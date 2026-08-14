@@ -365,10 +365,10 @@ std::string Game::itemDesc(const std::string& id) const {
 void Game::drawInventory() {
     if (!invOpen) return;
     float W = (float)ren->width(), H = (float)ren->height();
-    // dim the scene a bit
+    // full-screen black splash (transparent 50%) so the player focuses on the item UI
     Quad dim; dim.rect[0]=0; dim.rect[1]=0; dim.rect[2]=W; dim.rect[3]=H;
     dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1;
-    dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.45f; ren->drawSprite(dim);
+    dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.5f; ren->drawSprite(dim);
 
     static const float white[4] = {1,1,1,1};
     int cols = 3, cell = 56, gap = 6;

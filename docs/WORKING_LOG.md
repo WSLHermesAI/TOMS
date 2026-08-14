@@ -1,11 +1,22 @@
 # Working Log — Player Item System (9-Grid Inventory UI)
 
-**Date:** 2026-08-14
-**Branch:** `main`
-**Commit:** `53778ff` (and this log committed in a follow-up)
-**Feature:** Player item system with a 9-grid, extendable inventory UI.
+Track what was done, by date.
+
+- **2026-08-14** — Inventory overlay changed to a full-screen black splash at
+  transparent 50% (alpha 0.5) so the player focuses on the item UI. (commit `78dd2b6`+)
+- **2026-08-14** — Initial item system: 9-grid extendable inventory UI, usable
+  items (gems/potions/EXP crystal/scroll), pickup + use + discard. (commit `53778ff`)
 
 ---
+
+## Entry: 2026-08-14 — Inventory full-screen focus splash
+
+**Branch:** `main`  ·  **Feature:** Player item system (9-grid inventory UI)
+
+When the inventory UI is open, the scene is now covered by a **full-screen black
+splash at transparency 50%** (alpha 0.5) so the player's focus is on the open
+item panel. `Game::drawInventory()` draws a `0,0,W,H` black quad with
+`tint[3]=0.5f` before the grid/panel.
 
 ## What was built
 
@@ -37,8 +48,10 @@ The engine was run headless (lavapipe) and screenshots captured at each step.
 ### 1. Inventory open (9-grid with icons + selection + description)
 ![Inventory open](screenshots/inventory/inventory_open.png)
 
-The 3×3 grid renders with distinct item icons, a yellow highlight on slot 0
-(red potion), and the description "紅血瓶 立即恢復 40 點生命。" below.
+The scene is covered by a **full-screen black splash at transparent 50%** (alpha
+0.5) so the player focuses on the item UI. The 3×3 grid renders on top with
+distinct item icons, a yellow highlight on slot 0 (red potion), and the
+description "紅血瓶 立即恢復 40 點生命。" below.
 
 ### 2. After using the EXP crystal (level-up)
 ![After use EXP](screenshots/inventory/after_use_exp.png)
