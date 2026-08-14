@@ -44,12 +44,27 @@ The C function `downloadFile(url, dest)` is exported and callable from JS via
 ```
 
 ## Rebuild (Emscripten)
+
+The browser build supports **two backends**; pick one with `WEB_BACKEND`:
+
 ```bash
 source $HOME/opt/emsdk/emsdk_env.sh
+# WebGL2 (default, universal browser support):
 emcmake cmake -S . -B build-web -DWEB=ON
 cmake --build build-web -j4
 # -> web/tower_vulkan_web.html (+ .js/.wasm/.data)
+
+# WebGPU (closer to the Vulkan engine; Chrome/Edge, experimental in Emscripten):
+emcmake cmake -S . -B build-webgpu -DWEB=ON -DWEB_BACKEND=WebGPU
+cmake --build build-webgpu -j4
+# -> web/tower_vulkan_web.html (+ .js/.wasm/.data)
 ```
+
+Both backends implement the same `IRenderer` interface (`src/render_iface.h`);
+`Game` selects the backend at compile time (`src/game.cpp`). The WebGL2 path
+uses `src/renderer_webgl.cpp`; the WebGPU path uses `src/renderer_webgpu.cpp`
+(Dawn C API + WGSL). Neither is linked into, or visible to, the other — and
+both are fully isolated from the Windows/Linux Vulkan build.
 
 Requires the Emscripten SDK (`./emsdk install latest && ./emsdk activate latest`).
 The desktop Windows/Linux Vulkan build is unchanged (`cmake -S . -B build`).

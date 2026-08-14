@@ -1,7 +1,11 @@
 // game.cpp — implementation of Game.
 #include "game.h"
 #ifdef __EMSCRIPTEN__
-#include "renderer_webgl.h"   // WebGL2 backend (browser build only)
+  #ifdef WEBGPU
+    #include "renderer_webgpu.h"   // WebGPU backend (browser build only)
+  #else
+    #include "renderer_webgl.h"   // WebGL2 backend (browser build only)
+  #endif
 #else
 #include "renderer.h"         // Vulkan backend (desktop build only)
 #endif
@@ -30,11 +34,15 @@ static const int N_SPRITES = 27;
 
 bool Game::loadAssets(const std::string& assetDir) {
     dataDir = assetDir;
-    // Create the backend renderer. Desktop = Vulkan; Emscripten = WebGL2.
+    // Create the backend renderer. Desktop = Vulkan; Emscripten = WebGL2 or WebGPU.
 #ifndef __EMSCRIPTEN__
-    ren = new Renderer();
+    ren = new Renderer();                  // Vulkan (Windows / Linux)
 #else
-    ren = new WebGLRenderer();   // GL context must already be live (set up by emscripten main)
+  #ifdef WEBGPU
+    ren = new WebGPURenderer();           // WebGPU (browser)
+  #else
+    ren = new WebGLRenderer();            // WebGL2 (browser, default)
+  #endif
 #endif
     ren->init(1024, 768);
     // load sprites into a single 32x32-uniform atlas (GRID_COLS x GRID_ROWS grid)
