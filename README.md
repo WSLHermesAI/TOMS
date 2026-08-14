@@ -5,12 +5,35 @@ from-scratch Vulkan C++ engine. Runs **headless** (offscreen → PNG) and is
 fully cross-platform (Windows + Linux).
 
 ## What it is
-- 10 stages (13×11 grid) telling a story: the dark wizard **Vorkath** sealed the
+- 11 stages (13×11 grid) telling a story: the dark wizard **Vorkath** sealed the
   Star of Stability and imprisoned the princess atop the tower.
 - **Talking system**: NPC dialogue trees with branches (Traditional Chinese).
 - **Auto round-by-round combat**: player punches first, enemy retaliates; win →
   EXP/gold, level up; lose → respawn at stage start.
 - Procedurally generated sprites (27) + a CJK font atlas (444 glyphs).
+
+## Screenshots
+
+**Game — Stage 1 (村莊外緣 / Village Outskirts)**
+The top-down dungeon grid, HUD (stage name, ATK/DEF/LV/EXP/keys/HP), and the
+story preamble. The engine renders every frame offscreen and dumps PNGs.
+![Stage 1](docs/screenshots/game_stage1.png)
+
+**Game — Auto combat**
+Round-by-round combat vs. a slime: player strikes first, the enemy retaliates.
+The right HUD shows the enemy's HP; the bottom shows narrative dialogue.
+![Combat](docs/screenshots/game_combat.png)
+
+**Game — Dialogue**
+Branching NPC dialogue (Traditional Chinese) from the talking system.
+![Dialogue](docs/screenshots/game_dialogue.png)
+
+**Stage Editor (Qt6)**
+Cross-platform editor with a node-grid canvas, a 3-layer model
+(terrain / objects / annotations), a palette, an inspector, and
+import/export of the game's stage JSON. The screenshot below was grabbed
+headlessly (`tower_editor --shot stage01.json out.png`) on Linux/WSL.
+![Editor](docs/screenshots/editor_stage01.png)
 
 ## Build — Windows (Visual Studio)
 Prerequisites:
