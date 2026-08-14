@@ -52,6 +52,7 @@ public:
     bool inventoryOpen() const { return invOpen; }
     const std::vector<std::string>& inventory() const { return pl.inv; }
     int invSelection() const { return invSel; }
+    bool modalActive() const { return cs.active || inDialogue || invOpen; }  // any overlay open (combat/dialogue/inventory)
     Player& player() { return pl; }
     CombatState& combat() { return cs; }
     Stage& stage() { return st; }
@@ -75,7 +76,6 @@ private:
     // inventory so the player focuses on the active scene. Also gates background
     // input (movePlayer/interact) while any modal overlay is open.
     void drawFocusSplash();
-    bool modalActive() const { return cs.active || inDialogue || invOpen; }
 
     IRenderer* ren = nullptr;        // backend chosen in loadAssets (Vulkan / WebGL)
     Player pl;
