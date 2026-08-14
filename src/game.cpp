@@ -1,6 +1,13 @@
 // game.cpp — implementation of Game.
 #include "game.h"
-#include "vk_util.h"
+#ifdef __EMSCRIPTEN__
+#include "renderer_webgl.h"   // WebGL2 backend (browser build only)
+#else
+#include "renderer.h"         // Vulkan backend (desktop build only)
+#endif
+#ifndef __EMSCRIPTEN__
+#include "vk_util.h"   // Vulkan helpers — desktop build only
+#endif
 #include <json.hpp>
 #include <fstream>
 #include <sstream>
@@ -23,36 +30,35 @@ static const int N_SPRITES = 27;
 
 bool Game::loadAssets(const std::string& assetDir) {
     dataDir = assetDir;
-    ren.init(1024, 768);
+    // Create the backend renderer. Desktop = Vulkan; Emscripten = WebGL2.
+#ifndef __EMSCRIPTEN__
+    ren = new Renderer();
+#else
+    ren = new WebGLRenderer();   // GL context must already be live (set up by emscripten main)
+#endif
+    ren->init(1024, 768);
     // load sprites into a single 32x32-uniform atlas (GRID_COLS x GRID_ROWS grid)
     const int SW = 32, SH = 32, COLS = 9, ROWS = 3;
-    int AW = COLS*SW, AH = ROWS*SH;
-    std::vector<uint8_t> atlas(AW*AH*4, 0);
     spriteGridCols = COLS;
+    std::vector<std::vector<uint8_t>> layers;
+    layers.reserve(N_SPRITES);
     for (int i = 0; i < N_SPRITES; i++) {
         std::string name = SPRITE_ORDER[i];
         std::string path = assetDir + "/sprites/" + name + ".png";
         int w,h,ch; unsigned char* d = stbi_load(path.c_str(), &w, &h, &ch, 4);
         if (!d) { std::fprintf(stderr, "load fail %s\n", path.c_str()); return false; }
-        int gx = i % COLS, gy = i / COLS;
-        for (int y=0;y<SH;y++) for (int x=0;x<SW;x++) {
-            int ax = gx*SW+x, ay = gy*SH+y;
-            int si=(y*SW+x)*4, di=(ay*AW+ax)*4;
-            atlas[di]=d[si]; atlas[di+1]=d[si+1]; atlas[di+2]=d[si+2]; atlas[di+3]=d[si+3];
-        }
+        layers.emplace_back(d, d + w*h*4);
         idToLayer[name] = i;
         stbi_image_free(d);
     }
-    // upload full sprite atlas
-    ren.uploadAtlas(atlas, AW, AH, ren.spriteAtlas_.img, ren.spriteAtlas_.view, ren.spriteAtlas_.set);
-    ren.spriteSet = ren.spriteAtlas_.set; ren.spriteAtlas_.w=AW; ren.spriteAtlas_.h=AH;
+    // upload full sprite atlas (backend packs the grid + uploads)
+    ren->loadSprites(layers, SW, SH);
     // load font atlas
     {
         int w,h,ch; unsigned char* d = stbi_load((assetDir+"/font_atlas.png").c_str(), &w,&h,&ch,4);
         if (!d) { std::fprintf(stderr, "font fail\n"); return false; }
         std::vector<uint8_t> px(d, d + w*h*4); fontW=w; fontH=h;
-        ren.uploadAtlas(px, w, h, ren.fontAtlas_.img, ren.fontAtlas_.view, ren.fontAtlas_.set);
-        ren.fontSet = ren.fontAtlas_.set; ren.fontAtlas_.w=w; ren.fontAtlas_.h=h;
+        ren->loadFont(px, w, h);
         stbi_image_free(d);
         std::ifstream f(assetDir+"/font_atlas.json"); nlohmann::json j; f>>j;
         fontCols = j["cols"]; fontCell = j["cell"];
@@ -75,8 +81,11 @@ bool Game::loadAssets(const std::string& assetDir) {
     for (auto& [k,v] : ej.items()) enemyTpl[k] = v;
     // init player
     pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
-    // init SFX subsystem (no-op if no audio device; headless-safe)
+    // init SFX subsystem (no-op if no audio device; headless-safe). Disabled on
+    // the Emscripten/WebGL build to keep the browser bundle free of audio deps.
+#ifndef __EMSCRIPTEN__
     audio.init(assetDir + "/sfx");
+#endif
     return true;
 }
 
@@ -150,7 +159,7 @@ void Game::drawText(const std::string& s, float x, float y, float size, const fl
         Quad q; q.rect[0]=cx; q.rect[1]=y; q.rect[2]=size; q.rect[3]=size;
         q.uv[0]=uv[0]; q.uv[1]=uv[1]; q.uv[2]=uv[2]; q.uv[3]=uv[3];
         q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
-        ren.drawText(q);
+        ren->drawText(q);
         cx += size;
     }
 }
@@ -159,12 +168,12 @@ void Game::drawBar(float x, float y, float w, float h, float frac, const float c
     // background
     Quad bg; bg.rect[0]=x; bg.rect[1]=y; bg.rect[2]=w; bg.rect[3]=h;
     bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1;
-    bg.tint[0]=0.2f;bg.tint[1]=0.2f;bg.tint[2]=0.25f;bg.tint[3]=1; ren.drawSprite(bg);
+    bg.tint[0]=0.2f;bg.tint[1]=0.2f;bg.tint[2]=0.25f;bg.tint[3]=1; ren->drawSprite(bg);
     float fw = w * std::max(0.0f, std::min(1.0f, frac));
     if (fw > 0) {
         Quad fg; fg.rect[0]=x; fg.rect[1]=y; fg.rect[2]=fw; fg.rect[3]=h;
         fg.uv[0]=0;fg.uv[1]=0;fg.uv[2]=1;fg.uv[3]=1;
-        fg.tint[0]=col[0];fg.tint[1]=col[1];fg.tint[2]=col[2];fg.tint[3]=1; ren.drawSprite(fg);
+        fg.tint[0]=col[0];fg.tint[1]=col[1];fg.tint[2]=col[2];fg.tint[3]=1; ren->drawSprite(fg);
     }
 }
 
@@ -191,8 +200,8 @@ static std::string entSprite(const std::string& id) {
 }
 
 void Game::draw() {
-    ren.begin();
-    float W = (float)ren.W, H = (float)ren.H;
+    ren->begin();
+    float W = (float)ren->width(), H = (float)ren->height();
     // scene: 13x11 grid, tile size 48, centered
     int gw = st.width, gh = st.height;
     float ts = 48.0f;
@@ -202,16 +211,16 @@ void Game::draw() {
     for (int y = 0; y < gh; y++) for (int x = 0; x < gw; x++) {
         char c = st.at(x,y);
         int layer = spriteLayer(cellSprite(c));
-        ren.drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, white));
+        ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, white));
     }
     // entities
     for (auto& e : st.entities) {
         if (e.consumed) continue;
         int layer = spriteLayer(entSprite(e.id));
-        ren.drawSprite(spriteQuad(ox + e.x*ts + 8, oy + e.y*ts + 8, ts-16, ts-16, layer, white));
+        ren->drawSprite(spriteQuad(ox + e.x*ts + 8, oy + e.y*ts + 8, ts-16, ts-16, layer, white));
     }
     // player
-    ren.drawSprite(spriteQuad(ox + pl.x*ts + 8, oy + pl.y*ts + 8, ts-16, ts-16, spriteLayer("player"), white));
+    ren->drawSprite(spriteQuad(ox + pl.x*ts + 8, oy + pl.y*ts + 8, ts-16, ts-16, spriteLayer("player"), white));
 
     // HUD top bar
     float tint[4] = {1,1,1,1};
@@ -231,12 +240,12 @@ void Game::draw() {
         // dim
         Quad dim; dim.rect[0]=0; dim.rect[1]=0; dim.rect[2]=W; dim.rect[3]=H;
         dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1;
-        dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.55f; ren.drawSprite(dim);
+        dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.55f; ren->drawSprite(dim);
         float cx = W/2 - 250;
         drawText("⚔ 戰鬥！ " + cs.enemy.name, cx, 120, 26, C4(1,0.6f,0.4f,1));
         // player vs enemy boxes
-        ren.drawSprite(spriteQuad(cx, 170, 96, 96, spriteLayer("player"), white));
-        ren.drawSprite(spriteQuad(cx+350, 170, 96, 96, spriteLayer(cs.enemy.boss?"boss_demonlord":entSprite(cs.enemy.id)), white));
+        ren->drawSprite(spriteQuad(cx, 170, 96, 96, spriteLayer("player"), white));
+        ren->drawSprite(spriteQuad(cx+350, 170, 96, 96, spriteLayer(cs.enemy.boss?"boss_demonlord":entSprite(cs.enemy.id)), white));
         drawBar(cx, 280, 200, 16, (float)cs.playerHP/pl.maxhp, C4(0.3f,0.9f,0.4f,1));
         drawText("你 HP " + std::to_string(cs.playerHP), cx+210, 280, 18, tint);
         drawBar(cx+350, 280, 200, 16, (float)std::max(0,cs.enemyHP)/cs.enemy.hp, C4(0.9f,0.3f,0.3f,1));
@@ -249,14 +258,14 @@ void Game::draw() {
     if (inDialogue) {
         Quad box; box.rect[0]=40; box.rect[1]=H-200; box.rect[2]=W-80; box.rect[3]=170;
         box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1;
-        box.tint[0]=0.1f;box.tint[1]=0.12f;box.tint[2]=0.2f;box.tint[3]=0.95f; ren.drawSprite(box);
+        box.tint[0]=0.1f;box.tint[1]=0.12f;box.tint[2]=0.2f;box.tint[3]=0.95f; ren->drawSprite(box);
         std::string txt = dlgData["nodes"][dlgNode]["text"];
         drawText(txt, 60, H-180, 20, tint);
         for (size_t i = 0; i < dlgChoices.size(); i++) {
             drawText("▶ " + dlgChoices[i].first, 60, H-140 + (float)i*24, 18, C4(1,0.9f,0.5f,1));
         }
     }
-    ren.end();
+    ren->end();
 }
 
 void Game::applyItem(const std::string& id) {
@@ -405,5 +414,5 @@ void Game::update(int dtMs) {
 }
 
 void Game::saveFrame(const std::string& path) {
-    ren.savePNG(path);
+    ren->savePNG(path);
 }

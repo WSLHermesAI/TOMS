@@ -1,5 +1,7 @@
 # build dirs
 build/
+build-linux/
+build-web/
 out/
 cmake-build-*/
 editor/build/
@@ -8,6 +10,12 @@ editor/build/
 tower_vulkan
 tower_editor
 *.exe
+
+# generated Emscripten web artifacts (keep web/README.md, ignore the build output)
+web/*.html
+web/*.js
+web/*.wasm
+web/*.data
 
 # generated frames / review artifacts
 frames/

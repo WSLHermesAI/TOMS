@@ -3,9 +3,11 @@
 #include <vector>
 #include <string>
 #include <map>
-#include "renderer.h"
+#include "render_iface.h"
 #include "stage.h"
-#include "Audio.h"
+#ifndef __EMSCRIPTEN__
+#include "Audio.h"      // desktop SFX (miniaudio); excluded from the browser build
+#endif
 
 struct Player {
     int hp, maxhp, atk, def, gold, exp, lv;
@@ -54,7 +56,7 @@ private:
     void startDialogue(const std::string& npc);
     void enterNode(const std::string& node);
 
-    Renderer ren;
+    IRenderer* ren = nullptr;        // backend chosen in loadAssets (Vulkan / WebGL)
     Player pl;
     Stage st;
     CombatState cs;
@@ -77,5 +79,10 @@ private:
     std::string curStage;
     std::string dataDir;
     int totalStages = 10;   // highest stage index (derived from data/stages at loadStage)
+#ifndef __EMSCRIPTEN__
     Audio audio;           // SFX subsystem (no-op when no audio device)
+#else
+    // Browser build: no audio subsystem (kept isolated from desktop/Linux).
+    struct AudioStub { void init(const std::string&) {} void play(const std::string&) {} } audio;
+#endif
 };

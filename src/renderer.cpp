@@ -132,6 +132,21 @@ void Renderer::init(uint32_t w, uint32_t h) {
     fprintf(stderr, "[dbg] renderer init done\n");
 }
 
+void Renderer::loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) {
+    const uint32_t COLS = 9;
+    uint32_t AW=0, AH=0; std::vector<uint8_t> atlas;
+    if (!packAtlas(layers, sw, sh, COLS, atlas, AW, AH)) {
+        fprintf(stderr, "[err] loadSprites: bad layers\n"); return;
+    }
+    uploadAtlas(atlas, AW, AH, spriteAtlas_.img, spriteAtlas_.view, spriteAtlas_.set);
+    spriteSet = spriteAtlas_.set; spriteAtlas_.w=AW; spriteAtlas_.h=AH;
+}
+
+void Renderer::loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) {
+    uploadAtlas(px, w, h, fontAtlas_.img, fontAtlas_.view, fontAtlas_.set);
+    fontSet = fontAtlas_.set; fontAtlas_.w=w; fontAtlas_.h=h;
+}
+
 // Upload RGBA pixels directly into a LINEAR-tiled 2D image (avoids lavapipe copy bug).
 void Renderer::uploadAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h, VkImage& img, VkImageView& view, VkDescriptorSet& set) {
     VkDeviceMemory mem = VK_NULL_HANDLE;
