@@ -34,3 +34,5 @@ Desktop.ini
 # Python caches
 __pycache__/
 *.pyc
+
+build-webgpu/
