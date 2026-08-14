@@ -2,6 +2,7 @@
 // Loads assets, runs a scripted playthrough, and dumps PNG frames.
 // Works headless on both Linux (lavapipe) and Windows (real GPU / SwiftShader).
 #include "game.h"
+#include "renderer.h"   // for dynamic_cast<Renderer*> batch metric
 #include <iostream>
 #include <string>
 #include <filesystem>
@@ -96,6 +97,11 @@ int main(int argc, char** argv) {
     g.invUseSelected();                        // use potion_red
     shot(g, "frame14_after_use_potion");
     g.toggleInventory();                       // close
+
+    // report batch metrics (BatchRenderer) for verification
+    if (auto* r = dynamic_cast<Renderer*>(g.renderer()))
+        std::cout << "batch: drawCalls=" << r->lastDrawCalls
+                  << " quads=" << r->lastQuadCount << "\n";
 
     std::cout << "done. frames written: " << frame << "\n";
     return 0;

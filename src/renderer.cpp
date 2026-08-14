@@ -208,35 +208,52 @@ void Renderer::ensureVertexBuffer(size_t needBytes) {
     vk_check(vkAllocateMemory(vk.device,&ai,nullptr,&vbufMem),"vbm"); vkBindBufferMemory(vk.device,vbuf,vbufMem,0);
 }
 
+void Renderer::ensureIndexBuffer(size_t needBytes) {
+    if (ibufCap >= needBytes) return;
+    if (ibuf) { vkDestroyBuffer(vk.device, ibuf, nullptr); vkFreeMemory(vk.device, ibufMem, nullptr); }
+    ibufCap = needBytes * 2 + 65536;
+    VkBufferCreateInfo bi{}; bi.sType=VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; bi.size=ibufCap; bi.usage=VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+    vk_check(vkCreateBuffer(vk.device,&bi,nullptr,&ibuf),"ib");
+    VkMemoryRequirements mr; vkGetBufferMemoryRequirements(vk.device,ibuf,&mr);
+    VkPhysicalDeviceMemoryProperties pdmp; vkGetPhysicalDeviceMemoryProperties(vk.physical,&pdmp);
+    uint32_t mi=0; for(uint32_t i=0;i<pdmp.memoryTypeCount;i++) if(mr.memoryTypeBits&(1u<<i)&&(pdmp.memoryTypes[i].propertyFlags&VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)&&(pdmp.memoryTypes[i].propertyFlags&VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)){mi=i;break;}
+    VkMemoryAllocateInfo ai{}; ai.sType=VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO; ai.allocationSize=mr.size; ai.memoryTypeIndex=mi;
+    vk_check(vkAllocateMemory(vk.device,&ai,nullptr,&ibufMem),"ibm"); vkBindBufferMemory(vk.device,ibuf,ibufMem,0);
+}
+
 void Renderer::begin() { sprites.clear(); texts.clear(); }
 void Renderer::drawSprite(const Quad& q) { sprites.push_back(q); }
-void Renderer::drawText(const Quad& q) { texts.push_back(q); }
+void Renderer::drawText(const Quad& q)   { texts.push_back(q); }
+
+#include "batch_renderer.h"
 
 void Renderer::end() {
-    size_t total = (sprites.size() + texts.size()) * 6;
-    if (total == 0) return;
-    const int FPV = 14;
-    size_t bytes = total * FPV * 4;
-    ensureVertexBuffer(bytes);
-    std::vector<float> v(total * FPV);
-    auto emit = [&](const std::vector<Quad>& qs, size_t startVert) {
-        for (size_t i = 0; i < qs.size(); i++) {
-            const Quad& q = qs[i];
-            float* base = v.data() + (startVert + i * 6) * FPV;
-            float pos[6][2] = {{0,0},{1,0},{0,1},{1,0},{1,1},{0,1}};
-            for (int t = 0; t < 6; t++) {
-                float* vp = base + t * FPV;
-                vp[0] = pos[t][0]; vp[1] = pos[t][1];
-                vp[2] = q.rect[0]; vp[3] = q.rect[1]; vp[4] = q.rect[2]; vp[5] = q.rect[3];
-                vp[6] = q.uv[0]; vp[7] = q.uv[1]; vp[8] = q.uv[2]; vp[9] = q.uv[3];
-                vp[10] = q.tint[0]; vp[11] = q.tint[1]; vp[12] = q.tint[2]; vp[13] = q.tint[3];
-            }
-        }
-    };
-    emit(sprites, 0);
-    emit(texts, sprites.size() * 6);
-    void* p; vkMapMemory(vk.device, vbufMem, 0, bytes, 0, &p);
-    memcpy(p, v.data(), bytes); vkUnmapMemory(vk.device, vbufMem);
+    // ---- batch quads by texture-set / blend (FM79979 group-then-flush design) ----
+    BatchRenderer br;
+    br.begin();
+    for (auto& q : sprites) br.add(q, (void*)spriteSet, 0);   // sprite atlas, default blend
+    for (auto& q : texts)   br.add(q, (void*)fontSet,   0);   // font atlas,   default blend
+    br.flush();
+    lastDrawCalls = br.drawCalls;
+    lastQuadCount = br.quadCount;
+
+    size_t verts = br.vbuf.size();
+    size_t idxs  = br.ibuf.size();
+    if (verts == 0) return;
+
+    ensureVertexBuffer(verts * sizeof(float));
+    ensureIndexBuffer(idxs * sizeof(uint32_t));
+
+    // Upload interleaved vertices (4 per quad) and indices directly into the
+    // persistent GPU buffers -- no per-frame temp realloc + full copy.
+    {
+        void* p; vkMapMemory(vk.device, vbufMem, 0, verts * sizeof(float), 0, &p);
+        memcpy(p, br.vbuf.data(), verts * sizeof(float)); vkUnmapMemory(vk.device, vbufMem);
+    }
+    {
+        void* p; vkMapMemory(vk.device, ibufMem, 0, idxs * sizeof(uint32_t), 0, &p);
+        memcpy(p, br.ibuf.data(), idxs * sizeof(uint32_t)); vkUnmapMemory(vk.device, ibufMem);
+    }
 
     VkCommandBuffer cb = beginOnce(vk.device, cmdPool);
     VkRenderPassBeginInfo rb{}; rb.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -248,13 +265,13 @@ void Renderer::end() {
     vkCmdPushConstants(cb, pipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, 8, res);
     VkBuffer bufs[1] = {vbuf}; VkDeviceSize off[1] = {0};
     vkCmdBindVertexBuffers(cb, 0, 1, bufs, off);
-    if (!sprites.empty()) {
-        vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeLayout, 0, 1, &spriteSet, 0, 0);
-        vkCmdDraw(cb, 6 * (uint32_t)sprites.size(), 1, 0, 0);
-    }
-    if (!texts.empty()) {
-        vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeLayout, 0, 1, &fontSet, 0, 0);
-        vkCmdDraw(cb, 6 * (uint32_t)texts.size(), 1, 6 * (uint32_t)sprites.size(), 0);
+    vkCmdBindIndexBuffer(cb, ibuf, 0, VK_INDEX_TYPE_UINT32);
+    // one indexed draw per batch (flush on texture/blend change)
+    for (auto& b : br.batches) {
+        if (b.indexCount == 0) continue;
+        VkDescriptorSet ds = (b.texSet == (void*)spriteSet) ? spriteSet : fontSet;
+        vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeLayout, 0, 1, &ds, 0, 0);
+        vkCmdDrawIndexed(cb, b.indexCount, 1, b.indexOffset, 0, 0);
     }
     vkCmdEndRenderPass(cb);
     endSubmit(vk.device, vk.gfxQueue, cmdPool, cb);

@@ -54,6 +54,7 @@ public:
     int invSelection() const { return invSel; }
     bool modalActive() const { return cs.active || inDialogue || invOpen; }  // any overlay open (combat/dialogue/inventory)
     Player& player() { return pl; }
+    IRenderer* renderer() { return ren; }   // for batch-metric inspection (demo)
     // text drawing used by TextNode (render-bound text in the scene graph)
     void drawTextPublic(const std::string& s, float x, float y, float sz, const float* t);
     CombatState& combat() { return cs; }

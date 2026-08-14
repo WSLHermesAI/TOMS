@@ -2,7 +2,14 @@
 
 Track what was done, by date.
 
-- **2026-08-14** — **Render binding added** (`src/scene.h`): `GameObject : Node` binds
+- **2026-08-14** — **Batch rendering** added (`src/batch_renderer.h`) for the Vulkan
+  backend: a `BatchRenderer` ports the FM79979 `BatchDataMultiTexture` *group-then-flush*
+  design — quads are accumulated and a new draw batch starts when the texture-set or
+  blend mode changes. Renderer::end() now uploads a **4-vert + 6-index per quad** buffer
+  and issues one `vkCmdDrawIndexed` per batch, writing vertices directly into the
+  persistent GPU buffer (no per-frame temp realloc + full copy). Verified headless:
+  437 quads -> **2 draw calls** (sprite atlas + font atlas), 1/3 fewer vertices than
+  before. `IRenderer`/WebGL/WebGPU unchanged. (commit `f35212f`+)
   rendering to the scene-graph — `RenderTree()` walks the tree and **skips a whole
   subtree when its node is not visible** (parent.visible=false closes everything
   below). `SpriteNode` (common render: assign a texture+size+tint, it draws itself

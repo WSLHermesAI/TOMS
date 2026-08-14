@@ -36,6 +36,9 @@ public:
     VkDescriptorPool dsPool=VK_NULL_HANDLE;
     VkDescriptorSet spriteSet=VK_NULL_HANDLE, fontSet=VK_NULL_HANDLE;
     VkBuffer vbuf=VK_NULL_HANDLE; VkDeviceMemory vbufMem=VK_NULL_HANDLE; size_t vbufCap=0;
+    VkBuffer ibuf=VK_NULL_HANDLE; VkDeviceMemory ibufMem=VK_NULL_HANDLE; size_t ibufCap=0;
+    uint32_t lastDrawCalls=0;   // draw calls issued by the last end() (batch metric)
+    size_t   lastQuadCount=0;   // quads batched by the last end() (batch metric)
     Atlas spriteAtlas_, fontAtlas_;
     std::vector<Quad> sprites, texts;
 
@@ -53,4 +56,5 @@ public:
     void uploadAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h, VkImage& img, VkImageView& view, VkDescriptorSet& set);
     void transitionImage(VkImage img, VkImageLayout from, VkImageLayout to, VkImageAspectFlags asp);
     void ensureVertexBuffer(size_t needBytes);
+    void ensureIndexBuffer(size_t needBytes);
 };
