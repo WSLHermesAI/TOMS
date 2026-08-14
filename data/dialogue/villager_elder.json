@@ -1,0 +1,28 @@
+{
+  "npcId": "villager_elder",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "年輕人，災禍起源於十年前。黑巫師 Vorkath 封印了安穩之星，並將公主囚於塔頂。",
+      "choices": [
+        {
+          "label": "我該怎麼做？",
+          "next": "how"
+        },
+        {
+          "label": "明白了。",
+          "next": null
+        }
+      ]
+    },
+    "how": {
+      "text": "攀上這十層巫師之塔，變強，最後擊敗 Vorkath。路上寶石能強化你。",
+      "choices": [
+        {
+          "label": "我會做到。",
+          "next": null
+        }
+      ]
+    }
+  }
+}

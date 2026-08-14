@@ -1,0 +1,15 @@
+{
+  "npcId": "enemy_golem",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "石巨人：『此地不容活物。』",
+      "choices": [
+        {
+          "label": "（戰鬥）",
+          "next": null
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "npcId": "enemy_demonlord",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "Vorkath：『凡人，也敢踏足吾之王座？安穩之星將永世沉睡！』",
+      "choices": [
+        {
+          "label": "（決戰）",
+          "next": null
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "npcId": "sorcerer_teacher",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "戰鬥是自動的——你走向敵人便會輪流出拳，直到一方倒下。",
+      "choices": [
+        {
+          "label": "那我該注意什麼？",
+          "next": "tip"
+        },
+        {
+          "label": "懂了。",
+          "next": null
+        }
+      ]
+    },
+    "tip": {
+      "text": "先吃攻擊寶石再打高防敵人，損血最少。防禦則降低你承受的每一擊。",
+      "choices": [
+        {
+          "label": "記住了。",
+          "next": null
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "npcId": "princess_liora",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "你來了……我信你。打碎他，安穩之星便會重燃。",
+      "choices": [
+        {
+          "label": "等我。",
+          "next": null
+        }
+      ]
+    }
+  }
+}

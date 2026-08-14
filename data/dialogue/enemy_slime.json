@@ -1,0 +1,15 @@
+{
+  "npcId": "enemy_slime",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "咕嚕……（史萊姆擋住了去路）",
+      "choices": [
+        {
+          "label": "（戰鬥）",
+          "next": null
+        }
+      ]
+    }
+  }
+}

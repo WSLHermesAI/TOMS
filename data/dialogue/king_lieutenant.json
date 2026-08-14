@@ -1,0 +1,19 @@
+{
+  "npcId": "king_lieutenant",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "王國將希望寄託於你。這份祝福，願它護你周全。",
+      "action": {
+        "give": "potion_blue",
+        "amount": 1
+      },
+      "choices": [
+        {
+          "label": "感謝陛下。",
+          "next": null
+        }
+      ]
+    }
+  }
+}

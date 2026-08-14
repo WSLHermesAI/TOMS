@@ -1,0 +1,24 @@
+{
+  "npcId": "princess_victory",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "你做到了……Vorkath 已逝，安穩之星重燃。王國迎來黎明。",
+      "choices": [
+        {
+          "label": "這是我們共同的勝利。",
+          "next": "thanks"
+        }
+      ]
+    },
+    "thanks": {
+      "text": "帶我回王宮吧。從此，魔法塔不再是恐懼，而是守護之塔。",
+      "choices": [
+        {
+          "label": "願這份和平長存。",
+          "next": null
+        }
+      ]
+    }
+  }
+}

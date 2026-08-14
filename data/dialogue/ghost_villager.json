@@ -1,0 +1,15 @@
+{
+  "npcId": "ghost_villager",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "別怕……公主還活著。她在塔頂，等著被拯救。",
+      "choices": [
+        {
+          "label": "我會帶她回來。",
+          "next": null
+        }
+      ]
+    }
+  }
+}

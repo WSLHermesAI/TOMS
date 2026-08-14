@@ -1,0 +1,17 @@
+{
+  "model": "auto_round",
+  "description": "進入戰鬥後雙方自動輪流出拳，直到一方 HP 歸零。",
+  "round_time_ms": 700,
+  "formula": {
+    "dmg_to_target": "max(1, attacker.atk - target.def)",
+    "hits_to_kill": "ceil(target.hp / dmg_to_target)",
+    "damage_taken": "(hits_to_kill - 1) * max(1, target.atk - attacker.def)"
+  },
+  "player_base": {
+    "hp": 120,
+    "atk": 12,
+    "def": 4
+  },
+  "win_reward": "擊敗敵人獲得 exp 與 gold；exp 達門檻自動升級 +atk/+def。",
+  "lose": "玩家 HP 歸零 → 回到本層起點（保留屬性）。"
+}

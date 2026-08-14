@@ -1,0 +1,28 @@
+{
+  "npcId": "skeleton_scholar",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "吾曾為宮廷學者。Vorkath 之弱，在於純淨之攻與堅毅之防。",
+      "choices": [
+        {
+          "label": "意思是？",
+          "next": "weak"
+        },
+        {
+          "label": "受教了。",
+          "next": null
+        }
+      ]
+    },
+    "weak": {
+      "text": "把攻防寶石疊滿，他的高防便如紙糊。切記。",
+      "choices": [
+        {
+          "label": "我會變強。",
+          "next": null
+        }
+      ]
+    }
+  }
+}

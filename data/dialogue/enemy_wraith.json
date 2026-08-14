@@ -1,0 +1,15 @@
+{
+  "npcId": "enemy_wraith",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "怨靈：『仇恨……永不消散……』",
+      "choices": [
+        {
+          "label": "（戰鬥）",
+          "next": null
+        }
+      ]
+    }
+  }
+}

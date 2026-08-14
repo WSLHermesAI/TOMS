@@ -1,0 +1,32 @@
+{
+  "tile": 32,
+  "sprites": [
+    "bat.png",
+    "boss_demonlord.png",
+    "coin.png",
+    "demon.png",
+    "door_blue.png",
+    "door_red.png",
+    "door_yellow.png",
+    "floor.png",
+    "gem_atk.png",
+    "gem_def.png",
+    "golem.png",
+    "key_blue.png",
+    "key_red.png",
+    "key_yellow.png",
+    "npc_king.png",
+    "npc_princess.png",
+    "npc_sorcerer.png",
+    "npc_villager.png",
+    "player.png",
+    "potion_blue.png",
+    "potion_red.png",
+    "skeleton.png",
+    "slime.png",
+    "stairs_down.png",
+    "stairs_up.png",
+    "wall.png",
+    "wraith.png"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "npcId": "enemy_skeleton",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "骷髏：『加入我們的行列吧……』",
+      "choices": [
+        {
+          "label": "（戰鬥）",
+          "next": null
+        }
+      ]
+    }
+  }
+}

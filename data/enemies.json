@@ -1,0 +1,66 @@
+{
+  "slime": {
+    "name": "史萊姆",
+    "sprite": "slime.png",
+    "hp": 24,
+    "atk": 8,
+    "def": 2,
+    "exp": 6,
+    "gold": 4
+  },
+  "bat": {
+    "name": "暗影蝙蝠",
+    "sprite": "bat.png",
+    "hp": 18,
+    "atk": 11,
+    "def": 1,
+    "exp": 7,
+    "gold": 5
+  },
+  "golem": {
+    "name": "石巨人",
+    "sprite": "golem.png",
+    "hp": 70,
+    "atk": 14,
+    "def": 8,
+    "exp": 20,
+    "gold": 12
+  },
+  "skeleton": {
+    "name": "骷髏兵",
+    "sprite": "skeleton.png",
+    "hp": 40,
+    "atk": 16,
+    "def": 4,
+    "exp": 14,
+    "gold": 9
+  },
+  "wraith": {
+    "name": "怨靈",
+    "sprite": "wraith.png",
+    "hp": 55,
+    "atk": 20,
+    "def": 3,
+    "exp": 22,
+    "gold": 14
+  },
+  "demon": {
+    "name": "小惡魔",
+    "sprite": "demon.png",
+    "hp": 90,
+    "atk": 24,
+    "def": 9,
+    "exp": 40,
+    "gold": 22
+  },
+  "demonlord_vorkath": {
+    "name": "Vorkath 沃卡司",
+    "sprite": "boss_demonlord.png",
+    "hp": 400,
+    "atk": 34,
+    "def": 14,
+    "exp": 0,
+    "gold": 0,
+    "boss": true
+  }
+}

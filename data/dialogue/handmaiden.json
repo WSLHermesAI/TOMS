@@ -1,0 +1,15 @@
+{
+  "npcId": "handmaiden",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "頂層有禁咒機關，唯有擊碎沃卡司本體，封印才會解除。",
+      "choices": [
+        {
+          "label": "我明白了。",
+          "next": null
+        }
+      ]
+    }
+  }
+}

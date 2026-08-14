@@ -1,0 +1,15 @@
+{
+  "npcId": "enemy_demon",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "小惡魔：『主人在等你獻祭！』",
+      "choices": [
+        {
+          "label": "（戰鬥）",
+          "next": null
+        }
+      ]
+    }
+  }
+}

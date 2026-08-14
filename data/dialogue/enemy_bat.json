@@ -1,0 +1,15 @@
+{
+  "npcId": "enemy_bat",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": "嘶——（蝙蝠撲翅而來）",
+      "choices": [
+        {
+          "label": "（戰鬥）",
+          "next": null
+        }
+      ]
+    }
+  }
+}
