@@ -2,57 +2,58 @@
   "gem_atk": {
     "name": "攻擊寶石",
     "sprite": "gem_atk.png",
-    "effect": {
-      "atk": 6
-    }
+    "desc": "鑲嵌後永久提升攻擊力。",
+    "effect": { "atk": 6 }
   },
   "gem_def": {
     "name": "防禦寶石",
     "sprite": "gem_def.png",
-    "effect": {
-      "def": 5
-    }
+    "desc": "鑲嵌後永久提升防禦力。",
+    "effect": { "def": 5 }
   },
   "potion_red": {
     "name": "紅血瓶",
     "sprite": "potion_red.png",
-    "effect": {
-      "hp": 40
-    }
+    "desc": "立即恢復 40 點生命。",
+    "effect": { "hp": 40 }
   },
   "potion_blue": {
     "name": "藍血瓶",
     "sprite": "potion_blue.png",
-    "effect": {
-      "hp": 80
-    }
+    "desc": "立即恢復 80 點生命。",
+    "effect": { "hp": 80 }
+  },
+  "exp_up": {
+    "name": "經驗水晶",
+    "sprite": "exp_up.png",
+    "desc": "吸收後獲得大量經驗，足以讓你升級。",
+    "effect": { "exp": 100 }
+  },
+  "scroll": {
+    "name": "傳送卷軸",
+    "sprite": "scroll.png",
+    "desc": "展開後直接跳到目標樓層。",
+    "effect": { "warp": 1 },
+    "warp_to": "stage03"
   },
   "coin": {
     "name": "金幣",
     "sprite": "coin.png",
-    "effect": {
-      "gold": 10
-    }
+    "effect": { "gold": 10 }
   },
   "key_yellow": {
     "name": "黃鑰匙",
     "sprite": "key_yellow.png",
-    "effect": {
-      "key_yellow": 1
-    }
+    "effect": { "key_yellow": 1 }
   },
   "key_blue": {
     "name": "藍鑰匙",
     "sprite": "key_blue.png",
-    "effect": {
-      "key_blue": 1
-    }
+    "effect": { "key_blue": 1 }
   },
   "key_red": {
     "name": "紅鑰匙",
     "sprite": "key_red.png",
-    "effect": {
-      "key_red": 1
-    }
+    "effect": { "key_red": 1 }
   }
 }

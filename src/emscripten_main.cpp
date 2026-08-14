@@ -45,6 +45,30 @@ static void loop() {
     g_game->draw();
 }
 
+// keyboard handling for the inventory UI + movement
+static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* userData) {
+    (void)eventType; (void)userData;
+    if (!g_game) return EM_FALSE;
+    std::string k = e->key;
+    if (k == "i" || k == "I") { g_game->toggleInventory(); return EM_TRUE; }
+    if (g_game->inventoryOpen()) {
+        if (k == "ArrowLeft")  { g_game->invMoveSel(-1, 0); return EM_TRUE; }
+        if (k == "ArrowRight") { g_game->invMoveSel( 1, 0); return EM_TRUE; }
+        if (k == "ArrowUp")    { g_game->invMoveSel( 0,-1); return EM_TRUE; }
+        if (k == "ArrowDown")  { g_game->invMoveSel( 0, 1); return EM_TRUE; }
+        if (k == "Enter")      { g_game->invUseSelected(); return EM_TRUE; }
+        if (k == "d" || k == "D") { g_game->invDropSelected(); return EM_TRUE; }
+        return EM_TRUE; // swallow other keys while inventory is open
+    }
+    // movement (also allow WASD/arrows when inventory closed)
+    if (k == "ArrowLeft"  || k == "a" || k == "A") g_game->movePlayer(-1, 0);
+    else if (k == "ArrowRight" || k == "d" || k == "D") g_game->movePlayer(1, 0);
+    else if (k == "ArrowUp"    || k == "w" || k == "W") g_game->movePlayer(0, -1);
+    else if (k == "ArrowDown"  || k == "s" || k == "S") g_game->movePlayer(0, 1);
+    else if (k == " " || k == "e" || k == "E") g_game->interact();
+    return EM_TRUE;
+}
+
 int main() {
     // --- WebGL2 context on the <canvas> ---
     EmscriptenWebGLContextAttributes attrs;
@@ -55,6 +79,8 @@ int main() {
     if (!ctx) { fprintf(stderr, "[web] failed to create WebGL2 context\n"); return 1; }
     emscripten_webgl_make_context_current(ctx);
     emscripten_set_canvas_element_size("#canvas", 1024, 768);
+
+    emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, 1, keyCb);
 
     // Assets: when built with --preload-file assets --preload-file data, the bundle
     // is already mounted in the FS. Otherwise fetch a packed bundle from a URL:

@@ -13,6 +13,9 @@ struct Player {
     int hp, maxhp, atk, def, gold, exp, lv;
     int key_yellow = 0, key_blue = 0, key_red = 0;
     int x = 1, y = 1;
+    // inventory: list of item ids (a 9-grid, extendable UI). Keys/coins are NOT
+    // stored here (they apply immediately); usable items (gems/potions/exp/scroll) are.
+    std::vector<std::string> inv;
 };
 
 struct EnemyInst { std::string id; std::string name; int hp, atk, def, exp, gold; int x, y; bool boss=false; };
@@ -39,8 +42,16 @@ public:
     // input (scripted for headless)
     void movePlayer(int dx, int dy);
     void interact();                       // talk to NPC / trigger dialogue on current cell
-    void chooseDialogue(int idx);         // pick a dialogue choice
+    void chooseDialogue(int idx);          // pick a dialogue choice
     void startCombat(const EnemyInst& e);
+    // inventory UI (9-grid, extendable)
+    void toggleInventory();
+    void invMoveSel(int dx, int dy);        // move the selection cursor
+    bool invUseSelected();                 // use the highlighted item (returns true if used)
+    void invDropSelected();                // discard the highlighted item
+    bool inventoryOpen() const { return invOpen; }
+    const std::vector<std::string>& inventory() const { return pl.inv; }
+    int invSelection() const { return invSel; }
     Player& player() { return pl; }
     CombatState& combat() { return cs; }
     Stage& stage() { return st; }
@@ -55,6 +66,11 @@ private:
     void resolveCombatRound();
     void startDialogue(const std::string& npc);
     void enterNode(const std::string& node);
+    // inventory UI drawing + helpers
+    void drawInventory();
+    int spriteForItem(const std::string& id) const;
+    std::string itemName(const std::string& id) const;
+    std::string itemDesc(const std::string& id) const;
 
     IRenderer* ren = nullptr;        // backend chosen in loadAssets (Vulkan / WebGL)
     Player pl;
@@ -64,6 +80,11 @@ private:
     std::vector<std::string> spriteIds;
     std::map<std::string,int> idToLayer;
     int spriteGridCols = 9;
+    // item definitions (id -> json from data/items.json)
+    std::map<std::string, nlohmann::json> itemDefs;
+    // inventory UI state
+    bool invOpen = false;
+    int invSel = 0;            // selected slot index
     // font atlas map: codepoint -> uv rect
     std::map<uint32_t, std::array<float,4>> fontMap;
     int fontCols = 32, fontCell = 32, fontW = 0, fontH = 0;

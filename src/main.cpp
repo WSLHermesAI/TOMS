@@ -76,6 +76,27 @@ int main(int argc, char** argv) {
     g.interact();
     shot(g, "frame11_princess_victory");
 
+    // --- Inventory / item system demo ---
+    g.loadStage("stage01");
+    // simulate picking up usable items (normally done by walking onto item: tiles)
+    g.player().inv.push_back("potion_red");
+    g.player().inv.push_back("exp_up");
+    g.player().inv.push_back("gem_atk");
+    g.player().inv.push_back("scroll");
+    g.toggleInventory();                       // open the 9-grid UI
+    shot(g, "frame12_inventory_open");
+    // move selection and use the exp_up item (should grant EXP and level up)
+    g.invMoveSel(1, 0);                        // select slot 1 (exp_up)
+    int lvBefore = g.player().lv;
+    g.invUseSelected();                        // use exp_up
+    shot(g, "frame13_after_use_exp");
+    (void)lvBefore;
+    // use a potion (heal)
+    g.invMoveSel(-1, -1);                      // back to first slot
+    g.invUseSelected();                        // use potion_red
+    shot(g, "frame14_after_use_potion");
+    g.toggleInventory();                       // close
+
     std::cout << "done. frames written: " << frame << "\n";
     return 0;
 }

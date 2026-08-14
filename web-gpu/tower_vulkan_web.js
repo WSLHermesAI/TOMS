@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp4ond8g8a.js
+// include: /tmp/tmpt5_u3yi8.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -165,6 +165,9 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
         if (!check) throw new Error(msg);
       }
 Module['FS_createPath']("/", "assets", true, true);
+Module['FS_createPath']("/assets", "assets", true, true);
+Module['FS_createPath']("/assets/assets", "sfx", true, true);
+Module['FS_createPath']("/assets/assets", "sprites", true, true);
 Module['FS_createPath']("/assets", "sfx", true, true);
 Module['FS_createPath']("/assets", "sprites", true, true);
 Module['FS_createPath']("/", "data", true, true);
@@ -205,25 +208,25 @@ Module['FS_createPath']("/data", "stages", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 53082}, {"filename": "/assets/font_atlas.png", "start": 53082, "end": 230939}, {"filename": "/assets/sfx/confirm_click.wav", "start": 230939, "end": 237597}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 237597, "end": 245579}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 245579, "end": 265909}, {"filename": "/assets/sfx/get_item.wav", "start": 265909, "end": 285357}, {"filename": "/assets/sfx/player_attack.wav", "start": 285357, "end": 295985}, {"filename": "/assets/sfx/walk.wav", "start": 295985, "end": 302203}, {"filename": "/assets/sprites/bat.png", "start": 302203, "end": 302413}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 302413, "end": 302717}, {"filename": "/assets/sprites/coin.png", "start": 302717, "end": 302940}, {"filename": "/assets/sprites/demon.png", "start": 302940, "end": 303244}, {"filename": "/assets/sprites/door_blue.png", "start": 303244, "end": 303403}, {"filename": "/assets/sprites/door_red.png", "start": 303403, "end": 303562}, {"filename": "/assets/sprites/door_yellow.png", "start": 303562, "end": 303721}, {"filename": "/assets/sprites/floor.png", "start": 303721, "end": 303899}, {"filename": "/assets/sprites/gem_atk.png", "start": 303899, "end": 304152}, {"filename": "/assets/sprites/gem_def.png", "start": 304152, "end": 304409}, {"filename": "/assets/sprites/golem.png", "start": 304409, "end": 304616}, {"filename": "/assets/sprites/key_blue.png", "start": 304616, "end": 304873}, {"filename": "/assets/sprites/key_red.png", "start": 304873, "end": 305126}, {"filename": "/assets/sprites/key_yellow.png", "start": 305126, "end": 305380}, {"filename": "/assets/sprites/manifest.json", "start": 305380, "end": 305956}, {"filename": "/assets/sprites/npc_king.png", "start": 305956, "end": 306147}, {"filename": "/assets/sprites/npc_princess.png", "start": 306147, "end": 306370}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 306370, "end": 306616}, {"filename": "/assets/sprites/npc_villager.png", "start": 306616, "end": 306805}, {"filename": "/assets/sprites/player.png", "start": 306805, "end": 307070}, {"filename": "/assets/sprites/potion_blue.png", "start": 307070, "end": 307304}, {"filename": "/assets/sprites/potion_red.png", "start": 307304, "end": 307538}, {"filename": "/assets/sprites/skeleton.png", "start": 307538, "end": 307715}, {"filename": "/assets/sprites/slime.png", "start": 307715, "end": 307972}, {"filename": "/assets/sprites/stairs_down.png", "start": 307972, "end": 308148}, {"filename": "/assets/sprites/stairs_up.png", "start": 308148, "end": 308326}, {"filename": "/assets/sprites/wall.png", "start": 308326, "end": 308463}, {"filename": "/assets/sprites/wraith.png", "start": 308463, "end": 308706}, {"filename": "/data/combat.json", "start": 308706, "end": 309288}, {"filename": "/data/dialogue/enemy_bat.json", "start": 309288, "end": 309527}, {"filename": "/data/dialogue/enemy_demon.json", "start": 309527, "end": 309777}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 309777, "end": 310071}, {"filename": "/data/dialogue/enemy_golem.json", "start": 310071, "end": 310318}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 310318, "end": 310574}, {"filename": "/data/dialogue/enemy_slime.json", "start": 310574, "end": 310824}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 310824, "end": 311078}, {"filename": "/data/dialogue/ghost_villager.json", "start": 311078, "end": 311361}, {"filename": "/data/dialogue/handmaiden.json", "start": 311361, "end": 311646}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 311646, "end": 312005}, {"filename": "/data/dialogue/princess_liora.json", "start": 312005, "end": 312279}, {"filename": "/data/dialogue/princess_victory.json", "start": 312279, "end": 312828}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 312828, "end": 313406}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 313406, "end": 314025}, {"filename": "/data/dialogue/villager_elder.json", "start": 314025, "end": 314665}, {"filename": "/data/enemies.json", "start": 314665, "end": 315713}, {"filename": "/data/items.json", "start": 315713, "end": 316640}, {"filename": "/data/stages/stage01.json", "start": 316640, "end": 317897}, {"filename": "/data/stages/stage02.json", "start": 317897, "end": 319124}, {"filename": "/data/stages/stage03.json", "start": 319124, "end": 320346}, {"filename": "/data/stages/stage04.json", "start": 320346, "end": 321596}, {"filename": "/data/stages/stage05.json", "start": 321596, "end": 322811}, {"filename": "/data/stages/stage06.json", "start": 322811, "end": 324021}, {"filename": "/data/stages/stage07.json", "start": 324021, "end": 325263}, {"filename": "/data/stages/stage08.json", "start": 325263, "end": 326492}, {"filename": "/data/stages/stage09.json", "start": 326492, "end": 327729}, {"filename": "/data/stages/stage10.json", "start": 327729, "end": 328963}, {"filename": "/data/stages/stage_11.json", "start": 328963, "end": 331578}, {"filename": "/data/story.json", "start": 331578, "end": 332910}], "remote_package_size": 332910});
+    loadPackage({"files": [{"filename": "/assets/assets/font_atlas.json", "start": 0, "end": 53082}, {"filename": "/assets/assets/font_atlas.png", "start": 53082, "end": 230939}, {"filename": "/assets/assets/sfx/confirm_click.wav", "start": 230939, "end": 237597}, {"filename": "/assets/assets/sfx/dialogue_popup.wav", "start": 237597, "end": 245579}, {"filename": "/assets/assets/sfx/enemy_attack.wav", "start": 245579, "end": 265909}, {"filename": "/assets/assets/sfx/get_item.wav", "start": 265909, "end": 285357}, {"filename": "/assets/assets/sfx/player_attack.wav", "start": 285357, "end": 295985}, {"filename": "/assets/assets/sfx/walk.wav", "start": 295985, "end": 302203}, {"filename": "/assets/assets/sprites/bat.png", "start": 302203, "end": 302413}, {"filename": "/assets/assets/sprites/boss_demonlord.png", "start": 302413, "end": 302717}, {"filename": "/assets/assets/sprites/coin.png", "start": 302717, "end": 302940}, {"filename": "/assets/assets/sprites/demon.png", "start": 302940, "end": 303244}, {"filename": "/assets/assets/sprites/door_blue.png", "start": 303244, "end": 303403}, {"filename": "/assets/assets/sprites/door_red.png", "start": 303403, "end": 303562}, {"filename": "/assets/assets/sprites/door_yellow.png", "start": 303562, "end": 303721}, {"filename": "/assets/assets/sprites/exp_up.png", "start": 303721, "end": 303924}, {"filename": "/assets/assets/sprites/floor.png", "start": 303924, "end": 304102}, {"filename": "/assets/assets/sprites/gem_atk.png", "start": 304102, "end": 304355}, {"filename": "/assets/assets/sprites/gem_def.png", "start": 304355, "end": 304612}, {"filename": "/assets/assets/sprites/golem.png", "start": 304612, "end": 304819}, {"filename": "/assets/assets/sprites/key_blue.png", "start": 304819, "end": 305076}, {"filename": "/assets/assets/sprites/key_red.png", "start": 305076, "end": 305329}, {"filename": "/assets/assets/sprites/key_yellow.png", "start": 305329, "end": 305583}, {"filename": "/assets/assets/sprites/manifest.json", "start": 305583, "end": 306159}, {"filename": "/assets/assets/sprites/npc_handmaiden.png", "start": 306159, "end": 306374}, {"filename": "/assets/assets/sprites/npc_king.png", "start": 306374, "end": 306565}, {"filename": "/assets/assets/sprites/npc_princess.png", "start": 306565, "end": 306788}, {"filename": "/assets/assets/sprites/npc_sorcerer.png", "start": 306788, "end": 307034}, {"filename": "/assets/assets/sprites/npc_villager.png", "start": 307034, "end": 307223}, {"filename": "/assets/assets/sprites/player.png", "start": 307223, "end": 307488}, {"filename": "/assets/assets/sprites/potion_blue.png", "start": 307488, "end": 307722}, {"filename": "/assets/assets/sprites/potion_red.png", "start": 307722, "end": 307956}, {"filename": "/assets/assets/sprites/scroll.png", "start": 307956, "end": 308092}, {"filename": "/assets/assets/sprites/skeleton.png", "start": 308092, "end": 308269}, {"filename": "/assets/assets/sprites/slime.png", "start": 308269, "end": 308526}, {"filename": "/assets/assets/sprites/stairs_down.png", "start": 308526, "end": 308702}, {"filename": "/assets/assets/sprites/stairs_up.png", "start": 308702, "end": 308880}, {"filename": "/assets/assets/sprites/wall.png", "start": 308880, "end": 309017}, {"filename": "/assets/assets/sprites/wraith.png", "start": 309017, "end": 309260}, {"filename": "/assets/font_atlas.json", "start": 309260, "end": 362342}, {"filename": "/assets/font_atlas.png", "start": 362342, "end": 540199}, {"filename": "/assets/sfx/confirm_click.wav", "start": 540199, "end": 546857}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 546857, "end": 554839}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 554839, "end": 575169}, {"filename": "/assets/sfx/get_item.wav", "start": 575169, "end": 594617}, {"filename": "/assets/sfx/player_attack.wav", "start": 594617, "end": 605245}, {"filename": "/assets/sfx/walk.wav", "start": 605245, "end": 611463}, {"filename": "/assets/sprites/bat.png", "start": 611463, "end": 611673}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 611673, "end": 611977}, {"filename": "/assets/sprites/coin.png", "start": 611977, "end": 612200}, {"filename": "/assets/sprites/demon.png", "start": 612200, "end": 612504}, {"filename": "/assets/sprites/door_blue.png", "start": 612504, "end": 612663}, {"filename": "/assets/sprites/door_red.png", "start": 612663, "end": 612822}, {"filename": "/assets/sprites/door_yellow.png", "start": 612822, "end": 612981}, {"filename": "/assets/sprites/exp_up.png", "start": 612981, "end": 613184}, {"filename": "/assets/sprites/floor.png", "start": 613184, "end": 613362}, {"filename": "/assets/sprites/gem_atk.png", "start": 613362, "end": 613615}, {"filename": "/assets/sprites/gem_def.png", "start": 613615, "end": 613872}, {"filename": "/assets/sprites/golem.png", "start": 613872, "end": 614079}, {"filename": "/assets/sprites/key_blue.png", "start": 614079, "end": 614336}, {"filename": "/assets/sprites/key_red.png", "start": 614336, "end": 614589}, {"filename": "/assets/sprites/key_yellow.png", "start": 614589, "end": 614843}, {"filename": "/assets/sprites/manifest.json", "start": 614843, "end": 615419}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 615419, "end": 615634}, {"filename": "/assets/sprites/npc_king.png", "start": 615634, "end": 615825}, {"filename": "/assets/sprites/npc_princess.png", "start": 615825, "end": 616048}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 616048, "end": 616294}, {"filename": "/assets/sprites/npc_villager.png", "start": 616294, "end": 616483}, {"filename": "/assets/sprites/player.png", "start": 616483, "end": 616748}, {"filename": "/assets/sprites/potion_blue.png", "start": 616748, "end": 616982}, {"filename": "/assets/sprites/potion_red.png", "start": 616982, "end": 617216}, {"filename": "/assets/sprites/scroll.png", "start": 617216, "end": 617352}, {"filename": "/assets/sprites/skeleton.png", "start": 617352, "end": 617529}, {"filename": "/assets/sprites/slime.png", "start": 617529, "end": 617786}, {"filename": "/assets/sprites/stairs_down.png", "start": 617786, "end": 617962}, {"filename": "/assets/sprites/stairs_up.png", "start": 617962, "end": 618140}, {"filename": "/assets/sprites/wall.png", "start": 618140, "end": 618277}, {"filename": "/assets/sprites/wraith.png", "start": 618277, "end": 618520}, {"filename": "/data/combat.json", "start": 618520, "end": 619102}, {"filename": "/data/dialogue/enemy_bat.json", "start": 619102, "end": 619341}, {"filename": "/data/dialogue/enemy_demon.json", "start": 619341, "end": 619591}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 619591, "end": 619885}, {"filename": "/data/dialogue/enemy_golem.json", "start": 619885, "end": 620132}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 620132, "end": 620388}, {"filename": "/data/dialogue/enemy_slime.json", "start": 620388, "end": 620638}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 620638, "end": 620892}, {"filename": "/data/dialogue/ghost_villager.json", "start": 620892, "end": 621175}, {"filename": "/data/dialogue/handmaiden.json", "start": 621175, "end": 621460}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 621460, "end": 621819}, {"filename": "/data/dialogue/princess_liora.json", "start": 621819, "end": 622093}, {"filename": "/data/dialogue/princess_victory.json", "start": 622093, "end": 622642}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 622642, "end": 623220}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 623220, "end": 623839}, {"filename": "/data/dialogue/villager_elder.json", "start": 623839, "end": 624479}, {"filename": "/data/enemies.json", "start": 624479, "end": 625527}, {"filename": "/data/items.json", "start": 625527, "end": 626913}, {"filename": "/data/stages/stage01.json", "start": 626913, "end": 628170}, {"filename": "/data/stages/stage02.json", "start": 628170, "end": 629397}, {"filename": "/data/stages/stage03.json", "start": 629397, "end": 630619}, {"filename": "/data/stages/stage04.json", "start": 630619, "end": 631869}, {"filename": "/data/stages/stage05.json", "start": 631869, "end": 633084}, {"filename": "/data/stages/stage06.json", "start": 633084, "end": 634294}, {"filename": "/data/stages/stage07.json", "start": 634294, "end": 635536}, {"filename": "/data/stages/stage08.json", "start": 635536, "end": 636765}, {"filename": "/data/stages/stage09.json", "start": 636765, "end": 638002}, {"filename": "/data/stages/stage10.json", "start": 638002, "end": 639236}, {"filename": "/data/stages/stage_11.json", "start": 639236, "end": 641851}, {"filename": "/data/story.json", "start": 641851, "end": 643183}], "remote_package_size": 643183});
 
   })();
 
-// end include: /tmp/tmp4ond8g8a.js
-// include: /tmp/tmpdwkdp9tr.js
+// end include: /tmp/tmpt5_u3yi8.js
+// include: /tmp/tmpv6az1o3h.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpdwkdp9tr.js
-// include: /tmp/tmpgez8tg72.js
+  // end include: /tmp/tmpv6az1o3h.js
+// include: /tmp/tmpid0uxnxj.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpgez8tg72.js
+  // end include: /tmp/tmpid0uxnxj.js
 
 
 var programArgs = [];
@@ -4364,6 +4367,207 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       return 0;
     };
 
+  var onExits = [];
+  var addOnExit = (cb) => onExits.push(cb);
+  var JSEvents = {
+  removeAllEventListeners() {
+        while (JSEvents.eventHandlers.length) {
+          JSEvents._removeHandler(JSEvents.eventHandlers.length - 1);
+        }
+        JSEvents.deferredCalls = [];
+      },
+  inEventHandler:0,
+  deferredCalls:[],
+  deferCall(targetFunction, precedence, argsList) {
+        function arraysHaveEqualContent(arrA, arrB) {
+          if (arrA.length != arrB.length) return false;
+  
+          for (var i = 0; i < arrA.length; i++) {
+            if (arrA[i] != arrB[i]) return false;
+          }
+          return true;
+        }
+        // Test if the given call was already queued, and if so, don't add it again.
+        for (var call of JSEvents.deferredCalls) {
+          if (call.targetFunction == targetFunction && arraysHaveEqualContent(call.argsList, argsList)) {
+            return;
+          }
+        }
+        JSEvents.deferredCalls.push({
+          targetFunction,
+          precedence,
+          argsList
+        });
+  
+        JSEvents.deferredCalls.sort((x,y) => x.precedence - y.precedence);
+      },
+  removeDeferredCalls(targetFunction) {
+        JSEvents.deferredCalls = JSEvents.deferredCalls.filter((call) => call.targetFunction != targetFunction);
+      },
+  canPerformEventHandlerRequests() {
+        // Browsers that support navigator.userActivation.isActive: https://developer.mozilla.org/en-US/docs/Web/API/UserActivation/isActive
+        if (navigator.userActivation) {
+          // Verify against transient activation status from UserActivation API
+          // whether it is possible to perform a request here without needing to defer. See
+          // https://developer.mozilla.org/en-US/docs/Web/Security/User_activation#transient_activation
+          // and https://caniuse.com/mdn-api_useractivation
+          return navigator.userActivation.isActive;
+        }
+  
+        return JSEvents.inEventHandler && JSEvents.currentEventHandler.allowsDeferredCalls;
+      },
+  runDeferredCalls() {
+        if (!JSEvents.canPerformEventHandlerRequests()) {
+          return;
+        }
+        var deferredCalls = JSEvents.deferredCalls;
+        JSEvents.deferredCalls = [];
+        for (var call of deferredCalls) {
+          call.targetFunction(...call.argsList);
+        }
+      },
+  eventHandlers:[],
+  removeAllHandlersOnTarget:(target, eventTypeString) => {
+        for (var i = 0; i < JSEvents.eventHandlers.length; ++i) {
+          if (JSEvents.eventHandlers[i].target == target &&
+            (!eventTypeString || eventTypeString == JSEvents.eventHandlers[i].eventTypeString)) {
+             JSEvents._removeHandler(i--);
+           }
+        }
+      },
+  _removeHandler(i) {
+        var h = JSEvents.eventHandlers[i];
+        h.target.removeEventListener(h.eventTypeString, h.eventListenerFunc, h.useCapture);
+        JSEvents.eventHandlers.splice(i, 1);
+      },
+  registerOrRemoveHandler(eventHandler) {
+        if (!eventHandler.target) {
+          err('registerOrRemoveHandler: the target element for event handler registration does not exist, when processing the following event handler registration:');
+          console.dir(eventHandler);
+          return -4;
+        }
+        if (eventHandler.callbackfunc) {
+          eventHandler.eventListenerFunc = function(event) {
+            // Increment nesting count for the event handler.
+            ++JSEvents.inEventHandler;
+            JSEvents.currentEventHandler = eventHandler;
+            // Process any old deferred calls the user has placed.
+            JSEvents.runDeferredCalls();
+            // Process the actual event, calls back to user C code handler.
+            eventHandler.handlerFunc(event);
+            // Process any new deferred calls that were placed right now from this event handler.
+            JSEvents.runDeferredCalls();
+            // Out of event handler - restore nesting count.
+            --JSEvents.inEventHandler;
+          };
+  
+          eventHandler.target.addEventListener(eventHandler.eventTypeString,
+                                               eventHandler.eventListenerFunc,
+                                               eventHandler.useCapture);
+          JSEvents.eventHandlers.push(eventHandler);
+        } else {
+          for (var i = 0; i < JSEvents.eventHandlers.length; ++i) {
+            if (JSEvents.eventHandlers[i].target == eventHandler.target
+             && JSEvents.eventHandlers[i].eventTypeString == eventHandler.eventTypeString) {
+               JSEvents._removeHandler(i--);
+             }
+          }
+        }
+        return 0;
+      },
+  removeSingleHandler(eventHandler) {
+        let success = false;
+        for (let i = 0; i < JSEvents.eventHandlers.length; ++i) {
+          const handler = JSEvents.eventHandlers[i];
+          if (handler.target === eventHandler.target
+            && handler.eventTypeId === eventHandler.eventTypeId
+            && handler.callbackfunc === eventHandler.callbackfunc
+            && handler.userData === eventHandler.userData) {
+            // in some very rare cases (ex: Safari / fullscreen events), there is more than 1 handler (eventTypeString is different)
+            JSEvents._removeHandler(i--);
+            success = true;
+          }
+        }
+        return success ? 0 : -5;
+      },
+  getNodeNameForTarget(target) {
+        if (target == window) return '#window';
+        if (target == screen) return '#screen';
+        return target?.nodeName ?? '';
+      },
+  fullscreenEnabled() {
+        return document.fullscreenEnabled
+        // Safari 13.0.3 on macOS Catalina 10.15.1 still ships with prefixed webkitFullscreenEnabled.
+        // TODO: If Safari at some point ships with unprefixed version, update the version check above.
+        ?? document.webkitFullscreenEnabled
+         ;
+      },
+  };
+  
+  
+  
+  
+  var wasmTableMirror = [];
+  
+  
+  var getWasmTableEntry = (funcPtr) => {
+      var func = wasmTableMirror[funcPtr];
+      if (!func) {
+        /** @suppress {checkTypes} */
+        wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr);
+      }
+      /** @suppress {checkTypes} */
+      assert(wasmTable.get(funcPtr) == func, 'table mirror is out of date');
+      return func;
+    };
+  
+  
+  
+  /** @type {!Float64Array} */
+  var HEAPF64;
+  var registerKeyEventCallback = (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
+      var eventSize = 160;
+      JSEvents.keyEvent ||= _malloc(eventSize);
+  
+      var keyEventHandlerFunc = (e) => {
+        assert(e);
+  
+        var keyEventData = JSEvents.keyEvent;
+        HEAPF64[((keyEventData)>>3)] = e.timeStamp;
+  
+        var idx = ((keyEventData)>>2);
+  
+        HEAP32[idx + 2] = e.location;
+        HEAP8[keyEventData + 12] = e.ctrlKey;
+        HEAP8[keyEventData + 13] = e.shiftKey;
+        HEAP8[keyEventData + 14] = e.altKey;
+        HEAP8[keyEventData + 15] = e.metaKey;
+        HEAP8[keyEventData + 16] = e.repeat;
+        HEAP32[idx + 5] = e.charCode;
+        HEAP32[idx + 6] = e.keyCode;
+        HEAP32[idx + 7] = e.which;
+        stringToUTF8(e.key ?? '', keyEventData + 32, 32);
+        stringToUTF8(e.code ?? '', keyEventData + 64, 32);
+        stringToUTF8(e.char ?? '', keyEventData + 96, 32);
+        stringToUTF8(e.locale ?? '', keyEventData + 128, 32);
+  
+        if (getWasmTableEntry(callbackfunc)(eventTypeId, keyEventData, userData)) e.preventDefault();
+      };
+  
+      var eventHandler = {
+        target: findEventTarget(target),
+        eventTypeString,
+        eventTypeId,
+        userData,
+        callbackfunc,
+        handlerFunc: keyEventHandlerFunc,
+        useCapture
+      };
+      return JSEvents.registerOrRemoveHandler(eventHandler);
+    };
+  var _emscripten_set_keydown_callback_on_thread = (target, userData, useCapture, callbackfunc, targetThread) =>
+      registerKeyEventCallback(target, userData, useCapture, callbackfunc, 2, 'keydown', targetThread);
+
   
   var handleException = (e) => {
       // Certain exception types we do not treat as errors since they are used for
@@ -4673,19 +4877,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       }
     };
   
-  var wasmTableMirror = [];
-  
-  
-  var getWasmTableEntry = (funcPtr) => {
-      var func = wasmTableMirror[funcPtr];
-      if (!func) {
-        /** @suppress {checkTypes} */
-        wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr);
-      }
-      /** @suppress {checkTypes} */
-      assert(wasmTable.get(funcPtr) == func, 'table mirror is out of date');
-      return func;
-    };
   var _emscripten_set_main_loop = (func, fps, simulateInfiniteLoop) => {
       var iterFunc = getWasmTableEntry(func);
       setMainLoop(iterFunc, fps, simulateInfiniteLoop);
@@ -5587,8 +5778,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   /** @type {!Float32Array} */
   var HEAPF32;
   
-  /** @type {!Float64Array} */
-  var HEAPF64;
   var WebGPU = {
   Internals:{
   jsObjects:[],
@@ -8031,7 +8220,6 @@ if (Module['printErr']) err = Module['printErr'];
   'addOnInit',
   'addOnPostCtor',
   'addOnPreMain',
-  'addOnExit',
   'STACK_SIZE',
   'STACK_ALIGN',
   'POINTER_SIZE',
@@ -8053,7 +8241,6 @@ if (Module['printErr']) err = Module['printErr'];
   'UTF32ToString',
   'stringToUTF32',
   'lengthBytesUTF32',
-  'registerKeyEventCallback',
   'getBoundingClientRect',
   'fillMouseEventData',
   'registerMouseEventCallback',
@@ -8202,6 +8389,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'getUniqueRunDependency',
   'noExitRuntime',
   'addOnPreRun',
+  'addOnExit',
   'addOnPostRun',
   'freeTableIndexes',
   'functionsInTableMap',
@@ -8219,6 +8407,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'stringToUTF8OnStack',
   'writeArrayToMemory',
   'JSEvents',
+  'registerKeyEventCallback',
   'specialHTMLTargets',
   'maybeCStringToJsString',
   'findEventTarget',
@@ -8626,6 +8815,8 @@ var wasmImports = {
   emscripten_resize_heap: _emscripten_resize_heap,
   /** @export */
   emscripten_set_canvas_element_size: _emscripten_set_canvas_element_size,
+  /** @export */
+  emscripten_set_keydown_callback_on_thread: _emscripten_set_keydown_callback_on_thread,
   /** @export */
   emscripten_set_main_loop: _emscripten_set_main_loop,
   /** @export */

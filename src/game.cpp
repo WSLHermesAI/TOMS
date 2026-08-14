@@ -28,9 +28,10 @@ static const char* SPRITE_ORDER[] = {
     "gem_atk","gem_def","potion_red","potion_blue","coin",
     "key_yellow","key_blue","key_red",
     "player","slime","bat","golem","skeleton","wraith","demon","boss_demonlord",
-    "npc_sorcerer","npc_villager","npc_princess","npc_king","npc_handmaiden"
+    "npc_sorcerer","npc_villager","npc_princess","npc_king","npc_handmaiden",
+    "exp_up","scroll"          // item icons (added for the inventory UI)
 };
-static const int N_SPRITES = 27;
+static const int N_SPRITES = 29;
 
 bool Game::loadAssets(const std::string& assetDir) {
     dataDir = assetDir;
@@ -87,6 +88,11 @@ bool Game::loadAssets(const std::string& assetDir) {
     // load enemy templates
     std::ifstream ef(assetDir+"/../data/enemies.json"); nlohmann::json ej; ef>>ej;
     for (auto& [k,v] : ej.items()) enemyTpl[k] = v;
+    // load item definitions
+    {
+        std::ifstream itf(assetDir+"/../data/items.json"); nlohmann::json ij; itf>>ij;
+        for (auto& [k,v] : ij.items()) itemDefs[k] = v;
+    }
     // init player
     pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
     // init SFX subsystem (no-op if no audio device; headless-safe). Disabled on
@@ -238,7 +244,7 @@ void Game::draw() {
     drawBar(bx, by, 200, 14, (float)pl.hp/pl.maxhp, C4(0.9f,0.2f,0.2f,1));
     drawText("HP " + std::to_string(pl.hp) + "/" + std::to_string(pl.maxhp), bx+210, by, 18, tint);
     drawText("ATK " + std::to_string(pl.atk) + "  DEF " + std::to_string(pl.def) + "  LV " + std::to_string(pl.lv), bx, by+20, 18, tint);
-    drawText("GOLD " + std::to_string(pl.gold) + "  EXP " + std::to_string(pl.exp) + "  鑰匙 Y"+std::to_string(pl.key_yellow)+" B"+std::to_string(pl.key_blue)+" R"+std::to_string(pl.key_red), bx, by+42, 16, tint);
+    drawText("GOLD " + std::to_string(pl.gold) + "  EXP " + std::to_string(pl.exp) + "  鑰匙 Y"+std::to_string(pl.key_yellow)+" B"+std::to_string(pl.key_blue)+" R"+std::to_string(pl.key_red) + "  道具x" + std::to_string(pl.inv.size()) + " (I)", bx, by+42, 16, tint);
 
     // story note
     drawText(st.story_note, 16, H-30, 16, C4(0.8f,0.85f,1.0f,1));
@@ -273,22 +279,145 @@ void Game::draw() {
             drawText("▶ " + dlgChoices[i].first, 60, H-140 + (float)i*24, 18, C4(1,0.9f,0.5f,1));
         }
     }
+
+    // inventory UI (9-grid, extendable) — toggle with I
+    drawInventory();
+
     ren->end();
 }
 
 void Game::applyItem(const std::string& id) {
-    static std::map<std::string,std::array<int,3>> eff = {
-        {"gem_atk",{6,0,0}}, {"gem_def",{0,5,0}}, {"potion_red",{0,0,40}}, {"potion_blue",{0,0,80}},
-        {"coin",{0,0,0}}, {"key_yellow",{0,0,0}}, {"key_blue",{0,0,0}}, {"key_red",{0,0,0}}
-    };
-    if (id=="gem_atk") pl.atk += 6;
-    else if (id=="gem_def") pl.def += 5;
-    else if (id=="potion_red") pl.hp = std::min(pl.maxhp, pl.hp+40);
-    else if (id=="potion_blue") pl.hp = std::min(pl.maxhp, pl.hp+80);
-    else if (id=="key_yellow") pl.key_yellow++;
-    else if (id=="key_blue") pl.key_blue++;
-    else if (id=="key_red") pl.key_red++;
+    // Item definitions come from data/items.json (loaded in loadAssets).
+    auto it = itemDefs.find(id);
+    if (it == itemDefs.end()) { return; }
+    const nlohmann::json& eff = it->second["effect"];
+    if (eff.contains("hp"))    pl.hp    = std::min(pl.maxhp, pl.hp + (int)eff["hp"]);
+    if (eff.contains("atk"))   pl.atk   += (int)eff["atk"];
+    if (eff.contains("def"))   pl.def   += (int)eff["def"];
+    if (eff.contains("gold"))  pl.gold  += (int)eff["gold"];
+    if (eff.contains("key_yellow")) pl.key_yellow += (int)eff["key_yellow"];
+    if (eff.contains("key_blue"))   pl.key_blue   += (int)eff["key_blue"];
+    if (eff.contains("key_red"))    pl.key_red    += (int)eff["key_red"];
+    if (eff.contains("exp")) {
+        pl.exp += (int)eff["exp"];
+        int need = pl.lv * 30;
+        while (pl.exp >= need) { pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30; }
+    }
+    if (eff.contains("warp")) {
+        std::string dst = it->second.value("warp_to", std::string(""));
+        if (!dst.empty() && std::filesystem::exists(dataDir + "/../data/stages/" + dst + ".json"))
+            loadStage(dst);
+    }
     audio.play("get_item");
+}
+
+// ---------- inventory UI ----------
+void Game::toggleInventory() {
+    invOpen = !invOpen;
+    if (invSel >= (int)pl.inv.size()) invSel = (int)pl.inv.size() - 1;
+    if (invSel < 0) invSel = 0;
+}
+void Game::invMoveSel(int dx, int dy) {
+    if (!invOpen || pl.inv.empty()) return;
+    int cols = 3;
+    int n = (int)pl.inv.size();
+    int r = invSel / cols, c = invSel % cols;
+    c += dx; r += dy;
+    if (c < 0) c = 0; if (c >= cols) c = cols - 1;
+    if (r < 0) r = 0;
+    int maxr = (n + cols - 1) / cols - 1;
+    if (r > maxr) r = maxr;
+    int idx = r * cols + c;
+    if (idx >= n) idx = n - 1;
+    invSel = idx;
+}
+bool Game::invUseSelected() {
+    if (!invOpen || invSel < 0 || invSel >= (int)pl.inv.size()) return false;
+    std::string id = pl.inv[invSel];
+    applyItem(id);                 // applies effect (exp/warp/hp/atk/def/gold)
+    pl.inv.erase(pl.inv.begin() + invSel);
+    if (invSel >= (int)pl.inv.size()) invSel = (int)pl.inv.size() - 1;
+    if (invSel < 0) invSel = 0;
+    return true;
+}
+void Game::invDropSelected() {
+    if (!invOpen || invSel < 0 || invSel >= (int)pl.inv.size()) return;
+    pl.inv.erase(pl.inv.begin() + invSel);
+    if (invSel >= (int)pl.inv.size()) invSel = (int)pl.inv.size() - 1;
+    if (invSel < 0) invSel = 0;
+}
+int Game::spriteForItem(const std::string& id) const {
+    auto it = itemDefs.find(id);
+    if (it == itemDefs.end()) return 0;
+    std::string sp = it->second.value("sprite", std::string("coin.png"));
+    if (sp.size() > 4 && sp.substr(sp.size()-4) == ".png") sp = sp.substr(0, sp.size()-4);
+    int layer = spriteLayer(sp);
+    return layer;
+}
+std::string Game::itemName(const std::string& id) const {
+    auto it = itemDefs.find(id);
+    return it == itemDefs.end() ? id : it->second.value("name", id);
+}
+std::string Game::itemDesc(const std::string& id) const {
+    auto it = itemDefs.find(id);
+    return it == itemDefs.end() ? "" : it->second.value("desc", "");
+}
+void Game::drawInventory() {
+    if (!invOpen) return;
+    float W = (float)ren->width(), H = (float)ren->height();
+    // dim the scene a bit
+    Quad dim; dim.rect[0]=0; dim.rect[1]=0; dim.rect[2]=W; dim.rect[3]=H;
+    dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1;
+    dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.45f; ren->drawSprite(dim);
+
+    static const float white[4] = {1,1,1,1};
+    int cols = 3, cell = 56, gap = 6;
+    int rows = std::max(3, (int)((pl.inv.size() + cols - 1) / cols)); // at least 9 slots
+    int gw = cols * cell + (cols - 1) * gap;
+    float ox = (W - gw) / 2.0f;
+    float oy = H / 2.0f - (rows * cell + (rows - 1) * gap) / 2.0f;
+
+    // panel background
+    Quad panel; panel.rect[0]=ox-12; panel.rect[1]=oy-44; panel.rect[2]=gw+24; panel.rect[3]=(rows*cell+(rows-1)*gap)+92;
+    panel.uv[0]=0;panel.uv[1]=0;panel.uv[2]=1;panel.uv[3]=1;
+    panel.tint[0]=0.12f;panel.tint[1]=0.14f;panel.tint[2]=0.22f;panel.tint[3]=0.96f; ren->drawSprite(panel);
+
+    drawText("背包 Inventory (方向鍵選擇 · Enter 使用 · D 丟棄 · I 關閉)", ox-4, oy-34, 16, white);
+
+    for (int i = 0; i < (int)pl.inv.size(); i++) {
+        int r = i / cols, c = i % cols;
+        float x = ox + c * (cell + gap), y = oy + r * (cell + gap);
+        // slot box
+        Quad slot; slot.rect[0]=x; slot.rect[1]=y; slot.rect[2]=cell; slot.rect[3]=cell;
+        slot.uv[0]=0;slot.uv[1]=0;slot.uv[2]=1;slot.uv[3]=1;
+        slot.tint[0]=0.18f;slot.tint[1]=0.2f;slot.tint[2]=0.28f;slot.tint[3]=1; ren->drawSprite(slot);
+        // icon
+        ren->drawSprite(spriteQuad(x+8, y+8, cell-16, cell-16, spriteForItem(pl.inv[i]), white));
+        // selection highlight
+        if (i == invSel) {
+            Quad hl; hl.rect[0]=x-2; hl.rect[1]=y-2; hl.rect[2]=cell+4; hl.rect[3]=cell+4;
+            hl.uv[0]=0;hl.uv[1]=0;hl.uv[2]=1;hl.uv[3]=1;
+            hl.tint[0]=1;hl.tint[1]=0.85f;hl.tint[2]=0.2f;hl.tint[3]=1; ren->drawSprite(hl);
+        }
+    }
+    // empty-slot placeholders to show the 9-grid (extendable) layout
+    for (int i = (int)pl.inv.size(); i < cols*rows; i++) {
+        int r = i / cols, c = i % cols;
+        float x = ox + c * (cell + gap), y = oy + r * (cell + gap);
+        Quad slot; slot.rect[0]=x; slot.rect[1]=y; slot.rect[2]=cell; slot.rect[3]=cell;
+        slot.uv[0]=0;slot.uv[1]=0;slot.uv[2]=1;slot.uv[3]=1;
+        slot.tint[0]=0.1f;slot.tint[1]=0.11f;slot.tint[2]=0.16f;slot.tint[3]=0.9f; ren->drawSprite(slot);
+    }
+
+    // description panel for the selected item
+    if (!pl.inv.empty()) {
+        int si = std::max(0, std::min(invSel, (int)pl.inv.size()-1));
+        std::string id = pl.inv[si];
+        float dy2 = oy + rows*(cell+gap) + 6;
+        drawText(itemName(id), ox-4, dy2, 18, C4(1,0.9f,0.5f,1));
+        drawText(itemDesc(id), ox-4, dy2+24, 15, white);
+        drawText("按 Enter 使用 / D 丟棄", ox-4, dy2+48, 14, C4(0.7f,1,0.7f,1));
+    }
 }
 
 void Game::movePlayer(int dx, int dy) {
@@ -317,7 +446,11 @@ void Game::movePlayer(int dx, int dy) {
                 startCombat(en);
                 return;
             } else if (e.kind.rfind("item:",0)==0) {
-                applyItem(e.id);
+                // Keys/coins apply immediately (not stored in the 9-grid UI).
+                // Usable items (gems/potions/exp/scroll) go into the inventory.
+                bool immediate = (e.id.rfind("key_",0)==0) || e.id=="coin";
+                if (immediate) applyItem(e.id);
+                else pl.inv.push_back(e.id);
                 e.consumed = true;
                 st.tiles[e.y][e.x] = '.'; // clear from grid
             } else if (e.kind.rfind("npc:",0)==0) {
