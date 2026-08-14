@@ -47,11 +47,12 @@ if(NOT WEB)
     endif()
 
     add_executable(tower_vulkan
-        src/main.cpp src/game.cpp src/renderer.cpp src/render_iface.h src/Audio.cpp src/vk_util.h)
+        src/main.cpp src/game.cpp src/renderer.cpp src/node.cpp src/render_iface.h src/Audio.cpp src/vk_util.h)
 
     target_include_directories(tower_vulkan PRIVATE
         ${CMAKE_SOURCE_DIR}/src ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
-        ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio)
+        ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
+        $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
     target_link_libraries(tower_vulkan PRIVATE ${Vulkan_LIBRARIES})
     if(WIN32)
         target_compile_definitions(tower_vs PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
@@ -89,7 +90,8 @@ if(WEB)
     add_executable(tower_vulkan_web
         src/emscripten_main.cpp
         src/game.cpp
-        src/renderer_webgl.cpp)
+        src/renderer_webgl.cpp
+        src/node.cpp)
     if(WEB_BACKEND STREQUAL "WebGPU")
         target_sources(tower_vulkan_web PRIVATE src/renderer_webgpu.cpp)
         target_compile_definitions(tower_vulkan_web PRIVATE WEBGPU)
@@ -97,7 +99,7 @@ if(WEB)
     endif()
 
     target_include_directories(tower_vulkan_web PRIVATE
-        ${CMAKE_SOURCE_DIR}/src ${STB_DIR} ${JSON_DIR})
+        ${CMAKE_SOURCE_DIR}/src ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
     if(WEB_BACKEND STREQUAL "WebGPU")
         set(WEB_LINK "--use-port=emdawnwebgpu -sFETCH=1 -sALLOW_MEMORY_GROWTH=1 \
@@ -119,3 +121,10 @@ if(WEB)
         LINK_FLAGS "${WEB_LINK}")
     set_target_properties(tower_vulkan_web PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/web)
 endif()
+
+# ---------------------------------------------------------------------------
+# Headless unit test for the Node scene-graph (no rendering). Run: ./node_test
+# ---------------------------------------------------------------------------
+add_executable(node_test src/node_test.cpp src/node.cpp src/node.h)
+target_include_directories(node_test PRIVATE ${CMAKE_SOURCE_DIR}/src $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+

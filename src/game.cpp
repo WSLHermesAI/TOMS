@@ -1,5 +1,6 @@
 // game.cpp — implementation of Game.
 #include "game.h"
+#include "node.h"   // 2D scene-graph Node (parent/child + local/world transform)
 #ifdef __EMSCRIPTEN__
   #ifdef WEBGPU
     #include "renderer_webgpu.h"   // WebGPU backend (browser build only)
@@ -379,46 +380,58 @@ void Game::drawInventory() {
     float ox = (W - gw) / 2.0f;
     float oy = H / 2.0f - (rows * cell + (rows - 1) * gap) / 2.0f;
 
-    // panel background
-    Quad panel; panel.rect[0]=ox-12; panel.rect[1]=oy-44; panel.rect[2]=gw+24; panel.rect[3]=(rows*cell+(rows-1)*gap)+92;
-    panel.uv[0]=0;panel.uv[1]=0;panel.uv[2]=1;panel.uv[3]=1;
-    panel.tint[0]=0.12f;panel.tint[1]=0.14f;panel.tint[2]=0.22f;panel.tint[3]=0.96f; ren->drawSprite(panel);
-
-    drawText("背包 Inventory (方向鍵選擇 · Enter 使用 · D 丟棄 · I 關閉)", ox-4, oy-34, 16, white);
-
-    for (int i = 0; i < (int)pl.inv.size(); i++) {
+    // ---- Build a scene-graph for the inventory UI ----
+    // uiRoot -> panel -> slot[0..N]  (each slot is a child node of the panel,
+    // so its on-screen rect comes from the node's WORLD transform).
+    toms::Node uiRoot("uiRoot");
+    toms::Node panel("panel");
+    panel.SetLocalPosition(glm::vec2(ox, oy));
+    uiRoot.AddChild(&panel);
+    std::vector<toms::Node> slotNodes(rows * cols, toms::Node("slot"));
+    for (int i = 0; i < (int)slotNodes.size(); i++) {
         int r = i / cols, c = i % cols;
-        float x = ox + c * (cell + gap), y = oy + r * (cell + gap);
-        // slot box
+        slotNodes[i].SetLocalPosition(glm::vec2((float)(c * (cell + gap)), (float)(r * (cell + gap))));
+        panel.AddChild(&slotNodes[i]);
+    }
+
+    // panel background (rect derived from panel world transform)
+    {
+        glm::vec4 pr = panel.WorldRect(glm::vec2((float)(gw + 24), (float)(rows*cell + (rows-1)*gap + 92)));
+        Quad panelQ; panelQ.rect[0]=pr.x-12; panelQ.rect[1]=pr.y-44; panelQ.rect[2]=pr.z; panelQ.rect[3]=pr.w;
+        panelQ.uv[0]=0;panelQ.uv[1]=0;panelQ.uv[2]=1;panelQ.uv[3]=1;
+        panelQ.tint[0]=0.12f;panelQ.tint[1]=0.14f;panelQ.tint[2]=0.22f;panelQ.tint[3]=0.96f; ren->drawSprite(panelQ);
+    }
+
+    drawText("背包 Inventory (方向鍵選擇 · Enter 使用 · D 丟棄 · I 關閉)", panel.GetWorldPosition().x-4, panel.GetWorldPosition().y-34, 16, white);
+
+    // draw each slot from its node's WORLD rect
+    for (int i = 0; i < (int)slotNodes.size(); i++) {
+        glm::vec4 r = slotNodes[i].WorldRect(glm::vec2((float)cell, (float)cell));
+        float x = r.x, y = r.y;
+        bool occupied = (i < (int)pl.inv.size());
         Quad slot; slot.rect[0]=x; slot.rect[1]=y; slot.rect[2]=cell; slot.rect[3]=cell;
         slot.uv[0]=0;slot.uv[1]=0;slot.uv[2]=1;slot.uv[3]=1;
-        slot.tint[0]=0.18f;slot.tint[1]=0.2f;slot.tint[2]=0.28f;slot.tint[3]=1; ren->drawSprite(slot);
-        // icon
-        ren->drawSprite(spriteQuad(x+8, y+8, cell-16, cell-16, spriteForItem(pl.inv[i]), white));
-        // selection highlight
-        if (i == invSel) {
-            Quad hl; hl.rect[0]=x-2; hl.rect[1]=y-2; hl.rect[2]=cell+4; hl.rect[3]=cell+4;
-            hl.uv[0]=0;hl.uv[1]=0;hl.uv[2]=1;hl.uv[3]=1;
-            hl.tint[0]=1;hl.tint[1]=0.85f;hl.tint[2]=0.2f;hl.tint[3]=1; ren->drawSprite(hl);
+        if (occupied) { slot.tint[0]=0.18f;slot.tint[1]=0.2f;slot.tint[2]=0.28f;slot.tint[3]=1; }
+        else          { slot.tint[0]=0.1f;slot.tint[1]=0.11f;slot.tint[2]=0.16f;slot.tint[3]=0.9f; }
+        ren->drawSprite(slot);
+        if (occupied) {
+            ren->drawSprite(spriteQuad(x+8, y+8, cell-16, cell-16, spriteForItem(pl.inv[i]), white));
+            if (i == invSel) {
+                Quad hl; hl.rect[0]=x-2; hl.rect[1]=y-2; hl.rect[2]=cell+4; hl.rect[3]=cell+4;
+                hl.uv[0]=0;hl.uv[1]=0;hl.uv[2]=1;hl.uv[3]=1;
+                hl.tint[0]=1;hl.tint[1]=0.85f;hl.tint[2]=0.2f;hl.tint[3]=1; ren->drawSprite(hl);
+            }
         }
     }
-    // empty-slot placeholders to show the 9-grid (extendable) layout
-    for (int i = (int)pl.inv.size(); i < cols*rows; i++) {
-        int r = i / cols, c = i % cols;
-        float x = ox + c * (cell + gap), y = oy + r * (cell + gap);
-        Quad slot; slot.rect[0]=x; slot.rect[1]=y; slot.rect[2]=cell; slot.rect[3]=cell;
-        slot.uv[0]=0;slot.uv[1]=0;slot.uv[2]=1;slot.uv[3]=1;
-        slot.tint[0]=0.1f;slot.tint[1]=0.11f;slot.tint[2]=0.16f;slot.tint[3]=0.9f; ren->drawSprite(slot);
-    }
 
-    // description panel for the selected item
+    // description panel for the selected item (positioned under the panel via node)
     if (!pl.inv.empty()) {
         int si = std::max(0, std::min(invSel, (int)pl.inv.size()-1));
         std::string id = pl.inv[si];
-        float dy2 = oy + rows*(cell+gap) + 6;
-        drawText(itemName(id), ox-4, dy2, 18, C4(1,0.9f,0.5f,1));
-        drawText(itemDesc(id), ox-4, dy2+24, 15, white);
-        drawText("按 Enter 使用 / D 丟棄", ox-4, dy2+48, 14, C4(0.7f,1,0.7f,1));
+        glm::vec2 base = panel.GetWorldPosition() + glm::vec2(0, (float)(rows*(cell+gap) + 6));
+        drawText(itemName(id), base.x-4, base.y, 18, C4(1,0.9f,0.5f,1));
+        drawText(itemDesc(id), base.x-4, base.y+24, 15, white);
+        drawText("按 Enter 使用 / D 丟棄", base.x-4, base.y+48, 14, C4(0.7f,1,0.7f,1));
     }
 }
 

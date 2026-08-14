@@ -2,10 +2,12 @@
 
 Track what was done, by date.
 
-- **2026-08-14** — Combat + dialogue scenes now also get the shared full-screen
-  black splash at alpha 0.5 (focus). Added `Game::drawFocusSplash()` (common helper)
-  and `modalActive()` which also blocks world input (move/interact/keys) so events
-  don't reach background objects while a modal is open. (commit `c0114a5`+)
+- **2026-08-14** — **Node scene-graph system** added (`src/node.h` + `src/node.cpp`): a
+  2D port of FM79979 `Frame` using glm — each object has a **parent / first-child /
+  next-sibling** hierarchy and a cached **local + world transform** (`world =
+  parent.world * local`, lazy dirty-cache). Inventory UI now builds a `uiRoot →
+  panel → slot[]` node tree and draws slots from their world rects. Headless
+  `node_test` verifies the math (8 checks pass). (commit `a174800`+)
 - **2026-08-14** — Inventory overlay changed to a full-screen black splash at
   transparent 50% (alpha 0.5) so the player focuses on the item UI. (commit `78dd2b6`+)
 - **2026-08-14** — Initial item system: 9-grid extendable inventory UI, usable
