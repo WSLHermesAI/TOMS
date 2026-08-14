@@ -1,3 +1,0 @@
-/home/fatming/Desktop/TOMS/build-webgpu/CMakeFiles/tower_vulkan_web.dir
-/home/fatming/Desktop/TOMS/build-webgpu/CMakeFiles/edit_cache.dir
-/home/fatming/Desktop/TOMS/build-webgpu/CMakeFiles/rebuild_cache.dir
