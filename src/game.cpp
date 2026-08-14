@@ -1,6 +1,14 @@
 // game.cpp — implementation of Game.
 #include "game.h"
 #include "node.h"   // 2D scene-graph Node (parent/child + local/world transform)
+#include "scene.h"  // render binding: GameObject / SpriteNode / TextNode / FullScreenSplash
+
+// TextNode draws through Game's font; bind it once to the live Game instance.
+namespace { Game* g_textGame = nullptr; }
+void toms_TextNodeDraw(const std::string& s, float x, float y, float sz, const float* t) {
+    if (g_textGame) g_textGame->drawTextPublic(s, x, y, sz, t);
+}
+namespace toms { TextNode::DrawFn TextNode::Draw = ::toms_TextNodeDraw; }
 #ifdef __EMSCRIPTEN__
   #ifdef WEBGPU
     #include "renderer_webgpu.h"   // WebGPU backend (browser build only)
@@ -101,6 +109,7 @@ bool Game::loadAssets(const std::string& assetDir) {
 #ifndef __EMSCRIPTEN__
     audio.init(assetDir + "/sfx");
 #endif
+    g_textGame = this;   // bind TextNode text drawing to this instance
     return true;
 }
 
@@ -177,6 +186,11 @@ void Game::drawText(const std::string& s, float x, float y, float size, const fl
         ren->drawText(q);
         cx += size;
     }
+}
+
+// Public wrapper so TextNode (render-bound text) can draw through Game's font.
+void Game::drawTextPublic(const std::string& s, float x, float y, float sz, const float* t) {
+    drawText(s, x, y, sz, t);
 }
 
 void Game::drawBar(float x, float y, float w, float h, float frac, const float col[4]) {
@@ -372,67 +386,81 @@ void Game::drawFocusSplash() {
 void Game::drawInventory() {
     if (!invOpen) return;
     float W = (float)ren->width(), H = (float)ren->height();
-    drawFocusSplash();
-    static const float white[4] = {1,1,1,1};
     int cols = 3, cell = 56, gap = 6;
     int rows = std::max(3, (int)((pl.inv.size() + cols - 1) / cols)); // at least 9 slots
     int gw = cols * cell + (cols - 1) * gap;
     float ox = (W - gw) / 2.0f;
     float oy = H / 2.0f - (rows * cell + (rows - 1) * gap) / 2.0f;
 
-    // ---- Build a scene-graph for the inventory UI ----
-    // uiRoot -> panel -> slot[0..N]  (each slot is a child node of the panel,
-    // so its on-screen rect comes from the node's WORLD transform).
-    toms::Node uiRoot("uiRoot");
-    toms::Node panel("panel");
+    // ---- Build the item UI as a RENDER-BOUND node tree ----
+    // modalRoot is visible ONLY while the inventory is open: setting it false
+    // (toggleInventory) skips the whole subtree (splash + panel + slots) in one
+    // flag. It is the LAST node drawn in Game::draw(), so it renders on top.
+    toms::GameObject modalRoot("itemUI");
+    modalRoot.SetVisible(invOpen);
+
+    // 1) full-screen focus splash (child of modalRoot -> hidden when closed too)
+    toms::FullScreenSplash splash;
+    splash.w = W; splash.h = H; splash.tint[3] = 0.8f;
+    modalRoot.AddChild(&splash);
+
+    // 2) panel node positioned at screen center; children are laid out in its LOCAL space
+    toms::GameObject panel("panel");
     panel.SetLocalPosition(glm::vec2(ox, oy));
-    uiRoot.AddChild(&panel);
-    std::vector<toms::Node> slotNodes(rows * cols, toms::Node("slot"));
-    for (int i = 0; i < (int)slotNodes.size(); i++) {
+    modalRoot.AddChild(&panel);
+
+    // panel background (a SpriteNode = common render: just assign size+tint)
+    toms::SpriteNode panelBg;
+    panelBg.SetLocalPosition(glm::vec2(-12.0f, -44.0f));
+    panelBg.size[0] = (float)(gw + 24); panelBg.size[1] = (float)(rows*cell + (rows-1)*gap + 92);
+    panelBg.tint[0]=0.12f; panelBg.tint[1]=0.14f; panelBg.tint[2]=0.22f; panelBg.tint[3]=0.96f;
+    panel.AddChild(&panelBg);
+
+    // title text (render-bound TextNode)
+    toms::TextNode title;
+    title.SetLocalPosition(glm::vec2(-4.0f, -34.0f)); title.size = 16.0f; title.text = "背包 Inventory (方向鍵選擇 · Enter 使用 · D 丟棄 · I 關閉)";
+    panel.AddChild(&title);
+
+    // 3) slot nodes (SpriteNode = common render). Icon is a child SpriteNode of the slot.
+    std::vector<toms::SpriteNode> slots(rows * cols, toms::SpriteNode());
+    std::vector<toms::SpriteNode> icons(rows * cols, toms::SpriteNode());
+    std::vector<toms::SpriteNode> hi(rows * cols, toms::SpriteNode());
+    for (int i = 0; i < (int)slots.size(); i++) {
         int r = i / cols, c = i % cols;
-        slotNodes[i].SetLocalPosition(glm::vec2((float)(c * (cell + gap)), (float)(r * (cell + gap))));
-        panel.AddChild(&slotNodes[i]);
-    }
-
-    // panel background (rect derived from panel world transform)
-    {
-        glm::vec4 pr = panel.WorldRect(glm::vec2((float)(gw + 24), (float)(rows*cell + (rows-1)*gap + 92)));
-        Quad panelQ; panelQ.rect[0]=pr.x-12; panelQ.rect[1]=pr.y-44; panelQ.rect[2]=pr.z; panelQ.rect[3]=pr.w;
-        panelQ.uv[0]=0;panelQ.uv[1]=0;panelQ.uv[2]=1;panelQ.uv[3]=1;
-        panelQ.tint[0]=0.12f;panelQ.tint[1]=0.14f;panelQ.tint[2]=0.22f;panelQ.tint[3]=0.96f; ren->drawSprite(panelQ);
-    }
-
-    drawText("背包 Inventory (方向鍵選擇 · Enter 使用 · D 丟棄 · I 關閉)", panel.GetWorldPosition().x-4, panel.GetWorldPosition().y-34, 16, white);
-
-    // draw each slot from its node's WORLD rect
-    for (int i = 0; i < (int)slotNodes.size(); i++) {
-        glm::vec4 r = slotNodes[i].WorldRect(glm::vec2((float)cell, (float)cell));
-        float x = r.x, y = r.y;
+        slots[i].SetLocalPosition(glm::vec2((float)(c*(cell+gap)), (float)(r*(cell+gap))));
+        slots[i].size[0] = slots[i].size[1] = (float)cell;
         bool occupied = (i < (int)pl.inv.size());
-        Quad slot; slot.rect[0]=x; slot.rect[1]=y; slot.rect[2]=cell; slot.rect[3]=cell;
-        slot.uv[0]=0;slot.uv[1]=0;slot.uv[2]=1;slot.uv[3]=1;
-        if (occupied) { slot.tint[0]=0.18f;slot.tint[1]=0.2f;slot.tint[2]=0.28f;slot.tint[3]=1; }
-        else          { slot.tint[0]=0.1f;slot.tint[1]=0.11f;slot.tint[2]=0.16f;slot.tint[3]=0.9f; }
-        ren->drawSprite(slot);
+        if (occupied) { slots[i].tint[0]=0.18f; slots[i].tint[1]=0.2f; slots[i].tint[2]=0.28f; slots[i].tint[3]=1; }
+        else          { slots[i].tint[0]=0.1f; slots[i].tint[1]=0.11f; slots[i].tint[2]=0.16f; slots[i].tint[3]=0.9f; }
+        panel.AddChild(&slots[i]);
         if (occupied) {
-            ren->drawSprite(spriteQuad(x+8, y+8, cell-16, cell-16, spriteForItem(pl.inv[i]), white));
+            // icon: child of slot, offset (8,8), size cell-16, uv = item icon
+            int layer = spriteForItem(pl.inv[i]);
+            icons[i].SetLocalPosition(glm::vec2(8.0f, 8.0f));
+            icons[i].size[0] = icons[i].size[1] = (float)(cell-16);
+            spriteUV(layer, icons[i].uv);
+            slots[i].AddChild(&icons[i]);
             if (i == invSel) {
-                Quad hl; hl.rect[0]=x-2; hl.rect[1]=y-2; hl.rect[2]=cell+4; hl.rect[3]=cell+4;
-                hl.uv[0]=0;hl.uv[1]=0;hl.uv[2]=1;hl.uv[3]=1;
-                hl.tint[0]=1;hl.tint[1]=0.85f;hl.tint[2]=0.2f;hl.tint[3]=1; ren->drawSprite(hl);
+                hi[i].SetLocalPosition(glm::vec2(-2.0f, -2.0f));
+                hi[i].size[0] = hi[i].size[1] = (float)(cell+4);
+                hi[i].tint[0]=1; hi[i].tint[1]=0.85f; hi[i].tint[2]=0.2f; hi[i].tint[3]=1;
+                slots[i].AddChild(&hi[i]);
             }
         }
     }
 
-    // description panel for the selected item (positioned under the panel via node)
+    // 4) description texts (render-bound) under the panel
     if (!pl.inv.empty()) {
         int si = std::max(0, std::min(invSel, (int)pl.inv.size()-1));
         std::string id = pl.inv[si];
-        glm::vec2 base = panel.GetWorldPosition() + glm::vec2(0, (float)(rows*(cell+gap) + 6));
-        drawText(itemName(id), base.x-4, base.y, 18, C4(1,0.9f,0.5f,1));
-        drawText(itemDesc(id), base.x-4, base.y+24, 15, white);
-        drawText("按 Enter 使用 / D 丟棄", base.x-4, base.y+48, 14, C4(0.7f,1,0.7f,1));
+        float dy = (float)(rows*(cell+gap) + 6);
+        toms::TextNode dn; dn.SetLocalPosition(glm::vec2(-4.0f, dy));        dn.size=18; dn.text=itemName(id); dn.tint[0]=1; dn.tint[1]=0.9f; dn.tint[2]=0.5f; panel.AddChild(&dn);
+        toms::TextNode dd; dd.SetLocalPosition(glm::vec2(-4.0f, dy+24));     dd.size=15; dd.text=itemDesc(id); panel.AddChild(&dd);
+        toms::TextNode dh; dh.SetLocalPosition(glm::vec2(-4.0f, dy+48));     dh.size=14; dh.text="按 Enter 使用 / D 丟棄"; dh.tint[0]=0.7f; dh.tint[1]=1; dh.tint[2]=0.7f; panel.AddChild(&dh);
     }
+
+    // Single render call for the whole modal UI (visibility-culled subtree).
+    modalRoot.RenderTree(ren);
 }
 
 void Game::movePlayer(int dx, int dy) {

@@ -54,6 +54,8 @@ public:
     int invSelection() const { return invSel; }
     bool modalActive() const { return cs.active || inDialogue || invOpen; }  // any overlay open (combat/dialogue/inventory)
     Player& player() { return pl; }
+    // text drawing used by TextNode (render-bound text in the scene graph)
+    void drawTextPublic(const std::string& s, float x, float y, float sz, const float* t);
     CombatState& combat() { return cs; }
     Stage& stage() { return st; }
     const nlohmann::json& enemyTemplate(const std::string& id) const { return enemyTpl.at(id); }

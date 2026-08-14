@@ -47,3 +47,47 @@ decomposition. Build + run:
 cmake -S . -B build-linux && cmake --build build-linux --target node_test
 ./build-linux/node_test      # -> "node_test: ALL PASS (8 checks)"
 ```
+
+---
+
+# Render binding (`src/scene.h`)
+
+Rendering is **bound to the scene-graph** so the visibility rule "parent invisible =
+skip whole subtree" and "draw order = tree order" fall out for free.
+
+- **`GameObject : Node`** — adds `virtual Render(IRenderer*)` and `RenderTree()`:
+  ```cpp
+  void RenderTree(IRenderer* ren) {
+      if (!m_visible) return;            // subtree culled in one flag
+      Render(ren);
+      for (Node* c = GetFirstChild(); c; c = c->GetNextSibling())
+          static_cast<GameObject*>(c)->RenderTree(ren);
+  }
+  ```
+- **`SpriteNode : GameObject`** — the **common render**: you only assign a texture
+  (`uv`), a `size` and a `tint`; it draws itself at its node's world rect. No custom
+  code needed for map sprites, item icons, slots, etc.
+- **`TextNode : GameObject`** — draws a string at the node's world position; the
+  actual glyph rasterization is delegated to `TextNode::Draw` (a function pointer the
+  game sets once, since the font lives in `Game`).
+- **`FullScreenSplash : GameObject`** — a full-screen colored quad (the focus splash).
+
+### How the item UI uses it
+`Game::drawInventory()` builds a node tree and renders it with ONE call:
+```
+modalRoot (visible = invOpen)          // the LAST node drawn in draw() -> on top
+ ├─ FullScreenSplash                    //   hidden automatically when modalRoot.visible=false
+ └─ panel (local pos = screen center)
+     ├─ SpriteNode panelBg
+     ├─ TextNode title
+     ├─ slot[i] : SpriteNode
+     │    ├─ SpriteNode icon   (child of slot -> inherits slot's world transform)
+     │    └─ SpriteNode highlight
+     └─ TextNode description[0..2]
+modalRoot.RenderTree(ren);
+```
+Opening/closing the inventory is a single `modalRoot.SetVisible(true/false)` —
+because the splash is a **child** of `modalRoot`, it is culled together with the rest.
+Moving or scaling `panel` cascades to every slot/icon/label since they are its
+children. This is exactly the "common render assigns a texture and draws; special
+objects override Render()" pattern you described.
