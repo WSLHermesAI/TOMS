@@ -45,7 +45,9 @@ static void loop() {
     g_game->draw();
 }
 
-// keyboard handling for the inventory UI + movement
+// keyboard handling for the inventory UI + movement.
+// While ANY modal overlay is open (combat / dialogue / inventory), world input is
+// blocked so events don't reach background objects — matches the focus splash.
 static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* userData) {
     (void)eventType; (void)userData;
     if (!g_game) return EM_FALSE;
@@ -58,9 +60,11 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
         if (k == "ArrowDown")  { g_game->invMoveSel( 0, 1); return EM_TRUE; }
         if (k == "Enter")      { g_game->invUseSelected(); return EM_TRUE; }
         if (k == "d" || k == "D") { g_game->invDropSelected(); return EM_TRUE; }
-        return EM_TRUE; // swallow other keys while inventory is open
+        return EM_TRUE; // swallow all other keys while inventory is open
     }
-    // movement (also allow WASD/arrows when inventory closed)
+    // If a combat or dialogue modal is active, swallow input (the game loop drives it).
+    if (g_game->modalActive()) return EM_TRUE;
+    // movement (when no modal is open)
     if (k == "ArrowLeft"  || k == "a" || k == "A") g_game->movePlayer(-1, 0);
     else if (k == "ArrowRight" || k == "d" || k == "D") g_game->movePlayer(1, 0);
     else if (k == "ArrowUp"    || k == "w" || k == "W") g_game->movePlayer(0, -1);

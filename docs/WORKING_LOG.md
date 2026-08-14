@@ -2,12 +2,34 @@
 
 Track what was done, by date.
 
+- **2026-08-14** — Combat + dialogue scenes now also get the shared full-screen
+  black splash at alpha 0.5 (focus). Added `Game::drawFocusSplash()` (common helper)
+  and `modalActive()` which also blocks world input (move/interact/keys) so events
+  don't reach background objects while a modal is open. (commit `c0114a5`+)
 - **2026-08-14** — Inventory overlay changed to a full-screen black splash at
   transparent 50% (alpha 0.5) so the player focuses on the item UI. (commit `78dd2b6`+)
 - **2026-08-14** — Initial item system: 9-grid extendable inventory UI, usable
   items (gems/potions/EXP crystal/scroll), pickup + use + discard. (commit `53778ff`)
 
 ---
+
+## Entry: 2026-08-14 — Shared focus splash for combat & dialogue
+
+**Branch:** `main`  ·  **Feature:** Focus splash (common modal helper)
+
+Battle and talking scenes now use the **same** full-screen black splash at
+alpha 0.5 as the inventory, via a new common helper `Game::drawFocusSplash()`
+(called by combat, dialogue, and inventory overlays). This keeps the game
+focused on what is happening.
+
+Crucially, a modal also **blocks input to background objects**: `Game::modalActive()`
+returns true while combat / dialogue / inventory is open, and `movePlayer()` /
+`interact()` early-return on it; the Emscripten key handler swallows keys while
+any modal is active, so mouse/touch/keyboard events never reach the world behind
+the splash.
+
+![Combat focus splash](screenshots/focus/combat_splash.png)
+![Dialogue focus splash](screenshots/focus/dialogue_splash.png)
 
 ## Entry: 2026-08-14 — Inventory full-screen focus splash
 

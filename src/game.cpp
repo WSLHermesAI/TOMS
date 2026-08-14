@@ -251,10 +251,7 @@ void Game::draw() {
 
     // combat overlay
     if (cs.active || (cs.won || cs.log.find("倒下")!=std::string::npos)) {
-        // dim
-        Quad dim; dim.rect[0]=0; dim.rect[1]=0; dim.rect[2]=W; dim.rect[3]=H;
-        dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1;
-        dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.55f; ren->drawSprite(dim);
+        drawFocusSplash();
         float cx = W/2 - 250;
         drawText("⚔ 戰鬥！ " + cs.enemy.name, cx, 120, 26, C4(1,0.6f,0.4f,1));
         // player vs enemy boxes
@@ -270,6 +267,7 @@ void Game::draw() {
 
     // dialogue overlay
     if (inDialogue) {
+        drawFocusSplash();
         Quad box; box.rect[0]=40; box.rect[1]=H-200; box.rect[2]=W-80; box.rect[3]=170;
         box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1;
         box.tint[0]=0.1f;box.tint[1]=0.12f;box.tint[2]=0.2f;box.tint[3]=0.95f; ren->drawSprite(box);
@@ -362,14 +360,18 @@ std::string Game::itemDesc(const std::string& id) const {
     auto it = itemDefs.find(id);
     return it == itemDefs.end() ? "" : it->second.value("desc", "");
 }
-void Game::drawInventory() {
-    if (!invOpen) return;
+void Game::drawFocusSplash() {
     float W = (float)ren->width(), H = (float)ren->height();
-    // full-screen black splash (transparent 50%) so the player focuses on the item UI
+    // full-screen black splash (transparent 50%) so the player focuses on the
+    // active modal scene (combat / dialogue / inventory).
     Quad dim; dim.rect[0]=0; dim.rect[1]=0; dim.rect[2]=W; dim.rect[3]=H;
     dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1;
     dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.5f; ren->drawSprite(dim);
-
+}
+void Game::drawInventory() {
+    if (!invOpen) return;
+    float W = (float)ren->width(), H = (float)ren->height();
+    drawFocusSplash();
     static const float white[4] = {1,1,1,1};
     int cols = 3, cell = 56, gap = 6;
     int rows = std::max(3, (int)((pl.inv.size() + cols - 1) / cols)); // at least 9 slots
@@ -421,7 +423,7 @@ void Game::drawInventory() {
 }
 
 void Game::movePlayer(int dx, int dy) {
-    if (cs.active || inDialogue) return;
+    if (modalActive()) return;   // any modal overlay (combat/dialogue/inventory) blocks world input
     int nx = pl.x + dx, ny = pl.y + dy;
     char c = st.at(nx, ny);
     if (c == '#') return;
@@ -496,7 +498,7 @@ void Game::chooseDialogue(int idx) {
 }
 
 void Game::interact() {
-    if (cs.active || inDialogue) return;
+    if (modalActive()) return;   // any modal overlay blocks world interaction
     // find NPC on player's cell or adjacent
     for (auto& e : st.entities) {
         if (e.consumed) continue;

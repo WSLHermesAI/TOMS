@@ -71,6 +71,11 @@ private:
     int spriteForItem(const std::string& id) const;
     std::string itemName(const std::string& id) const;
     std::string itemDesc(const std::string& id) const;
+    // shared full-screen focus splash (black, alpha 0.5) used by combat / dialogue /
+    // inventory so the player focuses on the active scene. Also gates background
+    // input (movePlayer/interact) while any modal overlay is open.
+    void drawFocusSplash();
+    bool modalActive() const { return cs.active || inDialogue || invOpen; }
 
     IRenderer* ren = nullptr;        // backend chosen in loadAssets (Vulkan / WebGL)
     Player pl;
