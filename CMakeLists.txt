@@ -108,6 +108,7 @@ if(WEB)
         src/emscripten_main.cpp
         src/game.cpp
         src/renderer_webgl.cpp
+        src/font.cpp
         src/node.cpp)
     if(WEB_BACKEND STREQUAL "WebGPU")
         target_sources(tower_vulkan_web PRIVATE src/renderer_webgpu.cpp)
@@ -153,6 +154,8 @@ add_executable(log_test src/log_test.cpp src/log.h)
 target_include_directories(log_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # texture_test needs a real Vulkan device (lavapipe) + stb_image + the renderer.
+# Vulkan headers are unavailable under the Emscripten (WEB) build, so skip it there.
+if(NOT WEB)
 add_executable(texture_test src/texture_test.cpp src/texture.cpp src/renderer.cpp
     src/node.cpp src/vk_util.h src/render_iface.h)
 target_include_directories(texture_test PRIVATE
@@ -160,6 +163,7 @@ target_include_directories(texture_test PRIVATE
     ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
     $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 target_link_libraries(texture_test PRIVATE ${Vulkan_LIBRARIES})
+endif()
 
 # font_test: build the runtime TTF atlas (stb_truetype) and verify glyph UVs.
 # No Vulkan device needed — pure CPU atlas rasterization + Object base.

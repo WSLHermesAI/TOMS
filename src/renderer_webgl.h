@@ -26,7 +26,7 @@ public:
 
 private:
     GLuint compile(const char* src, GLenum kind);
-    GLuint makeTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h);
+    GLuint makeTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, bool flip = true);
     void flush(const std::vector<Quad>& qs, GLuint tex);
 };
 #endif

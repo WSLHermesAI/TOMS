@@ -40,11 +40,12 @@ GLuint WebGLRenderer::compile(const char* src, GLenum kind) {
     return s;
 }
 
-GLuint WebGLRenderer::makeTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h) {
+GLuint WebGLRenderer::makeTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, bool flip) {
     GLuint t; glGenTextures(1, &t);
     glBindTexture(GL_TEXTURE_2D, t);
-    glPixelStorei(GL_UNPACK_FLIP_Y_WEBGL, GL_TRUE);     // match top-left UV convention
+    glPixelStorei(GL_UNPACK_FLIP_Y_WEBGL, flip ? GL_TRUE : GL_FALSE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
+    glPixelStorei(GL_UNPACK_FLIP_Y_WEBGL, GL_FALSE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -72,12 +73,14 @@ void WebGLRenderer::loadSprites(const std::vector<std::vector<uint8_t>>& layers,
     uint32_t AW=0, AH=0; std::vector<uint8_t> atlas; spriteCols=9;
     if (!packAtlas(layers, sw, sh, spriteCols, atlas, AW, AH)) { fprintf(stderr,"[gl] sprite pack fail\n"); return; }
     if (spriteTex) glDeleteTextures(1,&spriteTex);
-    spriteTex = makeTexture(atlas, AW, AH);
+    spriteTex = makeTexture(atlas, AW, AH, true);
 }
 
 void WebGLRenderer::loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) {
     if (fontTex) glDeleteTextures(1,&fontTex);
-    fontTex = makeTexture(px, w, h);
+    // Font atlas UVs are top-left origin (same as the Vulkan path). Do NOT flip,
+    // otherwise glyphs render vertically mirrored (garbled CJK).
+    fontTex = makeTexture(px, w, h, false);
 }
 
 void WebGLRenderer::begin() { sprites.clear(); texts.clear(); }

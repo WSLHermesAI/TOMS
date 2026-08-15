@@ -109,14 +109,23 @@ bool Game::loadAssets(const std::string& assetDir) {
         std::ifstream f(assetDir+"/font_atlas.json"); nlohmann::json j; f>>j;
         fontCols = j["cols"]; fontCell = j["cell"];
         for (auto& [ch2, rc] : j["chars"].items()) {
-            uint32_t code = 0; const std::string& ks = ch2; size_t i = 0;
-            if (i < ks.size()) {
-                unsigned char c0 = (unsigned char)ks[i];
-                if (c0 < 0x80) code = c0;
-                else if ((c0 & 0xE0) == 0xC0) code = ((c0 & 0x1F) << 6) | (ks[i+1] & 0x3F);
-                else if ((c0 & 0xF0) == 0xE0) code = ((c0 & 0x0F) << 12) | ((ks[i+1] & 0x3F) << 6) | (ks[i+2] & 0x3F);
-                else if ((c0 & 0xF8) == 0xF0) code = ((c0 & 0x07) << 18) | ((ks[i+1] & 0x3F) << 12) | ((ks[i+2] & 0x3F) << 6) | (ks[i+3] & 0x3F);
+            uint32_t code = 0; const std::string& ks = ch2;
+            // New atlas: keys are "U+XXXX" (or "UXXXX") hex codepoints (unambiguous).
+            if (ks.size() >= 3 && ks[0] == 'U') {
+                size_t hexStart = (ks[1] == '+') ? 2 : 1;
+                code = (uint32_t)std::strtoul(ks.substr(hexStart).c_str(), nullptr, 16);
+            } else {
+                // Legacy atlas: literal UTF-8 char key -> decode first codepoint.
+                size_t i = 0;
+                if (i < ks.size()) {
+                    unsigned char c0 = (unsigned char)ks[i];
+                    if (c0 < 0x80) code = c0;
+                    else if ((c0 & 0xE0) == 0xC0) code = ((c0 & 0x1F) << 6) | (ks[i+1] & 0x3F);
+                    else if ((c0 & 0xF0) == 0xE0) code = ((c0 & 0x0F) << 12) | ((ks[i+1] & 0x3F) << 6) | (ks[i+2] & 0x3F);
+                    else if ((c0 & 0xF8) == 0xF0) code = ((c0 & 0x07) << 18) | ((ks[i+1] & 0x3F) << 12) | ((ks[i+2] & 0x3F) << 6) | (ks[i+3] & 0x3F);
+                }
             }
+            if (code == 0) continue;
             std::array<float,4> a = {rc["u0"], rc["v0"], rc["u1"], rc["v1"]};
             fontMap[code] = a;
         }

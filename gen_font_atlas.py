@@ -6,7 +6,7 @@ CELL x CELL px in a grid; atlas map gives UV rects (0..1).
 import os, json, glob, re
 from PIL import Image, ImageDraw, ImageFont
 
-OUT = "/home/fatming/tower_vulkan/assets"
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
 os.makedirs(OUT, exist_ok=True)
 CELL = 32
 COLS = 32
@@ -26,9 +26,21 @@ for f in glob.glob("/home/fatming/tower_vulkan/data/**/*.json", recursive=True):
         # include everything printable
         if ch.isprintable() and ch not in "﻿":
             chars.add(ch)
-# HUD labels (ensure present)
+# HUD labels (ensure present) — add each CHARACTER individually
 for s in ["HP", "ATK", "DEF", "LV", "EXP", "GOLD", "KEY", "▶", "（", "）", "：", "！", "？", "、", "。", "，", "「", "」", "『", "』", "—", "·", "+", "-", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-    chars.add(s)
+    for ch in s:
+        chars.add(ch)
+# Hardcoded HUD/UI strings in src/game.cpp (not present in data/*.json) — ensure their chars exist
+HUD_STRINGS = [
+    "魔法塔", "戰鬥", "你", "敵人", "鑰匙", "對話", "選擇", "繼續", "道具",
+    "使用", "離開", "是", "否", "背包", "方向鍵", "丟棄", "關閉", "任意鍵",
+    "勝利", "獲得", "倒下", "返回", "本層", "起點", "擊敗", "安穩", "之星",
+    "重燃", "王國", "黎明", "公主", " rescued", "沃卡司", "封印",
+]
+for s in HUD_STRINGS:
+    for ch in s:
+        if ch.isprintable():
+            chars.add(ch)
 chars = sorted(chars)
 n = len(chars)
 rows = (n + COLS - 1) // COLS
@@ -47,7 +59,8 @@ for i, ch in enumerate(chars):
     x = cx + (CELL - tw) // 2 - bb[0]
     y = cy + (CELL - th) // 2 - bb[1]
     d.text((x, y), ch, font=fnt, fill=(255, 255, 255, 255))
-    charmap[ch] = {
+    # key as "U+XXXX" (hex codepoint) so the C++ loader can map it unambiguously
+    charmap["U%04X" % ord(ch)] = {
         "u0": cx / atlas_w, "v0": cy / atlas_h,
         "u1": (cx + CELL) / atlas_w, "v1": (cy + CELL) / atlas_h,
     }
