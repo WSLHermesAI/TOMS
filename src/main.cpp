@@ -13,10 +13,12 @@
 namespace fs = std::filesystem;
 
 int main(int argc, char** argv) {
-    // asset dir: env override -> argv[1] -> "assets" (relative to CWD / exe dir)
+    // asset dir: env override -> argv[1] -> "assets"; argv[2] = scenario mode
     std::string assetDir = "assets";
+    std::string mode = "full";
     if (argc > 1) assetDir = argv[1];
     else if (const char* ad = std::getenv("ASSET_DIR")) assetDir = ad;
+    if (argc > 2) mode = argv[2];
 
     // frames output dir (relative to CWD); create portably
     std::string framesDir = "frames";
@@ -116,6 +118,47 @@ int main(int argc, char** argv) {
         // report batch metrics (BatchRenderer) for verification
         if (auto* r = dynamic_cast<Renderer*>(g.renderer()))
             TOMS_LOG_INFO("batch: drawCalls={} quads={}", r->lastDrawCalls, r->lastQuadCount);
+
+        // ---- Scenario modes (argv[2]): drive DIFFERENT player behavior, then exit ----
+        // Each path intentionally touches movement / dialogue / combat / inventory in a
+        // different way, so we can verify no scenario leaks an Object (e.g. a stray
+        // GameObject left alive when the process ends).
+        if (mode == "walk") {
+            g.loadStage("stage01");
+            for (int i = 0; i < 20; i++) { g.movePlayer(1, 0); g.movePlayer(0, 1); g.movePlayer(-1, 0); }
+            g.toggleInventory(); g.toggleInventory();   // open+close UI while moving
+            TOMS_LOG_INFO("scenario=walk done");
+        } else if (mode == "combat") {
+            g.loadStage("stage03");
+            EnemyInst en;
+            auto& t = g.enemyTemplate("slime");
+            en.id="slime"; en.name=t["name"]; en.hp=t["hp"]; en.atk=t["atk"]; en.def=t["def"];
+            en.exp=t["exp"]; en.gold=t["gold"]; en.x=0; en.y=0;
+            g.startCombat(en);
+            for (int r=0; r<120; r++) { g.update(700); if (!g.combat().active) break; }
+            g.toggleInventory(); g.toggleInventory();
+            TOMS_LOG_INFO("scenario=combat done (combat finished={})", !g.combat().active);
+        } else if (mode == "dialogue") {
+            g.loadStage("stage01");
+            g.movePlayer(1,0);
+            g.interact();                 // open dialogue
+            g.chooseDialogue(0); g.chooseDialogue(0);
+            g.interact();                 // re-open (may no-op if not on NPC) -> safe
+            g.toggleInventory(); g.invMoveSel(1,0); g.invUseSelected(); g.toggleInventory();
+            TOMS_LOG_INFO("scenario=dialogue done");
+        } else if (mode == "stress") {
+            // heavy churn: many stage loads, combats, inventory toggles, item uses
+            for (const char* s : {"stage01","stage03","stage05","stage07","stage10"}) {
+                g.loadStage(s);
+                g.toggleInventory(); g.invMoveSel(1,0); g.invUseSelected(); g.toggleInventory();
+                EnemyInst en; auto& t = g.enemyTemplate("slime");
+                en.id="slime"; en.name=t["name"]; en.hp=t["hp"]; en.atk=t["atk"]; en.def=t["def"];
+                en.exp=t["exp"]; en.gold=t["gold"]; en.x=0; en.y=0;
+                g.startCombat(en); for (int r=0;r<80;r++){ g.update(700); if(!g.combat().active) break; }
+                g.movePlayer(1,0); g.movePlayer(0,1);
+            }
+            TOMS_LOG_INFO("scenario=stress done");
+        }
 
         std::cout << "done. frames written: " << frame << "\n";
     } // <-- Game (and all engine Objects) destroyed here
