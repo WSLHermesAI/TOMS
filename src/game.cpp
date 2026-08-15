@@ -227,11 +227,15 @@ void Game::drawText(const std::string& s, float x, float y, float size, const fl
         }
         if (it == fontMap.end()) { cx += size; continue; }   // truly unknown glyph
         auto& uv = it->second;
-        Quad q; q.rect[0]=cx; q.rect[1]=y; q.rect[2]=size; q.rect[3]=size;
+        // Tight quad: use the glyph's baked width so Latin text doesn't get a full
+        // cell of padding on each side (fixes "V o r k a t h" spacing).
+        int advPx = font_ ? font_->glyphPxWidth(cp) : (int)size;
+        float qw = size * (float)advPx / (font_ ? (float)font_->cellSize() : 32.0f);
+        Quad q; q.rect[0]=cx; q.rect[1]=y; q.rect[2]=qw; q.rect[3]=size;
         q.uv[0]=uv[0]; q.uv[1]=uv[1]; q.uv[2]=uv[2]; q.uv[3]=uv[3];
         q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
         ren->drawText(q);
-        cx += size;
+        cx += qw + size * 0.06f;   // tight advance + small spacing
     }
     // If any glyph was added to the atlas this frame, re-upload it so it shows up.
     if (fontChanged && font_) {

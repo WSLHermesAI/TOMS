@@ -55,6 +55,8 @@ bool Font::bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_
     int gw = (int)((x1 - x0) * scale), gh = (int)((y1 - y0) * scale);
     if (gw <= 0 || gh <= 0) {              // whitespace glyph: reserve an empty cell
         int cx = (idx % cols_) * cell_, cy = (idx / cols_) * cell_;
+        glyphBox_[cp] = {0, 0, 0, 0};
+        advPx_[cp] = std::max(1, cell_ / 3);   // a space still advances a bit
         map_[cp] = { (float)cx / atlasW_, (float)cy / atlasH_,
                      (float)(cx + cell_) / atlasW_, (float)(cy + cell_) / atlasH_ };
         cellIdx_[cp] = idx;
@@ -67,8 +69,7 @@ bool Font::bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_
     // rasterize at scale, then copy (stb output is top-down rows)
     stbtt_MakeGlyphBitmap(&info, gb.data(), gw, gh, gw, scale, scale, g);
 
-    int cellX = (idx % cols_) * cell_;
-    int cellY = (idx / cols_) * cell_;
+    int cellX = (idx % cols_) * cell_, cellY = (idx / cols_) * cell_;
     int offX = cellX + (cell_ - gw) / 2;
     int offY = cellY + (cell_ - gh) / 2;
     uint8_t* base = atlas_.data();
@@ -80,10 +81,33 @@ bool Font::bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_
             size_t p = ((size_t)dy * atlasW_ + dx) * 4;
             base[p] = 255; base[p+1] = 255; base[p+2] = 255; base[p+3] = a;  // white glyph
         }
-    map_[cp] = { (float)cellX / atlasW_, (float)cellY / atlasH_,
-                 (float)(cellX + cell_) / atlasW_, (float)(cellY + cell_) / atlasH_ };
+    // TIGHT uv: horizontal span is the actual glyph (keeps v = full cell so the
+    // vertical scale is unchanged), so callers can draw a tight-width quad.
+    glyphBox_[cp] = { offX - cellX, offY - cellY, gw, gh };
+    advPx_[cp] = gw;
+    map_[cp] = { (float)offX / atlasW_, (float)cellY / atlasH_,
+                 (float)(offX + gw) / atlasW_, (float)(cellY + cell_) / atlasH_ };
     cellIdx_[cp] = idx;
     return true;
+}
+
+// Recompute a glyph's UV from its stored cell-local box. Called after the atlas
+// grows (atlasH_ changed) so the v-coordinate stays correct.
+void Font::recomputeUV(uint32_t cp) {
+    auto it = cellIdx_.find(cp);
+    if (it == cellIdx_.end()) return;
+    int idx = it->second;
+    int cx = (idx % cols_) * cell_, cy = (idx / cols_) * cell_;
+    auto b = glyphBox_.find(cp);
+    if (b == glyphBox_.end() || (b->second[2] == 0 && b->second[3] == 0)) {
+        // whitespace / empty cell
+        map_[cp] = { (float)cx / atlasW_, (float)cy / atlasH_,
+                     (float)(cx + cell_) / atlasW_, (float)(cy + cell_) / atlasH_ };
+    } else {
+        int ox = b->second[0], oy = b->second[1], gw = b->second[2];
+        map_[cp] = { (float)(cx + ox) / atlasW_, (float)cy / atlasH_,
+                     (float)(cx + ox + gw) / atlasW_, (float)(cy + cell_) / atlasH_ };
+    }
 }
 
 // Add one row of cells to the atlas and recompute every existing glyph's v so the
@@ -93,12 +117,7 @@ void Font::growAtlasOneRow() {
     rows_ += 1;
     atlasH_ = (uint32_t)(rows_ * cell_);
     atlas_.resize((size_t)atlasW_ * atlasH_ * 4, 0);   // tail is zero-filled (transparent)
-    for (auto& kv : cellIdx_) {
-        uint32_t cp = kv.first; int idx = kv.second;
-        int cx = (idx % cols_) * cell_, cy = (idx / cols_) * cell_;
-        map_[cp] = { (float)cx / atlasW_, (float)cy / atlasH_,
-                     (float)(cx + cell_) / atlasW_, (float)(cy + cell_) / atlasH_ };
-    }
+    for (auto& kv : cellIdx_) recomputeUV(kv.first);
 }
 
 bool Font::buildFromFile(const std::string& ttfPath,

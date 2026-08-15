@@ -7,7 +7,9 @@
 static WGPUAdapter  gAdapter = nullptr;
 static WGPUDevice   gDevice  = nullptr;
 static WGPUQueue    gQueue   = nullptr;
+static WGPUInstance gInstance = nullptr;
 static bool         gReady   = false;
+static bool         gStarted = false;   // adapter request kicked off
 
 static void onDevice(WGPURequestDeviceStatus status, WGPUDevice device,
                      WGPUStringView msg, void* u1, void* u2) {
@@ -16,9 +18,19 @@ static void onDevice(WGPURequestDeviceStatus status, WGPUDevice device,
     gQueue  = wgpuDeviceGetQueue(device);
     gReady  = true;
 }
+static int  gAdapterTries = 0;
+static const int gMaxTries = 60;   // retry until swiftshader/backend is ready
+
+static void requestAdapter();      // forward
+
 static void onAdapter(WGPURequestAdapterStatus status, WGPUAdapter adapter,
                       WGPUStringView msg, void* u1, void* u2) {
     (void)status; (void)msg; (void)u1; (void)u2;
+    if (!adapter) {
+        // Adapter not ready yet. Don't throw — ensureBuilt() will re-request next frame
+        // (on the render-loop cadence) until the GPU process / software backend is up.
+        return;
+    }
     gAdapter = adapter;
     WGPUDeviceDescriptor dd = {};
     dd.label = { "toms-device", WGPU_STRLEN };
@@ -26,6 +38,15 @@ static void onAdapter(WGPURequestAdapterStatus status, WGPUAdapter adapter,
     ci.mode = WGPUCallbackMode_AllowSpontaneous;
     ci.callback = onDevice;
     wgpuAdapterRequestDevice(adapter, &dd, ci);
+}
+
+static void requestAdapter() {
+    WGPURequestAdapterOptions opts = {};
+    opts.nextInChain = nullptr;
+    WGPURequestAdapterCallbackInfo ai = {};
+    ai.mode = WGPUCallbackMode_AllowSpontaneous;
+    ai.callback = onAdapter;
+    wgpuInstanceRequestAdapter(gInstance, &opts, ai);
 }
 
 static const char* WGSL = R"(
@@ -89,6 +110,7 @@ void WebGPURenderer::init(uint32_t w, uint32_t h) {
     W_ = w; H_ = h;
     WGPUInstanceDescriptor id = {};
     instance = wgpuCreateInstance(&id);
+    gInstance = instance;
 
     // canvas surface (Emscripten HTML selector)
     WGPUEmscriptenSurfaceSourceCanvasHTMLSelector src = {};
@@ -100,13 +122,8 @@ void WebGPURenderer::init(uint32_t w, uint32_t h) {
     sd.label = { "canvas", WGPU_STRLEN };
     surface = wgpuInstanceCreateSurface(instance, &sd);
 
-    // request adapter/device asynchronously
-    WGPURequestAdapterOptions opts = {};
-    opts.nextInChain = nullptr;
-    WGPURequestAdapterCallbackInfo ai = {};
-    ai.mode = WGPUCallbackMode_AllowSpontaneous;
-    ai.callback = onAdapter;
-    wgpuInstanceRequestAdapter(instance, &opts, ai);
+    // request adapter/device asynchronously; kicked off from ensureBuilt() (per-frame)
+    // so it naturally waits until the browser's GPU process / software backend is up.
 }
 
 void WebGPURenderer::loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) {
@@ -179,7 +196,13 @@ void WebGPURenderer::buildTexture(const std::vector<uint8_t>& data, uint32_t w, 
 }
 
 void WebGPURenderer::ensureBuilt() {
-    if (built || !gReady) return;
+    if (built) return;
+    if (!gReady) {
+        // Adapter not ready yet — re-request every frame (render-loop cadence) until the
+        // browser's GPU process / software backend is up. No throw, no bailing.
+        requestAdapter();
+        return;
+    }
     device = gDevice; queue = gQueue;
     (void)adapter;
 
@@ -268,7 +291,7 @@ void WebGPURenderer::ensureBuilt() {
     cfg.format = WGPUTextureFormat_BGRA8Unorm;
     cfg.usage = WGPUTextureUsage_RenderAttachment;
     cfg.width = W_; cfg.height = H_;
-    cfg.alphaMode = WGPUCompositeAlphaMode_Auto;
+    cfg.alphaMode = WGPUCompositeAlphaMode_Opaque;
     wgpuSurfaceConfigure(surface, &cfg);
 
     // textures + bind groups

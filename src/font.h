@@ -40,6 +40,14 @@ public:
     }
     bool has(uint32_t codepoint) const { return map_.find(codepoint) != map_.end(); }
 
+    // Per-glyph tight metrics (atlas pixels). advance()/glyphPxWidth() return the
+    // baked glyph width so callers can draw tight quads + kern correctly instead
+    // of giving every glyph a full-cell square (which caused "V o r k a t h" gaps).
+    int cellSize() const { return cell_; }
+    int glyphPxWidth(uint32_t cp) const {
+        auto it = advPx_.find(cp); return it == advPx_.end() ? cell_ : it->second;
+    }
+
     // Convenience: collect every printable codepoint in a set of JSON text files +
     // an explicit extra string (HUD labels). Used so the baked set matches the
     // shipped content (same as gen_font_atlas.py).
@@ -63,6 +71,8 @@ private:
     // Bake one glyph from `info` into cell `idx` (growing the atlas if needed).
     // Returns false if the font has no such glyph.
     bool bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_t>& fontData, int idx);
+    // Recompute a glyph's UV from its stored cell-local box after the atlas grew.
+    void recomputeUV(uint32_t cp);
     // Grow the atlas by one row (keeps existing UVs valid by recomputing v from idx).
     void growAtlasOneRow();
     // Lazily load + cache a fallback font; returns the info for the first file that
@@ -74,6 +84,9 @@ private:
     int cell_ = 32, cols_ = 32, rows_ = 0, nextIdx_ = 0;
     std::unordered_map<uint32_t, std::array<float,4>> map_;
     std::unordered_map<uint32_t, int> cellIdx_;   // cp -> grid cell index (for grow)
+    // tight per-glyph metrics (cell-local atlas px): offX,offY,gw,gh ; plus baked width
+    std::unordered_map<uint32_t, std::array<int,4>> glyphBox_;
+    std::unordered_map<uint32_t, int> advPx_;
     // primary font bytes + info (so ensure() can re-rasterize from it)
     std::vector<uint8_t> primData_;
     std::unique_ptr<stbtt_fontinfo> primInfo_;

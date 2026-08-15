@@ -15,3 +15,5 @@ frames/
 assets/wqy-zenhei.ttc
 tower_vulkan
 log_test_out.log
+
+build-webgpu/
