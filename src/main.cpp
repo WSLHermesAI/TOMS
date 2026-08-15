@@ -48,6 +48,10 @@ int main(int argc, char** argv) {
         );
         if (!g.loadAssets(assetDir)) { std::cerr << "asset load failed\n"; return 1; }
         if (const char* hm = std::getenv("TOMS_HIDE")) g.hideMask = std::atoi(hm);
+        // Diagnostic split: if TOMS_SPLIT_NODE=1..4, emit only that node's quads.
+        if (const char* sn = std::getenv("TOMS_SPLIT_NODE")) {
+            if (auto* r = dynamic_cast<Renderer*>(g.renderer())) r->setNodeFilter((uint8_t)std::atoi(sn));
+        }
         g.loadStage("stage01");
 
         std::cout << "loaded stage 1\n";

@@ -27,6 +27,9 @@
 
 // Interleaved vertex: aPos(2) aRect(4) aUVrc(4) aTint(4) aSolid(1) = 15 floats
 // (matches the Vulkan/WebGL pipeline attributes in renderer.cpp / renderer_webgl.cpp).
+// The 15th float (aSolid slot) ALSO carries the Quad::node tag (we store node in the
+// low 8 bits and solid in the high bit) so the Vulkan renderer can filter by node
+// during the split-screen diagnostic without changing the pipeline's float count.
 static const int BR_FPV = 15;
 
 struct Batch {

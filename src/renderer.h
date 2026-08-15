@@ -60,6 +60,8 @@ public:
     void begin() override;
     void drawSprite(const Quad& q) override;
     void drawText(const Quad& q) override;
+    void setNode(uint8_t n) override;   // diagnostic: tag subsequent quads (4-way split render)
+    void setNodeFilter(uint8_t n) override;   // diagnostic: emit only quads of this node
     void end() override;
     void savePNG(const std::string& path) override;
     uint32_t width()  const override { return W; }

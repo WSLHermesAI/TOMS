@@ -75,12 +75,12 @@ void Renderer::init(uint32_t w, uint32_t h) {
     vk_check(vkCreateDescriptorSetLayout(vk.device, &dsl, nullptr, &dsLayout), "dslayout");
 
     // pipeline layout with push constant (res)
-    VkPushConstantRange pc{}; pc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; pc.offset = 0; pc.size = 8;
+    VkPushConstantRange pc{}; pc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; pc.offset = 0; pc.size = 32;  // vec2 res + pad + vec4 xform (std140)
     VkPipelineLayoutCreateInfo pl{}; pl.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pl.setLayoutCount = 1; pl.pSetLayouts = &dsLayout; pl.pushConstantRangeCount = 1; pl.pPushConstantRanges = &pc;
     vk_check(vkCreatePipelineLayout(vk.device, &pl, nullptr, &pipeLayout), "pipelayout");
 
-    // pipeline (vertex: pos2, rect4, uvRC4, tint4 = 14 floats)
+    // pipeline (vertex: pos2, rect4, uvRC4, tint4, solid1 = 15 floats)
     VkVertexInputBindingDescription bind{};
     bind.binding = 0; bind.stride = 15 * 4; bind.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
     std::array<VkVertexInputAttributeDescription, 5> attr{};
@@ -88,11 +88,11 @@ void Renderer::init(uint32_t w, uint32_t h) {
     attr[1] = {1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 8};  // aRect
     attr[2] = {2, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 24}; // aUVrc
     attr[3] = {3, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 40}; // aTint
-    attr[4] = {4, 0, VK_FORMAT_R32_SFLOAT, 56};          // aSolid (flat)
+    attr[4] = {4, 0, VK_FORMAT_R32_SFLOAT, 56};          // aSolid (flat-color flag)
     VkPipelineVertexInputStateCreateInfo vi{};
     vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vi.vertexBindingDescriptionCount = 1; vi.pVertexBindingDescriptions = &bind;
-    vi.vertexAttributeDescriptionCount = 4; vi.pVertexAttributeDescriptions = attr.data();
+    vi.vertexAttributeDescriptionCount = 5; vi.pVertexAttributeDescriptions = attr.data();
     VkPipelineShaderStageCreateInfo ss[2]{};
     ss[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO; ss[0].stage = VK_SHADER_STAGE_VERTEX_BIT; ss[0].module = g_vs; ss[0].pName = "main";
     ss[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO; ss[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT; ss[1].module = g_fs; ss[1].pName = "main";
@@ -102,6 +102,9 @@ void Renderer::init(uint32_t w, uint32_t h) {
     VkViewport vpv{}; vpv.x=0; vpv.y=0; vpv.width=(float)W; vpv.height=(float)H; vpv.minDepth=0; vpv.maxDepth=1;
     VkRect2D scr{}; scr.offset={0,0}; scr.extent={W,H};
     vp.viewportCount = 1; vp.pViewports = &vpv; vp.scissorCount = 1; vp.pScissors = &scr;
+    // dynamic viewport + scissor so the 4-way split diagnostic can re-scissor per pass
+    VkDynamicState dynS[2] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+    VkPipelineDynamicStateCreateInfo dyns{}; dyns.sType=VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO; dyns.dynamicStateCount=2; dyns.pDynamicStates=dynS;
     VkPipelineRasterizationStateCreateInfo rs{}; rs.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rs.lineWidth = 1.0f;
     VkPipelineMultisampleStateCreateInfo ms{}; ms.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO; ms.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
@@ -114,6 +117,7 @@ void Renderer::init(uint32_t w, uint32_t h) {
     VkGraphicsPipelineCreateInfo pi{}; pi.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pi.stageCount = 2; pi.pStages = ss; pi.pVertexInputState = &vi; pi.pInputAssemblyState = &ia;
     pi.pViewportState = &vp; pi.pRasterizationState = &rs; pi.pMultisampleState = &ms; pi.pColorBlendState = &bl;
+    pi.pDynamicState = &dyns;   // dynamic viewport+scissor (for split diagnostic)
     pi.layout = pipeLayout; pi.renderPass = renderPass; pi.subpass = 0;
     vk_check(vkCreateGraphicsPipelines(vk.device, VK_NULL_HANDLE, 1, &pi, nullptr, &pipeline), "pipeline");
 
@@ -274,7 +278,12 @@ void Renderer::ensureIndexBuffer(size_t needBytes) {
 
 void Renderer::begin() { sprites.clear(); texts.clear(); }
 static int g_dbgQuads = -1;   // <0 = off; set by first call from TOMS_RENDER_DEBUG env
+static uint8_t g_node = 0;    // current "node" tag for setNode() diagnostic
+static uint8_t g_filter = 0;  // if !=0, only emit quads whose node == g_filter (split diagnostic)
+void Renderer::setNode(uint8_t n) { g_node = n; }
+void Renderer::setNodeFilter(uint8_t n) { g_filter = n; }
 void Renderer::drawSprite(const Quad& q) {
+    if (g_filter && g_node != g_filter) return;   // split diagnostic: isolate one node (by current tag)
     if (g_dbgQuads < 0) {
         const char* e = std::getenv("TOMS_RENDER_DEBUG");
         g_dbgQuads = (e && e[0]=='1') ? 1 : 0;
@@ -285,9 +294,10 @@ void Renderer::drawSprite(const Quad& q) {
             q.uv[0], q.uv[1], q.uv[2], q.uv[3], q.solid?1:0,
             q.tint[0], q.tint[1], q.tint[2], q.tint[3]);
     }
-    sprites.push_back(q);
+    Quad q2 = q; q2.node = g_node;
+    sprites.push_back(q2);
 }
-void Renderer::drawText(const Quad& q)   { texts.push_back(q); }
+void Renderer::drawText(const Quad& q)   { if (g_filter && g_node != g_filter) return; Quad q2 = q; q2.node = g_node; texts.push_back(q2); }
 
 #include "batch_renderer.h"
 
@@ -305,6 +315,12 @@ void Renderer::end() {
     size_t idxs  = br.ibuf.size();
     if (verts == 0) return;
 
+    // Parallel per-quad node tags (quad order == sprites then texts == br.vbuf order).
+    std::vector<uint8_t> quadNodes;
+    quadNodes.reserve(sprites.size() + texts.size());
+    for (auto& q : sprites) quadNodes.push_back(q.node);
+    for (auto& q : texts)   quadNodes.push_back(q.node);
+
     ensureVertexBuffer(verts * sizeof(float));
     ensureIndexBuffer(idxs * sizeof(uint32_t));
 
@@ -319,14 +335,85 @@ void Renderer::end() {
         memcpy(p, br.ibuf.data(), idxs * sizeof(uint32_t)); vkUnmapMemory(vk.device, ibufMem);
     }
 
+    // ---- split-screen diagnostic (TOMS_SPLIT=1) ----
+    // Render the frame 4x: one per quadrant, each showing ONLY quads from one node
+    // (1=stage, 2=char, 3=talk, 4=battle). Each quadrant clears to a label color so an
+    // empty node is obvious. This isolates which node draws a stray "unexpected" sprite.
+    static int splitMode = -1;
+    if (splitMode < 0) { const char* e = std::getenv("TOMS_SPLIT"); splitMode = (e && e[0]=='1') ? 1 : 0; }
+    if (splitMode) {
+        struct QV { int node; float r,g,b; } qv[4] = {
+            {1, 0.12f,0.04f,0.18f},  // stage  (dark purple)
+            {2, 0.04f,0.14f,0.18f},  // char   (dark teal)
+            {3, 0.18f,0.13f,0.04f},  // talk   (dark amber)
+            {4, 0.18f,0.04f,0.04f},  // battle (dark red)
+        };
+        uint32_t hw = W/2, hh = H/2;
+        // SINGLE render pass: clear full frame once, then draw each node's quads into its
+        // own viewport+scissor (with an xform that scales the node into the quadrant).
+        // One pass avoids the multi-pass font-atlas descriptor bug.
+        VkCommandBuffer cb = beginOnce(vk.device, cmdPool);
+        VkRenderPassBeginInfo rb{}; rb.sType=VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        rb.renderPass=renderPass; rb.framebuffer=fb; rb.renderArea={0,0,W,H};
+        VkClearValue cv{}; cv.color={0.04f,0.04f,0.07f,1.0f}; rb.clearValueCount=1; rb.pClearValues=&cv;
+        vkCmdBeginRenderPass(cb, &rb, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+        VkViewport vp{}; vp.x=0; vp.y=0; vp.width=(float)W; vp.height=(float)H; vp.minDepth=0; vp.maxDepth=1;
+        VkRect2D sc{}; sc.offset={0,0}; sc.extent={W,H};
+        vkCmdSetViewport(cb, 0, 1, &vp);
+        vkCmdSetScissor(cb, 0, 1, &sc);
+        float pc0[8]={(float)W,(float)H, 0,0, 0,0, 1,1};
+        vkCmdPushConstants(cb, pipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, 32, pc0);
+        VkBuffer bufs[1]={vbuf}; VkDeviceSize off[1]={0};
+        vkCmdBindVertexBuffers(cb,0,1,bufs,off);
+        vkCmdBindIndexBuffer(cb, ibuf, 0, VK_INDEX_TYPE_UINT32);
+        for (int qi=0; qi<4; qi++) {
+            int nx=(qi%2)*(int)hw, ny=(qi/2)*(int)hh;
+            // xform places the node's full-screen content into its quadrant.
+            // No per-quadrant viewport/scissor: the full-screen viewport + xform is enough,
+            // and per-quadrant viewport was clipping the offset quadrants to empty.
+            float pc[8]={(float)W,(float)H, 0,0, (float)nx,(float)ny, 0.5f,0.5f};
+            vkCmdPushConstants(cb, pipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, 32, pc);
+            uint32_t globalQI=0;
+            int cntPerNode[5]={0,0,0,0,0};
+            for (auto& b : br.batches) {
+                if (b.indexCount==0) continue;
+                uint32_t nq=b.indexCount/6;
+                VkDescriptorSet ds=(b.texSet==(void*)spriteSet)?spriteSet
+                                  : (b.texSet==(void*)fontSet)?fontSet
+                                  : b.solid?solidSet_:spriteSet;
+                for (uint32_t k=0;k<nq;k++) {
+                    uint8_t node=quadNodes[globalQI++];
+                    if (node!=qv[qi].node) continue;
+                    cntPerNode[node]++;
+                    uint32_t firstIndex=b.indexOffset+k*6;
+                    vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeLayout, 0, 1, &ds, 0, 0);
+                    vkCmdDrawIndexed(cb, 6, 1, firstIndex, 0, 0);
+                }
+            }
+            std::fprintf(stderr, "[split] qi=%d expectNode=%d drew:", qi, qv[qi].node);
+            for (int n=0;n<5;n++) if (cntPerNode[n]) std::fprintf(stderr, " n%d=%d", n, cntPerNode[n]);
+            std::fprintf(stderr, "\n");
+        }
+        vkCmdEndRenderPass(cb);
+        endSubmit(vk.device, vk.gfxQueue, cmdPool, cb);
+        return;
+    }
+
     VkCommandBuffer cb = beginOnce(vk.device, cmdPool);
     VkRenderPassBeginInfo rb{}; rb.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rb.renderPass = renderPass; rb.framebuffer = fb; rb.renderArea = {0,0,W,H};
     VkClearValue cv{}; cv.color = {0.06f,0.06f,0.1f,1.0f}; rb.clearValueCount = 1; rb.pClearValues = &cv;
     vkCmdBeginRenderPass(cb, &rb, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    // Dynamic viewport+scissor (enabled in the pipeline) must be set every pass.
+    VkViewport vp{}; vp.x=0; vp.y=0; vp.width=(float)W; vp.height=(float)H; vp.minDepth=0; vp.maxDepth=1;
+    VkRect2D sc{}; sc.offset={0,0}; sc.extent={W,H};
+    vkCmdSetViewport(cb, 0, 1, &vp);
+    vkCmdSetScissor(cb, 0, 1, &sc);
     float res[2] = {(float)W, (float)H};
-    vkCmdPushConstants(cb, pipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, 8, res);
+    float pcData[8] = {(float)W, (float)H, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f};  // res + identity xform
+    vkCmdPushConstants(cb, pipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, 32, pcData);
     VkBuffer bufs[1] = {vbuf}; VkDeviceSize off[1] = {0};
     vkCmdBindVertexBuffers(cb, 0, 1, bufs, off);
     vkCmdBindIndexBuffer(cb, ibuf, 0, VK_INDEX_TYPE_UINT32);

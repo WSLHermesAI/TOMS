@@ -12,7 +12,14 @@ struct Quad {
     float uv[4];     // u0,v0,u1,v1 (src atlas)
     float tint[4];   // rgba
     bool  solid = false;  // true => draw flat tint, ignore the texture (solid-color rect)
+    // Diagnostic-only: which "node" (subsystem) produced this quad. 0 = unspecified.
+    // Used by the 4-way split-screen render (TOMS_SPLIT=1) to isolate a stray-sprite bug.
+    // 1=stage/map+entities+player, 2=character(player/HUD stat), 3=talk/dialogue, 4=battle/combat.
+    uint8_t node = 0;
 };
+
+// Node tags (keep in sync with Quad::node comments above).
+enum RenderNode : uint8_t { NODE_UNSPEC=0, NODE_STAGE=1, NODE_CHAR=2, NODE_TALK=3, NODE_BATTLE=4 };
 
 // Shared sprite-grid layout (must match Game::SPRITE_ORDER in game.cpp).
 enum SpriteIdx {
@@ -59,6 +66,11 @@ public:
     virtual void begin() = 0;
     virtual void drawSprite(const Quad& q) = 0;
     virtual void drawText(const Quad& q) = 0;
+    // Diagnostic: tag subsequent quads with a "node" id (for the 4-way split-screen
+    // render). No-op by default; the Vulkan renderer stamps it onto each quad.
+    virtual void setNode(uint8_t n) { (void)n; }
+    // Diagnostic: if n!=0, only emit quads whose node==n (isolate one subsystem).
+    virtual void setNodeFilter(uint8_t n) { (void)n; }
     virtual void end() = 0;                       // present to target (offscreen/canvas)
     virtual uint32_t width()  const = 0;
     virtual uint32_t height() const = 0;

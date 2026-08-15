@@ -291,6 +291,8 @@ void Game::draw() {
     float ts = 48.0f;
     float ox = (W - gw*ts)/2.0f, oy = 60.0f;
     static const float white[4] = {1,1,1,1};
+    // ---- node 1: STAGE (map tiles + entities + player) ----
+    ren->setNode(NODE_STAGE);
     // tiles
     for (int y = 0; y < gh; y++) for (int x = 0; x < gw; x++) {
         char c = st.at(x,y);
@@ -306,6 +308,8 @@ void Game::draw() {
     // player
     ren->drawSprite(spriteQuad(ox + pl.x*ts + 8, oy + pl.y*ts + 8, ts-16, ts-16, spriteLayer("player"), white));
 
+    // ---- node 2: CHARACTER (HUD top bar: stats / HP-ATK-DEF / story note) ----
+    ren->setNode(NODE_CHAR);
     // HUD top bar
     float tint[4] = {1,1,1,1};
     drawText("魔法塔 Tower of the Sorcerer — " + st.name + " (" + std::to_string(st.index) + "/" + std::to_string(totalStages) + ")", 16, 16, 22, tint);
@@ -319,6 +323,8 @@ void Game::draw() {
     // story note
     drawText(st.story_note, 16, H-30, 16, C4(0.8f,0.85f,1.0f,1));
 
+    // ---- node 4: BATTLE (combat overlay) ----
+    ren->setNode(NODE_BATTLE);
     // combat overlay
     if ((hideMask & 1) == 0 && (cs.active || (cs.won || cs.log.find("倒下")!=std::string::npos))) {
         drawFocusSplash();
@@ -335,6 +341,8 @@ void Game::draw() {
         if (!cs.active) drawText("（按任意鍵繼續）", cx, 350, 16, C4(1,1,0.6f,1));
     }
 
+    // ---- node 3: TALK (dialogue overlay) ----
+    ren->setNode(NODE_TALK);
     // dialogue overlay
     if ((hideMask & 2) == 0 && inDialogue) {
         drawFocusSplash();
@@ -349,6 +357,7 @@ void Game::draw() {
     }
 
     // inventory UI (9-grid, extendable) — toggle with I
+    ren->setNode(NODE_CHAR);   // inventory is a character/UI screen
     if ((hideMask & 4) == 0) drawInventory();
 
     ren->end();
@@ -431,6 +440,7 @@ std::string Game::itemDesc(const std::string& id) const {
     return it == itemDefs.end() ? "" : it->second.value("desc", "");
 }
 void Game::drawFocusSplash() {
+    if (std::getenv("TOMS_NOSPLASH")) return;  // TEST: toggle splash off to isolate bug
     float W = (float)ren->width(), H = (float)ren->height();
     // full-screen black splash (transparent 50%) so the player focuses on the
     // active modal scene (combat / dialogue / inventory).

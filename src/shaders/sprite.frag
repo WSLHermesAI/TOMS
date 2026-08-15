@@ -6,10 +6,11 @@ layout(location=2) in flat int vSolid;   // 1 => draw flat color, ignore texture
 layout(location=0) out vec4 outColor;
 void main() {
     if (vSolid == 1) {
-        // solid-color quad (e.g. focus splash, bars, panel bg): output tint only.
-        // alpha is vTint.a (already premultiplied-style; blend uses srcAlpha).
+        // solid-color quad (focus splash, bars, panel bg): output tint ONLY.
+        // Do NOT sample the texture -- even though a dummy 1x1 is bound, this
+        // guards against ever leaking the last bound atlas color.
         if (vTint.a < 0.004) discard;
-        outColor = vTint;
+        outColor = vec4(vTint.rgb, vTint.a);
         return;
     }
     vec4 c = texture(tex, vUV);
