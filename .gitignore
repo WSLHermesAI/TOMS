@@ -1,38 +1,12 @@
 # build dirs
-build/
 build-linux/
 build-web/
-out/
-cmake-build-*/
-editor/build/
 
-# compiled binaries
-tower_vulkan
-tower_editor
-*.exe
-
-# generated Emscripten web artifacts (keep web/README.md, ignore the build output)
-web/*.html
-web/*.js
-web/*.wasm
-web/*.data
-
-# generated frames / review artifacts
+# runtime artifacts
+toms.log
+*.log
 frames/
-*.pdf
 
 # editor / OS
-.vs/
-.vscode/
-*.user
-Thumbs.db
-Desktop.ini
-
-# local SDK hints (keep paths out of VCS)
-*.local.cmake
-
-# Python caches
-__pycache__/
-*.pyc
-
-build-webgpu/
+*.swp
+.DS_Store
