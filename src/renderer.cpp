@@ -123,10 +123,10 @@ void Renderer::init(uint32_t w, uint32_t h) {
     sa.maxLod = 1.0f;
     vk_check(vkCreateSampler(vk.device, &sa, nullptr, &sampler), "sampler");
 
-    // descriptor pool (2 sets: sprite atlas, font atlas)
-    VkDescriptorPoolSize ps{}; ps.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER; ps.descriptorCount = 2;
+    // descriptor pool (sprite atlas + font atlas + room for runtime Textures)
+    VkDescriptorPoolSize ps{}; ps.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER; ps.descriptorCount = 32;
     VkDescriptorPoolCreateInfo dpi{}; dpi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    dpi.maxSets = 2; dpi.poolSizeCount = 1; dpi.pPoolSizes = &ps;
+    dpi.maxSets = 32; dpi.poolSizeCount = 1; dpi.pPoolSizes = &ps;
     vk_check(vkCreateDescriptorPool(vk.device, &dpi, nullptr, &dsPool), "dspool");
     spriteSet = VK_NULL_HANDLE; fontSet = VK_NULL_HANDLE;
     fprintf(stderr, "[dbg] renderer init done\n");
@@ -301,3 +301,8 @@ void Renderer::savePNG(const std::string& path) {
 }
 
 // (no pending PNG statics; savePNG writes directly)
+
+VkTextureRefs Renderer::textureRefs() const {
+    return VkTextureRefs{ vk.device, vk.physical, vk.gfxQueue, cmdPool,
+                          dsPool, dsLayout, sampler };
+}

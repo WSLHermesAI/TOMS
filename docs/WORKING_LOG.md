@@ -10,6 +10,20 @@ Track what was done, by date.
   (`setFile`). Macros: `TOMS_LOG_INFO(...)` etc. `Object::DumpLeaks()` and the demo's
   batch metric now route through it; main.cpp also enables a `toms.log` file sink.
   `log_test` verifies formatting/levels/file sink (all pass). (commit `fb4ead0`+)
+- **2026-08-15** — **Texture class + TextureManager** added (`src/texture.h` / `src/texture.cpp`),
+  reworked from FM79979 `Texture.h`/`TextureManager.h` into a modern Vulkan version.
+  `Texture : public Object` loads images via **stb_image** (already in `external/stb/`)
+  and uploads RGBA8 pixels into a LINEAR `VkImage` + `VkImageView` + `VkDescriptorSet`
+  (mirrors `Renderer::uploadAtlas`). Key feature: `UpdatePixels(rgba,w,h)` re-uploads new
+  pixel data into the Vulkan image (recreates the image if size changes). `TextureManager`
+  is a singleton mapping name→`shared_ptr<Texture>` (modern RAII, no wchar_t).
+  `Renderer::textureRefs()` exposes the Vulkan handles a `Texture` needs. `texture_test`
+  (lavapipe) verifies load + UpdatePixels + manager + 0 leaks. Descriptor pool 2→32 sets.
+- **2026-08-15** — **Extend leak detection to gameplay structs** (derive `Trackable`):
+  Player, EnemyInst, DialogueNode, CombatState, Game, Stage, Audio now inherit `Trackable`
+  so the object-lifecycle leak detector covers gameplay data, not just scene-graph nodes.
+  `object_test` + the 5 demo scenarios (full/walk/combat/dialogue/stress) all report
+  `live objects = 0, no leaks`. (commit `a774d80`)
 - **2026-08-14** — **Object lifecycle counter / leak dump** added (`src/object.h`): every
   `Object` registers itself on construction and unregisters on destruction in a
   global `ObjectRegistry` (thread-safe, idempotent Remove so double-destroy can't

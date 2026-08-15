@@ -123,8 +123,8 @@ if(WEB)
 endif()
 
 # ---------------------------------------------------------------------------
-# Headless unit tests for the Node scene-graph + Object base (no rendering).
-# Run: ./node_test  and  ./object_test
+# Headless unit tests for the Node scene-graph + Object base + Texture (Vulkan).
+# Run: ./node_test  ./object_test  ./log_test  ./texture_test
 # ---------------------------------------------------------------------------
 add_executable(node_test src/node_test.cpp src/node.cpp src/node.h)
 target_include_directories(node_test PRIVATE ${CMAKE_SOURCE_DIR}/src $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
@@ -134,4 +134,13 @@ target_include_directories(object_test PRIVATE ${CMAKE_SOURCE_DIR}/src $ENV{GLM_
 
 add_executable(log_test src/log_test.cpp src/log.h)
 target_include_directories(log_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+# texture_test needs a real Vulkan device (lavapipe) + stb_image + the renderer.
+add_executable(texture_test src/texture_test.cpp src/texture.cpp src/renderer.cpp
+    src/node.cpp src/vk_util.h src/render_iface.h)
+target_include_directories(texture_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
+    ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
+    $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+target_link_libraries(texture_test PRIVATE ${Vulkan_LIBRARIES})
 

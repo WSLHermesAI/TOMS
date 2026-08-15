@@ -7,6 +7,7 @@
 #include <cstdint>
 #include "vk_util.h"
 #include "render_iface.h"
+#include "texture.h"     // VkTextureRefs (Texture shares the renderer's Vulkan handles)
 
 struct VulkanContext {
     VkInstance instance = VK_NULL_HANDLE;
@@ -57,4 +58,6 @@ public:
     void transitionImage(VkImage img, VkImageLayout from, VkImageLayout to, VkImageAspectFlags asp);
     void ensureVertexBuffer(size_t needBytes);
     void ensureIndexBuffer(size_t needBytes);
+    // Bundle the Vulkan handles a Texture needs to create/upload its image + descriptor.
+    VkTextureRefs textureRefs() const;
 };
