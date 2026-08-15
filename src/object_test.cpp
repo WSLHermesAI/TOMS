@@ -62,21 +62,22 @@ int main() {
     }   // <-- m, a, b, panel, icon all destroyed -> registry back to 0
 
     // ---- 5/8) live-count + leak detection on a CLEAN registry ----
-    CHECK(Object::LiveCount() == 0, "registry clean after fixtures destroyed");
+    auto& reg = ObjectRegistry::instance();
+    CHECK(reg.LiveCount() == 0, "registry clean after fixtures destroyed");
 
     {
         auto tmp = Monster::Make<Monster>("tmpObj");
-        CHECK(Object::LiveCount() == 1, "LiveCount == 1 while a shared object is alive");
+        CHECK(reg.LiveCount() == 1, "LiveCount == 1 while a shared object is alive");
     }
-    CHECK(Object::LiveCount() == 0, "LiveCount returns to 0 after auto-release");
+    CHECK(reg.LiveCount() == 0, "LiveCount returns to 0 after auto-release");
 
     // an intentionally leaked object (not owned by any shared_ptr)
     Monster* leak = new Monster("leakedGoblin");
-    CHECK(Object::LiveCount() == 1, "leaked (raw) object is counted while alive");
+    CHECK(reg.LiveCount() == 1, "leaked (raw) object is counted while alive");
     printf("[object_test] expected leak dump:\n");
     Object::DumpLeaks();                            // should print type+name of the leak
     delete leak;                                    // simulate cleanup
-    CHECK(Object::LiveCount() == 0, "after delete, LiveCount returns to 0");
+    CHECK(reg.LiveCount() == 0, "after delete, LiveCount returns to 0");
 
     if (s_fail == 0) { printf("object_test: ALL PASS (8 groups)\n"); return 0; }
     printf("object_test: %d FAILED\n", s_fail);

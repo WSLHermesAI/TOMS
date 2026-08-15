@@ -3,26 +3,35 @@
 #include <vector>
 #include <string>
 #include <map>
+#include "object.h"      // Trackable base: Player/EnemyInst/CombatState/Game are tracked
 #include "render_iface.h"
 #include "stage.h"
 #ifndef __EMSCRIPTEN__
 #include "Audio.h"      // desktop SFX (miniaudio); excluded from the browser build
 #endif
 
-struct Player {
+struct Player : public Trackable {
     int hp, maxhp, atk, def, gold, exp, lv;
     int key_yellow = 0, key_blue = 0, key_red = 0;
     int x = 1, y = 1;
     // inventory: list of item ids (a 9-grid, extendable UI). Keys/coins are NOT
     // stored here (they apply immediately); usable items (gems/potions/exp/scroll) are.
     std::vector<std::string> inv;
+    Player() : hp(100), maxhp(100), atk(10), def(5), gold(0), exp(0), lv(1) {}
+    TOMS_OBJECT(Player)
 };
 
-struct EnemyInst { std::string id; std::string name; int hp, atk, def, exp, gold; int x, y; bool boss=false; };
+struct EnemyInst : public Trackable {
+    std::string id; std::string name; int hp, atk, def, exp, gold; int x, y; bool boss=false;
+    TOMS_OBJECT(EnemyInst)
+};
 
-struct DialogueNode { std::string text; std::vector<std::pair<std::string,std::string>> choices; };
+struct DialogueNode : public Trackable {
+    std::string text; std::vector<std::pair<std::string,std::string>> choices;
+    TOMS_OBJECT(DialogueNode)
+};
 
-struct CombatState {
+struct CombatState : public Trackable {
     EnemyInst enemy;
     int playerHP, enemyHP;
     int round = 0;
@@ -30,9 +39,10 @@ struct CombatState {
     int ticks = 0;            // ms accumulator
     std::string log;          // last exchange text
     bool won = false;
+    TOMS_OBJECT(CombatState)
 };
 
-class Game {
+class Game : public Trackable {
 public:
     bool loadAssets(const std::string& assetDir);
     void loadStage(const std::string& id);
@@ -112,6 +122,10 @@ private:
     Audio audio;           // SFX subsystem (no-op when no audio device)
 #else
     // Browser build: no audio subsystem (kept isolated from desktop/Linux).
-    struct AudioStub { void init(const std::string&) {} void play(const std::string&) {} } audio;
+    struct AudioStub : public Trackable {
+        void init(const std::string&) {} void play(const std::string&) {}
+        TOMS_OBJECT(AudioStub)
+    } audio;
 #endif
+    TOMS_OBJECT(Game)
 };

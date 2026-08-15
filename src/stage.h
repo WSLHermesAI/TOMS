@@ -5,6 +5,7 @@
 #include <map>
 #include <fstream>
 #include <json.hpp>
+#include "object.h"   // Stage derives Trackable so stage loads are leak-checked
 
 struct Entity {
     int x, y;
@@ -14,7 +15,7 @@ struct Entity {
     bool consumed = false; // items/monsters removed after use
 };
 
-struct Stage {
+struct Stage : public Trackable {
     std::string id, name, subtitle;
     int index = 0, width = 0, height = 0;
     std::vector<std::string> tiles;        // rows of chars
@@ -29,6 +30,7 @@ struct Stage {
         if (x < 0 || x >= (int)r.size()) return '#';
         return r[x];
     }
+    TOMS_OBJECT(Stage)
 };
 
 // Load a stage JSON file. legend maps char -> semantic; entities parsed from tiles.

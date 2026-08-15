@@ -4,8 +4,9 @@
 #pragma once
 #include <string>
 #include <map>
+#include "object.h"   // Trackable base (Audio is leak-tracked)
 
-struct Audio {
+struct Audio : public Trackable {
     bool init(const std::string& sfxDir);
     void play(const std::string& name);   // name without extension, e.g. "walk"
     void setVolume(float v);              // 0..1 master
@@ -16,4 +17,5 @@ private:
     std::string dir;
     float master = 1.0f;
     void* engine = nullptr;               // ma_engine* (opaque to avoid pulling the 4MB header into every TU)
+    TOMS_OBJECT(Audio)
 };
