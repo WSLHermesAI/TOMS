@@ -10,6 +10,21 @@ Track what was done, by date.
   (`setFile`). Macros: `TOMS_LOG_INFO(...)` etc. `Object::DumpLeaks()` and the demo's
   batch metric now route through it; main.cpp also enables a `toms.log` file sink.
   `log_test` verifies formatting/levels/file sink (all pass). (commit `fb4ead0`+)
+- **2026-08-15** — **Realtime system-font fallback for missing glyphs** added to the runtime
+  TTF font. `Font::ensure(cp)` lazily bakes any codepoint not yet in the atlas: it
+  tries the primary font, then scans `/usr/share/fonts` (113 fonts here; overridable
+  via `setFallbackDir`) for the first one that actually contains the glyph and
+  rasterizes that single glyph into the atlas on the fly (growing the atlas if full,
+  with UVs recomputed). `Game::drawText` now calls `ensure(cp)` + `ren->updateFont()`
+  when a glyph is missing, so an absent character is pulled from the OS font set at
+  runtime instead of being skipped. The renderer gained a non-leaking `updateFont()`
+  (frees the previous font image/view/mem) and a `Renderer::destroy()` that frees all
+  Vulkan objects (atlases/pools/layouts/pipeline/sampler, NULL_HANDLE-guarded) before
+  tearing down the device, fixing a latent GPU-resource leak at exit. `font_test`
+  verifies `ensure()` bakes a missing glyph + fails gracefully when no font has it.
+  Demo confirmed: a glyph absent from the baked set (✓ U+2713) renders via fallback
+  and the frame still shows 0 leaks. Answers "can a missing char be fetched from the
+  system in realtime?": yes, via stb_truetype + the OS font directory.
 - **2026-08-15** — **Runtime TTF font (stb_truetype)** added (`src/font.h` / `src/font.cpp`),
   replacing the offline PIL bitmap step. `Font : public Object` builds a glyph atlas
   from a `.ttf`/`.ttc` at load time via `external/stb/stb_truetype.h`: it collects

@@ -132,24 +132,66 @@ void Renderer::init(uint32_t w, uint32_t h) {
     fprintf(stderr, "[dbg] renderer init done\n");
 }
 
+// Free every Vulkan object this Renderer owns, with NULL_HANDLE guards so a
+// zero-handle never reaches vkDestroy* (which would fault with "Invalid device").
+// Called before the device is torn down so we don't leak GPU memory at exit.
+void Renderer::destroy() {
+    if (vk.device == VK_NULL_HANDLE) return;
+    auto dv = [&](VkDevice d, VkImage& i){ if (i!=VK_NULL_HANDLE){ vkDestroyImage(d,i,nullptr); i=VK_NULL_HANDLE; } };
+    auto dvw= [&](VkDevice d, VkImageView& v){ if (v!=VK_NULL_HANDLE){ vkDestroyImageView(d,v,nullptr); v=VK_NULL_HANDLE; } };
+    auto df = [&](VkDevice d, VkDeviceMemory& m){ if (m!=VK_NULL_HANDLE){ vkFreeMemory(d,m,nullptr); m=VK_NULL_HANDLE; } };
+    auto db = [&](VkDevice d, VkBuffer& b){ if (b!=VK_NULL_HANDLE){ vkDestroyBuffer(d,b,nullptr); b=VK_NULL_HANDLE; } };
+    dv(vk.device, spriteAtlas_.img); dvw(vk.device, spriteAtlas_.view); df(vk.device, spriteAtlas_.mem);
+    dv(vk.device, fontAtlas_.img);   dvw(vk.device, fontAtlas_.view);   df(vk.device, fontAtlas_.mem);
+    db(vk.device, vbuf); df(vk.device, vbufMem); vbufCap=0;
+    db(vk.device, ibuf); df(vk.device, ibufMem); ibufCap=0;
+    if (colorView != VK_NULL_HANDLE){ vkDestroyImageView(vk.device, colorView, nullptr); colorView=VK_NULL_HANDLE; }
+    if (colorImg  != VK_NULL_HANDLE){ vkDestroyImage(vk.device, colorImg, nullptr); colorImg=VK_NULL_HANDLE; }
+    if (fb        != VK_NULL_HANDLE){ vkDestroyFramebuffer(vk.device, fb, nullptr); fb=VK_NULL_HANDLE; }
+    if (renderPass!= VK_NULL_HANDLE){ vkDestroyRenderPass(vk.device, renderPass, nullptr); renderPass=VK_NULL_HANDLE; }
+    if (pipeline  != VK_NULL_HANDLE){ vkDestroyPipeline(vk.device, pipeline, nullptr); pipeline=VK_NULL_HANDLE; }
+    if (pipeLayout!= VK_NULL_HANDLE){ vkDestroyPipelineLayout(vk.device, pipeLayout, nullptr); pipeLayout=VK_NULL_HANDLE; }
+    if (dsLayout != VK_NULL_HANDLE){ vkDestroyDescriptorSetLayout(vk.device, dsLayout, nullptr); dsLayout=VK_NULL_HANDLE; }
+    if (sampler   != VK_NULL_HANDLE){ vkDestroySampler(vk.device, sampler, nullptr); sampler=VK_NULL_HANDLE; }
+    if (dsPool    != VK_NULL_HANDLE){ vkDestroyDescriptorPool(vk.device, dsPool, nullptr); dsPool=VK_NULL_HANDLE; }
+    if (cmdPool   != VK_NULL_HANDLE){ vkDestroyCommandPool(vk.device, cmdPool, nullptr); cmdPool=VK_NULL_HANDLE; }
+    vk.destroy();   // drops instance/device/queue (also NULL_HANDLE-guarded)
+}
+
 void Renderer::loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) {
     const uint32_t COLS = 9;
     uint32_t AW=0, AH=0; std::vector<uint8_t> atlas;
     if (!packAtlas(layers, sw, sh, COLS, atlas, AW, AH)) {
         fprintf(stderr, "[err] loadSprites: bad layers\n"); return;
     }
-    uploadAtlas(atlas, AW, AH, spriteAtlas_.img, spriteAtlas_.view, spriteAtlas_.set);
+    uploadAtlas(atlas, AW, AH, spriteAtlas_.img, spriteAtlas_.view, spriteAtlas_.set, spriteAtlas_.mem);
     spriteSet = spriteAtlas_.set; spriteAtlas_.w=AW; spriteAtlas_.h=AH;
 }
 
 void Renderer::loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) {
-    uploadAtlas(px, w, h, fontAtlas_.img, fontAtlas_.view, fontAtlas_.set);
+    uploadAtlas(px, w, h, fontAtlas_.img, fontAtlas_.view, fontAtlas_.set, fontAtlas_.mem);
     fontSet = fontAtlas_.set; fontAtlas_.w=w; fontAtlas_.h=h;
 }
 
+// Re-upload the font atlas after it grew / gained glyphs at runtime. Frees the
+// previous font image/view/mem first so repeated updates don't leak GPU memory.
+void Renderer::updateFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) {
+    if (fontAtlas_.img != VK_NULL_HANDLE) {
+        if (fontAtlas_.view != VK_NULL_HANDLE) vkDestroyImageView(vk.device, fontAtlas_.view, nullptr);
+        if (fontAtlas_.mem  != VK_NULL_HANDLE) vkFreeMemory(vk.device, fontAtlas_.mem, nullptr);
+        vkDestroyImage(vk.device, fontAtlas_.img, nullptr);
+        // descriptor set is pooled; not freed individually
+        fontAtlas_.img = VK_NULL_HANDLE; fontAtlas_.view = VK_NULL_HANDLE;
+        fontAtlas_.mem = VK_NULL_HANDLE; fontAtlas_.set = VK_NULL_HANDLE;
+    }
+    uploadAtlas(px, w, h, fontAtlas_.img, fontAtlas_.view, fontAtlas_.set, fontAtlas_.mem);
+    // uploadAtlas allocates a fresh descriptor set; surface it to drawText
+    fontSet = fontAtlas_.set; fontAtlas_.w = w; fontAtlas_.h = h;
+}
+
 // Upload RGBA pixels directly into a LINEAR-tiled 2D image (avoids lavapipe copy bug).
-void Renderer::uploadAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h, VkImage& img, VkImageView& view, VkDescriptorSet& set) {
-    VkDeviceMemory mem = VK_NULL_HANDLE;
+void Renderer::uploadAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h, VkImage& img, VkImageView& view, VkDescriptorSet& set, VkDeviceMemory& mem) {
+    mem = VK_NULL_HANDLE;
     createImage(vk.device, vk.physical, w, h, VK_FORMAT_R8G8B8A8_SRGB,
                 VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_IMAGE_ASPECT_COLOR_BIT, img, view, 1, &mem, 0, VK_IMAGE_TILING_LINEAR, true);

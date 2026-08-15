@@ -19,8 +19,9 @@ struct VulkanContext {
     void destroy();
 };
 
-struct Atlas { VkImage img = VK_NULL_HANDLE; VkImageView view = VK_NULL_HANDLE; VkDescriptorSet set = VK_NULL_HANDLE;
-               uint32_t w=0, h=0; };
+struct Atlas { VkImage img = VK_NULL_HANDLE; VkImageView view = VK_NULL_HANDLE;
+               VkDescriptorSet set = VK_NULL_HANDLE; VkDeviceMemory mem = VK_NULL_HANDLE;
+               uint32_t w = 0, h = 0; };
 
 class Renderer : public IRenderer {
 public:
@@ -44,8 +45,12 @@ public:
     std::vector<Quad> sprites, texts;
 
     void init(uint32_t w, uint32_t h) override;
+    void destroy();   // free Vulkan resources (atlases, pools, layout, sampler, pipeline)
     void loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) override;
     void loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) override;
+    // Re-upload the font atlas (after the Font grew / gained glyphs at runtime).
+    // Frees the previous font image/view/set/mem first so it does not leak.
+    void updateFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) override;
     void begin() override;
     void drawSprite(const Quad& q) override;
     void drawText(const Quad& q) override;
@@ -54,7 +59,8 @@ public:
     uint32_t width()  const override { return W; }
     uint32_t height() const override { return H; }
 
-    void uploadAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h, VkImage& img, VkImageView& view, VkDescriptorSet& set);
+    void uploadAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h,
+                    VkImage& img, VkImageView& view, VkDescriptorSet& set, VkDeviceMemory& mem);
     void transitionImage(VkImage img, VkImageLayout from, VkImageLayout to, VkImageAspectFlags asp);
     void ensureVertexBuffer(size_t needBytes);
     void ensureIndexBuffer(size_t needBytes);

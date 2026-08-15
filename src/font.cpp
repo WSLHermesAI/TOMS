@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <cstring>
+#include <filesystem>
 
 // ---- gather codepoints from JSON files (UTF-8) + an extra literal string ----
 std::vector<uint32_t> Font::collectFromFiles(const std::vector<std::string>& jsonFiles,
@@ -37,75 +38,159 @@ std::vector<uint32_t> Font::collectFromFiles(const std::vector<std::string>& jso
     return out;
 }
 
+// Rasterize one glyph from `info` into cell `idx` of the atlas. Returns false if
+// the font has no such glyph. Used by both the initial bake and realtime fallback.
+bool Font::bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_t>&, int idx) {
+    int g = stbtt_FindGlyphIndex(&info, (int)cp);
+    if (g == 0) return false;              // glyph absent from this font
+
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    stbtt_GetGlyphBitmapBox(&info, g, 1.0f, 1.0f, &x0, &y0, &x1, &y1);
+    // scale so the glyph fits the cell height (recomputed per font, since each
+    // fallback font has its own metrics)
+    int ascent = 0, descent = 0, lineGap = 0;
+    stbtt_GetFontVMetrics(&info, &ascent, &descent, &lineGap);
+    float scale = (ascent > 0) ? ((float)(cell_ - 4) / (float)(ascent - descent)) : 1.0f;
+
+    int gw = (int)((x1 - x0) * scale), gh = (int)((y1 - y0) * scale);
+    if (gw <= 0 || gh <= 0) {              // whitespace glyph: reserve an empty cell
+        int cx = (idx % cols_) * cell_, cy = (idx / cols_) * cell_;
+        map_[cp] = { (float)cx / atlasW_, (float)cy / atlasH_,
+                     (float)(cx + cell_) / atlasW_, (float)(cy + cell_) / atlasH_ };
+        cellIdx_[cp] = idx;
+        return true;
+    }
+    if (gw > cell_) gw = cell_;
+    if (gh > cell_) gh = cell_;
+
+    std::vector<uint8_t> gb((size_t)gw * gh, 0);
+    // rasterize at scale, then copy (stb output is top-down rows)
+    stbtt_MakeGlyphBitmap(&info, gb.data(), gw, gh, gw, scale, scale, g);
+
+    int cellX = (idx % cols_) * cell_;
+    int cellY = (idx / cols_) * cell_;
+    int offX = cellX + (cell_ - gw) / 2;
+    int offY = cellY + (cell_ - gh) / 2;
+    uint8_t* base = atlas_.data();
+    for (int yy = 0; yy < gh; yy++)
+        for (int xx = 0; xx < gw; xx++) {
+            uint8_t a = gb[(size_t)yy * gw + xx];
+            int dx = offX + xx, dy = offY + yy;
+            if (dx < 0 || dy < 0 || dx >= (int)atlasW_ || dy >= (int)atlasH_) continue;
+            size_t p = ((size_t)dy * atlasW_ + dx) * 4;
+            base[p] = 255; base[p+1] = 255; base[p+2] = 255; base[p+3] = a;  // white glyph
+        }
+    map_[cp] = { (float)cellX / atlasW_, (float)cellY / atlasH_,
+                 (float)(cellX + cell_) / atlasW_, (float)(cellY + cell_) / atlasH_ };
+    cellIdx_[cp] = idx;
+    return true;
+}
+
+// Add one row of cells to the atlas and recompute every existing glyph's v so the
+// UVs stay correct (v is a fraction of atlasH, which just grew). We keep each
+// glyph's grid cell index in cellIdx_, so the recompute is exact.
+void Font::growAtlasOneRow() {
+    rows_ += 1;
+    atlasH_ = (uint32_t)(rows_ * cell_);
+    atlas_.resize((size_t)atlasW_ * atlasH_ * 4, 0);   // tail is zero-filled (transparent)
+    for (auto& kv : cellIdx_) {
+        uint32_t cp = kv.first; int idx = kv.second;
+        int cx = (idx % cols_) * cell_, cy = (idx / cols_) * cell_;
+        map_[cp] = { (float)cx / atlasW_, (float)cy / atlasH_,
+                     (float)(cx + cell_) / atlasW_, (float)(cy + cell_) / atlasH_ };
+    }
+}
+
 bool Font::buildFromFile(const std::string& ttfPath,
                          const std::vector<uint32_t>& chars,
                          int cell, int fontPx) {
-    // load the whole font file into memory
+    cell_ = cell; cols_ = 32;
+    // load the whole font file into memory (keep a copy for realtime re-bake)
     std::ifstream in(ttfPath, std::ios::binary);
     if (!in) return false;
-    std::vector<uint8_t> ttf((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-    if (ttf.empty()) return false;
+    primData_.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    if (primData_.empty()) return false;
 
-    stbtt_fontinfo fi;
-    // A .ttc is a font collection: offset 0 is the TTCHeader, not a font table.
-    // Resolve the first face's real offset; for plain .ttf offset 0 is correct.
-    int ttcOffset = stbtt_GetFontOffsetForIndex(ttf.data(), 0);
+    int ttcOffset = stbtt_GetFontOffsetForIndex(primData_.data(), 0);
     if (ttcOffset < 0) return false;
-    if (!stbtt_InitFont(&fi, ttf.data(), ttcOffset)) return false;
+    primInfo_ = std::make_unique<stbtt_fontinfo>();
+    if (!stbtt_InitFont(primInfo_.get(), primData_.data(), ttcOffset)) return false;
+    primValid_ = true;
 
-    // scale so the glyph cell matches `cell`; use ascent for vertical fit like PIL
+    // scale for vertical fit
     int ascent = 0, descent = 0, lineGap = 0;
-    stbtt_GetFontVMetrics(&fi, &ascent, &descent, &lineGap);
-    float scale = stbtt_ScaleForPixelHeight(&fi, (float)fontPx);
+    stbtt_GetFontVMetrics(primInfo_.get(), &ascent, &descent, &lineGap);
+    float scale = (ascent > 0) ? ((float)(cell_ - 4) / (float)(ascent - descent)) : 1.0f;
+    (void)fontPx; (void)scale;   // per-glyph scale recomputed in bakeGlyph
 
     int n = (int)chars.size();
     if (n == 0) return false;
-    const int COLS = 32;
-    int rows = (n + COLS - 1) / COLS;
-    atlasW_ = (uint32_t)(COLS * cell);
-    atlasH_ = (uint32_t)(rows * cell);
-    atlas_.assign((size_t)atlasW_ * atlasH_ * 4, 0);   // transparent
+    rows_ = (n + cols_ - 1) / cols_;
+    atlasW_ = (uint32_t)(cols_ * cell_);
+    atlasH_ = (uint32_t)(rows_ * cell_);
+    atlas_.assign((size_t)atlasW_ * atlasH_ * 4, 0);
+    nextIdx_ = 0;
+    map_.clear();
+    cellIdx_.clear();
 
-    uint8_t* base = atlas_.data();
-    // temp buffer for one glyph (worst case cell size; +2 for padding)
-    std::vector<uint8_t> gb((size_t)(cell + 2) * (cell + 2), 0);
-
-    for (int idx = 0; idx < n; idx++) {
-        uint32_t cp = chars[idx];
-        int g = stbtt_FindGlyphIndex(&fi, (int)cp);
-        if (g == 0) { continue; }   // missing glyph (e.g. control char): skip, no UV
-
-        int ax = 0, lsb = 0, x0 = 0, y0 = 0, x1 = 0, y1 = 0;
-        stbtt_GetGlyphHMetrics(&fi, g, &ax, &lsb);
-        stbtt_GetGlyphBitmapBox(&fi, g, scale, scale, &x0, &y0, &x1, &y1);
-        int gw = x1 - x0, gh = y1 - y0;   // stb y is up: glyph height = y1 - y0
-        if (gw <= 0 || gh <= 0) {         // whitespace glyph
-            int cx = (idx % COLS) * cell, cy = (idx / COLS) * cell;
-            map_[cp] = { (float)cx / atlasW_, (float)cy / atlasH_,
-                         (float)(cx + cell) / atlasW_, (float)(cy + cell) / atlasH_ };
-            continue;
-        }
-        if (gw > cell + 2) gw = cell + 2;
-        if (gh > cell + 2) gh = cell + 2;
-        stbtt_MakeGlyphBitmap(&fi, gb.data(), gw, gh, gw, scale, scale, g);
-
-        int cellX = (idx % COLS) * cell;
-        int cellY = (idx / COLS) * cell;
-        // center the glyph in its CELL (stb output is already top-down rows)
-        int offX = cellX + (cell - gw) / 2;
-        int offY = cellY + (cell - gh) / 2;
-        for (int yy = 0; yy < gh; yy++)
-            for (int xx = 0; xx < gw; xx++) {
-                uint8_t a = gb[(size_t)yy * gw + xx];
-                int dx = offX + xx;
-                int dy = offY + yy;
-                if (dx < 0 || dy < 0 || dx >= (int)atlasW_ || dy >= (int)atlasH_) continue;
-                size_t p = ((size_t)dy * atlasW_ + dx) * 4;
-                base[p] = 255; base[p+1] = 255; base[p+2] = 255; base[p+3] = a;  // white glyph, alpha = coverage
-            }
-
-        map_[cp] = { (float)cellX / atlasW_, (float)cellY / atlasH_,
-                     (float)(cellX + cell) / atlasW_, (float)(cellY + cell) / atlasH_ };
+    for (uint32_t cp : chars) {
+        if (map_.find(cp) != map_.end()) continue;
+        int idx = nextIdx_++;
+        if (idx >= cols_ * rows_) growAtlasOneRow();
+        bakeGlyph(cp, *primInfo_, primData_, idx);
     }
     return true;
+}
+
+// Lazily discover + cache fallback fonts; return the first one that contains cp.
+std::pair<stbtt_fontinfo*, const std::vector<uint8_t>*> Font::findFallbackFont(uint32_t cp) {
+    if (!fallbackScanned_) {
+        fallbackScanned_ = true;
+        if (std::filesystem::exists(fallbackDir_)) {
+            for (auto& p : std::filesystem::recursive_directory_iterator(fallbackDir_)) {
+                std::string ext = p.path().extension().string();
+                if (ext == ".ttf" || ext == ".ttc" || ext == ".otf")
+                    fallbackFiles_.push_back(p.path().string());
+            }
+        }
+    }
+    for (auto& path : fallbackFiles_) {
+        auto it = fallbackCache_.find(path);
+        if (it == fallbackCache_.end()) {
+            std::ifstream in(path, std::ios::binary);
+            if (!in) continue;
+            std::vector<uint8_t> data((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+            if (data.empty()) continue;
+            int off = stbtt_GetFontOffsetForIndex(data.data(), 0);
+            auto fi = std::make_unique<stbtt_fontinfo>();
+            if (off < 0 || !stbtt_InitFont(fi.get(), data.data(), off)) continue;
+            it = fallbackCache_.emplace(path, std::make_pair(std::move(data), std::move(fi))).first;
+        }
+        stbtt_fontinfo* fi = it->second.second.get();
+        if (stbtt_FindGlyphIndex(fi, (int)cp) != 0)
+            return { fi, &(it->second.first) };
+    }
+    return { nullptr, nullptr };
+}
+
+// Realtime: ensure a codepoint is in the atlas. Already-baked -> immediate. Else
+// try the primary font, then pull the glyph from the first system fallback font
+// that has it. Returns true if the glyph is now available.
+bool Font::ensure(uint32_t codepoint) {
+    if (codepoint == 0) return false;
+    if (map_.find(codepoint) != map_.end()) return true;   // already baked
+
+    int idx = nextIdx_++;
+    if (idx >= cols_ * rows_) growAtlasOneRow();
+
+    if (primValid_ && bakeGlyph(codepoint, *primInfo_, primData_, idx))
+        return true;
+
+    auto fb = findFallbackFont(codepoint);
+    if (fb.first && bakeGlyph(codepoint, *fb.first, *fb.second, idx))
+        return true;
+
+    // could not find any font with this glyph; drop the reserved index
+    nextIdx_--;
+    return false;
 }

@@ -3,6 +3,7 @@
 // ASCII + CJK glyphs get valid UV rects in the atlas. No Vulkan needed.
 // Exits 0 on success, 1 on any failed check.
 #include "font.h"
+#include <stb_truetype.h>   // complete stbtt_fontinfo for ~Font (unique_ptr member)
 #include <cstdio>
 #include <string>
 #include <filesystem>
@@ -82,6 +83,45 @@ int main() {
         }
 
         CHECK(f.Type() != nullptr, "Font reports a type string");
+    }
+
+    // --- realtime fallback: ensure() bakes a glyph not in the initial set ---
+    {
+        // Build from the CJK font with ONLY 'A' baked, then ask for 'B' and a few
+        // others at runtime. 'B' exists in the primary font -> baked on demand.
+        Font f2("ensure-test");
+        std::vector<uint32_t> seed = { (uint32_t)'A' };
+        CHECK(f2.buildFromFile(ttf, seed, 32, 24), "ensure-test builds from TTF");
+        CHECK(f2.has('A'), "'A' baked initially");
+        CHECK(!f2.has('B'), "'B' not present yet");
+        bool okB = f2.ensure('B');
+        CHECK(okB, "ensure('B') finds glyph in primary font");
+        const std::array<float,4>* bUv = f2.uv('B');
+        CHECK(bUv != nullptr, "'B' UV present after ensure()");
+        if (bUv) {
+            int cell = f2.atlasW() / 32;
+            int cx = (int)((*bUv)[0] * f2.atlasW());
+            int cy = (int)((*bUv)[1] * f2.atlasH());
+            bool ink = false;
+            for (int y = cy; y < cy + cell && !ink; y++)
+                for (int x = cx; x < cx + cell; x++) {
+                    size_t p = ((size_t)y * f2.atlasW() + x) * 4 + 3;
+                    if (p < f2.atlas().size() && f2.atlas()[p] > 0) { ink = true; break; }
+                }
+            CHECK(ink, "'B' glyph has ink after realtime ensure()");
+        }
+        // A glyph absent from BOTH the primary font and any fallback must fail
+        // gracefully (no crash). Build f3 from DejaVuSans (ASCII only, no CJK),
+        // disable fallback, and ask for a CJK glyph no system font can supply here.
+        Font f3("no-fallback-test");
+        std::string dejavu = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
+        if (std::filesystem::exists(dejavu)) {
+            std::vector<uint32_t> seed3 = { (uint32_t)'A' };
+            CHECK(f3.buildFromFile(dejavu, seed3, 32, 24), "no-fallback builds from DejaVu");
+            f3.setFallbackDir("/nonexistent-fonts-dir");     // no fallback available
+            bool okCJK = f3.ensure(0x9B31);                    // 魔 : not in DejaVu
+            CHECK(!okCJK, "ensure() returns false when no font has the glyph");
+        }
     }
 
     // Font is Object-derived: after the scoped Font is destroyed, nothing leaks.

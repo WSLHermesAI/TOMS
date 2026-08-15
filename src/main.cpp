@@ -160,6 +160,11 @@ int main(int argc, char** argv) {
             TOMS_LOG_INFO("scenario=stress done");
         }
 
+        // Tear down the Vulkan renderer explicitly (frees atlases/pools/device) before
+        // Game is destroyed so we don't leak GPU memory. Safe if the shared_ptr dtor
+        // runs again (VulkanContext::destroy is NULL_HANDLE-guarded).
+        if (auto* r = dynamic_cast<Renderer*>(g.renderer())) r->destroy();
+
         std::cout << "done. frames written: " << frame << "\n";
     } // <-- Game (and all engine Objects) destroyed here
 

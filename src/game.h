@@ -7,6 +7,7 @@
 #include "render_iface.h"
 #include "stage.h"
 #include "font.h"        // runtime TTF -> atlas (stb_truetype), replaces offline font_atlas.png
+#include <stb_truetype.h> // complete stbtt_fontinfo for ~Font (unique_ptr member)
 #ifndef __EMSCRIPTEN__
 #include "Audio.h"      // desktop SFX (miniaudio); excluded from the browser build
 #endif

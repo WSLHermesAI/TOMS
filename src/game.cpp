@@ -205,15 +205,28 @@ static std::u32string utf8_to_utf32(const std::string& s) {
 void Game::drawText(const std::string& s, float x, float y, float size, const float tint[4]) {
     float cx = x;
     std::u32string cps = utf8_to_utf32(s);
+    bool fontChanged = false;
     for (uint32_t cp : cps) {
         auto it = fontMap.find(cp);
-        if (it == fontMap.end()) { cx += size; continue; }
+        if (it == fontMap.end()) {
+            // realtime fallback: try to pull the glyph from the primary font or a
+            // system font and bake it into the atlas on the fly.
+            if (font_ && font_->ensure(cp)) {
+                const std::array<float,4>* uv = font_->uv(cp);
+                if (uv) { fontMap[cp] = *uv; it = fontMap.find(cp); fontChanged = true; }
+            }
+        }
+        if (it == fontMap.end()) { cx += size; continue; }   // truly unknown glyph
         auto& uv = it->second;
         Quad q; q.rect[0]=cx; q.rect[1]=y; q.rect[2]=size; q.rect[3]=size;
         q.uv[0]=uv[0]; q.uv[1]=uv[1]; q.uv[2]=uv[2]; q.uv[3]=uv[3];
         q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
         ren->drawText(q);
         cx += size;
+    }
+    // If any glyph was added to the atlas this frame, re-upload it so it shows up.
+    if (fontChanged && font_) {
+        ren->updateFont(font_->atlas(), font_->atlasW(), font_->atlasH());
     }
 }
 

@@ -14,6 +14,8 @@
 #include <unordered_map>
 #include "object.h"
 
+struct stbtt_fontinfo;   // forward-declared; only font.cpp includes stb_truetype.h
+
 class Font : public Object {
     TOMS_OBJECT(Font)
 public:
@@ -44,8 +46,41 @@ public:
     static std::vector<uint32_t> collectFromFiles(const std::vector<std::string>& jsonFiles,
                                                   const std::string& extra = "");
 
+    // --- realtime system-font fallback ---
+    // Ensure a codepoint is present in the atlas. If it was baked already, returns
+    // true immediately. Otherwise it tries the primary font, then lazily scans a
+    // list of system fallback fonts (see setFallbackDir / default /usr/share/fonts)
+    // for the first one that actually contains the glyph, and rasterizes that
+    // single glyph into the atlas at runtime (so a missing character can be pulled
+    // from the OS font set on the fly). Returns true if the glyph is now present.
+    bool ensure(uint32_t codepoint);
+
+    // Directory to scan for fallback fonts (default: /usr/share/fonts). The scan is
+    // lazy: files are only opened/parsed when a missing glyph needs them.
+    void setFallbackDir(const std::string& dir) { fallbackDir_ = dir; }
+
 private:
+    // Bake one glyph from `info` into cell `idx` (growing the atlas if needed).
+    // Returns false if the font has no such glyph.
+    bool bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_t>& fontData, int idx);
+    // Grow the atlas by one row (keeps existing UVs valid by recomputing v from idx).
+    void growAtlasOneRow();
+    // Lazily load + cache a fallback font; returns the info for the first file that
+    // contains `cp`, or null.
+    std::pair<stbtt_fontinfo*, const std::vector<uint8_t>*> findFallbackFont(uint32_t cp);
+
     std::vector<uint8_t> atlas_;
     uint32_t atlasW_ = 0, atlasH_ = 0;
+    int cell_ = 32, cols_ = 32, rows_ = 0, nextIdx_ = 0;
     std::unordered_map<uint32_t, std::array<float,4>> map_;
+    std::unordered_map<uint32_t, int> cellIdx_;   // cp -> grid cell index (for grow)
+    // primary font bytes + info (so ensure() can re-rasterize from it)
+    std::vector<uint8_t> primData_;
+    std::unique_ptr<stbtt_fontinfo> primInfo_;
+    bool primValid_ = false;
+    // lazily-loaded system fallback fonts
+    std::string fallbackDir_ = "/usr/share/fonts";
+    std::vector<std::string> fallbackFiles_;     // discovered on first need
+    bool fallbackScanned_ = false;
+    std::unordered_map<std::string, std::pair<std::vector<uint8_t>, std::unique_ptr<stbtt_fontinfo>>> fallbackCache_;
 };
