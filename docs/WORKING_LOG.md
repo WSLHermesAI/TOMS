@@ -2,6 +2,14 @@
 
 Track what was done, by date.
 
+- **2026-08-15** — **Modern logging system** added (`src/log.h`) and mixed into the
+  lifecycle reporting. `toms::Logger` (C++17, no external deps): level filtering
+  (Trace..Fatal), `{}` positional substitution via a fold-expression formatter
+  (supports `{{`/`}}` escapes), streaming form `TOMS_LOG(Level) << ...`, automatic
+  source location + timestamp, thread-safe, and an optional file sink
+  (`setFile`). Macros: `TOMS_LOG_INFO(...)` etc. `Object::DumpLeaks()` and the demo's
+  batch metric now route through it; main.cpp also enables a `toms.log` file sink.
+  `log_test` verifies formatting/levels/file sink (all pass). (commit `fb4ead0`+)
 - **2026-08-14** — **Object lifecycle counter / leak dump** added (`src/object.h`): every
   `Object` registers itself on construction and unregisters on destruction in a
   global `ObjectRegistry` (thread-safe, idempotent Remove so double-destroy can't

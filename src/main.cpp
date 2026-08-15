@@ -34,6 +34,16 @@ int main(int argc, char** argv) {
         };
 
         Game g;
+        // route engine logs to a file as well as stdout (optional; empty path disables)
+        toms::Logger::instance().setFile("toms.log");
+        toms::Logger::instance().setLevel(toms::LogLevel::Info);
+        TOMS_LOG_INFO("TOMS engine start (C++{}, {} build)", __cplusplus/100,
+#ifdef __EMSCRIPTEN__
+            "web"
+#else
+            "native"
+#endif
+        );
         if (!g.loadAssets(assetDir)) { std::cerr << "asset load failed\n"; return 1; }
         g.loadStage("stage01");
 
@@ -105,8 +115,7 @@ int main(int argc, char** argv) {
 
         // report batch metrics (BatchRenderer) for verification
         if (auto* r = dynamic_cast<Renderer*>(g.renderer()))
-            std::cout << "batch: drawCalls=" << r->lastDrawCalls
-                      << " quads=" << r->lastQuadCount << "\n";
+            TOMS_LOG_INFO("batch: drawCalls={} quads={}", r->lastDrawCalls, r->lastQuadCount);
 
         std::cout << "done. frames written: " << frame << "\n";
     } // <-- Game (and all engine Objects) destroyed here

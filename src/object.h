@@ -121,14 +121,14 @@ public:                                                          \
 private:
 
 // ---- ObjectRegistry method definitions (need complete Object for Type()/Name()) ----
+#include "log.h"
 inline void ObjectRegistry::DumpLeaks() {
     std::lock_guard<std::mutex> lk(m_mutex);
     if (m_live.empty()) {
-        std::cout << "[Object] live objects = " << m_live.size() << " (no leaks)\n";
+        TOMS_LOG_INFO("Object lifecycle: live objects = {}, no leaks", m_live.size());
         return;
     }
-    std::cout << "[Object] LEAK: " << m_live.size()
-              << " object(s) still alive (count=" << m_live.size() << "):\n";
+    TOMS_LOG_ERROR("Object lifecycle: LEAK {} object(s) still alive:", m_live.size());
     for (Object* o : m_live)
-        std::cout << "  - type=" << o->Type() << "  name=\"" << o->Name() << "\"\n";
+        TOMS_LOG_ERROR("  - type={} name=\"{}\"", o->Type(), o->Name());
 }

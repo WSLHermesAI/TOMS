@@ -1,0 +1,3 @@
+[08:56:06] INFO main.cpp:40  TOMS engine start (C++2017, native build)
+[08:56:08] INFO main.cpp:118  batch: drawCalls=2 quads=437
+[08:56:08] INFO object.h:128  Object lifecycle: live objects = 0, no leaks

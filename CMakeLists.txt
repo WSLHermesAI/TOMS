@@ -132,3 +132,6 @@ target_include_directories(node_test PRIVATE ${CMAKE_SOURCE_DIR}/src $ENV{GLM_DI
 add_executable(object_test src/object_test.cpp src/node.cpp src/node.h src/scene.h src/object.h)
 target_include_directories(object_test PRIVATE ${CMAKE_SOURCE_DIR}/src $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
+add_executable(log_test src/log_test.cpp src/log.h)
+target_include_directories(log_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
