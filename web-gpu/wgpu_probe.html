@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<h1 id="out">testing...</h1>
+<script>
+(async () => {
+  const out = document.getElementById('out');
+  if (!navigator.gpu) { out.textContent = 'NO_NAV_GPU'; return; }
+  try {
+    const a = await navigator.gpu.requestAdapter();
+    if (!a) { out.textContent = 'ADAPTER_NULL'; return; }
+    const d = await a.requestDevice();
+    out.textContent = 'GPU_OK';
+  } catch (e) { out.textContent = 'GPU_ERR:' + e.message; }
+})();
+</script></body></html>

@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpn9uzkgj7.js
+// include: /tmp/tmp4tbxz4kp.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -205,25 +205,25 @@ Module['FS_createPath']("/data", "stages", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 53082}, {"filename": "/assets/font_atlas.png", "start": 53082, "end": 230939}, {"filename": "/assets/sfx/confirm_click.wav", "start": 230939, "end": 237597}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 237597, "end": 245579}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 245579, "end": 265909}, {"filename": "/assets/sfx/get_item.wav", "start": 265909, "end": 285357}, {"filename": "/assets/sfx/player_attack.wav", "start": 285357, "end": 295985}, {"filename": "/assets/sfx/walk.wav", "start": 295985, "end": 302203}, {"filename": "/assets/sprites/bat.png", "start": 302203, "end": 302413}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 302413, "end": 302717}, {"filename": "/assets/sprites/coin.png", "start": 302717, "end": 302940}, {"filename": "/assets/sprites/demon.png", "start": 302940, "end": 303244}, {"filename": "/assets/sprites/door_blue.png", "start": 303244, "end": 303403}, {"filename": "/assets/sprites/door_red.png", "start": 303403, "end": 303562}, {"filename": "/assets/sprites/door_yellow.png", "start": 303562, "end": 303721}, {"filename": "/assets/sprites/exp_up.png", "start": 303721, "end": 303924}, {"filename": "/assets/sprites/floor.png", "start": 303924, "end": 304102}, {"filename": "/assets/sprites/gem_atk.png", "start": 304102, "end": 304355}, {"filename": "/assets/sprites/gem_def.png", "start": 304355, "end": 304612}, {"filename": "/assets/sprites/golem.png", "start": 304612, "end": 304819}, {"filename": "/assets/sprites/key_blue.png", "start": 304819, "end": 305076}, {"filename": "/assets/sprites/key_red.png", "start": 305076, "end": 305329}, {"filename": "/assets/sprites/key_yellow.png", "start": 305329, "end": 305583}, {"filename": "/assets/sprites/manifest.json", "start": 305583, "end": 306159}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 306159, "end": 306374}, {"filename": "/assets/sprites/npc_king.png", "start": 306374, "end": 306565}, {"filename": "/assets/sprites/npc_princess.png", "start": 306565, "end": 306788}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 306788, "end": 307034}, {"filename": "/assets/sprites/npc_villager.png", "start": 307034, "end": 307223}, {"filename": "/assets/sprites/player.png", "start": 307223, "end": 307488}, {"filename": "/assets/sprites/potion_blue.png", "start": 307488, "end": 307722}, {"filename": "/assets/sprites/potion_red.png", "start": 307722, "end": 307956}, {"filename": "/assets/sprites/scroll.png", "start": 307956, "end": 308092}, {"filename": "/assets/sprites/skeleton.png", "start": 308092, "end": 308269}, {"filename": "/assets/sprites/slime.png", "start": 308269, "end": 308526}, {"filename": "/assets/sprites/stairs_down.png", "start": 308526, "end": 308702}, {"filename": "/assets/sprites/stairs_up.png", "start": 308702, "end": 308880}, {"filename": "/assets/sprites/wall.png", "start": 308880, "end": 309017}, {"filename": "/assets/sprites/wraith.png", "start": 309017, "end": 309260}, {"filename": "/data/combat.json", "start": 309260, "end": 309842}, {"filename": "/data/dialogue/enemy_bat.json", "start": 309842, "end": 310081}, {"filename": "/data/dialogue/enemy_demon.json", "start": 310081, "end": 310331}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 310331, "end": 310625}, {"filename": "/data/dialogue/enemy_golem.json", "start": 310625, "end": 310872}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 310872, "end": 311128}, {"filename": "/data/dialogue/enemy_slime.json", "start": 311128, "end": 311378}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 311378, "end": 311632}, {"filename": "/data/dialogue/ghost_villager.json", "start": 311632, "end": 311915}, {"filename": "/data/dialogue/handmaiden.json", "start": 311915, "end": 312200}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 312200, "end": 312559}, {"filename": "/data/dialogue/princess_liora.json", "start": 312559, "end": 312833}, {"filename": "/data/dialogue/princess_victory.json", "start": 312833, "end": 313382}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 313382, "end": 313960}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 313960, "end": 314579}, {"filename": "/data/dialogue/villager_elder.json", "start": 314579, "end": 315219}, {"filename": "/data/enemies.json", "start": 315219, "end": 316267}, {"filename": "/data/items.json", "start": 316267, "end": 317653}, {"filename": "/data/stages/stage01.json", "start": 317653, "end": 318910}, {"filename": "/data/stages/stage02.json", "start": 318910, "end": 320137}, {"filename": "/data/stages/stage03.json", "start": 320137, "end": 321359}, {"filename": "/data/stages/stage04.json", "start": 321359, "end": 322609}, {"filename": "/data/stages/stage05.json", "start": 322609, "end": 323824}, {"filename": "/data/stages/stage06.json", "start": 323824, "end": 325034}, {"filename": "/data/stages/stage07.json", "start": 325034, "end": 326276}, {"filename": "/data/stages/stage08.json", "start": 326276, "end": 327505}, {"filename": "/data/stages/stage09.json", "start": 327505, "end": 328742}, {"filename": "/data/stages/stage10.json", "start": 328742, "end": 329976}, {"filename": "/data/stages/stage_11.json", "start": 329976, "end": 332591}, {"filename": "/data/story.json", "start": 332591, "end": 333923}], "remote_package_size": 333923});
+    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 54997}, {"filename": "/assets/font_atlas.png", "start": 54997, "end": 248173}, {"filename": "/assets/sfx/confirm_click.wav", "start": 248173, "end": 254831}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 254831, "end": 262813}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 262813, "end": 283143}, {"filename": "/assets/sfx/get_item.wav", "start": 283143, "end": 302591}, {"filename": "/assets/sfx/player_attack.wav", "start": 302591, "end": 313219}, {"filename": "/assets/sfx/walk.wav", "start": 313219, "end": 319437}, {"filename": "/assets/sprites/bat.png", "start": 319437, "end": 319647}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 319647, "end": 319951}, {"filename": "/assets/sprites/coin.png", "start": 319951, "end": 320174}, {"filename": "/assets/sprites/demon.png", "start": 320174, "end": 320478}, {"filename": "/assets/sprites/door_blue.png", "start": 320478, "end": 320637}, {"filename": "/assets/sprites/door_red.png", "start": 320637, "end": 320796}, {"filename": "/assets/sprites/door_yellow.png", "start": 320796, "end": 320955}, {"filename": "/assets/sprites/exp_up.png", "start": 320955, "end": 321158}, {"filename": "/assets/sprites/floor.png", "start": 321158, "end": 321336}, {"filename": "/assets/sprites/gem_atk.png", "start": 321336, "end": 321589}, {"filename": "/assets/sprites/gem_def.png", "start": 321589, "end": 321846}, {"filename": "/assets/sprites/golem.png", "start": 321846, "end": 322053}, {"filename": "/assets/sprites/key_blue.png", "start": 322053, "end": 322310}, {"filename": "/assets/sprites/key_red.png", "start": 322310, "end": 322563}, {"filename": "/assets/sprites/key_yellow.png", "start": 322563, "end": 322817}, {"filename": "/assets/sprites/manifest.json", "start": 322817, "end": 323393}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 323393, "end": 323608}, {"filename": "/assets/sprites/npc_king.png", "start": 323608, "end": 323799}, {"filename": "/assets/sprites/npc_princess.png", "start": 323799, "end": 324022}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 324022, "end": 324268}, {"filename": "/assets/sprites/npc_villager.png", "start": 324268, "end": 324457}, {"filename": "/assets/sprites/player.png", "start": 324457, "end": 324722}, {"filename": "/assets/sprites/potion_blue.png", "start": 324722, "end": 324956}, {"filename": "/assets/sprites/potion_red.png", "start": 324956, "end": 325190}, {"filename": "/assets/sprites/scroll.png", "start": 325190, "end": 325326}, {"filename": "/assets/sprites/skeleton.png", "start": 325326, "end": 325503}, {"filename": "/assets/sprites/slime.png", "start": 325503, "end": 325760}, {"filename": "/assets/sprites/stairs_down.png", "start": 325760, "end": 325936}, {"filename": "/assets/sprites/stairs_up.png", "start": 325936, "end": 326114}, {"filename": "/assets/sprites/wall.png", "start": 326114, "end": 326251}, {"filename": "/assets/sprites/wraith.png", "start": 326251, "end": 326494}, {"filename": "/assets/wqy-zenhei.ttc", "start": 326494, "end": 17117745}, {"filename": "/data/combat.json", "start": 17117745, "end": 17118327}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17118327, "end": 17118566}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17118566, "end": 17118816}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17118816, "end": 17119110}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17119110, "end": 17119357}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17119357, "end": 17119613}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17119613, "end": 17119863}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17119863, "end": 17120117}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17120117, "end": 17120400}, {"filename": "/data/dialogue/handmaiden.json", "start": 17120400, "end": 17120685}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17120685, "end": 17121044}, {"filename": "/data/dialogue/princess_liora.json", "start": 17121044, "end": 17121318}, {"filename": "/data/dialogue/princess_victory.json", "start": 17121318, "end": 17121867}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17121867, "end": 17122445}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17122445, "end": 17123064}, {"filename": "/data/dialogue/villager_elder.json", "start": 17123064, "end": 17123704}, {"filename": "/data/enemies.json", "start": 17123704, "end": 17124752}, {"filename": "/data/items.json", "start": 17124752, "end": 17126138}, {"filename": "/data/stages/stage01.json", "start": 17126138, "end": 17127395}, {"filename": "/data/stages/stage02.json", "start": 17127395, "end": 17128622}, {"filename": "/data/stages/stage03.json", "start": 17128622, "end": 17129844}, {"filename": "/data/stages/stage04.json", "start": 17129844, "end": 17131094}, {"filename": "/data/stages/stage05.json", "start": 17131094, "end": 17132309}, {"filename": "/data/stages/stage06.json", "start": 17132309, "end": 17133519}, {"filename": "/data/stages/stage07.json", "start": 17133519, "end": 17134761}, {"filename": "/data/stages/stage08.json", "start": 17134761, "end": 17135990}, {"filename": "/data/stages/stage09.json", "start": 17135990, "end": 17137227}, {"filename": "/data/stages/stage10.json", "start": 17137227, "end": 17138461}, {"filename": "/data/stages/stage_11.json", "start": 17138461, "end": 17141076}, {"filename": "/data/story.json", "start": 17141076, "end": 17142408}], "remote_package_size": 17142408});
 
   })();
 
-// end include: /tmp/tmpn9uzkgj7.js
-// include: /tmp/tmpng86rv1w.js
+// end include: /tmp/tmp4tbxz4kp.js
+// include: /tmp/tmplcfigycj.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpng86rv1w.js
-// include: /tmp/tmpwdivavil.js
+  // end include: /tmp/tmplcfigycj.js
+// include: /tmp/tmpo6x9thu_.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpwdivavil.js
+  // end include: /tmp/tmpo6x9thu_.js
 
 
 var programArgs = [];
@@ -5399,330 +5399,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
     return fetch;
   }
 
-  var GLctx;
-  
-  var webgl_enable_ANGLE_instanced_arrays = (ctx) => {
-      // Extension available in WebGL 1 from Firefox 26 and Google Chrome 30 onwards. Core feature in WebGL 2.
-      var ext = ctx.getExtension('ANGLE_instanced_arrays');
-      // Because this extension is a core function in WebGL 2, assign the extension entry points in place of
-      // where the core functions will reside in WebGL 2. This way the calling code can call these without
-      // having to dynamically branch depending if running against WebGL 1 or WebGL 2.
-      if (ext) {
-        ctx['vertexAttribDivisor'] = (index, divisor) => ext['vertexAttribDivisorANGLE'](index, divisor);
-        ctx['drawArraysInstanced'] = (mode, first, count, primcount) => ext['drawArraysInstancedANGLE'](mode, first, count, primcount);
-        ctx['drawElementsInstanced'] = (mode, count, type, indices, primcount) => ext['drawElementsInstancedANGLE'](mode, count, type, indices, primcount);
-        return 1;
-      }
-    };
-  
-  var webgl_enable_OES_vertex_array_object = (ctx) => {
-      // Extension available in WebGL 1 from Firefox 25 and WebKit 536.28/desktop Safari 6.0.3 onwards. Core feature in WebGL 2.
-      var ext = ctx.getExtension('OES_vertex_array_object');
-      if (ext) {
-        ctx['createVertexArray'] = () => ext['createVertexArrayOES']();
-        ctx['deleteVertexArray'] = (vao) => ext['deleteVertexArrayOES'](vao);
-        ctx['bindVertexArray'] = (vao) => ext['bindVertexArrayOES'](vao);
-        ctx['isVertexArray'] = (vao) => ext['isVertexArrayOES'](vao);
-        return 1;
-      }
-    };
-  
-  var webgl_enable_WEBGL_draw_buffers = (ctx) => {
-      // Extension available in WebGL 1 from Firefox 28 onwards. Core feature in WebGL 2.
-      var ext = ctx.getExtension('WEBGL_draw_buffers');
-      if (ext) {
-        ctx['drawBuffers'] = (n, bufs) => ext['drawBuffersWEBGL'](n, bufs);
-        return 1;
-      }
-    };
-  
-  var webgl_enable_EXT_polygon_offset_clamp = (ctx) =>
-      !!(ctx.extPolygonOffsetClamp = ctx.getExtension('EXT_polygon_offset_clamp'));
-  
-  var webgl_enable_EXT_clip_control = (ctx) =>
-      !!(ctx.extClipControl = ctx.getExtension('EXT_clip_control'));
-  
-  var webgl_enable_WEBGL_polygon_mode = (ctx) =>
-      !!(ctx.webglPolygonMode = ctx.getExtension('WEBGL_polygon_mode'));
-  
-  var webgl_enable_WEBGL_multi_draw = (ctx) =>
-      // Closure is expected to be allowed to minify the '.multiDrawWebgl' property, so not accessing it quoted.
-      !!(ctx.multiDrawWebgl = ctx.getExtension('WEBGL_multi_draw'));
-  
-  var getEmscriptenSupportedExtensions = (ctx) => {
-      // Restrict the list of advertised extensions to those that we actually
-      // support.
-      var supportedExtensions = [
-        // WebGL 1 extensions
-        'ANGLE_instanced_arrays',
-        'EXT_blend_minmax',
-        'EXT_disjoint_timer_query',
-        'EXT_frag_depth',
-        'EXT_shader_texture_lod',
-        'EXT_sRGB',
-        'OES_element_index_uint',
-        'OES_fbo_render_mipmap',
-        'OES_standard_derivatives',
-        'OES_texture_float',
-        'OES_texture_half_float',
-        'OES_texture_half_float_linear',
-        'OES_vertex_array_object',
-        'WEBGL_color_buffer_float',
-        'WEBGL_depth_texture',
-        'WEBGL_draw_buffers',
-        // WebGL 1 and WebGL 2 extensions
-        'EXT_clip_control',
-        'EXT_color_buffer_half_float',
-        'EXT_depth_clamp',
-        'EXT_float_blend',
-        'EXT_polygon_offset_clamp',
-        'EXT_texture_compression_bptc',
-        'EXT_texture_compression_rgtc',
-        'EXT_texture_filter_anisotropic',
-        'KHR_parallel_shader_compile',
-        'OES_texture_float_linear',
-        'WEBGL_blend_func_extended',
-        'WEBGL_compressed_texture_astc',
-        'WEBGL_compressed_texture_etc',
-        'WEBGL_compressed_texture_etc1',
-        'WEBGL_compressed_texture_s3tc',
-        'WEBGL_compressed_texture_s3tc_srgb',
-        'WEBGL_debug_renderer_info',
-        'WEBGL_debug_shaders',
-        'WEBGL_lose_context',
-        'WEBGL_multi_draw',
-        'WEBGL_polygon_mode'
-      ];
-      // .getSupportedExtensions() can return null if context is lost, so coerce to empty array.
-      return ctx.getSupportedExtensions()?.filter(ext => supportedExtensions.includes(ext)) ?? [];
-    };
-  
-  
-  
-  
-  var GL = {
-  counter:1,
-  buffers:[],
-  programs:[],
-  framebuffers:[],
-  renderbuffers:[],
-  textures:[],
-  shaders:[],
-  vaos:[],
-  contexts:[],
-  offscreenCanvases:{
-  },
-  queries:[],
-  stringCache:{
-  },
-  unpackAlignment:4,
-  unpackRowLength:0,
-  recordError:(errorCode) => {
-        if (!GL.lastError) {
-          GL.lastError = errorCode;
-        }
-      },
-  getNewId:(table) => {
-        var ret = GL.counter++;
-        for (var i = table.length; i < ret; i++) {
-          table[i] = null;
-        }
-        return ret;
-      },
-  genObject:(n, buffers, createFunction, objectTable
-        ) => {
-        for (var i = 0; i < n; i++) {
-          var buffer = GLctx[createFunction]();
-          var id = buffer && GL.getNewId(objectTable);
-          if (buffer) {
-            buffer.name = id;
-            objectTable[id] = buffer;
-          } else {
-            GL.recordError(0x502 /* GL_INVALID_OPERATION */);
-          }
-          HEAP32[(((buffers)+(i*4))>>2)] = id;
-        }
-      },
-  getSource:(shader, count, string, length) => {
-        var source = '';
-        for (var i = 0; i < count; ++i) {
-          var len = length ? HEAPU32[(((length)+(i*4))>>2)] : undefined;
-          source += UTF8ToString(HEAPU32[(((string)+(i*4))>>2)], len);
-        }
-        return source;
-      },
-  createContext:(/** @type {HTMLCanvasElement} */ canvas, webGLContextAttributes) => {
-  
-        // BUG: Workaround Safari WebGL issue: After successfully acquiring WebGL
-        // context on a canvas, calling .getContext() will always return that
-        // context independent of which 'webgl' or 'webgl2'
-        // context version was passed. See:
-        //   https://webkit.org/b/222758
-        // and:
-        //   https://github.com/emscripten-core/emscripten/issues/13295.
-        // TODO: Once the bug is fixed and shipped in Safari, adjust the Safari
-        // version field in above check.
-        if (!canvas.getContextSafariWebGL2Fixed) {
-          canvas.getContextSafariWebGL2Fixed = canvas.getContext;
-          /** @type {function(this:HTMLCanvasElement, string, (Object|null)=): (Object|null)} */
-          function fixedGetContext(ver, attrs) {
-            var gl = canvas.getContextSafariWebGL2Fixed(ver, attrs);
-            return ((ver == 'webgl') == (gl instanceof WebGLRenderingContext)) ? gl : null;
-          }
-          canvas.getContext = fixedGetContext;
-        }
-  
-        var ctx =
-          canvas.getContext('webgl', webGLContextAttributes);
-  
-        if (!ctx) return 0;
-  
-        var handle = GL.registerContext(ctx, webGLContextAttributes);
-  
-        return handle;
-      },
-  registerContext:(ctx, webGLContextAttributes) => {
-        // without pthreads a context is just an integer ID
-        var handle = GL.getNewId(GL.contexts);
-  
-        var context = {
-          handle,
-          attributes: webGLContextAttributes,
-          version: webGLContextAttributes.majorVersion,
-          GLctx: ctx
-        };
-  
-        // Store the created context object so that we can access the context
-        // given a canvas without having to pass the parameters again.
-        if (ctx.canvas) ctx.canvas.GLctxObject = context;
-        GL.contexts[handle] = context;
-        if (typeof webGLContextAttributes.enableExtensionsByDefault == 'undefined' || webGLContextAttributes.enableExtensionsByDefault) {
-          GL.initExtensions(context);
-        }
-  
-        return handle;
-      },
-  makeContextCurrent:(contextHandle) => {
-  
-        // Active Emscripten GL layer context object.
-        GL.currentContext = GL.contexts[contextHandle];
-        // Active WebGL context object.
-        Module['ctx'] = GLctx = GL.currentContext?.GLctx;
-        return !(contextHandle && !GLctx);
-      },
-  getContext:(contextHandle) => {
-        return GL.contexts[contextHandle];
-      },
-  deleteContext:(contextHandle) => {
-        if (GL.currentContext === GL.contexts[contextHandle]) {
-          GL.currentContext = null;
-        }
-        if (typeof JSEvents == 'object') {
-          // Release all JS event handlers on the DOM element that the GL context is
-          // associated with since the context is now deleted.
-          JSEvents.removeAllHandlersOnTarget(GL.contexts[contextHandle].GLctx.canvas);
-        }
-        // Make sure the canvas object no longer refers to the context object so
-        // there are no GC surprises.
-        if (GL.contexts[contextHandle]?.GLctx.canvas) {
-          GL.contexts[contextHandle].GLctx.canvas.GLctxObject = undefined;
-        }
-        GL.contexts[contextHandle] = null;
-      },
-  initExtensions:(context) => {
-        // If this function is called without a specific context object, init the
-        // extensions of the currently active context.
-        context ||= GL.currentContext;
-  
-        if (context.initExtensionsDone) return;
-        context.initExtensionsDone = true;
-  
-        var GLctx = context.GLctx;
-  
-        // Detect the presence of a few extensions manually, since the GL interop
-        // layer itself will need to know if they exist.
-  
-        // Extensions that are available in both WebGL 1 and WebGL 2
-        webgl_enable_WEBGL_multi_draw(GLctx);
-        webgl_enable_EXT_polygon_offset_clamp(GLctx);
-        webgl_enable_EXT_clip_control(GLctx);
-        webgl_enable_WEBGL_polygon_mode(GLctx);
-        // Extensions that are only available in WebGL 1 (the calls will be no-ops
-        // if called on a WebGL 2 context active)
-        webgl_enable_ANGLE_instanced_arrays(GLctx);
-        webgl_enable_OES_vertex_array_object(GLctx);
-        webgl_enable_WEBGL_draw_buffers(GLctx);
-        {
-          GLctx.disjointTimerQueryExt = GLctx.getExtension('EXT_disjoint_timer_query');
-        }
-  
-        for (var ext of getEmscriptenSupportedExtensions(GLctx)) {
-          // WEBGL_lose_context, WEBGL_debug_renderer_info and WEBGL_debug_shaders
-          // are not enabled by default.
-          if (!ext.includes('lose_context') && !ext.includes('debug')) {
-            // Call .getExtension() to enable that extension permanently.
-            GLctx.getExtension(ext);
-          }
-        }
-      },
-  };
-  
-  var webglPowerPreferences = ["default","low-power","high-performance"];
-  
-  
-  
-  
-  var _emscripten_webgl_do_create_context = (target, attributes) => {
-      assert(attributes);
-      var attr32 = ((attributes)>>2);
-      var powerPreference = HEAP32[attr32 + (8>>2)];
-      var contextAttributes = {
-        'alpha': !!HEAP8[attributes + 0],
-        'depth': !!HEAP8[attributes + 1],
-        'stencil': !!HEAP8[attributes + 2],
-        'antialias': !!HEAP8[attributes + 3],
-        'premultipliedAlpha': !!HEAP8[attributes + 4],
-        'preserveDrawingBuffer': !!HEAP8[attributes + 5],
-        'powerPreference': webglPowerPreferences[powerPreference],
-        'failIfMajorPerformanceCaveat': !!HEAP8[attributes + 12],
-        'desynchronized': !!HEAP8[attributes + 33],
-        // The following are not predefined WebGL context attributes in the WebGL specification, so the property names can be minified by Closure.
-        majorVersion: HEAP32[attr32 + (16>>2)],
-        minorVersion: HEAP32[attr32 + (20>>2)],
-        enableExtensionsByDefault: HEAP8[attributes + 24],
-        explicitSwapControl: HEAP8[attributes + 25],
-        proxyContextToMainThread: HEAP32[attr32 + (28>>2)],
-        renderViaOffscreenBackBuffer: HEAP8[attributes + 32]
-      };
-  
-      //  TODO: Make these into hard errors at some point in the future
-      if (contextAttributes.majorVersion !== 1 && contextAttributes.majorVersion !== 2) {
-        err(`Invalid WebGL version requested: ${contextAttributes.majorVersion}`);
-      }
-      if (contextAttributes.majorVersion !== 1) {
-        err('WebGL 2 requested but only WebGL 1 is supported (set -sMAX_WEBGL_VERSION=2 to fix the problem)');
-      }
-  
-      var canvas = findCanvasEventTarget(target);
-  
-      if (!canvas) {
-        return 0;
-      }
-  
-      if (contextAttributes.explicitSwapControl) {
-        return 0;
-      }
-  
-      var contextHandle = GL.createContext(canvas, contextAttributes);
-      return contextHandle;
-    };
-  var _emscripten_webgl_create_context = _emscripten_webgl_do_create_context;
-
-  var _emscripten_webgl_make_context_current = (contextHandle) => {
-      var success = GL.makeContextCurrent(contextHandle);
-      return success ? 0 : -5;
-    };
-
   
   
   
@@ -8307,6 +7983,13 @@ if (Module['printErr']) err = Module['printErr'];
   '_setNetworkCallback',
   'heapObjectForWebGLType',
   'toTypedArrayIndex',
+  'webgl_enable_ANGLE_instanced_arrays',
+  'webgl_enable_OES_vertex_array_object',
+  'webgl_enable_WEBGL_draw_buffers',
+  'webgl_enable_WEBGL_multi_draw',
+  'webgl_enable_EXT_polygon_offset_clamp',
+  'webgl_enable_EXT_clip_control',
+  'webgl_enable_WEBGL_polygon_mode',
   'emscriptenWebGLGet',
   'computeUnpackAlignedImageSize',
   'colorChannelsInGlTextureFormat',
@@ -8555,13 +8238,6 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'tempFixedLengthArray',
   'miniTempWebGLFloatBuffers',
   'miniTempWebGLIntBuffers',
-  'webgl_enable_ANGLE_instanced_arrays',
-  'webgl_enable_OES_vertex_array_object',
-  'webgl_enable_WEBGL_draw_buffers',
-  'webgl_enable_WEBGL_multi_draw',
-  'webgl_enable_EXT_polygon_offset_clamp',
-  'webgl_enable_EXT_clip_control',
-  'webgl_enable_WEBGL_polygon_mode',
   'GL',
   'AL',
   'GLUT',
@@ -8818,10 +8494,6 @@ var wasmImports = {
   emscripten_set_main_loop: _emscripten_set_main_loop,
   /** @export */
   emscripten_start_fetch: _emscripten_start_fetch,
-  /** @export */
-  emscripten_webgl_create_context: _emscripten_webgl_create_context,
-  /** @export */
-  emscripten_webgl_make_context_current: _emscripten_webgl_make_context_current,
   /** @export */
   emwgpuAdapterRequestDevice: _emwgpuAdapterRequestDevice,
   /** @export */

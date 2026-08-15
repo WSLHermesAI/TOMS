@@ -1,0 +1,1 @@
+/home/fatming/opt/emsdk/upstream/emscripten/em++ CMakeFiles/font_test.dir/src/font_test.cpp.o CMakeFiles/font_test.dir/src/font.cpp.o -o font_test.js

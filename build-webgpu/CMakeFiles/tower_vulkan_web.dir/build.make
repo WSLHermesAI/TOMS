@@ -111,10 +111,24 @@ CMakeFiles/tower_vulkan_web.dir/src/renderer_webgl.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/tower_vulkan_web.dir/src/renderer_webgl.cpp.s"
 	/home/fatming/opt/emsdk/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/fatming/Desktop/TOMS/src/renderer_webgl.cpp -o CMakeFiles/tower_vulkan_web.dir/src/renderer_webgl.cpp.s
 
+CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o: CMakeFiles/tower_vulkan_web.dir/flags.make
+CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o: /home/fatming/Desktop/TOMS/src/font.cpp
+CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o: CMakeFiles/tower_vulkan_web.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/fatming/Desktop/TOMS/build-webgpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o"
+	/home/fatming/opt/emsdk/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o -MF CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o.d -o CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o -c /home/fatming/Desktop/TOMS/src/font.cpp
+
+CMakeFiles/tower_vulkan_web.dir/src/font.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/tower_vulkan_web.dir/src/font.cpp.i"
+	/home/fatming/opt/emsdk/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/fatming/Desktop/TOMS/src/font.cpp > CMakeFiles/tower_vulkan_web.dir/src/font.cpp.i
+
+CMakeFiles/tower_vulkan_web.dir/src/font.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/tower_vulkan_web.dir/src/font.cpp.s"
+	/home/fatming/opt/emsdk/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/fatming/Desktop/TOMS/src/font.cpp -o CMakeFiles/tower_vulkan_web.dir/src/font.cpp.s
+
 CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o: CMakeFiles/tower_vulkan_web.dir/flags.make
 CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o: /home/fatming/Desktop/TOMS/src/node.cpp
 CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o: CMakeFiles/tower_vulkan_web.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/fatming/Desktop/TOMS/build-webgpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/fatming/Desktop/TOMS/build-webgpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o"
 	/home/fatming/opt/emsdk/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o -MF CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o.d -o CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o -c /home/fatming/Desktop/TOMS/src/node.cpp
 
 CMakeFiles/tower_vulkan_web.dir/src/node.cpp.i: cmake_force
@@ -128,7 +142,7 @@ CMakeFiles/tower_vulkan_web.dir/src/node.cpp.s: cmake_force
 CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.o: CMakeFiles/tower_vulkan_web.dir/flags.make
 CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.o: /home/fatming/Desktop/TOMS/src/renderer_webgpu.cpp
 CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.o: CMakeFiles/tower_vulkan_web.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/fatming/Desktop/TOMS/build-webgpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/fatming/Desktop/TOMS/build-webgpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.o"
 	/home/fatming/opt/emsdk/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.o -MF CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.o.d -o CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.o -c /home/fatming/Desktop/TOMS/src/renderer_webgpu.cpp
 
 CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.i: cmake_force
@@ -144,6 +158,7 @@ tower_vulkan_web_OBJECTS = \
 "CMakeFiles/tower_vulkan_web.dir/src/emscripten_main.cpp.o" \
 "CMakeFiles/tower_vulkan_web.dir/src/game.cpp.o" \
 "CMakeFiles/tower_vulkan_web.dir/src/renderer_webgl.cpp.o" \
+"CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o" \
 "CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o" \
 "CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.o"
 
@@ -153,11 +168,12 @@ tower_vulkan_web_EXTERNAL_OBJECTS =
 /home/fatming/Desktop/TOMS/web/tower_vulkan_web.html: CMakeFiles/tower_vulkan_web.dir/src/emscripten_main.cpp.o
 /home/fatming/Desktop/TOMS/web/tower_vulkan_web.html: CMakeFiles/tower_vulkan_web.dir/src/game.cpp.o
 /home/fatming/Desktop/TOMS/web/tower_vulkan_web.html: CMakeFiles/tower_vulkan_web.dir/src/renderer_webgl.cpp.o
+/home/fatming/Desktop/TOMS/web/tower_vulkan_web.html: CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o
 /home/fatming/Desktop/TOMS/web/tower_vulkan_web.html: CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o
 /home/fatming/Desktop/TOMS/web/tower_vulkan_web.html: CMakeFiles/tower_vulkan_web.dir/src/renderer_webgpu.cpp.o
 /home/fatming/Desktop/TOMS/web/tower_vulkan_web.html: CMakeFiles/tower_vulkan_web.dir/build.make
 /home/fatming/Desktop/TOMS/web/tower_vulkan_web.html: CMakeFiles/tower_vulkan_web.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/fatming/Desktop/TOMS/build-webgpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable /home/fatming/Desktop/TOMS/web/tower_vulkan_web.html"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/fatming/Desktop/TOMS/build-webgpu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable /home/fatming/Desktop/TOMS/web/tower_vulkan_web.html"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/tower_vulkan_web.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

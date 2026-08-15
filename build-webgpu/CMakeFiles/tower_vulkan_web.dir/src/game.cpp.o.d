@@ -661,29 +661,35 @@ CMakeFiles/tower_vulkan_web.dir/src/game.cpp.o: \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__hash_table \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/default_searcher.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/not_fn.h \
-  /home/fatming/Desktop/TOMS/src/render_iface.h \
-  /home/fatming/Desktop/TOMS/src/stage.h \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/fstream \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/path.h \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/iomanip \
+  /home/fatming/Desktop/TOMS/src/object.h \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/unordered_set \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/iostream \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/istream \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__ostream/basic_ostream.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__ostream/put_character_sequence.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/bitset \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__type_traits/is_char_like_type.h \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/deque \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__algorithm/ranges_copy_n.h \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__algorithm/in_out_result.h \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__fwd/deque.h \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/ostream \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/format \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/queue \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__algorithm/ranges_copy.h \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__algorithm/in_out_result.h \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__fwd/deque.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__fwd/queue.h \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/deque \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__algorithm/ranges_copy_n.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/stack \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__fwd/stack.h \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/istream \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__ostream/basic_ostream.h \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/ostream \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/print \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/unistd.h \
+  /home/fatming/Desktop/TOMS/src/log.h \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/sstream \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/chrono \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__chrono/file_clock.h \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/forward_list \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/iomanip \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/fstream \
+  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/path.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/filesystem \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/copy_options.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/directory_entry.h \
@@ -691,7 +697,6 @@ CMakeFiles/tower_vulkan_web.dir/src/game.cpp.o: \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/file_type.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/perms.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/file_time_type.h \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__chrono/file_clock.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/filesystem_error.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/operations.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/perm_options.h \
@@ -701,8 +706,9 @@ CMakeFiles/tower_vulkan_web.dir/src/game.cpp.o: \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/path_iterator.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/recursive_directory_iterator.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/u8path.h \
+  /home/fatming/Desktop/TOMS/src/render_iface.h \
+  /home/fatming/Desktop/TOMS/src/stage.h \
   /home/fatming/Desktop/TOMS/external/json/json.hpp \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/forward_list \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/valarray \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/cassert \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/assert.h \
@@ -724,7 +730,8 @@ CMakeFiles/tower_vulkan_web.dir/src/game.cpp.o: \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/execution \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/__type_traits/is_execution_policy.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/any \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/chrono \
+  /home/fatming/Desktop/TOMS/src/font.h \
+  /home/fatming/Desktop/TOMS/external/stb/stb_truetype.h \
   /home/fatming/Desktop/TOMS/src/node.h \
   /home/fatming/opt/glm/glm/glm.hpp \
   /home/fatming/opt/glm/glm/detail/_fixes.hpp \
@@ -940,5 +947,4 @@ CMakeFiles/tower_vulkan_web.dir/src/game.cpp.o: \
   /home/fatming/Desktop/TOMS/src/scene.h \
   /home/fatming/Desktop/TOMS/src/renderer_webgpu.h \
   /home/fatming/opt/emsdk/upstream/emscripten/cache/ports/emdawnwebgpu/emdawnwebgpu_pkg/webgpu/include/webgpu/webgpu.h \
-  /home/fatming/opt/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1/sstream \
   /home/fatming/Desktop/TOMS/external/stb/stb_image.h

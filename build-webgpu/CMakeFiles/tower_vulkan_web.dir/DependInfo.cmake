@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/fatming/Desktop/TOMS/src/emscripten_main.cpp" "CMakeFiles/tower_vulkan_web.dir/src/emscripten_main.cpp.o" "gcc" "CMakeFiles/tower_vulkan_web.dir/src/emscripten_main.cpp.o.d"
+  "/home/fatming/Desktop/TOMS/src/font.cpp" "CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o" "gcc" "CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o.d"
   "/home/fatming/Desktop/TOMS/src/game.cpp" "CMakeFiles/tower_vulkan_web.dir/src/game.cpp.o" "gcc" "CMakeFiles/tower_vulkan_web.dir/src/game.cpp.o.d"
   "/home/fatming/Desktop/TOMS/src/node.cpp" "CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o" "gcc" "CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o.d"
   "/home/fatming/Desktop/TOMS/src/renderer_webgl.cpp" "CMakeFiles/tower_vulkan_web.dir/src/renderer_webgl.cpp.o" "gcc" "CMakeFiles/tower_vulkan_web.dir/src/renderer_webgl.cpp.o.d"

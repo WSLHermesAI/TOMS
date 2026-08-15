@@ -142,6 +142,45 @@ node_test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/node_test.dir/build.make CMakeFiles/node_test.dir/build
 .PHONY : node_test/fast
 
+#=============================================================================
+# Target rules for targets named object_test
+
+# Build rule for target.
+object_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 object_test
+.PHONY : object_test
+
+# fast build rule for target.
+object_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/object_test.dir/build.make CMakeFiles/object_test.dir/build
+.PHONY : object_test/fast
+
+#=============================================================================
+# Target rules for targets named log_test
+
+# Build rule for target.
+log_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 log_test
+.PHONY : log_test
+
+# fast build rule for target.
+log_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/log_test.dir/build.make CMakeFiles/log_test.dir/build
+.PHONY : log_test/fast
+
+#=============================================================================
+# Target rules for targets named font_test
+
+# Build rule for target.
+font_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 font_test
+.PHONY : font_test
+
+# fast build rule for target.
+font_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/font_test.dir/build.make CMakeFiles/font_test.dir/build
+.PHONY : font_test/fast
+
 src/emscripten_main.o: src/emscripten_main.cpp.o
 .PHONY : src/emscripten_main.o
 
@@ -165,6 +204,57 @@ src/emscripten_main.s: src/emscripten_main.cpp.s
 src/emscripten_main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tower_vulkan_web.dir/build.make CMakeFiles/tower_vulkan_web.dir/src/emscripten_main.cpp.s
 .PHONY : src/emscripten_main.cpp.s
+
+src/font.o: src/font.cpp.o
+.PHONY : src/font.o
+
+# target to build an object file
+src/font.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/tower_vulkan_web.dir/build.make CMakeFiles/tower_vulkan_web.dir/src/font.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/font_test.dir/build.make CMakeFiles/font_test.dir/src/font.cpp.o
+.PHONY : src/font.cpp.o
+
+src/font.i: src/font.cpp.i
+.PHONY : src/font.i
+
+# target to preprocess a source file
+src/font.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/tower_vulkan_web.dir/build.make CMakeFiles/tower_vulkan_web.dir/src/font.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/font_test.dir/build.make CMakeFiles/font_test.dir/src/font.cpp.i
+.PHONY : src/font.cpp.i
+
+src/font.s: src/font.cpp.s
+.PHONY : src/font.s
+
+# target to generate assembly for a file
+src/font.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/tower_vulkan_web.dir/build.make CMakeFiles/tower_vulkan_web.dir/src/font.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/font_test.dir/build.make CMakeFiles/font_test.dir/src/font.cpp.s
+.PHONY : src/font.cpp.s
+
+src/font_test.o: src/font_test.cpp.o
+.PHONY : src/font_test.o
+
+# target to build an object file
+src/font_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/font_test.dir/build.make CMakeFiles/font_test.dir/src/font_test.cpp.o
+.PHONY : src/font_test.cpp.o
+
+src/font_test.i: src/font_test.cpp.i
+.PHONY : src/font_test.i
+
+# target to preprocess a source file
+src/font_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/font_test.dir/build.make CMakeFiles/font_test.dir/src/font_test.cpp.i
+.PHONY : src/font_test.cpp.i
+
+src/font_test.s: src/font_test.cpp.s
+.PHONY : src/font_test.s
+
+# target to generate assembly for a file
+src/font_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/font_test.dir/build.make CMakeFiles/font_test.dir/src/font_test.cpp.s
+.PHONY : src/font_test.cpp.s
 
 src/game.o: src/game.cpp.o
 .PHONY : src/game.o
@@ -190,6 +280,30 @@ src/game.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tower_vulkan_web.dir/build.make CMakeFiles/tower_vulkan_web.dir/src/game.cpp.s
 .PHONY : src/game.cpp.s
 
+src/log_test.o: src/log_test.cpp.o
+.PHONY : src/log_test.o
+
+# target to build an object file
+src/log_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/log_test.dir/build.make CMakeFiles/log_test.dir/src/log_test.cpp.o
+.PHONY : src/log_test.cpp.o
+
+src/log_test.i: src/log_test.cpp.i
+.PHONY : src/log_test.i
+
+# target to preprocess a source file
+src/log_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/log_test.dir/build.make CMakeFiles/log_test.dir/src/log_test.cpp.i
+.PHONY : src/log_test.cpp.i
+
+src/log_test.s: src/log_test.cpp.s
+.PHONY : src/log_test.s
+
+# target to generate assembly for a file
+src/log_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/log_test.dir/build.make CMakeFiles/log_test.dir/src/log_test.cpp.s
+.PHONY : src/log_test.cpp.s
+
 src/node.o: src/node.cpp.o
 .PHONY : src/node.o
 
@@ -197,6 +311,7 @@ src/node.o: src/node.cpp.o
 src/node.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tower_vulkan_web.dir/build.make CMakeFiles/tower_vulkan_web.dir/src/node.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/node_test.dir/build.make CMakeFiles/node_test.dir/src/node.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/object_test.dir/build.make CMakeFiles/object_test.dir/src/node.cpp.o
 .PHONY : src/node.cpp.o
 
 src/node.i: src/node.cpp.i
@@ -206,6 +321,7 @@ src/node.i: src/node.cpp.i
 src/node.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tower_vulkan_web.dir/build.make CMakeFiles/tower_vulkan_web.dir/src/node.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/node_test.dir/build.make CMakeFiles/node_test.dir/src/node.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/object_test.dir/build.make CMakeFiles/object_test.dir/src/node.cpp.i
 .PHONY : src/node.cpp.i
 
 src/node.s: src/node.cpp.s
@@ -215,6 +331,7 @@ src/node.s: src/node.cpp.s
 src/node.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tower_vulkan_web.dir/build.make CMakeFiles/tower_vulkan_web.dir/src/node.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/node_test.dir/build.make CMakeFiles/node_test.dir/src/node.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/object_test.dir/build.make CMakeFiles/object_test.dir/src/node.cpp.s
 .PHONY : src/node.cpp.s
 
 src/node_test.o: src/node_test.cpp.o
@@ -240,6 +357,30 @@ src/node_test.s: src/node_test.cpp.s
 src/node_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/node_test.dir/build.make CMakeFiles/node_test.dir/src/node_test.cpp.s
 .PHONY : src/node_test.cpp.s
+
+src/object_test.o: src/object_test.cpp.o
+.PHONY : src/object_test.o
+
+# target to build an object file
+src/object_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/object_test.dir/build.make CMakeFiles/object_test.dir/src/object_test.cpp.o
+.PHONY : src/object_test.cpp.o
+
+src/object_test.i: src/object_test.cpp.i
+.PHONY : src/object_test.i
+
+# target to preprocess a source file
+src/object_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/object_test.dir/build.make CMakeFiles/object_test.dir/src/object_test.cpp.i
+.PHONY : src/object_test.cpp.i
+
+src/object_test.s: src/object_test.cpp.s
+.PHONY : src/object_test.s
+
+# target to generate assembly for a file
+src/object_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/object_test.dir/build.make CMakeFiles/object_test.dir/src/object_test.cpp.s
+.PHONY : src/object_test.cpp.s
 
 src/renderer_webgl.o: src/renderer_webgl.cpp.o
 .PHONY : src/renderer_webgl.o
@@ -297,20 +438,35 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... font_test"
+	@echo "... log_test"
 	@echo "... node_test"
+	@echo "... object_test"
 	@echo "... tower_vulkan_web"
 	@echo "... src/emscripten_main.o"
 	@echo "... src/emscripten_main.i"
 	@echo "... src/emscripten_main.s"
+	@echo "... src/font.o"
+	@echo "... src/font.i"
+	@echo "... src/font.s"
+	@echo "... src/font_test.o"
+	@echo "... src/font_test.i"
+	@echo "... src/font_test.s"
 	@echo "... src/game.o"
 	@echo "... src/game.i"
 	@echo "... src/game.s"
+	@echo "... src/log_test.o"
+	@echo "... src/log_test.i"
+	@echo "... src/log_test.s"
 	@echo "... src/node.o"
 	@echo "... src/node.i"
 	@echo "... src/node.s"
 	@echo "... src/node_test.o"
 	@echo "... src/node_test.i"
 	@echo "... src/node_test.s"
+	@echo "... src/object_test.o"
+	@echo "... src/object_test.i"
+	@echo "... src/object_test.s"
 	@echo "... src/renderer_webgl.o"
 	@echo "... src/renderer_webgl.i"
 	@echo "... src/renderer_webgl.s"

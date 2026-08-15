@@ -50,4 +50,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/tower_vulkan_web.dir/DependInfo.cmake"
   "CMakeFiles/node_test.dir/DependInfo.cmake"
+  "CMakeFiles/object_test.dir/DependInfo.cmake"
+  "CMakeFiles/log_test.dir/DependInfo.cmake"
+  "CMakeFiles/font_test.dir/DependInfo.cmake"
   )

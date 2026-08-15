@@ -74,7 +74,8 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
 }
 
 int main() {
-    // --- WebGL2 context on the <canvas> ---
+#ifndef WEBGPU
+    // --- WebGL2 context on the <canvas> --- (WebGPU builds create their own surface)
     EmscriptenWebGLContextAttributes attrs;
     emscripten_webgl_init_context_attributes(&attrs);
     attrs.majorVersion = 2; attrs.minorVersion = 0;
@@ -82,6 +83,7 @@ int main() {
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = emscripten_webgl_create_context("#canvas", &attrs);
     if (!ctx) { fprintf(stderr, "[web] failed to create WebGL2 context\n"); return 1; }
     emscripten_webgl_make_context_current(ctx);
+#endif
     emscripten_set_canvas_element_size("#canvas", 1024, 768);
 
     emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, 1, keyCb);

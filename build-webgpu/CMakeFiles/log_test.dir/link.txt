@@ -1,0 +1,1 @@
+/home/fatming/opt/emsdk/upstream/emscripten/em++ CMakeFiles/log_test.dir/src/log_test.cpp.o -o log_test.js
