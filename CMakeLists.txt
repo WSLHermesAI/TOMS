@@ -123,8 +123,12 @@ if(WEB)
 endif()
 
 # ---------------------------------------------------------------------------
-# Headless unit test for the Node scene-graph (no rendering). Run: ./node_test
+# Headless unit tests for the Node scene-graph + Object base (no rendering).
+# Run: ./node_test  and  ./object_test
 # ---------------------------------------------------------------------------
 add_executable(node_test src/node_test.cpp src/node.cpp src/node.h)
 target_include_directories(node_test PRIVATE ${CMAKE_SOURCE_DIR}/src $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+
+add_executable(object_test src/object_test.cpp src/node.cpp src/node.h src/scene.h src/object.h)
+target_include_directories(object_test PRIVATE ${CMAKE_SOURCE_DIR}/src $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 

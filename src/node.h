@@ -9,7 +9,11 @@
 //
 // Conventions (same as Frame): X = right, Y = up. For 2D we use glm::mat3 affine
 // transforms (column-major: columns are [right, up, translation]).
+//
+// Node also inherits Object (src/object.h) so every node is a typed, named,
+// unique-ID'd, shared_ptr-friendly game object.
 #pragma once
+#include "object.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <cassert>
@@ -22,14 +26,14 @@ namespace toms {
 
 constexpr float NODE_DIRTY_WORLD_CACHE = 1e10f;  // sentinel: world cache invalid
 
-class Node {
+class Node : public Object {
 public:
     Node() { resetCache(); }
-    explicit Node(const std::string& name) : m_name(name) { resetCache(); }
+    explicit Node(const std::string& name) { SetName(name); resetCache(); }
     virtual ~Node() { SetParent(nullptr); }
 
-    const std::string& name() const { return m_name; }
-    void setName(const std::string& n) { m_name = n; }
+    const std::string& name() const { return Name(); }
+    void setName(const std::string& n) { SetName(n); }
 
     // ---- hierarchy ----
     void AddChild(Node* child, bool updateRelatedPosition = true);
@@ -89,6 +93,10 @@ public:
     bool IsVisible() const { return m_visible; }
     void SetVisible(bool v) { m_visible = v; }
 
+    // shared_ptr convenience: make a shared Node-derived object
+    template <class T, class... Args>
+    static std::shared_ptr<T> Make(Args&&... args) { return Object::Make<T>(std::forward<Args>(args)...); }
+
 protected:
     void UpdateCachedWorldTransformIfNeeded();
     void SetCachedWorldTransformDirty();
@@ -101,7 +109,6 @@ protected:
 
     glm::mat3   m_local;
     glm::mat3   m_world;     // cached; [0][0]==1e10 means dirty
-    std::string m_name;
     bool        m_visible;
 
     Node* m_parent = nullptr;

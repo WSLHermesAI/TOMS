@@ -2,7 +2,15 @@
 
 Track what was done, by date.
 
-- **2026-08-14** — **Batch rendering** added (`src/batch_renderer.h`) for the Vulkan
+- **2026-08-14** — **Object base class** added (`src/object.h`): the lowest-level
+  base for every game object, porting FM79979 `NamedTypedObject` intent. Each object
+  knows its **type** (`Type()`/`StaticType()`/`IsType<T>`), its **name**
+  (`Name()`/`SetName`), and a **unique ID** (`UniqueID()`), and is designed to be
+  owned by `std::shared_ptr` so it **auto-releases** (`enable_shared_from_this` +
+  `As<T>()` downcast + `Make<T>()` factory). `Node` now inherits `Object`, so every
+  scene-graph node (GameObject/SpriteNode/TextNode/FullScreenSplash) is typed,
+  named, and ref-countable for free. `object_test` verifies (7 groups): type/name/
+  uid, IsType, As downcast, and shared_ptr auto-release. (commit `1fb3fb3`+)
   backend: a `BatchRenderer` ports the FM79979 `BatchDataMultiTexture` *group-then-flush*
   design — quads are accumulated and a new draw batch starts when the texture-set or
   blend mode changes. Renderer::end() now uploads a **4-vert + 6-index per quad** buffer

@@ -24,6 +24,7 @@
 namespace toms {
 
 class GameObject : public Node {
+    TOMS_OBJECT(GameObject)
 public:
     using Node::Node;   // inherit Node(const char* name) etc.
     virtual ~GameObject() {}
@@ -44,6 +45,7 @@ public:
 // The common render: assign a texture (uv) + size + tint, and it draws itself
 // at the node's world rect. Perfect for map sprites, item icons, slots, etc.
 class SpriteNode : public GameObject {
+    TOMS_OBJECT(SpriteNode)
 public:
     float size[2] = {32.0f, 32.0f};
     float uv[4]   = {0.0f, 0.0f, 1.0f, 1.0f};
@@ -62,6 +64,7 @@ public:
 // Draws a string at the node's world position. The actual glyph rasterization is
 // delegated to DrawFn (set once by the game, since font/atlas lives there).
 class TextNode : public GameObject {
+    TOMS_OBJECT(TextNode)
 public:
     std::string text;
     float size = 16.0f;
@@ -80,6 +83,7 @@ public:
 
 // Full-screen colored quad (used for the focus splash behind modals).
 class FullScreenSplash : public GameObject {
+    TOMS_OBJECT(FullScreenSplash)
 public:
     float w = 1024.0f, h = 768.0f;
     float tint[4] = {0.0f, 0.0f, 0.0f, 0.8f};
