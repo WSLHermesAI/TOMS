@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
 #endif
         );
         if (!g.loadAssets(assetDir)) { std::cerr << "asset load failed\n"; return 1; }
+        if (const char* hm = std::getenv("TOMS_HIDE")) g.hideMask = std::atoi(hm);
         g.loadStage("stage01");
 
         std::cout << "loaded stage 1\n";

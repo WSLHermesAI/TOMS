@@ -25,13 +25,14 @@
 #include <cstdint>
 #include "render_iface.h"   // Quad
 
-// Interleaved vertex: aPos(2) aRect(4) aUVrc(4) aTint(4) = 14 floats (matches
-// the Vulkan pipeline attributes in renderer.cpp).
-static const int BR_FPV = 14;
+// Interleaved vertex: aPos(2) aRect(4) aUVrc(4) aTint(4) aSolid(1) = 15 floats
+// (matches the Vulkan/WebGL pipeline attributes in renderer.cpp / renderer_webgl.cpp).
+static const int BR_FPV = 15;
 
 struct Batch {
     void*     texSet      = nullptr; // texture key (sprite atlas / font atlas / future)
     uint32_t  blend       = 0;       // blend-mode key (0 = srcAlpha/oneMinusSrcAlpha)
+    bool      solid       = false;   // true => flat color, sample dummy texture
     uint32_t  indexOffset = 0;       // start index into the shared index buffer
     uint32_t  indexCount  = 0;       // number of indices in this batch
 };
@@ -51,18 +52,18 @@ public:
         ibuf.reserve(4096 * 6);
     }
 
-    // Add one quad. Starts a new batch when texSet or blend differs from the
-    // current batch (mirrors cBatchDataMultiTexture::GetTextureIndexFromCurrentData
+    // Add one quad. Starts a new batch when texSet, blend, or solid differs from
+    // the current batch (mirrors cBatchDataMultiTexture::GetTextureIndexFromCurrentData
     // returning -1 and spilling to a fresh batch).
     void add(const Quad& q, void* texSet, uint32_t blend) {
         if (!batches.empty()) {
             Batch& cur = batches.back();
-            if (cur.texSet == texSet && cur.blend == blend) {
+            if (cur.texSet == texSet && cur.blend == blend && cur.solid == q.solid) {
                 appendQuad(q);                 // same batch
                 return;
             }
         }
-        Batch b; b.texSet = texSet; b.blend = blend;
+        Batch b; b.texSet = texSet; b.blend = blend; b.solid = q.solid;
         b.indexOffset = (uint32_t)ibuf.size();
         batches.push_back(b);
         appendQuad(q);                          // new batch
@@ -80,7 +81,7 @@ public:
 
 private:
     void appendQuad(const Quad& q) {
-        // 4 corners: (0,0)(1,0)(1,1)(0,1) -- all share rect/uv/tint
+        // 4 corners: (0,0)(1,0)(1,1)(0,1) -- all share rect/uv/tint/solid
         static const float corners[4][2] = {{0,0},{1,0},{1,1},{0,1}};
         size_t vbase = vbuf.size();
         vbuf.resize(vbase + 4 * BR_FPV);
@@ -90,6 +91,7 @@ private:
             vp[2]  = q.rect[0]; vp[3]  = q.rect[1]; vp[4]  = q.rect[2]; vp[5]  = q.rect[3];
             vp[6]  = q.uv[0];   vp[7]  = q.uv[1];   vp[8]  = q.uv[2];   vp[9]  = q.uv[3];
             vp[10] = q.tint[0];  vp[11] = q.tint[1];  vp[12] = q.tint[2];  vp[13] = q.tint[3];
+            vp[14] = q.solid ? 1.0f : 0.0f;
         }
         uint32_t base = (uint32_t)(vbase / BR_FPV);
         uint32_t idx[6] = { base, base+1, base+2, base, base+2, base+3 };

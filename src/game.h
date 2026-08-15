@@ -67,6 +67,9 @@ public:
     bool modalActive() const { return cs.active || inDialogue || invOpen; }  // any overlay open (combat/dialogue/inventory)
     Player& player() { return pl; }
     IRenderer* renderer() { return ren; }   // for batch-metric inspection (demo)
+    // DEBUG: hide individual overlay subsystems to bisect stray-sprite bugs.
+    // bit 1 = combat overlay, bit 2 = dialogue overlay, bit 4 = inventory UI.
+    int hideMask = 0;
     // text drawing used by TextNode (render-bound text in the scene graph)
     void drawTextPublic(const std::string& s, float x, float y, float sz, const float* t);
     CombatState& combat() { return cs; }

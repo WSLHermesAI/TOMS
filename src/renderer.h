@@ -42,6 +42,12 @@ public:
     uint32_t lastDrawCalls=0;   // draw calls issued by the last end() (batch metric)
     size_t   lastQuadCount=0;   // quads batched by the last end() (batch metric)
     Atlas spriteAtlas_, fontAtlas_;
+    // dummy 1x1 (vec4(0)) texture used by solid-color batches so the shader can
+    // sample "nothing" instead of the real atlas.
+    VkImage   solidImg_   = VK_NULL_HANDLE;
+    VkImageView solidView_ = VK_NULL_HANDLE;
+    VkDeviceMemory solidMem_ = VK_NULL_HANDLE;
+    VkDescriptorSet solidSet_ = VK_NULL_HANDLE;
     std::vector<Quad> sprites, texts;
 
     void init(uint32_t w, uint32_t h) override;

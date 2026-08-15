@@ -11,6 +11,7 @@ struct Quad {
     float rect[4];   // x,y,w,h in pixels (dst)
     float uv[4];     // u0,v0,u1,v1 (src atlas)
     float tint[4];   // rgba
+    bool  solid = false;  // true => draw flat tint, ignore the texture (solid-color rect)
 };
 
 // Shared sprite-grid layout (must match Game::SPRITE_ORDER in game.cpp).

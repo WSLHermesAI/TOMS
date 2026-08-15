@@ -34,11 +34,13 @@ struct VSIn {
   @location(1) rect: vec4f,
   @location(2) uv: vec4f,
   @location(3) tint: vec4f,
+  @location(4) solid: f32,
 };
 struct VSOut {
   @builtin(position) clip: vec4f,
   @location(0) uv: vec2f,
   @location(1) tint: vec4f,
+  @location(2) @interpolate(flat) solid: f32,
 };
 @group(0) @binding(0) var<uniform> uRes: vec2f;
 @group(0) @binding(1) var tex: texture_2d<f32>;
@@ -51,9 +53,14 @@ struct VSOut {
   o.clip = vec4f(clip, 0.0, 1.0);
   o.uv = i.uv.xy + i.pos * (i.uv.zw - i.uv.xy);
   o.tint = i.tint;
+  o.solid = i.solid;
   return o;
 }
 @fragment fn fs(i: VSOut) -> @location(0) vec4f {
+  if (i.solid > 0.5) {
+    if (i.tint.a < 0.004) { discard; }
+    return i.tint;
+  }
   let c = textureSample(tex, samp, i.uv);
   if (c.a < 0.01) { discard; }
   return vec4f(c.rgb * i.tint.rgb, c.a * i.tint.a);
@@ -61,7 +68,7 @@ struct VSOut {
 )";
 
 static void pushQuad(std::vector<float>& dst, const Quad& q) {
-    // 6 vertices (2 triangles), 14 floats each: pos2 rect4 uv4 tint4
+    // 6 vertices (2 triangles), 15 floats each: pos2 rect4 uv4 tint4 solid1
     static const float c[6][2] = {{0,0},{1,0},{0,1},{1,0},{1,1},{0,1}};
     for (int i = 0; i < 6; ++i) {
         dst.push_back(c[i][0]); dst.push_back(c[i][1]);
@@ -71,6 +78,7 @@ static void pushQuad(std::vector<float>& dst, const Quad& q) {
         dst.push_back(q.uv[2]); dst.push_back(q.uv[3]);
         dst.push_back(q.tint[0]); dst.push_back(q.tint[1]);
         dst.push_back(q.tint[2]); dst.push_back(q.tint[3]);
+        dst.push_back(q.solid ? 1.0f : 0.0f);
     }
 }
 
@@ -204,14 +212,15 @@ void WebGPURenderer::ensureBuilt() {
     pld.bindGroupLayoutCount = 1; pld.bindGroupLayouts = &bgl;
     WGPUPipelineLayout layout = wgpuDeviceCreatePipelineLayout(device, &pld);
 
-    // vertex buffer layout (14 floats / 56 bytes)
-    WGPUVertexAttribute attrs[4] = {};
+    // vertex buffer layout (15 floats / 60 bytes)
+    WGPUVertexAttribute attrs[5] = {};
     attrs[0].shaderLocation = 0; attrs[0].offset = 0;   attrs[0].format = WGPUVertexFormat_Float32x2;
     attrs[1].shaderLocation = 1; attrs[1].offset = 8;   attrs[1].format = WGPUVertexFormat_Float32x4;
     attrs[2].shaderLocation = 2; attrs[2].offset = 24;  attrs[2].format = WGPUVertexFormat_Float32x4;
     attrs[3].shaderLocation = 3; attrs[3].offset = 40;  attrs[3].format = WGPUVertexFormat_Float32x4;
+    attrs[4].shaderLocation = 4; attrs[4].offset = 56;  attrs[4].format = WGPUVertexFormat_Float32;
     WGPUVertexBufferLayout vbl = {};
-    vbl.arrayStride = 56; vbl.attributeCount = 4; vbl.attributes = attrs;
+    vbl.arrayStride = 60; vbl.attributeCount = 5; vbl.attributes = attrs;
 
     WGPUBlendComponent bc = WGPU_BLEND_COMPONENT_INIT;
     bc.srcFactor = WGPUBlendFactor_SrcAlpha; bc.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha; bc.operation = WGPUBlendOperation_Add;
@@ -305,7 +314,7 @@ void WebGPURenderer::flush(std::vector<float>& verts, WGPUBindGroup bg) {
     wgpuRenderPassEncoderSetPipeline(pass, pipeline);
     wgpuRenderPassEncoderSetBindGroup(pass, 0, bg, 0, nullptr);
     wgpuRenderPassEncoderSetVertexBuffer(pass, 0, vbuf, 0, need);
-    wgpuRenderPassEncoderDraw(pass, (uint32_t)(verts.size() / 14), 1, 0, 0);
+    wgpuRenderPassEncoderDraw(pass, (uint32_t)(verts.size() / 15), 1, 0, 0);
     wgpuRenderPassEncoderEnd(pass);
     WGPUCommandBuffer cb = wgpuCommandEncoderFinish(enc, nullptr);
     wgpuQueueSubmit(queue, 1, &cb);

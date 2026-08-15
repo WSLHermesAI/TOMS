@@ -50,6 +50,7 @@ public:
     float size[2] = {32.0f, 32.0f};
     float uv[4]   = {0.0f, 0.0f, 1.0f, 1.0f};
     float tint[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    bool  solid   = false;   // true => flat color quad (ignore the texture)
 
     void Render(IRenderer* ren) override {
         glm::vec4 r = WorldRect(glm::vec2(size[0], size[1]));
@@ -57,6 +58,7 @@ public:
         q.rect[0] = r.x; q.rect[1] = r.y; q.rect[2] = r.z; q.rect[3] = r.w;
         q.uv[0] = uv[0]; q.uv[1] = uv[1]; q.uv[2] = uv[2]; q.uv[3] = uv[3];
         q.tint[0] = tint[0]; q.tint[1] = tint[1]; q.tint[2] = tint[2]; q.tint[3] = tint[3];
+        q.solid = solid;
         ren->drawSprite(q);
     }
 };
@@ -89,7 +91,7 @@ public:
     float tint[4] = {0.0f, 0.0f, 0.0f, 0.8f};
     void Render(IRenderer* ren) override {
         Quad q; q.rect[0]=0; q.rect[1]=0; q.rect[2]=w; q.rect[3]=h;
-        q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1;
+        q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;   // flat color, not texture
         q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
         ren->drawSprite(q);
     }

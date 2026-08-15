@@ -238,12 +238,12 @@ void Game::drawTextPublic(const std::string& s, float x, float y, float sz, cons
 void Game::drawBar(float x, float y, float w, float h, float frac, const float col[4]) {
     // background
     Quad bg; bg.rect[0]=x; bg.rect[1]=y; bg.rect[2]=w; bg.rect[3]=h;
-    bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1;
+    bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1; bg.solid=true;
     bg.tint[0]=0.2f;bg.tint[1]=0.2f;bg.tint[2]=0.25f;bg.tint[3]=1; ren->drawSprite(bg);
     float fw = w * std::max(0.0f, std::min(1.0f, frac));
     if (fw > 0) {
         Quad fg; fg.rect[0]=x; fg.rect[1]=y; fg.rect[2]=fw; fg.rect[3]=h;
-        fg.uv[0]=0;fg.uv[1]=0;fg.uv[2]=1;fg.uv[3]=1;
+        fg.uv[0]=0;fg.uv[1]=0;fg.uv[2]=1;fg.uv[3]=1; fg.solid=true;
         fg.tint[0]=col[0];fg.tint[1]=col[1];fg.tint[2]=col[2];fg.tint[3]=1; ren->drawSprite(fg);
     }
 }
@@ -307,7 +307,7 @@ void Game::draw() {
     drawText(st.story_note, 16, H-30, 16, C4(0.8f,0.85f,1.0f,1));
 
     // combat overlay
-    if (cs.active || (cs.won || cs.log.find("倒下")!=std::string::npos)) {
+    if ((hideMask & 1) == 0 && (cs.active || (cs.won || cs.log.find("倒下")!=std::string::npos))) {
         drawFocusSplash();
         float cx = W/2 - 250;
         drawText("⚔ 戰鬥！ " + cs.enemy.name, cx, 120, 26, C4(1,0.6f,0.4f,1));
@@ -323,10 +323,10 @@ void Game::draw() {
     }
 
     // dialogue overlay
-    if (inDialogue) {
+    if ((hideMask & 2) == 0 && inDialogue) {
         drawFocusSplash();
         Quad box; box.rect[0]=40; box.rect[1]=H-200; box.rect[2]=W-80; box.rect[3]=170;
-        box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1;
+        box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1; box.solid=true;
         box.tint[0]=0.1f;box.tint[1]=0.12f;box.tint[2]=0.2f;box.tint[3]=0.95f; ren->drawSprite(box);
         std::string txt = dlgData["nodes"][dlgNode]["text"];
         drawText(txt, 60, H-180, 20, tint);
@@ -336,7 +336,7 @@ void Game::draw() {
     }
 
     // inventory UI (9-grid, extendable) — toggle with I
-    drawInventory();
+    if ((hideMask & 4) == 0) drawInventory();
 
     ren->end();
 }
@@ -422,7 +422,7 @@ void Game::drawFocusSplash() {
     // full-screen black splash (transparent 50%) so the player focuses on the
     // active modal scene (combat / dialogue / inventory).
     Quad dim; dim.rect[0]=0; dim.rect[1]=0; dim.rect[2]=W; dim.rect[3]=H;
-    dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1;
+    dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1; dim.solid=true;
     dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.8f; ren->drawSprite(dim);
 }
 void Game::drawInventory() {
@@ -453,6 +453,7 @@ void Game::drawInventory() {
 
     // panel background (a SpriteNode = common render: just assign size+tint)
     toms::SpriteNode panelBg;
+    panelBg.solid = true;   // flat color panel, not a textured sprite
     panelBg.SetLocalPosition(glm::vec2(-12.0f, -44.0f));
     panelBg.size[0] = (float)(gw + 24); panelBg.size[1] = (float)(rows*cell + (rows-1)*gap + 92);
     panelBg.tint[0]=0.12f; panelBg.tint[1]=0.14f; panelBg.tint[2]=0.22f; panelBg.tint[3]=0.96f;
@@ -471,6 +472,7 @@ void Game::drawInventory() {
         int r = i / cols, c = i % cols;
         slots[i].SetLocalPosition(glm::vec2((float)(c*(cell+gap)), (float)(r*(cell+gap))));
         slots[i].size[0] = slots[i].size[1] = (float)cell;
+        slots[i].solid = true;   // colored cell background, not a texture
         bool occupied = (i < (int)pl.inv.size());
         if (occupied) { slots[i].tint[0]=0.18f; slots[i].tint[1]=0.2f; slots[i].tint[2]=0.28f; slots[i].tint[3]=1; }
         else          { slots[i].tint[0]=0.1f; slots[i].tint[1]=0.11f; slots[i].tint[2]=0.16f; slots[i].tint[3]=0.9f; }
@@ -485,6 +487,7 @@ void Game::drawInventory() {
             if (i == invSel) {
                 hi[i].SetLocalPosition(glm::vec2(-2.0f, -2.0f));
                 hi[i].size[0] = hi[i].size[1] = (float)(cell+4);
+                hi[i].solid = true;   // colored highlight border
                 hi[i].tint[0]=1; hi[i].tint[1]=0.85f; hi[i].tint[2]=0.2f; hi[i].tint[3]=1;
                 slots[i].AddChild(&hi[i]);
             }

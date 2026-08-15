@@ -82,12 +82,13 @@ void Renderer::init(uint32_t w, uint32_t h) {
 
     // pipeline (vertex: pos2, rect4, uvRC4, tint4 = 14 floats)
     VkVertexInputBindingDescription bind{};
-    bind.binding = 0; bind.stride = 14 * 4; bind.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    std::array<VkVertexInputAttributeDescription, 4> attr{};
+    bind.binding = 0; bind.stride = 15 * 4; bind.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    std::array<VkVertexInputAttributeDescription, 5> attr{};
     attr[0] = {0, 0, VK_FORMAT_R32G32_SFLOAT, 0};        // aPos
     attr[1] = {1, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 8};  // aRect
     attr[2] = {2, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 24}; // aUVrc
     attr[3] = {3, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 40}; // aTint
+    attr[4] = {4, 0, VK_FORMAT_R32_SFLOAT, 56};          // aSolid (flat)
     VkPipelineVertexInputStateCreateInfo vi{};
     vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vi.vertexBindingDescriptionCount = 1; vi.pVertexBindingDescriptions = &bind;
@@ -129,6 +130,13 @@ void Renderer::init(uint32_t w, uint32_t h) {
     dpi.maxSets = 32; dpi.poolSizeCount = 1; dpi.pPoolSizes = &ps;
     vk_check(vkCreateDescriptorPool(vk.device, &dpi, nullptr, &dsPool), "dspool");
     spriteSet = VK_NULL_HANDLE; fontSet = VK_NULL_HANDLE;
+
+    // dummy 1x1 solid-color texture (transparent black). Solid quads sample this
+    // so the shader can output flat tint without pulling the sprite atlas.
+    {
+        std::vector<uint8_t> px(4, 0);   // RGBA = 0,0,0,0
+        uploadAtlas(px, 1, 1, solidImg_, solidView_, solidSet_, solidMem_);
+    }
     fprintf(stderr, "[dbg] renderer init done\n");
 }
 
@@ -143,6 +151,7 @@ void Renderer::destroy() {
     auto db = [&](VkDevice d, VkBuffer& b){ if (b!=VK_NULL_HANDLE){ vkDestroyBuffer(d,b,nullptr); b=VK_NULL_HANDLE; } };
     dv(vk.device, spriteAtlas_.img); dvw(vk.device, spriteAtlas_.view); df(vk.device, spriteAtlas_.mem);
     dv(vk.device, fontAtlas_.img);   dvw(vk.device, fontAtlas_.view);   df(vk.device, fontAtlas_.mem);
+    dv(vk.device, solidImg_);        dvw(vk.device, solidView_);        df(vk.device, solidMem_);  // dummy solid tex
     db(vk.device, vbuf); df(vk.device, vbufMem); vbufCap=0;
     db(vk.device, ibuf); df(vk.device, ibufMem); ibufCap=0;
     if (colorView != VK_NULL_HANDLE){ vkDestroyImageView(vk.device, colorView, nullptr); colorView=VK_NULL_HANDLE; }
@@ -264,7 +273,20 @@ void Renderer::ensureIndexBuffer(size_t needBytes) {
 }
 
 void Renderer::begin() { sprites.clear(); texts.clear(); }
-void Renderer::drawSprite(const Quad& q) { sprites.push_back(q); }
+static int g_dbgQuads = -1;   // <0 = off; set by first call from TOMS_RENDER_DEBUG env
+void Renderer::drawSprite(const Quad& q) {
+    if (g_dbgQuads < 0) {
+        const char* e = std::getenv("TOMS_RENDER_DEBUG");
+        g_dbgQuads = (e && e[0]=='1') ? 1 : 0;
+    }
+    if (g_dbgQuads) {
+        std::fprintf(stderr, "[quad] sprite rect=%.0f,%.0f %.0fx%.0f uv=[%.3f,%.3f,%.3f,%.3f] solid=%d tint=%.2f,%.2f,%.2f,%.2f\n",
+            q.rect[0], q.rect[1], q.rect[2], q.rect[3],
+            q.uv[0], q.uv[1], q.uv[2], q.uv[3], q.solid?1:0,
+            q.tint[0], q.tint[1], q.tint[2], q.tint[3]);
+    }
+    sprites.push_back(q);
+}
 void Renderer::drawText(const Quad& q)   { texts.push_back(q); }
 
 #include "batch_renderer.h"
@@ -308,10 +330,13 @@ void Renderer::end() {
     VkBuffer bufs[1] = {vbuf}; VkDeviceSize off[1] = {0};
     vkCmdBindVertexBuffers(cb, 0, 1, bufs, off);
     vkCmdBindIndexBuffer(cb, ibuf, 0, VK_INDEX_TYPE_UINT32);
-    // one indexed draw per batch (flush on texture/blend change)
+    // one indexed draw per batch (flush on texture/blend/solid change)
     for (auto& b : br.batches) {
         if (b.indexCount == 0) continue;
-        VkDescriptorSet ds = (b.texSet == (void*)spriteSet) ? spriteSet : fontSet;
+        VkDescriptorSet ds = (b.texSet == (void*)spriteSet) ? spriteSet
+                          : (b.texSet == (void*)fontSet)   ? fontSet
+                          : b.solid                         ? solidSet_   // flat color, dummy tex
+                          : spriteSet;
         vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeLayout, 0, 1, &ds, 0, 0);
         vkCmdDrawIndexed(cb, b.indexCount, 1, b.indexOffset, 0, 0);
     }
