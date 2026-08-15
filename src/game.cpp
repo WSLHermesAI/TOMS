@@ -40,7 +40,7 @@ static const char* SPRITE_ORDER[] = {
     "npc_sorcerer","npc_villager","npc_princess","npc_king","npc_handmaiden",
     "exp_up","scroll"          // item icons (added for the inventory UI)
 };
-static const int N_SPRITES = 29;
+static const int N_SPRITES = 30;
 
 bool Game::loadAssets(const std::string& assetDir) {
     dataDir = assetDir;
