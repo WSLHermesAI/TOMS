@@ -6,6 +6,7 @@
 #include "object.h"      // Trackable base: Player/EnemyInst/CombatState/Game are tracked
 #include "render_iface.h"
 #include "stage.h"
+#include "font.h"        // runtime TTF -> atlas (stb_truetype), replaces offline font_atlas.png
 #ifndef __EMSCRIPTEN__
 #include "Audio.h"      // desktop SFX (miniaudio); excluded from the browser build
 #endif
@@ -105,6 +106,7 @@ private:
     int invSel = 0;            // selected slot index
     // font atlas map: codepoint -> uv rect
     std::map<uint32_t, std::array<float,4>> fontMap;
+    std::shared_ptr<Font> font_;   // runtime TTF atlas (replaces font_atlas.png)
     int fontCols = 32, fontCell = 32, fontW = 0, fontH = 0;
     // dialogue state
     bool inDialogue = false;

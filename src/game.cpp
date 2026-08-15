@@ -71,7 +71,35 @@ bool Game::loadAssets(const std::string& assetDir) {
     }
     // upload full sprite atlas (backend packs the grid + uploads)
     ren->loadSprites(layers, SW, SH);
-    // load font atlas
+    // ---- build the font atlas ----
+    // Desktop: runtime TTF -> atlas via stb_truetype (no offline PIL step needed).
+    // Web: load the small pre-baked font_atlas.png + .json (TTF is too big to ship).
+#ifndef __EMSCRIPTEN__
+    {
+        std::string ttf = assetDir + "/wqy-zenhei.ttc";
+        if (const char* e = std::getenv("TOMS_FONT")) ttf = e;
+        else if (!std::filesystem::exists(ttf))
+            ttf = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc";
+        // collect every codepoint used by shipped JSON + HUD labels
+        std::vector<std::string> jsonFiles;
+        for (auto& p : std::filesystem::recursive_directory_iterator(dataDir + "/../data"))
+            if (p.path().extension() == ".json") jsonFiles.push_back(p.path().string());
+        std::string hud = "魔法塔Tower of the Sorcerer HP ATK DEF LV EXP GOLD KEY 戰鬥 你 敵人 鑰匙 對話 選擇 繼續 道具 使用 離開 是 否 "
+                          "▶ （ ） ： ！ ？ 、 。 ， 「 」 『 』 — · + - / 0 1 2 3 4 5 6 7 8 9 : .";
+        std::vector<uint32_t> cps = Font::collectFromFiles(jsonFiles, hud);
+        font_ = std::make_shared<Font>("game-font");
+        if (!font_->buildFromFile(ttf, cps, 32, 24)) {
+            std::fprintf(stderr, "font build failed: %s\n", ttf.c_str()); return false;
+        }
+        ren->loadFont(font_->atlas(), font_->atlasW(), font_->atlasH());
+        fontW = (int)font_->atlasW(); fontH = (int)font_->atlasH();
+        fontCols = 32; fontCell = 32;
+        for (uint32_t cp : cps) {
+            const std::array<float,4>* uv = font_->uv(cp);
+            if (uv) fontMap[cp] = *uv;
+        }
+    }
+#else
     {
         int w,h,ch; unsigned char* d = stbi_load((assetDir+"/font_atlas.png").c_str(), &w,&h,&ch,4);
         if (!d) { std::fprintf(stderr, "font fail\n"); return false; }
@@ -81,7 +109,6 @@ bool Game::loadAssets(const std::string& assetDir) {
         std::ifstream f(assetDir+"/font_atlas.json"); nlohmann::json j; f>>j;
         fontCols = j["cols"]; fontCell = j["cell"];
         for (auto& [ch2, rc] : j["chars"].items()) {
-            // decode first codepoint of the (possibly multi-byte UTF-8) key
             uint32_t code = 0; const std::string& ks = ch2; size_t i = 0;
             if (i < ks.size()) {
                 unsigned char c0 = (unsigned char)ks[i];
@@ -94,6 +121,8 @@ bool Game::loadAssets(const std::string& assetDir) {
             fontMap[code] = a;
         }
     }
+#endif
+
     // load enemy templates
     std::ifstream ef(assetDir+"/../data/enemies.json"); nlohmann::json ej; ef>>ej;
     for (auto& [k,v] : ej.items()) enemyTpl[k] = v;

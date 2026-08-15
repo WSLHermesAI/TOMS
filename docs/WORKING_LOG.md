@@ -10,9 +10,19 @@ Track what was done, by date.
   (`setFile`). Macros: `TOMS_LOG_INFO(...)` etc. `Object::DumpLeaks()` and the demo's
   batch metric now route through it; main.cpp also enables a `toms.log` file sink.
   `log_test` verifies formatting/levels/file sink (all pass). (commit `fb4ead0`+)
+- **2026-08-15** — **Runtime TTF font (stb_truetype)** added (`src/font.h` / `src/font.cpp`),
+  replacing the offline PIL bitmap step. `Font : public Object` builds a glyph atlas
+  from a `.ttf`/`.ttc` at load time via `external/stb/stb_truetype.h`: it collects
+  every codepoint used by `data/**/*.json` + HUD labels, rasterizes each into a
+  32px cell grid (RGBA, white glyph + coverage alpha), and exposes a
+  codepoint→UV map. Desktop `Game::loadAssets` now builds the font from
+  `assets/wqy-zenhei.ttc` (CJK; env `TOMS_FONT` override) and feeds it to
+  `ren->loadFont` — no `font_atlas.png`/`.json` needed on desktop. The browser
+  build keeps the small pre-baked atlas (TTF is 16MB, gitignored + copied by CMake).
+  `font_test` verifies ASCII+CJK glyphs rasterize with ink. Verified: demo renders
+  魔法塔 / 村莊外線 / 鑰匙 / 道具 Traditional-Chinese HUD + dialogue (vision-confirmed).
 - **2026-08-15** — **Texture class + TextureManager** added (`src/texture.h` / `src/texture.cpp`),
   reworked from FM79979 `Texture.h`/`TextureManager.h` into a modern Vulkan version.
-  `Texture : public Object` loads images via **stb_image** (already in `external/stb/`)
   and uploads RGBA8 pixels into a LINEAR `VkImage` + `VkImageView` + `VkDescriptorSet`
   (mirrors `Renderer::uploadAtlas`). Key feature: `UpdatePixels(rgba,w,h)` re-uploads new
   pixel data into the Vulkan image (recreates the image if size changes). `TextureManager`

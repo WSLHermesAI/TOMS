@@ -47,7 +47,8 @@ if(NOT WEB)
     endif()
 
     add_executable(tower_vulkan
-        src/main.cpp src/game.cpp src/renderer.cpp src/node.cpp src/render_iface.h src/Audio.cpp src/vk_util.h)
+        src/main.cpp src/game.cpp src/renderer.cpp src/node.cpp src/font.cpp
+        src/render_iface.h src/Audio.cpp src/vk_util.h)
 
     target_include_directories(tower_vulkan PRIVATE
         ${CMAKE_SOURCE_DIR}/src ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
@@ -67,6 +68,22 @@ if(NOT WEB)
                 COMMENT "Copying ${RES} next to executable")
         endif()
     endforeach()
+
+    # Ensure the CJK TTF exists for the runtime font builder. The bundled copy is
+    # gitignored (16MB); fall back to the system font if it isn't present.
+    if(NOT EXISTS "${CMAKE_SOURCE_DIR}/assets/wqy-zenhei.ttc")
+        foreach(SYSFONT
+                "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"
+                "/usr/share/fonts/opentype/wqy/wqy-zenhei.ttc")
+            if(EXISTS "${SYSFONT}")
+                add_custom_command(TARGET tower_vulkan POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy
+                        "${SYSFONT}" "$<TARGET_FILE_DIR:tower_vulkan>/assets/wqy-zenhei.ttc"
+                    COMMENT "Copying CJK TTF (${SYSFONT}) next to executable")
+                break()
+            endif()
+        endforeach()
+    endif()
 
     set_target_properties(tower_vulkan PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -143,4 +160,10 @@ target_include_directories(texture_test PRIVATE
     ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
     $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 target_link_libraries(texture_test PRIVATE ${Vulkan_LIBRARIES})
+
+# font_test: build the runtime TTF atlas (stb_truetype) and verify glyph UVs.
+# No Vulkan device needed — pure CPU atlas rasterization + Object base.
+add_executable(font_test src/font_test.cpp src/font.cpp src/object.h)
+target_include_directories(font_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
