@@ -2,7 +2,15 @@
 
 Track what was done, by date.
 
-- **2026-08-14** — **Object base class** added (`src/object.h`): the lowest-level
+- **2026-08-14** — **Object lifecycle counter / leak dump** added (`src/object.h`): every
+  `Object` registers itself on construction and unregisters on destruction in a
+  global `ObjectRegistry` (thread-safe, idempotent Remove so double-destroy can't
+  go negative). `Object::LiveCount()` reports live objects; `Object::DumpLeaks()`
+  (called at the end of `main.cpp` after the Game is destroyed) prints the count and,
+  for any still-alive object, its **type + name** — the FMLog-style "after all
+  resources destroyed, dump leaked objects" behavior. `object_test` extended with a
+  leak-detection group. Verified: clean run reports `live objects = 0`; an
+  intentionally leaked object is correctly dumped with type+name. (commit `bb49ca5`+)
   base for every game object, porting FM79979 `NamedTypedObject` intent. Each object
   knows its **type** (`Type()`/`StaticType()`/`IsType<T>`), its **name**
   (`Name()`/`SetName`), and a **unique ID** (`UniqueID()`), and is designed to be

@@ -5,6 +5,12 @@
 // RTTI-lite helpers (IsType<T>, As<T>). Adapted to modern C++ and designed to be
 // owned by std::shared_ptr so game objects auto-release.
 //
+// LEAK DETECTION (inspired by FM79979 FMLog's object-lifecycle bookkeeping):
+// every Object is registered on construction and unregistered on destruction, so
+// we keep a running count of live objects. After all game resources are destroyed,
+// call Object::DumpLeaks(): if the live count is not zero it prints each leaked
+// object's NAME and TYPE. This catches forgotten shared_ptr owners / leaks.
+//
 // Why shared_ptr:
 //   * an object held by shared_ptr releases itself when the last reference drops,
 //     so the scene graph / inventories don't have to manually delete anything;
@@ -17,13 +23,49 @@
 #include <memory>
 #include <string>
 #include <cstdint>
+#include <unordered_set>
+#include <mutex>
 #include <atomic>
+#include <iostream>
+
+class Object;   // forward declaration so ObjectRegistry can hold Object* before the
+                // full Object definition below
+
+// Registry of currently-alive Objects (one global instance, thread-safe).
+// Implemented as a Meyers singleton inside an inline function so it is a single
+// instance even when object.h is included by several translation units.
+class ObjectRegistry {
+public:
+    static ObjectRegistry& instance() { static ObjectRegistry r; return r; }
+
+    void Add(Object* o) {
+        std::lock_guard<std::mutex> lk(m_mutex);
+        m_live.insert(o);
+    }
+    // Idempotent: erasing a pointer not currently tracked is a no-op, so an
+    // edge-case double-destroy can never make the live count go negative.
+    void Remove(Object* o) {
+        std::lock_guard<std::mutex> lk(m_mutex);
+        m_live.erase(o);
+    }
+    long LiveCount() const {
+        std::lock_guard<std::mutex> lk(m_mutex);
+        return (long)m_live.size();
+    }
+    void DumpLeaks();
+
+private:
+    ObjectRegistry() = default;
+    std::unordered_set<Object*> m_live;
+    mutable std::mutex m_mutex;
+};
 
 class Object : public std::enable_shared_from_this<Object> {
 public:
     using Ptr = std::shared_ptr<Object>;
 
-    virtual ~Object() = default;
+    Object() : m_uid(NextUID()) { ObjectRegistry::instance().Add(this); }
+    virtual ~Object() { ObjectRegistry::instance().Remove(this); }
 
     // ---- type (RTTI-lite, mirrors NamedTypedObject::Type()/TypeID) ----
     // Override to return a stable string key (the class name). Use TOMS_OBJECT(T)
@@ -47,6 +89,10 @@ public:
     // ---- unique id (mirrors NamedTypedObject::GetUniqueID) ----
     uint64_t UniqueID() const { return m_uid; }
 
+    // ---- leak diagnostics ----
+    static long LiveCount() { return ObjectRegistry::instance().LiveCount(); }
+    static void DumpLeaks() { ObjectRegistry::instance().DumpLeaks(); }
+
     // factory: build a shared_ptr<Object>-compatible instance of T
     template <class T, class... Args>
     static std::shared_ptr<T> Make(Args&&... args) {
@@ -54,8 +100,6 @@ public:
     }
 
 protected:
-    Object() : m_uid(NextUID()) {}
-
     std::string m_name;
     uint64_t    m_uid = 0;
 
@@ -75,3 +119,16 @@ public:                                                          \
     static const char* StaticType() { return #T; }               \
     const char* Type() const override { return #T; }            \
 private:
+
+// ---- ObjectRegistry method definitions (need complete Object for Type()/Name()) ----
+inline void ObjectRegistry::DumpLeaks() {
+    std::lock_guard<std::mutex> lk(m_mutex);
+    if (m_live.empty()) {
+        std::cout << "[Object] live objects = " << m_live.size() << " (no leaks)\n";
+        return;
+    }
+    std::cout << "[Object] LEAK: " << m_live.size()
+              << " object(s) still alive (count=" << m_live.size() << "):\n";
+    for (Object* o : m_live)
+        std::cout << "  - type=" << o->Type() << "  name=\"" << o->Name() << "\"\n";
+}
