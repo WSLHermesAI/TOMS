@@ -98,14 +98,13 @@ bool Texture::UpdatePixels(const std::vector<uint8_t>& rgba, uint32_t w, uint32_
 // ---------------------------------------------------------------------------
 // TextureManager
 // ---------------------------------------------------------------------------
-std::shared_ptr<Texture> TextureManager::GetOrLoad(const std::string& name,
-                                                   const VkTextureRefs& refs,
-                                                   const std::string& path) {
-    auto it = map_.find(name);
-    if (it != map_.end()) return it->second;
-    auto tex = std::make_shared<Texture>(refs, name);
-    if (!tex->LoadFromFile(path)) return nullptr;
-    map_[name] = tex;
+std::shared_ptr<Texture> TextureManager::GetByFullPath(const std::string& path,
+                                                       const VkTextureRefs& refs) {
+    auto it = map_.find(path);
+    if (it != map_.end()) return it->second;          // already cached -> return existing
+    auto tex = std::make_shared<Texture>(refs, path);  // path is the logical name
+    if (!tex->LoadFromFile(path)) return nullptr;      // load failure -> null (not cached)
+    map_[path] = tex;
     return tex;
 }
 
@@ -120,4 +119,8 @@ std::shared_ptr<Texture> TextureManager::Get(const std::string& name) const {
 
 void TextureManager::Remove(const std::string& name) {
     map_.erase(name);
+}
+
+void TextureManager::Clear() {
+    map_.clear();
 }

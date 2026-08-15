@@ -13,3 +13,4 @@ frames/
 
 # large font asset (16MB CJK TTF) — copied by CMake if absent, not committed
 assets/wqy-zenhei.ttc
+tower_vulkan

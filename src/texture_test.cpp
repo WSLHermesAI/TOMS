@@ -45,10 +45,18 @@ int main() {
         auto got = mgr.Get("sharedTex");        // scoped so the extra ref dies here
         CHECK(got.get() == tex.get(), "TextureManager returns the same texture");
     }
-    CHECK(mgr.size() == 1, "TextureManager holds 1 texture");
+    // also exercise GetByFullPath (FM79979-style: path is the key, cached)
+    {
+        auto tp1 = mgr.GetByFullPath("assets/font_atlas.png", refs);
+        auto tp2 = mgr.GetByFullPath("assets/font_atlas.png", refs);
+        CHECK(tp1 != nullptr, "GetByFullPath loads from disk");
+        CHECK(tp1.get() == tp2.get(), "GetByFullPath returns the SAME cached object on repeat");
+    }
+    CHECK(mgr.size() == 2, "manager holds checker + font_atlas path");
 
     // 4) release every Texture reference BEFORE tearing down the Vulkan device
     mgr.Remove("sharedTex");
+    mgr.Remove("assets/font_atlas.png");
     tex.reset();
     CHECK(mgr.size() == 0, "TextureManager empty after remove");
     CHECK(ObjectRegistry::instance().LiveCount() == 1, "only the (static) TextureManager remains");

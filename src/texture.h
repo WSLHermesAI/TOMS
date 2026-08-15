@@ -80,11 +80,16 @@ public:
     std::shared_ptr<Texture> GetOrLoad(const std::string& name,
                                        const VkTextureRefs& refs,
                                        const std::string& path);
+    // FM79979-style: the full file path IS the cache key. If a texture for that
+    // path already exists, return it; otherwise create + load + cache it.
+    std::shared_ptr<Texture> GetByFullPath(const std::string& path,
+                                           const VkTextureRefs& refs);
     // Register an already-built texture under a name.
     void Add(const std::string& name, std::shared_ptr<Texture> tex);
     // Fetch a previously registered texture (nullptr if absent).
     std::shared_ptr<Texture> Get(const std::string& name) const;
     void Remove(const std::string& name);
+    void Clear();   // drop every cached texture (releases all shared_ptr refs)
     size_t size() const { return map_.size(); }
 
 private:
