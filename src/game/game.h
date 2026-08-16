@@ -83,6 +83,9 @@ public:
     const std::vector<std::string>& inventory() const { return pl.inv; }
     int invSelection() const { return invSel; }
     bool modalActive() const { return cs.active || inDialogue || invOpen || storeOpen || storeUnlockDlg; }  // any overlay open (combat/dialogue/inventory/store)
+    bool inDialogueFlag() const { return inDialogue; }
+    int dialogueSel() const { return dlgSel; }
+    int dialogueChoiceCount() const { return (int)dlgChoices.size(); }
     bool storeModal() const { return storeOpen || storeUnlockDlg; }  // store overlay (incl. unlock dialog) is the topmost modal
     // store system
     bool storeUnlocked() const { return storeUnlocked_; }
@@ -156,6 +159,7 @@ private:
     int fontCols = 32, fontCell = 32, fontW = 0, fontH = 0;
     // dialogue state
     bool inDialogue = false;
+    int dlgSel = 0;                     // currently highlighted dialogue choice (gamepad nav)
     std::string dlgNpc;
     std::string dlgNode = "root";
     nlohmann::json dlgData;

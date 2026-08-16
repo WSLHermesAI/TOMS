@@ -413,7 +413,9 @@ void Game::draw() {
         std::string txt = dlgData["nodes"][dlgNode]["text"];
         drawText(txt, 60, H-180, 20, tint);
         for (size_t i = 0; i < dlgChoices.size(); i++) {
-            drawText("▶ " + dlgChoices[i].first, 60, H-140 + (float)i*24, 18, C4(1,0.9f,0.5f,1));
+            float ty = H-140 + (float)i*24;
+            if ((int)i == dlgSel) drawText("▶ " + dlgChoices[i].first, 60, ty, 18, C4(1,1.0f,0.6f,1));   // highlighted choice (gamepad-selected)
+            else                   drawText("  " + dlgChoices[i].first, 60, ty, 18, C4(1,0.9f,0.5f,1));
         }
     }
 
@@ -495,11 +497,19 @@ void Game::handleTouch(float px, float py, int phase) {
         else if (id == 6 && phase == 0) toggleInventory();
         return;
     }
-    if (modalActive()) {                     // combat / dialogue / store: block movement
+    if (inDialogue) {                        // dialogue: full gamepad control
+        int n = (int)dlgChoices.size();
+        if (id == 0 && phase == 0 && n > 0) dlgSel = (dlgSel - 1 + n) % n;   // up = prev choice
+        else if (id == 1 && phase == 0 && n > 0) dlgSel = (dlgSel + 1) % n;  // down = next choice
+        else if (id == 4 && phase == 0) chooseDialogue(dlgSel);               // A = select
+        else if (id == 5 && phase == 0) inDialogue = false;                  // B = close
+        return;
+    }
+    if (modalActive()) {                     // combat / store: block movement
         if (id == 4 && phase == 0) interact();   // A = continue / confirm
         return;
     }
-    if (id <= 3) movePlayer(b.dx, b.dy);     // dpad (repeat on hold)
+    if (id <= 3 && phase == 0) movePlayer(b.dx, b.dy);   // dpad: one step per tap (phase 1 repeat is for hold, ignored here so a tap = exactly 1 step)
     else if (id == 4 && phase == 0) interact();
     else if (id == 6 && phase == 0) toggleInventory();
 }
@@ -982,16 +992,26 @@ void Game::startDialogue(const std::string& npc) {
     std::ifstream f(dataDir + "/../data/dialogue/" + npc + ".json");
     if (!f) { inDialogue=false; return; }
     f >> dlgData;
+    if (!dlgData.contains("start") || !dlgData["start"].is_string()) { inDialogue = false; return; }
     inDialogue = true; dlgNode = dlgData["start"];
+    dlgSel = 0;
     enterNode(dlgNode);
     audio.play("dialogue_popup");
 }
 void Game::enterNode(const std::string& node) {
-    auto& n = dlgData["nodes"][node];
     dlgChoices.clear();
-    for (auto& c : n["choices"]) {
-        dlgChoices.push_back({c["label"], c["next"].is_null()?std::string(""):(std::string)c["next"]});
+    if (!dlgData.contains("nodes") || !dlgData["nodes"].contains(node)) {
+        inDialogue = false; return;   // missing node -> close safely (no nlohmann throw / abort)
     }
+    const auto& n = dlgData["nodes"][node];
+    if (!n.is_object() || !n.contains("choices")) return;
+    for (auto& c : n["choices"]) {
+        if (!c.is_object()) continue;
+        std::string label = c.contains("label") && c["label"].is_string() ? (std::string)c["label"] : "";
+        std::string next  = c.contains("next")  && !c["next"].is_null()  ? (std::string)c["next"]  : "";
+        dlgChoices.push_back({label, next});
+    }
+    dlgSel = 0;
 }
 void Game::chooseDialogue(int idx) {
     if (!inDialogue) return;

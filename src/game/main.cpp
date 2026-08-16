@@ -263,7 +263,30 @@ int main(int argc, char** argv) {
             g.renderer()->end();
             g.saveFrame(framesDir + "/text_nihao.png");
             TOMS_LOG_INFO("scenario=text done");
-        } else if (mode == "stress") {
+        } else if (mode == "padtest") {
+            // Verify the web gamepad input path (handleTouch): single-step taps + dialogue nav.
+            // Right=d3(224,604) Up=d0(140,546) Down=d1(140,632) A=d4(914,660) B=d5(824,598) I=d6(908,554)
+            g.loadStage("stage01");
+            // walk the player into open space so movement isn't wall-blocked
+            g.movePlayer(1, 0); g.movePlayer(0, 1); g.movePlayer(0, 1);
+            int y0 = g.player().y;
+            // simulate a TAP: down + repeat + up. With the fix only phase 0 moves -> exactly 1 step.
+            g.handleTouch(140, 632, 0);   // down
+            g.handleTouch(140, 632, 1);   // repeat (would be the 2nd step in the old bug)
+            g.handleTouch(140, 632, 2);   // up
+            int y1 = g.player().y;
+            std::cout << "TAP down moved dy=" << (y1 - y0) << " (expect 1 if single-step)\n";
+
+            // Dialogue nav: open dialogue via interact on the villager, then drive gamepad dpad+A.
+            g.loadStage("stage01");
+            g.movePlayer(1, 0); g.interact();   // open villager dialogue
+            std::cout << "inDialogue=" << g.inDialogueFlag() << " choices=" << g.dialogueChoiceCount() << "\n";
+            int sel0 = g.dialogueSel();
+            g.handleTouch(140, 632, 0);         // dpad down -> next choice
+            std::cout << "dlgSel after down: " << sel0 << " -> " << g.dialogueSel() << "\n";
+            g.handleTouch(914, 660, 0);         // A -> chooseDialogue(dlgSel)
+            std::cout << "inDialogue after A=" << g.inDialogueFlag() << "\n";
+            TOMS_LOG_INFO("scenario=padtest done");
             // heavy churn: many stage loads, combats, inventory toggles, item uses
             for (const char* s : {"stage01","stage03","stage05","stage07","stage10"}) {
                 g.loadStage(s);
