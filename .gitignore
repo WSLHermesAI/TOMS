@@ -6,3 +6,5 @@ split_nodes/
 
 # font asset not part of source
 assets/wqy-zenhei.ttc
+build-webgpu/
+web/tower_vulkan_web.*
