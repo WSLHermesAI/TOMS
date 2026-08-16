@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpxv5xgucu.js
+// include: /tmp/tmp3ww8s4dv.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -205,25 +205,25 @@ Module['FS_createPath']("/data", "stages", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 54997}, {"filename": "/assets/font_atlas.png", "start": 54997, "end": 248173}, {"filename": "/assets/sfx/confirm_click.wav", "start": 248173, "end": 254831}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 254831, "end": 262813}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 262813, "end": 283143}, {"filename": "/assets/sfx/get_item.wav", "start": 283143, "end": 302591}, {"filename": "/assets/sfx/player_attack.wav", "start": 302591, "end": 313219}, {"filename": "/assets/sfx/walk.wav", "start": 313219, "end": 319437}, {"filename": "/assets/sprites/bat.png", "start": 319437, "end": 319647}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 319647, "end": 319951}, {"filename": "/assets/sprites/coin.png", "start": 319951, "end": 320174}, {"filename": "/assets/sprites/demon.png", "start": 320174, "end": 320478}, {"filename": "/assets/sprites/door_blue.png", "start": 320478, "end": 320637}, {"filename": "/assets/sprites/door_red.png", "start": 320637, "end": 320796}, {"filename": "/assets/sprites/door_yellow.png", "start": 320796, "end": 320955}, {"filename": "/assets/sprites/exp_up.png", "start": 320955, "end": 321158}, {"filename": "/assets/sprites/floor.png", "start": 321158, "end": 321336}, {"filename": "/assets/sprites/gem_atk.png", "start": 321336, "end": 321589}, {"filename": "/assets/sprites/gem_def.png", "start": 321589, "end": 321846}, {"filename": "/assets/sprites/golem.png", "start": 321846, "end": 322053}, {"filename": "/assets/sprites/key_blue.png", "start": 322053, "end": 322310}, {"filename": "/assets/sprites/key_red.png", "start": 322310, "end": 322563}, {"filename": "/assets/sprites/key_yellow.png", "start": 322563, "end": 322817}, {"filename": "/assets/sprites/manifest.json", "start": 322817, "end": 323393}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 323393, "end": 323608}, {"filename": "/assets/sprites/npc_king.png", "start": 323608, "end": 323799}, {"filename": "/assets/sprites/npc_princess.png", "start": 323799, "end": 324022}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 324022, "end": 324268}, {"filename": "/assets/sprites/npc_villager.png", "start": 324268, "end": 324457}, {"filename": "/assets/sprites/player.png", "start": 324457, "end": 324722}, {"filename": "/assets/sprites/potion_blue.png", "start": 324722, "end": 324956}, {"filename": "/assets/sprites/potion_red.png", "start": 324956, "end": 325190}, {"filename": "/assets/sprites/scroll.png", "start": 325190, "end": 325326}, {"filename": "/assets/sprites/skeleton.png", "start": 325326, "end": 325503}, {"filename": "/assets/sprites/slime.png", "start": 325503, "end": 325760}, {"filename": "/assets/sprites/stairs_down.png", "start": 325760, "end": 325936}, {"filename": "/assets/sprites/stairs_up.png", "start": 325936, "end": 326114}, {"filename": "/assets/sprites/wall.png", "start": 326114, "end": 326251}, {"filename": "/assets/sprites/wraith.png", "start": 326251, "end": 326494}, {"filename": "/assets/wqy-zenhei.ttc", "start": 326494, "end": 17117745}, {"filename": "/data/combat.json", "start": 17117745, "end": 17118327}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17118327, "end": 17118566}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17118566, "end": 17118816}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17118816, "end": 17119110}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17119110, "end": 17119357}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17119357, "end": 17119613}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17119613, "end": 17119863}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17119863, "end": 17120117}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17120117, "end": 17120400}, {"filename": "/data/dialogue/handmaiden.json", "start": 17120400, "end": 17120685}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17120685, "end": 17121044}, {"filename": "/data/dialogue/princess_liora.json", "start": 17121044, "end": 17121318}, {"filename": "/data/dialogue/princess_victory.json", "start": 17121318, "end": 17121867}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17121867, "end": 17122445}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17122445, "end": 17123064}, {"filename": "/data/dialogue/villager_elder.json", "start": 17123064, "end": 17123704}, {"filename": "/data/enemies.json", "start": 17123704, "end": 17124752}, {"filename": "/data/items.json", "start": 17124752, "end": 17126138}, {"filename": "/data/stages/stage01.json", "start": 17126138, "end": 17127395}, {"filename": "/data/stages/stage02.json", "start": 17127395, "end": 17128622}, {"filename": "/data/stages/stage03.json", "start": 17128622, "end": 17129844}, {"filename": "/data/stages/stage04.json", "start": 17129844, "end": 17131094}, {"filename": "/data/stages/stage05.json", "start": 17131094, "end": 17132309}, {"filename": "/data/stages/stage06.json", "start": 17132309, "end": 17133519}, {"filename": "/data/stages/stage07.json", "start": 17133519, "end": 17134761}, {"filename": "/data/stages/stage08.json", "start": 17134761, "end": 17135990}, {"filename": "/data/stages/stage09.json", "start": 17135990, "end": 17137227}, {"filename": "/data/stages/stage10.json", "start": 17137227, "end": 17138461}, {"filename": "/data/stages/stage_11.json", "start": 17138461, "end": 17141076}, {"filename": "/data/story.json", "start": 17141076, "end": 17142408}], "remote_package_size": 17142408});
+    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 54997}, {"filename": "/assets/font_atlas.png", "start": 54997, "end": 248173}, {"filename": "/assets/sfx/confirm_click.wav", "start": 248173, "end": 254831}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 254831, "end": 262813}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 262813, "end": 283143}, {"filename": "/assets/sfx/get_item.wav", "start": 283143, "end": 302591}, {"filename": "/assets/sfx/player_attack.wav", "start": 302591, "end": 313219}, {"filename": "/assets/sfx/walk.wav", "start": 313219, "end": 319437}, {"filename": "/assets/sprites/bat.png", "start": 319437, "end": 319647}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 319647, "end": 319951}, {"filename": "/assets/sprites/coin.png", "start": 319951, "end": 320174}, {"filename": "/assets/sprites/demon.png", "start": 320174, "end": 320478}, {"filename": "/assets/sprites/door_blue.png", "start": 320478, "end": 320637}, {"filename": "/assets/sprites/door_red.png", "start": 320637, "end": 320796}, {"filename": "/assets/sprites/door_yellow.png", "start": 320796, "end": 320955}, {"filename": "/assets/sprites/exp_up.png", "start": 320955, "end": 321158}, {"filename": "/assets/sprites/floor.png", "start": 321158, "end": 321336}, {"filename": "/assets/sprites/gem_atk.png", "start": 321336, "end": 321589}, {"filename": "/assets/sprites/gem_def.png", "start": 321589, "end": 321846}, {"filename": "/assets/sprites/golem.png", "start": 321846, "end": 322053}, {"filename": "/assets/sprites/key_blue.png", "start": 322053, "end": 322310}, {"filename": "/assets/sprites/key_red.png", "start": 322310, "end": 322563}, {"filename": "/assets/sprites/key_yellow.png", "start": 322563, "end": 322817}, {"filename": "/assets/sprites/manifest.json", "start": 322817, "end": 323393}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 323393, "end": 323608}, {"filename": "/assets/sprites/npc_king.png", "start": 323608, "end": 323799}, {"filename": "/assets/sprites/npc_princess.png", "start": 323799, "end": 324022}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 324022, "end": 324268}, {"filename": "/assets/sprites/npc_villager.png", "start": 324268, "end": 324457}, {"filename": "/assets/sprites/player.png", "start": 324457, "end": 324722}, {"filename": "/assets/sprites/potion_blue.png", "start": 324722, "end": 324956}, {"filename": "/assets/sprites/potion_red.png", "start": 324956, "end": 325190}, {"filename": "/assets/sprites/scroll.png", "start": 325190, "end": 325326}, {"filename": "/assets/sprites/skeleton.png", "start": 325326, "end": 325503}, {"filename": "/assets/sprites/slime.png", "start": 325503, "end": 325760}, {"filename": "/assets/sprites/stairs_down.png", "start": 325760, "end": 325936}, {"filename": "/assets/sprites/stairs_up.png", "start": 325936, "end": 326114}, {"filename": "/assets/sprites/wall.png", "start": 326114, "end": 326251}, {"filename": "/assets/sprites/wraith.png", "start": 326251, "end": 326494}, {"filename": "/assets/wqy-zenhei.ttc", "start": 326494, "end": 17117745}, {"filename": "/data/combat.json", "start": 17117745, "end": 17118327}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17118327, "end": 17118566}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17118566, "end": 17118816}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17118816, "end": 17119110}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17119110, "end": 17119357}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17119357, "end": 17119613}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17119613, "end": 17119863}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17119863, "end": 17120117}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17120117, "end": 17120400}, {"filename": "/data/dialogue/handmaiden.json", "start": 17120400, "end": 17120685}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17120685, "end": 17121044}, {"filename": "/data/dialogue/princess_liora.json", "start": 17121044, "end": 17121318}, {"filename": "/data/dialogue/princess_victory.json", "start": 17121318, "end": 17121867}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17121867, "end": 17122445}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17122445, "end": 17123064}, {"filename": "/data/dialogue/villager_elder.json", "start": 17123064, "end": 17123704}, {"filename": "/data/enemies.json", "start": 17123704, "end": 17124752}, {"filename": "/data/items.json", "start": 17124752, "end": 17126138}, {"filename": "/data/stages/stage01.json", "start": 17126138, "end": 17127395}, {"filename": "/data/stages/stage02.json", "start": 17127395, "end": 17128622}, {"filename": "/data/stages/stage03.json", "start": 17128622, "end": 17129844}, {"filename": "/data/stages/stage04.json", "start": 17129844, "end": 17131094}, {"filename": "/data/stages/stage05.json", "start": 17131094, "end": 17132309}, {"filename": "/data/stages/stage06.json", "start": 17132309, "end": 17133519}, {"filename": "/data/stages/stage07.json", "start": 17133519, "end": 17134761}, {"filename": "/data/stages/stage08.json", "start": 17134761, "end": 17135990}, {"filename": "/data/stages/stage09.json", "start": 17135990, "end": 17137227}, {"filename": "/data/stages/stage10.json", "start": 17137227, "end": 17138461}, {"filename": "/data/stages/stage_11.json", "start": 17138461, "end": 17141076}, {"filename": "/data/store.json", "start": 17141076, "end": 17142345}, {"filename": "/data/story.json", "start": 17142345, "end": 17143677}], "remote_package_size": 17143677});
 
   })();
 
-// end include: /tmp/tmpxv5xgucu.js
-// include: /tmp/tmpsjhpefzj.js
+// end include: /tmp/tmp3ww8s4dv.js
+// include: /tmp/tmptn9nykoz.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpsjhpefzj.js
-// include: /tmp/tmp_k1hk3yn.js
+  // end include: /tmp/tmptn9nykoz.js
+// include: /tmp/tmp8shvv91f.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmp_k1hk3yn.js
+  // end include: /tmp/tmp8shvv91f.js
 
 
 var programArgs = [];
@@ -658,7 +658,7 @@ function updateMemoryViews() {
   HEAPF32 = new Float32Array(b);
   HEAPF64 = new Float64Array(b);
   HEAP64 = new BigInt64Array(b);
-  
+  HEAPU64 = new BigUint64Array(b);
 }
 
 // include: memoryprofiler.js
@@ -4342,6 +4342,28 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       return false;
     };
 
+  
+  
+  
+  
+  /** @type {!Uint16Array} */
+  var HEAPU16;
+  
+  
+  
+  /** @type {!Float32Array} */
+  var HEAPF32;
+  
+  /** @type {!Float64Array} */
+  var HEAPF64;
+  
+  
+  /** not-@type {!BigUint64Array} */
+  var HEAPU64;
+  var _emscripten_run_script = (ptr) => {
+      eval(UTF8ToString(ptr));
+    };
+
   var maybeCStringToJsString = (cString) => {
       // 'cString > 2' checks if the input is a number, and isn't of the special
       // values we accept here, EMSCRIPTEN_EVENT_TARGET_* (which map to 0, 1, 2).
@@ -4522,8 +4544,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
   
   
-  /** @type {!Float64Array} */
-  var HEAPF64;
   var registerKeyEventCallback = (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
       var eventSize = 160;
       JSEvents.keyEvent ||= _malloc(eventSize);
@@ -5553,7 +5573,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         return ret;
       },
   genObject:(n, buffers, createFunction, objectTable
-        , functionName
         ) => {
         for (var i = 0; i < n; i++) {
           var buffer = GLctx[createFunction]();
@@ -5563,7 +5582,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
             objectTable[id] = buffer;
           } else {
             GL.recordError(0x502 /* GL_INVALID_OPERATION */);
-            err(`GL_INVALID_OPERATION in ${functionName}: GLctx.${createFunction} returned null - most likely GL context is lost!`);
           }
           HEAP32[(((buffers)+(i*4))>>2)] = id;
         }
@@ -5575,65 +5593,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
           source += UTF8ToString(HEAPU32[(((string)+(i*4))>>2)], len);
         }
         return source;
-      },
-  validateGLObjectID:(objectHandleArray, objectID, callerFunctionName, objectReadableType) => {
-        // `objectHandleArray` may be uninitialized when GL uniforms are lazily initialized, and `glUniform*` is called
-        // for the first time before uniforms have been populated. So ignore this validation if the handle array is not present.
-        if (objectID != 0 && objectHandleArray) {
-          if (objectHandleArray[objectID] === null) {
-            err(`${callerFunctionName} called with an already deleted ${objectReadableType} ID ${objectID}!`);
-          } else if (!(objectID in objectHandleArray)) {
-            err(`${callerFunctionName} called with a nonexisting ${objectReadableType} ID ${objectID}!`);
-          }
-        }
-      },
-  validateVertexAttribPointer:(dimension, dataType, stride, offset) => {
-        var sizeBytes = 1;
-        switch (dataType) {
-          case 0x1400 /* GL_BYTE */:
-          case 0x1401 /* GL_UNSIGNED_BYTE */:
-            sizeBytes = 1;
-            break;
-          case 0x1402 /* GL_SHORT */:
-          case 0x1403 /* GL_UNSIGNED_SHORT */:
-            sizeBytes = 2;
-            break;
-          case 0x1404 /* GL_INT */:
-          case 0x1405 /* GL_UNSIGNED_INT */:
-          case 0x1406 /* GL_FLOAT */:
-            sizeBytes = 4;
-            break;
-          case 0x140A /* GL_DOUBLE */:
-            sizeBytes = 8;
-            break;
-          default:
-            if (GL.currentContext.version >= 2) {
-              if (dataType == 0x8368 /* GL_UNSIGNED_INT_2_10_10_10_REV */ || dataType == 0x8D9F /* GL_INT_2_10_10_10_REV */) {
-                sizeBytes = 4;
-                break;
-              } else if (dataType == 0x140B /* GL_HALF_FLOAT */) {
-                sizeBytes = 2;
-                break;
-              } else {
-                // else fall through
-              }
-            }
-            err(`Invalid vertex attribute data type GLenum ${dataType} passed to GL function!`);
-        }
-        if (dimension == 0x80E1 /* GL_BGRA */) {
-          err('WebGL does not support size=GL_BGRA in a call to glVertexAttribPointer! Please use size=4 and type=GL_UNSIGNED_BYTE instead');
-        } else if (dimension < 1 || dimension > 4) {
-          err(`Invalid dimension=${dimension} in call to glVertexAttribPointer, must be 1,2,3 or 4.`);
-        }
-        if (stride < 0 || stride > 255) {
-          err(`Invalid stride=${stride} in call to glVertexAttribPointer. Note that maximum supported stride in WebGL is 255!`);
-        }
-        if (offset % sizeBytes != 0) {
-          err(`GL spec section 6.4 error: vertex attribute data offset of ${offset} bytes should have been a multiple of the data type size that was used: GLenum ${dataType} has size of ${sizeBytes} bytes!`);
-        }
-        if (stride % sizeBytes != 0) {
-          err(`GL spec section 6.4 error: vertex attribute data stride of ${stride} bytes should have been a multiple of the data type size that was used: GLenum ${dataType} has size of ${sizeBytes} bytes!`);
-        }
       },
   createContext:(/** @type {HTMLCanvasElement} */ canvas, webGLContextAttributes) => {
   
@@ -6010,14 +5969,11 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glActiveTexture = _emscripten_glActiveTexture;
 
   var _emscripten_glAttachShader = (program, shader) => {
-      GL.validateGLObjectID(GL.programs, program, 'glAttachShader', 'program');
-      GL.validateGLObjectID(GL.shaders, shader, 'glAttachShader', 'shader');
       GLctx.attachShader(GL.programs[program], GL.shaders[shader]);
     };
   var _glAttachShader = _emscripten_glAttachShader;
 
   var _emscripten_glBindBuffer = (target, buffer) => {
-      GL.validateGLObjectID(GL.buffers, buffer, 'glBindBuffer', 'buffer');
   
       if (target == 0x88EB /*GL_PIXEL_PACK_BUFFER*/) {
         // In WebGL 2 glReadPixels entry point, we need to use a different WebGL 2
@@ -6039,13 +5995,11 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glBindBuffer = _emscripten_glBindBuffer;
 
   var _emscripten_glBindTexture = (target, texture) => {
-      GL.validateGLObjectID(GL.textures, texture, 'glBindTexture', 'texture');
       GLctx.bindTexture(target, GL.textures[texture]);
     };
   var _glBindTexture = _emscripten_glBindTexture;
 
   var _emscripten_glBindVertexArray = (vao) => {
-      assert(GLctx.bindVertexArray, 'Must have WebGL2 or OES_vertex_array_object to use vao');
       GLctx.bindVertexArray(GL.vaos[vao]);
     };
   var _glBindVertexArray = _emscripten_glBindVertexArray;
@@ -6083,7 +6037,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glClearColor = _emscripten_glClearColor;
 
   var _emscripten_glCompileShader = (shader) => {
-      GL.validateGLObjectID(GL.shaders, shader, 'glCompileShader', 'shader');
       GLctx.compileShader(GL.shaders[shader]);
     };
   var _glCompileShader = _emscripten_glCompileShader;
@@ -6156,25 +6109,177 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
 
   var _emscripten_glGenBuffers = (n, buffers) => {
       GL.genObject(n, buffers, 'createBuffer', GL.buffers
-      , 'glGenBuffers'
         );
     };
   var _glGenBuffers = _emscripten_glGenBuffers;
 
   var _emscripten_glGenTextures = (n, textures) => {
       GL.genObject(n, textures, 'createTexture', GL.textures
-      , 'glGenTextures'
         );
     };
   var _glGenTextures = _emscripten_glGenTextures;
 
   var _emscripten_glGenVertexArrays = (n, arrays) => {
-      assert(GLctx.createVertexArray, 'Must have WebGL2 or OES_vertex_array_object to use vao');
       GL.genObject(n, arrays, 'createVertexArray', GL.vaos
-      , 'glGenVertexArrays'
         );
     };
   var _glGenVertexArrays = _emscripten_glGenVertexArrays;
+
+  var _emscripten_glGetError = () => {
+      var error = GLctx.getError() || GL.lastError;
+      GL.lastError = 0/*GL_NO_ERROR*/;
+      return error;
+    };
+  var _glGetError = _emscripten_glGetError;
+
+  
+  
+  var webglGetExtensions = () => {
+      var exts = getEmscriptenSupportedExtensions(GLctx);
+      exts = exts.concat(exts.map((e) => 'GL_' + e));
+      return exts;
+    };
+  
+  
+  
+  
+  var emscriptenWebGLGet = (name_, p, type) => {
+      // Guard against user passing a null pointer.
+      // Note that GLES2 spec does not say anything about how passing a null
+      // pointer should be treated.  Testing on desktop core GL 3, the application
+      // crashes on glGetIntegerv to a null pointer, but better to report an error
+      // instead of doing anything random.
+      if (!p) {
+        GL.recordError(0x501 /* GL_INVALID_VALUE */);
+        return;
+      }
+      var ret = undefined;
+      switch (name_) { // Handle a few trivial GLES values
+        case 0x8DFA: // GL_SHADER_COMPILER
+          ret = 1;
+          break;
+        case 0x8DF8: // GL_SHADER_BINARY_FORMATS
+          if (type != 0 && type != 1) {
+            GL.recordError(0x500); // GL_INVALID_ENUM
+          }
+          // Do not write anything to the out pointer, since no binary formats are
+          // supported.
+          return;
+        case 0x87FE: // GL_NUM_PROGRAM_BINARY_FORMATS
+        case 0x8DF9: // GL_NUM_SHADER_BINARY_FORMATS
+          ret = 0;
+          break;
+        case 0x86A2: // GL_NUM_COMPRESSED_TEXTURE_FORMATS
+          // WebGL doesn't have GL_NUM_COMPRESSED_TEXTURE_FORMATS (it's obsolete
+          // since GL_COMPRESSED_TEXTURE_FORMATS returns a JS array that can be
+          // queried for length), so implement it ourselves to allow C++ GLES2
+          // code to get the length.
+          var formats = GLctx.getParameter(0x86A3 /*GL_COMPRESSED_TEXTURE_FORMATS*/);
+          ret = formats ? formats.length : 0;
+          break;
+  
+        case 0x821D: // GL_NUM_EXTENSIONS
+          if (GL.currentContext.version < 2) {
+            // Calling GLES3/WebGL2 function with a GLES2/WebGL1 context
+            GL.recordError(0x502 /* GL_INVALID_OPERATION */);
+            return;
+          }
+          ret = webglGetExtensions().length;
+          break;
+        case 0x821B: // GL_MAJOR_VERSION
+        case 0x821C: // GL_MINOR_VERSION
+          if (GL.currentContext.version < 2) {
+            GL.recordError(0x500); // GL_INVALID_ENUM
+            return;
+          }
+          ret = name_ == 0x821B ? 3 : 0; // return version 3.0
+          break;
+      }
+  
+      if (ret === undefined) {
+        var result = GLctx.getParameter(name_);
+        switch (typeof result) {
+          case 'number':
+            ret = result;
+            break;
+          case 'boolean':
+            ret = result ? 1 : 0;
+            break;
+          case 'string':
+            GL.recordError(0x500); // GL_INVALID_ENUM
+            return;
+          case 'object':
+            if (result === null) {
+              // null is a valid result for some (e.g., which buffer is bound -
+              // perhaps nothing is bound), but otherwise can mean an invalid
+              // name_, which we need to report as an error
+              switch (name_) {
+                case 0x8894: // ARRAY_BUFFER_BINDING
+                case 0x8B8D: // CURRENT_PROGRAM
+                case 0x8895: // ELEMENT_ARRAY_BUFFER_BINDING
+                case 0x8CA6: // FRAMEBUFFER_BINDING or DRAW_FRAMEBUFFER_BINDING
+                case 0x8CA7: // RENDERBUFFER_BINDING
+                case 0x8069: // TEXTURE_BINDING_2D
+                case 0x85B5: // WebGL 2 GL_VERTEX_ARRAY_BINDING, or WebGL 1 extension OES_vertex_array_object GL_VERTEX_ARRAY_BINDING_OES
+                case 0x8F36: // COPY_READ_BUFFER_BINDING or COPY_READ_BUFFER
+                case 0x8F37: // COPY_WRITE_BUFFER_BINDING or COPY_WRITE_BUFFER
+                case 0x88ED: // PIXEL_PACK_BUFFER_BINDING
+                case 0x88EF: // PIXEL_UNPACK_BUFFER_BINDING
+                case 0x8CAA: // READ_FRAMEBUFFER_BINDING
+                case 0x8919: // SAMPLER_BINDING
+                case 0x8C1D: // TEXTURE_BINDING_2D_ARRAY
+                case 0x806A: // TEXTURE_BINDING_3D
+                case 0x8E25: // TRANSFORM_FEEDBACK_BINDING
+                case 0x8C8F: // TRANSFORM_FEEDBACK_BUFFER_BINDING
+                case 0x8A28: // UNIFORM_BUFFER_BINDING
+                case 0x8514: { // TEXTURE_BINDING_CUBE_MAP
+                  ret = 0;
+                  break;
+                }
+                default: {
+                  GL.recordError(0x500); // GL_INVALID_ENUM
+                  return;
+                }
+              }
+            } else if (result instanceof Float32Array ||
+                       result instanceof Uint32Array ||
+                       result instanceof Int32Array ||
+                       result instanceof Array) {
+              for (var i = 0; i < result.length; ++i) {
+                switch (type) {
+                  case 0: HEAP32[(((p)+(i*4))>>2)] = result[i]; break;
+                  case 2: HEAPF32[(((p)+(i*4))>>2)] = result[i]; break;
+                  case 4: HEAP8[(p)+(i)] = result[i] ? 1 : 0; break;
+                }
+              }
+              return;
+            } else {
+              try {
+                ret = result.name | 0;
+              } catch(e) {
+                GL.recordError(0x500); // GL_INVALID_ENUM
+                err(`GL_INVALID_ENUM in glGet${type}v: Unknown object returned from WebGL getParameter(${name_})! (error: ${e})`);
+                return;
+              }
+            }
+            break;
+          default:
+            GL.recordError(0x500); // GL_INVALID_ENUM
+            err(`GL_INVALID_ENUM in glGet${type}v: Native code calling glGet${type}v(${name_}) and it returns ${result} of type ${typeof(result)}!`);
+            return;
+        }
+      }
+  
+      switch (type) {
+        case 1: writeI53ToI64(p, ret); break;
+        case 0: HEAP32[((p)>>2)] = ret; break;
+        case 2:   HEAPF32[((p)>>2)] = ret; break;
+        case 4: HEAP8[p] = ret ? 1 : 0; break;
+      }
+    };
+  
+  var _emscripten_glGetIntegerv = (name_, p) => emscriptenWebGLGet(name_, p, 0);
+  var _glGetIntegerv = _emscripten_glGetIntegerv;
 
   
   var _emscripten_glGetProgramiv = (program, pname, p) => {
@@ -6182,14 +6287,11 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         // GLES2 specification does not specify how to behave if p is a null
         // pointer. Since calling this function does not make sense if p == null,
         // issue a GL error to notify user about it.
-        err(`GL_INVALID_VALUE in glGetProgramiv(program=${program}, pname=${pname}, p=0): Function called with null out pointer!`);
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      GL.validateGLObjectID(GL.programs, program, 'glGetProgramiv', 'program');
   
       if (program >= GL.counter) {
-        err(`GL_INVALID_VALUE in glGetProgramiv(program=${program}, pname=${pname}, p=${ptrToString(p)}): The specified program object name was not generated by GL!`);
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
@@ -6233,7 +6335,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
   
   var _emscripten_glGetShaderInfoLog = (shader, maxLength, length, infoLog) => {
-      GL.validateGLObjectID(GL.shaders, shader, 'glGetShaderInfoLog', 'shader');
       var log = GLctx.getShaderInfoLog(GL.shaders[shader]);
       if (log === null) log = '(unknown error)';
       var numBytesWrittenExclNull = (maxLength > 0 && infoLog) ? stringToUTF8(log, infoLog, maxLength) : 0;
@@ -6247,11 +6348,9 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         // GLES2 specification does not specify how to behave if p is a null
         // pointer. Since calling this function does not make sense if p == null,
         // issue a GL error to notify user about it.
-        err(`GL_INVALID_VALUE in glGetShaderiv(shader=${shader}, pname=${pname}, p=0): Function called with null out pointer!`);
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      GL.validateGLObjectID(GL.shaders, shader, 'glGetShaderiv', 'shader');
       if (pname == 0x8B84) { // GL_INFO_LOG_LENGTH
         var log = GLctx.getShaderInfoLog(GL.shaders[shader]);
         if (log === null) log = '(unknown error)';
@@ -6324,10 +6423,7 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
   var _emscripten_glGetUniformLocation = (program, name) => {
   
-      GL.validateGLObjectID(GL.programs, program, 'glGetUniformLocation', 'program');
       name = UTF8ToString(name);
-  
-      assert(!name.includes(' '), `Uniform names passed to glGetUniformLocation() should not contain spaces! (received "${name}")`);
   
       if (program = GL.programs[program]) {
         webglPrepareUniformLocationsBeforeFirstUse(program);
@@ -6347,7 +6443,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
         // If user passed an array accessor "[index]", parse the array index off the accessor.
         if (leftBrace > 0) {
-          assert(name.slice(leftBrace + 1).length == 1 || !isNaN(jstoi_q(name.slice(leftBrace + 1))), `Malformed input parameter name "${name}" passed to glGetUniformLocation!`);
           arrayIndex = jstoi_q(name.slice(leftBrace + 1)) >>> 0; // "index]", coerce parseInt(']') with >>>0 to treat "foo[]" as "foo[0]" and foo[-1] as unsigned out-of-bounds.
           uniformBaseName = name.slice(0, leftBrace);
         }
@@ -6377,7 +6472,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glGetUniformLocation = _emscripten_glGetUniformLocation;
 
   var _emscripten_glLinkProgram = (program) => {
-      GL.validateGLObjectID(GL.programs, program, 'glLinkProgram', 'program');
       program = GL.programs[program];
       GLctx.linkProgram(program);
       // Invalidate earlier computed uniform->ID mappings, those have now become stale
@@ -6398,7 +6492,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glPixelStorei = _emscripten_glPixelStorei;
 
   var _emscripten_glShaderSource = (shader, count, string, length) => {
-      GL.validateGLObjectID(GL.shaders, shader, 'glShaderSource', 'shader');
       var source = GL.getSource(shader, count, string, length);
   
       GLctx.shaderSource(GL.shaders[shader], source);
@@ -6407,7 +6500,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
 
   var computeUnpackAlignedImageSize = (width, height, sizePerPixel) => {
       function roundedToNextMultipleOf(x, y) {
-        assert((y & (y-1)) === 0, 'Unpack alignment must be a power of 2! (Allowed values per WebGL spec are 1, 2, 4 or 8)');
         return (x + y - 1) & -y;
       }
       var plainRowSize = (GL.unpackRowLength || width) * sizePerPixel;
@@ -6436,14 +6528,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         29846: 3,
         29847: 4
       };
-      if (!colorChannels[format - 0x1902]
-        && format != 0x1902 /* GL_DEPTH_COMPONENT */
-        && format != 0x1906 /* GL_ALPHA */
-        && format != 0x1909 /* GL_LUMINANCE */
-        && format != 0x1903 /* GL_RED */
-        && format != 0x8D94 /* GL_RED_INTEGER */) {
-        err(`Invalid format=${ptrToString(format)} passed to function colorChannelsInGlTextureFormat()!`);
-      }
       return colorChannels[format - 0x1902]||1;
     };
   
@@ -6451,13 +6535,9 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
   
   
-  /** @type {!Uint16Array} */
-  var HEAPU16;
   
   
   
-  /** @type {!Float32Array} */
-  var HEAPF32;
   var heapObjectForWebGLType = (type) => {
       // Micro-optimization for size: Subtract lowest GL enum number (0x1400/* GL_BYTE */) from type to compare
       // smaller values for the heap, for shorter generated code size.
@@ -6482,14 +6562,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         )
         return HEAPU32;
   
-        if (type != 3
-          && type != 11
-          && type != 27699
-          && type != 27700
-          && type != 28515
-          && type != 31073) {
-          err(`Invalid WebGL type 0x${(type+0x1400).toString()} passed to $heapObjectForWebGLType!`);
-        }
       return HEAPU16;
     };
   
@@ -6500,7 +6572,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       var heap = heapObjectForWebGLType(type);
       var sizePerPixel = colorChannelsInGlTextureFormat(format) * heap.BYTES_PER_ELEMENT;
       var bytes = computeUnpackAlignedImageSize(width, height, sizePerPixel);
-      assert(pixels % heap.BYTES_PER_ELEMENT == 0, 'Pointer to texture data passed to texture get function must be aligned to the byte size of the pixel type');
       return heap.subarray(toTypedArrayIndex(pixels, heap), toTypedArrayIndex(pixels + bytes, heap));
     };
   
@@ -6552,20 +6623,17 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
     };
   
   var _emscripten_glUniform1i = (location, v0) => {
-      GL.validateGLObjectID(GLctx.currentProgram.uniformLocsById, location, 'glUniform1i', 'location');
       GLctx.uniform1i(webglGetUniformLocation(location), v0);
     };
   var _glUniform1i = _emscripten_glUniform1i;
 
   
   var _emscripten_glUniform2f = (location, v0, v1) => {
-      GL.validateGLObjectID(GLctx.currentProgram.uniformLocsById, location, 'glUniform2f', 'location');
       GLctx.uniform2f(webglGetUniformLocation(location), v0, v1);
     };
   var _glUniform2f = _emscripten_glUniform2f;
 
   var _emscripten_glUseProgram = (program) => {
-      GL.validateGLObjectID(GL.programs, program, 'glUseProgram', 'program');
       program = GL.programs[program];
       GLctx.useProgram(program);
       // Record the currently active program so that we can access the uniform
@@ -6575,7 +6643,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glUseProgram = _emscripten_glUseProgram;
 
   var _emscripten_glVertexAttribPointer = (index, size, type, normalized, stride, ptr) => {
-      GL.validateVertexAttribPointer(size, type, stride, ptr);
       GLctx.vertexAttribPointer(index, size, type, !!normalized, stride, ptr);
     };
   var _glVertexAttribPointer = _emscripten_glVertexAttribPointer;
@@ -7334,7 +7401,6 @@ if (Module['printErr']) err = Module['printErr'];
   'getSocketAddress',
   'FS_mkdirTree',
   '_setNetworkCallback',
-  'emscriptenWebGLGet',
   'emscriptenWebGLGetUniform',
   'emscriptenWebGLGetVertexAttrib',
   '__glGetActiveAttribOrUniform',
@@ -7587,6 +7653,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'webgl_enable_EXT_clip_control',
   'webgl_enable_WEBGL_polygon_mode',
   'GL',
+  'emscriptenWebGLGet',
   'computeUnpackAlignedImageSize',
   'colorChannelsInGlTextureFormat',
   'emscriptenWebGLGetTexPixelData',
@@ -7651,6 +7718,13 @@ function checkIncomingModuleAPI() {
 }
 
 // Imports from the Wasm binary.
+var _jsMove = Module['_jsMove'] = makeInvalidEarlyAccess('_jsMove');
+var _jsInteract = Module['_jsInteract'] = makeInvalidEarlyAccess('_jsInteract');
+var _jsInventory = Module['_jsInventory'] = makeInvalidEarlyAccess('_jsInventory');
+var _jsInvDrop = Module['_jsInvDrop'] = makeInvalidEarlyAccess('_jsInvDrop');
+var _jsInvOpen = Module['_jsInvOpen'] = makeInvalidEarlyAccess('_jsInvOpen');
+var _jsModalActive = Module['_jsModalActive'] = makeInvalidEarlyAccess('_jsModalActive');
+var _jsGamepad = Module['_jsGamepad'] = makeInvalidEarlyAccess('_jsGamepad');
 var _downloadFile = Module['_downloadFile'] = makeInvalidEarlyAccess('_downloadFile');
 var _main = Module['_main'] = makeInvalidEarlyAccess('_main');
 var _realloc = makeInvalidEarlyAccess('_realloc');
@@ -7670,6 +7744,13 @@ var wasmMemory = makeInvalidEarlyAccess('wasmMemory');
 var wasmTable = makeInvalidEarlyAccess('wasmTable');
 
 function assignWasmExports(wasmExports) {
+  assert(typeof wasmExports['jsMove'] != 'undefined', 'missing Wasm export: jsMove');
+  assert(typeof wasmExports['jsInteract'] != 'undefined', 'missing Wasm export: jsInteract');
+  assert(typeof wasmExports['jsInventory'] != 'undefined', 'missing Wasm export: jsInventory');
+  assert(typeof wasmExports['jsInvDrop'] != 'undefined', 'missing Wasm export: jsInvDrop');
+  assert(typeof wasmExports['jsInvOpen'] != 'undefined', 'missing Wasm export: jsInvOpen');
+  assert(typeof wasmExports['jsModalActive'] != 'undefined', 'missing Wasm export: jsModalActive');
+  assert(typeof wasmExports['jsGamepad'] != 'undefined', 'missing Wasm export: jsGamepad');
   assert(typeof wasmExports['downloadFile'] != 'undefined', 'missing Wasm export: downloadFile');
   assert(typeof wasmExports['main'] != 'undefined', 'missing Wasm export: main');
   assert(typeof wasmExports['realloc'] != 'undefined', 'missing Wasm export: realloc');
@@ -7685,6 +7766,13 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['emscripten_stack_get_current'] != 'undefined', 'missing Wasm export: emscripten_stack_get_current');
   assert(typeof wasmExports['memory'] != 'undefined', 'missing Wasm export: memory');
   assert(typeof wasmExports['__indirect_function_table'] != 'undefined', 'missing Wasm export: __indirect_function_table');
+  _jsMove = Module['_jsMove'] = createExportWrapper('jsMove', wasmExports['jsMove'], 2);
+  _jsInteract = Module['_jsInteract'] = createExportWrapper('jsInteract', wasmExports['jsInteract'], 0);
+  _jsInventory = Module['_jsInventory'] = createExportWrapper('jsInventory', wasmExports['jsInventory'], 0);
+  _jsInvDrop = Module['_jsInvDrop'] = createExportWrapper('jsInvDrop', wasmExports['jsInvDrop'], 0);
+  _jsInvOpen = Module['_jsInvOpen'] = createExportWrapper('jsInvOpen', wasmExports['jsInvOpen'], 0);
+  _jsModalActive = Module['_jsModalActive'] = createExportWrapper('jsModalActive', wasmExports['jsModalActive'], 0);
+  _jsGamepad = Module['_jsGamepad'] = createExportWrapper('jsGamepad', wasmExports['jsGamepad'], 3);
   _downloadFile = Module['_downloadFile'] = createExportWrapper('downloadFile', wasmExports['downloadFile'], 2);
   _main = Module['_main'] = createExportWrapper('main', wasmExports['main'], 2);
   _realloc = createExportWrapper('realloc', wasmExports['realloc'], 2);
@@ -7733,6 +7821,8 @@ var wasmImports = {
   emscripten_is_main_browser_thread: _emscripten_is_main_browser_thread,
   /** @export */
   emscripten_resize_heap: _emscripten_resize_heap,
+  /** @export */
+  emscripten_run_script: _emscripten_run_script,
   /** @export */
   emscripten_set_canvas_element_size: _emscripten_set_canvas_element_size,
   /** @export */
@@ -7797,6 +7887,10 @@ var wasmImports = {
   glGenTextures: _glGenTextures,
   /** @export */
   glGenVertexArrays: _glGenVertexArrays,
+  /** @export */
+  glGetError: _glGetError,
+  /** @export */
+  glGetIntegerv: _glGetIntegerv,
   /** @export */
   glGetProgramiv: _glGetProgramiv,
   /** @export */

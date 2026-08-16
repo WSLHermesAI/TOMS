@@ -103665,6 +103665,52 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "width": 13
 }
 {
+  "store_title": "道具商店",
+  "currency": "gold",
+  "unlockstage": 3,
+  "layout": "card_grid",
+  "cost_rule": {
+    "description": "Each item starts at cost_base and the price doubles after every purchase (cost_base * cost_multiplier^purchases). Sequence: 2, 4, 8, 16, 32, ...",
+    "cost_base": 2,
+    "cost_multiplier": 2
+  },
+  "items": [
+    {
+      "id": "potion_hp",
+      "name": "生命藥水",
+      "sprite": "potion_red.png",
+      "icon_path": "assets/sprites/potion_red.png",
+      "desc": "立即恢復生命值。",
+      "effect": { "hp": 40 },
+      "effect_text": "恢復 HP +40",
+      "cost_base": 2,
+      "cost_multiplier": 2
+    },
+    {
+      "id": "potion_str",
+      "name": "力量藥水",
+      "sprite": "gem_atk.png",
+      "icon_path": "assets/sprites/gem_atk.png",
+      "desc": "永久提升攻擊力。",
+      "effect": { "str": 1 },
+      "effect_text": "STR +1",
+      "cost_base": 2,
+      "cost_multiplier": 2
+    },
+    {
+      "id": "potion_def",
+      "name": "防禦藥水",
+      "sprite": "gem_def.png",
+      "icon_path": "assets/sprites/gem_def.png",
+      "desc": "永久提升防禦力。",
+      "effect": { "def": 1 },
+      "effect_text": "DEF +1",
+      "cost_base": 2,
+      "cost_multiplier": 2
+    }
+  ]
+}
+{
   "title": "Tower of the Sorcerer",
   "subtitle": "魔法塔 — 巫師之塔",
   "premise": "十年前，黑巫師之王 Vorkath（沃卡司）以禁咒封印了『安穩之星』——王國生命的源泉，並將唯一的反咒之匙交給了被囚於塔頂的公主 Liora（莉歐拉）。從此大地枯萎、怪物橫行。你是年輕的見習巫師，必須攀上十層『巫師之塔』，擊敗 Vorkath，救出公主、重啟安穩之星。",

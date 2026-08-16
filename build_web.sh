@@ -66,13 +66,15 @@ build_one() {
   echo "[build_web] $backend artifacts -> $outdir/:"
   ls -la "$outdir"
 
-  # ---- cache-busting: stamp a version + locateFile into the HTML ----
-  # A normal reload then always fetches fresh .wasm/.data (no hard-refresh).
+  # ---- cache-busting + real-error display: stamp the generated HTML ----
+  # A normal reload then always fetches fresh .wasm/.data (no hard-refresh),
+  # and the page shows the REAL error text instead of the generic
+  # "Exception thrown, see JavaScript console" string.
   local VER="$(git rev-parse --short HEAD 2>/dev/null || echo dev)-$(date +%Y%m%d%H%M%S)"
   for html in "$outdir/tower_vulkan_web.html" "web/tower_vulkan_web.html"; do
     [ -f "$html" ] || continue
     python3 - "$html" "$VER" <<'PY'
-import sys, re
+import sys
 html, ver = sys.argv[1], sys.argv[2]
 s = open(html, encoding='utf-8').read()
 # 1) define window.TOMS_VERSION early (in <head> so it exists before Module)
@@ -86,8 +88,36 @@ if 'locateFile' not in s:
         '          if ((p.endsWith(\'.wasm\') || p.endsWith(\'.data\')) && window.TOMS_VERSION) '
         'return (prefix||\'\') + p + \'?v=\' + window.TOMS_VERSION;\n'
         '          return (prefix||\'\') + p;\n        },', 1)
+# 3) replace the generic window.onerror with one that shows the REAL message+stack
+OLD = """      window.onerror = window.onunhandledrejection = () => {
+        // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+        setStatus('Exception thrown, see JavaScript console');
+        spinnerElement.style.display = 'none';
+        setStatus = (text) => {
+          if (text) console.error('[post-exception status] ' + text);
+        };
+      };"""
+if OLD in s and 'showErr' not in s:
+    NEW = """      function showErr(msg){
+        var bar = document.getElementById('tomserr');
+        if(!bar){ bar = document.createElement('div'); bar.id='tomserr';
+          bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:9999;background:#400;color:#fff;font:14px/1.4 monospace;white-space:pre-wrap;padding:10px;max-height:60%;overflow:auto;';
+          (document.body||document.documentElement).appendChild(bar); }
+        bar.textContent = 'TOMS error:\\n' + msg;
+        console.error('[TOMS] ' + msg);
+      }
+      window.onerror = window.onunhandledrejection = (e) => {
+        var msg = (e && e.message) ? e.message : String(e);
+        if (e && e.error && e.error.stack) msg += '\\n' + e.error.stack;
+        else if (e && e.reason) msg += '\\n' + (e.reason && e.reason.stack ? e.reason.stack : e.reason);
+        showErr(msg);
+        spinnerElement.style.display = 'none';
+        setStatus = (text) => { if (text) console.error('[post-exception status] ' + text); };
+      };
+      if (typeof Module !== 'undefined') Module.onAbort = function(what){ showErr('ABORT: ' + (what||'unknown')); };"""
+    s = s.replace(OLD, NEW, 1)
 open(html, 'w', encoding='utf-8').write(s)
-print('stamped', html, 'with v='+ver)
+print('stamped', html, 'with v='+ver, '| showErr:', 'showErr' in s)
 PY
   done
 }

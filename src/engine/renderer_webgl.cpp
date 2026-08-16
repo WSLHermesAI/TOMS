@@ -46,14 +46,17 @@ GLuint WebGLRenderer::compile(const char* src, GLenum kind) {
 GLuint WebGLRenderer::makeTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, bool flip) {
     if (rgba.empty() || w == 0 || h == 0) return 0;   // guard: never upload zero-size/empty
     // Clamp to the context's max texture size so a grown font atlas can't request
-    // an impossible texture (which would GL-error -> abortOnError -> page abort).
+    // an impossible texture. IMPORTANT: we must not upload a smaller-than-declared
+    // pixel buffer (WebGL2 throws on a data-length mismatch, which is a JS
+    // exception GL_ASSERTIONS does NOT catch -> "Exception thrown"). If the atlas
+    // doesn't fit, skip the upload (return 0); callers already handle texture 0.
     GLint maxTex = 4096; glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTex);
     uint32_t cap = (maxTex > 0) ? (uint32_t)maxTex : 4096;
-    uint32_t ww = std::min(w, cap), hh = std::min(h, cap);
+    if (w > cap || h > cap) return 0;
     GLuint t; glGenTextures(1, &t);
     glBindTexture(GL_TEXTURE_2D, t);
     glPixelStorei(GL_UNPACK_FLIP_Y_WEBGL, flip ? GL_TRUE : GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)ww, (GLsizei)hh, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
     glPixelStorei(GL_UNPACK_FLIP_Y_WEBGL, GL_FALSE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
