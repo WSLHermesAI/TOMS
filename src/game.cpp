@@ -266,8 +266,13 @@ void Game::drawText(const std::string& s, float x, float y, float size, const fl
             }
         }
         float qw = sx, qh = sy;                 // natural glyph size (display px)
+        // Vertical placement matches FM79979 RenderFont: vertex.y = YOffset +
+        // glyphOffset.y = -firstOffset.y + glyphOffset.y. In our stored metrics
+        // (glyphM_[1] = -top_stb = top_freetype = -Offset.y_ref) this is
+        //   qy = y + (glyphM_[first][1] - glyphM_[cp][1]) * s
+        // (NOT y - firstTop*s + glyphM_[cp][1]*s, which would negate the bearing).
         float qx = cx + leftB;                  // advance then place by bearing
-        float qy = y - firstTop*s + topB;       // baseline-aligned (ref: YOffset=-firstTop)
+        float qy = y + (firstTop*s) - topB;     // baseline-aligned (ref sign)
         Quad q; q.rect[0]=qx; q.rect[1]=qy; q.rect[2]=qw; q.rect[3]=qh;
         q.uv[0]=uv[0]; q.uv[1]=uv[1]; q.uv[2]=uv[2]; q.uv[3]=uv[3];
         q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];

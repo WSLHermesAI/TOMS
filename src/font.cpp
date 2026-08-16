@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <cstring>
+#include <cmath>
 #include <filesystem>
 
 // ---- gather codepoints from JSON files (UTF-8) + an extra literal string ----
@@ -40,28 +41,28 @@ std::vector<uint32_t> Font::collectFromFiles(const std::vector<std::string>& jso
 
 // Rasterize one glyph from `info` into cell `idx` of the atlas. Returns false if
 // the font has no such glyph. Used by both the initial bake and realtime fallback.
-// Bakes at scale = cell/(ascent-descent) so the glyph's DESIGN size equals `cell`
-// (no shrink) — matching a freetype layout. The atlas cell is only a packing
-// container; drawText uses the stored design metrics (bearing + natural size) to
-// size/place the quad exactly (FM79979 FreetypeGlypth.cpp RenderFont @ L145).
+// Mirrors FM79979 cDynamicFontTexture::AddNewCharacterToTexture: rasterize the
+// glyph with stb's own bitmap renderer and store the ACTUAL rendered w x h plus
+// the freetype bearing (left, top). The full bitmap (all h rows) is pasted
+// top-left into the atlas cell (no centering, no height cap) so nothing is ever
+// clipped. We use an explicit scale = cell/(ascent-descent) (natural size, em-box
+// == cell) rather than stbtt_ScaleForPixelHeight, because wqy-zenhei's metrics
+// make ScaleForPixelHeight shrink the glyphs far too small.
 bool Font::bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_t>&, int idx) {
     int g = stbtt_FindGlyphIndex(&info, (int)cp);
     if (g == 0) return false;              // glyph absent from this font
 
-    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
-    stbtt_GetGlyphBitmapBox(&info, g, 1.0f, 1.0f, &x0, &y0, &x1, &y1);
-    // design metrics in font units; convert with the same vertical-fit scale the
-    // reference uses (scale so the em-box == cell, i.e. natural glyph size).
+    // Natural-size scale: em-box == cell.
     int ascent = 0, descent = 0, lineGap = 0;
     stbtt_GetFontVMetrics(&info, &ascent, &descent, &lineGap);
     float scale = (ascent > 0) ? ((float)cell_ / (float)(ascent - descent)) : 1.0f;
 
-    int gw = (int)((x1 - x0) * scale), gh = (int)((y1 - y0) * scale);
-    float leftBearing = (float)x0 * scale;   // px from pen to glyph left
-    float topBearing  = (float)y0 * scale;   // px from pen(baseline) to glyph top (<=0)
+    int w = 0, h = 0, left = 0, top = 0;
+    uint8_t* bmp = stbtt_GetGlyphBitmap(&info, scale, scale, g, &w, &h, &left, &top);
     int cellX = (idx % cols_) * cell_, cellY = (idx / cols_) * cell_;
 
-    if (gw <= 0 || gh <= 0) {              // whitespace glyph: reserve an empty cell
+    if (!bmp || w <= 0 || h <= 0) {        // whitespace glyph: reserve an empty cell
+        if (bmp) stbtt_FreeBitmap(bmp, 0);
         glyphBox_[cp] = {0, 0, 0, 0};
         advPx_[cp] = std::max(1, cell_ / 3);   // a space still advances a bit
         glyphM_[cp] = {0, 0, (float)(cell_/3), 0};
@@ -70,31 +71,27 @@ bool Font::bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_
         cellIdx_[cp] = idx;
         return true;
     }
-    if (gw > cell_) gw = cell_;
-    if (gh > cell_) gh = cell_;
-
-    std::vector<uint8_t> gb((size_t)gw * gh, 0);
-    // rasterize at scale, then copy (stb output is top-down rows)
-    stbtt_MakeGlyphBitmap(&info, gb.data(), gw, gh, gw, scale, scale, g);
-
-    int offX = cellX + (cell_ - gw) / 2;   // center within cell for packing only
-    int offY = cellY + (cell_ - gh) / 2;
+    // Paste the FULL bitmap (all h rows) top-left into the cell. No cap, no
+    // centering -> the bottom of round glyphs ('e','o','a') is never clipped.
+    int offX = cellX, offY = cellY;
     uint8_t* base = atlas_.data();
-    for (int yy = 0; yy < gh; yy++)
-        for (int xx = 0; xx < gw; xx++) {
-            uint8_t a = gb[(size_t)yy * gw + xx];
+    for (int yy = 0; yy < h; yy++)
+        for (int xx = 0; xx < w; xx++) {
+            uint8_t a = bmp[(size_t)yy * w + xx];
             int dx = offX + xx, dy = offY + yy;
             if (dx < 0 || dy < 0 || dx >= (int)atlasW_ || dy >= (int)atlasH_) continue;
             size_t p = ((size_t)dy * atlasW_ + dx) * 4;
             base[p] = 255; base[p+1] = 255; base[p+2] = 255; base[p+3] = a;  // white glyph
         }
+    stbtt_FreeBitmap(bmp, 0);
     // TIGHT uv (both axes span the actual inked glyph) so the quad never samples
     // padding or a neighbour under linear filtering.
-    glyphBox_[cp] = { offX - cellX, offY - cellY, gw, gh };
-    advPx_[cp] = gw;
-    glyphM_[cp] = { leftBearing, topBearing, (float)gw, (float)gh };
+    glyphBox_[cp] = { 0, 0, w, h };        // top-left placement
+    advPx_[cp] = w;
+    // freetype bearing: Offset.x = left, Offset.y = -top (exactly like the reference)
+    glyphM_[cp] = { (float)left, (float)(-top), (float)w, (float)h };
     map_[cp] = { (float)offX / atlasW_, (float)offY / atlasH_,
-                 (float)(offX + gw) / atlasW_, (float)(offY + gh) / atlasH_ };
+                 (float)(offX + w) / atlasW_, (float)(offY + h) / atlasH_ };
     cellIdx_[cp] = idx;
     return true;
 }
