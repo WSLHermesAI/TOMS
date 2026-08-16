@@ -19,7 +19,7 @@ struct Quad {
 };
 
 // Node tags (keep in sync with Quad::node comments above).
-enum RenderNode : uint8_t { NODE_UNSPEC=0, NODE_STAGE=1, NODE_CHAR=2, NODE_TALK=3, NODE_BATTLE=4 };
+enum RenderNode : uint8_t { NODE_UNSPEC=0, NODE_STAGE=1, NODE_CHAR=2, NODE_TALK=3, NODE_BATTLE=4, NODE_STORE=5 };
 
 // Shared sprite-grid layout (must match Game::SPRITE_ORDER in game.cpp).
 enum SpriteIdx {

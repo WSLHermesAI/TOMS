@@ -151,6 +151,37 @@ int main(int argc, char** argv) {
             g.interact();                 // re-open (may no-op if not on NPC) -> safe
             g.toggleInventory(); g.invMoveSel(1,0); g.invUseSelected(); g.toggleInventory();
             TOMS_LOG_INFO("scenario=dialogue done");
+        } else if (mode == "store") {
+            // ---- Store system verification (keyboard + mouse interactivity) ----
+            // 1) load stage 3 -> unlock dialog pops (once)
+            g.loadStage("stage03");
+            g.draw(); g.saveFrame(framesDir + "/store01_unlock_dialog.png");
+            // confirm the unlock dialog with a MOUSE CLICK on its confirm button.
+            // unlock button center (from drawStoreUnlockDialog): bx=(W-420)/2=302, by=(H-180)/2=294,
+            //   btnX=578, btnY=414, w=120,h=40 -> center (638,434)
+            g.storeClick(638, 434);
+            g.draw(); g.saveFrame(framesDir + "/store02_after_unlock.png");
+            // 2) give gold (simulate kills), open the store by MOUSE-clicking the HUD icon
+            g.player().gold = 50;
+            g.draw();  // sets storeIconRect (top-right icon: x=W-56=968, y=14, s=42 -> center 989,35)
+            g.storeClick(989, 35);
+            g.draw(); g.saveFrame(framesDir + "/store03_open.png");
+            // 3) buy HP potion (card 0) via MOUSE click on its buy button
+            //    card rects: cw=300,ch=300,gap=24,n=3 -> ox=38, oy=214; btn center=(188,479)
+            g.storeClick(188, 479);
+            g.draw(); g.saveFrame(framesDir + "/store04_bought_hp.png");
+            // 4) select STR card (keyboard '2') and buy via keyboard Enter
+            g.storeKey('2'); g.storeKey(13);
+            g.draw(); g.saveFrame(framesDir + "/store05_bought_str.png");
+            // 5) not-enough-gold: drain gold, try to buy DEF (card 3) -> toast + shake, no purchase
+            g.player().gold = 0;
+            g.storeKey('3');  // select DEF card
+            g.storeClick(188 + 324, 479);  // DEF card buy button (card index 2 -> +324 x)
+            g.draw(); g.saveFrame(framesDir + "/store06_not_enough_gold.png");
+            // 6) close via keyboard Esc
+            g.storeKey(27);
+            g.draw(); g.saveFrame(framesDir + "/store07_closed.png");
+            TOMS_LOG_INFO("scenario=store done (unlocked={} storeOpen={})", g.storeUnlocked(), g.storeOpenFlag());
         } else if (mode == "stress") {
             // heavy churn: many stage loads, combats, inventory toggles, item uses
             for (const char* s : {"stage01","stage03","stage05","stage07","stage10"}) {

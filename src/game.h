@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <json.hpp>
 #include "object.h"      // Trackable base: Player/EnemyInst/CombatState/Game are tracked
 #include "render_iface.h"
 #include "stage.h"
@@ -44,6 +45,21 @@ struct CombatState : public Trackable {
     TOMS_OBJECT(CombatState)
 };
 
+// A store item, parsed from data/store.json. cost = cost_base * cost_multiplier^purchases.
+struct StoreItemDef {
+    std::string id;
+    std::string name;
+    std::string sprite;       // sprite id (into the atlas) for the icon
+    std::string icon_path;    // original asset path stored in json
+    std::string desc;
+    nlohmann::json effect;     // {hp:..} / {str:..} / {def:..}
+    std::string effect_text;
+    int cost_base = 2;
+    int cost_multiplier = 2;
+    int purchases = 0;         // how many times already bought (drives the doubling price)
+    int liveCost() const { int c = cost_base; for (int i=1;i<=purchases;i++) c *= cost_multiplier; return c; }
+};
+
 class Game : public Trackable {
 public:
     bool loadAssets(const std::string& assetDir);
@@ -64,7 +80,18 @@ public:
     bool inventoryOpen() const { return invOpen; }
     const std::vector<std::string>& inventory() const { return pl.inv; }
     int invSelection() const { return invSel; }
-    bool modalActive() const { return cs.active || inDialogue || invOpen; }  // any overlay open (combat/dialogue/inventory)
+    bool modalActive() const { return cs.active || inDialogue || invOpen || storeOpen || storeUnlockDlg; }  // any overlay open (combat/dialogue/inventory/store)
+    // store system
+    bool storeUnlocked() const { return storeUnlocked_; }
+    bool storeOpenFlag() const { return storeOpen; }
+    const std::vector<StoreItemDef>& storeItems() const { return storeItems_; }
+    int storeSel() const { return storeSel_; }
+    const std::string& toastMsg() const { return toastMsg_; }
+    // input for the store (mouse: pixel coords; keyboard: vk key code / ascii)
+    void storeClick(float x, float y);     // click on the store icon or inside the store UI
+    void storeKey(int key);                // keyboard nav/confirm inside the store UI
+    void openStore();                      // open the store overlay
+    void closeStore();                     // close the store overlay
     Player& player() { return pl; }
     IRenderer* renderer() { return ren; }   // for batch-metric inspection (demo)
     // DEBUG: hide individual overlay subsystems to bisect stray-sprite bugs.
@@ -90,6 +117,15 @@ private:
     int spriteForItem(const std::string& id) const;
     std::string itemName(const std::string& id) const;
     std::string itemDesc(const std::string& id) const;
+    // store system
+    void loadStore(const std::string& assetDir);   // parse data/store.json
+    void drawStoreIcon();                            // HUD icon (clickable after unlock)
+    void drawStoreUnlockDialog();                   // "store unlocked" popup (confirm button)
+    void drawStoreUI();                              // the shop overlay (card grid)
+    void drawStoreToast();                           // transient "gold not enough" toast
+    // compute the on-screen rects of store UI elements (icon / cards / buttons) for hit-testing
+    void storeCardRects(std::vector<float>& rects) const;  // 4 floats per card: x,y,w,h
+    void buyStoreItem(int idx);                      // purchase + apply effect (or toast if poor)
     // shared full-screen focus splash (black, alpha 0.5) used by combat / dialogue /
     // inventory so the player focuses on the active scene. Also gates background
     // input (movePlayer/interact) while any modal overlay is open.
@@ -124,6 +160,21 @@ private:
     std::string curStage;
     std::string dataDir;
     int totalStages = 10;   // highest stage index (derived from data/stages at loadStage)
+    // store system state
+    std::vector<StoreItemDef> storeItems_;
+    int storeUnlockStage_ = 3;   // stage index at which the shop unlocks (from store.json)
+    bool storeUnlocked_ = false;
+    bool storeUnlockDlg = false; // "shop unlocked!" popup showing (with confirm button)
+    bool storeOpen = false;      // store overlay open
+    int storeSel_ = 0;           // selected card index (keyboard nav)
+    std::string toastMsg_;        // transient message ("金錢不足")
+    int toastTimer_ = 0;         // ms remaining for toast
+    int shakeTimer_ = 0;         // ms remaining for "not enough gold" shake
+    int storeIconRect[4] = {0,0,0,0}; // on-screen rect of the HUD store icon (for hit-test)
+    std::string storeTitle_ = "道具商店";     // title from store.json
+    int storeUnlockBtnRect_[4] = {0,0,0,0};   // unlock dialog confirm button rect
+    std::vector<float> storeBtnRects_;        // per-card buy-button rects (4 floats each)
+    int storeCloseRect_[4] = {0,0,0,0};       // store close button rect
 #ifndef __EMSCRIPTEN__
     Audio audio;           // SFX subsystem (no-op when no audio device)
 #else

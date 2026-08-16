@@ -1,0 +1,46 @@
+{
+  "store_title": "道具商店",
+  "currency": "gold",
+  "unlockstage": 3,
+  "layout": "card_grid",
+  "cost_rule": {
+    "description": "Each item starts at cost_base and the price doubles after every purchase (cost_base * cost_multiplier^purchases). Sequence: 2, 4, 8, 16, 32, ...",
+    "cost_base": 2,
+    "cost_multiplier": 2
+  },
+  "items": [
+    {
+      "id": "potion_hp",
+      "name": "生命藥水",
+      "sprite": "potion_red.png",
+      "icon_path": "assets/sprites/potion_red.png",
+      "desc": "立即恢復生命值。",
+      "effect": { "hp": 40 },
+      "effect_text": "恢復 HP +40",
+      "cost_base": 2,
+      "cost_multiplier": 2
+    },
+    {
+      "id": "potion_str",
+      "name": "力量藥水",
+      "sprite": "gem_atk.png",
+      "icon_path": "assets/sprites/gem_atk.png",
+      "desc": "永久提升攻擊力。",
+      "effect": { "str": 1 },
+      "effect_text": "STR +1",
+      "cost_base": 2,
+      "cost_multiplier": 2
+    },
+    {
+      "id": "potion_def",
+      "name": "防禦藥水",
+      "sprite": "gem_def.png",
+      "icon_path": "assets/sprites/gem_def.png",
+      "desc": "永久提升防禦力。",
+      "effect": { "def": 1 },
+      "effect_text": "DEF +1",
+      "cost_base": 2,
+      "cost_multiplier": 2
+    }
+  ]
+}

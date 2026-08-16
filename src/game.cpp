@@ -140,6 +140,8 @@ bool Game::loadAssets(const std::string& assetDir) {
         std::ifstream itf(assetDir+"/../data/items.json"); nlohmann::json ij; itf>>ij;
         for (auto& [k,v] : ij.items()) itemDefs[k] = v;
     }
+    // load store definitions (data/store.json) -> unlock stage + items + cost rule
+    loadStore(assetDir);
     // init player
     pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
     // init SFX subsystem (no-op if no audio device; headless-safe). Disabled on
@@ -187,6 +189,13 @@ void Game::loadStage(const std::string& id) {
             } catch (...) {}
         }
     }
+    // store unlock: when entering the configured unlock stage for the first time,
+    // mark the shop as unlocked and pop a one-time "shop unlocked!" dialog.
+    if (st.index >= storeUnlockStage_ && !storeUnlocked_) {
+        storeUnlocked_ = true;
+        storeUnlockDlg = true;
+    }
+
     // place player at '@' or default
     pl.x = 1; pl.y = (int)st.height - 2;
     for (auto& e : st.entities)
@@ -360,6 +369,15 @@ void Game::draw() {
     ren->setNode(NODE_CHAR);   // inventory is a character/UI screen
     if ((hideMask & 4) == 0) drawInventory();
 
+    // ---- store system (NODE_STORE) ----
+    ren->setNode(NODE_STORE);
+    if (!storeOpen) drawStoreIcon();          // HUD icon is always visible (dim+locked until unlocked)
+    // reset per-frame button-rect scratch (rebuilt during draw)
+    storeBtnRects_.clear();
+    if (storeUnlockDlg) drawStoreUnlockDialog();
+    else if (storeOpen) drawStoreUI();
+    drawStoreToast();
+
     ren->end();
 }
 
@@ -531,6 +549,251 @@ void Game::drawInventory() {
     modalRoot.RenderTree(ren);
 }
 
+// ---------- store system ----------
+void Game::loadStore(const std::string& assetDir) {
+    std::ifstream f(assetDir + "/../data/store.json");
+    if (!f) { return; }
+    nlohmann::json j; f >> j;
+    if (j.contains("store_title")) storeTitle_ = j["store_title"].get<std::string>();
+    if (j.contains("unlockstage")) storeUnlockStage_ = j["unlockstage"].get<int>();
+    for (auto& it : j["items"]) {
+        StoreItemDef d;
+        d.id = it.value("id", "");
+        d.name = it.value("name", d.id);
+        d.sprite = it.value("sprite", "");
+        // strip a trailing ".png" if present so it matches the atlas sprite id
+        if (d.sprite.size() > 4 && d.sprite.substr(d.sprite.size()-4) == ".png")
+            d.sprite = d.sprite.substr(0, d.sprite.size()-4);
+        d.icon_path = it.value("icon_path", "");
+        d.desc = it.value("desc", "");
+        if (it.contains("effect")) d.effect = it["effect"];
+        d.effect_text = it.value("effect_text", "");
+        d.cost_base = it.value("cost_base", 2);
+        d.cost_multiplier = it.value("cost_multiplier", 2);
+        d.purchases = 0;
+        storeItems_.push_back(d);
+    }
+}
+
+void Game::openStore() {
+    if (!storeUnlocked_) return;
+    storeOpen = true;
+    storeSel_ = 0;
+    audio.play("confirm_click");
+}
+void Game::closeStore() {
+    storeOpen = false;
+    audio.play("close_ui");
+}
+
+void Game::storeCardRects(std::vector<float>& rects) const {
+    rects.clear();
+    float W = (float)ren->width(), H = (float)ren->height();
+    int n = (int)storeItems_.size();
+    float cw = 300, ch = 300, gap = 24;
+    float totalW = n * cw + (n - 1) * gap;
+    float ox = (W - totalW) / 2.0f;
+    float oy = (H - ch) / 2.0f - 10;
+    for (int i = 0; i < n; i++) {
+        rects.push_back(ox + i * (cw + gap));
+        rects.push_back(oy);
+        rects.push_back(cw);
+        rects.push_back(ch);
+    }
+}
+
+void Game::drawStoreIcon() {
+    float W = (float)ren->width();
+    // top-right of the HUD bar (after GOLD/EXP text). Put it at x = W-60.
+    int x = (int)(W - 56), y = 14, s = 42;
+    storeIconRect[0] = x; storeIconRect[1] = y; storeIconRect[2] = s; storeIconRect[3] = s;
+    // background panel
+    Quad bg; bg.rect[0]=x-4; bg.rect[1]=y-4; bg.rect[2]=s+8; bg.rect[3]=s+8;
+    bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1; bg.solid=true;
+    if (storeUnlocked_) { bg.tint[0]=0.16f; bg.tint[1]=0.22f; bg.tint[2]=0.34f; bg.tint[3]=1; }
+    else { bg.tint[0]=0.12f; bg.tint[1]=0.12f; bg.tint[2]=0.14f; bg.tint[3]=0.5f; } // locked = dim
+    ren->drawSprite(bg);
+    // icon: a shop/coin sprite. Use SP_GOLD (coin) as the store glyph.
+    ren->drawSprite(spriteQuad((float)x, (float)y, (float)s, (float)s, spriteLayer("coin"), C4(1,1,1, storeUnlocked_?1.0f:0.4f)));
+    // label
+    drawText(storeUnlocked_ ? "商店" : "商店🔒", (float)x-4, (float)y + s + 2, 12, C4(1,1,1, storeUnlocked_?1:0.4f));
+}
+
+void Game::drawStoreUnlockDialog() {
+    float W = (float)ren->width(), H = (float)ren->height();
+    drawFocusSplash();
+    // centered dialog box
+    float bw = 420, bh = 180;
+    float bx = (W - bw)/2, by = (H - bh)/2;
+    Quad box; box.rect[0]=bx; box.rect[1]=by; box.rect[2]=bw; box.rect[3]=bh;
+    box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1; box.solid=true;
+    box.tint[0]=0.12f;box.tint[1]=0.16f;box.tint[2]=0.26f;box.tint[3]=0.97f; ren->drawSprite(box);
+    drawText("🛒 道具商店已經開放！", bx+30, by+34, 24, C4(1,0.9f,0.5f,1));
+    drawText("你現在可以在關卡中點擊右上角的商店圖示來購買道具。", bx+30, by+74, 15, C4(1,1,1,1));
+    // confirm button (bottom-right of box)
+    float btnW = 120, btnH = 40;
+    float btnX = bx + bw - btnW - 24, btnY = by + bh - btnH - 20;
+    storeUnlockBtnRect_[0] = (int)btnX; storeUnlockBtnRect_[1] = (int)btnY;
+    storeUnlockBtnRect_[2] = (int)btnW; storeUnlockBtnRect_[3] = (int)btnH;
+    Quad btn; btn.rect[0]=btnX; btn.rect[1]=btnY; btn.rect[2]=btnW; btn.rect[3]=btnH;
+    btn.uv[0]=0;btn.uv[1]=0;btn.uv[2]=1;btn.uv[3]=1; btn.solid=true;
+    btn.tint[0]=0.2f;btn.tint[1]=0.5f;btn.tint[2]=0.3f;btn.tint[3]=1; ren->drawSprite(btn);
+    drawText("確定 (Enter/點擊)", btnX+12, btnY+11, 15, C4(1,1,1,1));
+}
+
+void Game::drawStoreUI() {
+    float W = (float)ren->width(), H = (float)ren->height();
+    drawFocusSplash();
+    // panel background
+    Quad bg; bg.rect[0]=40; bg.rect[1]=40; bg.rect[2]=W-80; bg.rect[3]=H-80;
+    bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1; bg.solid=true;
+    bg.tint[0]=0.08f;bg.tint[1]=0.1f;bg.tint[2]=0.16f;bg.tint[3]=0.96f; ren->drawSprite(bg);
+    // title + gold
+    drawText("🛒 " + storeTitle_, 60, 64, 26, C4(1,0.9f,0.5f,1));
+    drawText("金錢 GOLD: " + std::to_string(pl.gold), W-260, 64, 20, C4(1,0.95f,0.4f,1));
+    drawText("（方向鍵/數字選擇 · Enter 購買 · Esc 關閉）", 60, 94, 14, C4(0.8f,0.85f,1,0.9f));
+
+    std::vector<float> rects; storeCardRects(rects);
+    for (int i = 0; i < (int)storeItems_.size(); i++) {
+        float cx = rects[i*4], cy = rects[i*4+1], cw = rects[i*4+2], ch = rects[i*4+3];
+        const StoreItemDef& d = storeItems_[i];
+        int cost = d.liveCost();
+        // card bg
+        Quad card; card.rect[0]=cx; card.rect[1]=cy; card.rect[2]=cw; card.rect[3]=ch;
+        card.uv[0]=0;card.uv[1]=0;card.uv[2]=1;card.uv[3]=1; card.solid=true;
+        bool sel = (i == storeSel_);
+        if (sel) { card.tint[0]=0.22f; card.tint[1]=0.26f; card.tint[2]=0.38f; card.tint[3]=1; }
+        else     { card.tint[0]=0.14f; card.tint[1]=0.16f; card.tint[2]=0.24f; card.tint[3]=0.96f; }
+        ren->drawSprite(card);
+        // selected highlight border
+        if (sel) {
+            Quad hi; hi.rect[0]=cx-3; hi.rect[1]=cy-3; hi.rect[2]=cw+6; hi.rect[3]=ch+6;
+            hi.uv[0]=0;hi.uv[1]=0;hi.uv[2]=1;hi.uv[3]=1; hi.solid=true;
+            hi.tint[0]=1;hi.tint[1]=0.85f;hi.tint[2]=0.2f;hi.tint[3]=1; ren->drawSprite(hi);
+        }
+        // icon (sprite)
+        ren->drawSprite(spriteQuad(cx + cw/2 - 46, cy + 22, 92, 92, spriteLayer(d.sprite.empty()?"coin":d.sprite), C4(1,1,1,1)));
+        drawText(d.name, cx + 16, cy + 126, 20, C4(1,1,1,1));
+        drawText(d.desc, cx + 16, cy + 156, 13, C4(0.85f,0.9f,1,1));
+        drawText("效果: " + d.effect_text, cx + 16, cy + 180, 14, C4(0.6f,1,0.7f,1));
+        drawText("已購買 x" + std::to_string(d.purchases), cx + 16, cy + 204, 12, C4(0.7f,0.7f,0.8f,1));
+        // price tag
+        drawText("價格: " + std::to_string(cost) + " G", cx + 16, cy + 226, 18, C4(1,0.95f,0.4f,1));
+        // buy button
+        float btnW = cw - 32, btnH = 38;
+        float btnX = cx + 16, btnY = cy + ch - btnH - 12;
+        storeBtnRects_.push_back(btnX); storeBtnRects_.push_back(btnY); storeBtnRects_.push_back(btnW); storeBtnRects_.push_back(btnH);
+        Quad btn; btn.rect[0]=btnX; btn.rect[1]=btnY; btn.rect[2]=btnW; btn.rect[3]=btnH;
+        btn.uv[0]=0;btn.uv[1]=0;btn.uv[2]=1;btn.uv[3]=1; btn.solid=true;
+        btn.tint[0]=0.2f;btn.tint[1]=0.5f;btn.tint[2]=0.3f;btn.tint[3]=1; ren->drawSprite(btn);
+        drawText("購買 (Enter)", btnX + 16, btnY + 10, 16, C4(1,1,1,1));
+    }
+    // close button (top-right corner of panel)
+    float cw2 = 90, ch2 = 34;
+    storeCloseRect_[0] = (int)(W-40-cw2); storeCloseRect_[1] = 56; storeCloseRect_[2] = (int)cw2; storeCloseRect_[3] = (int)ch2;
+    Quad cbtn; cbtn.rect[0]=storeCloseRect_[0]; cbtn.rect[1]=storeCloseRect_[1]; cbtn.rect[2]=cw2; cbtn.rect[3]=ch2;
+    cbtn.uv[0]=0;cbtn.uv[1]=0;cbtn.uv[2]=1;cbtn.uv[3]=1; cbtn.solid=true;
+    cbtn.tint[0]=0.5f;cbtn.tint[1]=0.2f;cbtn.tint[2]=0.2f;cbtn.tint[3]=1; ren->drawSprite(cbtn);
+    drawText("關閉 X", storeCloseRect_[0]+14, storeCloseRect_[1]+9, 16, C4(1,1,1,1));
+}
+
+void Game::drawStoreToast() {
+    if (toastTimer_ <= 0 || toastMsg_.empty()) return;
+    float W = (float)ren->width(), H = (float)ren->height();
+    float tw = 260, th = 48;
+    float tx = (W - tw)/2, ty = H - 160;
+    // "not enough gold" -> simple shake effect on the toast
+    if (shakeTimer_ > 0) tx += (float)(6.0f * std::sin((float)shakeTimer_ * 0.06f));
+    Quad t; t.rect[0]=tx; t.rect[1]=ty; t.rect[2]=tw; t.rect[3]=th;
+    t.uv[0]=0;t.uv[1]=0;t.uv[2]=1;t.uv[3]=1; t.solid=true;
+    t.tint[0]=0.4f;t.tint[1]=0.1f;t.tint[2]=0.1f;t.tint[3]=0.95f; ren->drawSprite(t);
+    drawText(toastMsg_, tx + 20, ty + 14, 18, C4(1,0.8f,0.8f,1));
+}
+
+void Game::storeClick(float x, float y) {
+    // unlock dialog takes priority
+    if (storeUnlockDlg) {
+        // confirm button?
+        if (x >= storeUnlockBtnRect_[0] && x <= storeUnlockBtnRect_[0]+storeUnlockBtnRect_[2] &&
+            y >= storeUnlockBtnRect_[1] && y <= storeUnlockBtnRect_[1]+storeUnlockBtnRect_[3]) {
+            storeUnlockDlg = false; audio.play("confirm_click");
+        }
+        return; // modal: swallow all other clicks
+    }
+    if (storeOpen) {
+        // close button
+        if (x >= storeCloseRect_[0] && x <= storeCloseRect_[0]+storeCloseRect_[2] &&
+            y >= storeCloseRect_[1] && y <= storeCloseRect_[1]+storeCloseRect_[3]) {
+            closeStore(); return;
+        }
+        // buy buttons
+        std::vector<float> rects; storeCardRects(rects);
+        for (int i = 0; i < (int)storeItems_.size(); i++) {
+            float bx = storeBtnRects_[i*4], by = storeBtnRects_[i*4+1], bw = storeBtnRects_[i*4+2], bh = storeBtnRects_[i*4+3];
+            if (x >= bx && x <= bx+bw && y >= by && y <= by+bh) {
+                buyStoreItem(i); return;
+            }
+        }
+        // clicking a card selects it (and if it's the buy area handled above). Clicking
+        // outside the panel closes the store.
+        bool insidePanel = (x >= 40 && x <= (float)ren->width()-40 && y >= 40 && y <= (float)ren->height()-40);
+        if (!insidePanel) closeStore();
+        return;
+    }
+    // not in any store overlay -> clicking the HUD icon opens the store (only if unlocked)
+    if (storeUnlocked_ &&
+        x >= storeIconRect[0] && x <= storeIconRect[0]+storeIconRect[2] &&
+        y >= storeIconRect[1] && y <= storeIconRect[1]+storeIconRect[3]) {
+        openStore();
+    }
+}
+
+void Game::storeKey(int key) {
+    // unlock dialog: Enter/Esc/Space confirms
+    if (storeUnlockDlg) {
+        if (key == 13 || key == 27 || key == 32) { storeUnlockDlg = false; audio.play("confirm_click"); }
+        return;
+    }
+    if (!storeOpen) return;
+    int n = (int)storeItems_.size();
+    if (key == 27) { closeStore(); return; }                       // Esc closes
+    if (key == 13 || key == 32) { buyStoreItem(storeSel_); return; } // Enter/Space buys
+    if (key == 262 || key == 263) {                                // right/left arrow
+        storeSel_ += (key == 262) ? 1 : -1;
+        if (storeSel_ < 0) storeSel_ = n-1; if (storeSel_ >= n) storeSel_ = 0;
+        return;
+    }
+    if (key >= '1' && key <= '9') {                                // number keys select
+        int idx = key - '1';
+        if (idx < n) storeSel_ = idx;
+    }
+}
+
+void Game::buyStoreItem(int idx) {
+    if (idx < 0 || idx >= (int)storeItems_.size()) return;
+    StoreItemDef& d = storeItems_[idx];
+    int cost = d.liveCost();
+    if (pl.gold < cost) {
+        // not enough gold -> toast + shake (simple effect), no purchase
+        toastMsg_ = "金錢不足！需要 " + std::to_string(cost) + " G";
+        toastTimer_ = 1600;
+        shakeTimer_ = 350;
+        audio.play("deny");
+        return;
+    }
+    pl.gold -= cost;
+    // apply effect immediately (per spec: bought item is used right away)
+    const nlohmann::json& eff = d.effect;
+    if (eff.contains("hp"))  pl.hp   = std::min(pl.maxhp, pl.hp + (int)eff["hp"]);
+    if (eff.contains("str")) pl.atk  += (int)eff["str"];
+    if (eff.contains("def")) pl.def  += (int)eff["def"];
+    d.purchases++;
+    toastMsg_ = "購買成功：" + d.name + "！";
+    toastTimer_ = 1400;
+    audio.play("get_item");
+}
+
+
 void Game::movePlayer(int dx, int dy) {
     if (modalActive()) return;   // any modal overlay (combat/dialogue/inventory) blocks world input
     int nx = pl.x + dx, ny = pl.y + dy;
@@ -663,6 +926,9 @@ void Game::update(int dtMs) {
         cs.ticks += dtMs;
         if (cs.ticks >= 700) { cs.ticks = 0; resolveCombatRound(); }
     }
+    // store UI timers (toast / shake) tick down regardless of combat
+    if (toastTimer_ > 0) { toastTimer_ -= dtMs; if (toastTimer_ < 0) toastTimer_ = 0; }
+    if (shakeTimer_ > 0) { shakeTimer_ -= dtMs; if (shakeTimer_ < 0) shakeTimer_ = 0; }
 }
 
 void Game::saveFrame(const std::string& path) {
