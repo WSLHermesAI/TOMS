@@ -43,16 +43,18 @@ public:
     // Per-glyph tight metrics (atlas pixels). advance()/glyphPxWidth() return the
     // baked glyph width so callers can draw tight quads + kern correctly instead
     // of giving every glyph a full-cell square (which caused "V o r k a t h" gaps).
+    // Tight vertical metrics (cell-local atlas px) for baseline-correct placement.
     int cellSize() const { return cell_; }
     int glyphPxWidth(uint32_t cp) const {
         auto it = advPx_.find(cp); return it == advPx_.end() ? cell_ : it->second;
     }
-    // Tight vertical metrics (cell-local atlas px) for baseline-correct placement.
-    int glyphPxHeight(uint32_t cp) const {
-        auto it = glyphBox_.find(cp); return it == glyphBox_.end() ? cell_ : it->second[3];
-    }
-    int glyphPxOffY(uint32_t cp) const {
-        auto it = glyphBox_.find(cp); return it == glyphBox_.end() ? 0 : it->second[1];
+    // Per-glyph DESIGN metrics (atlas px == design px, since we bake at
+    // scale=cell/(ascent-descent)): {leftBearing, topBearing, sizeX, sizeY}.
+    // Used by drawText to position/size the quad exactly like a freetype layout
+    // (see FM79979 FreetypeGlypth.cpp RenderFont): top-aligned by the first
+    // glyph's bearing, natural glyph size — no cell-centering, no shrink.
+    const std::array<float,4>* glyphMetrics(uint32_t cp) const {
+        auto it = glyphM_.find(cp); return it == glyphM_.end() ? nullptr : &it->second;
     }
 
     // Convenience: collect every printable codepoint in a set of JSON text files +
@@ -91,6 +93,8 @@ private:
     int cell_ = 32, cols_ = 32, rows_ = 0, nextIdx_ = 0;
     std::unordered_map<uint32_t, std::array<float,4>> map_;
     std::unordered_map<uint32_t, int> cellIdx_;   // cp -> grid cell index (for grow)
+    // per-glyph design metrics {leftBearing, topBearing, sizeX, sizeY} (atlas px)
+    std::unordered_map<uint32_t, std::array<float,4>> glyphM_;
     // tight per-glyph metrics (cell-local atlas px): offX,offY,gw,gh ; plus baked width
     std::unordered_map<uint32_t, std::array<int,4>> glyphBox_;
     std::unordered_map<uint32_t, int> advPx_;

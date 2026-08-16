@@ -243,7 +243,7 @@ int main(int argc, char** argv) {
                 const std::string s = "hello world";
                 float sz = 48;
                 float x = (g.renderer()->width() - g.measureText(s, sz)) / 2.0f;
-                float y = g.renderer()->height()/2.0f - sz/2.0f;
+                float y = g.renderer()->height()/2.0f + sz*0.30f;   // y = baseline
                 float t[4] = {1,1,1,1};
                 g.drawTextPublic(s, x, y, sz, t);
             }
@@ -256,7 +256,7 @@ int main(int argc, char** argv) {
                 const std::string s = "你好世界";
                 float sz = 48;
                 float x = (g.renderer()->width() - g.measureText(s, sz)) / 2.0f;
-                float y = g.renderer()->height()/2.0f - sz/2.0f;
+                float y = g.renderer()->height()/2.0f + sz*0.30f;   // y = baseline
                 float t[4] = {1,1,1,1};
                 g.drawTextPublic(s, x, y, sz, t);
             }

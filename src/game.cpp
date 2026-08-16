@@ -85,7 +85,8 @@ bool Game::loadAssets(const std::string& assetDir) {
         for (auto& p : std::filesystem::recursive_directory_iterator(dataDir + "/../data"))
             if (p.path().extension() == ".json") jsonFiles.push_back(p.path().string());
         std::string hud = "魔法塔Tower of the Sorcerer HP ATK DEF LV EXP GOLD KEY 戰鬥 你 敵人 鑰匙 對話 選擇 繼續 道具 使用 離開 是 否 "
-                          "▶ （ ） ： ！ ？ 、 。 ， 「 」 『 』 — · + - / 0 1 2 3 4 5 6 7 8 9 : .";
+                          "▶ （ ） ： ！ ？ 、 。 ， 「 」 『 』 — · + - / 0 1 2 3 4 5 6 7 8 9 : . "
+                          "道具商店 已經開放 你現在可以在關卡中點擊右上角的商店圖示來購買道具 確定 金錢 GOLD 效果 已購買 價格 購買 關閉 X 需要 不足 方向鍵 數字選擇 Enter Esc 生命 藥水 力量 防禦 提升 攻擊 防禦力";
         std::vector<uint32_t> cps = Font::collectFromFiles(jsonFiles, hud);
         font_ = std::make_shared<Font>("game-font");
         if (!font_->buildFromFile(ttf, cps, 32, 24)) {
@@ -224,6 +225,16 @@ void Game::drawText(const std::string& s, float x, float y, float size, const fl
     float cx = x;
     std::u32string cps = utf8_to_utf32(s);
     bool fontChanged = false;
+    // First glyph's top bearing establishes the baseline reference (FM79979
+    // FreetypeGlypth.cpp L145: YOffset = -firstGlyph->Offset.y). All glyphs are
+    // then placed top-aligned to that, at their NATURAL size — no cell-centering,
+    // no shrink. This is exactly how the reference lays text out.
+    float firstTop = 0;
+    const std::array<float,4>* m0 = nullptr;
+    if (font_ && !cps.empty()) {
+        m0 = font_->glyphMetrics(cps[0]);
+        if (m0) firstTop = (*m0)[1];   // topBearing
+    }
     for (uint32_t cp : cps) {
         auto it = fontMap.find(cp);
         if (it == fontMap.end()) {
@@ -231,25 +242,28 @@ void Game::drawText(const std::string& s, float x, float y, float size, const fl
             // system font and bake it into the atlas on the fly.
             if (font_ && font_->ensure(cp)) {
                 const std::array<float,4>* uv = font_->uv(cp);
-                if (uv) { fontMap[cp] = *uv; it = fontMap.find(cp); fontChanged = true; }
+                if (uv) {
+                    fontMap[cp] = *uv; it = fontMap.find(cp); fontChanged = true;
+                    if (cp == cps[0]) { m0 = font_->glyphMetrics(cp); if (m0) firstTop = (*m0)[1]; }
+                }
             }
         }
         if (it == fontMap.end()) { cx += size; continue; }   // truly unknown glyph
         auto& uv = it->second;
-        // Tight quad: width from the glyph's baked advance; height + vertical offset
-        // from the glyph's baked box so the ink sits at its true position in the
-        // cell (baseline-correct) and the quad never samples padding/neighbours.
-        int advPx = font_ ? font_->glyphPxWidth(cp) : (int)size;
-        int ghPx  = font_ ? font_->glyphPxHeight(cp) : (int)size;
-        int offYc = font_ ? font_->glyphPxOffY(cp) : 0;
-        float qw = size * (float)advPx / (font_ ? (float)font_->cellSize() : 32.0f);
-        float qh = size * (float)ghPx  / (font_ ? (float)font_->cellSize() : 32.0f);
-        float qy = y + size * (float)offYc / (font_ ? (float)font_->cellSize() : 32.0f);
-        Quad q; q.rect[0]=cx; q.rect[1]=qy; q.rect[2]=qw; q.rect[3]=qh;
+        // Design metrics: {leftBearing, topBearing, sizeX, sizeY} at atlas scale.
+        // The atlas cell is just packing; the quad uses design size + bearing.
+        float leftB = 0, topB = 0, sx = size, sy = size;
+        if (font_) {
+            if (auto* m = font_->glyphMetrics(cp)) { leftB = (*m)[0]; topB = (*m)[1]; sx = (*m)[2]; sy = (*m)[3]; }
+        }
+        float qw = sx, qh = sy;                 // natural glyph size (already px@size)
+        float qx = cx + leftB;                  // advance then place by bearing
+        float qy = y - firstTop + topB;         // top-aligned to first glyph's top
+        Quad q; q.rect[0]=qx; q.rect[1]=qy; q.rect[2]=qw; q.rect[3]=qh;
         q.uv[0]=uv[0]; q.uv[1]=uv[1]; q.uv[2]=uv[2]; q.uv[3]=uv[3];
         q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
         ren->drawText(q);
-        cx += qw + size * 0.06f;   // tight advance + small spacing
+        cx += leftB + sx;                       // reference advance = Offset.x + Size.x
     }
     // If any glyph was added to the atlas this frame, re-upload it so it shows up.
     if (fontChanged && font_) {
@@ -267,9 +281,11 @@ float Game::measureText(const std::string& s, float size) const {
     std::u32string cps = utf8_to_utf32(s);
     for (uint32_t cp : cps) {
         auto it = fontMap.find(cp);
-        int advPx = (it != fontMap.end() && font_) ? font_->glyphPxWidth(cp) : (int)size;
-        float qw = size * (float)advPx / (font_ ? (float)font_->cellSize() : 32.0f);
-        w += qw + size * 0.06f;
+        float leftB = 0, sx = (font_ ? (float)font_->cellSize() : 32.0f);
+        if (font_ && it != fontMap.end()) {
+            if (auto* m = font_->glyphMetrics(cp)) { leftB = (*m)[0]; sx = (*m)[2]; }
+        }
+        w += leftB + sx;   // matches drawText advance (Offset.x + Size.x)
     }
     return w;
 }
@@ -645,7 +661,7 @@ void Game::drawStoreUnlockDialog() {
     Quad box; box.rect[0]=bx; box.rect[1]=by; box.rect[2]=bw; box.rect[3]=bh;
     box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1; box.solid=true;
     box.tint[0]=0.12f;box.tint[1]=0.16f;box.tint[2]=0.26f;box.tint[3]=0.97f; ren->drawSprite(box);
-    drawText("🛒 道具商店已經開放！", bx+30, by+34, 24, C4(1,0.9f,0.5f,1));
+    drawText("道具商店已經開放！", bx+30, by+34, 24, C4(1,0.9f,0.5f,1));
     drawText("你現在可以在關卡中點擊右上角的商店圖示來購買道具。", bx+30, by+74, 15, C4(1,1,1,1));
     // confirm button (bottom-right of box)
     float btnW = 120, btnH = 40;
@@ -666,7 +682,7 @@ void Game::drawStoreUI() {
     bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1; bg.solid=true;
     bg.tint[0]=0.08f;bg.tint[1]=0.1f;bg.tint[2]=0.16f;bg.tint[3]=0.96f; ren->drawSprite(bg);
     // title + gold
-    drawText("🛒 " + storeTitle_, 60, 64, 26, C4(1,0.9f,0.5f,1));
+    drawText(storeTitle_, 60, 64, 26, C4(1,0.9f,0.5f,1));
     drawText("金錢 GOLD: " + std::to_string(pl.gold), W-260, 64, 20, C4(1,0.95f,0.4f,1));
     drawText("（方向鍵/數字選擇 · Enter 購買 · Esc 關閉）", 60, 94, 14, C4(0.8f,0.85f,1,0.9f));
 

@@ -40,25 +40,33 @@ std::vector<uint32_t> Font::collectFromFiles(const std::vector<std::string>& jso
 
 // Rasterize one glyph from `info` into cell `idx` of the atlas. Returns false if
 // the font has no such glyph. Used by both the initial bake and realtime fallback.
+// Bakes at scale = cell/(ascent-descent) so the glyph's DESIGN size equals `cell`
+// (no shrink) — matching a freetype layout. The atlas cell is only a packing
+// container; drawText uses the stored design metrics (bearing + natural size) to
+// size/place the quad exactly (FM79979 FreetypeGlypth.cpp RenderFont @ L145).
 bool Font::bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_t>&, int idx) {
     int g = stbtt_FindGlyphIndex(&info, (int)cp);
     if (g == 0) return false;              // glyph absent from this font
 
     int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
     stbtt_GetGlyphBitmapBox(&info, g, 1.0f, 1.0f, &x0, &y0, &x1, &y1);
-    // scale so the glyph fits the cell height (recomputed per font, since each
-    // fallback font has its own metrics)
+    // design metrics in font units; convert with the same vertical-fit scale the
+    // reference uses (scale so the em-box == cell, i.e. natural glyph size).
     int ascent = 0, descent = 0, lineGap = 0;
     stbtt_GetFontVMetrics(&info, &ascent, &descent, &lineGap);
-    float scale = (ascent > 0) ? ((float)(cell_ - 4) / (float)(ascent - descent)) : 1.0f;
+    float scale = (ascent > 0) ? ((float)cell_ / (float)(ascent - descent)) : 1.0f;
 
     int gw = (int)((x1 - x0) * scale), gh = (int)((y1 - y0) * scale);
+    float leftBearing = (float)x0 * scale;   // px from pen to glyph left
+    float topBearing  = (float)y0 * scale;   // px from pen(baseline) to glyph top (<=0)
+    int cellX = (idx % cols_) * cell_, cellY = (idx / cols_) * cell_;
+
     if (gw <= 0 || gh <= 0) {              // whitespace glyph: reserve an empty cell
-        int cx = (idx % cols_) * cell_, cy = (idx / cols_) * cell_;
         glyphBox_[cp] = {0, 0, 0, 0};
         advPx_[cp] = std::max(1, cell_ / 3);   // a space still advances a bit
-        map_[cp] = { (float)cx / atlasW_, (float)cy / atlasH_,
-                     (float)(cx + cell_) / atlasW_, (float)(cy + cell_) / atlasH_ };
+        glyphM_[cp] = {0, 0, (float)(cell_/3), 0};
+        map_[cp] = { (float)cellX / atlasW_, (float)cellY / atlasH_,
+                     (float)(cellX + cell_) / atlasW_, (float)(cellY + cell_) / atlasH_ };
         cellIdx_[cp] = idx;
         return true;
     }
@@ -69,8 +77,7 @@ bool Font::bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_
     // rasterize at scale, then copy (stb output is top-down rows)
     stbtt_MakeGlyphBitmap(&info, gb.data(), gw, gh, gw, scale, scale, g);
 
-    int cellX = (idx % cols_) * cell_, cellY = (idx / cols_) * cell_;
-    int offX = cellX + (cell_ - gw) / 2;
+    int offX = cellX + (cell_ - gw) / 2;   // center within cell for packing only
     int offY = cellY + (cell_ - gh) / 2;
     uint8_t* base = atlas_.data();
     for (int yy = 0; yy < gh; yy++)
@@ -81,11 +88,11 @@ bool Font::bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_
             size_t p = ((size_t)dy * atlasW_ + dx) * 4;
             base[p] = 255; base[p+1] = 255; base[p+2] = 255; base[p+3] = a;  // white glyph
         }
-    // TIGHT uv (both axes span the actual inked glyph), so the quad never samples
-    // the transparent padding of the cell or bleeds into a neighbouring glyph under
-    // linear filtering. drawText() aligns the quad vertically using glyphBox offY.
+    // TIGHT uv (both axes span the actual inked glyph) so the quad never samples
+    // padding or a neighbour under linear filtering.
     glyphBox_[cp] = { offX - cellX, offY - cellY, gw, gh };
     advPx_[cp] = gw;
+    glyphM_[cp] = { leftBearing, topBearing, (float)gw, (float)gh };
     map_[cp] = { (float)offX / atlasW_, (float)offY / atlasH_,
                  (float)(offX + gw) / atlasW_, (float)(offY + gh) / atlasH_ };
     cellIdx_[cp] = idx;
@@ -145,7 +152,13 @@ bool Font::buildFromFile(const std::string& ttfPath,
 
     int n = (int)chars.size();
     if (n == 0) return false;
-    rows_ = (n + cols_ - 1) / cols_;
+    // Allocate a FIXED-size atlas with generous slack so realtime ensure() can
+    // append new glyphs at fresh cells WITHOUT ever growing/recomputing the atlas
+    // mid-frame. Growing the atlas mid-frame rewrites every glyph's V (atlasH_
+    // changes) and invalidates the UVs of text quads already submitted THIS frame
+    // -> duplicated/offset glyphs. The slack avoids that entirely (see ensure()).
+    int slack = 2048;
+    rows_ = (n + slack + cols_ - 1) / cols_;
     atlasW_ = (uint32_t)(cols_ * cell_);
     atlasH_ = (uint32_t)(rows_ * cell_);
     atlas_.assign((size_t)atlasW_ * atlasH_ * 4, 0);
