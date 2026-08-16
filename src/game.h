@@ -81,6 +81,7 @@ public:
     const std::vector<std::string>& inventory() const { return pl.inv; }
     int invSelection() const { return invSel; }
     bool modalActive() const { return cs.active || inDialogue || invOpen || storeOpen || storeUnlockDlg; }  // any overlay open (combat/dialogue/inventory/store)
+    bool storeModal() const { return storeOpen || storeUnlockDlg; }  // store overlay (incl. unlock dialog) is the topmost modal
     // store system
     bool storeUnlocked() const { return storeUnlocked_; }
     bool storeOpenFlag() const { return storeOpen; }
@@ -131,6 +132,7 @@ private:
     // inventory so the player focuses on the active scene. Also gates background
     // input (movePlayer/interact) while any modal overlay is open.
     void drawFocusSplash();
+    void drawStoreSplash();   // store modal: full-screen black splash at alpha 0.5 (topmost layer)
 
     IRenderer* ren = nullptr;        // backend chosen in loadAssets (Vulkan / WebGL)
     Player pl;

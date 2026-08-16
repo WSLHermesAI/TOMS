@@ -367,8 +367,9 @@ void Game::draw() {
 
     // ---- node 2: CHARACTER (HUD top bar: stats / HP-ATK-DEF / story note) ----
     ren->setNode(NODE_CHAR);
-    // HUD top bar
     float tint[4] = {1,1,1,1};
+    if (!storeModal()) {
+    // HUD top bar
     drawText("魔法塔 Tower of the Sorcerer — " + st.name + " (" + std::to_string(st.index) + "/" + std::to_string(totalStages) + ")", 16, 16, 22, tint);
     // HP/ATK/DEF bars + text
     float bx = 16, by = 44;
@@ -379,11 +380,13 @@ void Game::draw() {
 
     // story note
     drawText(st.story_note, 16, H-30, 16, C4(0.8f,0.85f,1.0f,1));
+    }
 
     // ---- node 4: BATTLE (combat overlay) ----
     ren->setNode(NODE_BATTLE);
-    // combat overlay
-    if ((hideMask & 1) == 0 && (cs.active || (cs.won || cs.log.find("倒下")!=std::string::npos))) {
+    // combat overlay (suppressed while the store modal is the topmost layer, so the
+    // death hint "你倒下了" never bleeds through at the same level as the store)
+    if (!storeModal() && (hideMask & 1) == 0 && (cs.active || (cs.won || cs.log.find("倒下")!=std::string::npos))) {
         drawFocusSplash();
         float cx = W/2 - 250;
         drawText("⚔ 戰鬥！ " + cs.enemy.name, cx, 120, 26, C4(1,0.6f,0.4f,1));
@@ -400,8 +403,8 @@ void Game::draw() {
 
     // ---- node 3: TALK (dialogue overlay) ----
     ren->setNode(NODE_TALK);
-    // dialogue overlay
-    if ((hideMask & 2) == 0 && inDialogue) {
+    // dialogue overlay (suppressed while store modal is open)
+    if (!storeModal() && (hideMask & 2) == 0 && inDialogue) {
         drawFocusSplash();
         Quad box; box.rect[0]=40; box.rect[1]=H-200; box.rect[2]=W-80; box.rect[3]=170;
         box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1; box.solid=true;
@@ -413,11 +416,11 @@ void Game::draw() {
         }
     }
 
-    // inventory UI (9-grid, extendable) — toggle with I
+    // inventory UI (9-grid, extendable) — toggle with I (suppressed while store modal is open)
     ren->setNode(NODE_CHAR);   // inventory is a character/UI screen
-    if ((hideMask & 4) == 0) drawInventory();
+    if (!storeModal() && (hideMask & 4) == 0) drawInventory();
 
-    // ---- store system (NODE_STORE) ----
+    // ---- store system (NODE_STORE) — drawn LAST so it is the topmost layer ----
     ren->setNode(NODE_STORE);
     if (!storeOpen) drawStoreIcon();          // HUD icon is always visible (dim+locked until unlocked)
     // reset per-frame button-rect scratch (rebuilt during draw)
@@ -513,6 +516,15 @@ void Game::drawFocusSplash() {
     Quad dim; dim.rect[0]=0; dim.rect[1]=0; dim.rect[2]=W; dim.rect[3]=H;
     dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1; dim.solid=true;
     dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.8f; ren->drawSprite(dim);
+}
+// store modal uses a full-screen black splash at alpha 0.5 (per design) and is the
+// topmost layer, drawn last in Game::draw(); so it sits above all other overlays.
+void Game::drawStoreSplash() {
+    if (std::getenv("TOMS_NOSPLASH")) return;
+    float W = (float)ren->width(), H = (float)ren->height();
+    Quad dim; dim.rect[0]=0; dim.rect[1]=0; dim.rect[2]=W; dim.rect[3]=H;
+    dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1; dim.solid=true;
+    dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.5f; ren->drawSprite(dim);
 }
 void Game::drawInventory() {
     if (!invOpen) return;
@@ -669,7 +681,7 @@ void Game::drawStoreIcon() {
 
 void Game::drawStoreUnlockDialog() {
     float W = (float)ren->width(), H = (float)ren->height();
-    drawFocusSplash();
+    drawStoreSplash();
     // centered dialog box
     float bw = 420, bh = 180;
     float bx = (W - bw)/2, by = (H - bh)/2;
@@ -691,7 +703,7 @@ void Game::drawStoreUnlockDialog() {
 
 void Game::drawStoreUI() {
     float W = (float)ren->width(), H = (float)ren->height();
-    drawFocusSplash();
+    drawStoreSplash();
     // panel background
     Quad bg; bg.rect[0]=40; bg.rect[1]=40; bg.rect[2]=W-80; bg.rect[3]=H-80;
     bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1; bg.solid=true;
