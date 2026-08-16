@@ -182,6 +182,87 @@ int main(int argc, char** argv) {
             g.storeKey(27);
             g.draw(); g.saveFrame(framesDir + "/store07_closed.png");
             TOMS_LOG_INFO("scenario=store done (unlocked={} storeOpen={})", g.storeUnlocked(), g.storeOpenFlag());
+        } else if (mode == "shopshots") {
+            // ---- Clean screenshots: HOW IT UNLOCKS + HOW IT LOOKS ----
+            // (a) Before unlock: on stage 1 the HUD store icon is present but LOCKED (dimmed)
+            g.loadStage("stage01");
+            g.draw(); g.saveFrame(framesDir + "/shop_a_icon_locked_stage1.png");
+            // (b) Entering stage 3 -> unlock dialog pops (once), with confirm button
+            g.loadStage("stage03");
+            g.draw(); g.saveFrame(framesDir + "/shop_b_unlock_dialog_stage3.png");
+            // (c) Confirm unlock via the 確定 button (mouse click)
+            g.storeClick(638, 434);
+            g.draw(); g.saveFrame(framesDir + "/shop_c_after_confirm_icon_active.png");
+            // (d) Open the store by clicking the now-active HUD icon (gold = 50)
+            g.player().gold = 50;
+            g.draw();  // sets storeIconRect (top-right icon center ~989,35)
+            g.storeClick(989, 35);
+            g.draw(); g.saveFrame(framesDir + "/shop_d_store_open.png");
+            // (e) Not-enough-gold demo: drain gold, try to buy -> toast + shake
+            g.player().gold = 0;
+            g.storeKey('3');                 // select DEF card
+            g.storeClick(188 + 324, 479);    // click its buy button -> blocked
+            g.draw(); g.saveFrame(framesDir + "/shop_e_not_enough_gold.png");
+            // (f) Give gold, buy the HP potion to show it applies immediately (price 2->4)
+            g.player().gold = 30;
+            g.storeKey('1'); g.storeKey(13); // buy HP potion via keyboard
+            g.draw(); g.saveFrame(framesDir + "/shop_f_bought_hp.png");
+            TOMS_LOG_INFO("scenario=shopshots done (unlocked={})", g.storeUnlocked());
+        } else if (mode == "shopshots") {
+            // ---- Clean screenshots: HOW IT UNLOCKS + HOW IT LOOKS (for user) ----
+            // (a) Before unlock: on stage 1 the HUD store icon is present but LOCKED (dimmed, not clickable)
+            g.loadStage("stage01");
+            g.draw(); g.saveFrame(framesDir + "/shop_a_icon_locked_stage1.png");
+            // (b) Entering stage 3 -> unlock dialog pops (once), with a 確定 confirm button
+            g.loadStage("stage03");
+            g.draw(); g.saveFrame(framesDir + "/shop_b_unlock_dialog_stage3.png");
+            // (c) Confirm unlock via the 確定 button (mouse click) -> icon becomes active
+            g.storeClick(638, 434);
+            g.draw(); g.saveFrame(framesDir + "/shop_c_after_confirm_icon_active.png");
+            // (d) Open the store by clicking the now-active HUD icon (gold = 50)
+            g.player().gold = 50;
+            g.draw();  // sets storeIconRect (top-right icon center ~989,35)
+            g.storeClick(989, 35);
+            g.draw(); g.saveFrame(framesDir + "/shop_d_store_open.png");
+            // (e) Not-enough-gold demo: drain gold, try to buy -> red toast 金錢不足 + shake
+            g.player().gold = 0;
+            g.storeKey('3');                  // select DEF card
+            g.storeClick(188 + 324, 479);     // click its buy button -> blocked
+            g.draw(); g.saveFrame(framesDir + "/shop_e_not_enough_gold.png");
+            // (f) Give gold, buy HP potion via keyboard -> applies immediately (price 2 -> 4 next)
+            g.player().gold = 30;
+            g.storeKey('1'); g.storeKey(13);
+            g.draw(); g.saveFrame(framesDir + "/shop_f_bought_hp.png");
+            TOMS_LOG_INFO("scenario=shopshots done (unlocked={})", g.storeUnlocked());
+        } else if (mode == "text") {
+            // ---- Minimal text diagnostic: is the font/UV pipeline correct? ----
+            // Step 1: "hello world" centered (ASCII, should always work)
+            g.renderer()->begin();
+            g.renderer()->setNode(NODE_STAGE);
+            {
+                const std::string s = "hello world";
+                float sz = 48;
+                float x = (g.renderer()->width() - g.measureText(s, sz)) / 2.0f;
+                float y = g.renderer()->height()/2.0f - sz/2.0f;
+                float t[4] = {1,1,1,1};
+                g.drawTextPublic(s, x, y, sz, t);
+            }
+            g.renderer()->end();
+            g.saveFrame(framesDir + "/text_hello.png");
+            // Step 2: "你好世界" centered (Traditional Chinese) — the real test
+            g.renderer()->begin();
+            g.renderer()->setNode(NODE_STAGE);
+            {
+                const std::string s = "你好世界";
+                float sz = 48;
+                float x = (g.renderer()->width() - g.measureText(s, sz)) / 2.0f;
+                float y = g.renderer()->height()/2.0f - sz/2.0f;
+                float t[4] = {1,1,1,1};
+                g.drawTextPublic(s, x, y, sz, t);
+            }
+            g.renderer()->end();
+            g.saveFrame(framesDir + "/text_nihao.png");
+            TOMS_LOG_INFO("scenario=text done");
         } else if (mode == "stress") {
             // heavy churn: many stage loads, combats, inventory toggles, item uses
             for (const char* s : {"stage01","stage03","stage05","stage07","stage10"}) {

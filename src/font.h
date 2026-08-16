@@ -47,6 +47,13 @@ public:
     int glyphPxWidth(uint32_t cp) const {
         auto it = advPx_.find(cp); return it == advPx_.end() ? cell_ : it->second;
     }
+    // Tight vertical metrics (cell-local atlas px) for baseline-correct placement.
+    int glyphPxHeight(uint32_t cp) const {
+        auto it = glyphBox_.find(cp); return it == glyphBox_.end() ? cell_ : it->second[3];
+    }
+    int glyphPxOffY(uint32_t cp) const {
+        auto it = glyphBox_.find(cp); return it == glyphBox_.end() ? 0 : it->second[1];
+    }
 
     // Convenience: collect every printable codepoint in a set of JSON text files +
     // an explicit extra string (HUD labels). Used so the baked set matches the

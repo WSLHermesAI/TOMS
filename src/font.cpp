@@ -81,12 +81,13 @@ bool Font::bakeGlyph(uint32_t cp, stbtt_fontinfo& info, const std::vector<uint8_
             size_t p = ((size_t)dy * atlasW_ + dx) * 4;
             base[p] = 255; base[p+1] = 255; base[p+2] = 255; base[p+3] = a;  // white glyph
         }
-    // TIGHT uv: horizontal span is the actual glyph (keeps v = full cell so the
-    // vertical scale is unchanged), so callers can draw a tight-width quad.
+    // TIGHT uv (both axes span the actual inked glyph), so the quad never samples
+    // the transparent padding of the cell or bleeds into a neighbouring glyph under
+    // linear filtering. drawText() aligns the quad vertically using glyphBox offY.
     glyphBox_[cp] = { offX - cellX, offY - cellY, gw, gh };
     advPx_[cp] = gw;
-    map_[cp] = { (float)offX / atlasW_, (float)cellY / atlasH_,
-                 (float)(offX + gw) / atlasW_, (float)(cellY + cell_) / atlasH_ };
+    map_[cp] = { (float)offX / atlasW_, (float)offY / atlasH_,
+                 (float)(offX + gw) / atlasW_, (float)(offY + gh) / atlasH_ };
     cellIdx_[cp] = idx;
     return true;
 }

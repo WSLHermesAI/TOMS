@@ -99,6 +99,7 @@ public:
     int hideMask = 0;
     // text drawing used by TextNode (render-bound text in the scene graph)
     void drawTextPublic(const std::string& s, float x, float y, float sz, const float* t);
+    float measureText(const std::string& s, float size) const;   // width in px (for centering)
     CombatState& combat() { return cs; }
     Stage& stage() { return st; }
     const nlohmann::json& enemyTemplate(const std::string& id) const { return enemyTpl.at(id); }

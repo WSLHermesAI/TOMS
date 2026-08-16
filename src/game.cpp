@@ -236,11 +236,16 @@ void Game::drawText(const std::string& s, float x, float y, float size, const fl
         }
         if (it == fontMap.end()) { cx += size; continue; }   // truly unknown glyph
         auto& uv = it->second;
-        // Tight quad: use the glyph's baked width so Latin text doesn't get a full
-        // cell of padding on each side (fixes "V o r k a t h" spacing).
+        // Tight quad: width from the glyph's baked advance; height + vertical offset
+        // from the glyph's baked box so the ink sits at its true position in the
+        // cell (baseline-correct) and the quad never samples padding/neighbours.
         int advPx = font_ ? font_->glyphPxWidth(cp) : (int)size;
+        int ghPx  = font_ ? font_->glyphPxHeight(cp) : (int)size;
+        int offYc = font_ ? font_->glyphPxOffY(cp) : 0;
         float qw = size * (float)advPx / (font_ ? (float)font_->cellSize() : 32.0f);
-        Quad q; q.rect[0]=cx; q.rect[1]=y; q.rect[2]=qw; q.rect[3]=size;
+        float qh = size * (float)ghPx  / (font_ ? (float)font_->cellSize() : 32.0f);
+        float qy = y + size * (float)offYc / (font_ ? (float)font_->cellSize() : 32.0f);
+        Quad q; q.rect[0]=cx; q.rect[1]=qy; q.rect[2]=qw; q.rect[3]=qh;
         q.uv[0]=uv[0]; q.uv[1]=uv[1]; q.uv[2]=uv[2]; q.uv[3]=uv[3];
         q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
         ren->drawText(q);
@@ -255,6 +260,18 @@ void Game::drawText(const std::string& s, float x, float y, float size, const fl
 // Public wrapper so TextNode (render-bound text) can draw through Game's font.
 void Game::drawTextPublic(const std::string& s, float x, float y, float sz, const float* t) {
     drawText(s, x, y, sz, t);
+}
+
+float Game::measureText(const std::string& s, float size) const {
+    float w = 0;
+    std::u32string cps = utf8_to_utf32(s);
+    for (uint32_t cp : cps) {
+        auto it = fontMap.find(cp);
+        int advPx = (it != fontMap.end() && font_) ? font_->glyphPxWidth(cp) : (int)size;
+        float qw = size * (float)advPx / (font_ ? (float)font_->cellSize() : 32.0f);
+        w += qw + size * 0.06f;
+    }
+    return w;
 }
 
 void Game::drawBar(float x, float y, float w, float h, float frac, const float col[4]) {
@@ -673,12 +690,12 @@ void Game::drawStoreUI() {
         }
         // icon (sprite)
         ren->drawSprite(spriteQuad(cx + cw/2 - 46, cy + 22, 92, 92, spriteLayer(d.sprite.empty()?"coin":d.sprite), C4(1,1,1,1)));
-        drawText(d.name, cx + 16, cy + 126, 20, C4(1,1,1,1));
-        drawText(d.desc, cx + 16, cy + 156, 13, C4(0.85f,0.9f,1,1));
-        drawText("效果: " + d.effect_text, cx + 16, cy + 180, 14, C4(0.6f,1,0.7f,1));
-        drawText("已購買 x" + std::to_string(d.purchases), cx + 16, cy + 204, 12, C4(0.7f,0.7f,0.8f,1));
+        drawText(d.name, cx + 16, cy + 124, 26, C4(1,1,1,1));
+        drawText(d.desc, cx + 16, cy + 162, 16, C4(0.85f,0.9f,1,1));
+        drawText("效果: " + d.effect_text, cx + 16, cy + 188, 18, C4(0.6f,1,0.7f,1));
+        drawText("已購買 x" + std::to_string(d.purchases), cx + 16, cy + 216, 15, C4(0.7f,0.7f,0.8f,1));
         // price tag
-        drawText("價格: " + std::to_string(cost) + " G", cx + 16, cy + 226, 18, C4(1,0.95f,0.4f,1));
+        drawText("價格: " + std::to_string(cost) + " G", cx + 16, cy + 240, 22, C4(1,0.95f,0.4f,1));
         // buy button
         float btnW = cw - 32, btnH = 38;
         float btnX = cx + 16, btnY = cy + ch - btnH - 12;
