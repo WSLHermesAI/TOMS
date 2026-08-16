@@ -141,6 +141,11 @@ void WebGLRenderer::flush(const std::vector<Quad>& qs, GLuint tex) {
 }
 
 void WebGLRenderer::end() {
+    // Surface (but never abort on) the first GL error of a frame so a real
+    // driver/state issue is diagnosable in the console instead of silently
+    // killing the page (GL_ASSERTIONS is OFF for exactly this reason).
+    GLenum e = glGetError();
+    if (e != GL_NO_ERROR) fprintf(stderr, "[gl] end() GL error 0x%04X\n", e);
     glViewport(0,0,(GLsizei)W,(GLsizei)H);
     glClearColor(0.06f,0.06f,0.1f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT);

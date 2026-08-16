@@ -147,7 +147,7 @@ if(WEB)
 -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS'] \
 --preload-file ${CMAKE_SOURCE_DIR}/assets@assets \
 --preload-file ${CMAKE_SOURCE_DIR}/data@data \
--sGL_ASSERTIONS=1")
+-sGL_ASSERTIONS=0")
     endif()
 
     set_target_properties(tower_vulkan_web PROPERTIES

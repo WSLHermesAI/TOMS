@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp_0fhc3eb.js
+// include: /tmp/tmpsrt_ov4f.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -209,21 +209,21 @@ Module['FS_createPath']("/data", "stages", true, true);
 
   })();
 
-// end include: /tmp/tmp_0fhc3eb.js
-// include: /tmp/tmptcsw37ap.js
+// end include: /tmp/tmpsrt_ov4f.js
+// include: /tmp/tmpkx7vcc_7.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmptcsw37ap.js
-// include: /tmp/tmpr_9bikot.js
+  // end include: /tmp/tmpkx7vcc_7.js
+// include: /tmp/tmpxq1tpb6k.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpr_9bikot.js
+  // end include: /tmp/tmpxq1tpb6k.js
 
 
 var programArgs = [];
@@ -5573,7 +5573,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         return ret;
       },
   genObject:(n, buffers, createFunction, objectTable
-        , functionName
         ) => {
         for (var i = 0; i < n; i++) {
           var buffer = GLctx[createFunction]();
@@ -5583,7 +5582,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
             objectTable[id] = buffer;
           } else {
             GL.recordError(0x502 /* GL_INVALID_OPERATION */);
-            err(`GL_INVALID_OPERATION in ${functionName}: GLctx.${createFunction} returned null - most likely GL context is lost!`);
           }
           HEAP32[(((buffers)+(i*4))>>2)] = id;
         }
@@ -5595,65 +5593,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
           source += UTF8ToString(HEAPU32[(((string)+(i*4))>>2)], len);
         }
         return source;
-      },
-  validateGLObjectID:(objectHandleArray, objectID, callerFunctionName, objectReadableType) => {
-        // `objectHandleArray` may be uninitialized when GL uniforms are lazily initialized, and `glUniform*` is called
-        // for the first time before uniforms have been populated. So ignore this validation if the handle array is not present.
-        if (objectID != 0 && objectHandleArray) {
-          if (objectHandleArray[objectID] === null) {
-            err(`${callerFunctionName} called with an already deleted ${objectReadableType} ID ${objectID}!`);
-          } else if (!(objectID in objectHandleArray)) {
-            err(`${callerFunctionName} called with a nonexisting ${objectReadableType} ID ${objectID}!`);
-          }
-        }
-      },
-  validateVertexAttribPointer:(dimension, dataType, stride, offset) => {
-        var sizeBytes = 1;
-        switch (dataType) {
-          case 0x1400 /* GL_BYTE */:
-          case 0x1401 /* GL_UNSIGNED_BYTE */:
-            sizeBytes = 1;
-            break;
-          case 0x1402 /* GL_SHORT */:
-          case 0x1403 /* GL_UNSIGNED_SHORT */:
-            sizeBytes = 2;
-            break;
-          case 0x1404 /* GL_INT */:
-          case 0x1405 /* GL_UNSIGNED_INT */:
-          case 0x1406 /* GL_FLOAT */:
-            sizeBytes = 4;
-            break;
-          case 0x140A /* GL_DOUBLE */:
-            sizeBytes = 8;
-            break;
-          default:
-            if (GL.currentContext.version >= 2) {
-              if (dataType == 0x8368 /* GL_UNSIGNED_INT_2_10_10_10_REV */ || dataType == 0x8D9F /* GL_INT_2_10_10_10_REV */) {
-                sizeBytes = 4;
-                break;
-              } else if (dataType == 0x140B /* GL_HALF_FLOAT */) {
-                sizeBytes = 2;
-                break;
-              } else {
-                // else fall through
-              }
-            }
-            err(`Invalid vertex attribute data type GLenum ${dataType} passed to GL function!`);
-        }
-        if (dimension == 0x80E1 /* GL_BGRA */) {
-          err('WebGL does not support size=GL_BGRA in a call to glVertexAttribPointer! Please use size=4 and type=GL_UNSIGNED_BYTE instead');
-        } else if (dimension < 1 || dimension > 4) {
-          err(`Invalid dimension=${dimension} in call to glVertexAttribPointer, must be 1,2,3 or 4.`);
-        }
-        if (stride < 0 || stride > 255) {
-          err(`Invalid stride=${stride} in call to glVertexAttribPointer. Note that maximum supported stride in WebGL is 255!`);
-        }
-        if (offset % sizeBytes != 0) {
-          err(`GL spec section 6.4 error: vertex attribute data offset of ${offset} bytes should have been a multiple of the data type size that was used: GLenum ${dataType} has size of ${sizeBytes} bytes!`);
-        }
-        if (stride % sizeBytes != 0) {
-          err(`GL spec section 6.4 error: vertex attribute data stride of ${stride} bytes should have been a multiple of the data type size that was used: GLenum ${dataType} has size of ${sizeBytes} bytes!`);
-        }
       },
   createContext:(/** @type {HTMLCanvasElement} */ canvas, webGLContextAttributes) => {
   
@@ -6030,14 +5969,11 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glActiveTexture = _emscripten_glActiveTexture;
 
   var _emscripten_glAttachShader = (program, shader) => {
-      GL.validateGLObjectID(GL.programs, program, 'glAttachShader', 'program');
-      GL.validateGLObjectID(GL.shaders, shader, 'glAttachShader', 'shader');
       GLctx.attachShader(GL.programs[program], GL.shaders[shader]);
     };
   var _glAttachShader = _emscripten_glAttachShader;
 
   var _emscripten_glBindBuffer = (target, buffer) => {
-      GL.validateGLObjectID(GL.buffers, buffer, 'glBindBuffer', 'buffer');
   
       if (target == 0x88EB /*GL_PIXEL_PACK_BUFFER*/) {
         // In WebGL 2 glReadPixels entry point, we need to use a different WebGL 2
@@ -6059,13 +5995,11 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glBindBuffer = _emscripten_glBindBuffer;
 
   var _emscripten_glBindTexture = (target, texture) => {
-      GL.validateGLObjectID(GL.textures, texture, 'glBindTexture', 'texture');
       GLctx.bindTexture(target, GL.textures[texture]);
     };
   var _glBindTexture = _emscripten_glBindTexture;
 
   var _emscripten_glBindVertexArray = (vao) => {
-      assert(GLctx.bindVertexArray, 'Must have WebGL2 or OES_vertex_array_object to use vao');
       GLctx.bindVertexArray(GL.vaos[vao]);
     };
   var _glBindVertexArray = _emscripten_glBindVertexArray;
@@ -6103,7 +6037,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glClearColor = _emscripten_glClearColor;
 
   var _emscripten_glCompileShader = (shader) => {
-      GL.validateGLObjectID(GL.shaders, shader, 'glCompileShader', 'shader');
       GLctx.compileShader(GL.shaders[shader]);
     };
   var _glCompileShader = _emscripten_glCompileShader;
@@ -6176,22 +6109,18 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
 
   var _emscripten_glGenBuffers = (n, buffers) => {
       GL.genObject(n, buffers, 'createBuffer', GL.buffers
-      , 'glGenBuffers'
         );
     };
   var _glGenBuffers = _emscripten_glGenBuffers;
 
   var _emscripten_glGenTextures = (n, textures) => {
       GL.genObject(n, textures, 'createTexture', GL.textures
-      , 'glGenTextures'
         );
     };
   var _glGenTextures = _emscripten_glGenTextures;
 
   var _emscripten_glGenVertexArrays = (n, arrays) => {
-      assert(GLctx.createVertexArray, 'Must have WebGL2 or OES_vertex_array_object to use vao');
       GL.genObject(n, arrays, 'createVertexArray', GL.vaos
-      , 'glGenVertexArrays'
         );
     };
   var _glGenVertexArrays = _emscripten_glGenVertexArrays;
@@ -6221,7 +6150,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       // crashes on glGetIntegerv to a null pointer, but better to report an error
       // instead of doing anything random.
       if (!p) {
-        err(`GL_INVALID_VALUE in glGet${type}v(name=${name_}: Function called with null out pointer!`);
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
@@ -6233,7 +6161,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         case 0x8DF8: // GL_SHADER_BINARY_FORMATS
           if (type != 0 && type != 1) {
             GL.recordError(0x500); // GL_INVALID_ENUM
-            err(`GL_INVALID_ENUM in glGet${type}v(GL_SHADER_BINARY_FORMATS): Invalid parameter type!`);
           }
           // Do not write anything to the out pointer, since no binary formats are
           // supported.
@@ -6280,7 +6207,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
             break;
           case 'string':
             GL.recordError(0x500); // GL_INVALID_ENUM
-            err(`GL_INVALID_ENUM in glGet${type}v(${name}) on a name which returns a string!`);
             return;
           case 'object':
             if (result === null) {
@@ -6312,7 +6238,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
                 }
                 default: {
                   GL.recordError(0x500); // GL_INVALID_ENUM
-                  err(`GL_INVALID_ENUM in glGet${type}v(${name}) and it returns null!`);
                   return;
                 }
               }
@@ -6325,7 +6250,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
                   case 0: HEAP32[(((p)+(i*4))>>2)] = result[i]; break;
                   case 2: HEAPF32[(((p)+(i*4))>>2)] = result[i]; break;
                   case 4: HEAP8[(p)+(i)] = result[i] ? 1 : 0; break;
-                  default: abort(`internal glGet error, bad type: ${type}`);
                 }
               }
               return;
@@ -6351,7 +6275,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         case 0: HEAP32[((p)>>2)] = ret; break;
         case 2:   HEAPF32[((p)>>2)] = ret; break;
         case 4: HEAP8[p] = ret ? 1 : 0; break;
-        default: abort(`internal glGet error, bad type: ${type}`);
       }
     };
   
@@ -6364,14 +6287,11 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         // GLES2 specification does not specify how to behave if p is a null
         // pointer. Since calling this function does not make sense if p == null,
         // issue a GL error to notify user about it.
-        err(`GL_INVALID_VALUE in glGetProgramiv(program=${program}, pname=${pname}, p=0): Function called with null out pointer!`);
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      GL.validateGLObjectID(GL.programs, program, 'glGetProgramiv', 'program');
   
       if (program >= GL.counter) {
-        err(`GL_INVALID_VALUE in glGetProgramiv(program=${program}, pname=${pname}, p=${ptrToString(p)}): The specified program object name was not generated by GL!`);
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
@@ -6415,7 +6335,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
   
   var _emscripten_glGetShaderInfoLog = (shader, maxLength, length, infoLog) => {
-      GL.validateGLObjectID(GL.shaders, shader, 'glGetShaderInfoLog', 'shader');
       var log = GLctx.getShaderInfoLog(GL.shaders[shader]);
       if (log === null) log = '(unknown error)';
       var numBytesWrittenExclNull = (maxLength > 0 && infoLog) ? stringToUTF8(log, infoLog, maxLength) : 0;
@@ -6429,11 +6348,9 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         // GLES2 specification does not specify how to behave if p is a null
         // pointer. Since calling this function does not make sense if p == null,
         // issue a GL error to notify user about it.
-        err(`GL_INVALID_VALUE in glGetShaderiv(shader=${shader}, pname=${pname}, p=0): Function called with null out pointer!`);
         GL.recordError(0x501 /* GL_INVALID_VALUE */);
         return;
       }
-      GL.validateGLObjectID(GL.shaders, shader, 'glGetShaderiv', 'shader');
       if (pname == 0x8B84) { // GL_INFO_LOG_LENGTH
         var log = GLctx.getShaderInfoLog(GL.shaders[shader]);
         if (log === null) log = '(unknown error)';
@@ -6506,10 +6423,7 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
   var _emscripten_glGetUniformLocation = (program, name) => {
   
-      GL.validateGLObjectID(GL.programs, program, 'glGetUniformLocation', 'program');
       name = UTF8ToString(name);
-  
-      assert(!name.includes(' '), `Uniform names passed to glGetUniformLocation() should not contain spaces! (received "${name}")`);
   
       if (program = GL.programs[program]) {
         webglPrepareUniformLocationsBeforeFirstUse(program);
@@ -6529,7 +6443,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
         // If user passed an array accessor "[index]", parse the array index off the accessor.
         if (leftBrace > 0) {
-          assert(name.slice(leftBrace + 1).length == 1 || !isNaN(jstoi_q(name.slice(leftBrace + 1))), `Malformed input parameter name "${name}" passed to glGetUniformLocation!`);
           arrayIndex = jstoi_q(name.slice(leftBrace + 1)) >>> 0; // "index]", coerce parseInt(']') with >>>0 to treat "foo[]" as "foo[0]" and foo[-1] as unsigned out-of-bounds.
           uniformBaseName = name.slice(0, leftBrace);
         }
@@ -6559,7 +6472,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glGetUniformLocation = _emscripten_glGetUniformLocation;
 
   var _emscripten_glLinkProgram = (program) => {
-      GL.validateGLObjectID(GL.programs, program, 'glLinkProgram', 'program');
       program = GL.programs[program];
       GLctx.linkProgram(program);
       // Invalidate earlier computed uniform->ID mappings, those have now become stale
@@ -6580,7 +6492,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glPixelStorei = _emscripten_glPixelStorei;
 
   var _emscripten_glShaderSource = (shader, count, string, length) => {
-      GL.validateGLObjectID(GL.shaders, shader, 'glShaderSource', 'shader');
       var source = GL.getSource(shader, count, string, length);
   
       GLctx.shaderSource(GL.shaders[shader], source);
@@ -6589,7 +6500,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
 
   var computeUnpackAlignedImageSize = (width, height, sizePerPixel) => {
       function roundedToNextMultipleOf(x, y) {
-        assert((y & (y-1)) === 0, 'Unpack alignment must be a power of 2! (Allowed values per WebGL spec are 1, 2, 4 or 8)');
         return (x + y - 1) & -y;
       }
       var plainRowSize = (GL.unpackRowLength || width) * sizePerPixel;
@@ -6618,14 +6528,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         29846: 3,
         29847: 4
       };
-      if (!colorChannels[format - 0x1902]
-        && format != 0x1902 /* GL_DEPTH_COMPONENT */
-        && format != 0x1906 /* GL_ALPHA */
-        && format != 0x1909 /* GL_LUMINANCE */
-        && format != 0x1903 /* GL_RED */
-        && format != 0x8D94 /* GL_RED_INTEGER */) {
-        err(`Invalid format=${ptrToString(format)} passed to function colorChannelsInGlTextureFormat()!`);
-      }
       return colorChannels[format - 0x1902]||1;
     };
   
@@ -6660,14 +6562,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         )
         return HEAPU32;
   
-        if (type != 3
-          && type != 11
-          && type != 27699
-          && type != 27700
-          && type != 28515
-          && type != 31073) {
-          err(`Invalid WebGL type 0x${(type+0x1400).toString()} passed to $heapObjectForWebGLType!`);
-        }
       return HEAPU16;
     };
   
@@ -6678,7 +6572,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       var heap = heapObjectForWebGLType(type);
       var sizePerPixel = colorChannelsInGlTextureFormat(format) * heap.BYTES_PER_ELEMENT;
       var bytes = computeUnpackAlignedImageSize(width, height, sizePerPixel);
-      assert(pixels % heap.BYTES_PER_ELEMENT == 0, 'Pointer to texture data passed to texture get function must be aligned to the byte size of the pixel type');
       return heap.subarray(toTypedArrayIndex(pixels, heap), toTypedArrayIndex(pixels + bytes, heap));
     };
   
@@ -6730,20 +6623,17 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
     };
   
   var _emscripten_glUniform1i = (location, v0) => {
-      GL.validateGLObjectID(GLctx.currentProgram.uniformLocsById, location, 'glUniform1i', 'location');
       GLctx.uniform1i(webglGetUniformLocation(location), v0);
     };
   var _glUniform1i = _emscripten_glUniform1i;
 
   
   var _emscripten_glUniform2f = (location, v0, v1) => {
-      GL.validateGLObjectID(GLctx.currentProgram.uniformLocsById, location, 'glUniform2f', 'location');
       GLctx.uniform2f(webglGetUniformLocation(location), v0, v1);
     };
   var _glUniform2f = _emscripten_glUniform2f;
 
   var _emscripten_glUseProgram = (program) => {
-      GL.validateGLObjectID(GL.programs, program, 'glUseProgram', 'program');
       program = GL.programs[program];
       GLctx.useProgram(program);
       // Record the currently active program so that we can access the uniform
@@ -6753,7 +6643,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   var _glUseProgram = _emscripten_glUseProgram;
 
   var _emscripten_glVertexAttribPointer = (index, size, type, normalized, stride, ptr) => {
-      GL.validateVertexAttribPointer(size, type, stride, ptr);
       GLctx.vertexAttribPointer(index, size, type, !!normalized, stride, ptr);
     };
   var _glVertexAttribPointer = _emscripten_glVertexAttribPointer;
