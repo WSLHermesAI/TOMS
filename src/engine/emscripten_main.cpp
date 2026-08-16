@@ -92,6 +92,48 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
     return EM_TRUE;
 }
 
+// Injected browser UI. NOTE: EM_ASM does NOT support C++ raw-string (R"JS(...)JS")
+// syntax — that form leaks `R"JS(` into the emitted JS and breaks it. Use a plain
+// string literal instead. JS uses only single quotes to avoid C++ string escaping.
+static const char* TOMS_WEB_UI =
+"var T=function(){var c=document.getElementById('canvas');if(!c)return;"
+"var r=c.getBoundingClientRect();var top=(r.top>0)?r.top:0;"
+"var ah=window.innerHeight-top-4,aw=window.innerWidth-4;"
+"var s=Math.min(aw/1024,ah/768);if(s<=0)s=0.1;"
+"c.style.width=Math.floor(1024*s)+'px';c.style.height=Math.floor(768*s)+'px';"
+"c.style.display='block';c.style.margin='0 auto';};"
+"window.addEventListener('resize',T);window.addEventListener('load',T);"
+"window.addEventListener('fullscreenchange',T);window.addEventListener('webkitfullscreenchange',T);"
+"requestAnimationFrame(T);T();"
+"if(typeof Module!=='undefined'&&Module.requestFullscreen){Module.requestFullscreen=function(){"
+"var c=document.getElementById('canvas');try{if(!document.fullscreenElement){"
+"(c.requestFullscreen||c.webkitRequestFullscreen||function(){}).call(c);}"
+"else{(document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);}}catch(e){}};}"
+"var ctrls=document.getElementById('controls');if(ctrls)ctrls.style.display='none';"
+"var fsb=document.createElement('button');fsb.textContent='⛶';fsb.title='Fullscreen';"
+"fsb.style.cssText='position:fixed;top:8px;right:8px;z-index:50;width:40px;height:40px;font:18px sans-serif;background:#222;color:#fff;border:1px solid #555;border-radius:6px';"
+"fsb.onclick=function(){var c=document.getElementById('canvas');"
+"if(!document.fullscreenElement){(c.requestFullscreen||c.webkitRequestFullscreen)&&(c.requestFullscreen||c.webkitRequestFullscreen).call(c);}"
+"else{(document.exitFullscreen||document.webkitExitFullscreen)&&(document.exitFullscreen||document.webkitExitFullscreen).call(document);}};"
+"document.body.appendChild(fsb);"
+"if('ontouchstart'in window||navigator.maxTouchPoints>0){"
+"function call(n,a,b){if(typeof Module!=='undefined'&&Module.ccall)Module.ccall(n,'null',['number','number'],a!==undefined?[a,b]:[]);}"
+"function mk(label,style,fn){var b=document.createElement('button');b.textContent=label;"
+"b.style.cssText='position:fixed;z-index:41;pointer-events:auto;opacity:.7;border:2px solid #999;border-radius:50%;background:rgba(20,20,30,.92);color:#fff;font:bold 22px sans-serif;width:64px;height:64px;user-select:none;-webkit-user-select:none;touch-action:none;'+style;"
+"var rep=null,fire=function(e){if(e)e.preventDefault();fn();};"
+"b.addEventListener('touchstart',function(e){e.preventDefault();fire();rep=setInterval(fire,150);},false);"
+"b.addEventListener('touchend',function(e){e.preventDefault();if(rep)clearInterval(rep);rep=null;},false);"
+"b.addEventListener('touchcancel',function(e){if(rep)clearInterval(rep);rep=null;},false);"
+"document.body.appendChild(b);}"
+"mk('▲','left:88px;bottom:248px;',function(){call('jsMove',0,-1);});"
+"mk('▼','left:88px;bottom:120px;',function(){call('jsMove',0,1);});"
+"mk('◀','left:24px;bottom:184px;',function(){call('jsMove',-1,0);});"
+"mk('▶','left:152px;bottom:184px;',function(){call('jsMove',1,0);});"
+"mk('A','right:24px;bottom:104px;width:72px;height:72px;background:rgba(40,90,40,.92);',function(){call('jsInteract');});"
+"mk('B','right:108px;bottom:48px;width:64px;height:64px;background:rgba(90,40,40,.92);',function(){call('jsInvDrop');});"
+"mk('I','right:24px;bottom:24px;width:56px;height:56px;background:rgba(40,40,90,.92);',function(){call('jsInventory');});"
+"}";
+
 int main() {
 #ifndef WEBGPU
     EmscriptenWebGLContextAttributes attrs;
@@ -104,67 +146,7 @@ int main() {
 #endif
     emscripten_set_canvas_element_size("#canvas", 1024, 768);
 
-    // Inject UI: responsive canvas fit, CSS-only fullscreen (no drawing-buffer resize,
-    // which caused the black screen), and a touch virtual gamepad on mobile.
-    EM_ASM(R"JS(
-      function tomsFit(){
-        var c=document.getElementById('canvas'); if(!c) return;
-        var r=c.getBoundingClientRect(); var top=(r.top>0)?r.top:0;
-        var availH=window.innerHeight-top-4, availW=window.innerWidth-4;
-        var s=Math.min(availW/1024, availH/768); if(s<=0) s=0.1;
-        c.style.width=Math.floor(1024*s)+'px'; c.style.height=Math.floor(768*s)+'px';
-        c.style.display='block'; c.style.margin='0 auto';
-      }
-      window.addEventListener('resize', tomsFit);
-      window.addEventListener('load', tomsFit);
-      window.addEventListener('fullscreenchange', tomsFit);
-      window.addEventListener('webkitfullscreenchange', tomsFit);
-      requestAnimationFrame(tomsFit); tomsFit();
-
-      // CSS-only fullscreen: keep the drawing buffer at 1024x768 so the game keeps
-      // rendering the full frame (no black surround). Override Emscripten's button.
-      if (typeof Module !== 'undefined' && Module.requestFullscreen) {
-        Module.requestFullscreen = function(){
-          var c=document.getElementById('canvas');
-          try { if(!document.fullscreenElement){ (c.requestFullscreen||c.webkitRequestFullscreen||function(){}).call(c); }
-                else { (document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document); } }
-          catch(e){}
-        };
-      }
-      // hide Emscripten's generated control bar (its Fullscreen button resizes the buffer)
-      var ctrls=document.getElementById('controls'); if(ctrls) ctrls.style.display='none';
-      // our own fullscreen toggle (top-right)
-      var fsb=document.createElement('button');
-      fsb.textContent='⛶'; fsb.title='Fullscreen';
-      fsb.style.cssText='position:fixed;top:8px;right:8px;z-index:50;width:40px;height:40px;font:18px sans-serif;background:#222;color:#fff;border:1px solid #555;border-radius:6px';
-      fsb.onclick=function(){ var c=document.getElementById('canvas');
-        if(!document.fullscreenElement){ (c.requestFullscreen||c.webkitRequestFullscreen)&&(c.requestFullscreen||c.webkitRequestFullscreen).call(c); }
-        else { (document.exitFullscreen||document.webkitExitFullscreen)&&(document.exitFullscreen||document.webkitExitFullscreen).call(document); } };
-      document.body.appendChild(fsb);
-
-      // ---- virtual gamepad (touch devices only) ----
-      if ('ontouchstart' in window || navigator.maxTouchPoints>0) {
-        function call(name,a,b){ if(typeof Module!=='undefined'&&Module.ccall) Module.ccall(name,'null',['number','number'], a!==undefined?[a,b]:[]); }
-        function mk(label,style,fn){
-          var b=document.createElement('button'); b.textContent=label;
-          b.style.cssText='position:fixed;z-index:41;pointer-events:auto;opacity:.7;border:2px solid #999;border-radius:50%;background:rgba(20,20,30,.92);color:#fff;font:bold 22px sans-serif;width:64px;height:64px;user-select:none;-webkit-user-select:none;touch-action:none;'+style;
-          var rep=null, fire=function(e){ if(e) e.preventDefault(); fn(); };
-          b.addEventListener('touchstart',function(e){ e.preventDefault(); fire(); rep=setInterval(fire,150); },false);
-          b.addEventListener('touchend',function(e){ e.preventDefault(); if(rep) clearInterval(rep); rep=null; },false);
-          b.addEventListener('touchcancel',function(e){ if(rep) clearInterval(rep); rep=null; },false);
-          document.body.appendChild(b);
-        }
-        // D-pad (plus layout, left side)
-        mk('▲','left:88px;bottom:248px;', function(){ call('jsMove',0,-1); });
-        mk('▼','left:88px;bottom:120px;', function(){ call('jsMove',0, 1); });
-        mk('◀','left:24px;bottom:184px;', function(){ call('jsMove',-1,0); });
-        mk('▶','left:152px;bottom:184px;', function(){ call('jsMove', 1,0); });
-        // action buttons (right side)
-        mk('A','right:24px;bottom:104px;width:72px;height:72px;background:rgba(40,90,40,.92);', function(){ call('jsInteract'); });
-        mk('B','right:108px;bottom:48px;width:64px;height:64px;background:rgba(90,40,40,.92);', function(){ call('jsInvDrop'); });
-        mk('I','right:24px;bottom:24px;width:56px;height:56px;background:rgba(40,40,90,.92);', function(){ call('jsInventory'); });
-      }
-    )JS");
+    emscripten_run_script(TOMS_WEB_UI);
 
     emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, 1, keyCb);
 
