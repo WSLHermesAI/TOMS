@@ -10,8 +10,9 @@ layout(location=0) in vec2 aPos;
 layout(location=1) in vec4 aRect;
 layout(location=2) in vec4 aUV;
 layout(location=3) in vec4 aTint;
+layout(location=4) in float aSolid;
 uniform vec2 uRes;
-out vec2 vUV; out vec4 vTint;
+out vec2 vUV; out vec4 vTint; out float vSolid;
 void main() {
   vec2 px = aRect.xy + aPos * aRect.zw;
   vec2 clip = (px / uRes) * 2.0 - 1.0;
@@ -19,13 +20,15 @@ void main() {
   gl_Position = vec4(clip, 0.0, 1.0);
   vUV = aUV.xy + aPos * (aUV.zw - aUV.xy);
   vTint = aTint;
+  vSolid = aSolid;
 })";
 
 static const char* FRAG = R"(#version 300 es
 precision mediump float;
-in vec2 vUV; in vec4 vTint; out vec4 frag;
+in vec2 vUV; in vec4 vTint; in float vSolid; out vec4 frag;
 uniform sampler2D uTex;
 void main() {
+  if (vSolid > 0.5) { frag = vTint; return; }   // solid-color quad: ignore texture, use tint
   vec4 c = texture(uTex, vUV);
   if (c.a < 0.01) discard;
   frag = vec4(c.rgb * vTint.rgb, c.a * vTint.a);
@@ -62,10 +65,11 @@ void WebGLRenderer::init(uint32_t w, uint32_t h) {
     glDeleteShader(vs); glDeleteShader(fs);
     glGenVertexArrays(1, &vao); glGenBuffers(1, &vbo);
     glBindVertexArray(vao); glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glEnableVertexAttribArray(0); glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,14*4, (void*)0);
-    glEnableVertexAttribArray(1); glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,14*4, (void*)(8));
-    glEnableVertexAttribArray(2); glVertexAttribPointer(2,4,GL_FLOAT,GL_FALSE,14*4, (void*)(24));
-    glEnableVertexAttribArray(3); glVertexAttribPointer(3,4,GL_FLOAT,GL_FALSE,14*4, (void*)(40));
+    glEnableVertexAttribArray(0); glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,15*4, (void*)0);
+    glEnableVertexAttribArray(1); glVertexAttribPointer(1,4,GL_FLOAT,GL_FALSE,15*4, (void*)(8));
+    glEnableVertexAttribArray(2); glVertexAttribPointer(2,4,GL_FLOAT,GL_FALSE,15*4, (void*)(24));
+    glEnableVertexAttribArray(3); glVertexAttribPointer(3,4,GL_FLOAT,GL_FALSE,15*4, (void*)(40));
+    glEnableVertexAttribArray(4); glVertexAttribPointer(4,1,GL_FLOAT,GL_FALSE,15*4, (void*)(56));
     glBindVertexArray(0);
 }
 
@@ -101,17 +105,18 @@ void WebGLRenderer::drawSprite(const Quad& q) { sprites.push_back(q); }
 void WebGLRenderer::drawText(const Quad& q)   { texts.push_back(q); }
 
 void WebGLRenderer::flush(const std::vector<Quad>& qs, GLuint tex) {
-    if (qs.empty() || !tex) return;
-    std::vector<float> v(qs.size()*6*14);
+    if (qs.empty()) return;
+    std::vector<float> v(qs.size()*6*15);
     for (size_t i=0;i<qs.size();i++) {
         const Quad& q=qs[i];
         float pos[6][2]={{0,0},{1,0},{0,1},{1,0},{1,1},{0,1}};
         for (int t=0;t<6;t++) {
-            float* p=v.data()+(i*6+t)*14;
+            float* p=v.data()+(i*6+t)*15;
             p[0]=pos[t][0]; p[1]=pos[t][1];
             p[2]=q.rect[0]; p[3]=q.rect[1]; p[4]=q.rect[2]; p[5]=q.rect[3];
             p[6]=q.uv[0]; p[7]=q.uv[1]; p[8]=q.uv[2]; p[9]=q.uv[3];
             p[10]=q.tint[0]; p[11]=q.tint[1]; p[12]=q.tint[2]; p[13]=q.tint[3];
+            p[14]=q.solid ? 1.0f : 0.0f;
         }
     }
     glBindVertexArray(vao);
