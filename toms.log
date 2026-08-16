@@ -1,8 +1,0 @@
-[20:56:10] INFO main.cpp:42  TOMS engine start (C++2017, native build)
-[20:56:11] INFO main.cpp:125  batch: drawCalls=5 quads=220
-[20:56:11] INFO main.cpp:135  scenario=walk done
-[20:56:11] INFO object.h:96  Object lifecycle: live objects = 0, no leaks
-[20:56:11] INFO main.cpp:42  TOMS engine start (C++2017, native build)
-[20:56:11] INFO main.cpp:125  batch: drawCalls=5 quads=220
-[20:56:12] INFO main.cpp:210  scenario=shopshots done (unlocked=1)
-[20:56:12] INFO object.h:96  Object lifecycle: live objects = 0, no leaks
