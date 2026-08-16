@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpeyj3c_0j.js
+// include: /tmp/tmp66c1c8vh.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -209,21 +209,21 @@ Module['FS_createPath']("/data", "stages", true, true);
 
   })();
 
-// end include: /tmp/tmpeyj3c_0j.js
-// include: /tmp/tmp1hq00dow.js
+// end include: /tmp/tmp66c1c8vh.js
+// include: /tmp/tmppnf55zua.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmp1hq00dow.js
-// include: /tmp/tmpx45q9krx.js
+  // end include: /tmp/tmppnf55zua.js
+// include: /tmp/tmpztwhzkw_.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpx45q9krx.js
+  // end include: /tmp/tmpztwhzkw_.js
 
 
 var programArgs = [];
@@ -7699,10 +7699,74 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('wasmBinary');
 }
 var ASM_CONSTS = {
-  99628: () => { function tomsFit(){var c=document.getElementById('canvas');if(!c)return;var r=c.getBoundingClientRect();var top=(r.top>0)?r.top:0;var availH=window.innerHeight-top-4;var availW=window.innerWidth-4;var s=Math.min(availW/1024,availH/768);if(s<=0)s=0.1;var cw=Math.floor(1024*s),ch=Math.floor(768*s);c.style.width=cw+'px';c.style.height=ch+'px';c.style.display='block';c.style.margin='0 auto';}window.addEventListener('resize',tomsFit);window.addEventListener('load',tomsFit);requestAnimationFrame(tomsFit);tomsFit(); }
+  99628: () => { R"JS(
+      function tomsFit(){
+        var c=document.getElementById('canvas'); if(!c) return;
+        var r=c.getBoundingClientRect(); var top=(r.top>0)?r.top:0;
+        var availH=window.innerHeight-top-4, availW=window.innerWidth-4;
+        var s=Math.min(availW/1024, availH/768); if(s<=0) s=0.1;
+        c.style.width=Math.floor(1024*s)+'px'; c.style.height=Math.floor(768*s)+'px';
+        c.style.display='block'; c.style.margin='0 auto';
+      }
+      window.addEventListener('resize', tomsFit);
+      window.addEventListener('load', tomsFit);
+      window.addEventListener('fullscreenchange', tomsFit);
+      window.addEventListener('webkitfullscreenchange', tomsFit);
+      requestAnimationFrame(tomsFit); tomsFit();
+
+      // CSS-only fullscreen: keep the drawing buffer at 1024x768 so the game keeps
+      // rendering the full frame (no black surround). Override Emscripten's button.
+      if (typeof Module !== 'undefined' && Module.requestFullscreen) {
+        Module.requestFullscreen = function(){
+          var c=document.getElementById('canvas');
+          try { if(!document.fullscreenElement){ (c.requestFullscreen||c.webkitRequestFullscreen||function(){}).call(c); }
+                else { (document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document); } }
+          catch(e){}
+        };
+      }
+      // hide Emscripten's generated control bar (its Fullscreen button resizes the buffer)
+      var ctrls=document.getElementById('controls'); if(ctrls) ctrls.style.display='none';
+      // our own fullscreen toggle (top-right)
+      var fsb=document.createElement('button');
+      fsb.textContent='⛶'; fsb.title='Fullscreen';
+      fsb.style.cssText='position:fixed;top:8px;right:8px;z-index:50;width:40px;height:40px;font:18px sans-serif;background:#222;color:#fff;border:1px solid #555;border-radius:6px';
+      fsb.onclick=function(){ var c=document.getElementById('canvas');
+        if(!document.fullscreenElement){ (c.requestFullscreen||c.webkitRequestFullscreen)&&(c.requestFullscreen||c.webkitRequestFullscreen).call(c); }
+        else { (document.exitFullscreen||document.webkitExitFullscreen)&&(document.exitFullscreen||document.webkitExitFullscreen).call(document); } };
+      document.body.appendChild(fsb);
+
+      // ---- virtual gamepad (touch devices only) ----
+      if ('ontouchstart' in window || navigator.maxTouchPoints>0) {
+        function call(name,a,b){ if(typeof Module!=='undefined'&&Module.ccall) Module.ccall(name,'null',['number','number'], a!==undefined?[a,b]:[]); }
+        function mk(label,style,fn){
+          var b=document.createElement('button'); b.textContent=label;
+          b.style.cssText='position:fixed;z-index:41;pointer-events:auto;opacity:.7;border:2px solid #999;border-radius:50%;background:rgba(20,20,30,.92);color:#fff;font:bold 22px sans-serif;width:64px;height:64px;user-select:none;-webkit-user-select:none;touch-action:none;'+style;
+          var rep=null, fire=function(e){ if(e) e.preventDefault(); fn(); };
+          b.addEventListener('touchstart',function(e){ e.preventDefault(); fire(); rep=setInterval(fire,150); },false);
+          b.addEventListener('touchend',function(e){ e.preventDefault(); if(rep) clearInterval(rep); rep=null; },false);
+          b.addEventListener('touchcancel',function(e){ if(rep) clearInterval(rep); rep=null; },false);
+          document.body.appendChild(b);
+        }
+        // D-pad (plus layout, left side)
+        mk('▲','left:88px;bottom:248px;', function(){ call('jsMove',0,-1); });
+        mk('▼','left:88px;bottom:120px;', function(){ call('jsMove',0, 1); });
+        mk('◀','left:24px;bottom:184px;', function(){ call('jsMove',-1,0); });
+        mk('▶','left:152px;bottom:184px;', function(){ call('jsMove', 1,0); });
+        // action buttons (right side)
+        mk('A','right:24px;bottom:104px;width:72px;height:72px;background:rgba(40,90,40,.92);', function(){ call('jsInteract'); });
+        mk('B','right:108px;bottom:48px;width:64px;height:64px;background:rgba(90,40,40,.92);', function(){ call('jsInvDrop'); });
+        mk('I','right:24px;bottom:24px;width:56px;height:56px;background:rgba(40,40,90,.92);', function(){ call('jsInventory'); });
+      }
+    )JS" }
 };
 
 // Imports from the Wasm binary.
+var _jsMove = Module['_jsMove'] = makeInvalidEarlyAccess('_jsMove');
+var _jsInteract = Module['_jsInteract'] = makeInvalidEarlyAccess('_jsInteract');
+var _jsInventory = Module['_jsInventory'] = makeInvalidEarlyAccess('_jsInventory');
+var _jsInvDrop = Module['_jsInvDrop'] = makeInvalidEarlyAccess('_jsInvDrop');
+var _jsInvOpen = Module['_jsInvOpen'] = makeInvalidEarlyAccess('_jsInvOpen');
+var _jsModalActive = Module['_jsModalActive'] = makeInvalidEarlyAccess('_jsModalActive');
 var _downloadFile = Module['_downloadFile'] = makeInvalidEarlyAccess('_downloadFile');
 var _main = Module['_main'] = makeInvalidEarlyAccess('_main');
 var _realloc = makeInvalidEarlyAccess('_realloc');
@@ -7722,6 +7786,12 @@ var wasmMemory = makeInvalidEarlyAccess('wasmMemory');
 var wasmTable = makeInvalidEarlyAccess('wasmTable');
 
 function assignWasmExports(wasmExports) {
+  assert(typeof wasmExports['jsMove'] != 'undefined', 'missing Wasm export: jsMove');
+  assert(typeof wasmExports['jsInteract'] != 'undefined', 'missing Wasm export: jsInteract');
+  assert(typeof wasmExports['jsInventory'] != 'undefined', 'missing Wasm export: jsInventory');
+  assert(typeof wasmExports['jsInvDrop'] != 'undefined', 'missing Wasm export: jsInvDrop');
+  assert(typeof wasmExports['jsInvOpen'] != 'undefined', 'missing Wasm export: jsInvOpen');
+  assert(typeof wasmExports['jsModalActive'] != 'undefined', 'missing Wasm export: jsModalActive');
   assert(typeof wasmExports['downloadFile'] != 'undefined', 'missing Wasm export: downloadFile');
   assert(typeof wasmExports['main'] != 'undefined', 'missing Wasm export: main');
   assert(typeof wasmExports['realloc'] != 'undefined', 'missing Wasm export: realloc');
@@ -7737,6 +7807,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['emscripten_stack_get_current'] != 'undefined', 'missing Wasm export: emscripten_stack_get_current');
   assert(typeof wasmExports['memory'] != 'undefined', 'missing Wasm export: memory');
   assert(typeof wasmExports['__indirect_function_table'] != 'undefined', 'missing Wasm export: __indirect_function_table');
+  _jsMove = Module['_jsMove'] = createExportWrapper('jsMove', wasmExports['jsMove'], 2);
+  _jsInteract = Module['_jsInteract'] = createExportWrapper('jsInteract', wasmExports['jsInteract'], 0);
+  _jsInventory = Module['_jsInventory'] = createExportWrapper('jsInventory', wasmExports['jsInventory'], 0);
+  _jsInvDrop = Module['_jsInvDrop'] = createExportWrapper('jsInvDrop', wasmExports['jsInvDrop'], 0);
+  _jsInvOpen = Module['_jsInvOpen'] = createExportWrapper('jsInvOpen', wasmExports['jsInvOpen'], 0);
+  _jsModalActive = Module['_jsModalActive'] = createExportWrapper('jsModalActive', wasmExports['jsModalActive'], 0);
   _downloadFile = Module['_downloadFile'] = createExportWrapper('downloadFile', wasmExports['downloadFile'], 2);
   _main = Module['_main'] = createExportWrapper('main', wasmExports['main'], 2);
   _realloc = createExportWrapper('realloc', wasmExports['realloc'], 2);
