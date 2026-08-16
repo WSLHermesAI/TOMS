@@ -38,6 +38,10 @@ EMSCRIPTEN_KEEPALIVE
 int jsInvOpen() { return (g_game && g_game->inventoryOpen()) ? 1 : 0; }
 EMSCRIPTEN_KEEPALIVE
 int jsModalActive() { return (g_game && g_game->modalActive()) ? 1 : 0; }
+EMSCRIPTEN_KEEPALIVE
+void jsGamepad(int phase, int x, int y) {
+    if (g_game) g_game->handleTouch((float)x, (float)y, phase);
+}
 
 // Download a SINGLE file from a URL (e.g. a remote stage JSON) into the FS.
 EMSCRIPTEN_KEEPALIVE
@@ -116,22 +120,14 @@ static const char* TOMS_WEB_UI =
 "if(!document.fullscreenElement){(c.requestFullscreen||c.webkitRequestFullscreen)&&(c.requestFullscreen||c.webkitRequestFullscreen).call(c);}"
 "else{(document.exitFullscreen||document.webkitExitFullscreen)&&(document.exitFullscreen||document.webkitExitFullscreen).call(document);}};"
 "document.body.appendChild(fsb);"
+"var cv=document.getElementById('canvas');if(cv)cv.style.touchAction='none';"
+"function toBP(e){var r=cv.getBoundingClientRect();var t=(e.changedTouches&&e.changedTouches[0])?e.changedTouches[0]:e;var bx=(t.clientX-r.left)/r.width*1024;var by=(t.clientY-r.top)/r.height*768;return [bx,by];}"
+"function gpCall(p,ph){if(typeof Module!=='undefined'&&Module.ccall)Module.ccall('jsGamepad','null',['number','number','number'],[ph,p[0],p[1]]);}"
 "if('ontouchstart'in window||navigator.maxTouchPoints>0){"
-"function call(n,a,b){if(typeof Module!=='undefined'&&Module.ccall)Module.ccall(n,'null',['number','number'],a!==undefined?[a,b]:[]);}"
-"function mk(label,style,fn){var b=document.createElement('button');b.textContent=label;"
-"b.style.cssText='position:fixed;z-index:41;pointer-events:auto;opacity:.7;border:2px solid #999;border-radius:50%;background:rgba(20,20,30,.92);color:#fff;font:bold 22px sans-serif;width:64px;height:64px;user-select:none;-webkit-user-select:none;touch-action:none;'+style;"
-"var rep=null,fire=function(e){if(e)e.preventDefault();fn();};"
-"b.addEventListener('touchstart',function(e){e.preventDefault();fire();rep=setInterval(fire,150);},false);"
-"b.addEventListener('touchend',function(e){e.preventDefault();if(rep)clearInterval(rep);rep=null;},false);"
-"b.addEventListener('touchcancel',function(e){if(rep)clearInterval(rep);rep=null;},false);"
-"document.body.appendChild(b);}"
-"mk('▲','left:88px;bottom:248px;',function(){call('jsMove',0,-1);});"
-"mk('▼','left:88px;bottom:120px;',function(){call('jsMove',0,1);});"
-"mk('◀','left:24px;bottom:184px;',function(){call('jsMove',-1,0);});"
-"mk('▶','left:152px;bottom:184px;',function(){call('jsMove',1,0);});"
-"mk('A','right:24px;bottom:104px;width:72px;height:72px;background:rgba(40,90,40,.92);',function(){call('jsInteract');});"
-"mk('B','right:108px;bottom:48px;width:64px;height:64px;background:rgba(90,40,40,.92);',function(){call('jsInvDrop');});"
-"mk('I','right:24px;bottom:24px;width:56px;height:56px;background:rgba(40,40,90,.92);',function(){call('jsInventory');});"
+"cv.addEventListener('touchstart',function(e){e.preventDefault();var p=toBP(e);cv._p=p;gpCall(p,0);if(cv._rep)clearInterval(cv._rep);cv._rep=setInterval(function(){gpCall(cv._p||p,1);},150);},false);"
+"cv.addEventListener('touchmove',function(e){e.preventDefault();cv._p=toBP(e);},false);"
+"cv.addEventListener('touchend',function(e){e.preventDefault();var p=toBP(e);gpCall(p,2);if(cv._rep){clearInterval(cv._rep);cv._rep=null;}},false);"
+"cv.addEventListener('touchcancel',function(e){if(cv._rep){clearInterval(cv._rep);cv._rep=null;}},false);"
 "}";
 
 int main() {

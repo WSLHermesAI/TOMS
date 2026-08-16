@@ -429,7 +429,64 @@ void Game::draw() {
     else if (storeOpen) drawStoreUI();
     drawStoreToast();
 
+    drawGamepad();   // on-canvas touch controls (web build; gated by gpTouch)
+
     ren->end();
+}
+
+// ---- on-canvas virtual gamepad (web build, touch only) ----
+// Single source of truth: same rects used for drawing AND hit-testing.
+// Buffer space is 1024x768, y-down (matches the rest of draw()).
+struct GPadBtn { int id; float x,y,w,h; const char* label; float col[4]; int dx,dy; };
+static const GPadBtn GP[] = {
+    {0, 104,510, 72,72, "^", 0.40f,0.45f,0.55f,0.70f, 0,-1}, // up
+    {1, 104,626, 72,72, "v", 0.40f,0.45f,0.55f,0.70f, 0, 1}, // down
+    {2,  20,568, 72,72, "<", 0.40f,0.45f,0.55f,0.70f,-1, 0}, // left
+    {3, 188,568, 72,72, ">", 0.40f,0.45f,0.55f,0.70f, 1, 0}, // right
+    {4, 880,626, 68,68, "A", 0.30f,0.70f,0.35f,0.80f, 0, 0}, // interact / use
+    {5, 792,566, 64,64, "B", 0.75f,0.30f,0.30f,0.80f, 0, 0}, // drop
+    {6, 880,526, 56,56, "I", 0.30f,0.35f,0.75f,0.80f, 0, 0}, // inventory
+};
+static const int GP_N = 7;
+
+void Game::drawGamepad() {
+    if (!gpTouch) return;
+    ren->setNode(NODE_CHAR);
+    float t[4] = {1,1,1,1};
+    for (int i = 0; i < GP_N; i++) {
+        const GPadBtn& b = GP[i];
+        Quad q; q.rect[0]=b.x; q.rect[1]=b.y; q.rect[2]=b.w; q.rect[3]=b.h;
+        q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
+        q.tint[0]=b.col[0]; q.tint[1]=b.col[1]; q.tint[2]=b.col[2]; q.tint[3]=b.col[3];
+        ren->drawSprite(q);
+        drawText(b.label, b.x + b.w/2 - 11, b.y + b.h/2 - 13, 30, t);
+    }
+}
+
+void Game::handleTouch(float px, float py, int phase) {
+    gpTouch = true;
+    if (phase == 2) return;                 // touchend: nothing to do
+    int id = -1;
+    for (int i = 0; i < GP_N; i++) {
+        const GPadBtn& b = GP[i];
+        if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) { id = i; break; }
+    }
+    if (id < 0) return;
+    const GPadBtn& b = GP[id];
+    if (inventoryOpen()) {
+        if (id <= 3) invMoveSel(b.dx, b.dy);
+        else if (id == 4 && phase == 0) invUseSelected();
+        else if (id == 5 && phase == 0) invDropSelected();
+        else if (id == 6 && phase == 0) toggleInventory();
+        return;
+    }
+    if (modalActive()) {                     // combat / dialogue / store: block movement
+        if (id == 4 && phase == 0) interact();   // A = continue / confirm
+        return;
+    }
+    if (id <= 3) movePlayer(b.dx, b.dy);     // dpad (repeat on hold)
+    else if (id == 4 && phase == 0) interact();
+    else if (id == 6 && phase == 0) toggleInventory();
 }
 
 void Game::applyItem(const std::string& id) {

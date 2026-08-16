@@ -66,6 +66,8 @@ public:
     void loadStage(const std::string& id);
     void update(int dtMs);                 // advances combat timer etc.
     void draw();                          // render current frame
+    void drawGamepad();                   // on-canvas touch controls (web build)
+    void handleTouch(float px, float py, int phase); // px,py in 1024x768 buffer space; phase 0=down 1=repeat 2=up
     void saveFrame(const std::string& path);
     // input (scripted for headless)
     void movePlayer(int dx, int dy);
@@ -147,6 +149,7 @@ private:
     // inventory UI state
     bool invOpen = false;
     int invSel = 0;            // selected slot index
+    bool gpTouch = false;      // set true on first touch; gates the on-canvas gamepad
     // font atlas map: codepoint -> uv rect
     std::map<uint32_t, std::array<float,4>> fontMap;
     std::shared_ptr<Font> font_;   // runtime TTF atlas (replaces font_atlas.png)
