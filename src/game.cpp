@@ -250,15 +250,24 @@ void Game::drawText(const std::string& s, float x, float y, float size, const fl
         }
         if (it == fontMap.end()) { cx += size; continue; }   // truly unknown glyph
         auto& uv = it->second;
-        // Design metrics: {leftBearing, topBearing, sizeX, sizeY} at atlas scale.
-        // The atlas cell is just packing; the quad uses design size + bearing.
+        // Design metrics from the font are stored in ATLAS pixels (relative to the
+        // bake cell, cell_). To place the quad at the requested `size` we must
+        // scale them up to display pixels: scale = size / cell_. This is exactly
+        // what the reference does (its Size.x/Size.y are at m_iFontSize, then the
+        // whole vertex buffer is scaled by m_fScale). Without this, every glyph
+        // renders at cell_ px instead of `size`, and the per-glyph topBearing (which
+        // differs for e.g. 'e' vs 'h') shifts glyphs by the wrong amount -> they
+        // fall off the baseline and clip.
         float leftB = 0, topB = 0, sx = size, sy = size;
+        float s = (font_ ? size / (float)font_->cellSize() : 1.0f);
         if (font_) {
-            if (auto* m = font_->glyphMetrics(cp)) { leftB = (*m)[0]; topB = (*m)[1]; sx = (*m)[2]; sy = (*m)[3]; }
+            if (auto* m = font_->glyphMetrics(cp)) {
+                leftB = (*m)[0]*s; topB = (*m)[1]*s; sx = (*m)[2]*s; sy = (*m)[3]*s;
+            }
         }
-        float qw = sx, qh = sy;                 // natural glyph size (already px@size)
+        float qw = sx, qh = sy;                 // natural glyph size (display px)
         float qx = cx + leftB;                  // advance then place by bearing
-        float qy = y - firstTop + topB;         // top-aligned to first glyph's top
+        float qy = y - firstTop*s + topB;       // baseline-aligned (ref: YOffset=-firstTop)
         Quad q; q.rect[0]=qx; q.rect[1]=qy; q.rect[2]=qw; q.rect[3]=qh;
         q.uv[0]=uv[0]; q.uv[1]=uv[1]; q.uv[2]=uv[2]; q.uv[3]=uv[3];
         q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
@@ -279,13 +288,14 @@ void Game::drawTextPublic(const std::string& s, float x, float y, float sz, cons
 float Game::measureText(const std::string& s, float size) const {
     float w = 0;
     std::u32string cps = utf8_to_utf32(s);
+    float s2 = (font_ ? size / (float)font_->cellSize() : 1.0f);
     for (uint32_t cp : cps) {
         auto it = fontMap.find(cp);
         float leftB = 0, sx = (font_ ? (float)font_->cellSize() : 32.0f);
         if (font_ && it != fontMap.end()) {
             if (auto* m = font_->glyphMetrics(cp)) { leftB = (*m)[0]; sx = (*m)[2]; }
         }
-        w += leftB + sx;   // matches drawText advance (Offset.x + Size.x)
+        w += (leftB + sx) * s2;   // matches drawText advance (Offset.x + Size.x), scaled to display px
     }
     return w;
 }
