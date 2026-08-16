@@ -8,6 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(STB_DIR ${CMAKE_SOURCE_DIR}/external/stb)
 set(JSON_DIR ${CMAKE_SOURCE_DIR}/external/json)
 
+# Source tree split:
+#   src/game/    — gameplay (main, Game, Stage, Audio)
+#   src/engine/  — node scene-graph + render + core infra (fonts, textures, shaders, tests)
+set(GAME_DIR   ${CMAKE_SOURCE_DIR}/src/game)
+set(ENGINE_DIR ${CMAKE_SOURCE_DIR}/src/engine)
+
 # ============================================================================
 # Desktop target (Windows / Linux) — Vulkan renderer.
 # ============================================================================
@@ -40,18 +46,20 @@ if(NOT WEB)
         HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin" "${Vulkan_INCLUDE_DIRS}/../Bin")
     message(STATUS "GLSLANG_VALIDATOR = ${GLSLANG_VALIDATOR}")
 
-    file(GLOB SPV_FILES "${CMAKE_SOURCE_DIR}/src/shaders/*.spv")
+    file(GLOB SPV_FILES "${ENGINE_DIR}/shaders/*.spv")
     if(NOT SPV_FILES)
-        message(WARNING "No precompiled .spv shaders found in src/shaders/. "
+        message(WARNING "No precompiled .spv shaders found in src/engine/shaders/. "
                         "The Vulkan renderer needs them; run the shaders tool or place .spv files there.")
     endif()
 
     add_executable(tower_vulkan
-        src/main.cpp src/game.cpp src/renderer.cpp src/node.cpp src/font.cpp
-        src/render_iface.h src/Audio.cpp src/vk_util.h)
+        ${GAME_DIR}/main.cpp ${GAME_DIR}/game.cpp ${ENGINE_DIR}/renderer.cpp
+        ${ENGINE_DIR}/node.cpp ${ENGINE_DIR}/font.cpp
+        ${ENGINE_DIR}/render_iface.h ${GAME_DIR}/Audio.cpp ${ENGINE_DIR}/vk_util.h)
 
     target_include_directories(tower_vulkan PRIVATE
-        ${CMAKE_SOURCE_DIR}/src ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
+        ${GAME_DIR} ${ENGINE_DIR}
+        ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
         ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
         $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
     target_link_libraries(tower_vulkan PRIVATE ${Vulkan_LIBRARIES})
@@ -59,8 +67,8 @@ if(NOT WEB)
         target_compile_definitions(tower_vs PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
     endif()
 
-    # Copy runtime resources next to the executable (assets/, data/, shaders/)
-    foreach(RES assets data src/shaders)
+    # Copy runtime resources next to the executable (assets/, data/, src/engine/shaders)
+    foreach(RES assets data)
         if(EXISTS "${CMAKE_SOURCE_DIR}/${RES}")
             add_custom_command(TARGET tower_vulkan POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -68,6 +76,14 @@ if(NOT WEB)
                 COMMENT "Copying ${RES} next to executable")
         endif()
     endforeach()
+    # Shaders live under src/engine/shaders; copy while preserving that relative path
+    # (the Vulkan renderer loads them as "src/shaders/..." relative to CWD).
+    if(EXISTS "${ENGINE_DIR}/shaders")
+        add_custom_command(TARGET tower_vulkan POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${ENGINE_DIR}/shaders" "$<TARGET_FILE_DIR:tower_vulkan>/src/engine/shaders"
+            COMMENT "Copying shaders next to executable")
+    endif()
 
     # Ensure the CJK TTF exists for the runtime font builder. The bundled copy is
     # gitignored (16MB); fall back to the system font if it isn't present.
@@ -105,19 +121,19 @@ if(WEB)
     message(STATUS "TOMS web backend: ${WEB_BACKEND}")
 
     add_executable(tower_vulkan_web
-        src/emscripten_main.cpp
-        src/game.cpp
-        src/renderer_webgl.cpp
-        src/font.cpp
-        src/node.cpp)
+        ${ENGINE_DIR}/emscripten_main.cpp
+        ${GAME_DIR}/game.cpp
+        ${ENGINE_DIR}/renderer_webgl.cpp
+        ${ENGINE_DIR}/font.cpp
+        ${ENGINE_DIR}/node.cpp)
     if(WEB_BACKEND STREQUAL "WebGPU")
-        target_sources(tower_vulkan_web PRIVATE src/renderer_webgpu.cpp)
+        target_sources(tower_vulkan_web PRIVATE ${ENGINE_DIR}/renderer_webgpu.cpp)
         target_compile_definitions(tower_vulkan_web PRIVATE WEBGPU)
         target_compile_options(tower_vulkan_web PRIVATE --use-port=emdawnwebgpu)
     endif()
 
     target_include_directories(tower_vulkan_web PRIVATE
-        ${CMAKE_SOURCE_DIR}/src ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+        ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
     if(WEB_BACKEND STREQUAL "WebGPU")
         set(WEB_LINK "--use-port=emdawnwebgpu -sFETCH=1 -sALLOW_MEMORY_GROWTH=1 \
@@ -144,22 +160,23 @@ endif()
 # Headless unit tests for the Node scene-graph + Object base + Texture (Vulkan).
 # Run: ./node_test  ./object_test  ./log_test  ./texture_test
 # ---------------------------------------------------------------------------
-add_executable(node_test src/node_test.cpp src/node.cpp src/node.h)
-target_include_directories(node_test PRIVATE ${CMAKE_SOURCE_DIR}/src $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+add_executable(node_test ${ENGINE_DIR}/node_test.cpp ${ENGINE_DIR}/node.cpp ${ENGINE_DIR}/node.h)
+target_include_directories(node_test PRIVATE ${ENGINE_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
-add_executable(object_test src/object_test.cpp src/node.cpp src/node.h src/scene.h src/object.h)
-target_include_directories(object_test PRIVATE ${CMAKE_SOURCE_DIR}/src $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+add_executable(object_test ${ENGINE_DIR}/object_test.cpp ${ENGINE_DIR}/node.cpp ${ENGINE_DIR}/node.h ${ENGINE_DIR}/scene.h ${ENGINE_DIR}/object.h)
+target_include_directories(object_test PRIVATE ${ENGINE_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
-add_executable(log_test src/log_test.cpp src/log.h)
-target_include_directories(log_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_executable(log_test ${ENGINE_DIR}/log_test.cpp ${ENGINE_DIR}/log.h)
+target_include_directories(log_test PRIVATE ${ENGINE_DIR})
 
 # texture_test needs a real Vulkan device (lavapipe) + stb_image + the renderer.
 # Vulkan headers are unavailable under the Emscripten (WEB) build, so skip it there.
 if(NOT WEB)
-add_executable(texture_test src/texture_test.cpp src/texture.cpp src/renderer.cpp
-    src/node.cpp src/vk_util.h src/render_iface.h)
+add_executable(texture_test ${ENGINE_DIR}/texture_test.cpp ${ENGINE_DIR}/texture.cpp ${ENGINE_DIR}/renderer.cpp
+    ${ENGINE_DIR}/node.cpp ${ENGINE_DIR}/vk_util.h ${ENGINE_DIR}/render_iface.h)
 target_include_directories(texture_test PRIVATE
-    ${CMAKE_SOURCE_DIR}/src ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
+    ${GAME_DIR} ${ENGINE_DIR}
+    ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
     ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
     $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 target_link_libraries(texture_test PRIVATE ${Vulkan_LIBRARIES})
@@ -167,7 +184,6 @@ endif()
 
 # font_test: build the runtime TTF atlas (stb_truetype) and verify glyph UVs.
 # No Vulkan device needed — pure CPU atlas rasterization + Object base.
-add_executable(font_test src/font_test.cpp src/font.cpp src/object.h)
+add_executable(font_test ${ENGINE_DIR}/font_test.cpp ${ENGINE_DIR}/font.cpp ${ENGINE_DIR}/object.h)
 target_include_directories(font_test PRIVATE
-    ${CMAKE_SOURCE_DIR}/src ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
-
+    ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
