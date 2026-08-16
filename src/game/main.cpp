@@ -263,6 +263,23 @@ int main(int argc, char** argv) {
             g.renderer()->end();
             g.saveFrame(framesDir + "/text_nihao.png");
             TOMS_LOG_INFO("scenario=text done");
+        } else if (mode == "dlgtest") {
+            // Reproduce the dialogue render+nav on the Linux app (same code as web).
+            g.loadStage("stage01");
+            try {
+                g.startDialogue("villager_elder");
+                std::cout << "inDialogue=" << g.inDialogueFlag()
+                          << " dlgNode=" << g.dialogueNode()
+                          << " choices=" << g.dialogueChoiceCount() << "\n";
+                g.draw(); g.saveFrame(framesDir + "/dlg_villager.png");   // the frame that crashes on web if text access throws
+                // gamepad nav: dpad down -> next choice, A -> select
+                g.handleTouch(140, 632, 0);   // dpad down
+                std::cout << "dlgSel after down=" << g.dialogueSel() << "\n";
+                g.handleTouch(914, 660, 0);   // A select
+                std::cout << "inDialogue after A=" << g.inDialogueFlag() << "\n";
+                g.draw(); g.saveFrame(framesDir + "/dlg_after.png");
+            } catch (const std::exception& e) { std::cerr << "EXC dialogue: " << e.what() << "\n"; return 2; }
+            TOMS_LOG_INFO("scenario=dlgtest done");
         } else if (mode == "padtest") {
             // Verify the web gamepad input path (handleTouch): single-step taps + dialogue nav.
             // Right=d3(224,604) Up=d0(140,546) Down=d1(140,632) A=d4(914,660) B=d5(824,598) I=d6(908,554)

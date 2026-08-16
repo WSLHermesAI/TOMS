@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpbxy6lv9b.js
+// include: /tmp/tmp_0fhc3eb.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -209,21 +209,21 @@ Module['FS_createPath']("/data", "stages", true, true);
 
   })();
 
-// end include: /tmp/tmpbxy6lv9b.js
-// include: /tmp/tmpevx0sbz8.js
+// end include: /tmp/tmp_0fhc3eb.js
+// include: /tmp/tmptcsw37ap.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpevx0sbz8.js
-// include: /tmp/tmpefhtnkll.js
+  // end include: /tmp/tmptcsw37ap.js
+// include: /tmp/tmpr_9bikot.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpefhtnkll.js
+  // end include: /tmp/tmpr_9bikot.js
 
 
 var programArgs = [];
@@ -6196,6 +6196,168 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
     };
   var _glGenVertexArrays = _emscripten_glGenVertexArrays;
 
+  var _emscripten_glGetError = () => {
+      var error = GLctx.getError() || GL.lastError;
+      GL.lastError = 0/*GL_NO_ERROR*/;
+      return error;
+    };
+  var _glGetError = _emscripten_glGetError;
+
+  
+  
+  var webglGetExtensions = () => {
+      var exts = getEmscriptenSupportedExtensions(GLctx);
+      exts = exts.concat(exts.map((e) => 'GL_' + e));
+      return exts;
+    };
+  
+  
+  
+  
+  var emscriptenWebGLGet = (name_, p, type) => {
+      // Guard against user passing a null pointer.
+      // Note that GLES2 spec does not say anything about how passing a null
+      // pointer should be treated.  Testing on desktop core GL 3, the application
+      // crashes on glGetIntegerv to a null pointer, but better to report an error
+      // instead of doing anything random.
+      if (!p) {
+        err(`GL_INVALID_VALUE in glGet${type}v(name=${name_}: Function called with null out pointer!`);
+        GL.recordError(0x501 /* GL_INVALID_VALUE */);
+        return;
+      }
+      var ret = undefined;
+      switch (name_) { // Handle a few trivial GLES values
+        case 0x8DFA: // GL_SHADER_COMPILER
+          ret = 1;
+          break;
+        case 0x8DF8: // GL_SHADER_BINARY_FORMATS
+          if (type != 0 && type != 1) {
+            GL.recordError(0x500); // GL_INVALID_ENUM
+            err(`GL_INVALID_ENUM in glGet${type}v(GL_SHADER_BINARY_FORMATS): Invalid parameter type!`);
+          }
+          // Do not write anything to the out pointer, since no binary formats are
+          // supported.
+          return;
+        case 0x87FE: // GL_NUM_PROGRAM_BINARY_FORMATS
+        case 0x8DF9: // GL_NUM_SHADER_BINARY_FORMATS
+          ret = 0;
+          break;
+        case 0x86A2: // GL_NUM_COMPRESSED_TEXTURE_FORMATS
+          // WebGL doesn't have GL_NUM_COMPRESSED_TEXTURE_FORMATS (it's obsolete
+          // since GL_COMPRESSED_TEXTURE_FORMATS returns a JS array that can be
+          // queried for length), so implement it ourselves to allow C++ GLES2
+          // code to get the length.
+          var formats = GLctx.getParameter(0x86A3 /*GL_COMPRESSED_TEXTURE_FORMATS*/);
+          ret = formats ? formats.length : 0;
+          break;
+  
+        case 0x821D: // GL_NUM_EXTENSIONS
+          if (GL.currentContext.version < 2) {
+            // Calling GLES3/WebGL2 function with a GLES2/WebGL1 context
+            GL.recordError(0x502 /* GL_INVALID_OPERATION */);
+            return;
+          }
+          ret = webglGetExtensions().length;
+          break;
+        case 0x821B: // GL_MAJOR_VERSION
+        case 0x821C: // GL_MINOR_VERSION
+          if (GL.currentContext.version < 2) {
+            GL.recordError(0x500); // GL_INVALID_ENUM
+            return;
+          }
+          ret = name_ == 0x821B ? 3 : 0; // return version 3.0
+          break;
+      }
+  
+      if (ret === undefined) {
+        var result = GLctx.getParameter(name_);
+        switch (typeof result) {
+          case 'number':
+            ret = result;
+            break;
+          case 'boolean':
+            ret = result ? 1 : 0;
+            break;
+          case 'string':
+            GL.recordError(0x500); // GL_INVALID_ENUM
+            err(`GL_INVALID_ENUM in glGet${type}v(${name}) on a name which returns a string!`);
+            return;
+          case 'object':
+            if (result === null) {
+              // null is a valid result for some (e.g., which buffer is bound -
+              // perhaps nothing is bound), but otherwise can mean an invalid
+              // name_, which we need to report as an error
+              switch (name_) {
+                case 0x8894: // ARRAY_BUFFER_BINDING
+                case 0x8B8D: // CURRENT_PROGRAM
+                case 0x8895: // ELEMENT_ARRAY_BUFFER_BINDING
+                case 0x8CA6: // FRAMEBUFFER_BINDING or DRAW_FRAMEBUFFER_BINDING
+                case 0x8CA7: // RENDERBUFFER_BINDING
+                case 0x8069: // TEXTURE_BINDING_2D
+                case 0x85B5: // WebGL 2 GL_VERTEX_ARRAY_BINDING, or WebGL 1 extension OES_vertex_array_object GL_VERTEX_ARRAY_BINDING_OES
+                case 0x8F36: // COPY_READ_BUFFER_BINDING or COPY_READ_BUFFER
+                case 0x8F37: // COPY_WRITE_BUFFER_BINDING or COPY_WRITE_BUFFER
+                case 0x88ED: // PIXEL_PACK_BUFFER_BINDING
+                case 0x88EF: // PIXEL_UNPACK_BUFFER_BINDING
+                case 0x8CAA: // READ_FRAMEBUFFER_BINDING
+                case 0x8919: // SAMPLER_BINDING
+                case 0x8C1D: // TEXTURE_BINDING_2D_ARRAY
+                case 0x806A: // TEXTURE_BINDING_3D
+                case 0x8E25: // TRANSFORM_FEEDBACK_BINDING
+                case 0x8C8F: // TRANSFORM_FEEDBACK_BUFFER_BINDING
+                case 0x8A28: // UNIFORM_BUFFER_BINDING
+                case 0x8514: { // TEXTURE_BINDING_CUBE_MAP
+                  ret = 0;
+                  break;
+                }
+                default: {
+                  GL.recordError(0x500); // GL_INVALID_ENUM
+                  err(`GL_INVALID_ENUM in glGet${type}v(${name}) and it returns null!`);
+                  return;
+                }
+              }
+            } else if (result instanceof Float32Array ||
+                       result instanceof Uint32Array ||
+                       result instanceof Int32Array ||
+                       result instanceof Array) {
+              for (var i = 0; i < result.length; ++i) {
+                switch (type) {
+                  case 0: HEAP32[(((p)+(i*4))>>2)] = result[i]; break;
+                  case 2: HEAPF32[(((p)+(i*4))>>2)] = result[i]; break;
+                  case 4: HEAP8[(p)+(i)] = result[i] ? 1 : 0; break;
+                  default: abort(`internal glGet error, bad type: ${type}`);
+                }
+              }
+              return;
+            } else {
+              try {
+                ret = result.name | 0;
+              } catch(e) {
+                GL.recordError(0x500); // GL_INVALID_ENUM
+                err(`GL_INVALID_ENUM in glGet${type}v: Unknown object returned from WebGL getParameter(${name_})! (error: ${e})`);
+                return;
+              }
+            }
+            break;
+          default:
+            GL.recordError(0x500); // GL_INVALID_ENUM
+            err(`GL_INVALID_ENUM in glGet${type}v: Native code calling glGet${type}v(${name_}) and it returns ${result} of type ${typeof(result)}!`);
+            return;
+        }
+      }
+  
+      switch (type) {
+        case 1: writeI53ToI64(p, ret); break;
+        case 0: HEAP32[((p)>>2)] = ret; break;
+        case 2:   HEAPF32[((p)>>2)] = ret; break;
+        case 4: HEAP8[p] = ret ? 1 : 0; break;
+        default: abort(`internal glGet error, bad type: ${type}`);
+      }
+    };
+  
+  var _emscripten_glGetIntegerv = (name_, p) => emscriptenWebGLGet(name_, p, 0);
+  var _glGetIntegerv = _emscripten_glGetIntegerv;
+
   
   var _emscripten_glGetProgramiv = (program, pname, p) => {
       if (!p) {
@@ -7350,7 +7512,6 @@ if (Module['printErr']) err = Module['printErr'];
   'getSocketAddress',
   'FS_mkdirTree',
   '_setNetworkCallback',
-  'emscriptenWebGLGet',
   'emscriptenWebGLGetUniform',
   'emscriptenWebGLGetVertexAttrib',
   '__glGetActiveAttribOrUniform',
@@ -7603,6 +7764,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'webgl_enable_EXT_clip_control',
   'webgl_enable_WEBGL_polygon_mode',
   'GL',
+  'emscriptenWebGLGet',
   'computeUnpackAlignedImageSize',
   'colorChannelsInGlTextureFormat',
   'emscriptenWebGLGetTexPixelData',
@@ -7836,6 +7998,10 @@ var wasmImports = {
   glGenTextures: _glGenTextures,
   /** @export */
   glGenVertexArrays: _glGenVertexArrays,
+  /** @export */
+  glGetError: _glGetError,
+  /** @export */
+  glGetIntegerv: _glGetIntegerv,
   /** @export */
   glGetProgramiv: _glGetProgramiv,
   /** @export */

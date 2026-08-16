@@ -44,10 +44,16 @@ GLuint WebGLRenderer::compile(const char* src, GLenum kind) {
 }
 
 GLuint WebGLRenderer::makeTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, bool flip) {
+    if (rgba.empty() || w == 0 || h == 0) return 0;   // guard: never upload zero-size/empty
+    // Clamp to the context's max texture size so a grown font atlas can't request
+    // an impossible texture (which would GL-error -> abortOnError -> page abort).
+    GLint maxTex = 4096; glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTex);
+    uint32_t cap = (maxTex > 0) ? (uint32_t)maxTex : 4096;
+    uint32_t ww = std::min(w, cap), hh = std::min(h, cap);
     GLuint t; glGenTextures(1, &t);
     glBindTexture(GL_TEXTURE_2D, t);
     glPixelStorei(GL_UNPACK_FLIP_Y_WEBGL, flip ? GL_TRUE : GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)ww, (GLsizei)hh, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
     glPixelStorei(GL_UNPACK_FLIP_Y_WEBGL, GL_FALSE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -95,8 +101,12 @@ void WebGLRenderer::loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_
 // "^ v < >"). Without this the GPU texture stays stale while font_->atlas() grew,
 // so the new glyph samples garbage -> "weird characters". Mirrors Renderer (Vulkan).
 void WebGLRenderer::updateFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) {
-    if (fontTex) glDeleteTextures(1,&fontTex);
-    fontTex = makeTexture(px, w, h, false);
+    if (px.empty() || w == 0 || h == 0) return;          // nothing to upload -> keep old texture
+    GLuint newTex = makeTexture(px, w, h, false);
+    if (!newTex) return;                                  // upload failed -> keep old texture (no abort)
+    if (fontTex) glDeleteTextures(1, &fontTex);
+    fontTex = newTex;
+    glGetError();                                         // swallow pending GL error so abortOnError won't fire
 }
 
 void WebGLRenderer::begin() { sprites.clear(); texts.clear(); }

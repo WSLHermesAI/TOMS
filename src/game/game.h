@@ -73,6 +73,8 @@ public:
     void movePlayer(int dx, int dy);
     void interact();                       // talk to NPC / trigger dialogue on current cell
     void chooseDialogue(int idx);          // pick a dialogue choice
+    void startDialogue(const std::string& npc);   // open an NPC dialogue (public for tests)
+    void enterNode(const std::string& node);      // jump to a dialogue node (public for tests)
     void startCombat(const EnemyInst& e);
     // inventory UI (9-grid, extendable)
     void toggleInventory();
@@ -86,6 +88,7 @@ public:
     bool inDialogueFlag() const { return inDialogue; }
     int dialogueSel() const { return dlgSel; }
     int dialogueChoiceCount() const { return (int)dlgChoices.size(); }
+    std::string dialogueNode() const { return dlgNode; }
     bool storeModal() const { return storeOpen || storeUnlockDlg; }  // store overlay (incl. unlock dialog) is the topmost modal
     // store system
     bool storeUnlocked() const { return storeUnlocked_; }
@@ -117,9 +120,6 @@ private:
     int spriteLayer(const std::string& id) const; // index into sprite grid
     void applyItem(const std::string& id);
     void resolveCombatRound();
-    void startDialogue(const std::string& npc);
-    void enterNode(const std::string& node);
-    // inventory UI drawing + helpers
     void drawInventory();
     int spriteForItem(const std::string& id) const;
     std::string itemName(const std::string& id) const;

@@ -84,10 +84,10 @@ bool Game::loadAssets(const std::string& assetDir) {
         std::vector<std::string> jsonFiles;
         for (auto& p : std::filesystem::recursive_directory_iterator(dataDir + "/../data"))
             if (p.path().extension() == ".json") jsonFiles.push_back(p.path().string());
-        std::string hud = "魔法塔Tower of the Sorcerer HP ATK DEF LV EXP GOLD KEY 戰鬥 你 敵人 鑰匙 對話 選擇 繼續 道具 使用 離開 是 否 "
-                          "▶ （ ） ： ！ ？ 、 。 ， 「 」 『 』 — · + - / 0 1 2 3 4 5 6 7 8 9 : . "
-                          "道具商店 已經開放 你現在可以在關卡中點擊右上角的商店圖示來購買道具 確定 金錢 GOLD 效果 已購買 價格 購買 關閉 X 需要 不足 方向鍵 數字選擇 Enter Esc 生命 藥水 力量 防禦 提升 攻擊 防禦力 "
-                          "^ v < > A B I";  // on-canvas gamepad labels (pre-baked so drawText never triggers a runtime glyph bake)
+        // Comprehensive pre-bake: every glyph the game can display (dialogue +
+        // store + HUD + gamepad labels) so drawText never triggers a runtime
+        // glyph bake -> no mid-frame font-texture re-upload -> no WebGL abort.
+        std::string hud = " #'()*+,-./0123456789:<>@ABCDEFGHIKLOPRSTUVXYZ^_abcdefghijklmnopqrstuvwxy·—…→▶、。「」『』一上下不世並中主久之也了予亡交人什仇仍他付以件份但低住你使來侍便保信們倒值做傳價先入全公共兵具再凋凡出切列別利到則前副力加動勝化匙十升卡印即卷去反取受口可史右司吃合同向否吧吸吾告周命和咒咕唯商啟嘶嚕囚回國圖土在地堅塔墓外大奪女她如姆字存學它守安官定室宮家容寄寶封將對小少展層屬嵌巨巫已希師帶幣平年序店座廳廷弱強形影後徑得從復必怎怕思性怨怪恐恢恨惡意感懂懼成我戰所才打承把拉拯拳持接提揭援損撲撼擇擊擋攀收攻放效救敗教敢散敵數方於明星是晶暗書曾最會有望本村林枚果枯格森樓標機橫檻歐正此歸殿毅每民水永求決沃沉泉法注洞活流消淨深源準滿災為焉煉燃營物獲獻王玩現瓶生用留疊白的目直看真睡知石碎確示祝神祭禁禍福禦穩穴窟立章第等糊紅純紙級終給經緣繼續翅習老者而聖能自與莉莊萊萎著藍藏藥處蝙蝠血行被要見親角解言託記試話該語謝證護變讓買購贈走起足路跳踏身軍軸輕輪迎送透這逝進遇道達選還那重量金錢鍵鑰鑲長門閉開閣關防降陛除雙離零需露靈頂須頭願驗骷髏體高鬥魂魔麼黃黎黑點！（），：；？";
         std::vector<uint32_t> cps = Font::collectFromFiles(jsonFiles, hud);
         font_ = std::make_shared<Font>("game-font");
         if (!font_->buildFromFile(ttf, cps, 32, 24)) {
