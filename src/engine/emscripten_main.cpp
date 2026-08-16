@@ -86,6 +86,12 @@ int main() {
 #endif
     emscripten_set_canvas_element_size("#canvas", 1024, 768);
 
+    // Make the 1024x768 canvas FIT the viewport (preserve 4:3) instead of overflowing.
+    // The drawing buffer stays 1024x768; only the CSS display size changes. We measure
+    // the space actually available BELOW the Emscripten status banner so the canvas
+    // never overflows/clips, and center it horizontally.
+    EM_ASM("function tomsFit(){var c=document.getElementById('canvas');if(!c)return;var r=c.getBoundingClientRect();var top=(r.top>0)?r.top:0;var availH=window.innerHeight-top-4;var availW=window.innerWidth-4;var s=Math.min(availW/1024,availH/768);if(s<=0)s=0.1;var cw=Math.floor(1024*s),ch=Math.floor(768*s);c.style.width=cw+'px';c.style.height=ch+'px';c.style.display='block';c.style.margin='0 auto';}window.addEventListener('resize',tomsFit);window.addEventListener('load',tomsFit);requestAnimationFrame(tomsFit);tomsFit();");
+
     emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, 1, keyCb);
 
     // Assets: when built with --preload-file assets --preload-file data, the bundle

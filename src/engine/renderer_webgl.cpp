@@ -73,7 +73,10 @@ void WebGLRenderer::loadSprites(const std::vector<std::vector<uint8_t>>& layers,
     uint32_t AW=0, AH=0; std::vector<uint8_t> atlas; spriteCols=9;
     if (!packAtlas(layers, sw, sh, spriteCols, atlas, AW, AH)) { fprintf(stderr,"[gl] sprite pack fail\n"); return; }
     if (spriteTex) glDeleteTextures(1,&spriteTex);
-    spriteTex = makeTexture(atlas, AW, AH, true);
+    // Sprite atlas UVs are top-left origin (packAtlas + Game::spriteUV), same as the
+    // Vulkan path. Do NOT flip, otherwise every sprite samples a vertically mirrored
+    // cell (wrong/garbled textures — e.g. HUD icons and enemies show the wrong glyph).
+    spriteTex = makeTexture(atlas, AW, AH, false);
 }
 
 void WebGLRenderer::loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) {

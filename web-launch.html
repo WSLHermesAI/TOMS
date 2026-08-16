@@ -2,31 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>TOMS — WebGL2 / WebGPU switch</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Tower of the Sorcerer — WebGL2</title>
 <style>
-  body { font-family: system-ui, sans-serif; background:#1b1b1f; color:#eee; margin:2rem; }
-  h1 { font-size:1.4rem; }
-  .row { display:flex; gap:1rem; margin:1rem 0; }
-  a.btn { display:inline-block; padding:.8rem 1.4rem; border-radius:8px; text-decoration:none;
-          font-weight:600; color:#fff; }
-  .gl { background:#2a6df4; } .gpu { background:#d24b8f; }
-  code { background:#000; padding:.1rem .4rem; border-radius:4px; }
-  .note { color:#aaa; font-size:.85rem; max-width:60ch; }
+  html,body{margin:0;height:100%;background:#000;overflow:hidden}
+  iframe{width:100%;height:100%;border:0;display:block}
 </style>
 </head>
 <body>
-  <h1>Tower of the Sorcerer — browser backend switch</h1>
-  <p class="note">Both builds are real, separately-compiled Emscripten outputs of the same
-  game (same <code>IRenderer</code> interface). Open each in a browser tab and screenshot.</p>
-  <div class="row">
-    <a class="btn gl"  href="web-gl/tower_vulkan_web.html"  target="_blank">▶ WebGL2 build</a>
-    <a class="btn gpu" href="web-gpu/tower_vulkan_web.html" target="_blank">▶ WebGPU build</a>
-  </div>
-  <p class="note">WebGL2: universal browser support. WebGPU: Chrome/Edge (experimental in
-  Emscripten 6.0.6, via <code>--use-port=emdawnwebgpu</code>). If a browser lacks WebGPU,
-  the WebGPU tab will log an adapter/device error in the console.</p>
-  <p class="note">Rebuild from source:<br>
-  WebGL2: <code>emcmake cmake -S . -B build-web -DWEB=ON &amp;&amp; cmake --build build-web -j4</code><br>
-  WebGPU: <code>emcmake cmake -S . -B build-webgpu -DWEB=ON -DWEB_BACKEND=WebGPU &amp;&amp; cmake --build build-webgpu -j4</code></p>
+<iframe src="tower_vulkan_web.html" allow="cross-origin-isolated" allowfullscreen></iframe>
 </body>
 </html>
