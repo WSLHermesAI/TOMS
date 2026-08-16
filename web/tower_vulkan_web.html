@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en-us">
   <head>
+    <script>window.TOMS_VERSION='06066c2-20260817014648';</script>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Emscripten-Generated Code</title>
@@ -166,6 +167,10 @@ canvas.emscripten { border: 0px none; background-color: black; }
       };
 
       var Module = {
+        locateFile: function(p, prefix) {
+          if ((p.endsWith('.wasm') || p.endsWith('.data')) && window.TOMS_VERSION) return (prefix||'') + p + '?v=' + window.TOMS_VERSION;
+          return (prefix||'') + p;
+        },
         print(...args) {
           console.log(...args);
           // These replacements are necessary if you render to raw HTML

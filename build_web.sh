@@ -65,6 +65,31 @@ build_one() {
         web/tower_vulkan_web.data "$outdir/"
   echo "[build_web] $backend artifacts -> $outdir/:"
   ls -la "$outdir"
+
+  # ---- cache-busting: stamp a version + locateFile into the HTML ----
+  # A normal reload then always fetches fresh .wasm/.data (no hard-refresh).
+  local VER="$(git rev-parse --short HEAD 2>/dev/null || echo dev)-$(date +%Y%m%d%H%M%S)"
+  for html in "$outdir/tower_vulkan_web.html" "web/tower_vulkan_web.html"; do
+    [ -f "$html" ] || continue
+    python3 - "$html" "$VER" <<'PY'
+import sys, re
+html, ver = sys.argv[1], sys.argv[2]
+s = open(html, encoding='utf-8').read()
+# 1) define window.TOMS_VERSION early (in <head> so it exists before Module)
+tag = '<script>window.TOMS_VERSION=%r;</script>' % ver
+if 'window.TOMS_VERSION' not in s:
+    s = s.replace('<head>', '<head>\n    '+tag, 1)
+# 2) inject locateFile into the Module object (right after "var Module = {")
+if 'locateFile' not in s:
+    s = s.replace('var Module = {',
+        'var Module = {\n        locateFile: function(p, prefix) {\n'
+        '          if ((p.endsWith(\'.wasm\') || p.endsWith(\'.data\')) && window.TOMS_VERSION) '
+        'return (prefix||\'\') + p + \'?v=\' + window.TOMS_VERSION;\n'
+        '          return (prefix||\'\') + p;\n        },', 1)
+open(html, 'w', encoding='utf-8').write(s)
+print('stamped', html, 'with v='+ver)
+PY
+  done
 }
 
 TARGET="${1:-all}"
