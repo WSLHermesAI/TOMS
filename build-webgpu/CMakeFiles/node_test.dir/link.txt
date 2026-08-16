@@ -1,1 +1,0 @@
-/home/fatming/opt/emsdk/upstream/emscripten/em++ CMakeFiles/node_test.dir/src/node_test.cpp.o CMakeFiles/node_test.dir/src/node.cpp.o -o node_test.js
