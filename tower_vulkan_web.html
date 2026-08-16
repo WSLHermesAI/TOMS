@@ -166,6 +166,11 @@ canvas.emscripten { border: 0px none; background-color: black; }
       };
 
       var Module = {
+        locateFile: function(path, prefix) {
+          // Resolve assets against the page origin root so embedded/iframe use works.
+          return path;
+        },
+
         print(...args) {
           console.log(...args);
           // These replacements are necessary if you render to raw HTML
