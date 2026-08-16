@@ -149,7 +149,7 @@ private:
     // inventory UI state
     bool invOpen = false;
     int invSel = 0;            // selected slot index
-    bool gpTouch = false;      // set true on first touch; gates the on-canvas gamepad
+    bool gpOn = true;         // on-canvas gamepad: ALWAYS visible by default; toggle button hides it
     // font atlas map: codepoint -> uv rect
     std::map<uint32_t, std::array<float,4>> fontMap;
     std::shared_ptr<Font> font_;   // runtime TTF atlas (replaces font_atlas.png)

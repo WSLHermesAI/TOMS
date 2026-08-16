@@ -447,14 +447,24 @@ static const GPadBtn GP[] = {
     {4, 880,626, 68,68, "A", 0.30f,0.70f,0.35f,0.80f, 0, 0}, // interact / use
     {5, 792,566, 64,64, "B", 0.75f,0.30f,0.30f,0.80f, 0, 0}, // drop
     {6, 880,526, 56,56, "I", 0.30f,0.35f,0.75f,0.80f, 0, 0}, // inventory
+    {7,  20,490, 48,48, "P", 0.25f,0.25f,0.25f,0.85f, 0, 0}, // toggle: show/hide gamepad
 };
-static const int GP_N = 7;
+static const int GP_N = 8;
 
 void Game::drawGamepad() {
-    if (!gpTouch) return;
     ren->setNode(NODE_CHAR);
     float t[4] = {1,1,1,1};
-    for (int i = 0; i < GP_N; i++) {
+    // The toggle button is ALWAYS drawn (so the gamepad can be brought back after hiding).
+    {
+        const GPadBtn& b = GP[7];
+        Quad q; q.rect[0]=b.x; q.rect[1]=b.y; q.rect[2]=b.w; q.rect[3]=b.h;
+        q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
+        q.tint[0]=b.col[0]; q.tint[1]=b.col[1]; q.tint[2]=b.col[2]; q.tint[3]=b.col[3];
+        ren->drawSprite(q);
+        drawText(b.label, b.x + b.w/2 - 9, b.y + b.h/2 - 13, 28, t);
+    }
+    if (!gpOn) return;                 // gamepad hidden: only the toggle remains
+    for (int i = 0; i < 7; i++) {
         const GPadBtn& b = GP[i];
         Quad q; q.rect[0]=b.x; q.rect[1]=b.y; q.rect[2]=b.w; q.rect[3]=b.h;
         q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
@@ -465,14 +475,18 @@ void Game::drawGamepad() {
 }
 
 void Game::handleTouch(float px, float py, int phase) {
-    gpTouch = true;
-    if (phase == 2) return;                 // touchend: nothing to do
+    // Guard: ignore invalid coordinates (NaN from a zero-size canvas rect, or
+    // out-of-range). Prevents bad state / out-of-bounds in the hit-test below.
+    if (!(px == px) || !(py == py)) return;            // NaN check
+    if (px < 0 || px > 1024 || py < 0 || py > 768) return;
     int id = -1;
     for (int i = 0; i < GP_N; i++) {
         const GPadBtn& b = GP[i];
         if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) { id = i; break; }
     }
     if (id < 0) return;
+    if (id == 7) { if (phase == 0) gpOn = !gpOn; return; }  // toggle show/hide
+    if (phase == 2) return;                 // touchend on a game button: nothing
     const GPadBtn& b = GP[id];
     if (inventoryOpen()) {
         if (id <= 3) invMoveSel(b.dx, b.dy);
@@ -846,7 +860,8 @@ void Game::storeClick(float x, float y) {
         }
         // buy buttons
         std::vector<float> rects; storeCardRects(rects);
-        for (int i = 0; i < (int)storeItems_.size(); i++) {
+        int nBtn = (int)storeBtnRects_.size() / 4;
+        for (int i = 0; i < nBtn && i < (int)storeItems_.size(); i++) {
             float bx = storeBtnRects_[i*4], by = storeBtnRects_[i*4+1], bw = storeBtnRects_[i*4+2], bh = storeBtnRects_[i*4+3];
             if (x >= bx && x <= bx+bw && y >= by && y <= by+bh) {
                 buyStoreItem(i); return;
