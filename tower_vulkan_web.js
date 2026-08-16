@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpdg7x0w73.js
+// include: /tmp/tmpppi6gyia.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -209,21 +209,21 @@ Module['FS_createPath']("/data", "stages", true, true);
 
   })();
 
-// end include: /tmp/tmpdg7x0w73.js
-// include: /tmp/tmp2l0_xi6d.js
+// end include: /tmp/tmpppi6gyia.js
+// include: /tmp/tmpfiedi5_i.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmp2l0_xi6d.js
-// include: /tmp/tmppl0adbmt.js
+  // end include: /tmp/tmpfiedi5_i.js
+// include: /tmp/tmpapg82m14.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmppl0adbmt.js
+  // end include: /tmp/tmpapg82m14.js
 
 
 var programArgs = [];
@@ -7673,6 +7673,7 @@ var _jsInventory = Module['_jsInventory'] = makeInvalidEarlyAccess('_jsInventory
 var _jsInvDrop = Module['_jsInvDrop'] = makeInvalidEarlyAccess('_jsInvDrop');
 var _jsInvOpen = Module['_jsInvOpen'] = makeInvalidEarlyAccess('_jsInvOpen');
 var _jsModalActive = Module['_jsModalActive'] = makeInvalidEarlyAccess('_jsModalActive');
+var _jsGamepad = Module['_jsGamepad'] = makeInvalidEarlyAccess('_jsGamepad');
 var _downloadFile = Module['_downloadFile'] = makeInvalidEarlyAccess('_downloadFile');
 var _main = Module['_main'] = makeInvalidEarlyAccess('_main');
 var _realloc = makeInvalidEarlyAccess('_realloc');
@@ -7698,6 +7699,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['jsInvDrop'] != 'undefined', 'missing Wasm export: jsInvDrop');
   assert(typeof wasmExports['jsInvOpen'] != 'undefined', 'missing Wasm export: jsInvOpen');
   assert(typeof wasmExports['jsModalActive'] != 'undefined', 'missing Wasm export: jsModalActive');
+  assert(typeof wasmExports['jsGamepad'] != 'undefined', 'missing Wasm export: jsGamepad');
   assert(typeof wasmExports['downloadFile'] != 'undefined', 'missing Wasm export: downloadFile');
   assert(typeof wasmExports['main'] != 'undefined', 'missing Wasm export: main');
   assert(typeof wasmExports['realloc'] != 'undefined', 'missing Wasm export: realloc');
@@ -7719,6 +7721,7 @@ function assignWasmExports(wasmExports) {
   _jsInvDrop = Module['_jsInvDrop'] = createExportWrapper('jsInvDrop', wasmExports['jsInvDrop'], 0);
   _jsInvOpen = Module['_jsInvOpen'] = createExportWrapper('jsInvOpen', wasmExports['jsInvOpen'], 0);
   _jsModalActive = Module['_jsModalActive'] = createExportWrapper('jsModalActive', wasmExports['jsModalActive'], 0);
+  _jsGamepad = Module['_jsGamepad'] = createExportWrapper('jsGamepad', wasmExports['jsGamepad'], 3);
   _downloadFile = Module['_downloadFile'] = createExportWrapper('downloadFile', wasmExports['downloadFile'], 2);
   _main = Module['_main'] = createExportWrapper('main', wasmExports['main'], 2);
   _realloc = createExportWrapper('realloc', wasmExports['realloc'], 2);
