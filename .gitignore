@@ -8,3 +8,6 @@ split_nodes/
 assets/wqy-zenhei.ttc
 build-webgpu/
 web/tower_vulkan_web.*
+
+# emscripten build artifact
+tower_vulkan

@@ -82,7 +82,16 @@ void WebGLRenderer::loadSprites(const std::vector<std::vector<uint8_t>>& layers,
 void WebGLRenderer::loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) {
     if (fontTex) glDeleteTextures(1,&fontTex);
     // Font atlas UVs are top-left origin (same as the Vulkan path). Do NOT flip,
-    // otherwise glyphs render vertically mirrored (garbled CJK).
+    // otherwise glyph cells sample a vertically mirrored row -> wrong characters.
+    fontTex = makeTexture(px, w, h, false);
+}
+
+// Re-upload the font atlas after a realtime glyph bake (Game::drawText calls this
+// when it bakes a previously-unknown codepoint, e.g. the on-canvas gamepad labels
+// "^ v < >"). Without this the GPU texture stays stale while font_->atlas() grew,
+// so the new glyph samples garbage -> "weird characters". Mirrors Renderer (Vulkan).
+void WebGLRenderer::updateFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) {
+    if (fontTex) glDeleteTextures(1,&fontTex);
     fontTex = makeTexture(px, w, h, false);
 }
 

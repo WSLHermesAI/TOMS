@@ -86,7 +86,8 @@ bool Game::loadAssets(const std::string& assetDir) {
             if (p.path().extension() == ".json") jsonFiles.push_back(p.path().string());
         std::string hud = "魔法塔Tower of the Sorcerer HP ATK DEF LV EXP GOLD KEY 戰鬥 你 敵人 鑰匙 對話 選擇 繼續 道具 使用 離開 是 否 "
                           "▶ （ ） ： ！ ？ 、 。 ， 「 」 『 』 — · + - / 0 1 2 3 4 5 6 7 8 9 : . "
-                          "道具商店 已經開放 你現在可以在關卡中點擊右上角的商店圖示來購買道具 確定 金錢 GOLD 效果 已購買 價格 購買 關閉 X 需要 不足 方向鍵 數字選擇 Enter Esc 生命 藥水 力量 防禦 提升 攻擊 防禦力";
+                          "道具商店 已經開放 你現在可以在關卡中點擊右上角的商店圖示來購買道具 確定 金錢 GOLD 效果 已購買 價格 購買 關閉 X 需要 不足 方向鍵 數字選擇 Enter Esc 生命 藥水 力量 防禦 提升 攻擊 防禦力 "
+                          "^ v < > A B I";  // on-canvas gamepad labels (pre-baked so drawText never triggers a runtime glyph bake)
         std::vector<uint32_t> cps = Font::collectFromFiles(jsonFiles, hud);
         font_ = std::make_shared<Font>("game-font");
         if (!font_->buildFromFile(ttf, cps, 32, 24)) {

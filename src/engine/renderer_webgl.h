@@ -16,6 +16,7 @@ public:
     void init(uint32_t w, uint32_t h) override;
     void loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) override;
     void loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) override;
+    void updateFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) override;
     void begin() override;
     void drawSprite(const Quad& q) override;
     void drawText(const Quad& q) override;

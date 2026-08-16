@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp6_dkhqgv.js
+// include: /tmp/tmpzw_w1fp5.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -205,25 +205,25 @@ Module['FS_createPath']("/data", "stages", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 54997}, {"filename": "/assets/font_atlas.png", "start": 54997, "end": 248173}, {"filename": "/assets/sfx/confirm_click.wav", "start": 248173, "end": 254831}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 254831, "end": 262813}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 262813, "end": 283143}, {"filename": "/assets/sfx/get_item.wav", "start": 283143, "end": 302591}, {"filename": "/assets/sfx/player_attack.wav", "start": 302591, "end": 313219}, {"filename": "/assets/sfx/walk.wav", "start": 313219, "end": 319437}, {"filename": "/assets/sprites/bat.png", "start": 319437, "end": 319647}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 319647, "end": 319951}, {"filename": "/assets/sprites/coin.png", "start": 319951, "end": 320174}, {"filename": "/assets/sprites/demon.png", "start": 320174, "end": 320478}, {"filename": "/assets/sprites/door_blue.png", "start": 320478, "end": 320637}, {"filename": "/assets/sprites/door_red.png", "start": 320637, "end": 320796}, {"filename": "/assets/sprites/door_yellow.png", "start": 320796, "end": 320955}, {"filename": "/assets/sprites/exp_up.png", "start": 320955, "end": 321158}, {"filename": "/assets/sprites/floor.png", "start": 321158, "end": 321336}, {"filename": "/assets/sprites/gem_atk.png", "start": 321336, "end": 321589}, {"filename": "/assets/sprites/gem_def.png", "start": 321589, "end": 321846}, {"filename": "/assets/sprites/golem.png", "start": 321846, "end": 322053}, {"filename": "/assets/sprites/key_blue.png", "start": 322053, "end": 322310}, {"filename": "/assets/sprites/key_red.png", "start": 322310, "end": 322563}, {"filename": "/assets/sprites/key_yellow.png", "start": 322563, "end": 322817}, {"filename": "/assets/sprites/manifest.json", "start": 322817, "end": 323393}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 323393, "end": 323608}, {"filename": "/assets/sprites/npc_king.png", "start": 323608, "end": 323799}, {"filename": "/assets/sprites/npc_princess.png", "start": 323799, "end": 324022}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 324022, "end": 324268}, {"filename": "/assets/sprites/npc_villager.png", "start": 324268, "end": 324457}, {"filename": "/assets/sprites/player.png", "start": 324457, "end": 324722}, {"filename": "/assets/sprites/potion_blue.png", "start": 324722, "end": 324956}, {"filename": "/assets/sprites/potion_red.png", "start": 324956, "end": 325190}, {"filename": "/assets/sprites/scroll.png", "start": 325190, "end": 325326}, {"filename": "/assets/sprites/skeleton.png", "start": 325326, "end": 325503}, {"filename": "/assets/sprites/slime.png", "start": 325503, "end": 325760}, {"filename": "/assets/sprites/stairs_down.png", "start": 325760, "end": 325936}, {"filename": "/assets/sprites/stairs_up.png", "start": 325936, "end": 326114}, {"filename": "/assets/sprites/wall.png", "start": 326114, "end": 326251}, {"filename": "/assets/sprites/wraith.png", "start": 326251, "end": 326494}, {"filename": "/assets/wqy-zenhei.ttc", "start": 326494, "end": 17117745}, {"filename": "/data/combat.json", "start": 17117745, "end": 17118327}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17118327, "end": 17118566}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17118566, "end": 17118816}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17118816, "end": 17119110}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17119110, "end": 17119357}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17119357, "end": 17119613}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17119613, "end": 17119863}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17119863, "end": 17120117}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17120117, "end": 17120400}, {"filename": "/data/dialogue/handmaiden.json", "start": 17120400, "end": 17120685}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17120685, "end": 17121044}, {"filename": "/data/dialogue/princess_liora.json", "start": 17121044, "end": 17121318}, {"filename": "/data/dialogue/princess_victory.json", "start": 17121318, "end": 17121867}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17121867, "end": 17122445}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17122445, "end": 17123064}, {"filename": "/data/dialogue/villager_elder.json", "start": 17123064, "end": 17123704}, {"filename": "/data/enemies.json", "start": 17123704, "end": 17124752}, {"filename": "/data/items.json", "start": 17124752, "end": 17126138}, {"filename": "/data/stages/stage01.json", "start": 17126138, "end": 17127395}, {"filename": "/data/stages/stage02.json", "start": 17127395, "end": 17128622}, {"filename": "/data/stages/stage03.json", "start": 17128622, "end": 17129844}, {"filename": "/data/stages/stage04.json", "start": 17129844, "end": 17131094}, {"filename": "/data/stages/stage05.json", "start": 17131094, "end": 17132309}, {"filename": "/data/stages/stage06.json", "start": 17132309, "end": 17133519}, {"filename": "/data/stages/stage07.json", "start": 17133519, "end": 17134761}, {"filename": "/data/stages/stage08.json", "start": 17134761, "end": 17135990}, {"filename": "/data/stages/stage09.json", "start": 17135990, "end": 17137227}, {"filename": "/data/stages/stage10.json", "start": 17137227, "end": 17138461}, {"filename": "/data/stages/stage_11.json", "start": 17138461, "end": 17141076}, {"filename": "/data/story.json", "start": 17141076, "end": 17142408}], "remote_package_size": 17142408});
+    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 54997}, {"filename": "/assets/font_atlas.png", "start": 54997, "end": 248173}, {"filename": "/assets/sfx/confirm_click.wav", "start": 248173, "end": 254831}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 254831, "end": 262813}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 262813, "end": 283143}, {"filename": "/assets/sfx/get_item.wav", "start": 283143, "end": 302591}, {"filename": "/assets/sfx/player_attack.wav", "start": 302591, "end": 313219}, {"filename": "/assets/sfx/walk.wav", "start": 313219, "end": 319437}, {"filename": "/assets/sprites/bat.png", "start": 319437, "end": 319647}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 319647, "end": 319951}, {"filename": "/assets/sprites/coin.png", "start": 319951, "end": 320174}, {"filename": "/assets/sprites/demon.png", "start": 320174, "end": 320478}, {"filename": "/assets/sprites/door_blue.png", "start": 320478, "end": 320637}, {"filename": "/assets/sprites/door_red.png", "start": 320637, "end": 320796}, {"filename": "/assets/sprites/door_yellow.png", "start": 320796, "end": 320955}, {"filename": "/assets/sprites/exp_up.png", "start": 320955, "end": 321158}, {"filename": "/assets/sprites/floor.png", "start": 321158, "end": 321336}, {"filename": "/assets/sprites/gem_atk.png", "start": 321336, "end": 321589}, {"filename": "/assets/sprites/gem_def.png", "start": 321589, "end": 321846}, {"filename": "/assets/sprites/golem.png", "start": 321846, "end": 322053}, {"filename": "/assets/sprites/key_blue.png", "start": 322053, "end": 322310}, {"filename": "/assets/sprites/key_red.png", "start": 322310, "end": 322563}, {"filename": "/assets/sprites/key_yellow.png", "start": 322563, "end": 322817}, {"filename": "/assets/sprites/manifest.json", "start": 322817, "end": 323393}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 323393, "end": 323608}, {"filename": "/assets/sprites/npc_king.png", "start": 323608, "end": 323799}, {"filename": "/assets/sprites/npc_princess.png", "start": 323799, "end": 324022}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 324022, "end": 324268}, {"filename": "/assets/sprites/npc_villager.png", "start": 324268, "end": 324457}, {"filename": "/assets/sprites/player.png", "start": 324457, "end": 324722}, {"filename": "/assets/sprites/potion_blue.png", "start": 324722, "end": 324956}, {"filename": "/assets/sprites/potion_red.png", "start": 324956, "end": 325190}, {"filename": "/assets/sprites/scroll.png", "start": 325190, "end": 325326}, {"filename": "/assets/sprites/skeleton.png", "start": 325326, "end": 325503}, {"filename": "/assets/sprites/slime.png", "start": 325503, "end": 325760}, {"filename": "/assets/sprites/stairs_down.png", "start": 325760, "end": 325936}, {"filename": "/assets/sprites/stairs_up.png", "start": 325936, "end": 326114}, {"filename": "/assets/sprites/wall.png", "start": 326114, "end": 326251}, {"filename": "/assets/sprites/wraith.png", "start": 326251, "end": 326494}, {"filename": "/assets/wqy-zenhei.ttc", "start": 326494, "end": 17117745}, {"filename": "/data/combat.json", "start": 17117745, "end": 17118327}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17118327, "end": 17118566}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17118566, "end": 17118816}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17118816, "end": 17119110}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17119110, "end": 17119357}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17119357, "end": 17119613}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17119613, "end": 17119863}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17119863, "end": 17120117}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17120117, "end": 17120400}, {"filename": "/data/dialogue/handmaiden.json", "start": 17120400, "end": 17120685}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17120685, "end": 17121044}, {"filename": "/data/dialogue/princess_liora.json", "start": 17121044, "end": 17121318}, {"filename": "/data/dialogue/princess_victory.json", "start": 17121318, "end": 17121867}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17121867, "end": 17122445}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17122445, "end": 17123064}, {"filename": "/data/dialogue/villager_elder.json", "start": 17123064, "end": 17123704}, {"filename": "/data/enemies.json", "start": 17123704, "end": 17124752}, {"filename": "/data/items.json", "start": 17124752, "end": 17126138}, {"filename": "/data/stages/stage01.json", "start": 17126138, "end": 17127395}, {"filename": "/data/stages/stage02.json", "start": 17127395, "end": 17128622}, {"filename": "/data/stages/stage03.json", "start": 17128622, "end": 17129844}, {"filename": "/data/stages/stage04.json", "start": 17129844, "end": 17131094}, {"filename": "/data/stages/stage05.json", "start": 17131094, "end": 17132309}, {"filename": "/data/stages/stage06.json", "start": 17132309, "end": 17133519}, {"filename": "/data/stages/stage07.json", "start": 17133519, "end": 17134761}, {"filename": "/data/stages/stage08.json", "start": 17134761, "end": 17135990}, {"filename": "/data/stages/stage09.json", "start": 17135990, "end": 17137227}, {"filename": "/data/stages/stage10.json", "start": 17137227, "end": 17138461}, {"filename": "/data/stages/stage_11.json", "start": 17138461, "end": 17141076}, {"filename": "/data/store.json", "start": 17141076, "end": 17142345}, {"filename": "/data/story.json", "start": 17142345, "end": 17143677}], "remote_package_size": 17143677});
 
   })();
 
-// end include: /tmp/tmp6_dkhqgv.js
-// include: /tmp/tmpzttifrju.js
+// end include: /tmp/tmpzw_w1fp5.js
+// include: /tmp/tmp0q_fezc9.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpzttifrju.js
-// include: /tmp/tmpagsmnlh9.js
+  // end include: /tmp/tmp0q_fezc9.js
+// include: /tmp/tmp9wh23hp9.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpagsmnlh9.js
+  // end include: /tmp/tmp9wh23hp9.js
 
 
 var programArgs = [];
@@ -427,6 +427,10 @@ function assert(condition, text) {
 
 // We used to include malloc/free by default in the past. Show a helpful error in
 // builds with assertions.
+function _free() {
+  // Show a helpful error since we used to include free by default in the past.
+  abort('free() called but not included in the build - add `_free` to EXPORTED_FUNCTIONS');
+}
 
 /**
  * Indicates whether filename is delivered via file protocol (as opposed to http/https)
@@ -654,7 +658,7 @@ function updateMemoryViews() {
   HEAPF32 = new Float32Array(b);
   HEAPF64 = new Float64Array(b);
   HEAP64 = new BigInt64Array(b);
-  
+  HEAPU64 = new BigUint64Array(b);
 }
 
 // include: memoryprofiler.js
@@ -4255,8 +4259,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
     }
   }
 
-  var _emscripten_has_asyncify = () => 0;
-
   var _emscripten_is_main_browser_thread = () =>
       !ENVIRONMENT_IS_WORKER;
 
@@ -4338,6 +4340,28 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       }
       err(`Failed to grow the heap from ${oldSize} bytes to ${newSize} bytes, not enough memory!`);
       return false;
+    };
+
+  
+  
+  
+  
+  /** @type {!Uint16Array} */
+  var HEAPU16;
+  
+  
+  
+  /** @type {!Float32Array} */
+  var HEAPF32;
+  
+  /** @type {!Float64Array} */
+  var HEAPF64;
+  
+  
+  /** not-@type {!BigUint64Array} */
+  var HEAPU64;
+  var _emscripten_run_script = (ptr) => {
+      eval(UTF8ToString(ptr));
     };
 
   var maybeCStringToJsString = (cString) => {
@@ -4520,8 +4544,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
   
   
-  /** @type {!Float64Array} */
-  var HEAPF64;
   var registerKeyEventCallback = (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
       var eventSize = 160;
       JSEvents.keyEvent ||= _malloc(eventSize);
@@ -5399,1003 +5421,425 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
     return fetch;
   }
 
+  var GLctx;
   
+  var webgl_enable_ANGLE_instanced_arrays = (ctx) => {
+      // Extension available in WebGL 1 from Firefox 26 and Google Chrome 30 onwards. Core feature in WebGL 2.
+      var ext = ctx.getExtension('ANGLE_instanced_arrays');
+      // Because this extension is a core function in WebGL 2, assign the extension entry points in place of
+      // where the core functions will reside in WebGL 2. This way the calling code can call these without
+      // having to dynamically branch depending if running against WebGL 1 or WebGL 2.
+      if (ext) {
+        ctx['vertexAttribDivisor'] = (index, divisor) => ext['vertexAttribDivisorANGLE'](index, divisor);
+        ctx['drawArraysInstanced'] = (mode, first, count, primcount) => ext['drawArraysInstancedANGLE'](mode, first, count, primcount);
+        ctx['drawElementsInstanced'] = (mode, count, type, indices, primcount) => ext['drawElementsInstancedANGLE'](mode, count, type, indices, primcount);
+        return 1;
+      }
+    };
   
+  var webgl_enable_OES_vertex_array_object = (ctx) => {
+      // Extension available in WebGL 1 from Firefox 25 and WebKit 536.28/desktop Safari 6.0.3 onwards. Core feature in WebGL 2.
+      var ext = ctx.getExtension('OES_vertex_array_object');
+      if (ext) {
+        ctx['createVertexArray'] = () => ext['createVertexArrayOES']();
+        ctx['deleteVertexArray'] = (vao) => ext['deleteVertexArrayOES'](vao);
+        ctx['bindVertexArray'] = (vao) => ext['bindVertexArrayOES'](vao);
+        ctx['isVertexArray'] = (vao) => ext['isVertexArrayOES'](vao);
+        return 1;
+      }
+    };
   
+  var webgl_enable_WEBGL_draw_buffers = (ctx) => {
+      // Extension available in WebGL 1 from Firefox 28 onwards. Core feature in WebGL 2.
+      var ext = ctx.getExtension('WEBGL_draw_buffers');
+      if (ext) {
+        ctx['drawBuffers'] = (n, bufs) => ext['drawBuffersWEBGL'](n, bufs);
+        return 1;
+      }
+    };
   
+  var webgl_enable_WEBGL_draw_instanced_base_vertex_base_instance = (ctx) =>
+      // Closure is expected to be allowed to minify the '.dibvbi' property, so not accessing it quoted.
+      !!(ctx.dibvbi = ctx.getExtension('WEBGL_draw_instanced_base_vertex_base_instance'));
   
+  var webgl_enable_WEBGL_multi_draw_instanced_base_vertex_base_instance = (ctx) => {
+      // Closure is expected to be allowed to minify the '.mdibvbi' property, so not accessing it quoted.
+      return !!(ctx.mdibvbi = ctx.getExtension('WEBGL_multi_draw_instanced_base_vertex_base_instance'));
+    };
   
+  var webgl_enable_EXT_polygon_offset_clamp = (ctx) =>
+      !!(ctx.extPolygonOffsetClamp = ctx.getExtension('EXT_polygon_offset_clamp'));
   
+  var webgl_enable_EXT_clip_control = (ctx) =>
+      !!(ctx.extClipControl = ctx.getExtension('EXT_clip_control'));
   
+  var webgl_enable_WEBGL_polygon_mode = (ctx) =>
+      !!(ctx.webglPolygonMode = ctx.getExtension('WEBGL_polygon_mode'));
   
+  var webgl_enable_WEBGL_multi_draw = (ctx) =>
+      // Closure is expected to be allowed to minify the '.multiDrawWebgl' property, so not accessing it quoted.
+      !!(ctx.multiDrawWebgl = ctx.getExtension('WEBGL_multi_draw'));
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  var stackAlloc = (sz) => __emscripten_stack_alloc(sz);
-  var stringToUTF8OnStack = (str) => {
-      var size = lengthBytesUTF8(str) + 1;
-      var ret = stackAlloc(size);
-      stringToUTF8(str, ret, size);
-      return ret;
+  var getEmscriptenSupportedExtensions = (ctx) => {
+      // Restrict the list of advertised extensions to those that we actually
+      // support.
+      var supportedExtensions = [
+        // WebGL 1 extensions
+        'ANGLE_instanced_arrays',
+        'EXT_blend_minmax',
+        'EXT_disjoint_timer_query',
+        'EXT_frag_depth',
+        'EXT_shader_texture_lod',
+        'EXT_sRGB',
+        'OES_element_index_uint',
+        'OES_fbo_render_mipmap',
+        'OES_standard_derivatives',
+        'OES_texture_float',
+        'OES_texture_half_float',
+        'OES_texture_half_float_linear',
+        'OES_vertex_array_object',
+        'WEBGL_color_buffer_float',
+        'WEBGL_depth_texture',
+        'WEBGL_draw_buffers',
+        // WebGL 2 extensions
+        'EXT_color_buffer_float',
+        'EXT_conservative_depth',
+        'EXT_disjoint_timer_query_webgl2',
+        'EXT_texture_norm16',
+        'NV_shader_noperspective_interpolation',
+        'WEBGL_clip_cull_distance',
+        // WebGL 1 and WebGL 2 extensions
+        'EXT_clip_control',
+        'EXT_color_buffer_half_float',
+        'EXT_depth_clamp',
+        'EXT_float_blend',
+        'EXT_polygon_offset_clamp',
+        'EXT_texture_compression_bptc',
+        'EXT_texture_compression_rgtc',
+        'EXT_texture_filter_anisotropic',
+        'KHR_parallel_shader_compile',
+        'OES_texture_float_linear',
+        'WEBGL_blend_func_extended',
+        'WEBGL_compressed_texture_astc',
+        'WEBGL_compressed_texture_etc',
+        'WEBGL_compressed_texture_etc1',
+        'WEBGL_compressed_texture_s3tc',
+        'WEBGL_compressed_texture_s3tc_srgb',
+        'WEBGL_debug_renderer_info',
+        'WEBGL_debug_shaders',
+        'WEBGL_lose_context',
+        'WEBGL_multi_draw',
+        'WEBGL_polygon_mode'
+      ];
+      // .getSupportedExtensions() can return null if context is lost, so coerce to empty array.
+      return ctx.getSupportedExtensions()?.filter(ext => supportedExtensions.includes(ext)) ?? [];
     };
   
   
   
   
-  
-  
-  
-  
-  
-  
-  
-  
-  /** @type {!Float32Array} */
-  var HEAPF32;
-  
-  var WebGPU = {
-  Internals:{
-  jsObjects:[],
-  jsObjectInsert:(ptr, jsObject) => {
-          ptr >>>= 0
-          WebGPU.Internals.jsObjects[ptr] = jsObject;
-        },
-  bufferOnUnmaps:[],
-  futures:[],
-  futureInsert:(futureId, promise) => {
-        },
+  var GL = {
+  counter:1,
+  buffers:[],
+  programs:[],
+  framebuffers:[],
+  renderbuffers:[],
+  textures:[],
+  shaders:[],
+  vaos:[],
+  contexts:[],
+  offscreenCanvases:{
   },
-  getJsObject:(ptr) => {
-        if (!ptr) return undefined;
-        ptr >>>= 0
-        assert(ptr in WebGPU.Internals.jsObjects);
-        return WebGPU.Internals.jsObjects[ptr];
-      },
-  importJsAdapter:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateAdapter(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsBindGroup:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateBindGroup(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsBindGroupLayout:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateBindGroupLayout(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsBuffer:(buffer, parentPtr = 0) => {
-        // At the moment, we do not allow importing pending buffers.
-        assert(buffer.mapState === "unmapped");
-        var bufferPtr = _emwgpuImportBuffer(parentPtr);
-        WebGPU.Internals.jsObjectInsert(bufferPtr, buffer);
-        return bufferPtr;
-      },
-  importJsCommandBuffer:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateCommandBuffer(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsCommandEncoder:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateCommandEncoder(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsComputePassEncoder:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateComputePassEncoder(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsComputePipeline:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateComputePipeline(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsDevice:(device, parentPtr = 0) => {
-        var queuePtr = _emwgpuCreateQueue(parentPtr);
-        var devicePtr = _emwgpuCreateDevice(parentPtr, queuePtr);
-        WebGPU.Internals.jsObjectInsert(queuePtr, device.queue);
-        WebGPU.Internals.jsObjectInsert(devicePtr, device);
-        return devicePtr;
-      },
-  importJsExternalTexture:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateExternalTexture(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsPipelineLayout:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreatePipelineLayout(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsQuerySet:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateQuerySet(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsQueue:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateQueue(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsRenderBundle:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateRenderBundle(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsRenderBundleEncoder:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateRenderBundleEncoder(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsRenderPassEncoder:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateRenderPassEncoder(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsRenderPipeline:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateRenderPipeline(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsSampler:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateSampler(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsShaderModule:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateShaderModule(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsSurface:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateSurface(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsTexture:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateTexture(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  importJsTextureView:(obj, parentPtr = 0) => {
-            var ptr = _emwgpuCreateTextureView(parentPtr);
-            WebGPU.Internals.jsObjects[ptr] = obj;
-            return ptr;
-          },
-  errorCallback:(callback, type, message, userdata) => {
-        var sp = stackSave();
-        var messagePtr = stringToUTF8OnStack(message);
-        getWasmTableEntry(callback)(type, messagePtr, userdata);
-        stackRestore(sp);
-      },
-  iterateExtensions:(root, handlers) => {
-        assert(root);
-        for (var ptr = HEAPU32[((root)>>2)]; ptr;
-                 ptr = HEAPU32[((ptr)>>2)]) {
-          var sType = HEAP32[(((ptr)+(4))>>2)];
-          // This will crash if there's no handler indicating either a bogus
-          // sType, or one we haven't implemented yet.
-          var handler = handlers[sType](ptr);
-        }
-      },
-  setStringView:(ptr, data, length) => {
-        HEAPU32[((ptr)>>2)] = data;
-        HEAPU32[(((ptr)+(4))>>2)] = length;
-      },
-  makeStringFromStringView:(stringViewPtr) => {
-        var ptr = HEAPU32[((stringViewPtr)>>2)];
-        var length = HEAPU32[(((stringViewPtr)+(4))>>2)];
-        // UTF8ToString stops at the first null terminator character in the
-        // string regardless of the length.
-        return UTF8ToString(ptr, length);
-      },
-  makeStringFromOptionalStringView:(stringViewPtr) => {
-        var ptr = HEAPU32[((stringViewPtr)>>2)];
-        var length = HEAPU32[(((stringViewPtr)+(4))>>2)];
-        // If we don't have a valid string pointer, just return undefined when
-        // optional.
-        if (!ptr) {
-          if (length === 0) {
-            return "";
-          }
-          return undefined;
-        }
-        // UTF8ToString stops at the first null terminator character in the
-        // string regardless of the length.
-        return UTF8ToString(ptr, length);
-      },
-  makeColor:(ptr) => {
-        return {
-          "r": HEAPF64[((ptr)>>3)],
-          "g": HEAPF64[(((ptr)+(8))>>3)],
-          "b": HEAPF64[(((ptr)+(16))>>3)],
-          "a": HEAPF64[(((ptr)+(24))>>3)],
-        };
-      },
-  makeExtent3D:(ptr) => {
-        return {
-          "width": HEAPU32[((ptr)>>2)],
-          "height": HEAPU32[(((ptr)+(4))>>2)],
-          "depthOrArrayLayers": HEAPU32[(((ptr)+(8))>>2)],
-        };
-      },
-  makeOrigin3D:(ptr) => {
-        return {
-          "x": HEAPU32[((ptr)>>2)],
-          "y": HEAPU32[(((ptr)+(4))>>2)],
-          "z": HEAPU32[(((ptr)+(8))>>2)],
-        };
-      },
-  makeTexelCopyTextureInfo:(ptr) => {
-        assert(ptr);
-        return {
-          "texture": WebGPU.getJsObject(
-            HEAPU32[((ptr)>>2)]),
-          "mipLevel": HEAPU32[(((ptr)+(4))>>2)],
-          "origin": WebGPU.makeOrigin3D(ptr + 8),
-          "aspect": WebGPU.TextureAspect[HEAP32[(((ptr)+(20))>>2)]],
-        };
-      },
-  makeTexelCopyBufferLayout:(ptr) => {
-        var bytesPerRow = HEAPU32[(((ptr)+(8))>>2)];
-        var rowsPerImage = HEAPU32[(((ptr)+(12))>>2)];
-        return {
-          "offset": readI53FromI64(ptr),
-          "bytesPerRow": bytesPerRow === 4294967295 ? undefined : bytesPerRow,
-          "rowsPerImage": rowsPerImage === 4294967295 ? undefined : rowsPerImage,
-        };
-      },
-  makeTexelCopyBufferInfo:(ptr) => {
-        assert(ptr);
-        var layoutPtr = ptr + 0;
-        var bufferCopyView = WebGPU.makeTexelCopyBufferLayout(layoutPtr);
-        bufferCopyView["buffer"] = WebGPU.getJsObject(
-          HEAPU32[(((ptr)+(16))>>2)]);
-        return bufferCopyView;
-      },
-  makePassTimestampWrites:(ptr) => {
-        if (ptr === 0) return undefined;
-        return {
-          "querySet": WebGPU.getJsObject(
-            HEAPU32[(((ptr)+(4))>>2)]),
-          "beginningOfPassWriteIndex": HEAPU32[(((ptr)+(8))>>2)],
-          "endOfPassWriteIndex": HEAPU32[(((ptr)+(12))>>2)],
-        };
-      },
-  makePipelineConstants:(constantCount, constantsPtr) => {
-        if (!constantCount) return;
-        var constants = {};
-        for (var i = 0; i < constantCount; ++i) {
-          var entryPtr = constantsPtr + 24 * i;
-          var key = WebGPU.makeStringFromStringView(entryPtr + 4);
-          constants[key] = HEAPF64[(((entryPtr)+(16))>>3)];
-        }
-        return constants;
-      },
-  makePipelineLayout:(layoutPtr) => {
-        if (!layoutPtr) return 'auto';
-        return WebGPU.getJsObject(layoutPtr);
-      },
-  makeComputeState:(ptr) => {
-        if (!ptr) return undefined;
-        assert(ptr);assert(HEAPU32[((ptr)>>2)] === 0);
-        var desc = {
-          "module": WebGPU.getJsObject(
-            HEAPU32[(((ptr)+(4))>>2)]),
-          "constants": WebGPU.makePipelineConstants(
-            HEAPU32[(((ptr)+(16))>>2)],
-            HEAPU32[(((ptr)+(20))>>2)]),
-          "entryPoint": WebGPU.makeStringFromOptionalStringView(
-            ptr + 8),
-        };
-        return desc;
-      },
-  makeComputePipelineDesc:(descriptor) => {
-        assert(descriptor);assert(HEAPU32[((descriptor)>>2)] === 0);
-  
-        var desc = {
-          "label": WebGPU.makeStringFromOptionalStringView(
-            descriptor + 4),
-          "layout": WebGPU.makePipelineLayout(
-            HEAPU32[(((descriptor)+(12))>>2)]),
-          "compute": WebGPU.makeComputeState(
-            descriptor + 16),
-        };
-        return desc;
-      },
-  makeRenderPipelineDesc:(descriptor) => {
-        assert(descriptor);assert(HEAPU32[((descriptor)>>2)] === 0);
-  
-        function makePrimitiveState(psPtr) {
-          if (!psPtr) return undefined;
-          assert(psPtr);assert(HEAPU32[((psPtr)>>2)] === 0);
-          return {
-            "topology": WebGPU.PrimitiveTopology[HEAP32[(((psPtr)+(4))>>2)]],
-            "stripIndexFormat": WebGPU.IndexFormat[HEAP32[(((psPtr)+(8))>>2)]],
-            "frontFace": WebGPU.FrontFace[HEAP32[(((psPtr)+(12))>>2)]],
-            "cullMode": WebGPU.CullMode[HEAP32[(((psPtr)+(16))>>2)]],
-            "unclippedDepth": !!(HEAPU32[(((psPtr)+(20))>>2)]),
-          };
-        }
-  
-        function makeBlendComponent(bdPtr) {
-          if (!bdPtr) return undefined;
-          return {
-            "operation": WebGPU.BlendOperation[HEAP32[((bdPtr)>>2)]],
-            "srcFactor": WebGPU.BlendFactor[HEAP32[(((bdPtr)+(4))>>2)]],
-            "dstFactor": WebGPU.BlendFactor[HEAP32[(((bdPtr)+(8))>>2)]],
-          };
-        }
-  
-        function makeBlendState(bsPtr) {
-          if (!bsPtr) return undefined;
-          return {
-            "alpha": makeBlendComponent(bsPtr + 12),
-            "color": makeBlendComponent(bsPtr + 0),
-          };
-        }
-  
-        function makeColorState(csPtr) {
-          assert(csPtr);assert(HEAPU32[((csPtr)>>2)] === 0);
-          var format = WebGPU.TextureFormat[HEAP32[(((csPtr)+(4))>>2)]];
-          return format ? {
-            "format": format,
-            "blend": makeBlendState(HEAPU32[(((csPtr)+(8))>>2)]),
-            "writeMask": HEAPU32[(((csPtr)+(16))>>2)],
-          } : undefined;
-        }
-  
-        function makeColorStates(count, csArrayPtr) {
-          var states = [];
-          for (var i = 0; i < count; ++i) {
-            states.push(makeColorState(csArrayPtr + 24 * i));
-          }
-          return states;
-        }
-  
-        function makeStencilStateFace(ssfPtr) {
-          assert(ssfPtr);
-          return {
-            "compare": WebGPU.CompareFunction[HEAP32[((ssfPtr)>>2)]],
-            "failOp": WebGPU.StencilOperation[HEAP32[(((ssfPtr)+(4))>>2)]],
-            "depthFailOp": WebGPU.StencilOperation[HEAP32[(((ssfPtr)+(8))>>2)]],
-            "passOp": WebGPU.StencilOperation[HEAP32[(((ssfPtr)+(12))>>2)]],
-          };
-        }
-  
-        function makeDepthStencilState(dssPtr) {
-          if (!dssPtr) return undefined;
-  
-          assert(dssPtr);
-          return {
-            "format": WebGPU.TextureFormat[HEAP32[(((dssPtr)+(4))>>2)]],
-            "depthWriteEnabled": !!(HEAPU32[(((dssPtr)+(8))>>2)]),
-            "depthCompare": WebGPU.CompareFunction[HEAP32[(((dssPtr)+(12))>>2)]],
-            "stencilFront": makeStencilStateFace(dssPtr + 16),
-            "stencilBack": makeStencilStateFace(dssPtr + 32),
-            "stencilReadMask": HEAPU32[(((dssPtr)+(48))>>2)],
-            "stencilWriteMask": HEAPU32[(((dssPtr)+(52))>>2)],
-            "depthBias": HEAP32[(((dssPtr)+(56))>>2)],
-            "depthBiasSlopeScale": HEAPF32[(((dssPtr)+(60))>>2)],
-            "depthBiasClamp": HEAPF32[(((dssPtr)+(64))>>2)],
-          };
-        }
-  
-        function makeVertexAttribute(vaPtr) {
-          assert(vaPtr);
-          return {
-            "format": WebGPU.VertexFormat[HEAP32[(((vaPtr)+(4))>>2)]],
-            "offset": readI53FromI64((vaPtr)+(8)),
-            "shaderLocation": HEAPU32[(((vaPtr)+(16))>>2)],
-          };
-        }
-  
-        function makeVertexAttributes(count, vaArrayPtr) {
-          var vas = [];
-          for (var i = 0; i < count; ++i) {
-            vas.push(makeVertexAttribute(vaArrayPtr + i * 24));
-          }
-          return vas;
-        }
-  
-        function makeVertexBuffer(vbPtr) {
-          if (!vbPtr) return undefined;
-          var stepMode = WebGPU.VertexStepMode[HEAP32[(((vbPtr)+(4))>>2)]];
-          var attributeCount = HEAPU32[(((vbPtr)+(16))>>2)];
-          if (!stepMode && !attributeCount) {
-            return null;
-          }
-          return {
-            "arrayStride": readI53FromI64((vbPtr)+(8)),
-            "stepMode": stepMode,
-            "attributes": makeVertexAttributes(
-              attributeCount,
-              HEAPU32[(((vbPtr)+(20))>>2)]),
-          };
-        }
-  
-        function makeVertexBuffers(count, vbArrayPtr) {
-          if (!count) return undefined;
-  
-          var vbs = [];
-          for (var i = 0; i < count; ++i) {
-            vbs.push(makeVertexBuffer(vbArrayPtr + i * 24));
-          }
-          return vbs;
-        }
-  
-        function makeVertexState(viPtr) {
-          if (!viPtr) return undefined;
-          assert(viPtr);assert(HEAPU32[((viPtr)>>2)] === 0);
-          var desc = {
-            "module": WebGPU.getJsObject(
-              HEAPU32[(((viPtr)+(4))>>2)]),
-            "constants": WebGPU.makePipelineConstants(
-              HEAPU32[(((viPtr)+(16))>>2)],
-              HEAPU32[(((viPtr)+(20))>>2)]),
-            "buffers": makeVertexBuffers(
-              HEAPU32[(((viPtr)+(24))>>2)],
-              HEAPU32[(((viPtr)+(28))>>2)]),
-            "entryPoint": WebGPU.makeStringFromOptionalStringView(
-              viPtr + 8),
-            };
-          return desc;
-        }
-  
-        function makeMultisampleState(msPtr) {
-          if (!msPtr) return undefined;
-          assert(msPtr);assert(HEAPU32[((msPtr)>>2)] === 0);
-          return {
-            "count": HEAPU32[(((msPtr)+(4))>>2)],
-            "mask": HEAPU32[(((msPtr)+(8))>>2)],
-            "alphaToCoverageEnabled": !!(HEAPU32[(((msPtr)+(12))>>2)]),
-          };
-        }
-  
-        function makeFragmentState(fsPtr) {
-          if (!fsPtr) return undefined;
-          assert(fsPtr);assert(HEAPU32[((fsPtr)>>2)] === 0);
-          var desc = {
-            "module": WebGPU.getJsObject(
-              HEAPU32[(((fsPtr)+(4))>>2)]),
-            "constants": WebGPU.makePipelineConstants(
-              HEAPU32[(((fsPtr)+(16))>>2)],
-              HEAPU32[(((fsPtr)+(20))>>2)]),
-            "targets": makeColorStates(
-              HEAPU32[(((fsPtr)+(24))>>2)],
-              HEAPU32[(((fsPtr)+(28))>>2)]),
-            "entryPoint": WebGPU.makeStringFromOptionalStringView(
-              fsPtr + 8),
-            };
-          return desc;
-        }
-  
-        var desc = {
-          "label": WebGPU.makeStringFromOptionalStringView(
-            descriptor + 4),
-          "layout": WebGPU.makePipelineLayout(
-            HEAPU32[(((descriptor)+(12))>>2)]),
-          "vertex": makeVertexState(
-            descriptor + 16),
-          "primitive": makePrimitiveState(
-            descriptor + 48),
-          "depthStencil": makeDepthStencilState(
-            HEAPU32[(((descriptor)+(72))>>2)]),
-          "multisample": makeMultisampleState(
-            descriptor + 76),
-          "fragment": makeFragmentState(
-            HEAPU32[(((descriptor)+(92))>>2)]),
-        };
-        return desc;
-      },
-  fillLimitStruct:(limits, limitsOutPtr) => {
-        assert(limitsOutPtr);
-        var nextInChainPtr = HEAPU32[((limitsOutPtr)>>2)];
-  
-        function setLimitValueU32(name, basePtr, limitOffset, fallbackValue = 0) {
-          var limitValue = limits[name] ?? fallbackValue;
-          HEAPU32[(((basePtr)+(limitOffset))>>2)] = limitValue;
-        }
-        function setLimitValueU64(name, basePtr, limitOffset, fallbackValue = 0) {
-          var limitValue = limits[name] ?? fallbackValue;
-          // Limits are integer-valued JS `Number`s, so they fit in 'i53'.
-          writeI53ToI64((basePtr)+(limitOffset), limitValue);
-        }
-  
-        setLimitValueU32('maxTextureDimension1D',                     limitsOutPtr, 4);
-        setLimitValueU32('maxTextureDimension2D',                     limitsOutPtr, 8);
-        setLimitValueU32('maxTextureDimension3D',                     limitsOutPtr, 12);
-        setLimitValueU32('maxTextureArrayLayers',                     limitsOutPtr, 16);
-        setLimitValueU32('maxBindGroups',                             limitsOutPtr, 20);
-        setLimitValueU32('maxBindGroupsPlusVertexBuffers',            limitsOutPtr, 24);
-        setLimitValueU32('maxBindingsPerBindGroup',                   limitsOutPtr, 28);
-        setLimitValueU32('maxDynamicUniformBuffersPerPipelineLayout', limitsOutPtr, 32);
-        setLimitValueU32('maxDynamicStorageBuffersPerPipelineLayout', limitsOutPtr, 36);
-        setLimitValueU32('maxSampledTexturesPerShaderStage',          limitsOutPtr, 40);
-        setLimitValueU32('maxSamplersPerShaderStage',                 limitsOutPtr, 44);
-        setLimitValueU32('maxStorageBuffersPerShaderStage',           limitsOutPtr, 48);
-        setLimitValueU32('maxStorageTexturesPerShaderStage',          limitsOutPtr, 52);
-        setLimitValueU32('maxUniformBuffersPerShaderStage',           limitsOutPtr, 56);
-        setLimitValueU32('minUniformBufferOffsetAlignment',           limitsOutPtr, 80);
-        setLimitValueU32('minStorageBufferOffsetAlignment',           limitsOutPtr, 84);
-        setLimitValueU64('maxUniformBufferBindingSize',               limitsOutPtr, 64);
-        setLimitValueU64('maxStorageBufferBindingSize',               limitsOutPtr, 72);
-        setLimitValueU32('maxVertexBuffers',                          limitsOutPtr, 88);
-        setLimitValueU64('maxBufferSize',                             limitsOutPtr, 96);
-        setLimitValueU32('maxVertexAttributes',                       limitsOutPtr, 104);
-        setLimitValueU32('maxVertexBufferArrayStride',                limitsOutPtr, 108);
-        setLimitValueU32('maxInterStageShaderVariables',              limitsOutPtr, 112);
-        setLimitValueU32('maxColorAttachments',                       limitsOutPtr, 116);
-        setLimitValueU32('maxColorAttachmentBytesPerSample',          limitsOutPtr, 120);
-        setLimitValueU32('maxComputeWorkgroupStorageSize',            limitsOutPtr, 124);
-        setLimitValueU32('maxComputeInvocationsPerWorkgroup',         limitsOutPtr, 128);
-        setLimitValueU32('maxComputeWorkgroupSizeX',                  limitsOutPtr, 132);
-        setLimitValueU32('maxComputeWorkgroupSizeY',                  limitsOutPtr, 136);
-        setLimitValueU32('maxComputeWorkgroupSizeZ',                  limitsOutPtr, 140);
-        setLimitValueU32('maxComputeWorkgroupsPerDimension',          limitsOutPtr, 144);
-        // Note this limit is new and won't be present in all browsers for a while. Fall back to 0.
-        setLimitValueU32('maxImmediateSize',                          limitsOutPtr, 148);
-  
-        if (nextInChainPtr !== 0) {
-          var sType = HEAP32[(((nextInChainPtr)+(4))>>2)];
-          assert(sType === 15);
-          assert(0 === HEAPU32[((nextInChainPtr)>>2)]);
-          var compatibilityModeLimitsPtr = nextInChainPtr;
-          assert(compatibilityModeLimitsPtr);assert(HEAPU32[((compatibilityModeLimitsPtr)>>2)] === 0);
-  
-          // Note these limits are new and won't be present in all browsers for a while. Fall back to exposing the PerShaderStage limit.
-          setLimitValueU32('maxStorageBuffersInVertexStage',    compatibilityModeLimitsPtr, 8,    limits.maxStorageBuffersPerShaderStage);
-          setLimitValueU32('maxStorageBuffersInFragmentStage',  compatibilityModeLimitsPtr, 16,  limits.maxStorageBuffersPerShaderStage);
-          setLimitValueU32('maxStorageTexturesInVertexStage',   compatibilityModeLimitsPtr, 12,   limits.maxStorageTexturesPerShaderStage);
-          setLimitValueU32('maxStorageTexturesInFragmentStage', compatibilityModeLimitsPtr, 20, limits.maxStorageTexturesPerShaderStage);
-        }
-      },
-  fillAdapterInfoStruct:(info, infoStruct) => {
-        assert(infoStruct);assert(HEAPU32[((infoStruct)>>2)] === 0);
-  
-        // Populate subgroup limits.
-        HEAPU32[(((infoStruct)+(52))>>2)] = info.subgroupMinSize;
-        HEAPU32[(((infoStruct)+(56))>>2)] = info.subgroupMaxSize;
-  
-        // Append all the strings together to condense into a single malloc.
-        var strs = info.vendor + info.architecture + info.device + info.description;
-        var strPtr = stringToNewUTF8(strs);
-  
-        var vendorLen = lengthBytesUTF8(info.vendor);
-        WebGPU.setStringView(infoStruct + 4, strPtr, vendorLen);
-        strPtr += vendorLen;
-  
-        var architectureLen = lengthBytesUTF8(info.architecture);
-        WebGPU.setStringView(infoStruct + 12, strPtr, architectureLen);
-        strPtr += architectureLen;
-  
-        var deviceLen = lengthBytesUTF8(info.device);
-        WebGPU.setStringView(infoStruct + 20, strPtr, deviceLen);
-        strPtr += deviceLen;
-  
-        var descriptionLen = lengthBytesUTF8(info.description);
-        WebGPU.setStringView(infoStruct + 28, strPtr, descriptionLen);
-        strPtr += descriptionLen;
-  
-        HEAP32[(((infoStruct)+(36))>>2)] = 2;
-        var adapterType = info.isFallbackAdapter ? 3 : 4;
-        HEAP32[(((infoStruct)+(40))>>2)] = adapterType;
-        HEAPU32[(((infoStruct)+(44))>>2)] = 0;
-        HEAPU32[(((infoStruct)+(48))>>2)] = 0;
-      },
-  AddressMode:[,"clamp-to-edge","repeat","mirror-repeat"],
-  BlendFactor:[,"zero","one","src","one-minus-src","src-alpha","one-minus-src-alpha","dst","one-minus-dst","dst-alpha","one-minus-dst-alpha","src-alpha-saturated","constant","one-minus-constant","src1","one-minus-src1","src1-alpha","one-minus-src1-alpha"],
-  BlendOperation:[,"add","subtract","reverse-subtract","min","max"],
-  BufferBindingType:[,,"uniform","storage","read-only-storage"],
-  BufferMapState:[,"unmapped","pending","mapped"],
-  CompareFunction:[,"never","less","equal","less-equal","greater","not-equal","greater-equal","always"],
-  CompilationInfoRequestStatus:[,"success","callback-cancelled"],
-  ComponentSwizzle:[,"0","1","r","g","b","a"],
-  CompositeAlphaMode:[,"opaque","premultiplied","unpremultiplied","inherit"],
-  CullMode:[,"none","front","back"],
-  ErrorFilter:[,"validation","out-of-memory","internal"],
-  FeatureLevel:[,"compatibility","core"],
-  FeatureName:{
-  1:"core-features-and-limits",
-  2:"depth-clip-control",
-  3:"depth32float-stencil8",
-  4:"texture-compression-bc",
-  5:"texture-compression-bc-sliced-3d",
-  6:"texture-compression-etc2",
-  7:"texture-compression-astc",
-  8:"texture-compression-astc-sliced-3d",
-  9:"timestamp-query",
-  10:"indirect-first-instance",
-  11:"shader-f16",
-  12:"rg11b10ufloat-renderable",
-  13:"bgra8unorm-storage",
-  14:"float32-filterable",
-  15:"float32-blendable",
-  16:"clip-distances",
-  17:"dual-source-blending",
-  18:"subgroups",
-  19:"texture-formats-tier1",
-  20:"texture-formats-tier2",
-  21:"primitive-index",
-  22:"texture-component-swizzle",
-  327692:"chromium-experimental-unorm16-texture-formats",
-  327729:"chromium-experimental-multi-draw-indirect",
+  queries:[],
+  samplers:[],
+  transformFeedbacks:[],
+  syncs:[],
+  stringCache:{
   },
-  FilterMode:[,"nearest","linear"],
-  FrontFace:[,"ccw","cw"],
-  IndexFormat:[,"uint16","uint32"],
-  InstanceFeatureName:[,"timed-wait-any","shader-source-spirv","multiple-devices-per-adapter"],
-  LoadOp:[,"load","clear"],
-  MipmapFilterMode:[,"nearest","linear"],
-  OptionalBool:["false","true",],
-  PowerPreference:[,"low-power","high-performance"],
-  PredefinedColorSpace:[,"srgb","display-p3"],
-  PrimitiveTopology:[,"point-list","line-list","line-strip","triangle-list","triangle-strip"],
-  QueryType:[,"occlusion","timestamp"],
-  SamplerBindingType:[,,"filtering","non-filtering","comparison"],
-  Status:[,"success","error"],
-  StencilOperation:[,"keep","zero","replace","invert","increment-clamp","decrement-clamp","increment-wrap","decrement-wrap"],
-  StorageTextureAccess:[,,"write-only","read-only","read-write"],
-  StoreOp:[,"store","discard"],
-  SurfaceGetCurrentTextureStatus:[,"success-optimal","success-suboptimal","timeout","outdated","lost","error"],
-  TextureAspect:[,"all","stencil-only","depth-only"],
-  TextureDimension:[,"1d","2d","3d"],
-  TextureFormat:[,"r8unorm","r8snorm","r8uint","r8sint","r16unorm","r16snorm","r16uint","r16sint","r16float","rg8unorm","rg8snorm","rg8uint","rg8sint","r32float","r32uint","r32sint","rg16unorm","rg16snorm","rg16uint","rg16sint","rg16float","rgba8unorm","rgba8unorm-srgb","rgba8snorm","rgba8uint","rgba8sint","bgra8unorm","bgra8unorm-srgb","rgb10a2uint","rgb10a2unorm","rg11b10ufloat","rgb9e5ufloat","rg32float","rg32uint","rg32sint","rgba16unorm","rgba16snorm","rgba16uint","rgba16sint","rgba16float","rgba32float","rgba32uint","rgba32sint","stencil8","depth16unorm","depth24plus","depth24plus-stencil8","depth32float","depth32float-stencil8","bc1-rgba-unorm","bc1-rgba-unorm-srgb","bc2-rgba-unorm","bc2-rgba-unorm-srgb","bc3-rgba-unorm","bc3-rgba-unorm-srgb","bc4-r-unorm","bc4-r-snorm","bc5-rg-unorm","bc5-rg-snorm","bc6h-rgb-ufloat","bc6h-rgb-float","bc7-rgba-unorm","bc7-rgba-unorm-srgb","etc2-rgb8unorm","etc2-rgb8unorm-srgb","etc2-rgb8a1unorm","etc2-rgb8a1unorm-srgb","etc2-rgba8unorm","etc2-rgba8unorm-srgb","eac-r11unorm","eac-r11snorm","eac-rg11unorm","eac-rg11snorm","astc-4x4-unorm","astc-4x4-unorm-srgb","astc-5x4-unorm","astc-5x4-unorm-srgb","astc-5x5-unorm","astc-5x5-unorm-srgb","astc-6x5-unorm","astc-6x5-unorm-srgb","astc-6x6-unorm","astc-6x6-unorm-srgb","astc-8x5-unorm","astc-8x5-unorm-srgb","astc-8x6-unorm","astc-8x6-unorm-srgb","astc-8x8-unorm","astc-8x8-unorm-srgb","astc-10x5-unorm","astc-10x5-unorm-srgb","astc-10x6-unorm","astc-10x6-unorm-srgb","astc-10x8-unorm","astc-10x8-unorm-srgb","astc-10x10-unorm","astc-10x10-unorm-srgb","astc-12x10-unorm","astc-12x10-unorm-srgb","astc-12x12-unorm","astc-12x12-unorm-srgb"],
-  TextureSampleType:[,,"float","unfilterable-float","depth","sint","uint"],
-  TextureViewDimension:[,"1d","2d","2d-array","cube","cube-array","3d"],
-  ToneMappingMode:[,"standard","extended"],
-  VertexFormat:[,"uint8","uint8x2","uint8x4","sint8","sint8x2","sint8x4","unorm8","unorm8x2","unorm8x4","snorm8","snorm8x2","snorm8x4","uint16","uint16x2","uint16x4","sint16","sint16x2","sint16x4","unorm16","unorm16x2","unorm16x4","snorm16","snorm16x2","snorm16x4","float16","float16x2","float16x4","float32","float32x2","float32x3","float32x4","uint32","uint32x2","uint32x3","uint32x4","sint32","sint32x2","sint32x3","sint32x4","unorm10-10-10-2","unorm8x4-bgra"],
-  VertexStepMode:[,"vertex","instance"],
-  WGSLLanguageFeatureName:[,"readonly_and_readwrite_storage_textures","packed_4x8_integer_dot_product","unrestricted_pointer_parameters","pointer_composite_access","uniform_buffer_standard_layout","subgroup_id","texture_and_sampler_let","subgroup_uniformity","texture_formats_tier1","linear_indexing"],
+  stringiCache:{
+  },
+  unpackAlignment:4,
+  unpackRowLength:0,
+  recordError:(errorCode) => {
+        if (!GL.lastError) {
+          GL.lastError = errorCode;
+        }
+      },
+  getNewId:(table) => {
+        var ret = GL.counter++;
+        for (var i = table.length; i < ret; i++) {
+          table[i] = null;
+        }
+        return ret;
+      },
+  genObject:(n, buffers, createFunction, objectTable
+        , functionName
+        ) => {
+        for (var i = 0; i < n; i++) {
+          var buffer = GLctx[createFunction]();
+          var id = buffer && GL.getNewId(objectTable);
+          if (buffer) {
+            buffer.name = id;
+            objectTable[id] = buffer;
+          } else {
+            GL.recordError(0x502 /* GL_INVALID_OPERATION */);
+            err(`GL_INVALID_OPERATION in ${functionName}: GLctx.${createFunction} returned null - most likely GL context is lost!`);
+          }
+          HEAP32[(((buffers)+(i*4))>>2)] = id;
+        }
+      },
+  getSource:(shader, count, string, length) => {
+        var source = '';
+        for (var i = 0; i < count; ++i) {
+          var len = length ? HEAPU32[(((length)+(i*4))>>2)] : undefined;
+          source += UTF8ToString(HEAPU32[(((string)+(i*4))>>2)], len);
+        }
+        return source;
+      },
+  validateGLObjectID:(objectHandleArray, objectID, callerFunctionName, objectReadableType) => {
+        // `objectHandleArray` may be uninitialized when GL uniforms are lazily initialized, and `glUniform*` is called
+        // for the first time before uniforms have been populated. So ignore this validation if the handle array is not present.
+        if (objectID != 0 && objectHandleArray) {
+          if (objectHandleArray[objectID] === null) {
+            err(`${callerFunctionName} called with an already deleted ${objectReadableType} ID ${objectID}!`);
+          } else if (!(objectID in objectHandleArray)) {
+            err(`${callerFunctionName} called with a nonexisting ${objectReadableType} ID ${objectID}!`);
+          }
+        }
+      },
+  validateVertexAttribPointer:(dimension, dataType, stride, offset) => {
+        var sizeBytes = 1;
+        switch (dataType) {
+          case 0x1400 /* GL_BYTE */:
+          case 0x1401 /* GL_UNSIGNED_BYTE */:
+            sizeBytes = 1;
+            break;
+          case 0x1402 /* GL_SHORT */:
+          case 0x1403 /* GL_UNSIGNED_SHORT */:
+            sizeBytes = 2;
+            break;
+          case 0x1404 /* GL_INT */:
+          case 0x1405 /* GL_UNSIGNED_INT */:
+          case 0x1406 /* GL_FLOAT */:
+            sizeBytes = 4;
+            break;
+          case 0x140A /* GL_DOUBLE */:
+            sizeBytes = 8;
+            break;
+          default:
+            if (GL.currentContext.version >= 2) {
+              if (dataType == 0x8368 /* GL_UNSIGNED_INT_2_10_10_10_REV */ || dataType == 0x8D9F /* GL_INT_2_10_10_10_REV */) {
+                sizeBytes = 4;
+                break;
+              } else if (dataType == 0x140B /* GL_HALF_FLOAT */) {
+                sizeBytes = 2;
+                break;
+              } else {
+                // else fall through
+              }
+            }
+            err(`Invalid vertex attribute data type GLenum ${dataType} passed to GL function!`);
+        }
+        if (dimension == 0x80E1 /* GL_BGRA */) {
+          err('WebGL does not support size=GL_BGRA in a call to glVertexAttribPointer! Please use size=4 and type=GL_UNSIGNED_BYTE instead');
+        } else if (dimension < 1 || dimension > 4) {
+          err(`Invalid dimension=${dimension} in call to glVertexAttribPointer, must be 1,2,3 or 4.`);
+        }
+        if (stride < 0 || stride > 255) {
+          err(`Invalid stride=${stride} in call to glVertexAttribPointer. Note that maximum supported stride in WebGL is 255!`);
+        }
+        if (offset % sizeBytes != 0) {
+          err(`GL spec section 6.4 error: vertex attribute data offset of ${offset} bytes should have been a multiple of the data type size that was used: GLenum ${dataType} has size of ${sizeBytes} bytes!`);
+        }
+        if (stride % sizeBytes != 0) {
+          err(`GL spec section 6.4 error: vertex attribute data stride of ${stride} bytes should have been a multiple of the data type size that was used: GLenum ${dataType} has size of ${sizeBytes} bytes!`);
+        }
+      },
+  createContext:(/** @type {HTMLCanvasElement} */ canvas, webGLContextAttributes) => {
+  
+        // BUG: Workaround Safari WebGL issue: After successfully acquiring WebGL
+        // context on a canvas, calling .getContext() will always return that
+        // context independent of which 'webgl' or 'webgl2'
+        // context version was passed. See:
+        //   https://webkit.org/b/222758
+        // and:
+        //   https://github.com/emscripten-core/emscripten/issues/13295.
+        // TODO: Once the bug is fixed and shipped in Safari, adjust the Safari
+        // version field in above check.
+        if (!canvas.getContextSafariWebGL2Fixed) {
+          canvas.getContextSafariWebGL2Fixed = canvas.getContext;
+          /** @type {function(this:HTMLCanvasElement, string, (Object|null)=): (Object|null)} */
+          function fixedGetContext(ver, attrs) {
+            var gl = canvas.getContextSafariWebGL2Fixed(ver, attrs);
+            return ((ver == 'webgl') == (gl instanceof WebGLRenderingContext)) ? gl : null;
+          }
+          canvas.getContext = fixedGetContext;
+        }
+  
+        var ctx =
+          (webGLContextAttributes.majorVersion > 1)
+          ? canvas.getContext('webgl2', webGLContextAttributes) :
+          canvas.getContext('webgl', webGLContextAttributes);
+  
+        if (!ctx) return 0;
+  
+        var handle = GL.registerContext(ctx, webGLContextAttributes);
+  
+        return handle;
+      },
+  registerContext:(ctx, webGLContextAttributes) => {
+        // without pthreads a context is just an integer ID
+        var handle = GL.getNewId(GL.contexts);
+  
+        var context = {
+          handle,
+          attributes: webGLContextAttributes,
+          version: webGLContextAttributes.majorVersion,
+          GLctx: ctx
+        };
+  
+        // Store the created context object so that we can access the context
+        // given a canvas without having to pass the parameters again.
+        if (ctx.canvas) ctx.canvas.GLctxObject = context;
+        GL.contexts[handle] = context;
+        if (typeof webGLContextAttributes.enableExtensionsByDefault == 'undefined' || webGLContextAttributes.enableExtensionsByDefault) {
+          GL.initExtensions(context);
+        }
+  
+        return handle;
+      },
+  makeContextCurrent:(contextHandle) => {
+  
+        // Active Emscripten GL layer context object.
+        GL.currentContext = GL.contexts[contextHandle];
+        // Active WebGL context object.
+        Module['ctx'] = GLctx = GL.currentContext?.GLctx;
+        return !(contextHandle && !GLctx);
+      },
+  getContext:(contextHandle) => {
+        return GL.contexts[contextHandle];
+      },
+  deleteContext:(contextHandle) => {
+        if (GL.currentContext === GL.contexts[contextHandle]) {
+          GL.currentContext = null;
+        }
+        if (typeof JSEvents == 'object') {
+          // Release all JS event handlers on the DOM element that the GL context is
+          // associated with since the context is now deleted.
+          JSEvents.removeAllHandlersOnTarget(GL.contexts[contextHandle].GLctx.canvas);
+        }
+        // Make sure the canvas object no longer refers to the context object so
+        // there are no GC surprises.
+        if (GL.contexts[contextHandle]?.GLctx.canvas) {
+          GL.contexts[contextHandle].GLctx.canvas.GLctxObject = undefined;
+        }
+        GL.contexts[contextHandle] = null;
+      },
+  initExtensions:(context) => {
+        // If this function is called without a specific context object, init the
+        // extensions of the currently active context.
+        context ||= GL.currentContext;
+  
+        if (context.initExtensionsDone) return;
+        context.initExtensionsDone = true;
+  
+        var GLctx = context.GLctx;
+  
+        // Detect the presence of a few extensions manually, since the GL interop
+        // layer itself will need to know if they exist.
+  
+        // Extensions that are available in both WebGL 1 and WebGL 2
+        webgl_enable_WEBGL_multi_draw(GLctx);
+        webgl_enable_EXT_polygon_offset_clamp(GLctx);
+        webgl_enable_EXT_clip_control(GLctx);
+        webgl_enable_WEBGL_polygon_mode(GLctx);
+        // Extensions that are only available in WebGL 1 (the calls will be no-ops
+        // if called on a WebGL 2 context active)
+        webgl_enable_ANGLE_instanced_arrays(GLctx);
+        webgl_enable_OES_vertex_array_object(GLctx);
+        webgl_enable_WEBGL_draw_buffers(GLctx);
+        // Extensions that are available from WebGL >= 2 (no-op if called on a WebGL 1 context active)
+        webgl_enable_WEBGL_draw_instanced_base_vertex_base_instance(GLctx);
+        webgl_enable_WEBGL_multi_draw_instanced_base_vertex_base_instance(GLctx);
+  
+        // On WebGL 2, EXT_disjoint_timer_query is replaced with an alternative
+        // that's based on core APIs, and exposes only the queryCounterEXT()
+        // entrypoint.
+        if (context.version >= 2) {
+          GLctx.disjointTimerQueryExt = GLctx.getExtension('EXT_disjoint_timer_query_webgl2');
+        }
+  
+        // However, Firefox exposes the WebGL 1 version on WebGL 2 as well and
+        // thus we look for the WebGL 1 version again if the WebGL 2 version
+        // isn't present. https://bugzil.la/1328882
+        if (context.version < 2 || !GLctx.disjointTimerQueryExt)
+        {
+          GLctx.disjointTimerQueryExt = GLctx.getExtension('EXT_disjoint_timer_query');
+        }
+  
+        for (var ext of getEmscriptenSupportedExtensions(GLctx)) {
+          // WEBGL_lose_context, WEBGL_debug_renderer_info and WEBGL_debug_shaders
+          // are not enabled by default.
+          if (!ext.includes('lose_context') && !ext.includes('debug')) {
+            // Call .getExtension() to enable that extension permanently.
+            GLctx.getExtension(ext);
+          }
+        }
+      },
   };
   
-  var emwgpuStringToInt_DeviceLostReason = {
-              'undefined': 1,  // For older browsers
-              'unknown': 1,
-              'destroyed': 2,
-          };
+  var webglPowerPreferences = ["default","low-power","high-performance"];
   
   
   
   
-  var INT53_MAX = 9007199254740992;
-  
-  var INT53_MIN = -9007199254740992;
-  var bigintToI53Checked = (num) => (num < INT53_MIN || num > INT53_MAX) ? NaN : Number(num);
-  
-  
-  function _emwgpuAdapterRequestDevice(adapterPtr, futureId, deviceLostFutureId, devicePtr, queuePtr, descriptor) {
-    futureId = bigintToI53Checked(futureId);
-    deviceLostFutureId = bigintToI53Checked(deviceLostFutureId);
-  
-  
-      var adapter = WebGPU.getJsObject(adapterPtr);
-  
-      var desc = {};
-      if (descriptor) {
-        assert(descriptor);assert(HEAPU32[((descriptor)>>2)] === 0);
-        var requiredFeatureCount = HEAPU32[(((descriptor)+(12))>>2)];
-        if (requiredFeatureCount) {
-          var requiredFeaturesPtr = HEAPU32[(((descriptor)+(16))>>2)];
-          // requiredFeaturesPtr is a pointer to an array of FeatureName which is an enum of size uint32_t
-          desc["requiredFeatures"] = Array.from(HEAPU32.subarray((((requiredFeaturesPtr)>>2)), ((requiredFeaturesPtr + requiredFeatureCount * 4)>>2)),
-            (feature) => WebGPU.FeatureName[feature]);
-        }
-        var limitsPtr = HEAPU32[(((descriptor)+(20))>>2)];
-        if (limitsPtr) {
-          assert(limitsPtr);
-          var nextInChainPtr = HEAPU32[((limitsPtr)>>2)];
-          var requiredLimits = {};
-          function setLimitU32IfDefined(name, basePtr, limitOffset, ignoreIfZero = false) {
-            var ptr = basePtr + limitOffset;
-            var value = HEAPU32[((ptr)>>2)];
-            if (value != 4294967295 && (!ignoreIfZero || value != 0)) {
-              requiredLimits[name] = value;
-            }
-          }
-          function setLimitU64IfDefined(name, basePtr, limitOffset) {
-            var ptr = basePtr + limitOffset;
-            // Handle WGPU_LIMIT_U64_UNDEFINED.
-            var limitPart1 = HEAPU32[((ptr)>>2)];
-            var limitPart2 = HEAPU32[(((ptr)+(4))>>2)];
-            if (limitPart1 != 0xFFFFFFFF || limitPart2 != 0xFFFFFFFF) {
-              requiredLimits[name] = readI53FromI64(ptr);
-            }
-          }
-  
-          setLimitU32IfDefined("maxTextureDimension1D",                     limitsPtr, 4);
-          setLimitU32IfDefined("maxTextureDimension2D",                     limitsPtr, 8);
-          setLimitU32IfDefined("maxTextureDimension3D",                     limitsPtr, 12);
-          setLimitU32IfDefined("maxTextureArrayLayers",                     limitsPtr, 16);
-          setLimitU32IfDefined("maxBindGroups",                             limitsPtr, 20);
-          setLimitU32IfDefined('maxBindGroupsPlusVertexBuffers',            limitsPtr, 24);
-          setLimitU32IfDefined('maxBindingsPerBindGroup',                   limitsPtr, 28);
-          setLimitU32IfDefined("maxDynamicUniformBuffersPerPipelineLayout", limitsPtr, 32);
-          setLimitU32IfDefined("maxDynamicStorageBuffersPerPipelineLayout", limitsPtr, 36);
-          setLimitU32IfDefined("maxSampledTexturesPerShaderStage",          limitsPtr, 40);
-          setLimitU32IfDefined("maxSamplersPerShaderStage",                 limitsPtr, 44);
-          setLimitU32IfDefined("maxStorageBuffersPerShaderStage",           limitsPtr, 48);
-          setLimitU32IfDefined("maxStorageTexturesPerShaderStage",          limitsPtr, 52);
-          setLimitU32IfDefined("maxUniformBuffersPerShaderStage",           limitsPtr, 56);
-          setLimitU32IfDefined("minUniformBufferOffsetAlignment",           limitsPtr, 80);
-          setLimitU32IfDefined("minStorageBufferOffsetAlignment",           limitsPtr, 84);
-          setLimitU64IfDefined("maxUniformBufferBindingSize",               limitsPtr, 64);
-          setLimitU64IfDefined("maxStorageBufferBindingSize",               limitsPtr, 72);
-          setLimitU32IfDefined("maxVertexBuffers",                          limitsPtr, 88);
-          setLimitU64IfDefined("maxBufferSize",                             limitsPtr, 96);
-          setLimitU32IfDefined("maxVertexAttributes",                       limitsPtr, 104);
-          setLimitU32IfDefined("maxVertexBufferArrayStride",                limitsPtr, 108);
-          setLimitU32IfDefined("maxInterStageShaderVariables",              limitsPtr, 112);
-          setLimitU32IfDefined("maxColorAttachments",                       limitsPtr, 116);
-          setLimitU32IfDefined("maxColorAttachmentBytesPerSample",          limitsPtr, 120);
-          setLimitU32IfDefined("maxComputeWorkgroupStorageSize",            limitsPtr, 124);
-          setLimitU32IfDefined("maxComputeInvocationsPerWorkgroup",         limitsPtr, 128);
-          setLimitU32IfDefined("maxComputeWorkgroupSizeX",                  limitsPtr, 132);
-          setLimitU32IfDefined("maxComputeWorkgroupSizeY",                  limitsPtr, 136);
-          setLimitU32IfDefined("maxComputeWorkgroupSizeZ",                  limitsPtr, 140);
-          setLimitU32IfDefined("maxComputeWorkgroupsPerDimension",          limitsPtr, 144);
-          // Not present in all browsers. If the app requested 0, avoid passing it through so it won't cause an error.
-          setLimitU32IfDefined("maxImmediateSize",                          limitsPtr, 148, true);
-  
-          if (nextInChainPtr !== 0) {
-            var sType = HEAP32[(((nextInChainPtr)+(4))>>2)];
-            assert(sType === 15);
-            assert(0 === HEAPU32[((nextInChainPtr)>>2)]);
-            var compatibilityModeLimitsPtr = nextInChainPtr;
-            assert(compatibilityModeLimitsPtr);assert(HEAPU32[((compatibilityModeLimitsPtr)>>2)] === 0);
-            // If not present in the browser, don't request these, otherwise they'll cause an error.
-            // (Technically, if any of these is higher than the PerShaderStage equivalent, we should
-            // raise the PerShaderStage limit instead, but that's complex and apps should be able to
-            // deal with that themselves.)
-            if ('maxStorageBuffersInVertexStage' in GPUSupportedLimits.prototype) {
-              setLimitU32IfDefined('maxStorageBuffersInVertexStage',    compatibilityModeLimitsPtr, 8);
-              setLimitU32IfDefined('maxStorageTexturesInVertexStage',   compatibilityModeLimitsPtr, 12);
-              setLimitU32IfDefined('maxStorageBuffersInFragmentStage',  compatibilityModeLimitsPtr, 16);
-              setLimitU32IfDefined('maxStorageTexturesInFragmentStage', compatibilityModeLimitsPtr, 20);
-            }
-          }
-  
-          desc["requiredLimits"] = requiredLimits;
-        }
-  
-        var defaultQueuePtr = HEAPU32[(((descriptor)+(24))>>2)];
-        if (defaultQueuePtr) {
-          var defaultQueueDesc = {
-            "label": WebGPU.makeStringFromOptionalStringView(
-              defaultQueuePtr + 4),
-          };
-          desc["defaultQueue"] = defaultQueueDesc;
-        }
-        desc["label"] = WebGPU.makeStringFromOptionalStringView(
-          descriptor + 4
-        );
-      }
-  
-       // requestDevice
-      WebGPU.Internals.futureInsert(futureId, adapter.requestDevice(desc).then((device) => {
-         // requestDevice fulfilled
-        callUserCallback(() => {
-          WebGPU.Internals.jsObjectInsert(queuePtr, device.queue);
-          WebGPU.Internals.jsObjectInsert(devicePtr, device);
-  
-          
-  
-          // Set up device lost promise resolution.
-          assert(deviceLostFutureId);
-          // Don't keepalive here, because this isn't guaranteed to ever happen.
-          WebGPU.Internals.futureInsert(deviceLostFutureId, device.lost.then((info) => {
-            // If the runtime has exited, avoid calling callUserCallback as it
-            // will print an error (e.g. if the device got freed during shutdown).
-            callUserCallback(() => {
-              // Unset the uncaptured error handler.
-              device.onuncapturederror = (ev) => {};
-              var sp = stackSave();
-              var messagePtr = stringToUTF8OnStack(info.message);
-              _emwgpuOnDeviceLostCompleted(deviceLostFutureId, emwgpuStringToInt_DeviceLostReason[info.reason],
-                messagePtr);
-              stackRestore(sp);
-            });
-          }));
-  
-          // Set up uncaptured error handlers.
-          assert(typeof GPUValidationError != 'undefined');
-          assert(typeof GPUOutOfMemoryError != 'undefined');
-          assert(typeof GPUInternalError != 'undefined');
-          device.onuncapturederror = (ev) => {
-              var type = 5;
-              if (ev.error instanceof GPUValidationError) type = 2;
-              else if (ev.error instanceof GPUOutOfMemoryError) type = 3;
-              else if (ev.error instanceof GPUInternalError) type = 4;
-              var sp = stackSave();
-              var messagePtr = stringToUTF8OnStack(ev.error.message);
-              _emwgpuOnUncapturedError(devicePtr, type, messagePtr);
-              stackRestore(sp);
-          };
-  
-          _emwgpuOnRequestDeviceCompleted(futureId, 1,
-            devicePtr, 0);
-        });
-      }, (ex) => {
-         // requestDevice rejected
-        callUserCallback(() => {
-          var sp = stackSave();
-          var messagePtr = stringToUTF8OnStack(ex.message);
-          _emwgpuOnRequestDeviceCompleted(futureId, 3,
-            devicePtr, messagePtr);
-          if (deviceLostFutureId) {
-            _emwgpuOnDeviceLostCompleted(deviceLostFutureId, 4,
-              messagePtr);
-          }
-          stackRestore(sp);
-        });
-      }));
-    ;
-  }
-
-  
-  var _emwgpuDelete = (ptr) => {
-      delete WebGPU.Internals.jsObjects[ptr];
-    };
-
-  
-  
-  var _emwgpuDeviceCreateBuffer = (devicePtr, descriptor, bufferPtr) => {
-      assert(descriptor);assert(HEAPU32[((descriptor)>>2)] === 0);
-  
-      var mappedAtCreation = !!(HEAPU32[(((descriptor)+(32))>>2)]);
-  
-      var desc = {
-        "label": WebGPU.makeStringFromOptionalStringView(
-          descriptor + 4),
-        "usage": HEAPU32[(((descriptor)+(16))>>2)],
-        "size": readI53FromI64((descriptor)+(24)),
-        "mappedAtCreation": mappedAtCreation,
+  var _emscripten_webgl_do_create_context = (target, attributes) => {
+      assert(attributes);
+      var attr32 = ((attributes)>>2);
+      var powerPreference = HEAP32[attr32 + (8>>2)];
+      var contextAttributes = {
+        'alpha': !!HEAP8[attributes + 0],
+        'depth': !!HEAP8[attributes + 1],
+        'stencil': !!HEAP8[attributes + 2],
+        'antialias': !!HEAP8[attributes + 3],
+        'premultipliedAlpha': !!HEAP8[attributes + 4],
+        'preserveDrawingBuffer': !!HEAP8[attributes + 5],
+        'powerPreference': webglPowerPreferences[powerPreference],
+        'failIfMajorPerformanceCaveat': !!HEAP8[attributes + 12],
+        'desynchronized': !!HEAP8[attributes + 33],
+        // The following are not predefined WebGL context attributes in the WebGL specification, so the property names can be minified by Closure.
+        majorVersion: HEAP32[attr32 + (16>>2)],
+        minorVersion: HEAP32[attr32 + (20>>2)],
+        enableExtensionsByDefault: HEAP8[attributes + 24],
+        explicitSwapControl: HEAP8[attributes + 25],
+        proxyContextToMainThread: HEAP32[attr32 + (28>>2)],
+        renderViaOffscreenBackBuffer: HEAP8[attributes + 32]
       };
   
-      var device = WebGPU.getJsObject(devicePtr);
-      var buffer;
-      try {
-        buffer = device.createBuffer(desc);
-      } catch (ex) {
-        // The only exception should be RangeError if mapping at creation ran out of memory.
-        assert(ex instanceof RangeError);
-        assert(mappedAtCreation);
-        err('createBuffer threw:', ex);
-        return false;
+      //  TODO: Make these into hard errors at some point in the future
+      if (contextAttributes.majorVersion !== 1 && contextAttributes.majorVersion !== 2) {
+        err(`Invalid WebGL version requested: ${contextAttributes.majorVersion}`);
       }
-      WebGPU.Internals.jsObjectInsert(bufferPtr, buffer);
-      if (mappedAtCreation) {
-        WebGPU.Internals.bufferOnUnmaps[bufferPtr] = [];
+  
+      var canvas = findCanvasEventTarget(target);
+  
+      if (!canvas) {
+        return 0;
       }
-      return true;
+  
+      if (contextAttributes.explicitSwapControl) {
+        return 0;
+      }
+  
+      var contextHandle = GL.createContext(canvas, contextAttributes);
+      return contextHandle;
     };
+  var _emscripten_webgl_create_context = _emscripten_webgl_do_create_context;
 
-  
-  
-  
-  var _emwgpuDeviceCreateShaderModule = (devicePtr, descriptor, shaderModulePtr) => {
-      assert(descriptor);
-      var nextInChainPtr = HEAPU32[((descriptor)>>2)];
-      assert(nextInChainPtr !== 0);
-      var sType = HEAP32[(((nextInChainPtr)+(4))>>2)];
-  
-      var desc = {
-        "label": WebGPU.makeStringFromOptionalStringView(
-          descriptor + 4),
-        "code": "",
-      };
-  
-      switch (sType) {
-        case 2: {
-          desc["code"] = WebGPU.makeStringFromStringView(
-            nextInChainPtr + 8
-          );
-          break;
-        }
-        default: abort('unrecognized ShaderModule sType');
-      }
-  
-      var device = WebGPU.getJsObject(devicePtr);
-      WebGPU.Internals.jsObjectInsert(shaderModulePtr, device.createShaderModule(desc));
+  var _emscripten_webgl_make_context_current = (contextHandle) => {
+      var success = GL.makeContextCurrent(contextHandle);
+      return success ? 0 : -5;
     };
-
-  
-  var _emwgpuDeviceDestroy = (devicePtr) => {
-      const device = WebGPU.getJsObject(devicePtr);
-      // Remove the onuncapturederror handler which holds a pointer to the WGPUDevice.
-      device.onuncapturederror = null;
-      device.destroy()
-    };
-
-  
-  
-  
-  
-  
-  
-  function _emwgpuInstanceRequestAdapter(instancePtr, futureId, options, adapterPtr) {
-    futureId = bigintToI53Checked(futureId);
-  
-  
-      var opts;
-      if (options) {
-        assert(options);
-        opts = {
-          "featureLevel": WebGPU.FeatureLevel[HEAP32[(((options)+(4))>>2)]],
-          "powerPreference": WebGPU.PowerPreference[HEAP32[(((options)+(8))>>2)]],
-          "forceFallbackAdapter":
-            !!(HEAPU32[(((options)+(12))>>2)]),
-        };
-  
-        var nextInChainPtr = HEAPU32[((options)>>2)];
-        if (nextInChainPtr !== 0) {
-          var sType = HEAP32[(((nextInChainPtr)+(4))>>2)];
-          assert(sType === 11);
-          assert(0 === HEAPU32[((nextInChainPtr)>>2)]);
-          var webxrOptions = nextInChainPtr;
-          assert(webxrOptions);assert(HEAPU32[((webxrOptions)>>2)] === 0);
-          opts.xrCompatible = !!(HEAPU32[(((webxrOptions)+(8))>>2)]);
-        }
-      }
-  
-      if (!('gpu' in navigator)) {
-        var sp = stackSave();
-        var messagePtr = stringToUTF8OnStack('WebGPU not available on this browser (navigator.gpu is not available)');
-        _emwgpuOnRequestAdapterCompleted(futureId, 3,
-          adapterPtr, messagePtr);
-        stackRestore(sp);
-        return;
-      }
-  
-       // requestAdapter
-      WebGPU.Internals.futureInsert(futureId, navigator.gpu.requestAdapter(opts).then((adapter) => {
-         // requestAdapter fulfilled
-        callUserCallback(() => {
-          if (adapter) {
-            WebGPU.Internals.jsObjectInsert(adapterPtr, adapter);
-            _emwgpuOnRequestAdapterCompleted(futureId, 1,
-              adapterPtr, 0);
-          } else {
-            var sp = stackSave();
-            var messagePtr = stringToUTF8OnStack('WebGPU not available on this browser (requestAdapter returned null)');
-            _emwgpuOnRequestAdapterCompleted(futureId, 3,
-              adapterPtr, messagePtr);
-            stackRestore(sp);
-          }
-        });
-      }, (ex) => {
-         // requestAdapter rejected
-        callUserCallback(() => {
-          var sp = stackSave();
-          var messagePtr = stringToUTF8OnStack(ex.message);
-          _emwgpuOnRequestAdapterCompleted(futureId, 4,
-            adapterPtr, messagePtr);
-          stackRestore(sp);
-        });
-      }));
-    ;
-  }
 
   var ENV = {
   };
@@ -6516,6 +5960,10 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
 
   
+  var INT53_MAX = 9007199254740992;
+  
+  var INT53_MIN = -9007199254740992;
+  var bigintToI53Checked = (num) => (num < INT53_MIN || num > INT53_MAX) ? NaN : Number(num);
   
   function _fd_seek(fd, offset, whence, newOffset) {
     offset = bigintToI53Checked(offset);
@@ -6578,665 +6026,578 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   }
   
 
-  
-  
-  
-  
-  
-  var _wgpuCommandEncoderBeginRenderPass = (encoderPtr, descriptor) => {
-      assert(descriptor);
-  
-      function makeColorAttachment(caPtr) {
-        var viewPtr = HEAPU32[(((caPtr)+(4))>>2)];
-        if (viewPtr === 0) {
-          // Null `view` means no attachment in this slot.
-          return undefined;
-        }
-  
-        var depthSlice = HEAPU32[(((caPtr)+(8))>>2)];
-        if (depthSlice == 0xFFFFFFFF) depthSlice = undefined;
-  
-        return {
-          "view": WebGPU.getJsObject(viewPtr),
-          "depthSlice": depthSlice,
-          "resolveTarget": WebGPU.getJsObject(
-            HEAPU32[(((caPtr)+(12))>>2)]),
-          "clearValue": WebGPU.makeColor(caPtr + 24),
-          "loadOp": WebGPU.LoadOp[HEAP32[(((caPtr)+(16))>>2)]],
-          "storeOp": WebGPU.StoreOp[HEAP32[(((caPtr)+(20))>>2)]],
-        };
-      }
-  
-      function makeColorAttachments(count, caPtr) {
-        var attachments = [];
-        for (var i = 0; i < count; ++i) {
-          attachments.push(makeColorAttachment(caPtr + 56 * i));
-        }
-        return attachments;
-      }
-  
-      function makeDepthStencilAttachment(dsaPtr) {
-        if (dsaPtr === 0) return undefined;
-  
-        return {
-          "view": WebGPU.getJsObject(
-            HEAPU32[(((dsaPtr)+(4))>>2)]),
-          "depthClearValue": HEAPF32[(((dsaPtr)+(16))>>2)],
-          "depthLoadOp": WebGPU.LoadOp[HEAP32[(((dsaPtr)+(8))>>2)]],
-          "depthStoreOp": WebGPU.StoreOp[HEAP32[(((dsaPtr)+(12))>>2)]],
-          "depthReadOnly": !!(HEAPU32[(((dsaPtr)+(20))>>2)]),
-          "stencilClearValue": HEAPU32[(((dsaPtr)+(32))>>2)],
-          "stencilLoadOp": WebGPU.LoadOp[HEAP32[(((dsaPtr)+(24))>>2)]],
-          "stencilStoreOp": WebGPU.StoreOp[HEAP32[(((dsaPtr)+(28))>>2)]],
-          "stencilReadOnly": !!(HEAPU32[(((dsaPtr)+(36))>>2)]),
-        };
-      }
-  
-      function makeRenderPassDescriptor(descriptor) {
-        assert(descriptor);
-        var nextInChainPtr = HEAPU32[((descriptor)>>2)];
-  
-        var maxDrawCount = undefined;
-        if (nextInChainPtr !== 0) {
-          var sType = HEAP32[(((nextInChainPtr)+(4))>>2)];
-          assert(sType === 3);
-          assert(0 === HEAPU32[((nextInChainPtr)>>2)]);
-          var renderPassMaxDrawCount = nextInChainPtr;
-          assert(renderPassMaxDrawCount);assert(HEAPU32[((renderPassMaxDrawCount)>>2)] === 0);
-          // Note: The user could have passed a really huge value here, which is technically valid in
-          // C but will not be allowed by WebGPU in JS because of [EnforceRange]. We intentionally
-          // ignore that case because it's not useful - apps can just pick a smaller maxDrawCount.
-          maxDrawCount = readI53FromI64((renderPassMaxDrawCount)+(8));
-        }
-  
-        var desc = {
-          "label": WebGPU.makeStringFromOptionalStringView(
-            descriptor + 4),
-          "colorAttachments": makeColorAttachments(
-            HEAPU32[(((descriptor)+(12))>>2)],
-            HEAPU32[(((descriptor)+(16))>>2)]),
-          "depthStencilAttachment": makeDepthStencilAttachment(
-            HEAPU32[(((descriptor)+(20))>>2)]),
-          "occlusionQuerySet": WebGPU.getJsObject(
-            HEAPU32[(((descriptor)+(24))>>2)]),
-          "timestampWrites": WebGPU.makePassTimestampWrites(
-            HEAPU32[(((descriptor)+(28))>>2)]),
-          "maxDrawCount": maxDrawCount,
-        };
-        return desc;
-      }
-  
-      var desc = makeRenderPassDescriptor(descriptor);
-  
-      var commandEncoder = WebGPU.getJsObject(encoderPtr);
-      var ptr = _emwgpuCreateRenderPassEncoder(0);
-      WebGPU.Internals.jsObjectInsert(ptr, commandEncoder.beginRenderPass(desc));
-      return ptr;
+  var _emscripten_glActiveTexture = (x0) => GLctx.activeTexture(x0);
+  var _glActiveTexture = _emscripten_glActiveTexture;
+
+  var _emscripten_glAttachShader = (program, shader) => {
+      GL.validateGLObjectID(GL.programs, program, 'glAttachShader', 'program');
+      GL.validateGLObjectID(GL.shaders, shader, 'glAttachShader', 'shader');
+      GLctx.attachShader(GL.programs[program], GL.shaders[shader]);
     };
+  var _glAttachShader = _emscripten_glAttachShader;
+
+  var _emscripten_glBindBuffer = (target, buffer) => {
+      GL.validateGLObjectID(GL.buffers, buffer, 'glBindBuffer', 'buffer');
+  
+      if (target == 0x88EB /*GL_PIXEL_PACK_BUFFER*/) {
+        // In WebGL 2 glReadPixels entry point, we need to use a different WebGL 2
+        // API function call when a buffer is bound to
+        // GL_PIXEL_PACK_BUFFER_BINDING point, so must keep track whether that
+        // binding point is non-null to know what is the proper API function to
+        // call.
+        GLctx.currentPixelPackBufferBinding = buffer;
+      } else if (target == 0x88EC /*GL_PIXEL_UNPACK_BUFFER*/) {
+        // In WebGL 2 gl(Compressed)Tex(Sub)Image[23]D entry points, we need to
+        // use a different WebGL 2 API function call when a buffer is bound to
+        // GL_PIXEL_UNPACK_BUFFER_BINDING point, so must keep track whether that
+        // binding point is non-null to know what is the proper API function to
+        // call.
+        GLctx.currentPixelUnpackBufferBinding = buffer;
+      }
+      GLctx.bindBuffer(target, GL.buffers[buffer]);
+    };
+  var _glBindBuffer = _emscripten_glBindBuffer;
+
+  var _emscripten_glBindTexture = (target, texture) => {
+      GL.validateGLObjectID(GL.textures, texture, 'glBindTexture', 'texture');
+      GLctx.bindTexture(target, GL.textures[texture]);
+    };
+  var _glBindTexture = _emscripten_glBindTexture;
+
+  var _emscripten_glBindVertexArray = (vao) => {
+      assert(GLctx.bindVertexArray, 'Must have WebGL2 or OES_vertex_array_object to use vao');
+      GLctx.bindVertexArray(GL.vaos[vao]);
+    };
+  var _glBindVertexArray = _emscripten_glBindVertexArray;
+
+  var _emscripten_glBlendFunc = (x0, x1) => GLctx.blendFunc(x0, x1);
+  var _glBlendFunc = _emscripten_glBlendFunc;
 
   
+  var _emscripten_glBufferData = (target, size, data, usage) => {
   
-  var _wgpuCommandEncoderFinish = (encoderPtr, descriptor) => {
-      // TODO: Use the descriptor.
-      var commandEncoder = WebGPU.getJsObject(encoderPtr);
-      var ptr = _emwgpuCreateCommandBuffer(0);
-      WebGPU.Internals.jsObjectInsert(ptr, commandEncoder.finish());
-      return ptr;
-    };
-
-  
-  
-  
-  var _wgpuDeviceCreateBindGroup = (devicePtr, descriptor) => {
-      assert(descriptor);assert(HEAPU32[((descriptor)>>2)] === 0);
-  
-      function makeEntry(entryPtr) {
-        assert(entryPtr);
-  
-        var bufferPtr = HEAPU32[(((entryPtr)+(8))>>2)];
-        var samplerPtr = HEAPU32[(((entryPtr)+(32))>>2)];
-        var textureViewPtr = HEAPU32[(((entryPtr)+(36))>>2)];
-        var externalTexturePtr = 0;
-        WebGPU.iterateExtensions(entryPtr, {
-          14: (ptr) => {
-            externalTexturePtr = HEAPU32[(((ptr)+(8))>>2)];
-          },
-        });
-        assert((bufferPtr !== 0) + (samplerPtr !== 0) + (textureViewPtr !== 0) + (externalTexturePtr !== 0) === 1);
-  
-        var resource;
-        if (bufferPtr) {
-          // Note the sentinel UINT64_MAX will be read as -1.
-          var size = readI53FromI64((entryPtr)+(24));
-          if (size == -1) size = undefined;
-  
-          resource = {
-            "buffer": WebGPU.getJsObject(bufferPtr),
-            "offset": readI53FromI64((entryPtr)+(16)),
-            "size": size,
-          };
+      if (GL.currentContext.version >= 2) {
+        // If size is zero, WebGL would interpret uploading the whole input
+        // arraybuffer (starting from given offset), which would not make sense in
+        // WebAssembly, so avoid uploading if size is zero. However we must still
+        // call bufferData to establish a backing storage of zero bytes.
+        if (data && size) {
+          GLctx.bufferData(target, HEAPU8, usage, data, size);
         } else {
-          resource = WebGPU.getJsObject(samplerPtr || textureViewPtr || externalTexturePtr);
+          GLctx.bufferData(target, size, usage);
         }
-        return {
-          "binding": HEAPU32[(((entryPtr)+(4))>>2)],
-          "resource": resource,
-        };
+        return;
+      }
+      // N.b. here first form specifies a heap subarray, second form an integer
+      // size, so the ?: code here is polymorphic. It is advised to avoid
+      // randomly mixing both uses in calling code, to avoid any potential JS
+      // engine JIT issues.
+      GLctx.bufferData(target, data ? HEAPU8.subarray(data, data+size) : size, usage);
+    };
+  var _glBufferData = _emscripten_glBufferData;
+
+  var _emscripten_glClear = (x0) => GLctx.clear(x0);
+  var _glClear = _emscripten_glClear;
+
+  var _emscripten_glClearColor = (x0, x1, x2, x3) => GLctx.clearColor(x0, x1, x2, x3);
+  var _glClearColor = _emscripten_glClearColor;
+
+  var _emscripten_glCompileShader = (shader) => {
+      GL.validateGLObjectID(GL.shaders, shader, 'glCompileShader', 'shader');
+      GLctx.compileShader(GL.shaders[shader]);
+    };
+  var _glCompileShader = _emscripten_glCompileShader;
+
+  var _emscripten_glCreateProgram = () => {
+      var id = GL.getNewId(GL.programs);
+      var program = GLctx.createProgram();
+      // Store additional information needed for each shader program:
+      program.name = id;
+      // Lazy cache results of
+      // glGetProgramiv(GL_ACTIVE_UNIFORM_MAX_LENGTH/GL_ACTIVE_ATTRIBUTE_MAX_LENGTH/GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH)
+      program.maxUniformLength = program.maxAttributeLength = program.maxUniformBlockNameLength = 0;
+      program.uniformIdCounter = 1;
+      GL.programs[id] = program;
+      return id;
+    };
+  var _glCreateProgram = _emscripten_glCreateProgram;
+
+  var _emscripten_glCreateShader = (shaderType) => {
+      var id = GL.getNewId(GL.shaders);
+      GL.shaders[id] = GLctx.createShader(shaderType);
+  
+      return id;
+    };
+  var _glCreateShader = _emscripten_glCreateShader;
+
+  var _emscripten_glDeleteShader = (id) => {
+      if (!id) return;
+      var shader = GL.shaders[id];
+      if (!shader) {
+        // glDeleteShader actually signals an error when deleting a nonexisting
+        // object, unlike some other GL delete functions.
+        GL.recordError(0x501 /* GL_INVALID_VALUE */);
+        return;
+      }
+      GLctx.deleteShader(shader);
+      GL.shaders[id] = null;
+    };
+  var _glDeleteShader = _emscripten_glDeleteShader;
+
+  
+  var _emscripten_glDeleteTextures = (n, textures) => {
+      for (var i = 0; i < n; i++) {
+        var id = HEAP32[(((textures)+(i*4))>>2)];
+        var texture = GL.textures[id];
+        // GL spec: "glDeleteTextures silently ignores 0s and names that do not
+        // correspond to existing textures".
+        if (!texture) continue;
+        GLctx.deleteTexture(texture);
+        texture.name = 0;
+        GL.textures[id] = null;
+      }
+    };
+  var _glDeleteTextures = _emscripten_glDeleteTextures;
+
+  var _emscripten_glDrawArrays = (mode, first, count) => {
+  
+      GLctx.drawArrays(mode, first, count);
+  
+    };
+  var _glDrawArrays = _emscripten_glDrawArrays;
+
+  var _emscripten_glEnable = (x0) => GLctx.enable(x0);
+  var _glEnable = _emscripten_glEnable;
+
+  var _emscripten_glEnableVertexAttribArray = (index) => {
+      GLctx.enableVertexAttribArray(index);
+    };
+  var _glEnableVertexAttribArray = _emscripten_glEnableVertexAttribArray;
+
+  var _emscripten_glGenBuffers = (n, buffers) => {
+      GL.genObject(n, buffers, 'createBuffer', GL.buffers
+      , 'glGenBuffers'
+        );
+    };
+  var _glGenBuffers = _emscripten_glGenBuffers;
+
+  var _emscripten_glGenTextures = (n, textures) => {
+      GL.genObject(n, textures, 'createTexture', GL.textures
+      , 'glGenTextures'
+        );
+    };
+  var _glGenTextures = _emscripten_glGenTextures;
+
+  var _emscripten_glGenVertexArrays = (n, arrays) => {
+      assert(GLctx.createVertexArray, 'Must have WebGL2 or OES_vertex_array_object to use vao');
+      GL.genObject(n, arrays, 'createVertexArray', GL.vaos
+      , 'glGenVertexArrays'
+        );
+    };
+  var _glGenVertexArrays = _emscripten_glGenVertexArrays;
+
+  
+  var _emscripten_glGetProgramiv = (program, pname, p) => {
+      if (!p) {
+        // GLES2 specification does not specify how to behave if p is a null
+        // pointer. Since calling this function does not make sense if p == null,
+        // issue a GL error to notify user about it.
+        err(`GL_INVALID_VALUE in glGetProgramiv(program=${program}, pname=${pname}, p=0): Function called with null out pointer!`);
+        GL.recordError(0x501 /* GL_INVALID_VALUE */);
+        return;
+      }
+      GL.validateGLObjectID(GL.programs, program, 'glGetProgramiv', 'program');
+  
+      if (program >= GL.counter) {
+        err(`GL_INVALID_VALUE in glGetProgramiv(program=${program}, pname=${pname}, p=${ptrToString(p)}): The specified program object name was not generated by GL!`);
+        GL.recordError(0x501 /* GL_INVALID_VALUE */);
+        return;
       }
   
-      function makeEntries(count, entriesPtrs) {
-        var entries = [];
-        for (var i = 0; i < count; ++i) {
-          entries.push(makeEntry(entriesPtrs +
-              40 * i));
+      program = GL.programs[program];
+  
+      if (pname == 0x8B84) { // GL_INFO_LOG_LENGTH
+        var log = GLctx.getProgramInfoLog(program);
+        if (log === null) log = '(unknown error)';
+        HEAP32[((p)>>2)] = log.length + 1;
+      } else if (pname == 0x8B87 /* GL_ACTIVE_UNIFORM_MAX_LENGTH */) {
+        if (!program.maxUniformLength) {
+          var numActiveUniforms = GLctx.getProgramParameter(program, 0x8B86/*GL_ACTIVE_UNIFORMS*/);
+          for (var i = 0; i < numActiveUniforms; ++i) {
+            program.maxUniformLength = Math.max(program.maxUniformLength, GLctx.getActiveUniform(program, i).name.length+1);
+          }
         }
-        return entries;
-      }
-  
-      var desc = {
-        "label": WebGPU.makeStringFromOptionalStringView(
-          descriptor + 4),
-        "layout": WebGPU.getJsObject(
-          HEAPU32[(((descriptor)+(12))>>2)]),
-        "entries": makeEntries(
-          HEAPU32[(((descriptor)+(16))>>2)],
-          HEAPU32[(((descriptor)+(20))>>2)]
-        ),
-      };
-  
-      var device = WebGPU.getJsObject(devicePtr);
-      var ptr = _emwgpuCreateBindGroup(0);
-      WebGPU.Internals.jsObjectInsert(ptr, device.createBindGroup(desc));
-      return ptr;
-    };
-
-  
-  
-  
-  
-  var _wgpuDeviceCreateBindGroupLayout = (devicePtr, descriptor) => {
-      assert(descriptor);assert(HEAPU32[((descriptor)>>2)] === 0);
-  
-      function makeBufferEntry(substructPtr) {
-        var typeInt =
-          HEAPU32[(((substructPtr)+(4))>>2)];
-        if (!typeInt) return undefined;
-  
-        return {
-          "type": WebGPU.BufferBindingType[typeInt],
-          "hasDynamicOffset":
-            !!(HEAPU32[(((substructPtr)+(8))>>2)]),
-          "minBindingSize":
-            readI53FromI64((substructPtr)+(16)),
-        };
-      }
-  
-      function makeSamplerEntry(substructPtr) {
-        var typeInt =
-          HEAPU32[(((substructPtr)+(4))>>2)];
-        if (!typeInt) return undefined;
-  
-        return {
-          "type": WebGPU.SamplerBindingType[typeInt],
-        };
-      }
-  
-      function makeTextureEntry(substructPtr) {
-        var sampleTypeInt =
-          HEAPU32[(((substructPtr)+(4))>>2)];
-        if (!sampleTypeInt) return undefined;
-  
-        return {
-          "sampleType": WebGPU.TextureSampleType[sampleTypeInt],
-          "viewDimension": WebGPU.TextureViewDimension[HEAP32[(((substructPtr)+(8))>>2)]],
-          "multisampled":
-            !!(HEAPU32[(((substructPtr)+(12))>>2)]),
-        };
-      }
-  
-      function makeStorageTextureEntry(substructPtr) {
-        var accessInt =
-          HEAPU32[(((substructPtr)+(4))>>2)]
-        if (!accessInt) return undefined;
-  
-        return {
-          "access": WebGPU.StorageTextureAccess[accessInt],
-          "format": WebGPU.TextureFormat[HEAP32[(((substructPtr)+(8))>>2)]],
-          "viewDimension": WebGPU.TextureViewDimension[HEAP32[(((substructPtr)+(12))>>2)]],
-        };
-      }
-  
-      function makeEntry(entryPtr) {
-        assert(entryPtr);
-        // bindingArraySize is not specced and thus not implemented yet. We don't pass it through
-        // because if we did, then existing apps using this version of the bindings could break when
-        // browsers start accepting bindingArraySize.
-        var bindingArraySize = HEAPU32[(((entryPtr)+(16))>>2)];
-        assert(bindingArraySize == 0 || bindingArraySize == 1);
-  
-        var entry = {
-          "binding":
-            HEAPU32[(((entryPtr)+(4))>>2)],
-          "visibility":
-            HEAPU32[(((entryPtr)+(8))>>2)],
-          "buffer": makeBufferEntry(entryPtr + 24),
-          "sampler": makeSamplerEntry(entryPtr + 48),
-          "texture": makeTextureEntry(entryPtr + 56),
-          "storageTexture": makeStorageTextureEntry(entryPtr + 72),
-        };
-        WebGPU.iterateExtensions(entryPtr, {
-          13: (ptr) => {
-            entry["externalTexture"] = {};
-          },
-        });
-        return entry;
-      }
-  
-      function makeEntries(count, entriesPtrs) {
-        var entries = [];
-        for (var i = 0; i < count; ++i) {
-          entries.push(makeEntry(entriesPtrs +
-              88 * i));
+        HEAP32[((p)>>2)] = program.maxUniformLength;
+      } else if (pname == 0x8B8A /* GL_ACTIVE_ATTRIBUTE_MAX_LENGTH */) {
+        if (!program.maxAttributeLength) {
+          var numActiveAttributes = GLctx.getProgramParameter(program, 0x8B89/*GL_ACTIVE_ATTRIBUTES*/);
+          for (var i = 0; i < numActiveAttributes; ++i) {
+            program.maxAttributeLength = Math.max(program.maxAttributeLength, GLctx.getActiveAttrib(program, i).name.length+1);
+          }
         }
-        return entries;
-      }
-  
-      var desc = {
-        "label": WebGPU.makeStringFromOptionalStringView(
-          descriptor + 4),
-        "entries": makeEntries(
-          HEAPU32[(((descriptor)+(12))>>2)],
-          HEAPU32[(((descriptor)+(16))>>2)]
-        ),
-      };
-  
-      var device = WebGPU.getJsObject(devicePtr);
-      var ptr = _emwgpuCreateBindGroupLayout(0);
-      WebGPU.Internals.jsObjectInsert(ptr, device.createBindGroupLayout(desc));
-      return ptr;
-    };
-
-  
-  
-  
-  var _wgpuDeviceCreateCommandEncoder = (devicePtr, descriptor) => {
-      var desc;
-      if (descriptor) {
-        assert(descriptor);assert(HEAPU32[((descriptor)>>2)] === 0);
-        desc = {
-          "label": WebGPU.makeStringFromOptionalStringView(
-            descriptor + 4),
-        };
-      }
-      var device = WebGPU.getJsObject(devicePtr);
-      var ptr = _emwgpuCreateCommandEncoder(0);
-      WebGPU.Internals.jsObjectInsert(ptr, device.createCommandEncoder(desc));
-      return ptr;
-    };
-
-  
-  
-  
-  var _wgpuDeviceCreatePipelineLayout = (devicePtr, descriptor) => {
-      assert(descriptor);assert(HEAPU32[((descriptor)>>2)] === 0);
-      var bglCount = HEAPU32[(((descriptor)+(12))>>2)];
-      var bglPtr = HEAPU32[(((descriptor)+(16))>>2)];
-      var bgls = [];
-      for (var i = 0; i < bglCount; ++i) {
-        bgls.push(WebGPU.getJsObject(
-          HEAPU32[(((bglPtr)+(4 * i))>>2)]));
-      }
-      var desc = {
-        "label": WebGPU.makeStringFromOptionalStringView(
-          descriptor + 4),
-        "bindGroupLayouts": bgls,
-      };
-  
-      var device = WebGPU.getJsObject(devicePtr);
-      var ptr = _emwgpuCreatePipelineLayout(0);
-      WebGPU.Internals.jsObjectInsert(ptr, device.createPipelineLayout(desc));
-      return ptr;
-    };
-
-  
-  
-  var _wgpuDeviceCreateRenderPipeline = (devicePtr, descriptor) => {
-      var desc = WebGPU.makeRenderPipelineDesc(descriptor);
-      var device = WebGPU.getJsObject(devicePtr);
-      var ptr = _emwgpuCreateRenderPipeline(0);
-      WebGPU.Internals.jsObjectInsert(ptr, device.createRenderPipeline(desc));
-      return ptr;
-    };
-
-  
-  
-  
-  /** @type {!Uint16Array} */
-  var HEAPU16;
-  
-  
-  
-  var _wgpuDeviceCreateSampler = (devicePtr, descriptor) => {
-      var desc;
-      if (descriptor) {
-        assert(descriptor);assert(HEAPU32[((descriptor)>>2)] === 0);
-  
-        desc = {
-          "label": WebGPU.makeStringFromOptionalStringView(
-            descriptor + 4),
-          "addressModeU": WebGPU.AddressMode[HEAP32[(((descriptor)+(12))>>2)]],
-          "addressModeV": WebGPU.AddressMode[HEAP32[(((descriptor)+(16))>>2)]],
-          "addressModeW": WebGPU.AddressMode[HEAP32[(((descriptor)+(20))>>2)]],
-          "magFilter": WebGPU.FilterMode[HEAP32[(((descriptor)+(24))>>2)]],
-          "minFilter": WebGPU.FilterMode[HEAP32[(((descriptor)+(28))>>2)]],
-          "mipmapFilter": WebGPU.MipmapFilterMode[HEAP32[(((descriptor)+(32))>>2)]],
-          "lodMinClamp": HEAPF32[(((descriptor)+(36))>>2)],
-          "lodMaxClamp": HEAPF32[(((descriptor)+(40))>>2)],
-          "compare": WebGPU.CompareFunction[HEAP32[(((descriptor)+(44))>>2)]],
-          "maxAnisotropy": HEAPU16[(((descriptor)+(48))>>1)],
-        };
-      }
-  
-      var device = WebGPU.getJsObject(devicePtr);
-      var ptr = _emwgpuCreateSampler(0);
-      WebGPU.Internals.jsObjectInsert(ptr, device.createSampler(desc));
-      return ptr;
-    };
-
-  
-  
-  
-  
-  var _wgpuDeviceCreateTexture = (devicePtr, descriptor) => {
-      assert(descriptor);
-      var nextInChainPtr = HEAPU32[((descriptor)>>2)];
-  
-      var textureBindingViewDimension;
-      if (nextInChainPtr !== 0) {
-        var sType = HEAP32[(((nextInChainPtr)+(4))>>2)];
-        assert(sType === 16);
-        assert(0 === HEAPU32[((nextInChainPtr)>>2)]);
-        var textureBindingViewDimensionDescriptor = nextInChainPtr;
-        assert(textureBindingViewDimensionDescriptor);assert(HEAPU32[((textureBindingViewDimensionDescriptor)>>2)] === 0);
-        textureBindingViewDimension = WebGPU.TextureViewDimension[HEAP32[(((textureBindingViewDimensionDescriptor)+(8))>>2)]];
-      }
-  
-      var desc = {
-        "label": WebGPU.makeStringFromOptionalStringView(
-          descriptor + 4),
-        "size": WebGPU.makeExtent3D(descriptor + 28),
-        "mipLevelCount": HEAPU32[(((descriptor)+(44))>>2)],
-        "sampleCount": HEAPU32[(((descriptor)+(48))>>2)],
-        "dimension": WebGPU.TextureDimension[HEAP32[(((descriptor)+(24))>>2)]],
-        "format": WebGPU.TextureFormat[HEAP32[(((descriptor)+(40))>>2)]],
-        "usage": HEAPU32[(((descriptor)+(16))>>2)],
-        "textureBindingViewDimension": textureBindingViewDimension,
-      };
-  
-      var viewFormatCount = HEAPU32[(((descriptor)+(52))>>2)];
-      if (viewFormatCount) {
-        var viewFormatsPtr = HEAPU32[(((descriptor)+(56))>>2)];
-        // viewFormatsPtr pointer to an array of TextureFormat which is an enum of size uint32_t
-        desc['viewFormats'] = Array.from(HEAP32.subarray((((viewFormatsPtr)>>2)), ((viewFormatsPtr + viewFormatCount * 4)>>2)),
-          format => WebGPU.TextureFormat[format]);
-      }
-  
-      var device = WebGPU.getJsObject(devicePtr);
-      var ptr = _emwgpuCreateTexture(0);
-      WebGPU.Internals.jsObjectInsert(ptr, device.createTexture(desc));
-      return ptr;
-    };
-
-  
-  
-  
-  
-  
-  var _wgpuInstanceCreateSurface = (instancePtr, descriptor) => {
-      assert(descriptor);
-      var nextInChainPtr = HEAPU32[((descriptor)>>2)];
-      assert(nextInChainPtr !== 0);
-      assert(262144 ===
-        HEAP32[(((nextInChainPtr)+(4))>>2)]);
-      var sourceCanvasHTMLSelector = nextInChainPtr;
-  
-      assert(sourceCanvasHTMLSelector);assert(HEAPU32[((sourceCanvasHTMLSelector)>>2)] === 0);
-      var selectorPtr = HEAPU32[(((sourceCanvasHTMLSelector)+(8))>>2)];
-      assert(selectorPtr);
-      var canvas = findCanvasEventTarget(selectorPtr);
-      var context = canvas.getContext('webgpu');
-      assert(context);
-      if (!context) return 0;
-  
-      context.surfaceLabelWebGPU = WebGPU.makeStringFromOptionalStringView(
-        descriptor + 4
-      );
-  
-      var ptr = _emwgpuCreateSurface(0);
-      WebGPU.Internals.jsObjectInsert(ptr, context);
-      return ptr;
-    };
-
-  
-  
-  var _wgpuQueueSubmit = (queuePtr, commandCount, commands) => {
-      assert(commands % 4 === 0);
-      var queue = WebGPU.getJsObject(queuePtr);
-      var cmds = Array.from(HEAP32.subarray((((commands)>>2)), ((commands + commandCount * 4)>>2)),
-        (id) => WebGPU.getJsObject(id));
-      queue.submit(cmds);
-    };
-
-  
-  
-  
-  function _wgpuQueueWriteBuffer(queuePtr, bufferPtr, bufferOffset, data, size) {
-    bufferOffset = bigintToI53Checked(bufferOffset);
-  
-  
-      var queue = WebGPU.getJsObject(queuePtr);
-      var buffer = WebGPU.getJsObject(bufferPtr);
-      // There is a size limitation for ArrayBufferView. Work around by passing in a subarray
-      // instead of the whole heap. crbug.com/1201109
-      var subarray = HEAPU8.subarray(data, data + size);
-      queue.writeBuffer(buffer, bufferOffset, subarray, 0, size);
-    ;
-  }
-
-  
-  
-  var _wgpuQueueWriteTexture = (queuePtr, destinationPtr, data, dataSize, dataLayoutPtr, writeSizePtr) => {
-      var queue = WebGPU.getJsObject(queuePtr);
-  
-      var destination = WebGPU.makeTexelCopyTextureInfo(destinationPtr);
-      var dataLayout = WebGPU.makeTexelCopyBufferLayout(dataLayoutPtr);
-      var writeSize = WebGPU.makeExtent3D(writeSizePtr);
-      // This subarray isn't strictly necessary, but helps work around an issue
-      // where Chromium makes a copy of the entire heap. crbug.com/1134457
-      var subarray = HEAPU8.subarray(data, data + dataSize);
-      queue.writeTexture(destination, subarray, dataLayout, writeSize);
-    };
-
-  
-  var _wgpuRenderPassEncoderDraw = (passPtr, vertexCount, instanceCount, firstVertex, firstInstance) => {
-      assert(vertexCount >= 0);
-      assert(instanceCount >= 0);
-      firstVertex >>>= 0;
-      firstInstance >>>= 0;
-      var pass = WebGPU.getJsObject(passPtr);
-      pass.draw(vertexCount, instanceCount, firstVertex, firstInstance);
-    };
-
-  
-  var _wgpuRenderPassEncoderEnd = (encoderPtr) => {
-      var encoder = WebGPU.getJsObject(encoderPtr);
-      encoder.end();
-    };
-
-  
-  
-  var _wgpuRenderPassEncoderSetBindGroup = (passPtr, groupIndex, groupPtr, dynamicOffsetCount, dynamicOffsetsPtr) => {
-      assert(groupIndex >= 0);
-      var pass = WebGPU.getJsObject(passPtr);
-      var group = WebGPU.getJsObject(groupPtr);
-      if (dynamicOffsetCount == 0) {
-        pass.setBindGroup(groupIndex, group);
+        HEAP32[((p)>>2)] = program.maxAttributeLength;
+      } else if (pname == 0x8A35 /* GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH */) {
+        if (!program.maxUniformBlockNameLength) {
+          var numActiveUniformBlocks = GLctx.getProgramParameter(program, 0x8A36/*GL_ACTIVE_UNIFORM_BLOCKS*/);
+          for (var i = 0; i < numActiveUniformBlocks; ++i) {
+            program.maxUniformBlockNameLength = Math.max(program.maxUniformBlockNameLength, GLctx.getActiveUniformBlockName(program, i).length+1);
+          }
+        }
+        HEAP32[((p)>>2)] = program.maxUniformBlockNameLength;
       } else {
-        pass.setBindGroup(groupIndex, group, HEAPU32, ((dynamicOffsetsPtr)>>2), dynamicOffsetCount);
+        HEAP32[((p)>>2)] = GLctx.getProgramParameter(program, pname);
       }
     };
+  var _glGetProgramiv = _emscripten_glGetProgramiv;
 
   
-  var _wgpuRenderPassEncoderSetPipeline = (passPtr, pipelinePtr) => {
-      var pass = WebGPU.getJsObject(passPtr);
-      var pipeline = WebGPU.getJsObject(pipelinePtr);
-      pass.setPipeline(pipeline);
+  
+  var _emscripten_glGetShaderInfoLog = (shader, maxLength, length, infoLog) => {
+      GL.validateGLObjectID(GL.shaders, shader, 'glGetShaderInfoLog', 'shader');
+      var log = GLctx.getShaderInfoLog(GL.shaders[shader]);
+      if (log === null) log = '(unknown error)';
+      var numBytesWrittenExclNull = (maxLength > 0 && infoLog) ? stringToUTF8(log, infoLog, maxLength) : 0;
+      if (length) HEAP32[((length)>>2)] = numBytesWrittenExclNull;
     };
+  var _glGetShaderInfoLog = _emscripten_glGetShaderInfoLog;
 
   
-  
-  function _wgpuRenderPassEncoderSetVertexBuffer(passPtr, slot, bufferPtr, offset, size) {
-    offset = bigintToI53Checked(offset);
-    size = bigintToI53Checked(size);
-  
-  
-      assert(slot >= 0);
-      var pass = WebGPU.getJsObject(passPtr);
-      var buffer = WebGPU.getJsObject(bufferPtr);
-      if (size == -1) size = undefined;
-      pass.setVertexBuffer(slot, buffer, offset, size);
-    ;
-  }
+  var _emscripten_glGetShaderiv = (shader, pname, p) => {
+      if (!p) {
+        // GLES2 specification does not specify how to behave if p is a null
+        // pointer. Since calling this function does not make sense if p == null,
+        // issue a GL error to notify user about it.
+        err(`GL_INVALID_VALUE in glGetShaderiv(shader=${shader}, pname=${pname}, p=0): Function called with null out pointer!`);
+        GL.recordError(0x501 /* GL_INVALID_VALUE */);
+        return;
+      }
+      GL.validateGLObjectID(GL.shaders, shader, 'glGetShaderiv', 'shader');
+      if (pname == 0x8B84) { // GL_INFO_LOG_LENGTH
+        var log = GLctx.getShaderInfoLog(GL.shaders[shader]);
+        if (log === null) log = '(unknown error)';
+        // The GLES2 specification says that if the shader has an empty info log,
+        // a value of 0 is returned. Otherwise the log has a null char appended.
+        // (An empty string is falsey, so we can just check that instead of
+        // looking at log.length.)
+        var logLength = log ? log.length + 1 : 0;
+        HEAP32[((p)>>2)] = logLength;
+      } else if (pname == 0x8B88) { // GL_SHADER_SOURCE_LENGTH
+        var source = GLctx.getShaderSource(GL.shaders[shader]);
+        // source may be a null, or the empty string, both of which are falsey
+        // values that we report a 0 length for.
+        var sourceLength = source ? source.length + 1 : 0;
+        HEAP32[((p)>>2)] = sourceLength;
+      } else {
+        HEAP32[((p)>>2)] = GLctx.getShaderParameter(GL.shaders[shader], pname);
+      }
+    };
+  var _glGetShaderiv = _emscripten_glGetShaderiv;
 
+  /** @suppress {checkTypes} */
+  var jstoi_q = (str) => parseInt(str);
   
+  /** @noinline */
+  var webglGetLeftBracePos = (name) => name.slice(-1) == ']' && name.lastIndexOf('[');
   
+  var webglPrepareUniformLocationsBeforeFirstUse = (program) => {
+      var uniformLocsById = program.uniformLocsById, // Maps GLuint -> WebGLUniformLocation
+        uniformSizeAndIdsByName = program.uniformSizeAndIdsByName, // Maps name -> [uniform array length, GLuint]
+        i, j;
   
-  var _wgpuSurfaceConfigure = (surfacePtr, config) => {
-      assert(config);
-      var context = WebGPU.getJsObject(surfacePtr);
+      // On the first time invocation of glGetUniformLocation on this shader program:
+      // initialize cache data structures and discover which uniforms are arrays.
+      if (!uniformLocsById) {
+        // maps GLint integer locations to WebGLUniformLocations
+        program.uniformLocsById = uniformLocsById = {};
+        // maps integer locations back to uniform name strings, so that we can lazily fetch uniform array locations
+        program.uniformArrayNamesById = {};
   
-      var presentMode = HEAPU32[(((config)+(44))>>2)];
-      assert(presentMode === 1 ||
-             presentMode === 0);
+        var numActiveUniforms = GLctx.getProgramParameter(program, 0x8B86/*GL_ACTIVE_UNIFORMS*/);
+        for (i = 0; i < numActiveUniforms; ++i) {
+          var u = GLctx.getActiveUniform(program, i);
+          var nm = u.name;
+          var sz = u.size;
+          var lb = webglGetLeftBracePos(nm);
+          var arrayName = lb > 0 ? nm.slice(0, lb) : nm;
   
-      var canvasSize = [
-        HEAPU32[(((config)+(24))>>2)],
-        HEAPU32[(((config)+(28))>>2)]
-      ];
+          // Assign a new location.
+          var id = program.uniformIdCounter;
+          program.uniformIdCounter += sz;
+          // Eagerly get the location of the uniformArray[0] base element.
+          // The remaining indices >0 will be left for lazy evaluation to
+          // improve performance. Those may never be needed to fetch, if the
+          // application fills arrays always in full starting from the first
+          // element of the array.
+          uniformSizeAndIdsByName[arrayName] = [sz, id];
   
-      if (canvasSize[0] !== 0) {
-        context["canvas"]["width"] = canvasSize[0];
+          // Store placeholder integers in place that highlight that these
+          // >0 index locations are array indices pending population.
+          for (j = 0; j < sz; ++j) {
+            uniformLocsById[id] = j;
+            program.uniformArrayNamesById[id++] = arrayName;
+          }
+        }
       }
+    };
   
-      if (canvasSize[1] !== 0) {
-        context["canvas"]["height"] = canvasSize[1];
+  
+  
+  var _emscripten_glGetUniformLocation = (program, name) => {
+  
+      GL.validateGLObjectID(GL.programs, program, 'glGetUniformLocation', 'program');
+      name = UTF8ToString(name);
+  
+      assert(!name.includes(' '), `Uniform names passed to glGetUniformLocation() should not contain spaces! (received "${name}")`);
+  
+      if (program = GL.programs[program]) {
+        webglPrepareUniformLocationsBeforeFirstUse(program);
+        var uniformLocsById = program.uniformLocsById; // Maps GLuint -> WebGLUniformLocation
+        var arrayIndex = 0;
+        var uniformBaseName = name;
+  
+        // Invariant: when populating integer IDs for uniform locations, we must
+        // maintain the precondition that arrays reside in contiguous addresses,
+        // i.e. for a 'vec4 colors[10];', colors[4] must be at location
+        // colors[0]+4.  However, user might call glGetUniformLocation(program,
+        // "colors") for an array, so we cannot discover based on the user input
+        // arguments whether the uniform we are dealing with is an array. The only
+        // way to discover which uniforms are arrays is to enumerate over all the
+        // active uniforms in the program.
+        var leftBrace = webglGetLeftBracePos(name);
+  
+        // If user passed an array accessor "[index]", parse the array index off the accessor.
+        if (leftBrace > 0) {
+          assert(name.slice(leftBrace + 1).length == 1 || !isNaN(jstoi_q(name.slice(leftBrace + 1))), `Malformed input parameter name "${name}" passed to glGetUniformLocation!`);
+          arrayIndex = jstoi_q(name.slice(leftBrace + 1)) >>> 0; // "index]", coerce parseInt(']') with >>>0 to treat "foo[]" as "foo[0]" and foo[-1] as unsigned out-of-bounds.
+          uniformBaseName = name.slice(0, leftBrace);
+        }
+  
+        // Have we cached the location of this uniform before?
+        // A pair [array length, GLint of the uniform location]
+        var sizeAndId = program.uniformSizeAndIdsByName[uniformBaseName];
+  
+        // If a uniform with this name exists, and if its index is within the
+        // array limits (if it's even an array), query the WebGLlocation, or
+        // return an existing cached location.
+        if (sizeAndId && arrayIndex < sizeAndId[0]) {
+          arrayIndex += sizeAndId[1]; // Add the base location of the uniform to the array index offset.
+          if ((uniformLocsById[arrayIndex] = uniformLocsById[arrayIndex] || GLctx.getUniformLocation(program, name))) {
+            return arrayIndex;
+          }
+        }
       }
+      else {
+        // N.b. we are currently unable to distinguish between GL program IDs that
+        // never existed vs GL program IDs that have been deleted, so report
+        // GL_INVALID_VALUE in both cases.
+        GL.recordError(0x501 /* GL_INVALID_VALUE */);
+      }
+      return -1;
+    };
+  var _glGetUniformLocation = _emscripten_glGetUniformLocation;
+
+  var _emscripten_glLinkProgram = (program) => {
+      GL.validateGLObjectID(GL.programs, program, 'glLinkProgram', 'program');
+      program = GL.programs[program];
+      GLctx.linkProgram(program);
+      // Invalidate earlier computed uniform->ID mappings, those have now become stale
+      program.uniformLocsById = 0; // Mark as null-like so that glGetUniformLocation() knows to populate this again.
+      program.uniformSizeAndIdsByName = {};
   
-      var configuration = {
-        "device": WebGPU.getJsObject(HEAPU32[(((config)+(4))>>2)]),
-        "format": WebGPU.TextureFormat[HEAP32[(((config)+(8))>>2)]],
-        "usage": HEAPU32[(((config)+(16))>>2)],
-        "alphaMode": WebGPU.CompositeAlphaMode[HEAP32[(((config)+(40))>>2)]],
+    };
+  var _glLinkProgram = _emscripten_glLinkProgram;
+
+  var _emscripten_glPixelStorei = (pname, param) => {
+      if (pname == 3317) {
+        GL.unpackAlignment = param;
+      } else if (pname == 3314) {
+        GL.unpackRowLength = param;
+      }
+      GLctx.pixelStorei(pname, param);
+    };
+  var _glPixelStorei = _emscripten_glPixelStorei;
+
+  var _emscripten_glShaderSource = (shader, count, string, length) => {
+      GL.validateGLObjectID(GL.shaders, shader, 'glShaderSource', 'shader');
+      var source = GL.getSource(shader, count, string, length);
+  
+      GLctx.shaderSource(GL.shaders[shader], source);
+    };
+  var _glShaderSource = _emscripten_glShaderSource;
+
+  var computeUnpackAlignedImageSize = (width, height, sizePerPixel) => {
+      function roundedToNextMultipleOf(x, y) {
+        assert((y & (y-1)) === 0, 'Unpack alignment must be a power of 2! (Allowed values per WebGL spec are 1, 2, 4 or 8)');
+        return (x + y - 1) & -y;
+      }
+      var plainRowSize = (GL.unpackRowLength || width) * sizePerPixel;
+      var alignedRowSize = roundedToNextMultipleOf(plainRowSize, GL.unpackAlignment);
+      return height * alignedRowSize;
+    };
+  
+  var colorChannelsInGlTextureFormat = (format) => {
+      // Micro-optimizations for size: map format to size by subtracting smallest
+      // enum value (0x1902) from all values first.  Also omit the most common
+      // size value (1) from the list, which is assumed by formats not on the
+      // list.
+      var colorChannels = {
+        // 0x1902 /* GL_DEPTH_COMPONENT */ - 0x1902: 1,
+        // 0x1906 /* GL_ALPHA */ - 0x1902: 1,
+        5: 3,
+        6: 4,
+        // 0x1909 /* GL_LUMINANCE */ - 0x1902: 1,
+        8: 2,
+        29502: 3,
+        29504: 4,
+        // 0x1903 /* GL_RED */ - 0x1902: 1,
+        26917: 2,
+        26918: 2,
+        // 0x8D94 /* GL_RED_INTEGER */ - 0x1902: 1,
+        29846: 3,
+        29847: 4
       };
-  
-      var viewFormatCount = HEAPU32[(((config)+(32))>>2)];
-      if (viewFormatCount) {
-        var viewFormatsPtr = HEAPU32[(((config)+(36))>>2)];
-        // viewFormatsPtr pointer to an array of TextureFormat which is an enum of size uint32_t
-        configuration['viewFormats'] = Array.from(HEAP32.subarray((((viewFormatsPtr)>>2)), ((viewFormatsPtr + viewFormatCount * 4)>>2)),
-          format => WebGPU.TextureFormat[format]);
+      if (!colorChannels[format - 0x1902]
+        && format != 0x1902 /* GL_DEPTH_COMPONENT */
+        && format != 0x1906 /* GL_ALPHA */
+        && format != 0x1909 /* GL_LUMINANCE */
+        && format != 0x1903 /* GL_RED */
+        && format != 0x8D94 /* GL_RED_INTEGER */) {
+        err(`Invalid format=${ptrToString(format)} passed to function colorChannelsInGlTextureFormat()!`);
       }
+      return colorChannels[format - 0x1902]||1;
+    };
   
-      {
-        var nextInChainPtr = HEAPU32[((config)>>2)];
   
-        if (nextInChainPtr !== 0) {
-          var sType = HEAP32[(((nextInChainPtr)+(4))>>2)];
-          assert(sType === 10);
-          assert(0 === HEAPU32[((nextInChainPtr)>>2)]);
-          var surfaceColorManagement = nextInChainPtr;
-          assert(surfaceColorManagement);assert(HEAPU32[((surfaceColorManagement)>>2)] === 0);
-          configuration.colorSpace = WebGPU.PredefinedColorSpace[HEAP32[(((surfaceColorManagement)+(8))>>2)]];
-          configuration.toneMapping = {
-            mode: WebGPU.ToneMappingMode[HEAP32[(((surfaceColorManagement)+(12))>>2)]],
-          };
+  
+  
+  
+  
+  
+  
+  var heapObjectForWebGLType = (type) => {
+      // Micro-optimization for size: Subtract lowest GL enum number (0x1400/* GL_BYTE */) from type to compare
+      // smaller values for the heap, for shorter generated code size.
+      // Also the type HEAPU16 is not tested for explicitly, but any unrecognized type will return out HEAPU16.
+      // (since most types are HEAPU16)
+      type -= 0x1400;
+      if (type == 0) return HEAP8;
+  
+      if (type == 1) return HEAPU8;
+  
+      if (type == 2) return HEAP16;
+  
+      if (type == 4) return HEAP32;
+  
+      if (type == 6) return HEAPF32;
+  
+      if (type == 5
+        || type == 28922
+        || type == 28520
+        || type == 30779
+        || type == 30782
+        )
+        return HEAPU32;
+  
+        if (type != 3
+          && type != 11
+          && type != 27699
+          && type != 27700
+          && type != 28515
+          && type != 31073) {
+          err(`Invalid WebGL type 0x${(type+0x1400).toString()} passed to $heapObjectForWebGLType!`);
+        }
+      return HEAPU16;
+    };
+  
+  var toTypedArrayIndex = (pointer, heap) =>
+      pointer >>> (31 - Math.clz32(heap.BYTES_PER_ELEMENT));
+  
+  var emscriptenWebGLGetTexPixelData = (type, format, width, height, pixels) => {
+      var heap = heapObjectForWebGLType(type);
+      var sizePerPixel = colorChannelsInGlTextureFormat(format) * heap.BYTES_PER_ELEMENT;
+      var bytes = computeUnpackAlignedImageSize(width, height, sizePerPixel);
+      assert(pixels % heap.BYTES_PER_ELEMENT == 0, 'Pointer to texture data passed to texture get function must be aligned to the byte size of the pixel type');
+      return heap.subarray(toTypedArrayIndex(pixels, heap), toTypedArrayIndex(pixels + bytes, heap));
+    };
+  
+  
+  
+  var _emscripten_glTexImage2D = (target, level, internalFormat, width, height, border, format, type, pixels) => {
+      if (GL.currentContext.version >= 2) {
+        if (GLctx.currentPixelUnpackBufferBinding) {
+          GLctx.texImage2D(target, level, internalFormat, width, height, border, format, type, pixels);
+          return;
+        }
+        if (pixels) {
+          var heap = heapObjectForWebGLType(type);
+          var index = toTypedArrayIndex(pixels, heap);
+          GLctx.texImage2D(target, level, internalFormat, width, height, border, format, type, heap, index);
+          return;
         }
       }
-  
-      context.configure(configuration);
+      var pixelData = pixels ? emscriptenWebGLGetTexPixelData(type, format, width, height, pixels) : null;
+      GLctx.texImage2D(target, level, internalFormat, width, height, border, format, type, pixelData);
     };
+  var _glTexImage2D = _emscripten_glTexImage2D;
+
+  var _emscripten_glTexParameteri = (x0, x1, x2) => GLctx.texParameteri(x0, x1, x2);
+  var _glTexParameteri = _emscripten_glTexParameteri;
 
   
+  var webglGetProgramUniformLocation = (program, location) => {
   
-  
-  
-  var _wgpuSurfaceGetCurrentTexture = (surfacePtr, surfaceTexturePtr) => {
-      assert(surfaceTexturePtr);
-      var context = WebGPU.getJsObject(surfacePtr);
-  
-      try {
-        var texturePtr = _emwgpuCreateTexture(0);
-        WebGPU.Internals.jsObjectInsert(texturePtr, context.getCurrentTexture());
-        HEAPU32[(((surfaceTexturePtr)+(4))>>2)] = texturePtr;
-        HEAP32[(((surfaceTexturePtr)+(8))>>2)] = 1;
-      } catch (ex) {
-        err(`wgpuSurfaceGetCurrentTexture() failed: ${ex}`);
-        HEAPU32[(((surfaceTexturePtr)+(4))>>2)] = 0;
-        HEAP32[(((surfaceTexturePtr)+(8))>>2)] = 6;
-      }
-    };
-
-  
-  var _wgpuSurfacePresent = (surfacePtr) => {
-      // TODO: This could probably be emulated with ASYNCIFY.
-      abort('wgpuSurfacePresent is unsupported (use requestAnimationFrame via html5.h instead)');
-    };
-
-  
-  
-  
-  
-  var _wgpuTextureCreateView = (texturePtr, descriptor) => {
-      var desc;
-      if (descriptor) {
-        var swizzle;
-        var nextInChainPtr = HEAPU32[((descriptor)>>2)];
-        if (nextInChainPtr !== 0) {
-          var sType = HEAP32[(((nextInChainPtr)+(4))>>2)];
-          assert(sType === 12);
-          assert(0 === HEAPU32[((nextInChainPtr)>>2)]);
-          var swizzleDescriptor = nextInChainPtr;
-          assert(swizzleDescriptor);assert(HEAPU32[((swizzleDescriptor)>>2)] === 0);
-          var swizzlePtr = swizzleDescriptor + 8;
-          var r = WebGPU.ComponentSwizzle[HEAP32[((swizzlePtr)>>2)]] || 'r';
-          var g = WebGPU.ComponentSwizzle[HEAP32[(((swizzlePtr)+(4))>>2)]] || 'g';
-          var b = WebGPU.ComponentSwizzle[HEAP32[(((swizzlePtr)+(8))>>2)]] || 'b';
-          var a = WebGPU.ComponentSwizzle[HEAP32[(((swizzlePtr)+(12))>>2)]] || 'a';
-          swizzle = `${r}${g}${b}${a}`;
+      if (program) {
+        var webglLoc = program.uniformLocsById[location];
+        // program.uniformLocsById[location] stores either an integer, or a
+        // WebGLUniformLocation.
+        // If an integer, we have not yet bound the location, so do it now. The
+        // integer value specifies the array index we should bind to.
+        if (typeof webglLoc == 'number') {
+          program.uniformLocsById[location] = webglLoc = GLctx.getUniformLocation(program, program.uniformArrayNamesById[location] + (webglLoc > 0 ? `[${webglLoc}]` : ''));
         }
-  
-        var mipLevelCount = HEAPU32[(((descriptor)+(24))>>2)];
-        var arrayLayerCount = HEAPU32[(((descriptor)+(32))>>2)];
-        desc = {
-          "label": WebGPU.makeStringFromOptionalStringView(
-            descriptor + 4),
-          "format": WebGPU.TextureFormat[HEAP32[(((descriptor)+(12))>>2)]],
-          "dimension": WebGPU.TextureViewDimension[HEAP32[(((descriptor)+(16))>>2)]],
-          "baseMipLevel": HEAPU32[(((descriptor)+(20))>>2)],
-          "mipLevelCount": mipLevelCount === 4294967295 ? undefined : mipLevelCount,
-          "baseArrayLayer": HEAPU32[(((descriptor)+(28))>>2)],
-          "arrayLayerCount": arrayLayerCount === 4294967295 ? undefined : arrayLayerCount,
-          "aspect": WebGPU.TextureAspect[HEAP32[(((descriptor)+(36))>>2)]],
-          "usage": HEAPU32[(((descriptor)+(40))>>2)],
-          "swizzle": swizzle,
-        };
+        // Else an already cached WebGLUniformLocation, return it.
+        return webglLoc;
+      } else {
+        GL.recordError(0x502/*GL_INVALID_OPERATION*/);
       }
-  
-      var texture = WebGPU.getJsObject(texturePtr);
-      var ptr = _emwgpuCreateTextureView(0);
-      WebGPU.Internals.jsObjectInsert(ptr, texture.createView(desc));
-      return ptr;
     };
+  
+  var webglGetUniformLocation = (location) => {
+  
+      return webglGetProgramUniformLocation(GLctx.currentProgram, location);
+    };
+  
+  var _emscripten_glUniform1i = (location, v0) => {
+      GL.validateGLObjectID(GLctx.currentProgram.uniformLocsById, location, 'glUniform1i', 'location');
+      GLctx.uniform1i(webglGetUniformLocation(location), v0);
+    };
+  var _glUniform1i = _emscripten_glUniform1i;
+
+  
+  var _emscripten_glUniform2f = (location, v0, v1) => {
+      GL.validateGLObjectID(GLctx.currentProgram.uniformLocsById, location, 'glUniform2f', 'location');
+      GLctx.uniform2f(webglGetUniformLocation(location), v0, v1);
+    };
+  var _glUniform2f = _emscripten_glUniform2f;
+
+  var _emscripten_glUseProgram = (program) => {
+      GL.validateGLObjectID(GL.programs, program, 'glUseProgram', 'program');
+      program = GL.programs[program];
+      GLctx.useProgram(program);
+      // Record the currently active program so that we can access the uniform
+      // mapping table of that program.
+      GLctx.currentProgram = program;
+    };
+  var _glUseProgram = _emscripten_glUseProgram;
+
+  var _emscripten_glVertexAttribPointer = (index, size, type, normalized, stride, ptr) => {
+      GL.validateVertexAttribPointer(size, type, stride, ptr);
+      GLctx.vertexAttribPointer(index, size, type, !!normalized, stride, ptr);
+    };
+  var _glVertexAttribPointer = _emscripten_glVertexAttribPointer;
+
+  var _emscripten_glViewport = (x0, x1, x2, x3) => GLctx.viewport(x0, x1, x2, x3);
+  var _glViewport = _emscripten_glViewport;
 
 
 
@@ -7252,6 +6613,15 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       HEAP8.set(array, buffer);
     };
   
+  
+  
+  var stackAlloc = (sz) => __emscripten_stack_alloc(sz);
+  var stringToUTF8OnStack = (str) => {
+      var size = lengthBytesUTF8(str) + 1;
+      var ret = stackAlloc(size);
+      stringToUTF8(str, ret, size);
+      return ret;
+    };
   
   
   
@@ -7488,7 +6858,7 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
           var contextAttributes = {
             antialias: false,
             alpha: false,
-            majorVersion: 1,
+            majorVersion: (typeof WebGL2RenderingContext != 'undefined') ? 2 : 1,
           };
   
           if (webGLContextAttributes) {
@@ -7883,7 +7253,6 @@ if (Module['printErr']) err = Module['printErr'];
   'readSockaddr',
   'writeSockaddr',
   'readEmAsmArgs',
-  'jstoi_q',
   'autoResumeAudioContext',
   'getDynCaller',
   'dynCall',
@@ -7981,29 +7350,14 @@ if (Module['printErr']) err = Module['printErr'];
   'getSocketAddress',
   'FS_mkdirTree',
   '_setNetworkCallback',
-  'heapObjectForWebGLType',
-  'toTypedArrayIndex',
-  'webgl_enable_ANGLE_instanced_arrays',
-  'webgl_enable_OES_vertex_array_object',
-  'webgl_enable_WEBGL_draw_buffers',
-  'webgl_enable_WEBGL_multi_draw',
-  'webgl_enable_EXT_polygon_offset_clamp',
-  'webgl_enable_EXT_clip_control',
-  'webgl_enable_WEBGL_polygon_mode',
   'emscriptenWebGLGet',
-  'computeUnpackAlignedImageSize',
-  'colorChannelsInGlTextureFormat',
-  'emscriptenWebGLGetTexPixelData',
   'emscriptenWebGLGetUniform',
-  'webglGetProgramUniformLocation',
-  'webglGetUniformLocation',
-  'webglPrepareUniformLocationsBeforeFirstUse',
-  'webglGetLeftBracePos',
   'emscriptenWebGLGetVertexAttrib',
   '__glGetActiveAttribOrUniform',
   'writeGLArray',
   'registerWebGlEventCallback',
   'runAndAbortIfError',
+  'emscriptenWebGLGetIndexed',
   'writeStringToMemory',
   'writeAsciiToMemory',
   'allocateUTF8',
@@ -8055,6 +7409,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'timers',
   'warnOnce',
   'readEmAsmArgsArray',
+  'jstoi_q',
   'getExecutableName',
   'handleException',
   'keepRuntimeAlive',
@@ -8238,7 +7593,23 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'tempFixedLengthArray',
   'miniTempWebGLFloatBuffers',
   'miniTempWebGLIntBuffers',
+  'heapObjectForWebGLType',
+  'toTypedArrayIndex',
+  'webgl_enable_ANGLE_instanced_arrays',
+  'webgl_enable_OES_vertex_array_object',
+  'webgl_enable_WEBGL_draw_buffers',
+  'webgl_enable_WEBGL_multi_draw',
+  'webgl_enable_EXT_polygon_offset_clamp',
+  'webgl_enable_EXT_clip_control',
+  'webgl_enable_WEBGL_polygon_mode',
   'GL',
+  'computeUnpackAlignedImageSize',
+  'colorChannelsInGlTextureFormat',
+  'emscriptenWebGLGetTexPixelData',
+  'webglGetProgramUniformLocation',
+  'webglGetUniformLocation',
+  'webglPrepareUniformLocationsBeforeFirstUse',
+  'webglGetLeftBracePos',
   'AL',
   'GLUT',
   'EGL',
@@ -8246,6 +7617,8 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'IDBStore',
   'SDL',
   'SDL_gfx',
+  'webgl_enable_WEBGL_draw_instanced_base_vertex_base_instance',
+  'webgl_enable_WEBGL_multi_draw_instanced_base_vertex_base_instance',
   'print',
   'printErr',
   'jstoi_s',
@@ -8254,12 +7627,6 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'fetchLoadCachedData',
   'fetchCacheData',
   'fetchXHR',
-  'WebGPU',
-  'emwgpuStringToInt_BufferMapState',
-  'emwgpuStringToInt_CompilationMessageType',
-  'emwgpuStringToInt_DeviceLostReason',
-  'emwgpuStringToInt_FeatureName',
-  'emwgpuStringToInt_PreferredFormat',
 ];
 unexportedSymbols.forEach(unexportedRuntimeSymbol);
 
@@ -8300,48 +7667,21 @@ function checkIncomingModuleAPI() {
 }
 
 // Imports from the Wasm binary.
+var _jsMove = Module['_jsMove'] = makeInvalidEarlyAccess('_jsMove');
+var _jsInteract = Module['_jsInteract'] = makeInvalidEarlyAccess('_jsInteract');
+var _jsInventory = Module['_jsInventory'] = makeInvalidEarlyAccess('_jsInventory');
+var _jsInvDrop = Module['_jsInvDrop'] = makeInvalidEarlyAccess('_jsInvDrop');
+var _jsInvOpen = Module['_jsInvOpen'] = makeInvalidEarlyAccess('_jsInvOpen');
+var _jsModalActive = Module['_jsModalActive'] = makeInvalidEarlyAccess('_jsModalActive');
+var _jsGamepad = Module['_jsGamepad'] = makeInvalidEarlyAccess('_jsGamepad');
 var _downloadFile = Module['_downloadFile'] = makeInvalidEarlyAccess('_downloadFile');
 var _main = Module['_main'] = makeInvalidEarlyAccess('_main');
-var _free = makeInvalidEarlyAccess('_free');
 var _realloc = makeInvalidEarlyAccess('_realloc');
 var _malloc = makeInvalidEarlyAccess('_malloc');
-var _emwgpuCreateBindGroup = makeInvalidEarlyAccess('_emwgpuCreateBindGroup');
-var _emwgpuCreateBindGroupLayout = makeInvalidEarlyAccess('_emwgpuCreateBindGroupLayout');
-var _emwgpuCreateCommandBuffer = makeInvalidEarlyAccess('_emwgpuCreateCommandBuffer');
-var _emwgpuCreateCommandEncoder = makeInvalidEarlyAccess('_emwgpuCreateCommandEncoder');
-var _emwgpuCreateComputePassEncoder = makeInvalidEarlyAccess('_emwgpuCreateComputePassEncoder');
-var _emwgpuCreateComputePipeline = makeInvalidEarlyAccess('_emwgpuCreateComputePipeline');
-var _emwgpuCreateExternalTexture = makeInvalidEarlyAccess('_emwgpuCreateExternalTexture');
-var _emwgpuCreatePipelineLayout = makeInvalidEarlyAccess('_emwgpuCreatePipelineLayout');
-var _emwgpuCreateQuerySet = makeInvalidEarlyAccess('_emwgpuCreateQuerySet');
-var _emwgpuCreateRenderBundle = makeInvalidEarlyAccess('_emwgpuCreateRenderBundle');
-var _emwgpuCreateRenderBundleEncoder = makeInvalidEarlyAccess('_emwgpuCreateRenderBundleEncoder');
-var _emwgpuCreateRenderPassEncoder = makeInvalidEarlyAccess('_emwgpuCreateRenderPassEncoder');
-var _emwgpuCreateRenderPipeline = makeInvalidEarlyAccess('_emwgpuCreateRenderPipeline');
-var _emwgpuCreateSampler = makeInvalidEarlyAccess('_emwgpuCreateSampler');
-var _emwgpuCreateSurface = makeInvalidEarlyAccess('_emwgpuCreateSurface');
-var _emwgpuCreateTexture = makeInvalidEarlyAccess('_emwgpuCreateTexture');
-var _emwgpuCreateTextureView = makeInvalidEarlyAccess('_emwgpuCreateTextureView');
-var _emwgpuCreateAdapter = makeInvalidEarlyAccess('_emwgpuCreateAdapter');
-var _emwgpuImportBuffer = makeInvalidEarlyAccess('_emwgpuImportBuffer');
-var _emwgpuCreateDevice = makeInvalidEarlyAccess('_emwgpuCreateDevice');
-var _emwgpuCreateQueue = makeInvalidEarlyAccess('_emwgpuCreateQueue');
-var _emwgpuCreateShaderModule = makeInvalidEarlyAccess('_emwgpuCreateShaderModule');
-var _emwgpuOnCompilationInfoCompleted = makeInvalidEarlyAccess('_emwgpuOnCompilationInfoCompleted');
-var _emwgpuOnCreateComputePipelineCompleted = makeInvalidEarlyAccess('_emwgpuOnCreateComputePipelineCompleted');
-var _emwgpuOnCreateRenderPipelineCompleted = makeInvalidEarlyAccess('_emwgpuOnCreateRenderPipelineCompleted');
-var _emwgpuOnDeviceLostCompleted = makeInvalidEarlyAccess('_emwgpuOnDeviceLostCompleted');
-var _emwgpuOnMapAsyncCompleted = makeInvalidEarlyAccess('_emwgpuOnMapAsyncCompleted');
-var _emwgpuOnPopErrorScopeCompleted = makeInvalidEarlyAccess('_emwgpuOnPopErrorScopeCompleted');
-var _emwgpuOnRequestAdapterCompleted = makeInvalidEarlyAccess('_emwgpuOnRequestAdapterCompleted');
-var _emwgpuOnRequestDeviceCompleted = makeInvalidEarlyAccess('_emwgpuOnRequestDeviceCompleted');
-var _emwgpuOnWorkDoneCompleted = makeInvalidEarlyAccess('_emwgpuOnWorkDoneCompleted');
-var _emwgpuOnUncapturedError = makeInvalidEarlyAccess('_emwgpuOnUncapturedError');
 var _fflush = makeInvalidEarlyAccess('_fflush');
 var _emscripten_stack_get_end = makeInvalidEarlyAccess('_emscripten_stack_get_end');
 var _emscripten_stack_get_base = makeInvalidEarlyAccess('_emscripten_stack_get_base');
 var _strerror = makeInvalidEarlyAccess('_strerror');
-var _memalign = makeInvalidEarlyAccess('_memalign');
 var _emscripten_stack_init = makeInvalidEarlyAccess('_emscripten_stack_init');
 var _emscripten_stack_get_free = makeInvalidEarlyAccess('_emscripten_stack_get_free');
 var __emscripten_stack_restore = makeInvalidEarlyAccess('__emscripten_stack_restore');
@@ -8353,48 +7693,21 @@ var wasmMemory = makeInvalidEarlyAccess('wasmMemory');
 var wasmTable = makeInvalidEarlyAccess('wasmTable');
 
 function assignWasmExports(wasmExports) {
+  assert(typeof wasmExports['jsMove'] != 'undefined', 'missing Wasm export: jsMove');
+  assert(typeof wasmExports['jsInteract'] != 'undefined', 'missing Wasm export: jsInteract');
+  assert(typeof wasmExports['jsInventory'] != 'undefined', 'missing Wasm export: jsInventory');
+  assert(typeof wasmExports['jsInvDrop'] != 'undefined', 'missing Wasm export: jsInvDrop');
+  assert(typeof wasmExports['jsInvOpen'] != 'undefined', 'missing Wasm export: jsInvOpen');
+  assert(typeof wasmExports['jsModalActive'] != 'undefined', 'missing Wasm export: jsModalActive');
+  assert(typeof wasmExports['jsGamepad'] != 'undefined', 'missing Wasm export: jsGamepad');
   assert(typeof wasmExports['downloadFile'] != 'undefined', 'missing Wasm export: downloadFile');
   assert(typeof wasmExports['main'] != 'undefined', 'missing Wasm export: main');
-  assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
   assert(typeof wasmExports['realloc'] != 'undefined', 'missing Wasm export: realloc');
   assert(typeof wasmExports['malloc'] != 'undefined', 'missing Wasm export: malloc');
-  assert(typeof wasmExports['emwgpuCreateBindGroup'] != 'undefined', 'missing Wasm export: emwgpuCreateBindGroup');
-  assert(typeof wasmExports['emwgpuCreateBindGroupLayout'] != 'undefined', 'missing Wasm export: emwgpuCreateBindGroupLayout');
-  assert(typeof wasmExports['emwgpuCreateCommandBuffer'] != 'undefined', 'missing Wasm export: emwgpuCreateCommandBuffer');
-  assert(typeof wasmExports['emwgpuCreateCommandEncoder'] != 'undefined', 'missing Wasm export: emwgpuCreateCommandEncoder');
-  assert(typeof wasmExports['emwgpuCreateComputePassEncoder'] != 'undefined', 'missing Wasm export: emwgpuCreateComputePassEncoder');
-  assert(typeof wasmExports['emwgpuCreateComputePipeline'] != 'undefined', 'missing Wasm export: emwgpuCreateComputePipeline');
-  assert(typeof wasmExports['emwgpuCreateExternalTexture'] != 'undefined', 'missing Wasm export: emwgpuCreateExternalTexture');
-  assert(typeof wasmExports['emwgpuCreatePipelineLayout'] != 'undefined', 'missing Wasm export: emwgpuCreatePipelineLayout');
-  assert(typeof wasmExports['emwgpuCreateQuerySet'] != 'undefined', 'missing Wasm export: emwgpuCreateQuerySet');
-  assert(typeof wasmExports['emwgpuCreateRenderBundle'] != 'undefined', 'missing Wasm export: emwgpuCreateRenderBundle');
-  assert(typeof wasmExports['emwgpuCreateRenderBundleEncoder'] != 'undefined', 'missing Wasm export: emwgpuCreateRenderBundleEncoder');
-  assert(typeof wasmExports['emwgpuCreateRenderPassEncoder'] != 'undefined', 'missing Wasm export: emwgpuCreateRenderPassEncoder');
-  assert(typeof wasmExports['emwgpuCreateRenderPipeline'] != 'undefined', 'missing Wasm export: emwgpuCreateRenderPipeline');
-  assert(typeof wasmExports['emwgpuCreateSampler'] != 'undefined', 'missing Wasm export: emwgpuCreateSampler');
-  assert(typeof wasmExports['emwgpuCreateSurface'] != 'undefined', 'missing Wasm export: emwgpuCreateSurface');
-  assert(typeof wasmExports['emwgpuCreateTexture'] != 'undefined', 'missing Wasm export: emwgpuCreateTexture');
-  assert(typeof wasmExports['emwgpuCreateTextureView'] != 'undefined', 'missing Wasm export: emwgpuCreateTextureView');
-  assert(typeof wasmExports['emwgpuCreateAdapter'] != 'undefined', 'missing Wasm export: emwgpuCreateAdapter');
-  assert(typeof wasmExports['emwgpuImportBuffer'] != 'undefined', 'missing Wasm export: emwgpuImportBuffer');
-  assert(typeof wasmExports['emwgpuCreateDevice'] != 'undefined', 'missing Wasm export: emwgpuCreateDevice');
-  assert(typeof wasmExports['emwgpuCreateQueue'] != 'undefined', 'missing Wasm export: emwgpuCreateQueue');
-  assert(typeof wasmExports['emwgpuCreateShaderModule'] != 'undefined', 'missing Wasm export: emwgpuCreateShaderModule');
-  assert(typeof wasmExports['emwgpuOnCompilationInfoCompleted'] != 'undefined', 'missing Wasm export: emwgpuOnCompilationInfoCompleted');
-  assert(typeof wasmExports['emwgpuOnCreateComputePipelineCompleted'] != 'undefined', 'missing Wasm export: emwgpuOnCreateComputePipelineCompleted');
-  assert(typeof wasmExports['emwgpuOnCreateRenderPipelineCompleted'] != 'undefined', 'missing Wasm export: emwgpuOnCreateRenderPipelineCompleted');
-  assert(typeof wasmExports['emwgpuOnDeviceLostCompleted'] != 'undefined', 'missing Wasm export: emwgpuOnDeviceLostCompleted');
-  assert(typeof wasmExports['emwgpuOnMapAsyncCompleted'] != 'undefined', 'missing Wasm export: emwgpuOnMapAsyncCompleted');
-  assert(typeof wasmExports['emwgpuOnPopErrorScopeCompleted'] != 'undefined', 'missing Wasm export: emwgpuOnPopErrorScopeCompleted');
-  assert(typeof wasmExports['emwgpuOnRequestAdapterCompleted'] != 'undefined', 'missing Wasm export: emwgpuOnRequestAdapterCompleted');
-  assert(typeof wasmExports['emwgpuOnRequestDeviceCompleted'] != 'undefined', 'missing Wasm export: emwgpuOnRequestDeviceCompleted');
-  assert(typeof wasmExports['emwgpuOnWorkDoneCompleted'] != 'undefined', 'missing Wasm export: emwgpuOnWorkDoneCompleted');
-  assert(typeof wasmExports['emwgpuOnUncapturedError'] != 'undefined', 'missing Wasm export: emwgpuOnUncapturedError');
   assert(typeof wasmExports['fflush'] != 'undefined', 'missing Wasm export: fflush');
   assert(typeof wasmExports['emscripten_stack_get_end'] != 'undefined', 'missing Wasm export: emscripten_stack_get_end');
   assert(typeof wasmExports['emscripten_stack_get_base'] != 'undefined', 'missing Wasm export: emscripten_stack_get_base');
   assert(typeof wasmExports['strerror'] != 'undefined', 'missing Wasm export: strerror');
-  assert(typeof wasmExports['memalign'] != 'undefined', 'missing Wasm export: memalign');
   assert(typeof wasmExports['emscripten_stack_init'] != 'undefined', 'missing Wasm export: emscripten_stack_init');
   assert(typeof wasmExports['emscripten_stack_get_free'] != 'undefined', 'missing Wasm export: emscripten_stack_get_free');
   assert(typeof wasmExports['_emscripten_stack_restore'] != 'undefined', 'missing Wasm export: _emscripten_stack_restore');
@@ -8402,48 +7715,21 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['emscripten_stack_get_current'] != 'undefined', 'missing Wasm export: emscripten_stack_get_current');
   assert(typeof wasmExports['memory'] != 'undefined', 'missing Wasm export: memory');
   assert(typeof wasmExports['__indirect_function_table'] != 'undefined', 'missing Wasm export: __indirect_function_table');
+  _jsMove = Module['_jsMove'] = createExportWrapper('jsMove', wasmExports['jsMove'], 2);
+  _jsInteract = Module['_jsInteract'] = createExportWrapper('jsInteract', wasmExports['jsInteract'], 0);
+  _jsInventory = Module['_jsInventory'] = createExportWrapper('jsInventory', wasmExports['jsInventory'], 0);
+  _jsInvDrop = Module['_jsInvDrop'] = createExportWrapper('jsInvDrop', wasmExports['jsInvDrop'], 0);
+  _jsInvOpen = Module['_jsInvOpen'] = createExportWrapper('jsInvOpen', wasmExports['jsInvOpen'], 0);
+  _jsModalActive = Module['_jsModalActive'] = createExportWrapper('jsModalActive', wasmExports['jsModalActive'], 0);
+  _jsGamepad = Module['_jsGamepad'] = createExportWrapper('jsGamepad', wasmExports['jsGamepad'], 3);
   _downloadFile = Module['_downloadFile'] = createExportWrapper('downloadFile', wasmExports['downloadFile'], 2);
   _main = Module['_main'] = createExportWrapper('main', wasmExports['main'], 2);
-  _free = createExportWrapper('free', wasmExports['free'], 1);
   _realloc = createExportWrapper('realloc', wasmExports['realloc'], 2);
   _malloc = createExportWrapper('malloc', wasmExports['malloc'], 1);
-  _emwgpuCreateBindGroup = createExportWrapper('emwgpuCreateBindGroup', wasmExports['emwgpuCreateBindGroup'], 1);
-  _emwgpuCreateBindGroupLayout = createExportWrapper('emwgpuCreateBindGroupLayout', wasmExports['emwgpuCreateBindGroupLayout'], 1);
-  _emwgpuCreateCommandBuffer = createExportWrapper('emwgpuCreateCommandBuffer', wasmExports['emwgpuCreateCommandBuffer'], 1);
-  _emwgpuCreateCommandEncoder = createExportWrapper('emwgpuCreateCommandEncoder', wasmExports['emwgpuCreateCommandEncoder'], 1);
-  _emwgpuCreateComputePassEncoder = createExportWrapper('emwgpuCreateComputePassEncoder', wasmExports['emwgpuCreateComputePassEncoder'], 1);
-  _emwgpuCreateComputePipeline = createExportWrapper('emwgpuCreateComputePipeline', wasmExports['emwgpuCreateComputePipeline'], 1);
-  _emwgpuCreateExternalTexture = createExportWrapper('emwgpuCreateExternalTexture', wasmExports['emwgpuCreateExternalTexture'], 1);
-  _emwgpuCreatePipelineLayout = createExportWrapper('emwgpuCreatePipelineLayout', wasmExports['emwgpuCreatePipelineLayout'], 1);
-  _emwgpuCreateQuerySet = createExportWrapper('emwgpuCreateQuerySet', wasmExports['emwgpuCreateQuerySet'], 1);
-  _emwgpuCreateRenderBundle = createExportWrapper('emwgpuCreateRenderBundle', wasmExports['emwgpuCreateRenderBundle'], 1);
-  _emwgpuCreateRenderBundleEncoder = createExportWrapper('emwgpuCreateRenderBundleEncoder', wasmExports['emwgpuCreateRenderBundleEncoder'], 1);
-  _emwgpuCreateRenderPassEncoder = createExportWrapper('emwgpuCreateRenderPassEncoder', wasmExports['emwgpuCreateRenderPassEncoder'], 1);
-  _emwgpuCreateRenderPipeline = createExportWrapper('emwgpuCreateRenderPipeline', wasmExports['emwgpuCreateRenderPipeline'], 1);
-  _emwgpuCreateSampler = createExportWrapper('emwgpuCreateSampler', wasmExports['emwgpuCreateSampler'], 1);
-  _emwgpuCreateSurface = createExportWrapper('emwgpuCreateSurface', wasmExports['emwgpuCreateSurface'], 1);
-  _emwgpuCreateTexture = createExportWrapper('emwgpuCreateTexture', wasmExports['emwgpuCreateTexture'], 1);
-  _emwgpuCreateTextureView = createExportWrapper('emwgpuCreateTextureView', wasmExports['emwgpuCreateTextureView'], 1);
-  _emwgpuCreateAdapter = createExportWrapper('emwgpuCreateAdapter', wasmExports['emwgpuCreateAdapter'], 1);
-  _emwgpuImportBuffer = createExportWrapper('emwgpuImportBuffer', wasmExports['emwgpuImportBuffer'], 1);
-  _emwgpuCreateDevice = createExportWrapper('emwgpuCreateDevice', wasmExports['emwgpuCreateDevice'], 2);
-  _emwgpuCreateQueue = createExportWrapper('emwgpuCreateQueue', wasmExports['emwgpuCreateQueue'], 1);
-  _emwgpuCreateShaderModule = createExportWrapper('emwgpuCreateShaderModule', wasmExports['emwgpuCreateShaderModule'], 1);
-  _emwgpuOnCompilationInfoCompleted = createExportWrapper('emwgpuOnCompilationInfoCompleted', wasmExports['emwgpuOnCompilationInfoCompleted'], 3);
-  _emwgpuOnCreateComputePipelineCompleted = createExportWrapper('emwgpuOnCreateComputePipelineCompleted', wasmExports['emwgpuOnCreateComputePipelineCompleted'], 4);
-  _emwgpuOnCreateRenderPipelineCompleted = createExportWrapper('emwgpuOnCreateRenderPipelineCompleted', wasmExports['emwgpuOnCreateRenderPipelineCompleted'], 4);
-  _emwgpuOnDeviceLostCompleted = createExportWrapper('emwgpuOnDeviceLostCompleted', wasmExports['emwgpuOnDeviceLostCompleted'], 3);
-  _emwgpuOnMapAsyncCompleted = createExportWrapper('emwgpuOnMapAsyncCompleted', wasmExports['emwgpuOnMapAsyncCompleted'], 3);
-  _emwgpuOnPopErrorScopeCompleted = createExportWrapper('emwgpuOnPopErrorScopeCompleted', wasmExports['emwgpuOnPopErrorScopeCompleted'], 4);
-  _emwgpuOnRequestAdapterCompleted = createExportWrapper('emwgpuOnRequestAdapterCompleted', wasmExports['emwgpuOnRequestAdapterCompleted'], 4);
-  _emwgpuOnRequestDeviceCompleted = createExportWrapper('emwgpuOnRequestDeviceCompleted', wasmExports['emwgpuOnRequestDeviceCompleted'], 4);
-  _emwgpuOnWorkDoneCompleted = createExportWrapper('emwgpuOnWorkDoneCompleted', wasmExports['emwgpuOnWorkDoneCompleted'], 2);
-  _emwgpuOnUncapturedError = createExportWrapper('emwgpuOnUncapturedError', wasmExports['emwgpuOnUncapturedError'], 3);
   _fflush = createExportWrapper('fflush', wasmExports['fflush'], 1);
   _emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'];
   _emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'];
   _strerror = createExportWrapper('strerror', wasmExports['strerror'], 1);
-  _memalign = createExportWrapper('memalign', wasmExports['memalign'], 2);
   _emscripten_stack_init = wasmExports['emscripten_stack_init'];
   _emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'];
   __emscripten_stack_restore = wasmExports['_emscripten_stack_restore'];
@@ -8481,11 +7767,11 @@ var wasmImports = {
   /** @export */
   emscripten_fetch_free: _emscripten_fetch_free,
   /** @export */
-  emscripten_has_asyncify: _emscripten_has_asyncify,
-  /** @export */
   emscripten_is_main_browser_thread: _emscripten_is_main_browser_thread,
   /** @export */
   emscripten_resize_heap: _emscripten_resize_heap,
+  /** @export */
+  emscripten_run_script: _emscripten_run_script,
   /** @export */
   emscripten_set_canvas_element_size: _emscripten_set_canvas_element_size,
   /** @export */
@@ -8495,17 +7781,9 @@ var wasmImports = {
   /** @export */
   emscripten_start_fetch: _emscripten_start_fetch,
   /** @export */
-  emwgpuAdapterRequestDevice: _emwgpuAdapterRequestDevice,
+  emscripten_webgl_create_context: _emscripten_webgl_create_context,
   /** @export */
-  emwgpuDelete: _emwgpuDelete,
-  /** @export */
-  emwgpuDeviceCreateBuffer: _emwgpuDeviceCreateBuffer,
-  /** @export */
-  emwgpuDeviceCreateShaderModule: _emwgpuDeviceCreateShaderModule,
-  /** @export */
-  emwgpuDeviceDestroy: _emwgpuDeviceDestroy,
-  /** @export */
-  emwgpuInstanceRequestAdapter: _emwgpuInstanceRequestAdapter,
+  emscripten_webgl_make_context_current: _emscripten_webgl_make_context_current,
   /** @export */
   environ_get: _environ_get,
   /** @export */
@@ -8519,49 +7797,73 @@ var wasmImports = {
   /** @export */
   fd_write: _fd_write,
   /** @export */
-  wgpuCommandEncoderBeginRenderPass: _wgpuCommandEncoderBeginRenderPass,
+  glActiveTexture: _glActiveTexture,
   /** @export */
-  wgpuCommandEncoderFinish: _wgpuCommandEncoderFinish,
+  glAttachShader: _glAttachShader,
   /** @export */
-  wgpuDeviceCreateBindGroup: _wgpuDeviceCreateBindGroup,
+  glBindBuffer: _glBindBuffer,
   /** @export */
-  wgpuDeviceCreateBindGroupLayout: _wgpuDeviceCreateBindGroupLayout,
+  glBindTexture: _glBindTexture,
   /** @export */
-  wgpuDeviceCreateCommandEncoder: _wgpuDeviceCreateCommandEncoder,
+  glBindVertexArray: _glBindVertexArray,
   /** @export */
-  wgpuDeviceCreatePipelineLayout: _wgpuDeviceCreatePipelineLayout,
+  glBlendFunc: _glBlendFunc,
   /** @export */
-  wgpuDeviceCreateRenderPipeline: _wgpuDeviceCreateRenderPipeline,
+  glBufferData: _glBufferData,
   /** @export */
-  wgpuDeviceCreateSampler: _wgpuDeviceCreateSampler,
+  glClear: _glClear,
   /** @export */
-  wgpuDeviceCreateTexture: _wgpuDeviceCreateTexture,
+  glClearColor: _glClearColor,
   /** @export */
-  wgpuInstanceCreateSurface: _wgpuInstanceCreateSurface,
+  glCompileShader: _glCompileShader,
   /** @export */
-  wgpuQueueSubmit: _wgpuQueueSubmit,
+  glCreateProgram: _glCreateProgram,
   /** @export */
-  wgpuQueueWriteBuffer: _wgpuQueueWriteBuffer,
+  glCreateShader: _glCreateShader,
   /** @export */
-  wgpuQueueWriteTexture: _wgpuQueueWriteTexture,
+  glDeleteShader: _glDeleteShader,
   /** @export */
-  wgpuRenderPassEncoderDraw: _wgpuRenderPassEncoderDraw,
+  glDeleteTextures: _glDeleteTextures,
   /** @export */
-  wgpuRenderPassEncoderEnd: _wgpuRenderPassEncoderEnd,
+  glDrawArrays: _glDrawArrays,
   /** @export */
-  wgpuRenderPassEncoderSetBindGroup: _wgpuRenderPassEncoderSetBindGroup,
+  glEnable: _glEnable,
   /** @export */
-  wgpuRenderPassEncoderSetPipeline: _wgpuRenderPassEncoderSetPipeline,
+  glEnableVertexAttribArray: _glEnableVertexAttribArray,
   /** @export */
-  wgpuRenderPassEncoderSetVertexBuffer: _wgpuRenderPassEncoderSetVertexBuffer,
+  glGenBuffers: _glGenBuffers,
   /** @export */
-  wgpuSurfaceConfigure: _wgpuSurfaceConfigure,
+  glGenTextures: _glGenTextures,
   /** @export */
-  wgpuSurfaceGetCurrentTexture: _wgpuSurfaceGetCurrentTexture,
+  glGenVertexArrays: _glGenVertexArrays,
   /** @export */
-  wgpuSurfacePresent: _wgpuSurfacePresent,
+  glGetProgramiv: _glGetProgramiv,
   /** @export */
-  wgpuTextureCreateView: _wgpuTextureCreateView
+  glGetShaderInfoLog: _glGetShaderInfoLog,
+  /** @export */
+  glGetShaderiv: _glGetShaderiv,
+  /** @export */
+  glGetUniformLocation: _glGetUniformLocation,
+  /** @export */
+  glLinkProgram: _glLinkProgram,
+  /** @export */
+  glPixelStorei: _glPixelStorei,
+  /** @export */
+  glShaderSource: _glShaderSource,
+  /** @export */
+  glTexImage2D: _glTexImage2D,
+  /** @export */
+  glTexParameteri: _glTexParameteri,
+  /** @export */
+  glUniform1i: _glUniform1i,
+  /** @export */
+  glUniform2f: _glUniform2f,
+  /** @export */
+  glUseProgram: _glUseProgram,
+  /** @export */
+  glVertexAttribPointer: _glVertexAttribPointer,
+  /** @export */
+  glViewport: _glViewport
 };
 
 
