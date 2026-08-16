@@ -70,6 +70,10 @@ static void loop() {
     if (!g_game) return;
     g_game->update(33);                  // ~30 fps tick (advances combat timer)
     g_game->draw();
+    // Mark the runtime ready AFTER the first successful frame so the touch/mouse
+    // handlers can safely call jsGamepad (avoids the pre-init abort crash and is
+    // reliable across Emscripten versions, unlike Module.runtimeInitialized).
+    emscripten_run_script("window.__tomsReady=true;");
 }
 
 // keyboard handling for the inventory UI + movement.
@@ -121,13 +125,24 @@ static const char* TOMS_WEB_UI =
 "else{(document.exitFullscreen||document.webkitExitFullscreen)&&(document.exitFullscreen||document.webkitExitFullscreen).call(document);}};"
 "document.body.appendChild(fsb);"
 "var cv=document.getElementById('canvas');if(cv)cv.style.touchAction='none';"
+"window.__tomsReady=false;"
 "function toBP(e){var r=cv.getBoundingClientRect();var w=(r.width>0)?r.width:1024;var h=(r.height>0)?r.height:768;var t=(e.changedTouches&&e.changedTouches[0])?e.changedTouches[0]:e;var bx=(t.clientX-r.left)/w*1024;var by=(t.clientY-r.top)/h*768;if(!isFinite(bx)||!isFinite(by))return null;return [bx,by];}"
-"function gpCall(p,ph){if(typeof Module!=='undefined'&&Module.ccall&&Module.runtimeInitialized)Module.ccall('jsGamepad','null',['number','number','number'],[ph,p[0],p[1]]);}"
-"if('ontouchstart'in window||navigator.maxTouchPoints>0){"
-"cv.addEventListener('touchstart',function(e){e.preventDefault();var p=toBP(e);if(!p)return;cv._p=p;gpCall(p,0);if(cv._rep)clearInterval(cv._rep);cv._rep=setInterval(function(){gpCall(cv._p||p,1);},150);},false);"
-"cv.addEventListener('touchmove',function(e){e.preventDefault();var p=toBP(e);if(p)cv._p=p;},false);"
-"cv.addEventListener('touchend',function(e){e.preventDefault();var p=toBP(e);if(p)gpCall(p,2);if(cv._rep){clearInterval(cv._rep);cv._rep=null;}},false);"
+"function gpCall(p,ph){if(typeof Module!=='undefined'&&Module.ccall&&window.__tomsReady)Module.ccall('jsGamepad','null',['number','number','number'],[ph,p[0],p[1]]);}"
+"function onDown(e){var p=toBP(e);if(!p)return;cv._p=p;gpCall(p,0);if(cv._rep)clearInterval(cv._rep);cv._rep=setInterval(function(){gpCall(cv._p||p,1);},150);}"
+"function onMove(e){var p=toBP(e);if(p)cv._p=p;}"
+"function onUp(e){var p=toBP(e);if(p)gpCall(p,2);if(cv._rep){clearInterval(cv._rep);cv._rep=null;}}"
+"cv.addEventListener('touchstart',function(e){e.preventDefault();onDown(e);},false);"
+"cv.addEventListener('touchmove',function(e){e.preventDefault();onMove(e);},false);"
+"cv.addEventListener('touchend',function(e){e.preventDefault();onUp(e);},false);"
 "cv.addEventListener('touchcancel',function(e){if(cv._rep){clearInterval(cv._rep);cv._rep=null;}},false);"
+"if(window.PointerEvent){"
+"cv.addEventListener('pointerdown',function(e){e.preventDefault();onDown(e);},false);"
+"cv.addEventListener('pointermove',function(e){onMove(e);},false);"
+"cv.addEventListener('pointerup',function(e){e.preventDefault();onUp(e);},false);"
+"}else{"
+"cv.addEventListener('mousedown',function(e){e.preventDefault();onDown(e);},false);"
+"cv.addEventListener('mousemove',function(e){onMove(e);},false);"
+"cv.addEventListener('mouseup',function(e){e.preventDefault();onUp(e);},false);"
 "}";
 
 int main() {
