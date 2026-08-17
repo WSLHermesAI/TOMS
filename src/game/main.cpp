@@ -1,5 +1,7 @@
 ﻿// main.cpp - Tower of the Sorcerer (Vulkan), windowed interactive build.
-#define GLFW_INCLUDE_VULKAN
+// GLFW_INCLUDE_NONE => don't pull GL/gl.h (no OpenGL dev headers needed on
+// Windows/Linux). <vulkan/vulkan.h> is included by renderer.h.
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include "game.h"
 #include "renderer.h"   // for dynamic_cast<Renderer*> + VulkanContext

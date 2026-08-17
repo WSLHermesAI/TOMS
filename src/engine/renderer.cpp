@@ -5,13 +5,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
-// renderer.cpp
-#include "renderer.h"
-#include <cstring>
-#include <array>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
-
 void VulkanContext::init(uint32_t w, uint32_t h) {
     fprintf(stderr, "[dbg] vk init (windowed)\n");
 

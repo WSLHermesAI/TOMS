@@ -1,9 +1,16 @@
 // renderer.h — windowed 2D sprite/text renderer (Vulkan + GLFW).
 // Implements IRenderer. Desktop-only; not compiled under Emscripten.
 #pragma once
-#define GLFW_INCLUDE_VULKAN
+// GLFW_INCLUDE_NONE => don't pull GL/gl.h (avoids needing OpenGL dev headers on
+// Windows/Linux). We include <vulkan/vulkan.h> explicitly ourselves.
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
+// glfwCreateWindowSurface is declared by GLFW only when GLFW_INCLUDE_VULKAN is set;
+// GLFW_INCLUDE_VULKAN also forces GL/gl.h (OpenGL dev headers) which we don't have.
+// Since we use GLFW_INCLUDE_NONE, declare the stable surface helper ourselves.
+extern "C" GLFWAPI VkResult glfwCreateWindowSurface(VkInstance instance, GLFWwindow* window,
+                                                    const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface);
 #include <vector>
 #include <string>
 #include <cstdint>

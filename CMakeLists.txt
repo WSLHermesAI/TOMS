@@ -58,10 +58,27 @@ if(NOT WEB)
         HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin" "${Vulkan_INCLUDE_DIRS}/../Bin")
     message(STATUS "GLSLANG_VALIDATOR = ${GLSLANG_VALIDATOR}")
 
-    file(GLOB SPV_FILES "${CMAKE_SOURCE_DIR}/assets/shader/*.spv")
+    # Precompiled shaders live in assets/shaders/ (plural). If the .spv files are
+    # missing but the .vert/.frag sources + glslangValidator are present, build them.
+    file(GLOB SPV_FILES "${CMAKE_SOURCE_DIR}/assets/shaders/*.spv")
     if(NOT SPV_FILES)
-        message(WARNING "No precompiled .spv shaders found in assets/shader/. "
-                        "The Vulkan renderer needs them; run the shaders tool or place .spv files there.")
+        message(STATUS "No precompiled .spv in assets/shaders/; will compile from .vert/.frag if glslangValidator is available.")
+        if(GLSLANG_VALIDATOR)
+            file(GLOB VERT_FILES "${CMAKE_SOURCE_DIR}/assets/shaders/*.vert")
+            file(GLOB FRAG_FILES "${CMAKE_SOURCE_DIR}/assets/shaders/*.frag")
+            foreach(SRC ${VERT_FILES} ${FRAG_FILES})
+                get_filename_component(SPVID ${SRC} NAME_WE)
+                add_custom_command(OUTPUT "${CMAKE_SOURCE_DIR}/assets/shaders/${SPVID}.spv"
+                    COMMAND ${GLSLANG_VALIDATOR} -V "${SRC}" -o "${CMAKE_SOURCE_DIR}/assets/shaders/${SPVID}.spv"
+                    DEPENDS "${SRC}" COMMENT "Compiling ${SPVID} shader")
+                list(APPEND SHADER_SPVS "${CMAKE_SOURCE_DIR}/assets/shaders/${SPVID}.spv")
+            endforeach()
+            add_custom_target(toms_shaders DEPENDS ${SHADER_SPVS})
+            add_dependencies(tower_vulkan toms_shaders)
+        else()
+            message(WARNING "No precompiled .spv shaders found in assets/shaders/ and glslangValidator unavailable. "
+                            "The Vulkan renderer needs sprite.vert.spv / sprite.frag.spv next to the executable.")
+        endif()
     endif()
 
     add_executable(tower_vulkan
@@ -80,7 +97,7 @@ if(NOT WEB)
         target_compile_definitions(tower_vulkan PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
     endif()
 
-    # Copy runtime resources next to the executable (assets/, data/, src/engine/shaders)
+    # Copy runtime resources next to the executable (assets/, data/)
     foreach(RES assets data)
         if(EXISTS "${CMAKE_SOURCE_DIR}/${RES}")
             add_custom_command(TARGET tower_vulkan POST_BUILD
@@ -89,13 +106,16 @@ if(NOT WEB)
                 COMMENT "Copying ${RES} next to executable")
         endif()
     endforeach()
-    # Shaders live under assets/shader; copy next to executable
-    # (the Vulkan renderer loads them as "assets/shader/..." relative to CWD).
-    if(EXISTS "${CMAKE_SOURCE_DIR}/assets/shader")
-        add_custom_command(TARGET tower_vulkan POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                "${CMAKE_SOURCE_DIR}/assets/shader" "$<TARGET_FILE_DIR:tower_vulkan>/assets/shader"
-            COMMENT "Copying shaders next to executable")
+    # Shaders live under assets/shaders/ (plural). The Vulkan renderer loads them
+    # as "sprite.vert.spv" / "sprite.frag.spv" relative to CWD, so copy the .spv
+    # files directly next to the executable (not into a subfolder).
+    if(EXISTS "${CMAKE_SOURCE_DIR}/assets/shaders")
+        file(GLOB SHADER_SPV "${CMAKE_SOURCE_DIR}/assets/shaders/*.spv")
+        foreach(SPV ${SHADER_SPV})
+            add_custom_command(TARGET tower_vulkan POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy "${SPV}" "$<TARGET_FILE_DIR:tower_vulkan>/"
+                COMMENT "Copying shader ${SPV} next to executable")
+        endforeach()
     endif()
 
     # Ensure the CJK TTF exists for the runtime font builder. The bundled copy is
