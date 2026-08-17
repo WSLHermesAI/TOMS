@@ -44,7 +44,6 @@ int main(int argc, char** argv) {
 #else
     // frames output dir (relative to CWD); create portably
     std::string framesDir = "frames";
-
 #endif
     fs::create_directories(framesDir, ec);
 
