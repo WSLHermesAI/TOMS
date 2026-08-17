@@ -5,29 +5,151 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
+// renderer.cpp
+#include "renderer.h"
+#include <cstring>
+#include <array>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
 void VulkanContext::init(uint32_t w, uint32_t h) {
-    fprintf(stderr, "[dbg] vk init\n");
+    fprintf(stderr, "[dbg] vk init (windowed)\n");
+
+    // ---- GLFW window ----
+    glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    window = glfwCreateWindow((int)w, (int)h, "Tower of the Sorcerer", nullptr, nullptr);
+
+    // ---- Vulkan instance (with surface extensions) ----
     VkApplicationInfo ai{}; ai.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     ai.apiVersion = VK_API_VERSION_1_0;
-    VkInstanceCreateInfo ici{}; ici.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO; ici.pApplicationInfo = &ai;
+    uint32_t extCount = 0;
+    const char** glfwExts = glfwGetRequiredInstanceExtensions(&extCount);
+    VkInstanceCreateInfo ici{}; ici.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    ici.pApplicationInfo = &ai;
+    ici.enabledExtensionCount = extCount; ici.ppEnabledExtensionNames = glfwExts;
     vk_check(vkCreateInstance(&ici, nullptr, &instance), "instance");
+
+    // ---- Surface ----
+    vk_check(glfwCreateWindowSurface(instance, window, nullptr, &surface), "surface");
+
+    // ---- Physical device ----
     uint32_t n = 0; vkEnumeratePhysicalDevices(instance, &n, nullptr);
     std::vector<VkPhysicalDevice> phys(n); vkEnumeratePhysicalDevices(instance, &n, phys.data());
     physical = phys[0];
+
+    // ---- Queue family (graphics + present on same queue) ----
     uint32_t qc = 0; vkGetPhysicalDeviceQueueFamilyProperties(physical, &qc, nullptr);
     std::vector<VkQueueFamilyProperties> qf(qc); vkGetPhysicalDeviceQueueFamilyProperties(physical, &qc, qf.data());
-    for (uint32_t i = 0; i < qc; i++) if (qf[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) { gfxFamily = i; break; }
+    for (uint32_t i = 0; i < qc; i++) {
+        VkBool32 presentOk = VK_FALSE;
+        vkGetPhysicalDeviceSurfaceSupportKHR(physical, i, surface, &presentOk);
+        if ((qf[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && presentOk) { gfxFamily = i; break; }
+    }
+
+    // ---- Logical device (with swapchain extension) ----
     float pr = 1.0f;
     VkDeviceQueueCreateInfo qci{}; qci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     qci.queueFamilyIndex = gfxFamily; qci.queueCount = 1; qci.pQueuePriorities = &pr;
-    VkDeviceCreateInfo dci{}; dci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO; dci.queueCreateInfoCount = 1; dci.pQueueCreateInfos = &qci;
+    const char* devExts[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+    VkDeviceCreateInfo dci{}; dci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    dci.queueCreateInfoCount = 1; dci.pQueueCreateInfos = &qci;
+    dci.enabledExtensionCount = 1; dci.ppEnabledExtensionNames = devExts;
     vk_check(vkCreateDevice(physical, &dci, nullptr, &device), "device");
     vkGetDeviceQueue(device, gfxFamily, 0, &gfxQueue);
+
+    // ---- Choose swap surface format ----
+    uint32_t fmtCount = 0; vkGetPhysicalDeviceSurfaceFormatsKHR(physical, surface, &fmtCount, nullptr);
+    std::vector<VkSurfaceFormatKHR> fmts(fmtCount);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physical, surface, &fmtCount, fmts.data());
+    swapFormat = fmts[0].format;
+    VkColorSpaceKHR colorSpace = fmts[0].colorSpace;
+    for (auto& f : fmts) {
+        if (f.format == VK_FORMAT_B8G8R8A8_SRGB && f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+            swapFormat = f.format; colorSpace = f.colorSpace; break;
+        }
+    }
+
+    // ---- Swapchain ----
+    VkSurfaceCapabilitiesKHR caps{};
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical, surface, &caps);
+    swapImageCount = caps.minImageCount + 1;
+    if (caps.maxImageCount > 0 && swapImageCount > caps.maxImageCount)
+        swapImageCount = caps.maxImageCount;
+
+    VkSwapchainCreateInfoKHR sci{}; sci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    sci.surface = surface; sci.minImageCount = swapImageCount;
+    sci.imageFormat = swapFormat; sci.imageColorSpace = colorSpace;
+    sci.imageExtent = {w, h}; sci.imageArrayLayers = 1;
+    sci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    sci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    sci.preTransform = caps.currentTransform;
+    sci.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    sci.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    sci.clipped = VK_TRUE;
+    vk_check(vkCreateSwapchainKHR(device, &sci, nullptr, &swapchain), "swapchain");
+
+    // ---- Swapchain images + views ----
+    vkGetSwapchainImagesKHR(device, swapchain, &swapImageCount, nullptr);
+    swapImages.resize(swapImageCount);
+    vkGetSwapchainImagesKHR(device, swapchain, &swapImageCount, swapImages.data());
+    swapViews.resize(swapImageCount);
+    for (uint32_t i = 0; i < swapImageCount; i++) {
+        VkImageViewCreateInfo iv{}; iv.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        iv.image = swapImages[i]; iv.viewType = VK_IMAGE_VIEW_TYPE_2D; iv.format = swapFormat;
+        iv.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+        vk_check(vkCreateImageView(device, &iv, nullptr, &swapViews[i]), "swap_view");
+    }
+
+    // ---- Sync objects ----
+    VkSemaphoreCreateInfo si{}; si.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    VkFenceCreateInfo fi{}; fi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fi.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vk_check(vkCreateSemaphore(device, &si, nullptr, &imageAvailable[i]), "sem_img");
+        vk_check(vkCreateSemaphore(device, &si, nullptr, &renderFinished[i]), "sem_rnd");
+        vk_check(vkCreateFence(device, &fi, nullptr, &inFlight[i]), "fence");
+    }
 }
+
+bool VulkanContext::acquireNext() {
+    vkWaitForFences(device, 1, &inFlight[currentFrame], VK_TRUE, UINT64_MAX);
+    VkResult r = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX,
+                                       imageAvailable[currentFrame], VK_NULL_HANDLE,
+                                       &currentImageIndex);
+    if (r == VK_ERROR_OUT_OF_DATE_KHR) return false;
+    vkResetFences(device, 1, &inFlight[currentFrame]);
+    return true;
+}
+
+void VulkanContext::present() {
+    VkPresentInfoKHR pi{}; pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    pi.waitSemaphoreCount = 1; pi.pWaitSemaphores = &renderFinished[currentFrame];
+    pi.swapchainCount = 1; pi.pSwapchains = &swapchain;
+    pi.pImageIndices = &currentImageIndex;
+    vkQueuePresentKHR(gfxQueue, &pi);
+    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
 void VulkanContext::destroy() {
-    if (device) vkDestroyDevice(device, nullptr);
+    if (device) {
+        vkDeviceWaitIdle(device);
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            if (imageAvailable[i]) vkDestroySemaphore(device, imageAvailable[i], nullptr);
+            if (renderFinished[i]) vkDestroySemaphore(device, renderFinished[i], nullptr);
+            if (inFlight[i])       vkDestroyFence(device, inFlight[i], nullptr);
+        }
+        for (auto v : swapViews) vkDestroyImageView(device, v, nullptr);
+        if (swapchain) vkDestroySwapchainKHR(device, swapchain, nullptr);
+        vkDestroyDevice(device, nullptr);
+    }
+    if (surface)  vkDestroySurfaceKHR(instance, surface, nullptr);
     if (instance) vkDestroyInstance(instance, nullptr);
+    if (window)   { glfwDestroyWindow(window); glfwTerminate(); }
 }
+
+
 
 // ---- Renderer ----
 static VkShaderModule g_vs, g_fs;
@@ -40,28 +162,36 @@ void Renderer::init(uint32_t w, uint32_t h) {
     cp.queueFamilyIndex = vk.gfxFamily; cp.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     vk_check(vkCreateCommandPool(vk.device, &cp, nullptr, &cmdPool), "cmdpool");
 
-    // render pass (offscreen color)
-    VkAttachmentDescription att{}; att.format = VK_FORMAT_R8G8B8A8_SRGB;
+    // render pass (present to swapchain)
+    VkAttachmentDescription att{}; att.format = vk.swapFormat;
     att.samples = VK_SAMPLE_COUNT_1_BIT; att.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     att.storeOp = VK_ATTACHMENT_STORE_OP_STORE; att.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     att.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    att.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; att.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    att.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; att.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     VkAttachmentReference ref{}; ref.attachment = 0; ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     VkSubpassDescription sp{}; sp.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     sp.colorAttachmentCount = 1; sp.pColorAttachments = &ref;
+    VkSubpassDependency dep{}; dep.srcSubpass = VK_SUBPASS_EXTERNAL; dep.dstSubpass = 0;
+    dep.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; dep.srcAccessMask = 0;
+    dep.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
     VkRenderPassCreateInfo rpi{}; rpi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     rpi.attachmentCount = 1; rpi.pAttachments = &att; rpi.subpassCount = 1; rpi.pSubpasses = &sp;
+    rpi.dependencyCount = 1; rpi.pDependencies = &dep;
     vk_check(vkCreateRenderPass(vk.device, &rpi, nullptr, &renderPass), "renderpass");
 
-    // color image (createImage allocates + binds memory)
-    createImage(vk.device, vk.physical, W, H, VK_FORMAT_R8G8B8A8_SRGB,
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-                VK_IMAGE_ASPECT_COLOR_BIT, colorImg, colorView);
-    // framebuffer
-    VkFramebufferCreateInfo fbi{}; fbi.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    fbi.renderPass = renderPass; fbi.attachmentCount = 1; fbi.pAttachments = &colorView;
-    fbi.width = W; fbi.height = H; fbi.layers = 1;
-    vk_check(vkCreateFramebuffer(vk.device, &fbi, nullptr, &fb), "framebuffer");
+    // per-swapchain-image framebuffers + command buffers
+    swapFBs.resize(vk.swapImageCount);
+    for (uint32_t i = 0; i < vk.swapImageCount; i++) {
+        VkFramebufferCreateInfo fbi{}; fbi.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        fbi.renderPass = renderPass; fbi.attachmentCount = 1; fbi.pAttachments = &vk.swapViews[i];
+        fbi.width = W; fbi.height = H; fbi.layers = 1;
+        vk_check(vkCreateFramebuffer(vk.device, &fbi, nullptr, &swapFBs[i]), "framebuffer");
+    }
+    cmdBufs.resize(vk.swapImageCount);
+    VkCommandBufferAllocateInfo cba{}; cba.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    cba.commandPool = cmdPool; cba.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    cba.commandBufferCount = vk.swapImageCount;
+    vk_check(vkAllocateCommandBuffers(vk.device, &cba, cmdBufs.data()), "cmdbuf");
 
     // shaders (look in ./shaders/ relative to CWD; CMake copies them next to the exe)
     g_vs = loadSpv(vk.device, "sprite.vert.spv");
@@ -155,12 +285,11 @@ void Renderer::destroy() {
     auto db = [&](VkDevice d, VkBuffer& b){ if (b!=VK_NULL_HANDLE){ vkDestroyBuffer(d,b,nullptr); b=VK_NULL_HANDLE; } };
     dv(vk.device, spriteAtlas_.img); dvw(vk.device, spriteAtlas_.view); df(vk.device, spriteAtlas_.mem);
     dv(vk.device, fontAtlas_.img);   dvw(vk.device, fontAtlas_.view);   df(vk.device, fontAtlas_.mem);
-    dv(vk.device, solidImg_);        dvw(vk.device, solidView_);        df(vk.device, solidMem_);  // dummy solid tex
+    dv(vk.device, solidImg_);        dvw(vk.device, solidView_);        df(vk.device, solidMem_);
     db(vk.device, vbuf); df(vk.device, vbufMem); vbufCap=0;
     db(vk.device, ibuf); df(vk.device, ibufMem); ibufCap=0;
-    if (colorView != VK_NULL_HANDLE){ vkDestroyImageView(vk.device, colorView, nullptr); colorView=VK_NULL_HANDLE; }
-    if (colorImg  != VK_NULL_HANDLE){ vkDestroyImage(vk.device, colorImg, nullptr); colorImg=VK_NULL_HANDLE; }
-    if (fb        != VK_NULL_HANDLE){ vkDestroyFramebuffer(vk.device, fb, nullptr); fb=VK_NULL_HANDLE; }
+    for (auto& swfb : swapFBs) if (swfb) { vkDestroyFramebuffer(vk.device, swfb, nullptr); swfb=VK_NULL_HANDLE; }
+    swapFBs.clear();
     if (renderPass!= VK_NULL_HANDLE){ vkDestroyRenderPass(vk.device, renderPass, nullptr); renderPass=VK_NULL_HANDLE; }
     if (pipeline  != VK_NULL_HANDLE){ vkDestroyPipeline(vk.device, pipeline, nullptr); pipeline=VK_NULL_HANDLE; }
     if (pipeLayout!= VK_NULL_HANDLE){ vkDestroyPipelineLayout(vk.device, pipeLayout, nullptr); pipeLayout=VK_NULL_HANDLE; }
@@ -354,7 +483,7 @@ void Renderer::end() {
         // One pass avoids the multi-pass font-atlas descriptor bug.
         VkCommandBuffer cb = beginOnce(vk.device, cmdPool);
         VkRenderPassBeginInfo rb{}; rb.sType=VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        rb.renderPass=renderPass; rb.framebuffer=fb; rb.renderArea={0,0,W,H};
+        rb.renderPass=renderPass; rb.framebuffer=swapFBs[vk.currentImageIndex]; rb.renderArea={0,0,W,H};
         VkClearValue cv{}; cv.color={0.04f,0.04f,0.07f,1.0f}; rb.clearValueCount=1; rb.pClearValues=&cv;
         vkCmdBeginRenderPass(cb, &rb, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
@@ -396,13 +525,32 @@ void Renderer::end() {
             std::fprintf(stderr, "\n");
         }
         vkCmdEndRenderPass(cb);
-        endSubmit(vk.device, vk.gfxQueue, cmdPool, cb);
+        // Submit with swapchain sync semaphores
+        vkEndCommandBuffer(cb);
+        VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        VkSubmitInfo splitSI{}; splitSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        splitSI.waitSemaphoreCount = 1;
+        splitSI.pWaitSemaphores = &vk.imageAvailable[vk.currentFrame];
+        splitSI.pWaitDstStageMask = &waitStage;
+        splitSI.commandBufferCount = 1; splitSI.pCommandBuffers = &cb;
+        splitSI.signalSemaphoreCount = 1;
+        splitSI.pSignalSemaphores = &vk.renderFinished[vk.currentFrame];
+        vk_check(vkQueueSubmit(vk.gfxQueue, 1, &splitSI, vk.inFlight[vk.currentFrame]), "split_submit");
+        vkFreeCommandBuffers(vk.device, cmdPool, 1, &cb);
+        vk.present();
         return;
     }
 
-    VkCommandBuffer cb = beginOnce(vk.device, cmdPool);
+    // ---- Normal (non-split) windowed path ----
+    uint32_t imgIdx = vk.currentImageIndex;
+    VkCommandBuffer cb = cmdBufs[imgIdx];
+    vkResetCommandBuffer(cb, 0);
+    VkCommandBufferBeginInfo cbbi{}; cbbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    cbbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(cb, &cbbi);
+
     VkRenderPassBeginInfo rb{}; rb.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    rb.renderPass = renderPass; rb.framebuffer = fb; rb.renderArea = {0,0,W,H};
+    rb.renderPass = renderPass; rb.framebuffer = swapFBs[imgIdx]; rb.renderArea = {0,0,W,H};
     VkClearValue cv{}; cv.color = {0.06f,0.06f,0.1f,1.0f}; rb.clearValueCount = 1; rb.pClearValues = &cv;
     vkCmdBeginRenderPass(cb, &rb, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
@@ -428,30 +576,23 @@ void Renderer::end() {
         vkCmdDrawIndexed(cb, b.indexCount, 1, b.indexOffset, 0, 0);
     }
     vkCmdEndRenderPass(cb);
-    endSubmit(vk.device, vk.gfxQueue, cmdPool, cb);
+    vkEndCommandBuffer(cb);
+
+    VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    VkSubmitInfo si{}; si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.waitSemaphoreCount = 1;
+    si.pWaitSemaphores = &vk.imageAvailable[vk.currentFrame];
+    si.pWaitDstStageMask = &waitStage;
+    si.commandBufferCount = 1; si.pCommandBuffers = &cb;
+    si.signalSemaphoreCount = 1;
+    si.pSignalSemaphores = &vk.renderFinished[vk.currentFrame];
+    vk_check(vkQueueSubmit(vk.gfxQueue, 1, &si, vk.inFlight[vk.currentFrame]), "submit");
+    vk.present();
 }
 
 void Renderer::savePNG(const std::string& path) {
-    VkDeviceSize sz = (VkDeviceSize)W*H*4;
-    std::vector<uint8_t> readback(sz);
-    VkBuffer staging; VkDeviceMemory sm; VkBufferCreateInfo bi{}; bi.sType=VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; bi.size=sz; bi.usage=VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-    vk_check(vkCreateBuffer(vk.device,&bi,nullptr,&staging),"rs");
-    VkMemoryRequirements mr; vkGetBufferMemoryRequirements(vk.device,staging,&mr);
-    VkPhysicalDeviceMemoryProperties pdmp; vkGetPhysicalDeviceMemoryProperties(vk.physical,&pdmp);
-    uint32_t mi=0; for(uint32_t i=0;i<pdmp.memoryTypeCount;i++) if(mr.memoryTypeBits&(1u<<i)&&(pdmp.memoryTypes[i].propertyFlags&VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)&&(pdmp.memoryTypes[i].propertyFlags&VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)){mi=i;break;}
-    VkMemoryAllocateInfo ai{}; ai.sType=VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO; ai.allocationSize=mr.size; ai.memoryTypeIndex=mi;
-    vk_check(vkAllocateMemory(vk.device,&ai,nullptr,&sm),"rsm"); vkBindBufferMemory(vk.device,staging,sm,0);
-    VkCommandBuffer cb=beginOnce(vk.device,cmdPool);
-    transitionImage(colorImg,VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,VK_IMAGE_ASPECT_COLOR_BIT);
-    VkBufferImageCopy c{}; c.imageSubresource={VK_IMAGE_ASPECT_COLOR_BIT,0,0,1}; c.imageExtent={W,H,1};
-    vkCmdCopyImageToBuffer(cb,colorImg,VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,staging,1,&c);
-    endSubmit(vk.device,vk.gfxQueue,cmdPool,cb);
-    void* p; vkMapMemory(vk.device,sm,0,sz,0,&p); memcpy(readback.data(),p,sz); vkUnmapMemory(vk.device,sm);
-    vkDestroyBuffer(vk.device,staging,nullptr); vkFreeMemory(vk.device,sm,nullptr);
-    transitionImage(colorImg,VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,VK_IMAGE_ASPECT_COLOR_BIT);
-    std::vector<uint8_t> flipped(W*H*4);
-    for (uint32_t y=0;y<H;y++) memcpy(flipped.data()+((H-1-y))*W*4, readback.data()+y*W*4, W*4);
-    stbi_write_png(path.c_str(), (int)W, (int)H, 4, flipped.data(), (int)W*4);
+    // savePNG is not supported in windowed (swapchain) mode.
+    fprintf(stderr, "[warn] savePNG('%s') is not supported in windowed mode\n", path.c_str());
 }
 
 // (no pending PNG statics; savePNG writes directly)

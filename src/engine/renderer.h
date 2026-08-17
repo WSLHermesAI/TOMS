@@ -1,6 +1,8 @@
-// renderer.h — offscreen 2D sprite/text renderer (Vulkan, headless-capable).
+// renderer.h — windowed 2D sprite/text renderer (Vulkan + GLFW).
 // Implements IRenderer. Desktop-only; not compiled under Emscripten.
 #pragma once
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <string>
@@ -10,13 +12,42 @@
 #include "texture.h"     // VkTextureRefs (Texture shares the renderer's Vulkan handles)
 
 struct VulkanContext {
+    // Core
     VkInstance instance = VK_NULL_HANDLE;
     VkPhysicalDevice physical = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
     VkQueue gfxQueue = VK_NULL_HANDLE;
     uint32_t gfxFamily = 0;
+
+    // Window + surface
+    GLFWwindow* window = nullptr;
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+
+    // Swapchain
+    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
+    VkFormat swapFormat = VK_FORMAT_B8G8R8A8_SRGB;
+    std::vector<VkImage>     swapImages;
+    std::vector<VkImageView> swapViews;
+    uint32_t swapImageCount = 0;
+
+    // Per-frame sync
+    static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+    VkSemaphore imageAvailable[MAX_FRAMES_IN_FLIGHT] = {};
+    VkSemaphore renderFinished[MAX_FRAMES_IN_FLIGHT] = {};
+    VkFence     inFlight[MAX_FRAMES_IN_FLIGHT] = {};
+    int currentFrame = 0;
+
+    // Current acquired swapchain image index (filled by acquireNext)
+    uint32_t currentImageIndex = 0;
+
     void init(uint32_t w, uint32_t h);
     void destroy();
+    bool shouldClose() const { return window && glfwWindowShouldClose(window); }
+    void pollEvents() { glfwPollEvents(); }
+    // Acquire next swapchain image; returns false if the swapchain needs recreating.
+    bool acquireNext();
+    // Present the rendered image; call after end().
+    void present();
 };
 
 struct Atlas { VkImage img = VK_NULL_HANDLE; VkImageView view = VK_NULL_HANDLE;
@@ -29,8 +60,10 @@ public:
     VulkanContext vk;
     VkCommandPool cmdPool=VK_NULL_HANDLE;
     VkRenderPass renderPass=VK_NULL_HANDLE;
-    VkFramebuffer fb=VK_NULL_HANDLE;
-    VkImage colorImg=VK_NULL_HANDLE; VkImageView colorView=VK_NULL_HANDLE;
+    // Swapchain framebuffers (one per swap image)
+    std::vector<VkFramebuffer> swapFBs;
+    // Command buffers (one per swap image)
+    std::vector<VkCommandBuffer> cmdBufs;
     VkDescriptorSetLayout dsLayout=VK_NULL_HANDLE;
     VkPipelineLayout pipeLayout=VK_NULL_HANDLE;
     VkPipeline pipeline=VK_NULL_HANDLE;
@@ -39,11 +72,9 @@ public:
     VkDescriptorSet spriteSet=VK_NULL_HANDLE, fontSet=VK_NULL_HANDLE;
     VkBuffer vbuf=VK_NULL_HANDLE; VkDeviceMemory vbufMem=VK_NULL_HANDLE; size_t vbufCap=0;
     VkBuffer ibuf=VK_NULL_HANDLE; VkDeviceMemory ibufMem=VK_NULL_HANDLE; size_t ibufCap=0;
-    uint32_t lastDrawCalls=0;   // draw calls issued by the last end() (batch metric)
-    size_t   lastQuadCount=0;   // quads batched by the last end() (batch metric)
+    uint32_t lastDrawCalls=0;
+    size_t   lastQuadCount=0;
     Atlas spriteAtlas_, fontAtlas_;
-    // dummy 1x1 (vec4(0)) texture used by solid-color batches so the shader can
-    // sample "nothing" instead of the real atlas.
     VkImage   solidImg_   = VK_NULL_HANDLE;
     VkImageView solidView_ = VK_NULL_HANDLE;
     VkDeviceMemory solidMem_ = VK_NULL_HANDLE;

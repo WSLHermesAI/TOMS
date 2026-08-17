@@ -4,6 +4,18 @@ project(tower_vulkan CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(FetchContent)
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG        3.4
+)
+set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(glfw)
+
 # Paths to vendored third-party headers (self-contained, no system deps)
 set(STB_DIR ${CMAKE_SOURCE_DIR}/external/stb)
 set(JSON_DIR ${CMAKE_SOURCE_DIR}/external/json)
@@ -46,9 +58,9 @@ if(NOT WEB)
         HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin" "${Vulkan_INCLUDE_DIRS}/../Bin")
     message(STATUS "GLSLANG_VALIDATOR = ${GLSLANG_VALIDATOR}")
 
-    file(GLOB SPV_FILES "${ENGINE_DIR}/shaders/*.spv")
+    file(GLOB SPV_FILES "${CMAKE_SOURCE_DIR}/assets/shader/*.spv")
     if(NOT SPV_FILES)
-        message(WARNING "No precompiled .spv shaders found in src/engine/shaders/. "
+        message(WARNING "No precompiled .spv shaders found in assets/shader/. "
                         "The Vulkan renderer needs them; run the shaders tool or place .spv files there.")
     endif()
 
@@ -61,8 +73,9 @@ if(NOT WEB)
         ${GAME_DIR} ${ENGINE_DIR}
         ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
         ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
-        $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
-    target_link_libraries(tower_vulkan PRIVATE ${Vulkan_LIBRARIES})
+        $ENV{GLM_DIR} $ENV{HOME}/opt/glm
+        ${glfw_SOURCE_DIR}/include)
+    target_link_libraries(tower_vulkan PRIVATE ${Vulkan_LIBRARIES} glfw)
     if(WIN32)
         target_compile_definitions(tower_vulkan PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
     endif()
@@ -76,12 +89,12 @@ if(NOT WEB)
                 COMMENT "Copying ${RES} next to executable")
         endif()
     endforeach()
-    # Shaders live under src/engine/shaders; copy while preserving that relative path
-    # (the Vulkan renderer loads them as "src/shaders/..." relative to CWD).
-    if(EXISTS "${ENGINE_DIR}/shaders")
+    # Shaders live under assets/shader; copy next to executable
+    # (the Vulkan renderer loads them as "assets/shader/..." relative to CWD).
+    if(EXISTS "${CMAKE_SOURCE_DIR}/assets/shader")
         add_custom_command(TARGET tower_vulkan POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory
-                "${ENGINE_DIR}/shaders" "$<TARGET_FILE_DIR:tower_vulkan>/src/engine/shaders"
+                "${CMAKE_SOURCE_DIR}/assets/shader" "$<TARGET_FILE_DIR:tower_vulkan>/assets/shader"
             COMMENT "Copying shaders next to executable")
     endif()
 
