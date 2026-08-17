@@ -64,7 +64,7 @@ if(NOT WEB)
         $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
     target_link_libraries(tower_vulkan PRIVATE ${Vulkan_LIBRARIES})
     if(WIN32)
-        target_compile_definitions(tower_vs PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+        target_compile_definitions(tower_vulkan PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
     endif()
 
     # Copy runtime resources next to the executable (assets/, data/, src/engine/shaders)
@@ -102,7 +102,12 @@ if(NOT WEB)
     endif()
 
     set_target_properties(tower_vulkan PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
+        VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:tower_vulkan>")
+
+    # Default F5 target in the generated .sln (else VS picks the alphabetically
+    # first project — one of the *_test executables — instead of the game).
+    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tower_vulkan)
 endif()
 
 # ============================================================================

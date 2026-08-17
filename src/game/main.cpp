@@ -20,9 +20,32 @@ int main(int argc, char** argv) {
     else if (const char* ad = std::getenv("ASSET_DIR")) assetDir = ad;
     if (argc > 2) mode = argv[2];
 
+    // Log current working directory
+    std::error_code ec;
+    fs::path cwd = fs::current_path(ec);
+    if (!ec) std::cout << "[CWD] " << cwd.string() << '\n';
+
+#ifndef NDEBUG
+#ifdef _WIN32
+    // In debug mode, set working directory to the assets folder
+    //fs::path assetsPath = fs::path(assetDir).is_absolute()
+    //    ? fs::path(assetDir)
+    //    : cwd / assetDir;
+    fs::path assetsPath = "../../assets";
+    fs::current_path(assetsPath, ec);
+    if (ec)
+        std::cerr << "[WARN] Failed to set CWD to assets folder: " << ec.message() << '\n';
+    else
+        std::cout << "[CWD] Changed to assets folder: " << assetsPath.string() << '\n';
+    // Adjust paths that were relative to the original CWD
+    std::string framesDir = (cwd / "frames").string();
+    assetDir = ".";
+#endif
+#else
     // frames output dir (relative to CWD); create portably
     std::string framesDir = "frames";
-    std::error_code ec;
+
+#endif
     fs::create_directories(framesDir, ec);
 
     // Everything game-side lives in this block so Game (and all engine objects)
@@ -39,13 +62,12 @@ int main(int argc, char** argv) {
         // route engine logs to a file as well as stdout (optional; empty path disables)
         toms::Logger::instance().setFile("toms.log");
         toms::Logger::instance().setLevel(toms::LogLevel::Info);
-        TOMS_LOG_INFO("TOMS engine start (C++{}, {} build)", __cplusplus/100,
 #ifdef __EMSCRIPTEN__
-            "web"
+        const char* buildKind = "web";
 #else
-            "native"
+        const char* buildKind = "native";
 #endif
-        );
+        TOMS_LOG_INFO("TOMS engine start (C++{}, {} build)", __cplusplus/100, buildKind);
         if (!g.loadAssets(assetDir)) { std::cerr << "asset load failed\n"; return 1; }
         if (const char* hm = std::getenv("TOMS_HIDE")) g.hideMask = std::atoi(hm);
         // Diagnostic split: if TOMS_SPLIT_NODE=1..4, emit only that node's quads.
