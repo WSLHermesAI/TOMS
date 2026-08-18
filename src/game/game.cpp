@@ -467,6 +467,7 @@ void Game::drawGamepad() {
     }
     if (!gpOn) return;                 // gamepad hidden: only the toggle remains
     for (int i = 0; i < 7; i++) {
+        if ((i == 5 || i == 6) && !inventoryOpen()) continue;  // B/drop + I/close only show inside inventory
         const GPadBtn& b = GP[i];
         Quad q; q.rect[0]=b.x; q.rect[1]=b.y; q.rect[2]=b.w; q.rect[3]=b.h;
         q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
@@ -489,6 +490,13 @@ void Game::handleTouch(float px, float py, int phase) {
     if (id < 0) return;
     if (id == 7) { if (phase == 0) gpOn = !gpOn; return; }  // toggle show/hide
     if (phase == 2) return;                 // touchend on a game button: nothing
+    // Victory screen: tap anywhere to dismiss (cs.won is set on win and must be cleared
+    // or the combat overlay keeps painting forever -> "stuck after defeating enemy").
+    if (cs.won && phase == 0) { cs.won = false; return; }
+    // HUD stats line (carries the "(I)" inventory indicator) — tap to open inventory.
+    if (!inventoryOpen() && !inDialogue && !modalActive() && phase == 0) {
+        if (py >= 74 && py <= 104 && px >= 16 && px <= 560) { toggleInventory(); return; }
+    }
     const GPadBtn& b = GP[id];
     if (inventoryOpen()) {
         if (id <= 3) invMoveSel(b.dx, b.dy);
@@ -511,7 +519,6 @@ void Game::handleTouch(float px, float py, int phase) {
     }
     if (id <= 3 && phase == 0) movePlayer(b.dx, b.dy);   // dpad: one step per tap (phase 1 repeat is for hold, ignored here so a tap = exactly 1 step)
     else if (id == 4 && phase == 0) interact();
-    else if (id == 6 && phase == 0) toggleInventory();
 }
 
 void Game::applyItem(const std::string& id) {
@@ -1072,6 +1079,7 @@ void Game::resolveCombatRound() {
         pl.hp = pl.maxhp/2; // respawn at stage start
         cs.log = "你倒下了……返回本層起點。";
         loadStage(curStage); // reset monsters/items
+        cs.log = "";        // clear so the "倒下" combat overlay stops painting after respawn
     }
 }
 void Game::update(int dtMs) {
