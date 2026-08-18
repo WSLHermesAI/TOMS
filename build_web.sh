@@ -77,18 +77,19 @@ build_one() {
 import sys
 html, ver = sys.argv[1], sys.argv[2]
 s = open(html, encoding='utf-8').read()
-# 1) define window.TOMS_VERSION early (in <head> so it exists before Module)
+# 1) define window.TOMS_VERSION early (in <head> so it exists before Module).
+#    NOTE: we deliberately do NOT override Module.locateFile. Overriding it
+#    (even to return the same path) breaks Emscripten's asset loader in some
+#    browsers (the .data preload fetch hangs at "Downloading..."). The cache-bust
+#    ?v= query is therefore skipped; a hard refresh still picks up new builds.
 tag = '<script>window.TOMS_VERSION=%r;</script>' % ver
+# Guard: swallow unhandled promise rejections during init so they don't propagate
+# to Emscripten's run() promise and abort the wasm (the "Exception thrown" crash).
+# We still surface them via window.onunhandledrejection (installed below) for diagnostics.
+guard = '<script>window.addEventListener("unhandledrejection",function(e){e.preventDefault();e.stopPropagation();});</script>'
 if 'window.TOMS_VERSION' not in s:
-    s = s.replace('<head>', '<head>\n    '+tag, 1)
-# 2) inject locateFile into the Module object (right after "var Module = {")
-if 'locateFile' not in s:
-    s = s.replace('var Module = {',
-        'var Module = {\n        locateFile: function(p, prefix) {\n'
-        '          if ((p.endsWith(\'.wasm\') || p.endsWith(\'.data\')) && window.TOMS_VERSION) '
-        'return (prefix||\'\') + p + \'?v=\' + window.TOMS_VERSION;\n'
-        '          return (prefix||\'\') + p;\n        },', 1)
-# 3) replace the generic window.onerror with one that shows the REAL message+stack
+    s = s.replace('<head>', '<head>\n    '+tag+'\n    '+guard, 1)
+# 2) replace the generic window.onerror with one that shows the REAL message+stack
 OLD = """      window.onerror = window.onunhandledrejection = () => {
         // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
         setStatus('Exception thrown, see JavaScript console');
@@ -103,17 +104,32 @@ if OLD in s and 'showErr' not in s:
         if(!bar){ bar = document.createElement('div'); bar.id='tomserr';
           bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:9999;background:#400;color:#fff;font:14px/1.4 monospace;white-space:pre-wrap;padding:10px;max-height:60%;overflow:auto;';
           (document.body||document.documentElement).appendChild(bar); }
-        bar.textContent = 'TOMS error:\\n' + msg;
+        bar.textContent = 'TOMS error: ' + msg;
         console.error('[TOMS] ' + msg);
       }
-      window.onerror = window.onunhandledrejection = (e) => {
-        var msg = (e && e.message) ? e.message : String(e);
-        if (e && e.error && e.error.stack) msg += '\\n' + e.error.stack;
-        else if (e && e.reason) msg += '\\n' + (e.reason && e.reason.stack ? e.reason.stack : e.reason);
-        showErr(msg);
-        spinnerElement.style.display = 'none';
-        setStatus = (text) => { if (text) console.error('[post-exception status] ' + text); };
-      };
+      function dumpErr(e){
+        var parts = [];
+        try { parts.push('type=' + (e && e.constructor && e.constructor.name)); } catch(_) {}
+        if (e && e.message) parts.push('message=' + e.message);
+        var src = (e && e.reason !== undefined) ? e.reason : (e && e.error);
+        if (src === undefined && e && e.reason === undefined) parts.push('reason=undefined');
+        if (src) {
+          try {
+            var info = [];
+            if (src.name) info.push('name=' + src.name);
+            if (src.code) info.push('code=' + src.code);
+            if (src.message) info.push('msg=' + src.message);
+            info.push(src.stack ? src.stack : (src.message ? src.message : String(src)));
+            parts.push('reason={' + info.join(' | ') + '}');
+          } catch(_) { parts.push('reason=' + String(src)); }
+        }
+        if (e && e.filename) parts.push('at ' + e.filename + ':' + e.lineno + ':' + e.colno);
+        var txt = parts.join(' ');
+        try { document.title = 'ERR: ' + txt.slice(0, 200); } catch(_) {}
+        return txt;
+      }
+      window.onerror = (m,s,l,c,err) => { showErr(dumpErr(err || {message:m,filename:s,lineno:l,colno:c})); spinnerElement.style.display='none'; setStatus=(t)=>{if(t)console.error('[post] '+t);}; };
+      window.onunhandledrejection = (e) => { showErr(dumpErr(e)); spinnerElement.style.display='none'; setStatus=(t)=>{if(t)console.error('[post] '+t);}; };
       if (typeof Module !== 'undefined') Module.onAbort = function(what){ showErr('ABORT: ' + (what||'unknown')); };"""
     s = s.replace(OLD, NEW, 1)
 open(html, 'w', encoding='utf-8').write(s)

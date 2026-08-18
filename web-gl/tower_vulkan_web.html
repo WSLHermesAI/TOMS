@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="en-us">
   <head>
-    <script>window.TOMS_VERSION='de7d144-20260817015653';</script>
+    <script>window.TOMS_VERSION='f88f115-20260818200643';</script>
+    <script>window.addEventListener("unhandledrejection",function(e){e.preventDefault();e.stopPropagation();});</script>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Emscripten-Generated Code</title>
@@ -167,10 +168,6 @@ canvas.emscripten { border: 0px none; background-color: black; }
       };
 
       var Module = {
-        locateFile: function(p, prefix) {
-          if ((p.endsWith('.wasm') || p.endsWith('.data')) && window.TOMS_VERSION) return (prefix||'') + p + '?v=' + window.TOMS_VERSION;
-          return (prefix||'') + p;
-        },
         print(...args) {
           console.log(...args);
           // These replacements are necessary if you render to raw HTML
@@ -198,17 +195,32 @@ canvas.emscripten { border: 0px none; background-color: black; }
         if(!bar){ bar = document.createElement('div'); bar.id='tomserr';
           bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:9999;background:#400;color:#fff;font:14px/1.4 monospace;white-space:pre-wrap;padding:10px;max-height:60%;overflow:auto;';
           (document.body||document.documentElement).appendChild(bar); }
-        bar.textContent = 'TOMS error:\n' + msg;
+        bar.textContent = 'TOMS error: ' + msg;
         console.error('[TOMS] ' + msg);
       }
-      window.onerror = window.onunhandledrejection = (e) => {
-        var msg = (e && e.message) ? e.message : String(e);
-        if (e && e.error && e.error.stack) msg += '\n' + e.error.stack;
-        else if (e && e.reason) msg += '\n' + (e.reason && e.reason.stack ? e.reason.stack : e.reason);
-        showErr(msg);
-        spinnerElement.style.display = 'none';
-        setStatus = (text) => { if (text) console.error('[post-exception status] ' + text); };
-      };
+      function dumpErr(e){
+        var parts = [];
+        try { parts.push('type=' + (e && e.constructor && e.constructor.name)); } catch(_) {}
+        if (e && e.message) parts.push('message=' + e.message);
+        var src = (e && e.reason !== undefined) ? e.reason : (e && e.error);
+        if (src === undefined && e && e.reason === undefined) parts.push('reason=undefined');
+        if (src) {
+          try {
+            var info = [];
+            if (src.name) info.push('name=' + src.name);
+            if (src.code) info.push('code=' + src.code);
+            if (src.message) info.push('msg=' + src.message);
+            info.push(src.stack ? src.stack : (src.message ? src.message : String(src)));
+            parts.push('reason={' + info.join(' | ') + '}');
+          } catch(_) { parts.push('reason=' + String(src)); }
+        }
+        if (e && e.filename) parts.push('at ' + e.filename + ':' + e.lineno + ':' + e.colno);
+        var txt = parts.join(' ');
+        try { document.title = 'ERR: ' + txt.slice(0, 200); } catch(_) {}
+        return txt;
+      }
+      window.onerror = (m,s,l,c,err) => { showErr(dumpErr(err || {message:m,filename:s,lineno:l,colno:c})); spinnerElement.style.display='none'; setStatus=(t)=>{if(t)console.error('[post] '+t);}; };
+      window.onunhandledrejection = (e) => { showErr(dumpErr(e)); spinnerElement.style.display='none'; setStatus=(t)=>{if(t)console.error('[post] '+t);}; };
       if (typeof Module !== 'undefined') Module.onAbort = function(what){ showErr('ABORT: ' + (what||'unknown')); };
     </script>
     <script async type="text/javascript" src="tower_vulkan_web.js"></script>

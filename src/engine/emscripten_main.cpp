@@ -104,6 +104,7 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
 // syntax — that form leaks `R"JS(` into the emitted JS and breaks it. Use a plain
 // string literal instead. JS uses only single quotes to avoid C++ string escaping.
 static const char* TOMS_WEB_UI =
+"(function(){try{"
 "var T=function(){var c=document.getElementById('canvas');if(!c)return;"
 "var r=c.getBoundingClientRect();var top=(r.top>0)?r.top:0;"
 "var ah=window.innerHeight-top-4,aw=window.innerWidth-4;"
@@ -115,13 +116,13 @@ static const char* TOMS_WEB_UI =
 "requestAnimationFrame(T);T();"
 "if(typeof Module!=='undefined'&&Module.requestFullscreen){Module.requestFullscreen=function(){"
 "var c=document.getElementById('canvas');try{if(!document.fullscreenElement){"
-"(c.requestFullscreen||c.webkitRequestFullscreen||function(){}).call(c);}"
-"else{(document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);}}catch(e){}};}"
+"var p=(c.requestFullscreen||c.webkitRequestFullscreen||function(){}).call(c);if(p&&p.catch)p.catch(function(){});}"
+"else{var q=(document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);if(q&&q.catch)q.catch(function(){});}}catch(e){}};}"
 "var ctrls=document.getElementById('controls');if(ctrls)ctrls.style.display='none';"
 "var fsb=document.createElement('button');fsb.textContent='⛶';fsb.title='Fullscreen';"
 "fsb.style.cssText='position:fixed;top:8px;right:8px;z-index:50;width:40px;height:40px;font:18px sans-serif;background:#222;color:#fff;border:1px solid #555;border-radius:6px';"
 "fsb.onclick=function(){var c=document.getElementById('canvas');"
-"if(!document.fullscreenElement){(c.requestFullscreen||c.webkitRequestFullscreen)&&(c.requestFullscreen||c.webkitRequestFullscreen).call(c);}"
+"if(!document.fullscreenElement){var fp=(c.requestFullscreen||c.webkitRequestFullscreen);if(fp){var fr=fp.call(c);if(fr&&fr.catch)fr.catch(function(){});}}"
 "else{(document.exitFullscreen||document.webkitExitFullscreen)&&(document.exitFullscreen||document.webkitExitFullscreen).call(document);}};"
 "document.body.appendChild(fsb);"
 "var cv=document.getElementById('canvas');if(cv)cv.style.touchAction='none';"
@@ -129,8 +130,8 @@ static const char* TOMS_WEB_UI =
 "function toBP(e){var r=cv.getBoundingClientRect();var w=(r.width>0)?r.width:1024;var h=(r.height>0)?r.height:768;var t=(e.changedTouches&&e.changedTouches[0])?e.changedTouches[0]:e;var bx=(t.clientX-r.left)/w*1024;var by=(t.clientY-r.top)/h*768;if(!isFinite(bx)||!isFinite(by))return null;return [bx,by];}"
 "function gpCall(p,ph){try{if(typeof Module!=='undefined'&&Module.ccall&&window.__tomsReady)Module.ccall('jsGamepad','null',['number','number','number'],[ph,p[0],p[1]]);}catch(err){showErr('jsGamepad: '+err);}}"
 "function showErr(m){try{var d=document.getElementById('tomserr');if(!d){d=document.createElement('div');d.id='tomserr';d.style.cssText='position:fixed;left:0;top:0;right:0;z-index:999;background:rgba(120,0,0,0.9);color:#fff;font:13px monospace;padding:6px;white-space:pre-wrap;';document.body.appendChild(d);}d.textContent='ERROR: '+m;}catch(e){}}"
-"window.onerror=function(m,s,l,c,e){showErr(m+' @'+l+':'+c+(e&&e.stack?'\n'+e.stack:''));return false;};"
-"if(typeof Module!=='undefined'){Module.onAbort=function(what){showErr('ABORT: '+(what||'unknown')+'\n(open DevTools console for the C++ stack)');};}"
+"window.onerror=function(m,s,l,c,e){showErr(m+' @'+l+':'+c+(e&&e.stack?' | '+e.stack:''));return false;};"
+"if(typeof Module!=='undefined'){Module.onAbort=function(what){showErr('ABORT: '+(what||'unknown')+' (open DevTools console for the C++ stack)');};}"
 "function onDown(e){var p=toBP(e);if(!p)return;cv._p=p;gpCall(p,0);if(cv._rep)clearTimeout(cv._rep);if(cv._rep2)clearInterval(cv._rep2);cv._rep=null;cv._rep2=null;cv._rep=setTimeout(function(){cv._rep2=setInterval(function(){gpCall(cv._p||p,1);},150);},320);}"
 "function onMove(e){var p=toBP(e);if(p)cv._p=p;}"
 "function onUp(e){var p=toBP(e);if(p)gpCall(p,2);if(cv._rep){clearTimeout(cv._rep);cv._rep=null;}if(cv._rep2){clearInterval(cv._rep2);cv._rep2=null;}}"
@@ -146,7 +147,10 @@ static const char* TOMS_WEB_UI =
 "cv.addEventListener('mousedown',function(e){e.preventDefault();onDown(e);},false);"
 "cv.addEventListener('mousemove',function(e){onMove(e);},false);"
 "cv.addEventListener('mouseup',function(e){e.preventDefault();onUp(e);},false);"
-"}";
+"}"
+"}catch(e){console.error('[TOMS_WEB_UI] init failed (non-fatal):', e && e.stack ? e.stack : e);"
+"if(typeof showErr==='function')showErr('TOMS_WEB_UI init failed: '+(e&&e.message?e.message:e));}"
+"})();";
 
 int main() {
 #ifndef WEBGPU

@@ -5,16 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
-FetchContent_Declare(
-    glfw
-    GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG        3.4
-)
-set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(glfw)
 
 # Paths to vendored third-party headers (self-contained, no system deps)
 set(STB_DIR ${CMAKE_SOURCE_DIR}/external/stb)
@@ -31,6 +21,20 @@ set(ENGINE_DIR ${CMAKE_SOURCE_DIR}/src/engine)
 # ============================================================================
 option(WEB "Build the Emscripten browser target" OFF)
 if(NOT WEB)
+    # GLFW is only needed for the windowed desktop (Vulkan) build. Fetching it
+    # here (not at top level) keeps the Emscripten (WEB) configure from pulling
+    # in GLFW's Wayland/X11 detection, which has no business under WASM.
+    FetchContent_Declare(
+        glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG        3.4
+    )
+    set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(glfw)
+
     # ---- Vulkan ----
     find_package(Vulkan QUIET)
     if(NOT Vulkan_FOUND OR NOT Vulkan_LIBRARIES)
