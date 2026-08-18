@@ -178,7 +178,19 @@ Quad Game::spriteQuad(float x, float y, float w, float h, int layer, const float
 
 void Game::loadStage(const std::string& id) {
     curStage = id;
-    st = parseStage(dataDir + "/../data/stages/" + id + ".json");
+    // Resolve the stage JSON. Data ids in connect.up/down use "stage_02" (underscore)
+    // while the shipped files are named "stage02.json" (no underscore) — and the
+    // initial load uses "stage01". Normalize so both forms resolve instead of
+    // opening a non-existent path (which makes ifstream fail -> parse throw -> crash
+    // when the player steps on stairs / a warp tile).
+    std::string path = dataDir + "/../data/stages/" + id + ".json";
+    if (!std::filesystem::exists(path)) {
+        std::string noUs = id;
+        noUs.erase(std::remove(noUs.begin(), noUs.end(), '_'), noUs.end());
+        std::string alt = dataDir + "/../data/stages/" + noUs + ".json";
+        if (std::filesystem::exists(alt)) path = alt;
+    }
+    st = parseStage(path);
     // derive total stage count from the stages directory (max index)
     totalStages = 1;
     std::string dir = dataDir + "/../data/stages/";
