@@ -1,7 +1,7 @@
 {
   "store_title": "道具商店",
   "currency": "gold",
-  "unlockstage": 3,
+  "unlockstage": 1,
   "layout": "card_grid",
   "cost_rule": {
     "description": "Each item starts at cost_base and the price doubles after every purchase (cost_base * cost_multiplier^purchases). Sequence: 2, 4, 8, 16, 32, ...",

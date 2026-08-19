@@ -494,6 +494,15 @@ void Game::handleTouch(float px, float py, int phase) {
     // out-of-range). Prevents bad state / out-of-bounds in the hit-test below.
     if (!(px == px) || !(py == py)) return;            // NaN check
     if (px < 0 || px > 1024 || py < 0 || py > 768) return;
+    // --- Store overlay: route ALL taps to storeClick. Store buttons (icon / buy / close)
+    //     are NOT gamepad rects, so this must run BEFORE the gamepad hit-test below,
+    //     otherwise taps on store UI hit `id<0` and are dropped. ---
+    if (storeModal()) { if (phase == 0) storeClick(px, py); return; }
+    // Normal play: a tap on the store icon (top-right) opens the shop.
+    if (!modalActive() && phase == 0) {
+        storeClick(px, py);
+        if (storeOpen) return;   // icon tapped -> store opened; consume this tap
+    }
     int id = -1;
     for (int i = 0; i < GP_N; i++) {
         const GPadBtn& b = GP[i];

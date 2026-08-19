@@ -105,6 +105,8 @@ int main(int argc, char** argv) {
                 else g.interact();
             }
             if (keyPressed(GLFW_KEY_I)) g.toggleInventory();
+            // Store: B opens the shop (only when no other modal is up)
+            if (keyPressed(GLFW_KEY_B) && !g.modalActive()) g.openStore();
             // Inventory cursor
             if (g.inventoryOpen()) {
                 if (keyPressed(GLFW_KEY_UP)    || keyPressed(GLFW_KEY_W)) g.invMoveSel(0, -1);
