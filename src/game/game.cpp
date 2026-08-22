@@ -444,7 +444,7 @@ void Game::draw() {
     else if (storeOpen) drawStoreUI();
     drawStoreToast();
 
-    drawGamepad();   // on-canvas touch controls (web build; gated by gpTouch)
+    drawGamepad();   // on-canvas touch controls; auto-hidden while a top-layer UI (battle/dialogue/inventory/store) is active
 
     ren->end();
 }
@@ -466,9 +466,14 @@ static const GPadBtn GP[] = {
 static const int GP_N = 8;
 
 void Game::drawGamepad() {
+    // Hide the whole gamepad (including its P toggle) while a top-layer UI is
+    // active (battle / dialogue / inventory / store). Those UIs are driven by
+    // direct touch/keyboard on their own elements, so the on-canvas D-pad + A
+    // would just clutter the screen and could be mis-tapped.
+    if (modalActive() || cs.won) return;
     ren->setNode(NODE_CHAR);
     float t[4] = {1,1,1,1};
-    // The toggle button is ALWAYS drawn (so the gamepad can be brought back after hiding).
+    // P toggle button (drawn in normal play; modals already returned above).
     {
         const GPadBtn& b = GP[7];
         Quad q; q.rect[0]=b.x; q.rect[1]=b.y; q.rect[2]=b.w; q.rect[3]=b.h;
@@ -526,16 +531,32 @@ void Game::handleTouch(float px, float py, int phase) {
         else if (id == 6 && phase == 0) toggleInventory();
         return;
     }
-    if (inDialogue) {                        // dialogue: full gamepad control
+    if (inDialogue) {                        // dialogue: tap a choice line to select+confirm
         int n = (int)dlgChoices.size();
+        // Tap directly on a choice line (drawn at y = H-140 + i*24, x >= 60) selects & confirms it.
+        if (phase == 0 && n > 0) {
+            float W = (float)ren->width(), H = (float)ren->height();
+            for (int i = 0; i < n; i++) {
+                float ty = H - 140 + (float)i * 24;
+                if (py >= ty - 12 && py <= ty + 12 && px >= 56 && px <= W - 56) {
+                    dlgSel = i; chooseDialogue(i); return;
+                }
+            }
+            // tap elsewhere on the dialogue box = advance to next (keep current selection)
+            chooseDialogue(dlgSel); return;
+        }
+        // (gamepad D-pad still works too)
         if (id == 0 && phase == 0 && n > 0) dlgSel = (dlgSel - 1 + n) % n;   // up = prev choice
         else if (id == 1 && phase == 0 && n > 0) dlgSel = (dlgSel + 1) % n;  // down = next choice
         else if (id == 4 && phase == 0) chooseDialogue(dlgSel);               // A = select
         else if (id == 5 && phase == 0) inDialogue = false;                  // B = close
         return;
     }
-    if (modalActive()) {                     // combat / store: block movement
-        if (id == 4 && phase == 0) interact();   // A = continue / confirm
+    if (cs.active) {                         // combat in progress: tap = continue / next phase
+        if (phase == 0) interact();
+        return;
+    }
+    if (modalActive()) {                     // other modal (store handled above): block world input
         return;
     }
     if (id <= 3 && phase == 0) movePlayer(b.dx, b.dy);   // dpad: one step per tap (phase 1 repeat is for hold, ignored here so a tap = exactly 1 step)
