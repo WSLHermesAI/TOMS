@@ -153,6 +153,7 @@ static const char* TOMS_WEB_UI =
 "})();";
 
 int main() {
+ try {
 #ifndef WEBGPU
     EmscriptenWebGLContextAttributes attrs;
     emscripten_webgl_init_context_attributes(&attrs);
@@ -180,4 +181,12 @@ int main() {
 
     emscripten_set_main_loop(loop, 30, 0);
     return 0;
+ } catch (const std::exception& e) {
+    fprintf(stderr, "[web] FATAL init exception: %s\n", e.what());
+    EM_ASM({ if (typeof showErr === 'function') showErr('init exception: ' + UTF8ToString($0)); }, e.what());
+    return 2;
+ } catch (...) {
+    fprintf(stderr, "[web] FATAL init exception: unknown\n");
+    return 2;
+ }
 }

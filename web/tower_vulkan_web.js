@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp23e1yb8k.js
+// include: /tmp/tmpwkbaf4tj.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -171,7 +171,6 @@ Module['FS_createPath']("/assets", "sprites", true, true);
 Module['FS_createPath']("/", "data", true, true);
 Module['FS_createPath']("/data", "dialogue", true, true);
 Module['FS_createPath']("/data", "stages", true, true);
-Module['FS_createPath']("/data/stages", "_orig_backup", true, true);
 
       async function processPackageData(arrayBuffer) {
         assert(arrayBuffer, 'Loading data file failed.');
@@ -207,25 +206,25 @@ Module['FS_createPath']("/data/stages", "_orig_backup", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 54997}, {"filename": "/assets/font_atlas.png", "start": 54997, "end": 248173}, {"filename": "/assets/sfx/confirm_click.wav", "start": 248173, "end": 254831}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 254831, "end": 262813}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 262813, "end": 283143}, {"filename": "/assets/sfx/get_item.wav", "start": 283143, "end": 302591}, {"filename": "/assets/sfx/player_attack.wav", "start": 302591, "end": 313219}, {"filename": "/assets/sfx/walk.wav", "start": 313219, "end": 319437}, {"filename": "/assets/shaders/sprite.frag", "start": 319437, "end": 320160}, {"filename": "/assets/shaders/sprite.frag.spv", "start": 320160, "end": 321836}, {"filename": "/assets/shaders/sprite.vert", "start": 321836, "end": 322874}, {"filename": "/assets/shaders/sprite.vert.spv", "start": 322874, "end": 326058}, {"filename": "/assets/sprites/bat.png", "start": 326058, "end": 326268}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 326268, "end": 326572}, {"filename": "/assets/sprites/coin.png", "start": 326572, "end": 326795}, {"filename": "/assets/sprites/demon.png", "start": 326795, "end": 327099}, {"filename": "/assets/sprites/door_blue.png", "start": 327099, "end": 327258}, {"filename": "/assets/sprites/door_red.png", "start": 327258, "end": 327417}, {"filename": "/assets/sprites/door_yellow.png", "start": 327417, "end": 327576}, {"filename": "/assets/sprites/exp_up.png", "start": 327576, "end": 327779}, {"filename": "/assets/sprites/floor.png", "start": 327779, "end": 327957}, {"filename": "/assets/sprites/gem_atk.png", "start": 327957, "end": 328210}, {"filename": "/assets/sprites/gem_def.png", "start": 328210, "end": 328467}, {"filename": "/assets/sprites/golem.png", "start": 328467, "end": 328674}, {"filename": "/assets/sprites/key_blue.png", "start": 328674, "end": 328931}, {"filename": "/assets/sprites/key_red.png", "start": 328931, "end": 329184}, {"filename": "/assets/sprites/key_yellow.png", "start": 329184, "end": 329438}, {"filename": "/assets/sprites/manifest.json", "start": 329438, "end": 330014}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 330014, "end": 330229}, {"filename": "/assets/sprites/npc_king.png", "start": 330229, "end": 330420}, {"filename": "/assets/sprites/npc_princess.png", "start": 330420, "end": 330643}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 330643, "end": 330889}, {"filename": "/assets/sprites/npc_villager.png", "start": 330889, "end": 331078}, {"filename": "/assets/sprites/player.png", "start": 331078, "end": 331343}, {"filename": "/assets/sprites/potion_blue.png", "start": 331343, "end": 331577}, {"filename": "/assets/sprites/potion_red.png", "start": 331577, "end": 331811}, {"filename": "/assets/sprites/scroll.png", "start": 331811, "end": 331947}, {"filename": "/assets/sprites/skeleton.png", "start": 331947, "end": 332124}, {"filename": "/assets/sprites/slime.png", "start": 332124, "end": 332381}, {"filename": "/assets/sprites/stairs_down.png", "start": 332381, "end": 332557}, {"filename": "/assets/sprites/stairs_up.png", "start": 332557, "end": 332735}, {"filename": "/assets/sprites/wall.png", "start": 332735, "end": 332872}, {"filename": "/assets/sprites/wraith.png", "start": 332872, "end": 333115}, {"filename": "/assets/wqy-zenhei.ttc", "start": 333115, "end": 17124366}, {"filename": "/data/combat.json", "start": 17124366, "end": 17124948}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17124948, "end": 17125187}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17125187, "end": 17125437}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17125437, "end": 17125731}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17125731, "end": 17125978}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17125978, "end": 17126234}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17126234, "end": 17126484}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17126484, "end": 17126738}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17126738, "end": 17127021}, {"filename": "/data/dialogue/handmaiden.json", "start": 17127021, "end": 17127306}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17127306, "end": 17127665}, {"filename": "/data/dialogue/princess_liora.json", "start": 17127665, "end": 17127939}, {"filename": "/data/dialogue/princess_victory.json", "start": 17127939, "end": 17128488}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17128488, "end": 17129066}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17129066, "end": 17129685}, {"filename": "/data/dialogue/villager_elder.json", "start": 17129685, "end": 17130325}, {"filename": "/data/enemies.json", "start": 17130325, "end": 17131373}, {"filename": "/data/items.json", "start": 17131373, "end": 17132759}, {"filename": "/data/stages/_orig_backup/stage01.json", "start": 17132759, "end": 17133983}, {"filename": "/data/stages/_orig_backup/stage02.json", "start": 17133983, "end": 17135177}, {"filename": "/data/stages/_orig_backup/stage03.json", "start": 17135177, "end": 17136366}, {"filename": "/data/stages/_orig_backup/stage04.json", "start": 17136366, "end": 17137583}, {"filename": "/data/stages/_orig_backup/stage05.json", "start": 17137583, "end": 17138765}, {"filename": "/data/stages/_orig_backup/stage06.json", "start": 17138765, "end": 17139942}, {"filename": "/data/stages/_orig_backup/stage07.json", "start": 17139942, "end": 17141151}, {"filename": "/data/stages/_orig_backup/stage08.json", "start": 17141151, "end": 17142347}, {"filename": "/data/stages/_orig_backup/stage09.json", "start": 17142347, "end": 17143551}, {"filename": "/data/stages/_orig_backup/stage10.json", "start": 17143551, "end": 17144752}, {"filename": "/data/stages/_orig_backup/stage_11.json", "start": 17144752, "end": 17145934}, {"filename": "/data/stages/stage01.json", "start": 17145934, "end": 17147191}, {"filename": "/data/stages/stage02.json", "start": 17147191, "end": 17148418}, {"filename": "/data/stages/stage03.json", "start": 17148418, "end": 17149640}, {"filename": "/data/stages/stage04.json", "start": 17149640, "end": 17150890}, {"filename": "/data/stages/stage05.json", "start": 17150890, "end": 17152105}, {"filename": "/data/stages/stage06.json", "start": 17152105, "end": 17153315}, {"filename": "/data/stages/stage07.json", "start": 17153315, "end": 17154557}, {"filename": "/data/stages/stage08.json", "start": 17154557, "end": 17155786}, {"filename": "/data/stages/stage09.json", "start": 17155786, "end": 17157023}, {"filename": "/data/stages/stage10.json", "start": 17157023, "end": 17158257}, {"filename": "/data/stages/stage_11.json", "start": 17158257, "end": 17159472}, {"filename": "/data/store.json", "start": 17159472, "end": 17160741}, {"filename": "/data/story.json", "start": 17160741, "end": 17162073}], "remote_package_size": 17162073});
+    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 54997}, {"filename": "/assets/font_atlas.png", "start": 54997, "end": 248173}, {"filename": "/assets/sfx/confirm_click.wav", "start": 248173, "end": 254831}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 254831, "end": 262813}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 262813, "end": 283143}, {"filename": "/assets/sfx/get_item.wav", "start": 283143, "end": 302591}, {"filename": "/assets/sfx/player_attack.wav", "start": 302591, "end": 313219}, {"filename": "/assets/sfx/walk.wav", "start": 313219, "end": 319437}, {"filename": "/assets/shaders/sprite.frag", "start": 319437, "end": 320160}, {"filename": "/assets/shaders/sprite.frag.spv", "start": 320160, "end": 321836}, {"filename": "/assets/shaders/sprite.vert", "start": 321836, "end": 322874}, {"filename": "/assets/shaders/sprite.vert.spv", "start": 322874, "end": 326058}, {"filename": "/assets/sprites/bat.png", "start": 326058, "end": 326268}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 326268, "end": 326572}, {"filename": "/assets/sprites/coin.png", "start": 326572, "end": 326795}, {"filename": "/assets/sprites/demon.png", "start": 326795, "end": 327099}, {"filename": "/assets/sprites/door_blue.png", "start": 327099, "end": 327258}, {"filename": "/assets/sprites/door_red.png", "start": 327258, "end": 327417}, {"filename": "/assets/sprites/door_yellow.png", "start": 327417, "end": 327576}, {"filename": "/assets/sprites/exp_up.png", "start": 327576, "end": 327779}, {"filename": "/assets/sprites/floor.png", "start": 327779, "end": 327957}, {"filename": "/assets/sprites/gem_atk.png", "start": 327957, "end": 328210}, {"filename": "/assets/sprites/gem_def.png", "start": 328210, "end": 328467}, {"filename": "/assets/sprites/golem.png", "start": 328467, "end": 328674}, {"filename": "/assets/sprites/key_blue.png", "start": 328674, "end": 328931}, {"filename": "/assets/sprites/key_red.png", "start": 328931, "end": 329184}, {"filename": "/assets/sprites/key_yellow.png", "start": 329184, "end": 329438}, {"filename": "/assets/sprites/manifest.json", "start": 329438, "end": 330014}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 330014, "end": 330229}, {"filename": "/assets/sprites/npc_king.png", "start": 330229, "end": 330420}, {"filename": "/assets/sprites/npc_princess.png", "start": 330420, "end": 330643}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 330643, "end": 330889}, {"filename": "/assets/sprites/npc_villager.png", "start": 330889, "end": 331078}, {"filename": "/assets/sprites/player.png", "start": 331078, "end": 331343}, {"filename": "/assets/sprites/potion_blue.png", "start": 331343, "end": 331577}, {"filename": "/assets/sprites/potion_red.png", "start": 331577, "end": 331811}, {"filename": "/assets/sprites/scroll.png", "start": 331811, "end": 331947}, {"filename": "/assets/sprites/skeleton.png", "start": 331947, "end": 332124}, {"filename": "/assets/sprites/slime.png", "start": 332124, "end": 332381}, {"filename": "/assets/sprites/stairs_down.png", "start": 332381, "end": 332557}, {"filename": "/assets/sprites/stairs_up.png", "start": 332557, "end": 332735}, {"filename": "/assets/sprites/wall.png", "start": 332735, "end": 332872}, {"filename": "/assets/sprites/wraith.png", "start": 332872, "end": 333115}, {"filename": "/assets/wqy-zenhei.ttc", "start": 333115, "end": 17124366}, {"filename": "/data/combat.json", "start": 17124366, "end": 17124948}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17124948, "end": 17125187}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17125187, "end": 17125437}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17125437, "end": 17125731}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17125731, "end": 17125978}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17125978, "end": 17126234}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17126234, "end": 17126484}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17126484, "end": 17126738}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17126738, "end": 17127021}, {"filename": "/data/dialogue/handmaiden.json", "start": 17127021, "end": 17127306}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17127306, "end": 17127665}, {"filename": "/data/dialogue/princess_liora.json", "start": 17127665, "end": 17127939}, {"filename": "/data/dialogue/princess_victory.json", "start": 17127939, "end": 17128488}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17128488, "end": 17129066}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17129066, "end": 17129685}, {"filename": "/data/dialogue/villager_elder.json", "start": 17129685, "end": 17130325}, {"filename": "/data/enemies.json", "start": 17130325, "end": 17131373}, {"filename": "/data/items.json", "start": 17131373, "end": 17132759}, {"filename": "/data/stages/stage01.json", "start": 17132759, "end": 17134016}, {"filename": "/data/stages/stage02.json", "start": 17134016, "end": 17135243}, {"filename": "/data/stages/stage03.json", "start": 17135243, "end": 17136465}, {"filename": "/data/stages/stage04.json", "start": 17136465, "end": 17137715}, {"filename": "/data/stages/stage05.json", "start": 17137715, "end": 17138930}, {"filename": "/data/stages/stage06.json", "start": 17138930, "end": 17140140}, {"filename": "/data/stages/stage07.json", "start": 17140140, "end": 17141382}, {"filename": "/data/stages/stage08.json", "start": 17141382, "end": 17142611}, {"filename": "/data/stages/stage09.json", "start": 17142611, "end": 17143848}, {"filename": "/data/stages/stage10.json", "start": 17143848, "end": 17145082}, {"filename": "/data/stages/stage_11.json", "start": 17145082, "end": 17146297}, {"filename": "/data/store.json", "start": 17146297, "end": 17147566}, {"filename": "/data/story.json", "start": 17147566, "end": 17148898}], "remote_package_size": 17148898});
 
   })();
 
-// end include: /tmp/tmp23e1yb8k.js
-// include: /tmp/tmphxrvy4p1.js
+// end include: /tmp/tmpwkbaf4tj.js
+// include: /tmp/tmpndohmrw_.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmphxrvy4p1.js
-// include: /tmp/tmpdg7i0epu.js
+  // end include: /tmp/tmpndohmrw_.js
+// include: /tmp/tmpx5r7bpw2.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpdg7i0epu.js
+  // end include: /tmp/tmpx5r7bpw2.js
 
 
 var programArgs = [];
@@ -429,10 +428,6 @@ function assert(condition, text) {
 
 // We used to include malloc/free by default in the past. Show a helpful error in
 // builds with assertions.
-function _free() {
-  // Show a helpful error since we used to include free by default in the past.
-  abort('free() called but not included in the build - add `_free` to EXPORTED_FUNCTIONS');
-}
 
 /**
  * Indicates whether filename is delivered via file protocol (as opposed to http/https)
@@ -443,9 +438,19 @@ var isFileURI = (filename) => filename.startsWith('file://');
 // include: runtime_common.js
 // include: runtime_exceptions.js
 // Base Emscripten EH error class
-class EmscriptenEH {}
+class EmscriptenEH extends Error {}
 
 class EmscriptenSjLj extends EmscriptenEH {}
+
+class CppException extends EmscriptenEH {
+  constructor(excPtr) {
+    super(excPtr);
+    this.excPtr = excPtr;
+    const excInfo = getExceptionMessage(this);
+    this.name = excInfo[0];
+    this.message = excInfo[1];
+  }
+}
 
 // end include: runtime_exceptions.js
 // include: runtime_debug.js
@@ -1051,6 +1056,37 @@ async function createWasm() {
   var ___assert_fail = (condition, filename, line, func) =>
       abort(`Assertion failed: ${UTF8ToString(condition)}, at: ` + [filename ? UTF8ToString(filename) : 'unknown filename', line, func ? UTF8ToString(func) : 'unknown function']);
 
+  var exceptionCaught =  [];
+  
+  
+  var uncaughtExceptionCount = 0;
+  var ___cxa_begin_catch = (ptr) => {
+      var info = new ExceptionInfo(ptr);
+      if (!info.get_caught()) {
+        info.set_caught(true);
+        uncaughtExceptionCount--;
+      }
+      info.set_rethrown(false);
+      exceptionCaught.push(info);
+      return ___cxa_get_exception_ptr(ptr);
+    };
+
+  
+  
+  
+  var exceptionLast = null;
+  var ___cxa_end_catch = () => {
+      // Clear state flag.
+      _setThrew(0, 0);
+      assert(exceptionCaught.length > 0);
+      // Call destructor if one is registered then clear it.
+      var info = exceptionCaught.pop();
+  
+      ___cxa_decrement_exception_refcount(info.excPtr);
+      exceptionLast = null; // XXX in decRef?
+    };
+
+  
   
   class ExceptionInfo {
       // excPtr - Thrown object pointer to wrap. Metadata pointer is calculated from it.
@@ -1109,13 +1145,95 @@ async function createWasm() {
       }
     }
   
-  var uncaughtExceptionCount = 0;
+  
+  var setTempRet0 = (val) => __emscripten_tempret_set(val);
+  var findMatchingCatch = (args) => {
+      var thrown = exceptionLast?.excPtr;
+      if (!thrown) {
+        // just pass through the null ptr
+        setTempRet0(0);
+        return 0;
+      }
+      var info = new ExceptionInfo(thrown);
+      info.set_adjusted_ptr(thrown);
+      var thrownType = info.get_type();
+      if (!thrownType) {
+        // just pass through the thrown ptr
+        setTempRet0(0);
+        return thrown;
+      }
+  
+      // can_catch receives a **, add indirection
+      // The different catch blocks are denoted by different types.
+      // Due to inheritance, those types may not precisely match the
+      // type of the thrown object. Find one which matches, and
+      // return the type of the catch block which should be called.
+      for (var caughtType of args) {
+        if (!caughtType || caughtType === thrownType) {
+          // Catch all clause matched or exactly the same type is caught
+          break;
+        }
+        var adjusted_ptr_addr = info.ptr + 16;
+        if (___cxa_can_catch(caughtType, thrownType, adjusted_ptr_addr)) {
+          setTempRet0(caughtType);
+          return thrown;
+        }
+      }
+      setTempRet0(thrownType);
+      return thrown;
+    };
+  var ___cxa_find_matching_catch_2 = () => findMatchingCatch([]);
+
+  var ___cxa_find_matching_catch_3 = (arg0) => findMatchingCatch([arg0]);
+
+  
+  
+  
+  
+  
+  
+  
+  
+  var stackAlloc = (sz) => __emscripten_stack_alloc(sz);
+  
+  
+  var getExceptionMessageCommon = (ptr) => {
+      var sp = stackSave();
+      var type_addr_addr = stackAlloc(4);
+      var message_addr_addr = stackAlloc(4);
+      ___get_exception_message(ptr, type_addr_addr, message_addr_addr);
+      var type_addr = HEAPU32[((type_addr_addr)>>2)];
+      var message_addr = HEAPU32[((message_addr_addr)>>2)];
+      var type = UTF8ToString(type_addr);
+      _free(type_addr);
+      var message;
+      if (message_addr) {
+        message = UTF8ToString(message_addr);
+        _free(message_addr);
+      }
+      stackRestore(sp);
+      return [type, message];
+    };
+  var getExceptionMessage = (exn) => getExceptionMessageCommon(exn.excPtr);
+  
+  var decrementExceptionRefcount = (exn) => ___cxa_decrement_exception_refcount(exn.excPtr);
+  
+  var incrementExceptionRefcount = (exn) => ___cxa_increment_exception_refcount(exn.excPtr);
   var ___cxa_throw = (ptr, type, destructor) => {
       var info = new ExceptionInfo(ptr);
       // Initialize ExceptionInfo content after it was allocated in __cxa_allocate_exception.
       info.init(type, destructor);
+      ___cxa_increment_exception_refcount(ptr);
+      exceptionLast = new CppException(ptr);
       uncaughtExceptionCount++;
-      assert(false, 'Exception thrown, but exception catching is not enabled. Compile with -sNO_DISABLE_EXCEPTION_CATCHING or -sEXCEPTION_CATCHING_ALLOWED=[..] to catch.');
+      throw exceptionLast;
+    };
+
+  var ___resumeException = (ptr) => {
+      if (!exceptionLast) {
+        exceptionLast = new CppException(ptr);
+      }
+      throw exceptionLast;
     };
 
   var syscallGetVarargI = () => {
@@ -6655,6 +6773,7 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
 
 
 
+
   var getCFunc = (ident) => {
       var func = Module['_' + ident]; // closure exported function
       assert(func, `Cannot call unknown function ${ident}, make sure it is exported`);
@@ -6668,7 +6787,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
   
   
-  var stackAlloc = (sz) => __emscripten_stack_alloc(sz);
   var stringToUTF8OnStack = (str) => {
       var size = lengthBytesUTF8(str) + 1;
       var ret = stackAlloc(size);
@@ -7295,7 +7413,6 @@ if (Module['printErr']) err = Module['printErr'];
   'convertI32PairToI53Checked',
   'convertU32PairToI53',
   'getTempRet0',
-  'setTempRet0',
   'createNamedFunction',
   'zeroMemory',
   'withStackSave',
@@ -7391,7 +7508,6 @@ if (Module['printErr']) err = Module['printErr'];
   'addPromise',
   'idsToPromises',
   'makePromiseCallback',
-  'findMatchingCatch',
   'incrementUncaughtExceptionCount',
   'decrementUncaughtExceptionCount',
   'Browser_asyncPrepareDataCounter',
@@ -7448,6 +7564,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'stackSave',
   'stackRestore',
   'stackAlloc',
+  'setTempRet0',
   'ptrToString',
   'exitJS',
   'getHeapMax',
@@ -7513,8 +7630,14 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'emClearImmediate',
   'promiseMap',
   'uncaughtExceptionCount',
+  'exceptionLast',
   'exceptionCaught',
   'ExceptionInfo',
+  'findMatchingCatch',
+  'getExceptionMessageCommon',
+  'incrementExceptionRefcount',
+  'decrementExceptionRefcount',
+  'getExceptionMessage',
   'Browser',
   'setCanvasSize',
   'getUserMedia',
@@ -7729,17 +7852,25 @@ var _jsModalActive = Module['_jsModalActive'] = makeInvalidEarlyAccess('_jsModal
 var _jsGamepad = Module['_jsGamepad'] = makeInvalidEarlyAccess('_jsGamepad');
 var _downloadFile = Module['_downloadFile'] = makeInvalidEarlyAccess('_downloadFile');
 var _main = Module['_main'] = makeInvalidEarlyAccess('_main');
+var _free = makeInvalidEarlyAccess('_free');
 var _realloc = makeInvalidEarlyAccess('_realloc');
 var _malloc = makeInvalidEarlyAccess('_malloc');
 var _fflush = makeInvalidEarlyAccess('_fflush');
 var _emscripten_stack_get_end = makeInvalidEarlyAccess('_emscripten_stack_get_end');
 var _emscripten_stack_get_base = makeInvalidEarlyAccess('_emscripten_stack_get_base');
 var _strerror = makeInvalidEarlyAccess('_strerror');
+var _setThrew = makeInvalidEarlyAccess('_setThrew');
+var __emscripten_tempret_set = makeInvalidEarlyAccess('__emscripten_tempret_set');
 var _emscripten_stack_init = makeInvalidEarlyAccess('_emscripten_stack_init');
 var _emscripten_stack_get_free = makeInvalidEarlyAccess('_emscripten_stack_get_free');
 var __emscripten_stack_restore = makeInvalidEarlyAccess('__emscripten_stack_restore');
 var __emscripten_stack_alloc = makeInvalidEarlyAccess('__emscripten_stack_alloc');
 var _emscripten_stack_get_current = makeInvalidEarlyAccess('_emscripten_stack_get_current');
+var ___cxa_decrement_exception_refcount = makeInvalidEarlyAccess('___cxa_decrement_exception_refcount');
+var ___cxa_increment_exception_refcount = makeInvalidEarlyAccess('___cxa_increment_exception_refcount');
+var ___get_exception_message = makeInvalidEarlyAccess('___get_exception_message');
+var ___cxa_can_catch = makeInvalidEarlyAccess('___cxa_can_catch');
+var ___cxa_get_exception_ptr = makeInvalidEarlyAccess('___cxa_get_exception_ptr');
 var memory = makeInvalidEarlyAccess('memory');
 var __indirect_function_table = makeInvalidEarlyAccess('__indirect_function_table');
 var wasmMemory = makeInvalidEarlyAccess('wasmMemory');
@@ -7755,17 +7886,25 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['jsGamepad'] != 'undefined', 'missing Wasm export: jsGamepad');
   assert(typeof wasmExports['downloadFile'] != 'undefined', 'missing Wasm export: downloadFile');
   assert(typeof wasmExports['main'] != 'undefined', 'missing Wasm export: main');
+  assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
   assert(typeof wasmExports['realloc'] != 'undefined', 'missing Wasm export: realloc');
   assert(typeof wasmExports['malloc'] != 'undefined', 'missing Wasm export: malloc');
   assert(typeof wasmExports['fflush'] != 'undefined', 'missing Wasm export: fflush');
   assert(typeof wasmExports['emscripten_stack_get_end'] != 'undefined', 'missing Wasm export: emscripten_stack_get_end');
   assert(typeof wasmExports['emscripten_stack_get_base'] != 'undefined', 'missing Wasm export: emscripten_stack_get_base');
   assert(typeof wasmExports['strerror'] != 'undefined', 'missing Wasm export: strerror');
+  assert(typeof wasmExports['setThrew'] != 'undefined', 'missing Wasm export: setThrew');
+  assert(typeof wasmExports['_emscripten_tempret_set'] != 'undefined', 'missing Wasm export: _emscripten_tempret_set');
   assert(typeof wasmExports['emscripten_stack_init'] != 'undefined', 'missing Wasm export: emscripten_stack_init');
   assert(typeof wasmExports['emscripten_stack_get_free'] != 'undefined', 'missing Wasm export: emscripten_stack_get_free');
   assert(typeof wasmExports['_emscripten_stack_restore'] != 'undefined', 'missing Wasm export: _emscripten_stack_restore');
   assert(typeof wasmExports['_emscripten_stack_alloc'] != 'undefined', 'missing Wasm export: _emscripten_stack_alloc');
   assert(typeof wasmExports['emscripten_stack_get_current'] != 'undefined', 'missing Wasm export: emscripten_stack_get_current');
+  assert(typeof wasmExports['__cxa_decrement_exception_refcount'] != 'undefined', 'missing Wasm export: __cxa_decrement_exception_refcount');
+  assert(typeof wasmExports['__cxa_increment_exception_refcount'] != 'undefined', 'missing Wasm export: __cxa_increment_exception_refcount');
+  assert(typeof wasmExports['__get_exception_message'] != 'undefined', 'missing Wasm export: __get_exception_message');
+  assert(typeof wasmExports['__cxa_can_catch'] != 'undefined', 'missing Wasm export: __cxa_can_catch');
+  assert(typeof wasmExports['__cxa_get_exception_ptr'] != 'undefined', 'missing Wasm export: __cxa_get_exception_ptr');
   assert(typeof wasmExports['memory'] != 'undefined', 'missing Wasm export: memory');
   assert(typeof wasmExports['__indirect_function_table'] != 'undefined', 'missing Wasm export: __indirect_function_table');
   _jsMove = Module['_jsMove'] = createExportWrapper('jsMove', wasmExports['jsMove'], 2);
@@ -7777,17 +7916,25 @@ function assignWasmExports(wasmExports) {
   _jsGamepad = Module['_jsGamepad'] = createExportWrapper('jsGamepad', wasmExports['jsGamepad'], 3);
   _downloadFile = Module['_downloadFile'] = createExportWrapper('downloadFile', wasmExports['downloadFile'], 2);
   _main = Module['_main'] = createExportWrapper('main', wasmExports['main'], 2);
+  _free = createExportWrapper('free', wasmExports['free'], 1);
   _realloc = createExportWrapper('realloc', wasmExports['realloc'], 2);
   _malloc = createExportWrapper('malloc', wasmExports['malloc'], 1);
   _fflush = createExportWrapper('fflush', wasmExports['fflush'], 1);
   _emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'];
   _emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'];
   _strerror = createExportWrapper('strerror', wasmExports['strerror'], 1);
+  _setThrew = createExportWrapper('setThrew', wasmExports['setThrew'], 2);
+  __emscripten_tempret_set = createExportWrapper('_emscripten_tempret_set', wasmExports['_emscripten_tempret_set'], 1);
   _emscripten_stack_init = wasmExports['emscripten_stack_init'];
   _emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'];
   __emscripten_stack_restore = wasmExports['_emscripten_stack_restore'];
   __emscripten_stack_alloc = wasmExports['_emscripten_stack_alloc'];
   _emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'];
+  ___cxa_decrement_exception_refcount = createExportWrapper('__cxa_decrement_exception_refcount', wasmExports['__cxa_decrement_exception_refcount'], 1);
+  ___cxa_increment_exception_refcount = createExportWrapper('__cxa_increment_exception_refcount', wasmExports['__cxa_increment_exception_refcount'], 1);
+  ___get_exception_message = createExportWrapper('__get_exception_message', wasmExports['__get_exception_message'], 3);
+  ___cxa_can_catch = createExportWrapper('__cxa_can_catch', wasmExports['__cxa_can_catch'], 3);
+  ___cxa_get_exception_ptr = createExportWrapper('__cxa_get_exception_ptr', wasmExports['__cxa_get_exception_ptr'], 1);
   memory = wasmMemory = wasmExports['memory'];
   __indirect_function_table = wasmTable = wasmExports['__indirect_function_table'];
 }
@@ -7796,7 +7943,17 @@ var wasmImports = {
   /** @export */
   __assert_fail: ___assert_fail,
   /** @export */
+  __cxa_begin_catch: ___cxa_begin_catch,
+  /** @export */
+  __cxa_end_catch: ___cxa_end_catch,
+  /** @export */
+  __cxa_find_matching_catch_2: ___cxa_find_matching_catch_2,
+  /** @export */
+  __cxa_find_matching_catch_3: ___cxa_find_matching_catch_3,
+  /** @export */
   __cxa_throw: ___cxa_throw,
+  /** @export */
+  __resumeException: ___resumeException,
   /** @export */
   __syscall_fcntl64: ___syscall_fcntl64,
   /** @export */
@@ -7920,8 +8077,268 @@ var wasmImports = {
   /** @export */
   glVertexAttribPointer: _glVertexAttribPointer,
   /** @export */
-  glViewport: _glViewport
+  glViewport: _glViewport,
+  /** @export */
+  invoke_diii,
+  /** @export */
+  invoke_fiii,
+  /** @export */
+  invoke_i,
+  /** @export */
+  invoke_ii,
+  /** @export */
+  invoke_iii,
+  /** @export */
+  invoke_iiii,
+  /** @export */
+  invoke_iiiii,
+  /** @export */
+  invoke_iiiiii,
+  /** @export */
+  invoke_iiiiiii,
+  /** @export */
+  invoke_iiiiiiii,
+  /** @export */
+  invoke_iiiiiiiiiiii,
+  /** @export */
+  invoke_iiiiiiiiiiiii,
+  /** @export */
+  invoke_v,
+  /** @export */
+  invoke_vi,
+  /** @export */
+  invoke_vii,
+  /** @export */
+  invoke_viii,
+  /** @export */
+  invoke_viiii,
+  /** @export */
+  invoke_viiiiiii,
+  /** @export */
+  invoke_viiiiiiiiii,
+  /** @export */
+  invoke_viiiiiiiiiiiiiii
 };
+
+function invoke_viiii(index,a1,a2,a3,a4) {
+  var sp = stackSave();
+  try {
+    getWasmTableEntry(index)(a1,a2,a3,a4);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_vii(index,a1,a2) {
+  var sp = stackSave();
+  try {
+    getWasmTableEntry(index)(a1,a2);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_viii(index,a1,a2,a3) {
+  var sp = stackSave();
+  try {
+    getWasmTableEntry(index)(a1,a2,a3);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_iiiii(index,a1,a2,a3,a4) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2,a3,a4);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_vi(index,a1) {
+  var sp = stackSave();
+  try {
+    getWasmTableEntry(index)(a1);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_iii(index,a1,a2) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_iiii(index,a1,a2,a3) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2,a3);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_iiiiii(index,a1,a2,a3,a4,a5) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2,a3,a4,a5);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_ii(index,a1) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_v(index) {
+  var sp = stackSave();
+  try {
+    getWasmTableEntry(index)();
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_iiiiiii(index,a1,a2,a3,a4,a5,a6) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2,a3,a4,a5,a6);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_iiiiiiii(index,a1,a2,a3,a4,a5,a6,a7) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2,a3,a4,a5,a6,a7);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_iiiiiiiiiiiii(index,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_fiii(index,a1,a2,a3) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2,a3);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_diii(index,a1,a2,a3) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2,a3);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_viiiiiii(index,a1,a2,a3,a4,a5,a6,a7) {
+  var sp = stackSave();
+  try {
+    getWasmTableEntry(index)(a1,a2,a3,a4,a5,a6,a7);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_i(index) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)();
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_iiiiiiiiiiii(index,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_viiiiiiiiii(index,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10) {
+  var sp = stackSave();
+  try {
+    getWasmTableEntry(index)(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_viiiiiiiiiiiiiii(index,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15) {
+  var sp = stackSave();
+  try {
+    getWasmTableEntry(index)(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15);
+  } catch(e) {
+    stackRestore(sp);
+    if (!(e instanceof EmscriptenEH)) throw e;
+    _setThrew(1, 0);
+  }
+}
 
 
 // include: postamble.js

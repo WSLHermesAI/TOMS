@@ -35,8 +35,25 @@ struct Stage : public Trackable {
 
 // Load a stage JSON file. legend maps char -> semantic; entities parsed from tiles.
 inline Stage parseStage(const std::string& path) {
-    std::ifstream f(path);
-    nlohmann::json j; f >> j;
+    // Read the whole file into a string first, then json::parse. Using
+    // operator>>(istream, json) directly is unreliable under Emscripten's libc++
+    // (it can report "empty input" even though the file is present and non-empty).
+    std::ifstream f(path, std::ios::binary);
+    if (!f) {
+        fprintf(stderr, "[parseStage] FAILED to open %s\n", path.c_str());
+        Stage s; s.id = path; return s;
+    }
+    std::string buf((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    if (buf.empty()) {
+        fprintf(stderr, "[parseStage] EMPTY file %s\n", path.c_str());
+        Stage s; s.id = path; return s;
+    }
+    nlohmann::json j;
+    try { j = nlohmann::json::parse(buf); }
+    catch (const std::exception& e) {
+        fprintf(stderr, "[parseStage] parse error in %s: %s\n", path.c_str(), e.what());
+        Stage s; s.id = path; return s;
+    }
     Stage s;
     s.id = j["id"]; s.name = j["name"]; s.subtitle = j["subtitle"];
     s.index = j["index"]; s.width = j["width"]; s.height = j["height"];

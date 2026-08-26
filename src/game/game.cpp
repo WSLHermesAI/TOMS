@@ -24,6 +24,25 @@ namespace toms { TextNode::DrawFn TextNode::Draw = ::toms_TextNodeDraw; }
 #include <json.hpp>
 #include <fstream>
 #include <sstream>
+
+// Robust JSON file load. NOTE: Emscripten's libc++ std::ifstream is unreliable
+// for preloaded files (tellg reports the right size but read/>> return empty), so
+// we use C stdio (fopen/fread) which reads preloaded data correctly, then json::parse.
+static nlohmann::json readJsonFile(const std::string& path) {
+    FILE* fp = fopen(path.c_str(), "rb");
+    if (!fp) { fprintf(stderr, "[readJsonFile] cannot open %s\n", path.c_str()); return {}; }
+    fseek(fp, 0, SEEK_END); long sz = ftell(fp); fseek(fp, 0, SEEK_SET);
+    if (sz <= 0) { fclose(fp); fprintf(stderr, "[readJsonFile] empty %s\n", path.c_str()); return {}; }
+    std::string buf((size_t)sz, '\0');
+    size_t rd = fread(&buf[0], 1, (size_t)sz, fp);
+    fclose(fp);
+    if (rd == 0) { fprintf(stderr, "[readJsonFile] read 0 bytes %s\n", path.c_str()); return {}; }
+    try { return nlohmann::json::parse(buf); }
+    catch (const std::exception& e) {
+        fprintf(stderr, "[readJsonFile] parse error %s: %s\n", path.c_str(), e.what());
+        return {};
+    }
+}
 #include <algorithm>
 #include <filesystem>
 #define STB_IMAGE_IMPLEMENTATION
@@ -108,7 +127,8 @@ bool Game::loadAssets(const std::string& assetDir) {
         std::vector<uint8_t> px(d, d + w*h*4); fontW=w; fontH=h;
         ren->loadFont(px, w, h);
         stbi_image_free(d);
-        std::ifstream f(assetDir+"/font_atlas.json"); nlohmann::json j; f>>j;
+        std::ifstream f(assetDir+"/font_atlas.png"); // (PNG loaded above; json via readJsonFile)
+        nlohmann::json j = readJsonFile(assetDir+"/font_atlas.json");
         fontCols = j["cols"]; fontCell = j["cell"];
         for (auto& [ch2, rc] : j["chars"].items()) {
             uint32_t code = 0; const std::string& ks = ch2;
@@ -135,11 +155,13 @@ bool Game::loadAssets(const std::string& assetDir) {
 #endif
 
     // load enemy templates
-    std::ifstream ef(assetDir+"/../data/enemies.json"); nlohmann::json ej; ef>>ej;
+    std::ifstream ef(assetDir+"/../data/enemies.json"); // (read via readJsonFile)
+    nlohmann::json ej = readJsonFile(assetDir+"/../data/enemies.json");
     for (auto& [k,v] : ej.items()) enemyTpl[k] = v;
     // load item definitions
     {
-        std::ifstream itf(assetDir+"/../data/items.json"); nlohmann::json ij; itf>>ij;
+        std::ifstream itf(assetDir+"/../data/items.json"); // (read via readJsonFile)
+        nlohmann::json ij = readJsonFile(assetDir+"/../data/items.json");
         for (auto& [k,v] : ij.items()) itemDefs[k] = v;
     }
     // load store definitions (data/store.json) -> unlock stage + items + cost rule
@@ -197,7 +219,7 @@ void Game::loadStage(const std::string& id) {
     if (std::filesystem::exists(dir)) {
         for (auto& e : std::filesystem::directory_iterator(dir)) {
             try {
-                nlohmann::json j = nlohmann::json::parse(std::ifstream(e.path()));
+                nlohmann::json j = readJsonFile(e.path().string());
                 int idx = j.value("index", 0);
                 if (idx > totalStages) totalStages = idx;
             } catch (...) {}
@@ -742,9 +764,8 @@ void Game::drawInventory() {
 
 // ---------- store system ----------
 void Game::loadStore(const std::string& assetDir) {
-    std::ifstream f(assetDir + "/../data/store.json");
-    if (!f) { return; }
-    nlohmann::json j; f >> j;
+    nlohmann::json j = readJsonFile(assetDir + "/../data/store.json");
+    if (j.is_null() || j.empty()) { return; }
     if (j.contains("store_title")) storeTitle_ = j["store_title"].get<std::string>();
     if (j.contains("unlockstage")) storeUnlockStage_ = j["unlockstage"].get<int>();
     for (auto& it : j["items"]) {
@@ -1038,9 +1059,8 @@ void Game::movePlayer(int dx, int dy) {
 }
 
 void Game::startDialogue(const std::string& npc) {
-    std::ifstream f(dataDir + "/../data/dialogue/" + npc + ".json");
-    if (!f) { inDialogue=false; return; }
-    f >> dlgData;
+    dlgData = readJsonFile(dataDir + "/../data/dialogue/" + npc + ".json");
+    if (dlgData.is_null() || dlgData.empty()) { inDialogue=false; return; }
     if (!dlgData.contains("start") || !dlgData["start"].is_string()) { inDialogue = false; return; }
     inDialogue = true; dlgNode = dlgData["start"];
     dlgSel = 0;

@@ -179,12 +179,14 @@ if(WEB)
 
     if(WEB_BACKEND STREQUAL "WebGPU")
         set(WEB_LINK "--use-port=emdawnwebgpu -sFETCH=1 -sALLOW_MEMORY_GROWTH=1 \
+-sNO_DISABLE_EXCEPTION_CATCHING=1 \
 -sEXPORTED_FUNCTIONS=['_main','_downloadFile'] \
 -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS'] \
 --preload-file ${CMAKE_SOURCE_DIR}/assets@assets \
 --preload-file ${CMAKE_SOURCE_DIR}/data@data")
     else()
         set(WEB_LINK "-sUSE_WEBGL2=1 -sFETCH=1 -sALLOW_MEMORY_GROWTH=1 \
+-sNO_DISABLE_EXCEPTION_CATCHING=1 \
 -sEXPORTED_FUNCTIONS=['_main','_downloadFile'] \
 -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS'] \
 --preload-file ${CMAKE_SOURCE_DIR}/assets@assets \
