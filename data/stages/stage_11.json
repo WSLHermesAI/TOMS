@@ -1,110 +1,56 @@
 {
-    "connect": {
-        "down": null,
-        "up": "stage_10"
-    },
-    "editor_layers": [
-        {
-            "locked": false,
-            "name": "地形 Terrain",
-            "visible": true
-        },
-        {
-            "locked": false,
-            "name": "物件 Objects",
-            "visible": true
-        }
-    ],
-    "editor_objects": [
-        {
-            "category": "npc",
-            "layer": 1,
-            "props": {
-                "dialogue": "princess_victory"
-            },
-            "type": "princess",
-            "x": 10,
-            "y": 5
-        },
-        {
-            "category": "npc",
-            "layer": 1,
-            "props": {
-                "dialogue": "king_lieutenant"
-            },
-            "type": "king",
-            "x": 2,
-            "y": 3
-        },
-        {
-            "category": "item",
-            "layer": 1,
-            "props": {
-                "effect": "star_restored"
-            },
-            "type": "gem_atk",
-            "x": 6,
-            "y": 5
-        },
-        {
-            "category": "item",
-            "layer": 1,
-            "props": {
-                "effect": "hp+80"
-            },
-            "type": "potion_blue",
-            "x": 4,
-            "y": 7
-        }
-    ],
-    "height": 11,
-    "id": "stage_11",
-    "index": 11,
-    "legend": {
-        "#": "wall",
-        ".": "floor",
-        "1": "monster:slime",
-        "2": "monster:bat",
-        "3": "monster:golem",
-        "4": "monster:skeleton",
-        "5": "monster:wraith",
-        "6": "monster:demon",
-        "@": "player_start",
-        "B": "key:blue",
-        "D": "stairs_down",
-        "H": "item:potion_blue",
-        "R": "key:red",
-        "U": "stairs_up",
-        "Y": "key:yellow",
-        "Z": "monster:demonlord_vorkath",
-        "a": "item:gem_atk",
-        "b": "door:blue",
-        "c": "item:coin",
-        "d": "item:gem_def",
-        "h": "item:potion_red",
-        "k": "npc:king",
-        "m": "npc:handmaiden",
-        "p": "npc:princess",
-        "r": "door:red",
-        "s": "npc:sorcerer",
-        "v": "npc:villager",
-        "y": "door:yellow"
-    },
-    "name": "安穩之星",
-    "story_note": "公主獲救，安穩之星重燃——王國迎來黎明。",
-    "subtitle": "The Star of Stability",
-    "tiles": [
-        "#############",
-        "#.....U.....#",
-        "#...........#",
-        "#.k.........#",
-        "#...........#",
-        "#.....a...p.#",
-        "#...........#",
-        "#...H.......#",
-        "#...........#",
-        "#@..........#",
-        "#############"
-    ],
-    "width": 13
+  "id": "stage_11",
+  "name": "安穩之星",
+  "subtitle": "Star of Peace",
+  "index": 11,
+  "width": 13,
+  "height": 11,
+  "legend": {
+    "#": "wall",
+    ".": "floor",
+    "@": "player_start",
+    "U": "stairs_up",
+    "D": "stairs_down",
+    "y": "door:yellow",
+    "b": "door:blue",
+    "r": "door:red",
+    "Y": "key:yellow",
+    "B": "key:blue",
+    "R": "key:red",
+    "a": "item:gem_atk",
+    "d": "item:gem_def",
+    "h": "item:potion_red",
+    "H": "item:potion_blue",
+    "c": "item:coin",
+    "s": "npc:sorcerer",
+    "v": "npc:villager",
+    "k": "npc:king",
+    "p": "npc:princess",
+    "m": "npc:handmaiden",
+    "1": "monster:slime",
+    "2": "monster:bat",
+    "3": "monster:golem",
+    "4": "monster:skeleton",
+    "5": "monster:wraith",
+    "6": "monster:demon",
+    "Z": "monster:demonlord_vorkath"
+  },
+  "tiles": [
+    "#############",
+    "#..H........#",
+    "#........k..#",
+    "#...........#",
+    "#...........#",
+    "#...........#",
+    "#...........#",
+    "#...........#",
+    "#U...a...@..#",
+    "#.p.........#",
+    "#############"
+  ],
+  "story_note": "公主獲救，安穩之星重燃——王國迎來黎明。",
+  "connect": {
+    "up": "stage_10",
+    "down": null
+  }
 }
