@@ -45,8 +45,8 @@ The script sources the Emscripten environment, finds cmake, runs `emcmake`
 for each backend, and copies the runnable artifacts into:
 
 ```
-web-gl/  tower_vulkan_web.html  .js  .wasm  .data   (WebGL2)
-web-gpu/ tower_vulkan_web.html  .js  .wasm  .data   (WebGPU)
+web-gl/  toms_web.html  .js  .wasm  .data   (WebGL2)
+web-gpu/ toms_web.html  .js  .wasm  .data   (WebGPU)
 ```
 
 ---
@@ -66,7 +66,7 @@ emcmake cmake -S . -B build-webgpu -DWEB=ON -DWEB_BACKEND=WebGPU
 cmake --build build-webgpu -j4
 ```
 
-Both emit `web/tower_vulkan_web.{html,js,wasm,data}` (the last build wins in
+Both emit `web/toms_web.{html,js,wasm,data}` (the last build wins in
 that shared folder). Use `./build_web.sh` to keep WebGL and WebGPU outputs in
 separate folders (`web-gl/`, `web-gpu/`).
 

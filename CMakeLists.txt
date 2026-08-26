@@ -162,19 +162,19 @@ if(WEB)
     endif()
     message(STATUS "TOMS web backend: ${WEB_BACKEND}")
 
-    add_executable(tower_vulkan_web
+    add_executable(toms_web
         ${ENGINE_DIR}/emscripten_main.cpp
         ${GAME_DIR}/game.cpp
         ${ENGINE_DIR}/renderer_webgl.cpp
         ${ENGINE_DIR}/font.cpp
         ${ENGINE_DIR}/node.cpp)
     if(WEB_BACKEND STREQUAL "WebGPU")
-        target_sources(tower_vulkan_web PRIVATE ${ENGINE_DIR}/renderer_webgpu.cpp)
-        target_compile_definitions(tower_vulkan_web PRIVATE WEBGPU)
-        target_compile_options(tower_vulkan_web PRIVATE --use-port=emdawnwebgpu)
+        target_sources(toms_web PRIVATE ${ENGINE_DIR}/renderer_webgpu.cpp)
+        target_compile_definitions(toms_web PRIVATE WEBGPU)
+        target_compile_options(toms_web PRIVATE --use-port=emdawnwebgpu)
     endif()
 
-    target_include_directories(tower_vulkan_web PRIVATE
+    target_include_directories(toms_web PRIVATE
         ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
     if(WEB_BACKEND STREQUAL "WebGPU")
@@ -194,10 +194,10 @@ if(WEB)
 -sGL_ASSERTIONS=0")
     endif()
 
-    set_target_properties(tower_vulkan_web PROPERTIES
+    set_target_properties(toms_web PROPERTIES
         SUFFIX ".html"
         LINK_FLAGS "${WEB_LINK}")
-    set_target_properties(tower_vulkan_web PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/web)
+    set_target_properties(toms_web PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/web)
 endif()
 
 # ---------------------------------------------------------------------------

@@ -57,12 +57,12 @@ build_one() {
   emcmake cmake "${cmake_args[@]}"
   cmake --build "$builddir" -j"$JOBS"
 
-  # Copy the linked artifacts out (both share the filename tower_vulkan_web.*)
+  # Copy the linked artifacts out (both share the filename toms_web.*)
   mkdir -p "$outdir"
-  cp -f web/tower_vulkan_web.html \
-        web/tower_vulkan_web.js  \
-        web/tower_vulkan_web.wasm \
-        web/tower_vulkan_web.data "$outdir/"
+  cp -f web/toms_web.html \
+        web/toms_web.js  \
+        web/toms_web.wasm \
+        web/toms_web.data "$outdir/"
   echo "[build_web] $backend artifacts -> $outdir/:"
   ls -la "$outdir"
 
@@ -71,7 +71,7 @@ build_one() {
   # and the page shows the REAL error text instead of the generic
   # "Exception thrown, see JavaScript console" string.
   local VER="$(git rev-parse --short HEAD 2>/dev/null || echo dev)-$(date +%Y%m%d%H%M%S)"
-  for html in "$outdir/tower_vulkan_web.html" "web/tower_vulkan_web.html"; do
+  for html in "$outdir/toms_web.html" "web/toms_web.html"; do
     [ -f "$html" ] || continue
     python3 - "$html" "$VER" <<'PY'
 import sys
