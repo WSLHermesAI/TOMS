@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="640" height="260" fill="#1b1f27"/>
+
+  <!-- ATTACK BAR: default radii green=15, blue=35, red=60 (span = 2*60 = 120) -->
+  <text x="20" y="28" fill="#e8e8ec" font-size="16" font-weight="bold">ATTACK BAR (default: green 15 / blue 35 / red 60)</text>
+  <g transform="translate(20,36)">
+    <rect x="0" y="0" width="600" height="36" rx="6" fill="#2a2f3a" stroke="#444a58"/>
+    <rect x="0"   y="0" width="125" fill="#c94b4b"/> <!-- red   0-125px  (radius 35-60) -->
+    <rect x="125" y="0" width="100" fill="#3f7fbf"/> <!-- blue  125-225px (radius 15-35) -->
+    <rect x="225" y="0" width="150" fill="#4caf6b"/> <!-- green 225-375px (radius 0-15, centered) -->
+    <rect x="375" y="0" width="100" fill="#3f7fbf"/> <!-- blue  375-475px -->
+    <rect x="475" y="0" width="125" fill="#c94b4b"/> <!-- red   475-600px -->
+    <line x1="125" y1="-4" x2="125" y2="40" stroke="#0b0c0f" stroke-width="1"/>
+    <line x1="225" y1="-4" x2="225" y2="40" stroke="#0b0c0f" stroke-width="1"/>
+    <line x1="375" y1="-4" x2="375" y2="40" stroke="#0b0c0f" stroke-width="1"/>
+    <line x1="475" y1="-4" x2="475" y2="40" stroke="#0b0c0f" stroke-width="1"/>
+    <!-- marker near center -->
+    <polygon points="290,-10 300,-22 310,-10" fill="#fff"/>
+    <line x1="300" y1="-10" x2="300" y2="36" stroke="#fff" stroke-width="2"/>
+    <text x="300" y="-26" fill="#fff" font-size="12" text-anchor="middle">release ≈ center → power 90%</text>
+    <text x="62"  y="54" fill="#c94b4b" font-size="11" text-anchor="middle">RED (radius 35–60)</text>
+    <text x="175" y="54" fill="#7fb4e6" font-size="11" text-anchor="middle">BLUE (15–35)</text>
+    <text x="300" y="54" fill="#7fd79a" font-size="11" text-anchor="middle">GREEN (0–15, center)</text>
+    <text x="425" y="54" fill="#7fb4e6" font-size="11" text-anchor="middle">BLUE (15–35)</text>
+    <text x="538" y="54" fill="#c94b4b" font-size="11" text-anchor="middle">RED (35–60)</text>
+  </g>
+
+  <!-- DEFENSE BAR: a "fast/risky" armor with smaller radii (narrower AND shorter overall bar) -->
+  <text x="20" y="150" fill="#e8e8ec" font-size="16" font-weight="bold">DEFENSE BAR (e.g. "risky" armor: green 7 / blue 18 / red 42)</text>
+  <g transform="translate(20,158)">
+    <rect x="0" y="0" width="600" height="36" rx="6" fill="#2a2f3a" stroke="#444a58"/>
+    <rect x="0"   y="0" width="171" fill="#c94b4b"/> <!-- red:   (42-18)/42 = 57.1% each side -->
+    <rect x="171" y="0" width="157" fill="#3f7fbf"/> <!-- blue:  (18-7)/42  = 26.2% each side -->
+    <rect x="328" y="0" width="100" fill="#4caf6b"/> <!-- green: (7*2)/42  = 16.7% total -->
+    <rect x="428" y="0" width="157" fill="#3f7fbf"/>
+    <rect x="585" y="0" width="15"  fill="#c94b4b"/>
+    <line x1="171" y1="-4" x2="171" y2="40" stroke="#0b0c0f" stroke-width="1"/>
+    <line x1="328" y1="-4" x2="328" y2="40" stroke="#0b0c0f" stroke-width="1"/>
+    <line x1="428" y1="-4" x2="428" y2="40" stroke="#0b0c0f" stroke-width="1"/>
+    <line x1="585" y1="-4" x2="585" y2="40" stroke="#0b0c0f" stroke-width="1"/>
+    <polygon points="200,-10 210,-22 220,-10" fill="#fff"/>
+    <line x1="210" y1="-10" x2="210" y2="36" stroke="#fff" stroke-width="2"/>
+    <text x="210" y="-26" fill="#fff" font-size="12" text-anchor="middle">release off-center → power 34%</text>
+    <text x="300" y="54" fill="#8b93a6" font-size="11" text-anchor="middle">smaller green/blue/red radii = narrower target AND a shorter overall bar</text>
+  </g>
+
+  <text x="20" y="248" fill="#8b93a6" font-size="12">Marker starts at one edge and bounces back and forth while held: very slow at first, then speeds up, then a late BOOST to near-max speed. Green/blue/red are three independent radii from center — "red" also sets the bar's own edge/length, so it can be tuned per weapon/armor.</text>
+</svg>

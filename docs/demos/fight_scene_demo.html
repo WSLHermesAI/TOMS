@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fight Scene — Power Bar Demo</title>
+<style>
+  body { background:#14161c; color:#e8e8ec; font-family:'Segoe UI',Arial,sans-serif; padding:24px; max-width:820px; margin:0 auto; }
+  h1 { font-size:20px; margin-bottom:4px; }
+  p.sub { color:#8b93a6; margin-top:0; }
+  .bar-block { background:#1b1f27; border:1px solid #2a2f3a; border-radius:10px; padding:18px; margin:18px 0; }
+  .bar-title { font-weight:bold; margin-bottom:10px; display:flex; justify-content:space-between; }
+  .track { position:relative; height:40px; border-radius:6px; overflow:hidden; border:1px solid #444a58; background:#2a2f3a; }
+  .zone { position:absolute; top:0; bottom:0; }
+  .marker { position:absolute; top:-8px; width:3px; height:56px; background:#fff; box-shadow:0 0 6px #fff; transform:translateX(-1.5px); }
+  .zone-labels { display:flex; justify-content:space-between; font-size:11px; color:#8b93a6; margin-top:4px; }
+  .zone-labels .c { flex:1; text-align:center; }
+  button.hold { margin-top:12px; width:100%; padding:12px; font-size:15px; font-weight:bold; border:none; border-radius:8px;
+                background:#3a4152; color:#fff; cursor:pointer; user-select:none; touch-action:none; }
+  button.hold:active { background:#4a5468; }
+  .result { margin-top:10px; font-size:14px; min-height:20px; }
+  .stat-row { display:flex; gap:24px; margin:18px 0; font-size:14px; color:#c7cbd6; }
+  .stat-row b { color:#fff; }
+  code { background:#22262f; padding:1px 5px; border-radius:4px; }
+  .footer { color:#8b93a6; font-size:12px; margin-top:28px; }
+</style>
+</head>
+<body>
+
+<h1>Fight Scene — Attack / Defense Power Bar</h1>
+<p class="sub">Prototype for <code>FIGHT_SCENE_DESIGN.md</code>. Center = best (green), edges = worst (red). Press and hold each button; release to lock in the power %.</p>
+
+<div class="stat-row">
+  <span>Attacker: ATK <b>12</b> vs Target DEF <b>4</b> → base_hit = <b id="baseHit">8</b></span>
+  <span>Enemy: ATK <b>11</b> vs Player DEF <b>4</b> → incoming = <b id="incoming">7</b></span>
+</div>
+
+<div class="bar-block">
+  <div class="bar-title"><span>ATTACK BAR</span><span id="atkState">idle</span></div>
+  <div class="track" id="atkTrack">
+    <div class="marker" id="atkMarker" style="left:0%"></div>
+  </div>
+  <div class="zone-labels">
+    <span class="c" style="color:#e77">RED</span><span class="c" style="color:#8cf">BLUE</span>
+    <span class="c" style="color:#8e8">GREEN (center)</span><span class="c" style="color:#8cf">BLUE</span><span class="c" style="color:#e77">RED</span>
+  </div>
+  <button class="hold" id="atkBtn">HOLD to charge attack</button>
+  <div class="result" id="atkResult">—</div>
+</div>
+
+<div class="bar-block">
+  <div class="bar-title"><span>DEFENSE BAR</span><span id="defState">idle</span></div>
+  <div class="track" id="defTrack">
+    <div class="marker" id="defMarker" style="left:0%"></div>
+  </div>
+  <div class="zone-labels">
+    <span class="c" style="color:#e77">RED</span><span class="c" style="color:#8cf">BLUE</span>
+    <span class="c" style="color:#8e8">GREEN (center)</span><span class="c" style="color:#8cf">BLUE</span><span class="c" style="color:#e77">RED</span>
+  </div>
+  <button class="hold" id="defBtn">HOLD to time the guard</button>
+  <div class="result" id="defResult">—</div>
+</div>
+
+<div class="footer">
+  Formula: while held, speed(t) = V0 + (Vmax−V0)·(t/rampTime)³ — a cubic ease-in, so it's very
+  slow at first, visibly speeds up, then <b style="color:#ff9640">BOOST</b>s to near-max speed
+  once <code>t</code> approaches <code>rampTime</code>. The marker starts at one edge and bounces
+  back and forth for as long as the button is held; release freezes it. Power is driven by
+  <i>distance from the bar's center</i> (dead center → 100% power, either edge → 0%), where
+  <b style="color:#7fd79a">green</b>/<b style="color:#8cf">blue</b>/<b style="color:#e77">red</b>
+  are three independently adjustable radii from that center — <code>greenHalf</code> (default 15),
+  <code>blueOuter</code> (default 35), <code>redOuter</code> (default 60, which also defines the
+  bar's own edge/length). A weapon/armor can set any of the three, or stretch/shrink
+  <code>rampTime</code> — see <code>MAIN_BATTLE_SCENE_DESIGN.md</code> §4.
+</div>
+
+<script>
+const BASE_HIT = 8, INCOMING = 7;
+document.getElementById('baseHit').textContent = BASE_HIT;
+document.getElementById('incoming').textContent = INCOMING;
+
+// Default zone geometry (a "baseline weapon/armor"): three independently adjustable radii,
+// measured outward from the bar's center. redOuter ALSO defines the bar's edge (its half-width),
+// so the marker's full travel range is [0, 2*redOuter] with center = redOuter.
+const DEFAULT_ZONES = { greenHalf: 15, blueOuter: 35, redOuter: 60 };
+function span(z) { return z.redOuter * 2; }         // total travel range (0 .. span)
+function center(z) { return z.redOuter; }
+
+function zoneOf(pos, z) {
+  const d = Math.abs(pos - center(z));
+  return d <= z.greenHalf ? 'green' : (d <= z.blueOuter ? 'blue' : 'red');
+}
+// Power is a piecewise-linear function of distance-from-center so that, whatever the three radii
+// are, GREEN always means power 71-100, BLUE always 31-70, RED always 0-30.
+function computePower(pos, z) {
+  const d = Math.abs(pos - center(z));
+  if (d <= z.greenHalf) {
+    const t = z.greenHalf === 0 ? 0 : d / z.greenHalf;
+    return 100 - 29 * t;                       // 100 (center) .. 71 (green edge)
+  } else if (d <= z.blueOuter) {
+    const t = (d - z.greenHalf) / (z.blueOuter - z.greenHalf);
+    return 70 - 39 * t;                         // 70 .. 31
+  } else {
+    const t = Math.min(1, (d - z.blueOuter) / (z.redOuter - z.blueOuter));
+    return 30 - 30 * t;                         // 30 .. 0 (edge, d = redOuter)
+  }
+}
+function paintZones(track, marker, z) {
+  track.querySelectorAll('.zone').forEach(n => n.remove());
+  const c = center(z), s = span(z);
+  const pct = (raw) => raw / s * 100;
+  // boundaries, left to right, in raw units: 0, c-blueOuter, c-greenHalf, c+greenHalf, c+blueOuter, s
+  const segs = [
+    [0,                 pct(c - z.blueOuter),                  '#c94b4b'],
+    [pct(c - z.blueOuter),  pct(c - z.greenHalf) - pct(c - z.blueOuter), '#3f7fbf'],
+    [pct(c - z.greenHalf),  pct(c + z.greenHalf) - pct(c - z.greenHalf), '#4caf6b'],
+    [pct(c + z.greenHalf),  pct(c + z.blueOuter) - pct(c + z.greenHalf), '#3f7fbf'],
+    [pct(c + z.blueOuter),  100 - pct(c + z.blueOuter),         '#c94b4b'],
+  ];
+  segs.forEach(([left, width, color]) => {
+    const d = document.createElement('div');
+    d.className = 'zone'; d.style.left = left + '%'; d.style.width = Math.max(0,width) + '%'; d.style.background = color;
+    track.insertBefore(d, marker);
+  });
+}
+function zoneLabel(pos, z) {
+  const p = Math.round(computePower(pos, z));
+  const zone = zoneOf(pos, z);
+  if (zone === 'green') return p >= 97 ? 'GREEN — PERFECT!' : 'GREEN — crit';
+  if (zone === 'blue') return 'BLUE — solid';
+  return 'RED — weak';
+}
+
+function makeBar(opts) {
+  let holding = false, holdStart = 0, lastT = 0, pos = 0, dir = 1, raf = null;
+  paintZones(opts.track, opts.marker, opts.zones);
+
+  function frame(now) {
+    if (!holding) return;
+    const dt = (now - lastT) / 1000;
+    lastT = now;
+    const t = (now - holdStart) / 1000;
+    const progress = Math.min(1, t / opts.rampTime);
+    const speed = opts.v0 + (opts.vmax - opts.v0) * Math.pow(progress, 3); // cubic ease-in: slow -> speeding up -> BOOST
+    pos += dir * speed * dt;
+    const s = span(opts.zones);
+    if (pos > s) { pos = 2 * s - pos; dir = -1; }
+    if (pos < 0) { pos = -pos;        dir = 1; }
+    opts.marker.style.left = (pos / s * 100).toFixed(1) + '%';
+    opts.stateEl.textContent = speed >= 0.85 * opts.vmax ? 'BOOST!' : (progress > 0.15 ? 'speeding up…' : 'charging…');
+    opts.stateEl.style.color = speed >= 0.85 * opts.vmax ? '#ff9640' : '';
+    raf = requestAnimationFrame(frame);
+  }
+
+  function start(e) {
+    e.preventDefault();
+    holding = true; pos = 0; dir = 1;
+    holdStart = performance.now(); lastT = holdStart;
+    opts.stateEl.textContent = 'charging…';
+    opts.stateEl.style.color = '';
+    opts.resultEl.textContent = '—';
+    raf = requestAnimationFrame(frame);
+  }
+  function stop() {
+    if (!holding) return;
+    holding = false;
+    cancelAnimationFrame(raf);
+    const p = Math.round(computePower(pos, opts.zones));
+    const posPct = Math.round(pos / span(opts.zones) * 100);
+    opts.stateEl.style.color = '';
+    opts.stateEl.textContent = 'released @ ' + posPct + '% of bar → power ' + p + '%';
+    opts.onRelease(p, pos);
+  }
+
+  opts.btn.addEventListener('mousedown', start);
+  opts.btn.addEventListener('touchstart', start, {passive:false});
+  window.addEventListener('mouseup', stop);
+  window.addEventListener('touchend', stop);
+}
+
+makeBar({
+  btn: document.getElementById('atkBtn'),
+  marker: document.getElementById('atkMarker'),
+  track: document.getElementById('atkTrack'),
+  resultEl: document.getElementById('atkResult'),
+  stateEl: document.getElementById('atkState'),
+  zones: DEFAULT_ZONES,
+  v0: 15, vmax: 200, rampTime: 1.8,
+  onRelease: (p, pos) => {
+    const mult = 0.2 + 1.8 * (p / 100);
+    let dmg = Math.ceil(BASE_HIT * mult);
+    const perfect = p >= 97;
+    if (perfect) dmg = Math.ceil(dmg * 1.25);
+    document.getElementById('atkResult').innerHTML =
+      `${zoneLabel(pos, DEFAULT_ZONES)} — power ${p}% → ×${mult.toFixed(2)}${perfect ? ' +25% PERFECT' : ''} → <b>${dmg} dmg dealt</b>`;
+  }
+});
+
+makeBar({
+  btn: document.getElementById('defBtn'),
+  marker: document.getElementById('defMarker'),
+  track: document.getElementById('defTrack'),
+  resultEl: document.getElementById('defResult'),
+  stateEl: document.getElementById('defState'),
+  zones: DEFAULT_ZONES,
+  v0: 18, vmax: 220, rampTime: 1.4,
+  onRelease: (p, pos) => {
+    const mitig = p / 100;
+    const perfectGuard = p >= 99;
+    const dmg = perfectGuard ? 0 : Math.ceil(INCOMING * (1 - mitig));
+    document.getElementById('defResult').innerHTML =
+      `${zoneLabel(pos, DEFAULT_ZONES)} — mitigation ${p}% → <b>${dmg} dmg taken</b>${perfectGuard ? ' (PERFECT GUARD — counter!)' : ''}`;
+  }
+});
+</script>
+</body>
+</html>

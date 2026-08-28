@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Main Battle Scene Demo</title>
+<style>
+  body { background:#14161c; color:#e8e8ec; font-family:'Segoe UI',Arial,sans-serif; padding:22px; max-width:920px; margin:0 auto; }
+  h1 { font-size:20px; margin-bottom:2px; }
+  p.sub { color:#8b93a6; margin-top:0; }
+  .panel { background:#1b1f27; border:1px solid #2a2f3a; border-radius:10px; padding:16px; margin:14px 0; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .col { flex:1; min-width:260px; }
+  h3 { margin:0 0 10px 0; font-size:14px; color:#c7cbd6; text-transform:uppercase; letter-spacing:.04em; }
+  label { display:block; font-size:12px; color:#8b93a6; margin:8px 0 3px; }
+  select, button.main { width:100%; padding:8px; border-radius:6px; border:1px solid #444a58; background:#22262f; color:#fff; font-size:13px; }
+  button.main { cursor:pointer; font-weight:bold; margin-top:6px; }
+  button.main:hover { background:#2c3140; }
+  button.main:disabled { opacity:.4; cursor:default; }
+  .hpwrap { margin:6px 0 14px; }
+  .hpbar { height:16px; background:#2a2f3a; border-radius:8px; overflow:hidden; border:1px solid #444a58; }
+  .hpfill { height:100%; transition:width .25s; }
+  .hpfill.player { background:#4caf6b; }
+  .hpfill.enemy { background:#c94b4b; }
+  .hplabel { font-size:12px; color:#c7cbd6; display:flex; justify-content:space-between; margin-bottom:3px; }
+  .track { position:relative; height:34px; border-radius:6px; overflow:hidden; border:1px solid #444a58; background:#2a2f3a; margin-top:6px; }
+  .zone { position:absolute; top:0; bottom:0; }
+  .marker { position:absolute; top:-6px; width:3px; height:46px; background:#fff; box-shadow:0 0 6px #fff; }
+  .zonecap { font-size:10px; color:#8b93a6; margin-top:2px; }
+  button.hold { margin-top:8px; width:100%; padding:10px; font-weight:bold; border:none; border-radius:8px; background:#3a4152; color:#fff; cursor:pointer; touch-action:none; }
+  button.hold:disabled { opacity:.35; cursor:default; }
+  button.hold:active:not(:disabled) { background:#4a5468; }
+  #log { background:#0f1116; border:1px solid #2a2f3a; border-radius:8px; padding:10px 12px; height:150px; overflow-y:auto; font-size:12.5px; line-height:1.5; color:#b7bdca; }
+  #log .good { color:#7fd79a; } #log .bad { color:#e77; } #log .mid { color:#8cf; }
+  .stat { font-size:12.5px; color:#8b93a6; margin-top:4px; }
+</style>
+</head>
+<body>
+
+<h1>Main Battle Scene — Full Round Demo</h1>
+<p class="sub">Prototype for <code>MAIN_BATTLE_SCENE_DESIGN.md</code>. Equip gear, pick an enemy, fight it round by round. Center of each bar = best (green); edges = worst (red). Weapon/armor set both the bar's speed <i>and</i> how wide green/blue are.</p>
+
+<div class="panel">
+  <div class="row">
+    <div class="col">
+      <h3>Equipment</h3>
+      <label>Weapon (ATK + Attack Bar speed & zone widths)</label>
+      <select id="weaponSel"></select>
+      <label>Armor (DEF + Defense Bar speed & zone widths)</label>
+      <select id="armorSel"></select>
+      <label>Talent (passive)</label>
+      <select id="talentSel"></select>
+      <div class="stat" id="equipSummary"></div>
+    </div>
+    <div class="col">
+      <h3>Encounter</h3>
+      <label>Enemy</label>
+      <select id="enemySel"></select>
+      <button class="main" id="startBtn">Start Battle</button>
+      <div class="stat" id="enemySummary"></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="hpwrap">
+    <div class="hplabel"><span>Player</span><span id="playerHpText">120 / 120</span></div>
+    <div class="hpbar"><div class="hpfill player" id="playerHpFill" style="width:100%"></div></div>
+  </div>
+  <div class="hpwrap">
+    <div class="hplabel"><span id="enemyName">Enemy</span><span id="enemyHpText">— / —</span></div>
+    <div class="hpbar"><div class="hpfill enemy" id="enemyHpFill" style="width:100%"></div></div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <div class="hplabel"><span>ATTACK BAR</span><span id="atkState">—</span></div>
+      <div class="track" id="atkTrack"><div class="marker" id="atkMarker" style="left:0%"></div></div>
+      <div class="zonecap" id="atkZoneCap">green/blue widths follow the equipped weapon</div>
+      <button class="hold" id="atkBtn" disabled>HOLD to attack</button>
+    </div>
+    <div class="col">
+      <div class="hplabel"><span>DEFENSE BAR</span><span id="defState">—</span></div>
+      <div class="track" id="defTrack"><div class="marker" id="defMarker" style="left:0%"></div></div>
+      <div class="zonecap" id="defZoneCap">green/blue widths follow the equipped armor</div>
+      <button class="hold" id="defBtn" disabled>HOLD to guard</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>Battle Log</h3>
+  <div id="log"></div>
+</div>
+
+<script>
+// ---- Data: mirrors data/enemies.json (subset) ----
+const ENEMIES = {
+  slime:   { name:"史萊姆 Slime",        hp:24, atk:8,  def:2 },
+  bat:     { name:"暗影蝙蝠 Shadow Bat", hp:18, atk:11, def:1 },
+  golem:   { name:"石巨人 Stone Golem",  hp:70, atk:14, def:8 },
+  skeleton:{ name:"骷髏兵 Skeleton",     hp:40, atk:16, def:4 },
+  demon:   { name:"小惡魔 Imp",          hp:90, atk:24, def:9 },
+  boss:    { name:"Vorkath 沃卡司 (Boss)", hp:400, atk:34, def:14 },
+};
+
+// ---- Proposed equipment presets (see MAIN_BATTLE_SCENE_DESIGN.md §4) ----
+// zones: { greenHalf, blueOuter, redOuter } — three independently adjustable radii from the bar's
+// center, see FIGHT_SCENE_DESIGN.md §2. redOuter ALSO defines the bar's own edge/length (the
+// marker's travel range is [0, 2*redOuter]) — a bigger redOuter means an overall longer bar.
+// rampTime = seconds to reach Vmax via the cubic ease-in (slow -> speeding up -> BOOST).
+// Baseline (wand/robe): green 15 / blue 35 / red 60 (default geometry).
+const WEAPONS = {
+  wand:    { name:"Apprentice Wand (default)",   atk:0,  v0:15, vmax:200, rampTime:1.8, maxMult:2.0, zones:{greenHalf:15, blueOuter:35, redOuter:60} },
+  daggers: { name:"Twin Daggers (fast Boost/narrow)", atk:-2, v0:20, vmax:260, rampTime:1.0, maxMult:2.2, zones:{greenHalf:8,  blueOuter:20, redOuter:45} },
+  hammer:  { name:"War Hammer (slow Boost/wide)",     atk:8,  v0:10, vmax:140, rampTime:2.6, maxMult:2.6, zones:{greenHalf:25, blueOuter:40, redOuter:75} },
+};
+const ARMORS = {
+  robe:   { name:"Cloth Robe (default)",         def:0, v0:18, vmax:220, rampTime:1.4, zones:{greenHalf:15, blueOuter:35, redOuter:60} },
+  plate:  { name:"Guardian Plate (steady/wide)", def:5, v0:12, vmax:150, rampTime:2.2, zones:{greenHalf:24, blueOuter:38, redOuter:68} },
+  leather:{ name:"Swift Leather (risky/narrow)", def:-2,v0:25, vmax:280, rampTime:0.9, zones:{greenHalf:7,  blueOuter:18, redOuter:42} },
+};
+const TALENTS = {
+  none:      { name:"None" },
+  focus:     { name:"Focus — rampTime ×1.25 on both bars (Boost arrives later)" },
+  berserker: { name:"Berserker — +15% max power, but Red deals 0 dmg" },
+  guardian:  { name:"Guardian — Defense mitigation +10% flat floor" },
+};
+
+function fillSelect(sel, map) {
+  for (const k in map) { const o=document.createElement('option'); o.value=k; o.textContent=map[k].name; sel.appendChild(o); }
+}
+fillSelect(document.getElementById('weaponSel'), WEAPONS);
+fillSelect(document.getElementById('armorSel'), ARMORS);
+fillSelect(document.getElementById('talentSel'), TALENTS);
+fillSelect(document.getElementById('enemySel'), ENEMIES);
+
+const PLAYER_BASE = { hp:120, atk:12, def:4 };
+let player, enemy, atkParams, defParams, talent;
+
+function currentEquip() {
+  const w = WEAPONS[document.getElementById('weaponSel').value];
+  const a = ARMORS[document.getElementById('armorSel').value];
+  const t = TALENTS[document.getElementById('talentSel').value];
+  return { w, a, t };
+}
+
+// ---- Power Bar geometry/physics (shared math, see FIGHT_SCENE_DESIGN.md §2) ----
+// z = { greenHalf, blueOuter, redOuter } — redOuter is also the bar's half-width (its edge),
+// so the marker's travel range is [0, 2*redOuter] and the center is at redOuter.
+function center(z) { return z.redOuter; }
+function span(z) { return z.redOuter * 2; }
+function computePower(pos, z) {
+  const d = Math.abs(pos - center(z));
+  if (d <= z.greenHalf) {
+    const t = z.greenHalf === 0 ? 0 : d / z.greenHalf;
+    return 100 - 29 * t;
+  } else if (d <= z.blueOuter) {
+    const t = (d - z.greenHalf) / (z.blueOuter - z.greenHalf);
+    return 70 - 39 * t;
+  } else {
+    const t = Math.min(1, (d - z.blueOuter) / (z.redOuter - z.blueOuter));
+    return 30 - 30 * t;
+  }
+}
+function zoneOf(pos, z) {
+  const d = Math.abs(pos - center(z));
+  return d <= z.greenHalf ? 'green' : (d <= z.blueOuter ? 'blue' : 'red');
+}
+function zoneName(pos, z) {
+  const zn = zoneOf(pos, z);
+  if (zn === 'green') return computePower(pos, z) >= 97 ? 'GREEN-PERFECT' : 'GREEN';
+  return zn === 'blue' ? 'BLUE' : 'RED';
+}
+function paintZones(track, marker, z) {
+  track.querySelectorAll('.zone').forEach(n => n.remove());
+  const c = center(z), s = span(z);
+  const pct = (raw) => raw / s * 100;
+  const segs = [
+    [0,                     pct(c - z.blueOuter),                          '#c94b4b'],
+    [pct(c - z.blueOuter),  pct(c - z.greenHalf) - pct(c - z.blueOuter),   '#3f7fbf'],
+    [pct(c - z.greenHalf),  pct(c + z.greenHalf) - pct(c - z.greenHalf),   '#4caf6b'],
+    [pct(c + z.greenHalf),  pct(c + z.blueOuter) - pct(c + z.greenHalf),   '#3f7fbf'],
+    [pct(c + z.blueOuter),  100 - pct(c + z.blueOuter),                    '#c94b4b'],
+  ];
+  segs.forEach(([left, width, color]) => {
+    const d = document.createElement('div');
+    d.className = 'zone'; d.style.left = left + '%'; d.style.width = Math.max(0,width) + '%'; d.style.background = color;
+    track.insertBefore(d, marker);
+  });
+}
+
+function refreshSummary() {
+  const { w, a, t } = currentEquip();
+  document.getElementById('equipSummary').textContent =
+    `ATK ${PLAYER_BASE.atk + w.atk} / DEF ${PLAYER_BASE.def + a.def} — ${t.name}`;
+  const es = document.getElementById('enemySel').value;
+  const e = ENEMIES[es];
+  document.getElementById('enemySummary').textContent = `HP ${e.hp} / ATK ${e.atk} / DEF ${e.def}`;
+  paintZones(document.getElementById('atkTrack'), document.getElementById('atkMarker'), w.zones);
+  paintZones(document.getElementById('defTrack'), document.getElementById('defMarker'), a.zones);
+  document.getElementById('atkZoneCap').textContent = `green ${w.zones.greenHalf} / blue ${w.zones.blueOuter} / red ${w.zones.redOuter} (${w.name})`;
+  document.getElementById('defZoneCap').textContent = `green ${a.zones.greenHalf} / blue ${a.zones.blueOuter} / red ${a.zones.redOuter} (${a.name})`;
+}
+['weaponSel','armorSel','talentSel','enemySel'].forEach(id =>
+  document.getElementById(id).addEventListener('change', refreshSummary));
+refreshSummary();
+
+function log(msg, cls) {
+  const el = document.getElementById('log');
+  const div = document.createElement('div');
+  if (cls) div.className = cls;
+  div.textContent = msg;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function setHp(who) {
+  if (who === 'player') {
+    document.getElementById('playerHpText').textContent = `${Math.max(0,player.hp)} / ${player.maxhp}`;
+    document.getElementById('playerHpFill').style.width = Math.max(0,player.hp/player.maxhp*100) + '%';
+  } else {
+    document.getElementById('enemyHpText').textContent = `${Math.max(0,enemy.hp)} / ${enemy.maxhp}`;
+    document.getElementById('enemyHpFill').style.width = Math.max(0,enemy.hp/enemy.maxhp*100) + '%';
+  }
+}
+
+function makeBar(opts) {
+  let holding=false, holdStart=0, lastT=0, pos=0, dir=1, raf=null;
+  function frame(now) {
+    if (!holding) return;
+    const dt=(now-lastT)/1000; lastT=now;
+    const t=(now-holdStart)/1000;
+    const p = opts.get();
+    const progress = Math.min(1, t / p.rampTime);
+    const speed = p.v0 + (p.vmax - p.v0) * Math.pow(progress, 3); // cubic ease-in: slow -> speeding up -> BOOST
+    pos += dir*speed*dt;
+    const s = span(p.zones);
+    if (pos>s){pos=2*s-pos;dir=-1;} if (pos<0){pos=-pos;dir=1;}
+    opts.marker.style.left = (pos/s*100).toFixed(1)+'%';
+    const boosting = speed >= 0.85 * p.vmax;
+    opts.stateEl.textContent = boosting ? 'BOOST!' : (progress > 0.15 ? 'speeding up…' : 'charging…');
+    opts.stateEl.style.color = boosting ? '#ff9640' : '';
+    raf = requestAnimationFrame(frame);
+  }
+  function start(e){ e.preventDefault(); if(opts.btn.disabled) return; holding=true; pos=0; dir=1; holdStart=performance.now(); lastT=holdStart; opts.stateEl.textContent='charging…'; opts.stateEl.style.color=''; raf=requestAnimationFrame(frame); }
+  function stop(){ if(!holding) return; holding=false; cancelAnimationFrame(raf); const power=Math.round(computePower(pos, opts.get().zones)); opts.stateEl.style.color=''; opts.stateEl.textContent=power+'%'; opts.onRelease(power, pos); }
+  opts.btn.addEventListener('mousedown', start);
+  opts.btn.addEventListener('touchstart', start, {passive:false});
+  window.addEventListener('mouseup', stop);
+  window.addEventListener('touchend', stop);
+}
+
+let atkBar, defBar;
+function setupBars() {
+  atkBar = makeBar({
+    btn: document.getElementById('atkBtn'), marker: document.getElementById('atkMarker'),
+    stateEl: document.getElementById('atkState'),
+    get: () => atkParams,
+    onRelease: (p, pos) => {
+      const { w } = currentEquip();
+      const zn = zoneName(pos, atkParams.zones);
+      const baseHit = Math.max(1, player.atk - enemy.def);
+      let mult = 0.2 + (w.maxMult-0.2) * (p/100);
+      if (talent.key === 'berserker') mult *= 1.15;
+      let dmg = Math.ceil(baseHit * mult);
+      if (talent.key === 'berserker' && zn === 'RED') dmg = 0;
+      if (zn === 'GREEN-PERFECT') dmg = Math.ceil(dmg * 1.25);
+      enemy.hp -= dmg;
+      log(`⚔ Attack: ${zn} (power ${p}%) → ${dmg} dmg to ${enemy.name}`, zn.startsWith('GREEN')?'good':zn==='RED'?'bad':'mid');
+      setHp('enemy');
+      document.getElementById('atkBtn').disabled = true;
+      if (enemy.hp <= 0) { log(`🏆 ${enemy.name} defeated!`, 'good'); endBattle(true); return; }
+      document.getElementById('defBtn').disabled = false;
+    }
+  });
+  defBar = makeBar({
+    btn: document.getElementById('defBtn'), marker: document.getElementById('defMarker'),
+    stateEl: document.getElementById('defState'),
+    get: () => defParams,
+    onRelease: (p, pos) => {
+      const zn = zoneName(pos, defParams.zones);
+      const incoming = Math.max(1, enemy.atk - player.def);
+      let mitig = p/100;
+      if (talent.key === 'guardian') mitig = Math.min(1, mitig + 0.10);
+      const perfectGuard = zn === 'GREEN-PERFECT';
+      let dmg = perfectGuard ? 0 : Math.ceil(incoming * (1-mitig));
+      player.hp -= dmg;
+      log(`🛡 Guard: ${zn} (power ${p}%) → ${dmg} dmg taken` + (perfectGuard?' (PERFECT GUARD)':''), zn.startsWith('GREEN')?'good':zn==='RED'?'bad':'mid');
+      setHp('player');
+      document.getElementById('defBtn').disabled = true;
+      if (player.hp <= 0) { log(`💀 Player defeated — respawn at floor entrance (stats kept).`, 'bad'); endBattle(false); return; }
+      document.getElementById('atkBtn').disabled = false;
+    }
+  });
+}
+setupBars();
+
+function endBattle(won) {
+  document.getElementById('atkBtn').disabled = true;
+  document.getElementById('defBtn').disabled = true;
+  document.getElementById('startBtn').disabled = false;
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  const { w, a, t } = currentEquip();
+  talent = { key: document.getElementById('talentSel').value, ...t };
+  const rampMod = talent.key === 'focus' ? 1.25 : 1.0; // Focus: Boost arrives later
+  atkParams = { v0:w.v0, rampTime:w.rampTime*rampMod, vmax:w.vmax, zones:w.zones };
+  defParams = { v0:a.v0, rampTime:a.rampTime*rampMod, vmax:a.vmax, zones:a.zones };
+
+  player = { hp: PLAYER_BASE.hp, maxhp: PLAYER_BASE.hp, atk: PLAYER_BASE.atk + w.atk, def: PLAYER_BASE.def + a.def };
+  const ed = ENEMIES[document.getElementById('enemySel').value];
+  enemy = { name: ed.name, hp: ed.hp, maxhp: ed.hp, atk: ed.atk, def: ed.def };
+
+  document.getElementById('enemyName').textContent = enemy.name;
+  setHp('player'); setHp('enemy');
+  document.getElementById('log').innerHTML = '';
+  paintZones(document.getElementById('atkTrack'), document.getElementById('atkMarker'), w.zones);
+  paintZones(document.getElementById('defTrack'), document.getElementById('defMarker'), a.zones);
+  log(`Battle start — Player ATK ${player.atk}/DEF ${player.def} vs ${enemy.name} (HP ${enemy.hp}/ATK ${enemy.atk}/DEF ${enemy.def})`);
+  document.getElementById('atkBtn').disabled = false;
+  document.getElementById('defBtn').disabled = true;
+  document.getElementById('startBtn').disabled = true;
+});
+</script>
+</body>
+</html>
