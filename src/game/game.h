@@ -185,6 +185,11 @@ private:
     int storeUnlockBtnRect_[4] = {0,0,0,0};   // unlock dialog confirm button rect
     std::vector<float> storeBtnRects_;        // per-card buy-button rects (4 floats each)
     int storeCloseRect_[4] = {0,0,0,0};       // store close button rect
+    // backpack/inventory overlay hit-test rects (rebuilt each frame in drawInventory)
+    std::vector<float> invCardRects_;         // per-item card rects (4 floats each)
+    int invUseRect_[4] = {0,0,0,0};
+    int invDropRect_[4] = {0,0,0,0};
+    int invCloseRect_[4] = {0,0,0,0};
 #ifndef __EMSCRIPTEN__
     Audio audio;           // SFX subsystem (no-op when no audio device)
 #else

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>TOMS Backpack Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">TOMS / Backpack Demo</div>
+        <h1>傳統 RPG 背包系統示範</h1>
+        <p class="subtle">支援 mouse / touch / keyboard；點選道具後可查看說明、效果，並執行 use / drop / close。</p>
+      </div>
+      <div class="topbar-actions">
+        <button id="btn-open" class="ghost">打開背包</button>
+        <button id="btn-reset" class="ghost">重置示範資料</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel player-panel">
+        <div class="panel-title">玩家狀態</div>
+        <div id="player-stats" class="stats"></div>
+        <div class="mini-note">選擇道具後，會在右側顯示描述與效果。按 Enter / Space 可開啟操作選單，Esc 關閉。</div>
+      </section>
+
+      <section class="panel backpack-panel" aria-label="Backpack inventory">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">背包</div>
+            <div class="panel-desc">傳統 RPG 風格：道具格、圖示、名稱、數量、詳情面板。</div>
+          </div>
+          <div class="panel-header-actions">
+            <button id="btn-prev" class="ghost">◀</button>
+            <button id="btn-next" class="ghost">▶</button>
+          </div>
+        </div>
+        <div id="inventory-grid" class="inventory-grid" role="listbox" aria-label="Inventory items"></div>
+      </section>
+
+      <section class="panel detail-panel">
+        <div class="panel-title">道具詳情</div>
+        <div id="detail-empty" class="empty-state">請先點選一個道具。</div>
+        <div id="detail" class="detail hidden">
+          <div class="detail-head">
+            <img id="detail-icon" alt="item icon" />
+            <div>
+              <div class="detail-name" id="detail-name"></div>
+              <div class="detail-id" id="detail-id"></div>
+            </div>
+          </div>
+          <div class="chips" id="detail-chips"></div>
+          <p id="detail-desc" class="detail-desc"></p>
+          <div class="detail-block">
+            <div class="detail-label">效果</div>
+            <div id="detail-effect" class="effect-list"></div>
+          </div>
+          <div class="detail-block">
+            <div class="detail-label">觸控 / 滑鼠操作</div>
+            <div class="mini-note">點一下選擇、再點一次可開啟操作；或按 Enter/Space。使用後若是消耗品會扣數量。</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="menu-overlay" class="overlay hidden" aria-hidden="true"></div>
+  <div id="action-sheet" class="action-sheet hidden" role="dialog" aria-modal="true" aria-labelledby="action-title">
+    <div class="sheet-title" id="action-title">道具操作</div>
+    <div class="sheet-item">
+      <img id="sheet-icon" alt="" />
+      <div>
+        <div id="sheet-name" class="sheet-name"></div>
+        <div id="sheet-summary" class="sheet-summary"></div>
+      </div>
+    </div>
+    <div id="sheet-effect" class="sheet-effect"></div>
+    <div class="sheet-actions">
+      <button id="btn-use" class="primary">Use</button>
+      <button id="btn-drop" class="danger">Drop</button>
+      <button id="btn-close" class="ghost">Close</button>
+    </div>
+  </div>
+
+  <template id="item-template">
+    <button class="item-card" type="button" role="option">
+      <div class="icon-wrap"><img class="item-icon" alt="" /></div>
+      <div class="item-text">
+        <div class="item-name"></div>
+        <div class="item-meta"></div>
+      </div>
+      <div class="item-count"></div>
+    </button>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

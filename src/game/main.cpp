@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
             if (auto* r = dynamic_cast<Renderer*>(g.renderer())) r->setNodeFilter((uint8_t)std::atoi(sn));
         }
         g.loadStage("stage01");
-        std::cout << "Loaded stage01. Use arrow keys to move, Enter to interact, I for inventory, Escape to quit.\n";
+        std::cout << "Loaded stage01. Use arrow keys to move, Enter to interact, I or the Backpack button for inventory, Escape to quit.\n";
 
         // Retrieve the GLFW window from the renderer for key polling
         GLFWwindow* win = nullptr;

@@ -1,0 +1,82 @@
+{
+  "iron_sword": {
+    "gameId": "iron_sword",
+    "name": "鐵劍",
+    "icon": "icons/iron_sword.svg",
+    "description": "簡單但可靠的冒險者之劍。裝備後提升力量，適合前期推圖。",
+    "effect": { "str": 100 },
+    "type": "裝備",
+    "stackable": false,
+    "category": "Weapon"
+  },
+  "healing_potion": {
+    "gameId": "healing_potion",
+    "name": "治療藥水",
+    "icon": "icons/healing_potion.svg",
+    "description": "常見的紅色回復藥。使用後立即補充生命。",
+    "effect": { "hp": 100 },
+    "type": "消耗品",
+    "stackable": true,
+    "category": "Potion"
+  },
+  "giant_tonic": {
+    "gameId": "giant_tonic",
+    "name": "巨人秘藥",
+    "icon": "icons/giant_tonic.svg",
+    "description": "吞下去會全身發熱的秘藥。短時間讓力量暴增。",
+    "effect": { "str": 100, "hp": 50 },
+    "type": "消耗品",
+    "stackable": true,
+    "category": "Buff"
+  },
+  "guardian_shield": {
+    "gameId": "guardian_shield",
+    "name": "守護之盾",
+    "icon": "icons/guardian_shield.svg",
+    "description": "刻有神紋的圓盾，能大幅提高防禦。",
+    "effect": { "def": 60 },
+    "type": "裝備",
+    "stackable": false,
+    "category": "Armor"
+  },
+  "feather_boots": {
+    "gameId": "feather_boots",
+    "name": "疾風靴",
+    "icon": "icons/feather_boots.svg",
+    "description": "鞋底輕如羽毛，讓角色行動更快。",
+    "effect": { "agi": 35 },
+    "type": "裝備",
+    "stackable": false,
+    "category": "Boots"
+  },
+  "phoenix_scroll": {
+    "gameId": "phoenix_scroll",
+    "name": "鳳凰卷軸",
+    "icon": "icons/phoenix_scroll.svg",
+    "description": "燃燒後召喚復甦之力。使用後恢復大量生命與魔力。",
+    "effect": { "hp": 200, "mp": 120 },
+    "type": "消耗品",
+    "stackable": true,
+    "category": "Scroll"
+  },
+  "moon_ring": {
+    "gameId": "moon_ring",
+    "name": "月光戒指",
+    "icon": "icons/moon_ring.svg",
+    "description": "傳說中的月輝飾品，能讓佩戴者更加專注。",
+    "effect": { "mp": 100, "exp": 100 },
+    "type": "裝備",
+    "stackable": false,
+    "category": "Accessory"
+  },
+  "adventurer_map": {
+    "gameId": "adventurer_map",
+    "name": "冒險者地圖",
+    "icon": "icons/adventurer_map.svg",
+    "description": "標記了附近區域的地圖。使用後沒有直接屬性提升，但非常適合任務導覽。",
+    "effect": { "gold": 50 },
+    "type": "任務道具",
+    "stackable": false,
+    "category": "Quest"
+  }
+}

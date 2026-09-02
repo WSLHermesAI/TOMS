@@ -155,19 +155,16 @@ bool Game::loadAssets(const std::string& assetDir) {
 #endif
 
     // load enemy templates
-    std::ifstream ef(assetDir+"/../data/enemies.json"); // (read via readJsonFile)
     nlohmann::json ej = readJsonFile(assetDir+"/../data/enemies.json");
     for (auto& [k,v] : ej.items()) enemyTpl[k] = v;
     // load item definitions
-    {
-        std::ifstream itf(assetDir+"/../data/items.json"); // (read via readJsonFile)
-        nlohmann::json ij = readJsonFile(assetDir+"/../data/items.json");
-        for (auto& [k,v] : ij.items()) itemDefs[k] = v;
-    }
+    nlohmann::json ij = readJsonFile(assetDir+"/../data/items.json");
+    for (auto& [k,v] : ij.items()) itemDefs[k] = v;
     // load store definitions (data/store.json) -> unlock stage + items + cost rule
     loadStore(assetDir);
     // init player
     pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
+    pl.inv = {"potion_red", "potion_blue", "exp_up"};
     // init SFX subsystem (no-op if no audio device; headless-safe). Disabled on
     // the Emscripten/WebGL build to keep the browser bundle free of audio deps.
 #ifndef __EMSCRIPTEN__
@@ -535,7 +532,6 @@ void Game::handleTouch(float px, float py, int phase) {
         const GPadBtn& b = GP[i];
         if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) { id = i; break; }
     }
-    if (id < 0) return;
     if (id == 7) { if (phase == 0) gpOn = !gpOn; return; }  // toggle show/hide
     if (phase == 2) return;                 // touchend on a game button: nothing
     // Victory screen: tap anywhere to dismiss (cs.won is set on win and must be cleared
@@ -545,14 +541,29 @@ void Game::handleTouch(float px, float py, int phase) {
     if (!inventoryOpen() && !inDialogue && !modalActive() && phase == 0) {
         if (py >= 74 && py <= 104 && px >= 16 && px <= 560) { toggleInventory(); return; }
     }
-    const GPadBtn& b = GP[id];
     if (inventoryOpen()) {
-        if (id <= 3) invMoveSel(b.dx, b.dy);
-        else if (id == 4 && phase == 0) invUseSelected();
-        else if (id == 5 && phase == 0) invDropSelected();
-        else if (id == 6 && phase == 0) toggleInventory();
+        if (phase == 0) {
+            auto hit = [&](const int r[4]) {
+                return px >= r[0] && px <= r[0] + r[2] && py >= r[1] && py <= r[1] + r[3];
+            };
+            for (size_t i = 0; i + 3 < invCardRects_.size(); i += 4) {
+                int r[4] = { (int)invCardRects_[i+0], (int)invCardRects_[i+1], (int)invCardRects_[i+2], (int)invCardRects_[i+3] };
+                if (hit(r)) { invSel = (int)(i / 4); return; }
+            }
+            if (hit(invUseRect_)) { invUseSelected(); return; }
+            if (hit(invDropRect_)) { invDropSelected(); return; }
+            if (hit(invCloseRect_)) { toggleInventory(); return; }
+        }
+        if (id >= 0) {
+            const GPadBtn& b = GP[id];
+            if (id <= 3) invMoveSel(b.dx, b.dy);
+            else if (id == 4 && phase == 0) invUseSelected();
+            else if (id == 5 && phase == 0) invDropSelected();
+            else if (id == 6 && phase == 0) toggleInventory();
+        }
         return;
     }
+    if (id < 0) return;
     if (inDialogue) {                        // dialogue: tap a choice line to select+confirm
         int n = (int)dlgChoices.size();
         // Tap directly on a choice line (drawn at y = H-140 + i*24, x >= 60) selects & confirms it.
@@ -581,6 +592,7 @@ void Game::handleTouch(float px, float py, int phase) {
     if (modalActive()) {                     // other modal (store handled above): block world input
         return;
     }
+    const GPadBtn& b = GP[id];
     if (id <= 3 && phase == 0) movePlayer(b.dx, b.dy);   // dpad: one step per tap (phase 1 repeat is for hold, ignored here so a tap = exactly 1 step)
     else if (id == 4 && phase == 0) interact();
 }
@@ -679,88 +691,187 @@ void Game::drawStoreSplash() {
     dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1; dim.solid=true;
     dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.5f; ren->drawSprite(dim);
 }
+
 void Game::drawInventory() {
-    if (!invOpen) return;
+    if (!invOpen) {
+        invCardRects_.clear();
+        return;
+    }
+
     float W = (float)ren->width(), H = (float)ren->height();
-    int cols = 3, cell = 56, gap = 6;
-    int rows = std::max(3, (int)((pl.inv.size() + cols - 1) / cols)); // at least 9 slots
-    int gw = cols * cell + (cols - 1) * gap;
-    float ox = (W - gw) / 2.0f;
-    float oy = H / 2.0f - (rows * cell + (rows - 1) * gap) / 2.0f;
+    drawFocusSplash();
 
-    // ---- Build the item UI as a RENDER-BOUND node tree ----
-    // modalRoot is visible ONLY while the inventory is open: setting it false
-    // (toggleInventory) skips the whole subtree (splash + panel + slots) in one
-    // flag. It is the LAST node drawn in Game::draw(), so it renders on top.
-    toms::GameObject modalRoot("itemUI");
-    modalRoot.SetVisible(invOpen);
-
-    // 1) full-screen focus splash (child of modalRoot -> hidden when closed too)
-    toms::FullScreenSplash splash;
-    splash.w = W; splash.h = H; splash.tint[3] = 0.8f;
-    modalRoot.AddChild(&splash);
-
-    // 2) panel node positioned at screen center; children are laid out in its LOCAL space
-    toms::GameObject panel("panel");
-    panel.SetLocalPosition(glm::vec2(ox, oy));
-    modalRoot.AddChild(&panel);
-
-    // panel background (a SpriteNode = common render: just assign size+tint)
-    toms::SpriteNode panelBg;
-    panelBg.solid = true;   // flat color panel, not a textured sprite
-    panelBg.SetLocalPosition(glm::vec2(-12.0f, -44.0f));
-    panelBg.size[0] = (float)(gw + 24); panelBg.size[1] = (float)(rows*cell + (rows-1)*gap + 92);
-    panelBg.tint[0]=0.12f; panelBg.tint[1]=0.14f; panelBg.tint[2]=0.22f; panelBg.tint[3]=0.96f;
-    panel.AddChild(&panelBg);
-
-    // title text (render-bound TextNode)
-    toms::TextNode title;
-    title.SetLocalPosition(glm::vec2(-4.0f, -34.0f)); title.size = 16.0f; title.text = "背包 Inventory (方向鍵選擇 · Enter 使用 · D 丟棄 · I 關閉)";
-    panel.AddChild(&title);
-
-    // 3) slot nodes (SpriteNode = common render). Icon is a child SpriteNode of the slot.
-    std::vector<toms::SpriteNode> slots(rows * cols, toms::SpriteNode());
-    std::vector<toms::SpriteNode> icons(rows * cols, toms::SpriteNode());
-    std::vector<toms::SpriteNode> hi(rows * cols, toms::SpriteNode());
-    for (int i = 0; i < (int)slots.size(); i++) {
-        int r = i / cols, c = i % cols;
-        slots[i].SetLocalPosition(glm::vec2((float)(c*(cell+gap)), (float)(r*(cell+gap))));
-        slots[i].size[0] = slots[i].size[1] = (float)cell;
-        slots[i].solid = true;   // colored cell background, not a texture
-        bool occupied = (i < (int)pl.inv.size());
-        if (occupied) { slots[i].tint[0]=0.18f; slots[i].tint[1]=0.2f; slots[i].tint[2]=0.28f; slots[i].tint[3]=1; }
-        else          { slots[i].tint[0]=0.1f; slots[i].tint[1]=0.11f; slots[i].tint[2]=0.16f; slots[i].tint[3]=0.9f; }
-        panel.AddChild(&slots[i]);
-        if (occupied) {
-            // icon: child of slot, offset (8,8), size cell-16, uv = item icon
-            int layer = spriteForItem(pl.inv[i]);
-            icons[i].SetLocalPosition(glm::vec2(8.0f, 8.0f));
-            icons[i].size[0] = icons[i].size[1] = (float)(cell-16);
-            spriteUV(layer, icons[i].uv);
-            slots[i].AddChild(&icons[i]);
-            if (i == invSel) {
-                hi[i].SetLocalPosition(glm::vec2(-2.0f, -2.0f));
-                hi[i].size[0] = hi[i].size[1] = (float)(cell+4);
-                hi[i].solid = true;   // colored highlight border
-                hi[i].tint[0]=1; hi[i].tint[1]=0.85f; hi[i].tint[2]=0.2f; hi[i].tint[3]=1;
-                slots[i].AddChild(&hi[i]);
+    auto effectSummary = [&](const std::string& id) -> std::string {
+        auto it = itemDefs.find(id);
+        if (it == itemDefs.end() || !it->second.contains("effect")) return "無效果";
+        const nlohmann::json& eff = it->second["effect"];
+        std::vector<std::string> parts;
+        auto add = [&](const char* key, const char* label) {
+            if (eff.contains(key)) {
+                int v = eff[key].get<int>();
+                parts.push_back(std::string(label) + (v >= 0 ? "+" : "") + std::to_string(v));
             }
+        };
+        add("str", "STR");
+        add("def", "DEF");
+        add("hp",  "HP");
+        add("mp",  "MP");
+        add("exp", "EXP");
+        add("gold","Gold");
+        if (eff.contains("warp")) parts.push_back("Warp");
+        if (parts.empty()) parts.push_back("無效果");
+        std::string out;
+        for (size_t i = 0; i < parts.size(); ++i) {
+            if (i) out += " • ";
+            out += parts[i];
         }
+        return out;
+    };
+
+    // Main modal panel
+    float pw = std::min(960.0f, W - 40.0f);
+    float ph = std::min(580.0f, H - 40.0f);
+    float px = (W - pw) * 0.5f;
+    float py = (H - ph) * 0.5f;
+
+    Quad outer; outer.rect[0]=px; outer.rect[1]=py; outer.rect[2]=pw; outer.rect[3]=ph;
+    outer.uv[0]=0; outer.uv[1]=0; outer.uv[2]=1; outer.uv[3]=1; outer.solid=true;
+    outer.tint[0]=0.10f; outer.tint[1]=0.12f; outer.tint[2]=0.18f; outer.tint[3]=0.96f;
+    ren->drawSprite(outer);
+
+    Quad titleBar; titleBar.rect[0]=px; titleBar.rect[1]=py; titleBar.rect[2]=pw; titleBar.rect[3]=58;
+    titleBar.uv[0]=0; titleBar.uv[1]=0; titleBar.uv[2]=1; titleBar.uv[3]=1; titleBar.solid=true;
+    titleBar.tint[0]=0.14f; titleBar.tint[1]=0.17f; titleBar.tint[2]=0.25f; titleBar.tint[3]=1.0f;
+    ren->drawSprite(titleBar);
+
+    drawText("背包 Backpack", px + 22, py + 18, 26, C4(1,0.92f,0.55f,1));
+    drawText("點選道具可查看說明與效果，Use / Drop / Close 會出現在右側", px + 22, py + 38, 14, C4(0.82f,0.88f,1,1));
+
+    const std::vector<std::string>& inv = pl.inv;
+    int n = (int)inv.size();
+    if (n <= 0) {
+        Quad empty; empty.rect[0]=px+22; empty.rect[1]=py+80; empty.rect[2]=pw-44; empty.rect[3]=ph-102;
+        empty.uv[0]=0; empty.uv[1]=0; empty.uv[2]=1; empty.uv[3]=1; empty.solid=true;
+        empty.tint[0]=0.08f; empty.tint[1]=0.09f; empty.tint[2]=0.13f; empty.tint[3]=0.92f;
+        ren->drawSprite(empty);
+        drawText("背包目前是空的。", px+40, py+120, 22, C4(1,1,1,1));
+        drawText("先去撿一些道具吧。", px+40, py+152, 16, C4(0.8f,0.85f,1,1));
+        invCardRects_.clear();
+        invCloseRect_[0] = (int)(px + pw - 120);
+        invCloseRect_[1] = (int)(py + ph - 58);
+        invCloseRect_[2] = 90;
+        invCloseRect_[3] = 34;
+        Quad cbtn; cbtn.rect[0]=invCloseRect_[0]; cbtn.rect[1]=invCloseRect_[1]; cbtn.rect[2]=invCloseRect_[2]; cbtn.rect[3]=invCloseRect_[3];
+        cbtn.uv[0]=0; cbtn.uv[1]=0; cbtn.uv[2]=1; cbtn.uv[3]=1; cbtn.solid=true;
+        cbtn.tint[0]=0.5f; cbtn.tint[1]=0.2f; cbtn.tint[2]=0.2f; cbtn.tint[3]=1;
+        ren->drawSprite(cbtn);
+        drawText("Close", invCloseRect_[0] + 22, invCloseRect_[1] + 9, 16, C4(1,1,1,1));
+        return;
     }
 
-    // 4) description texts (render-bound) under the panel
-    if (!pl.inv.empty()) {
-        int si = std::max(0, std::min(invSel, (int)pl.inv.size()-1));
-        std::string id = pl.inv[si];
-        float dy = (float)(rows*(cell+gap) + 6);
-        toms::TextNode dn; dn.SetLocalPosition(glm::vec2(-4.0f, dy));        dn.size=18; dn.text=itemName(id); dn.tint[0]=1; dn.tint[1]=0.9f; dn.tint[2]=0.5f; panel.AddChild(&dn);
-        toms::TextNode dd; dd.SetLocalPosition(glm::vec2(-4.0f, dy+24));     dd.size=15; dd.text=itemDesc(id); panel.AddChild(&dd);
-        toms::TextNode dh; dh.SetLocalPosition(glm::vec2(-4.0f, dy+48));     dh.size=14; dh.text="按 Enter 使用 / D 丟棄"; dh.tint[0]=0.7f; dh.tint[1]=1; dh.tint[2]=0.7f; panel.AddChild(&dh);
+    // Layout close to the demo: left item list, right detail panel + action buttons.
+    float leftX = px + 22, leftY = py + 80;
+    float leftW = pw * 0.58f - 30.0f;
+    float leftH = ph - 104.0f;
+    float rightX = leftX + leftW + 24.0f;
+    float rightY = leftY;
+    float rightW = pw - (rightX - px) - 22.0f;
+    float rightH = leftH;
+
+    Quad lpanel; lpanel.rect[0]=leftX; lpanel.rect[1]=leftY; lpanel.rect[2]=leftW; lpanel.rect[3]=leftH;
+    lpanel.uv[0]=0; lpanel.uv[1]=0; lpanel.uv[2]=1; lpanel.uv[3]=1; lpanel.solid=true;
+    lpanel.tint[0]=0.08f; lpanel.tint[1]=0.10f; lpanel.tint[2]=0.15f; lpanel.tint[3]=0.96f; ren->drawSprite(lpanel);
+    Quad rpanel; rpanel.rect[0]=rightX; rpanel.rect[1]=rightY; rpanel.rect[2]=rightW; rpanel.rect[3]=rightH;
+    rpanel.uv[0]=0; rpanel.uv[1]=0; rpanel.uv[2]=1; rpanel.uv[3]=1; rpanel.solid=true;
+    rpanel.tint[0]=0.09f; rpanel.tint[1]=0.11f; rpanel.tint[2]=0.18f; rpanel.tint[3]=0.98f; ren->drawSprite(rpanel);
+
+    // Left list of items
+    invCardRects_.clear();
+    const float cardH = 66.0f;
+    const float gap = 10.0f;
+    const float cardW = leftW - 20.0f;
+    const float sx = leftX + 10.0f;
+    float sy = leftY + 10.0f;
+    for (int i = 0; i < n; ++i) {
+        const std::string& id = inv[i];
+        float cy = sy + i * (cardH + gap);
+        if (cy + cardH > leftY + leftH - 10.0f) break;   // fixed demo-style window
+        invCardRects_.push_back(sx);
+        invCardRects_.push_back(cy);
+        invCardRects_.push_back(cardW);
+        invCardRects_.push_back(cardH);
+        bool sel = (i == invSel);
+        Quad card; card.rect[0]=sx; card.rect[1]=cy; card.rect[2]=cardW; card.rect[3]=cardH;
+        card.uv[0]=0; card.uv[1]=0; card.uv[2]=1; card.uv[3]=1; card.solid=true;
+        if (sel) { card.tint[0]=0.22f; card.tint[1]=0.25f; card.tint[2]=0.38f; card.tint[3]=1; }
+        else     { card.tint[0]=0.14f; card.tint[1]=0.16f; card.tint[2]=0.24f; card.tint[3]=0.98f; }
+        ren->drawSprite(card);
+        if (sel) {
+            Quad hi; hi.rect[0]=sx-2; hi.rect[1]=cy-2; hi.rect[2]=cardW+4; hi.rect[3]=cardH+4;
+            hi.uv[0]=0; hi.uv[1]=0; hi.uv[2]=1; hi.uv[3]=1; hi.solid=true;
+            hi.tint[0]=1; hi.tint[1]=0.85f; hi.tint[2]=0.2f; hi.tint[3]=1; ren->drawSprite(hi);
+        }
+        int layer = spriteForItem(id);
+        ren->drawSprite(spriteQuad(sx + 10.0f, cy + 10.0f, 46.0f, 46.0f, layer, C4(1,1,1,1)));
+        drawText(itemName(id), sx + 66.0f, cy + 9.0f, 18, C4(1,1,1,1));
+        drawText(effectSummary(id), sx + 66.0f, cy + 34.0f, 13, C4(0.7f,1,0.78f,1));
+        drawText("x" + std::to_string(1), sx + cardW - 24.0f, cy + 22.0f, 18, C4(1,0.95f,0.5f,1));
     }
 
-    // Single render call for the whole modal UI (visibility-culled subtree).
-    modalRoot.RenderTree(ren);
+    // Clamp selection to visible item count.
+    if (invSel >= n) invSel = n - 1;
+    if (invSel < 0) invSel = 0;
+    const std::string& sid = inv[invSel];
+
+    // Detail pane.
+    drawText("道具詳情", rightX + 18, rightY + 16, 20, C4(1,0.95f,0.55f,1));
+    ren->drawSprite(spriteQuad(rightX + 18, rightY + 54, 76, 76, spriteForItem(sid), C4(1,1,1,1)));
+    drawText(itemName(sid), rightX + 108, rightY + 56, 26, C4(1,1,1,1));
+    drawText("gameId: " + sid, rightX + 108, rightY + 86, 14, C4(0.75f,0.8f,0.95f,1));
+    drawText("icon: " + itemDefs[sid].value("sprite", std::string("")), rightX + 18, rightY + 136, 13, C4(0.7f,0.8f,0.95f,1));
+    drawText(itemDesc(sid), rightX + 18, rightY + 162, 16, C4(0.88f,0.92f,1,1));
+    drawText("效果", rightX + 18, rightY + 240, 13, C4(0.7f,0.8f,0.95f,1));
+
+    const nlohmann::json& eff = itemDefs[sid]["effect"];
+    float effY = rightY + 264;
+    auto pill = [&](const std::string& s, float x, float y, float w) {
+        Quad q; q.rect[0]=x; q.rect[1]=y; q.rect[2]=w; q.rect[3]=28;
+        q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
+        q.tint[0]=0.12f; q.tint[1]=0.24f; q.tint[2]=0.16f; q.tint[3]=1;
+        ren->drawSprite(q);
+        drawText(s, x + 10, y + 7, 14, C4(0.85f,1,0.88f,1));
+    };
+    int pillRow = 0;
+    if (eff.contains("str")) { pill("STR +" + std::to_string((int)eff["str"]), rightX + 18, effY + pillRow*34, 110); pillRow++; }
+    if (eff.contains("def")) { pill("DEF +" + std::to_string((int)eff["def"]), rightX + 18, effY + pillRow*34, 110); pillRow++; }
+    if (eff.contains("hp"))  { pill("HP +" + std::to_string((int)eff["hp"]),  rightX + 18, effY + pillRow*34, 110); pillRow++; }
+    if (eff.contains("mp"))  { pill("MP +" + std::to_string((int)eff["mp"]),  rightX + 18, effY + pillRow*34, 110); pillRow++; }
+    if (eff.contains("exp")) { pill("EXP +" + std::to_string((int)eff["exp"]), rightX + 18, effY + pillRow*34, 120); pillRow++; }
+    if (eff.contains("gold")){ pill("Gold +" + std::to_string((int)eff["gold"]),rightX + 18, effY + pillRow*34, 126); pillRow++; }
+    if (eff.contains("warp")){ pill("Warp", rightX + 18, effY + pillRow*34, 90); pillRow++; }
+    if (pillRow == 0) pill("無效果", rightX + 18, effY, 90);
+
+    // Action buttons.
+    float by = rightY + rightH - 48;
+    float bw = 88, bh = 34;
+    invUseRect_[0] = (int)(rightX + 18); invUseRect_[1] = (int)by; invUseRect_[2] = (int)bw; invUseRect_[3] = (int)bh;
+    invDropRect_[0] = (int)(rightX + 116); invDropRect_[1] = (int)by; invDropRect_[2] = (int)bw; invDropRect_[3] = (int)bh;
+    invCloseRect_[0] = (int)(rightX + rightW - 104); invCloseRect_[1] = (int)by; invCloseRect_[2] = 86; invCloseRect_[3] = (int)bh;
+
+    auto drawBtn = [&](const int r[4], const char* txt, float cr, float cg, float cb) {
+        Quad q; q.rect[0]=r[0]; q.rect[1]=r[1]; q.rect[2]=r[2]; q.rect[3]=r[3];
+        q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
+        q.tint[0]=cr; q.tint[1]=cg; q.tint[2]=cb; q.tint[3]=1;
+        ren->drawSprite(q);
+        drawText(txt, (float)r[0] + 16, (float)r[1] + 9, 15, C4(1,1,1,1));
+    };
+    drawBtn(invUseRect_, "Use",   0.20f, 0.50f, 0.30f);
+    drawBtn(invDropRect_, "Drop",  0.60f, 0.28f, 0.26f);
+    drawBtn(invCloseRect_, "Close", 0.28f, 0.28f, 0.34f);
+
+    drawText("點選物品後可按右側按鈕操作；鍵盤 I 可關閉", rightX + 18, rightY + rightH - 76, 13, C4(0.75f,0.82f,0.95f,1));
 }
+
 
 // ---------- store system ----------
 void Game::loadStore(const std::string& assetDir) {
