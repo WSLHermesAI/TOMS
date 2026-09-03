@@ -380,49 +380,53 @@ void Game::draw() {
     float ts = 48.0f;
     float ox = (W - gw*ts)/2.0f, oy = 60.0f;
     static const float white[4] = {1,1,1,1};
-    // ---- node 1: STAGE (map tiles + entities + player) ----
-    ren->setNode(NODE_STAGE);
-    // tiles
-    for (int y = 0; y < gh; y++) for (int x = 0; x < gw; x++) {
-        char c = st.at(x,y);
-        int layer = spriteLayer(cellSprite(c));
-        ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, white));
-    }
-    // entities
-    for (auto& e : st.entities) {
-        if (e.consumed) continue;
-        int layer = spriteLayer(entSprite(e.id));
-        ren->drawSprite(spriteQuad(ox + e.x*ts + 8, oy + e.y*ts + 8, ts-16, ts-16, layer, white));
-    }
-    // player
-    ren->drawSprite(spriteQuad(ox + pl.x*ts + 8, oy + pl.y*ts + 8, ts-16, ts-16, spriteLayer("player"), white));
-
-    // ---- node 2: CHARACTER (HUD top bar: stats / HP-ATK-DEF / story note) ----
-    ren->setNode(NODE_CHAR);
     float tint[4] = {1,1,1,1};
-    if (!storeModal()) {
-    // HUD top bar
-    drawText("魔法塔 Tower of the Sorcerer — " + st.name + " (" + std::to_string(st.index) + "/" + std::to_string(totalStages) + ")", 16, 16, 22, tint);
-    // HP/ATK/DEF bars + text
-    float bx = 16, by = 44;
-    drawBar(bx, by, 200, 14, (float)pl.hp/pl.maxhp, C4(0.9f,0.2f,0.2f,1));
-    drawText("HP " + std::to_string(pl.hp) + "/" + std::to_string(pl.maxhp), bx+210, by, 18, tint);
-    drawText("ATK " + std::to_string(pl.atk) + "  DEF " + std::to_string(pl.def) + "  LV " + std::to_string(pl.lv), bx, by+20, 18, tint);
-    drawText("GOLD " + std::to_string(pl.gold) + "  EXP " + std::to_string(pl.exp) + "  鑰匙 Y"+std::to_string(pl.key_yellow)+" B"+std::to_string(pl.key_blue)+" R"+std::to_string(pl.key_red) + "  道具x" + std::to_string(pl.inv.size()) + " (I)", bx, by+42, 16, tint);
 
-    // story note
-    drawText(st.story_note, 16, H-30, 16, C4(0.8f,0.85f,1.0f,1));
+    const bool showStore = storeModal();
+    const bool showBattle = !showStore && (hideMask & 1) == 0 && (cs.active || cs.won || cs.log.find("倒下") != std::string::npos);
+    const bool showTalk   = !showStore && !showBattle && (hideMask & 2) == 0 && inDialogue;
+    const bool showInv    = !showStore && !showBattle && !showTalk && (hideMask & 4) == 0 && invOpen;
+    const bool showWalk   = !showStore && !showBattle && !showTalk && !showInv;
+
+    // ---- walking scene: STAGE + CHARACTER ----
+    if (showWalk) {
+        ren->setNode(NODE_STAGE);
+        for (int y = 0; y < gh; y++) for (int x = 0; x < gw; x++) {
+            char c = st.at(x,y);
+            int layer = spriteLayer(cellSprite(c));
+            ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, white));
+        }
+        for (auto& e : st.entities) {
+            if (e.consumed) continue;
+            int layer = spriteLayer(entSprite(e.id));
+            ren->drawSprite(spriteQuad(ox + e.x*ts + 8, oy + e.y*ts + 8, ts-16, ts-16, layer, white));
+        }
+        ren->drawSprite(spriteQuad(ox + pl.x*ts + 8, oy + pl.y*ts + 8, ts-16, ts-16, spriteLayer("player"), white));
+
+        ren->setNode(NODE_CHAR);
+        drawText("魔法塔 Tower of the Sorcerer — " + st.name + " (" + std::to_string(st.index) + "/" + std::to_string(totalStages) + ")", 16, 16, 22, tint);
+        float bx = 16, by = 44;
+        drawBar(bx, by, 200, 14, (float)pl.hp/pl.maxhp, C4(0.9f,0.2f,0.2f,1));
+        drawText("HP " + std::to_string(pl.hp) + "/" + std::to_string(pl.maxhp), bx+210, by, 18, tint);
+        drawText("ATK " + std::to_string(pl.atk) + "  DEF " + std::to_string(pl.def) + "  LV " + std::to_string(pl.lv), bx, by+20, 18, tint);
+        drawText("GOLD " + std::to_string(pl.gold) + "  EXP " + std::to_string(pl.exp) + "  鑰匙 Y"+std::to_string(pl.key_yellow)+" B"+std::to_string(pl.key_blue)+" R"+std::to_string(pl.key_red) + "  道具x" + std::to_string(pl.inv.size()) + " (I)", bx, by+42, 16, tint);
+        drawText(st.story_note, 16, H-30, 16, C4(0.8f,0.85f,1.0f,1));
+
+        ren->setNode(NODE_STORE);
+        if (!storeOpen) drawStoreIcon();
+        storeBtnRects_.clear();
+        drawStoreToast();
+        drawGamepad();
+        ren->end();
+        return;
     }
 
-    // ---- node 4: BATTLE (combat overlay) ----
-    ren->setNode(NODE_BATTLE);
-    // combat overlay (suppressed while the store modal is the topmost layer, so the
-    // death hint "你倒下了" never bleeds through at the same level as the store)
-    if (!storeModal() && (hideMask & 1) == 0 && (cs.active || (cs.won || cs.log.find("倒下")!=std::string::npos))) {
+    // ---- battle scene ----
+    if (showBattle) {
+        ren->setNode(NODE_BATTLE);
         drawFocusSplash();
         float cx = W/2 - 250;
         drawText("⚔ 戰鬥！ " + cs.enemy.name, cx, 120, 26, C4(1,0.6f,0.4f,1));
-        // player vs enemy boxes
         ren->drawSprite(spriteQuad(cx, 170, 96, 96, spriteLayer("player"), white));
         ren->drawSprite(spriteQuad(cx+350, 170, 96, 96, spriteLayer(cs.enemy.boss?"boss_demonlord":entSprite(cs.enemy.id)), white));
         drawBar(cx, 280, 200, 16, (float)cs.playerHP/pl.maxhp, C4(0.3f,0.9f,0.4f,1));
@@ -431,12 +435,13 @@ void Game::draw() {
         drawText(cs.enemy.name + " HP " + std::to_string(std::max(0,cs.enemyHP)), cx+560, 280, 18, tint);
         drawText(cs.log, cx, 320, 18, tint);
         if (!cs.active) drawText("（按任意鍵繼續）", cx, 350, 16, C4(1,1,0.6f,1));
+        ren->end();
+        return;
     }
 
-    // ---- node 3: TALK (dialogue overlay) ----
-    ren->setNode(NODE_TALK);
-    // dialogue overlay (suppressed while store modal is open)
-    if (!storeModal() && (hideMask & 2) == 0 && inDialogue) {
+    // ---- dialogue scene ----
+    if (showTalk) {
+        ren->setNode(NODE_TALK);
         drawFocusSplash();
         Quad box; box.rect[0]=40; box.rect[1]=H-200; box.rect[2]=W-80; box.rect[3]=170;
         box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1; box.solid=true;
@@ -445,25 +450,29 @@ void Game::draw() {
         drawText(txt, 60, H-180, 20, tint);
         for (size_t i = 0; i < dlgChoices.size(); i++) {
             float ty = H-140 + (float)i*24;
-            if ((int)i == dlgSel) drawText("▶ " + dlgChoices[i].first, 60, ty, 18, C4(1,1.0f,0.6f,1));   // highlighted choice (gamepad-selected)
+            if ((int)i == dlgSel) drawText("▶ " + dlgChoices[i].first, 60, ty, 18, C4(1,1.0f,0.6f,1));
             else                   drawText("  " + dlgChoices[i].first, 60, ty, 18, C4(1,0.9f,0.5f,1));
         }
+        ren->end();
+        return;
     }
 
-    // inventory UI (9-grid, extendable) — toggle with I (suppressed while store modal is open)
-    ren->setNode(NODE_CHAR);   // inventory is a character/UI screen
-    if (!storeModal() && (hideMask & 4) == 0) drawInventory();
+    // ---- inventory scene ----
+    if (showInv) {
+        ren->setNode(NODE_CHAR);
+        drawInventory();
+        ren->end();
+        return;
+    }
 
-    // ---- store system (NODE_STORE) — drawn LAST so it is the topmost layer ----
+    // ---- store scene ----
     ren->setNode(NODE_STORE);
-    if (!storeOpen) drawStoreIcon();          // HUD icon is always visible (dim+locked until unlocked)
-    // reset per-frame button-rect scratch (rebuilt during draw)
+    if (!storeOpen) drawStoreIcon();
     storeBtnRects_.clear();
     if (storeUnlockDlg) drawStoreUnlockDialog();
     else if (storeOpen) drawStoreUI();
     drawStoreToast();
-
-    drawGamepad();   // on-canvas touch controls; auto-hidden while a top-layer UI (battle/dialogue/inventory/store) is active
+    drawGamepad();
 
     ren->end();
 }
@@ -744,8 +753,8 @@ void Game::drawInventory() {
     titleBar.tint[0]=0.14f; titleBar.tint[1]=0.17f; titleBar.tint[2]=0.25f; titleBar.tint[3]=1.0f;
     ren->drawSprite(titleBar);
 
-    drawText("背包 Backpack", px + 22, py + 18, 26, C4(1,0.92f,0.55f,1));
-    drawText("點選道具可查看說明與效果，Use / Drop / Close 會出現在右側", px + 22, py + 38, 14, C4(0.82f,0.88f,1,1));
+    drawText("背包", px + 22, py + 18, 26, C4(1,0.92f,0.55f,1));
+    drawText("點選道具查看資訊，右側有 使用 / 丟棄 / 關閉", px + 22, py + 38, 14, C4(0.82f,0.88f,1,1));
 
     const std::vector<std::string>& inv = pl.inv;
     int n = (int)inv.size();
@@ -827,10 +836,10 @@ void Game::drawInventory() {
     drawText("道具詳情", rightX + 18, rightY + 16, 20, C4(1,0.95f,0.55f,1));
     ren->drawSprite(spriteQuad(rightX + 18, rightY + 54, 76, 76, spriteForItem(sid), C4(1,1,1,1)));
     drawText(itemName(sid), rightX + 108, rightY + 56, 26, C4(1,1,1,1));
-    drawText("gameId: " + sid, rightX + 108, rightY + 86, 14, C4(0.75f,0.8f,0.95f,1));
-    drawText("icon: " + itemDefs[sid].value("sprite", std::string("")), rightX + 18, rightY + 136, 13, C4(0.7f,0.8f,0.95f,1));
+    drawText("ID: " + sid, rightX + 108, rightY + 86, 14, C4(0.75f,0.8f,0.95f,1));
+    drawText("Icon: " + itemDefs[sid].value("sprite", std::string("")), rightX + 18, rightY + 136, 13, C4(0.7f,0.8f,0.95f,1));
     drawText(itemDesc(sid), rightX + 18, rightY + 162, 16, C4(0.88f,0.92f,1,1));
-    drawText("效果", rightX + 18, rightY + 240, 13, C4(0.7f,0.8f,0.95f,1));
+    drawText("Stats", rightX + 18, rightY + 240, 13, C4(0.7f,0.8f,0.95f,1));
 
     const nlohmann::json& eff = itemDefs[sid]["effect"];
     float effY = rightY + 264;
@@ -865,9 +874,9 @@ void Game::drawInventory() {
         ren->drawSprite(q);
         drawText(txt, (float)r[0] + 16, (float)r[1] + 9, 15, C4(1,1,1,1));
     };
-    drawBtn(invUseRect_, "Use",   0.20f, 0.50f, 0.30f);
-    drawBtn(invDropRect_, "Drop",  0.60f, 0.28f, 0.26f);
-    drawBtn(invCloseRect_, "Close", 0.28f, 0.28f, 0.34f);
+    drawBtn(invUseRect_, "使用",   0.20f, 0.50f, 0.30f);
+    drawBtn(invDropRect_, "丟棄",  0.60f, 0.28f, 0.26f);
+    drawBtn(invCloseRect_, "關閉", 0.28f, 0.28f, 0.34f);
 
     drawText("點選物品後可按右側按鈕操作；鍵盤 I 可關閉", rightX + 18, rightY + rightH - 76, 13, C4(0.75f,0.82f,0.95f,1));
 }
