@@ -2,6 +2,7 @@
 #include "renderer.h"
 #include <cstring>
 #include <array>
+#include <algorithm>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
@@ -11,8 +12,17 @@ void VulkanContext::init(uint32_t w, uint32_t h) {
     // ---- GLFW window ----
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     window = glfwCreateWindow((int)w, (int)h, "Tower of the Sorcerer", nullptr, nullptr);
+    // Lock dragged-edge resizing to the game's 16:9 design ratio, so the
+    // viewport always scales uniformly with the window instead of stretching
+    // or needing letterbox bars.
+    glfwSetWindowAspectRatio(window, 16, 9);
+    glfwSetWindowUserPointer(window, this);
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* win, int, int) {
+        auto* ctx = static_cast<VulkanContext*>(glfwGetWindowUserPointer(win));
+        if (ctx) ctx->framebufferResized = true;
+    });
 
     // ---- Vulkan instance (with surface extensions) ----
     VkApplicationInfo ai{}; ai.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -111,7 +121,7 @@ bool VulkanContext::acquireNext() {
     VkResult r = vkAcquireNextImageKHR(device, swapchain, UINT64_MAX,
                                        imageAvailable[currentFrame], VK_NULL_HANDLE,
                                        &currentImageIndex);
-    if (r == VK_ERROR_OUT_OF_DATE_KHR) return false;
+    if (r == VK_ERROR_OUT_OF_DATE_KHR) { framebufferResized = true; return false; }
     vkResetFences(device, 1, &inFlight[currentFrame]);
     return true;
 }
@@ -121,8 +131,63 @@ void VulkanContext::present() {
     pi.waitSemaphoreCount = 1; pi.pWaitSemaphores = &renderFinished[currentFrame];
     pi.swapchainCount = 1; pi.pSwapchains = &swapchain;
     pi.pImageIndices = &currentImageIndex;
-    vkQueuePresentKHR(gfxQueue, &pi);
+    VkResult r = vkQueuePresentKHR(gfxQueue, &pi);
+    if (r == VK_ERROR_OUT_OF_DATE_KHR || r == VK_SUBOPTIMAL_KHR) framebufferResized = true;
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+// Rebuild the swapchain + image views for a new window size. instance/device/
+// surface are untouched; the old swapchain is retired (passed as oldSwapchain)
+// then destroyed once the new one exists, per the Vulkan spec's resize recipe.
+void VulkanContext::recreateSwapchainImages(uint32_t w, uint32_t h) {
+    for (auto v : swapViews) vkDestroyImageView(device, v, nullptr);
+    swapViews.clear();
+    VkSwapchainKHR oldSwapchain = swapchain;
+
+    VkSurfaceCapabilitiesKHR caps{};
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical, surface, &caps);
+    VkExtent2D extent{w, h};
+    if (caps.currentExtent.width != UINT32_MAX) {
+        extent = caps.currentExtent;
+    } else {
+        extent.width  = std::max(caps.minImageExtent.width,  std::min(caps.maxImageExtent.width,  extent.width));
+        extent.height = std::max(caps.minImageExtent.height, std::min(caps.maxImageExtent.height, extent.height));
+    }
+
+    uint32_t fmtCount = 0; vkGetPhysicalDeviceSurfaceFormatsKHR(physical, surface, &fmtCount, nullptr);
+    std::vector<VkSurfaceFormatKHR> fmts(fmtCount);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physical, surface, &fmtCount, fmts.data());
+    VkColorSpaceKHR colorSpace = fmts.empty() ? VK_COLOR_SPACE_SRGB_NONLINEAR_KHR : fmts[0].colorSpace;
+    for (auto& f : fmts) if (f.format == swapFormat) { colorSpace = f.colorSpace; break; }
+
+    uint32_t wantCount = caps.minImageCount + 1;
+    if (caps.maxImageCount > 0 && wantCount > caps.maxImageCount) wantCount = caps.maxImageCount;
+
+    VkSwapchainCreateInfoKHR sci{}; sci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    sci.surface = surface; sci.minImageCount = wantCount;
+    sci.imageFormat = swapFormat; sci.imageColorSpace = colorSpace;
+    sci.imageExtent = extent; sci.imageArrayLayers = 1;
+    sci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    sci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    sci.preTransform = caps.currentTransform;
+    sci.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    sci.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    sci.clipped = VK_TRUE;
+    sci.oldSwapchain = oldSwapchain;
+    vk_check(vkCreateSwapchainKHR(device, &sci, nullptr, &swapchain), "swapchain_recreate");
+    if (oldSwapchain != VK_NULL_HANDLE) vkDestroySwapchainKHR(device, oldSwapchain, nullptr);
+
+    vkGetSwapchainImagesKHR(device, swapchain, &swapImageCount, nullptr);
+    swapImages.resize(swapImageCount);
+    vkGetSwapchainImagesKHR(device, swapchain, &swapImageCount, swapImages.data());
+    swapViews.resize(swapImageCount);
+    for (uint32_t i = 0; i < swapImageCount; i++) {
+        VkImageViewCreateInfo iv{}; iv.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        iv.image = swapImages[i]; iv.viewType = VK_IMAGE_VIEW_TYPE_2D; iv.format = swapFormat;
+        iv.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+        vk_check(vkCreateImageView(device, &iv, nullptr, &swapViews[i]), "swap_view_recreate");
+    }
+    framebufferResized = false;
 }
 
 void VulkanContext::destroy() {
@@ -265,6 +330,56 @@ void Renderer::init(uint32_t w, uint32_t h) {
         uploadAtlas(px, 1, 1, solidImg_, solidView_, solidSet_, solidMem_);
     }
     fprintf(stderr, "[dbg] renderer init done\n");
+}
+
+bool Renderer::beginFrame() {
+    if (vk.framebufferResized) { recreateSwapchain(); return false; }
+    if (!vk.acquireNext()) { recreateSwapchain(); return false; }
+    return true;
+}
+
+// Wait out minimization (0x0 framebuffer), then rebuild the swapchain and the
+// framebuffers/command buffers that depend on its size/image count. The
+// pipeline uses dynamic viewport+scissor (see init()) so it does not need
+// rebuilding; W/H are updated so game-side layout (which reads ren->width()/
+// height() every frame) picks up the new size immediately.
+void Renderer::recreateSwapchain() {
+    int fbw = 0, fbh = 0;
+    glfwGetFramebufferSize(vk.window, &fbw, &fbh);
+    while (fbw == 0 || fbh == 0) {
+        glfwWaitEvents();
+        glfwGetFramebufferSize(vk.window, &fbw, &fbh);
+    }
+
+    vkDeviceWaitIdle(vk.device);
+
+    for (auto& fb : swapFBs) if (fb) { vkDestroyFramebuffer(vk.device, fb, nullptr); fb = VK_NULL_HANDLE; }
+
+    uint32_t prevImageCount = vk.swapImageCount;
+    vk.recreateSwapchainImages((uint32_t)fbw, (uint32_t)fbh);
+
+    if (vk.swapImageCount != prevImageCount) {
+        if (!cmdBufs.empty()) vkFreeCommandBuffers(vk.device, cmdPool, (uint32_t)cmdBufs.size(), cmdBufs.data());
+        cmdBufs.resize(vk.swapImageCount);
+        VkCommandBufferAllocateInfo cba{}; cba.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        cba.commandPool = cmdPool; cba.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        cba.commandBufferCount = vk.swapImageCount;
+        vk_check(vkAllocateCommandBuffers(vk.device, &cba, cmdBufs.data()), "cmdbuf_recreate");
+    }
+
+    VkSurfaceCapabilitiesKHR caps{};
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vk.physical, vk.surface, &caps);
+    W = (caps.currentExtent.width  != UINT32_MAX) ? caps.currentExtent.width  : (uint32_t)fbw;
+    H = (caps.currentExtent.height != UINT32_MAX) ? caps.currentExtent.height : (uint32_t)fbh;
+
+    swapFBs.resize(vk.swapImageCount);
+    for (uint32_t i = 0; i < vk.swapImageCount; i++) {
+        VkFramebufferCreateInfo fbi{}; fbi.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        fbi.renderPass = renderPass; fbi.attachmentCount = 1; fbi.pAttachments = &vk.swapViews[i];
+        fbi.width = W; fbi.height = H; fbi.layers = 1;
+        vk_check(vkCreateFramebuffer(vk.device, &fbi, nullptr, &swapFBs[i]), "framebuffer_recreate");
+    }
+    fprintf(stderr, "[dbg] swapchain recreated: %ux%u (images=%u)\n", W, H, vk.swapImageCount);
 }
 
 // Free every Vulkan object this Renderer owns, with NULL_HANDLE guards so a

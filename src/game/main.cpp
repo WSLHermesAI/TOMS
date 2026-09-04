@@ -28,19 +28,19 @@ int main(int argc, char** argv) {
 
 #ifndef NDEBUG
 #ifdef _WIN32
-    // In debug mode, set working directory to the assets folder
-    //fs::path assetsPath = fs::path(assetDir).is_absolute()
-    //    ? fs::path(assetDir)
-    //    : cwd / assetDir;
-    fs::path assetsPath = "../../assets";
-    fs::current_path(assetsPath, ec);
-    if (ec)
-        std::cerr << "[WARN] Failed to set CWD to assets folder: " << ec.message() << '\n';
-    else
-        std::cout << "[CWD] Changed to assets folder: " << assetsPath.string() << '\n';
-    // Adjust paths that were relative to the original CWD
-    assetDir = ".";
-    (void)cwd;
+    //// In debug mode, set working directory to the assets folder
+    ////fs::path assetsPath = fs::path(assetDir).is_absolute()
+    ////    ? fs::path(assetDir)
+    ////    : cwd / assetDir;
+    //fs::path assetsPath = "../../assets";
+    //fs::current_path(assetsPath, ec);
+    //if (ec)
+    //    std::cerr << "[WARN] Failed to set CWD to assets folder: " << ec.message() << '\n';
+    //else
+    //    std::cout << "[CWD] Changed to assets folder: " << assetsPath.string() << '\n';
+    //// Adjust paths that were relative to the original CWD
+    //assetDir = ".";
+    //(void)cwd;
 #endif
 #endif
 
@@ -123,9 +123,11 @@ int main(int argc, char** argv) {
                 if (keyPressed(GLFW_KEY_ESCAPE)) g.storeKey(27);
             }
 
-            // Acquire next swapchain image then draw
+            // Acquire next swapchain image then draw. beginFrame() transparently
+            // recreates the swapchain (window was resized, or it's out of date)
+            // and returns false to skip the frame when that happens.
             if (auto* r = dynamic_cast<Renderer*>(g.renderer())) {
-                if (!r->vk.acquireNext()) continue;  // skip frame if swapchain not ready
+                if (!r->beginFrame()) continue;
             }
             g.draw();
         }

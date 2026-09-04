@@ -73,7 +73,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     ren = new WebGLRenderer();            // WebGL2 (browser, default)
   #endif
 #endif
-    ren->init(1024, 768);
+    ren->init(1280, 720);   // 16:9; window is locked to this aspect (see VulkanContext::init)
     // load sprites into a single 32x32-uniform atlas (GRID_COLS x GRID_ROWS grid)
     const int SW = 32, SH = 32, COLS = 9, ROWS = 3;
     spriteGridCols = COLS;

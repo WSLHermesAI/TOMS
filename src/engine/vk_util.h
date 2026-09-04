@@ -18,7 +18,7 @@ static inline void vk_check(VkResult r, const char* msg) {
 // binary works from the project root (Linux) and from a nested Visual Studio
 // output dir (Windows) without extra setup.
 static inline VkShaderModule loadSpv(VkDevice dev, const char* name) {
-    const char* candidates[] = {
+    const char* candidates[] = {"./",
         "shaders/", "src/shaders/", "src/engine/shaders/",
         "../src/shaders/", "../../src/shaders/",
         "../shaders/", "../../shaders/"

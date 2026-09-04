@@ -47,6 +47,10 @@ struct VulkanContext {
     // Current acquired swapchain image index (filled by acquireNext)
     uint32_t currentImageIndex = 0;
 
+    // Set by the GLFW framebuffer-size callback (window edge dragged) and by
+    // acquireNext()/present() when the swapchain reports itself out of date.
+    bool framebufferResized = false;
+
     void init(uint32_t w, uint32_t h);
     void destroy();
     bool shouldClose() const { return window && glfwWindowShouldClose(window); }
@@ -55,6 +59,9 @@ struct VulkanContext {
     bool acquireNext();
     // Present the rendered image; call after end().
     void present();
+    // Tear down and recreate the swapchain + image views at the given size
+    // (instance/device/surface are kept). Called after a window resize.
+    void recreateSwapchainImages(uint32_t w, uint32_t h);
 };
 
 struct Atlas { VkImage img = VK_NULL_HANDLE; VkImageView view = VK_NULL_HANDLE;
@@ -90,6 +97,13 @@ public:
 
     void init(uint32_t w, uint32_t h) override;
     void destroy();   // free Vulkan resources (atlases, pools, layout, sampler, pipeline)
+    // Acquire the next swapchain image, transparently recreating the swapchain
+    // (and dependent framebuffers) if the window was resized or the swapchain
+    // reports itself out of date. Returns false if the frame should be skipped
+    // (a recreation just happened, or the window is minimized).
+    bool beginFrame();
+    // Rebuild the swapchain + framebuffers to match the window's current size.
+    void recreateSwapchain();
     void loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) override;
     void loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) override;
     // Re-upload the font atlas (after the Font grew / gained glyphs at runtime).

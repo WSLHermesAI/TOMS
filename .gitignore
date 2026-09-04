@@ -11,3 +11,18 @@ web/tower_vulkan_web.*
 
 # emscripten build artifact
 tower_vulkan
+
+# Visual Studio / CMake (Windows) build output
+build/
+Debug/
+Release/
+.vs/
+editor/out/
+*.pdb
+*.ilk
+
+# runtime logs
+*.log
+
+# local Claude Code tool settings (machine-specific permission approvals)
+.claude/
