@@ -11,16 +11,28 @@
 
 ## ▶ Next Step
 
-**Start M5 for real.** Owner confirmed the aspect-fit viewport works. Note for whoever picks this
-up: M5 itself was never actually started this session — the "M5" work done so far (see the log
-entries above) was all a detour triggered by verifying the M2 styling-spike prerequisite: a real
-screenshot surfaced a shader Y-flip bug, a stale build, a keyboard-debounce bug, missing mouse
-wiring, and the aspect-fit-viewport request, all fixed and now owner-confirmed working. None of
-M5's actual deliverables (Stage Select screen, Inventory/Shop/Dialogue ImGui migration,
-Notification system) have been built yet. The upside: real visual verification is now possible
-(the owner can run the game and check screenshots directly), which removes the blocker M2's log
-originally flagged for M5 — so M5 can now proceed with actual human visual confirmation available,
-not just compile-and-don't-crash.
+**Session paused for the day (owner signing off) — three things waiting for the owner when they
+resume, in priority order:**
+
+1. **The F12/Steam-overlay test (highest priority — blocks trusting any further debug-session
+   testing).** Add `DISABLE_VK_LAYER_VALVE_steam_overlay_1=1` to the `tower_vulkan` project's
+   Debugging → Environment field in Visual Studio, F5 again, press F12. If it no longer crashes,
+   Steam's overlay (confirmed registered as a global implicit Vulkan layer on this machine, with
+   F12 as its default screenshot hotkey — see today's log) was the cause, not this project's code.
+   If it still crashes, grab the actual Visual Studio exception dialog / call stack next time —
+   that's the one piece of diagnostic data this session has no way to obtain on its own.
+2. **Visually confirm M5's two new screens**, now that build/debug should be on solid ground:
+   press **Tab** to open/close the Stage Select hub, and level up once in combat to see a toast
+   notification. Both are built, compiled, and smoke-tested, but not yet human-confirmed.
+3. **Decide what's next after that's confirmed**: finish M5 (migrate Inventory/Shop/Dialogue from
+   hand-built `Node`-tree UI to ImGui — deliberately deferred as its own pass since it replaces
+   already-working features) or move on to M6 (Equipment System + Power Bar minigame + real-time
+   input) — owner's call, not decided yet.
+
+**Everything currently in the repo builds clean and passes its full regression** (both `Debug`
+and `Release`, 12/12 headless tests) as of the last commands run this session — see the CMake
+cache-corruption entry below for why that's worth stating explicitly (the build system itself was
+found in a broken state today and is now fixed).
 
 ---
 
@@ -33,10 +45,7 @@ not just compile-and-don't-crash.
 | M2 — UI framework bring-up | 🟡 Done except web backends (deferred, no Emscripten toolchain) | Dear ImGui wired into `tower_vulkan` as a dev-only F1 overlay + the M5-prerequisite styling spike (F2), both compiled + smoke-tested. **Visual correctness of the styling spike is still unconfirmed** — screenshot capture attempted and abandoned as unreliable in this environment; see log. |
 | M3 — World logic core | ✅ Done | Condition/Flag Evaluator, Entity Status System, Story Controller — all built, test-verified, AND retrofitted into real gameplay (door/key gate, dialogue `requires` gate, beat advancement on floor entry). See log. |
 | M4 — Encounter Resolution + Mission System | ✅ Done | `EncounterKind` resolution (opt-in `dialogue_gate`, `direct_battle` stays default for all shipped content per owner's decision), dialogue `action` verbs (`give`/`setStoryFlag`/`enterBattle`/`startMission` — first real implementation of dialogue actions at all), Mission System (definitions/trackers/daily-reset/event-driven progress) wired to the Event Bus. See log. |
-| M2 — UI framework bring-up | ⬜ Not started | |
-| M3 — World logic core | ⬜ Not started | |
-| M4 — Encounter Resolution + Mission | ⬜ Not started | |
-| M5 — Stage Select + UI migration | ⬜ Not started | |
+| M5 — Stage Select + UI migration | 🟡 Half done | Stage Select hub (Tab to open) + Notification/toast system built, compiled, and smoke-tested (not yet owner-visually-confirmed). **Still not done:** migrating Inventory/Shop/Dialogue from hand-built `Node`-tree UI to ImGui — deferred as its own follow-up chunk since it replaces already-working features. See log. |
 | M6 — Equipment + Power Bar | ⬜ Not started | |
 | M7 — Balance & checklist closure | ⬜ Not started | |
 | M8 — Content authoring | ⬜ Not started | |
@@ -680,6 +689,137 @@ This closes out the whole shader-flip → stale-build → keyboard-debounce → 
 aspect-fit-viewport chain of fixes that started from one screenshot — **all confirmed working by
 the owner directly**, the first real end-to-end visual verification this session has had for
 anything in the live desktop window.
+
+### 2026-09-07 — M5 (part 1): Stage Select hub + Notification system
+
+With real visual verification now possible, went back to M5's actual deliverables — split into
+the purely-additive half (this entry) and the higher-risk "replace working UI" half (deferred,
+see Next Step).
+
+**Notification/Toast system** (architecture-doc §13 #28):
+- `Game::notifications_` — a simple `{message, remaining_ms}` queue; `pushNotification()` adds an
+  entry (3-second lifetime); `update()` decrements and prunes expired ones every frame.
+- `Game::drawNotifications()` (ImGui, always drawn when non-empty, not a dev-only toggle like
+  F1/F2) — stacks toasts top-right below the HUD/store icon.
+- Wired to two real triggers: **level-up** (both level-up sites — `applyItem`'s exp-item branch
+  and `resolveCombatRound`'s combat-win branch — push a "升級了！LV N" toast) and **daily mission
+  reset** (`Game::rollDailyMissions()`, called once per session in `loadAssets`, wraps Milestone
+  4's pure `toms::rollDailyReset` with a local-date wall clock and pushes a toast on transition to
+  `Available`). The daily-mission trigger is real, wired, and correct, but inert today since
+  `missionDefs_` is still empty until Milestone 8 loads actual mission content — consistent with
+  this session's established "systems now, content later" pattern for missions.
+
+**Stage Select hub** (architecture-doc §10):
+- `Game::ensureStageListLoaded()` scans `data/stages/` once, caching each stage's id/name/index.
+- **Real unlock tracking, not a stub:** `Game::loadStage()` now records every stage id it ever
+  loads into `meta_.unlockedStages` (already existed as a field since Milestone 1, previously
+  unused for this purpose). `GameConditionContext::stageCleared()` — a stub returning `false`
+  since Milestone 3 — now does a real lookup against that list, closing another of the
+  intentionally-deferred M3/M4 stubs.
+- `Game::drawStageSelect()` (ImGui) lists every stage: locked (previous stage not yet reached,
+  with a hover tooltip explaining why, using `ImGuiHoveredFlags_AllowWhenDisabled` since
+  `BeginDisabled()` suppresses hover reporting by default), "已到達" (reached) if visited before,
+  "NEW" if unlocked but never visited. Selecting one calls the existing `loadStage()` — no changes
+  to stage-loading itself.
+- Opened/closed via a new **Tab** key (only opens when nothing else is modal, mirroring the
+  existing "B opens the shop" convention); added to `modalActive()`'s flag set and to the
+  Escape-priority chain (`main.cpp`'s Escape handler: store, then Stage Select, then inventory,
+  then quit) established during the earlier keyboard-debounce fix.
+- Boot behavior is intentionally unchanged — the game still auto-loads `stage01` on launch; Stage
+  Select is an in-game hub for replaying reached floors, not (yet) a mandatory title-screen gate,
+  matching the roadmap's own scoping note that a Main Menu is separate, not-yet-built work.
+
+**Verification performed:** full 12-test regression passes (this milestone adds no new pure-logic
+module, so no new tests — the additions are UI/orchestration wiring over already-tested pieces:
+`stageCleared` over M1's `unlockedStages` field, `rollDailyMissions` over M4's tested
+`rollDailyReset`); both Debug and Release build clean; smoke-tested with the Stage Select screen
+temporarily forced open (via a one-line test call, reverted immediately after) to actually
+exercise its widget-drawing code, not just the toggle path — no crash, no error output, same
+verification discipline as M2's debug-overlay check.
+
+**Still unconfirmed by this session:** visual correctness of both new screens (layout, whether the
+lock/reached/NEW badges read correctly, whether the toast stacks position sensibly) — needs the
+owner to press Tab and level up once to see a toast, same as every other UI piece this session.
+
+### 2026-09-07 — "F12 crashes the game" investigation: unreproduced, but found a real build-system landmine
+
+Owner reported pressing F12 while the game was running (launched via debugging in Visual Studio)
+caused a crash. F12 isn't bound to anything in this project's code (only F1/F2 are handled).
+
+**Attempted to reproduce directly** by launching `tower_vulkan.exe`, focusing its real window,
+and injecting actual F12 keydown/up events via `keybd_event` — both after a short delay and
+repeatedly across the whole boot window (15 presses spanning ~3 seconds from process start).
+**Could not reproduce it** — the process survived every attempt, no crash, no error output.
+
+**Follow-up from the owner reframed the question**: they're debugging via Visual Studio directly
+(opening the project / solution, not running `main.cpp` from VS Code as earlier assumed) and
+asked how to regenerate `tower_vulkan.sln` / use `CMakeLists.txt` to build and debug. Trying to
+answer that by reconfiguring surfaced a real, separate problem:
+
+**Found: the `build/` directory's CMake cache was corrupted with a generator mismatch.**
+`cmake --preset vs2022-x64` failed with `Does not match the generator used previously: Ninja` —
+confirmed via `CMakeCache.txt`: `CMAKE_GENERATOR:INTERNAL=Ninja`, even though this project's only
+generator is `Visual Studio 17 2022`. Something (very likely a different tool — e.g. an editor's
+CMake integration that defaults to Ninja, such as VS Code's CMake Tools extension) had
+configured the *same* `build/` directory with a different generator at some point outside this
+session's own commands, since nothing this session ran ever specified Ninja. **This is a
+plausible real explanation for "debugging feels broken/crashes unpredictably"**: if the owner's
+Visual Studio was pointed at a `build/` directory whose cache/generated project files didn't
+consistently match what was last actually compiled, debugging could easily hit stale PDBs,
+mismatched binaries, or outright configure failures — independent of any actual F12 key bug.
+
+**Fixed two things:**
+1. **Permanently pinned the Visual Studio instance** in `CMakePresets.json`'s `vs2022-x64` preset
+   (`CMAKE_GENERATOR_INSTANCE` cache variable → the VS 2022 Community install path) — this is the
+   same fix applied ad hoc via a command-line flag earlier today (when the VS 2026 install first
+   caused this ambiguity), now made permanent so it survives a fresh configure/clone rather than
+   needing to be redone by hand. (First attempt used the presets-schema `generatorInstance` field
+   directly, which the IDE's own preset-schema validation rejected as unsupported at this file's
+   declared schema version — switched to the equivalent plain `cacheVariables` form, which has no
+   such restriction.)
+2. **Cleared the corrupted cache** (`build/CMakeCache.txt` + `build/CMakeFiles/` — pure generated
+   metadata; did not touch `build/_deps/`'s already-fetched GLFW/ImGui source checkouts or any
+   project source) and reconfigured clean with the now-pinned preset. Rebuilt both Debug and
+   Release from scratch (full rebuild, since the deleted `CMakeFiles/` held all incremental-build
+   dependency tracking) — both succeed, full 12-test regression passes.
+3. Documented both the instance-pin and the cache-corruption recovery steps in
+   `docs/BUILD_WINDOWS.md` §7.4, including a note that alternating between two different tools
+   (e.g. Visual Studio's own "Open Folder" CMake integration and a different editor's CMake
+   plugin) configuring the *same* `build/` directory is the likely way to reproduce this again,
+   with a suggested fix (point them at separate binary directories).
+
+**Still an open question at first:** whether the original F12 report was about this stale/
+mismatched build state, or a genuinely separate issue. Owner then clarified they launch via F5
+in Visual Studio (not `main.cpp` from VS Code) and the crash is real and reproducible for them
+that way — narrowing the search continued in the same conversation turn (see next entry).
+
+### 2026-09-07 — F12 crash: found the real, concrete lead (Steam's Vulkan overlay), not yet confirmed
+
+F12 is not bound to anything in this project's code (only F1/F2 are handled, both project-owned).
+Checked what else on this specific machine could be intercepting it:
+
+- **No RenderDoc** (the other common suspect for a Vulkan-app F12 hotkey) installed.
+- **Confirmed Steam's Vulkan overlay layer IS registered as a global implicit layer** on this
+  machine: `HKLM\SOFTWARE\Khronos\Vulkan\ImplicitLayers` lists
+  `D:\Program Files (x86)\Steam\SteamOverlayVulkanLayer64.json` (plus a second Steam layer,
+  Fossilize, and an Epic Online Services overlay layer — none of this is specific to this
+  project; it's global machine state affecting every Vulkan process). An implicit layer loads
+  into **every** Vulkan application automatically, regardless of whether that app was launched
+  through Steam.
+- **F12 is Steam's default in-game screenshot hotkey.** A custom/hand-rolled Vulkan renderer
+  (this project) crashing when Steam's overlay hooks into it on that hotkey is a well-known,
+  common real-world compatibility category — not unique to this codebase.
+- Read the actual layer manifest (`SteamOverlayVulkanLayer64.json`) to get the **official,
+  documented** per-process opt-out rather than guessing an env var name:
+  `disable_environment: { "DISABLE_VK_LAYER_VALVE_steam_overlay_1": "1" }`.
+
+**Not yet confirmed either way** — owner hadn't tested it before signing off for the day. The
+test (set that env var in Visual Studio's Debugging → Environment field for `tower_vulkan`, F5,
+press F12) is queued as the top item in ▶ Next Step above. Deliberately did **not** disable
+Steam's overlay globally or bake the env var into the project's own build config — that's a
+machine-wide/user preference decision (affects every other game/app using Steam overlay too),
+not something to change unilaterally without the owner first confirming this is actually the
+cause.
 
 ---
 

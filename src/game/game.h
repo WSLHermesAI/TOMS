@@ -94,7 +94,7 @@ public:
     bool inventoryOpen() const { return invOpen; }
     const std::vector<std::string>& inventory() const { return pl.inv; }
     int invSelection() const { return invSel; }
-    bool modalActive() const { return cs.active || inDialogue || invOpen || storeOpen || storeUnlockDlg; }  // any overlay open (combat/dialogue/inventory/store)
+    bool modalActive() const { return cs.active || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_; }  // any overlay open (combat/dialogue/inventory/store/stage-select)
     bool inDialogueFlag() const { return inDialogue; }
     int dialogueSel() const { return dlgSel; }
     int dialogueChoiceCount() const { return (int)dlgChoices.size(); }
@@ -111,6 +111,12 @@ public:
     void storeKey(int key);                // keyboard nav/confirm inside the store UI
     void openStore();                      // open the store overlay
     void closeStore();                     // close the store overlay
+    // Milestone 5: Stage Select hub -- every floor the player has ever reached becomes a
+    // replayable, individually-selectable entry (architecture-doc §10). Purely additive: does
+    // not change the existing boot flow (still auto-loads stage01), only adds an in-game hub.
+    bool stageSelectOpen() const { return stageSelectOpen_; }
+    void openStageSelect();
+    void closeStageSelect();
     Player& player() { return pl; }
     IRenderer* renderer() { return ren; }   // for batch-metric inspection (demo)
     // Derived, read-only classification of "what screen/mode is the game in right now",
@@ -131,6 +137,12 @@ public:
     // any real screen was built on the assumption. Desktop/Vulkan only, dev-only, F2 to toggle.
     void drawStylingSpike();
     void setStylingSpikeVisible(bool v) { stylingSpikeVisible_ = v; }
+    // Milestone 5: transient toast notifications (level-up, daily mission available, ...),
+    // driven by pushNotification() (private, called from the real gameplay events that trigger
+    // one). Always drawn when active, not gated behind a dev toggle like F1/F2.
+    void drawNotifications();
+    // Milestone 5: the Stage Select hub screen content -- call when stageSelectOpen() is true.
+    void drawStageSelect();
 #endif
     // DEBUG: hide individual overlay subsystems to bisect stray-sprite bugs.
     // bit 1 = combat overlay, bit 2 = dialogue overlay, bit 4 = inventory UI.
@@ -218,6 +230,19 @@ private:
     void startMission(const std::string& id);
     void runDialogueAction(const nlohmann::json& action);
     void wireMissionEvents();   // subscribes mission-progress handlers to the global EventBus once
+    // Milestone 5: daily-mission reset check (architecture-doc §8.3), run once per session start
+    // (see loadAssets). Inert today since missionDefs_ is empty until Milestone 8, but pushes a
+    // real notification the moment a tracked daily mission actually rolls to Available.
+    void rollDailyMissions();
+    // Milestone 5: transient toast queue -- {message, remaining_ms}, decremented in update().
+    std::vector<std::pair<std::string, int>> notifications_;
+    void pushNotification(const std::string& msg);
+    // Milestone 5: Stage Select hub state.
+    bool stageSelectOpen_ = false;
+    struct StageInfo { std::string id; std::string name; int index = 0; };
+    std::vector<StageInfo> stageList_;
+    bool stageListLoaded_ = false;
+    void ensureStageListLoaded();
     // M2 styling spike backdrop state. Declared unguarded (unlike drawStylingSpike()/
     // setStylingSpikeVisible(), which are desktop/ImGui-only) so Game::draw() — shared between
     // the desktop and web builds — can call drawStylingSpikeBackdrop() unconditionally; it's a

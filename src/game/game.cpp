@@ -71,8 +71,14 @@ public:
         auto it = missions_.find(missionId);
         return it != missions_.end() && it->second.state == toms::MissionState::Active;
     }
-    // Cross-stage clear tracking is Milestone 5's job (Stage Select hub) -- still fails closed.
-    bool stageCleared(const std::string&) const override { return false; }
+    // Milestone 5: a stage counts as "cleared" once the player has reached it at least once
+    // (see Game::loadStage's meta_.unlockedStages tracking) -- the simplest sensible definition
+    // for this linear-climb game; whether a *replayed* floor should repopulate enemies is a
+    // separate, still-open design question (architecture-doc §5.2, tracked in the roadmap's
+    // Milestone 7 balance checklist), not decided here.
+    bool stageCleared(const std::string& stageId) const override {
+        return std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), stageId) != meta_.unlockedStages.end();
+    }
 private:
     const Player& p_;
     const toms::MetaSaveData& meta_;
@@ -82,6 +88,8 @@ private:
 #include <json.hpp>
 #include <fstream>
 #include <sstream>
+#include <cstdio>
+#include <ctime>
 
 // Robust JSON file load. NOTE: Emscripten's libc++ std::ifstream is unreliable
 // for preloaded files (tellg reports the right size but read/>> return empty), so
@@ -230,6 +238,7 @@ bool Game::loadAssets(const std::string& assetDir) {
 #endif
     g_textGame = this;   // bind TextNode text drawing to this instance
     wireMissionEvents(); // Milestone 4: subscribe mission-progress handlers once per session
+    rollDailyMissions(); // Milestone 5: daily-mission reset check, once per session start
     return true;
 }
 
@@ -274,6 +283,12 @@ void Game::loadStage(const std::string& id) {
     // mapping); now it's also written into persisted story state instead of being purely
     // implicit in "which floor am I standing on."
     toms::advanceStoryBeat(meta_, st.index);
+    // Milestone 5: reaching a floor unlocks it as a Stage Select entry (architecture-doc §10 /
+    // §5.2's stageCleared) -- every floor the player has ever reached becomes individually
+    // re-selectable from the hub. Uses st.id (the parsed, canonical id) rather than the raw
+    // `id` argument, since the two can differ by underscore normalization above.
+    if (std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), st.id) == meta_.unlockedStages.end())
+        meta_.unlockedStages.push_back(st.id);
     // derive total stage count from the stages directory (max index)
     totalStages = 1;
     std::string dir = dataDir + "/../data/stages/";
@@ -690,7 +705,10 @@ void Game::applyItem(const std::string& id) {
     if (eff.contains("exp")) {
         pl.exp += (int)eff["exp"];
         int need = pl.lv * 30;
-        while (pl.exp >= need) { pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30; }
+        while (pl.exp >= need) {
+            pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30;
+            pushNotification("升級了！LV " + std::to_string(pl.lv));
+        }
     }
     if (eff.contains("warp")) {
         std::string dst = it->second.value("warp_to", std::string(""));
@@ -984,6 +1002,38 @@ void Game::openStore() {
 }
 void Game::closeStore() {
     storeOpen = false;
+    audio.play("close_ui");
+}
+
+// Milestone 5: scans data/stages/ once for every stage's id/name/index, so the Stage Select hub
+// can list all of them (locked or not) without re-parsing JSON every frame.
+void Game::ensureStageListLoaded() {
+    if (stageListLoaded_) return;
+    stageListLoaded_ = true;
+    std::string dir = dataDir + "/../data/stages/";
+    if (!std::filesystem::exists(dir)) return;
+    for (auto& e : std::filesystem::directory_iterator(dir)) {
+        try {
+            nlohmann::json j = readJsonFile(e.path().string());
+            if (j.is_null() || !j.contains("id")) continue;
+            StageInfo info;
+            info.id = j.value("id", std::string());
+            info.name = j.value("name", info.id);
+            info.index = j.value("index", 0);
+            if (!info.id.empty()) stageList_.push_back(info);
+        } catch (...) {}
+    }
+    std::sort(stageList_.begin(), stageList_.end(),
+              [](const StageInfo& a, const StageInfo& b) { return a.index < b.index; });
+}
+
+void Game::openStageSelect() {
+    ensureStageListLoaded();
+    stageSelectOpen_ = true;
+    audio.play("confirm_click");
+}
+void Game::closeStageSelect() {
+    stageSelectOpen_ = false;
     audio.play("close_ui");
 }
 
@@ -1345,6 +1395,40 @@ void Game::startMission(const std::string& id) {
 // missionDefs_ is empty until Milestone 8 loads data/missions.json, so these handlers are inert
 // today -- they become live the moment content defines a matching objective, with zero coupling
 // back into Battle/Item code (which only ever calls publish(), unchanged since Milestone 1).
+void Game::pushNotification(const std::string& msg) {
+    notifications_.push_back({msg, 3000});   // 3 seconds on screen
+}
+
+namespace {
+// Milestone 5: local-date rollover for daily missions (architecture-doc §8.1's "local device
+// midnight" default). Not itself unit-tested (wall-clock dependent) -- the pure logic it feeds,
+// toms::rollDailyReset, already is (mission_test.cpp).
+std::string todayDateStringLocal() {
+    std::time_t t = std::time(nullptr);
+    std::tm tmv{};
+#ifdef _WIN32
+    localtime_s(&tmv, &t);
+#else
+    localtime_r(&t, &tmv);
+#endif
+    char buf[16];
+    std::snprintf(buf, sizeof(buf), "%04d-%02d-%02d", tmv.tm_year + 1900, tmv.tm_mon + 1, tmv.tm_mday);
+    return std::string(buf);
+}
+} // namespace
+
+void Game::rollDailyMissions() {
+    std::string today = todayDateStringLocal();
+    for (auto& [id, tracker] : missionTrackers_) {
+        auto it = missionDefs_.find(id);
+        if (it == missionDefs_.end() || it->second.kind != toms::MissionKind::Daily) continue;
+        toms::MissionState before = tracker.state;
+        toms::rollDailyReset(tracker, it->second, today);
+        if (tracker.state == toms::MissionState::Available && before != toms::MissionState::Available)
+            pushNotification("每日任務已重置：" + id);
+    }
+}
+
 void Game::wireMissionEvents() {
     toms::globalEventBus().subscribe<toms::EnemyDefeated>([this](const toms::EnemyDefeated& e) {
         for (auto& [id, tracker] : missionTrackers_) {
@@ -1445,6 +1529,70 @@ void Game::drawStylingSpike() {
     ImGui::Text("clicks: %d", clicks);
     ImGui::End();
 }
+
+// Milestone 5: transient toast notifications, stacked top-right, each with its own fade-free
+// fixed 3-second lifetime (see pushNotification()/update()'s countdown). Purely additive --
+// nothing else reads/depends on this window.
+void Game::drawNotifications() {
+    if (notifications_.empty() || !ren) return;
+    float W = (float)ren->width();
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoCollapse |
+                             ImGuiWindowFlags_AlwaysAutoResize;
+    float y = 90.0f;   // below the HUD stat block and store icon
+    for (size_t i = 0; i < notifications_.size(); i++) {
+        ImGui::SetNextWindowPos(ImVec2(W - 260.0f, y), ImGuiCond_Always);
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.12f, 0.14f, 0.10f, 0.9f));
+        std::string winId = "##toast" + std::to_string(i);
+        ImGui::Begin(winId.c_str(), nullptr, flags);
+        ImGui::TextColored(ImVec4(0.8f, 1.0f, 0.6f, 1.0f), "%s", notifications_[i].first.c_str());
+        ImGui::End();
+        ImGui::PopStyleColor();
+        y += 48.0f;
+    }
+}
+
+// Milestone 5: the Stage Select hub -- every floor the player has ever reached is individually
+// selectable; a locked stage shows why (architecture-doc §10). Tab to open (see main.cpp),
+// blocks background input while open (modalActive() includes stageSelectOpen_).
+void Game::drawStageSelect() {
+    if (!ren) return;
+    float W = (float)ren->width(), H = (float)ren->height();
+    ImGui::SetNextWindowPos(ImVec2(W * 0.5f, H * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(W - 120.0f, H - 100.0f), ImGuiCond_Always);
+    ImGui::Begin("選擇關卡 Stage Select (Tab/Esc to close)", nullptr,
+                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+    ImGui::TextWrapped("Every floor you've reached can be replayed from here. A locked floor "
+                        "shows what's needed to unlock it.");
+    ImGui::Separator();
+    for (size_t i = 0; i < stageList_.size(); i++) {
+        const StageInfo& info = stageList_[i];
+        bool reached = std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), info.id) != meta_.unlockedStages.end();
+        bool locked = false;
+        if (info.index > 1 && i > 0) {
+            const StageInfo& prev = stageList_[i - 1];
+            locked = std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), prev.id) == meta_.unlockedStages.end();
+        }
+        bool isNew = !locked && !reached;
+
+        ImGui::PushID((int)i);
+        ImGui::BeginDisabled(locked);
+        std::string label = std::to_string(info.index) + ". " + info.name;
+        if (reached) label += "  [已到達]";
+        if (isNew)   label += "  [NEW]";
+        if (ImGui::Button(label.c_str(), ImVec2(-1, 0))) {
+            loadStage(info.id);
+            closeStageSelect();
+        }
+        ImGui::EndDisabled();
+        // ImGuiHoveredFlags_AllowWhenDisabled: BeginDisabled() suppresses hover reporting by
+        // default, so the lock-reason tooltip needs this explicit override to show at all.
+        if (locked && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+            ImGui::SetTooltip("先抵達第 %d 層才能選擇這一層", info.index - 1);
+        ImGui::PopID();
+    }
+    ImGui::End();
+}
 #endif
 
 // Draws the backdrop rect for the M2 styling spike (see drawStylingSpike() above). Declared
@@ -1487,7 +1635,10 @@ void Game::resolveCombatRound() {
         pl.gold += cs.enemy.gold; pl.exp += cs.enemy.exp;
         // level up
         int need = pl.lv * 30;
-        while (pl.exp >= need) { pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30; }
+        while (pl.exp >= need) {
+            pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30;
+            pushNotification("升級了！LV " + std::to_string(pl.lv));
+        }
         cs.log = "勝利！獲得 EXP " + std::to_string(cs.enemy.exp);
         // remove monster entity from stage
         for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) e.consumed=true;
@@ -1510,6 +1661,12 @@ void Game::update(int dtMs) {
     // store UI timers (toast / shake) tick down regardless of combat
     if (toastTimer_ > 0) { toastTimer_ -= dtMs; if (toastTimer_ < 0) toastTimer_ = 0; }
     if (shakeTimer_ > 0) { shakeTimer_ -= dtMs; if (shakeTimer_ < 0) shakeTimer_ = 0; }
+    // Milestone 5: notification toasts tick down and expire.
+    for (auto& n : notifications_) n.second -= dtMs;
+    notifications_.erase(
+        std::remove_if(notifications_.begin(), notifications_.end(),
+                        [](const std::pair<std::string,int>& n) { return n.second <= 0; }),
+        notifications_.end());
 }
 
 void Game::saveFrame(const std::string& path) {

@@ -116,6 +116,32 @@ cmake --build build --config Release --target tower_vulkan
 
 如果 F5 不是啟動 `tower_vulkan`，請在 CMake targets 中手動選擇 `tower_vulkan`。
 
+### 7.4 configure 失敗：「could not find specified instance of Visual Studio」
+
+如果機器上同時安裝了多個 Visual Studio 版本（例如 VS 2022 與更新的 VS 2026），CMake 的
+`Visual Studio 17 2022` generator 有時會解析到錯誤/不明確的安裝，導致 configure 直接失敗。
+`CMakePresets.json` 的 `vs2022-x64` preset 已經用 `CMAKE_GENERATOR_INSTANCE` 這個 cache
+variable 把它釘死在 `C:/Program Files/Microsoft Visual Studio/2022/Community` —— 如果你的
+VS 2022 裝在別的路徑，把這個值改掉即可；如果機器上只有一個 Visual Studio，這行是無害的，
+可以留著或刪掉都行。
+
+若改完路徑後 configure 仍然失敗（或看到 `Does not match the generator used previously`
+這種訊息），代表 `build/` 目錄裡的 `CMakeCache.txt` / `CMakeFiles/` 是用「別的
+generator」（例如某個編輯器的 CMake 外掛預設用 Ninja）配置過的、跟目前的 preset 衝突了。
+這種殘留是可以放心刪除的（純粹是產生出來的中介資料，不會動到 `build/_deps/` 底下已經下載
+好的 GLFW／ImGui 原始碼，也不會動到任何專案原始碼）：
+
+```bat
+del build\CMakeCache.txt
+rmdir /s /q build\CMakeFiles
+cmake --preset vs2022-x64
+```
+
+**如果你是用不同工具（例如 VS Code 的 CMake Tools 外掛）跟這份文件描述的流程（Visual Studio
+的 File → Open → Folder）輪流去 configure 同一個 `build/` 目錄**，就很容易重現這個衝突——
+兩邊各自預設不同的 generator，互相蓋掉對方的 cache。建議固定用其中一種方式；如果真的需要
+兩種都用，讓它們各自指到不同的 binary 目錄（例如額外開一個 `-B build-vscode`）。
+
 ## 8. 建議流程
 
 如果你是第一次在 Windows 上建置這個專案，建議順序如下：

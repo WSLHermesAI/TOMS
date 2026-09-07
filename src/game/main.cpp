@@ -134,10 +134,17 @@ int main(int argc, char** argv) {
             // game outright -- previously this unconditionally quit even with a dialog open.
             if (escPressed) {
                 if (g.storeModal()) g.storeKey(27);
+                else if (g.stageSelectOpen()) g.closeStageSelect();
                 else if (g.inventoryOpen()) g.toggleInventory();
                 else if (!g.modalActive()) break;
                 // Combat/dialogue have no defined Escape-to-cancel action; leave it a no-op
                 // rather than quitting the game out from under an active conversation/fight.
+            }
+            // Milestone 5: Tab opens/closes the Stage Select hub (only opens when nothing else
+            // is already modal, matching the existing "B opens the shop" convention below).
+            if (keyPressed(GLFW_KEY_TAB)) {
+                if (g.stageSelectOpen()) g.closeStageSelect();
+                else if (!g.modalActive()) g.openStageSelect();
             }
             if (upPressed)    g.movePlayer(0, -1);
             if (downPressed)  g.movePlayer(0,  1);
@@ -208,6 +215,10 @@ int main(int argc, char** argv) {
             // turn off the frame after F2 is toggled off, instead of staying stuck visible.
             g.setStylingSpikeVisible(false);
             if (showStylingSpike) g.drawStylingSpike();
+            // Milestone 5: notifications are always drawn when any are queued (not a dev
+            // toggle); the Stage Select hub draws only while open (Tab to toggle).
+            g.drawNotifications();
+            if (g.stageSelectOpen()) g.drawStageSelect();
             imguiLayer.endFrame();
             g.draw();
         }
