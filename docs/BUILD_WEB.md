@@ -1,17 +1,15 @@
 # Building the Web (Emscripten) version of Tower of the Sorcerer
 
-The game runs in a browser via **Emscripten**. Two rendering backends are
-supported, both implementing the same `IRenderer` interface
-(`src/render_iface.h`) so the shared game logic is untouched:
+The game runs in a browser via **Emscripten** and now uses a single
+**WebGPU** backend. The shared game logic is untouched through the
+`IRenderer` interface.
 
 | Backend | API | Best for | Files |
 |---------|-----|----------|-------|
-| **WebGL2** (default) | WebGL2 / GLSL ES | Universal browser support | `src/renderer_webgl.cpp` |
 | **WebGPU** | WebGPU (Dawn C API) + WGSL | Closest match to the Vulkan engine; Chrome/Edge | `src/renderer_webgpu.cpp` |
 
-Both backends are **fully isolated** from each other and from the
-Windows/Linux **Vulkan** desktop build. Audio (miniaudio) is excluded from the
-browser builds.
+The browser backend is fully isolated from the Windows/Linux **Vulkan** desktop build.
+Audio (miniaudio) is excluded from the browser build.
 
 ---
 
@@ -36,17 +34,14 @@ browser builds.
 ## 2. One-click build (recommended)
 
 ```bash
-./build_web.sh            # build BOTH WebGL2 and WebGPU
-./build_web.sh webgl      # build only WebGL2  -> web-gl/
-./build_web.sh webgpu     # build only WebGPU  -> web-gpu/
+./build_web.sh            # build WebGPU
 ```
 
 The script sources the Emscripten environment, finds cmake, runs `emcmake`
 for each backend, and copies the runnable artifacts into:
 
 ```
-web-gl/  toms_web.html  .js  .wasm  .data   (WebGL2)
-web-gpu/ toms_web.html  .js  .wasm  .data   (WebGPU)
+web-gpu/  toms_web.html  .js  .wasm  .data   (WebGPU)
 ```
 
 ---
@@ -57,18 +52,13 @@ web-gpu/ toms_web.html  .js  .wasm  .data   (WebGPU)
 source $HOME/opt/emsdk/emsdk_env.sh
 export PATH=$HOME/opt/cmake/bin:$PATH        # if using a no-root cmake
 
-# WebGL2 (default)
+# WebGPU
 emcmake cmake -S . -B build-web -DWEB=ON
 cmake --build build-web -j4
-
-# WebGPU
-emcmake cmake -S . -B build-webgpu -DWEB=ON -DWEB_BACKEND=WebGPU
-cmake --build build-webgpu -j4
 ```
 
-Both emit `web/toms_web.{html,js,wasm,data}` (the last build wins in
-that shared folder). Use `./build_web.sh` to keep WebGL and WebGPU outputs in
-separate folders (`web-gl/`, `web-gpu/`).
+The browser build emits `web/toms_web.{html,js,wasm,data}`. Use `./build_web.sh`
+to keep the output in `web-gpu/`.
 
 ### How the backend is selected
 
@@ -78,17 +68,11 @@ separate folders (`web-gl/`, `web-gpu/`).
 #ifndef __EMSCRIPTEN__
     ren = new Renderer();        // Vulkan (Windows / Linux)
 #else
-  #ifdef WEBGPU
     ren = new WebGPURenderer();  // WebGPU (browser)
-  #else
-    ren = new WebGLRenderer();   // WebGL2 (browser, default)
-  #endif
 #endif
 ```
 
-The CMake switch is `-DWEB_BACKEND=WebGL` (default) or `-DWEB_BACKEND=WebGPU`,
-which adds `--use-port=emdawnwebgpu` (Emscripten 6.0.6 replaced the old
-`-sUSE_WEBGPU=1`) and defines `WEBGPU` for the source.
+The CMake switch is now fixed to WebGPU and defines `WEBGPU` for the source.
 
 ---
 
@@ -101,13 +85,10 @@ python3 -m http.server 8099
 # open http://localhost:8099/web-launch.html
 ```
 
-`web-launch.html` has one-click buttons that open the WebGL2 and WebGPU builds
-in separate tabs. On WSL, forward port 8099 to your Windows browser
+`web-launch.html` opens the WebGPU build in an iframe. On WSL, forward port 8099 to your Windows browser
 (`ssh -N -L 8099:localhost:8099 ...`) or open it in the WSL browser.
 
-- **WebGL2**: works in all current browsers.
-- **WebGPU**: best in Chrome/Edge. If a browser lacks WebGPU, the WebGPU tab
-  logs an adapter/device error in the console.
+- **WebGPU**: best in Chrome/Edge. If a browser lacks WebGPU, the build will fail to start.
 
 ---
 

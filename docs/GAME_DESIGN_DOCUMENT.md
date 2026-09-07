@@ -87,7 +87,7 @@ than an oversight.
 - **Session shape:** designed to be finishable in a single 1–2 hour sitting, or in short 5–10
   minute floor-by-floor sessions since progress is never lost to death.
 - **Platforms (established):** the engine is Vulkan C++, headless-renderable, cross-platform
-  Windows + Linux, with a WebGL/WebGPU browser build (`web/`, `web-gl/`, `web-gpu/`,
+  Windows + Linux, with a WebGPU browser build (`web/`, `web-gpu/`,
   `build_web.sh`) — so **desktop + browser** are both first-class targets already. No touch/mobile
   input layer exists yet (**Proposed**, §16).
 
@@ -430,7 +430,7 @@ stage editor for authoring new floors.
 2. **Balance verification pass** against `FIGHTING_TALKING_DESIGN.md` §4's checklist — hand-trace
    at least one full route to confirm the floor-10 boss is beatable under typical growth, and that
    no `next` dialogue node is dangling.
-3. **Touch/mobile input layer** for the WebGL/WebGPU browser build, given the browser target
+3. **Touch/mobile input layer** for the WebGPU browser build, given the browser target
    already exists but the input model is presumably desktop-first (keyboard/mouse) today.
 4. **Hidden walls** (§3, §11.5) as a genre-authentic difficulty/secret-content lever for any
    floors added past 11 — deliberately deferred rather than cut for good.
