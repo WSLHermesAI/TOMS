@@ -6,6 +6,32 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
+Renderer::ViewportRect Renderer::computeAspectFitViewport(uint32_t deviceW, uint32_t deviceH,
+                                                           uint32_t targetW, uint32_t targetH) {
+    if (deviceW == 0 || deviceH == 0 || targetW == 0 || targetH == 0) return {0, 0, 0, 0};
+    float scaleX = (float)deviceW / (float)targetW;
+    float scaleY = (float)deviceH / (float)targetH;
+    float scale = std::min(scaleX, scaleY);   // uniform scale -- never stretches, never crops
+    float vw = (float)targetW * scale;
+    float vh = (float)targetH * scale;
+    ViewportRect r;
+    r.x = (deviceW - vw) / 2.0f;
+    r.y = (deviceH - vh) / 2.0f;
+    r.width = vw;
+    r.height = vh;
+    return r;
+}
+
+bool Renderer::deviceToDesign(double deviceX, double deviceY, float& outX, float& outY) const {
+    ViewportRect fit = computeAspectFitViewport(W, H, kDesignW, kDesignH);
+    if (fit.width <= 0.0f || fit.height <= 0.0f) return false;
+    double lx = deviceX - fit.x, ly = deviceY - fit.y;
+    if (lx < 0 || ly < 0 || lx > fit.width || ly > fit.height) return false;   // in a letterbox bar
+    outX = (float)(lx / fit.width * kDesignW);
+    outY = (float)(ly / fit.height * kDesignH);
+    return true;
+}
+
 void VulkanContext::init(uint32_t w, uint32_t h) {
     fprintf(stderr, "[dbg] vk init (windowed)\n");
 
@@ -14,10 +40,10 @@ void VulkanContext::init(uint32_t w, uint32_t h) {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     window = glfwCreateWindow((int)w, (int)h, "Tower of the Sorcerer", nullptr, nullptr);
-    // Lock dragged-edge resizing to the game's 16:9 design ratio, so the
-    // viewport always scales uniformly with the window instead of stretching
-    // or needing letterbox bars.
-    glfwSetWindowAspectRatio(window, 16, 9);
+    // No aspect-ratio lock on resize: the renderer now always draws at a fixed design
+    // resolution (Renderer::kDesignW/kDesignH) into a letterboxed/pillarboxed viewport that
+    // fits whatever shape the window is dragged to (see Renderer::computeAspectFitViewport),
+    // so an arbitrary window aspect ratio no longer stretches or distorts game content.
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow* win, int, int) {
         auto* ctx = static_cast<VulkanContext*>(glfwGetWindowUserPointer(win));
@@ -585,7 +611,7 @@ void Renderer::end() {
             {3, 0.18f,0.13f,0.04f},  // talk   (dark amber)
             {4, 0.18f,0.04f,0.04f},  // battle (dark red)
         };
-        uint32_t hw = W/2, hh = H/2;
+        uint32_t hw = kDesignW/2, hh = kDesignH/2;   // quadrant split is in design-resolution space, matching pc0/pc below
         // SINGLE render pass: clear full frame once, then draw each node's quads into its
         // own viewport+scissor (with an xform that scales the node into the quadrant).
         // One pass avoids the multi-pass font-atlas descriptor bug.
@@ -595,11 +621,14 @@ void Renderer::end() {
         VkClearValue cv{}; cv.color={0.04f,0.04f,0.07f,1.0f}; rb.clearValueCount=1; rb.pClearValues=&cv;
         vkCmdBeginRenderPass(cb, &rb, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-        VkViewport vp{}; vp.x=0; vp.y=0; vp.width=(float)W; vp.height=(float)H; vp.minDepth=0; vp.maxDepth=1;
+        // Fixed design resolution + a letterboxed/pillarboxed viewport fit to the actual window
+        // size, so game content never stretches/distorts on resize -- see computeAspectFitViewport.
+        ViewportRect fitSplit = computeAspectFitViewport(W, H, kDesignW, kDesignH);
+        VkViewport vp{}; vp.x=fitSplit.x; vp.y=fitSplit.y; vp.width=fitSplit.width; vp.height=fitSplit.height; vp.minDepth=0; vp.maxDepth=1;
         VkRect2D sc{}; sc.offset={0,0}; sc.extent={W,H};
         vkCmdSetViewport(cb, 0, 1, &vp);
         vkCmdSetScissor(cb, 0, 1, &sc);
-        float pc0[8]={(float)W,(float)H, 0,0, 0,0, 1,1};
+        float pc0[8]={(float)kDesignW,(float)kDesignH, 0,0, 0,0, 1,1};
         vkCmdPushConstants(cb, pipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, 32, pc0);
         VkBuffer bufs[1]={vbuf}; VkDeviceSize off[1]={0};
         vkCmdBindVertexBuffers(cb,0,1,bufs,off);
@@ -609,7 +638,7 @@ void Renderer::end() {
             // xform places the node's full-screen content into its quadrant.
             // No per-quadrant viewport/scissor: the full-screen viewport + xform is enough,
             // and per-quadrant viewport was clipping the offset quadrants to empty.
-            float pc[8]={(float)W,(float)H, 0,0, (float)nx,(float)ny, 0.5f,0.5f};
+            float pc[8]={(float)kDesignW,(float)kDesignH, 0,0, (float)nx,(float)ny, 0.5f,0.5f};
             vkCmdPushConstants(cb, pipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, 32, pc);
             uint32_t globalQI=0;
             int cntPerNode[5]={0,0,0,0,0};
@@ -662,13 +691,18 @@ void Renderer::end() {
     VkClearValue cv{}; cv.color = {0.06f,0.06f,0.1f,1.0f}; rb.clearValueCount = 1; rb.pClearValues = &cv;
     vkCmdBeginRenderPass(cb, &rb, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-    // Dynamic viewport+scissor (enabled in the pipeline) must be set every pass.
-    VkViewport vp{}; vp.x=0; vp.y=0; vp.width=(float)W; vp.height=(float)H; vp.minDepth=0; vp.maxDepth=1;
+    // Dynamic viewport+scissor (enabled in the pipeline) must be set every pass. Game content
+    // is always laid out against the fixed kDesignW x kDesignH resolution (see width()/height()
+    // overrides); the viewport scales+centers that fixed image to fit the actual window,
+    // letterboxed/pillarboxed rather than stretched, so resizing the window never distorts or
+    // reflows the game -- ported from the reference cOpenGLRender::
+    // SetAcceptRationWithGameresolution (see docs/PROGRESS_REPORT.md).
+    ViewportRect fit = computeAspectFitViewport(W, H, kDesignW, kDesignH);
+    VkViewport vp{}; vp.x=fit.x; vp.y=fit.y; vp.width=fit.width; vp.height=fit.height; vp.minDepth=0; vp.maxDepth=1;
     VkRect2D sc{}; sc.offset={0,0}; sc.extent={W,H};
     vkCmdSetViewport(cb, 0, 1, &vp);
     vkCmdSetScissor(cb, 0, 1, &sc);
-    float res[2] = {(float)W, (float)H};
-    float pcData[8] = {(float)W, (float)H, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f};  // res + identity xform
+    float pcData[8] = {(float)kDesignW, (float)kDesignH, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f};  // res + identity xform
     vkCmdPushConstants(cb, pipeLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, 32, pcData);
     VkBuffer bufs[1] = {vbuf}; VkDeviceSize off[1] = {0};
     vkCmdBindVertexBuffers(cb, 0, 1, bufs, off);
@@ -683,6 +717,7 @@ void Renderer::end() {
         vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeLayout, 0, 1, &ds, 0, 0);
         vkCmdDrawIndexed(cb, b.indexCount, 1, b.indexOffset, 0, 0);
     }
+    if (uiOverlayHook) uiOverlayHook(cb);   // Milestone 2: ImGui debug overlay, same render pass
     vkCmdEndRenderPass(cb);
     vkEndCommandBuffer(cb);
 

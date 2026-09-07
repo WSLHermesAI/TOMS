@@ -13,6 +13,12 @@ struct Entity {
     std::string id;     // resolved id (slime, villager, gem_atk, ...)
     std::string raw;    // single char
     bool consumed = false; // items/monsters removed after use
+    // Milestone 4 (Encounter Resolution, see src/engine/encounter.h): optional per-tile override
+    // of the encounter kind ("direct_battle"/"dialogue_gate"/"story_trigger"/"merchant"),
+    // parsed from the stage JSON's optional top-level "encounter_overrides" map (keyed by the
+    // tile's raw char). Empty = no override -> resolveEncounterKind() falls back to a default
+    // derived from `kind`. No shipped stage sets this yet, so it's empty for every entity today.
+    std::string encounterOverride;
 };
 
 struct Stage : public Trackable {
@@ -62,6 +68,11 @@ inline Stage parseStage(const std::string& path) {
     s.up = j["connect"]["up"].is_null() ? "" : (std::string)j["connect"]["up"];
     s.down = j["connect"]["down"].is_null() ? "" : (std::string)j["connect"]["down"];
     s.story_note = j["story_note"];
+    // Milestone 4: optional per-tile encounter-kind overrides, keyed by raw tile char. Absent
+    // from every shipped stage today -- guarded so existing files parse identically to before.
+    const nlohmann::json* encounterOverrides = nullptr;
+    if (j.contains("encounter_overrides") && j["encounter_overrides"].is_object())
+        encounterOverrides = &j["encounter_overrides"];
     // parse entities
     for (int y = 0; y < (int)s.tiles.size(); y++) {
         for (int x = 0; x < (int)s.tiles[y].size(); x++) {
@@ -73,6 +84,8 @@ inline Stage parseStage(const std::string& path) {
             // resolve id: e.g. "monster:slime" -> "slime", "npc:villager" -> "villager", "item:gem_atk" -> "gem_atk"
             auto pos = e.kind.find(':');
             e.id = (pos == std::string::npos) ? e.kind : e.kind.substr(pos+1);
+            if (encounterOverrides && encounterOverrides->contains(e.raw) && (*encounterOverrides)[e.raw].is_string())
+                e.encounterOverride = (*encounterOverrides)[e.raw].get<std::string>();
             s.entities.push_back(e);
         }
     }

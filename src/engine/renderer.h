@@ -14,6 +14,7 @@ extern "C" GLFWAPI VkResult glfwCreateWindowSurface(VkInstance instance, GLFWwin
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <functional>
 #include "vk_util.h"
 #include "render_iface.h"
 #include "texture.h"     // VkTextureRefs (Texture shares the renderer's Vulkan handles)
@@ -88,6 +89,11 @@ public:
     VkBuffer ibuf=VK_NULL_HANDLE; VkDeviceMemory ibufMem=VK_NULL_HANDLE; size_t ibufCap=0;
     uint32_t lastDrawCalls=0;
     size_t   lastQuadCount=0;
+    // Milestone 2: optional hook invoked with the active command buffer, right before
+    // vkCmdEndRenderPass in the normal (non-split) path — lets an owned ImGuiLayer
+    // (imgui_layer.h) record its draw data into the same render-pass instance without this
+    // class needing to know ImGui exists. No-op (std::function empty) unless someone sets it.
+    std::function<void(VkCommandBuffer)> uiOverlayHook;
     Atlas spriteAtlas_, fontAtlas_;
     VkImage   solidImg_   = VK_NULL_HANDLE;
     VkImageView solidView_ = VK_NULL_HANDLE;
@@ -116,8 +122,32 @@ public:
     void setNodeFilter(uint8_t n) override;   // diagnostic: emit only quads of this node
     void end() override;
     void savePNG(const std::string& path) override;
-    uint32_t width()  const override { return W; }
-    uint32_t height() const override { return H; }
+    // Game logic (game.cpp) lays everything out against this FIXED design resolution, not the
+    // live window size -- see kDesignW/kDesignH below. `W`/`H` (the actual device/swapchain
+    // pixel size) are still used internally for the real framebuffer/swapchain, and for scaling
+    // the viewport to fit the window (see computeAspectFitViewport / deviceToDesign).
+    uint32_t width()  const override { return kDesignW; }
+    uint32_t height() const override { return kDesignH; }
+
+    // Fixed logical/design resolution every game-space pixel coordinate (tile size, HUD
+    // positions, dialogue boxes, ...) is authored against -- matches the 1024x768 "buffer
+    // space" convention already established for touch input (see stage.h's handleTouch doc
+    // comment and the web build's toBP()). The actual window can be resized to any size/aspect
+    // ratio; only the viewport (see computeAspectFitViewport) scales to fit it, letterboxed.
+    static constexpr uint32_t kDesignW = 1024, kDesignH = 768;
+
+    struct ViewportRect { float x, y, width, height; };
+    // Computes a centered, aspect-correct viewport rect (in device/window pixels) that fits
+    // kDesignW x kDesignH into a deviceW x deviceH window without stretching -- the same
+    // "letterbox/pillarbox" technique as the reference cOpenGLRender::
+    // SetAcceptRationWithGameresolution this was ported from (see PROGRESS_REPORT.md).
+    static ViewportRect computeAspectFitViewport(uint32_t deviceW, uint32_t deviceH,
+                                                  uint32_t targetW, uint32_t targetH);
+    // Maps a device/window pixel coordinate (e.g. a GLFW cursor position, already converted to
+    // framebuffer pixels) into this renderer's fixed kDesignW x kDesignH logical space,
+    // accounting for the letterboxed viewport. Returns false (outputs left unchanged) if the
+    // point falls in a letterbox bar, outside the actual rendered content.
+    bool deviceToDesign(double deviceX, double deviceY, float& outX, float& outY) const;
 
     void uploadAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h,
                     VkImage& img, VkImageView& view, VkDescriptorSet& set, VkDeviceMemory& mem);

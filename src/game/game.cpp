@@ -21,6 +21,64 @@ namespace toms { TextNode::DrawFn TextNode::Draw = ::toms_TextNodeDraw; }
 #ifndef __EMSCRIPTEN__
 #include "vk_util.h"   // Vulkan helpers — desktop build only
 #endif
+#include "event_bus.h"   // toms::EventBus — see Game::resolveCombatRound / Game::movePlayer
+#include "condition.h"   // toms::evaluate / toms::ConditionContext — see GameConditionContext below
+#include "story_controller.h" // toms::advanceStoryBeat / setStoryFlag / hasStoryFlag
+#include "encounter.h"   // toms::resolveEncounterKind / toms::EncounterKind — see Game::movePlayer
+#ifndef __EMSCRIPTEN__
+#include "imgui.h"       // core ImGui API only -- backend plumbing lives in imgui_layer.h/.cpp
+#endif
+
+// GameConditionContext adapts live Player + MetaSaveData state to the engine-level
+// toms::ConditionContext interface (condition.h), so door/key gating and dialogue `requires`
+// gating both go through the one shared evaluator instead of bespoke checks (Milestone 3 —
+// see docs/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §9). Built from already-public Player
+// fields + a MetaSaveData reference passed in by the Game methods that use it (movePlayer,
+// enterNode), so it needs no friendship/new public API on Game.
+namespace {
+class GameConditionContext : public toms::ConditionContext {
+public:
+    GameConditionContext(const Player& p, const toms::MetaSaveData& meta,
+                          const std::map<std::string, toms::MissionTracker>& missions)
+        : p_(p), meta_(meta), missions_(missions) {}
+    bool storyFlagSet(const std::string& flag) const override { return toms::hasStoryFlag(meta_, flag); }
+    int  storyBeat() const override { return meta_.currentBeat; }
+    bool itemHeld(const std::string& itemId, int count) const override {
+        if (itemId == "key_yellow") return p_.key_yellow >= count;
+        if (itemId == "key_blue")   return p_.key_blue   >= count;
+        if (itemId == "key_red")    return p_.key_red    >= count;
+        int c = 0; for (auto& s : p_.inv) if (s == itemId) c++;
+        return c >= count;
+    }
+    int statValue(const std::string& stat) const override {
+        if (stat == "atk")  return p_.atk;
+        if (stat == "def")  return p_.def;
+        if (stat == "hp")   return p_.hp;
+        if (stat == "lv")   return p_.lv;
+        if (stat == "gold") return p_.gold;
+        if (stat == "exp")  return p_.exp;
+        return 0;
+    }
+    // Milestone 4: real lookups against Game's live mission trackers (closes the stub these two
+    // methods were in Milestone 3 — missionDefs_ may still be empty until Milestone 8 loads
+    // content, but tracker *state* is real the moment a mission is started).
+    bool missionComplete(const std::string& missionId) const override {
+        auto it = missions_.find(missionId);
+        return it != missions_.end() &&
+               (it->second.state == toms::MissionState::Completed || it->second.state == toms::MissionState::Claimed);
+    }
+    bool missionActive(const std::string& missionId) const override {
+        auto it = missions_.find(missionId);
+        return it != missions_.end() && it->second.state == toms::MissionState::Active;
+    }
+    // Cross-stage clear tracking is Milestone 5's job (Stage Select hub) -- still fails closed.
+    bool stageCleared(const std::string&) const override { return false; }
+private:
+    const Player& p_;
+    const toms::MetaSaveData& meta_;
+    const std::map<std::string, toms::MissionTracker>& missions_;
+};
+} // namespace
 #include <json.hpp>
 #include <fstream>
 #include <sstream>
@@ -171,6 +229,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     audio.init(assetDir + "/sfx");
 #endif
     g_textGame = this;   // bind TextNode text drawing to this instance
+    wireMissionEvents(); // Milestone 4: subscribe mission-progress handlers once per session
     return true;
 }
 
@@ -210,6 +269,11 @@ void Game::loadStage(const std::string& id) {
         if (std::filesystem::exists(alt)) path = alt;
     }
     st = parseStage(path);
+    // Milestone 3: entering a floor for the first time advances the main-story beat — this is
+    // exactly what connect.up already does today (GAME_DESIGN_DOCUMENT.md §5's 1:1 floor<->beat
+    // mapping); now it's also written into persisted story state instead of being purely
+    // implicit in "which floor am I standing on."
+    toms::advanceStoryBeat(meta_, st.index);
     // derive total stage count from the stages directory (max index)
     totalStages = 1;
     std::string dir = dataDir + "/../data/stages/";
@@ -417,6 +481,7 @@ void Game::draw() {
         storeBtnRects_.clear();
         drawStoreToast();
         drawGamepad();
+        drawStylingSpikeBackdrop();
         ren->end();
         return;
     }
@@ -435,6 +500,7 @@ void Game::draw() {
         drawText(cs.enemy.name + " HP " + std::to_string(std::max(0,cs.enemyHP)), cx+560, 280, 18, tint);
         drawText(cs.log, cx, 320, 18, tint);
         if (!cs.active) drawText("（按任意鍵繼續）", cx, 350, 16, C4(1,1,0.6f,1));
+        drawStylingSpikeBackdrop();
         ren->end();
         return;
     }
@@ -450,9 +516,10 @@ void Game::draw() {
         drawText(txt, 60, H-180, 20, tint);
         for (size_t i = 0; i < dlgChoices.size(); i++) {
             float ty = H-140 + (float)i*24;
-            if ((int)i == dlgSel) drawText("▶ " + dlgChoices[i].first, 60, ty, 18, C4(1,1.0f,0.6f,1));
-            else                   drawText("  " + dlgChoices[i].first, 60, ty, 18, C4(1,0.9f,0.5f,1));
+            if ((int)i == dlgSel) drawText("▶ " + dlgChoices[i].label, 60, ty, 18, C4(1,1.0f,0.6f,1));
+            else                   drawText("  " + dlgChoices[i].label, 60, ty, 18, C4(1,0.9f,0.5f,1));
         }
+        drawStylingSpikeBackdrop();
         ren->end();
         return;
     }
@@ -461,6 +528,7 @@ void Game::draw() {
     if (showInv) {
         ren->setNode(NODE_CHAR);
         drawInventory();
+        drawStylingSpikeBackdrop();
         ren->end();
         return;
     }
@@ -474,6 +542,7 @@ void Game::draw() {
     drawStoreToast();
     drawGamepad();
 
+    drawStylingSpikeBackdrop();
     ren->end();
 }
 
@@ -1132,10 +1201,17 @@ void Game::movePlayer(int dx, int dy) {
     int nx = pl.x + dx, ny = pl.y + dy;
     char c = st.at(nx, ny);
     if (c == '#') return;
-    // doors need keys
-    if (c == 'y' && pl.key_yellow <= 0) return;
-    if (c == 'b' && pl.key_blue <= 0) return;
-    if (c == 'r' && pl.key_red <= 0) return;
+    // Doors need keys -- gate routed through the shared Condition Evaluator (condition.h) so
+    // this uses the same "can the player do X" engine as dialogue `requires` gating, per
+    // Milestone 3's retrofit. Same outcome as the three bespoke inline checks this replaces:
+    // each door color needs >=1 of its matching key, expressed declaratively instead.
+    static const std::map<char, std::string> kDoorKeyItem = {
+        {'y', "key_yellow"}, {'b', "key_blue"}, {'r', "key_red"}
+    };
+    if (auto doorIt = kDoorKeyItem.find(c); doorIt != kDoorKeyItem.end()) {
+        nlohmann::json req = { {"type", "itemHeld"}, {"itemId", doorIt->second}, {"count", 1} };
+        if (!toms::evaluate(req, GameConditionContext(pl, meta_, missionTrackers_))) return;
+    }
     if (c == 'y') pl.key_yellow--;
     if (c == 'b') pl.key_blue--;
     if (c == 'r') pl.key_red--;
@@ -1150,7 +1226,19 @@ void Game::movePlayer(int dx, int dy) {
                 auto& t = enemyTpl[e.id];
                 en.id=e.id; en.name=t["name"]; en.hp=t["hp"]; en.atk=t["atk"]; en.def=t["def"];
                 en.exp=t["exp"]; en.gold=t["gold"]; en.x=e.x; en.y=e.y; en.boss=t.value("boss",false);
-                startCombat(en);
+                // Milestone 4 (Encounter Resolution): resolveEncounterKind returns DirectBattle
+                // for every monster tile in every shipped stage today (no stage sets
+                // encounter_overrides yet), so this is byte-for-byte the same behavior as
+                // before unless/until a future stage opts a specific tile into dialogue_gate.
+                toms::EncounterKind ek = toms::resolveEncounterKind(e.kind, e.encounterOverride);
+                if (ek == toms::EncounterKind::DialogueGate) {
+                    pendingEncounterEnemy_ = en;
+                    hasPendingEncounter_ = true;
+                    dlgNpc = "enemy_" + e.id;   // so ChoiceMade{dlgNpc,...} carries the right id
+                    startDialogue(dlgNpc);
+                } else {
+                    startCombat(en);
+                }
                 return;
             } else if (e.kind.rfind("item:",0)==0) {
                 // Keys/coins apply immediately (not stored in the 9-grid UI).
@@ -1160,6 +1248,7 @@ void Game::movePlayer(int dx, int dy) {
                 else pl.inv.push_back(e.id);
                 e.consumed = true;
                 st.tiles[e.y][e.x] = '.'; // clear from grid
+                toms::globalEventBus().publish(toms::ItemCollected{e.id, curStage});
             } else if (e.kind.rfind("npc:",0)==0) {
                 // start dialogue
                 dlgNpc = "enemy_"+e.id; // fallback; real npc ids below
@@ -1196,9 +1285,15 @@ void Game::enterNode(const std::string& node) {
     if (!n.is_object() || !n.contains("choices")) return;
     for (auto& c : n["choices"]) {
         if (!c.is_object()) continue;
+        // Milestone 3: a choice's optional `requires` gates whether it appears at all, evaluated
+        // via the shared Condition Evaluator (condition.h). No shipped dialogue file sets this
+        // yet, so `contains("requires")` is false for all of them today -- purely additive.
+        if (c.contains("requires") && !toms::evaluate(c["requires"], GameConditionContext(pl, meta_, missionTrackers_)))
+            continue;
         std::string label = c.contains("label") && c["label"].is_string() ? (std::string)c["label"] : "";
         std::string next  = c.contains("next")  && !c["next"].is_null()  ? (std::string)c["next"]  : "";
-        dlgChoices.push_back({label, next});
+        nlohmann::json action = c.contains("action") ? c["action"] : nlohmann::json();
+        dlgChoices.push_back({label, next, action});
     }
     dlgSel = 0;
 }
@@ -1206,9 +1301,63 @@ void Game::chooseDialogue(int idx) {
     if (!inDialogue) return;
     if (idx < 0 || idx >= (int)dlgChoices.size()) return;
     audio.play("confirm_click");
-    auto& ch = dlgChoices[idx];
-    if (ch.second.empty()) { inDialogue = false; return; }
-    dlgNode = ch.second; enterNode(dlgNode);
+    auto ch = dlgChoices[idx];   // copy: runDialogueAction (e.g. enterBattle) may resize dlgChoices
+    toms::globalEventBus().publish(toms::ChoiceMade{dlgNpc, ch.label});
+    if (!ch.action.is_null()) runDialogueAction(ch.action);
+    if (!inDialogue) return;    // an action (e.g. enterBattle) may have already ended the dialogue
+    if (ch.next.empty()) { inDialogue = false; return; }
+    dlgNode = ch.next; enterNode(dlgNode);
+}
+
+// Milestone 4: executes a dialogue choice's optional `action` verb. Kept as a small, explicit
+// enum-style switch rather than a scripting hook, matching this project's existing preference
+// (see MAIN_BATTLE_SCENE_DESIGN.md §4.4's `talent` enum / dialogue's own `action.give`
+// precedent in the design docs).
+void Game::runDialogueAction(const nlohmann::json& action) {
+    if (!action.is_object()) return;
+    std::string type = action.value("type", std::string());
+    if (type == "give") {
+        std::string itemId = action.value("itemId", std::string());
+        if (!itemId.empty()) applyItem(itemId);
+    } else if (type == "setStoryFlag") {
+        std::string flag = action.value("flag", std::string());
+        if (!flag.empty()) toms::setStoryFlag(meta_, flag);
+    } else if (type == "enterBattle") {
+        // Only meaningful after a dialogue_gate encounter (movePlayer) stashed an enemy.
+        if (hasPendingEncounter_) {
+            inDialogue = false;
+            hasPendingEncounter_ = false;
+            startCombat(pendingEncounterEnemy_);
+        }
+    } else if (type == "startMission") {
+        std::string missionId = action.value("missionId", std::string());
+        if (!missionId.empty()) startMission(missionId);
+    }
+}
+
+void Game::startMission(const std::string& id) {
+    auto& t = missionTrackers_[id];   // creates a fresh (Locked, progress=0) tracker if absent
+    if (t.missionId.empty()) t.missionId = id;
+    t.state = toms::MissionState::Active;
+}
+
+// Subscribes mission-progress handlers to the global EventBus once (called from loadAssets).
+// missionDefs_ is empty until Milestone 8 loads data/missions.json, so these handlers are inert
+// today -- they become live the moment content defines a matching objective, with zero coupling
+// back into Battle/Item code (which only ever calls publish(), unchanged since Milestone 1).
+void Game::wireMissionEvents() {
+    toms::globalEventBus().subscribe<toms::EnemyDefeated>([this](const toms::EnemyDefeated& e) {
+        for (auto& [id, tracker] : missionTrackers_) {
+            auto it = missionDefs_.find(id);
+            if (it != missionDefs_.end()) toms::applyProgressEvent(tracker, it->second, "defeat", e.enemyId);
+        }
+    });
+    toms::globalEventBus().subscribe<toms::ItemCollected>([this](const toms::ItemCollected& e) {
+        for (auto& [id, tracker] : missionTrackers_) {
+            auto it = missionDefs_.find(id);
+            if (it != missionDefs_.end()) toms::applyProgressEvent(tracker, it->second, "collect", e.itemId);
+        }
+    });
 }
 
 void Game::interact() {
@@ -1229,6 +1378,94 @@ void Game::interact() {
             return;
         }
     }
+}
+
+toms::GameState Game::currentState() const {
+    using toms::GameState;
+    if (cs.active) return GameState::DirectBattle;
+    if (inDialogue) return GameState::Dialogue;
+    if (storeOpen || storeUnlockDlg) return GameState::Merchant;
+    return GameState::Explore;   // includes inventory-open, an overlay atop Explore
+}
+
+#ifndef __EMSCRIPTEN__
+void Game::drawDebugOverlay() {
+    ImGui::SetNextWindowSize(ImVec2(340, 0), ImGuiCond_FirstUseEver);
+    ImGui::Begin("TOMS Debug (F1 to toggle)");
+    ImGui::Text("State: %s", toms::toString(currentState()));
+    ImGui::Text("Stage: %s", curStage.c_str());
+    ImGui::Separator();
+    ImGui::TextUnformatted("Player stats (hand-trace bestiary fights live)");
+    ImGui::SliderInt("HP", &pl.hp, 0, pl.maxhp > 0 ? pl.maxhp : 999);
+    ImGui::SliderInt("Max HP", &pl.maxhp, 1, 999);
+    ImGui::SliderInt("ATK", &pl.atk, 0, 99);
+    ImGui::SliderInt("DEF", &pl.def, 0, 99);
+    ImGui::SliderInt("Level", &pl.lv, 1, 20);
+    ImGui::SliderInt("EXP", &pl.exp, 0, 999);
+    ImGui::SliderInt("Gold", &pl.gold, 0, 999);
+    ImGui::Separator();
+    if (ren) {
+        static const char* nodeNames[] = { "All", "Stage", "Char", "Talk", "Battle", "Store" };
+        static int nodeSel = 0;
+        if (ImGui::Combo("Node filter (diagnostic)", &nodeSel, nodeNames, IM_ARRAYSIZE(nodeNames)))
+            ren->setNodeFilter((uint8_t)nodeSel);
+    }
+    ImGui::Separator();
+    ImGui::TextWrapped("Last combat log: %s", cs.log.empty() ? "(none)" : cs.log.c_str());
+    ImGui::Text("Inventory: %d item(s)", (int)pl.inv.size());
+    ImGui::End();
+}
+
+// M2 styling spike: an undecorated, transparent-background ImGui window positioned at the exact
+// same rect as a scene-graph-drawn backdrop (drawStylingSpikeBackdrop(), called from draw()).
+// If this reads as one seamless panel on screen rather than two overlapping things, it confirms
+// the hybrid rendering approach Milestone 5 is about to commit real screens to.
+void Game::drawStylingSpike() {
+    if (!ren) return;
+    float W = (float)ren->width(), H = (float)ren->height();
+    float w = 420, h = 260;
+    float x = (W - w) * 0.5f, y = (H - h) * 0.5f;
+    stylingSpikeRect_[0] = x; stylingSpikeRect_[1] = y; stylingSpikeRect_[2] = w; stylingSpikeRect_[3] = h;
+    stylingSpikeVisible_ = true;
+
+    ImGui::SetNextWindowPos(ImVec2(x, y), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.0f);
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
+                             ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoCollapse;
+    ImGui::Begin("StylingSpike", nullptr, flags);
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.7f, 1.0f), "M2 Styling Spike (F2 to toggle)");
+    ImGui::TextWrapped("This text and button are drawn by ImGui with NoBackground. The panel "
+                        "behind them is drawn by the scene-graph/renderer as a solid-tint quad "
+                        "(standing in for real 9-slice art) at the exact same rect.");
+    static int clicks = 0;
+    if (ImGui::Button("Click me")) clicks++;
+    ImGui::SameLine();
+    ImGui::Text("clicks: %d", clicks);
+    ImGui::End();
+}
+#endif
+
+// Draws the backdrop rect for the M2 styling spike (see drawStylingSpike() above). Declared
+// unguarded so Game::draw() -- shared between the desktop and web builds -- can call it
+// unconditionally: stylingSpikeVisible_ can only ever become true via the desktop-only
+// setStylingSpikeVisible()/drawStylingSpike(), so this is a correct no-op on the web build.
+void Game::drawStylingSpikeBackdrop() {
+    if (!stylingSpikeVisible_ || !ren) return;
+    float x = stylingSpikeRect_[0], y = stylingSpikeRect_[1], w = stylingSpikeRect_[2], h = stylingSpikeRect_[3];
+    // Outer rect (darker "border") + inset inner rect (lighter "fill") -- a cheap two-rect
+    // stand-in for a real 9-slice panel; the point of this spike is the ImGui/scene-graph
+    // alignment technique, not authoring actual 9-slice art.
+    Quad outer; outer.rect[0]=x; outer.rect[1]=y; outer.rect[2]=w; outer.rect[3]=h;
+    outer.uv[0]=0;outer.uv[1]=0;outer.uv[2]=1;outer.uv[3]=1; outer.solid=true;
+    outer.tint[0]=0.15f; outer.tint[1]=0.13f; outer.tint[2]=0.22f; outer.tint[3]=0.96f;
+    ren->drawSprite(outer);
+    float inset = 6.0f;
+    Quad inner; inner.rect[0]=x+inset; inner.rect[1]=y+inset; inner.rect[2]=w-2*inset; inner.rect[3]=h-2*inset;
+    inner.uv[0]=0;inner.uv[1]=0;inner.uv[2]=1;inner.uv[3]=1; inner.solid=true;
+    inner.tint[0]=0.10f; inner.tint[1]=0.09f; inner.tint[2]=0.16f; inner.tint[3]=0.96f;
+    ren->drawSprite(inner);
 }
 
 void Game::startCombat(const EnemyInst& e) {
@@ -1255,6 +1492,7 @@ void Game::resolveCombatRound() {
         // remove monster entity from stage
         for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) e.consumed=true;
         st.tiles[cs.enemy.y][cs.enemy.x] = '.';
+        toms::globalEventBus().publish(toms::EnemyDefeated{cs.enemy.id, curStage});
         if (cs.enemy.boss) { cs.log = "你擊敗了 Vorkath！安穩之星重燃。"; loadStage("stage_11"); }
     } else if (cs.playerHP <= 0) {
         cs.active = false; cs.won = false;

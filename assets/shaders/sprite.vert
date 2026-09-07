@@ -13,7 +13,12 @@ void main() {
     float sx = pc.xform.z, sy = pc.xform.w;
     float x = (aRect.x * sx + pc.xform.x) + aPos.x * (aRect.z * sx);
     float y = (aRect.y * sy + pc.xform.y) + aPos.y * (aRect.w * sy);
-    vec2 ndc = vec2(x / pc.res.x * 2.0 - 1.0, 1.0 - (y / pc.res.y * 2.0));
+    // Vulkan's NDC is Y-down (unlike OpenGL/WebGL's Y-up), and this project's viewports all use
+    // a standard positive height (no VK_KHR_maintenance1 negative-viewport-height trick) -- so,
+    // for pixel y=0 to land at the top of the window and y=res.y at the bottom, this must be
+    // y/res.y*2.0 - 1.0, NOT 1.0 - y/res.y*2.0 (which is the correct formula for OpenGL/WebGL's
+    // opposite Y convention, and was left over from this shader's OpenGL-heritage origin).
+    vec2 ndc = vec2(x / pc.res.x * 2.0 - 1.0, y / pc.res.y * 2.0 - 1.0);
     gl_Position = vec4(ndc, 0.0, 1.0);
     vUV = vec2(aUVrc.x + aPos.x * (aUVrc.z - aUVrc.x),
                aUVrc.y + aPos.y * (aUVrc.w - aUVrc.y));

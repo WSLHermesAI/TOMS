@@ -35,6 +35,19 @@ if(NOT WEB)
     set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(glfw)
 
+    # Dear ImGui (Milestone 2 — see docs/IMPLEMENTATION_ROADMAP.md). Pinned to v1.90.9, the
+    # last release before the Vulkan backend's init API changed shape (RenderPass moved from a
+    # second ImGui_ImplVulkan_Init() argument into the InitInfo struct around v1.91) — keeps
+    # src/engine/imgui_layer.cpp on a well-understood, stable API surface.
+    # Desktop (Vulkan+GLFW) only this milestone; the WebGL2/WebGPU backends are deferred until
+    # the Emscripten toolchain is available to build+test them (see docs/PROGRESS_REPORT.md).
+    FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG        v1.90.9
+    )
+    FetchContent_MakeAvailable(imgui)
+
     # ---- Vulkan ----
     find_package(Vulkan QUIET)
     if(NOT Vulkan_FOUND OR NOT Vulkan_LIBRARIES)
@@ -88,14 +101,22 @@ if(NOT WEB)
     add_executable(tower_vulkan
         ${GAME_DIR}/main.cpp ${GAME_DIR}/game.cpp ${ENGINE_DIR}/renderer.cpp
         ${ENGINE_DIR}/node.cpp ${ENGINE_DIR}/font.cpp
-        ${ENGINE_DIR}/render_iface.h ${GAME_DIR}/Audio.cpp ${ENGINE_DIR}/vk_util.h)
+        ${ENGINE_DIR}/render_iface.h ${GAME_DIR}/Audio.cpp ${ENGINE_DIR}/vk_util.h
+        ${GAME_DIR}/save_system.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/entity_status.cpp
+        ${ENGINE_DIR}/encounter.cpp ${GAME_DIR}/mission_system.cpp
+        ${ENGINE_DIR}/imgui_layer.h ${ENGINE_DIR}/imgui_layer.cpp
+        ${imgui_SOURCE_DIR}/imgui.cpp ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp)
 
     target_include_directories(tower_vulkan PRIVATE
         ${GAME_DIR} ${ENGINE_DIR}
         ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
         ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
         $ENV{GLM_DIR} $ENV{HOME}/opt/glm
-        ${glfw_SOURCE_DIR}/include)
+        ${glfw_SOURCE_DIR}/include
+        ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
     target_link_libraries(tower_vulkan PRIVATE ${Vulkan_LIBRARIES} glfw)
     if(WIN32)
         target_compile_definitions(tower_vulkan PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
@@ -167,7 +188,9 @@ if(WEB)
         ${GAME_DIR}/game.cpp
         ${ENGINE_DIR}/renderer_webgl.cpp
         ${ENGINE_DIR}/font.cpp
-        ${ENGINE_DIR}/node.cpp)
+        ${ENGINE_DIR}/node.cpp
+        ${GAME_DIR}/save_system.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/entity_status.cpp
+        ${ENGINE_DIR}/encounter.cpp ${GAME_DIR}/mission_system.cpp)
     if(WEB_BACKEND STREQUAL "WebGPU")
         target_sources(toms_web PRIVATE ${ENGINE_DIR}/renderer_webgpu.cpp)
         target_compile_definitions(toms_web PRIVATE WEBGPU)
@@ -231,3 +254,44 @@ endif()
 add_executable(font_test ${ENGINE_DIR}/font_test.cpp ${ENGINE_DIR}/font.cpp ${ENGINE_DIR}/object.h)
 target_include_directories(font_test PRIVATE
     ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+
+# ---------------------------------------------------------------------------
+# Milestone 1 scaffolding tests (see docs/IMPLEMENTATION_ROADMAP.md): Game State Machine,
+# Event Bus, Meta/Run save schema. All three are pure-STL / header-plus-json, no
+# Vulkan/GLFW dependency, so they build the same way on every platform.
+# Run: ./state_machine_test  ./event_bus_test  ./save_test
+# ---------------------------------------------------------------------------
+add_executable(state_machine_test ${ENGINE_DIR}/state_machine_test.cpp ${ENGINE_DIR}/game_state.h)
+target_include_directories(state_machine_test PRIVATE ${ENGINE_DIR})
+
+add_executable(event_bus_test ${ENGINE_DIR}/event_bus_test.cpp ${ENGINE_DIR}/event_bus.h)
+target_include_directories(event_bus_test PRIVATE ${ENGINE_DIR})
+
+add_executable(save_test ${GAME_DIR}/save_test.cpp ${GAME_DIR}/save_system.cpp ${GAME_DIR}/save_system.h)
+target_include_directories(save_test PRIVATE ${GAME_DIR} ${JSON_DIR})
+
+# ---------------------------------------------------------------------------
+# Milestone 3 scaffolding tests (see docs/IMPLEMENTATION_ROADMAP.md): Condition/Flag
+# Evaluator, Entity Status System, Story Controller. All pure-STL / header-plus-json, no
+# Vulkan/GLFW dependency.
+# Run: ./condition_eval_test  ./entity_status_test  ./story_controller_test
+# ---------------------------------------------------------------------------
+add_executable(condition_eval_test ${ENGINE_DIR}/condition_eval_test.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/condition.h)
+target_include_directories(condition_eval_test PRIVATE ${ENGINE_DIR} ${JSON_DIR})
+
+add_executable(entity_status_test ${ENGINE_DIR}/entity_status_test.cpp ${ENGINE_DIR}/entity_status.cpp ${ENGINE_DIR}/entity_status.h)
+target_include_directories(entity_status_test PRIVATE ${ENGINE_DIR})
+
+add_executable(story_controller_test ${GAME_DIR}/story_controller_test.cpp ${GAME_DIR}/save_system.cpp ${GAME_DIR}/story_controller.h)
+target_include_directories(story_controller_test PRIVATE ${GAME_DIR} ${JSON_DIR})
+
+# ---------------------------------------------------------------------------
+# Milestone 4 scaffolding tests (see docs/IMPLEMENTATION_ROADMAP.md): Encounter Resolution,
+# Mission System. Pure-STL / header-plus-json, no Vulkan/GLFW dependency.
+# Run: ./encounter_resolve_test  ./mission_test
+# ---------------------------------------------------------------------------
+add_executable(encounter_resolve_test ${ENGINE_DIR}/encounter_resolve_test.cpp ${ENGINE_DIR}/encounter.cpp ${ENGINE_DIR}/encounter.h)
+target_include_directories(encounter_resolve_test PRIVATE ${ENGINE_DIR})
+
+add_executable(mission_test ${GAME_DIR}/mission_test.cpp ${GAME_DIR}/mission_system.cpp ${GAME_DIR}/mission_system.h)
+target_include_directories(mission_test PRIVATE ${GAME_DIR} ${JSON_DIR})

@@ -6,6 +6,9 @@
 #include <json.hpp>
 #include "object.h"      // Trackable base: Player/EnemyInst/CombatState/Game are tracked
 #include "render_iface.h"
+#include "game_state.h"  // toms::GameState — see Game::currentState()
+#include "save_system.h" // toms::MetaSaveData — see Game::meta_ (Milestone 3; disk persistence is Milestone 5's job)
+#include "mission_system.h" // toms::MissionDefinition/MissionTracker — see Game::missionDefs_/missionTrackers_
 #include "stage.h"
 #include "font.h"        // runtime TTF -> atlas (stb_truetype), replaces offline font_atlas.png
 #include <stb_truetype.h> // complete stbtt_fontinfo for ~Font (unique_ptr member)
@@ -32,6 +35,13 @@ struct EnemyInst : public Trackable {
 struct DialogueNode : public Trackable {
     std::string text; std::vector<std::pair<std::string,std::string>> choices;
     TOMS_OBJECT(DialogueNode)
+};
+
+// Milestone 4: a parsed dialogue choice, now carrying its optional `action` alongside the
+// existing label/next — see Game::enterNode / Game::chooseDialogue / Game::runDialogueAction.
+struct DialogueChoice {
+    std::string label, next;
+    nlohmann::json action;   // null if the choice has no action (the common case today)
 };
 
 struct CombatState : public Trackable {
@@ -103,6 +113,25 @@ public:
     void closeStore();                     // close the store overlay
     Player& player() { return pl; }
     IRenderer* renderer() { return ren; }   // for batch-metric inspection (demo)
+    // Derived, read-only classification of "what screen/mode is the game in right now",
+    // computed from the existing modal flags — see docs/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md
+    // §4 and docs/IMPLEMENTATION_ROADMAP.md Milestone 1. Does not change control flow; the
+    // states with no real screen behind them yet (StageSelect, Paused, ...) are simply never
+    // returned today.
+    toms::GameState currentState() const;
+#ifndef __EMSCRIPTEN__
+    // Milestone 2 dev-only debug overlay (Dear ImGui: stat sliders, node-filter toggle, last
+    // combat log line). Desktop/Vulkan only — the caller (main.cpp) decides when to show it;
+    // this just builds the ImGui:: window content for the current frame.
+    void drawDebugOverlay();
+    // Milestone 2 styling spike (a prerequisite the roadmap flags before Milestone 5 commits real
+    // screens to the hybrid UI approach): proves a transparent, undecorated ImGui window laid
+    // exactly over a scene-graph-drawn backdrop rect reads as one panel, not two overlapping
+    // things — see docs/PROGRESS_REPORT.md's M2 log entry for why this needed checking before
+    // any real screen was built on the assumption. Desktop/Vulkan only, dev-only, F2 to toggle.
+    void drawStylingSpike();
+    void setStylingSpikeVisible(bool v) { stylingSpikeVisible_ = v; }
+#endif
     // DEBUG: hide individual overlay subsystems to bisect stray-sprite bugs.
     // bit 1 = combat overlay, bit 2 = dialogue overlay, bit 4 = inventory UI.
     int hideMask = 0;
@@ -163,12 +192,40 @@ private:
     std::string dlgNpc;
     std::string dlgNode = "root";
     nlohmann::json dlgData;
-    std::vector<std::pair<std::string,std::string>> dlgChoices; // label,next
+    std::vector<DialogueChoice> dlgChoices;
     // enemy templates
     std::map<std::string, nlohmann::json> enemyTpl;
     // current stage id
     std::string curStage;
     std::string dataDir;
+    // Milestone 3: story flags + main-story beat, evaluated by GameConditionContext (game.cpp)
+    // for door/key gating and dialogue `requires` gating. In-memory only this milestone — reading
+    // and writing this to an actual save file on disk is Milestone 5's job (Stage Select's
+    // "Continue"), per docs/IMPLEMENTATION_ROADMAP.md.
+    toms::MetaSaveData meta_;
+    // Milestone 4 (Encounter Resolution): when a monster tile resolves to EncounterKind::
+    // DialogueGate, the enemy instance is stashed here so a later `action.enterBattle` dialogue
+    // choice knows what to fight. hasPendingEncounter_ guards against acting on a stale/unset
+    // EnemyInst (whose numeric fields are otherwise uninitialized garbage, matching CombatState's
+    // own `enemy` member convention — see startCombat()).
+    EnemyInst pendingEncounterEnemy_;
+    bool hasPendingEncounter_ = false;
+    // Milestone 4 (Mission System): missionDefs_ is intentionally empty until Milestone 8 loads
+    // data/missions.json -- the tracker map is still real, live state (a mission "started" by id
+    // is meaningful even before content defines what that id means).
+    std::map<std::string, toms::MissionDefinition> missionDefs_;
+    std::map<std::string, toms::MissionTracker> missionTrackers_;
+    void startMission(const std::string& id);
+    void runDialogueAction(const nlohmann::json& action);
+    void wireMissionEvents();   // subscribes mission-progress handlers to the global EventBus once
+    // M2 styling spike backdrop state. Declared unguarded (unlike drawStylingSpike()/
+    // setStylingSpikeVisible(), which are desktop/ImGui-only) so Game::draw() — shared between
+    // the desktop and web builds — can call drawStylingSpikeBackdrop() unconditionally; it's a
+    // correct no-op on web, where stylingSpikeVisible_ can never be set true (nothing calls
+    // setStylingSpikeVisible() there).
+    bool stylingSpikeVisible_ = false;
+    float stylingSpikeRect_[4] = {0, 0, 0, 0};   // x,y,w,h — set by drawStylingSpike(), read by the backdrop
+    void drawStylingSpikeBackdrop();
     int totalStages = 10;   // highest stage index (derived from data/stages at loadStage)
     // store system state
     std::vector<StoreItemDef> storeItems_;
