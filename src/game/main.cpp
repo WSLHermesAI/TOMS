@@ -151,8 +151,25 @@ int main(int argc, char** argv) {
             if (leftPressed)  g.movePlayer(-1, 0);
             if (rightPressed) g.movePlayer( 1, 0);
             if (enterPressed || spacePressed) {
-                if (g.inDialogueFlag()) g.chooseDialogue(g.dialogueSel());
+                // Milestone 7 bugfix: the post-victory "(按任意鍵繼續)" pause had no keyboard
+                // dismiss path at all -- only handleTouch() (mouse/touch) ever cleared cs.won.
+                // Must be checked before g.interact(), since interact() itself now returns early
+                // once modalActive() covers cs.won (see game.h).
+                if (g.combatWon()) g.dismissVictory();
+                else if (g.inDialogueFlag()) g.chooseDialogue(g.dialogueSel());
                 else g.interact();
+            }
+            // Milestone 6: the Power Bar minigame needs real HOLD-DURATION input, not just the
+            // discrete "was this key pressed this frame" edge that keyPressed() gives -- reuses
+            // the same keyDown() level-state query already defined above for that. Harmless to
+            // compute/call unconditionally outside combat: battleChargeStart()/Release() are
+            // both no-ops whenever combat isn't active (see their declarations in game.h).
+            {
+                bool actionHeldNow = keyDown(GLFW_KEY_ENTER) || keyDown(GLFW_KEY_SPACE);
+                static bool actionWasHeld = false;
+                if (actionHeldNow && !actionWasHeld) g.battleChargeStart();
+                if (!actionHeldNow && actionWasHeld) g.battleChargeRelease();
+                actionWasHeld = actionHeldNow;
             }
             if (keyPressed(GLFW_KEY_I)) g.toggleInventory();
             // Store: B opens the shop (only when no other modal is up)
@@ -209,6 +226,7 @@ int main(int argc, char** argv) {
                 if (!r->beginFrame()) continue;
             }
             imguiLayer.newFrame();
+            g.applyUiSettings();   // font scale etc. -- must apply before anything else draws this frame
             if (showDebugOverlay) g.drawDebugOverlay();
             // setStylingSpikeVisible(false) first: drawStylingSpike() flips it back to true when
             // called, so this is what makes the backdrop (drawn later, inside g.draw()) actually

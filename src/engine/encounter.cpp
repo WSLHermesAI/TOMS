@@ -20,7 +20,7 @@ bool tryParseEncounterKind(const std::string& s, EncounterKind& out) {
     return false;
 }
 
-EncounterKind fromString(const std::string& s) {
+EncounterKind encounterKindFromString(const std::string& s) {
     EncounterKind k;
     return tryParseEncounterKind(s, k) ? k : EncounterKind::DirectBattle;
 }

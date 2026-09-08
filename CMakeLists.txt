@@ -104,6 +104,7 @@ if(NOT WEB)
         ${ENGINE_DIR}/render_iface.h ${GAME_DIR}/Audio.cpp ${ENGINE_DIR}/vk_util.h
         ${GAME_DIR}/save_system.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/entity_status.cpp
         ${ENGINE_DIR}/encounter.cpp ${GAME_DIR}/mission_system.cpp
+        ${ENGINE_DIR}/power_bar.cpp ${GAME_DIR}/equipment_system.cpp
         ${ENGINE_DIR}/imgui_layer.h ${ENGINE_DIR}/imgui_layer.cpp
         ${imgui_SOURCE_DIR}/imgui.cpp ${imgui_SOURCE_DIR}/imgui_draw.cpp
         ${imgui_SOURCE_DIR}/imgui_tables.cpp ${imgui_SOURCE_DIR}/imgui_widgets.cpp
@@ -190,7 +191,8 @@ if(WEB)
         ${ENGINE_DIR}/font.cpp
         ${ENGINE_DIR}/node.cpp
         ${GAME_DIR}/save_system.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/entity_status.cpp
-        ${ENGINE_DIR}/encounter.cpp ${GAME_DIR}/mission_system.cpp)
+        ${ENGINE_DIR}/encounter.cpp ${GAME_DIR}/mission_system.cpp
+        ${ENGINE_DIR}/power_bar.cpp ${GAME_DIR}/equipment_system.cpp)
     if(WEB_BACKEND STREQUAL "WebGPU")
         target_sources(toms_web PRIVATE ${ENGINE_DIR}/renderer_webgpu.cpp)
         target_compile_definitions(toms_web PRIVATE WEBGPU)
@@ -295,3 +297,14 @@ target_include_directories(encounter_resolve_test PRIVATE ${ENGINE_DIR})
 
 add_executable(mission_test ${GAME_DIR}/mission_test.cpp ${GAME_DIR}/mission_system.cpp ${GAME_DIR}/mission_system.h)
 target_include_directories(mission_test PRIVATE ${GAME_DIR} ${JSON_DIR})
+
+# ---------------------------------------------------------------------------
+# Milestone 6 scaffolding tests (see docs/IMPLEMENTATION_ROADMAP.md): Power Bar minigame math,
+# Equipment System. Pure-STL / header-plus-json, no Vulkan/GLFW dependency.
+# Run: ./power_bar_test  ./equipment_test
+# ---------------------------------------------------------------------------
+add_executable(power_bar_test ${ENGINE_DIR}/power_bar_test.cpp ${ENGINE_DIR}/power_bar.cpp ${ENGINE_DIR}/power_bar.h)
+target_include_directories(power_bar_test PRIVATE ${ENGINE_DIR})
+
+add_executable(equipment_test ${GAME_DIR}/equipment_test.cpp ${GAME_DIR}/equipment_system.cpp ${ENGINE_DIR}/power_bar.cpp)
+target_include_directories(equipment_test PRIVATE ${GAME_DIR} ${ENGINE_DIR} ${JSON_DIR})

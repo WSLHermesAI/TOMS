@@ -24,7 +24,7 @@ const char* toString(EncounterKind k);
 // Returns false (out left unchanged) if `s` doesn't match a known encounter-kind string.
 bool tryParseEncounterKind(const std::string& s, EncounterKind& out);
 // Convenience: unrecognized/empty input defaults to DirectBattle.
-EncounterKind fromString(const std::string& s);
+EncounterKind encounterKindFromString(const std::string& s);
 
 // Resolves the effective encounter kind for an entity on a stage tile:
 //  - a recognized `overrideStr` (from the stage JSON's optional per-tile "encounter_overrides"

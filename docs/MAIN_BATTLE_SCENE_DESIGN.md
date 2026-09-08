@@ -223,15 +223,30 @@ This example is exactly the kind of hand-trace that should be run against every 
 
 ## 7. Balance checklist additions
 
-Extends `GAME_DESIGN_DOCUMENT.md` §17:
+Extends `GAME_DESIGN_DOCUMENT.md` §17. Status as of Milestone 7's balance pass
+(`docs/IMPLEMENTATION_ROADMAP.md`):
 
-- [ ] Every bestiary entry hand-traced at P≈44% (the "old-parity" release point) still matches
-      pre-Power-Bar balance expectations.
+- [x] Every bestiary entry hand-traced at P≈44% (the "old-parity" release point) still matches
+      pre-Power-Bar balance expectations. ✅ Done computationally (not by hand) — simulated the
+      exact `combat.json` formula across every enemy on every floor of a full climb; see
+      `GAME_DESIGN_DOCUMENT.md` §7's "Balance verification pass" for the numbers. Comfortable
+      margins everywhere for a thorough player, including the boss.
 - [ ] Power-build gear (War Hammer/Guardian Plate) doesn't trivialize floors 1–3 so completely
-      that the Power Bar timing skill-check becomes irrelevant early game.
+      that the Power Bar timing skill-check becomes irrelevant early game. **Not yet testable** —
+      the Equipment System's math is built and wired into live combat (Milestone 6), but no
+      `data/equipment.json` content exists yet (Milestone 8), so there's no real War Hammer/
+      Guardian Plate to hand-trace against. Re-open once that content is authored.
 - [ ] Speed-build gear (Twin Daggers/Swift Leather) has a real payoff by the boss fight (floor 10)
-      to justify its lower floor-1 stat bonus.
-- [ ] Berserker Charm's "Red deals 0" downside is actually felt in at least one realistic route
-      (i.e. a player who picks it isn't just strictly better off ignoring the drawback).
-- [ ] `data/equipment.json` schema validated against a real stage/inventory implementation before
-      being treated as final.
+      to justify its lower floor-1 stat bonus. Same blocker as above — no equipment content yet.
+- [ ] Berserker Charm's "Red deals 0" downside is actually felt in at least one realistic route.
+      Same blocker — the talent effect itself is implemented and tested
+      (`talentZerosRedZoneAttacks()`, `equipment_test.cpp`), but there's no Berserker Charm item
+      or route to test it against yet.
+- [x] `data/equipment.json` schema validated against a real stage/inventory implementation before
+      being treated as final. **Partially done**: the schema is implemented
+      (`src/game/equipment_system.h/.cpp`'s `EquipmentDefinition`/`EquippedSet`) and *is* wired
+      into live combat (`resolveAttackRelease`/`resolveDefenseRelease` call
+      `effectiveAttackBar`/`effectiveDefenseBar`/`effectiveMaxMult` every round) — but there's
+      still no real `data/equipment.json` file or in-game equip UI, so it's validated against the
+      combat *code path*, not yet against real content or a player-facing inventory flow. Full
+      closure needs Milestone 8.

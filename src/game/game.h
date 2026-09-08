@@ -9,6 +9,9 @@
 #include "game_state.h"  // toms::GameState — see Game::currentState()
 #include "save_system.h" // toms::MetaSaveData — see Game::meta_ (Milestone 3; disk persistence is Milestone 5's job)
 #include "mission_system.h" // toms::MissionDefinition/MissionTracker — see Game::missionDefs_/missionTrackers_
+#include "power_bar.h"       // toms::PowerBarParams/simulatePosition/... — see CombatState's Phase
+#include "equipment_system.h" // toms::EquippedSet/EquipmentDefinition — see Game::equipped_/equipmentDefs_
+#include "entity_status.h"   // toms::EntityStatus/entityStatusKey — see Game::entityStatus_
 #include "stage.h"
 #include "font.h"        // runtime TTF -> atlas (stb_truetype), replaces offline font_atlas.png
 #include <stb_truetype.h> // complete stbtt_fontinfo for ~Font (unique_ptr member)
@@ -44,14 +47,28 @@ struct DialogueChoice {
     nlohmann::json action;   // null if the choice has no action (the common case today)
 };
 
+// Milestone 6: a battle round is now player-timed via the Attack/Defense Power Bar
+// (FIGHT_SCENE_DESIGN.md §6's round pseudocode), not an automatic 700ms timer. One round:
+// AwaitAttackPress -> AttackCharging -> AttackResultPause -> (enemy still alive?)
+// AwaitDefensePress -> DefenseCharging -> DefenseResultPause -> back to AwaitAttackPress.
+// If the Attack Bar's hit kills the enemy, the round ends there (no Defense Bar that round) --
+// matching "the enemy retaliates after every hit except the killing blow."
 struct CombatState : public Trackable {
+    enum class Phase { AwaitAttackPress, AttackCharging, AttackResultPause, AwaitDefensePress, DefenseCharging, DefenseResultPause };
     EnemyInst enemy;
     int playerHP, enemyHP;
     int round = 0;
     bool active = false;
-    int ticks = 0;            // ms accumulator
     std::string log;          // last exchange text
     bool won = false;
+
+    Phase phase = Phase::AwaitAttackPress;
+    bool charging = false;     // true while the action button is actively held for the current bar
+    int chargeMs = 0;          // accumulated hold duration for the current charge (ms)
+    float lastPosition = 0.0f; // marker position at the last release (for rendering the frozen bar)
+    float lastPower = 0.0f;    // marker power % at the last release (for the result text)
+    int lastDamage = 0;        // damage dealt/taken at the last release (for the result text)
+    int resultPauseMs = 0;     // countdown after a release before the next bar starts (readability beat)
     TOMS_OBJECT(CombatState)
 };
 
@@ -86,6 +103,12 @@ public:
     void startDialogue(const std::string& npc);   // open an NPC dialogue (public for tests)
     void enterNode(const std::string& node);      // jump to a dialogue node (public for tests)
     void startCombat(const EnemyInst& e);
+    // Milestone 6: press-and-hold Power Bar input (see CombatState::Phase). The caller (main.cpp)
+    // calls these on the action button's press/release edges; both are safe no-ops when combat
+    // isn't active or a charge isn't currently allowed (e.g. mid-ResultPause), so main.cpp does
+    // not need to track battle phase itself.
+    void battleChargeStart();
+    void battleChargeRelease();
     // inventory UI (9-grid, extendable)
     void toggleInventory();
     void invMoveSel(int dx, int dy);        // move the selection cursor
@@ -94,7 +117,16 @@ public:
     bool inventoryOpen() const { return invOpen; }
     const std::vector<std::string>& inventory() const { return pl.inv; }
     int invSelection() const { return invSel; }
-    bool modalActive() const { return cs.active || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_; }  // any overlay open (combat/dialogue/inventory/store/stage-select)
+    // Milestone 7 bugfix: cs.won (the post-victory "press any key to continue" pause) must count
+    // as a modal overlay too, not just cs.active -- otherwise the world underneath (movement,
+    // NPC interact, the store icon, Tab/B shortcuts) keeps responding to input while the victory
+    // screen is still up. See docs/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
+    bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_; }  // any overlay open (combat/dialogue/inventory/store/stage-select)
+    bool combatWon() const { return cs.won; }
+    // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
+    // keyboard path (Enter/Space) had no equivalent before this fix, so "press any key to
+    // continue" never actually worked from a keyboard.
+    void dismissVictory() { cs.won = false; cs.log.clear(); }
     bool inDialogueFlag() const { return inDialogue; }
     int dialogueSel() const { return dlgSel; }
     int dialogueChoiceCount() const { return (int)dlgChoices.size(); }
@@ -130,6 +162,9 @@ public:
     // combat log line). Desktop/Vulkan only — the caller (main.cpp) decides when to show it;
     // this just builds the ImGui:: window content for the current frame.
     void drawDebugOverlay();
+    // UI settings: applies uiFontScale_ to ImGui's global font scale. Call once per frame,
+    // right after ImGui's NewFrame(), so it's in effect before anything else draws that frame.
+    void applyUiSettings();
     // Milestone 2 styling spike (a prerequisite the roadmap flags before Milestone 5 commits real
     // screens to the hybrid UI approach): proves a transparent, undecorated ImGui window laid
     // exactly over a scene-graph-drawn backdrop rect reads as one panel, not two overlapping
@@ -160,7 +195,15 @@ private:
     void spriteUV(int layer, float uv[4]) const;
     int spriteLayer(const std::string& id) const; // index into sprite grid
     void applyItem(const std::string& id);
-    void resolveCombatRound();
+    // Milestone 6: Power Bar round resolution (replaces the old auto-attack resolveCombatRound).
+    // resolveAttackRelease/resolveDefenseRelease apply a released bar's damage and call
+    // finishCombatWin/finishCombatLose when that ends the fight; drawPowerBar renders the
+    // currently-active bar (live while charging, frozen at lastPosition during ResultPause).
+    void resolveAttackRelease(float heldSeconds);
+    void resolveDefenseRelease(float heldSeconds);
+    void finishCombatWin();
+    void finishCombatLose();
+    void drawPowerBar(float x, float y, float w, float h, const toms::PowerBarParams& bar, float position);
     void drawInventory();
     int spriteForItem(const std::string& id) const;
     std::string itemName(const std::string& id) const;
@@ -215,6 +258,21 @@ private:
     // and writing this to an actual save file on disk is Milestone 5's job (Stage Select's
     // "Continue"), per docs/IMPLEMENTATION_ROADMAP.md.
     toms::MetaSaveData meta_;
+    // Milestone 7: per-tile enemy/item status (Milestone 3's Entity Status System, wired in for
+    // real here) -- a defeated monster or collected item stays cleared when the floor is
+    // reloaded (stairs, or Milestone 5's Stage Select hub), matching the owner's decision that
+    // cleared floors don't repopulate. Keyed by entityStatusKey(stageId, x, y); in-memory only
+    // for now, same "persistence is later work" caveat as meta_ and missionTrackers_. Doors are
+    // deliberately NOT covered by this (a separate, pre-existing, still-open behavior: reusing
+    // an already-unlocked door tile currently consumes another key every time) -- out of scope
+    // for this fix, which is scoped to what the owner's decision was actually about.
+    std::map<std::string, std::string> entityStatus_;
+    // Milestone 6: equipment layer over the Power Bar/damage formulas (MAIN_BATTLE_SCENE_DESIGN.md
+    // §4). equipmentDefs_ is intentionally empty until Milestone 8 loads data/equipment.json --
+    // equipped_ starts fully empty (nothing equipped), so effectiveAttackBar/effectiveDefenseBar/
+    // effectiveMaxMult all fall back to baseline geometry/2.0x until real items exist to equip.
+    toms::EquippedSet equipped_;
+    std::map<std::string, toms::EquipmentDefinition> equipmentDefs_;
     // Milestone 4 (Encounter Resolution): when a monster tile resolves to EncounterKind::
     // DialogueGate, the enemy instance is stashed here so a later `action.enterBattle` dialogue
     // choice knows what to fight. hasPendingEncounter_ guards against acting on a stale/unset
@@ -237,6 +295,12 @@ private:
     // Milestone 5: transient toast queue -- {message, remaining_ms}, decremented in update().
     std::vector<std::pair<std::string, int>> notifications_;
     void pushNotification(const std::string& msg);
+    // UI setting: multiplier applied to ImGui's base font size (applyUiSettings(), declared
+    // above under the desktop/ImGui guard). Default is bigger than ImGui's own 1.0x default,
+    // since the un-scaled size read as too small against this game's other text. Adjustable via
+    // the slider in drawStageSelect(). In-memory only for now -- no settings file exists yet, so
+    // this resets to default each launch (same "persistence is later work" pattern as meta_).
+    float uiFontScale_ = 1.5f;
     // Milestone 5: Stage Select hub state.
     bool stageSelectOpen_ = false;
     struct StageInfo { std::string id; std::string name; int index = 0; };

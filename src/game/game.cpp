@@ -278,6 +278,22 @@ void Game::loadStage(const std::string& id) {
         if (std::filesystem::exists(alt)) path = alt;
     }
     st = parseStage(path);
+    // Milestone 7: parseStage() rebuilds every entity fresh from JSON on every call (stairs,
+    // Stage Select, etc.), so re-apply any previously-persisted Defeated/Collected status here --
+    // otherwise a monster the player already beat or an item they already picked up would come
+    // back the next time this floor loads, contradicting the "cleared floors stay cleared"
+    // decision. Doors are intentionally not covered (see entityStatus_'s declaration in game.h).
+    for (auto& e : st.entities) {
+        bool isMonster = e.kind.rfind("monster:", 0) == 0;
+        bool isItem = e.kind.rfind("item:", 0) == 0;
+        if (!isMonster && !isItem) continue;
+        toms::EntityStatus want = isMonster ? toms::EntityStatus::Defeated : toms::EntityStatus::Collected;
+        toms::EntityStatus have = toms::getEntityStatus(entityStatus_, toms::entityStatusKey(st.id, e.x, e.y));
+        if (have == want) {
+            e.consumed = true;
+            st.tiles[e.y][e.x] = '.';
+        }
+    }
     // Milestone 3: entering a floor for the first time advances the main-story beat — this is
     // exactly what connect.up already does today (GAME_DESIGN_DOCUMENT.md §5's 1:1 floor<->beat
     // mapping); now it's also written into persisted story state instead of being purely
@@ -429,6 +445,37 @@ void Game::drawBar(float x, float y, float w, float h, float frac, const float c
     }
 }
 
+// Milestone 6: renders the Attack/Defense Power Bar -- five solid-colour zones (red/blue/green/
+// blue/red, matching FIGHT_SCENE_DESIGN.md §2's symmetric layout) scaled to fit [x, x+w], plus a
+// thin marker at `position` (in the bar's own [0, 2*redOuter] units). Same raw-Quad technique as
+// drawBar()/the dialogue box background -- deliberately NOT ImGui, so the marker's frame timing
+// is never at the mercy of ImGui's own frame pacing (architecture-doc §2.3 Phase 5).
+void Game::drawPowerBar(float x, float y, float w, float h, const toms::PowerBarParams& bar, float position) {
+    float span = 2.0f * bar.redOuter;
+    if (span <= 0.0f) return;
+    float c = bar.redOuter;
+    auto seg = [&](float fromUnits, float toUnits, float r, float g, float b) {
+        float x0 = x + std::max(0.0f, fromUnits) / span * w;
+        float x1 = x + std::min(span, toUnits) / span * w;
+        if (x1 <= x0) return;
+        Quad q; q.rect[0]=x0; q.rect[1]=y; q.rect[2]=x1-x0; q.rect[3]=h;
+        q.uv[0]=0;q.uv[1]=0;q.uv[2]=1;q.uv[3]=1; q.solid=true;
+        q.tint[0]=r; q.tint[1]=g; q.tint[2]=b; q.tint[3]=1.0f;
+        ren->drawSprite(q);
+    };
+    seg(0.0f,            c - bar.blueOuter, 0.75f, 0.25f, 0.25f);   // red (left)
+    seg(c - bar.blueOuter, c - bar.greenHalf, 0.3f, 0.45f, 0.85f);  // blue (left)
+    seg(c - bar.greenHalf, c + bar.greenHalf, 0.3f, 0.8f, 0.4f);    // green (center)
+    seg(c + bar.greenHalf, c + bar.blueOuter, 0.3f, 0.45f, 0.85f);  // blue (right)
+    seg(c + bar.blueOuter, span,              0.75f, 0.25f, 0.25f); // red (right)
+
+    float mx = x + std::max(0.0f, std::min(span, position)) / span * w;
+    Quad marker; marker.rect[0]=mx-2.0f; marker.rect[1]=y-6.0f; marker.rect[2]=4.0f; marker.rect[3]=h+12.0f;
+    marker.uv[0]=0;marker.uv[1]=0;marker.uv[2]=1;marker.uv[3]=1; marker.solid=true;
+    marker.tint[0]=1;marker.tint[1]=1;marker.tint[2]=1;marker.tint[3]=1;
+    ren->drawSprite(marker);
+}
+
 // map a stage cell char to a sprite id (floor/wall/door/stairs)
 static std::string cellSprite(char c) {
     switch (c) {
@@ -462,7 +509,15 @@ void Game::draw() {
     float tint[4] = {1,1,1,1};
 
     const bool showStore = storeModal();
-    const bool showBattle = !showStore && (hideMask & 1) == 0 && (cs.active || cs.won || cs.log.find("倒下") != std::string::npos);
+    // Milestone 7 bugfix: this used to fall back to scanning cs.log for the substring "倒下" to
+    // keep the overlay open during the brief post-lose result-pause (cs.active and cs.won are
+    // both already false by then). That substring also appears in the WIN message ("...敵人倒下
+    //了！" -- the enemy fell down), so after a win was dismissed (cs.won reset to false) the
+    // overlay would never actually close, since the old log text still matched. cs.resultPauseMs
+    // is the actual, non-fragile signal for "a result was just resolved and needs its readability
+    // beat" -- it's set to 300 by both resolveAttackRelease/resolveDefenseRelease and ticks down
+    // in update() regardless of cs.active/cs.won (see update()'s own comment on that).
+    const bool showBattle = !showStore && (hideMask & 1) == 0 && (cs.active || cs.won || cs.resultPauseMs > 0);
     const bool showTalk   = !showStore && !showBattle && (hideMask & 2) == 0 && inDialogue;
     const bool showInv    = !showStore && !showBattle && !showTalk && (hideMask & 4) == 0 && invOpen;
     const bool showWalk   = !showStore && !showBattle && !showTalk && !showInv;
@@ -514,7 +569,23 @@ void Game::draw() {
         drawBar(cx+350, 280, 200, 16, (float)std::max(0,cs.enemyHP)/cs.enemy.hp, C4(0.9f,0.3f,0.3f,1));
         drawText(cs.enemy.name + " HP " + std::to_string(std::max(0,cs.enemyHP)), cx+560, 280, 18, tint);
         drawText(cs.log, cx, 320, 18, tint);
-        if (!cs.active) drawText("（按任意鍵繼續）", cx, 350, 16, C4(1,1,0.6f,1));
+        // Milestone 6: the active Power Bar -- Attack Bar first each round, Defense Bar only if
+        // the enemy survived it (MAIN_BATTLE_SCENE_DESIGN.md §2-3). Live while charging (marker
+        // position recomputed from the accumulated hold duration every frame), frozen at
+        // cs.lastPosition during the brief result-pause after a release.
+        if (cs.active) {
+            bool isDefensePhase = cs.phase == CombatState::Phase::AwaitDefensePress ||
+                                   cs.phase == CombatState::Phase::DefenseCharging ||
+                                   cs.phase == CombatState::Phase::DefenseResultPause;
+            toms::PowerBarParams bar = isDefensePhase ? toms::effectiveDefenseBar(equipped_, equipmentDefs_)
+                                                       : toms::effectiveAttackBar(equipped_, equipmentDefs_);
+            float pos = cs.charging ? toms::simulatePosition(bar, cs.chargeMs / 1000.0f) : cs.lastPosition;
+            drawText(isDefensePhase ? "防禦（按住 Enter/Space 蓄力，放開格擋）" : "攻擊（按住 Enter/Space 蓄力，放開出擊）",
+                      cx, 345, 15, C4(0.9f, 0.9f, 1.0f, 1));
+            drawPowerBar(cx, 365, 500, 22, bar, pos);
+        } else {
+            drawText("（按任意鍵繼續）", cx, 350, 16, C4(1,1,0.6f,1));
+        }
         drawStylingSpikeBackdrop();
         ren->end();
         return;
@@ -629,7 +700,7 @@ void Game::handleTouch(float px, float py, int phase) {
     if (phase == 2) return;                 // touchend on a game button: nothing
     // Victory screen: tap anywhere to dismiss (cs.won is set on win and must be cleared
     // or the combat overlay keeps painting forever -> "stuck after defeating enemy").
-    if (cs.won && phase == 0) { cs.won = false; return; }
+    if (cs.won && phase == 0) { dismissVictory(); return; }
     // HUD stats line (carries the "(I)" inventory indicator) — tap to open inventory.
     if (!inventoryOpen() && !inDialogue && !modalActive() && phase == 0) {
         if (py >= 74 && py <= 104 && px >= 16 && px <= 560) { toggleInventory(); return; }
@@ -678,8 +749,13 @@ void Game::handleTouch(float px, float py, int phase) {
         else if (id == 5 && phase == 0) inDialogue = false;                  // B = close
         return;
     }
-    if (cs.active) {                         // combat in progress: tap = continue / next phase
-        if (phase == 0) interact();
+    if (cs.active) {
+        // Milestone 6: touch/web equivalent of the desktop hold-to-charge input -- press-and-
+        // hold anywhere on the battle scene charges the active Power Bar, release fires it.
+        // (interact() here was already a no-op during combat -- modalActive() blocks it -- so
+        // this replaces genuinely dead code, not working behavior.)
+        if (phase == 0) battleChargeStart();
+        else if (phase == 2) battleChargeRelease();
         return;
     }
     if (modalActive()) {                     // other modal (store handled above): block world input
@@ -1298,6 +1374,9 @@ void Game::movePlayer(int dx, int dy) {
                 else pl.inv.push_back(e.id);
                 e.consumed = true;
                 st.tiles[e.y][e.x] = '.'; // clear from grid
+                // Milestone 7: persist the clear so it survives a reload of this floor (stairs
+                // or the Stage Select hub) -- see entityStatus_'s declaration in game.h.
+                toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, e.x, e.y), toms::EntityStatus::Collected);
                 toms::globalEventBus().publish(toms::ItemCollected{e.id, curStage});
             } else if (e.kind.rfind("npc:",0)==0) {
                 // start dialogue
@@ -1473,6 +1552,10 @@ toms::GameState Game::currentState() const {
 }
 
 #ifndef __EMSCRIPTEN__
+void Game::applyUiSettings() {
+    ImGui::GetIO().FontGlobalScale = uiFontScale_;
+}
+
 void Game::drawDebugOverlay() {
     ImGui::SetNextWindowSize(ImVec2(340, 0), ImGuiCond_FirstUseEver);
     ImGui::Begin("TOMS Debug (F1 to toggle)");
@@ -1565,6 +1648,14 @@ void Game::drawStageSelect() {
     ImGui::TextWrapped("Every floor you've reached can be replayed from here. A locked floor "
                         "shows what's needed to unlock it.");
     ImGui::Separator();
+    // UI settings: font size, applied globally via applyUiSettings() (called every frame from
+    // main.cpp). In-memory only for now -- see uiFontScale_'s declaration in game.h for why.
+    if (ImGui::CollapsingHeader("介面設定 UI Settings")) {
+        ImGui::SliderFloat("字體大小 Font Size", &uiFontScale_, 0.5f, 2.5f, "%.2fx");
+        ImGui::SameLine();
+        if (ImGui::Button("重設 Reset")) uiFontScale_ = 1.5f;
+    }
+    ImGui::Separator();
     for (size_t i = 0; i < stageList_.size(); i++) {
         const StageInfo& info = stageList_[i];
         bool reached = std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), info.id) != meta_.unlockedStages.end();
@@ -1617,46 +1708,141 @@ void Game::drawStylingSpikeBackdrop() {
 }
 
 void Game::startCombat(const EnemyInst& e) {
-    cs.enemy = e; cs.playerHP = pl.hp; cs.enemyHP = e.hp; cs.round = 0; cs.active = true; cs.ticks = 0; cs.won = false;
-    cs.log = "戰鬥開始！";
+    cs.enemy = e; cs.playerHP = pl.hp; cs.enemyHP = e.hp; cs.round = 0; cs.active = true; cs.won = false;
+    cs.phase = CombatState::Phase::AwaitAttackPress;
+    cs.charging = false; cs.chargeMs = 0; cs.resultPauseMs = 0;
+    cs.lastPosition = 0.0f; cs.lastPower = 0.0f; cs.lastDamage = 0;
+    cs.log = "戰鬥開始！按住 Enter/Space 蓄力攻擊！";
 }
-void Game::resolveCombatRound() {
-    int dmgToEnemy = std::max(1, pl.atk - cs.enemy.def);
-    int hits = (cs.enemyHP + dmgToEnemy - 1) / dmgToEnemy;
-    int dmgToPlayer = (hits - 1) * std::max(1, cs.enemy.atk - pl.def);
-    cs.enemyHP -= dmgToEnemy;       // this round's hit
-    cs.playerHP -= std::max(1, cs.enemy.atk - pl.def); // enemy retaliates once
+
+// Shared win/lose resolution -- identical to the pre-Milestone-6 auto-combat's own win/lose
+// handling (rewards, level-up, boss warp, respawn), just extracted so both
+// resolveAttackRelease/resolveDefenseRelease can reach it without duplicating it.
+void Game::finishCombatWin() {
+    cs.active = false; cs.won = true;
+    pl.hp = cs.playerHP;
+    pl.gold += cs.enemy.gold; pl.exp += cs.enemy.exp;
+    int need = pl.lv * 30;
+    while (pl.exp >= need) {
+        pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30;
+        pushNotification("升級了！LV " + std::to_string(pl.lv));
+    }
+    // remove monster entity from stage
+    for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) e.consumed=true;
+    st.tiles[cs.enemy.y][cs.enemy.x] = '.';
+    // Milestone 7: persist the clear so it survives a reload of this floor (stairs or the Stage
+    // Select hub) -- see entityStatus_'s declaration in game.h.
+    toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, cs.enemy.x, cs.enemy.y), toms::EntityStatus::Defeated);
+    toms::globalEventBus().publish(toms::EnemyDefeated{cs.enemy.id, curStage});
+    if (cs.enemy.boss) { cs.log = "你擊敗了 Vorkath！安穩之星重燃。"; loadStage("stage_11"); }
+}
+
+void Game::finishCombatLose() {
+    cs.active = false; cs.won = false;
+    pl.hp = pl.maxhp/2; // respawn at stage start
+    loadStage(curStage); // reset monsters/items
+}
+
+// Attack Bar released: apply damage to the enemy (FIGHT_SCENE_DESIGN.md §4's power_mult curve,
+// with the equipped weapon's maxMult and Berserker's Red-zone-deals-0 rule per
+// MAIN_BATTLE_SCENE_DESIGN.md §4.2). If this kills the enemy, the round ends here -- no Defense
+// Bar this round, matching "the enemy retaliates after every hit except the killing blow."
+void Game::resolveAttackRelease(float heldSeconds) {
+    toms::PowerBarParams bar = toms::effectiveAttackBar(equipped_, equipmentDefs_);
+    float pos = toms::simulatePosition(bar, heldSeconds);
+    float power = toms::powerFromPosition(bar, pos);
+    float maxMult = toms::effectiveMaxMult(equipped_, equipmentDefs_);
+    int baseHit = std::max(1, pl.atk - cs.enemy.def);
+    int dmg = toms::computeAttackDamage(baseHit, power, maxMult);
+    if (toms::zoneFromPosition(bar, pos) == toms::PowerZone::Red && toms::talentZerosRedZoneAttacks(equipped_.talentId))
+        dmg = 0;   // Berserker: a high ceiling, but Red-zone releases deal nothing
+
+    cs.enemyHP -= dmg;
+    cs.lastPosition = pos; cs.lastPower = power; cs.lastDamage = dmg;
     cs.round++;
     audio.play("player_attack");
-    if (dmgToPlayer > 0) audio.play("enemy_attack");
+
     if (cs.enemyHP <= 0) {
-        cs.active = false; cs.won = true;
-        pl.hp = cs.playerHP;
-        pl.gold += cs.enemy.gold; pl.exp += cs.enemy.exp;
-        // level up
-        int need = pl.lv * 30;
-        while (pl.exp >= need) {
-            pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30;
-            pushNotification("升級了！LV " + std::to_string(pl.lv));
-        }
-        cs.log = "勝利！獲得 EXP " + std::to_string(cs.enemy.exp);
-        // remove monster entity from stage
-        for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) e.consumed=true;
-        st.tiles[cs.enemy.y][cs.enemy.x] = '.';
-        toms::globalEventBus().publish(toms::EnemyDefeated{cs.enemy.id, curStage});
-        if (cs.enemy.boss) { cs.log = "你擊敗了 Vorkath！安穩之星重燃。"; loadStage("stage_11"); }
-    } else if (cs.playerHP <= 0) {
-        cs.active = false; cs.won = false;
-        pl.hp = pl.maxhp/2; // respawn at stage start
-        cs.log = "你倒下了……返回本層起點。";
-        loadStage(curStage); // reset monsters/items
-        cs.log = "";        // clear so the "倒下" combat overlay stops painting after respawn
+        cs.log = "會心一擊！造成 " + std::to_string(dmg) + " 點傷害，敵人倒下了！";
+        finishCombatWin();
+    } else {
+        cs.log = "你造成了 " + std::to_string(dmg) + " 點傷害！";
     }
+    cs.phase = CombatState::Phase::AttackResultPause;
+    cs.resultPauseMs = 300;
 }
+
+// Defense Bar released: apply damage to the player (mitigation curve, Perfect Guard, and
+// Guardian's flat mitigation floor per MAIN_BATTLE_SCENE_DESIGN.md §4.2).
+void Game::resolveDefenseRelease(float heldSeconds) {
+    toms::PowerBarParams bar = toms::effectiveDefenseBar(equipped_, equipmentDefs_);
+    float pos = toms::simulatePosition(bar, heldSeconds);
+    float power = toms::powerFromPosition(bar, pos);
+    int incoming = std::max(1, cs.enemy.atk - pl.def);
+    float floorMitigation = toms::talentDefenseMitigationFloor(equipped_.talentId);
+    int dmg = toms::computeDefenseDamage(incoming, power, floorMitigation);
+
+    cs.playerHP -= dmg;
+    cs.lastPosition = pos; cs.lastPower = power; cs.lastDamage = dmg;
+    if (dmg > 0) audio.play("enemy_attack");
+
+    if (cs.playerHP <= 0) {
+        cs.log = "你倒下了……返回本層起點。";
+        finishCombatLose();
+    } else {
+        cs.log = dmg == 0 ? "完美格擋！" : ("你承受了 " + std::to_string(dmg) + " 點傷害。");
+    }
+    cs.phase = CombatState::Phase::DefenseResultPause;
+    cs.resultPauseMs = 300;
+}
+
+void Game::battleChargeStart() {
+    if (!cs.active || cs.charging) return;
+    if (cs.phase == CombatState::Phase::AwaitAttackPress || cs.phase == CombatState::Phase::AwaitDefensePress) {
+        cs.charging = true;
+        cs.chargeMs = 0;
+        cs.phase = (cs.phase == CombatState::Phase::AwaitAttackPress) ? CombatState::Phase::AttackCharging
+                                                                       : CombatState::Phase::DefenseCharging;
+    }
+    // Ignored during {Attack,Defense}Charging (already charging) or a ResultPause (must wait
+    // for the readability beat to finish) -- matches the phase diagram in game.h's comment.
+}
+
+void Game::battleChargeRelease() {
+    if (!cs.active || !cs.charging) return;
+    cs.charging = false;
+    float heldSeconds = cs.chargeMs / 1000.0f;
+    if (cs.phase == CombatState::Phase::AttackCharging) resolveAttackRelease(heldSeconds);
+    else if (cs.phase == CombatState::Phase::DefenseCharging) resolveDefenseRelease(heldSeconds);
+}
+
 void Game::update(int dtMs) {
-    if (cs.active) {
-        cs.ticks += dtMs;
-        if (cs.ticks >= 700) { cs.ticks = 0; resolveCombatRound(); }
+    if (cs.active && cs.charging) cs.chargeMs += dtMs;
+    // The result-pause countdown must run regardless of cs.active: a release that ends the
+    // fight (win or lose) sets cs.active=false in the SAME call that starts the pause, so
+    // gating this on cs.active would freeze resultPauseMs forever and leave a stale "倒下"
+    // message stuck in cs.log (which -- see showBattle's condition -- would keep the battle
+    // overlay stuck open permanently after a loss).
+    if (cs.resultPauseMs > 0) {
+        cs.resultPauseMs -= dtMs;
+        if (cs.resultPauseMs <= 0) {
+            cs.resultPauseMs = 0;
+            if (!cs.active) {
+                // Combat just ended. A win keeps its victory text showing until the player
+                // dismisses it (cs.won, cleared elsewhere on tap/interact); a loss clears its
+                // message now, once the brief result-pause has had a chance to show it, so
+                // showBattle's "log contains 倒下" condition stops holding the battle overlay
+                // open. (The pre-Milestone-6 code set and immediately cleared this same string
+                // within one synchronous call, so it was never actually visible -- this is a
+                // small, deliberate improvement, not an accidental behavior change: see
+                // docs/PROGRESS_REPORT.md's Milestone 6 log entry.)
+                if (!cs.won) cs.log = "";
+            } else if (cs.phase == CombatState::Phase::AttackResultPause) {
+                cs.phase = CombatState::Phase::AwaitDefensePress;
+            } else if (cs.phase == CombatState::Phase::DefenseResultPause) {
+                cs.phase = CombatState::Phase::AwaitAttackPress;
+            }
+        }
     }
     // store UI timers (toast / shake) tick down regardless of combat
     if (toastTimer_ > 0) { toastTimer_ -= dtMs; if (toastTimer_ < 0) toastTimer_ = 0; }

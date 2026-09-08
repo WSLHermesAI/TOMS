@@ -25,10 +25,10 @@ int main() {
     CHECK(!tryParseEncounterKind("bogus_typo", dummy), "tryParseEncounterKind rejects an unrecognized string");
     CHECK(!tryParseEncounterKind("", dummy), "tryParseEncounterKind rejects an empty string");
 
-    // 3. fromString defaults unrecognized/empty input to DirectBattle.
-    CHECK(fromString("bogus_typo") == EncounterKind::DirectBattle, "fromString defaults garbage to DirectBattle");
-    CHECK(fromString("") == EncounterKind::DirectBattle, "fromString defaults empty to DirectBattle");
-    CHECK(fromString("merchant") == EncounterKind::Merchant, "fromString parses a valid string correctly");
+    // 3. encounterKindFromString defaults unrecognized/empty input to DirectBattle.
+    CHECK(encounterKindFromString("bogus_typo") == EncounterKind::DirectBattle, "encounterKindFromString defaults garbage to DirectBattle");
+    CHECK(encounterKindFromString("") == EncounterKind::DirectBattle, "encounterKindFromString defaults empty to DirectBattle");
+    CHECK(encounterKindFromString("merchant") == EncounterKind::Merchant, "encounterKindFromString parses a valid string correctly");
 
     // 4. resolveEncounterKind: kind-derived defaults with no override (this is the state of
     //    every shipped stage today — no data/stages/*.json file sets encounter_overrides).

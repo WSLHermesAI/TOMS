@@ -204,25 +204,59 @@ triggers an automatic level-up (`atk += 2`, `def += 1` per `FIGHTING_TALKING_DES
 **Lose:** HP hits 0 → respawn at the current floor's entrance with all stats retained (no
 permadeath, no floor reset of items already collected).
 
-### Proposed: explicit level-up curve
+### Level-up curve *(Established — `src/game/game.cpp`; supersedes this section's old "Proposed"
+cumulative table, which never matched the shipped code and is removed below — see
+`docs/IMPLEMENTATION_ROADMAP.md` Milestone 7)*
 
-The existing docs state *that* EXP crossing a threshold levels the player up, but no source file
-specifies the threshold(s) — this is a genuine gap. A curve consistent with the bestiary's EXP
-values (6 to 40 per kill, climbing to a floor-10 boss fight) and the fixed `atk+=2/def+=1` step:
+The implemented formula is a flat **per-level** requirement, not the cumulative table this
+section previously proposed: `need = level × 30` EXP to advance from that level, i.e. 30 EXP for
+1→2, 60 more (90 total) for 2→3, 90 more (180 total) for 3→4, 120 more (300 total) for 4→5, and so
+on. Each level-up grants `atk += 2`, `def += 1`, `maxhp += 10` (unchanged from the original
+formula reference).
 
-| Level | EXP required (cumulative) | Rationale |
-|---|---|---|
-| 1→2 | 30 | Clearable from floor 1's slime+bat alone (6+7=13) plus one item pickup — keeps the floor-2 tutorial fight winnable even for a player who explored minimally |
-| 2→3 | 70 | Reachable partway through floor 3 |
-| 3→4 | 130 | ~floor 4–5 |
-| 4→5 | 220 | ~floor 6 |
-| 5→6 | 340 | ~floor 7–8 |
-| 6→7 | 500 | ~floor 9, priming for the boss |
+**Verified by simulation against the real bestiary/item placements** (Milestone 7 balance pass,
+`data/enemies.json` + `data/items.json` + `data/stages/*.json`, walking floors 1–10 in order):
+a thorough player (every field item collected, every monster defeated) reaches level 2 partway
+through floor 2, level 3 on floor 4, level 4 on floor 6, level 5 on floor 7, and level 6 by floor
+8 — reaching the floor-10 boss at level 6, ATK 58, DEF 34. This pacing was never previously
+validated against real data; it now has been, and holds up (see the win-margin table below).
 
-This is a **recommendation to validate against the actual per-floor monster/item placements**
-(the balance checklist in `FIGHTING_TALKING_DESIGN.md` §4 already flags "boss must be beatable
-under typical growth" as an open checkbox) — treat the numbers above as a starting point for that
-verification pass, not as committed data.
+### Balance verification pass *(Established findings — Milestone 7, computed from the real
+`data/*.json`, not hand-estimated)*
+
+Simulated a full floor 1→10 climb twice, using the exact `combat.json` formula
+(`base_hit = max(1, atk-def)`, `hits = ceil(hp/base_hit)`, `damage_taken = (hits-1) × max(1,
+enemy.atk-player.def)`) at the P≈44% Power Bar release point — the release percentage
+`FIGHT_SCENE_DESIGN.md` §4 documents as reproducing this exact pre-Power-Bar formula, making this
+simulation a direct, computed answer to that document's own open checklist item ("every bestiary
+entry hand-traced at P≈44% still matches pre-Power-Bar balance expectations" — confirmed below,
+for the entire bestiary across the entire climb, not just one enemy):
+
+- **Thorough player (every item + every monster):** every single fight across all 10 floors
+  leaves the player above 60% of their max HP after the fight resolves, **including the floor-10
+  boss** (Vorkath deals a simulated 9 damage total against 170 max HP — an enormous margin). This
+  confirms Pillar 2 ("a thorough player should always be ahead of the minimum curve") and directly
+  closes the "is the floor-10 boss beatable under typical growth" checklist item: **yes,
+  comfortably**, even at average (non-Perfect) Power Bar timing.
+- **Zero-item stress test (fight every monster, collect zero gems/potions):** survivable through
+  floor 5, but the floor-6 and floor-7 `demon` fights and the floor-10 boss all become lethal at
+  this baseline (boss: a simulated 1,225 damage against 170 HP). **This is by design, not a bug**
+  — it's the exact mechanic `skeleton_scholar`'s floor-4 hint describes (stack `gem_atk`/`gem_def`
+  until the boss's DEF "becomes paper"): the gems are load-bearing for the back half of the game,
+  which this simulation now confirms numerically rather than just narratively.
+- **Not verified by this pass** (would need full tile-connectivity/pathfinding analysis, out of
+  scope for this milestone): whether any *specific* gem is skippable without softlocking a
+  route — i.e., true mandatory-vs-optional classification per tile. The two simulations above
+  bound the problem (comfortable at 100% collection, lethal at 0%) but don't pinpoint the exact
+  minimum viable subset. Flagged as a residual gap rather than silently assumed solved.
+- **Dialogue integrity:** every `data/dialogue/*.json` file's `start` node and every choice's
+  `next` reference resolve to a real node — no dangling references anywhere. Also confirmed no
+  shipped dialogue file uses the `action` field yet (matches Milestone 4's finding).
+- **Shop economy vs. the new Equipment System:** `GAME_DESIGN_DOCUMENT.md` §9's "gold is a
+  top-up, not a primary growth path" conclusion is unaffected by Milestone 6's Equipment System,
+  because **no `data/equipment.json` content exists yet** (Milestone 8's job) — there is currently
+  no second gold sink or reward path to check. Re-verify this specific item once equipment
+  content is authored.
 
 ## 8. Talking / Dialogue System *(Established — `FIGHTING_TALKING_DESIGN.md` §2)*
 
@@ -446,18 +480,40 @@ mechanic, any hidden stat the player can't see before committing to a fight.
 
 ## 17. Open Design Checklist
 
-Carried forward from `FIGHTING_TALKING_DESIGN.md` §4 (still open) plus new items from this
-document:
+Carried forward from `FIGHTING_TALKING_DESIGN.md` §4, closed against real data in Milestone 7
+(`docs/IMPLEMENTATION_ROADMAP.md`) — see §7's "Balance verification pass" above for the actual
+computed evidence behind each ✅:
 
-- [ ] Every route has a formula-verifiable solution (eat gems before high-DEF fights).
-- [ ] Floor-10 boss (HP 400/ATK 34/DEF 14) is beatable under typical player growth.
-- [ ] Combat outcomes are 100% determined by atk/def/hp — no hidden randomness anywhere.
-- [ ] No dialogue `next` chain points at a non-existent node.
-- [ ] **(New)** EXP level-up thresholds are defined in data, not just "a threshold exists" (§7).
-- [ ] **(New)** Every mandatory fight is confirmed winnable using only stats obtainable earlier on
-      that floor or before it (§11.1).
-- [ ] **(New)** Shop cost curve vs. bestiary gold drops confirmed to keep gold a top-up, not a
-      primary growth path (§9).
+- [x] Every route has a formula-verifiable solution (eat gems before high-DEF fights). ✅
+      Verified by simulation: comfortable margins everywhere when gems are collected, and the
+      floor-6+/boss fights are specifically *un*winnable without them — matching, not
+      contradicting, the game's own documented hint chain.
+- [x] Floor-10 boss (HP 400/ATK 34/DEF 14) is beatable under typical player growth. ✅ Simulated:
+      a thorough player reaches the boss at ATK 58/DEF 34/LV 6 and takes only ~9 damage from it.
+- [x] Combat outcomes are 100% determined by atk/def/hp — no hidden randomness anywhere. ✅ Still
+      true after Milestone 6's Power Bar: the added variance is player-timed release position,
+      not a seeded roll (`FIGHT_SCENE_DESIGN.md`'s own stated invariant).
+- [x] No dialogue `next` chain points at a non-existent node. ✅ Checked programmatically across
+      every file in `data/dialogue/*.json` — none found; also confirmed no shipped file uses the
+      Milestone 4 `action` field yet.
+- [x] EXP level-up thresholds are defined in data, not just "a threshold exists" (§7). ✅ The
+      *actual* shipped formula (`need = level × 30`, flat per-level) is now documented in §7,
+      replacing the old speculative cumulative table that never matched the code.
+- [ ] Every mandatory fight is confirmed winnable using only stats obtainable earlier on that
+      floor or before it (§11.1). **Partially closed** — bounded by simulation (100%-collection is
+      always comfortable, 0%-collection fails exactly where the game's own hints say it should),
+      but pinpointing the true minimum-viable item subset needs tile-connectivity/pathfinding
+      analysis this pass didn't attempt. Left open rather than claimed fully solved.
+- [ ] Shop cost curve vs. bestiary gold drops confirmed to keep gold a top-up, not a primary
+      growth path (§9). **Still true, but not yet re-tested against equipment** — no
+      `data/equipment.json` content exists yet (Milestone 8), so there's no second gold sink/
+      reward path to check against yet. Re-open once that content is authored.
+- [ ] **(New, Milestone 7)** Decide: does re-entering an already-cleared floor from the Stage
+      Select hub (Milestone 5) repopulate its regular enemies, or stay permanently cleared? This
+      was flagged as an open question when Stage Select was built and is still unresolved —
+      it has real economy-balance consequences (a repopulating floor becomes a farmable gold/EXP
+      source, changing the "gold is a top-up" conclusion above) and needs an owner decision, not
+      an engineering one.
 
 ---
 

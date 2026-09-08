@@ -206,9 +206,11 @@ function fightRound(player, enemy):
 - [ ] Is a flat `0.2×–2.0×` multiplier range appropriate for every enemy, or should the boss
       (Vorkath, `data/enemies.json`) narrow the window (harsher Vmax/accel) to keep the final
       fight tense even at high player stats?
-- [ ] Should losing (HP → 0) still return the player to the floor entrance with stats retained,
-      per the existing `combat.json: "lose"` rule? (Recommend: yes, unchanged — this system changes
-      *how* a round resolves, not the death/retry contract.)
+- [x] Should losing (HP → 0) still return the player to the floor entrance with stats retained,
+      per the existing `combat.json: "lose"` rule? **Resolved, implemented as recommended**:
+      Milestone 6's `Game::finishCombatLose()` calls the exact same `loadStage(curStage)` respawn
+      the pre-Power-Bar code did, byte-for-byte unchanged — confirmed by extracting the original
+      win/lose handling into shared functions rather than rewriting it.
 - [ ] Should `greenHalf`/`blueOuter`/`redOuter` ever shrink to near-0 for a specific enemy (e.g. the boss) so
       that even the best available equipment can't make center-hits trivial — i.e. should enemies,
       not just gear, get a say in zone geometry? (Currently only equipment tunes geometry, per
