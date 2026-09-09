@@ -391,6 +391,13 @@ void Renderer::recreateSwapchain() {
         cba.commandPool = cmdPool; cba.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         cba.commandBufferCount = vk.swapImageCount;
         vk_check(vkAllocateCommandBuffers(vk.device, &cba, cmdBufs.data()), "cmdbuf_recreate");
+        // Bugfix: Dear ImGui's Vulkan backend needs to know too (see
+        // onSwapchainImageCountChanged's declaration in renderer.h) -- otherwise its next
+        // renderDrawData() call (invoked via uiOverlayHook, inside this same command buffer
+        // right before vkCmdEndRenderPass) can record against internal per-frame resources
+        // still sized for the old image count, corrupting the command buffer and crashing
+        // the very next vkQueueSubmit with VK_ERROR_DEVICE_LOST.
+        if (onSwapchainImageCountChanged) onSwapchainImageCountChanged(vk.swapImageCount);
     }
 
     VkSurfaceCapabilitiesKHR caps{};
@@ -515,7 +522,21 @@ void Renderer::transitionImage(VkImage img, VkImageLayout from, VkImageLayout to
 
 void Renderer::ensureVertexBuffer(size_t needBytes) {
     if (vbufCap >= needBytes) return;
-    if (vbuf) { vkDestroyBuffer(vk.device, vbuf, nullptr); vkFreeMemory(vk.device, vbufMem, nullptr); }
+    // Bugfix: with MAX_FRAMES_IN_FLIGHT==2, up to two frames' command buffers can be
+    // executing on the GPU concurrently -- if the previous frame's command buffer is
+    // still in flight and still bound to this same vbuf (vkCmdBindVertexBuffers), and
+    // its work hasn't actually completed yet (only THIS frame's own inFlight fence is
+    // waited on before recording -- not every other frame's), destroying it here out
+    // from under that still-executing command buffer is a real GPU resource-lifetime
+    // violation and a plausible cause of VK_ERROR_DEVICE_LOST on the next submit. This
+    // growth path is rare (only taken when the required size first exceeds the current
+    // capacity, which then gets generously over-allocated below), so the cost of a full
+    // wait here is negligible -- same tradeoff recreateSwapchain() already accepts for
+    // the same class of resource-lifetime hazard.
+    if (vbuf) {
+        vkDeviceWaitIdle(vk.device);
+        vkDestroyBuffer(vk.device, vbuf, nullptr); vkFreeMemory(vk.device, vbufMem, nullptr);
+    }
     vbufCap = needBytes * 2 + 65536;
     VkBufferCreateInfo bi{}; bi.sType=VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; bi.size=vbufCap; bi.usage=VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
     vk_check(vkCreateBuffer(vk.device,&bi,nullptr,&vbuf),"vb");
@@ -528,7 +549,12 @@ void Renderer::ensureVertexBuffer(size_t needBytes) {
 
 void Renderer::ensureIndexBuffer(size_t needBytes) {
     if (ibufCap >= needBytes) return;
-    if (ibuf) { vkDestroyBuffer(vk.device, ibuf, nullptr); vkFreeMemory(vk.device, ibufMem, nullptr); }
+    // Bugfix: same in-flight-resource hazard as ensureVertexBuffer() above -- see its
+    // comment for the full explanation.
+    if (ibuf) {
+        vkDeviceWaitIdle(vk.device);
+        vkDestroyBuffer(vk.device, ibuf, nullptr); vkFreeMemory(vk.device, ibufMem, nullptr);
+    }
     ibufCap = needBytes * 2 + 65536;
     VkBufferCreateInfo bi{}; bi.sType=VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; bi.size=ibufCap; bi.usage=VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
     vk_check(vkCreateBuffer(vk.device,&bi,nullptr,&ibuf),"ib");

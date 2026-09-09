@@ -101,8 +101,29 @@ public:
     void saveFrame(const std::string& path);
     // input (scripted for headless)
     void movePlayer(int dx, int dy);
+    // Milestone 9 polish: "keep moving while held" instead of exactly one tile per key
+    // press/tap -- classic dungeon-crawler feel. Call every frame with the currently-held
+    // direction on each axis (dir in {-1,0,1}, 0 = not held): main.cpp does this for the
+    // keyboard (level state, not the edge-triggered up/down/left/rightPressed used for
+    // menu/inventory-cursor navigation, which should NOT auto-repeat), handleTouch() does it
+    // for the virtual/touch d-pad (0 on press-release). X and Y repeat independently -- both
+    // held at once keeps moving diagonally, same as the old one-tap version allowed. The
+    // actual repeat timer lives in update(); this only registers what's currently held and
+    // fires the immediate first step on a fresh press/direction-change.
+    void setMoveHeldX(int dir);
+    void setMoveHeldY(int dir);
+    void stopMoveHeld() { setMoveHeldX(0); setMoveHeldY(0); }
     void interact();                       // talk to NPC / trigger dialogue on current cell
     void chooseDialogue(int idx);          // pick a dialogue choice
+    // Bugfix: main.cpp never had any keyboard binding that moved dlgSel at all -- with
+    // only ever one choice ever shown before this session's content, that went
+    // unnoticed; now that real dialogue has 2-5 choices, the player had no way to
+    // reach anything but choice 0. Wraps like invMoveSel's cursor.
+    void dlgMoveSel(int delta) {
+        int n = (int)dlgChoices.size();
+        if (n <= 0) return;
+        dlgSel = ((dlgSel + delta) % n + n) % n;
+    }
     void startDialogue(const std::string& npc);   // open an NPC dialogue (public for tests)
     void enterNode(const std::string& node);      // jump to a dialogue node (public for tests)
     void startCombat(const EnemyInst& e);
@@ -124,7 +145,7 @@ public:
     // as a modal overlay too, not just cs.active -- otherwise the world underneath (movement,
     // NPC interact, the store icon, Tab/B shortcuts) keeps responding to input while the victory
     // screen is still up. See docs/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
-    bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_; }  // any overlay open (combat/dialogue/inventory/store/stage-select)
+    bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_; }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm)
     bool combatWon() const { return cs.won; }
     // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
     // keyboard path (Enter/Space) had no equivalent before this fix, so "press any key to
@@ -152,6 +173,16 @@ public:
     bool stageSelectOpen() const { return stageSelectOpen_; }
     void openStageSelect();
     void closeStageSelect();
+    // Milestone 9: a maze's dead ends force backtracking through the same corridor
+    // (Wilson's algorithm produces a tree -- there's no alternate route around
+    // anything), and a stairs tile sitting on that backtrack path could get walked
+    // over by accident (owner report). Reaching 'U'/'D' now opens a Yes/No confirm
+    // instead of transitioning immediately -- see movePlayer()'s call to
+    // requestStageTransition() and confirmStageTransition()/cancelStageTransition().
+    bool stairsConfirmOpen() const { return stairsConfirmOpen_; }
+    bool stairsConfirmIsUp() const { return stairsConfirmIsUp_; }
+    void confirmStageTransition();
+    void cancelStageTransition();
     Player& player() { return pl; }
     IRenderer* renderer() { return ren; }   // for batch-metric inspection (demo)
     // Derived, read-only classification of "what screen/mode is the game in right now",
@@ -322,6 +353,24 @@ private:
     std::vector<StageInfo> stageList_;
     bool stageListLoaded_ = false;
     void ensureStageListLoaded();
+    // Milestone 9: stairs confirm-before-transition state (see stairsConfirmOpen()'s
+    // declaration above for why). requestStageTransition() is what movePlayer() now
+    // calls instead of loadStage() directly when the player steps onto 'U'/'D'.
+    bool stairsConfirmOpen_ = false;
+    bool stairsConfirmIsUp_ = false;
+    std::string stairsConfirmTarget_;
+    int stairsConfirmYesRect_[4] = {0,0,0,0};
+    int stairsConfirmNoRect_[4] = {0,0,0,0};
+    void requestStageTransition(const std::string& target, bool isUp);
+    void drawStairsConfirmDialog();
+    // Milestone 9 polish: per-axis "held direction" state for setMoveHeldX/Y (declared
+    // above) -- holdMs/repeating are ticked in update(). kMoveInitialDelayMs is the pause
+    // after the immediate first step before repeating starts (long enough that a quick tap
+    // never double-steps); kMoveRepeatMs is the steady repeat rate once it's going.
+    struct MoveHoldAxis { int dir = 0; int holdMs = 0; bool repeating = false; };
+    MoveHoldAxis moveHoldX_, moveHoldY_;
+    static constexpr int kMoveInitialDelayMs = 220;
+    static constexpr int kMoveRepeatMs = 110;
     // M2 styling spike backdrop state. Declared unguarded (unlike drawStylingSpike()/
     // setStylingSpikeVisible(), which are desktop/ImGui-only) so Game::draw() — shared between
     // the desktop and web builds — can call drawStylingSpikeBackdrop() unconditionally; it's a

@@ -579,6 +579,7 @@ void Game::draw() {
         drawStoreToast();
         drawGamepad();
         drawStylingSpikeBackdrop();
+        if (stairsConfirmOpen_) drawStairsConfirmDialog();
         ren->end();
         return;
     }
@@ -724,10 +725,28 @@ void Game::handleTouch(float px, float py, int phase) {
         if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) { id = i; break; }
     }
     if (id == 7) { if (phase == 0) gpOn = !gpOn; return; }  // toggle show/hide
+    // Milestone 9 polish: releasing a d-pad button stops "keep moving while held" (see
+    // setMoveHeldX/Y's declaration in game.h). Checked here, before the generic phase==2
+    // return right below (which would otherwise swallow it), and unconditionally regardless
+    // of what else might be open -- harmless when nothing is currently held, and this is the
+    // one case where a release must never be dropped (an un-cleared held direction would
+    // otherwise keep stepping forever).
+    if (id >= 0 && id <= 3 && phase == 2) { stopMoveHeld(); return; }
     if (phase == 2) return;                 // touchend on a game button: nothing
     // Victory screen: tap anywhere to dismiss (cs.won is set on win and must be cleared
     // or the combat overlay keeps painting forever -> "stuck after defeating enemy").
     if (cs.won && phase == 0) { dismissVictory(); return; }
+    // Milestone 9: stairs confirm -- Yes/No buttons aren't gamepad rects, so `id` stays
+    // -1 for a desktop mouse click on them; must be checked before `if (id < 0) return;`
+    // below (the exact bug this fixes for dialogue too, right after this block).
+    if (stairsConfirmOpen_) {
+        if (phase == 0) {
+            auto hit = [&](const int r[4]) { return px>=r[0] && px<=r[0]+r[2] && py>=r[1] && py<=r[1]+r[3]; };
+            if (hit(stairsConfirmYesRect_)) { confirmStageTransition(); return; }
+            if (hit(stairsConfirmNoRect_))  { cancelStageTransition(); return; }
+        }
+        return;
+    }
     // HUD stats line (carries the "(I)" inventory indicator) — tap to open inventory.
     if (!inventoryOpen() && !inDialogue && !modalActive() && phase == 0) {
         if (py >= 74 && py <= 104 && px >= 16 && px <= 560) { toggleInventory(); return; }
@@ -754,7 +773,12 @@ void Game::handleTouch(float px, float py, int phase) {
         }
         return;
     }
-    if (id < 0) return;
+    // Milestone 9 bugfix: dialogue tap-to-select never actually worked from a desktop
+    // mouse. `if (id < 0) return;` used to run BEFORE this block -- a click on a
+    // dialogue choice line isn't inside any gamepad-button rect, so `id` was always -1
+    // there and every such click was silently dropped before ever reaching this code.
+    // Moved above that guard; the gamepad D-pad fallback below still needs `id`, which
+    // is already computed further up, so nothing else about it changes.
     if (inDialogue) {                        // dialogue: tap a choice line to select+confirm
         int n = (int)dlgChoices.size();
         // Tap directly on a choice line (drawn at y = H-140 + i*24, x >= 60) selects & confirms it.
@@ -776,6 +800,7 @@ void Game::handleTouch(float px, float py, int phase) {
         else if (id == 5 && phase == 0) inDialogue = false;                  // B = close
         return;
     }
+    if (id < 0) return;
     if (cs.active) {
         // Milestone 6: touch/web equivalent of the desktop hold-to-charge input -- press-and-
         // hold anywhere on the battle scene charges the active Power Bar, release fires it.
@@ -789,7 +814,13 @@ void Game::handleTouch(float px, float py, int phase) {
         return;
     }
     const GPadBtn& b = GP[id];
-    if (id <= 3 && phase == 0) movePlayer(b.dx, b.dy);   // dpad: one step per tap (phase 1 repeat is for hold, ignored here so a tap = exactly 1 step)
+    // Milestone 9 polish: press-and-hold now keeps stepping (setMoveHeldX/Y + update()'s
+    // repeat timer) instead of exactly one tile per tap; the matching release is handled
+    // above, before the generic phase==2 return. GP[0]/[1] are the Y axis (up/down), GP[2]/[3]
+    // the X axis (left/right) -- each button only ever sets one axis (see GP[]'s own dx/dy).
+    if (id <= 3 && phase == 0) {
+        if (b.dy != 0) setMoveHeldY(b.dy); else setMoveHeldX(b.dx);
+    }
     else if (id == 4 && phase == 0) interact();
 }
 
@@ -1216,6 +1247,40 @@ void Game::drawStoreUnlockDialog() {
     drawText("確定 (Enter/點擊)", btnX+12, btnY+11, 15, C4(1,1,1,1));
 }
 
+// Milestone 9: confirm-before-transition dialog (see stairsConfirmOpen_'s declaration
+// in game.h). Drawn as an overlay on top of the walking scene, not its own scene --
+// the map/HUD stay visible (dimmed) behind it, unlike the store dialogs' own splash.
+void Game::drawStairsConfirmDialog() {
+    float W = (float)ren->width(), H = (float)ren->height();
+    Quad dim; dim.rect[0]=0; dim.rect[1]=0; dim.rect[2]=W; dim.rect[3]=H;
+    dim.uv[0]=0;dim.uv[1]=0;dim.uv[2]=1;dim.uv[3]=1; dim.solid=true;
+    dim.tint[0]=0;dim.tint[1]=0;dim.tint[2]=0;dim.tint[3]=0.55f; ren->drawSprite(dim);
+
+    float bw = 380, bh = 160;
+    float bx = (W-bw)/2, by = (H-bh)/2;
+    Quad box; box.rect[0]=bx; box.rect[1]=by; box.rect[2]=bw; box.rect[3]=bh;
+    box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1; box.solid=true;
+    box.tint[0]=0.12f;box.tint[1]=0.16f;box.tint[2]=0.26f;box.tint[3]=0.97f; ren->drawSprite(box);
+
+    drawText(stairsConfirmIsUp_ ? "確定要往上一層嗎？" : "確定要往下一層嗎？", bx+30, by+30, 22, C4(1,0.95f,0.6f,1));
+
+    float btnW=130, btnH=40, gap=20;
+    float by2 = by+bh-btnH-24;
+    float yesX = bx + (bw-(btnW*2+gap))/2, noX = yesX+btnW+gap;
+    stairsConfirmYesRect_[0]=(int)yesX; stairsConfirmYesRect_[1]=(int)by2; stairsConfirmYesRect_[2]=(int)btnW; stairsConfirmYesRect_[3]=(int)btnH;
+    stairsConfirmNoRect_[0]=(int)noX;   stairsConfirmNoRect_[1]=(int)by2; stairsConfirmNoRect_[2]=(int)btnW; stairsConfirmNoRect_[3]=(int)btnH;
+
+    Quad yes; yes.rect[0]=yesX; yes.rect[1]=by2; yes.rect[2]=btnW; yes.rect[3]=btnH;
+    yes.uv[0]=0;yes.uv[1]=0;yes.uv[2]=1;yes.uv[3]=1; yes.solid=true;
+    yes.tint[0]=0.2f;yes.tint[1]=0.5f;yes.tint[2]=0.3f;yes.tint[3]=1; ren->drawSprite(yes);
+    drawText("是 (Enter)", yesX+18, by2+11, 16, C4(1,1,1,1));
+
+    Quad no; no.rect[0]=noX; no.rect[1]=by2; no.rect[2]=btnW; no.rect[3]=btnH;
+    no.uv[0]=0;no.uv[1]=0;no.uv[2]=1;no.uv[3]=1; no.solid=true;
+    no.tint[0]=0.5f;no.tint[1]=0.2f;no.tint[2]=0.2f;no.tint[3]=1; ren->drawSprite(no);
+    drawText("否 (Esc)", noX+22, by2+11, 16, C4(1,1,1,1));
+}
+
 void Game::drawStoreUI() {
     float W = (float)ren->width(), H = (float)ren->height();
     drawStoreSplash();
@@ -1428,6 +1493,20 @@ void Game::buyStoreItem(int idx) {
 }
 
 
+// Milestone 9 polish: see setMoveHeldX/Y's declaration in game.h. A fresh press (or switching
+// directions on the same axis) fires one immediate step, same feel as the old one-tap-one-tile
+// behavior; the repeat while still held is ticked in update().
+void Game::setMoveHeldX(int dir) {
+    if (dir == moveHoldX_.dir) return;
+    moveHoldX_.dir = dir; moveHoldX_.holdMs = 0; moveHoldX_.repeating = false;
+    if (dir != 0) movePlayer(dir, 0);
+}
+void Game::setMoveHeldY(int dir) {
+    if (dir == moveHoldY_.dir) return;
+    moveHoldY_.dir = dir; moveHoldY_.holdMs = 0; moveHoldY_.repeating = false;
+    if (dir != 0) movePlayer(0, dir);
+}
+
 void Game::movePlayer(int dx, int dy) {
     if (modalActive()) return;   // any modal overlay (combat/dialogue/inventory) blocks world input
     int nx = pl.x + dx, ny = pl.y + dy;
@@ -1493,13 +1572,36 @@ void Game::movePlayer(int dx, int dy) {
                 else if (e.id=="princess") dlgNpc=(curStage=="stage_11")?"princess_victory":"princess_liora";
                 else if (e.id=="handmaiden") dlgNpc="handmaiden";
                 startDialogue(dlgNpc);
-            } else if (c=='U' && !st.up.empty()) { loadStage(st.up); return; }
-            else if (c=='D' && !st.down.empty()) { loadStage(st.down); return; }
+            } else if (c=='U' && !st.up.empty()) { requestStageTransition(st.up, true); return; }
+            else if (c=='D' && !st.down.empty()) { requestStageTransition(st.down, false); return; }
         }
     }
     // stairs check (cell char)
-    if (c=='U' && !st.up.empty()) loadStage(st.up);
-    else if (c=='D' && !st.down.empty()) loadStage(st.down);
+    if (c=='U' && !st.up.empty()) requestStageTransition(st.up, true);
+    else if (c=='D' && !st.down.empty()) requestStageTransition(st.down, false);
+}
+
+// Milestone 9: opens the Yes/No confirm instead of transitioning immediately -- see
+// stairsConfirmOpen_'s declaration in game.h for why.
+void Game::requestStageTransition(const std::string& target, bool isUp) {
+    stairsConfirmOpen_ = true;
+    stairsConfirmIsUp_ = isUp;
+    stairsConfirmTarget_ = target;
+    audio.play("confirm_click");
+}
+
+void Game::confirmStageTransition() {
+    if (!stairsConfirmOpen_) return;
+    std::string target = stairsConfirmTarget_;
+    stairsConfirmOpen_ = false;
+    stairsConfirmTarget_.clear();
+    loadStage(target);
+}
+
+void Game::cancelStageTransition() {
+    stairsConfirmOpen_ = false;
+    stairsConfirmTarget_.clear();
+    audio.play("close_ui");
 }
 
 void Game::startDialogue(const std::string& npc) {
@@ -2007,6 +2109,24 @@ void Game::update(int dtMs) {
         std::remove_if(notifications_.begin(), notifications_.end(),
                         [](const std::pair<std::string,int>& n) { return n.second <= 0; }),
         notifications_.end());
+    // Milestone 9 polish: "keep moving while held" -- the actual repeat timer, driven from
+    // here regardless of which input (keyboard or the virtual/touch d-pad) is holding a
+    // direction; see setMoveHeldX/Y's declaration in game.h. Each axis repeats independently
+    // so a held diagonal (e.g. up+right) keeps moving diagonally. movePlayer() is already a
+    // safe no-op while modalActive(), so ticking this even during a dialogue/battle/etc. that
+    // started mid-hold is harmless.
+    auto tickMoveAxis = [&](MoveHoldAxis& a, int dx, int dy) {
+        if (a.dir == 0) return;
+        a.holdMs += dtMs;
+        int threshold = a.repeating ? kMoveRepeatMs : kMoveInitialDelayMs;
+        if (a.holdMs >= threshold) {
+            movePlayer(dx, dy);
+            a.holdMs -= threshold;
+            a.repeating = true;
+        }
+    };
+    tickMoveAxis(moveHoldX_, moveHoldX_.dir, 0);
+    tickMoveAxis(moveHoldY_, 0, moveHoldY_.dir);
 }
 
 void Game::saveFrame(const std::string& path) {

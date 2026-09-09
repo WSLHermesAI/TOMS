@@ -123,4 +123,9 @@ void ImGuiLayer::renderDrawData(VkCommandBuffer cmd) {
     if (dd) ImGui_ImplVulkan_RenderDrawData(dd, cmd);
 }
 
+void ImGuiLayer::setMinImageCount(uint32_t n) {
+    if (!initialized_) return;
+    ImGui_ImplVulkan_SetMinImageCount(n < 2 ? 2 : n);
+}
+
 } // namespace toms

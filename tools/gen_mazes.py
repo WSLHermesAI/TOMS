@@ -28,9 +28,16 @@ Design (owner-approved, see docs/PROGRESS_REPORT.md Milestone 9 log):
         since a tree has no alternate route around any edge.
       - remaining items (gems/potions/coins) scattered on whatever cells are left.
   - Maze size grows with floor index (owner asked for "higher level -> bigger maze"):
-    cell grid is (6 + (floor-1)//2) columns by (5 + (floor-1)//2) rows, so floor 1
-    is 6x5 cells (identical to today's fixed 13x11 tile size -- no visual change on
-    the tutorial floor) growing to 11x10 cells (23x21 tiles) by floor 11.
+    cell grid is (6 + (floor-1)//2) columns by (5 + (floor-1)//2) rows.
+  - Each abstract cell renders as an SxS block of tiles, not a single tile (owner:
+    "one cell can have 4 grid... so player can in this cell change direction" -- a
+    1-tile-wide perfect maze forces exact backtracking through the same corridor on
+    every dead end, which is how a stairs tile could get walked over by accident while
+    just turning around. CELL_SCALE_BY_FLOOR below is the "level data" defining that
+    size per floor -- easy to retune per floor later; every floor uses 2 (a 2x2, 4-tile
+    room per cell) today. Passages between connected cells are carved the full width of
+    the block (a wide doorway, not a single tile), and a gating door (see below) blocks
+    that entire width too, so there's no way to slip past it through a corner.
 
 Run from the repo root: python3 tools/gen_mazes.py
 """
@@ -52,6 +59,12 @@ FLOOR_FILES = [
     ("stage05.json", 5), ("stage06.json", 6), ("stage07.json", 7), ("stage08.json", 8),
     ("stage09.json", 9), ("stage10.json", 10), ("stage_11.json", 11),
 ]
+
+# How many tiles per side each abstract maze cell renders as (S -> an SxS, S*S-tile
+# room). 2 means "4 grid" per cell, matching the owner's own example. Per-floor so a
+# later pass can tune it (e.g. tighter rooms on early floors, roomier ones later)
+# without touching the algorithm -- defaults to 2 everywhere for now.
+CELL_SCALE_BY_FLOOR = {i: 2 for i in range(1, 12)}
 
 
 def cell_dims(floor_index):
@@ -150,25 +163,52 @@ def reachable_without_edge(adj, start, blocked_edge):
     return seen
 
 
-def cell_to_xy(cell):
+def cell_block(cell, scale):
+    """Returns (x0, y0) -- the top-left tile of this cell's SxS block, where S=scale.
+    One tile of wall separates every block from its neighbors."""
     r, c = cell
-    return 2 * c + 1, 2 * r + 1
+    return c * (scale + 1) + 1, r * (scale + 1) + 1
 
 
-def edge_to_xy(edge):
+def cell_center_xy(cell, scale):
+    """The tile any single entity placed "in" this cell actually renders at -- the
+    block's center-ish tile (scale//2 into it on both axes)."""
+    x0, y0 = cell_block(cell, scale)
+    off = scale // 2
+    return x0 + off, y0 + off
+
+
+def edge_strip(edge, scale):
+    """The full-width connecting strip between two adjacent cells' blocks: a list of
+    (x, y) tile positions, one per row (horizontal neighbors) or column (vertical
+    neighbors) -- carving/gating all of them, not just one tile, is what makes a door
+    actually block the passage (a single-tile door in an S-wide corridor could be
+    walked around)."""
     (r1, c1), (r2, c2) = tuple(edge)
-    return c1 + c2 + 1, r1 + r2 + 1
+    if r1 == r2:  # horizontal neighbors -- the strip runs vertically, S tiles tall
+        left, right = (c1, c2) if c1 < c2 else (c2, c1)
+        x = left * (scale + 1) + 1 + scale  # the single wall column between them
+        y0 = r1 * (scale + 1) + 1
+        return [(x, y0 + i) for i in range(scale)]
+    else:  # vertical neighbors -- the strip runs horizontally, S tiles wide
+        top, bottom = (r1, r2) if r1 < r2 else (r2, r1)
+        y = top * (scale + 1) + 1 + scale
+        x0 = c1 * (scale + 1) + 1
+        return [(x0 + i, y) for i in range(scale)]
 
 
-def build_tiles(cols, rows, edges):
-    w, h = 2 * cols + 1, 2 * rows + 1
+def build_tiles(cols, rows, edges, scale):
+    w, h = cols * (scale + 1) + 1, rows * (scale + 1) + 1
     grid = [['#'] * w for _ in range(h)]
     for r in range(rows):
         for c in range(cols):
-            grid[2 * r + 1][2 * c + 1] = '.'
+            x0, y0 = cell_block((r, c), scale)
+            for dy in range(scale):
+                for dx in range(scale):
+                    grid[y0 + dy][x0 + dx] = '.'
     for e in edges:
-        x, y = edge_to_xy(e)
-        grid[y][x] = '.'
+        for x, y in edge_strip(e, scale):
+            grid[y][x] = '.'
     return grid, w, h
 
 
@@ -201,6 +241,7 @@ def generate_floor(filename, floor_index, rng):
     key_char = next((ch for ch in roster if old_legend.get(ch, "").startswith("key:")), None)
 
     cols, rows = cell_dims(floor_index)
+    scale = CELL_SCALE_BY_FLOOR[floor_index]
     edges = wilson_maze(cols, rows, rng)
     adj = build_adjacency(edges, cols, rows)
 
@@ -242,17 +283,20 @@ def generate_floor(filename, floor_index, rng):
 
     # Door/key: pick an edge on the main path (roughly the midpoint) to gate. The key
     # must land in the entrance-side component of the tree once that edge is removed.
+    # The ENTIRE connecting strip becomes door tiles (not just one point of it) -- with
+    # cells now S tiles wide, a single-tile door in a wider passage could just be walked
+    # around through the rest of the opening.
     if door_char and key_char:
         path_edges = [frozenset((a, b)) for a, b in zip(main_path, main_path[1:])]
         door_edge = path_edges[len(path_edges) // 2]
-        edges.discard(door_edge)  # replaced by an explicit door tile below
+        edges.discard(door_edge)  # replaced by explicit door tiles below
         near_side = reachable_without_edge(adj, entrance, door_edge)
         key_cell = next((c for c in near_side if c not in used), None)
         assert key_cell is not None, f"{filename}: no free cell for the key on the near side"
         place(key_cell, key_char)
-        door_x, door_y = edge_to_xy(door_edge)
+        door_strip = edge_strip(door_edge, scale)
     else:
-        door_x = door_y = None
+        door_strip = []
 
     # Monsters: spread evenly along the interior of the main path (excluding the
     # entrance/goal endpoints), falling back to any free cell if the path is short.
@@ -284,21 +328,26 @@ def generate_floor(filename, floor_index, rng):
         place(cell, ch)
 
     # ---- render to a tile grid ----
-    grid, w, h = build_tiles(cols, rows, edges)
-    ex, ey = cell_to_xy(entrance)
+    grid, w, h = build_tiles(cols, rows, edges, scale)
+    ex, ey = cell_center_xy(entrance, scale)
     grid[ey][ex] = '@'
     for cell, ch in placements.items():
-        x, y = cell_to_xy(cell)
+        x, y = cell_center_xy(cell, scale)
         grid[y][x] = ch
-    if door_x is not None:
-        grid[door_y][door_x] = door_char
+    for x, y in door_strip:
+        grid[y][x] = door_char
 
     tiles = ["".join(row) for row in grid]
 
-    # ---- roster-preservation check: the new floor must carry exactly the same
-    #      entities (same chars, same counts) as the one it replaces, just relocated ----
+    # ---- roster-preservation check: the new floor must carry the same entities (same
+    #      chars, same counts) as the one it replaces, just relocated -- except the door,
+    #      which is deliberately `scale` tiles wide now instead of 1 (see door_strip
+    #      above), so its expected count is inflated by that factor before comparing.
+    expected_roster = Counter(roster)
+    if door_char:
+        expected_roster[door_char] *= scale
     new_roster = Counter(ch for row in tiles for ch in row if ch not in ("#", ".", "@"))
-    assert new_roster == roster, f"{filename}: roster mismatch, old={roster} new={new_roster}"
+    assert new_roster == expected_roster, f"{filename}: roster mismatch, old={expected_roster} new={new_roster}"
 
     # ---- solvability sanity check before writing anything ----
     # 1) every placed entity is reachable from '@' by walking through '.', the entity's
@@ -314,7 +363,7 @@ def generate_floor(filename, floor_index, rng):
                 seen.add((nx, ny))
                 q.append((nx, ny))
     for cell in placements:
-        x, y = cell_to_xy(cell)
+        x, y = cell_center_xy(cell, scale)
         assert (x, y) in seen, f"{filename}: placed entity at {cell} is unreachable"
 
     data["width"] = w

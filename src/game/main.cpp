@@ -78,6 +78,11 @@ int main(int argc, char** argv) {
             if (imguiLayer.init(win, r->vk.instance, r->vk.physical, r->vk.device, r->vk.gfxFamily,
                                  r->vk.gfxQueue, r->renderPass, r->vk.swapImageCount)) {
                 r->uiOverlayHook = [&imguiLayer](VkCommandBuffer cmd) { imguiLayer.renderDrawData(cmd); };
+                // Bugfix: a window resize can recreate the swapchain with a different image
+                // count than what ImGui's Vulkan backend was initialized with -- see
+                // onSwapchainImageCountChanged's declaration in renderer.h for why this is
+                // needed (a real crash: VK_ERROR_DEVICE_LOST right after a resize).
+                r->onSwapchainImageCountChanged = [&imguiLayer](uint32_t n) { imguiLayer.setMinImageCount(n); };
             }
         }
 
@@ -134,6 +139,8 @@ int main(int argc, char** argv) {
             // game outright -- previously this unconditionally quit even with a dialog open.
             if (escPressed) {
                 if (g.storeModal()) g.storeKey(27);
+                // Milestone 9: Escape cancels a pending stairs transition (say "no").
+                else if (g.stairsConfirmOpen()) g.cancelStageTransition();
                 else if (g.stageSelectOpen()) g.closeStageSelect();
                 else if (g.inventoryOpen()) g.toggleInventory();
                 else if (!g.modalActive()) break;
@@ -146,16 +153,41 @@ int main(int argc, char** argv) {
                 if (g.stageSelectOpen()) g.closeStageSelect();
                 else if (!g.modalActive()) g.openStageSelect();
             }
-            if (upPressed)    g.movePlayer(0, -1);
-            if (downPressed)  g.movePlayer(0,  1);
-            if (leftPressed)  g.movePlayer(-1, 0);
-            if (rightPressed) g.movePlayer( 1, 0);
+            // Milestone 9 polish: world movement now repeats while a direction is held
+            // (classic dungeon-crawler feel) instead of moving exactly one tile per key
+            // press. Uses level state (keyDown), not the edge-triggered upPressed/
+            // downPressed/etc above -- those stay edge-triggered for the inventory-cursor/
+            // dialogue-selection navigation below, which should NOT auto-repeat this way.
+            // X and Y are independent axes (see setMoveHeldX/Y's declaration in game.h),
+            // so holding a diagonal (e.g. up+right) keeps moving diagonally, same as this
+            // game already allowed on a single simultaneous press.
+            {
+                int ydir = 0;
+                if (keyDown(GLFW_KEY_UP) || keyDown(GLFW_KEY_W)) ydir = -1;
+                else if (keyDown(GLFW_KEY_DOWN) || keyDown(GLFW_KEY_S)) ydir = 1;
+                g.setMoveHeldY(ydir);
+                int xdir = 0;
+                if (keyDown(GLFW_KEY_LEFT) || keyDown(GLFW_KEY_A)) xdir = -1;
+                else if (keyDown(GLFW_KEY_RIGHT) || keyDown(GLFW_KEY_D)) xdir = 1;
+                g.setMoveHeldX(xdir);
+            }
+            // Milestone 9 bugfix: dialogue choice selection had no keyboard binding at all --
+            // main.cpp never touched dlgSel, so Enter always confirmed whatever choice 0
+            // happened to be (movePlayer() itself is already a no-op during dialogue via
+            // modalActive(), so this doesn't double up with movement).
+            if (g.inDialogueFlag()) {
+                if (upPressed)   g.dlgMoveSel(-1);
+                if (downPressed) g.dlgMoveSel(1);
+            }
             if (enterPressed || spacePressed) {
+                // Milestone 9: confirm a pending stairs transition (say "yes"). Checked first,
+                // same reasoning as combatWon() below -- once open this is the topmost modal.
+                if (g.stairsConfirmOpen()) g.confirmStageTransition();
                 // Milestone 7 bugfix: the post-victory "(按任意鍵繼續)" pause had no keyboard
                 // dismiss path at all -- only handleTouch() (mouse/touch) ever cleared cs.won.
                 // Must be checked before g.interact(), since interact() itself now returns early
                 // once modalActive() covers cs.won (see game.h).
-                if (g.combatWon()) g.dismissVictory();
+                else if (g.combatWon()) g.dismissVictory();
                 else if (g.inDialogueFlag()) g.chooseDialogue(g.dialogueSel());
                 else g.interact();
             }

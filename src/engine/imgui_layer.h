@@ -36,6 +36,19 @@ public:
     void renderDrawData(VkCommandBuffer cmd);    // records into an ALREADY-ACTIVE render pass
 
     bool initialized() const { return initialized_; }
+    // Bugfix: init() bakes in whatever the swapchain's image count is at that moment
+    // (ImGui_ImplVulkan_InitInfo::MinImageCount/ImageCount), and Dear ImGui's own Vulkan
+    // backend sizes its internal per-frame-in-flight resources from that number. Nothing
+    // ever told it when a LATER window resize recreates the swapchain with a *different*
+    // image count (Renderer::recreateSwapchain() only knew about its own cmdBufs/
+    // framebuffers) -- exactly the documented Dear ImGui/Vulkan pitfall ("call
+    // ImGui_ImplVulkan_SetMinImageCount() after changing MinImageCount"), and a very
+    // plausible cause of a real reported crash: VK_ERROR_DEVICE_LOST on the very next
+    // vkQueueSubmit after a resize-triggered "swapchain recreated (images=N)" log line,
+    // consistent with ImGui recording draw commands against stale-sized internal buffers.
+    // Call this whenever Renderer reports its image count changed (see
+    // Renderer::onSwapchainImageCountChanged in renderer.h).
+    void setMinImageCount(uint32_t n);
 
 private:
     bool initialized_ = false;

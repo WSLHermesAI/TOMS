@@ -94,6 +94,14 @@ public:
     // (imgui_layer.h) record its draw data into the same render-pass instance without this
     // class needing to know ImGui exists. No-op (std::function empty) unless someone sets it.
     std::function<void(VkCommandBuffer)> uiOverlayHook;
+    // Bugfix: a window resize can recreate the swapchain with a *different* image count
+    // (surface capabilities aren't guaranteed stable across a resize/monitor change), and
+    // Dear ImGui's Vulkan backend bakes in whatever the image count was at ImGuiLayer::init()
+    // time -- nothing ever told it the count changed later. Optional hook, invoked from
+    // recreateSwapchain() whenever swapImageCount actually changes, so main.cpp can forward
+    // it to ImGuiLayer::setMinImageCount() (the officially documented fix for exactly this).
+    // No-op (std::function empty) unless someone sets it.
+    std::function<void(uint32_t)> onSwapchainImageCountChanged;
     Atlas spriteAtlas_, fontAtlas_;
     VkImage   solidImg_   = VK_NULL_HANDLE;
     VkImageView solidView_ = VK_NULL_HANDLE;
