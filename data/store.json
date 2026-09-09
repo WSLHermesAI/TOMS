@@ -41,6 +41,96 @@
       "effect_text": "DEF +1",
       "cost_base": 2,
       "cost_multiplier": 2
+    },
+    {
+      "id": "eq_wand",
+      "name": "見習者法杖",
+      "sprite": "gem_atk.png",
+      "desc": "均衡的入門武器，速度與威力都走中庸路線。",
+      "equipmentId": "wand",
+      "effect_text": "裝備：武器（均衡）",
+      "cost_base": 20,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_twin_daggers",
+      "name": "雙生短匕",
+      "sprite": "gem_atk.png",
+      "desc": "犧牲少許攻擊力，換取極快蓄力與精巧的判定帶。",
+      "equipmentId": "twin_daggers",
+      "effect_text": "裝備：武器（速度型，ATK -2）",
+      "cost_base": 35,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_war_hammer",
+      "name": "戰爭巨鎚",
+      "sprite": "gem_atk.png",
+      "desc": "沉重而強力，蓄力較慢但判定帶寬廣。",
+      "equipmentId": "war_hammer",
+      "effect_text": "裝備：武器（力量型，ATK +8）",
+      "cost_base": 60,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_cloth_robe",
+      "name": "布衣長袍",
+      "sprite": "gem_def.png",
+      "desc": "均衡的入門防具，速度與韌性都走中庸路線。",
+      "equipmentId": "cloth_robe",
+      "effect_text": "裝備：防具（均衡）",
+      "cost_base": 20,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_guardian_plate",
+      "name": "守護重甲",
+      "sprite": "gem_def.png",
+      "desc": "厚重板甲，格擋蓄力較慢但判定帶寬廣。",
+      "equipmentId": "guardian_plate",
+      "effect_text": "裝備：防具（重甲型，DEF +5）",
+      "cost_base": 55,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_swift_leather",
+      "name": "疾風皮甲",
+      "sprite": "gem_def.png",
+      "desc": "犧牲少許防禦力，換取極快的格擋蓄力速度。",
+      "equipmentId": "swift_leather",
+      "effect_text": "裝備：防具（速度型，DEF -2）",
+      "cost_base": 35,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_focus_talisman",
+      "name": "專注護符",
+      "sprite": "exp_up.png",
+      "desc": "延緩蓄力進入衝刺的時機，讓瞄準更從容。",
+      "equipmentId": "focus_talisman",
+      "effect_text": "天賦：專注",
+      "cost_base": 50,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_berserker_charm",
+      "name": "狂戰士護身符",
+      "sprite": "exp_up.png",
+      "desc": "大幅提升攻擊上限，但紅色區域攻擊將完全無效。",
+      "equipmentId": "berserker_charm",
+      "effect_text": "天賦：狂戰士",
+      "cost_base": 60,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_guardian_ring",
+      "name": "守護者之戒",
+      "sprite": "exp_up.png",
+      "desc": "為防禦減傷提供保底下限，蓄力失手也有基本防護。",
+      "equipmentId": "guardian_ring",
+      "effect_text": "天賦：守護",
+      "cost_base": 60,
+      "cost_multiplier": 1
     }
   ]
 }

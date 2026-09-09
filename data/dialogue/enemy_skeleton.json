@@ -6,8 +6,9 @@
       "text": "骷髏：『加入我們的行列吧……』",
       "choices": [
         {
-          "label": "（戰鬥）",
-          "next": null
+          "label": "（拒絕，準備戰鬥）",
+          "next": null,
+          "action": { "type": "enterBattle" }
         }
       ]
     }

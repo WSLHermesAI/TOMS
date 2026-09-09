@@ -84,6 +84,9 @@ struct StoreItemDef {
     int cost_base = 2;
     int cost_multiplier = 2;
     int purchases = 0;         // how many times already bought (drives the doubling price)
+    // Milestone 8: non-empty for a weapon/armor/talent sold here instead of a consumable --
+    // an id into equipmentDefs_. buyStoreItem() branches on this instead of applying `effect`.
+    std::string equipmentId;
     int liveCost() const { int c = cost_base; for (int i=1;i<=purchases;i++) c *= cost_multiplier; return c; }
 };
 
@@ -215,7 +218,13 @@ private:
     void drawStoreUI();                              // the shop overlay (card grid)
     void drawStoreToast();                           // transient "gold not enough" toast
     // compute the on-screen rects of store UI elements (icon / cards / buttons) for hit-testing
-    void storeCardRects(std::vector<float>& rects) const;  // 4 floats per card: x,y,w,h
+    void storeCardRects(std::vector<float>& rects, int n) const;  // 4 floats per card: x,y,w,h
+    // Milestone 8: the store outgrew a single row of cards once equipment joined the 3 potions
+    // (12 items total vs. the layout's real capacity of ~3 per row) -- rather than reworking the
+    // existing per-card pixel layout (risky to get right without visual verification), items are
+    // split into tabs of <=3 each, reusing the untouched card layout per tab. Returns the indices
+    // into storeItems_ that belong to the current storeTab_ (0=potions,1=weapons,2=armor,3=talents).
+    std::vector<int> storeTabIndices() const;
     void buyStoreItem(int idx);                      // purchase + apply effect (or toast if poor)
     // shared full-screen focus splash (black, alpha 0.5) used by combat / dialogue /
     // inventory so the player focuses on the active scene. Also gates background
@@ -286,6 +295,10 @@ private:
     std::map<std::string, toms::MissionDefinition> missionDefs_;
     std::map<std::string, toms::MissionTracker> missionTrackers_;
     void startMission(const std::string& id);
+    // Milestone 8: grants a Completed mission's reward and flips it to Claimed. Idempotent --
+    // a no-op unless the tracker's state is exactly Completed, so re-triggering this (e.g. the
+    // dialogue choice that calls it stays visible after claiming) can never double-grant.
+    void claimMission(const std::string& id);
     void runDialogueAction(const nlohmann::json& action);
     void wireMissionEvents();   // subscribes mission-progress handlers to the global EventBus once
     // Milestone 5: daily-mission reset check (architecture-doc §8.3), run once per session start
@@ -303,7 +316,9 @@ private:
     float uiFontScale_ = 1.5f;
     // Milestone 5: Stage Select hub state.
     bool stageSelectOpen_ = false;
-    struct StageInfo { std::string id; std::string name; int index = 0; };
+    // Milestone 8: `preview` is the recommended-stats blurb shown in Stage Select, authored per
+    // stage JSON's optional top-level "preview" string (empty for a file that doesn't set one).
+    struct StageInfo { std::string id; std::string name; int index = 0; std::string preview; };
     std::vector<StageInfo> stageList_;
     bool stageListLoaded_ = false;
     void ensureStageListLoaded();
@@ -322,7 +337,8 @@ private:
     bool storeUnlocked_ = false;
     bool storeUnlockDlg = false; // "shop unlocked!" popup showing (with confirm button)
     bool storeOpen = false;      // store overlay open
-    int storeSel_ = 0;           // selected card index (keyboard nav)
+    int storeSel_ = 0;           // selected card index (keyboard nav), local to the current tab
+    int storeTab_ = 0;           // 0=potions,1=weapons,2=armor,3=talents (see storeTabIndices())
     std::string toastMsg_;        // transient message ("金錢不足")
     int toastTimer_ = 0;         // ms remaining for toast
     int shakeTimer_ = 0;         // ms remaining for "not enough gold" shake
@@ -330,6 +346,7 @@ private:
     std::string storeTitle_ = "道具商店";     // title from store.json
     int storeUnlockBtnRect_[4] = {0,0,0,0};   // unlock dialog confirm button rect
     std::vector<float> storeBtnRects_;        // per-card buy-button rects (4 floats each)
+    std::vector<float> storeTabRects_;        // Milestone 8: per-tab button rects (4 floats each)
     int storeCloseRect_[4] = {0,0,0,0};       // store close button rect
     // backpack/inventory overlay hit-test rects (rebuilt each frame in drawInventory)
     std::vector<float> invCardRects_;         // per-item card rects (4 floats each)

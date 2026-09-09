@@ -228,6 +228,19 @@ bool Game::loadAssets(const std::string& assetDir) {
     for (auto& [k,v] : ij.items()) itemDefs[k] = v;
     // load store definitions (data/store.json) -> unlock stage + items + cost rule
     loadStore(assetDir);
+    // Milestone 8: load the Equipment System's content (schema/logic built in Milestone 6 --
+    // equipment_system.h -- but equipmentDefs_ stayed empty, and nothing was ever purchasable,
+    // until this content-authoring pass wired it into the store below).
+    {
+        nlohmann::json eqj = readJsonFile(assetDir + "/../data/equipment.json");
+        for (auto& [k, v] : eqj.items()) equipmentDefs_[k] = toms::equipmentFromJson(v);
+    }
+    // Milestone 8: load the Mission System's content (schema/logic built in Milestone 4 --
+    // mission_system.h -- but missionDefs_ stayed empty until this content-authoring pass).
+    {
+        nlohmann::json mj = readJsonFile(assetDir + "/../data/missions.json");
+        for (auto& [k, v] : mj.items()) missionDefs_[k] = toms::missionDefinitionFromJson(v);
+    }
     // init player
     pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
     pl.inv = {"potion_red", "potion_blue", "exp_up"};
@@ -501,10 +514,20 @@ static std::string entSprite(const std::string& id) {
 void Game::draw() {
     ren->begin();
     float W = (float)ren->width(), H = (float)ren->height();
-    // scene: 13x11 grid, tile size 48, centered
+    // Milestone 9: stage grids are no longer a fixed 13x11 -- Wilson's-algorithm mazes
+    // grow with floor depth (see tools/gen_mazes.py), so the tile pixel size must shrink
+    // to fit a bigger grid into the same fixed design canvas instead of overflowing it
+    // (there's no camera/scroll system here -- see the drawing loop below, which still
+    // draws every tile of the grid in one pass). oy=60/bottom margin=50 mirror the fixed
+    // HUD text (top) and the story_note line (bottom) drawn around this grid, below.
     int gw = st.width, gh = st.height;
-    float ts = 48.0f;
-    float ox = (W - gw*ts)/2.0f, oy = 60.0f;
+    float oy = 60.0f, bottomMargin = 50.0f;
+    float ts = std::min(W / (float)gw, (H - oy - bottomMargin) / (float)gh);
+    ts = std::min(ts, 48.0f);   // never bigger than the original fixed size (stage01 is
+                                // the same 13x11 grid as before M9, so it renders
+                                // identically to what the owner already visually confirmed)
+    ts = std::max(ts, 20.0f);   // stay legible even for the largest generated floor
+    float ox = (W - gw*ts)/2.0f;
     static const float white[4] = {1,1,1,1};
     float tint[4] = {1,1,1,1};
 
@@ -530,12 +553,16 @@ void Game::draw() {
             int layer = spriteLayer(cellSprite(c));
             ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, white));
         }
+        // Entity/player sprites were inset by a fixed 8px into their 48px tile before
+        // Milestone 9; now that ts varies per stage, the inset scales with it (same
+        // ~1/6 ratio, so this renders identically to before at ts=48).
+        float inset = ts / 6.0f, sSize = ts - 2.0f * inset;
         for (auto& e : st.entities) {
             if (e.consumed) continue;
             int layer = spriteLayer(entSprite(e.id));
-            ren->drawSprite(spriteQuad(ox + e.x*ts + 8, oy + e.y*ts + 8, ts-16, ts-16, layer, white));
+            ren->drawSprite(spriteQuad(ox + e.x*ts + inset, oy + e.y*ts + inset, sSize, sSize, layer, white));
         }
-        ren->drawSprite(spriteQuad(ox + pl.x*ts + 8, oy + pl.y*ts + 8, ts-16, ts-16, spriteLayer("player"), white));
+        ren->drawSprite(spriteQuad(ox + pl.x*ts + inset, oy + pl.y*ts + inset, sSize, sSize, spriteLayer("player"), white));
 
         ren->setNode(NODE_CHAR);
         drawText("魔法塔 Tower of the Sorcerer — " + st.name + " (" + std::to_string(st.index) + "/" + std::to_string(totalStages) + ")", 16, 16, 22, tint);
@@ -1066,6 +1093,8 @@ void Game::loadStore(const std::string& assetDir) {
         d.cost_base = it.value("cost_base", 2);
         d.cost_multiplier = it.value("cost_multiplier", 2);
         d.purchases = 0;
+        // Milestone 8: an equipment-selling entry names its item instead of carrying an `effect`.
+        d.equipmentId = it.value("equipmentId", std::string());
         storeItems_.push_back(d);
     }
 }
@@ -1096,6 +1125,9 @@ void Game::ensureStageListLoaded() {
             info.id = j.value("id", std::string());
             info.name = j.value("name", info.id);
             info.index = j.value("index", 0);
+            // Milestone 8: recommended-stats blurb, authored per stage JSON's optional top-level
+            // "preview" string -- empty for a file that doesn't set one (none did before M8).
+            info.preview = j.value("preview", std::string());
             if (!info.id.empty()) stageList_.push_back(info);
         } catch (...) {}
     }
@@ -1113,10 +1145,9 @@ void Game::closeStageSelect() {
     audio.play("close_ui");
 }
 
-void Game::storeCardRects(std::vector<float>& rects) const {
+void Game::storeCardRects(std::vector<float>& rects, int n) const {
     rects.clear();
     float W = (float)ren->width(), H = (float)ren->height();
-    int n = (int)storeItems_.size();
     float cw = 300, ch = 300, gap = 24;
     float totalW = n * cw + (n - 1) * gap;
     float ox = (W - totalW) / 2.0f;
@@ -1127,6 +1158,23 @@ void Game::storeCardRects(std::vector<float>& rects) const {
         rects.push_back(cw);
         rects.push_back(ch);
     }
+}
+
+std::vector<int> Game::storeTabIndices() const {
+    std::vector<int> out;
+    for (int i = 0; i < (int)storeItems_.size(); i++) {
+        const StoreItemDef& d = storeItems_[i];
+        int tab;
+        if (d.equipmentId.empty()) {
+            tab = 0;   // potions / plain consumables
+        } else {
+            auto it = equipmentDefs_.find(d.equipmentId);
+            toms::EquipmentSlot slot = (it != equipmentDefs_.end()) ? it->second.slot : toms::EquipmentSlot::Weapon;
+            tab = (slot == toms::EquipmentSlot::Weapon) ? 1 : (slot == toms::EquipmentSlot::Armor) ? 2 : 3;
+        }
+        if (tab == storeTab_) out.push_back(i);
+    }
+    return out;
 }
 
 void Game::drawStoreIcon() {
@@ -1180,10 +1228,33 @@ void Game::drawStoreUI() {
     drawText("金錢 GOLD: " + std::to_string(pl.gold), W-260, 64, 20, C4(1,0.95f,0.4f,1));
     drawText("（方向鍵/數字選擇 · Enter 購買 · Esc 關閉）", 60, 94, 14, C4(0.8f,0.85f,1,0.9f));
 
-    std::vector<float> rects; storeCardRects(rects);
-    for (int i = 0; i < (int)storeItems_.size(); i++) {
+    // Milestone 8: tab bar (see storeTabIndices()'s declaration in game.h for why tabs exist at
+    // all -- keeps every tab's card count at the layout's original, unchanged capacity of ~3).
+    static const char* kTabLabels[4] = {"藥水", "武器", "防具", "天賦"};
+    storeTabRects_.clear();
+    {
+        float tbw = 100, tbh = 34, tgap = 12;
+        float tx = 60, ty = 110;
+        for (int t = 0; t < 4; t++) {
+            storeTabRects_.push_back(tx); storeTabRects_.push_back(ty);
+            storeTabRects_.push_back(tbw); storeTabRects_.push_back(tbh);
+            Quad tb; tb.rect[0]=tx; tb.rect[1]=ty; tb.rect[2]=tbw; tb.rect[3]=tbh;
+            tb.uv[0]=0;tb.uv[1]=0;tb.uv[2]=1;tb.uv[3]=1; tb.solid=true;
+            bool activeTab = (t == storeTab_);
+            if (activeTab) { tb.tint[0]=0.24f; tb.tint[1]=0.30f; tb.tint[2]=0.44f; tb.tint[3]=1; }
+            else           { tb.tint[0]=0.13f; tb.tint[1]=0.14f; tb.tint[2]=0.20f; tb.tint[3]=0.9f; }
+            ren->drawSprite(tb);
+            drawText(kTabLabels[t], tx + 22, ty + 8, 17, activeTab ? C4(1,0.95f,0.6f,1) : C4(0.8f,0.82f,0.9f,1));
+            tx += tbw + tgap;
+        }
+    }
+
+    std::vector<int> idx = storeTabIndices();
+    std::vector<float> rects; storeCardRects(rects, (int)idx.size());
+    storeBtnRects_.clear();
+    for (int i = 0; i < (int)idx.size(); i++) {
         float cx = rects[i*4], cy = rects[i*4+1], cw = rects[i*4+2], ch = rects[i*4+3];
-        const StoreItemDef& d = storeItems_[i];
+        const StoreItemDef& d = storeItems_[idx[i]];
         int cost = d.liveCost();
         // card bg
         Quad card; card.rect[0]=cx; card.rect[1]=cy; card.rect[2]=cw; card.rect[3]=ch;
@@ -1203,7 +1274,14 @@ void Game::drawStoreUI() {
         drawText(d.name, cx + 16, cy + 124, 26, C4(1,1,1,1));
         drawText(d.desc, cx + 16, cy + 162, 16, C4(0.85f,0.9f,1,1));
         drawText("效果: " + d.effect_text, cx + 16, cy + 188, 18, C4(0.6f,1,0.7f,1));
-        drawText("已購買 x" + std::to_string(d.purchases), cx + 16, cy + 216, 15, C4(0.7f,0.7f,0.8f,1));
+        // Milestone 8: an equipment card shows whether it's the one currently in its slot instead
+        // of a purchase counter (buying it re-equips it -- "已購買 x3" would be misleading).
+        bool isEquipped = !d.equipmentId.empty() &&
+            (d.equipmentId == equipped_.weaponId || d.equipmentId == equipped_.armorId || d.equipmentId == equipped_.talentId);
+        if (!d.equipmentId.empty())
+            drawText(isEquipped ? "✓ 已裝備" : "點擊裝備", cx + 16, cy + 216, 15, isEquipped ? C4(0.5f,1,0.6f,1) : C4(0.7f,0.7f,0.8f,1));
+        else
+            drawText("已購買 x" + std::to_string(d.purchases), cx + 16, cy + 216, 15, C4(0.7f,0.7f,0.8f,1));
         // price tag
         drawText("價格: " + std::to_string(cost) + " G", cx + 16, cy + 240, 22, C4(1,0.95f,0.4f,1));
         // buy button
@@ -1253,13 +1331,21 @@ void Game::storeClick(float x, float y) {
             y >= storeCloseRect_[1] && y <= storeCloseRect_[1]+storeCloseRect_[3]) {
             closeStore(); return;
         }
-        // buy buttons
-        std::vector<float> rects; storeCardRects(rects);
+        // Milestone 8: tab buttons (checked before the buy buttons, which are per-tab now).
+        for (int t = 0; t + 3 < (int)storeTabRects_.size() / 4 * 4; t += 4) {
+            float bx = storeTabRects_[t], by = storeTabRects_[t+1], bw = storeTabRects_[t+2], bh = storeTabRects_[t+3];
+            if (x >= bx && x <= bx+bw && y >= by && y <= by+bh) {
+                storeTab_ = t / 4; storeSel_ = 0; audio.play("confirm_click"); return;
+            }
+        }
+        // buy buttons -- storeBtnRects_ is rebuilt per-tab each frame in drawStoreUI(), so index i
+        // here maps through the same tab filter to the real storeItems_ index.
+        std::vector<int> idx = storeTabIndices();
         int nBtn = (int)storeBtnRects_.size() / 4;
-        for (int i = 0; i < nBtn && i < (int)storeItems_.size(); i++) {
+        for (int i = 0; i < nBtn && i < (int)idx.size(); i++) {
             float bx = storeBtnRects_[i*4], by = storeBtnRects_[i*4+1], bw = storeBtnRects_[i*4+2], bh = storeBtnRects_[i*4+3];
             if (x >= bx && x <= bx+bw && y >= by && y <= by+bh) {
-                buyStoreItem(i); return;
+                buyStoreItem(idx[i]); return;
             }
         }
         // clicking a card selects it (and if it's the buy area handled above). Clicking
@@ -1283,17 +1369,23 @@ void Game::storeKey(int key) {
         return;
     }
     if (!storeOpen) return;
-    int n = (int)storeItems_.size();
+    // Milestone 8: storeSel_ is an index into the current tab's filtered list, not storeItems_
+    // directly (see storeTabIndices()) -- map through it before buying.
+    std::vector<int> idxList = storeTabIndices();
+    int n = (int)idxList.size();
     if (key == 27) { closeStore(); return; }                       // Esc closes
-    if (key == 13 || key == 32) { buyStoreItem(storeSel_); return; } // Enter/Space buys
+    if (key == 13 || key == 32) {                                  // Enter/Space buys
+        if (storeSel_ >= 0 && storeSel_ < n) buyStoreItem(idxList[storeSel_]);
+        return;
+    }
     if (key == 262 || key == 263) {                                // right/left arrow
         storeSel_ += (key == 262) ? 1 : -1;
         if (storeSel_ < 0) storeSel_ = n-1; if (storeSel_ >= n) storeSel_ = 0;
         return;
     }
     if (key >= '1' && key <= '9') {                                // number keys select
-        int idx = key - '1';
-        if (idx < n) storeSel_ = idx;
+        int sel = key - '1';
+        if (sel < n) storeSel_ = sel;
     }
 }
 
@@ -1310,11 +1402,25 @@ void Game::buyStoreItem(int idx) {
         return;
     }
     pl.gold -= cost;
-    // apply effect immediately (per spec: bought item is used right away)
-    const nlohmann::json& eff = d.effect;
-    if (eff.contains("hp"))  pl.hp   = std::min(pl.maxhp, pl.hp + (int)eff["hp"]);
-    if (eff.contains("str")) pl.atk  += (int)eff["str"];
-    if (eff.contains("def")) pl.def  += (int)eff["def"];
+    // Milestone 8: an equipment entry replaces whatever was in that slot instead of applying a
+    // generic {hp/str/def} effect -- equipping is a swap, not a stacking buff, so re-buying the
+    // same item (or a different one in the same slot) is a harmless, idempotent re-equip.
+    if (!d.equipmentId.empty()) {
+        auto it = equipmentDefs_.find(d.equipmentId);
+        if (it != equipmentDefs_.end()) {
+            switch (it->second.slot) {
+                case toms::EquipmentSlot::Weapon: equipped_.weaponId = d.equipmentId; break;
+                case toms::EquipmentSlot::Armor:  equipped_.armorId  = d.equipmentId; break;
+                case toms::EquipmentSlot::Talent: equipped_.talentId = d.equipmentId; break;
+            }
+        }
+    } else {
+        // apply effect immediately (per spec: bought item is used right away)
+        const nlohmann::json& eff = d.effect;
+        if (eff.contains("hp"))  pl.hp   = std::min(pl.maxhp, pl.hp + (int)eff["hp"]);
+        if (eff.contains("str")) pl.atk  += (int)eff["str"];
+        if (eff.contains("def")) pl.def  += (int)eff["def"];
+    }
     d.purchases++;
     toastMsg_ = "購買成功：" + d.name + "！";
     toastTimer_ = 1400;
@@ -1461,6 +1567,9 @@ void Game::runDialogueAction(const nlohmann::json& action) {
     } else if (type == "startMission") {
         std::string missionId = action.value("missionId", std::string());
         if (!missionId.empty()) startMission(missionId);
+    } else if (type == "claimMission") {
+        std::string missionId = action.value("missionId", std::string());
+        if (!missionId.empty()) claimMission(missionId);
     }
 }
 
@@ -1468,6 +1577,36 @@ void Game::startMission(const std::string& id) {
     auto& t = missionTrackers_[id];   // creates a fresh (Locked, progress=0) tracker if absent
     if (t.missionId.empty()) t.missionId = id;
     t.state = toms::MissionState::Active;
+}
+
+// Milestone 8: grants the reward and flips Completed -> Claimed. Strictly gated on the tracker
+// already being Completed, so a dialogue choice that stays visible after claiming (see the
+// `requires: missionComplete` convention used in this session's authored content -- missionComplete()
+// returns true for both Completed and Claimed) can never grant the reward twice.
+void Game::claimMission(const std::string& id) {
+    auto trackerIt = missionTrackers_.find(id);
+    if (trackerIt == missionTrackers_.end() || trackerIt->second.state != toms::MissionState::Completed) return;
+    auto defIt = missionDefs_.find(id);
+    if (defIt != missionDefs_.end()) {
+        const toms::MissionDefinition& def = defIt->second;
+        pl.exp += def.rewardExp;
+        pl.gold += def.rewardGold;
+        // Mirrors movePlayer()'s item-pickup split: keys/coins apply immediately, everything
+        // else (gems/potions/exp/scroll) goes into the inventory to be used later, not consumed
+        // on the spot -- a reward potion should sit in the backpack like a picked-up one would.
+        if (!def.rewardItemId.empty()) {
+            bool immediate = (def.rewardItemId.rfind("key_",0)==0) || def.rewardItemId=="coin";
+            if (immediate) applyItem(def.rewardItemId);
+            else pl.inv.push_back(def.rewardItemId);
+        }
+        int need = pl.lv * 30;
+        while (pl.exp >= need) {
+            pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30;
+            pushNotification("升級了！LV " + std::to_string(pl.lv));
+        }
+    }
+    trackerIt->second.state = toms::MissionState::Claimed;
+    pushNotification("任務完成：" + id);
 }
 
 // Subscribes mission-progress handlers to the global EventBus once (called from loadAssets).
@@ -1680,6 +1819,14 @@ void Game::drawStageSelect() {
         // default, so the lock-reason tooltip needs this explicit override to show at all.
         if (locked && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
             ImGui::SetTooltip("先抵達第 %d 層才能選擇這一層", info.index - 1);
+        // Milestone 8: recommended-stats preview text, shown under every row that has one
+        // (locked rows too -- it's exactly the info a player needs to decide whether to go grind
+        // first, per the roadmap's own "Stage Select preview text (recommended stats)" ask).
+        if (!info.preview.empty()) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.75f, 0.8f, 0.9f, 0.85f));
+            ImGui::TextWrapped("  %s", info.preview.c_str());
+            ImGui::PopStyleColor();
+        }
         ImGui::PopID();
     }
     ImGui::End();
@@ -1752,7 +1899,12 @@ void Game::resolveAttackRelease(float heldSeconds) {
     float pos = toms::simulatePosition(bar, heldSeconds);
     float power = toms::powerFromPosition(bar, pos);
     float maxMult = toms::effectiveMaxMult(equipped_, equipmentDefs_);
-    int baseHit = std::max(1, pl.atk - cs.enemy.def);
+    // Milestone 8: applyEquipmentStats() (built and tested in Milestone 6) was never actually
+    // called anywhere -- a weapon's flat ATK bonus (or a speed-build's ATK penalty) only ever
+    // affected the Power Bar's geometry/maxMult, never the base damage number itself.
+    int effAtk = pl.atk, effDef = pl.def;
+    toms::applyEquipmentStats(equipped_, equipmentDefs_, effAtk, effDef);
+    int baseHit = std::max(1, effAtk - cs.enemy.def);
     int dmg = toms::computeAttackDamage(baseHit, power, maxMult);
     if (toms::zoneFromPosition(bar, pos) == toms::PowerZone::Red && toms::talentZerosRedZoneAttacks(equipped_.talentId))
         dmg = 0;   // Berserker: a high ceiling, but Red-zone releases deal nothing
@@ -1778,7 +1930,9 @@ void Game::resolveDefenseRelease(float heldSeconds) {
     toms::PowerBarParams bar = toms::effectiveDefenseBar(equipped_, equipmentDefs_);
     float pos = toms::simulatePosition(bar, heldSeconds);
     float power = toms::powerFromPosition(bar, pos);
-    int incoming = std::max(1, cs.enemy.atk - pl.def);
+    int effAtk = pl.atk, effDef = pl.def;
+    toms::applyEquipmentStats(equipped_, equipmentDefs_, effAtk, effDef);
+    int incoming = std::max(1, cs.enemy.atk - effDef);
     float floorMitigation = toms::talentDefenseMitigationFloor(equipped_.talentId);
     int dmg = toms::computeDefenseDamage(incoming, power, floorMitigation);
 

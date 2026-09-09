@@ -6,8 +6,18 @@
       "text": "小惡魔：『主人在等你獻祭！』",
       "choices": [
         {
+          "label": "你已無所畏懼——動手吧！",
+          "requires": { "all": [
+            { "type": "statAtLeast", "stat": "atk", "value": 20 },
+            { "type": "statAtLeast", "stat": "def", "value": 12 }
+          ]},
+          "next": null,
+          "action": { "type": "enterBattle" }
+        },
+        {
           "label": "（戰鬥）",
-          "next": null
+          "next": null,
+          "action": { "type": "enterBattle" }
         }
       ]
     }

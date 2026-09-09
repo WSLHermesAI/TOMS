@@ -10,8 +10,13 @@
           "next": "tip"
         },
         {
+          "label": "有沒有適合我練練手的委託？",
+          "next": "missions"
+        },
+        {
           "label": "懂了。",
-          "next": null
+          "next": null,
+          "action": { "type": "setStoryFlag", "flag": "met_sorcerer" }
         }
       ]
     },
@@ -20,6 +25,52 @@
       "choices": [
         {
           "label": "記住了。",
+          "next": null,
+          "action": { "type": "setStoryFlag", "flag": "met_sorcerer" }
+        }
+      ]
+    },
+    "missions": {
+      "text": "想稍微賺點外快嗎？我這裡剛好有些委託。",
+      "choices": [
+        {
+          "label": "獵殺石巨人——委託任務",
+          "requires": { "all": [
+            { "type": "storyBeatAtLeast", "value": 2 },
+            { "not": { "any": [
+              { "type": "missionActive", "missionId": "m_golem_slayer" },
+              { "type": "missionComplete", "missionId": "m_golem_slayer" }
+            ]}}
+          ]},
+          "next": null,
+          "action": { "type": "startMission", "missionId": "m_golem_slayer" }
+        },
+        {
+          "label": "獵殺石巨人——已完成，領取獎勵",
+          "requires": { "type": "missionComplete", "missionId": "m_golem_slayer" },
+          "next": null,
+          "action": { "type": "claimMission", "missionId": "m_golem_slayer" }
+        },
+        {
+          "label": "每日委託：清剿史萊姆",
+          "requires": { "all": [
+            { "type": "storyFlagSet", "flag": "met_sorcerer" },
+            { "not": { "any": [
+              { "type": "missionActive", "missionId": "m_daily_slime_bounty" },
+              { "type": "missionComplete", "missionId": "m_daily_slime_bounty" }
+            ]}}
+          ]},
+          "next": null,
+          "action": { "type": "startMission", "missionId": "m_daily_slime_bounty" }
+        },
+        {
+          "label": "每日委託——已完成，領取獎勵",
+          "requires": { "type": "missionComplete", "missionId": "m_daily_slime_bounty" },
+          "next": null,
+          "action": { "type": "claimMission", "missionId": "m_daily_slime_bounty" }
+        },
+        {
+          "label": "沒事了。",
           "next": null
         }
       ]

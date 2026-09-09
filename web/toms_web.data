@@ -4090,7 +4090,12 @@ void main() {
     float sx = pc.xform.z, sy = pc.xform.w;
     float x = (aRect.x * sx + pc.xform.x) + aPos.x * (aRect.z * sx);
     float y = (aRect.y * sy + pc.xform.y) + aPos.y * (aRect.w * sy);
-    vec2 ndc = vec2(x / pc.res.x * 2.0 - 1.0, 1.0 - (y / pc.res.y * 2.0));
+    // Vulkan's NDC is Y-down (unlike OpenGL/WebGL's Y-up), and this project's viewports all use
+    // a standard positive height (no VK_KHR_maintenance1 negative-viewport-height trick) -- so,
+    // for pixel y=0 to land at the top of the window and y=res.y at the bottom, this must be
+    // y/res.y*2.0 - 1.0, NOT 1.0 - y/res.y*2.0 (which is the correct formula for OpenGL/WebGL's
+    // opposite Y convention, and was left over from this shader's OpenGL-heritage origin).
+    vec2 ndc = vec2(x / pc.res.x * 2.0 - 1.0, y / pc.res.y * 2.0 - 1.0);
     gl_Position = vec4(ndc, 0.0, 1.0);
     vUV = vec2(aUVrc.x + aPos.x * (aUVrc.z - aUVrc.x),
                aUVrc.y + aPos.y * (aUVrc.w - aUVrc.y));
@@ -4102,7 +4107,7 @@ void main() {
          	      ;        	               +                        +                 	      +                    
    ;           +                           %      	   ;  %   &      +     0         @      	   +     C       +     G      @+     I     �?  R      0     S   
       R   R      T      S   ;  T   U      +     W          [      
-      ]      	   ;  ]   ^      ;     _      ;  [   w      ;     x         z         ;  z   {      ;     |      +     ~      ?6               �     ;           ;           ;           ;     /      ;  @   A      A                 =           >        A                 =           >        A              =           =            �     !          A     "            =     #   "   �     $   !   #   A     '   &      =     (   '   A     )         =     *   )   =     +      �     ,   *   +   �     -   (   ,   �     .   $   -   >     .   A     1      0   =     2   1   =     3      �     4   2   3   A     5         0   =     6   5   �     7   4   6   A     8   &   0   =     9   8   A     :         =     ;   :   =     <      �     =   ;   <   �     >   9   =   �     ?   7   >   >  /   ?   =     B      A     D      C      =     E   D   �     F   B   E   �     H   F   G   �     J   H   I   =     K   /   A     L      C   0   =     M   L   �     N   K   M   �     O   N   G   �     P   I   O   P  	   Q   J   P   >  A   Q   =  	   V   A   Q     X   V       Q     Y   V      P  
+      ]      	   ;  ]   ^      ;     _      ;  [   w      ;     x         z         ;  z   {      ;     |      +     ~      ?6               �     ;           ;           ;           ;     /      ;  @   A      A                 =           >        A                 =           >        A              =           =            �     !          A     "            =     #   "   �     $   !   #   A     '   &      =     (   '   A     )         =     *   )   =     +      �     ,   *   +   �     -   (   ,   �     .   $   -   >     .   A     1      0   =     2   1   =     3      �     4   2   3   A     5         0   =     6   5   �     7   4   6   A     8   &   0   =     9   8   A     :         =     ;   :   =     <      �     =   ;   <   �     >   9   =   �     ?   7   >   >  /   ?   =     B      A     D      C      =     E   D   �     F   B   E   �     H   F   G   �     J   H   I   =     K   /   A     L      C   0   =     M   L   �     N   K   M   �     O   N   G   �     P   O   I   P  	   Q   J   P   >  A   Q   =  	   V   A   Q     X   V       Q     Y   V      P  
    Z   X   Y   W   I   A  [   \   U   C   >  \   Z   A     `   _      =     a   `   A     b   &      =     c   b   A     d   _      =     e   d   A     f   _      =     g   f   �     h   e   g   �     i   c   h   �     j   a   i   A     k   _   0   =     l   k   A     m   &   0   =     n   m   A     o   _      =     p   o   A     q   _   0   =     r   q   �     s   p   r   �     t   n   s   �     u   l   t   P  	   v   j   u   >  ^   v   =  
    y   x   >  w   y   =     }   |   �        }   ~   n     �      >  {   �   �  8  �PNG
 
@@ -4221,7 +4226,12 @@ H*��#�|r���G��F0
 �h����?y�������df�8"���{�.:      �}=�s{�c      @��؈&ӥ�    IEND�B`��PNG
 
    IHDR           szz�   �IDATx��K�0Djp 2�S 	�@r��M�-����}l�iJ��Z�|Y�G�p� �j!T X�B@�H!D \s	@�e��, h��m�gj�8�4\����]��p��
-��� ��-��W8�o�<T ��XA�x�ԯ��o�B x���@ �5�o�7DX[���7@����|���J̆�n�    IEND�B`�ttcf           T  `       0BDF ��mc  �  MFFTMP���  !�   GDEF��   !�    GPOSDvLu ��W    GSUB#� � ��w   �OS/2*V� �   Vcmap����  	  vcvt  "�  !   gasp  	  !�   glyfLMO  !� �^�head�i�7 ��o   6hhea�. ���   $hmtx�( ��� �`loca̶wT �>) ��maxp�"i ���    name�H� ���  
+��� ��-��W8�o�<T ��XA�x�ԯ��o�B x���@ �5�o�7DX[���7@����|���J̆�n�    IEND�B`�[18:48:41] INFO main.cpp:69  TOMS engine start (C++1997, native build)
+[18:48:49] INFO main.cpp:146  batch: drawCalls=5 quads=220
+[18:48:49] INFO object.h:96  Object lifecycle: live objects = 0, no leaks
+[18:53:40] INFO main.cpp:69  TOMS engine start (C++1997, native build)
+[18:53:44] INFO object.h:96  Object lifecycle: live objects = 0, no leaks
+ttcf           T  `       0BDF ��mc  �  MFFTMP���  !�   GDEF��   !�    GPOSDvLu ��W    GSUB#� � ��w   �OS/2*V� �   Vcmap����  	  vcvt  "�  !   gasp  	  !�   glyfLMO  !� �^�head�i�7 ��o   6hhea�. ���   $hmtx�( ��� �`loca̶wT �>) ��maxp�"i ���    name�H� ���  
 Bpost���� �e �Gvhea>� ��   $vmtxY˘B ��� ��        FFTMP���  !�   GDEF��   !�    GPOSDvLu ��W    GSUB��� ��V   �OS/2*W ��'   Vcmap��� ��V   cvt  "�  !   gasp  	  !�   glyfLMO  !� �^�head��8C ��N   6hhea�. ���   $hmtx�( ��� �`loca̶wT �>) ��maxp�"i ���    name>��� �Ä  
 �postAd!� ��} �       PBDF _��j ���  
 �EBDT2�cr �� >��EBLC祢� ��� �lFFTMP���  !�   GDEF��   !�    GPOSDvLu ��W    GSUB#� � ��w   �OS/2*V� �   Vcmap����  	  vcvt  "�  !   gasp  	  !�   glyfLMO  !� �^�head`ϛ� ,a   6hhea�. ���   $hmtx�( ��� �`loca̶wT �>) ��maxp�"i ���    name��r ,�  
@@ -102689,13 +102699,24 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
       "text": "小惡魔：『主人在等你獻祭！』",
       "choices": [
         {
+          "label": "你已無所畏懼——動手吧！",
+          "requires": { "all": [
+            { "type": "statAtLeast", "stat": "atk", "value": 20 },
+            { "type": "statAtLeast", "stat": "def", "value": 12 }
+          ]},
+          "next": null,
+          "action": { "type": "enterBattle" }
+        },
+        {
           "label": "（戰鬥）",
-          "next": null
+          "next": null,
+          "action": { "type": "enterBattle" }
         }
       ]
     }
   }
-}{
+}
+{
   "npcId": "enemy_demonlord",
   "start": "root",
   "nodes": {
@@ -102731,13 +102752,15 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
       "text": "骷髏：『加入我們的行列吧……』",
       "choices": [
         {
-          "label": "（戰鬥）",
-          "next": null
+          "label": "（拒絕，準備戰鬥）",
+          "next": null,
+          "action": { "type": "enterBattle" }
         }
       ]
     }
   }
-}{
+}
+{
   "npcId": "enemy_slime",
   "start": "root",
   "nodes": {
@@ -102759,13 +102782,30 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
       "text": "怨靈：『仇恨……永不消散……』",
       "choices": [
         {
-          "label": "（戰鬥）",
-          "next": null
+          "label": "你在恨什麼？（傾聽）",
+          "next": "listen",
+          "action": { "type": "setStoryFlag", "flag": "heard_wraith_lament" }
+        },
+        {
+          "label": "（立刻迎戰）",
+          "next": null,
+          "action": { "type": "enterBattle" }
+        }
+      ]
+    },
+    "listen": {
+      "text": "怨靈：『我曾是這片土地的村民……沃卡司的詛咒讓我們死不瞑目……救救……我們……』",
+      "choices": [
+        {
+          "label": "（讓你解脫。）",
+          "next": null,
+          "action": { "type": "enterBattle" }
         }
       ]
     }
   }
-}{
+}
+{
   "npcId": "ghost_villager",
   "start": "root",
   "nodes": {
@@ -102799,14 +102839,11 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
   "nodes": {
     "root": {
       "text": "王國將希望寄託於你。這份祝福，願它護你周全。",
-      "action": {
-        "give": "potion_blue",
-        "amount": 1
-      },
       "choices": [
         {
           "label": "感謝陛下。",
-          "next": null
+          "next": null,
+          "action": { "type": "give", "itemId": "potion_blue" }
         }
       ]
     }
@@ -102888,8 +102925,13 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
           "next": "tip"
         },
         {
+          "label": "有沒有適合我練練手的委託？",
+          "next": "missions"
+        },
+        {
           "label": "懂了。",
-          "next": null
+          "next": null,
+          "action": { "type": "setStoryFlag", "flag": "met_sorcerer" }
         }
       ]
     },
@@ -102898,6 +102940,52 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
       "choices": [
         {
           "label": "記住了。",
+          "next": null,
+          "action": { "type": "setStoryFlag", "flag": "met_sorcerer" }
+        }
+      ]
+    },
+    "missions": {
+      "text": "想稍微賺點外快嗎？我這裡剛好有些委託。",
+      "choices": [
+        {
+          "label": "獵殺石巨人——委託任務",
+          "requires": { "all": [
+            { "type": "storyBeatAtLeast", "value": 2 },
+            { "not": { "any": [
+              { "type": "missionActive", "missionId": "m_golem_slayer" },
+              { "type": "missionComplete", "missionId": "m_golem_slayer" }
+            ]}}
+          ]},
+          "next": null,
+          "action": { "type": "startMission", "missionId": "m_golem_slayer" }
+        },
+        {
+          "label": "獵殺石巨人——已完成，領取獎勵",
+          "requires": { "type": "missionComplete", "missionId": "m_golem_slayer" },
+          "next": null,
+          "action": { "type": "claimMission", "missionId": "m_golem_slayer" }
+        },
+        {
+          "label": "每日委託：清剿史萊姆",
+          "requires": { "all": [
+            { "type": "storyFlagSet", "flag": "met_sorcerer" },
+            { "not": { "any": [
+              { "type": "missionActive", "missionId": "m_daily_slime_bounty" },
+              { "type": "missionComplete", "missionId": "m_daily_slime_bounty" }
+            ]}}
+          ]},
+          "next": null,
+          "action": { "type": "startMission", "missionId": "m_daily_slime_bounty" }
+        },
+        {
+          "label": "每日委託——已完成，領取獎勵",
+          "requires": { "type": "missionComplete", "missionId": "m_daily_slime_bounty" },
+          "next": null,
+          "action": { "type": "claimMission", "missionId": "m_daily_slime_bounty" }
+        },
+        {
+          "label": "沒事了。",
           "next": null
         }
       ]
@@ -102915,6 +103003,10 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
           "next": "how"
         },
         {
+          "label": "有沒有我能幫上忙的委託？",
+          "next": "missions"
+        },
+        {
           "label": "明白了。",
           "next": null
         }
@@ -102925,6 +103017,33 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
       "choices": [
         {
           "label": "我會做到。",
+          "next": null
+        }
+      ]
+    },
+    "missions": {
+      "text": "村里這陣子……不太安寧。要是你願意，有件事想請你幫忙。",
+      "choices": [
+        {
+          "label": "撫平怨靈——委託任務",
+          "requires": { "all": [
+            { "type": "stageCleared", "stageId": "stage_05" },
+            { "not": { "any": [
+              { "type": "missionActive", "missionId": "m_wraith_purge" },
+              { "type": "missionComplete", "missionId": "m_wraith_purge" }
+            ]}}
+          ]},
+          "next": null,
+          "action": { "type": "startMission", "missionId": "m_wraith_purge" }
+        },
+        {
+          "label": "撫平怨靈——已完成，領取獎勵",
+          "requires": { "type": "missionComplete", "missionId": "m_wraith_purge" },
+          "next": null,
+          "action": { "type": "claimMission", "missionId": "m_wraith_purge" }
+        },
+        {
+          "label": "沒事了。",
           "next": null
         }
       ]
@@ -102996,6 +103115,86 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "boss": true
   }
 }{
+  "wand": {
+    "id": "wand",
+    "name": "見習者法杖",
+    "sprite": "gem_atk.png",
+    "slot": "weapon",
+    "desc": "均衡的入門武器，速度與威力都走中庸路線。",
+    "stat": { "atk": 0 },
+    "bar": { "v0": 15, "vmax": 200, "rampTime": 1.8, "greenHalf": 15, "blueOuter": 35, "redOuter": 60, "maxMult": 2.0 }
+  },
+  "twin_daggers": {
+    "id": "twin_daggers",
+    "name": "雙生短匕",
+    "sprite": "gem_atk.png",
+    "slot": "weapon",
+    "desc": "犧牲少許攻擊力，換取極快的蓄力速度與短小精悍的判定帶。",
+    "stat": { "atk": -2 },
+    "bar": { "v0": 20, "vmax": 260, "rampTime": 1.0, "greenHalf": 8, "blueOuter": 20, "redOuter": 45, "maxMult": 2.2 }
+  },
+  "war_hammer": {
+    "id": "war_hammer",
+    "name": "戰爭巨鎚",
+    "sprite": "gem_atk.png",
+    "slot": "weapon",
+    "desc": "沉重而強力，蓄力緩慢但判定帶寬廣，容錯率高。",
+    "stat": { "atk": 8 },
+    "bar": { "v0": 10, "vmax": 140, "rampTime": 2.6, "greenHalf": 25, "blueOuter": 40, "redOuter": 75, "maxMult": 2.6 }
+  },
+  "cloth_robe": {
+    "id": "cloth_robe",
+    "name": "布衣長袍",
+    "sprite": "gem_def.png",
+    "slot": "armor",
+    "desc": "均衡的入門防具，速度與韌性都走中庸路線。",
+    "stat": { "def": 0 },
+    "bar": { "v0": 18, "vmax": 220, "rampTime": 1.4, "greenHalf": 15, "blueOuter": 35, "redOuter": 60 }
+  },
+  "guardian_plate": {
+    "id": "guardian_plate",
+    "name": "守護重甲",
+    "sprite": "gem_def.png",
+    "slot": "armor",
+    "desc": "厚重的板甲，格擋蓄力較慢，但判定帶寬廣，適合穩紮穩打。",
+    "stat": { "def": 5 },
+    "bar": { "v0": 12, "vmax": 150, "rampTime": 2.2, "greenHalf": 24, "blueOuter": 38, "redOuter": 68 }
+  },
+  "swift_leather": {
+    "id": "swift_leather",
+    "name": "疾風皮甲",
+    "sprite": "gem_def.png",
+    "slot": "armor",
+    "desc": "犧牲少許防禦力，換取極快的格擋蓄力速度。",
+    "stat": { "def": -2 },
+    "bar": { "v0": 25, "vmax": 280, "rampTime": 0.9, "greenHalf": 7, "blueOuter": 18, "redOuter": 42 }
+  },
+  "focus_talisman": {
+    "id": "focus_talisman",
+    "name": "專注護符",
+    "sprite": "exp_up.png",
+    "slot": "talent",
+    "desc": "延緩蓄力進入衝刺階段的時機，讓你有更充裕的時間瞄準目標區。",
+    "talent": "focus"
+  },
+  "berserker_charm": {
+    "id": "berserker_charm",
+    "name": "狂戰士護身符",
+    "sprite": "exp_up.png",
+    "slot": "talent",
+    "desc": "大幅提升攻擊上限，但落在紅色區域的攻擊將完全無效——高風險高回報。",
+    "talent": "berserker"
+  },
+  "guardian_ring": {
+    "id": "guardian_ring",
+    "name": "守護者之戒",
+    "sprite": "exp_up.png",
+    "slot": "talent",
+    "desc": "為防禦減傷提供一道保底下限，即使蓄力失手也能保有基本防護。",
+    "talent": "guardian"
+  }
+}
+{
   "gem_atk": {
     "name": "攻擊寶石",
     "sprite": "gem_atk.png",
@@ -103055,6 +103254,38 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
   }
 }
 {
+  "m_golem_slayer": {
+    "missionId": "m_golem_slayer",
+    "kind": "once",
+    "giver": "sorcerer_teacher",
+    "prerequisites": { "type": "storyBeatAtLeast", "value": 2 },
+    "objective": { "type": "defeat", "targetId": "golem", "count": 1 },
+    "rewardExp": 15,
+    "rewardGold": 20,
+    "rewardItemId": ""
+  },
+  "m_daily_slime_bounty": {
+    "missionId": "m_daily_slime_bounty",
+    "kind": "daily",
+    "giver": "sorcerer_teacher",
+    "prerequisites": { "type": "storyFlagSet", "flag": "met_sorcerer" },
+    "objective": { "type": "defeat", "targetId": "slime", "count": 3 },
+    "rewardExp": 0,
+    "rewardGold": 10,
+    "rewardItemId": ""
+  },
+  "m_wraith_purge": {
+    "missionId": "m_wraith_purge",
+    "kind": "side",
+    "giver": "villager_elder",
+    "prerequisites": { "type": "stageCleared", "stageId": "stage_05" },
+    "objective": { "type": "defeat", "targetId": "wraith", "count": 3 },
+    "rewardExp": 20,
+    "rewardGold": 25,
+    "rewardItemId": "potion_red"
+  }
+}
+{
   "id": "stage_01",
   "name": "村莊外緣",
   "subtitle": "Village Outskirts",
@@ -103093,23 +103324,25 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
   },
   "tiles": [
     "#############",
-    "#..2........#",
-    "#........h..#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#U...1...@..#",
-    "#.1....v....#",
+    "#1.......2..#",
+    "#.###.###.#.#",
+    "#.#...#...#.#",
+    "#.###.###.#.#",
+    "#..v#.#U#.#.#",
+    "###.###.#.###",
+    "#1..#.#.....#",
+    "#.###.###.###",
+    "#@.h..#.....#",
     "#############"
   ],
   "story_note": "長老：『沃卡司封印了安穩之星，公主被囚塔頂。去吧，攀上巫師之塔。』",
+  "preview": "建議 ATK 10+ / DEF 4+ -- 本層敵人：史萊姆、暗影蝙蝠",
   "connect": {
     "up": "stage_02",
     "down": null
   }
-}{
+}
+{
   "id": "stage_02",
   "name": "森林小徑",
   "subtitle": "Forest Path",
@@ -103148,29 +103381,31 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
   },
   "tiles": [
     "#############",
-    "#..c........#",
-    "#........1.1#",
-    "#...2.......#",
-    "#...........#",
-    "#...........#",
-    "#..2........#",
-    "#...........#",
-    "#U...D...@..#",
-    "#.s....a....#",
+    "#...#.#.#a#c#",
+    "###.#.#.#.#.#",
+    "#.#.#.#..2#.#",
+    "#.#.#.#.#.#.#",
+    "#1.s..#.#.#.#",
+    "#.###.#.#.#.#",
+    "#D..#..1#..2#",
+    "#.#.#######.#",
+    "#@#...#U....#",
     "#############"
   ],
   "story_note": "老巫師：『遇敵即自動輪流出拳，看準攻防再上。』",
+  "preview": "建議 ATK 10+ / DEF 4+ -- 本層敵人：史萊姆、暗影蝙蝠",
   "connect": {
     "up": "stage_03",
     "down": "stage_01"
   }
-}{
+}
+{
   "id": "stage_03",
   "name": "門樓",
   "subtitle": "Gatehouse",
   "index": 3,
-  "width": 13,
-  "height": 11,
+  "width": 15,
+  "height": 13,
   "legend": {
     "#": "wall",
     ".": "floor",
@@ -103202,30 +103437,34 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "Z": "monster:demonlord_vorkath"
   },
   "tiles": [
-    "#############",
-    "#..y........#",
-    "#........h..#",
-    "#...Y.......#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#U...D...@..#",
-    "#.3....1....#",
-    "#############"
+    "###############",
+    "#.#.....#.....#",
+    "#.#.#######.#.#",
+    "#...y3.h....#U#",
+    "#.#.#.###.#####",
+    "#.#.#...#...#.#",
+    "#.###.#.#####.#",
+    "#...#.#...#...#",
+    "###.#########.#",
+    "#Y.1..........#",
+    "###.#.#####.###",
+    "#@.D#.....#...#",
+    "###############"
   ],
   "story_note": "石巨人守著黃門；擊敗它取得黃鑰匙，門後是藏書閣。",
+  "preview": "建議 ATK 14+ / DEF 6+ -- 本層敵人：石巨人、史萊姆",
   "connect": {
     "up": "stage_04",
     "down": "stage_02"
   }
-}{
+}
+{
   "id": "stage_04",
   "name": "藏書閣",
   "subtitle": "Library",
   "index": 4,
-  "width": 13,
-  "height": 11,
+  "width": 15,
+  "height": 13,
   "legend": {
     "#": "wall",
     ".": "floor",
@@ -103257,30 +103496,37 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "Z": "monster:demonlord_vorkath"
   },
   "tiles": [
-    "#############",
-    "#..H........#",
-    "#........1.4#",
-    "#...4.......#",
-    "#...........#",
-    "#...........#",
-    "#..k........#",
-    "#...........#",
-    "#U...D...@..#",
-    "#.c....d....#",
-    "#############"
+    "###############",
+    "#H......#4..#.#",
+    "#.#.#.#.#.#.#.#",
+    "#.#.#.#...#...#",
+    "#######.#.###.#",
+    "#.....#.#.#...#",
+    "#####.#.#####.#",
+    "#d#c#.#..4#U..#",
+    "#.#.#.###.#####",
+    "#D.1.k#...#...#",
+    "#.###.#.#.#.###",
+    "#@#.....#.....#",
+    "###############"
   ],
   "story_note": "骷髏學者：『沃卡司懼怕純淨之攻與堅毅之防——疊滿寶石方可撼動他。』",
+  "preview": "建議 ATK 12+ / DEF 8+ -- 本層敵人：骷髏兵、史萊姆",
+  "encounter_overrides": {
+    "4": "dialogue_gate"
+  },
   "connect": {
     "up": "stage_05",
     "down": "stage_03"
   }
-}{
+}
+{
   "id": "stage_05",
   "name": "墓穴",
   "subtitle": "Crypt",
   "index": 5,
-  "width": 13,
-  "height": 11,
+  "width": 17,
+  "height": 15,
   "legend": {
     "#": "wall",
     ".": "floor",
@@ -103312,30 +103558,40 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "Z": "monster:demonlord_vorkath"
   },
   "tiles": [
-    "#############",
-    "#..h........#",
-    "#........4.4#",
-    "#...5.......#",
-    "#...........#",
-    "#...........#",
-    "#..5........#",
-    "#...........#",
-    "#U...D...@..#",
-    "#.v....a....#",
-    "#############"
+    "#################",
+    "#.....#.........#",
+    "#.#.#######.#.###",
+    "#.#...#....5#..h#",
+    "###.###.###.#####",
+    "#.....#...#.....#",
+    "#.###.###.#.###.#",
+    "#...#a#U..#.#.#.#",
+    "#####.#####.#.#.#",
+    "#4.v#....4#...#.#",
+    "#.#.#.###.#.#.###",
+    "#D#...#...#.#...#",
+    "#.#.###.###.#.#.#",
+    "#@#...#....5#.#.#",
+    "#################"
   ],
   "story_note": "村民亡魂：『別怕……公主還活著，她在等你去。』",
+  "preview": "建議 ATK 14+ / DEF 10+ -- 本層敵人：骷髏兵、怨靈",
+  "encounter_overrides": {
+    "4": "dialogue_gate",
+    "5": "dialogue_gate"
+  },
   "connect": {
     "up": "stage_06",
     "down": "stage_04"
   }
-}{
+}
+{
   "id": "stage_06",
   "name": "洞窟",
   "subtitle": "Cavern",
   "index": 6,
-  "width": 13,
-  "height": 11,
+  "width": 17,
+  "height": 15,
   "legend": {
     "#": "wall",
     ".": "floor",
@@ -103367,30 +103623,40 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "Z": "monster:demonlord_vorkath"
   },
   "tiles": [
-    "#############",
-    "#..d........#",
-    "#.5......b.a#",
-    "#...B.......#",
-    "#...........#",
-    "#...........#",
-    "#..H........#",
-    "#.......c...#",
-    "#U...D...@..#",
-    "#.3....6....#",
-    "#############"
+    "#################",
+    "#.......#....d..#",
+    "#.#####.#.#######",
+    "#.#a......#.....#",
+    "#.#########.#.###",
+    "#.#.#.....#.#.#.#",
+    "#.#.#.#####.#.#.#",
+    "#.........#U#...#",
+    "###.###.#####.###",
+    "#B#.#....5#...#.#",
+    "#.#.#.###.#.#.#.#",
+    "#D.3#.#...#.#6#.#",
+    "#.#.#.#.#####.#.#",
+    "#@#.#c#.bH......#",
+    "#################"
   ],
   "story_note": "洞窟深處藏著攻防雙寶石；藍門後是王之軍營。",
+  "preview": "建議 ATK 18+ / DEF 12+ -- 本層敵人：怨靈、石巨人、小惡魔",
+  "encounter_overrides": {
+    "5": "dialogue_gate",
+    "6": "dialogue_gate"
+  },
   "connect": {
     "up": "stage_07",
     "down": "stage_05"
   }
-}{
+}
+{
   "id": "stage_07",
   "name": "軍營",
   "subtitle": "Barracks",
   "index": 7,
-  "width": 13,
-  "height": 11,
+  "width": 19,
+  "height": 17,
   "legend": {
     "#": "wall",
     ".": "floor",
@@ -103422,30 +103688,43 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "Z": "monster:demonlord_vorkath"
   },
   "tiles": [
-    "#############",
-    "#..d........#",
-    "#.a......4.5#",
-    "#...6.......#",
-    "#...........#",
-    "#...........#",
-    "#..H........#",
-    "#...........#",
-    "#U...D...@..#",
-    "#.k....6....#",
-    "#############"
+    "###################",
+    "#d#...#.......#U..#",
+    "#.#.#.#.#########.#",
+    "#...#...#.....#...#",
+    "#####.#.#.#.#.#.###",
+    "#.#...#.#.#.#.#a.6#",
+    "#.#.#.#.#####.###.#",
+    "#...#.#.#.....#.#.#",
+    "###.###.#.###.#.#.#",
+    "#.....#.#5#H.6....#",
+    "###.###.#.#####.#.#",
+    "#.....#.#.#...#.#.#",
+    "#.###.###.###.#####",
+    "#...#.#.#.#.#...#.#",
+    "#.#####.#.#.###.#.#",
+    "#@.D.4.k..........#",
+    "###################"
   ],
   "story_note": "王之副官：『這枚祝福給你——但真正的力量，來自你一路的成長。』",
+  "preview": "建議 ATK 20+ / DEF 14+ -- 本層敵人：骷髏兵、怨靈、小惡魔",
+  "encounter_overrides": {
+    "4": "dialogue_gate",
+    "5": "dialogue_gate",
+    "6": "dialogue_gate"
+  },
   "connect": {
     "up": "stage_08",
     "down": "stage_06"
   }
-}{
+}
+{
   "id": "stage_08",
   "name": "神殿",
   "subtitle": "Sanctum",
   "index": 8,
-  "width": 13,
-  "height": 11,
+  "width": 19,
+  "height": 17,
   "legend": {
     "#": "wall",
     ".": "floor",
@@ -103477,30 +103756,42 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "Z": "monster:demonlord_vorkath"
   },
   "tiles": [
-    "#############",
-    "#..d........#",
-    "#........6.5#",
-    "#...6.......#",
-    "#...........#",
-    "#...........#",
-    "#..m........#",
-    "#...........#",
-    "#U...D...@..#",
-    "#.H....a....#",
-    "#############"
+    "###################",
+    "#.......#...#.#.#.#",
+    "#.#####.###.#.#.#.#",
+    "#....H#.#...#.....#",
+    "###.#####.###.#####",
+    "#......6....#d.a..#",
+    "###.#####.#.#.#.###",
+    "#...#...#.#...#...#",
+    "#.#####.#.#########",
+    "#m..#...#....6..#.#",
+    "#.#####.#.###.#.#.#",
+    "#5....#.....#.#...#",
+    "#.#.#.###.#.###.#.#",
+    "#D#.#...#.#...#.#.#",
+    "#.###.#.###.#.#.#.#",
+    "#@#...#.#...#.#.#U#",
+    "###################"
   ],
   "story_note": "侍女：『頂層有禁咒機關，唯有擊碎沃卡司本體才能解除。』",
+  "preview": "建議 ATK 22+ / DEF 16+ -- 本層敵人：小惡魔、怨靈",
+  "encounter_overrides": {
+    "5": "dialogue_gate",
+    "6": "dialogue_gate"
+  },
   "connect": {
     "up": "stage_09",
     "down": "stage_07"
   }
-}{
+}
+{
   "id": "stage_09",
   "name": "王座前室",
   "subtitle": "Throne Antechamber",
   "index": 9,
-  "width": 13,
-  "height": 11,
+  "width": 21,
+  "height": 19,
   "legend": {
     "#": "wall",
     ".": "floor",
@@ -103532,30 +103823,44 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "Z": "monster:demonlord_vorkath"
   },
   "tiles": [
-    "#############",
-    "#..a........#",
-    "#.H......6.5#",
-    "#...6.......#",
-    "#...........#",
-    "#...........#",
-    "#..d........#",
-    "#...........#",
-    "#U...D...@..#",
-    "#.p....6....#",
-    "#############"
+    "#####################",
+    "#.#.....#.#.#.#U..#.#",
+    "#.#####.#.#.#.###.#.#",
+    "#.#......d#...#.....#",
+    "#.#######.###.#.#.###",
+    "#.............#.#H#.#",
+    "###.#.###########.#.#",
+    "#...#.....#.....#...#",
+    "#.#####.#####.###.#.#",
+    "#.#...#...#.#...#6#.#",
+    "###.#####.#.#.###.#.#",
+    "#.....#...#...#.#.#.#",
+    "###.#####.#.###.#.###",
+    "#...#...#a...6#.#...#",
+    "###.###.#.###.#.###.#",
+    "#..5.p....#.#...#6..#",
+    "###.#######.#.###.###",
+    "#@.D......#.........#",
+    "#####################"
   ],
   "story_note": "公主 Liora：『我信你。打碎他，安穩之星便會重燃。』",
+  "preview": "建議 ATK 24+ / DEF 18+ -- 本層敵人：小惡魔、怨靈",
+  "encounter_overrides": {
+    "5": "dialogue_gate",
+    "6": "dialogue_gate"
+  },
   "connect": {
     "up": "stage_10",
     "down": "stage_08"
   }
-}{
+}
+{
   "id": "stage_10",
   "name": "巫師王座",
   "subtitle": "Demon Lord's Throne",
   "index": 10,
-  "width": 13,
-  "height": 11,
+  "width": 21,
+  "height": 19,
   "legend": {
     "#": "wall",
     ".": "floor",
@@ -103587,30 +103892,40 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "Z": "monster:demonlord_vorkath"
   },
   "tiles": [
-    "#############",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#D...Z...@..#",
-    "#.H.........#",
-    "#############"
+    "#####################",
+    "#.............#.....#",
+    "#####.#.#.###.###.###",
+    "#.....#.#.#.#.#.....#",
+    "###.#.#.###.#.#.#.###",
+    "#...#.#.#...#.#.#...#",
+    "###.###.#.#####.#####",
+    "#.#...#.#...#.......#",
+    "#.###.###.#####.#.###",
+    "#.....#H..#.....#...#",
+    "###.#####.#.#####.#.#",
+    "#.......#.#.....#.#.#",
+    "###.#####.#.###.#.###",
+    "#.........#...#.#...#",
+    "#.#.#.#####.#.#.###.#",
+    "#.#.#.#.....#.#.#.#.#",
+    "###.#######.#.###.#.#",
+    "#@.D........#.....#Z#",
+    "#####################"
   ],
   "story_note": "Vorkath：『凡人，也敢踏足吾之王座？』——最終決戰。",
+  "preview": "建議 ATK 30+ / DEF 24+ -- Boss：Vorkath（HP 400 / ATK 34 / DEF 14）",
   "connect": {
     "up": null,
     "down": "stage_11"
   }
-}{
+}
+{
   "id": "stage_11",
   "name": "安穩之星",
   "subtitle": "Star of Peace",
   "index": 11,
-  "width": 13,
-  "height": 11,
+  "width": 23,
+  "height": 21,
   "legend": {
     "#": "wall",
     ".": "floor",
@@ -103642,24 +103957,36 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
     "Z": "monster:demonlord_vorkath"
   },
   "tiles": [
-    "#############",
-    "#..H........#",
-    "#........k..#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#...........#",
-    "#U...a...@..#",
-    "#.p.........#",
-    "#############"
+    "#######################",
+    "#.....#.#.#.#U........#",
+    "#.###.#.#.#.#######.#.#",
+    "#...#.#.....#.......#.#",
+    "#.###.#.#.#.#######.###",
+    "#...#...#.#...........#",
+    "###.#######.#######.###",
+    "#...#.......#.#.......#",
+    "#.#####.###.#.###.#.#.#",
+    "#.#.#...#.#.#...#.#.#.#",
+    "#.#.#####.###.#######.#",
+    "#.....#...#...#...#...#",
+    "#####.###.###.#.#.#####",
+    "#.#.#...#.#.#...#.....#",
+    "#.#.#.#.#.#.#.###.#.###",
+    "#...#H#...#...#.#.#...#",
+    "###.###.#.#.###.###.#.#",
+    "#...#...#....a..#.#.#.#",
+    "#.#.#####.###.###.#####",
+    "#@#k.p......#.........#",
+    "#######################"
   ],
   "story_note": "公主獲救，安穩之星重燃——王國迎來黎明。",
+  "preview": "劇情尾聲，無戰鬥。",
   "connect": {
     "up": "stage_10",
     "down": null
   }
-}{
+}
+{
   "store_title": "道具商店",
   "currency": "gold",
   "unlockstage": 1,
@@ -103702,6 +104029,96 @@ Codename: Fighting-State RC1  W e n Q u a n Y i   Z e n   H e i   S h a r p  Wen
       "effect_text": "DEF +1",
       "cost_base": 2,
       "cost_multiplier": 2
+    },
+    {
+      "id": "eq_wand",
+      "name": "見習者法杖",
+      "sprite": "gem_atk.png",
+      "desc": "均衡的入門武器，速度與威力都走中庸路線。",
+      "equipmentId": "wand",
+      "effect_text": "裝備：武器（均衡）",
+      "cost_base": 20,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_twin_daggers",
+      "name": "雙生短匕",
+      "sprite": "gem_atk.png",
+      "desc": "犧牲少許攻擊力，換取極快蓄力與精巧的判定帶。",
+      "equipmentId": "twin_daggers",
+      "effect_text": "裝備：武器（速度型，ATK -2）",
+      "cost_base": 35,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_war_hammer",
+      "name": "戰爭巨鎚",
+      "sprite": "gem_atk.png",
+      "desc": "沉重而強力，蓄力較慢但判定帶寬廣。",
+      "equipmentId": "war_hammer",
+      "effect_text": "裝備：武器（力量型，ATK +8）",
+      "cost_base": 60,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_cloth_robe",
+      "name": "布衣長袍",
+      "sprite": "gem_def.png",
+      "desc": "均衡的入門防具，速度與韌性都走中庸路線。",
+      "equipmentId": "cloth_robe",
+      "effect_text": "裝備：防具（均衡）",
+      "cost_base": 20,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_guardian_plate",
+      "name": "守護重甲",
+      "sprite": "gem_def.png",
+      "desc": "厚重板甲，格擋蓄力較慢但判定帶寬廣。",
+      "equipmentId": "guardian_plate",
+      "effect_text": "裝備：防具（重甲型，DEF +5）",
+      "cost_base": 55,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_swift_leather",
+      "name": "疾風皮甲",
+      "sprite": "gem_def.png",
+      "desc": "犧牲少許防禦力，換取極快的格擋蓄力速度。",
+      "equipmentId": "swift_leather",
+      "effect_text": "裝備：防具（速度型，DEF -2）",
+      "cost_base": 35,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_focus_talisman",
+      "name": "專注護符",
+      "sprite": "exp_up.png",
+      "desc": "延緩蓄力進入衝刺的時機，讓瞄準更從容。",
+      "equipmentId": "focus_talisman",
+      "effect_text": "天賦：專注",
+      "cost_base": 50,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_berserker_charm",
+      "name": "狂戰士護身符",
+      "sprite": "exp_up.png",
+      "desc": "大幅提升攻擊上限，但紅色區域攻擊將完全無效。",
+      "equipmentId": "berserker_charm",
+      "effect_text": "天賦：狂戰士",
+      "cost_base": 60,
+      "cost_multiplier": 1
+    },
+    {
+      "id": "eq_guardian_ring",
+      "name": "守護者之戒",
+      "sprite": "exp_up.png",
+      "desc": "為防禦減傷提供保底下限，蓄力失手也有基本防護。",
+      "equipmentId": "guardian_ring",
+      "effect_text": "天賦：守護",
+      "cost_base": 60,
+      "cost_multiplier": 1
     }
   ]
 }

@@ -10,6 +10,10 @@
           "next": "how"
         },
         {
+          "label": "有沒有我能幫上忙的委託？",
+          "next": "missions"
+        },
+        {
           "label": "明白了。",
           "next": null
         }
@@ -20,6 +24,33 @@
       "choices": [
         {
           "label": "我會做到。",
+          "next": null
+        }
+      ]
+    },
+    "missions": {
+      "text": "村里這陣子……不太安寧。要是你願意，有件事想請你幫忙。",
+      "choices": [
+        {
+          "label": "撫平怨靈——委託任務",
+          "requires": { "all": [
+            { "type": "stageCleared", "stageId": "stage_05" },
+            { "not": { "any": [
+              { "type": "missionActive", "missionId": "m_wraith_purge" },
+              { "type": "missionComplete", "missionId": "m_wraith_purge" }
+            ]}}
+          ]},
+          "next": null,
+          "action": { "type": "startMission", "missionId": "m_wraith_purge" }
+        },
+        {
+          "label": "撫平怨靈——已完成，領取獎勵",
+          "requires": { "type": "missionComplete", "missionId": "m_wraith_purge" },
+          "next": null,
+          "action": { "type": "claimMission", "missionId": "m_wraith_purge" }
+        },
+        {
+          "label": "沒事了。",
           "next": null
         }
       ]

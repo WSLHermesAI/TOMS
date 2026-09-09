@@ -6,8 +6,24 @@
       "text": "怨靈：『仇恨……永不消散……』",
       "choices": [
         {
-          "label": "（戰鬥）",
-          "next": null
+          "label": "你在恨什麼？（傾聽）",
+          "next": "listen",
+          "action": { "type": "setStoryFlag", "flag": "heard_wraith_lament" }
+        },
+        {
+          "label": "（立刻迎戰）",
+          "next": null,
+          "action": { "type": "enterBattle" }
+        }
+      ]
+    },
+    "listen": {
+      "text": "怨靈：『我曾是這片土地的村民……沃卡司的詛咒讓我們死不瞑目……救救……我們……』",
+      "choices": [
+        {
+          "label": "（讓你解脫。）",
+          "next": null,
+          "action": { "type": "enterBattle" }
         }
       ]
     }

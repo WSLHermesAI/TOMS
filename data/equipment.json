@@ -1,0 +1,80 @@
+{
+  "wand": {
+    "id": "wand",
+    "name": "見習者法杖",
+    "sprite": "gem_atk.png",
+    "slot": "weapon",
+    "desc": "均衡的入門武器，速度與威力都走中庸路線。",
+    "stat": { "atk": 0 },
+    "bar": { "v0": 15, "vmax": 200, "rampTime": 1.8, "greenHalf": 15, "blueOuter": 35, "redOuter": 60, "maxMult": 2.0 }
+  },
+  "twin_daggers": {
+    "id": "twin_daggers",
+    "name": "雙生短匕",
+    "sprite": "gem_atk.png",
+    "slot": "weapon",
+    "desc": "犧牲少許攻擊力，換取極快的蓄力速度與短小精悍的判定帶。",
+    "stat": { "atk": -2 },
+    "bar": { "v0": 20, "vmax": 260, "rampTime": 1.0, "greenHalf": 8, "blueOuter": 20, "redOuter": 45, "maxMult": 2.2 }
+  },
+  "war_hammer": {
+    "id": "war_hammer",
+    "name": "戰爭巨鎚",
+    "sprite": "gem_atk.png",
+    "slot": "weapon",
+    "desc": "沉重而強力，蓄力緩慢但判定帶寬廣，容錯率高。",
+    "stat": { "atk": 8 },
+    "bar": { "v0": 10, "vmax": 140, "rampTime": 2.6, "greenHalf": 25, "blueOuter": 40, "redOuter": 75, "maxMult": 2.6 }
+  },
+  "cloth_robe": {
+    "id": "cloth_robe",
+    "name": "布衣長袍",
+    "sprite": "gem_def.png",
+    "slot": "armor",
+    "desc": "均衡的入門防具，速度與韌性都走中庸路線。",
+    "stat": { "def": 0 },
+    "bar": { "v0": 18, "vmax": 220, "rampTime": 1.4, "greenHalf": 15, "blueOuter": 35, "redOuter": 60 }
+  },
+  "guardian_plate": {
+    "id": "guardian_plate",
+    "name": "守護重甲",
+    "sprite": "gem_def.png",
+    "slot": "armor",
+    "desc": "厚重的板甲，格擋蓄力較慢，但判定帶寬廣，適合穩紮穩打。",
+    "stat": { "def": 5 },
+    "bar": { "v0": 12, "vmax": 150, "rampTime": 2.2, "greenHalf": 24, "blueOuter": 38, "redOuter": 68 }
+  },
+  "swift_leather": {
+    "id": "swift_leather",
+    "name": "疾風皮甲",
+    "sprite": "gem_def.png",
+    "slot": "armor",
+    "desc": "犧牲少許防禦力，換取極快的格擋蓄力速度。",
+    "stat": { "def": -2 },
+    "bar": { "v0": 25, "vmax": 280, "rampTime": 0.9, "greenHalf": 7, "blueOuter": 18, "redOuter": 42 }
+  },
+  "focus_talisman": {
+    "id": "focus_talisman",
+    "name": "專注護符",
+    "sprite": "exp_up.png",
+    "slot": "talent",
+    "desc": "延緩蓄力進入衝刺階段的時機，讓你有更充裕的時間瞄準目標區。",
+    "talent": "focus"
+  },
+  "berserker_charm": {
+    "id": "berserker_charm",
+    "name": "狂戰士護身符",
+    "sprite": "exp_up.png",
+    "slot": "talent",
+    "desc": "大幅提升攻擊上限，但落在紅色區域的攻擊將完全無效——高風險高回報。",
+    "talent": "berserker"
+  },
+  "guardian_ring": {
+    "id": "guardian_ring",
+    "name": "守護者之戒",
+    "sprite": "exp_up.png",
+    "slot": "talent",
+    "desc": "為防禦減傷提供一道保底下限，即使蓄力失手也能保有基本防護。",
+    "talent": "guardian"
+  }
+}
