@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp2fr_cl7x.js
+// include: /tmp/tmpsjzni622.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -210,21 +210,21 @@ Module['FS_createPath']("/data", "stages", true, true);
 
   })();
 
-// end include: /tmp/tmp2fr_cl7x.js
-// include: /tmp/tmpvll1x4bv.js
+// end include: /tmp/tmpsjzni622.js
+// include: /tmp/tmpjylgx5sq.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpvll1x4bv.js
-// include: /tmp/tmp4wr_7jyp.js
+  // end include: /tmp/tmpjylgx5sq.js
+// include: /tmp/tmp91yx0j16.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmp4wr_7jyp.js
+  // end include: /tmp/tmp91yx0j16.js
 
 
 var programArgs = [];
@@ -4910,6 +4910,30 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
     }
   }
 
+  var maybeCStringToJsString = (cString) => {
+      // 'cString > 2' checks if the input is a number, and isn't of the special
+      // values we accept here, EMSCRIPTEN_EVENT_TARGET_* (which map to 0, 1, 2).
+      // In other words, if cString > 2 then it's a pointer to a valid place in
+      // memory, and points to a C string.
+      return cString > 2 ? UTF8ToString(cString) : cString;
+    };
+  
+  /** @type {Object} */
+  var specialHTMLTargets = [0, globalThis.document ?? 0, globalThis.window ?? 0];
+  var findEventTarget = (target) => {
+      target = maybeCStringToJsString(target);
+      var domElement = specialHTMLTargets[target] || globalThis.document?.querySelector(target);
+      return domElement;
+    };
+  var findCanvasEventTarget = findEventTarget;
+  
+  var _emscripten_get_canvas_element_size = (target, width, height) => {
+      var canvas = findCanvasEventTarget(target);
+      if (!canvas) return -4;
+      HEAP32[((width)>>2)] = canvas.width;
+      HEAP32[((height)>>2)] = canvas.height;
+    };
+
   var _emscripten_is_main_browser_thread = () =>
       !ENVIRONMENT_IS_WORKER;
 
@@ -5013,22 +5037,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       eval(UTF8ToString(ptr));
     };
 
-  var maybeCStringToJsString = (cString) => {
-      // 'cString > 2' checks if the input is a number, and isn't of the special
-      // values we accept here, EMSCRIPTEN_EVENT_TARGET_* (which map to 0, 1, 2).
-      // In other words, if cString > 2 then it's a pointer to a valid place in
-      // memory, and points to a C string.
-      return cString > 2 ? UTF8ToString(cString) : cString;
-    };
-  
-  /** @type {Object} */
-  var specialHTMLTargets = [0, globalThis.document ?? 0, globalThis.window ?? 0];
-  var findEventTarget = (target) => {
-      target = maybeCStringToJsString(target);
-      var domElement = specialHTMLTargets[target] || globalThis.document?.querySelector(target);
-      return domElement;
-    };
-  var findCanvasEventTarget = findEventTarget;
   var _emscripten_set_canvas_element_size = (target, width, height) => {
       var canvas = findCanvasEventTarget(target);
       if (!canvas) return -4;
@@ -8370,8 +8378,8 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('wasmBinary');
 }
 var ASM_CONSTS = {
-  127732: () => { try { if (typeof FS === 'undefined') return; try { FS.mkdir('/save'); } catch (e) {} FS.mount(IDBFS, {}, '/save'); Module.__tomsSyncfs = function(load) { try { FS.syncfs(!!load, function(err) { if (err) { console.warn('[TOMS] syncfs', err); return; } if (load && typeof Module !== 'undefined' && Module.ccall) { try { Module.ccall('jsRefreshSlots', 'null', [], []); } catch (e) {} } }); } catch (e) { console.warn('[TOMS] syncfs failed', e); } }; Module.__tomsSyncfs(true); } catch (e) { console.warn('[TOMS] IDBFS mount failed; saves are session-only:', e); } },  
- 128297: () => { if (typeof Module !== 'undefined' && Module.__tomsSyncfs) Module.__tomsSyncfs(false); }
+  127812: () => { try { if (typeof FS === 'undefined') return; try { FS.mkdir('/save'); } catch (e) {} FS.mount(IDBFS, {}, '/save'); Module.__tomsSyncfs = function(load) { try { FS.syncfs(!!load, function(err) { if (err) { console.warn('[TOMS] syncfs', err); return; } if (load && typeof Module !== 'undefined' && Module.ccall) { try { Module.ccall('jsRefreshSlots', 'null', [], []); } catch (e) {} } }); } catch (e) { console.warn('[TOMS] syncfs failed', e); } }; Module.__tomsSyncfs(true); } catch (e) { console.warn('[TOMS] IDBFS mount failed; saves are session-only:', e); } },  
+ 128377: () => { if (typeof Module !== 'undefined' && Module.__tomsSyncfs) Module.__tomsSyncfs(false); }
 };
 
 // Imports from the Wasm binary.
@@ -8525,6 +8533,8 @@ var wasmImports = {
   emscripten_date_now: _emscripten_date_now,
   /** @export */
   emscripten_fetch_free: _emscripten_fetch_free,
+  /** @export */
+  emscripten_get_canvas_element_size: _emscripten_get_canvas_element_size,
   /** @export */
   emscripten_is_main_browser_thread: _emscripten_is_main_browser_thread,
   /** @export */
