@@ -15,7 +15,11 @@ fnt = ImageFont.truetype(FONT, 24)
 
 # Collect characters
 chars = set()
-for f in glob.glob("/home/fatming/tower_vulkan/data/**/*.json", recursive=True):
+# Repo-relative (was a hardcoded absolute path into another checkout, which silently baked the
+# WRONG project's glyphs into the shipped atlas -- including no glyphs at all for text that only
+# exists here, e.g. the title phase's data/text.json strings).
+ROOT = os.path.dirname(os.path.abspath(__file__))
+for f in glob.glob(os.path.join(ROOT, "data/**/*.json"), recursive=True):
     try:
         s = open(f, encoding="utf-8").read()
     except Exception:
@@ -36,6 +40,10 @@ HUD_STRINGS = [
     "使用", "離開", "是", "否", "背包", "方向鍵", "丟棄", "關閉", "任意鍵",
     "勝利", "獲得", "倒下", "返回", "本層", "起點", "擊敗", "安穩", "之星",
     "重燃", "王國", "黎明", "公主", " rescued", "沃卡司", "封印",
+    # Title phase (New Game / Continue / Settings) — data/text.json also carries these, but the
+    # explicit list keeps the atlas correct even if that file is edited or missing.
+    "新遊戲", "繼續遊戲", "設定", "存檔", "空", "語言", "繁體中文", "English",
+    "遊玩時間", "已儲存進度", "沒有存檔時請先開始新遊戲", "關卡", "等級",
 ]
 for s in HUD_STRINGS:
     for ch in s:

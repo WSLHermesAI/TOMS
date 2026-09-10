@@ -13,6 +13,9 @@
 #include "equipment_system.h" // toms::EquippedSet/EquipmentDefinition — see Game::equipped_/equipmentDefs_
 #include "entity_status.h"   // toms::EntityStatus/entityStatusKey — see Game::entityStatus_
 #include "stage.h"
+#include "title_screen.h"    // toms::TitleScreen/TitleAction — the title phase (New Game/Continue/Settings)
+#include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
+#include "localization.h"    // toms::Locale — key -> localized string (data/text.json)
 #include "font.h"        // runtime TTF -> atlas (stb_truetype), replaces offline font_atlas.png
 #include <stb_truetype.h> // complete stbtt_fontinfo for ~Font (unique_ptr member)
 #ifndef __EMSCRIPTEN__
@@ -145,7 +148,7 @@ public:
     // as a modal overlay too, not just cs.active -- otherwise the world underneath (movement,
     // NPC interact, the store icon, Tab/B shortcuts) keeps responding to input while the victory
     // screen is still up. See docs/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
-    bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_; }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm)
+    bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title)
     bool combatWon() const { return cs.won; }
     // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
     // keyboard path (Enter/Space) had no equivalent before this fix, so "press any key to
@@ -185,6 +188,39 @@ public:
     void cancelStageTransition();
     Player& player() { return pl; }
     IRenderer* renderer() { return ren; }   // for batch-metric inspection (demo)
+
+    // ---- Title phase (Boot screen: New Game / Continue / Settings) ----
+    // The title phase is the game's boot screen: Game::loadAssets() opens it, and nothing in
+    // the world responds to input until the player picks something (modalActive() includes it).
+    // New Game resets progress and loads stage01; Continue lists the save slots on disk and
+    // resumes one; Settings currently offers the language. See src/game/title_screen.h for the
+    // page/selection state machine and docs/TITLE_PHASE.md for the flow.
+    bool titleOpen() const { return title_.isOpen(); }
+    const toms::TitleScreen& title() const { return title_; }
+    // Input, in the same shape the other overlays use: a direction move, a confirm, a cancel,
+    // and a design-space (1024x768) tap. Each routes to the current title page.
+    void titleMove(int dx, int dy);
+    void titleConfirm();
+    void titleCancel();
+    void titleClick(float x, float y);
+    void drawTitleScreen();               // draws the title overlay; no-op unless titleOpen()
+    // Starts a brand new run: default player stats, cleared meta/story/entity progress, and a
+    // fresh slot (or the lowest-numbered slot when all are taken). Writes the slot immediately.
+    void newGame();
+    // Resumes slot N (1-based). Returns false (and leaves the title open) when that slot has no
+    // save, so the caller can show "no save here" instead of dropping the player into nothing.
+    bool continueFromSlot(int slot);
+    // Re-reads the slot files into the title's Continue list.
+    void refreshSlots();
+    // Writes the current run to activeSlot() atomically (no-op when no slot is active).
+    void saveCurrentRun();
+    // Applies settings_.language to the string table and persists settings.json.
+    void applyLanguage();
+    int activeSlot() const { return activeSlot_; }
+    int playTimeSec() const { return playTimeSec_; }
+    const toms::Locale& locale() const { return locale_; }
+    const toms::GameSettings& settings() const { return settings_; }
+    toms::GameSettings& mutableSettings() { return settings_; }
     // Derived, read-only classification of "what screen/mode is the game in right now",
     // computed from the existing modal flags — see docs/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md
     // §4 and docs/IMPLEMENTATION_ROADMAP.md Milestone 1. Does not change control flow; the
@@ -349,7 +385,10 @@ private:
     bool stageSelectOpen_ = false;
     // Milestone 8: `preview` is the recommended-stats blurb shown in Stage Select, authored per
     // stage JSON's optional top-level "preview" string (empty for a file that doesn't set one).
-    struct StageInfo { std::string id; std::string name; int index = 0; std::string preview; };
+    struct StageInfo { std::string id; std::string name; int index = 0; std::string preview;
+                       std::string fileStem; };   // filename stem, e.g. "stage01" (the id inside
+                                                  // the JSON is "stage_01" -- the game loads by
+                                                  // stem, so matching needs both)
     std::vector<StageInfo> stageList_;
     bool stageListLoaded_ = false;
     void ensureStageListLoaded();
@@ -411,5 +450,28 @@ private:
         TOMS_OBJECT(AudioStub)
     } audio;
 #endif
+
+    // ---- Title phase state (see the public title block above) ----
+    toms::TitleScreen title_;
+    toms::GameSettings settings_;
+    toms::Locale locale_;
+    // Rebuilt every drawTitleScreen() and read back by titleClick(), so a tap always lands on
+    // the row that was actually drawn (one layout function, two consumers).
+    toms::TitleLayout titleLayout_;
+    int activeSlot_ = 0;      // 0 = none chosen yet; set by newGame()/continueFromSlot()
+    int playTimeSec_ = 0;     // this run's accumulated play time (shown in the Continue list)
+    bool saveDirty_ = false;  // progress changed since the last slot write
+    int saveFlushMs_ = 0;     // countdown used to throttle autosave (see update())
+    static constexpr int kAutosaveIntervalMs = 3000;   // flush at most this often, when dirty
+    void markProgressDirty() { saveDirty_ = true; }
+    // Performs whatever the title phase asked for (see title_screen.h's TitleAction).
+    void handleTitleAction(toms::TitleAction a);
+    std::string stageDisplayName(const std::string& id) const;
+    toms::RunSaveData runSaveFromState() const;
+    // Applies a loaded slot to the live game state, then loads its stage.
+    void applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& r, int slot, int playTimeSec);
+    // One title-row button: framed panel + label + optional sub-label, highlighted when selected.
+    void drawTitleButton(const toms::TitleRow& r, const std::string& label,
+                         const std::string& sub, bool selected, const float accent[4]);
     TOMS_OBJECT(Game)
 };

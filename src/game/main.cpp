@@ -133,6 +133,24 @@ int main(int argc, char** argv) {
             bool spacePressed = keyPressed(GLFW_KEY_SPACE);
             bool escPressed   = keyPressed(GLFW_KEY_ESCAPE);
 
+            // ---- Title phase (Boot screen): New Game / Continue / Settings ----
+            // While it is up it owns the keyboard, and every gameplay binding below is skipped
+            // (the world behind it is inert anyway -- Game::modalActive() includes the title).
+            if (g.titleOpen()) {
+                if (upPressed)    g.titleMove(0, -1);
+                if (downPressed)  g.titleMove(0,  1);
+                if (leftPressed)  g.titleMove(-1, 0);
+                if (rightPressed) g.titleMove( 1, 0);
+                if (enterPressed || spacePressed) g.titleConfirm();
+                if (escPressed) {
+                    // Esc steps Back out of Continue/Settings; on the Menu page it quits, which
+                    // is what Escape did before the title phase existed.
+                    if (g.title().page() == toms::TitlePage::Menu) break;
+                    g.titleCancel();
+                }
+            }
+            if (!g.titleOpen()) {
+
             if (keyPressed(GLFW_KEY_F1)) showDebugOverlay = !showDebugOverlay;
             if (keyPressed(GLFW_KEY_F2)) showStylingSpike = !showStylingSpike;
             // Escape: close whatever modal is open (store, then inventory) before quitting the
@@ -221,6 +239,8 @@ int main(int argc, char** argv) {
                 if (enterPressed) g.storeKey(13);
             }
 
+            }   // end of gameplay input (skipped while the title phase is up)
+
             // Mouse: desktop clicks were never wired to the store/dialogue/inventory click
             // targets at all -- handleTouch()/storeClick() previously only ran from the web/
             // touch input path (see emscripten_main.cpp). Forward a left-click the same way, in
@@ -266,8 +286,10 @@ int main(int argc, char** argv) {
             g.setStylingSpikeVisible(false);
             if (showStylingSpike) g.drawStylingSpike();
             // Milestone 5: notifications are always drawn when any are queued (not a dev
-            // toggle); the Stage Select hub draws only while open (Tab to toggle).
-            g.drawNotifications();
+            // toggle) EXCEPT while the title phase is up: the title is a full-screen boot
+            // screen drawn with the game's own font, and ImGui toasts (default font, no CJK
+            // glyphs) would land on top of it as stray "?" boxes.
+            if (!g.titleOpen()) g.drawNotifications();
             if (g.stageSelectOpen()) g.drawStageSelect();
             imguiLayer.endFrame();
             g.draw();

@@ -19,6 +19,7 @@ extern "C" {
 EMSCRIPTEN_KEEPALIVE
 void jsMove(int dx, int dy) {
     if (!g_game) return;
+    if (g_game->titleOpen()) { g_game->titleMove(dx, dy); return; }   // title phase owns input
     if (g_game->inventoryOpen()) { g_game->invMoveSel(dx, dy); return; }
     if (g_game->modalActive()) return;
     g_game->movePlayer(dx, dy);
@@ -26,10 +27,15 @@ void jsMove(int dx, int dy) {
 EMSCRIPTEN_KEEPALIVE
 void jsInteract() {
     if (!g_game) return;
+    if (g_game->titleOpen()) { g_game->titleConfirm(); return; }
     if (g_game->inventoryOpen()) { g_game->invUseSelected(); return; }
     if (g_game->modalActive()) return;
     g_game->interact();
 }
+// Called from the IDBFS sync-in callback below: slots read before IndexedDB finished loading
+// would look empty, so the Continue list is re-read once the files are actually there.
+EMSCRIPTEN_KEEPALIVE
+void jsRefreshSlots() { if (g_game) g_game->refreshSlots(); }
 EMSCRIPTEN_KEEPALIVE
 void jsInventory() { if (g_game) g_game->toggleInventory(); }
 EMSCRIPTEN_KEEPALIVE
@@ -81,6 +87,17 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
     (void)eventType; (void)userData;
     if (!g_game) return EM_FALSE;
     std::string k = e->key;
+    // Title phase (Boot screen): it owns the keyboard while it is up — same bindings as the
+    // desktop build's main.cpp (arrows/WASD to move, Enter/Space to confirm, Esc to go back).
+    if (g_game->titleOpen()) {
+        if (k == "ArrowUp"    || k == "w" || k == "W")      g_game->titleMove(0, -1);
+        else if (k == "ArrowDown"  || k == "s" || k == "S") g_game->titleMove(0, 1);
+        else if (k == "ArrowLeft"  || k == "a" || k == "A") g_game->titleMove(-1, 0);
+        else if (k == "ArrowRight" || k == "d" || k == "D") g_game->titleMove(1, 0);
+        else if (k == "Enter" || k == " ")                  g_game->titleConfirm();
+        else if (k == "Escape")                             g_game->titleCancel();
+        return EM_TRUE;   // swallow everything else while the title is up
+    }
     if (k == "i" || k == "I") { g_game->toggleInventory(); return EM_TRUE; }
     if (g_game->inventoryOpen()) {
         if (k == "ArrowLeft")  { g_game->invMoveSel(-1, 0); return EM_TRUE; }
@@ -168,6 +185,31 @@ int main() {
     emscripten_webgl_make_context_current(ctx);
 #endif
     emscripten_set_canvas_element_size("#canvas", 1024, 768);
+
+    // ---- Saves that survive a page reload ----
+    // save_slots.h's defaultSaveDir() is /save in the browser. Mount IndexedDB-backed IDBFS
+    // there so slot files persist; when IndexedDB is unavailable (e.g. private browsing) the
+    // mount throws and the game keeps running with an in-memory /save — saves then last for the
+    // session only, which is still better than not saving at all. The initial sync-in is async,
+    // so the Continue list is re-read (jsRefreshSlots) once the files have actually arrived.
+    EM_ASM({
+        try {
+            if (typeof FS === 'undefined') return;
+            try { FS.mkdir('/save'); } catch (e) {}
+            FS.mount(IDBFS, {}, '/save');
+            Module.__tomsSyncfs = function(load) {
+                try {
+                    FS.syncfs(!!load, function(err) {
+                        if (err) { console.warn('[TOMS] syncfs', err); return; }
+                        if (load && typeof Module !== 'undefined' && Module.ccall) {
+                            try { Module.ccall('jsRefreshSlots', 'null', [], []); } catch (e) {}
+                        }
+                    });
+                } catch (e) { console.warn('[TOMS] syncfs failed', e); }
+            };
+            Module.__tomsSyncfs(true);
+        } catch (e) { console.warn('[TOMS] IDBFS mount failed; saves are session-only:', e); }
+    });
 
     emscripten_run_script(TOMS_WEB_UI);
 

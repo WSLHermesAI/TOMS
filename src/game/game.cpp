@@ -1,5 +1,6 @@
 // game.cpp — implementation of Game.
 #include "game.h"
+#include <cstdio>    // std::snprintf (title screen's play-time column)
 #include "node.h"   // 2D scene-graph Node (parent/child + local/world transform)
 #include "scene.h"  // render binding: GameObject / SpriteNode / TextNode / FullScreenSplash
 
@@ -244,6 +245,26 @@ bool Game::loadAssets(const std::string& assetDir) {
     // init player
     pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
     pl.inv = {"potion_red", "potion_blue", "exp_up"};
+
+    // ---- Title phase boot ----
+    // Persisted preferences (language, slot count) + the string table, then show the title.
+    // modalActive() includes the title, so the world main.cpp loads next sits inert behind it
+    // until the player chooses New Game or Continue. data/text.json is under data/, which the
+    // TTF codepoint collector above already globs, so its glyphs are in the atlas before this
+    // runs (the browser build's pre-baked atlas needs regenerating with gen_font_atlas.py).
+    {
+        toms::ensureSaveDir(toms::defaultSaveDir());
+        bool haveSettings = false;
+        settings_ = toms::loadGameSettings(toms::defaultSaveDir() + "/settings.json", &haveSettings);
+        locale_.loadFromFile(dataDir + "/../data/text.json");
+        locale_.setLanguage(settings_.language);
+        title_.setSlotCount(settings_.slotCount);
+        title_.setLanguageCount(locale_.languageCount());
+        title_.setLanguageIndex(locale_.languageIndex());
+        title_.open();
+        refreshSlots();
+        if (!haveSettings) applyLanguage();   // write defaults once, so the file exists
+    }
     // init SFX subsystem (no-op if no audio device; headless-safe). Disabled on
     // the Emscripten/WebGL build to keep the browser bundle free of audio deps.
 #ifndef __EMSCRIPTEN__
@@ -513,6 +534,15 @@ static std::string entSprite(const std::string& id) {
 
 void Game::draw() {
     ren->begin();
+    // Title phase (Boot screen): drawn INSTEAD of the world, then nothing else. There is
+    // nothing meaningful to show behind it yet, and skipping the world draw keeps the title's
+    // layout independent of whatever stage happens to be loaded underneath it.
+    if (title_.isOpen()) {
+        ren->setNode(NODE_UNSPEC);
+        drawTitleScreen();
+        ren->end();
+        return;
+    }
     float W = (float)ren->width(), H = (float)ren->height();
     // Milestone 9: stage grids are no longer a fixed 13x11 -- Wilson's-algorithm mazes
     // grow with floor depth (see tools/gen_mazes.py), so the tile pixel size must shrink
@@ -710,6 +740,9 @@ void Game::handleTouch(float px, float py, int phase) {
     // out-of-range). Prevents bad state / out-of-bounds in the hit-test below.
     if (!(px == px) || !(py == py)) return;            // NaN check
     if (px < 0 || px > 1024 || py < 0 || py > 768) return;
+    // Title phase: every tap goes to the title's own hit-testing (menu rows / save slots /
+    // language rows / Back). Checked first — while it is up, it is the only interactive screen.
+    if (title_.isOpen()) { if (phase == 0) titleClick(px, py); return; }
     // --- Store overlay: route ALL taps to storeClick. Store buttons (icon / buy / close)
     //     are NOT gamepad rects, so this must run BEFORE the gamepad hit-test below,
     //     otherwise taps on store UI hit `id<0` and are dropped. ---
@@ -1156,6 +1189,7 @@ void Game::ensureStageListLoaded() {
             info.id = j.value("id", std::string());
             info.name = j.value("name", info.id);
             info.index = j.value("index", 0);
+            info.fileStem = e.path().stem().string();
             // Milestone 8: recommended-stats blurb, authored per stage JSON's optional top-level
             // "preview" string -- empty for a file that doesn't set one (none did before M8).
             info.preview = j.value("preview", std::string());
@@ -1490,6 +1524,7 @@ void Game::buyStoreItem(int idx) {
     toastMsg_ = "購買成功：" + d.name + "！";
     toastTimer_ = 1400;
     audio.play("get_item");
+    markProgressDirty();   // a purchase changes gold/stats/equipment: autosave will flush it
 }
 
 
@@ -1596,6 +1631,9 @@ void Game::confirmStageTransition() {
     stairsConfirmOpen_ = false;
     stairsConfirmTarget_.clear();
     loadStage(target);
+    // A floor change is the run's natural checkpoint: write/refresh the slot immediately
+    // (rather than waiting for the throttled autosave) so the Continue list is always current.
+    saveCurrentRun();
 }
 
 void Game::cancelStageTransition() {
@@ -1637,6 +1675,7 @@ void Game::enterNode(const std::string& node) {
 void Game::chooseDialogue(int idx) {
     if (!inDialogue) return;
     if (idx < 0 || idx >= (int)dlgChoices.size()) return;
+    markProgressDirty();   // dialogue choices move story flags/beats, which the meta save holds
     audio.play("confirm_click");
     auto ch = dlgChoices[idx];   // copy: runDialogueAction (e.g. enterBattle) may resize dlgChoices
     toms::globalEventBus().publish(toms::ChoiceMade{dlgNpc, ch.label});
@@ -1786,6 +1825,10 @@ void Game::interact() {
 
 toms::GameState Game::currentState() const {
     using toms::GameState;
+    // Title phase (Boot): reported as MainMenu, with its Settings page mapping to
+    // GameState::Settings — game_state.h's table already allows MainMenu <-> Settings.
+    if (title_.isOpen())
+        return (title_.page() == toms::TitlePage::Settings) ? GameState::Settings : GameState::MainMenu;
     if (cs.active) return GameState::DirectBattle;
     if (inDialogue) return GameState::Dialogue;
     if (storeOpen || storeUnlockDlg) return GameState::Merchant;
@@ -1984,12 +2027,14 @@ void Game::finishCombatWin() {
     toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, cs.enemy.x, cs.enemy.y), toms::EntityStatus::Defeated);
     toms::globalEventBus().publish(toms::EnemyDefeated{cs.enemy.id, curStage});
     if (cs.enemy.boss) { cs.log = "你擊敗了 Vorkath！安穩之星重燃。"; loadStage("stage_11"); }
+    markProgressDirty();   // gold/exp/level/entity-status all changed: autosave will flush it
 }
 
 void Game::finishCombatLose() {
     cs.active = false; cs.won = false;
     pl.hp = pl.maxhp/2; // respawn at stage start
     loadStage(curStage); // reset monsters/items
+    markProgressDirty();
 }
 
 // Attack Bar released: apply damage to the enemy (FIGHT_SCENE_DESIGN.md §4's power_mult curve,
@@ -2072,7 +2117,316 @@ void Game::battleChargeRelease() {
     else if (cs.phase == CombatState::Phase::DefenseCharging) resolveDefenseRelease(heldSeconds);
 }
 
+// =====================================================================================
+// Title phase — New Game / Continue / Settings (see src/game/title_screen.h)
+// =====================================================================================
+
+// "HH:MM:SS" for the Continue list's play-time column.
+static std::string fmtPlayTime(int sec) {
+    if (sec < 0) sec = 0;
+    char b[32];
+    std::snprintf(b, sizeof(b), "%02d:%02d:%02d", sec / 3600, (sec / 60) % 60, sec % 60);
+    return std::string(b);
+}
+
+std::string Game::stageDisplayName(const std::string& id) const {
+    // Match either identifier: the game loads stages by FILE STEM ("stage01"), while the id
+    // inside the JSON is "stage_01" -- so a pure id comparison silently missed and the Continue
+    // list showed the raw stem instead of the stage's real name.
+    for (const auto& s : stageList_)
+        if (s.id == id || s.fileStem == id) return s.name.empty() ? id : s.name;
+    return id;
+}
+
+// Snapshots the live game state into the Run-save schema (save_system.h) for writing to a slot.
+toms::RunSaveData Game::runSaveFromState() const {
+    toms::RunSaveData r;
+    r.currentStageId = curStage;
+    r.player.hp = pl.hp; r.player.maxhp = pl.maxhp;
+    r.player.atk = pl.atk; r.player.def = pl.def;
+    r.player.gold = pl.gold; r.player.exp = pl.exp; r.player.lv = pl.lv;
+    r.player.key_yellow = pl.key_yellow; r.player.key_blue = pl.key_blue; r.player.key_red = pl.key_red;
+    r.player.inv = pl.inv;
+    r.entityStatus = entityStatus_;
+    return r;
+}
+
+void Game::saveCurrentRun() {
+    if (activeSlot_ <= 0) return;          // no slot chosen yet (title still up at boot)
+    ensureStageListLoaded();
+    const std::string dir = toms::defaultSaveDir();
+    if (toms::writeSlotSave(dir, activeSlot_, meta_, runSaveFromState(), playTimeSec_,
+                            toms::nowStamp(), stageDisplayName(curStage))) {
+        saveDirty_ = false;
+    }
+    if (title_.isOpen()) refreshSlots();
+}
+
+void Game::refreshSlots() {
+    std::vector<toms::SlotSummary> v;
+    const std::string dir = toms::defaultSaveDir();
+    for (int i = 1; i <= title_.slotCount(); i++) v.push_back(toms::summarizeSlot(dir, i));
+    title_.setSummaries(std::move(v));
+}
+
+void Game::applyLanguage() {
+    // The Settings page owns the selection -- mirror it into the persisted preference. Reading
+    // it back from title_ (rather than re-applying the old settings_.language) is what makes
+    // the choice actually stick: without this the freshly-picked language was overwritten by
+    // the stale preference on the very same call, so the UI snapped back.
+    const int idx = title_.languageIndex();
+    if (idx >= 0 && idx < locale_.languageCount())
+        settings_.language = locale_.languages()[idx].code;
+    locale_.setLanguage(settings_.language);
+    settings_.language = locale_.languageCode();   // normalize (e.g. an unknown code -> default)
+    title_.setLanguageIndex(locale_.languageIndex());
+    toms::ensureSaveDir(toms::defaultSaveDir());
+    toms::saveGameSettings(toms::defaultSaveDir() + "/settings.json", settings_);
+}
+
+void Game::applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& r,
+                          int slot, int playSec) {
+    meta_ = m;
+    entityStatus_ = r.entityStatus;
+    // Anything that belongs to the *previous* run must not leak into the loaded one.
+    missionTrackers_.clear();
+    notifications_.clear();
+    cs = CombatState{};
+    inDialogue = false; dlgChoices.clear(); dlgNode = "root";
+    invOpen = false; storeOpen = false; storeUnlockDlg = false;
+    stageSelectOpen_ = false; stairsConfirmOpen_ = false;
+    pl.hp = r.player.hp; pl.maxhp = r.player.maxhp;
+    pl.atk = r.player.atk; pl.def = r.player.def;
+    pl.gold = r.player.gold; pl.exp = r.player.exp; pl.lv = r.player.lv;
+    pl.key_yellow = r.player.key_yellow; pl.key_blue = r.player.key_blue; pl.key_red = r.player.key_red;
+    pl.inv = r.player.inv;
+    activeSlot_ = slot;
+    playTimeSec_ = playSec;
+    loadStage(r.currentStageId.empty() ? std::string("stage01") : r.currentStageId);
+    title_.close();
+    title_.setRunInProgress(true);
+}
+
+bool Game::continueFromSlot(int slot) {
+    if (slot <= 0) return false;
+    toms::MetaSaveData m;
+    toms::RunSaveData r;
+    int playSec = 0;
+    if (!toms::readSlotSave(toms::defaultSaveDir(), slot, m, r, &playSec, nullptr)) {
+        // Deliberately silent: the Continue row already reads "[空]/[Empty]" and the page shows
+        // "no saves yet -- start a new game first", and the toast path draws with ImGui's
+        // default font, which has no CJK glyphs (it would render as a "?" box). The title stays
+        // open, so there is nothing to resume from.
+        refreshSlots();
+        return false;
+    }
+    applyLoadedRun(m, r, slot, playSec);
+    return true;
+}
+
+void Game::newGame() {
+    // A new game is a genuinely fresh run: default stats and wiped story/entity/meta progress.
+    pl = Player();
+    pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
+    pl.inv = {"potion_red", "potion_blue", "exp_up"};
+    pl.x = 1; pl.y = 1;
+    entityStatus_.clear();
+    missionTrackers_.clear();
+    meta_ = toms::MetaSaveData{};
+    notifications_.clear();
+    cs = CombatState{};
+    inDialogue = false; dlgChoices.clear(); dlgNode = "root";
+    invOpen = false; storeOpen = false; storeUnlockDlg = false;
+    stageSelectOpen_ = false; stairsConfirmOpen_ = false;
+    playTimeSec_ = 0;
+    // Prefer a free slot; when every slot is taken, reuse slot 1 rather than refusing to start
+    // (the Continue page still lists all of them, so nothing is silently destroyed).
+    int free = toms::firstEmptySlot(toms::defaultSaveDir(), title_.slotCount());
+    activeSlot_ = (free > 0) ? free : 1;
+    loadStage("stage01");
+    saveCurrentRun();
+    title_.close();
+    title_.setRunInProgress(true);
+}
+
+void Game::handleTitleAction(toms::TitleAction a) {
+    switch (a) {
+        case toms::TitleAction::NewGame:      newGame(); break;
+        case toms::TitleAction::LoadSlot:     continueFromSlot(title_.pendingSlot()); break;
+        case toms::TitleAction::OpenContinue: refreshSlots(); break;   // always show current files
+        case toms::TitleAction::SetLanguage:  applyLanguage(); break;
+        case toms::TitleAction::OpenSettings:
+        case toms::TitleAction::Back:
+        case toms::TitleAction::None:         break;
+    }
+}
+
+void Game::titleMove(int dx, int dy) {
+    if (!title_.isOpen()) return;
+    toms::TitleAction a = toms::TitleAction::None;
+    if (dy != 0) a = title_.moveVertical(dy);
+    if (dx != 0) {
+        toms::TitleAction h = title_.moveHorizontal(dx);   // Settings: left/right switches language
+        if (a == toms::TitleAction::None) a = h;
+    }
+    handleTitleAction(a);
+}
+
+void Game::titleConfirm() {
+    if (title_.isOpen()) handleTitleAction(title_.activate());
+}
+
+void Game::titleCancel() {
+    if (title_.isOpen()) handleTitleAction(title_.cancel());
+}
+
+void Game::titleClick(float x, float y) {
+    if (!title_.isOpen()) return;
+    handleTitleAction(title_.click(x, y, titleLayout_));
+}
+
+// One title row: framed panel + left accent bar + label (+ optional dim sub-label), with the
+// highlight reserved for the row the cursor is on. Solid-tint quads only -- the title screen
+// ships no art, so it renders identically on every backend for free.
+void Game::drawTitleButton(const toms::TitleRow& r, const std::string& label, const std::string& sub,
+                           bool selected, const float accent[4]) {
+    static const float hi[4]  = {1.00f, 0.97f, 0.86f, 1.0f};
+    static const float dflt[4]= {0.86f, 0.88f, 0.94f, 1.0f};
+    static const float dim[4] = {0.60f, 0.64f, 0.76f, 1.0f};
+
+    Quad panel;
+    panel.rect[0] = r.x; panel.rect[1] = r.y; panel.rect[2] = r.w; panel.rect[3] = r.h;
+    panel.uv[0] = 0; panel.uv[1] = 0; panel.uv[2] = 1; panel.uv[3] = 1;
+    panel.solid = true;
+    panel.tint[0] = selected ? 0.20f : 0.11f;
+    panel.tint[1] = selected ? 0.21f : 0.12f;
+    panel.tint[2] = selected ? 0.30f : 0.18f;
+    panel.tint[3] = 0.96f;
+    ren->drawSprite(panel);
+
+    Quad bar;
+    bar.rect[0] = r.x; bar.rect[1] = r.y; bar.rect[2] = 6.0f; bar.rect[3] = r.h;
+    bar.uv[0] = 0; bar.uv[1] = 0; bar.uv[2] = 1; bar.uv[3] = 1;
+    bar.solid = true;
+    bar.tint[0] = accent[0]; bar.tint[1] = accent[1]; bar.tint[2] = accent[2];
+    bar.tint[3] = selected ? 1.0f : 0.35f;
+    ren->drawSprite(bar);
+
+    const float labelSize = 26.0f;
+    const bool hasSub = !sub.empty();
+    const float ly = hasSub ? r.y + 7.0f : r.y + (r.h - labelSize) * 0.5f;
+    drawText(label, r.x + 22.0f, ly, labelSize, selected ? hi : dflt);
+    if (hasSub) drawText(sub, r.x + 22.0f, ly + labelSize + 1.0f, 15.0f, dim);
+    if (selected) drawText(">", r.x - 26.0f, ly, labelSize, accent);
+}
+
+void Game::drawTitleScreen() {
+    if (!ren) return;
+    const float W = (float)ren->width(), H = (float)ren->height();
+    // Same layout function titleClick() hit-tests against -> a tap always lands on what was drawn.
+    titleLayout_ = toms::computeTitleLayout((int)W, (int)H, title_.slotCount(), locale_.languageCount());
+
+    static const float gold[4] = {0.95f, 0.82f, 0.45f, 1.0f};
+    static const float dim[4]  = {0.60f, 0.64f, 0.76f, 1.0f};
+
+    // Full-screen backdrop + two horizontal rules: a framed look with no art assets.
+    Quad bg;
+    bg.rect[0] = 0; bg.rect[1] = 0; bg.rect[2] = W; bg.rect[3] = H;
+    bg.uv[0] = 0; bg.uv[1] = 0; bg.uv[2] = 1; bg.uv[3] = 1;
+    bg.solid = true;
+    bg.tint[0] = 0.05f; bg.tint[1] = 0.05f; bg.tint[2] = 0.09f; bg.tint[3] = 1.0f;
+    ren->drawSprite(bg);
+
+    Quad rule;
+    rule.rect[0] = 0; rule.rect[2] = W; rule.rect[3] = 2.0f;
+    rule.uv[0] = 0; rule.uv[1] = 0; rule.uv[2] = 1; rule.uv[3] = 1;
+    rule.solid = true;
+    rule.tint[0] = gold[0]; rule.tint[1] = gold[1]; rule.tint[2] = gold[2]; rule.tint[3] = 0.55f;
+    rule.rect[1] = 74.0f;  ren->drawSprite(rule);
+    rule.rect[1] = H - 62.0f; ren->drawSprite(rule);
+
+    const std::string title = locale_.tr("game.title");
+    float tw = measureText(title, 52);
+    drawText(title, (W - tw) * 0.5f, 92.0f, 52, gold);
+    const std::string subtitle = locale_.tr("game.subtitle");
+    float sw = measureText(subtitle, 17);
+    drawText(subtitle, (W - sw) * 0.5f, 152.0f, 17, dim);
+
+    switch (title_.page()) {
+        case toms::TitlePage::Menu: {
+            static const char* keys[3] = {"menu.new_game", "menu.continue", "menu.settings"};
+            static const char* desc[3] = {"menu.new_game.desc", "menu.continue.desc", "menu.settings.desc"};
+            for (int i = 0; i < toms::TitleLayout::kMaxMenuRows; i++)
+                drawTitleButton(titleLayout_.menuRow[i], locale_.tr(keys[i]), locale_.tr(desc[i]),
+                                title_.menuSelection() == i, gold);
+            break;
+        }
+        case toms::TitlePage::Continue: {
+            const std::string head = locale_.tr("continue.header");
+            drawText(head, (W - measureText(head, 30)) * 0.5f, 196.0f, 30, gold);
+            const auto& sums = title_.summaries();
+            bool any = false;
+            for (int i = 0; i < titleLayout_.slotRowCount; i++) {
+                std::string label = locale_.tr("continue.slot") + " " + std::to_string(i + 1);
+                std::string sub;
+                if (i < (int)sums.size() && sums[i].exists) {
+                    const toms::SlotSummary& s = sums[i];
+                    any = true;
+                    label += "   " + (s.stageName.empty() ? s.stageId : s.stageName)
+                           + "   " + locale_.tr("hud.level") + " " + std::to_string(s.lv)
+                           + "   HP " + std::to_string(s.hp) + "/" + std::to_string(s.maxhp)
+                           + "   " + std::to_string(s.gold) + "G";
+                    sub = locale_.tr("continue.saved_at") + " " + s.savedAt
+                        + "    " + locale_.tr("continue.play_time") + " " + fmtPlayTime(s.playTimeSec);
+                } else {
+                    label += "   [" + locale_.tr("continue.empty") + "]";
+                }
+                drawTitleButton(titleLayout_.slotRow[i], label, sub,
+                                title_.slotSelection() == i, gold);
+            }
+            if (!any) {
+                const std::string hint = locale_.tr("continue.hint");
+                drawText(hint, (W - measureText(hint, 18)) * 0.5f, H - 178.0f, 18, dim);
+            }
+            drawTitleButton(titleLayout_.backButton, locale_.tr("menu.back"), "", false, dim);
+            break;
+        }
+        case toms::TitlePage::Settings: {
+            const std::string head = locale_.tr("settings.header");
+            drawText(head, (W - measureText(head, 30)) * 0.5f, 262.0f, 30, gold);
+            const std::string langLabel = locale_.tr("settings.language");
+            drawText(langLabel, (W - measureText(langLabel, 20)) * 0.5f, 300.0f, 20, dim);
+            const auto& langs = locale_.languages();
+            for (int i = 0; i < titleLayout_.langRowCount && i < (int)langs.size(); i++) {
+                const bool active = (i == locale_.languageIndex());
+                std::string label = std::string(active ? "[x] " : "[ ] ") + langs[i].name;
+                drawTitleButton(titleLayout_.langRow[i], label, "",
+                                title_.settingsSelection() == i, gold);
+            }
+            break;
+        }
+    }
+
+    const std::string hint = (title_.page() == toms::TitlePage::Settings)
+                             ? locale_.tr("settings.hint") : locale_.tr("menu.hint");
+    drawText(hint, (W - measureText(hint, 16)) * 0.5f, H - 44.0f, 16, dim);
+}
+
 void Game::update(int dtMs) {
+    // Title phase: the run's clock only advances while actually playing, and a changed run is
+    // flushed to its slot on a throttle (see kAutosaveIntervalMs) rather than on every event --
+    // one atomic write per few seconds instead of one per pickup.
+    if (title_.isOpen()) {
+        if (saveDirty_ && !title_.runInProgress()) saveDirty_ = false;   // nothing to save yet
+    } else {
+        playTimeSec_ += dtMs / 1000;
+        if (saveDirty_) {
+            saveFlushMs_ += dtMs;
+            if (saveFlushMs_ >= kAutosaveIntervalMs) { saveFlushMs_ = 0; saveCurrentRun(); }
+        } else {
+            saveFlushMs_ = 0;
+        }
+    }
     if (cs.active && cs.charging) cs.chargeMs += dtMs;
     // The result-pause countdown must run regardless of cs.active: a release that ends the
     // fight (win or lose) sets cs.active=false in the SAME call that starts the pause, so

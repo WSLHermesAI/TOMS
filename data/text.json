@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "languages": [
+    { "code": "zh_TW", "name": "繁體中文" },
+    { "code": "en",    "name": "English" }
+  ],
+  "strings": {
+    "game.title":            { "zh_TW": "魔法塔",              "en": "Tower of the Sorcerer" },
+    "game.subtitle":         { "zh_TW": "TOWER OF THE SORCERER", "en": "Roguelike Dungeon Crawl" },
+    "menu.new_game":         { "zh_TW": "新遊戲",              "en": "New Game" },
+    "menu.new_game.desc":    { "zh_TW": "從第一層重新開始",     "en": "Start a fresh run from stage 1" },
+    "menu.continue":         { "zh_TW": "繼續遊戲",            "en": "Continue" },
+    "menu.continue.desc":    { "zh_TW": "讀取存檔繼續遊玩",     "en": "Load a saved game" },
+    "menu.settings":         { "zh_TW": "設定",                "en": "Settings" },
+    "menu.settings.desc":    { "zh_TW": "語言與介面選項",       "en": "Language and interface options" },
+    "menu.back":             { "zh_TW": "返回",                "en": "Back" },
+    "menu.hint":             { "zh_TW": "↑↓ 選擇　Enter 確定　Esc 返回", "en": "Up/Down: select   Enter: confirm   Esc: back" },
+    "continue.header":       { "zh_TW": "選擇存檔",            "en": "Select a Save File" },
+    "continue.slot":         { "zh_TW": "存檔",                "en": "Slot" },
+    "continue.empty":        { "zh_TW": "空",                  "en": "Empty" },
+    "continue.hint":         { "zh_TW": "沒有存檔時請先開始新遊戲", "en": "No saves yet — start a new game first" },
+    "continue.saved_at":     { "zh_TW": "存檔時間",            "en": "Saved" },
+    "continue.play_time":    { "zh_TW": "遊玩時間",            "en": "Play time" },
+    "settings.header":       { "zh_TW": "設定",                "en": "Settings" },
+    "settings.language":     { "zh_TW": "語言",                "en": "Language" },
+    "settings.hint":         { "zh_TW": "←→ 切換　Esc 返回",    "en": "Left/Right: change   Esc: back" },
+    "settings.saved":        { "zh_TW": "設定已儲存",          "en": "Settings saved" },
+    "save.saved":            { "zh_TW": "已儲存進度",          "en": "Progress saved" },
+    "save.slot_full":        { "zh_TW": "存檔格已滿",          "en": "Save slot in use" },
+    "hud.stage":             { "zh_TW": "關卡",                "en": "Stage" },
+    "hud.level":             { "zh_TW": "等級",                "en": "LV" }
+  }
+}

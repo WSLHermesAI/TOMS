@@ -1,0 +1,134 @@
+# Title Phase — New Game / Continue / Settings
+
+The game boots into a **title phase** instead of dropping straight into `stage01`. It is the
+Boot screen named in `game_state.h` (`GameState::MainMenu`, with the Settings page reported as
+`GameState::Settings`), and it blocks all gameplay input until the player picks something
+(`Game::modalActive()` includes `titleOpen()`).
+
+```
+Boot ──► Title: Menu ──┬─► New Game ──► fresh run at stage01, slot written ──► Explore
+                       ├─► Continue ──► slot list ──► resume that save     ──► Explore
+                       └─► Settings ──► language                             ──► back to Menu
+```
+
+## Why it is drawn by the game renderer, not ImGui
+
+Dear ImGui is wired into the **desktop (Vulkan) build only** (`src/engine/imgui_layer.*` is
+never compiled into `toms_web`), and the Stage Select hub is therefore desktop-only. The title
+phase has to exist on both targets — the browser build is the one actually played — so it is
+drawn with the same `Quad` + `Game::drawText` path the store/inventory/dialogue overlays use.
+Solid-tint quads only: no new art assets, identical output on Vulkan, WebGL2 and WebGPU.
+
+Consequence worth knowing: ImGui-drawn toasts (`Game::drawNotifications()`) use ImGui's default
+font, which has **no CJK glyphs**, and would show stray `?` boxes over the title. They are
+skipped while the title is up (see `main.cpp`), and the title phase itself pushes no
+notifications for that reason.
+
+## Files
+
+- `src/game/title_screen.h/.cpp` — the page/selection state machine plus `computeTitleLayout()`
+  (pure math, shared by the draw pass and click hit-testing so a tap always lands on the row
+  that was drawn). No renderer dependency → headless-testable.
+- `src/game/save_slots.h/.cpp` — numbered save files: `writeSlotSave` / `readSlotSave` /
+  `summarizeSlot` (the Continue row's data) / `firstEmptySlot` / `newestSlot`, and the
+  platform-specific save directory + flush.
+- `src/game/game_settings.h/.cpp` — persisted preferences (`save/settings.json`): language,
+  slot count, ImGui font scale.
+- `src/game/localization.h/.cpp` — key → localized string from `data/text.json`, with a small
+  built-in fallback table so a missing/broken JSON degrades to English instead of blanking the
+  UI. Unknown keys return the key itself (an untranslated string is visible, not silent).
+- `data/text.json` — the string table (`languages` + `strings`).
+- `src/game/title_screen_test.cpp` — headless test: page state machine, slot I/O round-trip
+  (including story flags and per-tile entity status), settings clamping/persistence,
+  localization switching. Run `./title_screen_test`.
+
+## Save files
+
+```
+save/settings.json        language / slotCount / uiFontScale        (survives New Game)
+save/slot1.json           { meta, run, savedAt, playTimeSec, stageName }
+save/slot2.json  ...
+save/slot3.json  ...
+```
+
+`meta` + `run` reuse the schema in `src/game/save_system.h`, so a slot is exactly what a
+Meta/Run save already described — no second save format. Writes go through
+`writeJsonAtomic()` (temp file + rename), so an interrupted write cannot corrupt a slot.
+
+### Autosave policy
+
+| Event | What happens |
+| --- | --- |
+| New Game | slot chosen (first free, else slot 1), run written immediately |
+| Floor change (stairs up/down confirmed) | written immediately |
+| Combat won/lost, store purchase, dialogue choice | marked dirty; flushed at most every 3 s |
+| Continue | slot read back, run applied, then saved again on the next event |
+
+`playTimeSec` only advances outside the title phase, and the Continue row shows it.
+
+### Browser persistence
+
+`defaultSaveDir()` is `/save` under Emscripten. `emscripten_main.cpp` mounts IndexedDB-backed
+IDBFS there at startup and flushes after every write, so saves survive a page reload; the
+initial sync-in is async, and `jsRefreshSlots` re-reads the Continue list once the files have
+actually arrived. If IndexedDB is unavailable (private browsing) the mount fails harmlessly and
+saves last for the session only.
+
+## Testing notes (learned the hard way)
+
+- **Capture with `ffmpeg -f x11grab`, not `xwd`.** This session's hand-rolled `xwd` decoder
+  ignored the 4-byte word order (LSBFirst) and produced a *wrapped, duplicated* image that
+  looked like a rendering bug. It was a decoder artifact. `ffmpeg x11grab` is the trustworthy
+  path (`xwd` output is only correct if you decode little-endian 32-bit words).
+- **Synthetic xdotool mouse clicks are not seen** by the app (per-frame `glfwGetMouseButton`
+  polling misses the quick press/release). Synthetic *key* events do work, so scripted input
+  should be keyboard-only, or hold the button (`mousedown`, sleep, `mouseup`).
+- The title's menu cursor keeps its position when returning from a sub-page (a deliberate small
+  behaviour), so a key-only script must account for it — the tests therefore start from a known
+  row and move explicitly.
+- `xdotool` and a no-root `GL/gl.h` are required for the desktop build in this environment:
+  configure with
+  `-DCMAKE_CXX_FLAGS="-I$HOME/opt/x11root/usr/include -I$HOME/opt/glsym/include"` (imgui's GLFW
+  backend includes `<GLFW/glfw3.h>` without `GLFW_INCLUDE_NONE`, so it needs `GL/gl.h`).
+- `gen_font_atlas.py` used to glob a **hardcoded absolute path from another checkout**, so the
+  shipped browser atlas did not contain this project's own glyphs. It is now repo-relative, and
+  the title strings are also listed explicitly — regenerate it (`python3 gen_font_atlas.py`)
+  after adding text, or the browser build will show blank/`?` glyphs.
+
+## Verified (native, 2026-09-10)
+
+- Title renders (menu, Continue, Settings pages) — screenshots captured via x11grab.
+- Settings → language switch persists to `save/settings.json` (`zh_TW` → `en`) and the UI
+  follows immediately; it survives a restart.
+- New Game: fresh stats, wiped meta/entity progress, `stage01` loaded, `save/slot1.json`
+  written (with the stage's display name, e.g. `村莊外緣`).
+- Continue with a save: row shows stage / LV / HP / gold / saved-at / play time; activating it
+  resumes that run (dungeon renders, title gone).
+- Continue with no saves: rows read `[空]`, the hint says to start a new game, and activating an
+  empty slot does nothing (title stays put).
+- `title_screen_test` — all checks pass.
+
+## Verified (browser, WebGL2 build, 2026-09-10)
+
+- `web-gl/toms_web.html` boots into the title phase (`jsModalActive()` returns 1 at boot).
+- Menu → Continue shows the empty-slot list; activating an empty slot keeps the title up.
+- Menu → New Game closes the title (modal 0), starts the run, and the dungeon renders.
+- `/save/settings.json` and `/save/slot1.json` really exist inside the page's IDBFS
+  (`Module.FS.readFile('/save/slot1.json')` returns the run), so browser saves persist.
+- Settings → language switch writes `"language": "en"` into the browser's `settings.json`.
+
+### Known pre-existing web issue (NOT introduced by the title phase)
+
+The browser build has a **design-space / canvas-size mismatch**: `Game::loadAssets()` calls
+`ren->init(1280, 720)`, and `WebGLRenderer::width()/height()` return those init values, so the
+web UI is laid out for a **1280x720** design — while `emscripten_main.cpp` sets the canvas to
+**1024x768** and the touch mapping (`toBP` in the injected page JS) maps taps into 0..1024 /
+0..768. Result on web: layout is clipped at the canvas's right/bottom edge, and taps land
+left/high of what is drawn (this affects every screen, not just the title).
+
+The desktop Vulkan backend does not have this problem because `Renderer::width()/height()`
+return the fixed `kDesignW/kDesignH` (1024x768) regardless of the init arguments. The fix is to
+make the WebGL backend consistent (report the fixed 1024x768 design size, take the drawing
+buffer size from `emscripten_get_canvas_element_size`), which is a separate change to that
+backend with its own verification — see the note in `docs/TITLE_PHASE.md`'s "Testing notes".
+

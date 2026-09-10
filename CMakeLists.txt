@@ -106,6 +106,9 @@ if(NOT WEB)
         ${ENGINE_DIR}/encounter.cpp ${GAME_DIR}/mission_system.cpp
         ${ENGINE_DIR}/power_bar.cpp ${GAME_DIR}/equipment_system.cpp
         ${ENGINE_DIR}/imgui_layer.h ${ENGINE_DIR}/imgui_layer.cpp
+        # Title phase (New Game / Continue / Settings): save slots, preferences, string table.
+        ${GAME_DIR}/save_slots.cpp ${GAME_DIR}/game_settings.cpp
+        ${GAME_DIR}/localization.cpp ${GAME_DIR}/title_screen.cpp
         ${imgui_SOURCE_DIR}/imgui.cpp ${imgui_SOURCE_DIR}/imgui_draw.cpp
         ${imgui_SOURCE_DIR}/imgui_tables.cpp ${imgui_SOURCE_DIR}/imgui_widgets.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
@@ -192,7 +195,10 @@ if(WEB)
         ${ENGINE_DIR}/node.cpp
         ${GAME_DIR}/save_system.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/entity_status.cpp
         ${ENGINE_DIR}/encounter.cpp ${GAME_DIR}/mission_system.cpp
-        ${ENGINE_DIR}/power_bar.cpp ${GAME_DIR}/equipment_system.cpp)
+        ${ENGINE_DIR}/power_bar.cpp ${GAME_DIR}/equipment_system.cpp
+        # Title phase (New Game / Continue / Settings): slots + preferences + string table.
+        ${GAME_DIR}/save_slots.cpp ${GAME_DIR}/game_settings.cpp
+        ${GAME_DIR}/localization.cpp ${GAME_DIR}/title_screen.cpp)
     if(WEB_BACKEND STREQUAL "WebGPU")
         target_sources(toms_web PRIVATE ${ENGINE_DIR}/renderer_webgpu.cpp)
         target_compile_definitions(toms_web PRIVATE WEBGPU)
@@ -204,15 +210,17 @@ if(WEB)
 
     if(WEB_BACKEND STREQUAL "WebGPU")
         set(WEB_LINK "--use-port=emdawnwebgpu -sFETCH=1 -sALLOW_MEMORY_GROWTH=1 \
+-lidbfs.js \
 -sNO_DISABLE_EXCEPTION_CATCHING=1 \
--sEXPORTED_FUNCTIONS=['_main','_downloadFile'] \
+-sEXPORTED_FUNCTIONS=['_main','_downloadFile','_jsRefreshSlots'] \
 -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS'] \
 --preload-file ${CMAKE_SOURCE_DIR}/assets@assets \
 --preload-file ${CMAKE_SOURCE_DIR}/data@data")
     else()
         set(WEB_LINK "-sUSE_WEBGL2=1 -sFETCH=1 -sALLOW_MEMORY_GROWTH=1 \
+-lidbfs.js \
 -sNO_DISABLE_EXCEPTION_CATCHING=1 \
--sEXPORTED_FUNCTIONS=['_main','_downloadFile'] \
+-sEXPORTED_FUNCTIONS=['_main','_downloadFile','_jsRefreshSlots'] \
 -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS'] \
 --preload-file ${CMAKE_SOURCE_DIR}/assets@assets \
 --preload-file ${CMAKE_SOURCE_DIR}/data@data \
@@ -308,3 +316,15 @@ target_include_directories(power_bar_test PRIVATE ${ENGINE_DIR})
 
 add_executable(equipment_test ${GAME_DIR}/equipment_test.cpp ${GAME_DIR}/equipment_system.cpp ${ENGINE_DIR}/power_bar.cpp)
 target_include_directories(equipment_test PRIVATE ${GAME_DIR} ${ENGINE_DIR} ${JSON_DIR})
+
+# ---------------------------------------------------------------------------
+# Title phase test (see docs/TITLE_PHASE.md): the New Game / Continue / Settings page state
+# machine, save-slot files, persisted settings, and the string table. Pure game logic + file
+# I/O -- no Vulkan/GLFW, so it builds and runs anywhere.
+# Run: ./title_screen_test
+# ---------------------------------------------------------------------------
+add_executable(title_screen_test
+    ${GAME_DIR}/title_screen_test.cpp
+    ${GAME_DIR}/title_screen.cpp ${GAME_DIR}/save_slots.cpp
+    ${GAME_DIR}/save_system.cpp ${GAME_DIR}/game_settings.cpp ${GAME_DIR}/localization.cpp)
+target_include_directories(title_screen_test PRIVATE ${GAME_DIR} ${ENGINE_DIR} ${JSON_DIR})
