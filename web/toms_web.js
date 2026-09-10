@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpeww41omk.js
+// include: /tmp/tmpe63mkvyh.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -206,25 +206,25 @@ Module['FS_createPath']("/data", "stages", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 82583}, {"filename": "/assets/font_atlas.png", "start": 82583, "end": 365493}, {"filename": "/assets/sfx/confirm_click.wav", "start": 365493, "end": 372151}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 372151, "end": 380133}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 380133, "end": 400463}, {"filename": "/assets/sfx/get_item.wav", "start": 400463, "end": 419911}, {"filename": "/assets/sfx/player_attack.wav", "start": 419911, "end": 430539}, {"filename": "/assets/sfx/walk.wav", "start": 430539, "end": 436757}, {"filename": "/assets/shaders/sprite.frag", "start": 436757, "end": 437480}, {"filename": "/assets/shaders/sprite.frag.spv", "start": 437480, "end": 439156}, {"filename": "/assets/shaders/sprite.vert", "start": 439156, "end": 440669}, {"filename": "/assets/shaders/sprite.vert.spv", "start": 440669, "end": 443853}, {"filename": "/assets/sprites/bat.png", "start": 443853, "end": 444063}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 444063, "end": 444367}, {"filename": "/assets/sprites/coin.png", "start": 444367, "end": 444590}, {"filename": "/assets/sprites/demon.png", "start": 444590, "end": 444894}, {"filename": "/assets/sprites/door_blue.png", "start": 444894, "end": 445053}, {"filename": "/assets/sprites/door_red.png", "start": 445053, "end": 445212}, {"filename": "/assets/sprites/door_yellow.png", "start": 445212, "end": 445371}, {"filename": "/assets/sprites/exp_up.png", "start": 445371, "end": 445574}, {"filename": "/assets/sprites/floor.png", "start": 445574, "end": 445752}, {"filename": "/assets/sprites/gem_atk.png", "start": 445752, "end": 446005}, {"filename": "/assets/sprites/gem_def.png", "start": 446005, "end": 446262}, {"filename": "/assets/sprites/golem.png", "start": 446262, "end": 446469}, {"filename": "/assets/sprites/key_blue.png", "start": 446469, "end": 446726}, {"filename": "/assets/sprites/key_red.png", "start": 446726, "end": 446979}, {"filename": "/assets/sprites/key_yellow.png", "start": 446979, "end": 447233}, {"filename": "/assets/sprites/manifest.json", "start": 447233, "end": 447809}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 447809, "end": 448024}, {"filename": "/assets/sprites/npc_king.png", "start": 448024, "end": 448215}, {"filename": "/assets/sprites/npc_princess.png", "start": 448215, "end": 448438}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 448438, "end": 448684}, {"filename": "/assets/sprites/npc_villager.png", "start": 448684, "end": 448873}, {"filename": "/assets/sprites/player.png", "start": 448873, "end": 449138}, {"filename": "/assets/sprites/potion_blue.png", "start": 449138, "end": 449372}, {"filename": "/assets/sprites/potion_red.png", "start": 449372, "end": 449606}, {"filename": "/assets/sprites/scroll.png", "start": 449606, "end": 449742}, {"filename": "/assets/sprites/skeleton.png", "start": 449742, "end": 449919}, {"filename": "/assets/sprites/slime.png", "start": 449919, "end": 450176}, {"filename": "/assets/sprites/stairs_down.png", "start": 450176, "end": 450352}, {"filename": "/assets/sprites/stairs_up.png", "start": 450352, "end": 450530}, {"filename": "/assets/sprites/wall.png", "start": 450530, "end": 450667}, {"filename": "/assets/sprites/wraith.png", "start": 450667, "end": 450910}, {"filename": "/assets/wqy-zenhei.ttc", "start": 450910, "end": 17242161}, {"filename": "/data/combat.json", "start": 17242161, "end": 17242743}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17242743, "end": 17242982}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17242982, "end": 17243610}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17243610, "end": 17243904}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17243904, "end": 17244151}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17244151, "end": 17244470}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17244470, "end": 17244720}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17244720, "end": 17245530}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17245530, "end": 17245813}, {"filename": "/data/dialogue/handmaiden.json", "start": 17245813, "end": 17246098}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17246098, "end": 17246444}, {"filename": "/data/dialogue/princess_liora.json", "start": 17246444, "end": 17246718}, {"filename": "/data/dialogue/princess_victory.json", "start": 17246718, "end": 17247267}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17247267, "end": 17247845}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17247845, "end": 17250465}, {"filename": "/data/dialogue/villager_elder.json", "start": 17250465, "end": 17252198}, {"filename": "/data/enemies.json", "start": 17252198, "end": 17253246}, {"filename": "/data/equipment.json", "start": 17253246, "end": 17256145}, {"filename": "/data/items.json", "start": 17256145, "end": 17257531}, {"filename": "/data/missions.json", "start": 17257531, "end": 17258524}, {"filename": "/data/stages/stage01.json", "start": 17258524, "end": 17260128}, {"filename": "/data/stages/stage02.json", "start": 17260128, "end": 17261702}, {"filename": "/data/stages/stage03.json", "start": 17261702, "end": 17263409}, {"filename": "/data/stages/stage04.json", "start": 17263409, "end": 17265204}, {"filename": "/data/stages/stage05.json", "start": 17265204, "end": 17267148}, {"filename": "/data/stages/stage06.json", "start": 17267148, "end": 17269099}, {"filename": "/data/stages/stage07.json", "start": 17269099, "end": 17271286}, {"filename": "/data/stages/stage08.json", "start": 17271286, "end": 17273421}, {"filename": "/data/stages/stage09.json", "start": 17273421, "end": 17275759}, {"filename": "/data/stages/stage10.json", "start": 17275759, "end": 17278018}, {"filename": "/data/stages/stage_11.json", "start": 17278018, "end": 17280426}, {"filename": "/data/store.json", "start": 17280426, "end": 17284614}, {"filename": "/data/story.json", "start": 17284614, "end": 17285946}, {"filename": "/data/text.json", "start": 17285946, "end": 17288403}], "remote_package_size": 17288403});
+    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 82583}, {"filename": "/assets/font_atlas.png", "start": 82583, "end": 365493}, {"filename": "/assets/sfx/confirm_click.wav", "start": 365493, "end": 372151}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 372151, "end": 380133}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 380133, "end": 400463}, {"filename": "/assets/sfx/get_item.wav", "start": 400463, "end": 419911}, {"filename": "/assets/sfx/player_attack.wav", "start": 419911, "end": 430539}, {"filename": "/assets/sfx/walk.wav", "start": 430539, "end": 436757}, {"filename": "/assets/shaders/sprite.frag", "start": 436757, "end": 437480}, {"filename": "/assets/shaders/sprite.frag.spv", "start": 437480, "end": 439156}, {"filename": "/assets/shaders/sprite.vert", "start": 439156, "end": 440669}, {"filename": "/assets/shaders/sprite.vert.spv", "start": 440669, "end": 443853}, {"filename": "/assets/sprites/bat.png", "start": 443853, "end": 444063}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 444063, "end": 444367}, {"filename": "/assets/sprites/coin.png", "start": 444367, "end": 444590}, {"filename": "/assets/sprites/demon.png", "start": 444590, "end": 444894}, {"filename": "/assets/sprites/door_blue.png", "start": 444894, "end": 445053}, {"filename": "/assets/sprites/door_red.png", "start": 445053, "end": 445212}, {"filename": "/assets/sprites/door_yellow.png", "start": 445212, "end": 445371}, {"filename": "/assets/sprites/exp_up.png", "start": 445371, "end": 445574}, {"filename": "/assets/sprites/floor.png", "start": 445574, "end": 445752}, {"filename": "/assets/sprites/gem_atk.png", "start": 445752, "end": 446005}, {"filename": "/assets/sprites/gem_def.png", "start": 446005, "end": 446262}, {"filename": "/assets/sprites/golem.png", "start": 446262, "end": 446469}, {"filename": "/assets/sprites/key_blue.png", "start": 446469, "end": 446726}, {"filename": "/assets/sprites/key_red.png", "start": 446726, "end": 446979}, {"filename": "/assets/sprites/key_yellow.png", "start": 446979, "end": 447233}, {"filename": "/assets/sprites/manifest.json", "start": 447233, "end": 447809}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 447809, "end": 448024}, {"filename": "/assets/sprites/npc_king.png", "start": 448024, "end": 448215}, {"filename": "/assets/sprites/npc_princess.png", "start": 448215, "end": 448438}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 448438, "end": 448684}, {"filename": "/assets/sprites/npc_villager.png", "start": 448684, "end": 448873}, {"filename": "/assets/sprites/player.png", "start": 448873, "end": 449138}, {"filename": "/assets/sprites/potion_blue.png", "start": 449138, "end": 449372}, {"filename": "/assets/sprites/potion_red.png", "start": 449372, "end": 449606}, {"filename": "/assets/sprites/scroll.png", "start": 449606, "end": 449742}, {"filename": "/assets/sprites/skeleton.png", "start": 449742, "end": 449919}, {"filename": "/assets/sprites/slime.png", "start": 449919, "end": 450176}, {"filename": "/assets/sprites/stairs_down.png", "start": 450176, "end": 450352}, {"filename": "/assets/sprites/stairs_up.png", "start": 450352, "end": 450530}, {"filename": "/assets/sprites/wall.png", "start": 450530, "end": 450667}, {"filename": "/assets/sprites/wraith.png", "start": 450667, "end": 450910}, {"filename": "/assets/wqy-zenhei.ttc", "start": 450910, "end": 17242161}, {"filename": "/data/combat.json", "start": 17242161, "end": 17242743}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17242743, "end": 17242982}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17242982, "end": 17243610}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17243610, "end": 17243904}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17243904, "end": 17244151}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17244151, "end": 17244470}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17244470, "end": 17244720}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17244720, "end": 17245530}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17245530, "end": 17245813}, {"filename": "/data/dialogue/handmaiden.json", "start": 17245813, "end": 17246098}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17246098, "end": 17246444}, {"filename": "/data/dialogue/princess_liora.json", "start": 17246444, "end": 17246718}, {"filename": "/data/dialogue/princess_victory.json", "start": 17246718, "end": 17247267}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17247267, "end": 17247845}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17247845, "end": 17250465}, {"filename": "/data/dialogue/villager_elder.json", "start": 17250465, "end": 17252198}, {"filename": "/data/enemies.json", "start": 17252198, "end": 17253246}, {"filename": "/data/equipment.json", "start": 17253246, "end": 17256145}, {"filename": "/data/items.json", "start": 17256145, "end": 17257531}, {"filename": "/data/missions.json", "start": 17257531, "end": 17258524}, {"filename": "/data/stages/stage01.json", "start": 17258524, "end": 17260128}, {"filename": "/data/stages/stage02.json", "start": 17260128, "end": 17261702}, {"filename": "/data/stages/stage03.json", "start": 17261702, "end": 17263409}, {"filename": "/data/stages/stage04.json", "start": 17263409, "end": 17265204}, {"filename": "/data/stages/stage05.json", "start": 17265204, "end": 17267148}, {"filename": "/data/stages/stage06.json", "start": 17267148, "end": 17269099}, {"filename": "/data/stages/stage07.json", "start": 17269099, "end": 17271286}, {"filename": "/data/stages/stage08.json", "start": 17271286, "end": 17273421}, {"filename": "/data/stages/stage09.json", "start": 17273421, "end": 17275759}, {"filename": "/data/stages/stage10.json", "start": 17275759, "end": 17278018}, {"filename": "/data/stages/stage_11.json", "start": 17278018, "end": 17280426}, {"filename": "/data/store.json", "start": 17280426, "end": 17284614}, {"filename": "/data/story.json", "start": 17284614, "end": 17285946}, {"filename": "/data/text.json", "start": 17285946, "end": 17288904}], "remote_package_size": 17288904});
 
   })();
 
-// end include: /tmp/tmpeww41omk.js
-// include: /tmp/tmpxt89w30k.js
+// end include: /tmp/tmpe63mkvyh.js
+// include: /tmp/tmp7b07w634.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpxt89w30k.js
-// include: /tmp/tmpaksv4z0r.js
+  // end include: /tmp/tmp7b07w634.js
+// include: /tmp/tmpdanzyy71.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpaksv4z0r.js
+  // end include: /tmp/tmpdanzyy71.js
 
 
 var programArgs = [];
@@ -4910,6 +4910,30 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
     }
   }
 
+  var maybeCStringToJsString = (cString) => {
+      // 'cString > 2' checks if the input is a number, and isn't of the special
+      // values we accept here, EMSCRIPTEN_EVENT_TARGET_* (which map to 0, 1, 2).
+      // In other words, if cString > 2 then it's a pointer to a valid place in
+      // memory, and points to a C string.
+      return cString > 2 ? UTF8ToString(cString) : cString;
+    };
+  
+  /** @type {Object} */
+  var specialHTMLTargets = [0, globalThis.document ?? 0, globalThis.window ?? 0];
+  var findEventTarget = (target) => {
+      target = maybeCStringToJsString(target);
+      var domElement = specialHTMLTargets[target] || globalThis.document?.querySelector(target);
+      return domElement;
+    };
+  var findCanvasEventTarget = findEventTarget;
+  
+  var _emscripten_get_canvas_element_size = (target, width, height) => {
+      var canvas = findCanvasEventTarget(target);
+      if (!canvas) return -4;
+      HEAP32[((width)>>2)] = canvas.width;
+      HEAP32[((height)>>2)] = canvas.height;
+    };
+
   var _emscripten_is_main_browser_thread = () =>
       !ENVIRONMENT_IS_WORKER;
 
@@ -5013,22 +5037,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       eval(UTF8ToString(ptr));
     };
 
-  var maybeCStringToJsString = (cString) => {
-      // 'cString > 2' checks if the input is a number, and isn't of the special
-      // values we accept here, EMSCRIPTEN_EVENT_TARGET_* (which map to 0, 1, 2).
-      // In other words, if cString > 2 then it's a pointer to a valid place in
-      // memory, and points to a C string.
-      return cString > 2 ? UTF8ToString(cString) : cString;
-    };
-  
-  /** @type {Object} */
-  var specialHTMLTargets = [0, globalThis.document ?? 0, globalThis.window ?? 0];
-  var findEventTarget = (target) => {
-      target = maybeCStringToJsString(target);
-      var domElement = specialHTMLTargets[target] || globalThis.document?.querySelector(target);
-      return domElement;
-    };
-  var findCanvasEventTarget = findEventTarget;
   var _emscripten_set_canvas_element_size = (target, width, height) => {
       var canvas = findCanvasEventTarget(target);
       if (!canvas) return -4;
@@ -8370,8 +8378,8 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('wasmBinary');
 }
 var ASM_CONSTS = {
-  127332: () => { try { if (typeof FS === 'undefined') return; try { FS.mkdir('/save'); } catch (e) {} FS.mount(IDBFS, {}, '/save'); Module.__tomsSyncfs = function(load) { try { FS.syncfs(!!load, function(err) { if (err) { console.warn('[TOMS] syncfs', err); return; } if (load && typeof Module !== 'undefined' && Module.ccall) { try { Module.ccall('jsRefreshSlots', 'null', [], []); } catch (e) {} } }); } catch (e) { console.warn('[TOMS] syncfs failed', e); } }; Module.__tomsSyncfs(true); } catch (e) { console.warn('[TOMS] IDBFS mount failed; saves are session-only:', e); } },  
- 127897: () => { if (typeof Module !== 'undefined' && Module.__tomsSyncfs) Module.__tomsSyncfs(false); }
+  127812: () => { try { if (typeof FS === 'undefined') return; try { FS.mkdir('/save'); } catch (e) {} FS.mount(IDBFS, {}, '/save'); Module.__tomsSyncfs = function(load) { try { FS.syncfs(!!load, function(err) { if (err) { console.warn('[TOMS] syncfs', err); return; } if (load && typeof Module !== 'undefined' && Module.ccall) { try { Module.ccall('jsRefreshSlots', 'null', [], []); } catch (e) {} } }); } catch (e) { console.warn('[TOMS] syncfs failed', e); } }; Module.__tomsSyncfs(true); } catch (e) { console.warn('[TOMS] IDBFS mount failed; saves are session-only:', e); } },  
+ 128377: () => { if (typeof Module !== 'undefined' && Module.__tomsSyncfs) Module.__tomsSyncfs(false); }
 };
 
 // Imports from the Wasm binary.
@@ -8525,6 +8533,8 @@ var wasmImports = {
   emscripten_date_now: _emscripten_date_now,
   /** @export */
   emscripten_fetch_free: _emscripten_fetch_free,
+  /** @export */
+  emscripten_get_canvas_element_size: _emscripten_get_canvas_element_size,
   /** @export */
   emscripten_is_main_browser_thread: _emscripten_is_main_browser_thread,
   /** @export */

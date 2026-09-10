@@ -1,6 +1,8 @@
 // renderer_webgl.cpp — WebGL2 implementation of IRenderer (Emscripten only).
 #include "renderer_webgl.h"
 #ifdef __EMSCRIPTEN__
+#include <emscripten/html5.h>   // emscripten_get_canvas_element_size (drawing-buffer size)
+#include <cstdio>
 #ifndef GL_UNPACK_FLIP_Y_WEBGL
 #define GL_UNPACK_FLIP_Y_WEBGL 0x9240
 #endif
@@ -66,7 +68,22 @@ GLuint WebGLRenderer::makeTexture(const std::vector<uint8_t>& rgba, uint32_t w, 
 }
 
 void WebGLRenderer::init(uint32_t w, uint32_t h) {
-    W=w; H=h;
+    // ---- design space vs drawing buffer ----
+    // The game lays every coordinate out against a FIXED design resolution (the same 1024x768
+    // the Vulkan backend reports from width()/height()), while the canvas has whatever size the
+    // page gave it. Conflating the two was the cause of two visible web bugs:
+    //   1. layout authored for 1280x720 inside a 1024x768 canvas -> the right/bottom edge (HUD
+    //      text, the A button) was clipped;
+    //   2. glViewport(0,0,W,H) anchors the viewport at the drawing buffer's BOTTOM-left, so a
+    //      720-tall viewport inside a 768-tall buffer shifted everything it drew 48 px down
+    //      (768-720) -- while the game keeps hit-testing taps in design coordinates. Every
+    //      on-screen control therefore sat 48 px above its own hit box, which is why the
+    //      virtual keypad (and the store icon, dialogue choices, inventory cards) looked dead.
+    W = kDesignW; H = kDesignH;   // what the game draws/hit-tests in
+    (void)w; (void)h;             // the requested window size is meaningless in a canvas
+    refreshBufferSize();
+    fprintf(stderr, "[gl] design %ux%u, drawing buffer %ux%u\n", W, H, bufW, bufH);
+
     GLuint vs=compile(VERT, GL_VERTEX_SHADER), fs=compile(FRAG, GL_FRAGMENT_SHADER);
     prog=glCreateProgram(); glAttachShader(prog, vs); glAttachShader(prog, fs); glLinkProgram(prog);
     GLint ok; glGetProgramiv(prog, GL_LINK_STATUS, &ok);
@@ -112,7 +129,22 @@ void WebGLRenderer::updateFont(const std::vector<uint8_t>& px, uint32_t w, uint3
     glGetError();                                         // swallow pending GL error so abortOnError won't fire
 }
 
-void WebGLRenderer::begin() { sprites.clear(); texts.clear(); }
+void WebGLRenderer::refreshBufferSize() {
+    int cw = 0, ch = 0;
+    emscripten_get_canvas_element_size("#canvas", &cw, &ch);
+    bufW = (cw > 0) ? (uint32_t)cw : W;
+    bufH = (ch > 0) ? (uint32_t)ch : H;
+}
+
+void WebGLRenderer::begin() {
+    // Cheap DOM query: the page (or a fullscreen transition) can change the drawing buffer at
+    // any time, and the viewport must match it or the content shifts (see init()'s note).
+    uint32_t pw = bufW, ph = bufH;
+    refreshBufferSize();
+    if (bufW != pw || bufH != ph)
+        fprintf(stderr, "[gl] drawing buffer %ux%u -> %ux%u\n", pw, ph, bufW, bufH);
+    sprites.clear(); texts.clear();
+}
 
 void WebGLRenderer::drawSprite(const Quad& q) { sprites.push_back(q); }
 void WebGLRenderer::drawText(const Quad& q)   { texts.push_back(q); }
@@ -149,7 +181,10 @@ void WebGLRenderer::end() {
     // killing the page (GL_ASSERTIONS is OFF for exactly this reason).
     GLenum e = glGetError();
     if (e != GL_NO_ERROR) fprintf(stderr, "[gl] end() GL error 0x%04X\n", e);
-    glViewport(0,0,(GLsizei)W,(GLsizei)H);
+    // Viewport = the real drawing buffer (NOT the design size): the shader already maps design
+    // pixels into NDC via uRes, so the viewport must span the whole canvas for that mapping to
+    // land where the game expects it.
+    glViewport(0,0,(GLsizei)bufW,(GLsizei)bufH);
     glClearColor(0.06f,0.06f,0.1f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);

@@ -7,7 +7,14 @@
 
 class WebGLRenderer : public IRenderer {
 public:
-    uint32_t W=0, H=0;
+    // Design space the game lays everything out against -- the SAME fixed 1024x768 the Vulkan
+    // backend uses (Renderer::kDesignW/kDesignH). W/H hold this, and width()/height() report it.
+    static constexpr uint32_t kDesignW = 1024, kDesignH = 768;
+    uint32_t W=0, H=0;                 // design space (see above)
+    // Actual drawing-buffer size of the <canvas> (queried from the DOM). Used for glViewport.
+    // Kept separate from W/H: init()'s w/h arguments are the game's design resolution, which is
+    // NOT the canvas size on the browser build.
+    uint32_t bufW=0, bufH=0;
     GLuint prog=0, vbo=0, vao=0;
     GLuint spriteTex=0, fontTex=0;
     int spriteCols=9;
@@ -29,5 +36,6 @@ private:
     GLuint compile(const char* src, GLenum kind);
     GLuint makeTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, bool flip = true);
     void flush(const std::vector<Quad>& qs, GLuint tex);
+    void refreshBufferSize();     // re-read the <canvas> drawing-buffer size into bufW/bufH
 };
 #endif

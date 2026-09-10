@@ -126,18 +126,36 @@ saves last for the session only.
   (`Module.FS.readFile('/save/slot1.json')` returns the run), so browser saves persist.
 - Settings → language switch writes `"language": "en"` into the browser's `settings.json`.
 
-### Known pre-existing web issue (NOT introduced by the title phase)
+### Web design-space / canvas-size mismatch — FIXED (was: clipped layout + dead on-screen controls)
 
-The browser build has a **design-space / canvas-size mismatch**: `Game::loadAssets()` calls
-`ren->init(1280, 720)`, and `WebGLRenderer::width()/height()` return those init values, so the
-web UI is laid out for a **1280x720** design — while `emscripten_main.cpp` sets the canvas to
-**1024x768** and the touch mapping (`toBP` in the injected page JS) maps taps into 0..1024 /
-0..768. Result on web: layout is clipped at the canvas's right/bottom edge, and taps land
-left/high of what is drawn (this affects every screen, not just the title).
+The browser build used to conflate two different sizes:
 
-The desktop Vulkan backend does not have this problem because `Renderer::width()/height()`
-return the fixed `kDesignW/kDesignH` (1024x768) regardless of the init arguments. The fix is to
-make the WebGL backend consistent (report the fixed 1024x768 design size, take the drawing
-buffer size from `emscripten_get_canvas_element_size`), which is a separate change to that
-backend with its own verification — see the note in `docs/TITLE_PHASE.md`'s "Testing notes".
+- `Game::loadAssets()` calls `ren->init(1280, 720)`, and `WebGLRenderer::width()/height()`
+  returned those init values, so the web UI was laid out for a **1280x720** design;
+- the canvas is **1024x768** (`emscripten_main.cpp`), and the page's tap mapping (`toBP`) maps
+  into 0..1024 / 0..768;
+- `WebGLRenderer::end()` set `glViewport(0,0,W,H)` = (0,0,1280,720) inside that 768-tall drawing
+  buffer. A GL viewport is anchored at the buffer's **bottom-left**, so the 720-tall viewport
+  covered image rows 48..768 and everything it drew landed 48 px (768-720) lower than the
+  design coordinates the game keeps hit-testing taps against.
+
+Net effect: the HUD/right edge was clipped **and** every on-screen control (virtual keypad,
+store icon, dialogue choices, inventory cards) sat ~48 px above its own hit box — taps landed
+on dead space. That is why the web keypad "did nothing".
+
+Fix: `WebGLRenderer` now reports the same fixed **1024x768** design space the Vulkan backend
+uses (`kDesignW/kDesignH`), takes the drawing-buffer size from
+`emscripten_get_canvas_element_size("#canvas", ...)` (re-checked each frame in `begin()`), and
+sets the viewport to that buffer size. Design space, drawing buffer and the page's tap mapping
+are now all 1024x768, so drawing and hit-testing agree 1:1.
+
+Verified on the local build and the live site by driving real pointer events at the d-pad's
+design coordinates and diffing canvas pixels: taps now step the player (horizontal and vertical
+moves both produce map changes), and the HUD/story text and the A button are fully visible.
+
+**Still open:** `renderer_webgpu.cpp` has the same conflation (`W_/H_` from init serve as the
+surface config, the uniform *and* `width()/height()`), so the WebGPU build would mis-map taps
+the same way. It is not part of the deployed site (the Pages iframe loads the WebGL2 build) and
+could not be verified in this environment (`navigator.gpu.requestAdapter()` returns null), so it
+was deliberately left untouched rather than blind-fixed.
 
