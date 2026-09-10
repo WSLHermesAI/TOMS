@@ -25,8 +25,8 @@ const char* const kFallbackKeys[][3] = {
     {"menu.no",             "否",                        "No"},
     {"settings.header",     "設定",                      "Settings"},
     {"settings.language",   "語言",                      "Language"},
-    {"settings.hint",       "←→ 切換　Esc 返回",          "Left/Right: change   Esc: back"},
-    {"menu.hint",           "↑↓ 選擇　Enter 確定　Esc 返回", "Up/Down: select   Enter: confirm   Esc: back"},
+    {"settings.hint",       "左右鍵切換  Esc 返回",        "Left/Right: change   Esc: back"},
+    {"menu.hint",           "上下鍵選擇  Enter 確定  Esc 返回", "Up/Down: select   Enter: confirm   Esc: back"},
 };
 
 } // namespace
