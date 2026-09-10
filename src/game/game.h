@@ -130,6 +130,9 @@ public:
     void startDialogue(const std::string& npc);   // open an NPC dialogue (public for tests)
     void enterNode(const std::string& node);      // jump to a dialogue node (public for tests)
     void startCombat(const EnemyInst& e);
+    // Verification hook (web build, see jsDebugBattle in emscripten_main.cpp): start a fight with
+    // the nearest monster so a page harness can exercise the battle scene without walking the maze.
+    bool debugStartNearestBattle();
     // Milestone 6: press-and-hold Power Bar input (see CombatState::Phase). The caller (main.cpp)
     // calls these on the action button's press/release edges; both are safe no-ops when combat
     // isn't active or a charge isn't currently allowed (e.g. mid-ResultPause), so main.cpp does
@@ -274,6 +277,9 @@ private:
     // currently-active bar (live while charging, frozen at lastPosition during ResultPause).
     void resolveAttackRelease(float heldSeconds);
     void resolveDefenseRelease(float heldSeconds);
+    // Builds the EnemyInst for a monster tile and starts the fight (or its dialogue gate); shared
+    // by the bump-to-fight path in movePlayer() and the harness hook debugStartNearestBattle().
+    void engageMonster(const Entity& e);
     void finishCombatWin();
     void finishCombatLose();
     void drawPowerBar(float x, float y, float w, float h, const toms::PowerBarParams& bar, float position);
@@ -444,6 +450,11 @@ private:
     int invUseRect_[4] = {0,0,0,0};
     int invDropRect_[4] = {0,0,0,0};
     int invCloseRect_[4] = {0,0,0,0};
+    // Battle scene: the on-canvas Power Bar action button (rebuilt each frame in draw()). It is
+    // an affordance plus an exact target for clients without a keyboard (web/touch) -- handleTouch
+    // treats the whole battle scene as the same press-and-hold surface, so this only decides what
+    // gets highlighted, never whether input works at all.
+    int combatBtnRect_[4] = {0,0,0,0};
 #ifndef __EMSCRIPTEN__
     Audio audio;           // SFX subsystem (no-op when no audio device)
 #else

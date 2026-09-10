@@ -638,9 +638,29 @@ void Game::draw() {
             toms::PowerBarParams bar = isDefensePhase ? toms::effectiveDefenseBar(equipped_, equipmentDefs_)
                                                        : toms::effectiveAttackBar(equipped_, equipmentDefs_);
             float pos = cs.charging ? toms::simulatePosition(bar, cs.chargeMs / 1000.0f) : cs.lastPosition;
-            drawText(isDefensePhase ? "防禦（按住 Enter/Space 蓄力，放開格擋）" : "攻擊（按住 Enter/Space 蓄力，放開出擊）",
+            drawText(isDefensePhase ? "防禦（按住 Enter/Space 或下方按鈕蓄力，放開格擋）" : "攻擊（按住 Enter/Space 或下方按鈕蓄力，放開出擊）",
                       cx, 345, 15, C4(0.9f, 0.9f, 1.0f, 1));
             drawPowerBar(cx, 365, 500, 22, bar, pos);
+            // On-canvas action button: the browser build has no keyboard, so without this there is
+            // nothing in the battle scene to press -- the power bar swept forever and the fight
+            // never resolved. Press and hold it to charge, release to strike (identical to holding
+            // Enter/Space; handleTouch treats the whole scene as the same surface).
+            // The button is sized for the browser's bitmap font, whose CJK advance is a fixed cell
+            // (~32 px regardless of the size argument), so keep the label to about 8 glyphs.
+            float bW = 400, bH = 56, bX = cx + (500 - bW) * 0.5f, bY = 402;
+            combatBtnRect_[0] = (int)bX; combatBtnRect_[1] = (int)bY;
+            combatBtnRect_[2] = (int)bW; combatBtnRect_[3] = (int)bH;
+            bool held = cs.charging;
+            Quad cb; cb.rect[0]=bX; cb.rect[1]=bY; cb.rect[2]=bW; cb.rect[3]=bH;
+            cb.uv[0]=0; cb.uv[1]=0; cb.uv[2]=1; cb.uv[3]=1; cb.solid=true;
+            if (held) { cb.tint[0]=0.85f; cb.tint[1]=0.62f; cb.tint[2]=0.20f; cb.tint[3]=1; }
+            else      { cb.tint[0]=0.24f; cb.tint[1]=0.32f; cb.tint[2]=0.46f; cb.tint[3]=1; }
+            ren->drawSprite(cb);
+            std::string btnLabel;
+            if (held)                btnLabel = "蓄力中 放開！";
+            else if (isDefensePhase) btnLabel = "按住蓄力 放開格擋";
+            else                     btnLabel = "按住蓄力 放開出擊";
+            drawText(btnLabel, bX + 44, bY + 18, 16, C4(1,1,1,1));
         } else {
             drawText("（按任意鍵繼續）", cx, 350, 16, C4(1,1,0.6f,1));
         }
@@ -758,6 +778,20 @@ void Game::handleTouch(float px, float py, int phase) {
         if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) { id = i; break; }
     }
     if (id == 7) { if (phase == 0) gpOn = !gpOn; return; }  // toggle show/hide
+    // ---- Battle scene: press-and-hold is the only input that can drive the Power Bar, and on the
+    // web build it is the only input there is (no keyboard). Deliberately handled this early:
+    //  * the old block sat AFTER `if (phase == 2) return;` below, so the RELEASE was swallowed --
+    //    the web build started charging on a tap and then hung with the bar sweeping forever
+    //    ("stuck at battle scene");
+    //  * it also sat after `if (id < 0) return;`, so any tap that missed the virtual d-pad rects
+    //    (i.e. almost the entire battle scene, including the action button) was dropped.
+    // cs.won is excluded here so the post-victory "(按任意鍵繼續)" pause is still dismissed by the
+    // tap-anywhere branch further down.
+    if (cs.active && !cs.won && (phase == 0 || phase == 2)) {
+        if (phase == 0) battleChargeStart();
+        else            battleChargeRelease();
+        return;
+    }
     // Milestone 9 polish: releasing a d-pad button stops "keep moving while held" (see
     // setMoveHeldX/Y's declaration in game.h). Checked here, before the generic phase==2
     // return right below (which would otherwise swallow it), and unconditionally regardless
@@ -834,15 +868,8 @@ void Game::handleTouch(float px, float py, int phase) {
         return;
     }
     if (id < 0) return;
-    if (cs.active) {
-        // Milestone 6: touch/web equivalent of the desktop hold-to-charge input -- press-and-
-        // hold anywhere on the battle scene charges the active Power Bar, release fires it.
-        // (interact() here was already a no-op during combat -- modalActive() blocks it -- so
-        // this replaces genuinely dead code, not working behavior.)
-        if (phase == 0) battleChargeStart();
-        else if (phase == 2) battleChargeRelease();
-        return;
-    }
+    // (The battle scene's hold-to-charge input is handled much earlier, before the generic
+    // `phase == 2` return above -- see the comment there.)
     if (modalActive()) {                     // other modal (store handled above): block world input
         return;
     }
@@ -1568,23 +1595,7 @@ void Game::movePlayer(int dx, int dy) {
         if (e.consumed) continue;
         if (e.x == nx && e.y == ny) {
             if (e.kind.rfind("monster:",0)==0) {
-                EnemyInst en;
-                auto& t = enemyTpl[e.id];
-                en.id=e.id; en.name=t["name"]; en.hp=t["hp"]; en.atk=t["atk"]; en.def=t["def"];
-                en.exp=t["exp"]; en.gold=t["gold"]; en.x=e.x; en.y=e.y; en.boss=t.value("boss",false);
-                // Milestone 4 (Encounter Resolution): resolveEncounterKind returns DirectBattle
-                // for every monster tile in every shipped stage today (no stage sets
-                // encounter_overrides yet), so this is byte-for-byte the same behavior as
-                // before unless/until a future stage opts a specific tile into dialogue_gate.
-                toms::EncounterKind ek = toms::resolveEncounterKind(e.kind, e.encounterOverride);
-                if (ek == toms::EncounterKind::DialogueGate) {
-                    pendingEncounterEnemy_ = en;
-                    hasPendingEncounter_ = true;
-                    dlgNpc = "enemy_" + e.id;   // so ChoiceMade{dlgNpc,...} carries the right id
-                    startDialogue(dlgNpc);
-                } else {
-                    startCombat(en);
-                }
+                engageMonster(e);
                 return;
             } else if (e.kind.rfind("item:",0)==0) {
                 // Keys/coins apply immediately (not stored in the 9-grid UI).
@@ -1997,6 +2008,44 @@ void Game::drawStylingSpikeBackdrop() {
     inner.uv[0]=0;inner.uv[1]=0;inner.uv[2]=1;inner.uv[3]=1; inner.solid=true;
     inner.tint[0]=0.10f; inner.tint[1]=0.09f; inner.tint[2]=0.16f; inner.tint[3]=0.96f;
     ren->drawSprite(inner);
+}
+
+// Shared by movePlayer() (bumping a monster tile) and debugStartNearestBattle() (verification
+// harnesses): builds the EnemyInst from the entity and starts the fight -- or its dialogue gate.
+void Game::engageMonster(const Entity& e) {
+    EnemyInst en;
+    auto& t = enemyTpl[e.id];
+    en.id=e.id; en.name=t["name"]; en.hp=t["hp"]; en.atk=t["atk"]; en.def=t["def"];
+    en.exp=t["exp"]; en.gold=t["gold"]; en.x=e.x; en.y=e.y; en.boss=t.value("boss",false);
+    // Milestone 4 (Encounter Resolution): resolveEncounterKind returns DirectBattle for every
+    // monster tile in every shipped stage today (no stage sets encounter_overrides yet), so this is
+    // byte-for-byte the same behavior as before unless/until a stage opts a tile into dialogue_gate.
+    toms::EncounterKind ek = toms::resolveEncounterKind(e.kind, e.encounterOverride);
+    if (ek == toms::EncounterKind::DialogueGate) {
+        pendingEncounterEnemy_ = en;
+        hasPendingEncounter_ = true;
+        dlgNpc = "enemy_" + e.id;   // so ChoiceMade{dlgNpc,...} carries the right id
+        startDialogue(dlgNpc);
+    } else {
+        startCombat(en);
+    }
+}
+
+// Verification hook for the browser build's deploy harness (exposed as jsDebugBattle in
+// emscripten_main.cpp): start a fight with the nearest un-consumed monster so the battle scene and
+// its input can be driven without walking the maze first. Returns true when a fight is running.
+bool Game::debugStartNearestBattle() {
+    if (cs.active) return true;
+    int bestD = 1 << 30;
+    const Entity* best = nullptr;
+    for (const auto& e : st.entities) {
+        if (e.consumed || e.kind.rfind("monster:", 0) != 0) continue;
+        int d = std::abs(e.x - pl.x) + std::abs(e.y - pl.y);
+        if (d < bestD) { bestD = d; best = &e; }
+    }
+    if (!best) return false;
+    engageMonster(*best);
+    return cs.active;
 }
 
 void Game::startCombat(const EnemyInst& e) {

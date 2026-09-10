@@ -48,6 +48,33 @@ EMSCRIPTEN_KEEPALIVE
 void jsGamepad(int phase, int x, int y) {
     if (g_game) g_game->handleTouch((float)x, (float)y, phase);
 }
+// Diagnostics for the browser build's battle input. The battle scene is driven by press-and-hold,
+// which a page driver cannot observe through the DOM (nothing in the canvas reports state), so the
+// deploy harness asserts on these instead: which==0 -> flags|phase<<8 (bit0 active, bit1 charging,
+// bit2 won), which==1 -> enemy HP, which==2 -> accumulated charge ms.
+EMSCRIPTEN_KEEPALIVE
+int jsCombatInfo(int which) {
+    if (!g_game) return -1;
+    const CombatState& c = g_game->combat();
+    if (which == 0) return (c.active ? 1 : 0) | (c.charging ? 2 : 0) | (c.won ? 4 : 0) | ((int)c.phase << 8);
+    if (which == 1) return c.enemyHP;
+    if (which == 2) return c.chargeMs;
+    return -1;
+}
+// More harness diagnostics: which==0/1 -> player x/y, so a JS-driven walk can prove a step really
+// happened; jsDebugBattle() starts a fight with the nearest monster so the battle scene's
+// press-and-hold input can be exercised without walking the maze first.
+EMSCRIPTEN_KEEPALIVE
+int jsPlayerInfo(int which) {
+    if (!g_game) return -1;
+    if (which == 0) return g_game->player().x;
+    if (which == 1) return g_game->player().y;
+    return -1;
+}
+EMSCRIPTEN_KEEPALIVE
+int jsDebugBattle() {
+    return (g_game && g_game->debugStartNearestBattle()) ? 1 : 0;
+}
 
 // Download a SINGLE file from a URL (e.g. a remote stage JSON) into the FS.
 EMSCRIPTEN_KEEPALIVE

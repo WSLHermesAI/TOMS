@@ -49,6 +49,17 @@ for s in HUD_STRINGS:
     for ch in s:
         if ch.isprintable():
             chars.add(ch)
+# Hardcoded UI strings in the C++ sources are NOT in data/*.json, and a hand-maintained list goes
+# stale the moment new text is added -- which showed up on the live page as blank gaps where glyphs
+# were missing. Scan the sources instead: every printable non-ASCII character in a .cpp/.h gets a
+# glyph, so any hardcoded label drawn with drawText() is covered (now and in future).
+src_files = (glob.glob(os.path.join(ROOT, "src/**/*.cpp"), recursive=True) +
+             glob.glob(os.path.join(ROOT, "src/**/*.h"), recursive=True))
+for _path in src_files:
+    with open(_path, encoding="utf-8", errors="replace") as _f:
+        for _ch in _f.read():
+            if ord(_ch) > 0x7F and _ch.isprintable():
+                chars.add(_ch)
 chars = sorted(chars)
 n = len(chars)
 rows = (n + COLS - 1) // COLS

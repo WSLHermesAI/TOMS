@@ -249,6 +249,8 @@ int main(int argc, char** argv) {
             // letterboxed/pillarboxed viewport (see Renderer::computeAspectFitViewport) -- a
             // click landing in a letterbox bar is correctly ignored rather than mismapped.
             static bool mouseWasDown = false;
+            static float mouseDesignX = 0, mouseDesignY = 0;
+            static bool mouseHasDesign = false;
             if (win && glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
                 if (!mouseWasDown) {
                     double mx, my; glfwGetCursorPos(win, &mx, &my);
@@ -262,13 +264,21 @@ int main(int argc, char** argv) {
                         double dx = mx * ((double)fbW / winW), dy = my * ((double)fbH / winH);
                         if (auto* r = dynamic_cast<Renderer*>(g.renderer())) {
                             float bx, by;
-                            if (r->deviceToDesign(dx, dy, bx, by)) g.handleTouch(bx, by, 0);  // phase 0 = down
+                            if (r->deviceToDesign(dx, dy, bx, by)) {
+                                g.handleTouch(bx, by, 0);  // phase 0 = down
+                                mouseDesignX = bx; mouseDesignY = by; mouseHasDesign = true;
+                            }
                         }
                     }
                 }
                 mouseWasDown = true;
             } else {
+                // Release: forward a phase-2 event at the press coordinates. Only the press used to
+                // be forwarded, so any hold-type input driven by the mouse never resolved -- most
+                // visibly the battle scene's Power Bar, which charged and then never fired.
+                if (mouseWasDown && mouseHasDesign) g.handleTouch(mouseDesignX, mouseDesignY, 2);
                 mouseWasDown = false;
+                mouseHasDesign = false;
             }
 
             // Acquire next swapchain image then draw. beginFrame() transparently
