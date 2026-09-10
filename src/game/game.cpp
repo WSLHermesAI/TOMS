@@ -2349,18 +2349,23 @@ void Game::titleClick(float x, float y) {
 // highlight reserved for the row the cursor is on. Solid-tint quads only -- the title screen
 // ships no art, so it renders identically on every backend for free.
 void Game::drawTitleButton(const toms::TitleRow& r, const std::string& label, const std::string& sub,
-                           bool selected, const float accent[4]) {
+                           bool selected, const float accent[4], float pulse) {
     static const float hi[4]  = {1.00f, 0.97f, 0.86f, 1.0f};
     static const float dflt[4]= {0.86f, 0.88f, 0.94f, 1.0f};
     static const float dim[4] = {0.60f, 0.64f, 0.76f, 1.0f};
+
+    // Subtle breathing on the selected row (panel brightness, accent alpha, cursor slide) so the
+    // screen is visibly live even when nothing is being pressed -- a static title reads as a crash.
+    const float glow = selected ? (0.90f + 0.18f * pulse) : 1.0f;
+    const float accentA = selected ? (0.68f + 0.32f * pulse) : 0.35f;
 
     Quad panel;
     panel.rect[0] = r.x; panel.rect[1] = r.y; panel.rect[2] = r.w; panel.rect[3] = r.h;
     panel.uv[0] = 0; panel.uv[1] = 0; panel.uv[2] = 1; panel.uv[3] = 1;
     panel.solid = true;
-    panel.tint[0] = selected ? 0.20f : 0.11f;
-    panel.tint[1] = selected ? 0.21f : 0.12f;
-    panel.tint[2] = selected ? 0.30f : 0.18f;
+    panel.tint[0] = (selected ? 0.20f : 0.11f) * glow;
+    panel.tint[1] = (selected ? 0.21f : 0.12f) * glow;
+    panel.tint[2] = (selected ? 0.30f : 0.18f) * glow;
     panel.tint[3] = 0.96f;
     ren->drawSprite(panel);
 
@@ -2369,7 +2374,7 @@ void Game::drawTitleButton(const toms::TitleRow& r, const std::string& label, co
     bar.uv[0] = 0; bar.uv[1] = 0; bar.uv[2] = 1; bar.uv[3] = 1;
     bar.solid = true;
     bar.tint[0] = accent[0]; bar.tint[1] = accent[1]; bar.tint[2] = accent[2];
-    bar.tint[3] = selected ? 1.0f : 0.35f;
+    bar.tint[3] = accentA;
     ren->drawSprite(bar);
 
     const float labelSize = 26.0f;
@@ -2377,7 +2382,10 @@ void Game::drawTitleButton(const toms::TitleRow& r, const std::string& label, co
     const float ly = hasSub ? r.y + 7.0f : r.y + (r.h - labelSize) * 0.5f;
     drawText(label, r.x + 22.0f, ly, labelSize, selected ? hi : dflt);
     if (hasSub) drawText(sub, r.x + 22.0f, ly + labelSize + 1.0f, 15.0f, dim);
-    if (selected) drawText(">", r.x - 26.0f, ly, labelSize, accent);
+    if (selected) {
+        float cursor[4] = { accent[0], accent[1], accent[2], accentA };
+        drawText(">", r.x - 26.0f - 6.0f * pulse, ly, labelSize, cursor);
+    }
 }
 
 void Game::drawTitleScreen() {
@@ -2385,6 +2393,11 @@ void Game::drawTitleScreen() {
     const float W = (float)ren->width(), H = (float)ren->height();
     // Same layout function titleClick() hit-tests against -> a tap always lands on what was drawn.
     titleLayout_ = toms::computeTitleLayout((int)W, (int)H, title_.slotCount(), locale_.languageCount());
+
+    // Animation clock for the whole page: a slow ~1.4 s pulse drives the selected row's glow, its
+    // accent alpha and the sliding cursor, and gently breathes the two frame rules. Without it the
+    // title screen is a perfectly static image, which players read as "it crashed".
+    const float pulse = 0.5f + 0.5f * std::sin(titleAnimMs_ * 0.0045f);
 
     static const float gold[4] = {0.95f, 0.82f, 0.45f, 1.0f};
     static const float dim[4]  = {0.60f, 0.64f, 0.76f, 1.0f};
@@ -2401,7 +2414,8 @@ void Game::drawTitleScreen() {
     rule.rect[0] = 0; rule.rect[2] = W; rule.rect[3] = 2.0f;
     rule.uv[0] = 0; rule.uv[1] = 0; rule.uv[2] = 1; rule.uv[3] = 1;
     rule.solid = true;
-    rule.tint[0] = gold[0]; rule.tint[1] = gold[1]; rule.tint[2] = gold[2]; rule.tint[3] = 0.55f;
+    rule.tint[0] = gold[0]; rule.tint[1] = gold[1]; rule.tint[2] = gold[2];
+    rule.tint[3] = 0.40f + 0.30f * pulse;
     rule.rect[1] = 74.0f;  ren->drawSprite(rule);
     rule.rect[1] = H - 62.0f; ren->drawSprite(rule);
 
@@ -2418,7 +2432,7 @@ void Game::drawTitleScreen() {
             static const char* desc[3] = {"menu.new_game.desc", "menu.continue.desc", "menu.settings.desc"};
             for (int i = 0; i < toms::TitleLayout::kMaxMenuRows; i++)
                 drawTitleButton(titleLayout_.menuRow[i], locale_.tr(keys[i]), locale_.tr(desc[i]),
-                                title_.menuSelection() == i, gold);
+                                title_.menuSelection() == i, gold, pulse);
             break;
         }
         case toms::TitlePage::Continue: {
@@ -2442,13 +2456,13 @@ void Game::drawTitleScreen() {
                     label += "   [" + locale_.tr("continue.empty") + "]";
                 }
                 drawTitleButton(titleLayout_.slotRow[i], label, sub,
-                                title_.slotSelection() == i, gold);
+                                title_.slotSelection() == i, gold, pulse);
             }
             if (!any) {
                 const std::string hint = locale_.tr("continue.hint");
                 drawText(hint, (W - measureText(hint, 18)) * 0.5f, H - 178.0f, 18, dim);
             }
-            drawTitleButton(titleLayout_.backButton, locale_.tr("menu.back"), "", false, dim);
+            drawTitleButton(titleLayout_.backButton, locale_.tr("menu.back"), "", false, dim, pulse);
             break;
         }
         case toms::TitlePage::Settings: {
@@ -2461,7 +2475,7 @@ void Game::drawTitleScreen() {
                 const bool active = (i == locale_.languageIndex());
                 std::string label = std::string(active ? "[x] " : "[ ] ") + langs[i].name;
                 drawTitleButton(titleLayout_.langRow[i], label, "",
-                                title_.settingsSelection() == i, gold);
+                                title_.settingsSelection() == i, gold, pulse);
             }
             break;
         }
@@ -2518,11 +2532,16 @@ void Game::drawTitleConfirmDialog() {
     drawText(body, box.x + (box.w - measureText(body, 16)) * 0.5f, box.y + 86.0f, 16, dim);
 
     const bool yes = title_.newGameConfirmYesSelected();
-    drawTitleButton(titleLayout_.confirmYes, locale_.tr("menu.yes"), "", yes, gold);
-    drawTitleButton(titleLayout_.confirmNo,  locale_.tr("menu.no"),  "", !yes, gold);
+    const float pulse = 0.5f + 0.5f * std::sin(titleAnimMs_ * 0.0045f);   // same live pulse as the list
+    drawTitleButton(titleLayout_.confirmYes, locale_.tr("menu.yes"), "", yes, gold, pulse);
+    drawTitleButton(titleLayout_.confirmNo,  locale_.tr("menu.no"),  "", !yes, gold, pulse);
 }
 
 void Game::update(int dtMs) {
+    // Title-screen animation clock: advances in every state (the title is drawn long before any
+    // gameplay exists) and wraps so a float never drifts into precision loss on a long session.
+    titleAnimMs_ += (float)dtMs;
+    if (titleAnimMs_ > 3600000.0f) titleAnimMs_ -= 3600000.0f;
     // Title phase: the run's clock only advances while actually playing, and a changed run is
     // flushed to its slot on a throttle (see kAutosaveIntervalMs) rather than on every event --
     // one atomic write per few seconds instead of one per pickup.

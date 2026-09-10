@@ -455,6 +455,9 @@ private:
     // treats the whole battle scene as the same press-and-hold surface, so this only decides what
     // gets highlighted, never whether input works at all.
     int combatBtnRect_[4] = {0,0,0,0};
+    // Title screen animation clock (ms, advanced in update()). Drives the pulsing selection
+    // highlight / sliding cursor so the title never looks like a static (crashed) frame.
+    float titleAnimMs_ = 0.0f;
 #ifndef __EMSCRIPTEN__
     Audio audio;           // SFX subsystem (no-op when no audio device)
 #else
@@ -485,8 +488,10 @@ private:
     // Applies a loaded slot to the live game state, then loads its stage.
     void applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& r, int slot, int playTimeSec);
     // One title-row button: framed panel + label + optional sub-label, highlighted when selected.
+    // `pulse` (0..1, from titleAnimMs_) animates the selected row so a fully loaded title screen
+    // never looks like a frozen/crashed frame.
     void drawTitleButton(const toms::TitleRow& r, const std::string& label,
-                         const std::string& sub, bool selected, const float accent[4]);
+                         const std::string& sub, bool selected, const float accent[4], float pulse);
     // The "start a new game in this (empty) slot?" prompt, drawn over the Continue page.
     void drawTitleConfirmDialog();
     TOMS_OBJECT(Game)
