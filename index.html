@@ -2,11 +2,59 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tower of the Sorcerer — WebGL2</title>
-<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Tower of the Sorcerer</title>
+<!--
+  clear.html — the clean, hand-maintained game page for the TOMS browser build.
+
+  This file is SOURCE, not a build artifact: build_web.sh regenerates
+  toms_web.js / .wasm / .data on every build but never touches this page, and it copies
+  this file into the build output as index.html (with the build stamp filled in). So a clean
+  page always survives a rebuild — nothing here comes from the Emscripten shell.
+
+  It deliberately contains none of the default Emscripten shell chrome: no logo, no
+  spinner/status/progress block, and no #output debug console. Errors still go to the
+  browser console (F12), just not into the page.
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #05050a; overflow: hidden; }
+  /* The canvas keeps its 1024x768 drawing buffer; the page just centres it and the game's
+     own inline script scales the CSS box to fit the viewport. */
+  canvas {
+    display: block;
+    margin: 0 auto;
+    border: 0;
+    background: #05050a;
+    touch-action: none;           /* no browser pan/zoom gestures over the game */
+    outline: none;
+  }
+  #boot {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #8d93a8; font: 16px/1.5 system-ui, sans-serif; letter-spacing: .08em;
+    background: #05050a; transition: opacity .4s ease; pointer-events: none;
+  }
+  #boot.hidden { opacity: 0; }
+</style>
 </head>
 <body>
-<iframe src="toms_web.html?v=699f663-20260910222912" allow="cross-origin-isolated" allowfullscreen></iframe>
+<canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
+<div id="boot">TOWER OF THE SORCERER</div>
+
+<script>
+  // Must exist before the module script runs (the standard Emscripten embedding contract):
+  // the runtime uses this canvas instead of creating/looking one up of its own.
+  window.TOMS_VERSION = '699f663-20260910223832';   // filled in by build_web.sh
+  var Module = {
+    canvas: document.getElementById('canvas'),
+    arguments: [],
+    onRuntimeInitialized: function () {
+      var b = document.getElementById('boot');
+      if (b) b.classList.add('hidden');
+    }
+  };
+</script>
+<!-- 699f663-20260910223832 is replaced with a build stamp (e.g. "699f663-20260910222912") by
+     build_web.sh so a deploy never serves a stale toms_web.js. -->
+<script src="toms_web.js?v=699f663-20260910223832"></script>
 </body>
 </html>
