@@ -150,7 +150,7 @@ static const char* TOMS_WEB_UI =
 "window.__tomsReady=false;"
 "function toBP(e){var r=cv.getBoundingClientRect();var w=(r.width>0)?r.width:1024;var h=(r.height>0)?r.height:768;var t=(e.changedTouches&&e.changedTouches[0])?e.changedTouches[0]:e;var bx=(t.clientX-r.left)/w*1024;var by=(t.clientY-r.top)/h*768;if(!isFinite(bx)||!isFinite(by))return null;return [bx,by];}"
 "function gpCall(p,ph){try{if(typeof Module!=='undefined'&&Module.ccall&&window.__tomsReady)Module.ccall('jsGamepad','null',['number','number','number'],[ph,p[0],p[1]]);}catch(err){showErr('jsGamepad: '+err);}}"
-"function showErr(m){try{var d=document.getElementById('tomserr');if(!d){d=document.createElement('div');d.id='tomserr';d.style.cssText='position:fixed;left:0;top:0;right:0;z-index:999;background:rgba(120,0,0,0.9);color:#fff;font:13px monospace;padding:6px;white-space:pre-wrap;';document.body.appendChild(d);}d.textContent='ERROR: '+m;}catch(e){}}"
+"function showErr(m){try{console.error('[TOMS] '+m);}catch(e){}}"
 "window.onerror=function(m,s,l,c,e){showErr(m+' @'+l+':'+c+(e&&e.stack?' | '+e.stack:''));return false;};"
 "if(typeof Module!=='undefined'){Module.onAbort=function(what){showErr('ABORT: '+(what||'unknown')+' (open DevTools console for the C++ stack)');};}"
 "function onDown(e){var p=toBP(e);if(!p)return;cv._p=p;gpCall(p,0);if(cv._rep)clearTimeout(cv._rep);if(cv._rep2)clearInterval(cv._rep2);cv._rep=null;cv._rep2=null;cv._rep=setTimeout(function(){cv._rep2=setInterval(function(){gpCall(cv._p||p,1);},150);},320);}"

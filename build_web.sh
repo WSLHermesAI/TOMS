@@ -99,14 +99,9 @@ OLD = """      window.onerror = window.onunhandledrejection = () => {
         };
       };"""
 if OLD in s and 'showErr' not in s:
-    NEW = """      function showErr(msg){
-        var bar = document.getElementById('tomserr');
-        if(!bar){ bar = document.createElement('div'); bar.id='tomserr';
-          bar.style.cssText='position:fixed;left:0;right:0;top:0;z-index:9999;background:#400;color:#fff;font:14px/1.4 monospace;white-space:pre-wrap;padding:10px;max-height:60%;overflow:auto;';
-          (document.body||document.documentElement).appendChild(bar); }
-        bar.textContent = 'TOMS error: ' + msg;
-        console.error('[TOMS] ' + msg);
-      }
+    NEW = """      // Errors go to the BROWSER CONSOLE only: the published page keeps no on-screen debug
+      // banner/console (owner request). Open DevTools to read them.
+      function showErr(msg){ console.error('[TOMS] ' + msg); }
       function dumpErr(e){
         var parts = [];
         try { parts.push('type=' + (e && e.constructor && e.constructor.name)); } catch(_) {}
@@ -136,6 +131,49 @@ open(html, 'w', encoding='utf-8').write(s)
 print('stamped', html, 'with v='+ver, '| showErr:', 'showErr' in s)
 PY
   done
+
+  # ---- strip the stock Emscripten shell chrome from the generated game page ----------------
+  # The generated HTML is Emscripten's default shell: an Emscripten logo, a spinner/status/
+  # progress block, and an #output textarea (a debug console). None of that belongs in the
+  # shipped game, so it is removed here, on every build.
+  for html in "$outdir/toms_web.html" "web/toms_web.html"; do
+    [ -f "$html" ] || continue
+    python3 - "$html" <<'PY'
+import re, sys
+path = sys.argv[1]
+s = open(path, encoding='utf-8').read()
+
+s = re.sub(r'<title>.*?</title>', '<title>Tower of the Sorcerer</title>', s, count=1, flags=re.S | re.I)
+# the shell's logo anchor: <a href="...emscripten..."><img id="emscripten_logo" base64…></a>
+s = re.sub(r'<a[^>]*href="[^"]*emscripten[^"]*"[^>]*>.*?</a>', '', s, count=1, flags=re.S | re.I)
+for pat in (r'<div[^>]*id="status"[^>]*>.*?</div>',
+            r'<div[^>]*class="spinner"[^>]*>.*?</div>',
+            r'<progress[^>]*id="progress"[^>]*>.*?</progress>',
+            r'<div[^>]*id="controls"[^>]*>.*?</div>',
+            r'<textarea[^>]*id="output"[^>]*>.*?</textarea>',
+            # CSS blocks for elements that no longer exist
+            r'#emscripten_logo\s*\{[^}]*\}',
+            r'\.spinner\s*\{[^}]*\}'):
+    s = re.sub(pat, '', s, flags=re.S | re.I)
+# dark, chrome-free page instead of the shell's default styling
+s = s.replace('body {\n  font-family: arial;', 'body {\n  background: #05050a; overflow: hidden;\n  font-family: arial;')
+open(path, 'w', encoding='utf-8').write(s)
+print('cleaned %s | logo=%s status=%s output=%s tomserr=%s'
+      % (path, 'emscripten_logo' in s, 'id="status"' in s, 'id="output"' in s, 'tomserr' in s))
+PY
+  done
+
+  # ---- the page that actually gets published ------------------------------------------------
+  # web/clear.html is hand-maintained SOURCE (a clean full-viewport page with no Emscripten
+  # chrome). A rebuild regenerates the .js/.wasm/.data but never this file, so there is always
+  # a clean page to deploy; stamping it here keeps the cache-busting version in sync.
+  python3 - "$outdir/index.html" "web/clear.html" "$VER" <<'PY'
+import sys
+out, tpl, ver = sys.argv[1], sys.argv[2], sys.argv[3]
+s = open(tpl, encoding='utf-8').read().replace('__TOMS_STAMP__', ver)
+open(out, 'w', encoding='utf-8').write(s)
+print('wrote %s from %s with v=%s' % (out, tpl, ver))
+PY
 }
 
 TARGET="${1:-all}"

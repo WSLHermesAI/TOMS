@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpe63mkvyh.js
+// include: /tmp/tmprhd3jje_.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -210,21 +210,21 @@ Module['FS_createPath']("/data", "stages", true, true);
 
   })();
 
-// end include: /tmp/tmpe63mkvyh.js
-// include: /tmp/tmp7b07w634.js
+// end include: /tmp/tmprhd3jje_.js
+// include: /tmp/tmp3umha2_d.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmp7b07w634.js
-// include: /tmp/tmpdanzyy71.js
+  // end include: /tmp/tmp3umha2_d.js
+// include: /tmp/tmpxl71zbfu.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpdanzyy71.js
+  // end include: /tmp/tmpxl71zbfu.js
 
 
 var programArgs = [];
@@ -8378,8 +8378,8 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('wasmBinary');
 }
 var ASM_CONSTS = {
-  127812: () => { try { if (typeof FS === 'undefined') return; try { FS.mkdir('/save'); } catch (e) {} FS.mount(IDBFS, {}, '/save'); Module.__tomsSyncfs = function(load) { try { FS.syncfs(!!load, function(err) { if (err) { console.warn('[TOMS] syncfs', err); return; } if (load && typeof Module !== 'undefined' && Module.ccall) { try { Module.ccall('jsRefreshSlots', 'null', [], []); } catch (e) {} } }); } catch (e) { console.warn('[TOMS] syncfs failed', e); } }; Module.__tomsSyncfs(true); } catch (e) { console.warn('[TOMS] IDBFS mount failed; saves are session-only:', e); } },  
- 128377: () => { if (typeof Module !== 'undefined' && Module.__tomsSyncfs) Module.__tomsSyncfs(false); }
+  127524: () => { try { if (typeof FS === 'undefined') return; try { FS.mkdir('/save'); } catch (e) {} FS.mount(IDBFS, {}, '/save'); Module.__tomsSyncfs = function(load) { try { FS.syncfs(!!load, function(err) { if (err) { console.warn('[TOMS] syncfs', err); return; } if (load && typeof Module !== 'undefined' && Module.ccall) { try { Module.ccall('jsRefreshSlots', 'null', [], []); } catch (e) {} } }); } catch (e) { console.warn('[TOMS] syncfs failed', e); } }; Module.__tomsSyncfs(true); } catch (e) { console.warn('[TOMS] IDBFS mount failed; saves are session-only:', e); } },  
+ 128089: () => { if (typeof Module !== 'undefined' && Module.__tomsSyncfs) Module.__tomsSyncfs(false); }
 };
 
 // Imports from the Wasm binary.
