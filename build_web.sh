@@ -163,6 +163,26 @@ print('cleaned %s | logo=%s status=%s output=%s tomserr=%s'
 PY
   done
 
+  # ---- version the artifact filenames -------------------------------------------------------
+  # A deploy replaces toms_web.data/.wasm under the SAME names, so a returning visitor can end
+  # up with a fresh page JS against a cached old .data (size/offset mismatch => black canvas).
+  # Naming the artifacts per build makes the filename itself the cache buster. The plain-named
+  # copies are kept as well so a page cached from an earlier deploy still loads.
+  python3 - "$outdir" "$VER" <<'PY'
+import os, shutil, sys
+outdir, ver = sys.argv[1], sys.argv[2]
+ren = 'toms_web.' + ver
+js = open(os.path.join(outdir, 'toms_web.js'), encoding='utf-8').read()
+# only these two are fetch URLs; the embedded preload keys ("datafile_/…/toms_web.data") must keep
+# their original names because they identify packages inside the .data file itself.
+new = js.replace("'toms_web.wasm'", "'%s.wasm'" % ren).replace("'toms_web.data'", "'%s.data'" % ren)
+open(os.path.join(outdir, ren + '.js'), 'w', encoding='utf-8').write(new)
+for ext in ('wasm', 'data'):
+    shutil.copy2(os.path.join(outdir, 'toms_web.' + ext), os.path.join(outdir, '%s.%s' % (ren, ext)))
+print('versioned artifacts: %s.{js,wasm,data} | URL refs rewritten: %d'
+      % (ren, new.count(ren)))
+PY
+
   # ---- the page that actually gets published ------------------------------------------------
   # web/clear.html is hand-maintained SOURCE (a clean full-viewport page with no Emscripten
   # chrome). A rebuild regenerates the .js/.wasm/.data but never this file, so there is always

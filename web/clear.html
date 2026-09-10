@@ -53,8 +53,10 @@
     }
   };
 </script>
-<!-- __TOMS_STAMP__ is replaced with a build stamp (e.g. "699f663-20260910222912") by
-     build_web.sh so a deploy never serves a stale toms_web.js. -->
-<script src="toms_web.js?v=__TOMS_STAMP__"></script>
+<!-- __TOMS_STAMP__ is the build stamp (e.g. "7a99211-20260910224510"). build_web.sh names the
+     artifacts after it (toms_web.<stamp>.js/.wasm/.data) and fills the stamp in here, so the
+     filename itself busts the cache -- a returning visitor can never mix a new page with old
+     binaries. -->
+<script src="toms_web.__TOMS_STAMP__.js"></script>
 </body>
 </html>
