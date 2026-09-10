@@ -43,7 +43,7 @@
 <script>
   // Must exist before the module script runs (the standard Emscripten embedding contract):
   // the runtime uses this canvas instead of creating/looking one up of its own.
-  window.TOMS_VERSION = '699f663-20260910223832';   // filled in by build_web.sh
+  window.TOMS_VERSION = 'ddfd487-20260910224247';   // filled in by build_web.sh
   var Module = {
     canvas: document.getElementById('canvas'),
     arguments: [],
@@ -53,8 +53,8 @@
     }
   };
 </script>
-<!-- 699f663-20260910223832 is replaced with a build stamp (e.g. "699f663-20260910222912") by
+<!-- ddfd487-20260910224247 is replaced with a build stamp (e.g. "699f663-20260910222912") by
      build_web.sh so a deploy never serves a stale toms_web.js. -->
-<script src="toms_web.js?v=699f663-20260910223832"></script>
+<script src="toms_web.js?v=ddfd487-20260910224247"></script>
 </body>
 </html>
