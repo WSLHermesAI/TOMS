@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp5qwn0k2u.js
+// include: /tmp/tmpeww41omk.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -206,25 +206,25 @@ Module['FS_createPath']("/data", "stages", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 54997}, {"filename": "/assets/font_atlas.png", "start": 54997, "end": 248173}, {"filename": "/assets/sfx/confirm_click.wav", "start": 248173, "end": 254831}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 254831, "end": 262813}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 262813, "end": 283143}, {"filename": "/assets/sfx/get_item.wav", "start": 283143, "end": 302591}, {"filename": "/assets/sfx/player_attack.wav", "start": 302591, "end": 313219}, {"filename": "/assets/sfx/walk.wav", "start": 313219, "end": 319437}, {"filename": "/assets/shaders/sprite.frag", "start": 319437, "end": 320160}, {"filename": "/assets/shaders/sprite.frag.spv", "start": 320160, "end": 321836}, {"filename": "/assets/shaders/sprite.vert", "start": 321836, "end": 322874}, {"filename": "/assets/shaders/sprite.vert.spv", "start": 322874, "end": 326058}, {"filename": "/assets/sprites/bat.png", "start": 326058, "end": 326268}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 326268, "end": 326572}, {"filename": "/assets/sprites/coin.png", "start": 326572, "end": 326795}, {"filename": "/assets/sprites/demon.png", "start": 326795, "end": 327099}, {"filename": "/assets/sprites/door_blue.png", "start": 327099, "end": 327258}, {"filename": "/assets/sprites/door_red.png", "start": 327258, "end": 327417}, {"filename": "/assets/sprites/door_yellow.png", "start": 327417, "end": 327576}, {"filename": "/assets/sprites/exp_up.png", "start": 327576, "end": 327779}, {"filename": "/assets/sprites/floor.png", "start": 327779, "end": 327957}, {"filename": "/assets/sprites/gem_atk.png", "start": 327957, "end": 328210}, {"filename": "/assets/sprites/gem_def.png", "start": 328210, "end": 328467}, {"filename": "/assets/sprites/golem.png", "start": 328467, "end": 328674}, {"filename": "/assets/sprites/key_blue.png", "start": 328674, "end": 328931}, {"filename": "/assets/sprites/key_red.png", "start": 328931, "end": 329184}, {"filename": "/assets/sprites/key_yellow.png", "start": 329184, "end": 329438}, {"filename": "/assets/sprites/manifest.json", "start": 329438, "end": 330014}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 330014, "end": 330229}, {"filename": "/assets/sprites/npc_king.png", "start": 330229, "end": 330420}, {"filename": "/assets/sprites/npc_princess.png", "start": 330420, "end": 330643}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 330643, "end": 330889}, {"filename": "/assets/sprites/npc_villager.png", "start": 330889, "end": 331078}, {"filename": "/assets/sprites/player.png", "start": 331078, "end": 331343}, {"filename": "/assets/sprites/potion_blue.png", "start": 331343, "end": 331577}, {"filename": "/assets/sprites/potion_red.png", "start": 331577, "end": 331811}, {"filename": "/assets/sprites/scroll.png", "start": 331811, "end": 331947}, {"filename": "/assets/sprites/skeleton.png", "start": 331947, "end": 332124}, {"filename": "/assets/sprites/slime.png", "start": 332124, "end": 332381}, {"filename": "/assets/sprites/stairs_down.png", "start": 332381, "end": 332557}, {"filename": "/assets/sprites/stairs_up.png", "start": 332557, "end": 332735}, {"filename": "/assets/sprites/wall.png", "start": 332735, "end": 332872}, {"filename": "/assets/sprites/wraith.png", "start": 332872, "end": 333115}, {"filename": "/assets/wqy-zenhei.ttc", "start": 333115, "end": 17124366}, {"filename": "/data/combat.json", "start": 17124366, "end": 17124948}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17124948, "end": 17125187}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17125187, "end": 17125437}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17125437, "end": 17125731}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17125731, "end": 17125978}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17125978, "end": 17126234}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17126234, "end": 17126484}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17126484, "end": 17126738}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17126738, "end": 17127021}, {"filename": "/data/dialogue/handmaiden.json", "start": 17127021, "end": 17127306}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17127306, "end": 17127665}, {"filename": "/data/dialogue/princess_liora.json", "start": 17127665, "end": 17127939}, {"filename": "/data/dialogue/princess_victory.json", "start": 17127939, "end": 17128488}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17128488, "end": 17129066}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17129066, "end": 17129685}, {"filename": "/data/dialogue/villager_elder.json", "start": 17129685, "end": 17130325}, {"filename": "/data/enemies.json", "start": 17130325, "end": 17131373}, {"filename": "/data/items.json", "start": 17131373, "end": 17132759}, {"filename": "/data/stages/stage01.json", "start": 17132759, "end": 17134016}, {"filename": "/data/stages/stage02.json", "start": 17134016, "end": 17135243}, {"filename": "/data/stages/stage03.json", "start": 17135243, "end": 17136465}, {"filename": "/data/stages/stage04.json", "start": 17136465, "end": 17137715}, {"filename": "/data/stages/stage05.json", "start": 17137715, "end": 17138930}, {"filename": "/data/stages/stage06.json", "start": 17138930, "end": 17140140}, {"filename": "/data/stages/stage07.json", "start": 17140140, "end": 17141382}, {"filename": "/data/stages/stage08.json", "start": 17141382, "end": 17142611}, {"filename": "/data/stages/stage09.json", "start": 17142611, "end": 17143848}, {"filename": "/data/stages/stage10.json", "start": 17143848, "end": 17145082}, {"filename": "/data/stages/stage_11.json", "start": 17145082, "end": 17146297}, {"filename": "/data/store.json", "start": 17146297, "end": 17147566}, {"filename": "/data/story.json", "start": 17147566, "end": 17148898}], "remote_package_size": 17148898});
+    loadPackage({"files": [{"filename": "/assets/font_atlas.json", "start": 0, "end": 82583}, {"filename": "/assets/font_atlas.png", "start": 82583, "end": 365493}, {"filename": "/assets/sfx/confirm_click.wav", "start": 365493, "end": 372151}, {"filename": "/assets/sfx/dialogue_popup.wav", "start": 372151, "end": 380133}, {"filename": "/assets/sfx/enemy_attack.wav", "start": 380133, "end": 400463}, {"filename": "/assets/sfx/get_item.wav", "start": 400463, "end": 419911}, {"filename": "/assets/sfx/player_attack.wav", "start": 419911, "end": 430539}, {"filename": "/assets/sfx/walk.wav", "start": 430539, "end": 436757}, {"filename": "/assets/shaders/sprite.frag", "start": 436757, "end": 437480}, {"filename": "/assets/shaders/sprite.frag.spv", "start": 437480, "end": 439156}, {"filename": "/assets/shaders/sprite.vert", "start": 439156, "end": 440669}, {"filename": "/assets/shaders/sprite.vert.spv", "start": 440669, "end": 443853}, {"filename": "/assets/sprites/bat.png", "start": 443853, "end": 444063}, {"filename": "/assets/sprites/boss_demonlord.png", "start": 444063, "end": 444367}, {"filename": "/assets/sprites/coin.png", "start": 444367, "end": 444590}, {"filename": "/assets/sprites/demon.png", "start": 444590, "end": 444894}, {"filename": "/assets/sprites/door_blue.png", "start": 444894, "end": 445053}, {"filename": "/assets/sprites/door_red.png", "start": 445053, "end": 445212}, {"filename": "/assets/sprites/door_yellow.png", "start": 445212, "end": 445371}, {"filename": "/assets/sprites/exp_up.png", "start": 445371, "end": 445574}, {"filename": "/assets/sprites/floor.png", "start": 445574, "end": 445752}, {"filename": "/assets/sprites/gem_atk.png", "start": 445752, "end": 446005}, {"filename": "/assets/sprites/gem_def.png", "start": 446005, "end": 446262}, {"filename": "/assets/sprites/golem.png", "start": 446262, "end": 446469}, {"filename": "/assets/sprites/key_blue.png", "start": 446469, "end": 446726}, {"filename": "/assets/sprites/key_red.png", "start": 446726, "end": 446979}, {"filename": "/assets/sprites/key_yellow.png", "start": 446979, "end": 447233}, {"filename": "/assets/sprites/manifest.json", "start": 447233, "end": 447809}, {"filename": "/assets/sprites/npc_handmaiden.png", "start": 447809, "end": 448024}, {"filename": "/assets/sprites/npc_king.png", "start": 448024, "end": 448215}, {"filename": "/assets/sprites/npc_princess.png", "start": 448215, "end": 448438}, {"filename": "/assets/sprites/npc_sorcerer.png", "start": 448438, "end": 448684}, {"filename": "/assets/sprites/npc_villager.png", "start": 448684, "end": 448873}, {"filename": "/assets/sprites/player.png", "start": 448873, "end": 449138}, {"filename": "/assets/sprites/potion_blue.png", "start": 449138, "end": 449372}, {"filename": "/assets/sprites/potion_red.png", "start": 449372, "end": 449606}, {"filename": "/assets/sprites/scroll.png", "start": 449606, "end": 449742}, {"filename": "/assets/sprites/skeleton.png", "start": 449742, "end": 449919}, {"filename": "/assets/sprites/slime.png", "start": 449919, "end": 450176}, {"filename": "/assets/sprites/stairs_down.png", "start": 450176, "end": 450352}, {"filename": "/assets/sprites/stairs_up.png", "start": 450352, "end": 450530}, {"filename": "/assets/sprites/wall.png", "start": 450530, "end": 450667}, {"filename": "/assets/sprites/wraith.png", "start": 450667, "end": 450910}, {"filename": "/assets/wqy-zenhei.ttc", "start": 450910, "end": 17242161}, {"filename": "/data/combat.json", "start": 17242161, "end": 17242743}, {"filename": "/data/dialogue/enemy_bat.json", "start": 17242743, "end": 17242982}, {"filename": "/data/dialogue/enemy_demon.json", "start": 17242982, "end": 17243610}, {"filename": "/data/dialogue/enemy_demonlord.json", "start": 17243610, "end": 17243904}, {"filename": "/data/dialogue/enemy_golem.json", "start": 17243904, "end": 17244151}, {"filename": "/data/dialogue/enemy_skeleton.json", "start": 17244151, "end": 17244470}, {"filename": "/data/dialogue/enemy_slime.json", "start": 17244470, "end": 17244720}, {"filename": "/data/dialogue/enemy_wraith.json", "start": 17244720, "end": 17245530}, {"filename": "/data/dialogue/ghost_villager.json", "start": 17245530, "end": 17245813}, {"filename": "/data/dialogue/handmaiden.json", "start": 17245813, "end": 17246098}, {"filename": "/data/dialogue/king_lieutenant.json", "start": 17246098, "end": 17246444}, {"filename": "/data/dialogue/princess_liora.json", "start": 17246444, "end": 17246718}, {"filename": "/data/dialogue/princess_victory.json", "start": 17246718, "end": 17247267}, {"filename": "/data/dialogue/skeleton_scholar.json", "start": 17247267, "end": 17247845}, {"filename": "/data/dialogue/sorcerer_teacher.json", "start": 17247845, "end": 17250465}, {"filename": "/data/dialogue/villager_elder.json", "start": 17250465, "end": 17252198}, {"filename": "/data/enemies.json", "start": 17252198, "end": 17253246}, {"filename": "/data/equipment.json", "start": 17253246, "end": 17256145}, {"filename": "/data/items.json", "start": 17256145, "end": 17257531}, {"filename": "/data/missions.json", "start": 17257531, "end": 17258524}, {"filename": "/data/stages/stage01.json", "start": 17258524, "end": 17260128}, {"filename": "/data/stages/stage02.json", "start": 17260128, "end": 17261702}, {"filename": "/data/stages/stage03.json", "start": 17261702, "end": 17263409}, {"filename": "/data/stages/stage04.json", "start": 17263409, "end": 17265204}, {"filename": "/data/stages/stage05.json", "start": 17265204, "end": 17267148}, {"filename": "/data/stages/stage06.json", "start": 17267148, "end": 17269099}, {"filename": "/data/stages/stage07.json", "start": 17269099, "end": 17271286}, {"filename": "/data/stages/stage08.json", "start": 17271286, "end": 17273421}, {"filename": "/data/stages/stage09.json", "start": 17273421, "end": 17275759}, {"filename": "/data/stages/stage10.json", "start": 17275759, "end": 17278018}, {"filename": "/data/stages/stage_11.json", "start": 17278018, "end": 17280426}, {"filename": "/data/store.json", "start": 17280426, "end": 17284614}, {"filename": "/data/story.json", "start": 17284614, "end": 17285946}, {"filename": "/data/text.json", "start": 17285946, "end": 17288403}], "remote_package_size": 17288403});
 
   })();
 
-// end include: /tmp/tmp5qwn0k2u.js
-// include: /tmp/tmpvxk88_2k.js
+// end include: /tmp/tmpeww41omk.js
+// include: /tmp/tmpxt89w30k.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmpvxk88_2k.js
-// include: /tmp/tmpe0c5uhem.js
+  // end include: /tmp/tmpxt89w30k.js
+// include: /tmp/tmpaksv4z0r.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmpe0c5uhem.js
+  // end include: /tmp/tmpaksv4z0r.js
 
 
 var programArgs = [];
@@ -366,7 +366,7 @@ if (ENVIRONMENT_IS_WORKER) {
 var out = console.log.bind(console);
 var err = console.error.bind(console);
 
-var IDBFS = 'IDBFS is no longer included by default; build with -lidbfs.js';
+
 var PROXYFS = 'PROXYFS is no longer included by default; build with -lproxyfs.js';
 var WORKERFS = 'WORKERFS is no longer included by default; build with -lworkerfs.js';
 var FETCHFS = 'FETCHFS is no longer included by default; build with -lfetchfs.js';
@@ -1189,6 +1189,23 @@ async function createWasm() {
   
   
   
+  var ___cxa_rethrow = () => {
+      if (!exceptionCaught.length) {
+        abort('no exception to throw');
+      }
+      var info = exceptionCaught.at(-1);
+      var ptr = info.excPtr;
+      info.set_rethrown(true);
+      info.set_caught(false);
+      uncaughtExceptionCount++;
+      ___cxa_increment_exception_refcount(ptr);
+      exceptionLast = new CppException(ptr);
+      throw exceptionLast;
+    };
+
+  
+  
+  
   
   
   
@@ -1228,6 +1245,8 @@ async function createWasm() {
       uncaughtExceptionCount++;
       throw exceptionLast;
     };
+
+  var ___cxa_uncaught_exceptions = () => uncaughtExceptionCount;
 
   var ___resumeException = (ptr) => {
       if (!exceptionLast) {
@@ -1975,6 +1994,387 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       return mode;
     };
   
+  
+  
+  
+  var IDBFS = {
+  dbs:{
+  },
+  indexedDB:() => {
+        assert(typeof indexedDB != 'undefined', 'IDBFS used, but indexedDB not supported');
+        return indexedDB;
+      },
+  DB_VERSION:21,
+  DB_STORE_NAME:"FILE_DATA",
+  queuePersist:(mount) => {
+        function onPersistComplete() {
+          if (mount.idbPersistState === 'again') startPersist(); // If a new sync request has appeared in between, kick off a new sync
+          else {
+            mount.idbPersistState = 0; // Otherwise reset sync state back to idle to wait for a new sync later
+            IDBFS.onAutoPersistStateChanged?.(false);
+          }
+        }
+        function startPersist() {
+          mount.idbPersistState = 'idb'; // Mark that we are currently running a sync operation
+          IDBFS.onAutoPersistStateChanged?.(true);
+          IDBFS.syncfs(mount, /*populate:*/false, onPersistComplete);
+        }
+  
+        if (!mount.idbPersistState) {
+          // Programs typically write/copy/move multiple files in the in-memory
+          // filesystem within a single app frame, so when a filesystem sync
+          // command is triggered, do not start it immediately, but only after
+          // the current frame is finished. This way all the modified files
+          // inside the main loop tick will be batched up to the same sync.
+          mount.idbPersistState = setTimeout(startPersist, 0);
+        } else if (mount.idbPersistState === 'idb') {
+          // There is an active IndexedDB sync operation in-flight, but we now
+          // have accumulated more files to sync. We should therefore queue up
+          // a new sync after the current one finishes so that all writes
+          // will be properly persisted.
+          mount.idbPersistState = 'again';
+        }
+      },
+  mount:(mount) => {
+        // reuse core MEMFS functionality
+        var mnt = MEMFS.mount(mount);
+        // If the automatic IDBFS persistence option has been selected, then automatically persist
+        // all modifications to the filesystem as they occur.
+        if (mount?.opts?.autoPersist) {
+          mount.idbPersistState = 0; // IndexedDB sync starts in idle state
+          var memfs_node_ops = mnt.node_ops;
+          mnt.node_ops = {...mnt.node_ops}; // Clone node_ops to inject write tracking
+          mnt.node_ops.mknod = (parent, name, mode, dev) => {
+            var node = memfs_node_ops.mknod(parent, name, mode, dev);
+            // Propagate injected node_ops to the newly created child node
+            node.node_ops = mnt.node_ops;
+            // Remember for each IDBFS node which IDBFS mount point they came from so we know which mount to persist on modification.
+            node.idbfs_mount = mnt.mount;
+            // Remember original MEMFS stream_ops for this node
+            node.memfs_stream_ops = node.stream_ops;
+            // Clone stream_ops to inject write tracking
+            node.stream_ops = {...node.stream_ops};
+  
+            // Track all file writes
+            node.stream_ops.write = (stream, buffer, offset, length, position, canOwn) => {
+              // This file has been modified, we must persist IndexedDB when this file closes
+              stream.node.isModified = true;
+              return node.memfs_stream_ops.write(stream, buffer, offset, length, position, canOwn);
+            };
+  
+            // Persist IndexedDB on file close
+            node.stream_ops.close = (stream) => {
+              var n = stream.node;
+              if (n.isModified) {
+                IDBFS.queuePersist(n.idbfs_mount);
+                n.isModified = false;
+              }
+              if (n.memfs_stream_ops.close) return n.memfs_stream_ops.close(stream);
+            };
+  
+            // Persist the node we just created to IndexedDB
+            IDBFS.queuePersist(mnt.mount);
+  
+            return node;
+          };
+          // Also kick off persisting the filesystem on other operations that modify the filesystem.
+          mnt.node_ops.rmdir   = (...args) => (IDBFS.queuePersist(mnt.mount), memfs_node_ops.rmdir(...args));
+          mnt.node_ops.symlink = (...args) => (IDBFS.queuePersist(mnt.mount), memfs_node_ops.symlink(...args));
+          mnt.node_ops.unlink  = (...args) => (IDBFS.queuePersist(mnt.mount), memfs_node_ops.unlink(...args));
+          mnt.node_ops.rename  = (...args) => (IDBFS.queuePersist(mnt.mount), memfs_node_ops.rename(...args));
+        }
+        return mnt;
+      },
+  syncfs:(mount, populate, callback) => {
+        IDBFS.getLocalSet(mount, (err, local) => {
+          if (err) return callback(err);
+  
+          IDBFS.getRemoteSet(mount, (err, remote) => {
+            if (err) return callback(err);
+  
+            var src = populate ? remote : local;
+            var dst = populate ? local : remote;
+  
+            IDBFS.reconcile(src, dst, callback);
+          });
+        });
+      },
+  quit:() => {
+        for (var value of Object.values(IDBFS.dbs)) {
+          value.close()
+        }
+        IDBFS.dbs = {};
+      },
+  getDB:(name, callback) => {
+        // check the cache first
+        var db = IDBFS.dbs[name];
+        if (db) {
+          return callback(null, db);
+        }
+  
+        var req;
+        try {
+          req = IDBFS.indexedDB().open(name, IDBFS.DB_VERSION);
+        } catch (e) {
+          return callback(e);
+        }
+        if (!req) {
+          return callback('Unable to connect to IndexedDB');
+        }
+        req.onupgradeneeded = (e) => {
+          var db = /** @type {IDBDatabase} */ (e.target.result);
+          var transaction = e.target.transaction;
+  
+          var fileStore;
+  
+          if (db.objectStoreNames.contains(IDBFS.DB_STORE_NAME)) {
+            fileStore = transaction.objectStore(IDBFS.DB_STORE_NAME);
+          } else {
+            fileStore = db.createObjectStore(IDBFS.DB_STORE_NAME);
+          }
+  
+          if (!fileStore.indexNames.contains('timestamp')) {
+            fileStore.createIndex('timestamp', 'timestamp', { unique: false });
+          }
+        };
+        req.onsuccess = () => {
+          db = /** @type {IDBDatabase} */ (req.result);
+  
+          // add to the cache
+          IDBFS.dbs[name] = db;
+          callback(null, db);
+        };
+        req.onerror = (e) => {
+          callback(e.target.error);
+          e.preventDefault();
+        };
+      },
+  getLocalSet:(mount, callback) => {
+        var entries = {};
+  
+        function isRealDir(p) {
+          return p !== '.' && p !== '..';
+        };
+        function toAbsolute(root) {
+          return (p) => PATH.join2(root, p);
+        };
+  
+        var check = FS.readdir(mount.mountpoint).filter(isRealDir).map(toAbsolute(mount.mountpoint));
+  
+        while (check.length) {
+          var path = check.pop();
+          var stat;
+  
+          try {
+            stat = FS.lstat(path);
+          } catch (e) {
+            return callback(e);
+          }
+  
+          if (FS.isDir(stat.mode)) {
+            check.push(...FS.readdir(path).filter(isRealDir).map(toAbsolute(path)));
+          }
+  
+          entries[path] = { 'timestamp': stat.mtime };
+        }
+  
+        return callback(null, { type: 'local', entries: entries });
+      },
+  getRemoteSet:(mount, callback) => {
+        var entries = {};
+  
+        IDBFS.getDB(mount.mountpoint, (err, db) => {
+          if (err) return callback(err);
+  
+          try {
+            var transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readonly');
+            transaction.onerror = (e) => {
+              callback(e.target.error);
+              e.preventDefault();
+            };
+  
+            var store = transaction.objectStore(IDBFS.DB_STORE_NAME);
+            var index = store.index('timestamp');
+  
+            index.openKeyCursor().onsuccess = (event) => {
+              var cursor = event.target.result;
+  
+              if (!cursor) {
+                return callback(null, { type: 'remote', db, entries });
+              }
+  
+              entries[cursor.primaryKey] = { 'timestamp': cursor.key };
+  
+              cursor.continue();
+            };
+          } catch (e) {
+            return callback(e);
+          }
+        });
+      },
+  loadLocalEntry:(path, callback) => {
+        var stat, node;
+  
+        try {
+          var lookup = FS.lookupPath(path);
+          node = lookup.node;
+          stat = FS.lstat(path);
+        } catch (e) {
+          return callback(e);
+        }
+  
+        if (FS.isDir(stat.mode)) {
+          return callback(null, { 'timestamp': stat.mtime, 'mode': stat.mode });
+        } else if (FS.isLink(stat.mode)) {
+          return callback(null, { 'timestamp': stat.mtime, 'mode': stat.mode, 'link': node.link, });
+        } else if (FS.isFile(stat.mode)) {
+          // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
+          // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
+          node.contents = MEMFS.getFileDataAsTypedArray(node);
+          return callback(null, { 'timestamp': stat.mtime, 'mode': stat.mode, 'contents': node.contents });
+        } else {
+          return callback(new Error('node type not supported'));
+        }
+      },
+  storeLocalEntry:(path, entry, callback) => {
+        try {
+          if (FS.isDir(entry['mode'])) {
+            FS.mkdirTree(path, entry['mode']);
+          } else if (FS.isLink(entry['mode'])) {
+            FS.symlink(entry['link'], path);
+          } else if (FS.isFile(entry['mode'])) {
+            FS.writeFile(path, entry['contents'], { canOwn: true });
+          } else {
+            return callback(new Error('node type not supported'));
+          }
+  
+          FS.chmod(path, entry['mode']);
+          FS.utime(path, entry['timestamp'], entry['timestamp']);
+        } catch (e) {
+          return callback(e);
+        }
+  
+        callback(null);
+      },
+  removeLocalEntry:(path, callback) => {
+        try {
+          var stat = FS.lstat(path);
+  
+          if (FS.isDir(stat.mode)) {
+            FS.rmdir(path);
+          } else {
+            FS.unlink(path);
+          }
+        } catch (e) {
+          return callback(e);
+        }
+  
+        callback(null);
+      },
+  loadRemoteEntry:(store, path, callback) => {
+        var req = store.get(path);
+        req.onsuccess = (event) => callback(null, event.target.result);
+        req.onerror = (e) => {
+          callback(e.target.error);
+          e.preventDefault();
+        };
+      },
+  storeRemoteEntry:(store, path, entry, callback) => {
+        try {
+          var req = store.put(entry, path);
+        } catch (e) {
+          callback(e);
+          return;
+        }
+        req.onsuccess = (event) => callback();
+        req.onerror = (e) => {
+          callback(e.target.error);
+          e.preventDefault();
+        };
+      },
+  removeRemoteEntry:(store, path, callback) => {
+        var req = store.delete(path);
+        req.onsuccess = (event) => callback();
+        req.onerror = (e) => {
+          callback(e.target.error);
+          e.preventDefault();
+        };
+      },
+  reconcile:(src, dst, callback) => {
+        var total = 0;
+  
+        var create = [];
+        for (var [key, e] of Object.entries(src.entries)) {
+          var e2 = dst.entries[key];
+          if (!e2 || e['timestamp'].getTime() != e2['timestamp'].getTime()) {
+            create.push(key);
+            total++;
+          }
+        }
+  
+        var remove = [];
+        for (var key of Object.keys(dst.entries)) {
+          if (!src.entries[key]) {
+            remove.push(key);
+            total++;
+          }
+        }
+  
+        if (!total) {
+          return callback(null);
+        }
+  
+        var errored = false;
+        var db = src.type === 'remote' ? src.db : dst.db;
+        var transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
+        var store = transaction.objectStore(IDBFS.DB_STORE_NAME);
+  
+        function done(err) {
+          if (err && !errored) {
+            errored = true;
+            return callback(err);
+          }
+        };
+  
+        // transaction may abort if (for example) there is a QuotaExceededError
+        transaction.onerror = transaction.onabort = (e) => {
+          done(e.target.error);
+          e.preventDefault();
+        };
+  
+        transaction.oncomplete = (e) => {
+          if (!errored) {
+            callback(null);
+          }
+        };
+  
+        // sort paths in ascending order so directory entries are created
+        // before the files inside them
+        for (const path of create.sort()) {
+          if (dst.type === 'local') {
+            IDBFS.loadRemoteEntry(store, path, (err, entry) => {
+              if (err) return done(err);
+              IDBFS.storeLocalEntry(path, entry, done);
+            });
+          } else {
+            IDBFS.loadLocalEntry(path, (err, entry) => {
+              if (err) return done(err);
+              IDBFS.storeRemoteEntry(store, path, entry, done);
+            });
+          }
+        }
+  
+        // sort paths in descending order so files are deleted before their
+        // parent directories
+        for (var path of remove.sort().reverse()) {
+          if (dst.type === 'local') {
+            IDBFS.removeLocalEntry(path, done);
+          } else {
+            IDBFS.removeRemoteEntry(store, path, done);
+          }
+        }
+      },
+  };
   
   
   
@@ -3604,6 +4004,7 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
         FS.filesystems = {
           'MEMFS': MEMFS,
+          'IDBFS': IDBFS,
         };
       },
   init(input, output, error) {
@@ -4261,6 +4662,21 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   }
   
 
+  function ___syscall_mkdirat(dirfd, path, mode) {
+  try {
+  
+      path = SYSCALLS.getStr(path);
+      path = SYSCALLS.calculateAt(dirfd, path);
+      mode &= ~SYSCALLS.currentUmask;
+      FS.mkdir(path, mode, 0);
+      return 0;
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  }
+  
+
   function ___syscall_newfstatat(dirfd, path, buf, flags) {
   try {
   
@@ -4297,6 +4713,22 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   }
   
 
+  function ___syscall_renameat(olddirfd, oldpath, newdirfd, newpath) {
+  try {
+  
+      oldpath = SYSCALLS.getStr(oldpath);
+      newpath = SYSCALLS.getStr(newpath);
+      oldpath = SYSCALLS.calculateAt(olddirfd, oldpath);
+      newpath = SYSCALLS.calculateAt(newdirfd, newpath);
+      FS.rename(oldpath, newpath);
+      return 0;
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  }
+  
+
   function ___syscall_stat64(path, buf) {
   try {
   
@@ -4311,6 +4743,54 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
 
   var __abort_js = () =>
       abort('native code called abort()');
+
+  var isLeapYear = (year) => year%4 === 0 && (year%100 !== 0 || year%400 === 0);
+  
+  var MONTH_DAYS_LEAP_CUMULATIVE = [0,31,60,91,121,152,182,213,244,274,305,335];
+  
+  var MONTH_DAYS_REGULAR_CUMULATIVE = [0,31,59,90,120,151,181,212,243,273,304,334];
+  var ydayFromDate = (date) => {
+      var leap = isLeapYear(date.getFullYear());
+      var monthDaysCumulative = (leap ? MONTH_DAYS_LEAP_CUMULATIVE : MONTH_DAYS_REGULAR_CUMULATIVE);
+      var yday = monthDaysCumulative[date.getMonth()] + date.getDate() - 1; // -1 since it's days since Jan 1
+  
+      return yday;
+    };
+  
+  var INT53_MAX = 9007199254740992;
+  
+  var INT53_MIN = -9007199254740992;
+  var bigintToI53Checked = (num) => (num < INT53_MIN || num > INT53_MAX) ? NaN : Number(num);
+  
+  function __localtime_js(time, tmPtr) {
+    time = bigintToI53Checked(time);
+  
+  
+      var date = new Date(time*1000);
+      if (isNaN(date.getTime())) {
+        return 1;
+      }
+      HEAP32[((tmPtr)>>2)] = date.getSeconds();
+      HEAP32[(((tmPtr)+(4))>>2)] = date.getMinutes();
+      HEAP32[(((tmPtr)+(8))>>2)] = date.getHours();
+      HEAP32[(((tmPtr)+(12))>>2)] = date.getDate();
+      HEAP32[(((tmPtr)+(16))>>2)] = date.getMonth();
+      HEAP32[(((tmPtr)+(20))>>2)] = date.getFullYear()-1900;
+      HEAP32[(((tmPtr)+(24))>>2)] = date.getDay();
+  
+      var yday = ydayFromDate(date)|0;
+      HEAP32[(((tmPtr)+(28))>>2)] = yday;
+      HEAP32[(((tmPtr)+(36))>>2)] = -(date.getTimezoneOffset() * 60);
+  
+      // Attention: DST is in December in South, and some regions don't have DST at all.
+      var start = new Date(date.getFullYear(), 0, 1);
+      var summerOffset = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
+      var winterOffset = start.getTimezoneOffset();
+      var dst = (summerOffset != winterOffset && date.getTimezoneOffset() == Math.min(winterOffset, summerOffset))|0;
+      HEAP32[(((tmPtr)+(32))>>2)] = dst;
+      return 0;
+    ;
+  }
 
   
   
@@ -4367,6 +4847,57 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         stringToUTF8(summerName, std_name, 17);
       }
     };
+
+  var readEmAsmArgsArray = [];
+  
+  
+  
+  
+  /** @type {!Float64Array} */
+  var HEAPF64;
+  
+  var readEmAsmArgs = (sigPtr, buf) => {
+      // Nobody should have mutated _readEmAsmArgsArray underneath us to be something else than an array.
+      assert(Array.isArray(readEmAsmArgsArray));
+      // The input buffer is allocated on the stack, so it must be stack-aligned.
+      assert(buf % 16 == 0);
+      readEmAsmArgsArray.length = 0;
+      var ch;
+      // Most arguments are i32s, so shift the buffer pointer so it is a plain
+      // index into HEAP32.
+      while (ch = HEAPU8[sigPtr++]) {
+        var chr = String.fromCharCode(ch);
+        var validChars = ['d', 'f', 'i', 'p'];
+        // In WASM_BIGINT mode we support passing i64 values as bigint.
+        validChars.push('j');
+        assert(validChars.includes(chr), `Invalid character ${ch}("${chr}") in readEmAsmArgs! Use only [${validChars}], and do not specify "v" for void return argument.`);
+        // Floats are always passed as doubles, so all types except for 'i'
+        // are 8 bytes and require alignment.
+        var wide = (ch != 105);
+        wide &= (ch != 112);
+        buf += wide && (buf % 8) ? 4 : 0;
+        readEmAsmArgsArray.push(
+          // Special case for pointers under wasm64 or CAN_ADDRESS_2GB mode.
+          ch == 112 ? HEAPU32[((buf)>>2)] :
+          ch == 106 ? HEAP64[((buf)>>3)] :
+          ch == 105 ?
+            HEAP32[((buf)>>2)] :
+            HEAPF64[((buf)>>3)]
+        );
+        buf += wide ? 8 : 4;
+      }
+      return readEmAsmArgsArray;
+    };
+  var runEmAsmFunction = (code, sigPtr, argbuf) => {
+      var args = readEmAsmArgs(sigPtr, argbuf);
+      assert(ASM_CONSTS.hasOwnProperty(code), `No EM_ASM constant found at address ${code}.  The loaded WebAssembly file is likely out of sync with the generated JavaScript.`);
+      return ASM_CONSTS[code](...args);
+    };
+  var _emscripten_asm_const_int = (code, sigPtr, argbuf) => {
+      return runEmAsmFunction(code, sigPtr, argbuf);
+    };
+
+  var _emscripten_date_now = () => Date.now();
 
   function _emscripten_fetch_free(id) {
     if (Fetch.xhrs.has(id)) {
@@ -4474,8 +5005,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   /** @type {!Float32Array} */
   var HEAPF32;
   
-  /** @type {!Float64Array} */
-  var HEAPF64;
   
   
   /** not-@type {!BigUint64Array} */
@@ -6019,10 +6548,6 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
   
 
   
-  var INT53_MAX = 9007199254740992;
-  
-  var INT53_MIN = -9007199254740992;
-  var bigintToI53Checked = (num) => (num < INT53_MIN || num > INT53_MAX) ? NaN : Number(num);
   
   function _fd_seek(fd, offset, whence, newOffset) {
     offset = bigintToI53Checked(offset);
@@ -7422,7 +7947,7 @@ if (Module['printErr']) err = Module['printErr'];
   'inetNtop6',
   'readSockaddr',
   'writeSockaddr',
-  'readEmAsmArgs',
+  'runMainThreadEmAsm',
   'autoResumeAudioContext',
   'getDynCaller',
   'dynCall',
@@ -7511,8 +8036,6 @@ if (Module['printErr']) err = Module['printErr'];
   'incrementUncaughtExceptionCount',
   'decrementUncaughtExceptionCount',
   'Browser_asyncPrepareDataCounter',
-  'isLeapYear',
-  'ydayFromDate',
   'arraySum',
   'addDays',
   'getSocketFromFD',
@@ -7578,6 +8101,8 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'timers',
   'warnOnce',
   'readEmAsmArgsArray',
+  'readEmAsmArgs',
+  'runEmAsmFunction',
   'jstoi_q',
   'getExecutableName',
   'handleException',
@@ -7648,6 +8173,8 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'MONTH_DAYS_LEAP',
   'MONTH_DAYS_REGULAR_CUMULATIVE',
   'MONTH_DAYS_LEAP_CUMULATIVE',
+  'isLeapYear',
+  'ydayFromDate',
   'SYSCALLS',
   'preloadPlugins',
   'FS_createPreloadedFile',
@@ -7798,6 +8325,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'print',
   'printErr',
   'jstoi_s',
+  'IDBFS',
   'Fetch',
   'fetchDeleteCachedData',
   'fetchLoadCachedData',
@@ -7841,10 +8369,15 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('wasmMemory');
   ignoredModuleProp('wasmBinary');
 }
+var ASM_CONSTS = {
+  127332: () => { try { if (typeof FS === 'undefined') return; try { FS.mkdir('/save'); } catch (e) {} FS.mount(IDBFS, {}, '/save'); Module.__tomsSyncfs = function(load) { try { FS.syncfs(!!load, function(err) { if (err) { console.warn('[TOMS] syncfs', err); return; } if (load && typeof Module !== 'undefined' && Module.ccall) { try { Module.ccall('jsRefreshSlots', 'null', [], []); } catch (e) {} } }); } catch (e) { console.warn('[TOMS] syncfs failed', e); } }; Module.__tomsSyncfs(true); } catch (e) { console.warn('[TOMS] IDBFS mount failed; saves are session-only:', e); } },  
+ 127897: () => { if (typeof Module !== 'undefined' && Module.__tomsSyncfs) Module.__tomsSyncfs(false); }
+};
 
 // Imports from the Wasm binary.
 var _jsMove = Module['_jsMove'] = makeInvalidEarlyAccess('_jsMove');
 var _jsInteract = Module['_jsInteract'] = makeInvalidEarlyAccess('_jsInteract');
+var _jsRefreshSlots = Module['_jsRefreshSlots'] = makeInvalidEarlyAccess('_jsRefreshSlots');
 var _jsInventory = Module['_jsInventory'] = makeInvalidEarlyAccess('_jsInventory');
 var _jsInvDrop = Module['_jsInvDrop'] = makeInvalidEarlyAccess('_jsInvDrop');
 var _jsInvOpen = Module['_jsInvOpen'] = makeInvalidEarlyAccess('_jsInvOpen');
@@ -7879,6 +8412,7 @@ var wasmTable = makeInvalidEarlyAccess('wasmTable');
 function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['jsMove'] != 'undefined', 'missing Wasm export: jsMove');
   assert(typeof wasmExports['jsInteract'] != 'undefined', 'missing Wasm export: jsInteract');
+  assert(typeof wasmExports['jsRefreshSlots'] != 'undefined', 'missing Wasm export: jsRefreshSlots');
   assert(typeof wasmExports['jsInventory'] != 'undefined', 'missing Wasm export: jsInventory');
   assert(typeof wasmExports['jsInvDrop'] != 'undefined', 'missing Wasm export: jsInvDrop');
   assert(typeof wasmExports['jsInvOpen'] != 'undefined', 'missing Wasm export: jsInvOpen');
@@ -7909,6 +8443,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['__indirect_function_table'] != 'undefined', 'missing Wasm export: __indirect_function_table');
   _jsMove = Module['_jsMove'] = createExportWrapper('jsMove', wasmExports['jsMove'], 2);
   _jsInteract = Module['_jsInteract'] = createExportWrapper('jsInteract', wasmExports['jsInteract'], 0);
+  _jsRefreshSlots = Module['_jsRefreshSlots'] = createExportWrapper('jsRefreshSlots', wasmExports['jsRefreshSlots'], 0);
   _jsInventory = Module['_jsInventory'] = createExportWrapper('jsInventory', wasmExports['jsInventory'], 0);
   _jsInvDrop = Module['_jsInvDrop'] = createExportWrapper('jsInvDrop', wasmExports['jsInvDrop'], 0);
   _jsInvOpen = Module['_jsInvOpen'] = createExportWrapper('jsInvOpen', wasmExports['jsInvOpen'], 0);
@@ -7951,7 +8486,11 @@ var wasmImports = {
   /** @export */
   __cxa_find_matching_catch_3: ___cxa_find_matching_catch_3,
   /** @export */
+  __cxa_rethrow: ___cxa_rethrow,
+  /** @export */
   __cxa_throw: ___cxa_throw,
+  /** @export */
+  __cxa_uncaught_exceptions: ___cxa_uncaught_exceptions,
   /** @export */
   __resumeException: ___resumeException,
   /** @export */
@@ -7965,15 +8504,25 @@ var wasmImports = {
   /** @export */
   __syscall_lstat64: ___syscall_lstat64,
   /** @export */
+  __syscall_mkdirat: ___syscall_mkdirat,
+  /** @export */
   __syscall_newfstatat: ___syscall_newfstatat,
   /** @export */
   __syscall_openat: ___syscall_openat,
+  /** @export */
+  __syscall_renameat: ___syscall_renameat,
   /** @export */
   __syscall_stat64: ___syscall_stat64,
   /** @export */
   _abort_js: __abort_js,
   /** @export */
+  _localtime_js: __localtime_js,
+  /** @export */
   _tzset_js: __tzset_js,
+  /** @export */
+  emscripten_asm_const_int: _emscripten_asm_const_int,
+  /** @export */
+  emscripten_date_now: _emscripten_date_now,
   /** @export */
   emscripten_fetch_free: _emscripten_fetch_free,
   /** @export */
