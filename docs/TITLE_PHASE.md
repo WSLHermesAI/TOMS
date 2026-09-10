@@ -7,9 +7,16 @@ Boot screen named in `game_state.h` (`GameState::MainMenu`, with the Settings pa
 
 ```
 Boot ──► Title: Menu ──┬─► New Game ──► fresh run at stage01, slot written ──► Explore
-                       ├─► Continue ──► slot list ──► resume that save     ──► Explore
+                       ├─► Continue ──┬─► slot HAS a save ──► resume it      ──► Explore
+                       │              └─► slot is EMPTY ───► prompt ──┬─ Yes ─► new run in THAT slot
+                       │                                              └─ No  ─► back to the list
                        └─► Settings ──► language                             ──► back to Menu
 ```
+
+The empty-slot prompt (`continue.new_game_confirm`, drawn by `Game::drawTitleConfirmDialog()`)
+exists because activating an empty slot used to do nothing at all, which read as a broken
+button. Yes starts a fresh run **in the slot the player picked** (`Game::newGame(slot)`, not
+"first free slot"); No or Esc returns to the list with nothing changed.
 
 ## Why it is drawn by the game renderer, not ImGui
 
@@ -105,7 +112,9 @@ saves last for the session only.
 - Continue with a save: row shows stage / LV / HP / gold / saved-at / play time; activating it
   resumes that run (dungeon renders, title gone).
 - Continue with no saves: rows read `[空]`, the hint says to start a new game, and activating an
-  empty slot does nothing (title stays put).
+  empty slot opens the confirm prompt ("要用存檔格 2 開始新遊戲嗎？" with 是/否); No/Esc returns to
+  the list, Yes starts a fresh run and the slot file proves which slot was used (`slot2.json`
+  written, no `slot1.json`).
 - `title_screen_test` — all checks pass.
 
 ## Verified (browser, WebGL2 build, 2026-09-10)

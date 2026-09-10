@@ -19,6 +19,12 @@ int TitleLayout::hitLangRow(float x, float y) const {
 }
 bool TitleLayout::hitBack(float x, float y) const { return backButton.contains(x, y); }
 
+int TitleLayout::hitConfirmButton(float x, float y) const {
+    if (confirmYes.contains(x, y)) return 0;
+    if (confirmNo.contains(x, y)) return 1;
+    return -1;
+}
+
 TitleLayout computeTitleLayout(int designW, int designH, int slotCount, int langCount) {
     TitleLayout L;
     const float W = (float)designW, H = (float)designH;
@@ -62,6 +68,19 @@ TitleLayout computeTitleLayout(int designW, int designH, int slotCount, int lang
         const float w = 220.0f, h = 52.0f;
         L.backButton = TitleRow{ (W - w) * 0.5f, H - 100.0f, w, h };
     }
+
+    // "Start a new game in this slot?" dialog: centered panel with a Yes/No pair.
+    {
+        const float w = 560.0f, h = 210.0f;
+        const float bx = (W - w) * 0.5f, by = (H - h) * 0.5f;
+        L.confirmBox = TitleRow{ bx, by, w, h };
+        const float bw = 160.0f, bh = 56.0f, gap = 40.0f;
+        const float groupW = bw * 2 + gap;
+        const float bx0 = bx + (w - groupW) * 0.5f;
+        const float byy = by + h - bh - 26.0f;
+        L.confirmYes = TitleRow{ bx0, byy, bw, bh };
+        L.confirmNo  = TitleRow{ bx0 + bw + gap, byy, bw, bh };
+    }
     return L;
 }
 
@@ -74,10 +93,12 @@ void TitleScreen::open() {
     slotSel_ = 0;
     setSel_ = 0;
     pendingSlot_ = 0;
+    closeConfirm();
 }
 
 void TitleScreen::setPage(TitlePage p) {
     page_ = p;
+    closeConfirm();   // never carry the dialog across pages
     if (p == TitlePage::Continue) {
         int first = firstPlayableSlot();
         slotSel_ = (first > 0) ? first - 1 : 0;   // park on something the player can actually load
@@ -131,6 +152,8 @@ void TitleScreen::setRunInProgress(bool v) { runInProgress_ = v; }
 
 TitleAction TitleScreen::moveVertical(int delta) {
     if (delta == 0) return TitleAction::None;
+    // The confirm dialog is a 2-button prompt: any direction toggles which answer is armed.
+    if (confirmNewGame_) { confirmYes_ = !confirmYes_; return TitleAction::None; }
     switch (page_) {
         case TitlePage::Menu: {
             int n = kMenuItemCount;
@@ -153,12 +176,22 @@ TitleAction TitleScreen::moveVertical(int delta) {
 }
 
 TitleAction TitleScreen::moveHorizontal(int delta) {
+    if (delta == 0) return TitleAction::None;
+    if (confirmNewGame_) { confirmYes_ = !confirmYes_; return TitleAction::None; }
     // Only the Settings page uses left/right: it is a 2-4 option picker, not a list.
-    if (page_ != TitlePage::Settings || delta == 0) return TitleAction::None;
+    if (page_ != TitlePage::Settings) return TitleAction::None;
     return moveVertical(delta);
 }
 
 TitleAction TitleScreen::activate() {
+    // Confirm dialog first: it is the topmost thing on screen.
+    if (confirmNewGame_) {
+        const bool yes = confirmYes_;
+        const int slot = confirmSlot_;
+        closeConfirm();
+        if (yes) { pendingSlot_ = slot; return TitleAction::StartNewGameInSlot; }
+        return TitleAction::DismissNewGameConfirm;
+    }
     switch (page_) {
         case TitlePage::Menu:
             switch (menuSel_) {
@@ -167,10 +200,21 @@ TitleAction TitleScreen::activate() {
                 case 2: setPage(TitlePage::Settings); return TitleAction::OpenSettings;
                 default: return TitleAction::None;
             }
-        case TitlePage::Continue:
+        case TitlePage::Continue: {
             if (slotSel_ < 0 || slotSel_ >= slotCount_) return TitleAction::None;
-            pendingSlot_ = slotSel_ + 1;
+            const int slot = slotSel_ + 1;
+            if (!selectedSlotExists()) {
+                // Empty slot: ask before starting a new game here (owner's report: this used to
+                // do nothing at all, which read as a broken button).
+                confirmNewGame_ = true;
+                confirmSlot_ = slot;
+                confirmYes_ = true;      // "Yes, start a new game" is the default action
+                pendingSlot_ = slot;
+                return TitleAction::AskNewGameInSlot;
+            }
+            pendingSlot_ = slot;
             return TitleAction::LoadSlot;
+        }
         case TitlePage::Settings:
             return TitleAction::None;   // language already applied by moveHorizontal/Vertical
     }
@@ -178,6 +222,7 @@ TitleAction TitleScreen::activate() {
 }
 
 TitleAction TitleScreen::cancel() {
+    if (confirmNewGame_) { closeConfirm(); return TitleAction::DismissNewGameConfirm; }
     if (page_ == TitlePage::Continue || page_ == TitlePage::Settings) {
         page_ = TitlePage::Menu;
         return TitleAction::Back;
@@ -186,6 +231,13 @@ TitleAction TitleScreen::cancel() {
 }
 
 TitleAction TitleScreen::click(float px, float py, const TitleLayout& layout) {
+    // The dialog swallows taps: only its two answers are live.
+    if (confirmNewGame_) {
+        const int b = layout.hitConfirmButton(px, py);
+        if (b < 0) return TitleAction::None;
+        confirmYes_ = (b == 0);
+        return activate();
+    }
     switch (page_) {
         case TitlePage::Menu: {
             int r = layout.hitMenuRow(px, py);

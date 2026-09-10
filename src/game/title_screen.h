@@ -41,6 +41,13 @@ enum class TitleAction {
     OpenSettings,   // page switched to Settings
     SetLanguage,    // Settings: language index changed, caller should apply + persist
     Back,           // left Continue/Settings, now on Menu
+    // An EMPTY slot was activated: show the "start a new game in this slot?" confirm dialog
+    // (the title draws it itself -- the caller has nothing to do).
+    AskNewGameInSlot,
+    // The dialog was answered Yes: start a fresh run in pendingSlot().
+    StartNewGameInSlot,
+    // The dialog was answered No (or Esc): stay on the Continue page.
+    DismissNewGameConfirm,
 };
 
 // One clickable row, in design-resolution pixels (1024x768).
@@ -62,12 +69,18 @@ struct TitleLayout {
     TitleRow langRow[kMaxLangRows];
     int langRowCount = 0;
     TitleRow backButton;
+    // "Start a new game in this slot?" dialog: panel + its two answer buttons.
+    TitleRow confirmBox;
+    TitleRow confirmYes;
+    TitleRow confirmNo;
 
     // Row index under the point, or -1. hitBack() is separate because Back is not a list row.
     int hitMenuRow(float x, float y) const;
     int hitSlotRow(float x, float y) const;
     int hitLangRow(float x, float y) const;
     bool hitBack(float x, float y) const;
+    // 0 = Yes, 1 = No, -1 = neither.
+    int hitConfirmButton(float x, float y) const;
 };
 
 TitleLayout computeTitleLayout(int designW, int designH, int slotCount, int langCount);
@@ -77,7 +90,7 @@ public:
     static constexpr int kMenuItemCount = 3;   // New Game / Continue / Settings
 
     void open();                       // show the title, reset to the Menu page
-    void close() { open_ = false; }
+    void close() { open_ = false; closeConfirm(); }
     bool isOpen() const { return open_; }
 
     TitlePage page() const { return page_; }
@@ -117,7 +130,16 @@ public:
     // Tap/click in design space. Uses the layout the draw pass produced.
     TitleAction click(float px, float py, const TitleLayout& layout);
 
-    int pendingSlot() const { return pendingSlot_; }   // valid for LoadSlot
+    int pendingSlot() const { return pendingSlot_; }   // valid for LoadSlot / StartNewGameInSlot
+
+    // ---- "Start a new game in this slot?" confirm dialog ----
+    // Shown when the player activates an EMPTY slot on the Continue page (the owner's ask:
+    // picking an empty slot used to do nothing visible). Yes starts a fresh run in that slot
+    // instead of silently doing nothing; No/Esc returns to the list.
+    bool newGameConfirmOpen() const { return confirmNewGame_; }
+    int newGameConfirmSlot() const { return confirmSlot_; }
+    bool newGameConfirmYesSelected() const { return confirmYes_; }
+    void setNewGameConfirmYesSelected(bool yes) { confirmYes_ = yes; }
 
 private:
     bool open_ = false;
@@ -131,6 +153,10 @@ private:
     int pendingSlot_ = 0;
     bool runInProgress_ = false;
     std::vector<SlotSummary> slots_;
+    bool confirmNewGame_ = false;   // dialog visible
+    int confirmSlot_ = 0;           // slot the dialog is about (1-based)
+    bool confirmYes_ = true;        // which answer is highlighted (Yes is the default)
+    void closeConfirm() { confirmNewGame_ = false; confirmSlot_ = 0; confirmYes_ = true; }
 };
 
 } // namespace toms

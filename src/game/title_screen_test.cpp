@@ -214,6 +214,73 @@ int main() {
         CHECK(t.slotCount() == TitleLayout::kMaxSlotRows, "slotCount clamps to the layout max");
     }
 
+    // ------------------------------------------------- empty-slot "start a new game?" prompt
+    // (owner's report: activating an empty Continue slot used to do nothing at all)
+    {
+        TitleScreen t;
+        t.open();
+        t.setSlotCount(3);
+        std::vector<SlotSummary> sums(3);
+        for (int i = 0; i < 3; i++) { sums[i].slot = i + 1; sums[i].exists = false; }
+        sums[0].exists = true;                  // slot 1 filled, slots 2-3 empty
+        t.setSummaries(sums);
+        t.setPage(TitlePage::Continue);
+        CHECK(t.slotSelection() == 0, "Continue parks on the filled slot 1");
+
+        TitleAction a = t.activate();
+        CHECK(a == TitleAction::LoadSlot, "a FILLED slot still loads directly");
+        CHECK(!t.newGameConfirmOpen(), "no prompt for a filled slot");
+
+        t.moveVertical(1);                      // -> slot 2 (empty)
+        CHECK(t.selectedSlotNumber() == 2, "cursor moved to empty slot 2");
+        a = t.activate();
+        CHECK(a == TitleAction::AskNewGameInSlot, "activating an EMPTY slot asks for confirmation");
+        CHECK(t.newGameConfirmOpen(), "the confirm prompt is open");
+        CHECK(t.newGameConfirmSlot() == 2, "the prompt names the slot the player picked");
+        CHECK(t.newGameConfirmYesSelected(), "Yes is armed by default");
+        CHECK(t.pendingSlot() == 2, "pendingSlot points at the chosen slot");
+
+        a = t.activate();
+        CHECK(a == TitleAction::StartNewGameInSlot, "Yes asks to start a new game in that slot");
+        CHECK(!t.newGameConfirmOpen(), "answering closes the prompt");
+        CHECK(t.pendingSlot() == 2, "pendingSlot survives the answer");
+
+        a = t.activate();
+        CHECK(a == TitleAction::AskNewGameInSlot, "the prompt re-opens for the next attempt");
+        t.setNewGameConfirmYesSelected(false);
+        a = t.activate();
+        CHECK(a == TitleAction::DismissNewGameConfirm, "No dismisses the prompt");
+        CHECK(!t.newGameConfirmOpen(), "No closes the prompt");
+
+        t.activate();                           // re-open, then leave with Esc
+        a = t.cancel();
+        CHECK(a == TitleAction::DismissNewGameConfirm, "Esc dismisses the prompt");
+        CHECK(!t.newGameConfirmOpen(), "Esc closes the prompt");
+        CHECK(t.page() == TitlePage::Continue, "Esc on the prompt does not leave the Continue page");
+
+        t.activate();
+        const bool armed = t.newGameConfirmYesSelected();
+        t.moveHorizontal(1);
+        CHECK(t.newGameConfirmYesSelected() != armed, "left/right toggles the armed answer");
+        t.moveVertical(1);
+        CHECK(t.newGameConfirmYesSelected() == armed, "up/down toggles it back");
+
+        // Taps: only the two answers are live while the prompt is up.
+        TitleLayout L = computeTitleLayout(1024, 768, 3, 2);
+        t.setNewGameConfirmYesSelected(true);
+        a = t.click(L.confirmNo.x + 5, L.confirmNo.y + 5, L);
+        CHECK(a == TitleAction::DismissNewGameConfirm, "tapping No dismisses the prompt");
+        t.activate();                           // re-open
+        a = t.click(L.confirmYes.x + 5, L.confirmYes.y + 5, L);
+        CHECK(a == TitleAction::StartNewGameInSlot, "tapping Yes starts the new game");
+        t.activate();                           // re-open
+        a = t.click(L.backButton.x + 5, L.backButton.y + 5, L);
+        CHECK(a == TitleAction::None, "taps outside the prompt are ignored while it is open");
+        CHECK(t.newGameConfirmOpen(), "the prompt survives a stray tap");
+        CHECK(t.click(500, 400, L) == TitleAction::None || !t.newGameConfirmOpen(),
+              "a tap in the scrim does not start a game");
+    }
+
     if (g_fail == 0) { printf("title_screen_test: ALL PASS\n"); return 0; }
     printf("title_screen_test: %d CHECK(s) FAILED\n", g_fail);
     return 1;

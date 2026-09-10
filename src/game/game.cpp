@@ -2224,7 +2224,9 @@ bool Game::continueFromSlot(int slot) {
     return true;
 }
 
-void Game::newGame() {
+void Game::newGame() { newGame(0); }
+
+void Game::newGame(int slot) {
     // A new game is a genuinely fresh run: default stats and wiped story/entity/meta progress.
     pl = Player();
     pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
@@ -2239,10 +2241,15 @@ void Game::newGame() {
     invOpen = false; storeOpen = false; storeUnlockDlg = false;
     stageSelectOpen_ = false; stairsConfirmOpen_ = false;
     playTimeSec_ = 0;
-    // Prefer a free slot; when every slot is taken, reuse slot 1 rather than refusing to start
-    // (the Continue page still lists all of them, so nothing is silently destroyed).
-    int free = toms::firstEmptySlot(toms::defaultSaveDir(), title_.slotCount());
-    activeSlot_ = (free > 0) ? free : 1;
+    if (slot > 0) {
+        // Explicit slot (the Continue page's "start a new game in this empty slot?" answer).
+        activeSlot_ = slot;
+    } else {
+        // Prefer a free slot; when every slot is taken, reuse slot 1 rather than refusing to
+        // start (the Continue page still lists all of them, so nothing is silently destroyed).
+        int free = toms::firstEmptySlot(toms::defaultSaveDir(), title_.slotCount());
+        activeSlot_ = (free > 0) ? free : 1;
+    }
     loadStage("stage01");
     saveCurrentRun();
     title_.close();
@@ -2251,13 +2258,17 @@ void Game::newGame() {
 
 void Game::handleTitleAction(toms::TitleAction a) {
     switch (a) {
-        case toms::TitleAction::NewGame:      newGame(); break;
-        case toms::TitleAction::LoadSlot:     continueFromSlot(title_.pendingSlot()); break;
-        case toms::TitleAction::OpenContinue: refreshSlots(); break;   // always show current files
-        case toms::TitleAction::SetLanguage:  applyLanguage(); break;
+        case toms::TitleAction::NewGame:             newGame(); break;
+        case toms::TitleAction::StartNewGameInSlot:  newGame(title_.pendingSlot()); break;
+        case toms::TitleAction::LoadSlot:            continueFromSlot(title_.pendingSlot()); break;
+        case toms::TitleAction::OpenContinue:        refreshSlots(); break;   // always show current files
+        case toms::TitleAction::SetLanguage:         applyLanguage(); break;
+        // The confirm dialog is drawn and answered by the title itself; these are informational.
+        case toms::TitleAction::AskNewGameInSlot:
+        case toms::TitleAction::DismissNewGameConfirm:
         case toms::TitleAction::OpenSettings:
         case toms::TitleAction::Back:
-        case toms::TitleAction::None:         break;
+        case toms::TitleAction::None:                break;
     }
 }
 
@@ -2410,6 +2421,56 @@ void Game::drawTitleScreen() {
     const std::string hint = (title_.page() == toms::TitlePage::Settings)
                              ? locale_.tr("settings.hint") : locale_.tr("menu.hint");
     drawText(hint, (W - measureText(hint, 16)) * 0.5f, H - 44.0f, 16, dim);
+
+    // The confirm prompt is the topmost thing on the title (see drawTitleConfirmDialog()).
+    if (title_.newGameConfirmOpen()) drawTitleConfirmDialog();
+}
+
+// "Use this slot to start the game?" -- shown when an EMPTY Continue slot is activated, so the
+// button never just does nothing. Yes starts a fresh run in that specific slot.
+void Game::drawTitleConfirmDialog() {
+    if (!ren || !title_.newGameConfirmOpen()) return;
+    const float W = (float)ren->width();
+    static const float gold[4] = {0.95f, 0.82f, 0.45f, 1.0f};
+    static const float dim[4]  = {0.60f, 0.64f, 0.76f, 1.0f};
+
+    // Dim the list behind the prompt so it reads as modal.
+    Quad scrim;
+    scrim.rect[0] = 0; scrim.rect[1] = 0; scrim.rect[2] = W; scrim.rect[3] = (float)ren->height();
+    scrim.uv[0] = 0; scrim.uv[1] = 0; scrim.uv[2] = 1; scrim.uv[3] = 1;
+    scrim.solid = true;
+    scrim.tint[0] = 0.0f; scrim.tint[1] = 0.0f; scrim.tint[2] = 0.0f; scrim.tint[3] = 0.62f;
+    ren->drawSprite(scrim);
+
+    const toms::TitleRow& box = titleLayout_.confirmBox;
+    Quad panel;
+    panel.rect[0] = box.x; panel.rect[1] = box.y; panel.rect[2] = box.w; panel.rect[3] = box.h;
+    panel.uv[0] = 0; panel.uv[1] = 0; panel.uv[2] = 1; panel.uv[3] = 1;
+    panel.solid = true;
+    panel.tint[0] = 0.13f; panel.tint[1] = 0.14f; panel.tint[2] = 0.21f; panel.tint[3] = 0.98f;
+    ren->drawSprite(panel);
+
+    Quad rule;
+    rule.rect[0] = box.x; rule.rect[1] = box.y; rule.rect[2] = box.w; rule.rect[3] = 3.0f;
+    rule.uv[0] = 0; rule.uv[1] = 0; rule.uv[2] = 1; rule.uv[3] = 1;
+    rule.solid = true;
+    rule.tint[0] = gold[0]; rule.tint[1] = gold[1]; rule.tint[2] = gold[2]; rule.tint[3] = 0.9f;
+    ren->drawSprite(rule);
+
+    // "{slot}" placeholder substitution -- keeps the wording in data/text.json instead of
+    // hardcoding the sentence in two languages here.
+    std::string question = locale_.tr("continue.new_game_confirm");
+    const std::string slotText = std::to_string(title_.newGameConfirmSlot());
+    for (size_t p = question.find("{slot}"); p != std::string::npos; p = question.find("{slot}"))
+        question.replace(p, 6, slotText);
+    drawText(question, box.x + (box.w - measureText(question, 26)) * 0.5f, box.y + 34.0f, 26, gold);
+
+    const std::string body = locale_.tr("continue.new_game_confirm.body");
+    drawText(body, box.x + (box.w - measureText(body, 16)) * 0.5f, box.y + 86.0f, 16, dim);
+
+    const bool yes = title_.newGameConfirmYesSelected();
+    drawTitleButton(titleLayout_.confirmYes, locale_.tr("menu.yes"), "", yes, gold);
+    drawTitleButton(titleLayout_.confirmNo,  locale_.tr("menu.no"),  "", !yes, gold);
 }
 
 void Game::update(int dtMs) {

@@ -206,7 +206,10 @@ public:
     void drawTitleScreen();               // draws the title overlay; no-op unless titleOpen()
     // Starts a brand new run: default player stats, cleared meta/story/entity progress, and a
     // fresh slot (or the lowest-numbered slot when all are taken). Writes the slot immediately.
+    // The overload starts the run in a specific slot -- what the Continue page's "start a new
+    // game in this (empty) slot?" dialog needs.
     void newGame();
+    void newGame(int slot);
     // Resumes slot N (1-based). Returns false (and leaves the title open) when that slot has no
     // save, so the caller can show "no save here" instead of dropping the player into nothing.
     bool continueFromSlot(int slot);
@@ -473,5 +476,7 @@ private:
     // One title-row button: framed panel + label + optional sub-label, highlighted when selected.
     void drawTitleButton(const toms::TitleRow& r, const std::string& label,
                          const std::string& sub, bool selected, const float accent[4]);
+    // The "start a new game in this (empty) slot?" prompt, drawn over the Continue page.
+    void drawTitleConfirmDialog();
     TOMS_OBJECT(Game)
 };
