@@ -18,9 +18,7 @@
 #include "localization.h"    // toms::Locale — key -> localized string (data/text.json)
 #include "font.h"        // runtime TTF -> atlas (stb_truetype), replaces offline font_atlas.png
 #include <stb_truetype.h> // complete stbtt_fontinfo for ~Font (unique_ptr member)
-#ifndef __EMSCRIPTEN__
-#include "Audio.h"      // desktop SFX (miniaudio); excluded from the browser build
-#endif
+#include "Audio.h"        // SFX (miniaudio) -- native device backends on desktop, Web Audio in the browser
 
 struct Player : public Trackable {
     int hp, maxhp, atk, def, gold, exp, lv;
@@ -458,15 +456,10 @@ private:
     // Title screen animation clock (ms, advanced in update()). Drives the pulsing selection
     // highlight / sliding cursor so the title never looks like a static (crashed) frame.
     float titleAnimMs_ = 0.0f;
-#ifndef __EMSCRIPTEN__
-    Audio audio;           // SFX subsystem (no-op when no audio device)
-#else
-    // Browser build: no audio subsystem (kept isolated from desktop/Linux).
-    struct AudioStub : public Trackable {
-        void init(const std::string&) {} void play(const std::string&) {}
-        TOMS_OBJECT(AudioStub)
-    } audio;
-#endif
+    // miniaudio backs both desktop (native device backends) and the browser
+    // build (Web Audio via Emscripten) behind this one interface -- no-op
+    // when no audio device/context is available (e.g. headless CI).
+    Audio audio;
 
     // ---- Title phase state (see the public title block above) ----
     toms::TitleScreen title_;

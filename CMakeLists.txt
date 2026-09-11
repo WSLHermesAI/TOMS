@@ -176,7 +176,8 @@ endif()
 # Emscripten browser target — WebGL2 (default) or WebGPU.
 # Build with:  emcmake cmake -S . -B build-web -DWEB=ON [-DWEB_BACKEND=WebGPU]
 # Produces web/tower_vulkan_web.html (+ .js/.wasm) with assets preloaded as a
-# single packed .data bundle. SFX/Audio is excluded on purpose.
+# single packed .data bundle. SFX/Audio uses miniaudio's built-in Web Audio
+# backend (same Audio.cpp as desktop; no extra JS glue or linker flags needed).
 # ============================================================================
 if(WEB)
     if(NOT DEFINED ENV{EMSDK})
@@ -187,6 +188,13 @@ if(WEB)
     endif()
     message(STATUS "TOMS web backend: ${WEB_BACKEND}")
 
+    # WEB_DEBUG=ON embeds DWARF debug info (-g) so Chrome/Edge DevTools (with the
+    # "C/C++ DevTools Support (DWARF)" extension) can set breakpoints and inspect
+    # locals directly in the .cpp sources. Output goes to web-debug/ (not web/) so
+    # it never clobbers the artifacts build_web.sh ships. No optimization flags are
+    # set anywhere in this file (emcc defaults to -O0), so -g doesn't change codegen.
+    option(WEB_DEBUG "Emit DWARF debug info for browser DevTools source debugging" OFF)
+
     add_executable(toms_web
         ${ENGINE_DIR}/emscripten_main.cpp
         ${GAME_DIR}/game.cpp
@@ -196,6 +204,7 @@ if(WEB)
         ${GAME_DIR}/save_system.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/entity_status.cpp
         ${ENGINE_DIR}/encounter.cpp ${GAME_DIR}/mission_system.cpp
         ${ENGINE_DIR}/power_bar.cpp ${GAME_DIR}/equipment_system.cpp
+        ${GAME_DIR}/Audio.cpp
         # Title phase (New Game / Continue / Settings): slots + preferences + string table.
         ${GAME_DIR}/save_slots.cpp ${GAME_DIR}/game_settings.cpp
         ${GAME_DIR}/localization.cpp ${GAME_DIR}/title_screen.cpp)
@@ -206,7 +215,12 @@ if(WEB)
     endif()
 
     target_include_directories(toms_web PRIVATE
-        ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+        ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
+        $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+
+    if(WEB_DEBUG)
+        target_compile_options(toms_web PRIVATE -g)
+    endif()
 
     if(WEB_BACKEND STREQUAL "WebGPU")
         set(WEB_LINK "--use-port=emdawnwebgpu -sFETCH=1 -sALLOW_MEMORY_GROWTH=1 \
@@ -227,10 +241,18 @@ if(WEB)
 -sGL_ASSERTIONS=0")
     endif()
 
+    if(WEB_DEBUG)
+        set(WEB_LINK "${WEB_LINK} -g")
+    endif()
+
     set_target_properties(toms_web PROPERTIES
         SUFFIX ".html"
         LINK_FLAGS "${WEB_LINK}")
-    set_target_properties(toms_web PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/web)
+    if(WEB_DEBUG)
+        set_target_properties(toms_web PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/web-debug)
+    else()
+        set_target_properties(toms_web PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/web)
+    endif()
 endif()
 
 # ---------------------------------------------------------------------------

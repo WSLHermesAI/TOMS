@@ -36,3 +36,5 @@ editor/out/
 # Browser build output dirs (build_web.sh) — deployed via the gh-pages branch, not tracked here
 web-gl/
 web-gpu/
+build-web-debug/
+web-debug/

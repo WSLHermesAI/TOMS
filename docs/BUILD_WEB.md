@@ -9,7 +9,8 @@ The game runs in a browser via **Emscripten** and now uses a single
 | **WebGPU** | WebGPU (Dawn C API) + WGSL | Closest match to the Vulkan engine; Chrome/Edge | `src/renderer_webgpu.cpp` |
 
 The browser backend is fully isolated from the Windows/Linux **Vulkan** desktop build.
-Audio (miniaudio) is excluded from the browser build.
+Audio (miniaudio) ships in the browser build too, via miniaudio's built-in
+Web Audio backend — same `Audio.cpp`/interface as desktop, no extra JS glue.
 
 ---
 

@@ -18,10 +18,28 @@
       "displayName": "Ninja (Linux/WSL)",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "emscripten-web-debug",
+      "displayName": "Emscripten Web (DWARF debug)",
+      "description": "Builds toms_web.html with -g debug info for Chrome/Edge DevTools WASM debugging. Assumes the emsdk at D:/Work/emsdk -- update toolchainFile/PATH/CMAKE_CROSSCOMPILING_EMULATOR below if yours lives elsewhere or after `emsdk update` changes the bundled node version.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-web-debug",
+      "toolchainFile": "D:/Work/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "cacheVariables": {
+        "WEB": "ON",
+        "WEB_DEBUG": "ON",
+        "CMAKE_CROSSCOMPILING_EMULATOR": "D:/Work/emsdk/node/24.19.0_64bit/node.exe"
+      },
+      "environment": {
+        "EMSDK": "D:/Work/emsdk",
+        "PATH": "D:/Work/emsdk;D:/Work/emsdk/upstream/emscripten;$penv{PATH}"
+      }
     }
   ],
   "buildPresets": [
     { "name": "vs2022-release", "configurePreset": "vs2022-x64", "configuration": "Release" },
-    { "name": "vs2022-debug",   "configurePreset": "vs2022-x64", "configuration": "Debug" }
+    { "name": "vs2022-debug",   "configurePreset": "vs2022-x64", "configuration": "Debug" },
+    { "name": "emscripten-web-debug", "configurePreset": "emscripten-web-debug", "targets": ["toms_web"] }
   ]
 }

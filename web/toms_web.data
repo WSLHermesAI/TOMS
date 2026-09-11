@@ -6144,7 +6144,12 @@ H*»‘#è|røÀ€GÁ¨F0
 ‹hš€øõ?yîÚÜçÒÃ’df©8"Òíé{º.:       }=Çs{ë™c      @úàØˆ&Ó¥ª    IEND®B`‚‰PNG
 
    IHDR           szzô   ºIDATxœí•K€0Djp 2S 	È@r¸§Mó-äÀ¡Ù}l˜iJ¿ŒZ§|YæGp„ †j!T X˜B@…H!D \s	@úeÜó, h–m†gjÏ8ƒ4\£óÞì]³pÊð
-§üª Þá-ß W8æoº<T ´þXAÿx¤Ô¯…šoÌB x¯ó‹Û@ ¯5¨oÃ7DX[ æã7@»ÎÜç|®þºJÌ†‚n´    IEND®B`‚ttcf           T  `       0BDF š¼mc  ¼  MFFTMP¬ÅÜ  !ƒ   GDEF¯Í   !¯    GPOSDvLu ¢€W    GSUB#È · ¢€w   øOS/2*VÒ ¨   Vcmap¶º™Ì  	  vcvt  "ˆ  !   gasp  	  !Ÿ   glyfLMO  !Ï ¢^ˆheadÌi­7 ¢o   6hheaì°. ¢¥   $hmtxš( ¢É ¼`locaÌ¶wT ¥>) ¾„maxp°"i §ü­    nameáHï §üÍ  
+§üª Þá-ß W8æoº<T ´þXAÿx¤Ô¯…šoÌB x¯ó‹Û@ ¯5¨oÃ7DX[ æã7@»ÎÜç|®þºJÌ†‚n´    IEND®B`‚[18:48:41] INFO main.cpp:69  TOMS engine start (C++1997, native build)
+[18:48:49] INFO main.cpp:146  batch: drawCalls=5 quads=220
+[18:48:49] INFO object.h:96  Object lifecycle: live objects = 0, no leaks
+[18:53:40] INFO main.cpp:69  TOMS engine start (C++1997, native build)
+[18:53:44] INFO object.h:96  Object lifecycle: live objects = 0, no leaks
+ttcf           T  `       0BDF š¼mc  ¼  MFFTMP¬ÅÜ  !ƒ   GDEF¯Í   !¯    GPOSDvLu ¢€W    GSUB#È · ¢€w   øOS/2*VÒ ¨   Vcmap¶º™Ì  	  vcvt  "ˆ  !   gasp  	  !Ÿ   glyfLMO  !Ï ¢^ˆheadÌi­7 ¢o   6hheaì°. ¢¥   $hmtxš( ¢É ¼`locaÌ¶wT ¥>) ¾„maxp°"i §ü­    nameáHï §üÍ  
 BpostŠ«´Ó ¨e áGvhea>» ®è¬   $vmtxYË˜B ®èÐ »†        FFTMP¬ÅÜ  !ƒ   GDEF¯Í   !¯    GPOSDvLu ¢€W    GSUBú¤ï ±ÂV   øOS/2*W ±Î'   VcmapóØî« ±¤V   cvt  "ˆ  !   gasp  	  !Ÿ   glyfLMO  !Ï ¢^ˆhead‰™8C ±ÃN   6hheaì°. ¢¥   $hmtxš( ¢É ¼`locaÌ¶wT ¥>) ¾„maxp°"i §ü­    name>øªû ±Ã„  
 £postAd!ù ±Î} á       PBDF _–Îj ¸¯Œ  
 „EBDT2âcr ¸º >ÛåEBLCç¥¢â ÷•õ –lFFTMP¬ÅÜ  !ƒ   GDEF¯Í   !¯    GPOSDvLu ¢€W    GSUB#È · ¢€w   øOS/2*VÒ ¨   Vcmap¶º™Ì  	  vcvt  "ˆ  !   gasp  	  !Ÿ   glyfLMO  !Ï ¢^ˆhead`Ï›õ ,a   6hheaì°. ¢¥   $hmtxš( ¢É ¼`locaÌ¶wT ¥>) ¾„maxp°"i §ü­    nameåÉr ,—  

@@ -167,31 +167,37 @@ PY
   # A deploy replaces toms_web.data/.wasm under the SAME names, so a returning visitor can end
   # up with a fresh page JS against a cached old .data (size/offset mismatch => black canvas).
   # Naming the artifacts per build makes the filename itself the cache buster. The plain-named
-  # copies are kept as well so a page cached from an earlier deploy still loads.
-  python3 - "$outdir" "$VER" <<'PY'
+  # copies are kept as well so a page cached from an earlier deploy still loads. Versioned in
+  # both $outdir AND web/ -- web/index.html (below) needs its own copy to resolve against.
+  python3 - "$outdir" "web" "$VER" <<'PY'
 import os, shutil, sys
-outdir, ver = sys.argv[1], sys.argv[2]
+outdir, webdir, ver = sys.argv[1], sys.argv[2], sys.argv[3]
 ren = 'toms_web.' + ver
-js = open(os.path.join(outdir, 'toms_web.js'), encoding='utf-8').read()
-# only these two are fetch URLs; the embedded preload keys ("datafile_/…/toms_web.data") must keep
-# their original names because they identify packages inside the .data file itself.
-new = js.replace("'toms_web.wasm'", "'%s.wasm'" % ren).replace("'toms_web.data'", "'%s.data'" % ren)
-open(os.path.join(outdir, ren + '.js'), 'w', encoding='utf-8').write(new)
-for ext in ('wasm', 'data'):
-    shutil.copy2(os.path.join(outdir, 'toms_web.' + ext), os.path.join(outdir, '%s.%s' % (ren, ext)))
-print('versioned artifacts: %s.{js,wasm,data} | URL refs rewritten: %d'
-      % (ren, new.count(ren)))
+for d in (outdir, webdir):
+    js = open(os.path.join(d, 'toms_web.js'), encoding='utf-8').read()
+    # only these two are fetch URLs; the embedded preload keys ("datafile_/…/toms_web.data") must
+    # keep their original names because they identify packages inside the .data file itself.
+    new = js.replace("'toms_web.wasm'", "'%s.wasm'" % ren).replace("'toms_web.data'", "'%s.data'" % ren)
+    open(os.path.join(d, ren + '.js'), 'w', encoding='utf-8').write(new)
+    for ext in ('wasm', 'data'):
+        shutil.copy2(os.path.join(d, 'toms_web.' + ext), os.path.join(d, '%s.%s' % (ren, ext)))
+    print('versioned artifacts in %s: %s.{js,wasm,data} | URL refs rewritten: %d'
+          % (d, ren, new.count(ren)))
 PY
 
   # ---- the page that actually gets published ------------------------------------------------
   # web/clear.html is hand-maintained SOURCE (a clean full-viewport page with no Emscripten
   # chrome). A rebuild regenerates the .js/.wasm/.data but never this file, so there is always
-  # a clean page to deploy; stamping it here keeps the cache-busting version in sync.
-  python3 - "$outdir/index.html" "web/clear.html" "$VER" <<'PY'
+  # a clean page to deploy; stamping it here keeps the cache-busting version in sync. Written to
+  # both $outdir/index.html and web/index.html so `web/` is a valid serve root on its own
+  # (clear.html itself is left untouched -- it's a template, not something to open directly).
+  python3 - "$outdir/index.html" "web/index.html" "web/clear.html" "$VER" <<'PY'
 import sys
-out, tpl, ver = sys.argv[1], sys.argv[2], sys.argv[3]
+out1, out2, tpl, ver = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 s = open(tpl, encoding='utf-8').read().replace('__TOMS_STAMP__', ver)
-open(out, 'w', encoding='utf-8').write(s)
+for out in (out1, out2):
+    open(out, 'w', encoding='utf-8').write(s)
+    print('wrote %s from %s with v=%s' % (out, tpl, ver))
 print('wrote %s from %s with v=%s' % (out, tpl, ver))
 PY
 }

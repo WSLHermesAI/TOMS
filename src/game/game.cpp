@@ -265,11 +265,8 @@ bool Game::loadAssets(const std::string& assetDir) {
         refreshSlots();
         if (!haveSettings) applyLanguage();   // write defaults once, so the file exists
     }
-    // init SFX subsystem (no-op if no audio device; headless-safe). Disabled on
-    // the Emscripten/WebGL build to keep the browser bundle free of audio deps.
-#ifndef __EMSCRIPTEN__
+    // init SFX subsystem (no-op if no audio device/context; headless-safe).
     audio.init(assetDir + "/sfx");
-#endif
     g_textGame = this;   // bind TextNode text drawing to this instance
     wireMissionEvents(); // Milestone 4: subscribe mission-progress handlers once per session
     rollDailyMissions(); // Milestone 5: daily-mission reset check, once per session start

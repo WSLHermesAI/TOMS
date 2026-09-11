@@ -1,6 +1,8 @@
 // Audio.h — minimal sound-effects subsystem (miniaudio, single-header).
-// Plays one-shot WAV SFX. Degrades to no-op when no audio device is available
-// (e.g. headless CI / lavapipe), so the game never crashes for lack of sound.
+// Plays one-shot WAV SFX. Same interface on desktop (native device backends)
+// and the Emscripten/browser build (miniaudio's Web Audio backend). Degrades
+// to no-op when no audio device/context is available (e.g. headless CI /
+// lavapipe), so the game never crashes for lack of sound.
 #pragma once
 #include <string>
 #include <map>

@@ -1,0 +1,21 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "toms_web.html (web-debug\\toms_web.html)",
+      "name": "toms_web — Chrome (DWARF debug)",
+      "program": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceRoot}\\tools\\run_web_debug.ps1"
+      ],
+      "cwd": "${workspaceRoot}"
+    }
+  ]
+}
