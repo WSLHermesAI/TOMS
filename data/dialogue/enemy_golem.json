@@ -3,10 +3,24 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "石巨人：『此地不容活物。』",
+      "text": {
+        "zh_TW": "石巨人：『此地不容活物。』",
+        "en": "Stone Golem: \"No living thing may pass.\"",
+        "zh_CN": "石巨人：『此地不容活物。』",
+        "ja": "ストーンゴーレム「生ける者はここを通さぬ。」",
+        "ko": "스톤 골렘: \"살아있는 것은 이곳을 지날 수 없다.\"",
+        "es": "Gólem de Piedra: \"Ningún ser vivo puede pasar por aquí.\""
+      },
       "choices": [
         {
-          "label": "（戰鬥）",
+          "label": {
+            "zh_TW": "（戰鬥）",
+            "en": "(Fight)",
+            "zh_CN": "（战斗）",
+            "ja": "（戦闘）",
+            "ko": "(전투)",
+            "es": "(Combate)"
+          },
           "next": null
         }
       ]

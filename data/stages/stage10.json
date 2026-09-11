@@ -1,6 +1,13 @@
 {
   "id": "stage_10",
-  "name": "巫師王座",
+  "name": {
+    "zh_TW": "巫師王座",
+    "en": "Sorcerer's Throne",
+    "zh_CN": "巫师王座",
+    "ja": "魔導士の王座",
+    "ko": "마도사의 왕좌",
+    "es": "El Trono del Hechicero"
+  },
   "subtitle": "Demon Lord's Throne",
   "index": 10,
   "width": 31,
@@ -65,8 +72,22 @@
     "#.@..D............#........#.Z#",
     "###############################"
   ],
-  "story_note": "Vorkath：『凡人，也敢踏足吾之王座？』——最終決戰。",
-  "preview": "建議 ATK 30+ / DEF 24+ -- Boss：Vorkath（HP 400 / ATK 34 / DEF 14）",
+  "story_note": {
+    "zh_TW": "Vorkath：『凡人，也敢踏足吾之王座？』——最終決戰。",
+    "en": "Vorkath: \"Mortal, you dare set foot upon my throne?\" — The final battle.",
+    "zh_CN": "Vorkath：『凡人，也敢踏足吾之王座？』——最终决战。",
+    "ja": "Vorkath「人間風情が、我が玉座に足を踏み入れるとは？」——最終決戦。",
+    "ko": "Vorkath: \"인간 주제에 감히 나의 옥좌에 발을 들이다니?\" — 최종 결전.",
+    "es": "Vorkath: \"¿Un mortal osa poner pie en mi trono?\" — La batalla final."
+  },
+  "preview": {
+    "zh_TW": "建議 ATK 30+ / DEF 24+ -- Boss：Vorkath（HP 400 / ATK 34 / DEF 14）",
+    "en": "Suggested ATK 30+ / DEF 24+ -- Boss: Vorkath (HP 400 / ATK 34 / DEF 14)",
+    "zh_CN": "建议 ATK 30+ / DEF 24+ -- Boss：Vorkath（HP 400 / ATK 34 / DEF 14）",
+    "ja": "推奨 ATK 30+ / DEF 24+ -- ボス：Vorkath（HP 400 / ATK 34 / DEF 14）",
+    "ko": "권장 ATK 30+ / DEF 24+ -- 보스: Vorkath (HP 400 / ATK 34 / DEF 14)",
+    "es": "Recomendado ATK 30+ / DEF 24+ -- Jefe: Vorkath (HP 400 / ATK 34 / DEF 14)"
+  },
   "connect": {
     "up": null,
     "down": "stage_11"

@@ -6,6 +6,7 @@
 #include <fstream>
 #include <json.hpp>
 #include "object.h"   // Stage derives Trackable so stage loads are leak-checked
+#include "localization.h"   // toms::Locale::field() -- resolves name/story_note if multi-language
 
 struct Entity {
     int x, y;
@@ -39,8 +40,11 @@ struct Stage : public Trackable {
     TOMS_OBJECT(Stage)
 };
 
-// Load a stage JSON file. legend maps char -> semantic; entities parsed from tiles.
-inline Stage parseStage(const std::string& path) {
+// Load a stage JSON file. legend maps char -> semantic; entities parsed from tiles. `locale`
+// resolves `name`/`story_note` if they're multi-language {code:text} objects (plain strings
+// still work as-is); called fresh on every stage load, always during live gameplay after the
+// title phase has set the player's language, so this stays correctly reactive.
+inline Stage parseStage(const std::string& path, const toms::Locale& locale) {
     // Read the whole file into a string first, then json::parse. Using
     // operator>>(istream, json) directly is unreliable under Emscripten's libc++
     // (it can report "empty input" even though the file is present and non-empty).
@@ -61,13 +65,13 @@ inline Stage parseStage(const std::string& path) {
         Stage s; s.id = path; return s;
     }
     Stage s;
-    s.id = j["id"]; s.name = j["name"]; s.subtitle = j["subtitle"];
+    s.id = j["id"]; s.name = locale.field(j["name"]); s.subtitle = j["subtitle"];
     s.index = j["index"]; s.width = j["width"]; s.height = j["height"];
     s.tiles = j["tiles"].get<std::vector<std::string>>();
     for (auto& [k,v] : j["legend"].get<std::map<std::string,std::string>>()) s.legend[k] = v;
     s.up = j["connect"]["up"].is_null() ? "" : (std::string)j["connect"]["up"];
     s.down = j["connect"]["down"].is_null() ? "" : (std::string)j["connect"]["down"];
-    s.story_note = j["story_note"];
+    s.story_note = locale.field(j["story_note"]);
     // Milestone 4: optional per-tile encounter-kind overrides, keyed by raw tile char. Absent
     // from every shipped stage today -- guarded so existing files parse identically to before.
     const nlohmann::json* encounterOverrides = nullptr;

@@ -35,9 +35,9 @@ EquipmentDefinition equipmentFromJson(const nlohmann::json& j) {
     EquipmentDefinition d;
     if (!j.is_object()) return d;
     d.id = j.value("id", std::string());
-    d.name = j.value("name", d.id);
+    d.name = j.contains("name") ? j["name"] : nlohmann::json(d.id);
     d.sprite = j.value("sprite", std::string());
-    d.desc = j.value("desc", std::string());
+    d.desc = j.contains("desc") ? j["desc"] : nlohmann::json("");
     d.slot = equipmentSlotFromString(j.value("slot", std::string("weapon")));
     if (j.contains("stat") && j["stat"].is_object()) {
         d.statAtk = j["stat"].value("atk", 0);

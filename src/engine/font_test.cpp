@@ -124,6 +124,100 @@ int main() {
         }
     }
 
+    // --- multi-font pre-bake: buildFromFiles() covers scripts the primary font lacks ---
+    // wqy-zenhei (Han) has neither Hangul nor Japanese Kana; pairing it with Noto
+    // Sans KR/JP should bake ALL of them into one atlas in a single call, with no
+    // runtime ensure()/re-upload needed (see multi-language support work).
+    {
+        std::string notoKR = "assets/fonts/NotoSansKR-Regular.ttf";
+        std::string notoJP = "assets/fonts/NotoSansJP-Regular.ttf";
+        if (std::filesystem::exists(notoKR) && std::filesystem::exists(notoJP)) {
+            Font f4("multi-font-test");
+            std::vector<uint32_t> cps4 = {
+                'A',                // ASCII: from wqy-zenhei (primary, first in list)
+                0x9B31,             // 魔 : Han, from wqy-zenhei
+                0xAC00,             // 가 : Hangul, NOT in wqy-zenhei -> must come from NotoSansKR
+                0x3042,             // あ : Hiragana, NOT in wqy-zenhei -> must come from NotoSansJP
+            };
+            std::vector<std::string> fontList = { ttf, notoKR, notoJP };
+            CHECK(f4.buildFromFiles(fontList, cps4, 32, 24), "buildFromFiles succeeds with 3 fonts");
+            auto hasInk = [&](uint32_t cp) {
+                const std::array<float,4>* uv = f4.uv(cp);
+                if (!uv) return false;
+                int cell = f4.atlasW() / 32;
+                int cx = (int)((*uv)[0] * f4.atlasW()), cy = (int)((*uv)[1] * f4.atlasH());
+                for (int y = cy; y < cy + cell; y++)
+                    for (int x = cx; x < cx + cell; x++) {
+                        size_t p = ((size_t)y * f4.atlasW() + x) * 4 + 3;
+                        if (p < f4.atlas().size() && f4.atlas()[p] > 0) return true;
+                    }
+                return false;
+            };
+            CHECK(f4.has(0xAC00), "Hangul '가' baked via NotoSansKR fallback");
+            CHECK(hasInk(0xAC00), "Hangul glyph has rasterized ink");
+            CHECK(f4.has(0x3042), "Hiragana 'あ' baked via NotoSansJP fallback");
+            CHECK(hasInk(0x3042), "Hiragana glyph has rasterized ink");
+            CHECK(f4.has('A') && hasInk('A'), "ASCII still baked from primary font");
+            CHECK(f4.has(0x9B31) && hasInk(0x9B31), "Han glyph still baked from primary font");
+        } else {
+            printf("  (skipping buildFromFiles multi-font test: Noto fonts not found)\n");
+        }
+    }
+
+    // --- real content coverage: every codepoint actually shipped in data/*.json must bake ---
+    // Regression guard for multi-language support: data/*.json now carries zh_TW/en/zh_CN/ja/
+    // ko/es text (dialogue, stages, items, store, text.json). This bakes the SAME font list
+    // Game::loadAssets() uses and fails loudly if any real shipped codepoint (e.g. a Hangul
+    // syllable or Hiragana/Katakana kana from a translated string) has no glyph anywhere --
+    // exactly the failure mode a missing/wrong font file would cause silently in-game.
+    {
+        std::string notoKR = "assets/fonts/NotoSansKR-Regular.ttf";
+        std::string notoJP = "assets/fonts/NotoSansJP-Regular.ttf";
+        std::string dataDir = "data";
+        if (std::filesystem::exists(notoKR) && std::filesystem::exists(notoJP) && std::filesystem::exists(dataDir)) {
+            std::vector<std::string> jsonFiles;
+            for (auto& p : std::filesystem::recursive_directory_iterator(dataDir))
+                if (p.path().extension() == ".json") jsonFiles.push_back(p.path().string());
+            std::vector<uint32_t> cps = Font::collectFromFiles(jsonFiles);
+            CHECK(cps.size() > 500, "collected a substantial codepoint set from real shipped content");
+
+            Font f5("content-coverage-test");
+            std::vector<std::string> fontList = { ttf, notoJP, notoKR };
+            CHECK(f5.buildFromFiles(fontList, cps, 32, 24), "buildFromFiles succeeds with real shipped content");
+
+            int missing = 0;
+            uint32_t firstMissing = 0;
+            for (uint32_t cp : cps) {
+                if (!f5.has(cp)) { missing++; if (!firstMissing) firstMissing = cp; }
+            }
+            char msg[128];
+            std::snprintf(msg, sizeof(msg),
+                "every shipped codepoint has a glyph (missing=%d/%d, first=U+%04X)",
+                missing, (int)cps.size(), firstMissing);
+            CHECK(missing == 0, msg);
+
+            // Spot-check one real codepoint per non-Han script actually used by the shipped
+            // translations, so this test fails specifically (not just "missing > 0") if a
+            // script's font was dropped or swapped for the wrong one.
+            struct ScriptCheck { uint32_t cp; const char* label; };
+            ScriptCheck checks[] = {
+                { 0xAC00, "Hangul (Korean)" },        // 가 -- appears in ko translations
+                { 0x3042, "Hiragana (Japanese)" },     // あ -- appears in ja translations
+                { 0x30A2, "Katakana (Japanese)" },     // ア -- appears in ja translations (loanwords)
+                { 0x00F1, "Spanish n-tilde" },          // n with tilde -- appears in es translations
+                { 0x00E1, "Spanish a-acute" },          // a with acute -- appears in es translations
+            };
+            for (auto& c : checks) {
+                bool present = f5.has(c.cp);
+                char cmsg[96];
+                std::snprintf(cmsg, sizeof(cmsg), "%s codepoint U+%04X present in atlas", c.label, c.cp);
+                CHECK(present, cmsg);
+            }
+        } else {
+            printf("  (skipping content-coverage test: Noto fonts or data/ dir not found)\n");
+        }
+    }
+
     // Font is Object-derived: after the scoped Font is destroyed, nothing leaks.
     CHECK(ObjectRegistry::instance().LiveCount() == 0, "no Font leaked");
 

@@ -1,6 +1,13 @@
 {
   "id": "stage_01",
-  "name": "村莊外緣",
+  "name": {
+    "zh_TW": "村莊外緣",
+    "en": "Village Outskirts",
+    "zh_CN": "村庄外缘",
+    "ja": "村はずれ",
+    "ko": "마을 외곽",
+    "es": "Las Afueras del Pueblo"
+  },
   "subtitle": "Village Outskirts",
   "index": 1,
   "width": 19,
@@ -53,8 +60,22 @@
     "#.@..h...#........#",
     "###################"
   ],
-  "story_note": "長老：『沃卡司封印了安穩之星，公主被囚塔頂。去吧，攀上巫師之塔。』",
-  "preview": "建議 ATK 10+ / DEF 4+ -- 本層敵人：史萊姆、暗影蝙蝠",
+  "story_note": {
+    "zh_TW": "長老：『沃卡司封印了安穩之星，公主被囚塔頂。去吧，攀上巫師之塔。』",
+    "en": "Elder: \"Vorkath has sealed away the Star of Peace, and the princess is imprisoned atop the tower. Go now, and climb the Sorcerer's Tower.\"",
+    "zh_CN": "长老：『沃卡司封印了安稳之星，公主被囚塔顶。去吧，攀上巫师之塔。』",
+    "ja": "長老「Vorkath が安寧の星を封じ、王女は塔の頂に幽閉されている。さあ行け、魔導士の塔を登るのだ。」",
+    "ko": "장로: \"Vorkath가 평온의 별을 봉인했고, 공주는 탑 꼭대기에 갇혀 있다. 가거라, 마도사의 탑을 오르거라.\"",
+    "es": "Anciano: \"Vorkath ha sellado la Estrella de la Paz, y la princesa está prisionera en la cima de la torre. Ve ahora y sube la Torre del Hechicero.\""
+  },
+  "preview": {
+    "zh_TW": "建議 ATK 10+ / DEF 4+ -- 本層敵人：史萊姆、暗影蝙蝠",
+    "en": "Suggested ATK 10+ / DEF 4+ -- Enemies on this floor: Slime, Shadow Bat",
+    "zh_CN": "建议 ATK 10+ / DEF 4+ -- 本层敌人：史莱姆、暗影蝙蝠",
+    "ja": "推奨 ATK 10+ / DEF 4+ -- このフロアの敵：スライム、シャドウバット",
+    "ko": "권장 ATK 10+ / DEF 4+ -- 이 층의 적: 슬라임, 섀도우 배트",
+    "es": "Recomendado ATK 10+ / DEF 4+ -- Enemigos de este piso: Limo, Murciélago Sombrío"
+  },
   "connect": {
     "up": "stage_02",
     "down": null

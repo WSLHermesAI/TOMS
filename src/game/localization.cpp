@@ -119,4 +119,14 @@ std::string Locale::tr(const std::string& key) const {
     return key;
 }
 
+std::string Locale::field(const nlohmann::json& j) const {
+    if (j.is_string()) return j.get<std::string>();
+    if (!j.is_object()) return std::string();
+    const std::string& code = languageCode();
+    if (auto it = j.find(code); it != j.end() && it->is_string()) return it->get<std::string>();
+    if (auto it = j.find("en"); it != j.end() && it->is_string()) return it->get<std::string>();
+    for (auto& [k, v] : j.items()) if (v.is_string()) return v.get<std::string>();
+    return std::string();
+}
+
 } // namespace toms

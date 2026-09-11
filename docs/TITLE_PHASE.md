@@ -97,10 +97,10 @@ saves last for the session only.
   configure with
   `-DCMAKE_CXX_FLAGS="-I$HOME/opt/x11root/usr/include -I$HOME/opt/glsym/include"` (imgui's GLFW
   backend includes `<GLFW/glfw3.h>` without `GLFW_INCLUDE_NONE`, so it needs `GL/gl.h`).
-- `gen_font_atlas.py` used to glob a **hardcoded absolute path from another checkout**, so the
-  shipped browser atlas did not contain this project's own glyphs. It is now repo-relative, and
-  the title strings are also listed explicitly — regenerate it (`python3 gen_font_atlas.py`)
-  after adding text, or the browser build will show blank/`?` glyphs.
+- `gen_font_atlas.py` is retired — both desktop and web now build the font atlas the same way at
+  load time via `Font::buildFromFiles()` (stb_truetype, see `src/engine/font.cpp`), scanning
+  `data/*.json` for codepoints, so adding text needs no separate regeneration step on either
+  platform.
 
 ## Verified (native, 2026-09-10)
 

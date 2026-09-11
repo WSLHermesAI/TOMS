@@ -3,10 +3,24 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "王國將希望寄託於你。這份祝福，願它護你周全。",
+      "text": {
+        "zh_TW": "王國將希望寄託於你。這份祝福，願它護你周全。",
+        "en": "The kingdom places its hope in you. May this blessing keep you safe.",
+        "zh_CN": "王国将希望寄托于你。这份祝福，愿它护你周全。",
+        "ja": "王国は汝に希望を託す。この祝福が、汝を守らんことを。",
+        "ko": "왕국은 그대에게 희망을 걸고 있다. 이 축복이 그대를 온전히 지켜주기를.",
+        "es": "El reino deposita su esperanza en ti. Que esta bendición te proteja."
+      },
       "choices": [
         {
-          "label": "感謝陛下。",
+          "label": {
+            "zh_TW": "感謝陛下。",
+            "en": "Thank you, Your Majesty.",
+            "zh_CN": "感谢陛下。",
+            "ja": "陛下、感謝いたします。",
+            "ko": "폐하, 감사합니다.",
+            "es": "Gracias, Su Majestad."
+          },
           "next": null,
           "action": { "type": "give", "itemId": "potion_blue" }
         }

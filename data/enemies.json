@@ -1,6 +1,6 @@
 {
   "slime": {
-    "name": "史萊姆",
+    "name": { "zh_TW": "史萊姆", "en": "Slime", "zh_CN": "史莱姆", "ja": "スライム", "ko": "슬라임", "es": "Limo" },
     "sprite": "slime.png",
     "hp": 24,
     "atk": 8,
@@ -9,7 +9,7 @@
     "gold": 4
   },
   "bat": {
-    "name": "暗影蝙蝠",
+    "name": { "zh_TW": "暗影蝙蝠", "en": "Shadow Bat", "zh_CN": "暗影蝙蝠", "ja": "影のコウモリ", "ko": "그림자 박쥐", "es": "Murciélago Sombrío" },
     "sprite": "bat.png",
     "hp": 18,
     "atk": 11,
@@ -18,7 +18,7 @@
     "gold": 5
   },
   "golem": {
-    "name": "石巨人",
+    "name": { "zh_TW": "石巨人", "en": "Stone Golem", "zh_CN": "石巨人", "ja": "石の巨人", "ko": "돌 거인", "es": "Gólem de Piedra" },
     "sprite": "golem.png",
     "hp": 70,
     "atk": 14,
@@ -27,7 +27,7 @@
     "gold": 12
   },
   "skeleton": {
-    "name": "骷髏兵",
+    "name": { "zh_TW": "骷髏兵", "en": "Skeleton Soldier", "zh_CN": "骷髅兵", "ja": "骸骨兵", "ko": "해골 병사", "es": "Soldado Esqueleto" },
     "sprite": "skeleton.png",
     "hp": 40,
     "atk": 16,
@@ -36,7 +36,7 @@
     "gold": 9
   },
   "wraith": {
-    "name": "怨靈",
+    "name": { "zh_TW": "怨靈", "en": "Wraith", "zh_CN": "怨灵", "ja": "怨霊", "ko": "원령", "es": "Espectro" },
     "sprite": "wraith.png",
     "hp": 55,
     "atk": 20,
@@ -45,7 +45,7 @@
     "gold": 14
   },
   "demon": {
-    "name": "小惡魔",
+    "name": { "zh_TW": "小惡魔", "en": "Imp", "zh_CN": "小恶魔", "ja": "小悪魔", "ko": "임프", "es": "Diablillo" },
     "sprite": "demon.png",
     "hp": 90,
     "atk": 24,
@@ -54,7 +54,7 @@
     "gold": 22
   },
   "demonlord_vorkath": {
-    "name": "Vorkath 沃卡司",
+    "name": { "zh_TW": "Vorkath 沃卡司", "en": "Vorkath", "zh_CN": "Vorkath 沃卡司", "ja": "Vorkath", "ko": "Vorkath", "es": "Vorkath" },
     "sprite": "boss_demonlord.png",
     "hp": 400,
     "atk": 34,

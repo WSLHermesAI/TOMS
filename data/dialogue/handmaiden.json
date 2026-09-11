@@ -3,10 +3,24 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "頂層有禁咒機關，唯有擊碎沃卡司本體，封印才會解除。",
+      "text": {
+        "zh_TW": "頂層有禁咒機關，唯有擊碎沃卡司本體，封印才會解除。",
+        "en": "The top floor holds a forbidden ward — only by shattering Vorkath himself will the seal be broken.",
+        "zh_CN": "顶层有禁咒机关，唯有击碎沃卡司本体，封印才会解除。",
+        "ja": "最上階には禁呪の仕掛けがある——Vorkath 本体を打ち砕かぬ限り、封印は解けぬ。",
+        "ko": "최상층에는 금주의 장치가 있다——Vorkath 본체를 부수지 않는 한, 봉인은 풀리지 않는다.",
+        "es": "En el piso superior hay un mecanismo de magia prohibida: solo destruyendo al propio Vorkath se romperá el sello."
+      },
       "choices": [
         {
-          "label": "我明白了。",
+          "label": {
+            "zh_TW": "我明白了。",
+            "en": "I understand.",
+            "zh_CN": "我明白了。",
+            "ja": "分かりました。",
+            "ko": "알겠습니다.",
+            "es": "Lo entiendo."
+          },
           "next": null
         }
       ]

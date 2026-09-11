@@ -3,10 +3,24 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "Vorkath：『凡人，也敢踏足吾之王座？安穩之星將永世沉睡！』",
+      "text": {
+        "zh_TW": "Vorkath：『凡人，也敢踏足吾之王座？安穩之星將永世沉睡！』",
+        "en": "Vorkath: \"Mortal, you dare set foot upon my throne? The Star of Peace shall sleep for all eternity!\"",
+        "zh_CN": "Vorkath：『凡人，也敢踏足吾之王座？安稳之星将永世沉睡！』",
+        "ja": "Vorkath「人間風情が、我が玉座に足を踏み入れるとは？安寧の星は永遠に眠り続けるのだ！」",
+        "ko": "Vorkath: \"인간 주제에 감히 나의 옥좌에 발을 들이다니? 평온의 별은 영원히 잠들 것이다!\"",
+        "es": "Vorkath: \"¿Un mortal osa poner pie en mi trono? ¡La Estrella de la Paz dormirá por toda la eternidad!\""
+      },
       "choices": [
         {
-          "label": "（決戰）",
+          "label": {
+            "zh_TW": "（決戰）",
+            "en": "(Final Battle)",
+            "zh_CN": "（决战）",
+            "ja": "（決戦）",
+            "ko": "(결전)",
+            "es": "(Batalla final)"
+          },
           "next": null
         }
       ]

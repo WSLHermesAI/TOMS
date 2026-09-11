@@ -1,6 +1,13 @@
 {
   "id": "stage_11",
-  "name": "安穩之星",
+  "name": {
+    "zh_TW": "安穩之星",
+    "en": "Star of Peace",
+    "zh_CN": "安稳之星",
+    "ja": "安寧の星",
+    "ko": "평온의 별",
+    "es": "La Estrella de la Paz"
+  },
   "subtitle": "Star of Peace",
   "index": 11,
   "width": 34,
@@ -68,8 +75,22 @@
     "#.@#.k..p.........#..............#",
     "##################################"
   ],
-  "story_note": "公主獲救，安穩之星重燃——王國迎來黎明。",
-  "preview": "劇情尾聲，無戰鬥。",
+  "story_note": {
+    "zh_TW": "公主獲救，安穩之星重燃——王國迎來黎明。",
+    "en": "The princess is saved, and the Star of Peace burns again — the kingdom greets its dawn.",
+    "zh_CN": "公主获救，安稳之星重燃——王国迎来黎明。",
+    "ja": "王女は救われ、安寧の星が再び灯った——王国に夜明けが訪れる。",
+    "ko": "공주가 구출되고, 평온의 별이 다시 타올랐다——왕국에 새벽이 찾아왔다.",
+    "es": "La princesa ha sido rescatada, y la Estrella de la Paz vuelve a arder: el reino recibe su amanecer."
+  },
+  "preview": {
+    "zh_TW": "劇情尾聲，無戰鬥。",
+    "en": "Story epilogue, no combat.",
+    "zh_CN": "剧情尾声，无战斗。",
+    "ja": "物語の終章、戦闘なし。",
+    "ko": "이야기의 마지막 장, 전투 없음.",
+    "es": "Epílogo de la historia, sin combate."
+  },
   "connect": {
     "up": "stage_10",
     "down": null

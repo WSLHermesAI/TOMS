@@ -135,12 +135,23 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
         if (k == "d" || k == "D") { g_game->invDropSelected(); return EM_TRUE; }
         return EM_TRUE; // swallow all other keys while inventory is open
     }
+    // In-game menu (Save/Settings/Back to Title) -- the gear icon (tap/click) is the primary
+    // way in on touch, but a keyboard attached to the browser gets the same bindings as the
+    // title phase's own Menu/Settings above.
+    if (g_game->inGameMenuOpen()) {
+        if (k == "ArrowUp"   || k == "ArrowLeft")  { g_game->inGameMenuMove(-1); return EM_TRUE; }
+        if (k == "ArrowDown" || k == "ArrowRight") { g_game->inGameMenuMove(1); return EM_TRUE; }
+        if (k == "Enter" || k == " ") { g_game->inGameMenuActivate(); return EM_TRUE; }
+        if (k == "Escape") { g_game->inGameMenuBack(); return EM_TRUE; }
+        return EM_TRUE; // swallow all other keys while the menu is open
+    }
     if (g_game->modalActive()) return EM_TRUE;
     if (k == "ArrowLeft"  || k == "a" || k == "A") g_game->movePlayer(-1, 0);
     else if (k == "ArrowRight" || k == "d" || k == "D") g_game->movePlayer(1, 0);
     else if (k == "ArrowUp"    || k == "w" || k == "W") g_game->movePlayer(0, -1);
     else if (k == "ArrowDown"  || k == "s" || k == "S") g_game->movePlayer(0, 1);
     else if (k == " " || k == "e" || k == "E") g_game->interact();
+    else if (k == "Escape") g_game->openInGameMenu();
     return EM_TRUE;
 }
 

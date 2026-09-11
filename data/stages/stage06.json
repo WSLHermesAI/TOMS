@@ -1,6 +1,13 @@
 {
   "id": "stage_06",
-  "name": "洞窟",
+  "name": {
+    "zh_TW": "洞窟",
+    "en": "Cavern",
+    "zh_CN": "洞窟",
+    "ja": "洞窟",
+    "ko": "동굴",
+    "es": "La Caverna"
+  },
   "subtitle": "Cavern",
   "index": 6,
   "width": 25,
@@ -59,8 +66,22 @@
     "#.@#..#.c#..b.H.........#",
     "#########################"
   ],
-  "story_note": "洞窟深處藏著攻防雙寶石；藍門後是王之軍營。",
-  "preview": "建議 ATK 18+ / DEF 12+ -- 本層敵人：怨靈、石巨人、小惡魔",
+  "story_note": {
+    "zh_TW": "洞窟深處藏著攻防雙寶石；藍門後是王之軍營。",
+    "en": "Deep within the cavern lie both attack and defense gems; beyond the blue door lies the King's Barracks.",
+    "zh_CN": "洞窟深处藏着攻防双宝石；蓝门后是王之军营。",
+    "ja": "洞窟の奥には攻撃と防御、両方の宝石が眠っている。青い扉の先は王の軍営だ。",
+    "ko": "동굴 깊숙한 곳에는 공격과 방어 보석이 모두 숨겨져 있다. 파란 문 너머는 왕의 군영이다.",
+    "es": "En lo profundo de la caverna se ocultan tanto gemas de ataque como de defensa; tras la puerta azul se encuentra el Cuartel del Rey."
+  },
+  "preview": {
+    "zh_TW": "建議 ATK 18+ / DEF 12+ -- 本層敵人：怨靈、石巨人、小惡魔",
+    "en": "Suggested ATK 18+ / DEF 12+ -- Enemies on this floor: Wraith, Stone Golem, Imp",
+    "zh_CN": "建议 ATK 18+ / DEF 12+ -- 本层敌人：怨灵、石巨人、小恶魔",
+    "ja": "推奨 ATK 18+ / DEF 12+ -- このフロアの敵：怨霊、ストーンゴーレム、インプ",
+    "ko": "권장 ATK 18+ / DEF 12+ -- 이 층의 적: 원령, 스톤 골렘, 임프",
+    "es": "Recomendado ATK 18+ / DEF 12+ -- Enemigos de este piso: Espectro, Gólem de Piedra, Diablillo"
+  },
   "encounter_overrides": {
     "5": "dialogue_gate",
     "6": "dialogue_gate"

@@ -29,6 +29,28 @@ public:
                        const std::vector<uint32_t>& chars,
                        int cell = 32, int fontPx = 24);
 
+    // Same as buildFromFile, but tries each font in `ttfPaths` IN ORDER for every
+    // codepoint (first one whose glyph table has it wins) -- so e.g. a CJK font
+    // missing Hangul/Kana can be paired with script-specific fonts and still bake
+    // everything into ONE atlas, ONE upload, before the renderer ever sees it (no
+    // runtime re-bake / re-upload once the game is running). Paths that fail to
+    // open/parse are skipped. The first font that opens successfully becomes the
+    // "primary" font for ensure()'s realtime fallback path. Returns false only if
+    // NO font in the list could be opened.
+    bool buildFromFiles(const std::vector<std::string>& ttfPaths,
+                        const std::vector<uint32_t>& chars,
+                        int cell = 32, int fontPx = 24);
+
+#ifdef __EMSCRIPTEN__
+    // Web only: rasterizes every codepoint via an offscreen HTML5 Canvas 2D context
+    // (browser/OS system fonts, generic "sans-serif" family) instead of a bundled TTF --
+    // the browser's own font-fallback chain already covers Han/Kana/Hangul/Latin/etc., so
+    // no font file needs to ship in the .data bundle at all. Produces the exact same atlas
+    // layout/metrics convention as buildFromFiles (tight top-left-anchored glyph boxes),
+    // so drawText()/measureText() need no awareness of which backend built the atlas.
+    bool buildFromCanvas(const std::vector<uint32_t>& chars, int cell = 32, int fontPx = 24);
+#endif
+
     // Atlas pixels (RGBA8, premultiplied white glyphs on transparent) + dimensions.
     const std::vector<uint8_t>& atlas() const { return atlas_; }
     uint32_t atlasW() const { return atlasW_; }

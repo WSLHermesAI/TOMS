@@ -1,80 +1,80 @@
 {
   "wand": {
     "id": "wand",
-    "name": "見習者法杖",
+    "name": { "zh_TW": "見習者法杖", "en": "Apprentice's Wand", "zh_CN": "见习者法杖", "ja": "見習いの杖", "ko": "견습자의 지팡이", "es": "Vara del Aprendiz" },
     "sprite": "gem_atk.png",
     "slot": "weapon",
-    "desc": "均衡的入門武器，速度與威力都走中庸路線。",
+    "desc": { "zh_TW": "均衡的入門武器，速度與威力都走中庸路線。", "en": "A balanced starter weapon, moderate in both speed and power.", "zh_CN": "均衡的入门武器，速度与威力都走中庸路线。", "ja": "速度と威力のバランスが取れた入門用武器。", "ko": "속도와 위력이 고르게 균형 잡힌 입문용 무기입니다.", "es": "Un arma inicial equilibrada, con velocidad y poder moderados." },
     "stat": { "atk": 0 },
     "bar": { "v0": 15, "vmax": 200, "rampTime": 1.8, "greenHalf": 15, "blueOuter": 35, "redOuter": 60, "maxMult": 2.0 }
   },
   "twin_daggers": {
     "id": "twin_daggers",
-    "name": "雙生短匕",
+    "name": { "zh_TW": "雙生短匕", "en": "Twin Daggers", "zh_CN": "双生短匕", "ja": "双子の短剣", "ko": "쌍둥이 단검", "es": "Dagas Gemelas" },
     "sprite": "gem_atk.png",
     "slot": "weapon",
-    "desc": "犧牲少許攻擊力，換取極快的蓄力速度與短小精悍的判定帶。",
+    "desc": { "zh_TW": "犧牲少許攻擊力，換取極快的蓄力速度與短小精悍的判定帶。", "en": "Sacrifices a bit of Attack for extremely fast charge speed and a compact, precise timing window.", "zh_CN": "牺牲少许攻击力，换取极快的蓄力速度与短小精悍的判定带。", "ja": "攻撃力を少し犠牲にする代わりに、非常に速いチャージ速度と小さく精密な判定帯を得る。", "ko": "공격력을 약간 희생하는 대신 매우 빠른 차지 속도와 작고 정밀한 판정 구간을 얻습니다.", "es": "Sacrifica algo de Ataque a cambio de una carga extremadamente rápida y una franja de acierto compacta y precisa." },
     "stat": { "atk": -2 },
     "bar": { "v0": 20, "vmax": 260, "rampTime": 1.0, "greenHalf": 8, "blueOuter": 20, "redOuter": 45, "maxMult": 2.2 }
   },
   "war_hammer": {
     "id": "war_hammer",
-    "name": "戰爭巨鎚",
+    "name": { "zh_TW": "戰爭巨鎚", "en": "War Hammer", "zh_CN": "战争巨锤", "ja": "戦争の大槌", "ko": "전쟁의 대망치", "es": "Martillo de Guerra" },
     "sprite": "gem_atk.png",
     "slot": "weapon",
-    "desc": "沉重而強力，蓄力緩慢但判定帶寬廣，容錯率高。",
+    "desc": { "zh_TW": "沉重而強力，蓄力緩慢但判定帶寬廣，容錯率高。", "en": "Heavy and powerful; charges slowly but has a wide timing window with a high margin for error.", "zh_CN": "沉重而强力，蓄力缓慢但判定带宽广，容错率高。", "ja": "重く強力だが、チャージは遅い。判定帯が広く、ミスへの許容度が高い。", "ko": "무겁고 강력하지만 차지 속도가 느립니다. 판정 구간이 넓어 실수를 허용하는 폭이 큽니다.", "es": "Pesado y poderoso; carga lentamente pero tiene una franja de acierto amplia y gran margen de error." },
     "stat": { "atk": 8 },
     "bar": { "v0": 10, "vmax": 140, "rampTime": 2.6, "greenHalf": 25, "blueOuter": 40, "redOuter": 75, "maxMult": 2.6 }
   },
   "cloth_robe": {
     "id": "cloth_robe",
-    "name": "布衣長袍",
+    "name": { "zh_TW": "布衣長袍", "en": "Cloth Robe", "zh_CN": "布衣长袍", "ja": "布のローブ", "ko": "천 로브", "es": "Túnica de Tela" },
     "sprite": "gem_def.png",
     "slot": "armor",
-    "desc": "均衡的入門防具，速度與韌性都走中庸路線。",
+    "desc": { "zh_TW": "均衡的入門防具，速度與韌性都走中庸路線。", "en": "A balanced starter armor, moderate in both speed and resilience.", "zh_CN": "均衡的入门防具，速度与韧性都走中庸路线。", "ja": "速度と粘り強さのバランスが取れた入門用防具。", "ko": "속도와 내구성이 고르게 균형 잡힌 입문용 방어구입니다.", "es": "Una armadura inicial equilibrada, con velocidad y resistencia moderadas." },
     "stat": { "def": 0 },
     "bar": { "v0": 18, "vmax": 220, "rampTime": 1.4, "greenHalf": 15, "blueOuter": 35, "redOuter": 60 }
   },
   "guardian_plate": {
     "id": "guardian_plate",
-    "name": "守護重甲",
+    "name": { "zh_TW": "守護重甲", "en": "Guardian Plate", "zh_CN": "守护重甲", "ja": "守護の重鎧", "ko": "수호의 중갑", "es": "Placa del Guardián" },
     "sprite": "gem_def.png",
     "slot": "armor",
-    "desc": "厚重的板甲，格擋蓄力較慢，但判定帶寬廣，適合穩紮穩打。",
+    "desc": { "zh_TW": "厚重的板甲，格擋蓄力較慢，但判定帶寬廣，適合穩紮穩打。", "en": "Heavy plate armor; block charges slowly, but the timing window is wide, suited to a steady, cautious playstyle.", "zh_CN": "厚重的板甲，格挡蓄力较慢，但判定带宽广，适合稳扎稳打。", "ja": "重厚な板金鎧。ガードのチャージは遅いが判定帯が広く、堅実な立ち回りに向く。", "ko": "두꺼운 판금 갑옷입니다. 방어 차지는 느리지만 판정 구간이 넓어 신중한 플레이에 적합합니다.", "es": "Armadura de placas pesada; el bloqueo carga lento, pero su franja de acierto es amplia, ideal para un estilo cauteloso." },
     "stat": { "def": 5 },
     "bar": { "v0": 12, "vmax": 150, "rampTime": 2.2, "greenHalf": 24, "blueOuter": 38, "redOuter": 68 }
   },
   "swift_leather": {
     "id": "swift_leather",
-    "name": "疾風皮甲",
+    "name": { "zh_TW": "疾風皮甲", "en": "Swift Leather", "zh_CN": "疾风皮甲", "ja": "疾風の革鎧", "ko": "질풍의 가죽 갑옷", "es": "Cuero Veloz" },
     "sprite": "gem_def.png",
     "slot": "armor",
-    "desc": "犧牲少許防禦力，換取極快的格擋蓄力速度。",
+    "desc": { "zh_TW": "犧牲少許防禦力，換取極快的格擋蓄力速度。", "en": "Sacrifices a bit of Defense for extremely fast block-charge speed.", "zh_CN": "牺牲少许防御力，换取极快的格挡蓄力速度。", "ja": "防御力を少し犠牲にする代わりに、非常に速いガードチャージ速度を得る。", "ko": "방어력을 약간 희생하는 대신 매우 빠른 방어 차지 속도를 얻습니다.", "es": "Sacrifica algo de Defensa a cambio de una carga de bloqueo extremadamente rápida." },
     "stat": { "def": -2 },
     "bar": { "v0": 25, "vmax": 280, "rampTime": 0.9, "greenHalf": 7, "blueOuter": 18, "redOuter": 42 }
   },
   "focus_talisman": {
     "id": "focus_talisman",
-    "name": "專注護符",
+    "name": { "zh_TW": "專注護符", "en": "Focus Talisman", "zh_CN": "专注护符", "ja": "集中のお守り", "ko": "집중의 부적", "es": "Talismán de Enfoque" },
     "sprite": "exp_up.png",
     "slot": "talent",
-    "desc": "延緩蓄力進入衝刺階段的時機，讓你有更充裕的時間瞄準目標區。",
+    "desc": { "zh_TW": "延緩蓄力進入衝刺階段的時機，讓你有更充裕的時間瞄準目標區。", "en": "Delays when the charge enters its dash phase, giving you more time to aim for the target zone.", "zh_CN": "延缓蓄力进入冲刺阶段的时机，让你有更充裕的时间瞄准目标区。", "ja": "チャージがダッシュ段階に入るタイミングを遅らせ、目標エリアを狙う時間に余裕を持たせる。", "ko": "차지가 돌진 단계에 들어가는 시점을 늦춰 목표 구간을 노릴 여유를 줍니다.", "es": "Retrasa el momento en que la carga entra en su fase de impulso, dándote más tiempo para apuntar a la zona objetivo." },
     "talent": "focus"
   },
   "berserker_charm": {
     "id": "berserker_charm",
-    "name": "狂戰士護身符",
+    "name": { "zh_TW": "狂戰士護身符", "en": "Berserker Charm", "zh_CN": "狂战士护身符", "ja": "狂戦士のお守り", "ko": "광전사의 부적", "es": "Amuleto del Berserker" },
     "sprite": "exp_up.png",
     "slot": "talent",
-    "desc": "大幅提升攻擊上限，但落在紅色區域的攻擊將完全無效——高風險高回報。",
+    "desc": { "zh_TW": "大幅提升攻擊上限，但落在紅色區域的攻擊將完全無效——高風險高回報。", "en": "Greatly raises the Attack ceiling, but attacks landing in the red zone are completely negated — high risk, high reward.", "zh_CN": "大幅提升攻击上限，但落在红色区域的攻击将完全无效——高风险高回报。", "ja": "攻撃力の上限を大幅に引き上げるが、赤色ゾーンに入った攻撃は完全に無効となる——ハイリスク・ハイリターン。", "ko": "공격력 상한을 크게 높이지만, 빨간 구간에 들어간 공격은 완전히 무효화됩니다 — 하이 리스크, 하이 리턴입니다.", "es": "Aumenta enormemente el límite de Ataque, pero los ataques que caen en la zona roja quedan completamente anulados: alto riesgo, alta recompensa." },
     "talent": "berserker"
   },
   "guardian_ring": {
     "id": "guardian_ring",
-    "name": "守護者之戒",
+    "name": { "zh_TW": "守護者之戒", "en": "Ring of the Guardian", "zh_CN": "守护者之戒", "ja": "守護者の指輪", "ko": "수호자의 반지", "es": "Anillo del Guardián" },
     "sprite": "exp_up.png",
     "slot": "talent",
-    "desc": "為防禦減傷提供一道保底下限，即使蓄力失手也能保有基本防護。",
+    "desc": { "zh_TW": "為防禦減傷提供一道保底下限，即使蓄力失手也能保有基本防護。", "en": "Provides a floor for damage reduction, ensuring basic protection even if the charge timing is missed.", "zh_CN": "为防御减伤提供一道保底下限，即使蓄力失手也能保有基本防护。", "ja": "防御による減傷に最低保証ラインを設け、チャージに失敗しても基本的な防御を保てるようにする。", "ko": "방어 피해 감소에 최소 보장선을 두어, 차지에 실패해도 기본적인 방어를 유지할 수 있습니다.", "es": "Establece un mínimo garantizado en la reducción de daño, asegurando protección básica incluso si fallas el momento de la carga." },
     "talent": "guardian"
   }
 }

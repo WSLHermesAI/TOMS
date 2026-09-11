@@ -1,6 +1,13 @@
 {
   "id": "stage_05",
-  "name": "墓穴",
+  "name": {
+    "zh_TW": "墓穴",
+    "en": "Crypt",
+    "zh_CN": "墓穴",
+    "ja": "墓所",
+    "ko": "묘지",
+    "es": "La Cripta"
+  },
   "subtitle": "Crypt",
   "index": 5,
   "width": 25,
@@ -59,8 +66,22 @@
     "#.@#.....#.......5#..#..#",
     "#########################"
   ],
-  "story_note": "村民亡魂：『別怕……公主還活著，她在等你去。』",
-  "preview": "建議 ATK 14+ / DEF 10+ -- 本層敵人：骷髏兵、怨靈",
+  "story_note": {
+    "zh_TW": "村民亡魂：『別怕……公主還活著，她在等你去。』",
+    "en": "Ghost Villager: \"Don't be afraid... the princess is still alive. She's waiting for you.\"",
+    "zh_CN": "村民亡魂：『别怕……公主还活着，她在等你去。』",
+    "ja": "村人の亡霊「怖がらなくていい……王女はまだ生きている。あなたを待っているわ。」",
+    "ko": "촌민의 망령: \"두려워하지 마……공주는 아직 살아 있다. 그대를 기다리고 있어.\"",
+    "es": "Fantasma del Aldeano: \"No temas... la princesa aún vive. Te está esperando.\""
+  },
+  "preview": {
+    "zh_TW": "建議 ATK 14+ / DEF 10+ -- 本層敵人：骷髏兵、怨靈",
+    "en": "Suggested ATK 14+ / DEF 10+ -- Enemies on this floor: Skeleton Soldier, Wraith",
+    "zh_CN": "建议 ATK 14+ / DEF 10+ -- 本层敌人：骷髅兵、怨灵",
+    "ja": "推奨 ATK 14+ / DEF 10+ -- このフロアの敵：スケルトン兵、怨霊",
+    "ko": "권장 ATK 14+ / DEF 10+ -- 이 층의 적: 스켈레톤 병사, 원령",
+    "es": "Recomendado ATK 14+ / DEF 10+ -- Enemigos de este piso: Soldado Esqueleto, Espectro"
+  },
   "encounter_overrides": {
     "4": "dialogue_gate",
     "5": "dialogue_gate"

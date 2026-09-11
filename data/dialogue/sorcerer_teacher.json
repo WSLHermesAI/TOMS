@@ -3,38 +3,94 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "戰鬥是自動的——你走向敵人便會輪流出拳，直到一方倒下。",
+      "text": {
+        "zh_TW": "戰鬥是自動的——你走向敵人便會輪流出拳，直到一方倒下。",
+        "en": "Combat is automatic — walk into an enemy and you'll trade blows in turn until one side falls.",
+        "zh_CN": "战斗是自动的——你走向敌人便会轮流出拳，直到一方倒下。",
+        "ja": "戦闘は自動で行われる——敵に向かって歩けば、互いに一撃ずつ交わし合い、どちらかが倒れるまで続く。",
+        "ko": "전투는 자동으로 진행된다——적을 향해 걸어가면 번갈아 공격을 주고받으며, 어느 한쪽이 쓰러질 때까지 계속된다.",
+        "es": "El combate es automático: camina hacia un enemigo y intercambiarán golpes por turnos hasta que uno de los dos caiga."
+      },
       "choices": [
         {
-          "label": "那我該注意什麼？",
+          "label": {
+            "zh_TW": "那我該注意什麼？",
+            "en": "So what should I watch out for?",
+            "zh_CN": "那我该注意什么？",
+            "ja": "では、何に気をつければいい？",
+            "ko": "그럼 무엇을 조심해야 하지?",
+            "es": "Entonces, ¿a qué debo prestar atención?"
+          },
           "next": "tip"
         },
         {
-          "label": "有沒有適合我練練手的委託？",
+          "label": {
+            "zh_TW": "有沒有適合我練練手的委託？",
+            "en": "Is there a task suited for me to practice on?",
+            "zh_CN": "有没有适合我练练手的委托？",
+            "ja": "腕試しにちょうどいい依頼はあるか？",
+            "ko": "연습 삼아 할 만한 의뢰가 있나?",
+            "es": "¿Hay alguna tarea adecuada para que practique?"
+          },
           "next": "missions"
         },
         {
-          "label": "懂了。",
+          "label": {
+            "zh_TW": "懂了。",
+            "en": "Understood.",
+            "zh_CN": "懂了。",
+            "ja": "分かった。",
+            "ko": "알겠다.",
+            "es": "Entendido."
+          },
           "next": null,
           "action": { "type": "setStoryFlag", "flag": "met_sorcerer" }
         }
       ]
     },
     "tip": {
-      "text": "先吃攻擊寶石再打高防敵人，損血最少。防禦則降低你承受的每一擊。",
+      "text": {
+        "zh_TW": "先吃攻擊寶石再打高防敵人，損血最少。防禦則降低你承受的每一擊。",
+        "en": "Consume attack gems before facing a high-defense enemy — you'll lose the least health that way. Defense gems reduce the damage of every blow you take.",
+        "zh_CN": "先吃攻击宝石再打高防敌人，损血最少。防御则降低你承受的每一击。",
+        "ja": "高防御の敵に挑む前に攻撃の宝石を取っておけば、失う体力が最も少なくて済む。防御の宝石は、受けるすべての一撃のダメージを減らしてくれる。",
+        "ko": "방어력이 높은 적과 싸우기 전에 공격 보석을 먼저 섭취하면 체력 손실이 가장 적다. 방어 보석은 네가 받는 모든 타격의 피해를 줄여준다.",
+        "es": "Consume gemas de ataque antes de enfrentarte a un enemigo con alta defensa: así perderás la menor cantidad de vida posible. Las gemas de defensa reducen el daño de cada golpe que recibes."
+      },
       "choices": [
         {
-          "label": "記住了。",
+          "label": {
+            "zh_TW": "記住了。",
+            "en": "I'll remember that.",
+            "zh_CN": "记住了。",
+            "ja": "覚えておく。",
+            "ko": "명심하겠다.",
+            "es": "Lo recordaré."
+          },
           "next": null,
           "action": { "type": "setStoryFlag", "flag": "met_sorcerer" }
         }
       ]
     },
     "missions": {
-      "text": "想稍微賺點外快嗎？我這裡剛好有些委託。",
+      "text": {
+        "zh_TW": "想稍微賺點外快嗎？我這裡剛好有些委託。",
+        "en": "Looking to earn a bit on the side? I happen to have some tasks here.",
+        "zh_CN": "想稍微赚点外快吗？我这里刚好有些委托。",
+        "ja": "少し小遣い稼ぎがしたいか？ちょうどいくつか依頼があるぞ。",
+        "ko": "약간의 용돈벌이를 하고 싶나? 마침 여기 몇 가지 의뢰가 있다.",
+        "es": "¿Buscas ganar algo extra? Da la casualidad de que tengo algunas tareas."
+      },
       "choices": [
         {
-          "label": "獵殺石巨人——委託任務",
+          "label": {
+            "zh_TW": "獵殺石巨人——委託任務",
+            "en": "Hunt the Stone Golem — Mission",
+            "zh_CN": "猎杀石巨人——委托任务",
+            "ja": "ストーンゴーレム討伐——依頼",
+            "ko": "스톤 골렘 사냥 — 의뢰",
+            "es": "Cazar al Gólem de Piedra: misión"
+          },
           "requires": { "all": [
             { "type": "storyBeatAtLeast", "value": 2 },
             { "not": { "any": [
@@ -46,13 +102,27 @@
           "action": { "type": "startMission", "missionId": "m_golem_slayer" }
         },
         {
-          "label": "獵殺石巨人——已完成，領取獎勵",
+          "label": {
+            "zh_TW": "獵殺石巨人——已完成，領取獎勵",
+            "en": "Hunt the Stone Golem — Completed, Claim Reward",
+            "zh_CN": "猎杀石巨人——已完成，领取奖励",
+            "ja": "ストーンゴーレム討伐——達成済み、報酬を受け取る",
+            "ko": "스톤 골렘 사냥 — 완료됨, 보상 받기",
+            "es": "Cazar al Gólem de Piedra: completada, reclamar recompensa"
+          },
           "requires": { "type": "missionComplete", "missionId": "m_golem_slayer" },
           "next": null,
           "action": { "type": "claimMission", "missionId": "m_golem_slayer" }
         },
         {
-          "label": "每日委託：清剿史萊姆",
+          "label": {
+            "zh_TW": "每日委託：清剿史萊姆",
+            "en": "Daily Task: Clear Out the Slimes",
+            "zh_CN": "每日委托：清剿史莱姆",
+            "ja": "デイリー依頼：スライム討伐",
+            "ko": "일일 의뢰: 슬라임 소탕",
+            "es": "Tarea diaria: eliminar limos"
+          },
           "requires": { "all": [
             { "type": "storyFlagSet", "flag": "met_sorcerer" },
             { "not": { "any": [
@@ -64,13 +134,27 @@
           "action": { "type": "startMission", "missionId": "m_daily_slime_bounty" }
         },
         {
-          "label": "每日委託——已完成，領取獎勵",
+          "label": {
+            "zh_TW": "每日委託——已完成，領取獎勵",
+            "en": "Daily Task — Completed, Claim Reward",
+            "zh_CN": "每日委托——已完成，领取奖励",
+            "ja": "デイリー依頼——達成済み、報酬を受け取る",
+            "ko": "일일 의뢰 — 완료됨, 보상 받기",
+            "es": "Tarea diaria: completada, reclamar recompensa"
+          },
           "requires": { "type": "missionComplete", "missionId": "m_daily_slime_bounty" },
           "next": null,
           "action": { "type": "claimMission", "missionId": "m_daily_slime_bounty" }
         },
         {
-          "label": "沒事了。",
+          "label": {
+            "zh_TW": "沒事了。",
+            "en": "Never mind.",
+            "zh_CN": "没事了。",
+            "ja": "何でもない。",
+            "ko": "아무것도 아니다.",
+            "es": "No es nada."
+          },
           "next": null
         }
       ]

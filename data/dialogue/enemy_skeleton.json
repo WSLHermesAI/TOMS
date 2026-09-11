@@ -3,10 +3,24 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "骷髏：『加入我們的行列吧……』",
+      "text": {
+        "zh_TW": "骷髏：『加入我們的行列吧……』",
+        "en": "Skeleton: \"Join our ranks...\"",
+        "zh_CN": "骷髅：『加入我们的行列吧……』",
+        "ja": "スケルトン「我らの仲間になれ……」",
+        "ko": "스켈레톤: \"우리 대열에 합류해라……\"",
+        "es": "Esqueleto: \"Únete a nuestras filas...\""
+      },
       "choices": [
         {
-          "label": "（拒絕，準備戰鬥）",
+          "label": {
+            "zh_TW": "（拒絕，準備戰鬥）",
+            "en": "(Refuse, prepare for battle)",
+            "zh_CN": "（拒绝，准备战斗）",
+            "ja": "（拒否し、戦闘に備える）",
+            "ko": "(거부하고 전투를 준비한다)",
+            "es": "(Negarse y prepararse para el combate)"
+          },
           "next": null,
           "action": { "type": "enterBattle" }
         }

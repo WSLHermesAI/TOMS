@@ -3,10 +3,24 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "嘶——（蝙蝠撲翅而來）",
+      "text": {
+        "zh_TW": "嘶——（蝙蝠撲翅而來）",
+        "en": "Hsss— A bat swoops down, wings beating.",
+        "zh_CN": "嘶——（蝙蝠扑翅而来）",
+        "ja": "シャーッ……（コウモリが羽ばたきながら襲いかかる）",
+        "ko": "쉬익—— (박쥐가 날개를 퍼덕이며 달려든다)",
+        "es": "Siseo... (un murciélago se abalanza batiendo las alas)"
+      },
       "choices": [
         {
-          "label": "（戰鬥）",
+          "label": {
+            "zh_TW": "（戰鬥）",
+            "en": "(Fight)",
+            "zh_CN": "（战斗）",
+            "ja": "（戦闘）",
+            "ko": "(전투)",
+            "es": "(Combate)"
+          },
           "next": null
         }
       ]

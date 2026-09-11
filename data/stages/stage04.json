@@ -1,6 +1,13 @@
 {
   "id": "stage_04",
-  "name": "藏書閣",
+  "name": {
+    "zh_TW": "藏書閣",
+    "en": "Library",
+    "zh_CN": "藏书阁",
+    "ja": "書庫",
+    "ko": "서고",
+    "es": "La Biblioteca"
+  },
   "subtitle": "Library",
   "index": 4,
   "width": 22,
@@ -56,8 +63,22 @@
     "#.@#........#........#",
     "######################"
   ],
-  "story_note": "骷髏學者：『沃卡司懼怕純淨之攻與堅毅之防——疊滿寶石方可撼動他。』",
-  "preview": "建議 ATK 12+ / DEF 8+ -- 本層敵人：骷髏兵、史萊姆",
+  "story_note": {
+    "zh_TW": "骷髏學者：『沃卡司懼怕純淨之攻與堅毅之防——疊滿寶石方可撼動他。』",
+    "en": "Skeleton Scholar: \"Vorkath fears pure attack and unyielding defense — only by stacking your gems to the fullest can you hope to shake him.\"",
+    "zh_CN": "骷髅学者：『沃卡司惧怕纯净之攻与坚毅之防——叠满宝石方可撼动他。』",
+    "ja": "スケルトンの学者「Vorkath は純粋な攻撃力と揺るがぬ防御力を恐れている——宝石を極限まで重ねてこそ、奴を揺るがせる。」",
+    "ko": "스켈레톤 학자: \"Vorkath는 순수한 공격력과 굳건한 방어력을 두려워한다——보석을 최대한 쌓아야만 그를 흔들 수 있다.\"",
+    "es": "Erudito Esqueleto: \"Vorkath teme el ataque puro y la defensa inquebrantable: solo acumulando tus gemas al máximo podrás hacerlo tambalear.\""
+  },
+  "preview": {
+    "zh_TW": "建議 ATK 12+ / DEF 8+ -- 本層敵人：骷髏兵、史萊姆",
+    "en": "Suggested ATK 12+ / DEF 8+ -- Enemies on this floor: Skeleton Soldier, Slime",
+    "zh_CN": "建议 ATK 12+ / DEF 8+ -- 本层敌人：骷髅兵、史莱姆",
+    "ja": "推奨 ATK 12+ / DEF 8+ -- このフロアの敵：スケルトン兵、スライム",
+    "ko": "권장 ATK 12+ / DEF 8+ -- 이 층의 적: 스켈레톤 병사, 슬라임",
+    "es": "Recomendado ATK 12+ / DEF 8+ -- Enemigos de este piso: Soldado Esqueleto, Limo"
+  },
   "encounter_overrides": {
     "4": "dialogue_gate"
   },

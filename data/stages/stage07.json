@@ -1,6 +1,13 @@
 {
   "id": "stage_07",
-  "name": "軍營",
+  "name": {
+    "zh_TW": "軍營",
+    "en": "Barracks",
+    "zh_CN": "军营",
+    "ja": "軍営",
+    "ko": "군영",
+    "es": "El Cuartel"
+  },
   "subtitle": "Barracks",
   "index": 7,
   "width": 28,
@@ -62,8 +69,22 @@
     "#.@..D..4..k...............#",
     "############################"
   ],
-  "story_note": "王之副官：『這枚祝福給你——但真正的力量，來自你一路的成長。』",
-  "preview": "建議 ATK 20+ / DEF 14+ -- 本層敵人：骷髏兵、怨靈、小惡魔",
+  "story_note": {
+    "zh_TW": "王之副官：『這枚祝福給你——但真正的力量，來自你一路的成長。』",
+    "en": "King's Lieutenant: \"Take this blessing — but true strength comes from the growth you've earned along the way.\"",
+    "zh_CN": "王之副官：『这枚祝福给你——但真正的力量，来自你一路的成长。』",
+    "ja": "王の副官「この祝福を授けよう——だが真の力は、汝がこれまで積み重ねてきた成長にこそある。」",
+    "ko": "왕의 부관: \"이 축복을 주겠다——하지만 진정한 힘은 그대가 여기까지 오며 쌓아온 성장에서 비롯된다.\"",
+    "es": "Teniente del Rey: \"Toma esta bendición... pero la verdadera fuerza proviene del crecimiento que has ganado en tu camino.\""
+  },
+  "preview": {
+    "zh_TW": "建議 ATK 20+ / DEF 14+ -- 本層敵人：骷髏兵、怨靈、小惡魔",
+    "en": "Suggested ATK 20+ / DEF 14+ -- Enemies on this floor: Skeleton Soldier, Wraith, Imp",
+    "zh_CN": "建议 ATK 20+ / DEF 14+ -- 本层敌人：骷髅兵、怨灵、小恶魔",
+    "ja": "推奨 ATK 20+ / DEF 14+ -- このフロアの敵：スケルトン兵、怨霊、インプ",
+    "ko": "권장 ATK 20+ / DEF 14+ -- 이 층의 적: 스켈레톤 병사, 원령, 임프",
+    "es": "Recomendado ATK 20+ / DEF 14+ -- Enemigos de este piso: Soldado Esqueleto, Espectro, Diablillo"
+  },
   "encounter_overrides": {
     "4": "dialogue_gate",
     "5": "dialogue_gate",

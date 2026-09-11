@@ -3,19 +3,47 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "你做到了……Vorkath 已逝，安穩之星重燃。王國迎來黎明。",
+      "text": {
+        "zh_TW": "你做到了……Vorkath 已逝，安穩之星重燃。王國迎來黎明。",
+        "en": "You did it... Vorkath is no more, and the Star of Peace burns again. The kingdom greets its dawn.",
+        "zh_CN": "你做到了……Vorkath 已逝，安稳之星重燃。王国迎来黎明。",
+        "ja": "やり遂げたのね……Vorkath は滅び、安寧の星が再び灯った。王国に夜明けが訪れる。",
+        "ko": "해냈군요……Vorkath는 사라졌고, 평온의 별이 다시 타올랐어요. 왕국에 새벽이 찾아왔습니다.",
+        "es": "Lo lograste... Vorkath ha caído, y la Estrella de la Paz vuelve a arder. El reino recibe su amanecer."
+      },
       "choices": [
         {
-          "label": "這是我們共同的勝利。",
+          "label": {
+            "zh_TW": "這是我們共同的勝利。",
+            "en": "This is a victory we share.",
+            "zh_CN": "这是我们共同的胜利。",
+            "ja": "これは私たち二人の勝利だ。",
+            "ko": "이건 우리가 함께 이룬 승리예요.",
+            "es": "Esta es una victoria que compartimos."
+          },
           "next": "thanks"
         }
       ]
     },
     "thanks": {
-      "text": "帶我回王宮吧。從此，魔法塔不再是恐懼，而是守護之塔。",
+      "text": {
+        "zh_TW": "帶我回王宮吧。從此，魔法塔不再是恐懼，而是守護之塔。",
+        "en": "Take me back to the palace. From now on, the tower of magic will no longer be feared — it will be a tower of protection.",
+        "zh_CN": "带我回王宫吧。从此，魔法塔不再是恐惧，而是守护之塔。",
+        "ja": "私を王宮へ連れ帰って。これからは、魔法の塔は恐怖の象徴ではなく、守護の塔となるでしょう。",
+        "ko": "저를 왕궁으로 데려다주세요. 이제부터 마법의 탑은 두려움이 아니라, 수호의 탑이 될 거예요.",
+        "es": "Llévame de vuelta al palacio. A partir de ahora, la torre mágica ya no será motivo de temor, sino una torre protectora."
+      },
       "choices": [
         {
-          "label": "願這份和平長存。",
+          "label": {
+            "zh_TW": "願這份和平長存。",
+            "en": "May this peace endure.",
+            "zh_CN": "愿这份和平长存。",
+            "ja": "この平和が末永く続きますように。",
+            "ko": "이 평화가 오래도록 이어지기를.",
+            "es": "Que esta paz perdure."
+          },
           "next": null
         }
       ]

@@ -3,10 +3,24 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "你來了……我信你。打碎他，安穩之星便會重燃。",
+      "text": {
+        "zh_TW": "你來了……我信你。打碎他，安穩之星便會重燃。",
+        "en": "You've come... I believe in you. Shatter him, and the Star of Peace will burn again.",
+        "zh_CN": "你来了……我信你。打碎他，安稳之星便会重燃。",
+        "ja": "来てくれたのね……あなたを信じるわ。彼を打ち砕けば、安寧の星は再び灯るはず。",
+        "ko": "왔군요……당신을 믿어요. 그를 부수면, 평온의 별이 다시 타오를 거예요.",
+        "es": "Has venido... confío en ti. Destrúyelo, y la Estrella de la Paz volverá a arder."
+      },
       "choices": [
         {
-          "label": "等我。",
+          "label": {
+            "zh_TW": "等我。",
+            "en": "Wait for me.",
+            "zh_CN": "等我。",
+            "ja": "待っていてくれ。",
+            "ko": "기다려줘요.",
+            "es": "Espérame."
+          },
           "next": null
         }
       ]

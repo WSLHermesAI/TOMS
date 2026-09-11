@@ -3,36 +3,92 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "年輕人，災禍起源於十年前。黑巫師 Vorkath 封印了安穩之星，並將公主囚於塔頂。",
+      "text": {
+        "zh_TW": "年輕人，災禍起源於十年前。黑巫師 Vorkath 封印了安穩之星，並將公主囚於塔頂。",
+        "en": "Young one, the calamity began ten years ago. The Dark Sorcerer Vorkath sealed away the Star of Peace and imprisoned the princess atop the tower.",
+        "zh_CN": "年轻人，灾祸起源于十年前。黑巫师 Vorkath 封印了安稳之星，并将公主囚于塔顶。",
+        "ja": "若者よ、災いは十年前に始まった。闇の魔導士 Vorkath が安寧の星を封じ、王女を塔の頂に幽閉したのだ。",
+        "ko": "젊은이여, 재앙은 십 년 전에 시작되었다. 어둠의 마도사 Vorkath가 평온의 별을 봉인하고, 공주를 탑 꼭대기에 가두었다.",
+        "es": "Joven, la calamidad comenzó hace diez años. El Hechicero Oscuro Vorkath selló la Estrella de la Paz y encerró a la princesa en la cima de la torre."
+      },
       "choices": [
         {
-          "label": "我該怎麼做？",
+          "label": {
+            "zh_TW": "我該怎麼做？",
+            "en": "What should I do?",
+            "zh_CN": "我该怎么做？",
+            "ja": "私は何をすればいいのですか？",
+            "ko": "저는 무엇을 해야 하나요?",
+            "es": "¿Qué debo hacer?"
+          },
           "next": "how"
         },
         {
-          "label": "有沒有我能幫上忙的委託？",
+          "label": {
+            "zh_TW": "有沒有我能幫上忙的委託？",
+            "en": "Is there a task I can help with?",
+            "zh_CN": "有没有我能帮上忙的委托？",
+            "ja": "何か私に手伝えることはありますか？",
+            "ko": "제가 도울 수 있는 의뢰가 있나요?",
+            "es": "¿Hay alguna tarea en la que pueda ayudar?"
+          },
           "next": "missions"
         },
         {
-          "label": "明白了。",
+          "label": {
+            "zh_TW": "明白了。",
+            "en": "Understood.",
+            "zh_CN": "明白了。",
+            "ja": "分かりました。",
+            "ko": "알겠습니다.",
+            "es": "Entendido."
+          },
           "next": null
         }
       ]
     },
     "how": {
-      "text": "攀上這十層巫師之塔，變強，最後擊敗 Vorkath。路上寶石能強化你。",
+      "text": {
+        "zh_TW": "攀上這十層巫師之塔，變強，最後擊敗 Vorkath。路上寶石能強化你。",
+        "en": "Climb this ten-story Sorcerer's Tower, grow stronger, and defeat Vorkath in the end. The gems along the way will empower you.",
+        "zh_CN": "攀上这十层巫师之塔，变强，最后击败 Vorkath。路上宝石能强化你。",
+        "ja": "この十階建ての魔導士の塔を登り、力をつけ、最後に Vorkath を倒すのだ。道中の宝石が汝を強くしてくれる。",
+        "ko": "이 십 층짜리 마도사의 탑을 오르며 강해져서, 마침내 Vorkath를 물리쳐라. 길을 따라 놓인 보석들이 너를 강하게 해줄 것이다.",
+        "es": "Sube esta Torre del Hechicero de diez pisos, hazte más fuerte y derrota finalmente a Vorkath. Las gemas del camino te fortalecerán."
+      },
       "choices": [
         {
-          "label": "我會做到。",
+          "label": {
+            "zh_TW": "我會做到。",
+            "en": "I will do it.",
+            "zh_CN": "我会做到。",
+            "ja": "必ずやり遂げます。",
+            "ko": "반드시 해내겠습니다.",
+            "es": "Lo haré."
+          },
           "next": null
         }
       ]
     },
     "missions": {
-      "text": "村里這陣子……不太安寧。要是你願意，有件事想請你幫忙。",
+      "text": {
+        "zh_TW": "村里這陣子……不太安寧。要是你願意，有件事想請你幫忙。",
+        "en": "The village has not known peace lately... If you're willing, there's something I'd like your help with.",
+        "zh_CN": "村里这阵子……不太安宁。要是你愿意，有件事想请你帮忙。",
+        "ja": "村はこのところ……あまり穏やかではない。もしよければ、頼みたいことがあるのだ。",
+        "ko": "요즘 마을이……좀처럼 평온하지가 않구나. 괜찮다면 부탁하고 싶은 일이 있다.",
+        "es": "El pueblo no ha conocido la paz últimamente... Si estás dispuesto, hay algo con lo que me gustaría que me ayudaras."
+      },
       "choices": [
         {
-          "label": "撫平怨靈——委託任務",
+          "label": {
+            "zh_TW": "撫平怨靈——委託任務",
+            "en": "Lay the Wraiths to Rest — Mission",
+            "zh_CN": "抚平怨灵——委托任务",
+            "ja": "怨霊を鎮める——依頼",
+            "ko": "원령을 진정시키기 — 의뢰",
+            "es": "Apaciguar a los espectros: misión"
+          },
           "requires": { "all": [
             { "type": "stageCleared", "stageId": "stage_05" },
             { "not": { "any": [
@@ -44,13 +100,27 @@
           "action": { "type": "startMission", "missionId": "m_wraith_purge" }
         },
         {
-          "label": "撫平怨靈——已完成，領取獎勵",
+          "label": {
+            "zh_TW": "撫平怨靈——已完成，領取獎勵",
+            "en": "Lay the Wraiths to Rest — Completed, Claim Reward",
+            "zh_CN": "抚平怨灵——已完成，领取奖励",
+            "ja": "怨霊を鎮める——達成済み、報酬を受け取る",
+            "ko": "원령을 진정시키기 — 완료됨, 보상 받기",
+            "es": "Apaciguar a los espectros: completada, reclamar recompensa"
+          },
           "requires": { "type": "missionComplete", "missionId": "m_wraith_purge" },
           "next": null,
           "action": { "type": "claimMission", "missionId": "m_wraith_purge" }
         },
         {
-          "label": "沒事了。",
+          "label": {
+            "zh_TW": "沒事了。",
+            "en": "Never mind.",
+            "zh_CN": "没事了。",
+            "ja": "何でもない。",
+            "ko": "아무것도 아닙니다.",
+            "es": "No es nada."
+          },
           "next": null
         }
       ]

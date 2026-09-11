@@ -173,17 +173,20 @@ int main() {
         CHECK(t.firstPlayableSlot() == -1, "with no saves there is no playable slot");
         CHECK(!t.selectedSlotExists(), "an empty slot is not reported as playable");
 
-        // Settings page: language rows; moving returns SetLanguage so the caller persists it.
+        // Settings page: language rows. Moving only changes the highlight -- activate()/tap is
+        // needed to open the "switch to XXX?" dialog, and only confirming it actually applies
+        // the language (see the dedicated confirm-dialog test block below for the full flow).
         t.setPage(TitlePage::Settings);
         CHECK(t.page() == TitlePage::Settings, "setPage switches to Settings");
         t.setLanguageCount(2);
         t.setLanguageIndex(0);
         a = t.moveVertical(1);
-        CHECK(a == TitleAction::SetLanguage, "changing the language row asks to apply it");
-        CHECK(t.languageIndex() == 1, "the language index follows the selection");
+        CHECK(a == TitleAction::None, "moving the highlight alone does not apply the language");
+        CHECK(t.settingsSelection() == 1, "the highlighted row follows the move");
+        CHECK(t.languageIndex() == 0, "the active language is unchanged until confirmed");
         a = t.moveHorizontal(1);
-        CHECK(a == TitleAction::SetLanguage, "left/right also switches the language");
-        CHECK(t.languageIndex() == 0, "language selection wraps with left/right");
+        CHECK(a == TitleAction::None, "left/right also just moves the highlight");
+        CHECK(t.settingsSelection() == 0, "the highlight wraps with left/right");
 
         // Esc goes Back to the Menu from a sub-page.
         a = t.cancel();
@@ -202,12 +205,15 @@ int main() {
         a = t.click(L.backButton.x + 5, L.backButton.y + 5, L);
         CHECK(a == TitleAction::Back, "tapping Back returns to the Menu");
 
-        // Settings tap selects a language row.
+        // Settings tap opens the "switch to XXX?" dialog rather than applying instantly.
         t.setPage(TitlePage::Settings);
         t.setLanguageCount(2);
         a = t.click(L.langRow[1].x + 5, L.langRow[1].y + 5, L);
-        CHECK(a == TitleAction::SetLanguage && t.languageIndex() == 1,
-              "tapping a language row selects it");
+        CHECK(a == TitleAction::AskLanguageChange && t.languageConfirmOpen(),
+              "tapping a language row opens the confirm dialog instead of applying it");
+        CHECK(t.languageIndex() == 0, "the active language has not changed yet");
+        CHECK(t.languageConfirmIndex() == 1, "the dialog names the tapped row");
+        t.cancel();   // leave it closed for the next block
 
         // Slot count is clamped to what the layout can show (8 rows).
         t.setSlotCount(99);
@@ -279,6 +285,78 @@ int main() {
         CHECK(t.newGameConfirmOpen(), "the prompt survives a stray tap");
         CHECK(t.click(500, 400, L) == TitleAction::None || !t.newGameConfirmOpen(),
               "a tap in the scrim does not start a game");
+    }
+
+    // ------------------------------------------------- "switch to XXX language?" prompt
+    // (a single tap/Enter used to apply a language instantly -- one wrong tap away from
+    // stranding a touch/mobile player with no keyboard/Esc to undo it)
+    {
+        TitleScreen t;
+        t.open();
+        t.setLanguageCount(3);
+        t.setLanguageIndex(0);
+        t.setPage(TitlePage::Settings);
+
+        // Keyboard: move the highlight, then Enter opens the dialog (does not apply yet).
+        t.moveVertical(1);
+        CHECK(t.settingsSelection() == 1, "cursor moved to row 1");
+        TitleAction a = t.activate();
+        CHECK(a == TitleAction::AskLanguageChange, "Enter on a language row asks for confirmation");
+        CHECK(t.languageConfirmOpen(), "the confirm prompt is open");
+        CHECK(t.languageConfirmIndex() == 1, "the prompt names the row the player picked");
+        CHECK(t.languageConfirmYesSelected(), "Yes is armed by default");
+        CHECK(t.languageIndex() == 0, "the active language has not changed yet");
+
+        a = t.activate();
+        CHECK(a == TitleAction::SetLanguage, "Yes asks the caller to apply + persist the language");
+        CHECK(!t.languageConfirmOpen(), "answering closes the prompt");
+        CHECK(t.languageIndex() == 1, "the language index now follows the confirmed row");
+
+        // No leaves the active language untouched.
+        t.moveVertical(1);                      // -> row 2
+        a = t.activate();
+        CHECK(a == TitleAction::AskLanguageChange, "the prompt re-opens for the next row");
+        t.setLanguageConfirmYesSelected(false);
+        a = t.activate();
+        CHECK(a == TitleAction::DismissLanguageConfirm, "No dismisses the prompt");
+        CHECK(!t.languageConfirmOpen(), "No closes the prompt");
+        CHECK(t.languageIndex() == 1, "declining leaves the previously-applied language alone");
+
+        // Esc (no keyboard on web/touch, but still must work on desktop) also dismisses it.
+        t.activate();                            // re-open (row 2, Yes armed again by default)
+        a = t.cancel();
+        CHECK(a == TitleAction::DismissLanguageConfirm, "Esc dismisses the prompt");
+        CHECK(!t.languageConfirmOpen(), "Esc closes the prompt");
+        CHECK(t.page() == TitlePage::Settings, "Esc on the prompt does not leave the Settings page");
+        CHECK(t.languageIndex() == 1, "Esc does not apply the pending language");
+
+        // Left/right and up/down both toggle the armed answer while the prompt is open.
+        t.activate();
+        const bool armed = t.languageConfirmYesSelected();
+        t.moveHorizontal(1);
+        CHECK(t.languageConfirmYesSelected() != armed, "left/right toggles the armed answer");
+        t.moveVertical(1);
+        CHECK(t.languageConfirmYesSelected() == armed, "up/down toggles it back");
+
+        // Taps: THIS is the mobile-critical path -- the dialog must expose a real, always-hit-
+        // testable "No" button so a touch player (no keyboard, no Esc) is never stuck on it.
+        TitleLayout L = computeTitleLayout(1024, 768, 3, 3);
+        t.setLanguageConfirmYesSelected(true);
+        a = t.click(L.confirmNo.x + 5, L.confirmNo.y + 5, L);
+        CHECK(a == TitleAction::DismissLanguageConfirm, "tapping No dismisses the prompt");
+        CHECK(!t.languageConfirmOpen(), "tapping No actually closed it (mobile is not stuck)");
+        CHECK(t.languageIndex() == 1, "tapping No did not change the language");
+
+        t.moveVertical(1); t.activate();         // re-open on a different row
+        a = t.click(L.confirmYes.x + 5, L.confirmYes.y + 5, L);
+        CHECK(a == TitleAction::SetLanguage, "tapping Yes applies the language");
+        CHECK(t.languageIndex() == t.settingsSelection(), "the confirmed row is now active");
+
+        // Settings itself also has a touch-reachable way out (a Back button is now drawn there
+        // by Game::draw(), matching Continue's -- this just proves the hit-test still agrees).
+        a = t.click(L.backButton.x + 5, L.backButton.y + 5, L);
+        CHECK(a == TitleAction::Back && t.page() == TitlePage::Menu,
+              "tapping Back on Settings returns to the Menu");
     }
 
     if (g_fail == 0) { printf("title_screen_test: ALL PASS\n"); return 0; }

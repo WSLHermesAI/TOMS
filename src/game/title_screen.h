@@ -39,7 +39,7 @@ enum class TitleAction {
     LoadSlot,       // resume from pendingSlot()
     OpenContinue,   // page switched to Continue
     OpenSettings,   // page switched to Settings
-    SetLanguage,    // Settings: language index changed, caller should apply + persist
+    SetLanguage,    // Settings: a language change was CONFIRMED, caller should apply + persist
     Back,           // left Continue/Settings, now on Menu
     // An EMPTY slot was activated: show the "start a new game in this slot?" confirm dialog
     // (the title draws it itself -- the caller has nothing to do).
@@ -48,6 +48,13 @@ enum class TitleAction {
     StartNewGameInSlot,
     // The dialog was answered No (or Esc): stay on the Continue page.
     DismissNewGameConfirm,
+    // A language row was activated/tapped: show the "switch to XXX?" confirm dialog (the title
+    // draws it itself -- the caller has nothing to do). Mirrors AskNewGameInSlot -- selecting a
+    // language used to apply instantly on a single tap, which is one wrong tap away from
+    // stranding a touch/mobile player with no keyboard to undo it.
+    AskLanguageChange,
+    // The dialog was answered No (or Esc): stay on Settings, nothing changes.
+    DismissLanguageConfirm,
 };
 
 // One clickable row, in design-resolution pixels (1024x768).
@@ -90,7 +97,7 @@ public:
     static constexpr int kMenuItemCount = 3;   // New Game / Continue / Settings
 
     void open();                       // show the title, reset to the Menu page
-    void close() { open_ = false; closeConfirm(); }
+    void close() { open_ = false; closeConfirm(); closeLanguageConfirm(); }
     bool isOpen() const { return open_; }
 
     TitlePage page() const { return page_; }
@@ -141,6 +148,15 @@ public:
     bool newGameConfirmYesSelected() const { return confirmYes_; }
     void setNewGameConfirmYesSelected(bool yes) { confirmYes_ = yes; }
 
+    // ---- "Switch to XXX language?" confirm dialog ----
+    // Shown when the player activates/taps a language row on the Settings page, instead of
+    // applying it instantly -- a single mis-tap on a touch device (no keyboard, no Esc) used to
+    // have no way back. No/Esc leaves the active language untouched.
+    bool languageConfirmOpen() const { return confirmLanguage_; }
+    int languageConfirmIndex() const { return confirmLangIdx_; }
+    bool languageConfirmYesSelected() const { return confirmLangYes_; }
+    void setLanguageConfirmYesSelected(bool yes) { confirmLangYes_ = yes; }
+
 private:
     bool open_ = false;
     TitlePage page_ = TitlePage::Menu;
@@ -157,6 +173,11 @@ private:
     int confirmSlot_ = 0;           // slot the dialog is about (1-based)
     bool confirmYes_ = true;        // which answer is highlighted (Yes is the default)
     void closeConfirm() { confirmNewGame_ = false; confirmSlot_ = 0; confirmYes_ = true; }
+
+    bool confirmLanguage_ = false;  // dialog visible
+    int confirmLangIdx_ = 0;        // language row the dialog is about
+    bool confirmLangYes_ = true;    // which answer is highlighted (Yes is the default)
+    void closeLanguageConfirm() { confirmLanguage_ = false; confirmLangIdx_ = 0; confirmLangYes_ = true; }
 };
 
 } // namespace toms

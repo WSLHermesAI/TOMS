@@ -3,10 +3,24 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "咕嚕……（史萊姆擋住了去路）",
+      "text": {
+        "zh_TW": "咕嚕……（史萊姆擋住了去路）",
+        "en": "Glorp... A slime blocks the way.",
+        "zh_CN": "咕噜……（史莱姆挡住了去路）",
+        "ja": "ぐちゅり……（スライムが行く手を阻む）",
+        "ko": "꿀렁... (슬라임이 길을 막아선다)",
+        "es": "Glup... (un limo bloquea el camino)"
+      },
       "choices": [
         {
-          "label": "（戰鬥）",
+          "label": {
+            "zh_TW": "（戰鬥）",
+            "en": "(Fight)",
+            "zh_CN": "（战斗）",
+            "ja": "（戦闘）",
+            "ko": "(전투)",
+            "es": "(Combate)"
+          },
           "next": null
         }
       ]

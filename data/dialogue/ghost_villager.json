@@ -3,10 +3,24 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "別怕……公主還活著。她在塔頂，等著被拯救。",
+      "text": {
+        "zh_TW": "別怕……公主還活著。她在塔頂，等著被拯救。",
+        "en": "Don't be afraid... the princess is still alive. She's at the top of the tower, waiting to be saved.",
+        "zh_CN": "别怕……公主还活着。她在塔顶，等着被拯救。",
+        "ja": "怖がらなくていい……王女はまだ生きている。塔の頂で、救われるのを待っているのだ。",
+        "ko": "두려워하지 마……공주는 아직 살아 있다. 탑 꼭대기에서 구원받기를 기다리고 있어.",
+        "es": "No temas... la princesa aún vive. Está en lo alto de la torre, esperando ser rescatada."
+      },
       "choices": [
         {
-          "label": "我會帶她回來。",
+          "label": {
+            "zh_TW": "我會帶她回來。",
+            "en": "I will bring her back.",
+            "zh_CN": "我会带她回来。",
+            "ja": "必ず連れ戻します。",
+            "ko": "제가 반드시 데려오겠습니다.",
+            "es": "La traeré de vuelta."
+          },
           "next": null
         }
       ]

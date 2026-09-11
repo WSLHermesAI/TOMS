@@ -1,6 +1,13 @@
 {
   "id": "stage_02",
-  "name": "森林小徑",
+  "name": {
+    "zh_TW": "森林小徑",
+    "en": "Forest Path",
+    "zh_CN": "森林小径",
+    "ja": "森の小道",
+    "ko": "숲길",
+    "es": "El Sendero del Bosque"
+  },
   "subtitle": "Forest Path",
   "index": 2,
   "width": 19,
@@ -53,8 +60,22 @@
     "#.@#.....#.U......#",
     "###################"
   ],
-  "story_note": "老巫師：『遇敵即自動輪流出拳，看準攻防再上。』",
-  "preview": "建議 ATK 10+ / DEF 4+ -- 本層敵人：史萊姆、暗影蝙蝠",
+  "story_note": {
+    "zh_TW": "老巫師：『遇敵即自動輪流出拳，看準攻防再上。』",
+    "en": "Old Sorcerer: \"When you meet an enemy, blows are traded automatically in turn — size up attack and defense before you engage.\"",
+    "zh_CN": "老巫师：『遇敌即自动轮流出拳，看准攻防再上。』",
+    "ja": "老魔導士「敵に出会えば自動で互いに一撃ずつ交わし合う——攻撃力と防御力をよく見極めてから挑め。」",
+    "ko": "노마법사: \"적을 만나면 자동으로 번갈아 공격을 주고받는다——공격력과 방어력을 잘 살핀 뒤 나서라.\"",
+    "es": "Viejo Hechicero: \"Al encontrar a un enemigo, los golpes se intercambian automáticamente por turnos: calcula bien el ataque y la defensa antes de enfrentarte.\""
+  },
+  "preview": {
+    "zh_TW": "建議 ATK 10+ / DEF 4+ -- 本層敵人：史萊姆、暗影蝙蝠",
+    "en": "Suggested ATK 10+ / DEF 4+ -- Enemies on this floor: Slime, Shadow Bat",
+    "zh_CN": "建议 ATK 10+ / DEF 4+ -- 本层敌人：史莱姆、暗影蝙蝠",
+    "ja": "推奨 ATK 10+ / DEF 4+ -- このフロアの敵：スライム、シャドウバット",
+    "ko": "권장 ATK 10+ / DEF 4+ -- 이 층의 적: 슬라임, 섀도우 배트",
+    "es": "Recomendado ATK 10+ / DEF 4+ -- Enemigos de este piso: Limo, Murciélago Sombrío"
+  },
   "connect": {
     "up": "stage_03",
     "down": "stage_01"

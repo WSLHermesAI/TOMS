@@ -1,6 +1,13 @@
 {
   "id": "stage_08",
-  "name": "神殿",
+  "name": {
+    "zh_TW": "神殿",
+    "en": "Sanctum",
+    "zh_CN": "神殿",
+    "ja": "神殿",
+    "ko": "신전",
+    "es": "El Santuario"
+  },
   "subtitle": "Sanctum",
   "index": 8,
   "width": 28,
@@ -62,8 +69,22 @@
     "#.@#.....#..#.....#..#..#.U#",
     "############################"
   ],
-  "story_note": "侍女：『頂層有禁咒機關，唯有擊碎沃卡司本體才能解除。』",
-  "preview": "建議 ATK 22+ / DEF 16+ -- 本層敵人：小惡魔、怨靈",
+  "story_note": {
+    "zh_TW": "侍女：『頂層有禁咒機關，唯有擊碎沃卡司本體才能解除。』",
+    "en": "Handmaiden: \"The top floor holds a forbidden ward — only by shattering Vorkath himself can it be undone.\"",
+    "zh_CN": "侍女：『顶层有禁咒机关，唯有击碎沃卡司本体才能解除。』",
+    "ja": "侍女「最上階には禁呪の仕掛けがある——Vorkath 本体を打ち砕かぬ限り、それは解けぬ。」",
+    "ko": "시녀: \"최상층에는 금주의 장치가 있다——Vorkath 본체를 부수지 않는 한 풀리지 않는다.\"",
+    "es": "Doncella: \"En el piso superior hay un mecanismo de magia prohibida: solo destruyendo al propio Vorkath podrá deshacerse.\""
+  },
+  "preview": {
+    "zh_TW": "建議 ATK 22+ / DEF 16+ -- 本層敵人：小惡魔、怨靈",
+    "en": "Suggested ATK 22+ / DEF 16+ -- Enemies on this floor: Imp, Wraith",
+    "zh_CN": "建议 ATK 22+ / DEF 16+ -- 本层敌人：小恶魔、怨灵",
+    "ja": "推奨 ATK 22+ / DEF 16+ -- このフロアの敵：インプ、怨霊",
+    "ko": "권장 ATK 22+ / DEF 16+ -- 이 층의 적: 임프, 원령",
+    "es": "Recomendado ATK 22+ / DEF 16+ -- Enemigos de este piso: Diablillo, Espectro"
+  },
   "encounter_overrides": {
     "5": "dialogue_gate",
     "6": "dialogue_gate"

@@ -19,7 +19,11 @@ const char* toString(EquipmentSlot s);
 EquipmentSlot equipmentSlotFromString(const std::string& s);   // unrecognized -> Weapon (fail-safe default)
 
 struct EquipmentDefinition {
-    std::string id, name, sprite, desc;
+    std::string id, sprite;
+    // Raw json (plain string or {code:text} multi-language map) -- resolve via
+    // Locale::field() at display time, not here (equipmentFromJson has no Locale access,
+    // and is called before the title phase sets the player's language anyway).
+    nlohmann::json name, desc;
     EquipmentSlot slot = EquipmentSlot::Weapon;
     int statAtk = 0, statDef = 0;
     PowerBarParams bar;              // baseline geometry by default (PowerBarParams{})

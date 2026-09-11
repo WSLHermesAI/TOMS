@@ -3,23 +3,58 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "吾曾為宮廷學者。Vorkath 之弱，在於純淨之攻與堅毅之防。",
+      "text": {
+        "zh_TW": "吾曾為宮廷學者。Vorkath 之弱，在於純淨之攻與堅毅之防。",
+        "en": "I was once a court scholar. Vorkath's weakness lies in pure attack and unyielding defense.",
+        "zh_CN": "吾曾为宫廷学者。Vorkath 之弱，在于纯净之攻与坚毅之防。",
+        "ja": "我はかつて宮廷学者であった。Vorkath の弱点は、純粋な攻撃力と揺るがぬ防御力にある。",
+        "ko": "나는 한때 궁정 학자였다. Vorkath의 약점은 순수한 공격력과 굳건한 방어력에 있다.",
+        "es": "Yo era, en otro tiempo, un erudito de la corte. La debilidad de Vorkath reside en el ataque puro y la defensa inquebrantable."
+      },
       "choices": [
         {
-          "label": "意思是？",
+          "label": {
+            "zh_TW": "意思是？",
+            "en": "What do you mean?",
+            "zh_CN": "意思是？",
+            "ja": "それはどういう意味だ？",
+            "ko": "그게 무슨 뜻이지?",
+            "es": "¿Qué quieres decir?"
+          },
           "next": "weak"
         },
         {
-          "label": "受教了。",
+          "label": {
+            "zh_TW": "受教了。",
+            "en": "I've learned much.",
+            "zh_CN": "受教了。",
+            "ja": "勉強になった。",
+            "ko": "가르침 감사하다.",
+            "es": "He aprendido mucho."
+          },
           "next": null
         }
       ]
     },
     "weak": {
-      "text": "把攻防寶石疊滿，他的高防便如紙糊。切記。",
+      "text": {
+        "zh_TW": "把攻防寶石疊滿，他的高防便如紙糊。切記。",
+        "en": "Stack your attack and defense gems to the fullest, and his high defense will crumble like paper. Remember this.",
+        "zh_CN": "把攻防宝石叠满，他的高防便如纸糊。切记。",
+        "ja": "攻撃と防御の宝石を極限まで重ねよ。さすれば奴の高い防御力も紙のように崩れよう。忘れるな。",
+        "ko": "공격과 방어 보석을 최대한 쌓아라. 그러면 그의 높은 방어력도 종이처럼 허물어질 것이다. 명심해라.",
+        "es": "Acumula al máximo tus gemas de ataque y defensa, y su alta defensa se desmoronará como papel. Recuérdalo."
+      },
       "choices": [
         {
-          "label": "我會變強。",
+          "label": {
+            "zh_TW": "我會變強。",
+            "en": "I will grow strong.",
+            "zh_CN": "我会变强。",
+            "ja": "必ず強くなってみせる。",
+            "ko": "반드시 강해지겠다.",
+            "es": "Me haré más fuerte."
+          },
           "next": null
         }
       ]

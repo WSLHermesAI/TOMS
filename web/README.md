@@ -1,10 +1,12 @@
 # Tower of the Sorcerer — Web (Emscripten / WebGL2)
 
 A browser build of the game. The Vulkan renderer is replaced by a WebGL2
-backend (`src/renderer_webgl.cpp`); everything else (game logic, stages, CJK
-text, combat, dialogue) is shared with the desktop build through the
-`IRenderer` interface. The WebGL build is fully isolated from the
-Windows/Linux Vulkan build — no Vulkan, no miniaudio.
+backend (`src/renderer_webgl.cpp`); everything else (game logic, stages,
+multi-language text, combat, dialogue, SFX) is shared with the desktop build
+through the `IRenderer` interface (and, for audio, miniaudio's own Web Audio
+backend — see `src/game/Audio.cpp`). The WebGL build is fully isolated from
+the Windows/Linux Vulkan build — no Vulkan, but audio and font rendering both
+use the exact same code path as desktop.
 
 ## Run locally
 Serve the folder over HTTP (Emscripten needs `fetch`/workers; opening the

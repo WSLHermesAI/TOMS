@@ -1,6 +1,13 @@
 {
   "id": "stage_03",
-  "name": "門樓",
+  "name": {
+    "zh_TW": "門樓",
+    "en": "Gatehouse",
+    "zh_CN": "门楼",
+    "ja": "門楼",
+    "ko": "성문 누각",
+    "es": "La Casa de la Puerta"
+  },
   "subtitle": "Gatehouse",
   "index": 3,
   "width": 22,
@@ -56,8 +63,22 @@
     "#.@..D#........#.....#",
     "######################"
   ],
-  "story_note": "石巨人守著黃門；擊敗它取得黃鑰匙，門後是藏書閣。",
-  "preview": "建議 ATK 14+ / DEF 6+ -- 本層敵人：石巨人、史萊姆",
+  "story_note": {
+    "zh_TW": "石巨人守著黃門；擊敗它取得黃鑰匙，門後是藏書閣。",
+    "en": "A Stone Golem guards the yellow door; defeat it to obtain the yellow key. Beyond the door lies the Library.",
+    "zh_CN": "石巨人守着黄门；击败它取得黄钥匙，门后是藏书阁。",
+    "ja": "ストーンゴーレムが黄色い扉を守っている。倒せば黄色い鍵が手に入り、扉の先には書庫がある。",
+    "ko": "스톤 골렘이 노란 문을 지키고 있다. 물리치면 노란 열쇠를 얻을 수 있으며, 문 너머에는 서고가 있다.",
+    "es": "Un Gólem de Piedra custodia la puerta amarilla; derrótalo para obtener la llave amarilla. Tras la puerta se halla la Biblioteca."
+  },
+  "preview": {
+    "zh_TW": "建議 ATK 14+ / DEF 6+ -- 本層敵人：石巨人、史萊姆",
+    "en": "Suggested ATK 14+ / DEF 6+ -- Enemies on this floor: Stone Golem, Slime",
+    "zh_CN": "建议 ATK 14+ / DEF 6+ -- 本层敌人：石巨人、史莱姆",
+    "ja": "推奨 ATK 14+ / DEF 6+ -- このフロアの敵：ストーンゴーレム、スライム",
+    "ko": "권장 ATK 14+ / DEF 6+ -- 이 층의 적: 스톤 골렘, 슬라임",
+    "es": "Recomendado ATK 14+ / DEF 6+ -- Enemigos de este piso: Gólem de Piedra, Limo"
+  },
   "connect": {
     "up": "stage_04",
     "down": "stage_02"

@@ -51,6 +51,13 @@ public:
     // How many keys the loaded table defines (used by tests to prove the file was parsed).
     size_t stringCount() const { return strings_.size(); }
 
+    // Resolves a CONTENT json field that may be either a plain string (not yet converted --
+    // returned as-is, so migrating data/*.json to multi-language fields can happen file by
+    // file) or a {code: text} object (current language -> en -> first available -> ""), the
+    // same fallback order as tr(). Used for items/equipment/missions/dialogue/etc., where the
+    // translatable text lives inline in content data rather than under a text.json key.
+    std::string field(const nlohmann::json& j) const;
+
 private:
     std::vector<LanguageInfo> langs_;
     // key -> (language code -> text)

@@ -1,6 +1,13 @@
 {
   "id": "stage_09",
-  "name": "王座前室",
+  "name": {
+    "zh_TW": "王座前室",
+    "en": "Throne Antechamber",
+    "zh_CN": "王座前室",
+    "ja": "玉座の前室",
+    "ko": "옥좌 앞방",
+    "es": "La Antesala del Trono"
+  },
   "subtitle": "Throne Antechamber",
   "index": 9,
   "width": 31,
@@ -65,8 +72,22 @@
     "#.@..D.........#..............#",
     "###############################"
   ],
-  "story_note": "公主 Liora：『我信你。打碎他，安穩之星便會重燃。』",
-  "preview": "建議 ATK 24+ / DEF 18+ -- 本層敵人：小惡魔、怨靈",
+  "story_note": {
+    "zh_TW": "公主 Liora：『我信你。打碎他，安穩之星便會重燃。』",
+    "en": "Princess Liora: \"I believe in you. Shatter him, and the Star of Peace will burn again.\"",
+    "zh_CN": "公主 Liora：『我信你。打碎他，安稳之星便会重燃。』",
+    "ja": "王女 Liora「あなたを信じるわ。彼を打ち砕けば、安寧の星は再び灯るはず。」",
+    "ko": "공주 Liora: \"당신을 믿어요. 그를 부수면, 평온의 별이 다시 타오를 거예요.\"",
+    "es": "Princesa Liora: \"Confío en ti. Destrúyelo, y la Estrella de la Paz volverá a arder.\""
+  },
+  "preview": {
+    "zh_TW": "建議 ATK 24+ / DEF 18+ -- 本層敵人：小惡魔、怨靈",
+    "en": "Suggested ATK 24+ / DEF 18+ -- Enemies on this floor: Imp, Wraith",
+    "zh_CN": "建议 ATK 24+ / DEF 18+ -- 本层敌人：小恶魔、怨灵",
+    "ja": "推奨 ATK 24+ / DEF 18+ -- このフロアの敵：インプ、怨霊",
+    "ko": "권장 ATK 24+ / DEF 18+ -- 이 층의 적: 임프, 원령",
+    "es": "Recomendado ATK 24+ / DEF 18+ -- Enemigos de este piso: Diablillo, Espectro"
+  },
   "encounter_overrides": {
     "5": "dialogue_gate",
     "6": "dialogue_gate"

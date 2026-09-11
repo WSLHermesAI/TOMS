@@ -3,10 +3,24 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "小惡魔：『主人在等你獻祭！』",
+      "text": {
+        "zh_TW": "小惡魔：『主人在等你獻祭！』",
+        "en": "Imp: \"The master awaits your sacrifice!\"",
+        "zh_CN": "小恶魔：『主人在等你献祭！』",
+        "ja": "インプ「主様がお前の生贄を待っておられる！」",
+        "ko": "임프: \"주인님께서 네 제물을 기다리고 계신다!\"",
+        "es": "Diablillo: \"¡El amo espera tu sacrificio!\""
+      },
       "choices": [
         {
-          "label": "你已無所畏懼——動手吧！",
+          "label": {
+            "zh_TW": "你已無所畏懼——動手吧！",
+            "en": "You fear nothing now — let's finish this!",
+            "zh_CN": "你已无所畏惧——动手吧！",
+            "ja": "もう何も恐れはしない——かかってこい！",
+            "ko": "이제 두려울 게 없다——덤벼라!",
+            "es": "Ya no temes nada... ¡Acabemos con esto!"
+          },
           "requires": { "all": [
             { "type": "statAtLeast", "stat": "atk", "value": 20 },
             { "type": "statAtLeast", "stat": "def", "value": 12 }
@@ -15,7 +29,14 @@
           "action": { "type": "enterBattle" }
         },
         {
-          "label": "（戰鬥）",
+          "label": {
+            "zh_TW": "（戰鬥）",
+            "en": "(Fight)",
+            "zh_CN": "（战斗）",
+            "ja": "（戦闘）",
+            "ko": "(전투)",
+            "es": "(Combate)"
+          },
           "next": null,
           "action": { "type": "enterBattle" }
         }

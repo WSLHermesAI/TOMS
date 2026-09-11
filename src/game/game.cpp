@@ -5,7 +5,18 @@
 #include "scene.h"  // render binding: GameObject / SpriteNode / TextNode / FullScreenSplash
 
 // TextNode draws through Game's font; bind it once to the live Game instance.
-namespace { Game* g_textGame = nullptr; }
+namespace {
+Game* g_textGame = nullptr;
+// Substitutes one "{key}" placeholder in a locale_.tr() string with `val` -- the same
+// pattern already used for "{slot}" in the title-screen confirm dialog, generalized so
+// combat-log/toast strings with an embedded dynamic value don't each hand-roll find/replace.
+std::string trParam(std::string s, const std::string& key, const std::string& val) {
+    std::string token = "{" + key + "}";
+    size_t p = s.find(token);
+    if (p != std::string::npos) s.replace(p, token.size(), val);
+    return s;
+}
+}
 void toms_TextNodeDraw(const std::string& s, float x, float y, float sz, const float* t) {
     if (g_textGame) g_textGame->drawTextPublic(s, x, y, sz, t);
 }
@@ -158,14 +169,14 @@ bool Game::loadAssets(const std::string& assetDir) {
     // upload full sprite atlas (backend packs the grid + uploads)
     ren->loadSprites(layers, SW, SH);
     // ---- build the font atlas ----
-    // Desktop: runtime TTF -> atlas via stb_truetype (no offline PIL step needed).
-    // Web: load the small pre-baked font_atlas.png + .json (TTF is too big to ship).
-#ifndef __EMSCRIPTEN__
+    // Runtime atlas build. Desktop: stb_truetype from bundled TTFs (wqy-zenhei for Han,
+    // Noto Sans JP/KR paired in for Kana/Hangul -- see Font::buildFromFiles). Web: an
+    // offscreen Canvas 2D context using the browser's own system fonts (see
+    // Font::buildFromCanvas) -- no TTF file ships in the .data bundle at all, since every
+    // major browser already carries full CJK/Latin/etc. font coverage. Both produce the
+    // identical atlas layout/metric convention, so everything below this block (and all
+    // of Game::drawText()/measureText()) is unaware of which backend built it.
     {
-        std::string ttf = assetDir + "/wqy-zenhei.ttc";
-        if (const char* e = std::getenv("TOMS_FONT")) ttf = e;
-        else if (!std::filesystem::exists(ttf))
-            ttf = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc";
         // collect every codepoint used by shipped JSON + HUD labels
         std::vector<std::string> jsonFiles;
         for (auto& p : std::filesystem::recursive_directory_iterator(dataDir + "/../data"))
@@ -176,9 +187,24 @@ bool Game::loadAssets(const std::string& assetDir) {
         std::string hud = " #'()*+,-./0123456789:<>@ABCDEFGHIKLOPRSTUVXYZ^_abcdefghijklmnopqrstuvwxy·—…→▶、。「」『』一上下不世並中主久之也了予亡交人什仇仍他付以件份但低住你使來侍便保信們倒值做傳價先入全公共兵具再凋凡出切列別利到則前副力加動勝化匙十升卡印即卷去反取受口可史右司吃合同向否吧吸吾告周命和咒咕唯商啟嘶嚕囚回國圖土在地堅塔墓外大奪女她如姆字存學它守安官定室宮家容寄寶封將對小少展層屬嵌巨巫已希師帶幣平年序店座廳廷弱強形影後徑得從復必怎怕思性怨怪恐恢恨惡意感懂懼成我戰所才打承把拉拯拳持接提揭援損撲撼擇擊擋攀收攻放效救敗教敢散敵數方於明星是晶暗書曾最會有望本村林枚果枯格森樓標機橫檻歐正此歸殿毅每民水永求決沃沉泉法注洞活流消淨深源準滿災為焉煉燃營物獲獻王玩現瓶生用留疊白的目直看真睡知石碎確示祝神祭禁禍福禦穩穴窟立章第等糊紅純紙級終給經緣繼續翅習老者而聖能自與莉莊萊萎著藍藏藥處蝙蝠血行被要見親角解言託記試話該語謝證護變讓買購贈走起足路跳踏身軍軸輕輪迎送透這逝進遇道達選還那重量金錢鍵鑰鑲長門閉開閣關防降陛除雙離零需露靈頂須頭願驗骷髏體高鬥魂魔麼黃黎黑點！（），：；？";
         std::vector<uint32_t> cps = Font::collectFromFiles(jsonFiles, hud);
         font_ = std::make_shared<Font>("game-font");
-        if (!font_->buildFromFile(ttf, cps, 32, 24)) {
+#ifdef __EMSCRIPTEN__
+        if (!font_->buildFromCanvas(cps, 32, 24)) {
+            std::fprintf(stderr, "font build failed (canvas)\n"); return false;
+        }
+#else
+        std::string ttf = assetDir + "/wqy-zenhei.ttc";
+        if (const char* e = std::getenv("TOMS_FONT")) ttf = e;
+        else if (!std::filesystem::exists(ttf))
+            ttf = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc";
+        std::vector<std::string> fontFiles = {
+            ttf,
+            assetDir + "/fonts/NotoSansJP-Regular.ttf",
+            assetDir + "/fonts/NotoSansKR-Regular.ttf",
+        };
+        if (!font_->buildFromFiles(fontFiles, cps, 32, 24)) {
             std::fprintf(stderr, "font build failed: %s\n", ttf.c_str()); return false;
         }
+#endif
         ren->loadFont(font_->atlas(), font_->atlasW(), font_->atlasH());
         fontW = (int)font_->atlasW(); fontH = (int)font_->atlasH();
         fontCols = 32; fontCell = 32;
@@ -187,39 +213,6 @@ bool Game::loadAssets(const std::string& assetDir) {
             if (uv) fontMap[cp] = *uv;
         }
     }
-#else
-    {
-        int w,h,ch; unsigned char* d = stbi_load((assetDir+"/font_atlas.png").c_str(), &w,&h,&ch,4);
-        if (!d) { std::fprintf(stderr, "font fail\n"); return false; }
-        std::vector<uint8_t> px(d, d + w*h*4); fontW=w; fontH=h;
-        ren->loadFont(px, w, h);
-        stbi_image_free(d);
-        std::ifstream f(assetDir+"/font_atlas.png"); // (PNG loaded above; json via readJsonFile)
-        nlohmann::json j = readJsonFile(assetDir+"/font_atlas.json");
-        fontCols = j["cols"]; fontCell = j["cell"];
-        for (auto& [ch2, rc] : j["chars"].items()) {
-            uint32_t code = 0; const std::string& ks = ch2;
-            // New atlas: keys are "U+XXXX" (or "UXXXX") hex codepoints (unambiguous).
-            if (ks.size() >= 3 && ks[0] == 'U') {
-                size_t hexStart = (ks[1] == '+') ? 2 : 1;
-                code = (uint32_t)std::strtoul(ks.substr(hexStart).c_str(), nullptr, 16);
-            } else {
-                // Legacy atlas: literal UTF-8 char key -> decode first codepoint.
-                size_t i = 0;
-                if (i < ks.size()) {
-                    unsigned char c0 = (unsigned char)ks[i];
-                    if (c0 < 0x80) code = c0;
-                    else if ((c0 & 0xE0) == 0xC0) code = ((c0 & 0x1F) << 6) | (ks[i+1] & 0x3F);
-                    else if ((c0 & 0xF0) == 0xE0) code = ((c0 & 0x0F) << 12) | ((ks[i+1] & 0x3F) << 6) | (ks[i+2] & 0x3F);
-                    else if ((c0 & 0xF8) == 0xF0) code = ((c0 & 0x07) << 18) | ((ks[i+1] & 0x3F) << 12) | ((ks[i+2] & 0x3F) << 6) | (ks[i+3] & 0x3F);
-                }
-            }
-            if (code == 0) continue;
-            std::array<float,4> a = {rc["u0"], rc["v0"], rc["u1"], rc["v1"]};
-            fontMap[code] = a;
-        }
-    }
-#endif
 
     // load enemy templates
     nlohmann::json ej = readJsonFile(assetDir+"/../data/enemies.json");
@@ -251,7 +244,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     // modalActive() includes the title, so the world main.cpp loads next sits inert behind it
     // until the player chooses New Game or Continue. data/text.json is under data/, which the
     // TTF codepoint collector above already globs, so its glyphs are in the atlas before this
-    // runs (the browser build's pre-baked atlas needs regenerating with gen_font_atlas.py).
+    // runs -- on both desktop and web, since the atlas is now built the same way on both.
     {
         toms::ensureSaveDir(toms::defaultSaveDir());
         bool haveSettings = false;
@@ -308,7 +301,7 @@ void Game::loadStage(const std::string& id) {
         std::string alt = dataDir + "/../data/stages/" + noUs + ".json";
         if (std::filesystem::exists(alt)) path = alt;
     }
-    st = parseStage(path);
+    st = parseStage(path, locale_);
     // Milestone 7: parseStage() rebuilds every entity fresh from JSON on every call (stairs,
     // Stage Select, etc.), so re-apply any previously-persisted Defeated/Collected status here --
     // otherwise a monster the player already beat or an item they already picked up would come
@@ -592,21 +585,23 @@ void Game::draw() {
         ren->drawSprite(spriteQuad(ox + pl.x*ts + inset, oy + pl.y*ts + inset, sSize, sSize, spriteLayer("player"), white));
 
         ren->setNode(NODE_CHAR);
-        drawText("魔法塔 Tower of the Sorcerer — " + st.name + " (" + std::to_string(st.index) + "/" + std::to_string(totalStages) + ")", 16, 16, 22, tint);
+        drawText(locale_.tr("game.title") + " — " + st.name + " (" + std::to_string(st.index) + "/" + std::to_string(totalStages) + ")", 16, 16, 22, tint);
         float bx = 16, by = 44;
         drawBar(bx, by, 200, 14, (float)pl.hp/pl.maxhp, C4(0.9f,0.2f,0.2f,1));
         drawText("HP " + std::to_string(pl.hp) + "/" + std::to_string(pl.maxhp), bx+210, by, 18, tint);
         drawText("ATK " + std::to_string(pl.atk) + "  DEF " + std::to_string(pl.def) + "  LV " + std::to_string(pl.lv), bx, by+20, 18, tint);
-        drawText("GOLD " + std::to_string(pl.gold) + "  EXP " + std::to_string(pl.exp) + "  鑰匙 Y"+std::to_string(pl.key_yellow)+" B"+std::to_string(pl.key_blue)+" R"+std::to_string(pl.key_red) + "  道具x" + std::to_string(pl.inv.size()) + " (I)", bx, by+42, 16, tint);
+        drawText("GOLD " + std::to_string(pl.gold) + "  EXP " + std::to_string(pl.exp) + "  " + locale_.tr("hud.keys") + " Y"+std::to_string(pl.key_yellow)+" B"+std::to_string(pl.key_blue)+" R"+std::to_string(pl.key_red) + "  " + locale_.tr("hud.items") + "x" + std::to_string(pl.inv.size()) + " (I)", bx, by+42, 16, tint);
         drawText(st.story_note, 16, H-30, 16, C4(0.8f,0.85f,1.0f,1));
 
         ren->setNode(NODE_STORE);
         if (!storeOpen) drawStoreIcon();
+        if (!storeOpen && !inGameMenuOpen_) drawMenuIcon();
         storeBtnRects_.clear();
         drawStoreToast();
         drawGamepad();
         drawStylingSpikeBackdrop();
         if (stairsConfirmOpen_) drawStairsConfirmDialog();
+        if (inGameMenuOpen_) drawInGameMenu();
         ren->end();
         return;
     }
@@ -616,11 +611,11 @@ void Game::draw() {
         ren->setNode(NODE_BATTLE);
         drawFocusSplash();
         float cx = W/2 - 250;
-        drawText("⚔ 戰鬥！ " + cs.enemy.name, cx, 120, 26, C4(1,0.6f,0.4f,1));
+        drawText(locale_.tr("battle.title") + " " + cs.enemy.name, cx, 120, 26, C4(1,0.6f,0.4f,1));
         ren->drawSprite(spriteQuad(cx, 170, 96, 96, spriteLayer("player"), white));
         ren->drawSprite(spriteQuad(cx+350, 170, 96, 96, spriteLayer(cs.enemy.boss?"boss_demonlord":entSprite(cs.enemy.id)), white));
         drawBar(cx, 280, 200, 16, (float)cs.playerHP/pl.maxhp, C4(0.3f,0.9f,0.4f,1));
-        drawText("你 HP " + std::to_string(cs.playerHP), cx+210, 280, 18, tint);
+        drawText(locale_.tr("battle.you") + " HP " + std::to_string(cs.playerHP), cx+210, 280, 18, tint);
         drawBar(cx+350, 280, 200, 16, (float)std::max(0,cs.enemyHP)/cs.enemy.hp, C4(0.9f,0.3f,0.3f,1));
         drawText(cs.enemy.name + " HP " + std::to_string(std::max(0,cs.enemyHP)), cx+560, 280, 18, tint);
         drawText(cs.log, cx, 320, 18, tint);
@@ -635,15 +630,16 @@ void Game::draw() {
             toms::PowerBarParams bar = isDefensePhase ? toms::effectiveDefenseBar(equipped_, equipmentDefs_)
                                                        : toms::effectiveAttackBar(equipped_, equipmentDefs_);
             float pos = cs.charging ? toms::simulatePosition(bar, cs.chargeMs / 1000.0f) : cs.lastPosition;
-            drawText(isDefensePhase ? "防禦（按住 Enter/Space 或下方按鈕蓄力，放開格擋）" : "攻擊（按住 Enter/Space 或下方按鈕蓄力，放開出擊）",
+            drawText(isDefensePhase ? locale_.tr("battle.defense_prompt") : locale_.tr("battle.attack_prompt"),
                       cx, 345, 15, C4(0.9f, 0.9f, 1.0f, 1));
             drawPowerBar(cx, 365, 500, 22, bar, pos);
             // On-canvas action button: the browser build has no keyboard, so without this there is
             // nothing in the battle scene to press -- the power bar swept forever and the fight
             // never resolved. Press and hold it to charge, release to strike (identical to holding
             // Enter/Space; handleTouch treats the whole scene as the same surface).
-            // The button is sized for the browser's bitmap font, whose CJK advance is a fixed cell
-            // (~32 px regardless of the size argument), so keep the label to about 8 glyphs.
+            // Glyph advances are now tight/proportional (see Font::buildFromFiles), same as
+            // desktop, so a longer translated label just measures wider instead of overflowing a
+            // fixed cell grid -- no per-language length cap needed here any more.
             float bW = 400, bH = 56, bX = cx + (500 - bW) * 0.5f, bY = 402;
             combatBtnRect_[0] = (int)bX; combatBtnRect_[1] = (int)bY;
             combatBtnRect_[2] = (int)bW; combatBtnRect_[3] = (int)bH;
@@ -654,12 +650,12 @@ void Game::draw() {
             else      { cb.tint[0]=0.24f; cb.tint[1]=0.32f; cb.tint[2]=0.46f; cb.tint[3]=1; }
             ren->drawSprite(cb);
             std::string btnLabel;
-            if (held)                btnLabel = "蓄力中 放開！";
-            else if (isDefensePhase) btnLabel = "按住蓄力 放開格擋";
-            else                     btnLabel = "按住蓄力 放開出擊";
+            if (held)                btnLabel = locale_.tr("battle.btn_charging");
+            else if (isDefensePhase) btnLabel = locale_.tr("battle.btn_hold_defense");
+            else                     btnLabel = locale_.tr("battle.btn_hold_attack");
             drawText(btnLabel, bX + 44, bY + 18, 16, C4(1,1,1,1));
         } else {
-            drawText("（按任意鍵繼續）", cx, 350, 16, C4(1,1,0.6f,1));
+            drawText(locale_.tr("battle.continue_hint"), cx, 350, 16, C4(1,1,0.6f,1));
         }
         drawStylingSpikeBackdrop();
         ren->end();
@@ -673,7 +669,7 @@ void Game::draw() {
         Quad box; box.rect[0]=40; box.rect[1]=H-200; box.rect[2]=W-80; box.rect[3]=170;
         box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1; box.solid=true;
         box.tint[0]=0.1f;box.tint[1]=0.12f;box.tint[2]=0.2f;box.tint[3]=0.95f; ren->drawSprite(box);
-        std::string txt = dlgData["nodes"][dlgNode]["text"];
+        std::string txt = locale_.field(dlgData["nodes"][dlgNode]["text"]);
         drawText(txt, 60, H-180, 20, tint);
         for (size_t i = 0; i < dlgChoices.size(); i++) {
             float ty = H-140 + (float)i*24;
@@ -764,8 +760,17 @@ void Game::handleTouch(float px, float py, int phase) {
     //     are NOT gamepad rects, so this must run BEFORE the gamepad hit-test below,
     //     otherwise taps on store UI hit `id<0` and are dropped. ---
     if (storeModal()) { if (phase == 0) storeClick(px, py); return; }
-    // Normal play: a tap on the store icon (top-right) opens the shop.
+    // In-game menu (Save/Settings/Back to Title): swallow every tap while it is up, same
+    // pattern as the store overlay above.
+    if (inGameMenuOpen_) { if (phase == 0) inGameMenuClick(px, py); return; }
+    // Normal play: a tap on the gear icon (top-right, left of the store icon) opens the
+    // in-game menu; a tap on the store icon opens the shop.
     if (!modalActive() && phase == 0) {
+        if (px >= menuIconRect_[0] && px <= menuIconRect_[0]+menuIconRect_[2] &&
+            py >= menuIconRect_[1] && py <= menuIconRect_[1]+menuIconRect_[3]) {
+            openInGameMenu();
+            return;
+        }
         storeClick(px, py);
         if (storeOpen) return;   // icon tapped -> store opened; consume this tap
     }
@@ -898,7 +903,7 @@ void Game::applyItem(const std::string& id) {
         int need = pl.lv * 30;
         while (pl.exp >= need) {
             pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30;
-            pushNotification("升級了！LV " + std::to_string(pl.lv));
+            pushNotification(locale_.tr("battle.levelup") + std::to_string(pl.lv));
         }
     }
     if (eff.contains("warp")) {
@@ -954,11 +959,14 @@ int Game::spriteForItem(const std::string& id) const {
 }
 std::string Game::itemName(const std::string& id) const {
     auto it = itemDefs.find(id);
-    return it == itemDefs.end() ? id : it->second.value("name", id);
+    if (it == itemDefs.end() || !it->second.contains("name")) return id;
+    std::string s = locale_.field(it->second["name"]);
+    return s.empty() ? id : s;
 }
 std::string Game::itemDesc(const std::string& id) const {
     auto it = itemDefs.find(id);
-    return it == itemDefs.end() ? "" : it->second.value("desc", "");
+    if (it == itemDefs.end() || !it->second.contains("desc")) return "";
+    return locale_.field(it->second["desc"]);
 }
 void Game::drawFocusSplash() {
     if (std::getenv("TOMS_NOSPLASH")) return;  // TEST: toggle splash off to isolate bug
@@ -990,7 +998,7 @@ void Game::drawInventory() {
 
     auto effectSummary = [&](const std::string& id) -> std::string {
         auto it = itemDefs.find(id);
-        if (it == itemDefs.end() || !it->second.contains("effect")) return "無效果";
+        if (it == itemDefs.end() || !it->second.contains("effect")) return locale_.tr("inventory.no_effect");
         const nlohmann::json& eff = it->second["effect"];
         std::vector<std::string> parts;
         auto add = [&](const char* key, const char* label) {
@@ -1006,7 +1014,7 @@ void Game::drawInventory() {
         add("exp", "EXP");
         add("gold","Gold");
         if (eff.contains("warp")) parts.push_back("Warp");
-        if (parts.empty()) parts.push_back("無效果");
+        if (parts.empty()) parts.push_back(locale_.tr("inventory.no_effect"));
         std::string out;
         for (size_t i = 0; i < parts.size(); ++i) {
             if (i) out += " • ";
@@ -1031,8 +1039,8 @@ void Game::drawInventory() {
     titleBar.tint[0]=0.14f; titleBar.tint[1]=0.17f; titleBar.tint[2]=0.25f; titleBar.tint[3]=1.0f;
     ren->drawSprite(titleBar);
 
-    drawText("背包", px + 22, py + 18, 26, C4(1,0.92f,0.55f,1));
-    drawText("點選道具查看資訊，右側有 使用 / 丟棄 / 關閉", px + 22, py + 38, 14, C4(0.82f,0.88f,1,1));
+    drawText(locale_.tr("inventory.title"), px + 22, py + 18, 26, C4(1,0.92f,0.55f,1));
+    drawText(locale_.tr("inventory.hint"), px + 22, py + 38, 14, C4(0.82f,0.88f,1,1));
 
     const std::vector<std::string>& inv = pl.inv;
     int n = (int)inv.size();
@@ -1041,8 +1049,8 @@ void Game::drawInventory() {
         empty.uv[0]=0; empty.uv[1]=0; empty.uv[2]=1; empty.uv[3]=1; empty.solid=true;
         empty.tint[0]=0.08f; empty.tint[1]=0.09f; empty.tint[2]=0.13f; empty.tint[3]=0.92f;
         ren->drawSprite(empty);
-        drawText("背包目前是空的。", px+40, py+120, 22, C4(1,1,1,1));
-        drawText("先去撿一些道具吧。", px+40, py+152, 16, C4(0.8f,0.85f,1,1));
+        drawText(locale_.tr("inventory.empty_title"), px+40, py+120, 22, C4(1,1,1,1));
+        drawText(locale_.tr("inventory.empty_hint"), px+40, py+152, 16, C4(0.8f,0.85f,1,1));
         invCardRects_.clear();
         invCloseRect_[0] = (int)(px + pw - 120);
         invCloseRect_[1] = (int)(py + ph - 58);
@@ -1052,7 +1060,7 @@ void Game::drawInventory() {
         cbtn.uv[0]=0; cbtn.uv[1]=0; cbtn.uv[2]=1; cbtn.uv[3]=1; cbtn.solid=true;
         cbtn.tint[0]=0.5f; cbtn.tint[1]=0.2f; cbtn.tint[2]=0.2f; cbtn.tint[3]=1;
         ren->drawSprite(cbtn);
-        drawText("Close", invCloseRect_[0] + 22, invCloseRect_[1] + 9, 16, C4(1,1,1,1));
+        drawText(locale_.tr("inventory.close"), invCloseRect_[0] + 22, invCloseRect_[1] + 9, 16, C4(1,1,1,1));
         return;
     }
 
@@ -1111,13 +1119,13 @@ void Game::drawInventory() {
     const std::string& sid = inv[invSel];
 
     // Detail pane.
-    drawText("道具詳情", rightX + 18, rightY + 16, 20, C4(1,0.95f,0.55f,1));
+    drawText(locale_.tr("inventory.detail_title"), rightX + 18, rightY + 16, 20, C4(1,0.95f,0.55f,1));
     ren->drawSprite(spriteQuad(rightX + 18, rightY + 54, 76, 76, spriteForItem(sid), C4(1,1,1,1)));
     drawText(itemName(sid), rightX + 108, rightY + 56, 26, C4(1,1,1,1));
     drawText("ID: " + sid, rightX + 108, rightY + 86, 14, C4(0.75f,0.8f,0.95f,1));
-    drawText("Icon: " + itemDefs[sid].value("sprite", std::string("")), rightX + 18, rightY + 136, 13, C4(0.7f,0.8f,0.95f,1));
+    drawText(locale_.tr("inventory.icon_label") + ": " + itemDefs[sid].value("sprite", std::string("")), rightX + 18, rightY + 136, 13, C4(0.7f,0.8f,0.95f,1));
     drawText(itemDesc(sid), rightX + 18, rightY + 162, 16, C4(0.88f,0.92f,1,1));
-    drawText("Stats", rightX + 18, rightY + 240, 13, C4(0.7f,0.8f,0.95f,1));
+    drawText(locale_.tr("inventory.stats_label"), rightX + 18, rightY + 240, 13, C4(0.7f,0.8f,0.95f,1));
 
     const nlohmann::json& eff = itemDefs[sid]["effect"];
     float effY = rightY + 264;
@@ -1136,7 +1144,7 @@ void Game::drawInventory() {
     if (eff.contains("exp")) { pill("EXP +" + std::to_string((int)eff["exp"]), rightX + 18, effY + pillRow*34, 120); pillRow++; }
     if (eff.contains("gold")){ pill("Gold +" + std::to_string((int)eff["gold"]),rightX + 18, effY + pillRow*34, 126); pillRow++; }
     if (eff.contains("warp")){ pill("Warp", rightX + 18, effY + pillRow*34, 90); pillRow++; }
-    if (pillRow == 0) pill("無效果", rightX + 18, effY, 90);
+    if (pillRow == 0) pill(locale_.tr("inventory.no_effect"), rightX + 18, effY, 90);
 
     // Action buttons.
     float by = rightY + rightH - 48;
@@ -1145,18 +1153,18 @@ void Game::drawInventory() {
     invDropRect_[0] = (int)(rightX + 116); invDropRect_[1] = (int)by; invDropRect_[2] = (int)bw; invDropRect_[3] = (int)bh;
     invCloseRect_[0] = (int)(rightX + rightW - 104); invCloseRect_[1] = (int)by; invCloseRect_[2] = 86; invCloseRect_[3] = (int)bh;
 
-    auto drawBtn = [&](const int r[4], const char* txt, float cr, float cg, float cb) {
+    auto drawBtn = [&](const int r[4], const std::string& txt, float cr, float cg, float cb) {
         Quad q; q.rect[0]=r[0]; q.rect[1]=r[1]; q.rect[2]=r[2]; q.rect[3]=r[3];
         q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
         q.tint[0]=cr; q.tint[1]=cg; q.tint[2]=cb; q.tint[3]=1;
         ren->drawSprite(q);
         drawText(txt, (float)r[0] + 16, (float)r[1] + 9, 15, C4(1,1,1,1));
     };
-    drawBtn(invUseRect_, "使用",   0.20f, 0.50f, 0.30f);
-    drawBtn(invDropRect_, "丟棄",  0.60f, 0.28f, 0.26f);
-    drawBtn(invCloseRect_, "關閉", 0.28f, 0.28f, 0.34f);
+    drawBtn(invUseRect_, locale_.tr("inventory.use"),   0.20f, 0.50f, 0.30f);
+    drawBtn(invDropRect_, locale_.tr("inventory.drop"),  0.60f, 0.28f, 0.26f);
+    drawBtn(invCloseRect_, locale_.tr("inventory.close"), 0.28f, 0.28f, 0.34f);
 
-    drawText("點選物品後可按右側按鈕操作；鍵盤 I 可關閉", rightX + 18, rightY + rightH - 76, 13, C4(0.75f,0.82f,0.95f,1));
+    drawText(locale_.tr("inventory.footer_hint"), rightX + 18, rightY + rightH - 76, 13, C4(0.75f,0.82f,0.95f,1));
 }
 
 
@@ -1164,20 +1172,20 @@ void Game::drawInventory() {
 void Game::loadStore(const std::string& assetDir) {
     nlohmann::json j = readJsonFile(assetDir + "/../data/store.json");
     if (j.is_null() || j.empty()) { return; }
-    if (j.contains("store_title")) storeTitle_ = j["store_title"].get<std::string>();
+    if (j.contains("store_title")) storeTitle_ = j["store_title"];
     if (j.contains("unlockstage")) storeUnlockStage_ = j["unlockstage"].get<int>();
     for (auto& it : j["items"]) {
         StoreItemDef d;
         d.id = it.value("id", "");
-        d.name = it.value("name", d.id);
+        d.name = it.contains("name") ? it["name"] : nlohmann::json(d.id);
         d.sprite = it.value("sprite", "");
         // strip a trailing ".png" if present so it matches the atlas sprite id
         if (d.sprite.size() > 4 && d.sprite.substr(d.sprite.size()-4) == ".png")
             d.sprite = d.sprite.substr(0, d.sprite.size()-4);
         d.icon_path = it.value("icon_path", "");
-        d.desc = it.value("desc", "");
+        d.desc = it.contains("desc") ? it["desc"] : nlohmann::json("");
         if (it.contains("effect")) d.effect = it["effect"];
-        d.effect_text = it.value("effect_text", "");
+        d.effect_text = it.contains("effect_text") ? it["effect_text"] : nlohmann::json("");
         d.cost_base = it.value("cost_base", 2);
         d.cost_multiplier = it.value("cost_multiplier", 2);
         d.purchases = 0;
@@ -1211,12 +1219,12 @@ void Game::ensureStageListLoaded() {
             if (j.is_null() || !j.contains("id")) continue;
             StageInfo info;
             info.id = j.value("id", std::string());
-            info.name = j.value("name", info.id);
+            info.name = j.contains("name") ? locale_.field(j["name"]) : info.id;
             info.index = j.value("index", 0);
             info.fileStem = e.path().stem().string();
             // Milestone 8: recommended-stats blurb, authored per stage JSON's optional top-level
             // "preview" string -- empty for a file that doesn't set one (none did before M8).
-            info.preview = j.value("preview", std::string());
+            info.preview = j.contains("preview") ? locale_.field(j["preview"]) : std::string();
             if (!info.id.empty()) stageList_.push_back(info);
         } catch (...) {}
     }
@@ -1280,7 +1288,7 @@ void Game::drawStoreIcon() {
     // icon: a shop/coin sprite. Use SP_GOLD (coin) as the store glyph.
     ren->drawSprite(spriteQuad((float)x, (float)y, (float)s, (float)s, spriteLayer("coin"), C4(1,1,1, storeUnlocked_?1.0f:0.4f)));
     // label
-    drawText(storeUnlocked_ ? "商店" : "商店🔒", (float)x-4, (float)y + s + 2, 12, C4(1,1,1, storeUnlocked_?1:0.4f));
+    drawText(locale_.tr("store.icon_label") + (storeUnlocked_ ? "" : "🔒"), (float)x-4, (float)y + s + 2, 12, C4(1,1,1, storeUnlocked_?1:0.4f));
 }
 
 void Game::drawStoreUnlockDialog() {
@@ -1292,8 +1300,8 @@ void Game::drawStoreUnlockDialog() {
     Quad box; box.rect[0]=bx; box.rect[1]=by; box.rect[2]=bw; box.rect[3]=bh;
     box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1; box.solid=true;
     box.tint[0]=0.12f;box.tint[1]=0.16f;box.tint[2]=0.26f;box.tint[3]=0.97f; ren->drawSprite(box);
-    drawText("道具商店已經開放！", bx+30, by+34, 24, C4(1,0.9f,0.5f,1));
-    drawText("你現在可以在關卡中點擊右上角的商店圖示來購買道具。", bx+30, by+74, 15, C4(1,1,1,1));
+    drawText(locale_.tr("store.unlocked_title"), bx+30, by+34, 24, C4(1,0.9f,0.5f,1));
+    drawText(locale_.tr("store.unlocked_body"), bx+30, by+74, 15, C4(1,1,1,1));
     // confirm button (bottom-right of box)
     float btnW = 120, btnH = 40;
     float btnX = bx + bw - btnW - 24, btnY = by + bh - btnH - 20;
@@ -1302,7 +1310,7 @@ void Game::drawStoreUnlockDialog() {
     Quad btn; btn.rect[0]=btnX; btn.rect[1]=btnY; btn.rect[2]=btnW; btn.rect[3]=btnH;
     btn.uv[0]=0;btn.uv[1]=0;btn.uv[2]=1;btn.uv[3]=1; btn.solid=true;
     btn.tint[0]=0.2f;btn.tint[1]=0.5f;btn.tint[2]=0.3f;btn.tint[3]=1; ren->drawSprite(btn);
-    drawText("確定 (Enter/點擊)", btnX+12, btnY+11, 15, C4(1,1,1,1));
+    drawText(locale_.tr("store.confirm_hint"), btnX+12, btnY+11, 15, C4(1,1,1,1));
 }
 
 // Milestone 9: confirm-before-transition dialog (see stairsConfirmOpen_'s declaration
@@ -1320,7 +1328,7 @@ void Game::drawStairsConfirmDialog() {
     box.uv[0]=0;box.uv[1]=0;box.uv[2]=1;box.uv[3]=1; box.solid=true;
     box.tint[0]=0.12f;box.tint[1]=0.16f;box.tint[2]=0.26f;box.tint[3]=0.97f; ren->drawSprite(box);
 
-    drawText(stairsConfirmIsUp_ ? "確定要往上一層嗎？" : "確定要往下一層嗎？", bx+30, by+30, 22, C4(1,0.95f,0.6f,1));
+    drawText(stairsConfirmIsUp_ ? locale_.tr("stairs.confirm_up") : locale_.tr("stairs.confirm_down"), bx+30, by+30, 22, C4(1,0.95f,0.6f,1));
 
     float btnW=130, btnH=40, gap=20;
     float by2 = by+bh-btnH-24;
@@ -1331,12 +1339,245 @@ void Game::drawStairsConfirmDialog() {
     Quad yes; yes.rect[0]=yesX; yes.rect[1]=by2; yes.rect[2]=btnW; yes.rect[3]=btnH;
     yes.uv[0]=0;yes.uv[1]=0;yes.uv[2]=1;yes.uv[3]=1; yes.solid=true;
     yes.tint[0]=0.2f;yes.tint[1]=0.5f;yes.tint[2]=0.3f;yes.tint[3]=1; ren->drawSprite(yes);
-    drawText("是 (Enter)", yesX+18, by2+11, 16, C4(1,1,1,1));
+    drawText(locale_.tr("menu.yes") + " (Enter)", yesX+18, by2+11, 16, C4(1,1,1,1));
 
     Quad no; no.rect[0]=noX; no.rect[1]=by2; no.rect[2]=btnW; no.rect[3]=btnH;
     no.uv[0]=0;no.uv[1]=0;no.uv[2]=1;no.uv[3]=1; no.solid=true;
     no.tint[0]=0.5f;no.tint[1]=0.2f;no.tint[2]=0.2f;no.tint[3]=1; ren->drawSprite(no);
-    drawText("否 (Esc)", noX+22, by2+11, 16, C4(1,1,1,1));
+    drawText(locale_.tr("menu.no") + " (Esc)", noX+22, by2+11, 16, C4(1,1,1,1));
+}
+
+// ---------- in-game menu (walking-phase HUD gear icon) ----------
+// Save / Settings (language) / Back to Title. A lighter-weight sibling of the title's own
+// Menu/Settings flow, built directly as Game state to match every other in-game modal here.
+
+void Game::drawMenuIcon() {
+    float W = (float)ren->width();
+    // Left of the store icon (store sits at x = W-56) so the two HUD buttons sit side by side
+    // without overlapping, same y/size as drawStoreIcon().
+    int x = (int)(W - 112), y = 14, s = 42;
+    menuIconRect_[0] = x; menuIconRect_[1] = y; menuIconRect_[2] = s; menuIconRect_[3] = s;
+    Quad bg; bg.rect[0]=x-4; bg.rect[1]=y-4; bg.rect[2]=s+8; bg.rect[3]=s+8;
+    bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1; bg.solid=true;
+    bg.tint[0]=0.16f; bg.tint[1]=0.16f; bg.tint[2]=0.20f; bg.tint[3]=1;
+    ren->drawSprite(bg);
+    // No dedicated gear sprite exists in the atlas -- reuse the coin sprite's slot would be
+    // confusing (already the store icon), so draw a plain glyph label instead, same as other
+    // icon-less HUD buttons in this file.
+    drawText("=", (float)x + s*0.5f - 6.0f, (float)y + 6.0f, 26, C4(1,1,1,1));
+    drawText(locale_.tr("ingame_menu.title"), (float)x-10, (float)y + s + 2, 12, C4(1,1,1,1));
+}
+
+void Game::openInGameMenu() {
+    inGameMenuOpen_ = true;
+    inGameMenuPage_ = InGameMenuPage::Main;
+    inGameMenuSel_ = 0;
+    inGameLangConfirmOpen_ = false;
+    audio.play("confirm_click");
+}
+
+void Game::closeInGameMenu() {
+    inGameMenuOpen_ = false;
+    inGameMenuPage_ = InGameMenuPage::Main;
+    inGameLangConfirmOpen_ = false;
+    audio.play("close_ui");
+}
+
+void Game::inGameMenuMove(int delta) {
+    if (delta == 0 || !inGameMenuOpen_) return;
+    if (inGameLangConfirmOpen_) { inGameLangConfirmYes_ = !inGameLangConfirmYes_; return; }
+    if (inGameMenuPage_ == InGameMenuPage::Main) {
+        int n = 3;   // Save / Settings / Back to Title
+        inGameMenuSel_ = ((inGameMenuSel_ + delta) % n + n) % n;
+    } else {
+        int n = std::max(1, locale_.languageCount());
+        inGameMenuSel_ = ((inGameMenuSel_ + delta) % n + n) % n;
+    }
+}
+
+void Game::inGameMenuActivate() {
+    if (!inGameMenuOpen_) return;
+    if (inGameLangConfirmOpen_) {
+        const bool yes = inGameLangConfirmYes_;
+        const int idx = inGameLangConfirmIdx_;
+        inGameLangConfirmOpen_ = false;
+        if (yes) { title_.setLanguageIndex(idx); applyLanguage(); }
+        audio.play("confirm_click");
+        return;
+    }
+    if (inGameMenuPage_ == InGameMenuPage::Main) {
+        switch (inGameMenuSel_) {
+            case 0:   // Save
+                saveCurrentRun();
+                toastMsg_ = locale_.tr("save.saved");
+                toastTimer_ = 1600;
+                audio.play("confirm_click");
+                break;
+            case 1:   // Settings
+                inGameMenuPage_ = InGameMenuPage::Settings;
+                inGameMenuSel_ = locale_.languageIndex();
+                audio.play("confirm_click");
+                break;
+            case 2:   // Back to Title
+                returnToTitle();
+                break;
+        }
+    } else {
+        // Settings page: activating a language row opens the "switch to XXX?" dialog,
+        // mirroring the title screen's own confirm dialog (see AskLanguageChange).
+        if (inGameMenuSel_ >= 0 && inGameMenuSel_ < locale_.languageCount()) {
+            inGameLangConfirmOpen_ = true;
+            inGameLangConfirmIdx_ = inGameMenuSel_;
+            inGameLangConfirmYes_ = true;
+            audio.play("confirm_click");
+        }
+    }
+}
+
+void Game::inGameMenuBack() {
+    if (!inGameMenuOpen_) return;
+    if (inGameLangConfirmOpen_) { inGameLangConfirmOpen_ = false; audio.play("close_ui"); return; }
+    if (inGameMenuPage_ == InGameMenuPage::Settings) {
+        inGameMenuPage_ = InGameMenuPage::Main;
+        inGameMenuSel_ = 1;   // land back on the "Settings" row
+        audio.play("close_ui");
+        return;
+    }
+    closeInGameMenu();
+}
+
+void Game::inGameMenuClick(float x, float y) {
+    if (!inGameMenuOpen_) return;
+    auto hit = [&](const int r[4]) { return x>=r[0] && x<=r[0]+r[2] && y>=r[1] && y<=r[1]+r[3]; };
+    if (inGameLangConfirmOpen_) {
+        if (hit(igmLangYesRect_)) { inGameLangConfirmYes_ = true; inGameMenuActivate(); }
+        else if (hit(igmLangNoRect_)) { inGameLangConfirmYes_ = false; inGameMenuActivate(); }
+        return;   // the dialog swallows all other taps
+    }
+    if (inGameMenuPage_ == InGameMenuPage::Main) {
+        if (hit(igmSaveRect_)) { inGameMenuSel_ = 0; inGameMenuActivate(); return; }
+        if (hit(igmSettingsRect_)) { inGameMenuSel_ = 1; inGameMenuActivate(); return; }
+        if (hit(igmBackToTitleRect_)) { inGameMenuSel_ = 2; inGameMenuActivate(); return; }
+        if (hit(igmCloseRect_)) { closeInGameMenu(); return; }
+    } else {
+        int n = std::min((int)igmLangRowRects_.size()/4, locale_.languageCount());
+        for (int i = 0; i < n; i++) {
+            const float* r4 = &igmLangRowRects_[i*4];
+            int r[4] = {(int)r4[0], (int)r4[1], (int)r4[2], (int)r4[3]};
+            if (hit(r)) { inGameMenuSel_ = i; inGameMenuActivate(); return; }
+        }
+        if (hit(igmBackRect_)) { inGameMenuBack(); return; }
+    }
+}
+
+// Saves, tears down transient modal/run-in-progress state, and reopens the title -- the
+// inverse of newGame()/applyLoadedRun() (see their resets for what this mirrors). Unlike
+// newGame(), this deliberately leaves pl/meta_/entityStatus_/activeSlot_/curStage alone: the
+// run is only SUSPENDED, not discarded, so Continue can pick it back up.
+void Game::returnToTitle() {
+    saveCurrentRun();   // flush before leaving so nothing is lost
+    cs = CombatState{};
+    inDialogue = false; dlgChoices.clear(); dlgNode = "root";
+    invOpen = false; storeOpen = false; storeUnlockDlg = false;
+    stageSelectOpen_ = false; stairsConfirmOpen_ = false;
+    closeInGameMenu();
+    missionTrackers_.clear();
+    notifications_.clear();
+    title_.setRunInProgress(false);
+    title_.open();
+    refreshSlots();
+}
+
+void Game::drawInGameMenu() {
+    if (!ren || !inGameMenuOpen_) return;
+    const float W = (float)ren->width(), H = (float)ren->height();
+    static const float gold[4] = {0.95f, 0.82f, 0.45f, 1.0f};
+    static const float dim[4]  = {0.60f, 0.64f, 0.76f, 1.0f};
+    static const float white[4] = {1,1,1,1};
+
+    Quad scrim;
+    scrim.rect[0]=0; scrim.rect[1]=0; scrim.rect[2]=W; scrim.rect[3]=H;
+    scrim.uv[0]=0;scrim.uv[1]=0;scrim.uv[2]=1;scrim.uv[3]=1; scrim.solid=true;
+    scrim.tint[0]=0; scrim.tint[1]=0; scrim.tint[2]=0; scrim.tint[3]=0.62f;
+    ren->drawSprite(scrim);
+
+    auto panel = [&](float x, float y, float w, float h) {
+        Quad p; p.rect[0]=x; p.rect[1]=y; p.rect[2]=w; p.rect[3]=h;
+        p.uv[0]=0;p.uv[1]=0;p.uv[2]=1;p.uv[3]=1; p.solid=true;
+        p.tint[0]=0.13f; p.tint[1]=0.14f; p.tint[2]=0.21f; p.tint[3]=0.98f;
+        ren->drawSprite(p);
+        Quad rule; rule.rect[0]=x; rule.rect[1]=y; rule.rect[2]=w; rule.rect[3]=3.0f;
+        rule.uv[0]=0;rule.uv[1]=0;rule.uv[2]=1;rule.uv[3]=1; rule.solid=true;
+        rule.tint[0]=gold[0]; rule.tint[1]=gold[1]; rule.tint[2]=gold[2]; rule.tint[3]=0.9f;
+        ren->drawSprite(rule);
+    };
+    auto button = [&](int rectOut[4], float x, float y, float w, float h,
+                       const std::string& label, bool selected) {
+        rectOut[0]=(int)x; rectOut[1]=(int)y; rectOut[2]=(int)w; rectOut[3]=(int)h;
+        Quad q; q.rect[0]=x; q.rect[1]=y; q.rect[2]=w; q.rect[3]=h;
+        q.uv[0]=0;q.uv[1]=0;q.uv[2]=1;q.uv[3]=1; q.solid=true;
+        if (selected) { q.tint[0]=0.24f; q.tint[1]=0.30f; q.tint[2]=0.44f; q.tint[3]=1; }
+        else          { q.tint[0]=0.16f; q.tint[1]=0.17f; q.tint[2]=0.24f; q.tint[3]=0.96f; }
+        ren->drawSprite(q);
+        drawText(label, x + 18, y + (h-20)*0.5f, 18, white);
+    };
+
+    if (inGameLangConfirmOpen_) {
+        const float bw=560, bh=210, bx=(W-bw)*0.5f, by=(H-bh)*0.5f;
+        panel(bx, by, bw, bh);
+        const auto& langs = locale_.languages();
+        int idx = inGameLangConfirmIdx_;
+        std::string langName = (idx >= 0 && idx < (int)langs.size()) ? langs[idx].name : "";
+        std::string question = trParam(locale_.tr("settings.language_confirm"), "lang", langName);
+        drawText(question, bx + (bw - measureText(question, 24)) * 0.5f, by + 70.0f, 24, gold);
+        const float btnW=160, btnH=56, gap=40, groupW=btnW*2+gap;
+        const float bx0 = bx + (bw-groupW)*0.5f, byy = by + bh - btnH - 26.0f;
+        const bool yes = inGameLangConfirmYes_;
+        button(igmLangYesRect_, bx0, byy, btnW, btnH, locale_.tr("menu.yes"), yes);
+        button(igmLangNoRect_,  bx0+btnW+gap, byy, btnW, btnH, locale_.tr("menu.no"), !yes);
+        return;
+    }
+
+    if (inGameMenuPage_ == InGameMenuPage::Main) {
+        const float bw=420, bh=380, bx=(W-bw)*0.5f, by=(H-bh)*0.5f;
+        panel(bx, by, bw, bh);
+        const std::string head = locale_.tr("ingame_menu.title");
+        drawText(head, bx + (bw - measureText(head, 28)) * 0.5f, by + 28.0f, 28, gold);
+        const float rw = bw - 60, rh = 64, rx = bx + 30, gap = 16;
+        float ry = by + 90;
+        button(igmSaveRect_, rx, ry, rw, rh, locale_.tr("ingame_menu.save"), inGameMenuSel_ == 0);
+        ry += rh + gap;
+        button(igmSettingsRect_, rx, ry, rw, rh, locale_.tr("menu.settings"), inGameMenuSel_ == 1);
+        ry += rh + gap;
+        button(igmBackToTitleRect_, rx, ry, rw, rh, locale_.tr("ingame_menu.back_to_title"), inGameMenuSel_ == 2);
+        const float cw=140, ch=48, cx=bx+(bw-cw)*0.5f, cy=by+bh-ch-20;
+        button(igmCloseRect_, cx, cy, cw, ch, locale_.tr("inventory.close"), false);
+    } else {
+        const auto& langs = locale_.languages();
+        int n = std::max(1, (int)langs.size());
+        const float rh = 48, gap = 10;
+        const float bw = 420, bh = 130.0f + n * (rh + gap) + 70.0f;
+        const float bx = (W-bw)*0.5f, by = (H-bh)*0.5f;
+        panel(bx, by, bw, bh);
+        const std::string head = locale_.tr("settings.header");
+        drawText(head, bx + (bw - measureText(head, 26)) * 0.5f, by + 26.0f, 26, gold);
+        const std::string langLabel = locale_.tr("settings.language");
+        drawText(langLabel, bx + (bw - measureText(langLabel, 16)) * 0.5f, by + 62.0f, 16, dim);
+        const float rw = bw - 60, rx = bx + 30;
+        float ry = by + 96;
+        igmLangRowRects_.assign((size_t)n * 4, 0.0f);
+        int scratch[4];   // button() wants an int[4] out-param; the real rect is stored below
+        for (int i = 0; i < (int)langs.size(); i++) {
+            const bool active = (i == locale_.languageIndex());
+            std::string label = std::string(active ? "[x] " : "[ ] ") + langs[i].name;
+            button(scratch, rx, ry, rw, rh, label, inGameMenuSel_ == i);
+            igmLangRowRects_[i*4+0] = rx; igmLangRowRects_[i*4+1] = ry;
+            igmLangRowRects_[i*4+2] = rw; igmLangRowRects_[i*4+3] = rh;
+            ry += rh + gap;
+        }
+        const float cw=140, ch=44, cx=bx+(bw-cw)*0.5f;
+        button(igmBackRect_, cx, ry + 10, cw, ch, locale_.tr("menu.back"), false);
+    }
 }
 
 void Game::drawStoreUI() {
@@ -1347,13 +1588,16 @@ void Game::drawStoreUI() {
     bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1; bg.solid=true;
     bg.tint[0]=0.08f;bg.tint[1]=0.1f;bg.tint[2]=0.16f;bg.tint[3]=0.96f; ren->drawSprite(bg);
     // title + gold
-    drawText(storeTitle_, 60, 64, 26, C4(1,0.9f,0.5f,1));
-    drawText("金錢 GOLD: " + std::to_string(pl.gold), W-260, 64, 20, C4(1,0.95f,0.4f,1));
-    drawText("（方向鍵/數字選擇 · Enter 購買 · Esc 關閉）", 60, 94, 14, C4(0.8f,0.85f,1,0.9f));
+    drawText(locale_.field(storeTitle_), 60, 64, 26, C4(1,0.9f,0.5f,1));
+    drawText(locale_.tr("store.gold_label") + ": " + std::to_string(pl.gold), W-260, 64, 20, C4(1,0.95f,0.4f,1));
+    drawText(locale_.tr("store.controls_hint"), 60, 94, 14, C4(0.8f,0.85f,1,0.9f));
 
     // Milestone 8: tab bar (see storeTabIndices()'s declaration in game.h for why tabs exist at
     // all -- keeps every tab's card count at the layout's original, unchanged capacity of ~3).
-    static const char* kTabLabels[4] = {"藥水", "武器", "防具", "天賦"};
+    const std::string kTabLabels[4] = {
+        locale_.tr("store.tab.potion"), locale_.tr("store.tab.weapon"),
+        locale_.tr("store.tab.armor"), locale_.tr("store.tab.talent"),
+    };
     storeTabRects_.clear();
     {
         float tbw = 100, tbh = 34, tgap = 12;
@@ -1394,19 +1638,19 @@ void Game::drawStoreUI() {
         }
         // icon (sprite)
         ren->drawSprite(spriteQuad(cx + cw/2 - 46, cy + 22, 92, 92, spriteLayer(d.sprite.empty()?"coin":d.sprite), C4(1,1,1,1)));
-        drawText(d.name, cx + 16, cy + 124, 26, C4(1,1,1,1));
-        drawText(d.desc, cx + 16, cy + 162, 16, C4(0.85f,0.9f,1,1));
-        drawText("效果: " + d.effect_text, cx + 16, cy + 188, 18, C4(0.6f,1,0.7f,1));
+        drawText(locale_.field(d.name), cx + 16, cy + 124, 26, C4(1,1,1,1));
+        drawText(locale_.field(d.desc), cx + 16, cy + 162, 16, C4(0.85f,0.9f,1,1));
+        drawText(locale_.tr("store.effect_label") + ": " + locale_.field(d.effect_text), cx + 16, cy + 188, 18, C4(0.6f,1,0.7f,1));
         // Milestone 8: an equipment card shows whether it's the one currently in its slot instead
         // of a purchase counter (buying it re-equips it -- "已購買 x3" would be misleading).
         bool isEquipped = !d.equipmentId.empty() &&
             (d.equipmentId == equipped_.weaponId || d.equipmentId == equipped_.armorId || d.equipmentId == equipped_.talentId);
         if (!d.equipmentId.empty())
-            drawText(isEquipped ? "✓ 已裝備" : "點擊裝備", cx + 16, cy + 216, 15, isEquipped ? C4(0.5f,1,0.6f,1) : C4(0.7f,0.7f,0.8f,1));
+            drawText(isEquipped ? locale_.tr("store.equipped") : locale_.tr("store.tap_to_equip"), cx + 16, cy + 216, 15, isEquipped ? C4(0.5f,1,0.6f,1) : C4(0.7f,0.7f,0.8f,1));
         else
-            drawText("已購買 x" + std::to_string(d.purchases), cx + 16, cy + 216, 15, C4(0.7f,0.7f,0.8f,1));
+            drawText(locale_.tr("store.purchased_label") + " x" + std::to_string(d.purchases), cx + 16, cy + 216, 15, C4(0.7f,0.7f,0.8f,1));
         // price tag
-        drawText("價格: " + std::to_string(cost) + " G", cx + 16, cy + 240, 22, C4(1,0.95f,0.4f,1));
+        drawText(locale_.tr("store.price_label") + ": " + std::to_string(cost) + " G", cx + 16, cy + 240, 22, C4(1,0.95f,0.4f,1));
         // buy button
         float btnW = cw - 32, btnH = 38;
         float btnX = cx + 16, btnY = cy + ch - btnH - 12;
@@ -1414,7 +1658,7 @@ void Game::drawStoreUI() {
         Quad btn; btn.rect[0]=btnX; btn.rect[1]=btnY; btn.rect[2]=btnW; btn.rect[3]=btnH;
         btn.uv[0]=0;btn.uv[1]=0;btn.uv[2]=1;btn.uv[3]=1; btn.solid=true;
         btn.tint[0]=0.2f;btn.tint[1]=0.5f;btn.tint[2]=0.3f;btn.tint[3]=1; ren->drawSprite(btn);
-        drawText("購買 (Enter)", btnX + 16, btnY + 10, 16, C4(1,1,1,1));
+        drawText(locale_.tr("store.buy_button"), btnX + 16, btnY + 10, 16, C4(1,1,1,1));
     }
     // close button (top-right corner of panel)
     float cw2 = 90, ch2 = 34;
@@ -1422,7 +1666,7 @@ void Game::drawStoreUI() {
     Quad cbtn; cbtn.rect[0]=storeCloseRect_[0]; cbtn.rect[1]=storeCloseRect_[1]; cbtn.rect[2]=cw2; cbtn.rect[3]=ch2;
     cbtn.uv[0]=0;cbtn.uv[1]=0;cbtn.uv[2]=1;cbtn.uv[3]=1; cbtn.solid=true;
     cbtn.tint[0]=0.5f;cbtn.tint[1]=0.2f;cbtn.tint[2]=0.2f;cbtn.tint[3]=1; ren->drawSprite(cbtn);
-    drawText("關閉 X", storeCloseRect_[0]+14, storeCloseRect_[1]+9, 16, C4(1,1,1,1));
+    drawText(locale_.tr("inventory.close") + " X", storeCloseRect_[0]+14, storeCloseRect_[1]+9, 16, C4(1,1,1,1));
 }
 
 void Game::drawStoreToast() {
@@ -1518,7 +1762,7 @@ void Game::buyStoreItem(int idx) {
     int cost = d.liveCost();
     if (pl.gold < cost) {
         // not enough gold -> toast + shake (simple effect), no purchase
-        toastMsg_ = "金錢不足！需要 " + std::to_string(cost) + " G";
+        toastMsg_ = trParam(locale_.tr("store.toast_insufficient_gold"), "cost", std::to_string(cost));
         toastTimer_ = 1600;
         shakeTimer_ = 350;
         audio.play("deny");
@@ -1545,7 +1789,7 @@ void Game::buyStoreItem(int idx) {
         if (eff.contains("def")) pl.def  += (int)eff["def"];
     }
     d.purchases++;
-    toastMsg_ = "購買成功：" + d.name + "！";
+    toastMsg_ = trParam(locale_.tr("store.toast_purchase_success"), "name", locale_.field(d.name));
     toastTimer_ = 1400;
     audio.play("get_item");
     markProgressDirty();   // a purchase changes gold/stats/equipment: autosave will flush it
@@ -1673,7 +1917,7 @@ void Game::enterNode(const std::string& node) {
         // yet, so `contains("requires")` is false for all of them today -- purely additive.
         if (c.contains("requires") && !toms::evaluate(c["requires"], GameConditionContext(pl, meta_, missionTrackers_)))
             continue;
-        std::string label = c.contains("label") && c["label"].is_string() ? (std::string)c["label"] : "";
+        std::string label = c.contains("label") ? locale_.field(c["label"]) : "";
         std::string next  = c.contains("next")  && !c["next"].is_null()  ? (std::string)c["next"]  : "";
         nlohmann::json action = c.contains("action") ? c["action"] : nlohmann::json();
         dlgChoices.push_back({label, next, action});
@@ -1751,11 +1995,11 @@ void Game::claimMission(const std::string& id) {
         int need = pl.lv * 30;
         while (pl.exp >= need) {
             pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30;
-            pushNotification("升級了！LV " + std::to_string(pl.lv));
+            pushNotification(locale_.tr("battle.levelup") + std::to_string(pl.lv));
         }
     }
     trackerIt->second.state = toms::MissionState::Claimed;
-    pushNotification("任務完成：" + id);
+    pushNotification(locale_.tr("mission.completed_prefix") + id);
 }
 
 // Subscribes mission-progress handlers to the global EventBus once (called from loadAssets).
@@ -1792,7 +2036,7 @@ void Game::rollDailyMissions() {
         toms::MissionState before = tracker.state;
         toms::rollDailyReset(tracker, it->second, today);
         if (tracker.state == toms::MissionState::Available && before != toms::MissionState::Available)
-            pushNotification("每日任務已重置：" + id);
+            pushNotification(locale_.tr("mission.daily_reset_prefix") + id);
     }
 }
 
@@ -1935,17 +2179,16 @@ void Game::drawStageSelect() {
     float W = (float)ren->width(), H = (float)ren->height();
     ImGui::SetNextWindowPos(ImVec2(W * 0.5f, H * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(W - 120.0f, H - 100.0f), ImGuiCond_Always);
-    ImGui::Begin("選擇關卡 Stage Select (Tab/Esc to close)", nullptr,
+    ImGui::Begin(locale_.tr("stageselect.title").c_str(), nullptr,
                   ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
-    ImGui::TextWrapped("Every floor you've reached can be replayed from here. A locked floor "
-                        "shows what's needed to unlock it.");
+    ImGui::TextWrapped("%s", locale_.tr("stageselect.hint").c_str());
     ImGui::Separator();
     // UI settings: font size, applied globally via applyUiSettings() (called every frame from
     // main.cpp). In-memory only for now -- see uiFontScale_'s declaration in game.h for why.
-    if (ImGui::CollapsingHeader("介面設定 UI Settings")) {
-        ImGui::SliderFloat("字體大小 Font Size", &uiFontScale_, 0.5f, 2.5f, "%.2fx");
+    if (ImGui::CollapsingHeader(locale_.tr("stageselect.ui_settings_header").c_str())) {
+        ImGui::SliderFloat(locale_.tr("stageselect.font_size_label").c_str(), &uiFontScale_, 0.5f, 2.5f, "%.2fx");
         ImGui::SameLine();
-        if (ImGui::Button("重設 Reset")) uiFontScale_ = 1.5f;
+        if (ImGui::Button(locale_.tr("stageselect.reset_button").c_str())) uiFontScale_ = 1.5f;
     }
     ImGui::Separator();
     for (size_t i = 0; i < stageList_.size(); i++) {
@@ -1961,8 +2204,8 @@ void Game::drawStageSelect() {
         ImGui::PushID((int)i);
         ImGui::BeginDisabled(locked);
         std::string label = std::to_string(info.index) + ". " + info.name;
-        if (reached) label += "  [已到達]";
-        if (isNew)   label += "  [NEW]";
+        if (reached) label += "  " + locale_.tr("stageselect.reached_tag");
+        if (isNew)   label += "  " + locale_.tr("stageselect.new_tag");
         if (ImGui::Button(label.c_str(), ImVec2(-1, 0))) {
             loadStage(info.id);
             closeStageSelect();
@@ -1971,7 +2214,7 @@ void Game::drawStageSelect() {
         // ImGuiHoveredFlags_AllowWhenDisabled: BeginDisabled() suppresses hover reporting by
         // default, so the lock-reason tooltip needs this explicit override to show at all.
         if (locked && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-            ImGui::SetTooltip("先抵達第 %d 層才能選擇這一層", info.index - 1);
+            ImGui::SetTooltip("%s", trParam(locale_.tr("stageselect.locked_hint"), "floor", std::to_string(info.index - 1)).c_str());
         // Milestone 8: recommended-stats preview text, shown under every row that has one
         // (locked rows too -- it's exactly the info a player needs to decide whether to go grind
         // first, per the roadmap's own "Stage Select preview text (recommended stats)" ask).
@@ -2012,7 +2255,7 @@ void Game::drawStylingSpikeBackdrop() {
 void Game::engageMonster(const Entity& e) {
     EnemyInst en;
     auto& t = enemyTpl[e.id];
-    en.id=e.id; en.name=t["name"]; en.hp=t["hp"]; en.atk=t["atk"]; en.def=t["def"];
+    en.id=e.id; en.name=locale_.field(t["name"]); en.hp=t["hp"]; en.atk=t["atk"]; en.def=t["def"];
     en.exp=t["exp"]; en.gold=t["gold"]; en.x=e.x; en.y=e.y; en.boss=t.value("boss",false);
     // Milestone 4 (Encounter Resolution): resolveEncounterKind returns DirectBattle for every
     // monster tile in every shipped stage today (no stage sets encounter_overrides yet), so this is
@@ -2050,7 +2293,7 @@ void Game::startCombat(const EnemyInst& e) {
     cs.phase = CombatState::Phase::AwaitAttackPress;
     cs.charging = false; cs.chargeMs = 0; cs.resultPauseMs = 0;
     cs.lastPosition = 0.0f; cs.lastPower = 0.0f; cs.lastDamage = 0;
-    cs.log = "戰鬥開始！按住 Enter/Space 蓄力攻擊！";
+    cs.log = locale_.tr("battle.start");
 }
 
 // Shared win/lose resolution -- identical to the pre-Milestone-6 auto-combat's own win/lose
@@ -2063,7 +2306,7 @@ void Game::finishCombatWin() {
     int need = pl.lv * 30;
     while (pl.exp >= need) {
         pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30;
-        pushNotification("升級了！LV " + std::to_string(pl.lv));
+        pushNotification(locale_.tr("battle.levelup") + std::to_string(pl.lv));
     }
     // remove monster entity from stage
     for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) e.consumed=true;
@@ -2072,7 +2315,7 @@ void Game::finishCombatWin() {
     // Select hub) -- see entityStatus_'s declaration in game.h.
     toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, cs.enemy.x, cs.enemy.y), toms::EntityStatus::Defeated);
     toms::globalEventBus().publish(toms::EnemyDefeated{cs.enemy.id, curStage});
-    if (cs.enemy.boss) { cs.log = "你擊敗了 Vorkath！安穩之星重燃。"; loadStage("stage_11"); }
+    if (cs.enemy.boss) { cs.log = locale_.tr("battle.boss_win"); loadStage("stage_11"); }
     markProgressDirty();   // gold/exp/level/entity-status all changed: autosave will flush it
 }
 
@@ -2108,10 +2351,10 @@ void Game::resolveAttackRelease(float heldSeconds) {
     audio.play("player_attack");
 
     if (cs.enemyHP <= 0) {
-        cs.log = "會心一擊！造成 " + std::to_string(dmg) + " 點傷害，敵人倒下了！";
+        cs.log = trParam(locale_.tr("battle.crit_win"), "dmg", std::to_string(dmg));
         finishCombatWin();
     } else {
-        cs.log = "你造成了 " + std::to_string(dmg) + " 點傷害！";
+        cs.log = trParam(locale_.tr("battle.hit"), "dmg", std::to_string(dmg));
     }
     cs.phase = CombatState::Phase::AttackResultPause;
     cs.resultPauseMs = 300;
@@ -2134,10 +2377,10 @@ void Game::resolveDefenseRelease(float heldSeconds) {
     if (dmg > 0) audio.play("enemy_attack");
 
     if (cs.playerHP <= 0) {
-        cs.log = "你倒下了……返回本層起點。";
+        cs.log = locale_.tr("battle.player_down");
         finishCombatLose();
     } else {
-        cs.log = dmg == 0 ? "完美格擋！" : ("你承受了 " + std::to_string(dmg) + " 點傷害。");
+        cs.log = dmg == 0 ? locale_.tr("battle.perfect_guard") : trParam(locale_.tr("battle.guard_hit"), "dmg", std::to_string(dmg));
     }
     cs.phase = CombatState::Phase::DefenseResultPause;
     cs.resultPauseMs = 300;
@@ -2309,9 +2552,11 @@ void Game::handleTitleAction(toms::TitleAction a) {
         case toms::TitleAction::LoadSlot:            continueFromSlot(title_.pendingSlot()); break;
         case toms::TitleAction::OpenContinue:        refreshSlots(); break;   // always show current files
         case toms::TitleAction::SetLanguage:         applyLanguage(); break;
-        // The confirm dialog is drawn and answered by the title itself; these are informational.
+        // The confirm dialogs are drawn and answered by the title itself; these are informational.
         case toms::TitleAction::AskNewGameInSlot:
         case toms::TitleAction::DismissNewGameConfirm:
+        case toms::TitleAction::AskLanguageChange:
+        case toms::TitleAction::DismissLanguageConfirm:
         case toms::TitleAction::OpenSettings:
         case toms::TitleAction::Back:
         case toms::TitleAction::None:                break;
@@ -2433,46 +2678,60 @@ void Game::drawTitleScreen() {
             break;
         }
         case toms::TitlePage::Continue: {
-            const std::string head = locale_.tr("continue.header");
-            drawText(head, (W - measureText(head, 30)) * 0.5f, 196.0f, 30, gold);
-            const auto& sums = title_.summaries();
-            bool any = false;
-            for (int i = 0; i < titleLayout_.slotRowCount; i++) {
-                std::string label = locale_.tr("continue.slot") + " " + std::to_string(i + 1);
-                std::string sub;
-                if (i < (int)sums.size() && sums[i].exists) {
-                    const toms::SlotSummary& s = sums[i];
-                    any = true;
-                    label += "   " + (s.stageName.empty() ? s.stageId : s.stageName)
-                           + "   " + locale_.tr("hud.level") + " " + std::to_string(s.lv)
-                           + "   HP " + std::to_string(s.hp) + "/" + std::to_string(s.maxhp)
-                           + "   " + std::to_string(s.gold) + "G";
-                    sub = locale_.tr("continue.saved_at") + " " + s.savedAt
-                        + "    " + locale_.tr("continue.play_time") + " " + fmtPlayTime(s.playTimeSec);
-                } else {
-                    label += "   [" + locale_.tr("continue.empty") + "]";
+            // The renderer draws ALL sprites first, then ALL text glyphs in one later pass
+            // (see WebGLRenderer::end()/flush() -- two texture batches, sprites then text), so
+            // text can never be visually covered by a later sprite (the dialog's scrim/panel):
+            // it always ends up on top. Skip drawing the rows this dialog would otherwise sit
+            // on top of, rather than relying on the scrim to hide their labels.
+            if (!title_.newGameConfirmOpen()) {
+                const std::string head = locale_.tr("continue.header");
+                drawText(head, (W - measureText(head, 30)) * 0.5f, 196.0f, 30, gold);
+                const auto& sums = title_.summaries();
+                bool any = false;
+                for (int i = 0; i < titleLayout_.slotRowCount; i++) {
+                    std::string label = locale_.tr("continue.slot") + " " + std::to_string(i + 1);
+                    std::string sub;
+                    if (i < (int)sums.size() && sums[i].exists) {
+                        const toms::SlotSummary& s = sums[i];
+                        any = true;
+                        label += "   " + (s.stageName.empty() ? s.stageId : s.stageName)
+                               + "   " + locale_.tr("hud.level") + " " + std::to_string(s.lv)
+                               + "   HP " + std::to_string(s.hp) + "/" + std::to_string(s.maxhp)
+                               + "   " + std::to_string(s.gold) + "G";
+                        sub = locale_.tr("continue.saved_at") + " " + s.savedAt
+                            + "    " + locale_.tr("continue.play_time") + " " + fmtPlayTime(s.playTimeSec);
+                    } else {
+                        label += "   [" + locale_.tr("continue.empty") + "]";
+                    }
+                    drawTitleButton(titleLayout_.slotRow[i], label, sub,
+                                    title_.slotSelection() == i, gold, pulse);
                 }
-                drawTitleButton(titleLayout_.slotRow[i], label, sub,
-                                title_.slotSelection() == i, gold, pulse);
+                if (!any) {
+                    const std::string hint = locale_.tr("continue.hint");
+                    drawText(hint, (W - measureText(hint, 18)) * 0.5f, H - 178.0f, 18, dim);
+                }
+                drawTitleButton(titleLayout_.backButton, locale_.tr("menu.back"), "", false, dim, pulse);
             }
-            if (!any) {
-                const std::string hint = locale_.tr("continue.hint");
-                drawText(hint, (W - measureText(hint, 18)) * 0.5f, H - 178.0f, 18, dim);
-            }
-            drawTitleButton(titleLayout_.backButton, locale_.tr("menu.back"), "", false, dim, pulse);
             break;
         }
         case toms::TitlePage::Settings: {
-            const std::string head = locale_.tr("settings.header");
-            drawText(head, (W - measureText(head, 30)) * 0.5f, 262.0f, 30, gold);
-            const std::string langLabel = locale_.tr("settings.language");
-            drawText(langLabel, (W - measureText(langLabel, 20)) * 0.5f, 300.0f, 20, dim);
-            const auto& langs = locale_.languages();
-            for (int i = 0; i < titleLayout_.langRowCount && i < (int)langs.size(); i++) {
-                const bool active = (i == locale_.languageIndex());
-                std::string label = std::string(active ? "[x] " : "[ ] ") + langs[i].name;
-                drawTitleButton(titleLayout_.langRow[i], label, "",
-                                title_.settingsSelection() == i, gold, pulse);
+            // Same reasoning as Continue above: hide the rows the language-confirm dialog
+            // would otherwise (ineffectively) sit on top of.
+            if (!title_.languageConfirmOpen()) {
+                const std::string head = locale_.tr("settings.header");
+                drawText(head, (W - measureText(head, 30)) * 0.5f, 262.0f, 30, gold);
+                const std::string langLabel = locale_.tr("settings.language");
+                drawText(langLabel, (W - measureText(langLabel, 20)) * 0.5f, 300.0f, 20, dim);
+                const auto& langs = locale_.languages();
+                for (int i = 0; i < titleLayout_.langRowCount && i < (int)langs.size(); i++) {
+                    const bool active = (i == locale_.languageIndex());
+                    std::string label = std::string(active ? "[x] " : "[ ] ") + langs[i].name;
+                    drawTitleButton(titleLayout_.langRow[i], label, "",
+                                    title_.settingsSelection() == i, gold, pulse);
+                }
+                // Touch/mobile has no Esc key -- without a drawn Back button, Settings was a
+                // dead end on the web build (the hit-test already worked, it was just invisible).
+                drawTitleButton(titleLayout_.backButton, locale_.tr("menu.back"), "", false, dim, pulse);
             }
             break;
         }
@@ -2482,8 +2741,11 @@ void Game::drawTitleScreen() {
                              ? locale_.tr("settings.hint") : locale_.tr("menu.hint");
     drawText(hint, (W - measureText(hint, 16)) * 0.5f, H - 44.0f, 16, dim);
 
-    // The confirm prompt is the topmost thing on the title (see drawTitleConfirmDialog()).
+    // The confirm prompts are the topmost thing on the title (see drawTitleConfirmDialog() /
+    // drawLanguageConfirmDialog()). The two pages they belong to are mutually exclusive, so at
+    // most one of these is ever open at once.
     if (title_.newGameConfirmOpen()) drawTitleConfirmDialog();
+    if (title_.languageConfirmOpen()) drawLanguageConfirmDialog();
 }
 
 // "Use this slot to start the game?" -- shown when an EMPTY Continue slot is activated, so the
@@ -2518,11 +2780,9 @@ void Game::drawTitleConfirmDialog() {
     ren->drawSprite(rule);
 
     // "{slot}" placeholder substitution -- keeps the wording in data/text.json instead of
-    // hardcoding the sentence in two languages here.
-    std::string question = locale_.tr("continue.new_game_confirm");
-    const std::string slotText = std::to_string(title_.newGameConfirmSlot());
-    for (size_t p = question.find("{slot}"); p != std::string::npos; p = question.find("{slot}"))
-        question.replace(p, 6, slotText);
+    // hardcoding the sentence per language here.
+    std::string question = trParam(locale_.tr("continue.new_game_confirm"), "slot",
+                                    std::to_string(title_.newGameConfirmSlot()));
     drawText(question, box.x + (box.w - measureText(question, 26)) * 0.5f, box.y + 34.0f, 26, gold);
 
     const std::string body = locale_.tr("continue.new_game_confirm.body");
@@ -2530,6 +2790,53 @@ void Game::drawTitleConfirmDialog() {
 
     const bool yes = title_.newGameConfirmYesSelected();
     const float pulse = 0.5f + 0.5f * std::sin(titleAnimMs_ * 0.0045f);   // same live pulse as the list
+    drawTitleButton(titleLayout_.confirmYes, locale_.tr("menu.yes"), "", yes, gold, pulse);
+    drawTitleButton(titleLayout_.confirmNo,  locale_.tr("menu.no"),  "", !yes, gold, pulse);
+}
+
+// "Switch to XXX language?" -- shown when a language row is activated/tapped, instead of
+// applying it instantly (a single mis-tap used to have no way back on a touch device with no
+// keyboard/Esc). Reuses the same confirmBox/confirmYes/confirmNo layout as
+// drawTitleConfirmDialog(): the two dialogs only ever appear on different pages (Continue vs.
+// Settings), so they never need to coexist.
+void Game::drawLanguageConfirmDialog() {
+    if (!ren || !title_.languageConfirmOpen()) return;
+    const float W = (float)ren->width();
+    static const float gold[4] = {0.95f, 0.82f, 0.45f, 1.0f};
+    static const float dim[4]  = {0.60f, 0.64f, 0.76f, 1.0f};
+
+    Quad scrim;
+    scrim.rect[0] = 0; scrim.rect[1] = 0; scrim.rect[2] = W; scrim.rect[3] = (float)ren->height();
+    scrim.uv[0] = 0; scrim.uv[1] = 0; scrim.uv[2] = 1; scrim.uv[3] = 1;
+    scrim.solid = true;
+    scrim.tint[0] = 0.0f; scrim.tint[1] = 0.0f; scrim.tint[2] = 0.0f; scrim.tint[3] = 0.62f;
+    ren->drawSprite(scrim);
+
+    const toms::TitleRow& box = titleLayout_.confirmBox;
+    Quad panel;
+    panel.rect[0] = box.x; panel.rect[1] = box.y; panel.rect[2] = box.w; panel.rect[3] = box.h;
+    panel.uv[0] = 0; panel.uv[1] = 0; panel.uv[2] = 1; panel.uv[3] = 1;
+    panel.solid = true;
+    panel.tint[0] = 0.13f; panel.tint[1] = 0.14f; panel.tint[2] = 0.21f; panel.tint[3] = 0.98f;
+    ren->drawSprite(panel);
+
+    Quad rule;
+    rule.rect[0] = box.x; rule.rect[1] = box.y; rule.rect[2] = box.w; rule.rect[3] = 3.0f;
+    rule.uv[0] = 0; rule.uv[1] = 0; rule.uv[2] = 1; rule.uv[3] = 1;
+    rule.solid = true;
+    rule.tint[0] = gold[0]; rule.tint[1] = gold[1]; rule.tint[2] = gold[2]; rule.tint[3] = 0.9f;
+    ren->drawSprite(rule);
+
+    // Name the target language in ITS OWN endonym (matches the row label's own style, e.g.
+    // "日本語" not "Japanese") so it reads correctly regardless of the CURRENT UI language.
+    const auto& langs = locale_.languages();
+    int idx = title_.languageConfirmIndex();
+    std::string langName = (idx >= 0 && idx < (int)langs.size()) ? langs[idx].name : "";
+    std::string question = trParam(locale_.tr("settings.language_confirm"), "lang", langName);
+    drawText(question, box.x + (box.w - measureText(question, 24)) * 0.5f, box.y + 70.0f, 24, gold);
+
+    const bool yes = title_.languageConfirmYesSelected();
+    const float pulse = 0.5f + 0.5f * std::sin(titleAnimMs_ * 0.0045f);
     drawTitleButton(titleLayout_.confirmYes, locale_.tr("menu.yes"), "", yes, gold, pulse);
     drawTitleButton(titleLayout_.confirmNo,  locale_.tr("menu.no"),  "", !yes, gold, pulse);
 }

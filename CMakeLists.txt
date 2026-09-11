@@ -222,6 +222,13 @@ if(WEB)
         target_compile_options(toms_web PRIVATE -g)
     endif()
 
+    # Web renders text via an offscreen Canvas 2D context using the browser's own system
+    # fonts (Font::buildFromCanvas, src/engine/font.cpp) instead of stb_truetype + bundled
+    # TTFs, so none of assets/fonts/ or the (gitignored, desktop-only) wqy-zenhei.ttc need
+    # to ship in the .data bundle -- exclude them explicitly since --preload-file below
+    # otherwise wildcards the whole assets/ directory.
+    set(WEB_FONT_EXCLUDES "--exclude-file ${CMAKE_SOURCE_DIR}/assets/fonts/* \
+--exclude-file ${CMAKE_SOURCE_DIR}/assets/wqy-zenhei.ttc")
     if(WEB_BACKEND STREQUAL "WebGPU")
         set(WEB_LINK "--use-port=emdawnwebgpu -sFETCH=1 -sALLOW_MEMORY_GROWTH=1 \
 -lidbfs.js \
@@ -229,7 +236,8 @@ if(WEB)
 -sEXPORTED_FUNCTIONS=['_main','_downloadFile','_jsRefreshSlots'] \
 -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS'] \
 --preload-file ${CMAKE_SOURCE_DIR}/assets@assets \
---preload-file ${CMAKE_SOURCE_DIR}/data@data")
+--preload-file ${CMAKE_SOURCE_DIR}/data@data \
+${WEB_FONT_EXCLUDES}")
     else()
         set(WEB_LINK "-sUSE_WEBGL2=1 -sFETCH=1 -sALLOW_MEMORY_GROWTH=1 \
 -lidbfs.js \
@@ -238,6 +246,7 @@ if(WEB)
 -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS'] \
 --preload-file ${CMAKE_SOURCE_DIR}/assets@assets \
 --preload-file ${CMAKE_SOURCE_DIR}/data@data \
+${WEB_FONT_EXCLUDES} \
 -sGL_ASSERTIONS=0")
     endif()
 

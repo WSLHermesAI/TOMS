@@ -1,58 +1,58 @@
 {
   "gem_atk": {
-    "name": "攻擊寶石",
+    "name": { "zh_TW": "攻擊寶石", "en": "Attack Gem", "zh_CN": "攻击宝石", "ja": "攻撃の宝石", "ko": "공격 보석", "es": "Gema de Ataque" },
     "sprite": "gem_atk.png",
-    "desc": "鑲嵌後永久提升攻擊力。",
+    "desc": { "zh_TW": "鑲嵌後永久提升攻擊力。", "en": "Permanently increases Attack when socketed.", "zh_CN": "镶嵌后永久提升攻击力。", "ja": "装着すると攻撃力が永久に上昇する。", "ko": "장착하면 공격력이 영구적으로 상승합니다.", "es": "Aumenta permanentemente el Ataque al engastarla." },
     "effect": { "atk": 6 }
   },
   "gem_def": {
-    "name": "防禦寶石",
+    "name": { "zh_TW": "防禦寶石", "en": "Defense Gem", "zh_CN": "防御宝石", "ja": "防御の宝石", "ko": "방어 보석", "es": "Gema de Defensa" },
     "sprite": "gem_def.png",
-    "desc": "鑲嵌後永久提升防禦力。",
+    "desc": { "zh_TW": "鑲嵌後永久提升防禦力。", "en": "Permanently increases Defense when socketed.", "zh_CN": "镶嵌后永久提升防御力。", "ja": "装着すると防御力が永久に上昇する。", "ko": "장착하면 방어력이 영구적으로 상승합니다.", "es": "Aumenta permanentemente la Defensa al engastarla." },
     "effect": { "def": 5 }
   },
   "potion_red": {
-    "name": "紅血瓶",
+    "name": { "zh_TW": "紅血瓶", "en": "Red Health Potion", "zh_CN": "红血瓶", "ja": "赤い回復薬", "ko": "붉은 회복약", "es": "Poción Roja" },
     "sprite": "potion_red.png",
-    "desc": "立即恢復 40 點生命。",
+    "desc": { "zh_TW": "立即恢復 40 點生命。", "en": "Instantly restores 40 HP.", "zh_CN": "立即恢复 40 点生命。", "ja": "即座にHPを40回復する。", "ko": "즉시 HP 40을 회복합니다.", "es": "Restaura 40 PV al instante." },
     "effect": { "hp": 40 }
   },
   "potion_blue": {
-    "name": "藍血瓶",
+    "name": { "zh_TW": "藍血瓶", "en": "Blue Health Potion", "zh_CN": "蓝血瓶", "ja": "青い回復薬", "ko": "푸른 회복약", "es": "Poción Azul" },
     "sprite": "potion_blue.png",
-    "desc": "立即恢復 80 點生命。",
+    "desc": { "zh_TW": "立即恢復 80 點生命。", "en": "Instantly restores 80 HP.", "zh_CN": "立即恢复 80 点生命。", "ja": "即座にHPを80回復する。", "ko": "즉시 HP 80을 회복합니다.", "es": "Restaura 80 PV al instante." },
     "effect": { "hp": 80 }
   },
   "exp_up": {
-    "name": "經驗水晶",
+    "name": { "zh_TW": "經驗水晶", "en": "Experience Crystal", "zh_CN": "经验水晶", "ja": "経験の結晶", "ko": "경험의 결정", "es": "Cristal de Experiencia" },
     "sprite": "exp_up.png",
-    "desc": "吸收後獲得大量經驗，足以讓你升級。",
+    "desc": { "zh_TW": "吸收後獲得大量經驗，足以讓你升級。", "en": "Absorb it to gain a large amount of experience, enough to level up.", "zh_CN": "吸收后获得大量经验，足以让你升级。", "ja": "吸収すると大量の経験値を得られ、レベルアップできるほどだ。", "ko": "흡수하면 레벨업할 만큼 막대한 경험치를 얻습니다.", "es": "Absórbelo para obtener una gran cantidad de experiencia, suficiente para subir de nivel." },
     "effect": { "exp": 100 }
   },
   "scroll": {
-    "name": "傳送卷軸",
+    "name": { "zh_TW": "傳送卷軸", "en": "Scroll of Teleportation", "zh_CN": "传送卷轴", "ja": "転送の巻物", "ko": "순간이동 두루마리", "es": "Pergamino de Teletransporte" },
     "sprite": "scroll.png",
-    "desc": "展開後直接跳到目標樓層。",
+    "desc": { "zh_TW": "展開後直接跳到目標樓層。", "en": "Unroll it to jump directly to the target floor.", "zh_CN": "展开后直接跳到目标楼层。", "ja": "広げると目標階層へ直接ワープする。", "ko": "펼치면 목표 층으로 곧장 이동합니다.", "es": "Desenróllalo para saltar directamente al piso objetivo." },
     "effect": { "warp": 1 },
     "warp_to": "stage03"
   },
   "coin": {
-    "name": "金幣",
+    "name": { "zh_TW": "金幣", "en": "Gold Coin", "zh_CN": "金币", "ja": "金貨", "ko": "금화", "es": "Moneda de Oro" },
     "sprite": "coin.png",
     "effect": { "gold": 10 }
   },
   "key_yellow": {
-    "name": "黃鑰匙",
+    "name": { "zh_TW": "黃鑰匙", "en": "Yellow Key", "zh_CN": "黄钥匙", "ja": "黄色の鍵", "ko": "노란 열쇠", "es": "Llave Amarilla" },
     "sprite": "key_yellow.png",
     "effect": { "key_yellow": 1 }
   },
   "key_blue": {
-    "name": "藍鑰匙",
+    "name": { "zh_TW": "藍鑰匙", "en": "Blue Key", "zh_CN": "蓝钥匙", "ja": "青い鍵", "ko": "파란 열쇠", "es": "Llave Azul" },
     "sprite": "key_blue.png",
     "effect": { "key_blue": 1 }
   },
   "key_red": {
-    "name": "紅鑰匙",
+    "name": { "zh_TW": "紅鑰匙", "en": "Red Key", "zh_CN": "红钥匙", "ja": "赤い鍵", "ko": "빨간 열쇠", "es": "Llave Roja" },
     "sprite": "key_red.png",
     "effect": { "key_red": 1 }
   }

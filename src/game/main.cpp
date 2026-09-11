@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
             if (auto* r = dynamic_cast<Renderer*>(g.renderer())) r->setNodeFilter((uint8_t)std::atoi(sn));
         }
         g.loadStage("stage01");
-        std::cout << "Loaded stage01. Use arrow keys to move, Enter to interact, I or the Backpack button for inventory, Escape to quit.\n";
+        std::cout << "Loaded stage01. Use arrow keys to move, Enter to interact, I or the Backpack button for inventory, Escape for the menu (Save/Settings/Back to Title).\n";
 
         // Retrieve the GLFW window from the renderer for key polling
         GLFWwindow* win = nullptr;
@@ -153,15 +153,21 @@ int main(int argc, char** argv) {
 
             if (keyPressed(GLFW_KEY_F1)) showDebugOverlay = !showDebugOverlay;
             if (keyPressed(GLFW_KEY_F2)) showStylingSpike = !showStylingSpike;
-            // Escape: close whatever modal is open (store, then inventory) before quitting the
-            // game outright -- previously this unconditionally quit even with a dialog open.
+            // Escape: close whatever modal is open (store, then inventory, ...) before opening
+            // the in-game menu during plain walking -- it no longer quits the app outright (the
+            // window's own close button still does that).
             if (escPressed) {
                 if (g.storeModal()) g.storeKey(27);
                 // Milestone 9: Escape cancels a pending stairs transition (say "no").
                 else if (g.stairsConfirmOpen()) g.cancelStageTransition();
                 else if (g.stageSelectOpen()) g.closeStageSelect();
                 else if (g.inventoryOpen()) g.toggleInventory();
-                else if (!g.modalActive()) break;
+                else if (g.inGameMenuOpen()) g.inGameMenuBack();
+                // Plain walking, nothing else open: Escape opens the in-game menu (Save /
+                // Settings / Back to Title) instead of quitting outright -- quitting with no
+                // confirmation from a single stray keypress was the previous behavior; the
+                // window's own close button still works for an actual quit.
+                else if (!g.modalActive()) g.openInGameMenu();
                 // Combat/dialogue have no defined Escape-to-cancel action; leave it a no-op
                 // rather than quitting the game out from under an active conversation/fight.
             }
@@ -198,9 +204,12 @@ int main(int argc, char** argv) {
                 if (downPressed) g.dlgMoveSel(1);
             }
             if (enterPressed || spacePressed) {
+                // In-game menu: checked first, same reasoning as stairsConfirmOpen() below --
+                // once open it is the topmost modal.
+                if (g.inGameMenuOpen()) g.inGameMenuActivate();
                 // Milestone 9: confirm a pending stairs transition (say "yes"). Checked first,
                 // same reasoning as combatWon() below -- once open this is the topmost modal.
-                if (g.stairsConfirmOpen()) g.confirmStageTransition();
+                else if (g.stairsConfirmOpen()) g.confirmStageTransition();
                 // Milestone 7 bugfix: the post-victory "(按任意鍵繼續)" pause had no keyboard
                 // dismiss path at all -- only handleTouch() (mouse/touch) ever cleared cs.won.
                 // Must be checked before g.interact(), since interact() itself now returns early
@@ -224,6 +233,11 @@ int main(int argc, char** argv) {
             if (keyPressed(GLFW_KEY_I)) g.toggleInventory();
             // Store: B opens the shop (only when no other modal is up)
             if (keyPressed(GLFW_KEY_B) && !g.modalActive()) g.openStore();
+            // In-game menu cursor (Save / Settings / Back to Title, and its language list)
+            if (g.inGameMenuOpen()) {
+                if (upPressed || leftPressed)  g.inGameMenuMove(-1);
+                if (downPressed || rightPressed) g.inGameMenuMove(1);
+            }
             // Inventory cursor
             if (g.inventoryOpen()) {
                 if (upPressed)    g.invMoveSel(0, -1);

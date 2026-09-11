@@ -76,12 +76,15 @@ struct CombatState : public Trackable {
 // A store item, parsed from data/store.json. cost = cost_base * cost_multiplier^purchases.
 struct StoreItemDef {
     std::string id;
-    std::string name;
+    // Raw json (either a plain string or a {code: text} multi-language map) -- resolved via
+    // Locale::field() at display time so a language switch updates the store instantly instead
+    // of needing loadStore() to re-run.
+    nlohmann::json name;
     std::string sprite;       // sprite id (into the atlas) for the icon
     std::string icon_path;    // original asset path stored in json
-    std::string desc;
+    nlohmann::json desc;
     nlohmann::json effect;     // {hp:..} / {str:..} / {def:..}
-    std::string effect_text;
+    nlohmann::json effect_text;
     int cost_base = 2;
     int cost_multiplier = 2;
     int purchases = 0;         // how many times already bought (drives the doubling price)
@@ -149,7 +152,7 @@ public:
     // as a modal overlay too, not just cs.active -- otherwise the world underneath (movement,
     // NPC interact, the store icon, Tab/B shortcuts) keeps responding to input while the victory
     // screen is still up. See docs/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
-    bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title)
+    bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_; }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu)
     bool combatWon() const { return cs.won; }
     // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
     // keyboard path (Enter/Space) had no equivalent before this fix, so "press any key to
@@ -187,6 +190,12 @@ public:
     bool stairsConfirmIsUp() const { return stairsConfirmIsUp_; }
     void confirmStageTransition();
     void cancelStageTransition();
+    // In-game menu (walking-phase HUD gear icon): Save / Settings (language) / Back to Title.
+    bool inGameMenuOpen() const { return inGameMenuOpen_; }
+    void openInGameMenu();
+    void inGameMenuMove(int delta);    // Up/Down or Left/Right
+    void inGameMenuActivate();         // Enter/Space
+    void inGameMenuBack();             // Esc: dialog->list, Settings->Main, Main->closed
     Player& player() { return pl; }
     IRenderer* renderer() { return ren; }   // for batch-metric inspection (demo)
 
@@ -438,11 +447,43 @@ private:
     int toastTimer_ = 0;         // ms remaining for toast
     int shakeTimer_ = 0;         // ms remaining for "not enough gold" shake
     int storeIconRect[4] = {0,0,0,0}; // on-screen rect of the HUD store icon (for hit-test)
-    std::string storeTitle_ = "道具商店";     // title from store.json
+    // Raw json (string or {code:text}) from store.json, resolved via Locale::field() at draw
+    // time -- loadStore() runs before the title phase sets locale_ to the player's saved
+    // language, so resolving here (instead of once at load) is what makes it show correctly.
+    nlohmann::json storeTitle_ = "道具商店";
     int storeUnlockBtnRect_[4] = {0,0,0,0};   // unlock dialog confirm button rect
     std::vector<float> storeBtnRects_;        // per-card buy-button rects (4 floats each)
     std::vector<float> storeTabRects_;        // Milestone 8: per-tab button rects (4 floats each)
     int storeCloseRect_[4] = {0,0,0,0};       // store close button rect
+
+    // ---- in-game menu (walking-phase HUD gear icon): Save / Settings (language) / Back to
+    // Title. Built directly as Game state (not a separate testable class, unlike TitleScreen)
+    // to match how every other in-game modal (store/inventory/stairs-confirm) already works in
+    // this file -- there's no headless-test need here the way the title phase has.
+    bool inGameMenuOpen_ = false;
+    enum class InGameMenuPage { Main, Settings };
+    InGameMenuPage inGameMenuPage_ = InGameMenuPage::Main;
+    int inGameMenuSel_ = 0;               // highlighted row on whichever page (keyboard nav)
+    bool inGameLangConfirmOpen_ = false;  // "switch to XXX?" sub-dialog, mirrors the title's own
+    int inGameLangConfirmIdx_ = 0;
+    bool inGameLangConfirmYes_ = true;
+    int menuIconRect_[4] = {0,0,0,0};         // HUD gear button (opens the menu)
+    int igmSaveRect_[4] = {0,0,0,0};
+    int igmSettingsRect_[4] = {0,0,0,0};
+    int igmBackToTitleRect_[4] = {0,0,0,0};
+    int igmCloseRect_[4] = {0,0,0,0};
+    std::vector<float> igmLangRowRects_;      // per-language rects on the Settings sub-page
+    int igmBackRect_[4] = {0,0,0,0};          // Settings sub-page's own Back-to-Main button
+    int igmLangYesRect_[4] = {0,0,0,0};
+    int igmLangNoRect_[4] = {0,0,0,0};
+    void closeInGameMenu();                // closes the whole menu (any page/dialog)
+    void inGameMenuClick(float x, float y);
+    void drawMenuIcon();
+    void drawInGameMenu();
+    // Saves, tears down transient modal/run-in-progress state, and reopens the title (the
+    // inverse of newGame()/applyLoadedRun() -- see their resets for what this mirrors).
+    void returnToTitle();
+
     // backpack/inventory overlay hit-test rects (rebuilt each frame in drawInventory)
     std::vector<float> invCardRects_;         // per-item card rects (4 floats each)
     int invUseRect_[4] = {0,0,0,0};
@@ -487,5 +528,7 @@ private:
                          const std::string& sub, bool selected, const float accent[4], float pulse);
     // The "start a new game in this (empty) slot?" prompt, drawn over the Continue page.
     void drawTitleConfirmDialog();
+    // The "switch to XXX language?" prompt, drawn over the Settings page.
+    void drawLanguageConfirmDialog();
     TOMS_OBJECT(Game)
 };

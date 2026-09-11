@@ -94,11 +94,13 @@ void TitleScreen::open() {
     setSel_ = 0;
     pendingSlot_ = 0;
     closeConfirm();
+    closeLanguageConfirm();
 }
 
 void TitleScreen::setPage(TitlePage p) {
     page_ = p;
-    closeConfirm();   // never carry the dialog across pages
+    closeConfirm();          // never carry a dialog across pages
+    closeLanguageConfirm();
     if (p == TitlePage::Continue) {
         int first = firstPlayableSlot();
         slotSel_ = (first > 0) ? first - 1 : 0;   // park on something the player can actually load
@@ -152,8 +154,9 @@ void TitleScreen::setRunInProgress(bool v) { runInProgress_ = v; }
 
 TitleAction TitleScreen::moveVertical(int delta) {
     if (delta == 0) return TitleAction::None;
-    // The confirm dialog is a 2-button prompt: any direction toggles which answer is armed.
+    // Confirm dialogs are 2-button prompts: any direction toggles which answer is armed.
     if (confirmNewGame_) { confirmYes_ = !confirmYes_; return TitleAction::None; }
+    if (confirmLanguage_) { confirmLangYes_ = !confirmLangYes_; return TitleAction::None; }
     switch (page_) {
         case TitlePage::Menu: {
             int n = kMenuItemCount;
@@ -166,10 +169,11 @@ TitleAction TitleScreen::moveVertical(int delta) {
             return TitleAction::None;
         }
         case TitlePage::Settings: {
+            // Just moves the highlight now -- activate()/tap opens the confirm dialog below,
+            // which is what actually applies the language (see AskLanguageChange).
             int n = std::max(1, langCount_);
             setSel_ = ((setSel_ + delta) % n + n) % n;
-            langIdx_ = setSel_;
-            return TitleAction::SetLanguage;
+            return TitleAction::None;
         }
     }
     return TitleAction::None;
@@ -178,19 +182,27 @@ TitleAction TitleScreen::moveVertical(int delta) {
 TitleAction TitleScreen::moveHorizontal(int delta) {
     if (delta == 0) return TitleAction::None;
     if (confirmNewGame_) { confirmYes_ = !confirmYes_; return TitleAction::None; }
+    if (confirmLanguage_) { confirmLangYes_ = !confirmLangYes_; return TitleAction::None; }
     // Only the Settings page uses left/right: it is a 2-4 option picker, not a list.
     if (page_ != TitlePage::Settings) return TitleAction::None;
     return moveVertical(delta);
 }
 
 TitleAction TitleScreen::activate() {
-    // Confirm dialog first: it is the topmost thing on screen.
+    // Confirm dialogs first: they are the topmost thing on screen.
     if (confirmNewGame_) {
         const bool yes = confirmYes_;
         const int slot = confirmSlot_;
         closeConfirm();
         if (yes) { pendingSlot_ = slot; return TitleAction::StartNewGameInSlot; }
         return TitleAction::DismissNewGameConfirm;
+    }
+    if (confirmLanguage_) {
+        const bool yes = confirmLangYes_;
+        const int idx = confirmLangIdx_;
+        closeLanguageConfirm();
+        if (yes) { langIdx_ = idx; return TitleAction::SetLanguage; }
+        return TitleAction::DismissLanguageConfirm;
     }
     switch (page_) {
         case TitlePage::Menu:
@@ -215,14 +227,20 @@ TitleAction TitleScreen::activate() {
             pendingSlot_ = slot;
             return TitleAction::LoadSlot;
         }
-        case TitlePage::Settings:
-            return TitleAction::None;   // language already applied by moveHorizontal/Vertical
+        case TitlePage::Settings: {
+            if (setSel_ < 0 || setSel_ >= langCount_) return TitleAction::None;
+            confirmLanguage_ = true;
+            confirmLangIdx_ = setSel_;
+            confirmLangYes_ = true;      // "Yes, switch" is the default action
+            return TitleAction::AskLanguageChange;
+        }
     }
     return TitleAction::None;
 }
 
 TitleAction TitleScreen::cancel() {
     if (confirmNewGame_) { closeConfirm(); return TitleAction::DismissNewGameConfirm; }
+    if (confirmLanguage_) { closeLanguageConfirm(); return TitleAction::DismissLanguageConfirm; }
     if (page_ == TitlePage::Continue || page_ == TitlePage::Settings) {
         page_ = TitlePage::Menu;
         return TitleAction::Back;
@@ -231,11 +249,17 @@ TitleAction TitleScreen::cancel() {
 }
 
 TitleAction TitleScreen::click(float px, float py, const TitleLayout& layout) {
-    // The dialog swallows taps: only its two answers are live.
+    // A dialog swallows taps: only its two answers are live.
     if (confirmNewGame_) {
         const int b = layout.hitConfirmButton(px, py);
         if (b < 0) return TitleAction::None;
         confirmYes_ = (b == 0);
+        return activate();
+    }
+    if (confirmLanguage_) {
+        const int b = layout.hitConfirmButton(px, py);
+        if (b < 0) return TitleAction::None;
+        confirmLangYes_ = (b == 0);
         return activate();
     }
     switch (page_) {
@@ -253,7 +277,7 @@ TitleAction TitleScreen::click(float px, float py, const TitleLayout& layout) {
         }
         case TitlePage::Settings: {
             int r = layout.hitLangRow(px, py);
-            if (r >= 0 && r < langCount_) { setSel_ = r; langIdx_ = r; return TitleAction::SetLanguage; }
+            if (r >= 0 && r < langCount_) { setSel_ = r; return activate(); }
             if (layout.hitBack(px, py)) return cancel();
             return TitleAction::None;
         }

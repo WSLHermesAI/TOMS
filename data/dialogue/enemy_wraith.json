@@ -3,25 +3,60 @@
   "start": "root",
   "nodes": {
     "root": {
-      "text": "怨靈：『仇恨……永不消散……』",
+      "text": {
+        "zh_TW": "怨靈：『仇恨……永不消散……』",
+        "en": "Wraith: \"Hatred... never fades...\"",
+        "zh_CN": "怨灵：『仇恨……永不消散……』",
+        "ja": "怨霊「憎しみは……決して消えぬ……」",
+        "ko": "원령: \"증오는……결코 사라지지 않는다……\"",
+        "es": "Espectro: \"El odio... jamás se desvanece...\""
+      },
       "choices": [
         {
-          "label": "你在恨什麼？（傾聽）",
+          "label": {
+            "zh_TW": "你在恨什麼？（傾聽）",
+            "en": "What is it you hate? (Listen)",
+            "zh_CN": "你在恨什么？（倾听）",
+            "ja": "何を憎んでいる？（耳を傾ける）",
+            "ko": "무엇을 그리 증오하는가? (귀 기울인다)",
+            "es": "¿Qué es lo que odias? (Escuchar)"
+          },
           "next": "listen",
           "action": { "type": "setStoryFlag", "flag": "heard_wraith_lament" }
         },
         {
-          "label": "（立刻迎戰）",
+          "label": {
+            "zh_TW": "（立刻迎戰）",
+            "en": "(Engage immediately)",
+            "zh_CN": "（立刻迎战）",
+            "ja": "（すぐさま迎え撃つ）",
+            "ko": "(즉시 맞서 싸운다)",
+            "es": "(Atacar de inmediato)"
+          },
           "next": null,
           "action": { "type": "enterBattle" }
         }
       ]
     },
     "listen": {
-      "text": "怨靈：『我曾是這片土地的村民……沃卡司的詛咒讓我們死不瞑目……救救……我們……』",
+      "text": {
+        "zh_TW": "怨靈：『我曾是這片土地的村民……沃卡司的詛咒讓我們死不瞑目……救救……我們……』",
+        "en": "Wraith: \"I was once a villager of this land... Vorkath's curse won't let us rest in death... save... save us...\"",
+        "zh_CN": "怨灵：『我曾是这片土地的村民……沃卡司的诅咒让我们死不瞑目……救救……我们……』",
+        "ja": "怨霊「我はかつてこの地の村人であった……Vorkath の呪いが、我らを死してなお安らげぬようにしている……助け……助けてくれ……」",
+        "ko": "원령: \"나는 한때 이 땅의 촌민이었다……Vorkath의 저주가 우리를 죽어서도 눈을 감지 못하게 한다……구해……구해다오……\"",
+        "es": "Espectro: \"Yo fui, en otro tiempo, un aldeano de esta tierra... La maldición de Vorkath no nos deja descansar en la muerte... sálva... sálvanos...\""
+      },
       "choices": [
         {
-          "label": "（讓你解脫。）",
+          "label": {
+            "zh_TW": "（讓你解脫。）",
+            "en": "(Grant you release.)",
+            "zh_CN": "（让你解脱。）",
+            "ja": "（安らぎを与えよう。）",
+            "ko": "(그대에게 해방을 주겠다.)",
+            "es": "(Concederte la liberación.)"
+          },
           "next": null,
           "action": { "type": "enterBattle" }
         }

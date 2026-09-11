@@ -128,24 +128,52 @@ void Font::growAtlasOneRow() {
 bool Font::buildFromFile(const std::string& ttfPath,
                          const std::vector<uint32_t>& chars,
                          int cell, int fontPx) {
+    return buildFromFiles({ttfPath}, chars, cell, fontPx);
+}
+
+bool Font::buildFromFiles(const std::vector<std::string>& ttfPaths,
+                          const std::vector<uint32_t>& chars,
+                          int cell, int fontPx) {
     cell_ = cell; cols_ = 32;
-    // load the whole font file into memory (keep a copy for realtime re-bake)
-    std::ifstream in(ttfPath, std::ios::binary);
-    if (!in) return false;
-    primData_.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-    if (primData_.empty()) return false;
+    (void)fontPx;   // per-glyph scale recomputed in bakeGlyph
 
-    int ttcOffset = stbtt_GetFontOffsetForIndex(primData_.data(), 0);
-    if (ttcOffset < 0) return false;
-    primInfo_ = std::make_unique<stbtt_fontinfo>();
-    if (!stbtt_InitFont(primInfo_.get(), primData_.data(), ttcOffset)) return false;
+    // Load every font up front (order matters: first one that has a given glyph
+    // wins). A path that fails to open/parse is skipped, not fatal.
+    struct Loaded { std::vector<uint8_t> data; std::unique_ptr<stbtt_fontinfo> info; };
+    std::vector<Loaded> fonts;
+    for (auto& path : ttfPaths) {
+        std::ifstream in(path, std::ios::binary);
+        if (!in) continue;
+        std::vector<uint8_t> data((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+        if (data.empty()) continue;
+        int off = stbtt_GetFontOffsetForIndex(data.data(), 0);
+        if (off < 0) continue;
+        auto info = std::make_unique<stbtt_fontinfo>();
+        if (!stbtt_InitFont(info.get(), data.data(), off)) continue;
+        fonts.push_back({std::move(data), std::move(info)});
+    }
+    if (fonts.empty()) return false;
+
+    // The first successfully-loaded font stays "primary" (ensure()'s realtime
+    // fallback re-bakes from this one first); the rest are pre-registered as
+    // fallback fonts so any codepoint requested later that wasn't in `chars`
+    // still resolves through the same ordered list ensure() already knows how
+    // to search, instead of only ever consulting fallbackDir_.
+    primData_ = std::move(fonts[0].data);
+    primInfo_ = std::move(fonts[0].info);
     primValid_ = true;
-
-    // scale for vertical fit
-    int ascent = 0, descent = 0, lineGap = 0;
-    stbtt_GetFontVMetrics(primInfo_.get(), &ascent, &descent, &lineGap);
-    float scale = (ascent > 0) ? ((float)(cell_ - 4) / (float)(ascent - descent)) : 1.0f;
-    (void)fontPx; (void)scale;   // per-glyph scale recomputed in bakeGlyph
+    fallbackScanned_ = true;   // skip the directory scan; we already have the list below
+    for (size_t i = 1; i < fonts.size(); i++) {
+        std::string key = "#prebaked" + std::to_string(i);
+        fallbackFiles_.push_back(key);
+        fallbackCache_.emplace(key, std::make_pair(std::move(fonts[i].data), std::move(fonts[i].info)));
+    }
+    // findFallbackFont() re-parses primInfo_'s bytes via primData_, but the fonts
+    // vector's font[0] entries were just moved out of -- rebuild local pointers
+    // for the pre-bake loop below from the now-owning members instead of `fonts`.
+    std::vector<stbtt_fontinfo*> order;
+    order.push_back(primInfo_.get());
+    for (auto& key : fallbackFiles_) order.push_back(fallbackCache_[key].second.get());
 
     int n = (int)chars.size();
     if (n == 0) return false;
@@ -167,7 +195,8 @@ bool Font::buildFromFile(const std::string& ttfPath,
         if (map_.find(cp) != map_.end()) continue;
         int idx = nextIdx_++;
         if (idx >= cols_ * rows_) growAtlasOneRow();
-        bakeGlyph(cp, *primInfo_, primData_, idx);
+        for (stbtt_fontinfo* fi : order)
+            if (bakeGlyph(cp, *fi, primData_, idx)) break;
     }
     return true;
 }
@@ -224,3 +253,122 @@ bool Font::ensure(uint32_t codepoint) {
     nextIdx_--;
     return false;
 }
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+
+// Rasterizes the whole codepoint set in ONE offscreen <canvas>, one JS<->WASM round trip,
+// mirroring buildFromFiles()'s cell-grid layout (cols_=32, cell x cell cells) so every other
+// Font method (uv/glyphMetrics/glyphPxWidth) works identically regardless of backend.
+//
+// Per glyph the JS side uses TextMetrics.actualBoundingBox{Left,Right,Ascent,Descent} to
+// compute the SAME quantities stbtt_GetGlyphBitmap gives bakeGlyph() (see font.cpp above):
+//   leftBearing = actualBoundingBoxLeft   (stb's `left`)
+//   topBearing  = actualBoundingBoxAscent (stb's `-top`: bitmap-top distance above baseline)
+//   sizeX/sizeY = tight ink width/height  (stb's rasterized bitmap w/h)
+// and draws each glyph so its ink's top-left corner lands exactly at the cell's top-left
+// pixel (pen = cell origin + (actualBoundingBoxLeft, actualBoundingBoxAscent)) -- the same
+// "paste bitmap at cell origin, no centering" placement bakeGlyph uses. That keeps the UV
+// rect / quad-size math in Game::drawText()/measureText() byte-for-byte the same as the
+// stb_truetype path; only how the pixels got into the atlas differs.
+bool Font::buildFromCanvas(const std::vector<uint32_t>& chars, int cell, int fontPx) {
+    cell_ = cell; cols_ = 32;
+    int n = (int)chars.size();
+    if (n == 0) return false;
+
+    int slack = 2048;
+    rows_ = (n + slack + cols_ - 1) / cols_;
+    atlasW_ = (uint32_t)(cols_ * cell_);
+    atlasH_ = (uint32_t)(rows_ * cell_);
+    atlas_.assign((size_t)atlasW_ * atlasH_ * 4, 0);
+    nextIdx_ = 0;
+    map_.clear(); cellIdx_.clear(); glyphM_.clear(); glyphBox_.clear(); advPx_.clear();
+    primValid_ = false;   // no stb primary font in this backend -- ensure() degrades to
+                           // fallbackDir_ scan only (a graceful no-op if nothing's there)
+
+    // metrics[i*4 + {0,1,2,3}] = leftBearing, topBearing, sizeX, sizeY (design/atlas px)
+    std::vector<float> metrics((size_t)n * 4, 0.0f);
+
+    // NOTE: every JS statement below is written as ONE variable per `var` and with no
+    // top-level comma outside of a (...) group -- the C PREPROCESSOR (not the JS engine)
+    // scans EM_ASM's arguments and only tracks balanced parentheses, not braces; a bare
+    // comma like `var a = 1, b = 2;` inside the { } code block gets misread as separating
+    // macro arguments and breaks the build. See the original single-`var`-list version's
+    // compile errors if you're tempted to reintroduce comma-separated declarations here.
+    EM_ASM({
+        var cps = $0;
+        var count = $1;
+        var cell = $2;
+        var fontPx = $3;
+        var atlasPtr = $4;
+        var atlasW = $5;
+        var atlasH = $6;
+        var metricsPtr = $7;
+        var canvas = document.createElement('canvas');
+        canvas.width = atlasW; canvas.height = atlasH;
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.clearRect(0, 0, atlasW, atlasH);
+        ctx.font = fontPx + 'px sans-serif';   // browser's own font-fallback chain
+        ctx.fillStyle = '#ffffff';
+        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'left';
+        var cols = atlasW / cell;
+        for (var i = 0; i < count; i++) {
+            var cp = HEAPU32[(cps >> 2) + i];
+            var ch = String.fromCodePoint(cp);
+            var cellX = (i % cols) * cell;
+            var cellY = Math.floor(i / cols) * cell;
+            var m = ctx.measureText(ch);
+            var left = m.actualBoundingBoxLeft || 0;
+            var right = m.actualBoundingBoxRight || 0;
+            var asc = m.actualBoundingBoxAscent || 0;
+            var desc = m.actualBoundingBoxDescent || 0;
+            var w = left + right;
+            var h = asc + desc;
+            var mi = (metricsPtr >> 2) + i * 4;
+            if (w <= 0.01 || h <= 0.01) {
+                // whitespace / zero-ink glyph: advance a third of a cell, draw nothing
+                // (matches bakeGlyph's whitespace special case in font.cpp).
+                HEAPF32[mi+0] = 0; HEAPF32[mi+1] = 0;
+                HEAPF32[mi+2] = cell / 3; HEAPF32[mi+3] = 0;
+                continue;
+            }
+            var penX = cellX + left;
+            var penY = cellY + asc;
+            ctx.fillText(ch, penX, penY);
+            HEAPF32[mi+0] = left; HEAPF32[mi+1] = asc;
+            HEAPF32[mi+2] = w;    HEAPF32[mi+3] = h;
+        }
+        // getImageData is spec'd non-premultiplied -- RGB stays 255,255,255 under a white
+        // fillStyle regardless of antialiased alpha, exactly the format bakeGlyph() writes.
+        var img = ctx.getImageData(0, 0, atlasW, atlasH).data;
+        HEAPU8.set(img, atlasPtr);
+    }, chars.data(), n, cell_, fontPx, atlas_.data(), atlasW_, atlasH_, metrics.data());
+
+    for (int i = 0; i < n; i++) {
+        uint32_t cp = chars[i];
+        if (map_.find(cp) != map_.end()) continue;   // duplicate codepoint in input
+        int idx = i;
+        int cellX = (idx % cols_) * cell_, cellY = (idx / cols_) * cell_;
+        float leftBearing = metrics[i*4+0], topBearing = metrics[i*4+1];
+        float w = metrics[i*4+2], h = metrics[i*4+3];
+        glyphM_[cp] = { leftBearing, topBearing, w, h };
+        if (h <= 0.0f) {
+            // whitespace: reserve the cell but no ink -- same bookkeeping as bakeGlyph().
+            glyphBox_[cp] = {0, 0, 0, 0};
+            advPx_[cp] = std::max(1, cell_ / 3);
+            map_[cp] = { (float)cellX / atlasW_, (float)cellY / atlasH_,
+                         (float)(cellX + cell_) / atlasW_, (float)(cellY + cell_) / atlasH_ };
+        } else {
+            int iw = (int)std::ceil(w), ih = (int)std::ceil(h);
+            glyphBox_[cp] = { 0, 0, iw, ih };
+            advPx_[cp] = iw;
+            map_[cp] = { (float)cellX / atlasW_, (float)cellY / atlasH_,
+                         (float)(cellX + iw) / atlasW_, (float)(cellY + ih) / atlasH_ };
+        }
+        cellIdx_[cp] = idx;
+        nextIdx_ = idx + 1;
+    }
+    return true;
+}
+#endif
