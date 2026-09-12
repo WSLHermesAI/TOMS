@@ -236,3 +236,21 @@ by this roadmap except where a milestone explicitly says "retrofit."
 opportunity is **M2 and M6 alongside M3/M4**: UI bring-up and the Power Bar/Equipment track touch
 almost entirely different code and can be built by a second contributor (or in a second work
 session) without blocking the world-logic track.
+
+---
+
+## Appendix — Phase S (70 floors, story, art), 2026-09-13
+
+Milestones M0-M9 above describe what actually shipped through the 11-stage game. The next phase is
+a different shape and is tracked as **S1-S8** in `PROGRESS_REPORT.md` under Milestone status, with
+its data contract in:
+
+| Document | Covers |
+|---|---|
+| `STORY_BIBLE.md` v3 | 70 floors = 10 acts x 7, the seal/cultivation ladder, 8 choices into 3 counters, 15 endings, rebirth rules |
+| `SIDE_STORIES.md` v3 | 10 flagship side stories (one per act, 5th floor), choice-gated and mirror variants, per-floor event pools |
+| `STORY_DATA_SCHEMA.md` v3 | per-floor files `F01..F70`, `stage.story`, 4 new condition types, maze scaling to 63x42, `endings.json`, `cycles.json`, save v3, 16 validators |
+| `ART_AND_ABILITY_DESIGN.md` | 50 enemies, 20 equipment, 36 statuses, ComfyUI prompts, 1/2/4-grid footprints, 1,006 frames + 469 statics, 3 MB budget |
+
+Order of work: S1 footprint, S2 70-floor generator, S3 story data + condition DSL + save v3,
+S4-S7 systems (skill tree, forge, hub, actives, endings, rebirth), S8 art pipeline.

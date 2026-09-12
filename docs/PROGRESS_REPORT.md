@@ -11,45 +11,53 @@
 
 ## ▶ Next Step
 
-**Start here: the virtual keypad UI doesn't work (owner-reported), and the confirmed cause + exact
-fix are already written up in the "2026-09-09 — Owner reports the virtual keypad UI doesn't work"
-log entry below.** Short version: desktop mouse-forwarding in `main.cpp` never sends a release
-(`phase == 2`) event to `handleTouch()` at all, only a press -- harmless before this session's
-hold-to-move change, but now a click on the on-canvas d-pad likely starts the character moving and
-never stops. The fix is small (mirror the press branch with an `else` that fires
-`handleTouch(bx, by, 2)` on release) and not yet applied -- do that first, rebuild, and actually
-click the on-canvas d-pad to confirm before assuming anything else is wrong. That same entry also
-flags one *unconfirmed* thing worth a look while in this code: `drawGamepad()` hides the whole d-pad
-during inventory/dialogue/etc., but `handleTouch()`'s inventory-open path still has a d-pad-based
-`invMoveSel` fallback that assumes it's visible -- may be intentional (external-gamepad support on
-web), may not be.
+**Start here: a complete design set for the next phase landed on 2026-09-13 (see the log entry
+below), and NONE of it is in the code yet.** `docs/STORY_BIBLE.md`, `docs/SIDE_STORIES.md`,
+`docs/STORY_DATA_SCHEMA.md` and `docs/ART_AND_ABILITY_DESIGN.md` reshape the game: 11 fixed stages
+become **70 generated floors** (10 acts x 7), **15 endings** decided by choices and missed key
+items, **rebirth / NG+** that carries half the power and resets every item, **50 enemies** (with
+1/2/4-grid footprints) and **20 equipment** on a **36-status** system. The old M0-M9 roadmap stays
+correct for what shipped; the new work is tracked as **S1-S8** in the milestone table.
 
-**Everything else touched this session, still needing the owner's hands-on time (nothing below has
-changed since it was last flagged, only accumulated):**
-- **Hold-to-move** (this session's other polish item) — keyboard should now feel like classic
-  dungeon-crawler "hold a direction to keep walking," not one tile per press. Confirmed via injected
-  key-hold that it fires multiple repeated steps, but real *feel* (is 220ms/110ms right?) needs a
-  human.
-- **The regenerated mazes** — walk all 11 floors (or at least floor 1 for "should look identical to
-  before," floor 6 for the door/key puzzle, floor 10 for the boss, floor 11 for the two-NPC
-  epilogue) and confirm they're solvable and read well at their new, dynamically-sized tile scale.
-- **The VK_ERROR_DEVICE_LOST crash fix** — traced to a real, pre-existing GPU buffer-lifetime bug
-  finally exposed by the bigger mazes (see that log entry for the full mechanism); fixed and
-  reproduced-clean many times here, but only the owner hitting it again (or not) is real proof.
-- Everything from M8 (shop tabs/equip, mission accept/claim, the 3 new `dialogue_gate` fights) and
-  M7 (the entity-status "stays cleared" fix) — still unconfirmed, unchanged since first flagged.
-- The web build, in an actual browser (`web-gl/toms_web.html` or `web-gpu/toms_web.html`, served
-  over HTTP) — compiling and passing headless tests proves the shared game-logic layer works under
-  WASM, but no actual WebGL/WebGPU rendering has been checked yet.
-- M9's remaining checklist items: a full floor-1-to-11 playthrough, an audio pass, a docs-accuracy
-  check.
-- Older still-open items: the F12/Steam-overlay test, Milestone 5's deferred Inventory/Shop/Dialogue
-  ImGui migration.
+Recommended order (each item is sized to finish and verify in one sitting):
 
-**Everything currently in the repo builds clean and passes its full regression** (`Debug`+`Release`
-natively, and both web backends under Node) as of the last commands run this session.
+1. **S1 - Entity footprint (1/2/4 grids).** The owner's most recent request and the smallest engine
+   change: add `footprint` to `Entity` (default 1x1, so every shipped stage JSON stays valid),
+   size/offset entity sprites by footprint in `draw()` with y-sort on the lowest occupied tile,
+   treat all occupied tiles as blocking *and* battle triggers, then add `RoamerController` (wander,
+   detect, chase; never phases through walls) and the name banner for 4-grid roamers/bosses. Verify
+   by placing a 2x1 enemy by hand and walking around it. Note: a maze cell is 2x2 tiles and passages
+   are carved 2 tiles wide, so a 2x2 enemy can traverse the maze with no extra work.
+2. **S2 - `tools/gen_floors.py` + the 70-floor table** (`STORY_DATA_SCHEMA.md` section 5). Emits
+   `data/story/floors/F01..F70.json` (maze up to 63x42, rooms/loops/enemies/items/events per floor)
+   and keeps the 11 hand-authored stage files as the act-boss floors. Connectivity (Wilson + BFS,
+   every floor reachable, stairs present) must be validated before anything else depends on it.
+3. **S3 - Story data + condition DSL + save v3**: `story.json` v3 + `ch_01..ch_03` + the first three
+   acts' event pools, then the four new condition types (`choiceMade`, `sideStoryState`,
+   `counterAtLeast`, `cycleIndexAtLeast`) and save `schemaVersion: 3` -- without that, the act-1
+   motive choice cannot actually persist.
+4. **S4-S7 - the four systems, in the order the docs assume**: skill tree (`skills.json` + UI),
+   forging (`forge.json` + forge UI), village/barracks hub (`hub.json`), equipment actives; then
+   `endings.json` + the priority-order resolver (first-match-wins with a guaranteed fallback); then
+   `cycles.json` (rebirth: cultivation halved, skill effects x0.5, skill points halved, every item,
+   key, material, gold and side-story state reset; enemies +15% per cycle, capped at +120%).
+5. **S8 - Art pipeline** (parallel to all of the above, it blocks nothing): the four new sprite
+   shader uniforms (`uTintMode`, `uRimLight`, `uOverlay`, `uDistort`), `tools/make_variants.py`,
+   `tools/pack_atlas.py`, then the 9 shared body rigs. Budget: 3 MB of art total (currently
+   estimated 2.8 MB with multi-grid enemies -- trim before it grows).
 
----
+**Still waiting on the owner (no code task attached, carried over from earlier sessions):**
+- Playtest confirmation of hold-to-move feel, the title phase, and the battle scene in a browser.
+- Whether the upstream **battle v2** (real-time auto-moving bars, tap to freeze, attack / defend /
+  super as three independent buttons, multi-touch) feels right. It arrived with the 2026-09-12 pull
+  and **replaces** the press-and-hold Power Bar this repo built in M6.
+- Audio pass (web audio and SFX arrived with the 2026-09-11 multi-language pull).
+- The stray `sprite.frag.spv` / `sprite.vert.spv` in the repo root: byte-identical duplicates of
+  `assets/shaders/` (1676 / 3184 bytes, md5 match), untracked and not gitignored -- delete them and
+  add a `.gitignore` rule, or keep?
+- Nothing above is currently broken: as of the last commands run, `tower_vulkan` builds and the
+  deployed web build (commit `af29333`) loads, plays and passes a scripted battle check on the live
+  GitHub Pages site.
 
 ## Milestone status
 
@@ -65,6 +73,13 @@ natively, and both web backends under Node) as of the last commands run this ses
 | M7 — Balance & checklist closure | ✅ Done | Whole-tower balance simulation (full-item and zero-item runs) against real `data/*.json`; dialogue `next`-chain integrity check across all files; design-doc checklists closed with evidence; found and fixed a real gap (Entity Status System built in M3 but never wired into live gameplay — floors didn't actually stay cleared). See log. |
 | M8 — Content authoring | ✅ Done (with 3 small system additions the content needed to be reachable) | 9-item `data/equipment.json` sold through the Store (auto-equips), 3-mission `data/missions.json` (once/daily/side) offered and claimable through NPC dialogue, 3 monster types converted to `dialogue_gate`, Stage Select preview text for all 11 floors. Found and fixed 3 real gaps along the way (mission rewards never granted, equipment never loadable/equippable, `applyEquipmentStats` never called) plus 2 unrelated pre-existing dead-content bugs. See log. |
 | M9 — Platform verification & polish | 🟡 In progress | Full regression now passes on **both** Windows (Debug+Release) and web (WebGL+WebGPU, Emscripten 6.0.9, actually executed under Node not just compiled) for the first time this project has ever had that confirmed. Owner also asked, mid-milestone, for all 11 stages' mazes to be regenerated via Wilson's algorithm with per-floor-growing size — done (`tools/gen_mazes.py`), same entity roster preserved exactly, tile size now dynamic per stage. **Still open:** manual floor-1-to-11 playthrough, a browser/WebGPU playthrough, an audio pass, a docs-accuracy check. See log. |
+| M10 — Title phase (New Game / Continue / Settings) | ✅ Done | Title screen drawn with the game's own renderer (so it exists on web too), numbered save slots (`save/slotN.json`, atomic writes), settings (`save/settings.json`: language, slot count, font scale), a 6-language text table (`data/text.json` with built-in fallback), and the "start a new game in this empty slot?" confirm dialog (owner-reported: an empty slot previously did nothing). Verified natively under Xvfb with real key events, and again in a browser on the live site. |
+| M11 — Web delivery pipeline | ✅ Done (deployed and verified live) | Root cause of the dead virtual keypad: the WebGL backend reported a 1280x720 design space while the canvas and the page's tap mapping were 1024x768, and `glViewport` used the design size inside a 768-tall buffer, shifting every drawn control 48px below its hit box. Fixed by splitting design space from drawing buffer. The published page is now a hand-maintained clean page (`web/clear.html`: no Emscripten logo, no status/spinner block, no debug console; real byte-level loading progress; animated title screen) that survives rebuilds, and artifact filenames are version-stamped per build so a cached `.data` can never mismatch a fresh page. Live: https://wslhermesai.github.io/TOMS/ |
+| S1 — Entity footprint (1/2/4 grids) + roamers | ⬜ Not started | Rules and data contract in `ART_AND_ABILITY_DESIGN.md` sections 1.7 / 3.6: only 1/2/4 grids, fixed 32px per grid, no footprint overlap inside a cell, elites never change footprint, 4 grids means boss-or-special-event. |
+| S2 — 70-floor generator | ⬜ Not started | `tools/gen_floors.py` + floor table + connectivity validation (`STORY_DATA_SCHEMA.md` section 5). |
+| S3 — Story data + condition DSL + save v3 | ⬜ Not started | `story.json` v3, `ch_01..ch_03`, event pools, `choiceMade` / `sideStoryState` / counters / `cycleIndex`, save `schemaVersion: 3`. |
+| S4-S7 — Skill tree / forging / hub / actives, then endings + rebirth | ⬜ Not started | Schemas in `STORY_DATA_SCHEMA.md` sections 6 (systems), 7 (endings + resolver), 8 (rebirth). |
+| S8 — Art pipeline (shader variants, atlas, rigs) | ⬜ Not started | `ART_AND_ABILITY_DESIGN.md` sections 1.3 / 1.5 / 8; 1,006 animation frames + 469 static images, 3 MB budget. |
 
 Legend: ⬜ Not started · 🟡 In progress · 🟥 Blocked · ✅ Done
 
@@ -1693,6 +1708,75 @@ assuming anything else is wrong.
 ---
 
 ---
+
+### 2026-09-11 to 2026-09-13 — Title phase, a real web pipeline, upstream pulls, and the next-phase design set
+
+Six work streams landed after the last log entry, all verified rather than assumed:
+
+**1. Title phase (now M10).** New Game / Continue / Settings with numbered save slots, a settings
+file (language, slot count, font scale), a six-language text table with built-in fallback, and a
+confirm dialog before starting a run in an empty slot (owner-reported: an empty slot previously did
+nothing). Two real bugs found and fixed while verifying: language selection reverted because the
+preference was re-applied from stale state, and `stageDisplayName()` never matched because it
+compared the file stem against the JSON id (`stage01` vs `stage_01`). Verified natively (Xvfb, real
+key events, screenshots) and in a browser on the live site.
+
+**2. The virtual keypad was not a keypad bug.** Owner-reported dead on-screen controls traced to the
+WebGL backend conflating two sizes: it reported a 1280x720 design space while the canvas and the
+page tap mapping were 1024x768, and `end()` set `glViewport` to the design size inside a 768-tall
+drawing buffer (a GL viewport is bottom-left anchored, so everything drew 48px below the coordinate
+the game hit-tested taps against). Fixed by separating design space from drawing buffer
+(`emscripten_get_canvas_element_size`, re-checked every frame). Taps then landed correctly, verified
+by frame-diffing the map while injecting pointer events at design coordinates.
+
+**3. The published page is now maintainable.** `index.html` used to be an iframe wrapper around
+Emscripten's stock shell: logo, spinner/status block, an `#output` textarea that was literally a
+visible debug console, and the title "Emscripten-Generated Code". Now `web/clear.html` is
+hand-maintained source (clean full-viewport page, errors to the browser console only) and
+`build_web.sh` regenerates the deployable page from it on every build, so a clean page always
+survives a rebuild. Added afterwards, on the owner's report that a static loading screen reads as a
+crash: real byte-level progress from the loader's own status reports ("downloading data x / 17 MB"),
+held below 100% until `onRuntimeInitialized` actually fires, with a CSS shimmer and a breathing
+brand so it never looks frozen; plus a pulsing, sliding selection highlight on the title screen
+(measured: consecutive no-input frames differ by about 7k samples on web and 5.8k on native).
+
+**4. Deploy safety.** A deploy used to replace `toms_web.data` / `.wasm` under the same names, so a
+returning visitor could run fresh page JS against a cached old `.data` -- reproduced here as a black
+canvas that only a cold browser profile fixed. Artifact filenames are now version-stamped per build
+with the two fetch URLs rewritten inside the JS, and the deploy keeps the previously referenced set.
+Also pruned about 72 MB of stale artifact sets from `gh-pages`, and stopped the deploy script from
+copying every past build's stamped bundle out of the build directory (94.6 MB of local cruft).
+
+**5. Upstream pulls (owner-requested; each followed by a build, a live deploy and verification).**
+- 2026-09-11: multi-language, web audio, TTF fonts -- `toms_web.data` dropped from 17,311,851 B to
+  208,318 B (the bitmap font atlas was replaced by subsetted TTFs), so the page now loads almost
+  instantly and the loading bar jumps straight to 100%.
+- 2026-09-12: camera, battle system v2, more multi-language content. Battle v2 replaces the
+  press-and-hold Power Bar with auto-moving bars and tap-to-freeze, three independent buttons
+  (attack / defend / super) and multi-touch concurrency; verified live in a browser (a two-finger
+  tap cools both bars, the enemy clock advances on its own). One content bug the deployed page
+  exposed: the new Attack/Defend prompt strings were longer than their 230px column and printed over
+  each other -- trimmed across all six languages.
+- Each pull was checked for surviving local work: the earlier battle-button and input-routing fixes
+  were superseded by upstream's design, while the clean page, version-stamped artifacts, loading
+  screen, title animation and the harness diagnostics (`jsCombatInfo`, `jsPlayerInfo`,
+  `jsDebugBattle`) survived and are still in use.
+
+**6. Next-phase design set (documents only, not implemented).** `STORY_BIBLE.md` v3 turns the story
+into a xianxia reincarnation main line -- a fallen Grand Emperor reborn as a powerless apprentice,
+each floor releasing one seal of memory and cultivation -- over **70 floors = 10 acts x 7**, with
+eight cross-act choices feeding three counters (insight / resolve / humanity) and **15 endings** (3
+good, 2 neutral, 10 bad, 1 hidden) resolved by a priority condition tree from choices made on
+different floors *and* key items never obtained; rebirth carries half the power and resets every
+item. `SIDE_STORIES.md` v3 places the ten flagship side stories one per act (5th floor), two
+choice-gated and several mirroring main-line choices, plus per-floor minor event pools so 70 floors
+have daily content. `STORY_DATA_SCHEMA.md` v3 is the data contract (per-floor files, story graph,
+four new condition types, maze scaling table to 63x42, `endings.json`, `cycles.json`, save v3,
+16 validators). `ART_AND_ABILITY_DESIGN.md` specifies **50 enemies** (40 regular plus 10 unique
+bosses, each with a full ComfyUI prompt) and **20 equipment** with gameplay values, a **36-status**
+system, and the resulting asset list -- **1,006 animation frames and 469 static images** -- built on
+nine shared body rigs plus swappable parts plus shader colour variants (198 enemy frames instead of
+1,100), with **1/2/4-grid footprints** as a wordless visual language (4 grids means boss or roamer).
 
 ## Open Questions / Blockers
 
