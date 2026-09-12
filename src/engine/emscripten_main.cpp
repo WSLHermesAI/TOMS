@@ -48,22 +48,24 @@ EMSCRIPTEN_KEEPALIVE
 void jsGamepad(int phase, int x, int y) {
     if (g_game) g_game->handleTouch((float)x, (float)y, phase);
 }
-// Diagnostics for the browser build's battle input. The battle scene is driven by press-and-hold,
-// which a page driver cannot observe through the DOM (nothing in the canvas reports state), so the
-// deploy harness asserts on these instead: which==0 -> flags|phase<<8 (bit0 active, bit1 charging,
-// bit2 won), which==1 -> enemy HP, which==2 -> accumulated charge ms.
+// Diagnostics for the browser build's battle input. The battle scene is driven by taps on canvas
+// rects, which a page driver cannot observe through the DOM (nothing in the canvas reports state),
+// so the deploy harness asserts on these instead: which==0 -> flag bits (0 active, 1 attack bar
+// cooling, 2 defense bar cooling, 3 won, 4 shield banked), which==1 -> enemy HP, which==2 -> ms
+// elapsed on the enemy's own attack clock, which==3 -> current Super Attack gauge charge.
 EMSCRIPTEN_KEEPALIVE
 int jsCombatInfo(int which) {
     if (!g_game) return -1;
     const CombatState& c = g_game->combat();
-    if (which == 0) return (c.active ? 1 : 0) | (c.charging ? 2 : 0) | (c.won ? 4 : 0) | ((int)c.phase << 8);
+    if (which == 0) return (c.active?1:0) | (c.atkBar.cooling?2:0) | (c.defBar.cooling?4:0) | (c.won?8:0) | (c.shieldBanked?16:0);
     if (which == 1) return c.enemyHP;
-    if (which == 2) return c.chargeMs;
+    if (which == 2) return c.enemyClockMs;
+    if (which == 3) return c.superCharge;
     return -1;
 }
 // More harness diagnostics: which==0/1 -> player x/y, so a JS-driven walk can prove a step really
-// happened; jsDebugBattle() starts a fight with the nearest monster so the battle scene's
-// press-and-hold input can be exercised without walking the maze first.
+// happened; jsDebugBattle() starts a fight with the nearest monster so the battle scene's tap
+// input can be exercised without walking the maze first.
 EMSCRIPTEN_KEEPALIVE
 int jsPlayerInfo(int which) {
     if (!g_game) return -1;
@@ -144,6 +146,18 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
         if (k == "Enter" || k == " ") { g_game->inGameMenuActivate(); return EM_TRUE; }
         if (k == "Escape") { g_game->inGameMenuBack(); return EM_TRUE; }
         return EM_TRUE; // swallow all other keys while the menu is open
+    }
+    // Battle System v2: a keyboard attached to the browser gets the same tap bindings as the
+    // desktop build (main.cpp) -- Attack/Defend/Super are independent instantaneous taps, each a
+    // safe no-op while its bar is cooling / the gauge isn't full, so no state tracking is needed.
+    // The primary input is still touch (see handleTouch's rect-based dispatch via jsGamepad, which
+    // already supports genuinely concurrent multi-touch since each finger's pointerdown fires its
+    // own independent call) -- this is parity for anyone with a keyboard, not the main path.
+    if (g_game->combatActive()) {
+        if (k == "Enter" || k == " ")      { g_game->battleTapAttack(); return EM_TRUE; }
+        if (k == "f" || k == "F")          { g_game->battleTapDefense(); return EM_TRUE; }
+        if (k == "g" || k == "G")          { g_game->battleTapSuper(); return EM_TRUE; }
+        return EM_TRUE;
     }
     if (g_game->modalActive()) return EM_TRUE;
     if (k == "ArrowLeft"  || k == "a" || k == "A") g_game->movePlayer(-1, 0);

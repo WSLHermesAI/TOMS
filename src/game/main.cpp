@@ -215,21 +215,20 @@ int main(int argc, char** argv) {
                 // Must be checked before g.interact(), since interact() itself now returns early
                 // once modalActive() covers cs.won (see game.h).
                 else if (g.combatWon()) g.dismissVictory();
+                // Battle System v2: Enter/Space is now a single instantaneous Attack tap (the bar
+                // is always auto-moving; there's nothing to hold) -- battleTapAttack() is a safe
+                // no-op while that bar is on cooldown, so no state tracking is needed here.
+                else if (g.combatActive()) g.battleTapAttack();
                 else if (g.inDialogueFlag()) g.chooseDialogue(g.dialogueSel());
                 else g.interact();
             }
-            // Milestone 6: the Power Bar minigame needs real HOLD-DURATION input, not just the
-            // discrete "was this key pressed this frame" edge that keyPressed() gives -- reuses
-            // the same keyDown() level-state query already defined above for that. Harmless to
-            // compute/call unconditionally outside combat: battleChargeStart()/Release() are
-            // both no-ops whenever combat isn't active (see their declarations in game.h).
-            {
-                bool actionHeldNow = keyDown(GLFW_KEY_ENTER) || keyDown(GLFW_KEY_SPACE);
-                static bool actionWasHeld = false;
-                if (actionHeldNow && !actionWasHeld) g.battleChargeStart();
-                if (!actionHeldNow && actionWasHeld) g.battleChargeRelease();
-                actionWasHeld = actionHeldNow;
-            }
+            // Battle System v2: Defend and Super are independent taps, each on their own key, so
+            // a player can act on Attack (above) and Defend within the same frame -- matching the
+            // design's "concurrent, multi-touch-capable" input on desktop as closely as a
+            // single-mouse/single-keyboard setup allows. Both are safe no-ops outside combat / not
+            // yet available.
+            if (keyPressed(GLFW_KEY_F) && g.combatActive()) g.battleTapDefense();
+            if (keyPressed(GLFW_KEY_G) && g.combatActive()) g.battleTapSuper();
             if (keyPressed(GLFW_KEY_I)) g.toggleInventory();
             // Store: B opens the shop (only when no other modal is up)
             if (keyPressed(GLFW_KEY_B) && !g.modalActive()) g.openStore();

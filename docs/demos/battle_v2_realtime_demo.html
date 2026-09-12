@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Battle v2 — Real-Time Auto-Bar Demo</title>
+<style>
+  body { background:#14161c; color:#e8e8ec; font-family:'Segoe UI',Arial,sans-serif; padding:24px; max-width:820px; margin:0 auto; touch-action:manipulation; }
+  h1 { font-size:20px; margin-bottom:4px; }
+  p.sub { color:#8b93a6; margin-top:0; }
+  .hp-row { display:flex; gap:24px; margin:14px 0; }
+  .hp-block { flex:1; }
+  .hp-label { display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; }
+  .hp-outer { height:16px; border-radius:8px; background:#2a2f3a; border:1px solid #444a58; overflow:hidden; }
+  .hp-inner { height:100%; background:linear-gradient(90deg,#4caf6b,#7fd79a); transition:width .15s; }
+  .hp-inner.enemy { background:linear-gradient(90deg,#c94b4b,#e77); }
+  .clock-block { background:#1b1f27; border:1px solid #2a2f3a; border-radius:10px; padding:14px 18px; margin:14px 0; }
+  .clock-title { font-weight:bold; margin-bottom:8px; display:flex; justify-content:space-between; font-size:13px; }
+  .clock-outer { height:16px; border-radius:6px; background:#2a2f3a; border:1px solid #444a58; overflow:hidden; }
+  .clock-inner { height:100%; width:0%; background:linear-gradient(90deg,#e0a030,#ff5050); }
+  .bars-row { display:flex; gap:16px; }
+  .bar-block { flex:1; background:#1b1f27; border:1px solid #2a2f3a; border-radius:10px; padding:16px; margin:10px 0; }
+  .bar-title { font-weight:bold; margin-bottom:10px; display:flex; justify-content:space-between; font-size:13px; }
+  .track { position:relative; height:36px; border-radius:6px; overflow:hidden; border:1px solid #444a58; background:#2a2f3a; }
+  .track.cooling { opacity:.4; }
+  .zone { position:absolute; top:0; bottom:0; }
+  .marker { position:absolute; top:-6px; width:3px; height:48px; background:#fff; box-shadow:0 0 6px #fff; transform:translateX(-1.5px); }
+  button.tapbtn { margin-top:10px; width:100%; padding:16px; font-size:14px; font-weight:bold; border:none; border-radius:8px;
+                  background:#3a4152; color:#fff; cursor:pointer; user-select:none; touch-action:manipulation; }
+  button.tapbtn:active { background:#4a5468; }
+  button.tapbtn.cooling { background:#22262f; color:#6a7280; }
+  button.tapbtn#superBtn { background:#a8452f; display:none; }
+  button.tapbtn#superBtn.ready { display:block; }
+  .shield-badge { font-size:12px; padding:2px 8px; border-radius:10px; background:#2e4a5e; color:#8cf; }
+  .shield-badge.empty { background:#2a2f3a; color:#6a7280; }
+  .charge-row { display:flex; align-items:center; gap:10px; margin:10px 0; font-size:13px; }
+  .charge-dots { display:flex; gap:4px; }
+  .charge-dot { width:10px; height:10px; border-radius:50%; background:#2a2f3a; border:1px solid #444a58; }
+  .charge-dot.filled { background:#ff9640; border-color:#ff9640; }
+  .log { background:#1b1f27; border:1px solid #2a2f3a; border-radius:10px; padding:12px 16px; margin-top:14px; font-size:13px; max-height:170px; overflow-y:auto; }
+  .log div { margin:3px 0; color:#c7cbd6; }
+  .log div.warn { color:#ff9640; }
+  .log div.good { color:#7fd79a; }
+  .log div.bad { color:#e77; }
+  code { background:#22262f; padding:1px 5px; border-radius:4px; }
+  .footer { color:#8b93a6; font-size:12px; margin-top:24px; }
+  a { color:#8cf; }
+</style>
+</head>
+<body>
+
+<h1>Battle v2 — Real-Time Auto-Bar Demo</h1>
+<p class="sub">See <a href="../BATTLE_SYSTEM_V2_PROPOSALS.md">BATTLE_SYSTEM_V2_PROPOSALS.md</a>.
+Both bars move on their own, all the time. Tap ATTACK or DEFEND whenever you want — try tapping
+both close together (two fingers on a touchscreen, or two clicks in quick succession here). The
+enemy hits on its own clock no matter what you're doing.</p>
+
+<div class="hp-row">
+  <div class="hp-block">
+    <div class="hp-label"><span>YOU</span><span id="pHpText">30 / 30</span></div>
+    <div class="hp-outer"><div class="hp-inner" id="pHpBar" style="width:100%"></div></div>
+  </div>
+  <div class="hp-block">
+    <div class="hp-label"><span>ENEMY</span><span id="eHpText">40 / 40</span></div>
+    <div class="hp-outer"><div class="hp-inner enemy" id="eHpBar" style="width:100%"></div></div>
+  </div>
+</div>
+
+<div class="clock-block">
+  <div class="clock-title"><span>ENEMY CLOCK (attacks every 4.0s, always ticking)</span><span id="clockState">…</span></div>
+  <div class="clock-outer"><div class="clock-inner" id="clockBar"></div></div>
+</div>
+
+<div class="bars-row">
+  <div class="bar-block">
+    <div class="bar-title"><span>ATTACK</span><span id="atkLabel">auto-moving</span></div>
+    <div class="track" id="atkTrack"><div class="marker" id="atkMarker" style="left:0%"></div></div>
+    <button class="tapbtn" id="atkBtn">TAP to attack</button>
+  </div>
+  <div class="bar-block">
+    <div class="bar-title"><span>DEFEND</span><span id="defLabel">auto-moving</span> <span class="shield-badge empty" id="shieldBadge">no shield</span></div>
+    <div class="track" id="defTrack"><div class="marker" id="defMarker" style="left:0%"></div></div>
+    <button class="tapbtn" id="defBtn">TAP to bank a shield</button>
+  </div>
+</div>
+
+<div class="charge-row">
+  <span>Super charge:</span>
+  <div class="charge-dots" id="chargeDots"></div>
+  <button class="tapbtn" id="superBtn" style="flex:1; margin:0;">SUPER ATTACK — guaranteed hit!</button>
+</div>
+
+<div class="log" id="log"></div>
+
+<div class="footer">
+  Attack/Defense zone geometry and damage formulas match <code>src/engine/power_bar.cpp</code>
+  exactly (not reimplemented from scratch). Each bar pauses for 1.5s after a tap before it starts
+  auto-moving again — that pause (plus the enemy's own independent 4s clock) is the whole pacing
+  of the fight; there is nothing to "wait your turn" for.
+</div>
+
+<script>
+const PLAYER = { atk: 12, def: 4, maxHp: 30, hp: 30 };
+const ENEMY  = { atk: 11, def: 1, maxHp: 40, hp: 40 };
+const ENEMY_INTERVAL_MS = 4000;
+const COOLDOWN_MS = 1500;
+const SUPER_THRESHOLD = 5;
+
+function span(z){ return z.redOuter*2; }
+function center(z){ return z.redOuter; }
+function computePower(pos, z) {
+  const d = Math.abs(pos - center(z));
+  if (d <= z.greenHalf) { const t = z.greenHalf===0?0:d/z.greenHalf; return 100-29*t; }
+  if (d <= z.blueOuter) { const t=(d-z.greenHalf)/(z.blueOuter-z.greenHalf); return 70-39*t; }
+  const t = Math.min(1,(d-z.blueOuter)/(z.redOuter-z.blueOuter)); return 30-30*t;
+}
+function zoneOf(pos, z) {
+  const d = Math.abs(pos - center(z));
+  return d<=z.greenHalf ? 'green' : (d<=z.blueOuter ? 'blue':'red');
+}
+function computeAttackDamage(baseHit, power, maxMult=2.0) {
+  const mult = 0.2 + (maxMult-0.2)*(power/100);
+  let dmg = Math.ceil(baseHit*mult);
+  if (power>=97) dmg = Math.ceil(dmg*1.25);
+  return dmg;
+}
+function computeDefenseDamage(incoming, power, mitigationFloor=0.0) {
+  if (power>=99) return 0;
+  let mit = power/100;
+  if (mit < mitigationFloor) mit = mitigationFloor;
+  return Math.ceil(incoming*(1-mit));
+}
+function paintZones(trackId, markerId, z) {
+  const track = document.getElementById(trackId), marker = document.getElementById(markerId);
+  track.querySelectorAll('.zone').forEach(n=>n.remove());
+  const c = center(z), s = span(z);
+  const pct = raw => raw/s*100;
+  const segs = [
+    [0, pct(c-z.blueOuter), '#c94b4b'],
+    [pct(c-z.blueOuter), pct(c-z.greenHalf)-pct(c-z.blueOuter), '#3f7fbf'],
+    [pct(c-z.greenHalf), pct(c+z.greenHalf)-pct(c-z.greenHalf), '#4caf6b'],
+    [pct(c+z.greenHalf), pct(c+z.blueOuter)-pct(c+z.greenHalf), '#3f7fbf'],
+    [pct(c+z.blueOuter), 100-pct(c+z.blueOuter), '#c94b4b'],
+  ];
+  segs.forEach(([left,width,color])=>{
+    const d=document.createElement('div'); d.className='zone'; d.style.left=left+'%'; d.style.width=Math.max(0,width)+'%'; d.style.background=color;
+    track.insertBefore(d, marker);
+  });
+}
+
+function log(msg, cls) {
+  const el = document.getElementById('log');
+  const d = document.createElement('div'); if (cls) d.className=cls; d.textContent = msg;
+  el.appendChild(d); el.scrollTop = el.scrollHeight;
+}
+function updateHp() {
+  document.getElementById('pHpText').textContent = `${Math.max(0,PLAYER.hp)} / ${PLAYER.maxHp}`;
+  document.getElementById('eHpText').textContent = `${Math.max(0,ENEMY.hp)} / ${ENEMY.maxHp}`;
+  document.getElementById('pHpBar').style.width = Math.max(0,PLAYER.hp/PLAYER.maxHp*100)+'%';
+  document.getElementById('eHpBar').style.width = Math.max(0,ENEMY.hp/ENEMY.maxHp*100)+'%';
+}
+updateHp();
+let over = false;
+function checkEnd() {
+  if (over) return;
+  if (ENEMY.hp <= 0) { over = true; log('ENEMY DEFEATED. Reload the page to fight again.', 'good'); }
+  else if (PLAYER.hp <= 0) { over = true; log('YOU WERE DEFEATED. Reload the page to try again.', 'bad'); }
+}
+
+// ---- Auto-moving bar: bounces forever, cubic ease-in per leg, tap freezes + banks cooldown ----
+function makeAutoBar(opts) {
+  const bar = {
+    zones: opts.zones,
+    pos: 0, dir: 1, legStart: performance.now(),
+    cooling: false, cooldownEnd: 0,
+    trackEl: document.getElementById(opts.trackId),
+    markerEl: document.getElementById(opts.markerId),
+    btnEl: document.getElementById(opts.btnId),
+    labelEl: document.getElementById(opts.labelId),
+  };
+  paintZones(opts.trackId, opts.markerId, opts.zones);
+  bar.step = (now, dt) => {
+    if (bar.cooling) {
+      if (now >= bar.cooldownEnd) {
+        bar.cooling = false; bar.pos = 0; bar.dir = 1; bar.legStart = now;
+        bar.trackEl.classList.remove('cooling'); bar.btnEl.classList.remove('cooling');
+        bar.labelEl.textContent = 'auto-moving';
+        bar.btnEl.textContent = opts.readyLabel;
+      }
+      return;
+    }
+    const z = bar.zones;
+    const t = (now - bar.legStart) / 1000;
+    const progress = Math.min(1, t / z.rampTime);
+    const speed = z.v0 + (z.vmax - z.v0) * Math.pow(progress, 3);
+    bar.pos += bar.dir * speed * dt;
+    const s = span(z);
+    if (bar.pos > s) { bar.pos = s; bar.dir = -1; bar.legStart = now; }
+    if (bar.pos < 0) { bar.pos = 0; bar.dir = 1; bar.legStart = now; }
+    bar.markerEl.style.left = (bar.pos / s * 100).toFixed(1) + '%';
+    bar.labelEl.textContent = speed >= 0.85 * z.vmax ? 'BOOST!' : 'auto-moving';
+  };
+  bar.tap = () => {
+    if (over || bar.cooling) return null;
+    const power = computePower(bar.pos, bar.zones);
+    const zone = zoneOf(bar.pos, bar.zones);
+    bar.cooling = true; bar.cooldownEnd = performance.now() + opts.cooldownMs;
+    bar.trackEl.classList.add('cooling'); bar.btnEl.classList.add('cooling');
+    bar.labelEl.textContent = 'cooling…';
+    bar.btnEl.textContent = 'cooling…';
+    return { power, zone };
+  };
+  // pointerdown (not click): click's compatibility-event synthesis only fires for the FIRST
+  // touch point in a simultaneous multi-touch gesture, which would silently drop one half of an
+  // "attack + defend at once" two-finger tap. pointerdown fires independently per finger/pointer.
+  bar.btnEl.addEventListener('pointerdown', (e) => { e.preventDefault(); const r = bar.tap(); if (r) opts.onTap(r); });
+  return bar;
+}
+
+const atkBar = makeAutoBar({
+  trackId: 'atkTrack', markerId: 'atkMarker', btnId: 'atkBtn', labelId: 'atkLabel',
+  zones: { v0:15, vmax:200, rampTime:1.8, greenHalf:15, blueOuter:35, redOuter:60 },
+  cooldownMs: COOLDOWN_MS, readyLabel: 'TAP to attack',
+  onTap: ({ power, zone }) => {
+    const baseHit = Math.max(1, PLAYER.atk - ENEMY.def);
+    const dmg = computeAttackDamage(baseHit, power);
+    ENEMY.hp -= dmg;
+    log(`You attack: ${zone.toUpperCase()} power ${Math.round(power)}% -> ${dmg} dmg to enemy.`, 'good');
+    bumpCharge();
+    updateHp(); checkEnd();
+  },
+});
+
+let bankedShield = null; // { power, zone } | null
+const defBar = makeAutoBar({
+  trackId: 'defTrack', markerId: 'defMarker', btnId: 'defBtn', labelId: 'defLabel',
+  zones: { v0:18, vmax:220, rampTime:1.4, greenHalf:15, blueOuter:35, redOuter:60 },
+  cooldownMs: COOLDOWN_MS, readyLabel: 'TAP to bank a shield',
+  onTap: ({ power, zone }) => {
+    bankedShield = { power, zone };
+    const badge = document.getElementById('shieldBadge');
+    badge.textContent = `shield: ${zone} ${Math.round(power)}%`;
+    badge.classList.remove('empty');
+    log(`Shield banked: ${zone.toUpperCase()} power ${Math.round(power)}% — armed for the next enemy hit.`, 'warn');
+  },
+});
+
+// ---- Super-Attack Gauge ----
+let superCharge = 0;
+const chargeDotsEl = document.getElementById('chargeDots');
+for (let i = 0; i < SUPER_THRESHOLD; i++) {
+  const d = document.createElement('div'); d.className = 'charge-dot'; chargeDotsEl.appendChild(d);
+}
+function bumpCharge() {
+  if (superCharge >= SUPER_THRESHOLD) return;
+  superCharge++;
+  const dots = chargeDotsEl.children;
+  for (let i = 0; i < dots.length; i++) dots[i].classList.toggle('filled', i < superCharge);
+  if (superCharge >= SUPER_THRESHOLD) {
+    document.getElementById('superBtn').classList.add('ready');
+    log('SUPER ATTACK charged!', 'warn');
+  }
+}
+document.getElementById('superBtn').addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  if (over || superCharge < SUPER_THRESHOLD) return;
+  const baseHit = Math.max(1, PLAYER.atk - ENEMY.def);
+  const dmg = computeAttackDamage(baseHit, 100, 2.6);
+  ENEMY.hp -= dmg;
+  log(`SUPER ATTACK! Guaranteed hit -> ${dmg} dmg to enemy.`, 'good');
+  superCharge = 0;
+  const dots = chargeDotsEl.children;
+  for (let i = 0; i < dots.length; i++) dots[i].classList.remove('filled');
+  document.getElementById('superBtn').classList.remove('ready');
+  updateHp(); checkEnd();
+});
+
+// ---- Enemy clock (independent of everything above) ----
+let enemyMs = 0;
+let lastTick = performance.now();
+function tick(now) {
+  const dt = now - lastTick; lastTick = now;
+  if (!over) {
+    atkBar.step(now, dt / 1000);
+    defBar.step(now, dt / 1000);
+
+    enemyMs += dt;
+    document.getElementById('clockBar').style.width = Math.min(100, enemyMs / ENEMY_INTERVAL_MS * 100).toFixed(1) + '%';
+    document.getElementById('clockState').textContent = bankedShield ? 'shield armed' : 'no shield banked';
+    if (enemyMs >= ENEMY_INTERVAL_MS) {
+      enemyMs = 0;
+      const incoming = Math.max(1, ENEMY.atk - PLAYER.def);
+      let dmg;
+      if (bankedShield) {
+        dmg = computeDefenseDamage(incoming, bankedShield.power);
+        log(`Enemy attacks! Shield spent (${bankedShield.zone.toUpperCase()} ${Math.round(bankedShield.power)}%) -> ${dmg} dmg taken.`, dmg===0?'good':'bad');
+        bankedShield = null;
+        const badge = document.getElementById('shieldBadge');
+        badge.textContent = 'no shield'; badge.classList.add('empty');
+      } else {
+        dmg = incoming;
+        log(`Enemy attacks! No shield banked -> full ${dmg} dmg taken.`, 'bad');
+      }
+      PLAYER.hp -= dmg;
+      updateHp(); checkEnd();
+    }
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+log('Fight start. Both bars move on their own — tap either one whenever you like.');
+</script>
+</body>
+</html>

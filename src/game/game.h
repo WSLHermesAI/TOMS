@@ -33,6 +33,10 @@ struct Player : public Trackable {
 
 struct EnemyInst : public Trackable {
     std::string id; std::string name; int hp, atk, def, exp, gold; int x, y; bool boss=false;
+    // Battle System v2 (docs/BATTLE_SYSTEM_V2_PROPOSALS.md): how often, in ms, this enemy attacks
+    // on its own real-time clock -- independent of anything the player does. Read from
+    // data/enemies.json's "atk_interval_ms" (engageMonster()); defaults to 4000 when absent.
+    int atkIntervalMs = 4000;
     TOMS_OBJECT(EnemyInst)
 };
 
@@ -48,28 +52,52 @@ struct DialogueChoice {
     nlohmann::json action;   // null if the choice has no action (the common case today)
 };
 
-// Milestone 6: a battle round is now player-timed via the Attack/Defense Power Bar
-// (FIGHT_SCENE_DESIGN.md §6's round pseudocode), not an automatic 700ms timer. One round:
-// AwaitAttackPress -> AttackCharging -> AttackResultPause -> (enemy still alive?)
-// AwaitDefensePress -> DefenseCharging -> DefenseResultPause -> back to AwaitAttackPress.
-// If the Attack Bar's hit kills the enemy, the round ends there (no Defense Bar that round) --
-// matching "the enemy retaliates after every hit except the killing blow."
+// Battle System v2 (docs/BATTLE_SYSTEM_V2_PROPOSALS.md): replaces the old strictly-alternating
+// "Attack Bar then Defense Bar, press-and-hold-to-charge" round with three real-time clocks
+// running simultaneously and independently for the whole fight:
+//  - The Attack and Defense bars each move on their own, continuously, forever -- there is no
+//    "your turn"; tapping either one (battleTapAttack/battleTapDefense) freezes its marker where
+//    it is, resolves that action immediately from the current position, then that bar cools down
+//    for kBarCooldownMs before resuming. Both are always available and independent of each other
+//    (genuinely concurrent -- a two-finger tap on both at once, on touch, resolves both).
+//  - A Defense tap doesn't need an incoming hit to exist yet: it immediately banks whatever power
+//    it lands on as a "shield" (shieldBanked/shieldPower). The enemy's clock spends and clears it
+//    whenever it next fires; a second tap before that just overwrites the banked value.
+//  - The enemy fires on its own fixed timer (enemy.atkIntervalMs), ticked by enemyClockMs,
+//    completely independent of either bar's state -- see Game::update()/resolveEnemyClockFire().
 struct CombatState : public Trackable {
-    enum class Phase { AwaitAttackPress, AttackCharging, AttackResultPause, AwaitDefensePress, DefenseCharging, DefenseResultPause };
+    // One auto-moving bar's live state. Reuses the exact same cubic ease-in speed curve and zone
+    // geometry (toms::PowerBarParams) that today's Power Bar formulas already use -- only how the
+    // marker is driven changes (auto-bounce + tap-to-freeze instead of hold-to-charge).
+    struct AutoBar {
+        float pos = 0.0f;     // marker position, in the bar's own [0, 2*redOuter] units
+        int dir = 1;          // +1 or -1
+        float legMs = 0.0f;   // ms since the marker's current leg (one edge-to-edge sweep) began
+        bool cooling = false; // true while frozen after a tap, waiting to resume auto-moving
+        int cooldownMs = 0;   // ms remaining in that cooldown
+    };
+    static constexpr int kBarCooldownMs = 1500;
+    static constexpr int kSuperThreshold = 5;
+
     EnemyInst enemy;
     int playerHP, enemyHP;
-    int round = 0;
     bool active = false;
     std::string log;          // last exchange text
     bool won = false;
 
-    Phase phase = Phase::AwaitAttackPress;
-    bool charging = false;     // true while the action button is actively held for the current bar
-    int chargeMs = 0;          // accumulated hold duration for the current charge (ms)
-    float lastPosition = 0.0f; // marker position at the last release (for rendering the frozen bar)
-    float lastPower = 0.0f;    // marker power % at the last release (for the result text)
-    int lastDamage = 0;        // damage dealt/taken at the last release (for the result text)
-    int resultPauseMs = 0;     // countdown after a release before the next bar starts (readability beat)
+    AutoBar atkBar, defBar;
+    bool shieldBanked = false;
+    float shieldPower = 0.0f;
+    int enemyClockMs = 0;      // counts up to enemy.atkIntervalMs, then fires and resets to 0
+
+    // Super-Attack Gauge: +1 per successful Attack tap, unlocks a guaranteed strong hit
+    // (battleTapSuper()) at kSuperThreshold, then resets.
+    int superCharge = 0;
+
+    // resultPauseMs: only needed for a LOSE (finishCombatLose() sets active=false immediately,
+    // but the "you fell" message should stay on screen briefly rather than vanish the same
+    // frame) -- a WIN uses `won` to stay open until dismissed instead. See draw()'s showBattle.
+    int resultPauseMs = 0;
     TOMS_OBJECT(CombatState)
 };
 
@@ -134,12 +162,13 @@ public:
     // Verification hook (web build, see jsDebugBattle in emscripten_main.cpp): start a fight with
     // the nearest monster so a page harness can exercise the battle scene without walking the maze.
     bool debugStartNearestBattle();
-    // Milestone 6: press-and-hold Power Bar input (see CombatState::Phase). The caller (main.cpp)
-    // calls these on the action button's press/release edges; both are safe no-ops when combat
-    // isn't active or a charge isn't currently allowed (e.g. mid-ResultPause), so main.cpp does
-    // not need to track battle phase itself.
-    void battleChargeStart();
-    void battleChargeRelease();
+    // Battle System v2 (see CombatState's comment): each is a single instantaneous tap, safe to
+    // call any time -- a no-op when combat isn't active or that specific bar is still cooling
+    // down / the Super gauge isn't full, so callers (main.cpp, emscripten_main.cpp, handleTouch)
+    // don't need to track any battle state themselves, just forward the tap.
+    void battleTapAttack();
+    void battleTapDefense();
+    void battleTapSuper();
     // inventory UI (9-grid, extendable)
     void toggleInventory();
     void invMoveSel(int dx, int dy);        // move the selection cursor
@@ -154,6 +183,7 @@ public:
     // screen is still up. See docs/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
     bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_; }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu)
     bool combatWon() const { return cs.won; }
+    bool combatActive() const { return cs.active; }
     // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
     // keyboard path (Enter/Space) had no equivalent before this fix, so "press any key to
     // continue" never actually worked from a keyboard.
@@ -283,12 +313,16 @@ private:
     void spriteUV(int layer, float uv[4]) const;
     int spriteLayer(const std::string& id) const; // index into sprite grid
     void applyItem(const std::string& id);
-    // Milestone 6: Power Bar round resolution (replaces the old auto-attack resolveCombatRound).
-    // resolveAttackRelease/resolveDefenseRelease apply a released bar's damage and call
-    // finishCombatWin/finishCombatLose when that ends the fight; drawPowerBar renders the
-    // currently-active bar (live while charging, frozen at lastPosition during ResultPause).
-    void resolveAttackRelease(float heldSeconds);
-    void resolveDefenseRelease(float heldSeconds);
+    // Battle System v2: resolveAttackTap/resolveDefenseTap fire the instant a bar is tapped,
+    // reading its current (just-frozen) position -- resolveAttackTap applies damage to the enemy
+    // directly (and calls finishCombatWin on a kill); resolveDefenseTap only banks a shield, it
+    // doesn't apply damage itself. resolveEnemyClockFire runs whenever the enemy's own real-time
+    // clock completes: it spends (and clears) whatever shield is currently banked, or applies full
+    // damage if none is, and calls finishCombatLose on a kill. drawPowerBar renders either bar at
+    // its live auto-moving position (frozen while cooling down after a tap).
+    void resolveAttackTap();
+    void resolveDefenseTap();
+    void resolveEnemyClockFire();
     // Builds the EnemyInst for a monster tile and starts the fight (or its dialogue gate); shared
     // by the bump-to-fight path in movePlayer() and the harness hook debugStartNearestBattle().
     void engageMonster(const Entity& e);
@@ -527,7 +561,12 @@ private:
     // an affordance plus an exact target for clients without a keyboard (web/touch) -- handleTouch
     // treats the whole battle scene as the same press-and-hold surface, so this only decides what
     // gets highlighted, never whether input works at all.
-    int combatBtnRect_[4] = {0,0,0,0};
+    // On-canvas battle hit targets (design-space 1024x768 pixels), set in draw()'s battle block,
+    // read in handleTouch() -- unlike the old single-surface press-and-hold model, taps now need
+    // to know WHICH bar/button they landed on, since Attack/Defend/Super are independent.
+    int atkBtnRect_[4] = {0,0,0,0};
+    int defBtnRect_[4] = {0,0,0,0};
+    int superBtnRect_[4] = {0,0,0,0};
     // Title screen animation clock (ms, advanced in update()). Drives the pulsing selection
     // highlight / sliding cursor so the title never looks like a static (crashed) frame.
     float titleAnimMs_ = 0.0f;

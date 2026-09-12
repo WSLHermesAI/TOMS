@@ -61,6 +61,7 @@
     "def": 14,
     "exp": 0,
     "gold": 0,
-    "boss": true
+    "boss": true,
+    "atk_interval_ms": 3000
   }
 }

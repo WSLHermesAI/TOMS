@@ -607,14 +607,14 @@ void Game::draw() {
     float tint[4] = {1,1,1,1};
 
     const bool showStore = storeModal();
-    // Milestone 7 bugfix: this used to fall back to scanning cs.log for the substring "倒下" to
-    // keep the overlay open during the brief post-lose result-pause (cs.active and cs.won are
-    // both already false by then). That substring also appears in the WIN message ("...敵人倒下
-    //了！" -- the enemy fell down), so after a win was dismissed (cs.won reset to false) the
-    // overlay would never actually close, since the old log text still matched. cs.resultPauseMs
-    // is the actual, non-fragile signal for "a result was just resolved and needs its readability
-    // beat" -- it's set to 300 by both resolveAttackRelease/resolveDefenseRelease and ticks down
-    // in update() regardless of cs.active/cs.won (see update()'s own comment on that).
+    // Milestone 7 bugfix (still relevant under Battle System v2): this used to fall back to
+    // scanning cs.log for the substring "倒下" to keep the overlay open during the brief post-lose
+    // result-pause (cs.active and cs.won are both already false by then). That substring also
+    // appears in the WIN message ("...敵人倒下了！" -- the enemy fell down), so after a win was
+    // dismissed (cs.won reset to false) the overlay would never actually close, since the old log
+    // text still matched. cs.resultPauseMs is the actual, non-fragile signal for "a loss was just
+    // resolved and needs its readability beat" -- see finishCombatLose() and update()'s own
+    // comment on this countdown.
     const bool showBattle = !showStore && (hideMask & 1) == 0 && (cs.active || cs.won || cs.resultPauseMs > 0);
     const bool showTalk   = !showStore && !showBattle && (hideMask & 2) == 0 && inDialogue;
     const bool showInv    = !showStore && !showBattle && !showTalk && (hideMask & 4) == 0 && invOpen;
@@ -682,41 +682,73 @@ void Game::draw() {
         drawBar(cx+350, 280, 200, 16, (float)std::max(0,cs.enemyHP)/cs.enemy.hp, C4(0.9f,0.3f,0.3f,1));
         drawText(cs.enemy.name + " HP " + std::to_string(std::max(0,cs.enemyHP)), cx+560, 280, 18, tint);
         drawText(cs.log, cx, 320, 18, tint);
-        // Milestone 6: the active Power Bar -- Attack Bar first each round, Defense Bar only if
-        // the enemy survived it (MAIN_BATTLE_SCENE_DESIGN.md §2-3). Live while charging (marker
-        // position recomputed from the accumulated hold duration every frame), frozen at
-        // cs.lastPosition during the brief result-pause after a release.
+        // Battle System v2 (docs/BATTLE_SYSTEM_V2_PROPOSALS.md): the Attack and Defense bars move
+        // on their own, continuously and independently, all the time -- there's no "your turn" to
+        // display, just wherever each marker currently is. A tap (handleTouch/battleTapAttack/
+        // battleTapDefense) resolves instantly from that live position, so unlike the old
+        // press-and-hold model there is nothing here to compute from an accumulated duration.
         if (cs.active) {
-            bool isDefensePhase = cs.phase == CombatState::Phase::AwaitDefensePress ||
-                                   cs.phase == CombatState::Phase::DefenseCharging ||
-                                   cs.phase == CombatState::Phase::DefenseResultPause;
-            toms::PowerBarParams bar = isDefensePhase ? toms::effectiveDefenseBar(equipped_, equipmentDefs_)
-                                                       : toms::effectiveAttackBar(equipped_, equipmentDefs_);
-            float pos = cs.charging ? toms::simulatePosition(bar, cs.chargeMs / 1000.0f) : cs.lastPosition;
-            drawText(isDefensePhase ? locale_.tr("battle.defense_prompt") : locale_.tr("battle.attack_prompt"),
-                      cx, 345, 15, C4(0.9f, 0.9f, 1.0f, 1));
-            drawPowerBar(cx, 365, 500, 22, bar, pos);
-            // On-canvas action button: the browser build has no keyboard, so without this there is
-            // nothing in the battle scene to press -- the power bar swept forever and the fight
-            // never resolved. Press and hold it to charge, release to strike (identical to holding
-            // Enter/Space; handleTouch treats the whole scene as the same surface).
-            // Glyph advances are now tight/proportional (see Font::buildFromFiles), same as
-            // desktop, so a longer translated label just measures wider instead of overflowing a
-            // fixed cell grid -- no per-language length cap needed here any more.
-            float bW = 400, bH = 56, bX = cx + (500 - bW) * 0.5f, bY = 402;
-            combatBtnRect_[0] = (int)bX; combatBtnRect_[1] = (int)bY;
-            combatBtnRect_[2] = (int)bW; combatBtnRect_[3] = (int)bH;
-            bool held = cs.charging;
-            Quad cb; cb.rect[0]=bX; cb.rect[1]=bY; cb.rect[2]=bW; cb.rect[3]=bH;
-            cb.uv[0]=0; cb.uv[1]=0; cb.uv[2]=1; cb.uv[3]=1; cb.solid=true;
-            if (held) { cb.tint[0]=0.85f; cb.tint[1]=0.62f; cb.tint[2]=0.20f; cb.tint[3]=1; }
-            else      { cb.tint[0]=0.24f; cb.tint[1]=0.32f; cb.tint[2]=0.46f; cb.tint[3]=1; }
-            ren->drawSprite(cb);
-            std::string btnLabel;
-            if (held)                btnLabel = locale_.tr("battle.btn_charging");
-            else if (isDefensePhase) btnLabel = locale_.tr("battle.btn_hold_defense");
-            else                     btnLabel = locale_.tr("battle.btn_hold_attack");
-            drawText(btnLabel, bX + 44, bY + 18, 16, C4(1,1,1,1));
+            // The enemy's own real-time clock -- how close it is to its next attack, completely
+            // independent of either bar below.
+            float enemyFrac = (float)cs.enemyClockMs / (float)std::max(500, cs.enemy.atkIntervalMs);
+            drawText(locale_.tr("battle.enemy_clock"), cx, 338, 14, C4(0.9f, 0.75f, 0.5f, 1));
+            drawBar(cx, 353, 500, 10, enemyFrac, C4(0.85f, 0.45f, 0.2f, 1));
+
+            float colW = 230.0f, atkX = cx, defX = cx + colW + 40.0f;
+            auto drawAutoBar = [&](float x, CombatState::AutoBar& bar, const toms::PowerBarParams& params,
+                                    int rect[4], const std::string& promptKey, const std::string& idleLabelKey) {
+                drawText(locale_.tr(promptKey), x, 372, 15, C4(0.9f, 0.9f, 1.0f, 1));
+                drawPowerBar(x, 390, colW, 20, params, bar.pos);
+                if (bar.cooling) {
+                    Quad dim; dim.rect[0]=x; dim.rect[1]=390; dim.rect[2]=colW; dim.rect[3]=20;
+                    dim.uv[0]=0; dim.uv[1]=0; dim.uv[2]=1; dim.uv[3]=1; dim.solid=true;
+                    dim.tint[0]=0.08f; dim.tint[1]=0.08f; dim.tint[2]=0.1f; dim.tint[3]=0.55f;
+                    ren->drawSprite(dim);
+                }
+                float bY = 414, bH = 44;
+                rect[0]=(int)x; rect[1]=(int)bY; rect[2]=(int)colW; rect[3]=(int)bH;
+                Quad cb; cb.rect[0]=x; cb.rect[1]=bY; cb.rect[2]=colW; cb.rect[3]=bH;
+                cb.uv[0]=0; cb.uv[1]=0; cb.uv[2]=1; cb.uv[3]=1; cb.solid=true;
+                if (bar.cooling) { cb.tint[0]=0.16f; cb.tint[1]=0.18f; cb.tint[2]=0.22f; cb.tint[3]=1; }
+                else             { cb.tint[0]=0.24f; cb.tint[1]=0.32f; cb.tint[2]=0.46f; cb.tint[3]=1; }
+                ren->drawSprite(cb);
+                drawText(bar.cooling ? locale_.tr("battle.btn_charging") : locale_.tr(idleLabelKey),
+                          x + 12, bY + 14, 14, C4(1,1,1,1));
+            };
+            drawAutoBar(atkX, cs.atkBar, toms::effectiveAttackBar(equipped_, equipmentDefs_),
+                        atkBtnRect_, "battle.attack_prompt", "battle.btn_hold_attack");
+            drawAutoBar(defX, cs.defBar, toms::effectiveDefenseBar(equipped_, equipmentDefs_),
+                        defBtnRect_, "battle.defense_prompt", "battle.btn_hold_defense");
+
+            std::string shieldTxt = cs.shieldBanked
+                ? trParam(locale_.tr("battle.shield_armed"), "pct", std::to_string((int)std::lround(cs.shieldPower)))
+                : locale_.tr("battle.shield_none");
+            drawText(shieldTxt, defX, 462, 14, cs.shieldBanked ? C4(0.55f,0.75f,1.0f,1) : C4(0.6f,0.63f,0.7f,1));
+
+            // Super-Attack Gauge (§4): a row of dots (filled = one banked charge toward a free,
+            // no-timing-required strong hit) plus a button that only appears once full. Tapping
+            // it doesn't touch either bar's own cooldown above.
+            drawText(locale_.tr("battle.super_label"), cx, 486, 14, C4(0.9f, 0.9f, 1.0f, 1));
+            float dotX = cx + 110, dotY = 486, dotSz = 12, dotGap = 6;
+            for (int i = 0; i < CombatState::kSuperThreshold; i++) {
+                Quad d; d.rect[0]=dotX + i*(dotSz+dotGap); d.rect[1]=dotY; d.rect[2]=dotSz; d.rect[3]=dotSz;
+                d.uv[0]=0; d.uv[1]=0; d.uv[2]=1; d.uv[3]=1; d.solid=true;
+                if (i < cs.superCharge) { d.tint[0]=1.0f; d.tint[1]=0.6f; d.tint[2]=0.25f; d.tint[3]=1; }
+                else                    { d.tint[0]=0.2f; d.tint[1]=0.2f; d.tint[2]=0.25f; d.tint[3]=1; }
+                ren->drawSprite(d);
+            }
+            bool superReady = cs.superCharge >= CombatState::kSuperThreshold;
+            if (superReady) {
+                float sX = cx, sY = 508, sW = 500, sH = 36;
+                superBtnRect_[0]=(int)sX; superBtnRect_[1]=(int)sY; superBtnRect_[2]=(int)sW; superBtnRect_[3]=(int)sH;
+                Quad sb; sb.rect[0]=sX; sb.rect[1]=sY; sb.rect[2]=sW; sb.rect[3]=sH;
+                sb.uv[0]=0; sb.uv[1]=0; sb.uv[2]=1; sb.uv[3]=1; sb.solid=true;
+                sb.tint[0]=0.7f; sb.tint[1]=0.25f; sb.tint[2]=0.2f; sb.tint[3]=1;
+                ren->drawSprite(sb);
+                drawText(locale_.tr("battle.super_ready"), sX + 150, sY + 8, 16, C4(1,1,1,1));
+            } else {
+                superBtnRect_[0]=superBtnRect_[1]=superBtnRect_[2]=superBtnRect_[3]=0;
+            }
         } else {
             drawText(locale_.tr("battle.continue_hint"), cx, 350, 16, C4(1,1,0.6f,1));
         }
@@ -843,19 +875,21 @@ void Game::handleTouch(float px, float py, int phase) {
         if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) { id = i; break; }
     }
     if (id == 7) { if (phase == 0) gpOn = !gpOn; return; }  // toggle show/hide
-    // ---- Battle scene: press-and-hold is the only input that can drive the Power Bar, and on the
-    // web build it is the only input there is (no keyboard). Deliberately handled this early:
-    //  * the old block sat AFTER `if (phase == 2) return;` below, so the RELEASE was swallowed --
-    //    the web build started charging on a tap and then hung with the bar sweeping forever
-    //    ("stuck at battle scene");
-    //  * it also sat after `if (id < 0) return;`, so any tap that missed the virtual d-pad rects
-    //    (i.e. almost the entire battle scene, including the action button) was dropped.
-    // cs.won is excluded here so the post-victory "(按任意鍵繼續)" pause is still dismissed by the
-    // tap-anywhere branch further down.
-    if (cs.active && !cs.won && (phase == 0 || phase == 2)) {
-        if (phase == 0) battleChargeStart();
-        else            battleChargeRelease();
-        return;
+    // ---- Battle scene (Battle System v2): each tap is a single, instantaneous action -- there is
+    // no press-and-hold or release to track any more, so (unlike the old model) only phase==0
+    // matters here, and it matters WHICH rect was hit, since Attack/Defend/Super are three
+    // independent actions now instead of one shared "the" action button. Two fingers landing on
+    // two different rects in the same instant (multi-touch) each fire their own handleTouch call
+    // independently, so concurrent attack+defend just falls out of this naturally. Deliberately
+    // handled this early, before the `id` gamepad-rect loop below, so a tap on any of these three
+    // rects (which are not gamepad rects) is never dropped by the `if (id < 0) return;` further
+    // down. cs.won is excluded so the post-victory tap-anywhere-to-dismiss below still works.
+    if (cs.active && !cs.won && phase == 0) {
+        auto hit = [&](const int r[4]) { return px>=r[0] && px<=r[0]+r[2] && py>=r[1] && py<=r[1]+r[3]; };
+        if (hit(atkBtnRect_)) { battleTapAttack(); return; }
+        if (hit(defBtnRect_)) { battleTapDefense(); return; }
+        if (cs.superCharge >= CombatState::kSuperThreshold && hit(superBtnRect_)) { battleTapSuper(); return; }
+        return;   // a tap elsewhere in the battle scene does nothing now (no more "whole scene is the surface")
     }
     // Milestone 9 polish: releasing a d-pad button stops "keep moving while held" (see
     // setMoveHeldX/Y's declaration in game.h). Checked here, before the generic phase==2
@@ -2344,6 +2378,7 @@ void Game::engageMonster(const Entity& e) {
     auto& t = enemyTpl[e.id];
     en.id=e.id; en.name=locale_.field(t["name"]); en.hp=t["hp"]; en.atk=t["atk"]; en.def=t["def"];
     en.exp=t["exp"]; en.gold=t["gold"]; en.x=e.x; en.y=e.y; en.boss=t.value("boss",false);
+    en.atkIntervalMs = t.value("atk_interval_ms", 4000);
     // Milestone 4 (Encounter Resolution): resolveEncounterKind returns DirectBattle for every
     // monster tile in every shipped stage today (no stage sets encounter_overrides yet), so this is
     // byte-for-byte the same behavior as before unless/until a stage opts a tile into dialogue_gate.
@@ -2376,16 +2411,19 @@ bool Game::debugStartNearestBattle() {
 }
 
 void Game::startCombat(const EnemyInst& e) {
-    cs.enemy = e; cs.playerHP = pl.hp; cs.enemyHP = e.hp; cs.round = 0; cs.active = true; cs.won = false;
-    cs.phase = CombatState::Phase::AwaitAttackPress;
-    cs.charging = false; cs.chargeMs = 0; cs.resultPauseMs = 0;
-    cs.lastPosition = 0.0f; cs.lastPower = 0.0f; cs.lastDamage = 0;
+    cs.enemy = e; cs.playerHP = pl.hp; cs.enemyHP = e.hp; cs.active = true; cs.won = false;
+    cs.atkBar = CombatState::AutoBar{};
+    cs.defBar = CombatState::AutoBar{};
+    cs.shieldBanked = false; cs.shieldPower = 0.0f;
+    cs.enemyClockMs = 0;
+    cs.superCharge = 0;
+    cs.resultPauseMs = 0;
     cs.log = locale_.tr("battle.start");
 }
 
 // Shared win/lose resolution -- identical to the pre-Milestone-6 auto-combat's own win/lose
-// handling (rewards, level-up, boss warp, respawn), just extracted so both
-// resolveAttackRelease/resolveDefenseRelease can reach it without duplicating it.
+// handling (rewards, level-up, boss warp, respawn), just extracted so resolveAttackTap/
+// battleTapSuper (win) and resolveEnemyClockFire (lose) can all reach it without duplicating it.
 void Game::finishCombatWin() {
     cs.active = false; cs.won = true;
     pl.hp = cs.playerHP;
@@ -2408,23 +2446,22 @@ void Game::finishCombatWin() {
 
 void Game::finishCombatLose() {
     cs.active = false; cs.won = false;
+    cs.resultPauseMs = 300;   // keep the "you fell" message on screen briefly (see CombatState)
     pl.hp = pl.maxhp/2; // respawn at stage start
     loadStage(curStage); // reset monsters/items
     markProgressDirty();
 }
 
-// Attack Bar released: apply damage to the enemy (FIGHT_SCENE_DESIGN.md §4's power_mult curve,
-// with the equipped weapon's maxMult and Berserker's Red-zone-deals-0 rule per
-// MAIN_BATTLE_SCENE_DESIGN.md §4.2). If this kills the enemy, the round ends here -- no Defense
-// Bar this round, matching "the enemy retaliates after every hit except the killing blow."
-void Game::resolveAttackRelease(float heldSeconds) {
+// Attack bar tapped: apply damage to the enemy from wherever its auto-moving marker currently is
+// (FIGHT_SCENE_DESIGN.md §4's power_mult curve, with the equipped weapon's maxMult and
+// Berserker's Red-zone-deals-0 rule per MAIN_BATTLE_SCENE_DESIGN.md §4.2). A kill ends the fight
+// immediately -- there's no "the enemy still gets to retaliate this round" any more, since the
+// enemy's own clock is what decides when it attacks, independent of this tap.
+void Game::resolveAttackTap() {
     toms::PowerBarParams bar = toms::effectiveAttackBar(equipped_, equipmentDefs_);
-    float pos = toms::simulatePosition(bar, heldSeconds);
+    float pos = cs.atkBar.pos;
     float power = toms::powerFromPosition(bar, pos);
     float maxMult = toms::effectiveMaxMult(equipped_, equipmentDefs_);
-    // Milestone 8: applyEquipmentStats() (built and tested in Milestone 6) was never actually
-    // called anywhere -- a weapon's flat ATK bonus (or a speed-build's ATK penalty) only ever
-    // affected the Power Bar's geometry/maxMult, never the base damage number itself.
     int effAtk = pl.atk, effDef = pl.def;
     toms::applyEquipmentStats(equipped_, equipmentDefs_, effAtk, effDef);
     int baseHit = std::max(1, effAtk - cs.enemy.def);
@@ -2433,8 +2470,7 @@ void Game::resolveAttackRelease(float heldSeconds) {
         dmg = 0;   // Berserker: a high ceiling, but Red-zone releases deal nothing
 
     cs.enemyHP -= dmg;
-    cs.lastPosition = pos; cs.lastPower = power; cs.lastDamage = dmg;
-    cs.round++;
+    if (dmg > 0) cs.superCharge = std::min(CombatState::kSuperThreshold, cs.superCharge + 1);
     audio.play("player_attack");
 
     if (cs.enemyHP <= 0) {
@@ -2443,24 +2479,34 @@ void Game::resolveAttackRelease(float heldSeconds) {
     } else {
         cs.log = trParam(locale_.tr("battle.hit"), "dmg", std::to_string(dmg));
     }
-    cs.phase = CombatState::Phase::AttackResultPause;
-    cs.resultPauseMs = 300;
 }
 
-// Defense Bar released: apply damage to the player (mitigation curve, Perfect Guard, and
-// Guardian's flat mitigation floor per MAIN_BATTLE_SCENE_DESIGN.md §4.2).
-void Game::resolveDefenseRelease(float heldSeconds) {
+// Defense bar tapped: doesn't apply any damage itself -- it just banks whatever power the
+// auto-moving marker currently reads as a shield (mitigation curve, Perfect Guard, and Guardian's
+// flat mitigation floor per MAIN_BATTLE_SCENE_DESIGN.md §4.2 are all applied later, in
+// resolveEnemyClockFire(), when that shield is actually spent). A second tap before the enemy's
+// clock fires simply overwrites the banked value -- most recent tap wins, no stacking.
+void Game::resolveDefenseTap() {
     toms::PowerBarParams bar = toms::effectiveDefenseBar(equipped_, equipmentDefs_);
-    float pos = toms::simulatePosition(bar, heldSeconds);
-    float power = toms::powerFromPosition(bar, pos);
+    float power = toms::powerFromPosition(bar, cs.defBar.pos);
+    cs.shieldBanked = true;
+    cs.shieldPower = power;
+    cs.log = trParam(locale_.tr("battle.shield_log"), "pct", std::to_string((int)std::lround(power)));
+}
+
+// The enemy's own real-time clock fired (see update()): spend whatever shield is currently
+// banked (if any) and apply the resulting damage to the player -- an un-shielded hit resolves at
+// power=0, i.e. full damage, identical to whiffing the old press-and-hold Defense Bar entirely.
+void Game::resolveEnemyClockFire() {
     int effAtk = pl.atk, effDef = pl.def;
     toms::applyEquipmentStats(equipped_, equipmentDefs_, effAtk, effDef);
     int incoming = std::max(1, cs.enemy.atk - effDef);
     float floorMitigation = toms::talentDefenseMitigationFloor(equipped_.talentId);
+    float power = cs.shieldBanked ? cs.shieldPower : 0.0f;
     int dmg = toms::computeDefenseDamage(incoming, power, floorMitigation);
+    cs.shieldBanked = false; cs.shieldPower = 0.0f;
 
     cs.playerHP -= dmg;
-    cs.lastPosition = pos; cs.lastPower = power; cs.lastDamage = dmg;
     if (dmg > 0) audio.play("enemy_attack");
 
     if (cs.playerHP <= 0) {
@@ -2469,28 +2515,44 @@ void Game::resolveDefenseRelease(float heldSeconds) {
     } else {
         cs.log = dmg == 0 ? locale_.tr("battle.perfect_guard") : trParam(locale_.tr("battle.guard_hit"), "dmg", std::to_string(dmg));
     }
-    cs.phase = CombatState::Phase::DefenseResultPause;
-    cs.resultPauseMs = 300;
 }
 
-void Game::battleChargeStart() {
-    if (!cs.active || cs.charging) return;
-    if (cs.phase == CombatState::Phase::AwaitAttackPress || cs.phase == CombatState::Phase::AwaitDefensePress) {
-        cs.charging = true;
-        cs.chargeMs = 0;
-        cs.phase = (cs.phase == CombatState::Phase::AwaitAttackPress) ? CombatState::Phase::AttackCharging
-                                                                       : CombatState::Phase::DefenseCharging;
+void Game::battleTapAttack() {
+    if (!cs.active || cs.atkBar.cooling) return;
+    resolveAttackTap();
+    if (!cs.active) return;   // the tap just won the fight -- nothing left to cool down
+    cs.atkBar.cooling = true;
+    cs.atkBar.cooldownMs = CombatState::kBarCooldownMs;
+}
+
+void Game::battleTapDefense() {
+    if (!cs.active || cs.defBar.cooling) return;
+    resolveDefenseTap();
+    cs.defBar.cooling = true;
+    cs.defBar.cooldownMs = CombatState::kBarCooldownMs;
+}
+
+// Super Attack: a guaranteed, no-timing-required strong hit once the gauge is full (§4 of
+// docs/BATTLE_SYSTEM_V2_PROPOSALS.md) -- resolved at power=100 against the Attack Bar's own
+// (equipment-tuned) maxMult ceiling, the same number a manual Perfect release already reaches.
+// Independent of the Attack bar's own cooldown; doesn't touch it.
+void Game::battleTapSuper() {
+    if (!cs.active || cs.superCharge < CombatState::kSuperThreshold) return;
+    float maxMult = toms::effectiveMaxMult(equipped_, equipmentDefs_);
+    int effAtk = pl.atk, effDef = pl.def;
+    toms::applyEquipmentStats(equipped_, equipmentDefs_, effAtk, effDef);
+    int baseHit = std::max(1, effAtk - cs.enemy.def);
+    int dmg = toms::computeAttackDamage(baseHit, 100.0f, maxMult);
+    cs.enemyHP -= dmg;
+    cs.superCharge = 0;
+    audio.play("player_attack");
+
+    if (cs.enemyHP <= 0) {
+        cs.log = trParam(locale_.tr("battle.crit_win"), "dmg", std::to_string(dmg));
+        finishCombatWin();
+    } else {
+        cs.log = trParam(locale_.tr("battle.super_hit"), "dmg", std::to_string(dmg));
     }
-    // Ignored during {Attack,Defense}Charging (already charging) or a ResultPause (must wait
-    // for the readability beat to finish) -- matches the phase diagram in game.h's comment.
-}
-
-void Game::battleChargeRelease() {
-    if (!cs.active || !cs.charging) return;
-    cs.charging = false;
-    float heldSeconds = cs.chargeMs / 1000.0f;
-    if (cs.phase == CombatState::Phase::AttackCharging) resolveAttackRelease(heldSeconds);
-    else if (cs.phase == CombatState::Phase::DefenseCharging) resolveDefenseRelease(heldSeconds);
 }
 
 // =====================================================================================
@@ -2947,31 +3009,47 @@ void Game::update(int dtMs) {
             saveFlushMs_ = 0;
         }
     }
-    if (cs.active && cs.charging) cs.chargeMs += dtMs;
-    // The result-pause countdown must run regardless of cs.active: a release that ends the
-    // fight (win or lose) sets cs.active=false in the SAME call that starts the pause, so
-    // gating this on cs.active would freeze resultPauseMs forever and leave a stale "倒下"
-    // message stuck in cs.log (which -- see showBattle's condition -- would keep the battle
-    // overlay stuck open permanently after a loss).
+    // Battle System v2: both bars auto-move continuously and independently, and the enemy fires
+    // on its own fixed real-time clock -- none of this waits on player input, so it all just ticks
+    // every frame combat is active. See CombatState's comment in game.h for the full model.
+    if (cs.active) {
+        auto stepBar = [&](CombatState::AutoBar& bar, const toms::PowerBarParams& z) {
+            if (bar.cooling) {
+                bar.cooldownMs -= dtMs;
+                if (bar.cooldownMs <= 0) { bar.cooling = false; bar.pos = 0.0f; bar.dir = 1; bar.legMs = 0.0f; }
+                return;
+            }
+            bar.legMs += (float)dtMs;
+            float t = z.rampTime > 0.0f ? std::min(1.0f, bar.legMs / 1000.0f / z.rampTime) : 1.0f;
+            float speed = z.v0 + (z.vmax - z.v0) * (t * t * t);   // cubic ease-in, same curve as a manual charge
+            float span = 2.0f * z.redOuter;
+            bar.pos += (float)bar.dir * speed * (dtMs / 1000.0f);
+            if (bar.pos > span) { bar.pos = span; bar.dir = -1; bar.legMs = 0.0f; }
+            if (bar.pos < 0.0f)  { bar.pos = 0.0f;  bar.dir = 1;  bar.legMs = 0.0f; }
+        };
+        stepBar(cs.atkBar, toms::effectiveAttackBar(equipped_, equipmentDefs_));
+        stepBar(cs.defBar, toms::effectiveDefenseBar(equipped_, equipmentDefs_));
+
+        cs.enemyClockMs += dtMs;
+        int interval = std::max(500, cs.enemy.atkIntervalMs);
+        if (cs.enemyClockMs >= interval) {
+            cs.enemyClockMs = 0;
+            resolveEnemyClockFire();
+        }
+    }
+    // The result-pause countdown must run regardless of cs.active: finishCombatLose() sets
+    // active=false in the same call that starts this pause, so gating on cs.active would freeze
+    // it forever and leave a stale "you fell" message stuck in cs.log (which -- see showBattle's
+    // condition -- would keep the battle overlay stuck open permanently after a loss).
     if (cs.resultPauseMs > 0) {
         cs.resultPauseMs -= dtMs;
         if (cs.resultPauseMs <= 0) {
             cs.resultPauseMs = 0;
-            if (!cs.active) {
-                // Combat just ended. A win keeps its victory text showing until the player
-                // dismisses it (cs.won, cleared elsewhere on tap/interact); a loss clears its
-                // message now, once the brief result-pause has had a chance to show it, so
-                // showBattle's "log contains 倒下" condition stops holding the battle overlay
-                // open. (The pre-Milestone-6 code set and immediately cleared this same string
-                // within one synchronous call, so it was never actually visible -- this is a
-                // small, deliberate improvement, not an accidental behavior change: see
-                // docs/PROGRESS_REPORT.md's Milestone 6 log entry.)
-                if (!cs.won) cs.log = "";
-            } else if (cs.phase == CombatState::Phase::AttackResultPause) {
-                cs.phase = CombatState::Phase::AwaitDefensePress;
-            } else if (cs.phase == CombatState::Phase::DefenseResultPause) {
-                cs.phase = CombatState::Phase::AwaitAttackPress;
-            }
+            // A win keeps its victory text showing until the player dismisses it (cs.won,
+            // cleared elsewhere on tap/interact); a loss clears its message now, once the brief
+            // pause has had a chance to show it, so showBattle's condition stops holding the
+            // battle overlay open.
+            if (!cs.active && !cs.won) cs.log = "";
         }
     }
     // store UI timers (toast / shake) tick down regardless of combat
