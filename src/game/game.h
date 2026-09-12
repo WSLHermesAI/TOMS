@@ -190,6 +190,11 @@ public:
     bool stairsConfirmIsUp() const { return stairsConfirmIsUp_; }
     void confirmStageTransition();
     void cancelStageTransition();
+    // Maze camera mode (see cameraMode_'s declaration for what each value does). Applying a
+    // change re-targets the camera immediately (no confirm dialog needed -- unlike language,
+    // this is a low-stakes, instantly-visible, freely-reversible preference).
+    int cameraModeIndex() const { return (int)cameraMode_; }
+    void setCameraModeIndex(int m);
     // In-game menu (walking-phase HUD gear icon): Save / Settings (language) / Back to Title.
     bool inGameMenuOpen() const { return inGameMenuOpen_; }
     void openInGameMenu();
@@ -435,6 +440,34 @@ private:
     float stylingSpikeRect_[4] = {0, 0, 0, 0};   // x,y,w,h — set by drawStylingSpike(), read by the backdrop
     void drawStylingSpikeBackdrop();
     int totalStages = 10;   // highest stage index (derived from data/stages at loadStage)
+
+    // ---- maze camera ----
+    // Stage grids range from 19x16 to 34x31 tiles (data/stages/*.json) -- too big to keep
+    // shrinking tile size to fit the whole grid on screen (that's what made the maze illegible/
+    // hard to tap on mobile). A fixed tile size + scrolling viewport fixes that at any grid size.
+    // Follow: the viewport pans to keep the player centered (clamped to the grid edges).
+    // Rooms: the grid is divided into fixed viewport-sized sections; the camera slides to
+    // whichever section currently contains the player, only when they cross into a new one.
+    enum class CameraMode { Follow = 0, Rooms = 1 };
+    CameraMode cameraMode_ = CameraMode::Follow;
+    // How many tile columns are visible across the (always 1024px-wide) design canvas; tile
+    // size and row count are both derived from this (see cameraViewportTiles()), so it's a
+    // single "how zoomed in is the camera" knob. Adjustable live from the F1 debug overlay
+    // (real-time, for testing what actually fits on a small screen) and persisted like any
+    // other setting.
+    int viewCols_ = 13;
+    float camX_ = 0, camY_ = 0;                 // current viewport origin, in tile units (floats
+                                                 // so a pan/slide can be mid-tile between frames)
+    float camTargetX_ = 0, camTargetY_ = 0;     // where camX_/camY_ are easing toward
+    // Derives tile size (ts) and viewport size in tiles (cols/rows) from viewCols_ + the
+    // (always 1024x768) design canvas -- the one place this math happens, shared by
+    // update()'s camera targeting and draw()'s actual rendering so they can never disagree.
+    void cameraViewportTiles(float& ts, int& cols, int& rows) const;
+    // Recomputes camTargetX_/Y_ from pl.x/y + cameraMode_ (clamped to the stage's edges).
+    void updateCameraTarget();
+    // Jumps the camera straight to its target (no pan) -- called right after loadStage() so a
+    // floor change never visibly scrolls in from the previous floor's camera position.
+    void snapCamera();
     // store system state
     std::vector<StoreItemDef> storeItems_;
     int storeUnlockStage_ = 3;   // stage index at which the shop unlocks (from store.json)
@@ -473,6 +506,7 @@ private:
     int igmBackToTitleRect_[4] = {0,0,0,0};
     int igmCloseRect_[4] = {0,0,0,0};
     std::vector<float> igmLangRowRects_;      // per-language rects on the Settings sub-page
+    int igmCameraRowRect_[4] = {0,0,0,0};     // the camera-mode toggle row (always last)
     int igmBackRect_[4] = {0,0,0,0};          // Settings sub-page's own Back-to-Main button
     int igmLangYesRect_[4] = {0,0,0,0};
     int igmLangNoRect_[4] = {0,0,0,0};

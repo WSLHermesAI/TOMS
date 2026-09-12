@@ -251,6 +251,8 @@ bool Game::loadAssets(const std::string& assetDir) {
         settings_ = toms::loadGameSettings(toms::defaultSaveDir() + "/settings.json", &haveSettings);
         locale_.loadFromFile(dataDir + "/../data/text.json");
         locale_.setLanguage(settings_.language);
+        cameraMode_ = (settings_.cameraMode == 1) ? CameraMode::Rooms : CameraMode::Follow;
+        viewCols_ = settings_.viewCols;
         title_.setSlotCount(settings_.slotCount);
         title_.setLanguageCount(locale_.languageCount());
         title_.setLanguageIndex(locale_.languageIndex());
@@ -352,6 +354,62 @@ void Game::loadStage(const std::string& id) {
     pl.x = 1; pl.y = (int)st.height - 2;
     for (auto& e : st.entities)
         if (e.raw == "@") { pl.x = e.x; pl.y = e.y; }
+    // A floor change must never visibly pan in from wherever the camera was on the PREVIOUS
+    // floor (different grid, different scale of "makes sense") -- jump straight to the new
+    // floor's starting view instead of easing into it.
+    snapCamera();
+}
+
+// ---------- maze camera ----------
+
+void Game::cameraViewportTiles(float& ts, int& cols, int& rows) const {
+    // Mirrors the HUD layout the walking scene draws around the grid (see draw()'s showWalk
+    // branch): oy=60 top margin for the HUD text, bottomMargin=50 for the story_note line.
+    float W = ren ? (float)ren->width() : 1024.0f;
+    float H = ren ? (float)ren->height() : 768.0f;
+    const float oy = 60.0f, bottomMargin = 50.0f;
+    int vc = std::max(4, viewCols_);   // guard against a corrupt/absurd persisted value
+    ts = W / (float)vc;
+    cols = vc;
+    rows = std::max(1, (int)((H - oy - bottomMargin) / ts));
+}
+
+void Game::updateCameraTarget() {
+    float ts; int cols, rows; cameraViewportTiles(ts, cols, rows);
+    int gw = st.width, gh = st.height;
+    float tx, ty;
+    if (cameraMode_ == CameraMode::Rooms) {
+        // Divide the grid into fixed viewport-sized sections, aligned from the origin; the
+        // target is whichever section's top-left corner currently contains the player.
+        tx = (float)(std::max(0, (int)pl.x / cols) * cols);
+        ty = (float)(std::max(0, (int)pl.y / rows) * rows);
+    } else {
+        // Follow: keep the player centered in the viewport.
+        tx = (float)pl.x - cols * 0.5f;
+        ty = (float)pl.y - rows * 0.5f;
+    }
+    // Clamp so the viewport never scrolls past the grid's edges (and centers a grid that's
+    // smaller than the viewport, e.g. stage01/02 are narrower than a 21-tile-wide viewport).
+    float maxX = (float)std::max(0, gw - cols), maxY = (float)std::max(0, gh - rows);
+    if (gw <= cols) tx = -(cols - gw) * 0.5f; else tx = std::max(0.0f, std::min(tx, maxX));
+    if (gh <= rows) ty = -(rows - gh) * 0.5f; else ty = std::max(0.0f, std::min(ty, maxY));
+    camTargetX_ = tx; camTargetY_ = ty;
+}
+
+void Game::snapCamera() {
+    updateCameraTarget();
+    camX_ = camTargetX_; camY_ = camTargetY_;
+}
+
+void Game::setCameraModeIndex(int m) {
+    cameraMode_ = (m == 1) ? CameraMode::Rooms : CameraMode::Follow;
+    settings_.cameraMode = (int)cameraMode_;
+    toms::ensureSaveDir(toms::defaultSaveDir());
+    toms::saveGameSettings(toms::defaultSaveDir() + "/settings.json", settings_);
+    // Re-target immediately so the effect is visible right away instead of waiting for the
+    // player to take a step; ease into it rather than snapping (consistent with "Rooms" mode's
+    // own slide, and it's a nicer transition than a hard cut for "Follow" too).
+    updateCameraTarget();
 }
 
 // Proper UTF-8 decode -> code points, then draw each glyph from font atlas.
@@ -534,20 +592,17 @@ void Game::draw() {
         return;
     }
     float W = (float)ren->width(), H = (float)ren->height();
-    // Milestone 9: stage grids are no longer a fixed 13x11 -- Wilson's-algorithm mazes
-    // grow with floor depth (see tools/gen_mazes.py), so the tile pixel size must shrink
-    // to fit a bigger grid into the same fixed design canvas instead of overflowing it
-    // (there's no camera/scroll system here -- see the drawing loop below, which still
-    // draws every tile of the grid in one pass). oy=60/bottom margin=50 mirror the fixed
-    // HUD text (top) and the story_note line (bottom) drawn around this grid, below.
+    // Milestone 9 originally shrank tile size to fit the whole (up to 34x31) grid onto one
+    // fixed-size screen -- legible on desktop, but tiny/hard-to-tap on mobile once stages grew
+    // past the smallest ones. Now tile size is derived from viewCols_ (how many columns should
+    // be visible -- see its declaration in game.h) and a camera (camX_/camY_, eased toward
+    // updateCameraTarget()'s result every frame in update()) scrolls a viewport over the grid
+    // instead -- see cameraMode_'s declaration in game.h for the two modes.
     int gw = st.width, gh = st.height;
     float oy = 60.0f, bottomMargin = 50.0f;
-    float ts = std::min(W / (float)gw, (H - oy - bottomMargin) / (float)gh);
-    ts = std::min(ts, 48.0f);   // never bigger than the original fixed size (stage01 is
-                                // the same 13x11 grid as before M9, so it renders
-                                // identically to what the owner already visually confirmed)
-    ts = std::max(ts, 20.0f);   // stay legible even for the largest generated floor
-    float ox = (W - gw*ts)/2.0f;
+    float ts; int viewCols, viewRows; cameraViewportTiles(ts, viewCols, viewRows);
+    float ox = -camX_ * ts;
+    oy -= camY_ * ts;
     static const float white[4] = {1,1,1,1};
     float tint[4] = {1,1,1,1};
 
@@ -568,7 +623,15 @@ void Game::draw() {
     // ---- walking scene: STAGE + CHARACTER ----
     if (showWalk) {
         ren->setNode(NODE_STAGE);
-        for (int y = 0; y < gh; y++) for (int x = 0; x < gw; x++) {
+        // Only draw tiles the camera can actually see (+1 tile of padding on every side so a
+        // mid-pan fractional camX_/camY_ never pops a row/column in right at the edge) --
+        // stage_11 is 34x31 (1054 tiles) against a ~21x13 viewport, so this is a real ~4x cut
+        // in quads submitted, not just tidiness.
+        int startX = std::max(0, (int)std::floor(camX_) - 1);
+        int endX   = std::min(gw, (int)std::ceil(camX_) + viewCols + 1);
+        int startY = std::max(0, (int)std::floor(camY_) - 1);
+        int endY   = std::min(gh, (int)std::ceil(camY_) + viewRows + 1);
+        for (int y = startY; y < endY; y++) for (int x = startX; x < endX; x++) {
             char c = st.at(x,y);
             int layer = spriteLayer(cellSprite(c));
             ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, white));
@@ -1390,7 +1453,7 @@ void Game::inGameMenuMove(int delta) {
         int n = 3;   // Save / Settings / Back to Title
         inGameMenuSel_ = ((inGameMenuSel_ + delta) % n + n) % n;
     } else {
-        int n = std::max(1, locale_.languageCount());
+        int n = std::max(1, locale_.languageCount() + 1);   // languages + the camera toggle row
         inGameMenuSel_ = ((inGameMenuSel_ + delta) % n + n) % n;
     }
 }
@@ -1422,15 +1485,19 @@ void Game::inGameMenuActivate() {
                 returnToTitle();
                 break;
         }
-    } else {
+    } else if (inGameMenuSel_ >= 0 && inGameMenuSel_ < locale_.languageCount()) {
         // Settings page: activating a language row opens the "switch to XXX?" dialog,
         // mirroring the title screen's own confirm dialog (see AskLanguageChange).
-        if (inGameMenuSel_ >= 0 && inGameMenuSel_ < locale_.languageCount()) {
-            inGameLangConfirmOpen_ = true;
-            inGameLangConfirmIdx_ = inGameMenuSel_;
-            inGameLangConfirmYes_ = true;
-            audio.play("confirm_click");
-        }
+        inGameLangConfirmOpen_ = true;
+        inGameLangConfirmIdx_ = inGameMenuSel_;
+        inGameLangConfirmYes_ = true;
+        audio.play("confirm_click");
+    } else if (inGameMenuSel_ == locale_.languageCount()) {
+        // The camera row (always last): cycles instantly, no confirm dialog needed -- unlike
+        // language, this is a low-stakes preference whose effect the player already sees behind
+        // this very menu (the maze keeps scrolling/paging under the scrim).
+        setCameraModeIndex(1 - cameraModeIndex());
+        audio.play("confirm_click");
     }
 }
 
@@ -1466,6 +1533,7 @@ void Game::inGameMenuClick(float x, float y) {
             int r[4] = {(int)r4[0], (int)r4[1], (int)r4[2], (int)r4[3]};
             if (hit(r)) { inGameMenuSel_ = i; inGameMenuActivate(); return; }
         }
+        if (hit(igmCameraRowRect_)) { inGameMenuSel_ = locale_.languageCount(); inGameMenuActivate(); return; }
         if (hit(igmBackRect_)) { inGameMenuBack(); return; }
     }
 }
@@ -1556,7 +1624,8 @@ void Game::drawInGameMenu() {
         const auto& langs = locale_.languages();
         int n = std::max(1, (int)langs.size());
         const float rh = 48, gap = 10;
-        const float bw = 420, bh = 130.0f + n * (rh + gap) + 70.0f;
+        // +1 row for the camera-mode toggle, always last, below the language list.
+        const float bw = 420, bh = 130.0f + (n + 1) * (rh + gap) + 70.0f;
         const float bx = (W-bw)*0.5f, by = (H-bh)*0.5f;
         panel(bx, by, bw, bh);
         const std::string head = locale_.tr("settings.header");
@@ -1575,6 +1644,12 @@ void Game::drawInGameMenu() {
             igmLangRowRects_[i*4+2] = rw; igmLangRowRects_[i*4+3] = rh;
             ry += rh + gap;
         }
+        // Camera-mode toggle: a single row that cycles on tap/Enter, no confirm dialog (see
+        // inGameMenuActivate()'s handling of inGameMenuSel_ == languageCount()).
+        std::string camLabel = (cameraMode_ == CameraMode::Rooms)
+                              ? locale_.tr("settings.camera_rooms") : locale_.tr("settings.camera_follow");
+        button(igmCameraRowRect_, rx, ry, rw, rh, camLabel, inGameMenuSel_ == n);
+        ry += rh + gap;
         const float cw=140, ch=44, cx=bx+(bw-cw)*0.5f;
         button(igmBackRect_, cx, ry + 10, cw, ch, locale_.tr("menu.back"), false);
     }
@@ -2112,6 +2187,18 @@ void Game::drawDebugOverlay() {
         static int nodeSel = 0;
         if (ImGui::Combo("Node filter (diagnostic)", &nodeSel, nodeNames, IM_ARRAYSIZE(nodeNames)))
             ren->setNodeFilter((uint8_t)nodeSel);
+    }
+    ImGui::Separator();
+    // Maze camera: how many tile columns are visible (tile size + row count both derive from
+    // this -- see cameraViewportTiles()). Applies live every frame (nothing to "apply"), and
+    // persists to settings.json when you release the slider so a chosen value survives restart
+    // -- IsItemDeactivatedAfterEdit() fires once per drag instead of once per dragged pixel.
+    ImGui::TextUnformatted("Maze camera (see also: in-game menu > Settings > Camera mode)");
+    ImGui::SliderInt("Visible cells", &viewCols_, 6, 40);
+    if (ImGui::IsItemDeactivatedAfterEdit()) {
+        settings_.viewCols = viewCols_;
+        toms::ensureSaveDir(toms::defaultSaveDir());
+        toms::saveGameSettings(toms::defaultSaveDir() + "/settings.json", settings_);
     }
     ImGui::Separator();
     ImGui::TextWrapped("Last combat log: %s", cs.log.empty() ? "(none)" : cs.log.c_str());
@@ -2914,6 +3001,24 @@ void Game::update(int dtMs) {
     };
     tickMoveAxis(moveHoldX_, moveHoldX_.dir, 0);
     tickMoveAxis(moveHoldY_, 0, moveHoldY_.dir);
+
+    // Maze camera: ease camX_/camY_ toward the target every frame (both modes slide -- Rooms'
+    // target only actually MOVES when the player crosses into a different section, per
+    // updateCameraTarget(), so this reads as "smoothly snap to the new room" for that mode and
+    // as continuous following for Follow mode). Frame-rate-independent exponential smoothing,
+    // not a fixed-duration tween (this project has no tweening library) -- the deviation
+    // shrinks by a constant fraction every kCamSmoothingMs, however dtMs is chopped up.
+    if (!title_.isOpen()) {
+        updateCameraTarget();
+        static constexpr float kCamSmoothingMs = 120.0f;
+        float decay = std::exp(-(float)dtMs / kCamSmoothingMs);
+        camX_ = camTargetX_ + (camX_ - camTargetX_) * decay;
+        camY_ = camTargetY_ + (camY_ - camTargetY_) * decay;
+        // Close the last fraction of a pixel instantly so the camera actually settles instead
+        // of asymptotically crawling toward the target forever.
+        if (std::fabs(camX_ - camTargetX_) < 0.01f) camX_ = camTargetX_;
+        if (std::fabs(camY_ - camTargetY_) < 0.01f) camY_ = camTargetY_;
+    }
 }
 
 void Game::saveFrame(const std::string& path) {

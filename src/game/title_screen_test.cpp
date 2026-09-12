@@ -43,17 +43,21 @@ int main() {
         s.language = "en";
         s.slotCount = 4;
         s.uiFontScale = 1.75f;
+        s.cameraMode = 1;
         auto j = toJson(s);
         GameSettings s2 = gameSettingsFromJson(j);
         CHECK(s2.language == "en" && s2.slotCount == 4, "settings JSON round-trip");
+        CHECK(s2.cameraMode == 1, "cameraMode round-trips");
 
         // Out-of-range values are clamped, not accepted blindly.
         nlohmann::json bad;
         bad["slotCount"] = 99;
         bad["uiFontScale"] = 100.0f;
+        bad["cameraMode"] = 7;
         GameSettings s3 = gameSettingsFromJson(bad);
         CHECK(s3.slotCount <= 8, "slotCount is clamped to the layout maximum");
         CHECK(s3.uiFontScale <= 4.0f, "uiFontScale is clamped to a sane range");
+        CHECK(s3.cameraMode == 0, "an unrecognized cameraMode falls back to Follow (0)");
 
         // File round-trip.
         std::string path = "title_test_settings.json";

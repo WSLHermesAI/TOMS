@@ -32,6 +32,8 @@
     "settings.header":       { "zh_TW": "設定", "en": "Settings", "zh_CN": "设置", "ja": "設定", "ko": "설정", "es": "Ajustes" },
     "settings.language":     { "zh_TW": "語言", "en": "Language", "zh_CN": "语言", "ja": "言語", "ko": "언어", "es": "Idioma" },
     "settings.language_confirm": { "zh_TW": "確定要切換為 {lang} 嗎？", "en": "Switch to {lang}?", "zh_CN": "确定要切换为 {lang} 吗？", "ja": "{lang} に切り替えますか？", "ko": "{lang}(으)로 전환하시겠습니까?", "es": "¿Cambiar a {lang}?" },
+    "settings.camera_follow": { "zh_TW": "鏡頭：跟隨角色", "en": "Camera: Follow", "zh_CN": "镜头：跟随角色", "ja": "カメラ：追従", "ko": "카메라: 추적", "es": "Cámara: Seguimiento" },
+    "settings.camera_rooms":  { "zh_TW": "鏡頭：分區顯示", "en": "Camera: Rooms", "zh_CN": "镜头：分区显示", "ja": "カメラ：エリア表示", "ko": "카메라: 구역 표시", "es": "Cámara: Por Secciones" },
     "settings.hint":         { "zh_TW": "左右鍵切換  Esc 返回", "en": "Left/Right: change   Esc: back", "zh_CN": "左右键切换  Esc 返回", "ja": "←→ で切り替え　Esc で戻る", "ko": "←→ 전환　Esc 뒤로", "es": "Izquierda/Derecha: cambiar   Esc: atrás" },
     "settings.saved":        { "zh_TW": "設定已儲存", "en": "Settings saved", "zh_CN": "设置已保存", "ja": "設定を保存しました", "ko": "설정이 저장되었습니다", "es": "Ajustes guardados" },
     "save.saved":            { "zh_TW": "已儲存進度", "en": "Progress saved", "zh_CN": "已保存进度", "ja": "進行状況を保存しました", "ko": "진행 상황이 저장되었습니다", "es": "Progreso guardado" },

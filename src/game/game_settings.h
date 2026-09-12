@@ -22,6 +22,14 @@ struct GameSettings {
     // ImGui font scale for the desktop debug/overlay UI (kept here so it finally persists
     // instead of resetting every launch — see uiFontScale_ in game.h).
     float uiFontScale = 1.5f;
+    // Maze camera: 0 = Follow (viewport pans to keep the player centered), 1 = Rooms (the
+    // stage is divided into fixed viewport-sized sections; the camera slides between them as
+    // the player crosses a boundary). See Game::cameraMode_ in game.h.
+    int cameraMode = 0;
+    // How many tile columns the maze camera shows across the screen -- tile size and visible
+    // row count are both derived from this (see Game::cameraViewportTiles() in game.cpp).
+    // Adjustable live from the F1 debug overlay for testing what fits on a smaller screen.
+    int viewCols = 13;
 };
 
 nlohmann::json toJson(const GameSettings& s);

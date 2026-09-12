@@ -9,6 +9,8 @@ nlohmann::json toJson(const GameSettings& s) {
     j["language"] = s.language;
     j["slotCount"] = s.slotCount;
     j["uiFontScale"] = s.uiFontScale;
+    j["cameraMode"] = s.cameraMode;
+    j["viewCols"] = s.viewCols;
     return j;
 }
 
@@ -25,6 +27,12 @@ GameSettings gameSettingsFromJson(const nlohmann::json& j) {
     float fs = j.value("uiFontScale", 1.5f);
     if (fs < 0.5f || fs > 4.0f) fs = 1.5f;
     s.uiFontScale = fs;
+    int cam = j.value("cameraMode", 0);
+    s.cameraMode = (cam == 1) ? 1 : 0;   // unrecognized/missing -> Follow
+    int vc = j.value("viewCols", 13);
+    if (vc < 4) vc = 4;      // cameraViewportTiles() floors at 4 anyway; keep the setting sane
+    if (vc > 60) vc = 60;    // past this a tile is a couple px, not a testing scenario
+    s.viewCols = vc;
     return s;
 }
 
