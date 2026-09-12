@@ -49,8 +49,8 @@
 
     "battle.title":          { "zh_TW": "戰鬥！", "en": "Battle!", "zh_CN": "战斗！", "ja": "戦闘！", "ko": "전투!", "es": "¡Batalla!" },
     "battle.you":            { "zh_TW": "你", "en": "You", "zh_CN": "你", "ja": "あなた", "ko": "당신", "es": "Tú" },
-    "battle.attack_prompt":  { "zh_TW": "攻擊（能量條持續移動，時機到就點下方按鈕）", "en": "Attack (the bar moves on its own — tap the button below at your moment)", "zh_CN": "攻击（能量条持续移动，时机到就点下方按钮）", "ja": "攻撃（ゲージは常に動いている、狙ったタイミングで下のボタンをタップ）", "ko": "공격 (게이지가 계속 움직입니다 — 원하는 타이밍에 아래 버튼을 탭)", "es": "Ataque (la barra se mueve sola — toca el botón de abajo en tu momento)" },
-    "battle.defense_prompt": { "zh_TW": "防禦（點下方按鈕即可預先架起護盾）", "en": "Defend (tap the button below to arm a shield ahead of time)", "zh_CN": "防御（点下方按钮即可预先架起护盾）", "ja": "防御（下のボタンをタップして事前にシールドを構える）", "ko": "방어 (아래 버튼을 탭해 미리 방패를 준비하세요)", "es": "Defensa (toca el botón de abajo para armar un escudo con antelación)" },
+    "battle.attack_prompt":  { "zh_TW": "攻擊（時機到就點下方按鈕）", "en": "Attack: tap the bar button", "zh_CN": "攻击（时机到就点下方按钮）", "ja": "攻撃（下のボタンをタップ）", "ko": "공격 (아래 버튼을 탭)", "es": "Ataque: toca el botón" },
+    "battle.defense_prompt": { "zh_TW": "防禦（點下方按鈕架盾）", "en": "Defend: tap to raise a shield", "zh_CN": "防御（点下方按钮架盾）", "ja": "防御（下のボタンで盾）", "ko": "방어 (아래 버튼으로 방패)", "es": "Defensa: toca el botón" },
     "battle.btn_charging":   { "zh_TW": "冷卻中…", "en": "Cooling down…", "zh_CN": "冷却中…", "ja": "クールダウン中…", "ko": "쿨다운 중…", "es": "Enfriando…" },
     "battle.btn_hold_attack":{ "zh_TW": "點擊出擊", "en": "Tap to attack", "zh_CN": "点击出击", "ja": "タップして攻撃", "ko": "탭하여 공격", "es": "Toca para atacar" },
     "battle.btn_hold_defense":{ "zh_TW": "點擊架盾", "en": "Tap to guard", "zh_CN": "点击架盾", "ja": "タップして防御", "ko": "탭하여 방어", "es": "Toca para defender" },
