@@ -11,6 +11,9 @@
 
 ## ▶ Next Step
 
+**Next action: S1 — Entity footprint (1/2/4 grids).** The full ordered plan is the
+numbered list below; the milestone table further down is the status board for it.
+
 **Start here: a complete design set for the next phase landed on 2026-09-13 (see the log entry
 below), and NONE of it is in the code yet.** `docs/STORY_BIBLE.md`, `docs/SIDE_STORIES.md`,
 `docs/STORY_DATA_SCHEMA.md` and `docs/ART_AND_ABILITY_DESIGN.md` reshape the game: 11 fixed stages
@@ -1777,6 +1780,37 @@ bosses, each with a full ComfyUI prompt) and **20 equipment** with gameplay valu
 system, and the resulting asset list -- **1,006 animation frames and 469 static images** -- built on
 nine shared body rigs plus swappable parts plus shader colour variants (198 enemy frames instead of
 1,100), with **1/2/4-grid footprints** as a wordless visual language (4 grids means boss or roamer).
+
+### 2026-09-13 — Design documents committed (70 floors / 15 endings / 50 enemies) and this status board updated
+
+**Commits:** `af29333` "Story + art design document set (70 floors, 15 endings, 50 enemies, 20
+equipment)" and `043c6c9` (this progress report update -- Next Step, milestone rows M10/M11 plus
+S1-S8, the log entry, and the Phase S appendix in `IMPLEMENTATION_ROADMAP.md`). Both are pushed to
+`main` and verified with `git ls-remote`.
+
+**What is now committed (documents only -- no game code changed):**
+
+| File | Content |
+|---|---|
+| `docs/STORY_BIBLE.md` v3 | 修仙 reincarnation main line; 70 floors = 10 acts x 7; one seal (and one system unlock) per act; 8 cross-act choices feeding `insight` / `resolve` / `humanity`; 15 endings via a priority condition tree; rebirth rules (half power, all items reset) |
+| `docs/SIDE_STORIES.md` v3 | 10 flagship side stories, one per act on that act's 5th floor, all optional; two choice-gated (`ss_09`, `ss_10`), several mirroring main-line choices; per-floor minor event pools |
+| `docs/STORY_DATA_SCHEMA.md` v3 | per-floor files `F01..F70`, `stage.story` blocks, 4 new condition types, maze scaling table to 63x42, `endings.json`, `cycles.json`, save v3, 16 validators |
+| `docs/ART_AND_ABILITY_DESIGN.md` | 50 enemies (40 regular + 10 unique bosses, each with a full ComfyUI prompt), 20 equipment with gameplay values, 36 statuses, 1/2/4-grid footprint rules, 1,006 animation frames + 469 static images, 3 MB art budget |
+
+**How the design got to this shape (owner-driven revisions, in order):** first pass was 10 floors
+with 4 endings and a simple rescue premise; the owner then asked for **70 floors** with map size
+growing per floor, **more than 10 endings** (many bad, few good, triggered by choices made on
+different floors and by items never obtained) and **replay at half power with items reset**; then
+asked for the art/ability document (50 enemies, 20 equipment, status count -> asset count, ComfyUI
+prompts, unique bosses, shared-looking enemies differentiated by shader colour and per-part scale);
+and finally that **one cell has 4 grids, so some enemies occupy 2 or 4 grids** as visual signalling
+for boss/special-event -- that rule is now section 1.7 / 3.6 of the art document and is the reason
+S1 is first in the order of work.
+
+**Nothing in these documents is implemented.** They are the contract the next milestones build
+against; the engine currently still ships the 11 hand-authored stages, the M6 press-and-hold battle
+(now replaced upstream by battle v2) and no skill tree, forging, hub, endings resolver or rebirth.
+
 
 ## Open Questions / Blockers
 
