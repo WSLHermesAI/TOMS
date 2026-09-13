@@ -6,8 +6,8 @@
   "seal": "xinmo",
   "role": "boss-stage",
   "maze": {
-    "cols": 57,
-    "rows": 38,
+    "cols": 58,
+    "rows": 39,
     "rooms": 11,
     "loops": 10,
     "seed": "63:toms-s2"

@@ -6,8 +6,8 @@
   "seal": "digu",
   "role": "normal",
   "maze": {
-    "cols": 63,
-    "rows": 42,
+    "cols": 62,
+    "rows": 41,
     "rooms": 12,
     "loops": 11,
     "seed": "69:toms-s2"

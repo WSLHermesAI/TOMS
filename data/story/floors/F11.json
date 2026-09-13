@@ -6,8 +6,8 @@
   "seal": "qi",
   "role": "normal",
   "maze": {
-    "cols": 23,
-    "rows": 18,
+    "cols": 25,
+    "rows": 20,
     "rooms": 4,
     "loops": 3,
     "seed": "11:toms-s2"
@@ -73,20 +73,20 @@
     ],
     "eventCells": [
       [
-        0,
+        4,
         5
       ],
       [
+        4,
+        6
+      ],
+      [
         0,
-        6
+        4
       ],
       [
-        1,
+        0,
         5
-      ],
-      [
-        1,
-        6
       ]
     ]
   }

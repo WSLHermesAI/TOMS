@@ -6,7 +6,7 @@
   "seal": "shenshi",
   "role": "normal",
   "maze": {
-    "cols": 51,
+    "cols": 50,
     "rows": 34,
     "rooms": 10,
     "loops": 9,

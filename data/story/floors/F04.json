@@ -6,8 +6,8 @@
   "seal": "memory",
   "role": "normal",
   "maze": {
-    "cols": 19,
-    "rows": 16,
+    "cols": 21,
+    "rows": 17,
     "rooms": 3,
     "loops": 2,
     "seed": "04:toms-s2"

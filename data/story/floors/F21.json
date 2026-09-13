@@ -6,8 +6,8 @@
   "seal": "daoji",
   "role": "boss-stage",
   "maze": {
-    "cols": 27,
-    "rows": 20,
+    "cols": 31,
+    "rows": 24,
     "rooms": 5,
     "loops": 4,
     "seed": "21:toms-s2"

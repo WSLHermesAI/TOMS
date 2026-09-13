@@ -6,8 +6,8 @@
   "seal": "daoji",
   "role": "normal",
   "maze": {
-    "cols": 27,
-    "rows": 20,
+    "cols": 28,
+    "rows": 22,
     "rooms": 5,
     "loops": 4,
     "seed": "16:toms-s2"
@@ -74,24 +74,24 @@
     ],
     "eventCells": [
       [
-        4,
-        4
+        5,
+        6
       ],
       [
-        4,
+        6,
         5
       ],
       [
-        5,
-        4
+        6,
+        6
       ],
       [
-        5,
-        5
+        3,
+        8
       ],
       [
         4,
-        0
+        7
       ]
     ]
   }

@@ -6,8 +6,8 @@
   "seal": "memory",
   "role": "boss-stage",
   "maze": {
-    "cols": 19,
-    "rows": 16,
+    "cols": 23,
+    "rows": 18,
     "rooms": 3,
     "loops": 2,
     "seed": "07:toms-s2"

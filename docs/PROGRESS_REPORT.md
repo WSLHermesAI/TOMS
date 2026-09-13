@@ -2186,6 +2186,26 @@ low, but it is not yet *seen*, and this log says so rather than claiming it.
 now carries `actKey` ("ch01") and both the card and the hub row use it; `floor_table_test` checks `actKey`
 against the act id with the underscore stripped, so the two forms cannot drift apart again.
 
+### 2026-09-13 — Per-floor grid sizes (owner request) + the mobile UI ask recorded
+
+Owner: *"each level should have different grid size, for example first level is 10x10 second level is
+10x12, third is 14x14, higher level should have more grids, only boss level not follow this rule"*.
+
+Done: `SIZE_RAMP` in `tools/gen_floors.py` replaces the per-act table (which gave all seven floors of an
+act the same size -- the reason every level looked alike). 44 column + 26 row increments are spread over
+the 69 steps, so **every floor has its own size and the tower never shrinks**: F01 19x16, F02 20x16,
+F03 20x17 … F69 62x41, F70 63x42 (same span as before). Boss floors are exempt by construction -- the ten
+act-boss floors have no generated grid, they load their hand-authored map. The generator pads targets that
+are off its 3c+1 x 3r+1 cell lattice (at most ~2 tiles of wall at the far edge), which is what makes an
+arbitrary monotonic ramp legal; the loop now reads the per-floor size instead of the act row's.
+
+NOT done yet -- the second half of the same request: **the web build is not mobile-friendly**. The owner
+reports everything too small on a phone, especially the dialogue text and the battle phase, "text and
+buttons all too small". Not started. Options are laid out in the report's Next Step for the owner to
+choose; the leading candidate is a device-adaptive *design resolution* (render the fixed 1024x768 design
+at a smaller logical size on small screens, which scales up every element -- text, buttons, the pad --
+with one change) plus a dialogue/battle layout pass.
+
 ## Open Questions / Blockers
 
 ### 1. `texture_test` fails to build — pre-existing CMake bug, left as-is by owner's decision

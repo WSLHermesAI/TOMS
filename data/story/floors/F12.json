@@ -6,8 +6,8 @@
   "seal": "qi",
   "role": "side-story-stage",
   "maze": {
-    "cols": 23,
-    "rows": 18,
+    "cols": 26,
+    "rows": 20,
     "rooms": 4,
     "loops": 3,
     "seed": "12:toms-s2"
@@ -43,8 +43,8 @@
     {
       "sideStoryId": "ss_02",
       "cell": [
-        14,
-        14
+        2,
+        11
       ],
       "trigger": "proximity",
       "requires": {
@@ -86,20 +86,20 @@
     ],
     "eventCells": [
       [
-        4,
+        3,
+        0
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        0,
         4
       ],
       [
-        3,
-        1
-      ],
-      [
-        3,
-        2
-      ],
-      [
-        4,
-        1
+        1,
+        4
       ]
     ]
   }

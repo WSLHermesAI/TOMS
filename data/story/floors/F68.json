@@ -6,8 +6,8 @@
   "seal": "digu",
   "role": "side-story-stage",
   "maze": {
-    "cols": 63,
-    "rows": 42,
+    "cols": 61,
+    "rows": 41,
     "rooms": 12,
     "loops": 11,
     "seed": "68:toms-s2"

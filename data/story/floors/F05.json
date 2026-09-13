@@ -6,8 +6,8 @@
   "seal": "memory",
   "role": "side-story-stage",
   "maze": {
-    "cols": 19,
-    "rows": 16,
+    "cols": 21,
+    "rows": 18,
     "rooms": 3,
     "loops": 2,
     "seed": "05:toms-s2"

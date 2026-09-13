@@ -6,8 +6,8 @@
   "seal": "jindan",
   "role": "normal",
   "maze": {
-    "cols": 31,
-    "rows": 22,
+    "cols": 32,
+    "rows": 24,
     "rooms": 6,
     "loops": 5,
     "seed": "22:toms-s2"

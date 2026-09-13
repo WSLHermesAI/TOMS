@@ -6,8 +6,8 @@
   "seal": "fire",
   "role": "boss-stage",
   "maze": {
-    "cols": 45,
-    "rows": 30,
+    "cols": 49,
+    "rows": 34,
     "rooms": 9,
     "loops": 8,
     "seed": "49:toms-s2"

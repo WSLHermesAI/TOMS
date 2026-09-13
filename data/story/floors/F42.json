@@ -6,8 +6,8 @@
   "seal": "yuanying",
   "role": "boss-stage",
   "maze": {
-    "cols": 39,
-    "rows": 26,
+    "cols": 45,
+    "rows": 31,
     "rooms": 8,
     "loops": 7,
     "seed": "42:toms-s2"

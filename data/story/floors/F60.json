@@ -6,7 +6,7 @@
   "seal": "xinmo",
   "role": "normal",
   "maze": {
-    "cols": 57,
+    "cols": 56,
     "rows": 38,
     "rooms": 11,
     "loops": 10,

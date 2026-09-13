@@ -86,24 +86,6 @@ def _stable_hash(text):
     return h
 
 
-def tile_counts(floor_no):
-    """Tile dims for a floor, in closed form.
-
-    NOTE: STORY_DATA_SCHEMA.md section 5.1's printed formula (19+4*tier, 16+2*tier+2*(tier>=4),
-    +2 cols past tier 8) does NOT reproduce its own table from tier 4 upward (it gives F29 35x26 vs
-    the table's 35x24, F43 43x30 vs 45x30, F64 53x38 vs 63x42). The TABLE is authoritative -- it is
-    what STORY_BIBLE.md section 5 prints and what validator V9 checks -- so the dims are taken from
-    the table via this exact piecewise form, and the doc's formula was corrected to match.
-    """
-    tier = min((floor_no - 1) // 7, 9)
-    if tier < 6:
-        cols, rows = 19 + 4 * tier, 16 + 2 * tier
-    else:
-        cols, rows = 45 + 6 * (tier - 6), 30 + 4 * (tier - 6)
-    assert (cols, rows) == FLOOR_TABLE[tier][:2], (floor_no, cols, rows, FLOOR_TABLE[tier][:2])
-    return cols, rows
-
-
 # ---------------------------------------------------------------------------------------------
 # Acts (STORY_BIBLE.md section 3) -- seal, boss id, flagship side story (section 6)
 # ---------------------------------------------------------------------------------------------
@@ -248,6 +230,49 @@ def load_event_pools(theme, act_no):
 # ---------------------------------------------------------------------------------------------
 # Maze assembly
 # ---------------------------------------------------------------------------------------------
+
+
+def _size_ramp():
+    """Tile dims for EVERY floor (owner, 2026-09-13: "each level should have different grid size ...
+    higher level should have more grids, only boss level not follow this rule").
+
+    44 column steps + 26 row steps = 70 increments spread over the 69 steps from F01 to F70, so every
+    floor gets at least one increment (one floor gets two) and NO two floors share a size: F01 19x16,
+    F02 20x16, F03 20x17, ... F70 63x42 -- the same tower span the design already had. The generator
+    pads a grid whose target is off its 3c+1 x 3r+1 cell lattice (at most ~2 tiles of unused wall at
+    the far edge), which is what makes an arbitrary monotonic ramp legal.
+
+    Boss floors are exempt by construction: the ten act-boss floors have no generated grid at all,
+    they load their hand-authored data/stages/stageNN.json map.
+    """
+    sizes = [(19, 16)]
+    cols, rows, left_c, left_r, acc = 19, 16, 44, 26, 0
+    for _ in range(69):
+        acc += 70
+        while acc >= 69 and (left_c or left_r):
+            acc -= 69
+            if left_c and (not left_r or left_c * 26 >= left_r * 44):
+                cols += 1; left_c -= 1
+            else:
+                rows += 1; left_r -= 1
+        sizes.append((cols, rows))
+    return sizes
+
+
+SIZE_RAMP = _size_ramp()
+assert len(SIZE_RAMP) == 70 and SIZE_RAMP[0] == (19, 16) and SIZE_RAMP[-1] == (63, 42), SIZE_RAMP[-1]
+assert len(set(SIZE_RAMP)) == 70, 'every floor must have its own size'
+assert all(SIZE_RAMP[i][0] >= SIZE_RAMP[i-1][0] and SIZE_RAMP[i][1] >= SIZE_RAMP[i-1][1]
+           and SIZE_RAMP[i] != SIZE_RAMP[i-1] for i in range(1, 70)), 'must strictly grow'
+
+
+def tile_counts(floor_no):
+    """Per-floor tile dims -- replaces the per-act table (all seven floors of an act shared one size,
+    which the owner rejected). FLOOR_TABLE's cols/rows stay as the act's reference size; its other
+    columns (rooms/loops/events/enemy mix/items) are unchanged."""
+    return SIZE_RAMP[min(max(floor_no - 1, 0), 69)]
+
+
 def cell_dims_for(cols, rows):
     """Largest cell grid whose tile footprint fits the table's dims. Cells are SxS with a single
     wall between neighbours, so W = cells*(S+1)+1. The remainder is wall padding on the right/bottom
@@ -358,6 +383,7 @@ def main():
     for floor_no in wanted:
         tier = min((floor_no - 1) // 7, 9)
         cols, rows, rooms, loops, n_events, emin, emax, elites, n_items = FLOOR_TABLE[tier]
+        cols, rows = tile_counts(floor_no)   # per-floor size; the row's dims are the act's reference
         act_id, seal, boss_id, ss_id, theme = ACTS[tier]
         index_in_act = (floor_no - 1) % 7 + 1
         is_boss = (floor_no % 7 == 0)

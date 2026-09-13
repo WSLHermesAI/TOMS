@@ -6,8 +6,8 @@
   "seal": "qi",
   "role": "boss-stage",
   "maze": {
-    "cols": 23,
-    "rows": 18,
+    "cols": 27,
+    "rows": 21,
     "rooms": 4,
     "loops": 3,
     "seed": "14:toms-s2"

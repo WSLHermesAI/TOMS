@@ -6,8 +6,8 @@
   "seal": "shenshi",
   "role": "boss-stage",
   "maze": {
-    "cols": 51,
-    "rows": 34,
+    "cols": 53,
+    "rows": 37,
     "rooms": 10,
     "loops": 9,
     "seed": "56:toms-s2"

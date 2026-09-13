@@ -6,8 +6,8 @@
   "seal": "daoji",
   "role": "side-story-stage",
   "maze": {
-    "cols": 27,
-    "rows": 20,
+    "cols": 30,
+    "rows": 23,
     "rooms": 5,
     "loops": 4,
     "seed": "19:toms-s2"
@@ -95,16 +95,16 @@
         6
       ],
       [
-        5,
+        1,
+        0
+      ],
+      [
+        1,
         1
       ],
       [
-        3,
-        6
-      ],
-      [
-        3,
-        7
+        2,
+        0
       ]
     ]
   }

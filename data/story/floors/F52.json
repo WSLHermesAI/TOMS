@@ -7,7 +7,7 @@
   "role": "normal",
   "maze": {
     "cols": 51,
-    "rows": 34,
+    "rows": 35,
     "rooms": 10,
     "loops": 9,
     "seed": "52:toms-s2"

@@ -6,7 +6,7 @@
   "seal": "memory",
   "role": "normal",
   "maze": {
-    "cols": 19,
+    "cols": 20,
     "rows": 16,
     "rooms": 3,
     "loops": 2,
