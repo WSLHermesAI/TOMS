@@ -96,7 +96,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
         PACKAGE_PATH = encodeURIComponent(location.pathname.substring(0, location.pathname.lastIndexOf('/')) + '/');
       }
       var PACKAGE_NAME = '/home/fatming/Desktop/TOMS/web/toms_web.data';
-      var REMOTE_PACKAGE_BASE = 'toms_web.data';
+      var REMOTE_PACKAGE_BASE = 'toms_web.f4ecfc3-20260913221930.data';
       var REMOTE_PACKAGE_NAME = Module['locateFile'] ? Module['locateFile'](REMOTE_PACKAGE_BASE, '') : REMOTE_PACKAGE_BASE;
       var REMOTE_PACKAGE_SIZE = metadata['remote_package_size'];
 
@@ -773,7 +773,7 @@ function createExportWrapper(name, func, nargs) {
 var wasmBinaryFile;
 
 function findWasmBinary() {
-  return locateFile('toms_web.wasm');
+  return locateFile('toms_web.f4ecfc3-20260913221930.wasm');
 }
 
 function getBinarySync(file) {
