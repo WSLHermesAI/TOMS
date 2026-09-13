@@ -68,6 +68,9 @@ def validate_spec(path, tiers):
     floor_no = int(fid[1:])
     tier = min((floor_no - 1) // 7, 9)
     cols, rows, rooms, loops, n_events, emin, emax, elites, n_items = FLOOR_TABLE[tier]
+    # V9 must expect the FLOOR's size, not its act's reference row: the ramp (section 5.1b) gives
+    # every level its own grid, which is exactly what the owner asked for.
+    cols, rows = tile_counts(floor_no)
     act_id, seal, boss_id, ss_id, theme = ACTS[tier]
     index_in_act = (floor_no - 1) % 7 + 1
 
