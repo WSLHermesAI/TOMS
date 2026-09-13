@@ -255,6 +255,11 @@ void Game::movePlayer(int dx, int dy) {
     else if (c=='D' && !st.down.empty()) requestStageTransition(st.down, false);
 }
 
+void Game::setPadScale(float s) {
+    // Clamped: a runaway value would push the pad off its own screen edge.
+    toms::game_detail::kPadScale = (s < 0.8f) ? 0.8f : ((s > 1.8f) ? 1.8f : s);
+}
+
 void Game::interact() {
     if (modalActive()) return;   // any modal overlay blocks world interaction
     // find NPC on player's cell or adjacent

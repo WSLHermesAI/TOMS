@@ -359,7 +359,11 @@ void Game::drawGamepad() {
         q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
         q.tint[0]=b.col[0]; q.tint[1]=b.col[1]; q.tint[2]=b.col[2]; q.tint[3]=b.col[3];
         ren->drawSprite(q);
-        drawText(b.label, b.x + b.w/2 - 9, b.y + b.h/2 - 13, 28, t);
+        {   // centred by measurement so a scaled plate keeps its glyph in the middle
+            const float lsize = 28.0f * toms::game_detail::kPadScale;
+            drawText(b.label, b.x + b.w/2 - measureText(b.label, lsize) * 0.5f,
+                     b.y + b.h/2 - lsize * 0.46f, lsize, t);
+        }
     }
     if (!gpOn) return;                 // gamepad hidden: only the toggle remains
     for (int i = 0; i < 7; i++) {
@@ -369,7 +373,11 @@ void Game::drawGamepad() {
         q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
         q.tint[0]=b.col[0]; q.tint[1]=b.col[1]; q.tint[2]=b.col[2]; q.tint[3]=b.col[3];
         ren->drawSprite(q);
-        drawText(b.label, b.x + b.w/2 - 11, b.y + b.h/2 - 13, 30, t);
+        {
+            const float lsize = 30.0f * toms::game_detail::kPadScale;
+            drawText(b.label, b.x + b.w/2 - measureText(b.label, lsize) * 0.5f,
+                     b.y + b.h/2 - lsize * 0.46f, lsize, t);
+        }
     }
 }
 

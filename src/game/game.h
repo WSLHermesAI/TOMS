@@ -393,6 +393,8 @@ public:
     int storyLineIndex() const { return toms::storyLineIndex(storyTurns_, (int)storyAmbientKeys_.size()); }
     bool chapterCardVisible() const { return chapterCardMs_ > 0.0f; }
     int themeAct() const { return themeActIndex_; }
+    // C-lite (mobile): enlarge the on-canvas pad's plates and tap targets (1.0 on desktop).
+    void setPadScale(float s);
     // saveCurrentRun() itself stays where it was (private); this is the one public entry the web
     // harness probe jsSaveNow() needs, without widening the existing declaration's access.
     void saveRunNow() { saveCurrentRun(); }

@@ -118,8 +118,32 @@ inline const GPadBtn GP[] = {
 // uses 768x576 on phones) the pad would sit below the visible area, so every consumer goes through
 // this helper -- drawing and hit-testing must shift by the SAME amount, or a button would look right
 // and do nothing. g_padShiftY is set by the platform entry point (0 on desktop).
-inline int kPadShiftY = 0;   // 0 == the authored layout; a smaller mobile design needs this set (C)
-inline GPadBtn gpadBtn(int i) { GPadBtn b = GP[i]; b.y -= kPadShiftY; return b; }
+inline int kPadShiftY = 0;      // 0 == the authored layout (see gpadBtn)
+// C-lite (mobile): the pad's plates scale about their own centre. Drawing and hit-testing both go
+// through gpadBtn(), so enlarging a plate enlarges its tap target too -- which is the whole point for
+// a phone ("UI is hard to see and hard to click buttons"): at 1024x768 on a 390 px-tall landscape
+// phone the authored 72 px button renders at ~36 css px, below the 44 px guidance.
+inline float kPadScale = 1.0f;
+inline GPadBtn gpadBtn(int i) {
+    GPadBtn b = GP[i];
+    const float cx = b.x + b.w * 0.5f, cy = b.y + b.h * 0.5f;
+    float ncx = cx, ncy = cy;
+    if (i >= 0 && i <= 3 && kPadScale != 1.0f) {
+        // The four direction plates are packed tightly in the authored layout, so scaling each about
+        // its own centre alone makes them overlap into a blob (the 1.40 attempt). Spreading them about
+        // the cluster's centre by the SAME factor keeps every gap proportional, so bigger plates stay
+        // visually distinct. The isolated action buttons (A/B/P) are already far apart and only need
+        // their own centre.
+        const float CCX = 140.0f, CCY = 604.0f;      // the authored d-pad centre
+        ncx = CCX + (cx - CCX) * kPadScale;
+        ncy = CCY + (cy - CCY) * kPadScale;
+    }
+    b.w *= kPadScale;
+    b.h *= kPadScale;
+    b.x = ncx - b.w * 0.5f;
+    b.y = ncy - b.h * 0.5f - kPadShiftY;
+    return b;
+}
 inline constexpr int GP_N = 8;
 
 

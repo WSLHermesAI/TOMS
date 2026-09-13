@@ -427,6 +427,21 @@ int main() {
     emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, 1, keyCb);
 
     g_game = new Game();
+    // C-lite (mobile): with the Game alive, enlarge the on-canvas pad's plates -- and therefore its
+    // tap targets, because drawing and hit-testing share gpadBtn(). Nothing else moves, so this
+    // cannot regress the maze, the dialogue or the battle layout (the lesson from the design-size
+    // attempt earlier today). At 1024x768 on a 390 px-tall landscape phone the authored 72 px plate
+    // renders ~36 css px, under the 44 px guidance; 1.40 puts it ~50.
+    {
+        const int w = EM_ASM_INT({ return window.innerWidth; });
+        const int h = EM_ASM_INT({ return window.innerHeight; });
+        if (w < 900 || h < 560) {
+            // 1.20: big enough to clear the 44 px touch guidance (72 px plate -> ~43 css px on a
+            // 390 px-tall landscape phone) while keeping the four direction plates visually distinct.
+            g_game->setPadScale(1.20f);
+            fprintf(stderr, "[web] small screen (%dx%d css): pad plates x1.20 for touch\n", w, h);
+        }
+    }
     if (!g_game->loadAssets("assets")) {
         delete g_game; g_game = new Game();
         if (!g_game->loadAssets("./assets")) {
