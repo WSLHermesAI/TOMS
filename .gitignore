@@ -38,3 +38,9 @@ web-gl/
 web-gpu/
 build-web-debug/
 web-debug/
+
+# Stray shader blobs a local build/run drops in the repo root: byte-identical duplicates of the
+# tracked assets/shaders/ copies (they showed up as untracked noise in every `git status`).
+# Root-anchored so assets/shaders/*.spv keeps being tracked.
+/sprite.frag.spv
+/sprite.vert.spv
