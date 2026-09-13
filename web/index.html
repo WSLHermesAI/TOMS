@@ -82,7 +82,7 @@
 <script>
   // Must exist before the module script runs (the standard Emscripten embedding contract):
   // the runtime uses this canvas instead of creating/looking one up of its own.
-  window.TOMS_VERSION = '6d5cdb9-20260913184245';   // filled in by build_web.sh
+  window.TOMS_VERSION = 'bb891d8-20260913185107';   // filled in by build_web.sh
   var Module = {
     canvas: document.getElementById('canvas'),
     arguments: []
@@ -152,10 +152,10 @@
     });
   })();
 </script>
-<!-- 6d5cdb9-20260913184245 is the build stamp (e.g. "7a99211-20260910224510"). build_web.sh names the
+<!-- bb891d8-20260913185107 is the build stamp (e.g. "7a99211-20260910224510"). build_web.sh names the
      artifacts after it (toms_web.<stamp>.js/.wasm/.data) and fills the stamp in here, so the
      filename itself busts the cache -- a returning visitor can never mix a new page with old
      binaries. -->
-<script src="toms_web.6d5cdb9-20260913184245.js"></script>
+<script src="toms_web.bb891d8-20260913185107.js"></script>
 </body>
 </html>
