@@ -355,6 +355,11 @@ target_include_directories(run_state_test PRIVATE
 # in chain order, ten acts of seven, one boss floor per act naming a map that exists, and every grid's
 # own exit agreeing with the table's nextFloor.
 add_executable(floor_table_test ${GAME_DIR}/floor_table_test.cpp ${GAME_DIR}/floor_table.cpp)
+
+# ui_layout_test: S3.6 ("C") -- the design-size/scale-aware layout primitive the pad, dialogue and
+# battle screens are being moved onto. Pure arithmetic + a measurer callback, so it runs headless.
+add_executable(ui_layout_test ${GAME_DIR}/ui_layout_test.cpp)
+target_include_directories(ui_layout_test PRIVATE ${GAME_DIR} ${ENGINE_DIR} ${JSON_DIR})
 target_include_directories(floor_table_test PRIVATE
     ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 

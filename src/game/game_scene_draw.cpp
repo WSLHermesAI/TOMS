@@ -212,14 +212,22 @@ void Game::draw() {
         ren->setNode(NODE_BATTLE);
         drawFocusSplash();
         float cx = W/2 - 250;
-        drawText(locale_.tr("battle.title") + " " + cs.enemy.name, cx, 120, 26, C4(1,0.6f,0.4f,1));
-        ren->drawSprite(spriteQuad(cx, 170, 96, 96, spriteLayer("player"), white));
-        ren->drawSprite(spriteQuad(cx+350, 170, 96, 96, spriteLayer(cs.enemy.boss?"boss_demonlord":entSprite(cs.enemy.id)), white));
-        drawBar(cx, 280, 200, 16, (float)cs.playerHP/pl.maxhp, C4(0.3f,0.9f,0.4f,1));
-        drawText(locale_.tr("battle.you") + " HP " + std::to_string(cs.playerHP), cx+210, 280, 18, tint);
-        drawBar(cx+350, 280, 200, 16, (float)std::max(0,cs.enemyHP)/cs.enemy.hp, C4(0.9f,0.3f,0.3f,1));
-        drawText(cs.enemy.name + " HP " + std::to_string(std::max(0,cs.enemyHP)), cx+560, 280, 18, tint);
-        drawText(cs.log, cx, 320, 18, tint);
+        // Battle UI scale (owner: "make battle scene' UI bigger, it's hard to see on mobile"). The
+        // battle screen is its own modal, so it can be enlarged inside the fixed 1024x768 design
+        // without touching the maze or the on-canvas pad: sizes multiply and positions scale about
+        // the screen centre, so the layout keeps its shape and simply fills more of the screen.
+        const float BS = 1.40f;
+        auto S  = [BS](float v) { return v * BS; };
+        auto SX = [&](float x) { return W * 0.5f + (x - W * 0.5f) * BS; };
+        auto SY = [&](float y) { return H * 0.5f + (y - H * 0.5f) * BS; };
+        drawText(locale_.tr("battle.title") + " " + cs.enemy.name, cx, SY(120), S(26), C4(1,0.6f,0.4f,1));
+        ren->drawSprite(spriteQuad(cx, SY(170), S(96), S(96), spriteLayer("player"), white));
+        ren->drawSprite(spriteQuad(SX(cx+350), SY(170), S(96), S(96), spriteLayer(cs.enemy.boss?"boss_demonlord":entSprite(cs.enemy.id)), white));
+        drawBar(cx, SY(280), S(200), S(16), (float)cs.playerHP/pl.maxhp, C4(0.3f,0.9f,0.4f,1));
+        drawText(locale_.tr("battle.you") + " HP " + std::to_string(cs.playerHP), SX(cx+210), SY(280), S(18), tint);
+        drawBar(SX(cx+350), SY(280), S(200), S(16), (float)std::max(0,cs.enemyHP)/cs.enemy.hp, C4(0.9f,0.3f,0.3f,1));
+        drawText(cs.enemy.name + " HP " + std::to_string(std::max(0,cs.enemyHP)), SX(cx+560), SY(280), S(18), tint);
+        drawText(cs.log, cx, SY(320), S(18), tint);
         // Battle System v2 (docs/BATTLE_SYSTEM_V2_PROPOSALS.md): the Attack and Defense bars move
         // on their own, continuously and independently, all the time -- there's no "your turn" to
         // display, just wherever each marker currently is. A tap (handleTouch/battleTapAttack/
@@ -229,13 +237,13 @@ void Game::draw() {
             // The enemy's own real-time clock -- how close it is to its next attack, completely
             // independent of either bar below.
             float enemyFrac = (float)cs.enemyClockMs / (float)std::max(500, cs.enemy.atkIntervalMs);
-            drawText(locale_.tr("battle.enemy_clock"), cx, 338, 14, C4(0.9f, 0.75f, 0.5f, 1));
-            drawBar(cx, 353, 500, 10, enemyFrac, C4(0.85f, 0.45f, 0.2f, 1));
+            drawText(locale_.tr("battle.enemy_clock"), cx, SY(338), S(14), C4(0.9f, 0.75f, 0.5f, 1));
+            drawBar(cx, SY(353), S(500), S(10), enemyFrac, C4(0.85f, 0.45f, 0.2f, 1));
 
-            float colW = 230.0f, atkX = cx, defX = cx + colW + 40.0f;
+            float colW = S(230.0f), atkX = cx, defX = cx + colW + 40.0f;
             auto drawAutoBar = [&](float x, CombatState::AutoBar& bar, const toms::PowerBarParams& params,
                                     int rect[4], const std::string& promptKey, const std::string& idleLabelKey) {
-                drawText(locale_.tr(promptKey), x, 372, 15, C4(0.9f, 0.9f, 1.0f, 1));
+                drawText(locale_.tr(promptKey), x, SY(372), S(15), C4(0.9f, 0.9f, 1.0f, 1));
                 drawPowerBar(x, 390, colW, 20, params, bar.pos);
                 if (bar.cooling) {
                     Quad dim; dim.rect[0]=x; dim.rect[1]=390; dim.rect[2]=colW; dim.rect[3]=20;
@@ -243,7 +251,7 @@ void Game::draw() {
                     dim.tint[0]=0.08f; dim.tint[1]=0.08f; dim.tint[2]=0.1f; dim.tint[3]=0.55f;
                     ren->drawSprite(dim);
                 }
-                float bY = 414, bH = 44;
+                float bY = SY(414), bH = S(44);
                 rect[0]=(int)x; rect[1]=(int)bY; rect[2]=(int)colW; rect[3]=(int)bH;
                 Quad cb; cb.rect[0]=x; cb.rect[1]=bY; cb.rect[2]=colW; cb.rect[3]=bH;
                 cb.uv[0]=0; cb.uv[1]=0; cb.uv[2]=1; cb.uv[3]=1; cb.solid=true;
@@ -261,7 +269,7 @@ void Game::draw() {
             std::string shieldTxt = cs.shieldBanked
                 ? trParam(locale_.tr("battle.shield_armed"), "pct", std::to_string((int)std::lround(cs.shieldPower)))
                 : locale_.tr("battle.shield_none");
-            drawText(shieldTxt, defX, 462, 14, cs.shieldBanked ? C4(0.55f,0.75f,1.0f,1) : C4(0.6f,0.63f,0.7f,1));
+            drawText(shieldTxt, defX, SY(462), S(14), cs.shieldBanked ? C4(0.55f,0.75f,1.0f,1) : C4(0.6f,0.63f,0.7f,1));
 
             // Super-Attack Gauge (§4): a row of dots (filled = one banked charge toward a free,
             // no-timing-required strong hit) plus a button that only appears once full. Tapping
