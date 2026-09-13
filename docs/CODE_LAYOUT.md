@@ -52,7 +52,9 @@
 | `imgui_layer.cpp` | — | **桌面（Vulkan + GLFW）的 ImGui 後端**：初始化、每幀 NewFrame/渲染（`imgui_impl_glfw` + `imgui_impl_vulkan`）。 |
 | `imgui_web.{h,cpp}` | — | **瀏覽器（WebGL2）的 ImGui 後端**（2026-09-13 新增，M2）：ImGui 核心 + `imgui_impl_opengl3`（ES3）+ Emscripten DOM 事件橋（滑鼠/滾輪/觸控/鍵盤/焦點）。此 build 沒有 SDL/GLFW，所以輸入層是自己寫的。 |
 | `title_screen.cpp` / `save_slots.cpp` / `game_settings.cpp` / `localization.cpp` | 288 / 137 / 53 / 132 | 標題畫面資料與繪製、存檔格 I/O、設定、六語言文字表。 |
-| `*_test.cpp` | — | 純邏輯測試（不開視窗）：`camera_test`、`title_screen_test`、`equipment_test`、`mission_test`、`save_test`、`condition_eval_test`、`entity_status_test`、`story_controller_test`、`encounter_resolve_test`。 |
+| `run_state.h` / `run_state.cpp` | 110 / 152 | **S3**：`toms::RunStoryState` — 單趟遊玩的劇情狀態（選項、計數器、支線狀態、旗標、記憶碎片、樓層進度、死亡數）。條件的四個新葉子（`choiceMade`／`sideStoryState`／`counterAtLeast`／`cycleIndexAtLeast`）都向它要答案，存檔 v3 由它 `writeInto/readFrom(RunSaveData)`，重生則是 `reset(keepShards=true)`。**不認得** Renderer／Stage／Game——所以可以在測試裡直接跑。 |
+| `tools/gen_story_i18n.py` | — | 掃描 story.json／章檔／樓層／事件池所引用的 `story.*`、`ev_*.text` 鍵，補進 `data/text.json`（zh_TW 權威；缺翻譯以 zh_TW 回填並標 `_todo`）。可重複執行。 |
+| `*_test.cpp` | — | 純邏輯測試（不開視窗）：`camera_test`、`run_state_test`（S3，45 項）、`title_screen_test`、`equipment_test`、`mission_test`、`save_test`、`condition_eval_test`、`entity_status_test`、`story_controller_test`、`encounter_resolve_test`。 |
 
 ### 邊界規則（新增程式碼時照這個判斷）
 
@@ -118,7 +120,7 @@ F1 debug overlay 的「Visible cells」滑桿 → `setViewCols()`。
 | 項目 | 結果 |
 |---|---|
 | 原生建置 | `tower_vulkan` 建置成功（2026-09-13） |
-| 單元測試 | **17/17 全過**，含新增 `camera_test: ALL PASS`（30 項）與修好的 `texture_test: ALL PASS` |
+| 單元測試 | **19/19 全過**（重構當時 17/17；S1 的 `footprint_test` 88 項、S3 的 `run_state_test` 45 項加入後為 19/19），含新增 `camera_test: ALL PASS`（30 項）與修好的 `texture_test: ALL PASS` |
 | 原生實機 | Xvfb 上真鍵盤：標題 → 新遊戲 → 迷宮；按住方向鍵走動時畫面 **17.2%** 像素改變（相機滾動），HUD/虛擬手把/底部劇情列文字完整 |
 | 網頁建置 | `./build_web.sh webgl`（Emscripten 目標也吃同一份 CMake 來源清單） |
 

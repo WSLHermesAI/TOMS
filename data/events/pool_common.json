@@ -1,0 +1,59 @@
+{
+  "_comment": [
+    "S3 — the common pool (docs/SIDE_STORIES.md section 12.1/12.2). Every floor samples",
+    "its events from its act pool plus this one; section 5.2's constraints (>=1",
+    "relic/whisper, >=1 cache, no repeat within a floor) are enforced by the generator."
+  ],
+  "events": [
+    {
+      "eventId": "ev_common_relic_road",
+      "kind": "relic",
+      "text": "ev_common_relic_road.text"
+    },
+    {
+      "eventId": "ev_common_whisper_old_road",
+      "kind": "whisper",
+      "text": "ev_common_whisper_old_road.text"
+    },
+    {
+      "eventId": "ev_common_cache_wall",
+      "kind": "cache",
+      "text": "ev_common_cache_wall.text"
+    },
+    {
+      "eventId": "ev_common_trap_rubble",
+      "kind": "trap",
+      "text": "ev_common_trap_rubble.text"
+    },
+    {
+      "eventId": "ev_common_rescue_lost_soldier",
+      "kind": "rescue",
+      "text": "ev_common_rescue_lost_soldier.text"
+    },
+    {
+      "eventId": "ev_common_merchant_echo_ash",
+      "kind": "merchant_echo",
+      "text": "ev_common_merchant_echo_ash.text"
+    },
+    {
+      "eventId": "ev_common_shard_wandering",
+      "kind": "memory_shard",
+      "text": "ev_common_shard_wandering.text"
+    },
+    {
+      "eventId": "ev_common_relic_chipped_blade",
+      "kind": "relic",
+      "text": "ev_common_relic_chipped_blade.text"
+    },
+    {
+      "eventId": "ev_common_whisper_old_song",
+      "kind": "whisper",
+      "text": "ev_common_whisper_old_song.text"
+    },
+    {
+      "eventId": "ev_common_cache_rat_nest",
+      "kind": "cache",
+      "text": "ev_common_cache_rat_nest.text"
+    }
+  ]
+}

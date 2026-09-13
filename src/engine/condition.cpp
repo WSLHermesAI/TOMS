@@ -29,6 +29,17 @@ bool evaluate(const nlohmann::json& expr, const ConditionContext& ctx) {
     if (type == "missionActive")    return ctx.missionActive(expr.value("missionId", std::string()));
     if (type == "stageCleared")     return ctx.stageCleared(expr.value("stageId", std::string()));
 
+    // S3 leaves (docs/STORY_DATA_SCHEMA.md section 2.2). Each reads one fact from the run's story
+    // state through the context; nothing here knows what a choice or a counter means.
+    if (type == "choiceMade")
+        return ctx.choiceMade(expr.value("choiceId", std::string()), expr.value("optionId", std::string()));
+    if (type == "sideStoryState")
+        return ctx.sideStoryState(expr.value("sideStoryId", std::string())) == expr.value("state", std::string());
+    if (type == "counterAtLeast")
+        return ctx.counter(expr.value("counter", std::string())) >= expr.value("min", 0);
+    if (type == "cycleIndexAtLeast")
+        return ctx.cycleIndex() >= expr.value("min", 1);
+
     return false;   // unknown leaf type -> fail closed
 }
 

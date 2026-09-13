@@ -31,6 +31,18 @@ public:
     virtual bool missionComplete(const std::string& missionId) const = 0;
     virtual bool missionActive(const std::string& missionId) const = 0;
     virtual bool stageCleared(const std::string& stageId) const = 0;
+
+    // ---- S3 (docs/STORY_DATA_SCHEMA.md section 2.2) --------------------------------------------
+    // The four leaves the 70-floor story needs. They are DEFAULTED here rather than pure virtual so
+    // every existing context (and every test mock) keeps compiling unchanged and simply answers
+    // "no choice made / no counter / cycle 1" -- a mock that does not care cannot accidentally make
+    // a gated screen appear.
+    virtual bool choiceMade(const std::string& /*choiceId*/, const std::string& /*optionId*/) const {
+        return false;
+    }
+    virtual std::string sideStoryState(const std::string& /*sideStoryId*/) const { return ""; }
+    virtual int counter(const std::string& /*counter*/) const { return 0; }
+    virtual int cycleIndex() const { return 1; }
 };
 
 // Recursively evaluates `expr` against `ctx`. A null/non-object `expr` is vacuously true (no

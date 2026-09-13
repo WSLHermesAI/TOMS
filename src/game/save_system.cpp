@@ -1,4 +1,5 @@
 #include "save_system.h"
+#include <algorithm>
 #include <cstdio>
 #include <fstream>
 
@@ -14,6 +15,10 @@ nlohmann::json toJson(const MetaSaveData& m) {
     j["permanentAtkBonus"] = m.permanentAtkBonus;
     j["permanentDefBonus"] = m.permanentDefBonus;
     j["permanentHpBonus"] = m.permanentHpBonus;
+    // S3 (schemaVersion 3)
+    j["cycleIndex"] = m.cycleIndex;
+    j["endingsSeen"] = m.endingsSeen;
+    j["hintsUnlocked"] = m.hintsUnlocked;
     return j;
 }
 
@@ -31,6 +36,12 @@ MetaSaveData metaFromJson(const nlohmann::json& j, bool* versionMismatch) {
     m.permanentAtkBonus = j.value("permanentAtkBonus", 0);
     m.permanentDefBonus = j.value("permanentDefBonus", 0);
     m.permanentHpBonus  = j.value("permanentHpBonus", 0);
+    // S3: absent in a pre-v3 file -> the declared defaults (cycleIndex 1, empty lists). This is the
+    // "must not refuse an old save" rule from docs/STORY_DATA_SCHEMA.md section 9; the caller sees
+    // *versionMismatch so it can log/migrate, but loading never fails because of it.
+    m.cycleIndex = std::max(1, j.value("cycleIndex", 1));
+    m.endingsSeen    = j.value("endingsSeen", std::vector<std::string>{});
+    m.hintsUnlocked  = j.value("hintsUnlocked", std::vector<std::string>{});
     return m;
 }
 
@@ -46,6 +57,16 @@ nlohmann::json toJson(const RunSaveData& r) {
     p["inv"] = r.player.inv;
     j["player"] = p;
     j["entityStatus"] = r.entityStatus;
+    // S3 (schemaVersion 3): the run's story state -- see RunStoryState for what writes/reads it.
+    j["choices"] = r.choices;
+    j["counters"] = r.counters;
+    j["sideStories"] = r.sideStories;
+    j["flags"] = r.flags;
+    j["floor"] = r.floor;
+    j["clearedFloors"] = r.clearedFloors;
+    j["shards"] = r.shards;
+    j["deathsTotal"] = r.deathsTotal;
+    j["deathsNonBoss"] = r.deathsNonBoss;
     return j;
 }
 
@@ -73,6 +94,21 @@ RunSaveData runFromJson(const nlohmann::json& j, bool* versionMismatch) {
     if (j.contains("entityStatus") && j["entityStatus"].is_object())
         for (auto& [k, v] : j["entityStatus"].items())
             if (v.is_string()) r.entityStatus[k] = v.get<std::string>();
+    // S3: a pre-v3 run file simply has none of these; defaults above (floor F01, everything empty)
+    // are the documented migration. Loading must never be refused for a version difference.
+    if (j.contains("choices") && j["choices"].is_object())
+        for (auto& [k, v] : j["choices"].items()) if (v.is_string()) r.choices[k] = v.get<std::string>();
+    if (j.contains("counters") && j["counters"].is_object())
+        for (auto& [k, v] : j["counters"].items()) if (v.is_number_integer()) r.counters[k] = v.get<int>();
+    if (j.contains("sideStories") && j["sideStories"].is_object())
+        for (auto& [k, v] : j["sideStories"].items()) if (v.is_string()) r.sideStories[k] = v.get<std::string>();
+    if (j.contains("flags") && j["flags"].is_object())
+        for (auto& [k, v] : j["flags"].items()) if (v.is_boolean()) r.flags[k] = v.get<bool>();
+    r.floor = j.value("floor", std::string("F01"));
+    r.clearedFloors = j.value("clearedFloors", std::vector<std::string>{});
+    r.shards = j.value("shards", std::vector<std::string>{});
+    r.deathsTotal = j.value("deathsTotal", 0);
+    r.deathsNonBoss = j.value("deathsNonBoss", 0);
     return r;
 }
 

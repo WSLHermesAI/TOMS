@@ -29,14 +29,15 @@
     "table": [
       "potion_red",
       "coin",
-      "gem_def"
+      "gem_def",
+      "potion_blue"
     ]
   },
   "events": [
-    "ev_common_whisper_old_road_v5",
-    "ev_common_cache_wall_v5",
-    "ev_common_merchant_echo_ash_v4",
-    "ev_common_rescue_lost_soldier_v3"
+    "ev_common_whisper_old_road",
+    "ev_common_cache_wall",
+    "ev_forest_hunter_cache",
+    "ev_forest_lost_child"
   ],
   "sideStoryHooks": [
     {
@@ -74,10 +75,15 @@
     "eventKinds": [
       "whisper",
       "cache",
-      "merchant_echo",
+      "cache",
       "rescue"
     ],
-    "eventPoolSource": "provisional",
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "slime",
+      "bat"
+    ],
     "eventCells": [
       [
         4,

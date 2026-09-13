@@ -33,17 +33,17 @@
     ]
   },
   "events": [
-    "ev_common_relic_road_v4",
-    "ev_common_cache_wall_v2",
     "ev_common_whisper_old_road",
-    "ev_common_cache_wall",
-    "ev_common_merchant_echo_ash_v5",
-    "ev_common_rescue_lost_soldier_v3",
-    "ev_common_trap_rubble_v4",
+    "ev_antechamber_old_sword_rack_v2",
+    "ev_common_whisper_old_road_v5",
+    "ev_common_whisper_old_road_v3",
+    "ev_common_trap_rubble_v3",
+    "ev_common_rescue_lost_soldier_v5",
+    "ev_common_cache_wall_v2",
+    "ev_antechamber_mirror_self",
     "ev_common_whisper_old_road_v4",
-    "ev_common_cache_wall_v5",
-    "ev_common_shard_wandering_v5",
-    "ev_common_relic_road_v3"
+    "ev_common_shard_wandering_v4",
+    "ev_common_trap_rubble_v4"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -66,19 +66,24 @@
     ],
     "difficultyTier": 9,
     "eventKinds": [
-      "relic",
-      "cache",
       "whisper",
       "cache",
-      "merchant_echo",
-      "rescue",
+      "whisper",
+      "whisper",
       "trap",
-      "whisper",
+      "rescue",
       "cache",
+      "relic",
+      "whisper",
       "memory_shard",
-      "relic"
+      "trap"
     ],
-    "eventPoolSource": "provisional"
+    "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "demon",
+      "wraith"
+    ]
   },
   "handAuthoredStage": "stage09.json"
 }

@@ -33,11 +33,11 @@
     ]
   },
   "events": [
-    "ev_gate_seal_rubbing",
-    "ev_gate_forge_first_v3",
-    "ev_common_shard_wandering",
-    "ev_common_cache_wall_v4",
-    "ev_common_trap_rubble_v2"
+    "ev_common_whisper_old_road",
+    "ev_gate_forge_slag",
+    "ev_gate_deserters_kit",
+    "ev_common_cache_wall",
+    "ev_common_shard_wandering"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -62,11 +62,16 @@
     "eventKinds": [
       "whisper",
       "cache",
-      "memory_shard",
+      "rescue",
       "cache",
-      "trap"
+      "memory_shard"
     ],
-    "eventPoolSource": "provisional",
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "bat",
+      "golem"
+    ],
     "eventCells": [
       [
         4,

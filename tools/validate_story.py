@@ -36,6 +36,9 @@ FOOTPRINTS = os.path.join(ROOT, 'data', 'footprints.json')
 sys.path.insert(0, os.path.join(ROOT, 'tools'))
 from gen_floors import ACTS, BOSS_STAGE, FLOOR_TABLE, tile_counts, CELL_SCALE   # the table itself
 
+STORY_DIR = os.path.join(ROOT, 'data', 'story')
+DATA_DIR = os.path.join(ROOT, 'data')
+
 FAILS = []
 CHECKS = [0]
 
@@ -225,6 +228,129 @@ def validate_stage(path, tiers):
                 occupied[(xx, yy)] = kind
 
 
+def validate_story_files(specs_by_id, chapters):
+    """S3 validators: V1 (declared flags), V2 (choiceMade references exist), V6 (i18n keys present),
+    plus chapter <-> chapter-data consistency (floors, boss floor/stage, mix/item ids)."""
+    with open(os.path.join(STORY_DIR, 'flags.json'), encoding='utf-8') as f:
+        declared = set(k for k in json.load(f) if not k.startswith('_'))
+    with open(os.path.join(DATA_DIR, 'text.json'), encoding='utf-8') as f:
+        text = json.load(f)
+
+    def collect_keys(node, out):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if isinstance(v, str) and (v.startswith('story.') or v.startswith('ev_')):
+                    out.add(v)
+                else:
+                    collect_keys(v, out)
+        elif isinstance(node, list):
+            for v in node:
+                if isinstance(v, str):
+                    if v.startswith('story.') or v.startswith('ev_'):
+                        out.add(v)
+                else:
+                    collect_keys(v, out)
+
+    # ---- V1: every setFlags names a declared flag ----
+    def check_setflags(node, where):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k == 'setFlags' and isinstance(v, list):
+                    for flag in v:
+                        check(flag in declared, 'V1 %s sets undeclared flag %s' % (where, flag))
+                else:
+                    check_setflags(v, where)
+        elif isinstance(node, list):
+            for v in node:
+                check_setflags(v, where)
+
+    # ---- V2: every choiceMade condition references a real choice+option ----
+    def check_choice_refs(node, where):
+        if isinstance(node, dict):
+            if node.get('type') == 'choiceMade':
+                cid, oid = node.get('choiceId', ''), node.get('optionId', '')
+                opts = CHAPTER_DATA.get('choices', {}).get(cid)
+                check(opts is not None, 'V2 %s requires unknown choice %s' % (where, cid))
+                if opts is not None:
+                    check(oid in opts, 'V2 %s requires unknown option %s.%s' % (where, cid, oid))
+            for v in node.values():
+                check_choice_refs(v, where)
+        elif isinstance(node, list):
+            for v in node:
+                check_choice_refs(v, where)
+
+    chapters_by_id = {c['id']: c for c in chapters}
+    for cid, ch in chapters_by_id.items():
+        CHAPTER_DATA['choices'][ch.get('id')] = {c['id']: [o['id'] for o in c.get('options', [])]
+                                                for c in ch.get('choices', [])}
+    # flatten for the reference check
+    flat = {}
+    for cid, ch in chapters_by_id.items():
+        for c in ch.get('choices', []):
+            flat[c['id']] = [o['id'] for o in c.get('options', [])]
+    CHAPTER_DATA['choices'] = flat
+
+    for cid, ch in sorted(chapters_by_id.items()):
+        check_setflags(ch, cid)
+        check_choice_refs(ch, cid)
+        # floors exist and belong to this act
+        for fid in ch.get('floors', []):
+            spec = specs_by_id.get(fid)
+            check(spec is not None, 'chapter %s names unknown floor %s' % (cid, fid))
+            if spec:
+                check(spec['act'] == cid, 'chapter %s vs %s.act=%s' % (cid, fid, spec['act']))
+        # boss floor + stage
+        bf = ch.get('bossFloor')
+        if bf:
+            spec = specs_by_id.get(bf)
+            check(spec is not None and spec.get('role') == 'boss-stage',
+                  'chapter %s bossFloor %s is not a boss-stage spec' % (cid, bf))
+            if spec:
+                want = ch.get('bossStage', '').replace('stage', 'stage')
+                got = (spec.get('handAuthoredStage') or '').replace('.json', '')
+                check(not want or want == got,
+                      'chapter %s bossStage %s != floor spec %s' % (cid, want, got))
+        # the act's flagship side story sits on its 5th floor
+        for i, fid in enumerate(ch.get('floors', [])):
+            spec = specs_by_id.get(fid)
+            if not spec:
+                continue
+            if (i + 1) == 5:
+                check(spec['sideStoryHooks'], 'chapter %s: %s (5th floor) has no side-story hook' % (cid, fid))
+        # mix / item ids must be real
+        with open(os.path.join(DATA_DIR, 'enemies.json'), encoding='utf-8') as f:
+            enemies = set(json.load(f).keys())
+        with open(os.path.join(DATA_DIR, 'items.json'), encoding='utf-8') as f:
+            items = set(json.load(f).keys())
+        for mid in ch.get('enemyMix', []):
+            check(mid in enemies, 'chapter %s enemyMix has unknown monster %s' % (cid, mid))
+        for iid in ch.get('itemTable', []):
+            check(iid in items, 'chapter %s itemTable has unknown item %s' % (cid, iid))
+
+    # ---- V1/V2/V6 across the generated floors and the event pools ----
+    keys = set()
+    for path in ([os.path.join(DATA_DIR, 'story.json'),
+                  os.path.join(STORY_DIR, 'flags.json'), os.path.join(STORY_DIR, 'counters.json')]
+                 + sorted(glob.glob(os.path.join(STORY_DIR, 'chapters', '*.json')))
+                 + sorted(glob.glob(os.path.join(STORY_DIR, 'floors', '*.json')))
+                 + sorted(glob.glob(os.path.join(DATA_DIR, 'events', '*.json')))):
+        with open(path, encoding='utf-8') as f:
+            doc = json.load(f)
+        check_setflags(doc, os.path.basename(path))
+        check_choice_refs(doc, os.path.basename(path))
+        collect_keys(doc, keys)
+    missing = sorted(k for k in keys if k not in text)
+    for k in missing[:10]:
+        check(False, 'V6 missing i18n key %s' % k)
+    if not missing:
+        check(True, 'V6 all %d referenced i18n keys exist' % len(keys))
+    return len(keys)
+
+
+# Populated by validate_story_files: choice -> [option ids], used by the V2 reference check.
+CHAPTER_DATA = {'choices': {}}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--quiet', action='store_true')
@@ -245,6 +371,21 @@ def main():
             boss_specs += 1
     check(boss_specs == 10, 'expected 10 boss floors, found %d' % boss_specs)
 
+    # ---- S3: chapters, flags, choices, i18n ----
+    specs_by_id = {}
+    for p in specs:
+        with open(p, encoding='utf-8') as f:
+            doc = json.load(f)
+        specs_by_id[doc['id']] = doc
+    chapters = []
+    ch_paths = sorted(glob.glob(os.path.join(STORY_DIR, 'chapters', 'ch_*.json')))
+    check(len(ch_paths) >= 3, 'expected at least ch_01..ch_03, found %d' % len(ch_paths))
+    for p in ch_paths:
+        with open(p, encoding='utf-8') as f:
+            chapters.append(json.load(f))
+    n_keys = validate_story_files(specs_by_id, chapters)
+    print('checked %d chapter(s), %d i18n key(s) referenced' % (len(chapters), n_keys))
+
     for p in stages:
         validate_stage(p, tiers)
 
@@ -257,11 +398,12 @@ def main():
         if len(FAILS) > 20:
             print('  ... and %d more' % (len(FAILS) - 20))
         sys.exit(1)
-    print('validate_story: ALL PASS (V7, V8, V9, V12 + footprint/softlock checks; %d checks)'
-          % CHECKS[0])
-    print('not yet applicable (arrive with their own phase): V1-V6 flags/choices/grants/endings, '
-          'V10 text width, V11 side-story rewards, V13 ending fallback, V14 cycle maths, '
-          'V16 event-pool depth -- see STORY_DATA_SCHEMA.md section 10/13')
+    print('validate_story: ALL PASS (V1, V2, V6, V7, V8, V9, V12 + footprint/softlock checks; '
+          '%d checks)' % CHECKS[0])
+    print('not yet applicable (arrive with their own phase): V3 side-story reachability needs the '
+          'side-story data (S5), V4 grant ids need skills.json (S4), V5/V13 need endings.json (S7), '
+          'V10 text width + V16 pool depth are advisory reports, V14 needs cycles.json (S7) -- '
+          'see STORY_DATA_SCHEMA.md section 10/13')
 
 
 if __name__ == '__main__':

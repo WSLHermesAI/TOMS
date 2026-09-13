@@ -29,14 +29,15 @@
     "table": [
       "potion_red",
       "coin",
-      "gem_def"
+      "gem_def",
+      "potion_blue"
     ]
   },
   "events": [
-    "ev_common_relic_road",
-    "ev_common_cache_wall_v4",
-    "ev_common_merchant_echo_ash",
-    "ev_forest_broken_arrow"
+    "ev_common_whisper_old_road",
+    "ev_forest_charcoal_kiln",
+    "ev_common_whisper_old_song",
+    "ev_forest_trap_net"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -59,12 +60,17 @@
     ],
     "difficultyTier": 2,
     "eventKinds": [
-      "relic",
+      "whisper",
       "cache",
-      "merchant_echo",
-      "relic"
+      "whisper",
+      "trap"
     ],
-    "eventPoolSource": "provisional",
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "slime",
+      "bat"
+    ],
     "eventCells": [
       [
         0,

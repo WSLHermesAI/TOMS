@@ -33,11 +33,11 @@
     ]
   },
   "events": [
-    "ev_common_whisper_old_road",
-    "ev_common_cache_wall_v3",
-    "ev_gate_forge_first_v4",
-    "ev_gate_seal_rubbing",
-    "ev_common_shard_wandering_v3"
+    "ev_common_relic_road",
+    "ev_gate_forge_slag",
+    "ev_common_merchant_echo_ash",
+    "ev_common_cache_rat_nest",
+    "ev_gate_old_banner"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -60,13 +60,18 @@
     ],
     "difficultyTier": 3,
     "eventKinds": [
-      "whisper",
+      "relic",
       "cache",
+      "merchant_echo",
       "cache",
-      "whisper",
-      "memory_shard"
+      "relic"
     ],
-    "eventPoolSource": "provisional",
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "bat",
+      "golem"
+    ],
     "eventCells": [
       [
         4,

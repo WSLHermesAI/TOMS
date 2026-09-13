@@ -1,0 +1,33 @@
+{
+  "id": "ch_01",
+  "floors": ["F01", "F02", "F03", "F04", "F05", "F06", "F07"],
+  "bossFloor": "F07",
+  "bossStage": "stage01",
+  "title": "story.ch01.title",
+  "seal": "memory",
+  "beats": [
+    { "id": "b_village_wake",    "kind": "dialogue", "nodeId": "village_elder.intro",      "floor": "F01" },
+    { "id": "b_village_well",    "kind": "event",    "eventId": "ev_village_well",         "floor": "F03" },
+    { "id": "b_shard_01",        "kind": "memory",   "shardId": "shard_01_the_well",       "floor": "F04",
+      "setFlags": ["flag_memory_shard_01"] },
+    { "id": "b_village_finale",  "kind": "boss",     "floor": "F07", "enemyId": "slime_king" }
+  ],
+  "grants": { "skills": ["s_yinqi"], "skillPoints": 1, "hub": ["hub.village"], "unlocks": ["gameplay.combat"] },
+  "choices": [
+    {
+      "id": "c_motive",
+      "prompt": "story.ch01.c1.q",
+      "options": [
+        { "id": "opt_know_self",  "text": "story.ch01.c1.o1", "setFlags": ["flag_motive_know_self"] },
+        { "id": "opt_save_liora", "text": "story.ch01.c1.o2", "setFlags": ["flag_motive_save_liora"] },
+        { "id": "opt_avenge",     "text": "story.ch01.c1.o3", "setFlags": ["flag_motive_avenge"] }
+      ],
+      "reversible": false
+    }
+  ],
+  "sideStoryHooks": ["ss_01"],
+  "exitConditions": { "type": "stageCleared", "stageId": "F07" },
+
+  "enemyMix": ["slime", "bat"],
+  "itemTable": ["potion_red", "coin", "gem_def"]
+}

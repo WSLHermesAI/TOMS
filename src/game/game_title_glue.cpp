@@ -36,6 +36,9 @@ toms::RunSaveData Game::runSaveFromState() const {
     r.player.key_yellow = pl.key_yellow; r.player.key_blue = pl.key_blue; r.player.key_red = pl.key_red;
     r.player.inv = pl.inv;
     r.entityStatus = entityStatus_;
+    // S3: the run's story state travels with the run save (schemaVersion 3) -- choices, counters,
+    // side-story states, run flags, shards, floor progress and deaths.
+    run_.writeInto(r);
     return r;
 }
 
@@ -76,6 +79,7 @@ void Game::applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& 
                           int slot, int playSec) {
     meta_ = m;
     entityStatus_ = r.entityStatus;
+    run_.readFrom(r);   // S3: restore the run's story state (defaults for a pre-v3 file)
     // Anything that belongs to the *previous* run must not leak into the loaded one.
     missionTrackers_.clear();
     notifications_.clear();

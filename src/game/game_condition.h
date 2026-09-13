@@ -12,6 +12,7 @@
 #include "story_controller.h"  // toms::hasStoryFlag / storyBeat
 #include "mission_system.h"    // toms::MissionTracker
 #include "save_system.h"       // toms::MetaSaveData (story flags / cleared stages)
+#include "run_state.h"         // toms::RunStoryState (S3: choices/counters/side stories/floors)
 #include <map>
 #include <string>
 
@@ -26,9 +27,13 @@ namespace game_detail {
 // enterNode), so it needs no friendship/new public API on Game.
 class GameConditionContext : public toms::ConditionContext {
 public:
+    // `run` is REQUIRED, not defaulted: a default empty run state would silently answer "no choice
+    // made yet" at any call site that forgot to pass it, which is exactly the kind of bug S3 exists
+    // to prevent (the compiler now finds those sites instead).
     GameConditionContext(const Player& p, const toms::MetaSaveData& meta,
-                          const std::map<std::string, toms::MissionTracker>& missions)
-        : p_(p), meta_(meta), missions_(missions) {}
+                          const std::map<std::string, toms::MissionTracker>& missions,
+                          const toms::RunStoryState& run)
+        : p_(p), meta_(meta), missions_(missions), run_(run) {}
     bool storyFlagSet(const std::string& flag) const override { return toms::hasStoryFlag(meta_, flag); }
     int  storyBeat() const override { return meta_.currentBeat; }
     bool itemHeld(const std::string& itemId, int count) const override {
@@ -65,12 +70,26 @@ public:
     // separate, still-open design question (architecture-doc §5.2, tracked in the roadmap's
     // Milestone 7 balance checklist), not decided here.
     bool stageCleared(const std::string& stageId) const override {
+        // S3: a floor counts as cleared when the RUN says so (docs/STORY_DATA_SCHEMA.md section 9's
+        // clearedFloors[]), falling back to the pre-S3 "reached at least once" rule for the eleven
+        // hand-authored stages so existing content keeps behaving.
+        if (run_.floorCleared(stageId)) return true;
         return std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), stageId) != meta_.unlockedStages.end();
     }
+    // ---- S3 leaves (docs/STORY_DATA_SCHEMA.md section 2.2) ----
+    bool choiceMade(const std::string& choiceId, const std::string& optionId) const override {
+        return run_.choiceMade(choiceId, optionId);
+    }
+    std::string sideStoryState(const std::string& sideStoryId) const override {
+        return run_.sideStoryState(sideStoryId);
+    }
+    int counter(const std::string& name) const override { return run_.counter(name); }
+    int cycleIndex() const override { return meta_.cycleIndex; }
 private:
     const Player& p_;
     const toms::MetaSaveData& meta_;
     const std::map<std::string, toms::MissionTracker>& missions_;
+    const toms::RunStoryState& run_;
 };
 
 } // namespace game_detail

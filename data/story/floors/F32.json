@@ -34,13 +34,13 @@
     ]
   },
   "events": [
-    "ev_crypt_ten_year_candle_v3",
+    "ev_crypt_ten_year_candle",
     "ev_common_cache_wall_v4",
-    "ev_crypt_choir_echo_v3",
-    "ev_crypt_nameless_brick_v4",
-    "ev_common_relic_road_v3",
-    "ev_common_rescue_lost_soldier_v5",
-    "ev_common_shard_wandering_v4"
+    "ev_crypt_choir_echo",
+    "ev_crypt_nameless_brick",
+    "ev_common_shard_wandering_v2",
+    "ev_common_relic_road",
+    "ev_crypt_choir_echo_v2"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -67,11 +67,16 @@
       "cache",
       "whisper",
       "whisper",
+      "memory_shard",
       "relic",
-      "rescue",
-      "memory_shard"
+      "whisper"
     ],
     "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "skeleton",
+      "wraith"
+    ],
     "eventCells": [
       [
         0,

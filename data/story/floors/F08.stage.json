@@ -18,13 +18,14 @@
     "2": "monster:slime",
     "a": "item:coin",
     "d": "item:gem_def",
-    "h": "item:potion_red",
+    "h": "item:potion_blue",
+    "H": "item:potion_red",
     "Y": "key:yellow",
     "y": "door:yellow"
   },
   "tiles": [
     "#######################",
-    "#Y........h..a..h..U.##",
+    "#Y........h..H..H..U.##",
     "#....................##",
     "####..#..#..#..#..#..##",
     "#........#.....#a..d.##",

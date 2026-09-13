@@ -33,11 +33,11 @@
     ]
   },
   "events": [
-    "ev_gate_soldier_plate_v3",
-    "ev_gate_forge_first_v2",
-    "ev_gate_seal_rubbing",
-    "ev_common_shard_wandering_v3",
-    "ev_gate_forge_first_v4"
+    "ev_gate_soldier_plate",
+    "ev_gate_forge_first",
+    "ev_common_whisper_old_road",
+    "ev_gate_quartermaster_cache",
+    "ev_common_relic_chipped_blade"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -67,10 +67,15 @@
       "relic",
       "cache",
       "whisper",
-      "memory_shard",
-      "cache"
+      "cache",
+      "relic"
     ],
-    "eventPoolSource": "provisional",
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "bat",
+      "golem"
+    ],
     "eventCells": [
       [
         1,

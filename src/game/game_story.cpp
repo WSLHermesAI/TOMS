@@ -26,7 +26,7 @@ void Game::enterNode(const std::string& node) {
         // Milestone 3: a choice's optional `requires` gates whether it appears at all, evaluated
         // via the shared Condition Evaluator (condition.h). No shipped dialogue file sets this
         // yet, so `contains("requires")` is false for all of them today -- purely additive.
-        if (c.contains("requires") && !toms::evaluate(c["requires"], GameConditionContext(pl, meta_, missionTrackers_)))
+        if (c.contains("requires") && !toms::evaluate(c["requires"], GameConditionContext(pl, meta_, missionTrackers_, run_)))
             continue;
         std::string label = c.contains("label") ? locale_.field(c["label"]) : "";
         std::string next  = c.contains("next")  && !c["next"].is_null()  ? (std::string)c["next"]  : "";
@@ -75,6 +75,29 @@ void Game::runDialogueAction(const nlohmann::json& action) {
     } else if (type == "claimMission") {
         std::string missionId = action.value("missionId", std::string());
         if (!missionId.empty()) claimMission(missionId);
+    } else if (type == "makeChoice") {
+        // S3: record a main-line decision (docs/STORY_DATA_SCHEMA.md section 4.1). Main-line choices
+        // are irreversible, so the first answer sticks even if the node is reached again.
+        std::string choiceId = action.value("choiceId", std::string());
+        std::string optionId = action.value("optionId", std::string());
+        if (!choiceId.empty() && !optionId.empty()) {
+            run_.makeChoice(choiceId, optionId, action.value("reversible", false));
+            // The option's effects travel with the action: the chapter file is the authority
+            // (section 4.1's option entry) and the dialogue node mirrors it, the same way every other
+            // data-driven effect in this project is declared where it is used.
+            if (action.contains("setFlags") && action["setFlags"].is_array())
+                for (auto& f : action["setFlags"])
+                    if (f.is_string()) run_.setFlag(f.get<std::string>());
+            if (action.contains("counters") && action["counters"].is_object())
+                for (auto& [name, delta] : action["counters"].items())
+                    if (delta.is_number_integer()) run_.addCounter(name, delta.get<int>());
+        }
+    } else if (type == "addCounter") {
+        // S3: the three accumulators (insight / resolve / humanity). Clamped by RunStoryState to the
+        // range declared in data/story/counters.json.
+        std::string name = action.value("counter", std::string());
+        int delta = action.value("delta", 0);
+        if (!name.empty() && delta != 0) run_.addCounter(name, delta);
     }
 }
 

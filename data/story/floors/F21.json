@@ -33,11 +33,11 @@
     ]
   },
   "events": [
-    "ev_gate_seal_rubbing_v4",
-    "ev_common_cache_wall_v3",
-    "ev_common_relic_road_v3",
-    "ev_common_shard_wandering_v3",
-    "ev_common_merchant_echo_ash_v2"
+    "ev_common_whisper_old_song",
+    "ev_gate_forge_first",
+    "ev_common_shard_wandering",
+    "ev_common_merchant_echo_ash",
+    "ev_common_relic_road"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -62,11 +62,16 @@
     "eventKinds": [
       "whisper",
       "cache",
-      "relic",
       "memory_shard",
-      "merchant_echo"
+      "merchant_echo",
+      "relic"
     ],
-    "eventPoolSource": "provisional"
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "bat",
+      "golem"
+    ]
   },
   "handAuthoredStage": "stage03.json"
 }

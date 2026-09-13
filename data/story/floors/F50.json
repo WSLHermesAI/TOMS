@@ -34,15 +34,15 @@
   },
   "events": [
     "ev_sanctum_crack_prayer_v4",
-    "ev_common_cache_wall_v4",
-    "ev_sanctum_seventh_bell_v3",
-    "ev_common_merchant_echo_ash",
-    "ev_sanctum_crack_prayer",
-    "ev_common_merchant_echo_ash_v4",
-    "ev_common_shard_wandering",
-    "ev_sanctum_crack_prayer_v3",
-    "ev_common_relic_road_v4",
-    "ev_common_rescue_lost_soldier_v3"
+    "ev_common_cache_wall_v3",
+    "ev_common_merchant_echo_ash_v2",
+    "ev_common_whisper_old_road",
+    "ev_common_merchant_echo_ash_v5",
+    "ev_common_whisper_old_road_v4",
+    "ev_common_rescue_lost_soldier_v4",
+    "ev_common_relic_road",
+    "ev_common_shard_wandering_v4",
+    "ev_common_cache_wall_v4"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -67,16 +67,21 @@
     "eventKinds": [
       "whisper",
       "cache",
-      "relic",
       "merchant_echo",
       "whisper",
       "merchant_echo",
+      "whisper",
+      "rescue",
+      "relic",
       "memory_shard",
-      "whisper",
-      "relic",
-      "rescue"
+      "cache"
     ],
     "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "wraith",
+      "demon"
+    ],
     "eventCells": [
       [
         5,

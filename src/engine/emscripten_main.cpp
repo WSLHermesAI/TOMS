@@ -58,6 +58,46 @@ void jsGamepad(int phase, int x, int y) {
     if (toms::imgui_web::wantsMouse()) return;
     if (g_game) g_game->handleTouch((float)x, (float)y, phase);
 }
+// S3 dialogue/choice probes for the deploy harness: the dialogue box is drawn on the canvas, so a
+// page driver cannot see which node it is on or whether a choice was recorded -- these assert on the
+// real Game state instead. Same rationale as the battle probes below.
+EMSCRIPTEN_KEEPALIVE
+void jsTalk(const char* npc) { if (g_game && npc) g_game->startDialogue(npc); }
+EMSCRIPTEN_KEEPALIVE
+int jsDialogueInfo(int which) {
+    if (!g_game) return -1;
+    if (which == 0) return g_game->inDialogueFlag() ? 1 : 0;
+    if (which == 1) return g_game->dialogueChoiceCount();
+    if (which == 2) return g_game->dialogueSel();
+    return -1;
+}
+EMSCRIPTEN_KEEPALIVE
+void jsChoose(int idx) { if (g_game) g_game->chooseDialogue(idx); }
+// The S3 probes: did a main-line choice get recorded on the RUN, and what do the counters say?
+EMSCRIPTEN_KEEPALIVE
+int jsChoiceMade(const char* choiceId, const char* optionId) {
+    if (!g_game || !choiceId || !optionId) return -1;
+    return g_game->runState().choiceMade(choiceId, optionId) ? 1 : 0;
+}
+EMSCRIPTEN_KEEPALIVE
+int jsRunCounter(const char* name) {
+    if (!g_game || !name) return -999;
+    return g_game->runState().counter(name);
+}
+EMSCRIPTEN_KEEPALIVE
+int jsRunInfo(int which) {
+    if (!g_game) return -1;
+    const toms::RunStoryState& r = g_game->runState();
+    if (which == 0) return r.shardCount();
+    if (which == 1) return (int)r.clearedFloors().size();
+    if (which == 2) return r.deathsTotal();
+    if (which == 3) return r.flag("flag_motive_know_self") ? 1 : 0;   // spot-check a choice flag
+    return -1;
+}
+// Force a run save (the page then reads /save/slotN.json out of IDBFS to verify schemaVersion 3).
+EMSCRIPTEN_KEEPALIVE
+void jsSaveNow() { if (g_game) g_game->saveRunNow(); }
+
 // Diagnostics for the browser build's battle input. The battle scene is driven by taps on canvas
 // rects, which a page driver cannot observe through the DOM (nothing in the canvas reports state),
 // so the deploy harness asserts on these instead: which==0 -> flag bits (0 active, 1 attack bar

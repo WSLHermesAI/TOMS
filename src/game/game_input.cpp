@@ -173,7 +173,7 @@ void Game::movePlayer(int dx, int dy) {
     };
     if (auto doorIt = kDoorKeyItem.find(c); doorIt != kDoorKeyItem.end()) {
         nlohmann::json req = { {"type", "itemHeld"}, {"itemId", doorIt->second}, {"count", 1} };
-        if (!toms::evaluate(req, GameConditionContext(pl, meta_, missionTrackers_))) return;
+        if (!toms::evaluate(req, GameConditionContext(pl, meta_, missionTrackers_, run_))) return;
     }
     if (c == 'y') pl.key_yellow--;
     if (c == 'b') pl.key_blue--;

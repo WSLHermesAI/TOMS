@@ -11,17 +11,16 @@
 
 ## ▶ Next Step
 
-**Next action: S3 — story data v3 + the condition DSL + save v3.** (S1 shipped 2026-09-13, S2 shipped
-2026-09-13 — both logged below; the numbered list further down is the full ordered plan and the
-milestone table is its status board.)
+**Next action: S4 — the systems the story now promises: skill tree (`skills.json` + UI), forging
+(`forge.json` + forge UI), the village/barracks hub (`hub.json`) and equipment actives.** (S1, S2 and S3
+all shipped 2026-09-13 — see the log entries below; the numbered list further down is the full ordered
+plan and the milestone table is its status board.)
 
-**Why S3 next:** S2 now generates all 70 floors, but two thirds of each floor's *meaning* is still
-provisional: the per-act enemy mixes and item tables should come from `data/story/chapters/ch_NN.json`,
-and every floor's events are sampled from a built-in temporary pool because `data/events/pool_act*.json`
-does not exist yet. S3 writes `story.json` v3 + `ch_01…ch_03` + the first three acts' event pools (which
-flips `meta.eventPoolSource` from `provisional` to `authored` — the generator picks them up with no code
-change), adds the four new condition types (`choiceMade` / `sideStoryState` / `counterAtLeast` /
-`cycleIndexAtLeast`) and save `schemaVersion: 3`, without which the act-1 motive choice cannot persist.
+**Why S4 next:** S3 made the story's *state* real — choices are recorded, counters accumulate, the save
+keeps them, and the condition DSL can gate on them. What the acts promise next are the systems the first
+three chapters already name in their `grants`: `s_yinqi` / `s_yuqi` / `s_faqi` (skills), `hub.village` /
+`hub.forge`, and the forging unlock. Those ids are declared but nothing implements them yet, so the
+validator's V4 (every grant names a real skill) cannot pass until `skills.json` exists.
 
 **Last completed (2026-09-13):** the source-layout refactor (`game.cpp` 3,104 -> 268 lines, camera
 extracted to `toms::Camera`) and **M2 — ImGui on the browser backend**, both logged below. Owner
@@ -101,7 +100,7 @@ Recommended order (each item is sized to finish and verify in one sitting):
 | M12 — Source-layout refactor | ✅ Done | `game.cpp` 3,104 -> 268 lines, split into 9 responsibility units; `toms::Camera` extracted to `src/game/camera.{h,cpp}` with 30 unit checks (`camera_test`); shared helpers in `game_helpers.h` / `game_condition.h` / `game_internal.h`; new `docs/CODE_LAYOUT.md`; `texture_test` (the last accepted M0 gap) fixed -- 17/17 tests pass; native walk re-verified under Xvfb. No behaviour change. |
 | S1 — Entity footprint (1/2/4 grids) + roamers | ✅ Done (2026-09-13) | Engine: `src/game/footprint.h` (legal sizes 1x1/2x1/1x2/2x2 per doc F1, tile coverage, F5 y-sort key, JSON parsing that rejects an illegal size instead of shipping it, and `resolveFootprint()` — the one place that decides stage-file override > character type table > 1x1) and `src/game/roamer.{h,cpp}` (`toms::Roamer`, pure logic behind a `GridQuery` interface: wander with a heading, detect radius 6 / lose radius 9 hysteresis, greedy chase, and a candidate step is only legal when the WHOLE footprint fits on walkable tiles, so it never phases through walls). Data: `data/footprints.json` (character-level tiers — golem/demon 2x1, demonlord_vorkath 2x2 + name). Gameplay: all occupied tiles block/bump (F6), a big monster is never walked into (pure bump: the player fights from the adjacent tile and the boss keeps its cell), one unified y-sorted draw pass with the player included (F5), footprint-sized sprites (F2) and a name banner for the 4-grid/roamer tier. Tests: `footprint_test` — 88 checks, incl. a validator over all 11 shipped stages (legal size, no entity on a wall, no overlap (F7), stairs still reachable with the bigger blockers = anti-softlock). Six monsters in four stage files stood in 1-tile nooks that cannot host their tier (stage10's boss had no 2x2 room) and were moved to the nearest fitting tile. Roamers are engine-ready but not yet placed in shipped data — the two designed ones (王座之影, 前世道兵王) arrive with S2. |
 | S2 — `tools/gen_floors.py` + the 70-floor table | ✅ Done (2026-09-13) | `tools/gen_floors.py` emits **70 floor specs** (`data/story/floors/F01…F70.json`, the section-4 schema: act/indexInAct/seal/role, maze params, enemy mix+range+elites+boss, item table, sampled events, side-story hook, narrative keys, nextFloor, meta) plus **60 playable grids** (`Fnn.stage.json`, every non-boss floor) in the existing stage schema — boss floors are the ten hand-authored `data/stages/*.json` the section-3.2 table maps them to (recorded as `handAuthoredStage`). The maze reuses `tools/gen_mazes.py`'s Wilson + BFS (one implementation, same conventions: cell = 2x2 tiles, 2-tile passages), adds the table's rooms ("event containers") and extra loops, and pads the right/bottom edge with wall so the table's dims come out exact. `tools/validate_story.py` implements V7 (floor↔act↔nextFloor, boss floor → hand-authored stage), V8 (one player start, stairs up/down, maze fully connected, and each key reachable with the doors shut = anti-softlock), V9 (dims/rooms/loops/events/enemy range/elites/items/difficulty vs the table) and V12 (≥1 relic/whisper + ≥1 cache per floor), plus footprint legality/overlap and side-story placement — **6745 checks, ALL PASS**. The engine gained one resolution fallback (`loadStage` also looks in `data/story/floors/<id>.stage.json`), and `footprint_test` now validates the 60 generated grids through the runtime's own `parseStage` (71 stage files, 430 multi-grid entities) so generated data is gated by the game's parser, not just by Python. Verified natively by booting a new game into the generated F64 (63x42): playable, camera follows, 2-grid demons and rooms render (HUD 「第 64 層」). Provisional until their own phase: per-act enemy mixes / item tables (chapters, S3) and the event pools (S3) — the generator prefers `data/events/pool_*.json` the moment those exist. Docs corrected: the section-5.1 formula disagreed with its own table from tier 4 up, so it was replaced by the exact piecewise form the table implies. |
-| S3 — Story data + condition DSL + save v3 | ⬜ Not started | `story.json` v3, `ch_01..ch_03`, event pools, `choiceMade` / `sideStoryState` / counters / `cycleIndex`, save `schemaVersion: 3`. |
+| S3 — Story data v3 + condition DSL + save v3 | ✅ Done (2026-09-13) | **DSL**: the four leaves the 70-floor story needs — `choiceMade`, `sideStoryState`, `counterAtLeast`, `cycleIndexAtLeast` — added to `src/engine/condition.{h,cpp}` (as *defaulted* virtuals on `ConditionContext`, so every existing context keeps compiling and answers "nothing chosen / cycle 1"), with cases in `condition_eval_test` and a state-backed context in the new `run_state_test`. **State**: `src/game/run_state.{h,cpp}` — `toms::RunStoryState`, the per-run truth for choices (first answer sticks), the three clamped counters (insight/resolve/humanity, `displayAt` from counters.json), side-story states, run flags, memory shards, floor progress + cleared floors, and death counts; `Game` owns one, `GameConditionContext` answers all four leaves from it, `newGame()` resets it and rebirth is `reset(keepShards=true)`. **Save v3**: `kRunSaveSchemaVersion = kMetaSaveSchemaVersion = 3`, the run file now carries choices/counters/sideStories/flags/floor/clearedFloors/shards/deaths and the meta file carries cycleIndex/endingsSeen/hintsUnlocked — and section 9's compatibility rule is implemented: a **pre-v3 file still loads**, with the new fields defaulted (verified live: an old `saveVersion: 1` slot loaded unchanged, and `run_state_test` covers the round trip + migration). **Data**: `data/story.json` v3 (chapters + seals + the old `arc[]` kept as the projection section 12 requires), `data/story/chapters/ch_01…ch_03` (section-4.1 schema: beats, grants, choices, side-story hooks, exit conditions, plus the `enemyMix`/`itemTable` section 6.2 reads), `data/story/flags.json` (25 declarations incl. the whole 8-choice arc) and `counters.json`; `data/events/pool_common.json` + `pool_act01…03.json` (authored, 8+8+8+10 events with the section-12.1 kinds); the boss-floor `story` blocks injected into stage01…03 (section 6.1 step 2). **i18n**: `tools/gen_story_i18n.py` fills `data/text.json` for every key the story data references (453 keys; 86 authored TC/EN, the rest backfilled + `_todo` per section 11.2) and is idempotent. **Generator**: `gen_floors.py` now reads the chapters for enemy mix/item table and the authored pools — floors F01–F21 report `contentSource: chapter` / `eventPoolSource: authored`, F22–F70 stay provisional as designed. |
 | S4-S7 — Skill tree / forging / hub / actives, then endings + rebirth | ⬜ Not started | Schemas in `STORY_DATA_SCHEMA.md` sections 6 (systems), 7 (endings + resolver), 8 (rebirth). |
 | S8 — Art pipeline (shader variants, atlas, rigs) | ⬜ Not started | `ART_AND_ABILITY_DESIGN.md` sections 1.3 / 1.5 / 8; 1,006 animation frames + 469 static images, 3 MB budget. |
 
@@ -2079,6 +2078,71 @@ Owner: "Do next (it should be S2?)" — yes, S2 is `tools/gen_floors.py` + the f
   `meta.eventPoolSource` records which floors used the built-in pool, so the swap is auditable.
 - Not deployed: the generated floors are not reachable from the live build yet (no progression), so a
   deploy would only add unused data weight.
+
+### 2026-09-13 — S3 done: story v3 + the four new condition leaves + save v3 (choices actually persist)
+
+Owner: "Do S3 and ensure all jobs has written into progress md file." S3 is the phase
+STORY_DATA_SCHEMA.md section 13 lists as M2+M3 ("前 21 層有敘事與事件", "分歧與計數器可保存").
+
+**Code.**
+- `condition.h/.cpp` — `choiceMade`, `sideStoryState`, `counterAtLeast`, `cycleIndexAtLeast`. They are
+  *defaulted* virtuals on `ConditionContext` rather than pure virtuals, so every existing context (and
+  every test mock) keeps compiling and simply answers "no choice made / counter 0 / cycle 1" — a mock
+  that does not care cannot accidentally open a gated screen. The other three leaves the section lists
+  (`cultivationTier`, `memoryShards`, `endingSeen`) belong to the phases that create their data (S4/S7)
+  and are not invented here.
+- `src/game/run_state.{h,cpp}` — `toms::RunStoryState`, its own class like the camera and the roamer:
+  choices (irreversible ones keep the first answer), counters clamped to the range declared in
+  `counters.json` with a `displayAt` visibility rule, side-story states, run flags, memory shards, floor
+  progress + `clearedFloors` (what `stageCleared` reads), death counts, `reset(keepShards)` for rebirth,
+  and `writeInto/readFrom(RunSaveData)` so persistence is one pair of calls instead of field copying.
+- `save_system.{h,cpp}` — schema version 3 for both files: run gains choices/counters/sideStories/flags/
+  floor/clearedFloors/shards/deaths, meta gains cycleIndex/endingsSeen/hintsUnlocked. **Section 9's
+  compatibility rule is implemented, not just documented**: a pre-v3 file loads with the new fields
+  defaulted and `*versionMismatch` set for logging — loading is never refused for a version difference.
+- `Game` wiring: owns a `RunStoryState`; `newGame()` resets it; `runSaveFromState()` writes it;
+  `applyLoadedRun()` reads it; `GameConditionContext` answers all four leaves from it (its constructor
+  now *requires* the run state, so no call site can silently forget it); `loadStage()` records the
+  current floor; and the dialogue action runner gained `makeChoice` (with the option's `setFlags` /
+  `counters`, mirroring the chapter entry) and `addCounter`.
+
+**Data.** `story.json` v3 (chapters + seals; `arc[]` kept as the projection section 12 asks for);
+`chapters/ch_01…ch_03` in the section-4.1 schema with the real content from STORY_BIBLE §3/§4.1
+(`c_motive` with three options; `c_gate_seal` with break/unseal + insight); `flags.json` (25 declarations
+covering the whole 8-choice arc so V1 passes now and later phases only add content); `counters.json`;
+`events/pool_common.json` + `pool_act01…03.json` (the three documented seeds per act plus variants in the
+same namespace, kinds per section 12.1); and the boss-floor `story` blocks in stage01…03.
+`villager_elder.json` gained the act-1 question as a **gated** row — its `requires` is
+`not any(choiceMade(c_motive, …))`, i.e. real data using the new leaf.
+
+**i18n.** `tools/gen_story_i18n.py`: 453 referenced keys, 86 authored 繁中/English, the rest backfilled
+from zh_TW and marked `_todo` (section 11.2); idempotent, and it repairs its own earlier placeholders.
+
+**Verified (real runs, not builds).**
+- `run_state_test: ALL PASS (45 checks)` — choices/counters/side stories/flags/shards/floors/deaths,
+  first-answer-wins, clamps, rebirth resets, the schemaVersion-3 round trip, and the pre-v3 migration on
+  both the run and the meta file.
+- `condition_eval_test` extended per section 12 rule 5; **19/19 test binaries pass**.
+- `validate_story: ALL PASS (6834 checks)` — now also V1 (every `setFlags` is declared), V2 (every
+  `choiceMade` names a real choice+option), V6 (all 453 i18n keys exist) and chapter↔data consistency
+  (floors/boss floor/boss stage match the specs, mix and item ids exist in enemies.json/items.json).
+- Native, live: an **old `saveVersion: 1` slot still loads** (the migration rule in the wild — it came up
+  on the generated F64 floor unchanged), and the act-1 dialogue runs.
+- Browser (WebGL2 harness probes added for exactly this): `jsTalk` → 4 choices; `jsChoose(1)` → the
+  motive question (3 choices); `jsChoose(0)` → `jsChoiceMade(c_motive, opt_know_self)` **0 → 1**,
+  `flag_motive_know_self` = 1; reopening the dialogue shows **3** choices (the gate closed); `jsSaveNow()`
+  then reading `/save/slot1.json` out of IDBFS shows `schemaVersion: 3`,
+  `choices: {"c_motive": "opt_know_self"}`, `flags: {"flag_motive_know_self": true}`, `floor: F01`.
+
+**Two real bugs caught while verifying.** (1) The confirmation node I wrote had no way out — a dialogue
+node with neither `choices` nor a closing option can never be dismissed, because `chooseDialogue()` only
+leaves the dialogue through a chosen option with an empty `next`; it now has a closing row like the
+elder's other nodes. (2) The i18n collector could not see keys inside JSON *arrays* (e.g. a floor's
+`ambient` list), so 235 keys would have been silently missing; fixed and re-run.
+
+**Not done, on purpose:** the remaining three leaves (`cultivationTier`, `memoryShards`, `endingSeen`),
+`ch_04…ch_10` content, and V3/V4/V5/V13/V14/V16 — each needs the data its own phase creates. Not
+deployed: the live site still serves the S1 build.
 
 ## Open Questions / Blockers
 

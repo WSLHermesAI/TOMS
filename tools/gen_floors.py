@@ -77,6 +77,15 @@ FLOOR_TABLE = [
 ]
 
 
+def _stable_hash(text):
+    """FNV-1a over the string's UTF-8 bytes: stable across processes and Python versions, unlike
+    the built-in hash() (randomized per process since 3.3)."""
+    h = 2166136261
+    for b in text.encode('utf-8'):
+        h = ((h ^ b) * 16777619) & 0xFFFFFFFF
+    return h
+
+
 def tile_counts(floor_no):
     """Tile dims for a floor, in closed form.
 
@@ -187,6 +196,22 @@ def load_footprint_tiers():
             continue
         tiers[kind] = (int(spec.get('w', 1)), int(spec.get('h', 1)))
     return tiers
+
+
+def load_chapter(act_no):
+    """The authored chapter file, when the story phase has written it (S3 writes ch_01..ch_03).
+
+    STORY_DATA_SCHEMA.md section 6.2's pseudocode reads act["enemyMix"] / act["itemTable"] from the
+    chapter, so a chapter that exists overrides the provisional tables below -- the same pattern as
+    the event pools. Returns {} when the chapter is absent."""
+    path = os.path.join(ROOT, 'data', 'story', 'chapters', 'ch_%02d.json' % act_no)
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
 
 def event_pool(theme):
@@ -338,9 +363,17 @@ def main():
         is_boss = (floor_no % 7 == 0)
         role = 'boss-stage' if is_boss else ('side-story-stage' if index_in_act == 5 else 'normal')
         seed = '%02d:toms-s2' % floor_no
-        rng = random.Random(hash(seed) & 0xFFFFFFFF)
+        # NOT python's hash(): it is randomized per process (PYTHONHASHSEED), which silently made
+        # every run produce different floors -- the opposite of what the doc's "seed": "auto" is for
+        # (a save must name a floor and get the same maze back). FNV-1a, the same stable hash the
+        # roamer seeds use on the C++ side.
+        rng = random.Random(_stable_hash(seed))
 
         assert (cols, rows) == tile_counts(floor_no), floor_no
+
+        chapter = load_chapter(tier + 1)
+        act_mix = chapter.get('enemyMix') or MIX_BY_ACT[tier]
+        act_items = chapter.get('itemTable') or ITEM_TABLE_BY_ACT[tier]
 
         spec = {
             "id": "F%02d" % floor_no,
@@ -351,12 +384,12 @@ def main():
             "role": role,
             "maze": {"cols": cols, "rows": rows, "rooms": rooms, "loops": loops, "seed": seed},
             "enemies": {
-                "mix": MIX_BY_ACT[tier],
+                "mix": act_mix,
                 "count": [emin, emax],
                 "elites": elites,
                 "boss": boss_id if is_boss else None,
             },
-            "items": {"count": n_items, "table": ITEM_TABLE_BY_ACT[tier]},
+            "items": {"count": n_items, "table": act_items},
             "events": [],
             "sideStoryHooks": [],
             "story": {
@@ -394,6 +427,8 @@ def main():
         spec['events'] = [p[0] for p in picks]
         spec['meta']['eventKinds'] = [p[1] for p in picks]
         spec['meta']['eventPoolSource'] = pool_source
+        spec['meta']['contentSource'] = 'chapter' if chapter else 'provisional'
+        spec['meta']['enemyMix'] = act_mix
 
         # ---- side story hook: this act's flagship story sits on its 5th floor (bible section 6) ----
         if index_in_act == 5:
@@ -454,7 +489,7 @@ def main():
             used.add(back)
 
             roster = []
-            mix = MIX_BY_ACT[tier]
+            mix = act_mix
             n_enemies = emin + (floor_no % (emax - emin + 1))
             for i in range(n_enemies):
                 roster.append(mix[i % len(mix)])
@@ -473,7 +508,7 @@ def main():
                 mon_by_id[mid] = ch
                 legend[ch] = "monster:" + mid
             ITEM_CHARS = ["a", "d", "h", "H", "c", "x", "X"]
-            item_table = ITEM_TABLE_BY_ACT[tier]
+            item_table = act_items
             item_by_id = {}
             for idx, iid in enumerate(sorted(set(item_table))):
                 ch = ITEM_CHARS[idx % len(ITEM_CHARS)]

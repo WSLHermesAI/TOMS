@@ -1,0 +1,12 @@
+{
+  "_comment": [
+    "S3 — accumulator declarations (docs/STORY_DATA_SCHEMA.md section 2.3 / STORY_BIBLE.md 4.2).",
+    "`displayAt` is the threshold at which the HUD shows the state WORD (never the number): the",
+    "player should feel a direction, not optimise a score. `clamp` bounds the value so section 8's",
+    "rebirth maths can never produce a negative or absurd counter.",
+    "RunStoryState applies these clamps on every write (see src/game/run_state.h)."
+  ],
+  "insight":  { "label": { "zh_TW": "道心澄明", "en": "Clarity of Dao" },  "displayAt": 6, "clamp": [-20, 20] },
+  "resolve":  { "label": { "zh_TW": "執念纏身", "en": "Burning Resolve" }, "displayAt": 6, "clamp": [-20, 20] },
+  "humanity": { "label": { "zh_TW": "仁心未泯", "en": "Heart Unsevered" }, "displayAt": 6, "clamp": [-20, 20] }
+}

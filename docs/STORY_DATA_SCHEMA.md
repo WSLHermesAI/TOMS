@@ -47,7 +47,7 @@
 { "type": "itemHeld",         "itemId": "key_yellow", "count": 1 }
 ```
 
-### 2.2 新增（本版需要）
+### 2.2 新增（本版需要）— **S3 已實作前四項**
 
 ```json
 { "type": "choiceMade",       "choiceId": "c_final_stance", "optionId": "opt_guard" }
@@ -411,7 +411,7 @@ context = { flags, choices, counters, items, sideStories, cycleIndex, shards, de
 
 ---
 
-## 9. 存檔整合（`schemaVersion: 3`）
+## 9. 存檔整合（`schemaVersion: 3`）— **S3 已實作（含舊檔相容）**
 
 | 資料 | 落點 | 說明 |
 |---|---|---|
@@ -470,13 +470,20 @@ context = { flags, choices, counters, items, sideStories, cycleIndex, shards, de
 
 ---
 
+### 5.2 產生器必須可重現（S3 修正）
+
+`"seed": "auto"` 的意思是「**同一個樓層編號永遠得到同一座迷宮**」——存檔只記樓層名，重載時必須拿回
+同一張圖。Python 內建的 `hash()` 自 3.3 起每個行程都加鹽（`PYTHONHASHSEED`），拿它當種子會讓**每次產生
+的樓層都不一樣**；`tools/gen_floors.py` 已改用 FNV-1a（與 C++ 端 roamer 同一套穩定雜湊）。驗收方式：
+連續跑兩次產生器，`diff -r` 必須完全相同。
+
 ## 13. 實作順序（70 層版）
 
 | 階段 | 內容 | 產出 |
 |---|---|---|
 | M1 | `gen_floors.py` + 樓層表 + V7/V8/V9 | 70 層可生成、可走通 |
-| M2 | `story.json` v3 + `ch_01`–`ch_03` + 事件池（前三幕） | 前 21 層有敘事與事件 |
-| M3 | 條件 DSL 擴充（`choiceMade`／計數器／`cycleIndex`）＋存檔 v3 | 分歧與計數器可保存 |
+| M2 | `story.json` v3 + `ch_01`–`ch_03` + 事件池（前三幕） | 前 21 層有敘事與事件 | ✅ 2026-09-13 |
+| M3 | 條件 DSL 擴充（`choiceMade`／計數器／`cycleIndex`）＋存檔 v3 | 分歧與計數器可保存 | ✅ 2026-09-13 |
 | M4 | 技能樹（`skills.json` ＋UI） | 成長線成立 |
 | M5 | 鍛造（`forge.json` ＋火爐 UI）＋樞紐 NPC（`hub.json`） | 經濟與強化閉環 |
 | M6 | 裝備主動技（`actives`） | 主動技灌注 |

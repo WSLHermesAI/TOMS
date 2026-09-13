@@ -137,6 +137,7 @@ void Game::newGame(int slot) {
     pl.inv = {"potion_red", "potion_blue", "exp_up"};
     pl.x = 1; pl.y = 1;
     entityStatus_.clear();
+    run_.reset();   // S3: a new game is a fresh run -- choices/counters/side stories/floors/deaths
     missionTrackers_.clear();
     meta_ = toms::MetaSaveData{};
     notifications_.clear();

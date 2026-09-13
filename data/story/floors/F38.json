@@ -33,14 +33,14 @@
     ]
   },
   "events": [
-    "ev_common_relic_road_v5",
-    "ev_cavern_miner_cache_v4",
-    "ev_common_cache_wall_v5",
-    "ev_common_whisper_old_road_v5",
-    "ev_common_trap_rubble_v2",
-    "ev_common_whisper_old_road",
-    "ev_cavern_twin_crystal_v2",
-    "ev_cavern_echo_wall_v3"
+    "ev_common_relic_road",
+    "ev_common_cache_wall_v3",
+    "ev_cavern_twin_crystal_v3",
+    "ev_common_whisper_old_road_v4",
+    "ev_cavern_echo_wall",
+    "ev_cavern_echo_wall_v4",
+    "ev_cavern_miner_cache_v3",
+    "ev_common_shard_wandering_v2"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -69,14 +69,19 @@
     "eventKinds": [
       "relic",
       "cache",
-      "cache",
-      "whisper",
-      "trap",
-      "whisper",
       "relic",
-      "whisper"
+      "whisper",
+      "whisper",
+      "whisper",
+      "cache",
+      "memory_shard"
     ],
     "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "golem",
+      "wraith"
+    ],
     "eventCells": [
       [
         3,

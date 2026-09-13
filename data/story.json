@@ -1,23 +1,64 @@
 {
+  "schemaVersion": 3,
+  "_comment": [
+    "S3 — story.json upgraded to v3 (docs/STORY_DATA_SCHEMA.md sections 1.1 and 12).",
+    "Kept for compatibility: title/subtitle/premise/final_boss/arc -- arc[] is now a PROJECTION of",
+    "chapters[].title (section 12 rule 1), so the pre-S3 consumers keep working unchanged.",
+    "Added by v3: the ten chapters, the ten seals (STORY_BIBLE.md 1.3), and pointers to the files",
+    "that hold the flags/counters declarations. Chapters 4-10 carry their act-level metadata now so",
+    "the generator and the validators can see the whole tower; their content lands in the phase that",
+    "writes them (docs/STORY_DATA_SCHEMA.md section 13)."
+  ],
   "title": "Tower of the Sorcerer",
   "subtitle": "魔法塔 — 巫師之塔",
-  "premise": "十年前，黑巫師之王 Vorkath（沃卡司）以禁咒封印了『安穩之星』——王國生命的源泉，並將唯一的反咒之匙交給了被囚於塔頂的公主 Liora（莉歐拉）。從此大地枯萎、怪物橫行。你是年輕的見習巫師，必須攀上十層『巫師之塔』，擊敗 Vorkath，救出公主、重啟安穩之星。",
+  "premise": "十年前，黑巫師之王 Vorkath（沃卡司）以禁咒封印了『安穩之星』——王國生命的源泉，並將唯一的反咒之匙交給了被囚於塔頂的公主 Liora（莉歐拉）。從此大地枯萎、怪物橫行。你是年輕的見習巫師，攀上七十層『巫師之塔』、解開十道封印之鎖，才能決定安穩之星要如何重啟——是要報仇，還是要守護。",
   "final_boss": {
     "id": "demonlord_vorkath",
     "name": "Vorkath 沃卡司",
-    "floor": 10,
-    "why": "他是封印的源頭；不擊敗他，安穩之星永不重啟，國土將持續凋零。"
+    "floor": "F70",
+    "why": "他是封印的源頭；不擊敗他，安穩之星永不重啟。但他也是師兄——十條結局取決於你如何面對這件事。"
+  },
+  "chapters": [
+    { "id": "ch_01", "title": "我為何舉劍", "seal": "memory",   "floors": "F01-F07", "bossFloor": "F07", "bossStage": "stage01", "boss": "slime_king" },
+    { "id": "ch_02", "title": "老巫師的氣", "seal": "qi",       "floors": "F08-F14", "bossFloor": "F14", "bossStage": "stage02", "boss": "bat_matron" },
+    { "id": "ch_03", "title": "門環上的刻痕", "seal": "daoji",  "floors": "F15-F21", "bossFloor": "F21", "bossStage": "stage03", "boss": "golem" },
+    { "id": "ch_04", "title": "執卷人的遺骸", "seal": "jindan", "floors": "F22-F28", "bossFloor": "F28", "bossStage": "stage04", "boss": "skeleton_scholar_boss" },
+    { "id": "ch_05", "title": "我死的那一夜", "seal": "soul",   "floors": "F29-F35", "bossFloor": "F35", "bossStage": "stage05", "boss": "wraith_choir" },
+    { "id": "ch_06", "title": "雙修之石", "seal": "yuanying",   "floors": "F36-F42", "bossFloor": "F42", "bossStage": "stage06", "boss": "twin_golem" },
+    { "id": "ch_07", "title": "王的副官", "seal": "fire",       "floors": "F43-F49", "bossFloor": "F49", "bossStage": "stage07", "boss": "traitor_captain" },
+    { "id": "ch_08", "title": "第七次鐘聲", "seal": "shenshi",  "floors": "F50-F56", "bossFloor": "F56", "bossStage": "stage08", "boss": "bell_warden" },
+    { "id": "ch_09", "title": "她的託付", "seal": "xinmo",      "floors": "F57-F63", "bossFloor": "F63", "bossStage": "stage09", "boss": "inner_qingxiao" },
+    { "id": "ch_10", "title": "師兄", "seal": "digu",           "floors": "F64-F70", "bossFloor": "F70", "bossStage": "stage10", "boss": "demonlord_vorkath" }
+  ],
+  "seals": [
+    { "act": "ch_01", "name": { "zh_TW": "記憶之鎖", "en": "Seal of Memory" },  "unlocks": { "zh_TW": "引氣（戰鬥基礎）、村莊樞紐", "en": "Qi intake, village hub" } },
+    { "act": "ch_02", "name": { "zh_TW": "氣感之鎖", "en": "Seal of Qi Sense" }, "unlocks": { "zh_TW": "禦氣（護盾／防禦條）", "en": "Qi ward (shield bar)" } },
+    { "act": "ch_03", "name": { "zh_TW": "道基之鎖", "en": "Seal of Foundation" }, "unlocks": { "zh_TW": "法器／鍛造開啟", "en": "Artifacts and forging" } },
+    { "act": "ch_04", "name": { "zh_TW": "金丹之鎖", "en": "Seal of the Golden Core" }, "unlocks": { "zh_TW": "功法三系（技能樹）", "en": "Three skill schools" } },
+    { "act": "ch_05", "name": { "zh_TW": "魂魄之鎖", "en": "Seal of the Soul" }, "unlocks": { "zh_TW": "前世記憶（背刺真相）", "en": "Past-life memory" } },
+    { "act": "ch_06", "name": { "zh_TW": "元嬰之鎖", "en": "Seal of the Nascent Soul" }, "unlocks": { "zh_TW": "裝備強化", "en": "Equipment upgrade" } },
+    { "act": "ch_07", "name": { "zh_TW": "火劫之鎖", "en": "Seal of Fire" },   "unlocks": { "zh_TW": "爐火（T3 鍛造循環）", "en": "Forge fire (T3 loop)" } },
+    { "act": "ch_08", "name": { "zh_TW": "神識之鎖", "en": "Seal of Spirit" }, "unlocks": { "zh_TW": "主動技灌注", "en": "Active-skill infusion" } },
+    { "act": "ch_09", "name": { "zh_TW": "心魔之鎖", "en": "Seal of the Inner Demon" }, "unlocks": { "zh_TW": "前世佩劍線", "en": "The past-life blade" } },
+    { "act": "ch_10", "name": { "zh_TW": "帝骨之鎖", "en": "Seal of the Emperor's Bone" }, "unlocks": { "zh_TW": "大帝之身（決戰三階段）", "en": "Emperor's body (three-stage finale)" } }
+  ],
+  "files": {
+    "flags": "data/story/flags.json",
+    "counters": "data/story/counters.json",
+    "chapters": "data/story/chapters/ch_NN.json",
+    "floors": "data/story/floors/Fnn.json",
+    "events": "data/events/pool_common.json + pool_act01..10.json"
   },
   "arc": [
-    "序章：村莊外緣 — 長老告知災禍起源。",
-    "習戰：森林小徑 — 老巫師教你『自動回合拳戰』。",
-    "奪鑰：門樓 — 擊敗石巨人以取得第一把鑰匙。",
-    "求知：藏書閣 — 骷髏學者揭示 Vorkath 的弱點。",
-    "亡者之語：墓穴 — 村民亡魂證言公主仍活著。",
-    "試煉：洞窟 — 取得攻防寶石強化自身。",
-    "王者之援：軍營 — 王之副官贈予祝福。",
-    "聖所：神殿 — 公主侍女透露頂層機關。",
-    "終焉前廳：王座前室 — 公主親口託付希望。",
-    "決戰：巫師王座 — 與 Vorkath 一戰。"
+    "第一幕：我為何舉劍 — 記憶之鎖。村莊外緣的井中妖，讓你第一次決定為何而戰。",
+    "第二幕：老巫師的氣 — 氣感之鎖。林道上的折箭獵手，教你禦氣。",
+    "第三幕：門環上的刻痕 — 道基之鎖。門樓的守門石巨人，逼你在破壞與解印之間選擇。",
+    "第四幕：執卷人的遺骸 — 金丹之鎖。藏書閣的骷髏學者，攤開撕頁者的線索。",
+    "第五幕：我死的那一夜 — 魂魄之鎖。墓穴的亡者合唱，讓你面對被背刺的那一夜。",
+    "第六幕：雙修之石 — 元嬰之鎖。洞窟的雙首晶獸，問你晶石要獨取還是分予。",
+    "第七幕：王的副官 — 火劫之鎖。軍營的叛將，是你可以坦白前世的對象。",
+    "第八幕：第七次鐘聲 — 神識之鎖。神殿的鐘樓守衛，逼你選擇替誰承擔。",
+    "第九幕：她的託付 — 心魔之鎖。王座前室的心魔·青霄，是你自己的前世。",
+    "第十幕：師兄 — 帝骨之鎖。巫師王座的墨無殤，與你並不相同，也並非全然不同。"
   ]
 }

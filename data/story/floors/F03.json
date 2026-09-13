@@ -28,13 +28,14 @@
     "count": 4,
     "table": [
       "potion_red",
-      "coin"
+      "coin",
+      "gem_def"
     ]
   },
   "events": [
-    "ev_village_well_v4",
-    "ev_common_cache_wall_v5",
-    "ev_common_merchant_echo_ash_v5"
+    "ev_village_chapel_dust",
+    "ev_common_cache_wall",
+    "ev_common_cache_rat_nest"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -63,9 +64,14 @@
     "eventKinds": [
       "whisper",
       "cache",
-      "merchant_echo"
+      "cache"
     ],
-    "eventPoolSource": "provisional",
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "slime",
+      "bat"
+    ],
     "eventCells": [
       [
         2,

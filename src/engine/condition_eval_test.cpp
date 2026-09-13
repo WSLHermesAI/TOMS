@@ -28,6 +28,22 @@ struct MockContext : ConditionContext {
     bool missionComplete(const std::string& id) const override { return missionsComplete.count(id) != 0; }
     bool missionActive(const std::string& id) const override { return missionsActive.count(id) != 0; }
     bool stageCleared(const std::string& id) const override { return stagesCleared.count(id) != 0; }
+
+    // ---- S3 leaves (docs/STORY_DATA_SCHEMA.md section 2.2) ----
+    std::map<std::string, std::string> choices;        // choiceId -> optionId
+    std::map<std::string, std::string> sideStories;    // sideStoryId -> state
+    std::map<std::string, int> counters;
+    int cycle = 1;
+    bool choiceMade(const std::string& c, const std::string& o) const override {
+        auto it = choices.find(c); return it != choices.end() && it->second == o;
+    }
+    std::string sideStoryState(const std::string& id) const override {
+        auto it = sideStories.find(id); return it == sideStories.end() ? std::string() : it->second;
+    }
+    int counter(const std::string& name) const override {
+        auto it = counters.find(name); return it == counters.end() ? 0 : it->second;
+    }
+    int cycleIndex() const override { return cycle; }
 };
 
 int main() {
@@ -40,6 +56,40 @@ int main() {
     ctx.missionsComplete = {"m_intro_once"};
 
     CHECK(evaluate(nlohmann::json(), ctx), "null condition is always true");
+
+    // ---- S3: the four new leaf types (docs/STORY_DATA_SCHEMA.md section 2.2) ----
+    ctx.choices = {{"c_motive", "opt_know_self"}};
+    ctx.sideStories = {{"ss_08", "completed"}};
+    ctx.counters = {{"insight", 6}, {"resolve", -3}};
+    ctx.cycle = 2;
+    CHECK(evaluate({{"type","choiceMade"},{"choiceId","c_motive"},{"optionId","opt_know_self"}}, ctx),
+          "choiceMade: the taken option is true");
+    CHECK(!evaluate({{"type","choiceMade"},{"choiceId","c_motive"},{"optionId","opt_avenge"}}, ctx),
+          "choiceMade: an option not taken is false");
+    CHECK(!evaluate({{"type","choiceMade"},{"choiceId","c_never"},{"optionId","opt_x"}}, ctx),
+          "choiceMade: an unmade choice is false");
+    CHECK(evaluate({{"type","sideStoryState"},{"sideStoryId","ss_08"},{"state","completed"}}, ctx),
+          "sideStoryState: matching state is true");
+    CHECK(!evaluate({{"type","sideStoryState"},{"sideStoryId","ss_08"},{"state","failed"}}, ctx),
+          "sideStoryState: a different state is false");
+    CHECK(!evaluate({{"type","sideStoryState"},{"sideStoryId","ss_09"},{"state","completed"}}, ctx),
+          "sideStoryState: an unknown side story is false");
+    CHECK(evaluate({{"type","counterAtLeast"},{"counter","insight"},{"min",6}}, ctx),
+          "counterAtLeast: at the threshold");
+    CHECK(!evaluate({{"type","counterAtLeast"},{"counter","insight"},{"min",7}}, ctx),
+          "counterAtLeast: below the threshold");
+    CHECK(!evaluate({{"type","counterAtLeast"},{"counter","resolve"},{"min",0}}, ctx),
+          "counterAtLeast: a negative counter fails a positive floor");
+    CHECK(evaluate({{"type","cycleIndexAtLeast"},{"min",2}}, ctx),
+          "cycleIndexAtLeast: second cycle passes min 2");
+    CHECK(!evaluate({{"type","cycleIndexAtLeast"},{"min",3}}, ctx),
+          "cycleIndexAtLeast: second cycle fails min 3");
+    // combinators and fail-closed behaviour are unchanged by the additions
+    CHECK(evaluate({{"all", nlohmann::json::array({{{"type","choiceMade"},{"choiceId","c_motive"},{"optionId","opt_know_self"}},
+                                                   {{"type","counterAtLeast"},{"counter","insight"},{"min",6}}})}}, ctx),
+          "the new leaves compose with all()");
+    CHECK(evaluate({{"not", {{"type","cycleIndexAtLeast"},{"min",3}}}}, ctx),
+          "the new leaves compose with not()");
 
     CHECK(evaluate({{"type","storyBeatAtLeast"},{"value",4}}, ctx), "storyBeatAtLeast: 4>=4 true");
     CHECK(!evaluate({{"type","storyBeatAtLeast"},{"value",5}}, ctx), "storyBeatAtLeast: 4>=5 false");

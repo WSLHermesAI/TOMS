@@ -33,11 +33,11 @@
     ]
   },
   "events": [
-    "ev_common_whisper_old_road",
-    "ev_common_cache_wall_v5",
-    "ev_gate_forge_first_v2",
-    "ev_gate_forge_first_v4",
-    "ev_gate_soldier_plate"
+    "ev_gate_soldier_plate",
+    "ev_gate_forge_slag",
+    "ev_gate_deserters_kit",
+    "ev_common_shard_wandering",
+    "ev_common_cache_rat_nest"
   ],
   "sideStoryHooks": [
     {
@@ -73,13 +73,18 @@
     ],
     "difficultyTier": 3,
     "eventKinds": [
-      "whisper",
+      "relic",
       "cache",
-      "cache",
-      "cache",
-      "relic"
+      "rescue",
+      "memory_shard",
+      "cache"
     ],
-    "eventPoolSource": "provisional",
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "bat",
+      "golem"
+    ],
     "eventCells": [
       [
         1,

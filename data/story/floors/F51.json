@@ -33,16 +33,16 @@
     ]
   },
   "events": [
-    "ev_common_relic_road_v5",
-    "ev_common_cache_wall_v2",
-    "ev_sanctum_warden_oath_v3",
     "ev_common_whisper_old_road_v2",
-    "ev_common_relic_road_v4",
+    "ev_common_cache_wall",
+    "ev_common_relic_road_v2",
+    "ev_common_shard_wandering_v3",
     "ev_common_rescue_lost_soldier_v4",
-    "ev_sanctum_crack_prayer",
-    "ev_sanctum_crack_prayer_v2",
-    "ev_sanctum_seventh_bell_v4",
-    "ev_common_shard_wandering_v4"
+    "ev_common_merchant_echo_ash_v4",
+    "ev_common_trap_rubble_v4",
+    "ev_common_whisper_old_road",
+    "ev_sanctum_seventh_bell",
+    "ev_sanctum_seventh_bell_v4"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -65,18 +65,23 @@
     ],
     "difficultyTier": 8,
     "eventKinds": [
-      "relic",
+      "whisper",
       "cache",
-      "whisper",
-      "whisper",
       "relic",
+      "memory_shard",
       "rescue",
-      "whisper",
+      "merchant_echo",
+      "trap",
       "whisper",
       "relic",
-      "memory_shard"
+      "relic"
     ],
     "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "wraith",
+      "demon"
+    ],
     "eventCells": [
       [
         0,

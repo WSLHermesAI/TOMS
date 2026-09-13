@@ -271,5 +271,9 @@ its data contract in:
 | `STORY_DATA_SCHEMA.md` v3 | per-floor files `F01..F70`, `stage.story`, 4 new condition types, maze scaling to 63x42, `endings.json`, `cycles.json`, save v3, 16 validators |
 | `ART_AND_ABILITY_DESIGN.md` | 50 enemies, 20 equipment, 36 statuses, ComfyUI prompts, 1/2/4-grid footprints, 1,006 frames + 469 statics, 3 MB budget |
 
+Progress: **S1 ✅, S2 ✅, S3 ✅** (all 2026-09-13 — footprint tiers; `tools/gen_floors.py` + 70 floor
+specs / 60 generated grids with `tools/validate_story.py`; `story.json` v3, `ch_01`-`ch_03`, the four
+new condition leaves and save `schemaVersion: 3`). See `PROGRESS_REPORT.md` for the per-phase evidence.
+
 Order of work: S1 footprint, S2 70-floor generator, S3 story data + condition DSL + save v3,
 S4-S7 systems (skill tree, forge, hub, actives, endings, rebirth), S8 art pipeline.

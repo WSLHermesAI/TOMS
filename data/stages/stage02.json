@@ -12,6 +12,13 @@
   "index": 2,
   "width": 19,
   "height": 16,
+  "story": {
+    "chapter": "ch_02",
+    "floor": "F14",
+    "intro": "story.f14.intro",
+    "beats": ["b_02_finale"],
+    "sideStoryHooks": ["ss_02"]
+  },
   "legend": {
     "#": "wall",
     ".": "floor",

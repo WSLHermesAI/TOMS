@@ -33,12 +33,12 @@
     ]
   },
   "events": [
-    "ev_common_relic_road_v3",
-    "ev_common_cache_wall_v5",
     "ev_library_torn_page",
-    "ev_common_rescue_lost_soldier",
     "ev_common_cache_wall_v3",
-    "ev_common_shard_wandering_v3"
+    "ev_common_trap_rubble_v4",
+    "ev_library_shelf_collapse_v3",
+    "ev_library_scholar_whisper_v4",
+    "ev_library_torn_page_v4"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -63,12 +63,17 @@
     "eventKinds": [
       "relic",
       "cache",
-      "relic",
-      "rescue",
-      "cache",
-      "memory_shard"
+      "trap",
+      "trap",
+      "whisper",
+      "relic"
     ],
     "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "skeleton",
+      "bat"
+    ],
     "eventCells": [
       [
         4,

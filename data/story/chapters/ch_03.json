@@ -1,0 +1,35 @@
+{
+  "id": "ch_03",
+  "floors": ["F15", "F16", "F17", "F18", "F19", "F20", "F21"],
+  "bossFloor": "F21",
+  "bossStage": "stage03",
+  "title": "story.ch03.title",
+  "seal": "daoji",
+  "beats": [
+    { "id": "b_gate_plate",   "kind": "event",    "eventId": "ev_gate_soldier_plate", "floor": "F16" },
+    { "id": "b_gate_rubbing", "kind": "event",    "eventId": "ev_gate_seal_rubbing",  "floor": "F18",
+      "setFlags": ["flag_gate_rubbing_taken"] },
+    { "id": "b_shard_03",     "kind": "memory",   "shardId": "shard_03_the_seal",     "floor": "F18",
+      "setFlags": ["flag_memory_shard_03"] },
+    { "id": "b_gate_finale",  "kind": "boss",     "floor": "F21", "enemyId": "golem" }
+  ],
+  "grants": { "skills": ["s_faqi"], "skillPoints": 1, "hub": ["hub.forge"], "unlocks": ["system.forge"] },
+  "choices": [
+    {
+      "id": "c_gate_seal",
+      "prompt": "story.ch03.c3.q",
+      "options": [
+        { "id": "opt_break",  "text": "story.ch03.c3.o1", "setFlags": ["flag_gate_broken"],
+          "counters": { "resolve": 1 } },
+        { "id": "opt_unseal", "text": "story.ch03.c3.o2", "setFlags": ["flag_gate_unsealed"],
+          "counters": { "insight": 1 } }
+      ],
+      "reversible": false
+    }
+  ],
+  "sideStoryHooks": ["ss_03"],
+  "exitConditions": { "type": "stageCleared", "stageId": "F21" },
+
+  "enemyMix": ["bat", "golem"],
+  "itemTable": ["potion_red", "potion_blue", "gem_atk"]
+}

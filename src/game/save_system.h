@@ -15,8 +15,13 @@
 
 namespace toms {
 
-constexpr int kMetaSaveSchemaVersion = 1;
-constexpr int kRunSaveSchemaVersion  = 1;
+// S3 (docs/STORY_DATA_SCHEMA.md section 9): version 3 adds the story state -- flags, choices,
+// counters, side-story states, floor progress, memory shards and death counts on the run, and
+// cycleIndex / endingsSeen / hintsUnlocked on the meta save (they survive a rebirth).
+// COMPATIBILITY IS A HARD RULE: a file written by an older version must still load, with the new
+// fields defaulted (counters 0, cycleIndex 1, endingsSeen empty) -- never refuse a save.
+constexpr int kMetaSaveSchemaVersion = 3;
+constexpr int kRunSaveSchemaVersion  = 3;
 
 // Permanent, cross-run progress. Survives even a full Run save wipe.
 struct MetaSaveData {
@@ -26,6 +31,10 @@ struct MetaSaveData {
     std::vector<std::string> unlockedStages;
     std::vector<std::string> missionsClaimed;   // "once" missions — never re-arm once here
     int permanentAtkBonus = 0, permanentDefBonus = 0, permanentHpBonus = 0;
+    // ---- S3, meta scope: these survive rebirth (section 8/9) ----
+    int cycleIndex = 1;                          // 1 = first life; rebirth increments it
+    std::vector<std::string> endingsSeen;        // ending ids already reached (rebirth record UI)
+    std::vector<std::string> hintsUnlocked;      // meta hints the player has been shown
 };
 
 // Mirrors the fields of Player (src/game/game.h) that need to persist. Kept as its own struct
@@ -44,12 +53,21 @@ struct RunSaveData {
     // key = "<stageId>|<x>,<y>" -> status string ("Defeated"/"Collected"/"Opened"/...), per
     // architecture-doc §5.2's StageEntityStatus.
     std::map<std::string, std::string> entityStatus;
+    // ---- S3, run scope (section 9's table; reset every run, see RunStoryState) ----
+    std::map<std::string, std::string> choices;      // choiceId -> optionId
+    std::map<std::string, int>         counters;     // insight / resolve / humanity (and any future one)
+    std::map<std::string, std::string> sideStories;  // sideStoryId -> available/accepted/declined/completed/failed
+    std::map<std::string, bool>        flags;        // run-scoped flags declared in data/story/flags.json
+    std::string                        floor = "F01";// the 70-floor tower's current floor id
+    std::vector<std::string>           clearedFloors;// feeds the `stageCleared` condition
+    std::vector<std::string>           shards;       // memory shards -- SURVIVE rebirth (section 8)
+    int deathsTotal = 0, deathsNonBoss = 0;          // feeds ending e_13
 };
 
 nlohmann::json toJson(const MetaSaveData& m);
-// Parses j into a MetaSaveData. If versionMismatch is non-null, it is set to true when the
-// file's schemaVersion doesn't match kMetaSaveSchemaVersion — detection only, no migration logic
-// exists yet (that's future scope, not Milestone 1's).
+// Parses j into a MetaSaveData. If versionMismatch is non-null, it is set to true when the file's
+// schemaVersion differs from kMetaSaveSchemaVersion -- DETECTION ONLY: an older file is still loaded,
+// with the fields it predates left at their defaults (section 9's compatibility rule).
 MetaSaveData metaFromJson(const nlohmann::json& j, bool* versionMismatch = nullptr);
 
 nlohmann::json toJson(const RunSaveData& r);

@@ -28,12 +28,13 @@
     "count": 4,
     "table": [
       "potion_red",
-      "coin"
+      "coin",
+      "gem_def"
     ]
   },
   "events": [
-    "ev_common_relic_road_v2",
-    "ev_common_cache_wall_v4",
+    "ev_village_chapel_dust",
+    "ev_village_old_plough",
     "ev_common_rescue_lost_soldier"
   ],
   "sideStoryHooks": [],
@@ -57,11 +58,16 @@
     ],
     "difficultyTier": 1,
     "eventKinds": [
-      "relic",
+      "whisper",
       "cache",
       "rescue"
     ],
-    "eventPoolSource": "provisional"
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "slime",
+      "bat"
+    ]
   },
   "handAuthoredStage": "stage01.json"
 }

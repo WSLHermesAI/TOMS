@@ -33,17 +33,17 @@
     ]
   },
   "events": [
-    "ev_common_relic_road_v2",
-    "ev_common_cache_wall_v5",
-    "ev_antechamber_liora_voice_v2",
-    "ev_common_trap_rubble_v5",
-    "ev_common_rescue_lost_soldier",
-    "ev_common_whisper_old_road_v3",
+    "ev_common_whisper_old_road_v2",
     "ev_common_cache_wall_v3",
-    "ev_common_merchant_echo_ash_v5",
-    "ev_antechamber_liora_voice_v3",
+    "ev_antechamber_mirror_self_v2",
+    "ev_common_relic_road",
     "ev_antechamber_liora_voice",
-    "ev_common_rescue_lost_soldier_v5"
+    "ev_common_relic_road_v3",
+    "ev_common_shard_wandering",
+    "ev_common_trap_rubble_v5",
+    "ev_common_relic_road_v4",
+    "ev_common_relic_road_v2",
+    "ev_antechamber_old_sword_rack_v2"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -66,19 +66,24 @@
     ],
     "difficultyTier": 9,
     "eventKinds": [
+      "whisper",
+      "cache",
       "relic",
-      "cache",
+      "relic",
       "whisper",
+      "relic",
+      "memory_shard",
       "trap",
-      "rescue",
-      "whisper",
-      "cache",
-      "merchant_echo",
-      "whisper",
-      "whisper",
-      "rescue"
+      "relic",
+      "relic",
+      "cache"
     ],
     "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "demon",
+      "wraith"
+    ],
     "eventCells": [
       [
         7,

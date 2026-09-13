@@ -1,120 +1,4905 @@
 {
   "schemaVersion": 1,
   "languages": [
-    { "code": "zh_TW", "name": "繁體中文" },
-    { "code": "en",    "name": "English" },
-    { "code": "zh_CN", "name": "简体中文" },
-    { "code": "ja",    "name": "日本語" },
-    { "code": "ko",    "name": "한국어" },
-    { "code": "es",    "name": "Español" }
+    {
+      "code": "zh_TW",
+      "name": "繁體中文"
+    },
+    {
+      "code": "en",
+      "name": "English"
+    },
+    {
+      "code": "zh_CN",
+      "name": "简体中文"
+    },
+    {
+      "code": "ja",
+      "name": "日本語"
+    },
+    {
+      "code": "ko",
+      "name": "한국어"
+    },
+    {
+      "code": "es",
+      "name": "Español"
+    }
   ],
   "strings": {
-    "game.title":            { "zh_TW": "魔法塔", "en": "Tower of the Sorcerer", "zh_CN": "魔法塔", "ja": "魔法の塔", "ko": "마법의 탑", "es": "La Torre del Hechicero" },
-    "game.subtitle":         { "zh_TW": "TOWER OF THE SORCERER", "en": "Roguelike Dungeon Crawl", "zh_CN": "TOWER OF THE SORCERER", "ja": "ローグライク・ダンジョン攻略", "ko": "로그라이크 던전 크롤", "es": "Exploración de Mazmorras Roguelike" },
-    "menu.new_game":         { "zh_TW": "新遊戲", "en": "New Game", "zh_CN": "新游戏", "ja": "新しいゲーム", "ko": "새 게임", "es": "Nueva Partida" },
-    "menu.new_game.desc":    { "zh_TW": "從第一層重新開始", "en": "Start a fresh run from stage 1", "zh_CN": "从第一层重新开始", "ja": "1階から新しく始める", "ko": "1층부터 새로 시작합니다", "es": "Comienza una nueva partida desde la planta 1" },
-    "menu.continue":         { "zh_TW": "繼續遊戲", "en": "Continue", "zh_CN": "继续游戏", "ja": "つづきから", "ko": "이어하기", "es": "Continuar" },
-    "menu.continue.desc":    { "zh_TW": "讀取存檔繼續遊玩", "en": "Load a saved game", "zh_CN": "读取存档继续游玩", "ja": "セーブデータから再開する", "ko": "저장된 게임을 불러옵니다", "es": "Carga una partida guardada" },
-    "menu.settings":         { "zh_TW": "設定", "en": "Settings", "zh_CN": "设置", "ja": "設定", "ko": "설정", "es": "Ajustes" },
-    "menu.settings.desc":    { "zh_TW": "語言與介面選項", "en": "Language and interface options", "zh_CN": "语言与界面选项", "ja": "言語とインターフェースの設定", "ko": "언어 및 인터페이스 옵션", "es": "Opciones de idioma e interfaz" },
-    "menu.back":             { "zh_TW": "返回", "en": "Back", "zh_CN": "返回", "ja": "戻る", "ko": "뒤로", "es": "Atrás" },
-    "menu.hint":             { "zh_TW": "上下鍵選擇  Enter 確定  Esc 返回", "en": "Up/Down: select   Enter: confirm   Esc: back", "zh_CN": "上下键选择  Enter 确定  Esc 返回", "ja": "↑↓ で選択　Enter で決定　Esc で戻る", "ko": "↑↓ 선택　Enter 확인　Esc 뒤로", "es": "Arriba/Abajo: seleccionar   Enter: confirmar   Esc: atrás" },
-    "continue.header":       { "zh_TW": "選擇存檔", "en": "Select a Save File", "zh_CN": "选择存档", "ja": "セーブデータを選択", "ko": "저장 파일 선택", "es": "Selecciona una Partida Guardada" },
-    "continue.slot":         { "zh_TW": "存檔", "en": "Slot", "zh_CN": "存档", "ja": "スロット", "ko": "슬롯", "es": "Ranura" },
-    "continue.empty":        { "zh_TW": "空", "en": "Empty", "zh_CN": "空", "ja": "空き", "ko": "비어 있음", "es": "Vacío" },
-    "continue.new_game_confirm":      { "zh_TW": "要用存檔格 {slot} 開始新遊戲嗎？", "en": "Use slot {slot} to start the game?", "zh_CN": "要用存档格 {slot} 开始新游戏吗？", "ja": "スロット {slot} で新しいゲームを始めますか？", "ko": "슬롯 {slot}로 새 게임을 시작할까요?", "es": "¿Usar la ranura {slot} para iniciar la partida?" },
-    "continue.new_game_confirm.body": { "zh_TW": "這個存檔格是空的，選「是」會從第一層開始新遊戲。", "en": "This slot is empty. Choosing Yes starts a new game from stage 1.", "zh_CN": "这个存档格是空的，选择“是”会从第一层开始新游戏。", "ja": "このスロットは空です。「はい」を選ぶと1階から新しいゲームを始めます。", "ko": "이 슬롯은 비어 있습니다. \"예\"를 선택하면 1층부터 새 게임을 시작합니다.", "es": "Esta ranura está vacía. Si eliges Sí, la partida comenzará desde la planta 1." },
-    "menu.yes":              { "zh_TW": "是", "en": "Yes", "zh_CN": "是", "ja": "はい", "ko": "예", "es": "Sí" },
-    "menu.no":               { "zh_TW": "否", "en": "No", "zh_CN": "否", "ja": "いいえ", "ko": "아니요", "es": "No" },
-    "continue.hint":         { "zh_TW": "沒有存檔時請先開始新遊戲", "en": "No saves yet — start a new game first", "zh_CN": "没有存档时请先开始新游戏", "ja": "セーブデータがありません。まず新しいゲームを始めてください", "ko": "저장된 게임이 없습니다. 먼저 새 게임을 시작하세요", "es": "Aún no hay partidas guardadas — comienza una nueva primero" },
-    "continue.saved_at":     { "zh_TW": "存檔時間", "en": "Saved", "zh_CN": "存档时间", "ja": "保存日時", "ko": "저장 시각", "es": "Guardado" },
-    "continue.play_time":    { "zh_TW": "遊玩時間", "en": "Play time", "zh_CN": "游玩时间", "ja": "プレイ時間", "ko": "플레이 시간", "es": "Tiempo de juego" },
-    "settings.header":       { "zh_TW": "設定", "en": "Settings", "zh_CN": "设置", "ja": "設定", "ko": "설정", "es": "Ajustes" },
-    "settings.language":     { "zh_TW": "語言", "en": "Language", "zh_CN": "语言", "ja": "言語", "ko": "언어", "es": "Idioma" },
-    "settings.language_confirm": { "zh_TW": "確定要切換為 {lang} 嗎？", "en": "Switch to {lang}?", "zh_CN": "确定要切换为 {lang} 吗？", "ja": "{lang} に切り替えますか？", "ko": "{lang}(으)로 전환하시겠습니까?", "es": "¿Cambiar a {lang}?" },
-    "settings.camera_follow": { "zh_TW": "鏡頭：跟隨角色", "en": "Camera: Follow", "zh_CN": "镜头：跟随角色", "ja": "カメラ：追従", "ko": "카메라: 추적", "es": "Cámara: Seguimiento" },
-    "settings.camera_rooms":  { "zh_TW": "鏡頭：分區顯示", "en": "Camera: Rooms", "zh_CN": "镜头：分区显示", "ja": "カメラ：エリア表示", "ko": "카메라: 구역 표시", "es": "Cámara: Por Secciones" },
-    "settings.hint":         { "zh_TW": "左右鍵切換  Esc 返回", "en": "Left/Right: change   Esc: back", "zh_CN": "左右键切换  Esc 返回", "ja": "←→ で切り替え　Esc で戻る", "ko": "←→ 전환　Esc 뒤로", "es": "Izquierda/Derecha: cambiar   Esc: atrás" },
-    "settings.saved":        { "zh_TW": "設定已儲存", "en": "Settings saved", "zh_CN": "设置已保存", "ja": "設定を保存しました", "ko": "설정이 저장되었습니다", "es": "Ajustes guardados" },
-    "save.saved":            { "zh_TW": "已儲存進度", "en": "Progress saved", "zh_CN": "已保存进度", "ja": "進行状況を保存しました", "ko": "진행 상황이 저장되었습니다", "es": "Progreso guardado" },
-    "ingame_menu.title":         { "zh_TW": "選單", "en": "Menu", "zh_CN": "菜单", "ja": "メニュー", "ko": "메뉴", "es": "Menú" },
-    "ingame_menu.save":          { "zh_TW": "儲存進度", "en": "Save Progress", "zh_CN": "保存进度", "ja": "セーブ", "ko": "저장", "es": "Guardar Progreso" },
-    "ingame_menu.back_to_title": { "zh_TW": "返回標題", "en": "Back to Title", "zh_CN": "返回标题", "ja": "タイトルへ戻る", "ko": "타이틀로 돌아가기", "es": "Volver al Título" },
-    "save.slot_full":        { "zh_TW": "存檔格已滿", "en": "Save slot in use", "zh_CN": "存档格已满", "ja": "このスロットは使用中です", "ko": "저장 슬롯이 사용 중입니다", "es": "Ranura de guardado en uso" },
-    "hud.stage":             { "zh_TW": "關卡", "en": "Stage", "zh_CN": "关卡", "ja": "ステージ", "ko": "스테이지", "es": "Etapa" },
-    "hud.level":             { "zh_TW": "等級", "en": "LV", "zh_CN": "等级", "ja": "Lv", "ko": "Lv", "es": "Nivel" },
-
-    "hud.keys":              { "zh_TW": "鑰匙", "en": "Keys", "zh_CN": "钥匙", "ja": "鍵", "ko": "열쇠", "es": "Llaves" },
-    "hud.items":             { "zh_TW": "道具", "en": "Items", "zh_CN": "道具", "ja": "道具", "ko": "아이템", "es": "Objetos" },
-
-    "battle.title":          { "zh_TW": "戰鬥！", "en": "Battle!", "zh_CN": "战斗！", "ja": "戦闘！", "ko": "전투!", "es": "¡Batalla!" },
-    "battle.you":            { "zh_TW": "你", "en": "You", "zh_CN": "你", "ja": "あなた", "ko": "당신", "es": "Tú" },
-    "battle.attack_prompt":  { "zh_TW": "攻擊（時機到就點下方按鈕）", "en": "Attack: tap the bar button", "zh_CN": "攻击（时机到就点下方按钮）", "ja": "攻撃（下のボタンをタップ）", "ko": "공격 (아래 버튼을 탭)", "es": "Ataque: toca el botón" },
-    "battle.defense_prompt": { "zh_TW": "防禦（點下方按鈕架盾）", "en": "Defend: tap to raise a shield", "zh_CN": "防御（点下方按钮架盾）", "ja": "防御（下のボタンで盾）", "ko": "방어 (아래 버튼으로 방패)", "es": "Defensa: toca el botón" },
-    "battle.btn_charging":   { "zh_TW": "冷卻中…", "en": "Cooling down…", "zh_CN": "冷却中…", "ja": "クールダウン中…", "ko": "쿨다운 중…", "es": "Enfriando…" },
-    "battle.btn_hold_attack":{ "zh_TW": "點擊出擊", "en": "Tap to attack", "zh_CN": "点击出击", "ja": "タップして攻撃", "ko": "탭하여 공격", "es": "Toca para atacar" },
-    "battle.btn_hold_defense":{ "zh_TW": "點擊架盾", "en": "Tap to guard", "zh_CN": "点击架盾", "ja": "タップして防御", "ko": "탭하여 방어", "es": "Toca para defender" },
-    "battle.continue_hint":  { "zh_TW": "（按任意鍵繼續）", "en": "(Press any key to continue)", "zh_CN": "（按任意键继续）", "ja": "（何かキーを押して続行）", "ko": "(아무 키나 눌러 계속)", "es": "(Pulsa cualquier tecla para continuar)" },
-    "battle.start":          { "zh_TW": "戰鬥開始！攻擊、防禦皆可隨時點擊，敵人則會依自己的節奏出手。", "en": "Battle start! Tap Attack or Defend any time — the enemy attacks on its own clock.", "zh_CN": "战斗开始！攻击、防御皆可随时点击，敌人则会依自己的节奏出手。", "ja": "戦闘開始！攻撃・防御はいつでもタップ可能、敵は自分のペースで攻撃してくる。", "ko": "전투 시작! 공격과 방어는 언제든 탭할 수 있습니다 — 적은 자신만의 주기로 공격합니다.", "es": "¡Comienza el combate! Toca Atacar o Defender cuando quieras — el enemigo ataca según su propio reloj." },
-    "battle.enemy_clock":    { "zh_TW": "敵人攻擊倒數", "en": "Enemy attack timer", "zh_CN": "敌人攻击倒数", "ja": "敵の攻撃タイマー", "ko": "적 공격 타이머", "es": "Temporizador de ataque enemigo" },
-    "battle.shield_none":    { "zh_TW": "無護盾", "en": "No shield", "zh_CN": "无护盾", "ja": "シールドなし", "ko": "방패 없음", "es": "Sin escudo" },
-    "battle.shield_armed":   { "zh_TW": "護盾已架起：{pct}%", "en": "Shield armed: {pct}%", "zh_CN": "护盾已架起：{pct}%", "ja": "シールド展開中：{pct}%", "ko": "방패 준비됨: {pct}%", "es": "Escudo armado: {pct}%" },
-    "battle.shield_log":     { "zh_TW": "護盾已架起（{pct}%），將抵擋敵人下一擊。", "en": "Shield armed ({pct}%) — will absorb the enemy's next hit.", "zh_CN": "护盾已架起（{pct}%），将抵挡敌人下一击。", "ja": "シールドを展開（{pct}%）——敵の次の攻撃を防ぐ。", "ko": "방패 준비 완료 ({pct}%) — 적의 다음 공격을 막습니다.", "es": "Escudo armado ({pct}%): absorberá el próximo golpe del enemigo." },
-    "battle.super_label":    { "zh_TW": "必殺充能", "en": "Super charge", "zh_CN": "必杀充能", "ja": "必殺チャージ", "ko": "필살 충전", "es": "Carga especial" },
-    "battle.super_ready":    { "zh_TW": "必殺技！點擊發動！", "en": "SUPER ATTACK — tap to unleash!", "zh_CN": "必杀技！点击发动！", "ja": "必殺技！タップで発動！", "ko": "필살기! 탭하여 발동!", "es": "¡ATAQUE ESPECIAL — toca para lanzarlo!" },
-    "battle.super_hit":      { "zh_TW": "必殺技命中！造成 {dmg} 點傷害！", "en": "SUPER ATTACK hits! Dealt {dmg} damage!", "zh_CN": "必杀技命中！造成 {dmg} 点伤害！", "ja": "必殺技命中！{dmg} のダメージを与えた！", "ko": "필살기 명중! {dmg}의 피해를 입혔습니다!", "es": "¡El ATAQUE ESPECIAL acierta! ¡Causaste {dmg} de daño!" },
-    "battle.crit_win":       { "zh_TW": "會心一擊！造成 {dmg} 點傷害，敵人倒下了！", "en": "Critical hit! Dealt {dmg} damage — the enemy is down!", "zh_CN": "会心一击！造成 {dmg} 点伤害，敌人倒下了！", "ja": "会心の一撃！{dmg} のダメージを与え、敵を倒した！", "ko": "치명타! {dmg}의 피해를 입혀 적을 쓰러뜨렸습니다!", "es": "¡Golpe crítico! Causaste {dmg} de daño: ¡el enemigo ha caído!" },
-    "battle.hit":            { "zh_TW": "你造成了 {dmg} 點傷害！", "en": "You dealt {dmg} damage!", "zh_CN": "你造成了 {dmg} 点伤害！", "ja": "{dmg} のダメージを与えた！", "ko": "{dmg}의 피해를 입혔습니다!", "es": "¡Causaste {dmg} de daño!" },
-    "battle.player_down":    { "zh_TW": "你倒下了……返回本層起點。", "en": "You have fallen... returning to the start of this floor.", "zh_CN": "你倒下了……返回本层起点。", "ja": "あなたは倒れた……この階の出発点に戻ります。", "ko": "쓰러졌습니다……이 층의 시작 지점으로 돌아갑니다.", "es": "Has caído... volviendo al inicio de esta planta." },
-    "battle.perfect_guard":  { "zh_TW": "完美格擋！", "en": "Perfect guard!", "zh_CN": "完美格挡！", "ja": "パーフェクトガード！", "ko": "퍼펙트 가드!", "es": "¡Bloqueo perfecto!" },
-    "battle.guard_hit":      { "zh_TW": "你承受了 {dmg} 點傷害。", "en": "You took {dmg} damage.", "zh_CN": "你承受了 {dmg} 点伤害。", "ja": "{dmg} のダメージを受けた。", "ko": "{dmg}의 피해를 입었습니다.", "es": "Recibiste {dmg} de daño." },
-    "battle.boss_win":       { "zh_TW": "你擊敗了 Vorkath！安穩之星重燃。", "en": "You defeated Vorkath! The Star of Peace burns again.", "zh_CN": "你击败了 Vorkath！安稳之星重燃。", "ja": "Vorkath を倒した！安寧の星が再び灯る。", "ko": "Vorkath를 물리쳤습니다! 평온의 별이 다시 타오릅니다.", "es": "¡Has derrotado a Vorkath! La Estrella de la Paz vuelve a arder." },
-    "battle.levelup":        { "zh_TW": "升級了！LV ", "en": "Level up! LV ", "zh_CN": "升级了！LV ", "ja": "レベルアップ！LV ", "ko": "레벨 업! LV ", "es": "¡Subiste de nivel! LV " },
-
-    "inventory.title":         { "zh_TW": "背包", "en": "Inventory", "zh_CN": "背包", "ja": "持ち物", "ko": "인벤토리", "es": "Inventario" },
-    "inventory.hint":          { "zh_TW": "點選道具查看資訊，右側有 使用 / 丟棄 / 關閉", "en": "Select an item to see details — Use / Drop / Close are on the right", "zh_CN": "点选道具查看资讯，右侧有 使用 / 丢弃 / 关闭", "ja": "アイテムを選ぶと詳細が表示されます。右側に「使用／捨てる／閉じる」があります", "ko": "아이템을 선택하면 정보가 표시됩니다. 오른쪽에 사용 / 버리기 / 닫기가 있습니다", "es": "Selecciona un objeto para ver sus detalles — Usar / Descartar / Cerrar están a la derecha" },
-    "inventory.empty_title":   { "zh_TW": "背包目前是空的。", "en": "Your inventory is empty.", "zh_CN": "背包目前是空的。", "ja": "持ち物は空です。", "ko": "인벤토리가 비어 있습니다.", "es": "Tu inventario está vacío." },
-    "inventory.empty_hint":    { "zh_TW": "先去撿一些道具吧。", "en": "Go pick up some items first.", "zh_CN": "先去捡一些道具吧。", "ja": "まずはアイテムを拾いに行きましょう。", "ko": "먼저 아이템을 좀 주워 오세요.", "es": "Ve a recoger algunos objetos primero." },
-    "inventory.detail_title":  { "zh_TW": "道具詳情", "en": "Item Details", "zh_CN": "道具详情", "ja": "アイテム詳細", "ko": "아이템 정보", "es": "Detalles del Objeto" },
-    "inventory.no_effect":     { "zh_TW": "無效果", "en": "No effect", "zh_CN": "无效果", "ja": "効果なし", "ko": "효과 없음", "es": "Sin efecto" },
-    "inventory.use":           { "zh_TW": "使用", "en": "Use", "zh_CN": "使用", "ja": "使用", "ko": "사용", "es": "Usar" },
-    "inventory.drop":          { "zh_TW": "丟棄", "en": "Drop", "zh_CN": "丢弃", "ja": "捨てる", "ko": "버리기", "es": "Descartar" },
-    "inventory.close":         { "zh_TW": "關閉", "en": "Close", "zh_CN": "关闭", "ja": "閉じる", "ko": "닫기", "es": "Cerrar" },
-    "inventory.footer_hint":   { "zh_TW": "點選物品後可按右側按鈕操作；鍵盤 I 可關閉", "en": "Select an item, then use the buttons on the right; press I to close", "zh_CN": "点选物品后可按右侧按钮操作；键盘 I 可关闭", "ja": "アイテムを選んで右側のボタンを操作できます。I キーで閉じます", "ko": "아이템을 선택한 후 오른쪽 버튼으로 조작하세요. I 키로 닫을 수 있습니다", "es": "Selecciona un objeto y usa los botones de la derecha; pulsa I para cerrar" },
-    "inventory.stats_label":   { "zh_TW": "屬性", "en": "Stats", "zh_CN": "属性", "ja": "ステータス", "ko": "스탯", "es": "Estadísticas" },
-    "inventory.icon_label":    { "zh_TW": "圖示", "en": "Icon", "zh_CN": "图标", "ja": "アイコン", "ko": "아이콘", "es": "Icono" },
-
-    "store.icon_label":        { "zh_TW": "商店", "en": "Shop", "zh_CN": "商店", "ja": "ショップ", "ko": "상점", "es": "Tienda" },
-    "store.unlocked_title":    { "zh_TW": "道具商店已經開放！", "en": "The item shop is now open!", "zh_CN": "道具商店已经开放！", "ja": "アイテムショップが開放されました！", "ko": "아이템 상점이 열렸습니다!", "es": "¡La tienda de objetos ya está abierta!" },
-    "store.unlocked_body":     { "zh_TW": "你現在可以在關卡中點擊右上角的商店圖示來購買道具。", "en": "You can now click the shop icon in the top-right corner of the stage to buy items.", "zh_CN": "你现在可以在关卡中点击右上角的商店图示来购买道具。", "ja": "ステージ右上のショップアイコンをクリックしてアイテムを購入できます。", "ko": "이제 스테이지 우측 상단의 상점 아이콘을 클릭해 아이템을 구매할 수 있습니다.", "es": "Ahora puedes pulsar el icono de la tienda en la esquina superior derecha de la etapa para comprar objetos." },
-    "store.confirm_hint":      { "zh_TW": "確定 (Enter/點擊)", "en": "Confirm (Enter/Tap)", "zh_CN": "确定 (Enter/点击)", "ja": "確定（Enter／タップ）", "ko": "확인 (Enter/탭)", "es": "Confirmar (Enter/Toque)" },
-    "stairs.confirm_up":       { "zh_TW": "確定要往上一層嗎？", "en": "Go up to the next floor?", "zh_CN": "确定要往上一层吗？", "ja": "上の階へ進みますか？", "ko": "위층으로 올라가시겠습니까?", "es": "¿Subir a la siguiente planta?" },
-    "stairs.confirm_down":     { "zh_TW": "確定要往下一層嗎？", "en": "Go down to the floor below?", "zh_CN": "确定要往下一层吗？", "ja": "下の階へ進みますか？", "ko": "아래층으로 내려가시겠습니까?", "es": "¿Bajar a la planta inferior?" },
-    "store.gold_label":        { "zh_TW": "金錢 GOLD", "en": "GOLD", "zh_CN": "金钱 GOLD", "ja": "所持金 GOLD", "ko": "골드 GOLD", "es": "Oro GOLD" },
-    "store.controls_hint":     { "zh_TW": "（方向鍵/數字選擇 · Enter 購買 · Esc 關閉）", "en": "(Arrow keys/number to select · Enter to buy · Esc to close)", "zh_CN": "（方向键/数字选择 · Enter 购买 · Esc 关闭）", "ja": "（方向キー／数字で選択・Enterで購入・Escで閉じる）", "ko": "(방향키/숫자로 선택 · Enter로 구매 · Esc로 닫기)", "es": "(Flechas/números para elegir · Enter para comprar · Esc para cerrar)" },
-    "store.tab.potion":        { "zh_TW": "藥水", "en": "Potions", "zh_CN": "药水", "ja": "薬", "ko": "물약", "es": "Pociones" },
-    "store.tab.weapon":        { "zh_TW": "武器", "en": "Weapons", "zh_CN": "武器", "ja": "武器", "ko": "무기", "es": "Armas" },
-    "store.tab.armor":         { "zh_TW": "防具", "en": "Armor", "zh_CN": "防具", "ja": "防具", "ko": "방어구", "es": "Armaduras" },
-    "store.tab.talent":        { "zh_TW": "天賦", "en": "Talents", "zh_CN": "天赋", "ja": "特性", "ko": "특성", "es": "Talentos" },
-    "store.effect_label":      { "zh_TW": "效果", "en": "Effect", "zh_CN": "效果", "ja": "効果", "ko": "효과", "es": "Efecto" },
-    "store.equipped":          { "zh_TW": "✓ 已裝備", "en": "✓ Equipped", "zh_CN": "✓ 已装备", "ja": "✓ 装備済み", "ko": "✓ 장착됨", "es": "✓ Equipado" },
-    "store.tap_to_equip":      { "zh_TW": "點擊裝備", "en": "Tap to equip", "zh_CN": "点击装备", "ja": "タップで装備", "ko": "탭하여 장착", "es": "Toca para equipar" },
-    "store.purchased_label":   { "zh_TW": "已購買", "en": "Purchased", "zh_CN": "已购买", "ja": "購入済み", "ko": "구매함", "es": "Comprado" },
-    "store.price_label":       { "zh_TW": "價格", "en": "Price", "zh_CN": "价格", "ja": "価格", "ko": "가격", "es": "Precio" },
-    "store.buy_button":        { "zh_TW": "購買 (Enter)", "en": "Buy (Enter)", "zh_CN": "购买 (Enter)", "ja": "購入（Enter）", "ko": "구매 (Enter)", "es": "Comprar (Enter)" },
-    "store.toast_insufficient_gold": { "zh_TW": "金錢不足！需要 {cost} G", "en": "Not enough gold! Need {cost} G", "zh_CN": "金钱不足！需要 {cost} G", "ja": "所持金が足りません！{cost} G 必要です", "ko": "골드가 부족합니다! {cost} G 필요", "es": "¡Oro insuficiente! Necesitas {cost} G" },
-    "store.toast_purchase_success":  { "zh_TW": "購買成功：{name}！", "en": "Purchased: {name}!", "zh_CN": "购买成功：{name}！", "ja": "購入しました：{name}！", "ko": "구매 완료: {name}!", "es": "¡Comprado: {name}!" },
-
-    "mission.completed_prefix":   { "zh_TW": "任務完成：", "en": "Mission complete: ", "zh_CN": "任务完成：", "ja": "ミッション完了：", "ko": "미션 완료: ", "es": "Misión completada: " },
-    "mission.daily_reset_prefix": { "zh_TW": "每日任務已重置：", "en": "Daily mission reset: ", "zh_CN": "每日任务已重置：", "ja": "デイリーミッションをリセット：", "ko": "일일 미션 초기화: ", "es": "Misión diaria reiniciada: " },
-
-    "stageselect.title":       { "zh_TW": "選擇關卡（Tab/Esc 關閉）", "en": "Stage Select (Tab/Esc to close)", "zh_CN": "选择关卡（Tab/Esc 关闭）", "ja": "ステージ選択（Tab/Esc で閉じる）", "ko": "스테이지 선택 (Tab/Esc로 닫기)", "es": "Selección de Etapa (Tab/Esc para cerrar)" },
-    "stageselect.hint":        { "zh_TW": "在這裡可以重新遊玩你已抵達過的樓層。上鎖的樓層會顯示解鎖所需的條件。", "en": "Every floor you've reached can be replayed from here. A locked floor shows what's needed to unlock it.", "zh_CN": "在这里可以重新游玩你已抵达过的楼层。上锁的楼层会显示解锁所需的条件。", "ja": "ここから、これまでに到達した階を再プレイできます。ロックされた階には解放条件が表示されます。", "ko": "여기서 이미 도달한 층을 다시 플레이할 수 있습니다. 잠긴 층에는 해제 조건이 표시됩니다.", "es": "Desde aquí puedes rejugar cualquier planta que ya hayas alcanzado. Una planta bloqueada muestra lo que necesitas para desbloquearla." },
-    "stageselect.ui_settings_header": { "zh_TW": "介面設定", "en": "UI Settings", "zh_CN": "界面设置", "ja": "UI設定", "ko": "UI 설정", "es": "Ajustes de Interfaz" },
-    "stageselect.font_size_label":    { "zh_TW": "字體大小", "en": "Font Size", "zh_CN": "字体大小", "ja": "文字サイズ", "ko": "글자 크기", "es": "Tamaño de Fuente" },
-    "stageselect.reset_button":       { "zh_TW": "重設", "en": "Reset", "zh_CN": "重置", "ja": "リセット", "ko": "재설정", "es": "Restablecer" },
-    "stageselect.reached_tag":        { "zh_TW": "[已到達]", "en": "[Reached]", "zh_CN": "[已抵达]", "ja": "[到達済み]", "ko": "[도달함]", "es": "[Alcanzada]" },
-    "stageselect.new_tag":            { "zh_TW": "[新]", "en": "[NEW]", "zh_CN": "[新]", "ja": "[NEW]", "ko": "[NEW]", "es": "[Nuevo]" },
-    "stageselect.locked_hint":        { "zh_TW": "先抵達第 {floor} 層才能選擇這一層", "en": "Reach floor {floor} first to select this one", "zh_CN": "先抵达第 {floor} 层才能选择这一层", "ja": "この階を選ぶには、先に {floor} 階に到達してください", "ko": "이 층을 선택하려면 먼저 {floor}층에 도달해야 합니다", "es": "Alcanza la planta {floor} primero para poder elegir esta" }
+    "game.title": {
+      "zh_TW": "魔法塔",
+      "en": "Tower of the Sorcerer",
+      "zh_CN": "魔法塔",
+      "ja": "魔法の塔",
+      "ko": "마법의 탑",
+      "es": "La Torre del Hechicero"
+    },
+    "game.subtitle": {
+      "zh_TW": "TOWER OF THE SORCERER",
+      "en": "Roguelike Dungeon Crawl",
+      "zh_CN": "TOWER OF THE SORCERER",
+      "ja": "ローグライク・ダンジョン攻略",
+      "ko": "로그라이크 던전 크롤",
+      "es": "Exploración de Mazmorras Roguelike"
+    },
+    "menu.new_game": {
+      "zh_TW": "新遊戲",
+      "en": "New Game",
+      "zh_CN": "新游戏",
+      "ja": "新しいゲーム",
+      "ko": "새 게임",
+      "es": "Nueva Partida"
+    },
+    "menu.new_game.desc": {
+      "zh_TW": "從第一層重新開始",
+      "en": "Start a fresh run from stage 1",
+      "zh_CN": "从第一层重新开始",
+      "ja": "1階から新しく始める",
+      "ko": "1층부터 새로 시작합니다",
+      "es": "Comienza una nueva partida desde la planta 1"
+    },
+    "menu.continue": {
+      "zh_TW": "繼續遊戲",
+      "en": "Continue",
+      "zh_CN": "继续游戏",
+      "ja": "つづきから",
+      "ko": "이어하기",
+      "es": "Continuar"
+    },
+    "menu.continue.desc": {
+      "zh_TW": "讀取存檔繼續遊玩",
+      "en": "Load a saved game",
+      "zh_CN": "读取存档继续游玩",
+      "ja": "セーブデータから再開する",
+      "ko": "저장된 게임을 불러옵니다",
+      "es": "Carga una partida guardada"
+    },
+    "menu.settings": {
+      "zh_TW": "設定",
+      "en": "Settings",
+      "zh_CN": "设置",
+      "ja": "設定",
+      "ko": "설정",
+      "es": "Ajustes"
+    },
+    "menu.settings.desc": {
+      "zh_TW": "語言與介面選項",
+      "en": "Language and interface options",
+      "zh_CN": "语言与界面选项",
+      "ja": "言語とインターフェースの設定",
+      "ko": "언어 및 인터페이스 옵션",
+      "es": "Opciones de idioma e interfaz"
+    },
+    "menu.back": {
+      "zh_TW": "返回",
+      "en": "Back",
+      "zh_CN": "返回",
+      "ja": "戻る",
+      "ko": "뒤로",
+      "es": "Atrás"
+    },
+    "menu.hint": {
+      "zh_TW": "上下鍵選擇  Enter 確定  Esc 返回",
+      "en": "Up/Down: select   Enter: confirm   Esc: back",
+      "zh_CN": "上下键选择  Enter 确定  Esc 返回",
+      "ja": "↑↓ で選択　Enter で決定　Esc で戻る",
+      "ko": "↑↓ 선택　Enter 확인　Esc 뒤로",
+      "es": "Arriba/Abajo: seleccionar   Enter: confirmar   Esc: atrás"
+    },
+    "continue.header": {
+      "zh_TW": "選擇存檔",
+      "en": "Select a Save File",
+      "zh_CN": "选择存档",
+      "ja": "セーブデータを選択",
+      "ko": "저장 파일 선택",
+      "es": "Selecciona una Partida Guardada"
+    },
+    "continue.slot": {
+      "zh_TW": "存檔",
+      "en": "Slot",
+      "zh_CN": "存档",
+      "ja": "スロット",
+      "ko": "슬롯",
+      "es": "Ranura"
+    },
+    "continue.empty": {
+      "zh_TW": "空",
+      "en": "Empty",
+      "zh_CN": "空",
+      "ja": "空き",
+      "ko": "비어 있음",
+      "es": "Vacío"
+    },
+    "continue.new_game_confirm": {
+      "zh_TW": "要用存檔格 {slot} 開始新遊戲嗎？",
+      "en": "Use slot {slot} to start the game?",
+      "zh_CN": "要用存档格 {slot} 开始新游戏吗？",
+      "ja": "スロット {slot} で新しいゲームを始めますか？",
+      "ko": "슬롯 {slot}로 새 게임을 시작할까요?",
+      "es": "¿Usar la ranura {slot} para iniciar la partida?"
+    },
+    "continue.new_game_confirm.body": {
+      "zh_TW": "這個存檔格是空的，選「是」會從第一層開始新遊戲。",
+      "en": "This slot is empty. Choosing Yes starts a new game from stage 1.",
+      "zh_CN": "这个存档格是空的，选择“是”会从第一层开始新游戏。",
+      "ja": "このスロットは空です。「はい」を選ぶと1階から新しいゲームを始めます。",
+      "ko": "이 슬롯은 비어 있습니다. \"예\"를 선택하면 1층부터 새 게임을 시작합니다.",
+      "es": "Esta ranura está vacía. Si eliges Sí, la partida comenzará desde la planta 1."
+    },
+    "menu.yes": {
+      "zh_TW": "是",
+      "en": "Yes",
+      "zh_CN": "是",
+      "ja": "はい",
+      "ko": "예",
+      "es": "Sí"
+    },
+    "menu.no": {
+      "zh_TW": "否",
+      "en": "No",
+      "zh_CN": "否",
+      "ja": "いいえ",
+      "ko": "아니요",
+      "es": "No"
+    },
+    "continue.hint": {
+      "zh_TW": "沒有存檔時請先開始新遊戲",
+      "en": "No saves yet — start a new game first",
+      "zh_CN": "没有存档时请先开始新游戏",
+      "ja": "セーブデータがありません。まず新しいゲームを始めてください",
+      "ko": "저장된 게임이 없습니다. 먼저 새 게임을 시작하세요",
+      "es": "Aún no hay partidas guardadas — comienza una nueva primero"
+    },
+    "continue.saved_at": {
+      "zh_TW": "存檔時間",
+      "en": "Saved",
+      "zh_CN": "存档时间",
+      "ja": "保存日時",
+      "ko": "저장 시각",
+      "es": "Guardado"
+    },
+    "continue.play_time": {
+      "zh_TW": "遊玩時間",
+      "en": "Play time",
+      "zh_CN": "游玩时间",
+      "ja": "プレイ時間",
+      "ko": "플레이 시간",
+      "es": "Tiempo de juego"
+    },
+    "settings.header": {
+      "zh_TW": "設定",
+      "en": "Settings",
+      "zh_CN": "设置",
+      "ja": "設定",
+      "ko": "설정",
+      "es": "Ajustes"
+    },
+    "settings.language": {
+      "zh_TW": "語言",
+      "en": "Language",
+      "zh_CN": "语言",
+      "ja": "言語",
+      "ko": "언어",
+      "es": "Idioma"
+    },
+    "settings.language_confirm": {
+      "zh_TW": "確定要切換為 {lang} 嗎？",
+      "en": "Switch to {lang}?",
+      "zh_CN": "确定要切换为 {lang} 吗？",
+      "ja": "{lang} に切り替えますか？",
+      "ko": "{lang}(으)로 전환하시겠습니까?",
+      "es": "¿Cambiar a {lang}?"
+    },
+    "settings.camera_follow": {
+      "zh_TW": "鏡頭：跟隨角色",
+      "en": "Camera: Follow",
+      "zh_CN": "镜头：跟随角色",
+      "ja": "カメラ：追従",
+      "ko": "카메라: 추적",
+      "es": "Cámara: Seguimiento"
+    },
+    "settings.camera_rooms": {
+      "zh_TW": "鏡頭：分區顯示",
+      "en": "Camera: Rooms",
+      "zh_CN": "镜头：分区显示",
+      "ja": "カメラ：エリア表示",
+      "ko": "카메라: 구역 표시",
+      "es": "Cámara: Por Secciones"
+    },
+    "settings.hint": {
+      "zh_TW": "左右鍵切換  Esc 返回",
+      "en": "Left/Right: change   Esc: back",
+      "zh_CN": "左右键切换  Esc 返回",
+      "ja": "←→ で切り替え　Esc で戻る",
+      "ko": "←→ 전환　Esc 뒤로",
+      "es": "Izquierda/Derecha: cambiar   Esc: atrás"
+    },
+    "settings.saved": {
+      "zh_TW": "設定已儲存",
+      "en": "Settings saved",
+      "zh_CN": "设置已保存",
+      "ja": "設定を保存しました",
+      "ko": "설정이 저장되었습니다",
+      "es": "Ajustes guardados"
+    },
+    "save.saved": {
+      "zh_TW": "已儲存進度",
+      "en": "Progress saved",
+      "zh_CN": "已保存进度",
+      "ja": "進行状況を保存しました",
+      "ko": "진행 상황이 저장되었습니다",
+      "es": "Progreso guardado"
+    },
+    "ingame_menu.title": {
+      "zh_TW": "選單",
+      "en": "Menu",
+      "zh_CN": "菜单",
+      "ja": "メニュー",
+      "ko": "메뉴",
+      "es": "Menú"
+    },
+    "ingame_menu.save": {
+      "zh_TW": "儲存進度",
+      "en": "Save Progress",
+      "zh_CN": "保存进度",
+      "ja": "セーブ",
+      "ko": "저장",
+      "es": "Guardar Progreso"
+    },
+    "ingame_menu.back_to_title": {
+      "zh_TW": "返回標題",
+      "en": "Back to Title",
+      "zh_CN": "返回标题",
+      "ja": "タイトルへ戻る",
+      "ko": "타이틀로 돌아가기",
+      "es": "Volver al Título"
+    },
+    "save.slot_full": {
+      "zh_TW": "存檔格已滿",
+      "en": "Save slot in use",
+      "zh_CN": "存档格已满",
+      "ja": "このスロットは使用中です",
+      "ko": "저장 슬롯이 사용 중입니다",
+      "es": "Ranura de guardado en uso"
+    },
+    "hud.stage": {
+      "zh_TW": "關卡",
+      "en": "Stage",
+      "zh_CN": "关卡",
+      "ja": "ステージ",
+      "ko": "스테이지",
+      "es": "Etapa"
+    },
+    "hud.level": {
+      "zh_TW": "等級",
+      "en": "LV",
+      "zh_CN": "等级",
+      "ja": "Lv",
+      "ko": "Lv",
+      "es": "Nivel"
+    },
+    "hud.keys": {
+      "zh_TW": "鑰匙",
+      "en": "Keys",
+      "zh_CN": "钥匙",
+      "ja": "鍵",
+      "ko": "열쇠",
+      "es": "Llaves"
+    },
+    "hud.items": {
+      "zh_TW": "道具",
+      "en": "Items",
+      "zh_CN": "道具",
+      "ja": "道具",
+      "ko": "아이템",
+      "es": "Objetos"
+    },
+    "battle.title": {
+      "zh_TW": "戰鬥！",
+      "en": "Battle!",
+      "zh_CN": "战斗！",
+      "ja": "戦闘！",
+      "ko": "전투!",
+      "es": "¡Batalla!"
+    },
+    "battle.you": {
+      "zh_TW": "你",
+      "en": "You",
+      "zh_CN": "你",
+      "ja": "あなた",
+      "ko": "당신",
+      "es": "Tú"
+    },
+    "battle.attack_prompt": {
+      "zh_TW": "攻擊（時機到就點下方按鈕）",
+      "en": "Attack: tap the bar button",
+      "zh_CN": "攻击（时机到就点下方按钮）",
+      "ja": "攻撃（下のボタンをタップ）",
+      "ko": "공격 (아래 버튼을 탭)",
+      "es": "Ataque: toca el botón"
+    },
+    "battle.defense_prompt": {
+      "zh_TW": "防禦（點下方按鈕架盾）",
+      "en": "Defend: tap to raise a shield",
+      "zh_CN": "防御（点下方按钮架盾）",
+      "ja": "防御（下のボタンで盾）",
+      "ko": "방어 (아래 버튼으로 방패)",
+      "es": "Defensa: toca el botón"
+    },
+    "battle.btn_charging": {
+      "zh_TW": "冷卻中…",
+      "en": "Cooling down…",
+      "zh_CN": "冷却中…",
+      "ja": "クールダウン中…",
+      "ko": "쿨다운 중…",
+      "es": "Enfriando…"
+    },
+    "battle.btn_hold_attack": {
+      "zh_TW": "點擊出擊",
+      "en": "Tap to attack",
+      "zh_CN": "点击出击",
+      "ja": "タップして攻撃",
+      "ko": "탭하여 공격",
+      "es": "Toca para atacar"
+    },
+    "battle.btn_hold_defense": {
+      "zh_TW": "點擊架盾",
+      "en": "Tap to guard",
+      "zh_CN": "点击架盾",
+      "ja": "タップして防御",
+      "ko": "탭하여 방어",
+      "es": "Toca para defender"
+    },
+    "battle.continue_hint": {
+      "zh_TW": "（按任意鍵繼續）",
+      "en": "(Press any key to continue)",
+      "zh_CN": "（按任意键继续）",
+      "ja": "（何かキーを押して続行）",
+      "ko": "(아무 키나 눌러 계속)",
+      "es": "(Pulsa cualquier tecla para continuar)"
+    },
+    "battle.start": {
+      "zh_TW": "戰鬥開始！攻擊、防禦皆可隨時點擊，敵人則會依自己的節奏出手。",
+      "en": "Battle start! Tap Attack or Defend any time — the enemy attacks on its own clock.",
+      "zh_CN": "战斗开始！攻击、防御皆可随时点击，敌人则会依自己的节奏出手。",
+      "ja": "戦闘開始！攻撃・防御はいつでもタップ可能、敵は自分のペースで攻撃してくる。",
+      "ko": "전투 시작! 공격과 방어는 언제든 탭할 수 있습니다 — 적은 자신만의 주기로 공격합니다.",
+      "es": "¡Comienza el combate! Toca Atacar o Defender cuando quieras — el enemigo ataca según su propio reloj."
+    },
+    "battle.enemy_clock": {
+      "zh_TW": "敵人攻擊倒數",
+      "en": "Enemy attack timer",
+      "zh_CN": "敌人攻击倒数",
+      "ja": "敵の攻撃タイマー",
+      "ko": "적 공격 타이머",
+      "es": "Temporizador de ataque enemigo"
+    },
+    "battle.shield_none": {
+      "zh_TW": "無護盾",
+      "en": "No shield",
+      "zh_CN": "无护盾",
+      "ja": "シールドなし",
+      "ko": "방패 없음",
+      "es": "Sin escudo"
+    },
+    "battle.shield_armed": {
+      "zh_TW": "護盾已架起：{pct}%",
+      "en": "Shield armed: {pct}%",
+      "zh_CN": "护盾已架起：{pct}%",
+      "ja": "シールド展開中：{pct}%",
+      "ko": "방패 준비됨: {pct}%",
+      "es": "Escudo armado: {pct}%"
+    },
+    "battle.shield_log": {
+      "zh_TW": "護盾已架起（{pct}%），將抵擋敵人下一擊。",
+      "en": "Shield armed ({pct}%) — will absorb the enemy's next hit.",
+      "zh_CN": "护盾已架起（{pct}%），将抵挡敌人下一击。",
+      "ja": "シールドを展開（{pct}%）——敵の次の攻撃を防ぐ。",
+      "ko": "방패 준비 완료 ({pct}%) — 적의 다음 공격을 막습니다.",
+      "es": "Escudo armado ({pct}%): absorberá el próximo golpe del enemigo."
+    },
+    "battle.super_label": {
+      "zh_TW": "必殺充能",
+      "en": "Super charge",
+      "zh_CN": "必杀充能",
+      "ja": "必殺チャージ",
+      "ko": "필살 충전",
+      "es": "Carga especial"
+    },
+    "battle.super_ready": {
+      "zh_TW": "必殺技！點擊發動！",
+      "en": "SUPER ATTACK — tap to unleash!",
+      "zh_CN": "必杀技！点击发动！",
+      "ja": "必殺技！タップで発動！",
+      "ko": "필살기! 탭하여 발동!",
+      "es": "¡ATAQUE ESPECIAL — toca para lanzarlo!"
+    },
+    "battle.super_hit": {
+      "zh_TW": "必殺技命中！造成 {dmg} 點傷害！",
+      "en": "SUPER ATTACK hits! Dealt {dmg} damage!",
+      "zh_CN": "必杀技命中！造成 {dmg} 点伤害！",
+      "ja": "必殺技命中！{dmg} のダメージを与えた！",
+      "ko": "필살기 명중! {dmg}의 피해를 입혔습니다!",
+      "es": "¡El ATAQUE ESPECIAL acierta! ¡Causaste {dmg} de daño!"
+    },
+    "battle.crit_win": {
+      "zh_TW": "會心一擊！造成 {dmg} 點傷害，敵人倒下了！",
+      "en": "Critical hit! Dealt {dmg} damage — the enemy is down!",
+      "zh_CN": "会心一击！造成 {dmg} 点伤害，敌人倒下了！",
+      "ja": "会心の一撃！{dmg} のダメージを与え、敵を倒した！",
+      "ko": "치명타! {dmg}의 피해를 입혀 적을 쓰러뜨렸습니다!",
+      "es": "¡Golpe crítico! Causaste {dmg} de daño: ¡el enemigo ha caído!"
+    },
+    "battle.hit": {
+      "zh_TW": "你造成了 {dmg} 點傷害！",
+      "en": "You dealt {dmg} damage!",
+      "zh_CN": "你造成了 {dmg} 点伤害！",
+      "ja": "{dmg} のダメージを与えた！",
+      "ko": "{dmg}의 피해를 입혔습니다!",
+      "es": "¡Causaste {dmg} de daño!"
+    },
+    "battle.player_down": {
+      "zh_TW": "你倒下了……返回本層起點。",
+      "en": "You have fallen... returning to the start of this floor.",
+      "zh_CN": "你倒下了……返回本层起点。",
+      "ja": "あなたは倒れた……この階の出発点に戻ります。",
+      "ko": "쓰러졌습니다……이 층의 시작 지점으로 돌아갑니다.",
+      "es": "Has caído... volviendo al inicio de esta planta."
+    },
+    "battle.perfect_guard": {
+      "zh_TW": "完美格擋！",
+      "en": "Perfect guard!",
+      "zh_CN": "完美格挡！",
+      "ja": "パーフェクトガード！",
+      "ko": "퍼펙트 가드!",
+      "es": "¡Bloqueo perfecto!"
+    },
+    "battle.guard_hit": {
+      "zh_TW": "你承受了 {dmg} 點傷害。",
+      "en": "You took {dmg} damage.",
+      "zh_CN": "你承受了 {dmg} 点伤害。",
+      "ja": "{dmg} のダメージを受けた。",
+      "ko": "{dmg}의 피해를 입었습니다.",
+      "es": "Recibiste {dmg} de daño."
+    },
+    "battle.boss_win": {
+      "zh_TW": "你擊敗了 Vorkath！安穩之星重燃。",
+      "en": "You defeated Vorkath! The Star of Peace burns again.",
+      "zh_CN": "你击败了 Vorkath！安稳之星重燃。",
+      "ja": "Vorkath を倒した！安寧の星が再び灯る。",
+      "ko": "Vorkath를 물리쳤습니다! 평온의 별이 다시 타오릅니다.",
+      "es": "¡Has derrotado a Vorkath! La Estrella de la Paz vuelve a arder."
+    },
+    "battle.levelup": {
+      "zh_TW": "升級了！LV ",
+      "en": "Level up! LV ",
+      "zh_CN": "升级了！LV ",
+      "ja": "レベルアップ！LV ",
+      "ko": "레벨 업! LV ",
+      "es": "¡Subiste de nivel! LV "
+    },
+    "inventory.title": {
+      "zh_TW": "背包",
+      "en": "Inventory",
+      "zh_CN": "背包",
+      "ja": "持ち物",
+      "ko": "인벤토리",
+      "es": "Inventario"
+    },
+    "inventory.hint": {
+      "zh_TW": "點選道具查看資訊，右側有 使用 / 丟棄 / 關閉",
+      "en": "Select an item to see details — Use / Drop / Close are on the right",
+      "zh_CN": "点选道具查看资讯，右侧有 使用 / 丢弃 / 关闭",
+      "ja": "アイテムを選ぶと詳細が表示されます。右側に「使用／捨てる／閉じる」があります",
+      "ko": "아이템을 선택하면 정보가 표시됩니다. 오른쪽에 사용 / 버리기 / 닫기가 있습니다",
+      "es": "Selecciona un objeto para ver sus detalles — Usar / Descartar / Cerrar están a la derecha"
+    },
+    "inventory.empty_title": {
+      "zh_TW": "背包目前是空的。",
+      "en": "Your inventory is empty.",
+      "zh_CN": "背包目前是空的。",
+      "ja": "持ち物は空です。",
+      "ko": "인벤토리가 비어 있습니다.",
+      "es": "Tu inventario está vacío."
+    },
+    "inventory.empty_hint": {
+      "zh_TW": "先去撿一些道具吧。",
+      "en": "Go pick up some items first.",
+      "zh_CN": "先去捡一些道具吧。",
+      "ja": "まずはアイテムを拾いに行きましょう。",
+      "ko": "먼저 아이템을 좀 주워 오세요.",
+      "es": "Ve a recoger algunos objetos primero."
+    },
+    "inventory.detail_title": {
+      "zh_TW": "道具詳情",
+      "en": "Item Details",
+      "zh_CN": "道具详情",
+      "ja": "アイテム詳細",
+      "ko": "아이템 정보",
+      "es": "Detalles del Objeto"
+    },
+    "inventory.no_effect": {
+      "zh_TW": "無效果",
+      "en": "No effect",
+      "zh_CN": "无效果",
+      "ja": "効果なし",
+      "ko": "효과 없음",
+      "es": "Sin efecto"
+    },
+    "inventory.use": {
+      "zh_TW": "使用",
+      "en": "Use",
+      "zh_CN": "使用",
+      "ja": "使用",
+      "ko": "사용",
+      "es": "Usar"
+    },
+    "inventory.drop": {
+      "zh_TW": "丟棄",
+      "en": "Drop",
+      "zh_CN": "丢弃",
+      "ja": "捨てる",
+      "ko": "버리기",
+      "es": "Descartar"
+    },
+    "inventory.close": {
+      "zh_TW": "關閉",
+      "en": "Close",
+      "zh_CN": "关闭",
+      "ja": "閉じる",
+      "ko": "닫기",
+      "es": "Cerrar"
+    },
+    "inventory.footer_hint": {
+      "zh_TW": "點選物品後可按右側按鈕操作；鍵盤 I 可關閉",
+      "en": "Select an item, then use the buttons on the right; press I to close",
+      "zh_CN": "点选物品后可按右侧按钮操作；键盘 I 可关闭",
+      "ja": "アイテムを選んで右側のボタンを操作できます。I キーで閉じます",
+      "ko": "아이템을 선택한 후 오른쪽 버튼으로 조작하세요. I 키로 닫을 수 있습니다",
+      "es": "Selecciona un objeto y usa los botones de la derecha; pulsa I para cerrar"
+    },
+    "inventory.stats_label": {
+      "zh_TW": "屬性",
+      "en": "Stats",
+      "zh_CN": "属性",
+      "ja": "ステータス",
+      "ko": "스탯",
+      "es": "Estadísticas"
+    },
+    "inventory.icon_label": {
+      "zh_TW": "圖示",
+      "en": "Icon",
+      "zh_CN": "图标",
+      "ja": "アイコン",
+      "ko": "아이콘",
+      "es": "Icono"
+    },
+    "store.icon_label": {
+      "zh_TW": "商店",
+      "en": "Shop",
+      "zh_CN": "商店",
+      "ja": "ショップ",
+      "ko": "상점",
+      "es": "Tienda"
+    },
+    "store.unlocked_title": {
+      "zh_TW": "道具商店已經開放！",
+      "en": "The item shop is now open!",
+      "zh_CN": "道具商店已经开放！",
+      "ja": "アイテムショップが開放されました！",
+      "ko": "아이템 상점이 열렸습니다!",
+      "es": "¡La tienda de objetos ya está abierta!"
+    },
+    "store.unlocked_body": {
+      "zh_TW": "你現在可以在關卡中點擊右上角的商店圖示來購買道具。",
+      "en": "You can now click the shop icon in the top-right corner of the stage to buy items.",
+      "zh_CN": "你现在可以在关卡中点击右上角的商店图示来购买道具。",
+      "ja": "ステージ右上のショップアイコンをクリックしてアイテムを購入できます。",
+      "ko": "이제 스테이지 우측 상단의 상점 아이콘을 클릭해 아이템을 구매할 수 있습니다.",
+      "es": "Ahora puedes pulsar el icono de la tienda en la esquina superior derecha de la etapa para comprar objetos."
+    },
+    "store.confirm_hint": {
+      "zh_TW": "確定 (Enter/點擊)",
+      "en": "Confirm (Enter/Tap)",
+      "zh_CN": "确定 (Enter/点击)",
+      "ja": "確定（Enter／タップ）",
+      "ko": "확인 (Enter/탭)",
+      "es": "Confirmar (Enter/Toque)"
+    },
+    "stairs.confirm_up": {
+      "zh_TW": "確定要往上一層嗎？",
+      "en": "Go up to the next floor?",
+      "zh_CN": "确定要往上一层吗？",
+      "ja": "上の階へ進みますか？",
+      "ko": "위층으로 올라가시겠습니까?",
+      "es": "¿Subir a la siguiente planta?"
+    },
+    "stairs.confirm_down": {
+      "zh_TW": "確定要往下一層嗎？",
+      "en": "Go down to the floor below?",
+      "zh_CN": "确定要往下一层吗？",
+      "ja": "下の階へ進みますか？",
+      "ko": "아래층으로 내려가시겠습니까?",
+      "es": "¿Bajar a la planta inferior?"
+    },
+    "store.gold_label": {
+      "zh_TW": "金錢 GOLD",
+      "en": "GOLD",
+      "zh_CN": "金钱 GOLD",
+      "ja": "所持金 GOLD",
+      "ko": "골드 GOLD",
+      "es": "Oro GOLD"
+    },
+    "store.controls_hint": {
+      "zh_TW": "（方向鍵/數字選擇 · Enter 購買 · Esc 關閉）",
+      "en": "(Arrow keys/number to select · Enter to buy · Esc to close)",
+      "zh_CN": "（方向键/数字选择 · Enter 购买 · Esc 关闭）",
+      "ja": "（方向キー／数字で選択・Enterで購入・Escで閉じる）",
+      "ko": "(방향키/숫자로 선택 · Enter로 구매 · Esc로 닫기)",
+      "es": "(Flechas/números para elegir · Enter para comprar · Esc para cerrar)"
+    },
+    "store.tab.potion": {
+      "zh_TW": "藥水",
+      "en": "Potions",
+      "zh_CN": "药水",
+      "ja": "薬",
+      "ko": "물약",
+      "es": "Pociones"
+    },
+    "store.tab.weapon": {
+      "zh_TW": "武器",
+      "en": "Weapons",
+      "zh_CN": "武器",
+      "ja": "武器",
+      "ko": "무기",
+      "es": "Armas"
+    },
+    "store.tab.armor": {
+      "zh_TW": "防具",
+      "en": "Armor",
+      "zh_CN": "防具",
+      "ja": "防具",
+      "ko": "방어구",
+      "es": "Armaduras"
+    },
+    "store.tab.talent": {
+      "zh_TW": "天賦",
+      "en": "Talents",
+      "zh_CN": "天赋",
+      "ja": "特性",
+      "ko": "특성",
+      "es": "Talentos"
+    },
+    "store.effect_label": {
+      "zh_TW": "效果",
+      "en": "Effect",
+      "zh_CN": "效果",
+      "ja": "効果",
+      "ko": "효과",
+      "es": "Efecto"
+    },
+    "store.equipped": {
+      "zh_TW": "✓ 已裝備",
+      "en": "✓ Equipped",
+      "zh_CN": "✓ 已装备",
+      "ja": "✓ 装備済み",
+      "ko": "✓ 장착됨",
+      "es": "✓ Equipado"
+    },
+    "store.tap_to_equip": {
+      "zh_TW": "點擊裝備",
+      "en": "Tap to equip",
+      "zh_CN": "点击装备",
+      "ja": "タップで装備",
+      "ko": "탭하여 장착",
+      "es": "Toca para equipar"
+    },
+    "store.purchased_label": {
+      "zh_TW": "已購買",
+      "en": "Purchased",
+      "zh_CN": "已购买",
+      "ja": "購入済み",
+      "ko": "구매함",
+      "es": "Comprado"
+    },
+    "store.price_label": {
+      "zh_TW": "價格",
+      "en": "Price",
+      "zh_CN": "价格",
+      "ja": "価格",
+      "ko": "가격",
+      "es": "Precio"
+    },
+    "store.buy_button": {
+      "zh_TW": "購買 (Enter)",
+      "en": "Buy (Enter)",
+      "zh_CN": "购买 (Enter)",
+      "ja": "購入（Enter）",
+      "ko": "구매 (Enter)",
+      "es": "Comprar (Enter)"
+    },
+    "store.toast_insufficient_gold": {
+      "zh_TW": "金錢不足！需要 {cost} G",
+      "en": "Not enough gold! Need {cost} G",
+      "zh_CN": "金钱不足！需要 {cost} G",
+      "ja": "所持金が足りません！{cost} G 必要です",
+      "ko": "골드가 부족합니다! {cost} G 필요",
+      "es": "¡Oro insuficiente! Necesitas {cost} G"
+    },
+    "store.toast_purchase_success": {
+      "zh_TW": "購買成功：{name}！",
+      "en": "Purchased: {name}!",
+      "zh_CN": "购买成功：{name}！",
+      "ja": "購入しました：{name}！",
+      "ko": "구매 완료: {name}!",
+      "es": "¡Comprado: {name}!"
+    },
+    "mission.completed_prefix": {
+      "zh_TW": "任務完成：",
+      "en": "Mission complete: ",
+      "zh_CN": "任务完成：",
+      "ja": "ミッション完了：",
+      "ko": "미션 완료: ",
+      "es": "Misión completada: "
+    },
+    "mission.daily_reset_prefix": {
+      "zh_TW": "每日任務已重置：",
+      "en": "Daily mission reset: ",
+      "zh_CN": "每日任务已重置：",
+      "ja": "デイリーミッションをリセット：",
+      "ko": "일일 미션 초기화: ",
+      "es": "Misión diaria reiniciada: "
+    },
+    "stageselect.title": {
+      "zh_TW": "選擇關卡（Tab/Esc 關閉）",
+      "en": "Stage Select (Tab/Esc to close)",
+      "zh_CN": "选择关卡（Tab/Esc 关闭）",
+      "ja": "ステージ選択（Tab/Esc で閉じる）",
+      "ko": "스테이지 선택 (Tab/Esc로 닫기)",
+      "es": "Selección de Etapa (Tab/Esc para cerrar)"
+    },
+    "stageselect.hint": {
+      "zh_TW": "在這裡可以重新遊玩你已抵達過的樓層。上鎖的樓層會顯示解鎖所需的條件。",
+      "en": "Every floor you've reached can be replayed from here. A locked floor shows what's needed to unlock it.",
+      "zh_CN": "在这里可以重新游玩你已抵达过的楼层。上锁的楼层会显示解锁所需的条件。",
+      "ja": "ここから、これまでに到達した階を再プレイできます。ロックされた階には解放条件が表示されます。",
+      "ko": "여기서 이미 도달한 층을 다시 플레이할 수 있습니다. 잠긴 층에는 해제 조건이 표시됩니다.",
+      "es": "Desde aquí puedes rejugar cualquier planta que ya hayas alcanzado. Una planta bloqueada muestra lo que necesitas para desbloquearla."
+    },
+    "stageselect.ui_settings_header": {
+      "zh_TW": "介面設定",
+      "en": "UI Settings",
+      "zh_CN": "界面设置",
+      "ja": "UI設定",
+      "ko": "UI 설정",
+      "es": "Ajustes de Interfaz"
+    },
+    "stageselect.font_size_label": {
+      "zh_TW": "字體大小",
+      "en": "Font Size",
+      "zh_CN": "字体大小",
+      "ja": "文字サイズ",
+      "ko": "글자 크기",
+      "es": "Tamaño de Fuente"
+    },
+    "stageselect.reset_button": {
+      "zh_TW": "重設",
+      "en": "Reset",
+      "zh_CN": "重置",
+      "ja": "リセット",
+      "ko": "재설정",
+      "es": "Restablecer"
+    },
+    "stageselect.reached_tag": {
+      "zh_TW": "[已到達]",
+      "en": "[Reached]",
+      "zh_CN": "[已抵达]",
+      "ja": "[到達済み]",
+      "ko": "[도달함]",
+      "es": "[Alcanzada]"
+    },
+    "stageselect.new_tag": {
+      "zh_TW": "[新]",
+      "en": "[NEW]",
+      "zh_CN": "[新]",
+      "ja": "[NEW]",
+      "ko": "[NEW]",
+      "es": "[Nuevo]"
+    },
+    "stageselect.locked_hint": {
+      "zh_TW": "先抵達第 {floor} 層才能選擇這一層",
+      "en": "Reach floor {floor} first to select this one",
+      "zh_CN": "先抵达第 {floor} 层才能选择这一层",
+      "ja": "この階を選ぶには、先に {floor} 階に到達してください",
+      "ko": "이 층을 선택하려면 먼저 {floor}층에 도달해야 합니다",
+      "es": "Alcanza la planta {floor} primero para poder elegir esta"
+    }
+  },
+  "ev_common_cache_rat_nest": {
+    "zh_TW": "ev_common_cache_rat_nest",
+    "en": "ev_common_cache_rat_nest",
+    "zh_CN": "ev_common_cache_rat_nest",
+    "ja": "ev_common_cache_rat_nest",
+    "ko": "ev_common_cache_rat_nest",
+    "es": "ev_common_cache_rat_nest",
+    "_todo": true
+  },
+  "ev_common_cache_rat_nest.text": {
+    "zh_TW": "鼠窩裡混著一枚乾淨的金幣。",
+    "en": "鼠窩裡混著一枚乾淨的金幣。",
+    "zh_CN": "鼠窩裡混著一枚乾淨的金幣。",
+    "ja": "鼠窩裡混著一枚乾淨的金幣。",
+    "ko": "鼠窩裡混著一枚乾淨的金幣。",
+    "es": "鼠窩裡混著一枚乾淨的金幣。"
+  },
+  "ev_common_cache_wall": {
+    "zh_TW": "ev_common_cache_wall",
+    "en": "ev_common_cache_wall",
+    "zh_CN": "ev_common_cache_wall",
+    "ja": "ev_common_cache_wall",
+    "ko": "ev_common_cache_wall",
+    "es": "ev_common_cache_wall",
+    "_todo": true
+  },
+  "ev_common_cache_wall.text": {
+    "zh_TW": "牆後有個縫，裡面塞著補給。",
+    "en": "牆後有個縫，裡面塞著補給。",
+    "zh_CN": "牆後有個縫，裡面塞著補給。",
+    "ja": "牆後有個縫，裡面塞著補給。",
+    "ko": "牆後有個縫，裡面塞著補給。",
+    "es": "牆後有個縫，裡面塞著補給。"
+  },
+  "ev_common_merchant_echo_ash": {
+    "zh_TW": "ev_common_merchant_echo_ash",
+    "en": "ev_common_merchant_echo_ash",
+    "zh_CN": "ev_common_merchant_echo_ash",
+    "ja": "ev_common_merchant_echo_ash",
+    "ko": "ev_common_merchant_echo_ash",
+    "es": "ev_common_merchant_echo_ash",
+    "_todo": true
+  },
+  "ev_common_merchant_echo_ash.text": {
+    "zh_TW": "灰中的商人殘影只收素材，不收金幣。",
+    "en": "灰中的商人殘影只收素材，不收金幣。",
+    "zh_CN": "灰中的商人殘影只收素材，不收金幣。",
+    "ja": "灰中的商人殘影只收素材，不收金幣。",
+    "ko": "灰中的商人殘影只收素材，不收金幣。",
+    "es": "灰中的商人殘影只收素材，不收金幣。"
+  },
+  "ev_common_relic_chipped_blade": {
+    "zh_TW": "ev_common_relic_chipped_blade",
+    "en": "ev_common_relic_chipped_blade",
+    "zh_CN": "ev_common_relic_chipped_blade",
+    "ja": "ev_common_relic_chipped_blade",
+    "ko": "ev_common_relic_chipped_blade",
+    "es": "ev_common_relic_chipped_blade",
+    "_todo": true
+  },
+  "ev_common_relic_chipped_blade.text": {
+    "zh_TW": "缺口的位置，剛好是你腰間那把劍的另一半。",
+    "en": "缺口的位置，剛好是你腰間那把劍的另一半。",
+    "zh_CN": "缺口的位置，剛好是你腰間那把劍的另一半。",
+    "ja": "缺口的位置，剛好是你腰間那把劍的另一半。",
+    "ko": "缺口的位置，剛好是你腰間那把劍的另一半。",
+    "es": "缺口的位置，剛好是你腰間那把劍的另一半。"
+  },
+  "ev_common_relic_road": {
+    "zh_TW": "ev_common_relic_road",
+    "en": "ev_common_relic_road",
+    "zh_CN": "ev_common_relic_road",
+    "ja": "ev_common_relic_road",
+    "ko": "ev_common_relic_road",
+    "es": "ev_common_relic_road",
+    "_todo": true
+  },
+  "ev_common_relic_road.text": {
+    "zh_TW": "路邊的劍痕很深——是同一個人反覆練出來的。",
+    "en": "路邊的劍痕很深——是同一個人反覆練出來的。",
+    "zh_CN": "路邊的劍痕很深——是同一個人反覆練出來的。",
+    "ja": "路邊的劍痕很深——是同一個人反覆練出來的。",
+    "ko": "路邊的劍痕很深——是同一個人反覆練出來的。",
+    "es": "路邊的劍痕很深——是同一個人反覆練出來的。"
+  },
+  "ev_common_rescue_lost_soldier": {
+    "zh_TW": "ev_common_rescue_lost_soldier",
+    "en": "ev_common_rescue_lost_soldier",
+    "zh_CN": "ev_common_rescue_lost_soldier",
+    "ja": "ev_common_rescue_lost_soldier",
+    "ko": "ev_common_rescue_lost_soldier",
+    "es": "ev_common_rescue_lost_soldier",
+    "_todo": true
+  },
+  "ev_common_rescue_lost_soldier.text": {
+    "zh_TW": "壓在梁下的士兵還醒著，先問你的名字。",
+    "en": "壓在梁下的士兵還醒著，先問你的名字。",
+    "zh_CN": "壓在梁下的士兵還醒著，先問你的名字。",
+    "ja": "壓在梁下的士兵還醒著，先問你的名字。",
+    "ko": "壓在梁下的士兵還醒著，先問你的名字。",
+    "es": "壓在梁下的士兵還醒著，先問你的名字。"
+  },
+  "ev_common_shard_wandering": {
+    "zh_TW": "ev_common_shard_wandering",
+    "en": "ev_common_shard_wandering",
+    "zh_CN": "ev_common_shard_wandering",
+    "ja": "ev_common_shard_wandering",
+    "ko": "ev_common_shard_wandering",
+    "es": "ev_common_shard_wandering",
+    "_todo": true
+  },
+  "ev_common_shard_wandering.text": {
+    "zh_TW": "一片記憶碎片在空中停留了一瞬。",
+    "en": "一片記憶碎片在空中停留了一瞬。",
+    "zh_CN": "一片記憶碎片在空中停留了一瞬。",
+    "ja": "一片記憶碎片在空中停留了一瞬。",
+    "ko": "一片記憶碎片在空中停留了一瞬。",
+    "es": "一片記憶碎片在空中停留了一瞬。"
+  },
+  "ev_common_trap_rubble": {
+    "zh_TW": "ev_common_trap_rubble",
+    "en": "ev_common_trap_rubble",
+    "zh_CN": "ev_common_trap_rubble",
+    "ja": "ev_common_trap_rubble",
+    "ko": "ev_common_trap_rubble",
+    "es": "ev_common_trap_rubble",
+    "_todo": true
+  },
+  "ev_common_trap_rubble.text": {
+    "zh_TW": "落石是剛被推下來的——上面還站得穩。",
+    "en": "落石是剛被推下來的——上面還站得穩。",
+    "zh_CN": "落石是剛被推下來的——上面還站得穩。",
+    "ja": "落石是剛被推下來的——上面還站得穩。",
+    "ko": "落石是剛被推下來的——上面還站得穩。",
+    "es": "落石是剛被推下來的——上面還站得穩。"
+  },
+  "ev_common_whisper_old_road": {
+    "zh_TW": "ev_common_whisper_old_road",
+    "en": "ev_common_whisper_old_road",
+    "zh_CN": "ev_common_whisper_old_road",
+    "ja": "ev_common_whisper_old_road",
+    "ko": "ev_common_whisper_old_road",
+    "es": "ev_common_whisper_old_road",
+    "_todo": true
+  },
+  "ev_common_whisper_old_road.text": {
+    "zh_TW": "「那位大人……十年前來過這裡。」",
+    "en": "「那位大人……十年前來過這裡。」",
+    "zh_CN": "「那位大人……十年前來過這裡。」",
+    "ja": "「那位大人……十年前來過這裡。」",
+    "ko": "「那位大人……十年前來過這裡。」",
+    "es": "「那位大人……十年前來過這裡。」"
+  },
+  "ev_common_whisper_old_song": {
+    "zh_TW": "ev_common_whisper_old_song",
+    "en": "ev_common_whisper_old_song",
+    "zh_CN": "ev_common_whisper_old_song",
+    "ja": "ev_common_whisper_old_song",
+    "ko": "ev_common_whisper_old_song",
+    "es": "ev_common_whisper_old_song",
+    "_todo": true
+  },
+  "ev_common_whisper_old_song.text": {
+    "zh_TW": "有人低聲哼著你沒學過卻會唱的調子。",
+    "en": "有人低聲哼著你沒學過卻會唱的調子。",
+    "zh_CN": "有人低聲哼著你沒學過卻會唱的調子。",
+    "ja": "有人低聲哼著你沒學過卻會唱的調子。",
+    "ko": "有人低聲哼著你沒學過卻會唱的調子。",
+    "es": "有人低聲哼著你沒學過卻會唱的調子。"
+  },
+  "ev_forest_broken_arrow": {
+    "zh_TW": "ev_forest_broken_arrow",
+    "en": "ev_forest_broken_arrow",
+    "zh_CN": "ev_forest_broken_arrow",
+    "ja": "ev_forest_broken_arrow",
+    "ko": "ev_forest_broken_arrow",
+    "es": "ev_forest_broken_arrow",
+    "_todo": true
+  },
+  "ev_forest_broken_arrow.text": {
+    "zh_TW": "斷箭上刻著你前世的軍號。",
+    "en": "斷箭上刻著你前世的軍號。",
+    "zh_CN": "斷箭上刻著你前世的軍號。",
+    "ja": "斷箭上刻著你前世的軍號。",
+    "ko": "斷箭上刻著你前世的軍號。",
+    "es": "斷箭上刻著你前世的軍號。"
+  },
+  "ev_forest_charcoal_kiln": {
+    "zh_TW": "ev_forest_charcoal_kiln",
+    "en": "ev_forest_charcoal_kiln",
+    "zh_CN": "ev_forest_charcoal_kiln",
+    "ja": "ev_forest_charcoal_kiln",
+    "ko": "ev_forest_charcoal_kiln",
+    "es": "ev_forest_charcoal_kiln",
+    "_todo": true
+  },
+  "ev_forest_charcoal_kiln.text": {
+    "zh_TW": "炭窯還溫著，窯口的腳印是兩雙。",
+    "en": "炭窯還溫著，窯口的腳印是兩雙。",
+    "zh_CN": "炭窯還溫著，窯口的腳印是兩雙。",
+    "ja": "炭窯還溫著，窯口的腳印是兩雙。",
+    "ko": "炭窯還溫著，窯口的腳印是兩雙。",
+    "es": "炭窯還溫著，窯口的腳印是兩雙。"
+  },
+  "ev_forest_hunter_cache": {
+    "zh_TW": "ev_forest_hunter_cache",
+    "en": "ev_forest_hunter_cache",
+    "zh_CN": "ev_forest_hunter_cache",
+    "ja": "ev_forest_hunter_cache",
+    "ko": "ev_forest_hunter_cache",
+    "es": "ev_forest_hunter_cache",
+    "_todo": true
+  },
+  "ev_forest_hunter_cache.text": {
+    "zh_TW": "獵人藏糧的樹洞裡多了一封信。",
+    "en": "獵人藏糧的樹洞裡多了一封信。",
+    "zh_CN": "獵人藏糧的樹洞裡多了一封信。",
+    "ja": "獵人藏糧的樹洞裡多了一封信。",
+    "ko": "獵人藏糧的樹洞裡多了一封信。",
+    "es": "獵人藏糧的樹洞裡多了一封信。"
+  },
+  "ev_forest_lost_child": {
+    "zh_TW": "ev_forest_lost_child",
+    "en": "ev_forest_lost_child",
+    "zh_CN": "ev_forest_lost_child",
+    "ja": "ev_forest_lost_child",
+    "ko": "ev_forest_lost_child",
+    "es": "ev_forest_lost_child",
+    "_todo": true
+  },
+  "ev_forest_lost_child.text": {
+    "zh_TW": "霧裡的孩子說不出自己的名字，只說得出你的。",
+    "en": "霧裡的孩子說不出自己的名字，只說得出你的。",
+    "zh_CN": "霧裡的孩子說不出自己的名字，只說得出你的。",
+    "ja": "霧裡的孩子說不出自己的名字，只說得出你的。",
+    "ko": "霧裡的孩子說不出自己的名字，只說得出你的。",
+    "es": "霧裡的孩子說不出自己的名字，只說得出你的。"
+  },
+  "ev_forest_old_wizard_mark": {
+    "zh_TW": "ev_forest_old_wizard_mark",
+    "en": "ev_forest_old_wizard_mark",
+    "zh_CN": "ev_forest_old_wizard_mark",
+    "ja": "ev_forest_old_wizard_mark",
+    "ko": "ev_forest_old_wizard_mark",
+    "es": "ev_forest_old_wizard_mark",
+    "_todo": true
+  },
+  "ev_forest_old_wizard_mark.text": {
+    "zh_TW": "樹皮上的記號是老師父的筆跡，日期是今天。",
+    "en": "樹皮上的記號是老師父的筆跡，日期是今天。",
+    "zh_CN": "樹皮上的記號是老師父的筆跡，日期是今天。",
+    "ja": "樹皮上的記號是老師父的筆跡，日期是今天。",
+    "ko": "樹皮上的記號是老師父的筆跡，日期是今天。",
+    "es": "樹皮上的記號是老師父的筆跡，日期是今天。"
+  },
+  "ev_forest_snare": {
+    "zh_TW": "ev_forest_snare",
+    "en": "ev_forest_snare",
+    "zh_CN": "ev_forest_snare",
+    "ja": "ev_forest_snare",
+    "ko": "ev_forest_snare",
+    "es": "ev_forest_snare",
+    "_todo": true
+  },
+  "ev_forest_snare.text": {
+    "zh_TW": "繩索已經被人動過手腳——手法很熟。",
+    "en": "繩索已經被人動過手腳——手法很熟。",
+    "zh_CN": "繩索已經被人動過手腳——手法很熟。",
+    "ja": "繩索已經被人動過手腳——手法很熟。",
+    "ko": "繩索已經被人動過手腳——手法很熟。",
+    "es": "繩索已經被人動過手腳——手法很熟。"
+  },
+  "ev_forest_stone_marker": {
+    "zh_TW": "ev_forest_stone_marker",
+    "en": "ev_forest_stone_marker",
+    "zh_CN": "ev_forest_stone_marker",
+    "ja": "ev_forest_stone_marker",
+    "ko": "ev_forest_stone_marker",
+    "es": "ev_forest_stone_marker",
+    "_todo": true
+  },
+  "ev_forest_stone_marker.text": {
+    "zh_TW": "界石上寫著「此地曾有人等你」。",
+    "en": "界石上寫著「此地曾有人等你」。",
+    "zh_CN": "界石上寫著「此地曾有人等你」。",
+    "ja": "界石上寫著「此地曾有人等你」。",
+    "ko": "界石上寫著「此地曾有人等你」。",
+    "es": "界石上寫著「此地曾有人等你」。"
+  },
+  "ev_forest_trap_net": {
+    "zh_TW": "ev_forest_trap_net",
+    "en": "ev_forest_trap_net",
+    "zh_CN": "ev_forest_trap_net",
+    "ja": "ev_forest_trap_net",
+    "ko": "ev_forest_trap_net",
+    "es": "ev_forest_trap_net",
+    "_todo": true
+  },
+  "ev_forest_trap_net.text": {
+    "zh_TW": "網上掛著一件很新的外袍。",
+    "en": "網上掛著一件很新的外袍。",
+    "zh_CN": "網上掛著一件很新的外袍。",
+    "ja": "網上掛著一件很新的外袍。",
+    "ko": "網上掛著一件很新的外袍。",
+    "es": "網上掛著一件很新的外袍。"
+  },
+  "ev_gate_broken_ram": {
+    "zh_TW": "ev_gate_broken_ram",
+    "en": "ev_gate_broken_ram",
+    "zh_CN": "ev_gate_broken_ram",
+    "ja": "ev_gate_broken_ram",
+    "ko": "ev_gate_broken_ram",
+    "es": "ev_gate_broken_ram",
+    "_todo": true
+  },
+  "ev_gate_broken_ram.text": {
+    "zh_TW": "撞門的木槌斷了三次，第三次是從內側斷的。",
+    "en": "撞門的木槌斷了三次，第三次是從內側斷的。",
+    "zh_CN": "撞門的木槌斷了三次，第三次是從內側斷的。",
+    "ja": "撞門的木槌斷了三次，第三次是從內側斷的。",
+    "ko": "撞門的木槌斷了三次，第三次是從內側斷的。",
+    "es": "撞門的木槌斷了三次，第三次是從內側斷的。"
+  },
+  "ev_gate_deserters_kit": {
+    "zh_TW": "ev_gate_deserters_kit",
+    "en": "ev_gate_deserters_kit",
+    "zh_CN": "ev_gate_deserters_kit",
+    "ja": "ev_gate_deserters_kit",
+    "ko": "ev_gate_deserters_kit",
+    "es": "ev_gate_deserters_kit",
+    "_todo": true
+  },
+  "ev_gate_deserters_kit.text": {
+    "zh_TW": "逃兵的背包已收好，卻沒有人帶走。",
+    "en": "逃兵的背包已收好，卻沒有人帶走。",
+    "zh_CN": "逃兵的背包已收好，卻沒有人帶走。",
+    "ja": "逃兵的背包已收好，卻沒有人帶走。",
+    "ko": "逃兵的背包已收好，卻沒有人帶走。",
+    "es": "逃兵的背包已收好，卻沒有人帶走。"
+  },
+  "ev_gate_forge_first": {
+    "zh_TW": "ev_gate_forge_first",
+    "en": "ev_gate_forge_first",
+    "zh_CN": "ev_gate_forge_first",
+    "ja": "ev_gate_forge_first",
+    "ko": "ev_gate_forge_first",
+    "es": "ev_gate_forge_first",
+    "_todo": true
+  },
+  "ev_gate_forge_first.text": {
+    "zh_TW": "第一爐火還留著餘燼，鐵砧上有你的手印。",
+    "en": "第一爐火還留著餘燼，鐵砧上有你的手印。",
+    "zh_CN": "第一爐火還留著餘燼，鐵砧上有你的手印。",
+    "ja": "第一爐火還留著餘燼，鐵砧上有你的手印。",
+    "ko": "第一爐火還留著餘燼，鐵砧上有你的手印。",
+    "es": "第一爐火還留著餘燼，鐵砧上有你的手印。"
+  },
+  "ev_gate_forge_slag": {
+    "zh_TW": "ev_gate_forge_slag",
+    "en": "ev_gate_forge_slag",
+    "zh_CN": "ev_gate_forge_slag",
+    "ja": "ev_gate_forge_slag",
+    "ko": "ev_gate_forge_slag",
+    "es": "ev_gate_forge_slag",
+    "_todo": true
+  },
+  "ev_gate_forge_slag.text": {
+    "zh_TW": "爐渣裡有一枚沒有成形的劍胚。",
+    "en": "爐渣裡有一枚沒有成形的劍胚。",
+    "zh_CN": "爐渣裡有一枚沒有成形的劍胚。",
+    "ja": "爐渣裡有一枚沒有成形的劍胚。",
+    "ko": "爐渣裡有一枚沒有成形的劍胚。",
+    "es": "爐渣裡有一枚沒有成形的劍胚。"
+  },
+  "ev_gate_old_banner": {
+    "zh_TW": "ev_gate_old_banner",
+    "en": "ev_gate_old_banner",
+    "zh_CN": "ev_gate_old_banner",
+    "ja": "ev_gate_old_banner",
+    "ko": "ev_gate_old_banner",
+    "es": "ev_gate_old_banner",
+    "_todo": true
+  },
+  "ev_gate_old_banner.text": {
+    "zh_TW": "舊旗上的紋章與你的劍柄相同。",
+    "en": "舊旗上的紋章與你的劍柄相同。",
+    "zh_CN": "舊旗上的紋章與你的劍柄相同。",
+    "ja": "舊旗上的紋章與你的劍柄相同。",
+    "ko": "舊旗上的紋章與你的劍柄相同。",
+    "es": "舊旗上的紋章與你的劍柄相同。"
+  },
+  "ev_gate_quartermaster_cache": {
+    "zh_TW": "ev_gate_quartermaster_cache",
+    "en": "ev_gate_quartermaster_cache",
+    "zh_CN": "ev_gate_quartermaster_cache",
+    "ja": "ev_gate_quartermaster_cache",
+    "ko": "ev_gate_quartermaster_cache",
+    "es": "ev_gate_quartermaster_cache",
+    "_todo": true
+  },
+  "ev_gate_quartermaster_cache.text": {
+    "zh_TW": "軍需箱上的封條蓋著你前世的印。",
+    "en": "軍需箱上的封條蓋著你前世的印。",
+    "zh_CN": "軍需箱上的封條蓋著你前世的印。",
+    "ja": "軍需箱上的封條蓋著你前世的印。",
+    "ko": "軍需箱上的封條蓋著你前世的印。",
+    "es": "軍需箱上的封條蓋著你前世的印。"
+  },
+  "ev_gate_seal_rubbing": {
+    "zh_TW": "ev_gate_seal_rubbing",
+    "en": "ev_gate_seal_rubbing",
+    "zh_CN": "ev_gate_seal_rubbing",
+    "ja": "ev_gate_seal_rubbing",
+    "ko": "ev_gate_seal_rubbing",
+    "es": "ev_gate_seal_rubbing",
+    "_todo": true
+  },
+  "ev_gate_seal_rubbing.text": {
+    "zh_TW": "拓印的紙上，刻痕比原物多一道。",
+    "en": "拓印的紙上，刻痕比原物多一道。",
+    "zh_CN": "拓印的紙上，刻痕比原物多一道。",
+    "ja": "拓印的紙上，刻痕比原物多一道。",
+    "ko": "拓印的紙上，刻痕比原物多一道。",
+    "es": "拓印的紙上，刻痕比原物多一道。"
+  },
+  "ev_gate_soldier_plate": {
+    "zh_TW": "ev_gate_soldier_plate",
+    "en": "ev_gate_soldier_plate",
+    "zh_CN": "ev_gate_soldier_plate",
+    "ja": "ev_gate_soldier_plate",
+    "ko": "ev_gate_soldier_plate",
+    "es": "ev_gate_soldier_plate",
+    "_todo": true
+  },
+  "ev_gate_soldier_plate.text": {
+    "zh_TW": "胸甲內側用刀尖刻著「別替我報仇」。",
+    "en": "胸甲內側用刀尖刻著「別替我報仇」。",
+    "zh_CN": "胸甲內側用刀尖刻著「別替我報仇」。",
+    "ja": "胸甲內側用刀尖刻著「別替我報仇」。",
+    "ko": "胸甲內側用刀尖刻著「別替我報仇」。",
+    "es": "胸甲內側用刀尖刻著「別替我報仇」。"
+  },
+  "ev_village_bell_rope": {
+    "zh_TW": "ev_village_bell_rope",
+    "en": "ev_village_bell_rope",
+    "zh_CN": "ev_village_bell_rope",
+    "ja": "ev_village_bell_rope",
+    "ko": "ev_village_bell_rope",
+    "es": "ev_village_bell_rope",
+    "_todo": true
+  },
+  "ev_village_bell_rope.text": {
+    "zh_TW": "鈴繩一拉，遠處有人同時抬頭。",
+    "en": "鈴繩一拉，遠處有人同時抬頭。",
+    "zh_CN": "鈴繩一拉，遠處有人同時抬頭。",
+    "ja": "鈴繩一拉，遠處有人同時抬頭。",
+    "ko": "鈴繩一拉，遠處有人同時抬頭。",
+    "es": "鈴繩一拉，遠處有人同時抬頭。"
+  },
+  "ev_village_chapel_dust": {
+    "zh_TW": "ev_village_chapel_dust",
+    "en": "ev_village_chapel_dust",
+    "zh_CN": "ev_village_chapel_dust",
+    "ja": "ev_village_chapel_dust",
+    "ko": "ev_village_chapel_dust",
+    "es": "ev_village_chapel_dust",
+    "_todo": true
+  },
+  "ev_village_chapel_dust.text": {
+    "zh_TW": "灰塵在光裡排成一個字。",
+    "en": "灰塵在光裡排成一個字。",
+    "zh_CN": "灰塵在光裡排成一個字。",
+    "ja": "灰塵在光裡排成一個字。",
+    "ko": "灰塵在光裡排成一個字。",
+    "es": "灰塵在光裡排成一個字。"
+  },
+  "ev_village_chimney": {
+    "zh_TW": "ev_village_chimney",
+    "en": "ev_village_chimney",
+    "zh_CN": "ev_village_chimney",
+    "ja": "ev_village_chimney",
+    "ko": "ev_village_chimney",
+    "es": "ev_village_chimney",
+    "_todo": true
+  },
+  "ev_village_chimney.text": {
+    "zh_TW": "灶煙裡有一句你聽過的話，卻想不起是誰說的。",
+    "en": "灶煙裡有一句你聽過的話，卻想不起是誰說的。",
+    "zh_CN": "灶煙裡有一句你聽過的話，卻想不起是誰說的。",
+    "ja": "灶煙裡有一句你聽過的話，卻想不起是誰說的。",
+    "ko": "灶煙裡有一句你聽過的話，卻想不起是誰說的。",
+    "es": "灶煙裡有一句你聽過的話，卻想不起是誰說的。"
+  },
+  "ev_village_dog_bowl": {
+    "zh_TW": "ev_village_dog_bowl",
+    "en": "ev_village_dog_bowl",
+    "zh_CN": "ev_village_dog_bowl",
+    "ja": "ev_village_dog_bowl",
+    "ko": "ev_village_dog_bowl",
+    "es": "ev_village_dog_bowl",
+    "_todo": true
+  },
+  "ev_village_dog_bowl.text": {
+    "zh_TW": "狗碗還是滿的，狗卻不在了。",
+    "en": "狗碗還是滿的，狗卻不在了。",
+    "zh_CN": "狗碗還是滿的，狗卻不在了。",
+    "ja": "狗碗還是滿的，狗卻不在了。",
+    "ko": "狗碗還是滿的，狗卻不在了。",
+    "es": "狗碗還是滿的，狗卻不在了。"
+  },
+  "ev_village_grave_new": {
+    "zh_TW": "ev_village_grave_new",
+    "en": "ev_village_grave_new",
+    "zh_CN": "ev_village_grave_new",
+    "ja": "ev_village_grave_new",
+    "ko": "ev_village_grave_new",
+    "es": "ev_village_grave_new",
+    "_todo": true
+  },
+  "ev_village_grave_new.text": {
+    "zh_TW": "新墳上的土還是濕的；有人在裡面敲了兩下。",
+    "en": "新墳上的土還是濕的；有人在裡面敲了兩下。",
+    "zh_CN": "新墳上的土還是濕的；有人在裡面敲了兩下。",
+    "ja": "新墳上的土還是濕的；有人在裡面敲了兩下。",
+    "ko": "新墳上的土還是濕的；有人在裡面敲了兩下。",
+    "es": "新墳上的土還是濕的；有人在裡面敲了兩下。"
+  },
+  "ev_village_ledger": {
+    "zh_TW": "ev_village_ledger",
+    "en": "ev_village_ledger",
+    "zh_CN": "ev_village_ledger",
+    "ja": "ev_village_ledger",
+    "ko": "ev_village_ledger",
+    "es": "ev_village_ledger",
+    "_todo": true
+  },
+  "ev_village_ledger.text": {
+    "zh_TW": "帳冊上有一筆以你的名字付過的款。",
+    "en": "帳冊上有一筆以你的名字付過的款。",
+    "zh_CN": "帳冊上有一筆以你的名字付過的款。",
+    "ja": "帳冊上有一筆以你的名字付過的款。",
+    "ko": "帳冊上有一筆以你的名字付過的款。",
+    "es": "帳冊上有一筆以你的名字付過的款。"
+  },
+  "ev_village_old_plough": {
+    "zh_TW": "ev_village_old_plough",
+    "en": "ev_village_old_plough",
+    "zh_CN": "ev_village_old_plough",
+    "ja": "ev_village_old_plough",
+    "ko": "ev_village_old_plough",
+    "es": "ev_village_old_plough",
+    "_todo": true
+  },
+  "ev_village_old_plough.text": {
+    "zh_TW": "犁頭上纏著一段十年前的布。",
+    "en": "犁頭上纏著一段十年前的布。",
+    "zh_CN": "犁頭上纏著一段十年前的布。",
+    "ja": "犁頭上纏著一段十年前的布。",
+    "ko": "犁頭上纏著一段十年前的布。",
+    "es": "犁頭上纏著一段十年前的布。"
+  },
+  "ev_village_well": {
+    "zh_TW": "ev_village_well",
+    "en": "ev_village_well",
+    "zh_CN": "ev_village_well",
+    "ja": "ev_village_well",
+    "ko": "ev_village_well",
+    "es": "ev_village_well",
+    "_todo": true
+  },
+  "ev_village_well.text": {
+    "zh_TW": "井水映出一個不是你的人影。",
+    "en": "井水映出一個不是你的人影。",
+    "zh_CN": "井水映出一個不是你的人影。",
+    "ja": "井水映出一個不是你的人影。",
+    "ko": "井水映出一個不是你的人影。",
+    "es": "井水映出一個不是你的人影。"
+  },
+  "story.ch01.c1.o1": {
+    "zh_TW": "我想知道自己究竟是誰",
+    "en": "I want to know who I really am",
+    "zh_CN": "我想知道自己究竟是誰",
+    "ja": "我想知道自己究竟是誰",
+    "ko": "我想知道自己究竟是誰",
+    "es": "我想知道自己究竟是誰"
+  },
+  "story.ch01.c1.o2": {
+    "zh_TW": "我想救出莉歐拉",
+    "en": "I want to free Liora",
+    "zh_CN": "我想救出莉歐拉",
+    "ja": "我想救出莉歐拉",
+    "ko": "我想救出莉歐拉",
+    "es": "我想救出莉歐拉"
+  },
+  "story.ch01.c1.o3": {
+    "zh_TW": "我要向沃卡司討回那一刀",
+    "en": "I will take back that blade from Vorkath",
+    "zh_CN": "我要向沃卡司討回那一刀",
+    "ja": "我要向沃卡司討回那一刀",
+    "ko": "我要向沃卡司討回那一刀",
+    "es": "我要向沃卡司討回那一刀"
+  },
+  "story.ch01.c1.q": {
+    "zh_TW": "為什麼要攀上這座塔？",
+    "en": "Why climb this tower?",
+    "zh_CN": "為什麼要攀上這座塔？",
+    "ja": "為什麼要攀上這座塔？",
+    "ko": "為什麼要攀上這座塔？",
+    "es": "為什麼要攀上這座塔？"
+  },
+  "story.ch01.title": {
+    "zh_TW": "我為何舉劍",
+    "en": "Why I Raise the Blade",
+    "zh_CN": "我為何舉劍",
+    "ja": "我為何舉劍",
+    "ko": "我為何舉劍",
+    "es": "我為何舉劍"
+  },
+  "story.ch02.title": {
+    "zh_TW": "老巫師的氣",
+    "en": "The Old Sorcerer's Qi",
+    "zh_CN": "老巫師的氣",
+    "ja": "老巫師的氣",
+    "ko": "老巫師的氣",
+    "es": "老巫師的氣"
+  },
+  "story.ch03.c3.o1": {
+    "zh_TW": "破壞它——路是自己開的",
+    "en": "Break it -- I carve my own way",
+    "zh_CN": "破壞它——路是自己開的",
+    "ja": "破壞它——路是自己開的",
+    "ko": "破壞它——路是自己開的",
+    "es": "破壞它——路是自己開的"
+  },
+  "story.ch03.c3.o2": {
+    "zh_TW": "解開它——門本來就是給人過的",
+    "en": "Unseal it -- a gate is meant to be passed",
+    "zh_CN": "解開它——門本來就是給人過的",
+    "ja": "解開它——門本來就是給人過的",
+    "ko": "解開它——門本來就是給人過的",
+    "es": "解開它——門本來就是給人過的"
+  },
+  "story.ch03.c3.q": {
+    "zh_TW": "門環上的刻痕要怎麼處理？",
+    "en": "What will you do with the notch on the ring?",
+    "zh_CN": "門環上的刻痕要怎麼處理？",
+    "ja": "門環上的刻痕要怎麼處理？",
+    "ko": "門環上的刻痕要怎麼處理？",
+    "es": "門環上的刻痕要怎麼處理？"
+  },
+  "story.ch03.title": {
+    "zh_TW": "門環上的刻痕",
+    "en": "The Notch on the Ring",
+    "zh_CN": "門環上的刻痕",
+    "ja": "門環上的刻痕",
+    "ko": "門環上的刻痕",
+    "es": "門環上的刻痕"
+  },
+  "story.f01.intro": {
+    "zh_TW": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "en": "Village edge: the well",
+    "zh_CN": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "ja": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "ko": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "es": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」"
+  },
+  "story.f01.name": {
+    "zh_TW": "村莊外緣・井",
+    "en": "Village edge: the well",
+    "zh_CN": "村莊外緣・井",
+    "ja": "村莊外緣・井",
+    "ko": "村莊外緣・井",
+    "es": "村莊外緣・井"
+  },
+  "story.f02.intro": {
+    "zh_TW": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "en": "The drying yard",
+    "zh_CN": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "ja": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "ko": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "es": "風把穀殼吹過腳邊，村子的日子還在繼續。"
+  },
+  "story.f02.name": {
+    "zh_TW": "曬穀場",
+    "en": "The drying yard",
+    "zh_CN": "曬穀場",
+    "ja": "曬穀場",
+    "ko": "曬穀場",
+    "es": "曬穀場"
+  },
+  "story.f03.intro": {
+    "zh_TW": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "en": "The old shrine",
+    "zh_CN": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "ja": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "ko": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "es": "祠堂的木像沒有臉——有人刻意磨掉了。"
+  },
+  "story.f03.name": {
+    "zh_TW": "舊祠堂",
+    "en": "The old shrine",
+    "zh_CN": "舊祠堂",
+    "ja": "舊祠堂",
+    "ko": "舊祠堂",
+    "es": "舊祠堂"
+  },
+  "story.f04.intro": {
+    "zh_TW": "井底的石壁刻著七道痕，其中一道是新的。",
+    "en": "The well of memory",
+    "zh_CN": "井底的石壁刻著七道痕，其中一道是新的。",
+    "ja": "井底的石壁刻著七道痕，其中一道是新的。",
+    "ko": "井底的石壁刻著七道痕，其中一道是新的。",
+    "es": "井底的石壁刻著七道痕，其中一道是新的。"
+  },
+  "story.f04.name": {
+    "zh_TW": "記憶之井",
+    "en": "The well of memory",
+    "zh_CN": "記憶之井",
+    "ja": "記憶之井",
+    "ko": "記憶之井",
+    "es": "記憶之井"
+  },
+  "story.f05.intro": {
+    "zh_TW": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "en": "Xiaosui's stall",
+    "zh_CN": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "ja": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "ko": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "es": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」"
+  },
+  "story.f05.name": {
+    "zh_TW": "小穗的攤位",
+    "en": "Xiaosui's stall",
+    "zh_CN": "小穗的攤位",
+    "ja": "小穗的攤位",
+    "ko": "小穗的攤位",
+    "es": "小穗的攤位"
+  },
+  "story.f06.intro": {
+    "zh_TW": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "en": "Slope to the gate",
+    "zh_CN": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "ja": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "ko": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "es": "坡道上的腳印比你早一步，方向卻是往下的。"
+  },
+  "story.f06.name": {
+    "zh_TW": "往門樓的坡道",
+    "en": "Slope to the gate",
+    "zh_CN": "往門樓的坡道",
+    "ja": "往門樓的坡道",
+    "ko": "往門樓的坡道",
+    "es": "往門樓的坡道"
+  },
+  "story.f07.intro": {
+    "zh_TW": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "en": "Village edge: the seal knot",
+    "zh_CN": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "ja": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "ko": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "es": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。"
+  },
+  "story.f07.name": {
+    "zh_TW": "村莊外緣・封印結",
+    "en": "Village edge: the seal knot",
+    "zh_CN": "村莊外緣・封印結",
+    "ja": "村莊外緣・封印結",
+    "ko": "村莊外緣・封印結",
+    "es": "村莊外緣・封印結"
+  },
+  "story.f08.intro": {
+    "zh_TW": "林線之後，霧開始有自己的重量。",
+    "en": "Forest path",
+    "zh_CN": "林線之後，霧開始有自己的重量。",
+    "ja": "林線之後，霧開始有自己的重量。",
+    "ko": "林線之後，霧開始有自己的重量。",
+    "es": "林線之後，霧開始有自己的重量。"
+  },
+  "story.f08.name": {
+    "zh_TW": "林道入口",
+    "en": "Forest path",
+    "zh_CN": "林道入口",
+    "ja": "林道入口",
+    "ko": "林道入口",
+    "es": "林道入口"
+  },
+  "story.f09.intro": {
+    "zh_TW": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "en": "The old sorcerer's campfire",
+    "zh_CN": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "ja": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "ko": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "es": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」"
+  },
+  "story.f09.name": {
+    "zh_TW": "老巫師的營火",
+    "en": "The old sorcerer's campfire",
+    "zh_CN": "老巫師的營火",
+    "ja": "老巫師的營火",
+    "ko": "老巫師的營火",
+    "es": "老巫師的營火"
+  },
+  "story.f10.intro": {
+    "zh_TW": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "en": "Broken-arrow snares",
+    "zh_CN": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "ja": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "ko": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "es": "腳下全是折斷的箭——有人不希望你走到這裡。"
+  },
+  "story.f10.name": {
+    "zh_TW": "折箭陷阱區",
+    "en": "Broken-arrow snares",
+    "zh_CN": "折箭陷阱區",
+    "ja": "折箭陷阱區",
+    "ko": "折箭陷阱區",
+    "es": "折箭陷阱區"
+  },
+  "story.f11.intro": {
+    "zh_TW": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "en": "The old arrow",
+    "zh_CN": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "ja": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "ko": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "es": "一支插在樹心的箭，箭羽是你前世的紋樣。"
+  },
+  "story.f11.name": {
+    "zh_TW": "林中的舊箭",
+    "en": "The old arrow",
+    "zh_CN": "林中的舊箭",
+    "ja": "林中的舊箭",
+    "ko": "林中的舊箭",
+    "es": "林中的舊箭"
+  },
+  "story.f12.intro": {
+    "zh_TW": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "en": "The nameless grave",
+    "zh_CN": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "ja": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "ko": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "es": "無名塚沒有名字，只有一把沒收鞘的劍。"
+  },
+  "story.f12.name": {
+    "zh_TW": "無名塚",
+    "en": "The nameless grave",
+    "zh_CN": "無名塚",
+    "ja": "無名塚",
+    "ko": "無名塚",
+    "es": "無名塚"
+  },
+  "story.f13.intro": {
+    "zh_TW": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "en": "Hunting trail in fog",
+    "zh_CN": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "ja": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "ko": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "es": "霧裡的獵徑繞回原處，像有人希望你留在這裡。"
+  },
+  "story.f13.name": {
+    "zh_TW": "霧中的獵徑",
+    "en": "Hunting trail in fog",
+    "zh_CN": "霧中的獵徑",
+    "ja": "霧中的獵徑",
+    "ko": "霧中的獵徑",
+    "es": "霧中的獵徑"
+  },
+  "story.f14.intro": {
+    "zh_TW": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "en": "Forest path: the seal knot",
+    "zh_CN": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "ja": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "ko": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "es": "折箭獵手在霧中拉弓，箭尖對著你的胸口。"
+  },
+  "story.f14.name": {
+    "zh_TW": "林道・封印結",
+    "en": "Forest path: the seal knot",
+    "zh_CN": "林道・封印結",
+    "ja": "林道・封印結",
+    "ko": "林道・封印結",
+    "es": "林道・封印結"
+  },
+  "story.f15.intro": {
+    "zh_TW": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "en": "Soldiers before the gate",
+    "zh_CN": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "ja": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "ko": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "es": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。"
+  },
+  "story.f15.name": {
+    "zh_TW": "門樓前的道兵",
+    "en": "Soldiers before the gate",
+    "zh_CN": "門樓前的道兵",
+    "ja": "門樓前的道兵",
+    "ko": "門樓前的道兵",
+    "es": "門樓前的道兵"
+  },
+  "story.f16.intro": {
+    "zh_TW": "石階上刻滿了名字，最後一個位置是空的。",
+    "en": "The gate steps",
+    "zh_CN": "石階上刻滿了名字，最後一個位置是空的。",
+    "ja": "石階上刻滿了名字，最後一個位置是空的。",
+    "ko": "石階上刻滿了名字，最後一個位置是空的。",
+    "es": "石階上刻滿了名字，最後一個位置是空的。"
+  },
+  "story.f16.name": {
+    "zh_TW": "門樓石階",
+    "en": "The gate steps",
+    "zh_CN": "門樓石階",
+    "ja": "門樓石階",
+    "ko": "門樓石階",
+    "es": "門樓石階"
+  },
+  "story.f17.intro": {
+    "zh_TW": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "en": "Corridor of carvings",
+    "zh_CN": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "ja": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "ko": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "es": "走廊兩側的刻痕連成一張臉，你認得那張臉。"
+  },
+  "story.f17.name": {
+    "zh_TW": "刻痕迴廊",
+    "en": "Corridor of carvings",
+    "zh_CN": "刻痕迴廊",
+    "ja": "刻痕迴廊",
+    "ko": "刻痕迴廊",
+    "es": "刻痕迴廊"
+  },
+  "story.f18.intro": {
+    "zh_TW": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "en": "The ring and the rubbing",
+    "zh_CN": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "ja": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "ko": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "es": "門環上的刻痕與你腰間那把劍的缺口吻合。"
+  },
+  "story.f18.name": {
+    "zh_TW": "門環與拓印",
+    "en": "The ring and the rubbing",
+    "zh_CN": "門環與拓印",
+    "ja": "門環與拓印",
+    "ko": "門環與拓印",
+    "es": "門環與拓印"
+  },
+  "story.f19.intro": {
+    "zh_TW": "門環上的刻痕——可以補，也可以砸。",
+    "en": "The notch on the ring",
+    "zh_CN": "門環上的刻痕——可以補，也可以砸。",
+    "ja": "門環上的刻痕——可以補，也可以砸。",
+    "ko": "門環上的刻痕——可以補，也可以砸。",
+    "es": "門環上的刻痕——可以補，也可以砸。"
+  },
+  "story.f19.name": {
+    "zh_TW": "門環上的刻痕",
+    "en": "The notch on the ring",
+    "zh_CN": "門環上的刻痕",
+    "ja": "門環上的刻痕",
+    "ko": "門環上的刻痕",
+    "es": "門環上的刻痕"
+  },
+  "story.f20.intro": {
+    "zh_TW": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "en": "First qi beyond the gate",
+    "zh_CN": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "ja": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "ko": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "es": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。"
+  },
+  "story.f20.name": {
+    "zh_TW": "門內的第一道氣",
+    "en": "First qi beyond the gate",
+    "zh_CN": "門內的第一道氣",
+    "ja": "門內的第一道氣",
+    "ko": "門內的第一道氣",
+    "es": "門內的第一道氣"
+  },
+  "story.f21.intro": {
+    "zh_TW": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "en": "The gate: the seal knot",
+    "zh_CN": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "ja": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "ko": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "es": "守門石巨人的眼窩裡亮著兩點舊火。"
+  },
+  "story.f21.name": {
+    "zh_TW": "門樓・封印結",
+    "en": "The gate: the seal knot",
+    "zh_CN": "門樓・封印結",
+    "ja": "門樓・封印結",
+    "ko": "門樓・封印結",
+    "es": "門樓・封印結"
+  },
+  "story.f22.intro": {
+    "zh_TW": "第 22 層（ch_04）的入口。",
+    "en": "第 22 層（ch_04）的入口。",
+    "zh_CN": "第 22 層（ch_04）的入口。",
+    "ja": "第 22 層（ch_04）的入口。",
+    "ko": "第 22 層（ch_04）的入口。",
+    "es": "第 22 層（ch_04）的入口。",
+    "_todo": true
+  },
+  "story.f22.name": {
+    "zh_TW": "第 22 層",
+    "en": "Floor 22",
+    "zh_CN": "第 22 層",
+    "ja": "第 22 層",
+    "ko": "第 22 層",
+    "es": "第 22 層",
+    "_todo": true
+  },
+  "story.f23.intro": {
+    "zh_TW": "第 23 層（ch_04）的入口。",
+    "en": "第 23 層（ch_04）的入口。",
+    "zh_CN": "第 23 層（ch_04）的入口。",
+    "ja": "第 23 層（ch_04）的入口。",
+    "ko": "第 23 層（ch_04）的入口。",
+    "es": "第 23 層（ch_04）的入口。",
+    "_todo": true
+  },
+  "story.f23.name": {
+    "zh_TW": "第 23 層",
+    "en": "Floor 23",
+    "zh_CN": "第 23 層",
+    "ja": "第 23 層",
+    "ko": "第 23 層",
+    "es": "第 23 層",
+    "_todo": true
+  },
+  "story.f24.intro": {
+    "zh_TW": "第 24 層（ch_04）的入口。",
+    "en": "第 24 層（ch_04）的入口。",
+    "zh_CN": "第 24 層（ch_04）的入口。",
+    "ja": "第 24 層（ch_04）的入口。",
+    "ko": "第 24 層（ch_04）的入口。",
+    "es": "第 24 層（ch_04）的入口。",
+    "_todo": true
+  },
+  "story.f24.name": {
+    "zh_TW": "第 24 層",
+    "en": "Floor 24",
+    "zh_CN": "第 24 層",
+    "ja": "第 24 層",
+    "ko": "第 24 層",
+    "es": "第 24 層",
+    "_todo": true
+  },
+  "story.f25.intro": {
+    "zh_TW": "第 25 層（ch_04）的入口。",
+    "en": "第 25 層（ch_04）的入口。",
+    "zh_CN": "第 25 層（ch_04）的入口。",
+    "ja": "第 25 層（ch_04）的入口。",
+    "ko": "第 25 層（ch_04）的入口。",
+    "es": "第 25 層（ch_04）的入口。",
+    "_todo": true
+  },
+  "story.f25.name": {
+    "zh_TW": "第 25 層",
+    "en": "Floor 25",
+    "zh_CN": "第 25 層",
+    "ja": "第 25 層",
+    "ko": "第 25 層",
+    "es": "第 25 層",
+    "_todo": true
+  },
+  "story.f26.intro": {
+    "zh_TW": "第 26 層（ch_04）的入口。",
+    "en": "第 26 層（ch_04）的入口。",
+    "zh_CN": "第 26 層（ch_04）的入口。",
+    "ja": "第 26 層（ch_04）的入口。",
+    "ko": "第 26 層（ch_04）的入口。",
+    "es": "第 26 層（ch_04）的入口。",
+    "_todo": true
+  },
+  "story.f26.name": {
+    "zh_TW": "第 26 層",
+    "en": "Floor 26",
+    "zh_CN": "第 26 層",
+    "ja": "第 26 層",
+    "ko": "第 26 層",
+    "es": "第 26 層",
+    "_todo": true
+  },
+  "story.f27.intro": {
+    "zh_TW": "第 27 層（ch_04）的入口。",
+    "en": "第 27 層（ch_04）的入口。",
+    "zh_CN": "第 27 層（ch_04）的入口。",
+    "ja": "第 27 層（ch_04）的入口。",
+    "ko": "第 27 層（ch_04）的入口。",
+    "es": "第 27 層（ch_04）的入口。",
+    "_todo": true
+  },
+  "story.f27.name": {
+    "zh_TW": "第 27 層",
+    "en": "Floor 27",
+    "zh_CN": "第 27 層",
+    "ja": "第 27 層",
+    "ko": "第 27 層",
+    "es": "第 27 層",
+    "_todo": true
+  },
+  "story.f28.intro": {
+    "zh_TW": "第 28 層（ch_04）的入口。",
+    "en": "第 28 層（ch_04）的入口。",
+    "zh_CN": "第 28 層（ch_04）的入口。",
+    "ja": "第 28 層（ch_04）的入口。",
+    "ko": "第 28 層（ch_04）的入口。",
+    "es": "第 28 層（ch_04）的入口。",
+    "_todo": true
+  },
+  "story.f28.name": {
+    "zh_TW": "第 28 層",
+    "en": "Floor 28",
+    "zh_CN": "第 28 層",
+    "ja": "第 28 層",
+    "ko": "第 28 層",
+    "es": "第 28 層",
+    "_todo": true
+  },
+  "story.f29.intro": {
+    "zh_TW": "第 29 層（ch_05）的入口。",
+    "en": "第 29 層（ch_05）的入口。",
+    "zh_CN": "第 29 層（ch_05）的入口。",
+    "ja": "第 29 層（ch_05）的入口。",
+    "ko": "第 29 層（ch_05）的入口。",
+    "es": "第 29 層（ch_05）的入口。",
+    "_todo": true
+  },
+  "story.f29.name": {
+    "zh_TW": "第 29 層",
+    "en": "Floor 29",
+    "zh_CN": "第 29 層",
+    "ja": "第 29 層",
+    "ko": "第 29 層",
+    "es": "第 29 層",
+    "_todo": true
+  },
+  "story.f30.intro": {
+    "zh_TW": "第 30 層（ch_05）的入口。",
+    "en": "第 30 層（ch_05）的入口。",
+    "zh_CN": "第 30 層（ch_05）的入口。",
+    "ja": "第 30 層（ch_05）的入口。",
+    "ko": "第 30 層（ch_05）的入口。",
+    "es": "第 30 層（ch_05）的入口。",
+    "_todo": true
+  },
+  "story.f30.name": {
+    "zh_TW": "第 30 層",
+    "en": "Floor 30",
+    "zh_CN": "第 30 層",
+    "ja": "第 30 層",
+    "ko": "第 30 層",
+    "es": "第 30 層",
+    "_todo": true
+  },
+  "story.f31.intro": {
+    "zh_TW": "第 31 層（ch_05）的入口。",
+    "en": "第 31 層（ch_05）的入口。",
+    "zh_CN": "第 31 層（ch_05）的入口。",
+    "ja": "第 31 層（ch_05）的入口。",
+    "ko": "第 31 層（ch_05）的入口。",
+    "es": "第 31 層（ch_05）的入口。",
+    "_todo": true
+  },
+  "story.f31.name": {
+    "zh_TW": "第 31 層",
+    "en": "Floor 31",
+    "zh_CN": "第 31 層",
+    "ja": "第 31 層",
+    "ko": "第 31 層",
+    "es": "第 31 層",
+    "_todo": true
+  },
+  "story.f32.intro": {
+    "zh_TW": "第 32 層（ch_05）的入口。",
+    "en": "第 32 層（ch_05）的入口。",
+    "zh_CN": "第 32 層（ch_05）的入口。",
+    "ja": "第 32 層（ch_05）的入口。",
+    "ko": "第 32 層（ch_05）的入口。",
+    "es": "第 32 層（ch_05）的入口。",
+    "_todo": true
+  },
+  "story.f32.name": {
+    "zh_TW": "第 32 層",
+    "en": "Floor 32",
+    "zh_CN": "第 32 層",
+    "ja": "第 32 層",
+    "ko": "第 32 層",
+    "es": "第 32 層",
+    "_todo": true
+  },
+  "story.f33.intro": {
+    "zh_TW": "第 33 層（ch_05）的入口。",
+    "en": "第 33 層（ch_05）的入口。",
+    "zh_CN": "第 33 層（ch_05）的入口。",
+    "ja": "第 33 層（ch_05）的入口。",
+    "ko": "第 33 層（ch_05）的入口。",
+    "es": "第 33 層（ch_05）的入口。",
+    "_todo": true
+  },
+  "story.f33.name": {
+    "zh_TW": "第 33 層",
+    "en": "Floor 33",
+    "zh_CN": "第 33 層",
+    "ja": "第 33 層",
+    "ko": "第 33 層",
+    "es": "第 33 層",
+    "_todo": true
+  },
+  "story.f34.intro": {
+    "zh_TW": "第 34 層（ch_05）的入口。",
+    "en": "第 34 層（ch_05）的入口。",
+    "zh_CN": "第 34 層（ch_05）的入口。",
+    "ja": "第 34 層（ch_05）的入口。",
+    "ko": "第 34 層（ch_05）的入口。",
+    "es": "第 34 層（ch_05）的入口。",
+    "_todo": true
+  },
+  "story.f34.name": {
+    "zh_TW": "第 34 層",
+    "en": "Floor 34",
+    "zh_CN": "第 34 層",
+    "ja": "第 34 層",
+    "ko": "第 34 層",
+    "es": "第 34 層",
+    "_todo": true
+  },
+  "story.f35.intro": {
+    "zh_TW": "第 35 層（ch_05）的入口。",
+    "en": "第 35 層（ch_05）的入口。",
+    "zh_CN": "第 35 層（ch_05）的入口。",
+    "ja": "第 35 層（ch_05）的入口。",
+    "ko": "第 35 層（ch_05）的入口。",
+    "es": "第 35 層（ch_05）的入口。",
+    "_todo": true
+  },
+  "story.f35.name": {
+    "zh_TW": "第 35 層",
+    "en": "Floor 35",
+    "zh_CN": "第 35 層",
+    "ja": "第 35 層",
+    "ko": "第 35 層",
+    "es": "第 35 層",
+    "_todo": true
+  },
+  "story.f36.intro": {
+    "zh_TW": "第 36 層（ch_06）的入口。",
+    "en": "第 36 層（ch_06）的入口。",
+    "zh_CN": "第 36 層（ch_06）的入口。",
+    "ja": "第 36 層（ch_06）的入口。",
+    "ko": "第 36 層（ch_06）的入口。",
+    "es": "第 36 層（ch_06）的入口。",
+    "_todo": true
+  },
+  "story.f36.name": {
+    "zh_TW": "第 36 層",
+    "en": "Floor 36",
+    "zh_CN": "第 36 層",
+    "ja": "第 36 層",
+    "ko": "第 36 層",
+    "es": "第 36 層",
+    "_todo": true
+  },
+  "story.f37.intro": {
+    "zh_TW": "第 37 層（ch_06）的入口。",
+    "en": "第 37 層（ch_06）的入口。",
+    "zh_CN": "第 37 層（ch_06）的入口。",
+    "ja": "第 37 層（ch_06）的入口。",
+    "ko": "第 37 層（ch_06）的入口。",
+    "es": "第 37 層（ch_06）的入口。",
+    "_todo": true
+  },
+  "story.f37.name": {
+    "zh_TW": "第 37 層",
+    "en": "Floor 37",
+    "zh_CN": "第 37 層",
+    "ja": "第 37 層",
+    "ko": "第 37 層",
+    "es": "第 37 層",
+    "_todo": true
+  },
+  "story.f38.intro": {
+    "zh_TW": "第 38 層（ch_06）的入口。",
+    "en": "第 38 層（ch_06）的入口。",
+    "zh_CN": "第 38 層（ch_06）的入口。",
+    "ja": "第 38 層（ch_06）的入口。",
+    "ko": "第 38 層（ch_06）的入口。",
+    "es": "第 38 層（ch_06）的入口。",
+    "_todo": true
+  },
+  "story.f38.name": {
+    "zh_TW": "第 38 層",
+    "en": "Floor 38",
+    "zh_CN": "第 38 層",
+    "ja": "第 38 層",
+    "ko": "第 38 層",
+    "es": "第 38 層",
+    "_todo": true
+  },
+  "story.f39.intro": {
+    "zh_TW": "第 39 層（ch_06）的入口。",
+    "en": "第 39 層（ch_06）的入口。",
+    "zh_CN": "第 39 層（ch_06）的入口。",
+    "ja": "第 39 層（ch_06）的入口。",
+    "ko": "第 39 層（ch_06）的入口。",
+    "es": "第 39 層（ch_06）的入口。",
+    "_todo": true
+  },
+  "story.f39.name": {
+    "zh_TW": "第 39 層",
+    "en": "Floor 39",
+    "zh_CN": "第 39 層",
+    "ja": "第 39 層",
+    "ko": "第 39 層",
+    "es": "第 39 層",
+    "_todo": true
+  },
+  "story.f40.intro": {
+    "zh_TW": "第 40 層（ch_06）的入口。",
+    "en": "第 40 層（ch_06）的入口。",
+    "zh_CN": "第 40 層（ch_06）的入口。",
+    "ja": "第 40 層（ch_06）的入口。",
+    "ko": "第 40 層（ch_06）的入口。",
+    "es": "第 40 層（ch_06）的入口。",
+    "_todo": true
+  },
+  "story.f40.name": {
+    "zh_TW": "第 40 層",
+    "en": "Floor 40",
+    "zh_CN": "第 40 層",
+    "ja": "第 40 層",
+    "ko": "第 40 層",
+    "es": "第 40 層",
+    "_todo": true
+  },
+  "story.f41.intro": {
+    "zh_TW": "第 41 層（ch_06）的入口。",
+    "en": "第 41 層（ch_06）的入口。",
+    "zh_CN": "第 41 層（ch_06）的入口。",
+    "ja": "第 41 層（ch_06）的入口。",
+    "ko": "第 41 層（ch_06）的入口。",
+    "es": "第 41 層（ch_06）的入口。",
+    "_todo": true
+  },
+  "story.f41.name": {
+    "zh_TW": "第 41 層",
+    "en": "Floor 41",
+    "zh_CN": "第 41 層",
+    "ja": "第 41 層",
+    "ko": "第 41 層",
+    "es": "第 41 層",
+    "_todo": true
+  },
+  "story.f42.intro": {
+    "zh_TW": "第 42 層（ch_06）的入口。",
+    "en": "第 42 層（ch_06）的入口。",
+    "zh_CN": "第 42 層（ch_06）的入口。",
+    "ja": "第 42 層（ch_06）的入口。",
+    "ko": "第 42 層（ch_06）的入口。",
+    "es": "第 42 層（ch_06）的入口。",
+    "_todo": true
+  },
+  "story.f42.name": {
+    "zh_TW": "第 42 層",
+    "en": "Floor 42",
+    "zh_CN": "第 42 層",
+    "ja": "第 42 層",
+    "ko": "第 42 層",
+    "es": "第 42 層",
+    "_todo": true
+  },
+  "story.f43.intro": {
+    "zh_TW": "第 43 層（ch_07）的入口。",
+    "en": "第 43 層（ch_07）的入口。",
+    "zh_CN": "第 43 層（ch_07）的入口。",
+    "ja": "第 43 層（ch_07）的入口。",
+    "ko": "第 43 層（ch_07）的入口。",
+    "es": "第 43 層（ch_07）的入口。",
+    "_todo": true
+  },
+  "story.f43.name": {
+    "zh_TW": "第 43 層",
+    "en": "Floor 43",
+    "zh_CN": "第 43 層",
+    "ja": "第 43 層",
+    "ko": "第 43 層",
+    "es": "第 43 層",
+    "_todo": true
+  },
+  "story.f44.intro": {
+    "zh_TW": "第 44 層（ch_07）的入口。",
+    "en": "第 44 層（ch_07）的入口。",
+    "zh_CN": "第 44 層（ch_07）的入口。",
+    "ja": "第 44 層（ch_07）的入口。",
+    "ko": "第 44 層（ch_07）的入口。",
+    "es": "第 44 層（ch_07）的入口。",
+    "_todo": true
+  },
+  "story.f44.name": {
+    "zh_TW": "第 44 層",
+    "en": "Floor 44",
+    "zh_CN": "第 44 層",
+    "ja": "第 44 層",
+    "ko": "第 44 層",
+    "es": "第 44 層",
+    "_todo": true
+  },
+  "story.f45.intro": {
+    "zh_TW": "第 45 層（ch_07）的入口。",
+    "en": "第 45 層（ch_07）的入口。",
+    "zh_CN": "第 45 層（ch_07）的入口。",
+    "ja": "第 45 層（ch_07）的入口。",
+    "ko": "第 45 層（ch_07）的入口。",
+    "es": "第 45 層（ch_07）的入口。",
+    "_todo": true
+  },
+  "story.f45.name": {
+    "zh_TW": "第 45 層",
+    "en": "Floor 45",
+    "zh_CN": "第 45 層",
+    "ja": "第 45 層",
+    "ko": "第 45 層",
+    "es": "第 45 層",
+    "_todo": true
+  },
+  "story.f46.intro": {
+    "zh_TW": "第 46 層（ch_07）的入口。",
+    "en": "第 46 層（ch_07）的入口。",
+    "zh_CN": "第 46 層（ch_07）的入口。",
+    "ja": "第 46 層（ch_07）的入口。",
+    "ko": "第 46 層（ch_07）的入口。",
+    "es": "第 46 層（ch_07）的入口。",
+    "_todo": true
+  },
+  "story.f46.name": {
+    "zh_TW": "第 46 層",
+    "en": "Floor 46",
+    "zh_CN": "第 46 層",
+    "ja": "第 46 層",
+    "ko": "第 46 層",
+    "es": "第 46 層",
+    "_todo": true
+  },
+  "story.f47.intro": {
+    "zh_TW": "第 47 層（ch_07）的入口。",
+    "en": "第 47 層（ch_07）的入口。",
+    "zh_CN": "第 47 層（ch_07）的入口。",
+    "ja": "第 47 層（ch_07）的入口。",
+    "ko": "第 47 層（ch_07）的入口。",
+    "es": "第 47 層（ch_07）的入口。",
+    "_todo": true
+  },
+  "story.f47.name": {
+    "zh_TW": "第 47 層",
+    "en": "Floor 47",
+    "zh_CN": "第 47 層",
+    "ja": "第 47 層",
+    "ko": "第 47 層",
+    "es": "第 47 層",
+    "_todo": true
+  },
+  "story.f48.intro": {
+    "zh_TW": "第 48 層（ch_07）的入口。",
+    "en": "第 48 層（ch_07）的入口。",
+    "zh_CN": "第 48 層（ch_07）的入口。",
+    "ja": "第 48 層（ch_07）的入口。",
+    "ko": "第 48 層（ch_07）的入口。",
+    "es": "第 48 層（ch_07）的入口。",
+    "_todo": true
+  },
+  "story.f48.name": {
+    "zh_TW": "第 48 層",
+    "en": "Floor 48",
+    "zh_CN": "第 48 層",
+    "ja": "第 48 層",
+    "ko": "第 48 層",
+    "es": "第 48 層",
+    "_todo": true
+  },
+  "story.f49.intro": {
+    "zh_TW": "第 49 層（ch_07）的入口。",
+    "en": "第 49 層（ch_07）的入口。",
+    "zh_CN": "第 49 層（ch_07）的入口。",
+    "ja": "第 49 層（ch_07）的入口。",
+    "ko": "第 49 層（ch_07）的入口。",
+    "es": "第 49 層（ch_07）的入口。",
+    "_todo": true
+  },
+  "story.f49.name": {
+    "zh_TW": "第 49 層",
+    "en": "Floor 49",
+    "zh_CN": "第 49 層",
+    "ja": "第 49 層",
+    "ko": "第 49 層",
+    "es": "第 49 層",
+    "_todo": true
+  },
+  "story.f50.intro": {
+    "zh_TW": "第 50 層（ch_08）的入口。",
+    "en": "第 50 層（ch_08）的入口。",
+    "zh_CN": "第 50 層（ch_08）的入口。",
+    "ja": "第 50 層（ch_08）的入口。",
+    "ko": "第 50 層（ch_08）的入口。",
+    "es": "第 50 層（ch_08）的入口。",
+    "_todo": true
+  },
+  "story.f50.name": {
+    "zh_TW": "第 50 層",
+    "en": "Floor 50",
+    "zh_CN": "第 50 層",
+    "ja": "第 50 層",
+    "ko": "第 50 層",
+    "es": "第 50 層",
+    "_todo": true
+  },
+  "story.f51.intro": {
+    "zh_TW": "第 51 層（ch_08）的入口。",
+    "en": "第 51 層（ch_08）的入口。",
+    "zh_CN": "第 51 層（ch_08）的入口。",
+    "ja": "第 51 層（ch_08）的入口。",
+    "ko": "第 51 層（ch_08）的入口。",
+    "es": "第 51 層（ch_08）的入口。",
+    "_todo": true
+  },
+  "story.f51.name": {
+    "zh_TW": "第 51 層",
+    "en": "Floor 51",
+    "zh_CN": "第 51 層",
+    "ja": "第 51 層",
+    "ko": "第 51 層",
+    "es": "第 51 層",
+    "_todo": true
+  },
+  "story.f52.intro": {
+    "zh_TW": "第 52 層（ch_08）的入口。",
+    "en": "第 52 層（ch_08）的入口。",
+    "zh_CN": "第 52 層（ch_08）的入口。",
+    "ja": "第 52 層（ch_08）的入口。",
+    "ko": "第 52 層（ch_08）的入口。",
+    "es": "第 52 層（ch_08）的入口。",
+    "_todo": true
+  },
+  "story.f52.name": {
+    "zh_TW": "第 52 層",
+    "en": "Floor 52",
+    "zh_CN": "第 52 層",
+    "ja": "第 52 層",
+    "ko": "第 52 層",
+    "es": "第 52 層",
+    "_todo": true
+  },
+  "story.f53.intro": {
+    "zh_TW": "第 53 層（ch_08）的入口。",
+    "en": "第 53 層（ch_08）的入口。",
+    "zh_CN": "第 53 層（ch_08）的入口。",
+    "ja": "第 53 層（ch_08）的入口。",
+    "ko": "第 53 層（ch_08）的入口。",
+    "es": "第 53 層（ch_08）的入口。",
+    "_todo": true
+  },
+  "story.f53.name": {
+    "zh_TW": "第 53 層",
+    "en": "Floor 53",
+    "zh_CN": "第 53 層",
+    "ja": "第 53 層",
+    "ko": "第 53 層",
+    "es": "第 53 層",
+    "_todo": true
+  },
+  "story.f54.intro": {
+    "zh_TW": "第 54 層（ch_08）的入口。",
+    "en": "第 54 層（ch_08）的入口。",
+    "zh_CN": "第 54 層（ch_08）的入口。",
+    "ja": "第 54 層（ch_08）的入口。",
+    "ko": "第 54 層（ch_08）的入口。",
+    "es": "第 54 層（ch_08）的入口。",
+    "_todo": true
+  },
+  "story.f54.name": {
+    "zh_TW": "第 54 層",
+    "en": "Floor 54",
+    "zh_CN": "第 54 層",
+    "ja": "第 54 層",
+    "ko": "第 54 層",
+    "es": "第 54 層",
+    "_todo": true
+  },
+  "story.f55.intro": {
+    "zh_TW": "第 55 層（ch_08）的入口。",
+    "en": "第 55 層（ch_08）的入口。",
+    "zh_CN": "第 55 層（ch_08）的入口。",
+    "ja": "第 55 層（ch_08）的入口。",
+    "ko": "第 55 層（ch_08）的入口。",
+    "es": "第 55 層（ch_08）的入口。",
+    "_todo": true
+  },
+  "story.f55.name": {
+    "zh_TW": "第 55 層",
+    "en": "Floor 55",
+    "zh_CN": "第 55 層",
+    "ja": "第 55 層",
+    "ko": "第 55 層",
+    "es": "第 55 層",
+    "_todo": true
+  },
+  "story.f56.intro": {
+    "zh_TW": "第 56 層（ch_08）的入口。",
+    "en": "第 56 層（ch_08）的入口。",
+    "zh_CN": "第 56 層（ch_08）的入口。",
+    "ja": "第 56 層（ch_08）的入口。",
+    "ko": "第 56 層（ch_08）的入口。",
+    "es": "第 56 層（ch_08）的入口。",
+    "_todo": true
+  },
+  "story.f56.name": {
+    "zh_TW": "第 56 層",
+    "en": "Floor 56",
+    "zh_CN": "第 56 層",
+    "ja": "第 56 層",
+    "ko": "第 56 層",
+    "es": "第 56 層",
+    "_todo": true
+  },
+  "story.f57.intro": {
+    "zh_TW": "第 57 層（ch_09）的入口。",
+    "en": "第 57 層（ch_09）的入口。",
+    "zh_CN": "第 57 層（ch_09）的入口。",
+    "ja": "第 57 層（ch_09）的入口。",
+    "ko": "第 57 層（ch_09）的入口。",
+    "es": "第 57 層（ch_09）的入口。",
+    "_todo": true
+  },
+  "story.f57.name": {
+    "zh_TW": "第 57 層",
+    "en": "Floor 57",
+    "zh_CN": "第 57 層",
+    "ja": "第 57 層",
+    "ko": "第 57 層",
+    "es": "第 57 層",
+    "_todo": true
+  },
+  "story.f58.intro": {
+    "zh_TW": "第 58 層（ch_09）的入口。",
+    "en": "第 58 層（ch_09）的入口。",
+    "zh_CN": "第 58 層（ch_09）的入口。",
+    "ja": "第 58 層（ch_09）的入口。",
+    "ko": "第 58 層（ch_09）的入口。",
+    "es": "第 58 層（ch_09）的入口。",
+    "_todo": true
+  },
+  "story.f58.name": {
+    "zh_TW": "第 58 層",
+    "en": "Floor 58",
+    "zh_CN": "第 58 層",
+    "ja": "第 58 層",
+    "ko": "第 58 層",
+    "es": "第 58 層",
+    "_todo": true
+  },
+  "story.f59.intro": {
+    "zh_TW": "第 59 層（ch_09）的入口。",
+    "en": "第 59 層（ch_09）的入口。",
+    "zh_CN": "第 59 層（ch_09）的入口。",
+    "ja": "第 59 層（ch_09）的入口。",
+    "ko": "第 59 層（ch_09）的入口。",
+    "es": "第 59 層（ch_09）的入口。",
+    "_todo": true
+  },
+  "story.f59.name": {
+    "zh_TW": "第 59 層",
+    "en": "Floor 59",
+    "zh_CN": "第 59 層",
+    "ja": "第 59 層",
+    "ko": "第 59 層",
+    "es": "第 59 層",
+    "_todo": true
+  },
+  "story.f60.intro": {
+    "zh_TW": "第 60 層（ch_09）的入口。",
+    "en": "第 60 層（ch_09）的入口。",
+    "zh_CN": "第 60 層（ch_09）的入口。",
+    "ja": "第 60 層（ch_09）的入口。",
+    "ko": "第 60 層（ch_09）的入口。",
+    "es": "第 60 層（ch_09）的入口。",
+    "_todo": true
+  },
+  "story.f60.name": {
+    "zh_TW": "第 60 層",
+    "en": "Floor 60",
+    "zh_CN": "第 60 層",
+    "ja": "第 60 層",
+    "ko": "第 60 層",
+    "es": "第 60 層",
+    "_todo": true
+  },
+  "story.f61.intro": {
+    "zh_TW": "第 61 層（ch_09）的入口。",
+    "en": "第 61 層（ch_09）的入口。",
+    "zh_CN": "第 61 層（ch_09）的入口。",
+    "ja": "第 61 層（ch_09）的入口。",
+    "ko": "第 61 層（ch_09）的入口。",
+    "es": "第 61 層（ch_09）的入口。",
+    "_todo": true
+  },
+  "story.f61.name": {
+    "zh_TW": "第 61 層",
+    "en": "Floor 61",
+    "zh_CN": "第 61 層",
+    "ja": "第 61 層",
+    "ko": "第 61 層",
+    "es": "第 61 層",
+    "_todo": true
+  },
+  "story.f62.intro": {
+    "zh_TW": "第 62 層（ch_09）的入口。",
+    "en": "第 62 層（ch_09）的入口。",
+    "zh_CN": "第 62 層（ch_09）的入口。",
+    "ja": "第 62 層（ch_09）的入口。",
+    "ko": "第 62 層（ch_09）的入口。",
+    "es": "第 62 層（ch_09）的入口。",
+    "_todo": true
+  },
+  "story.f62.name": {
+    "zh_TW": "第 62 層",
+    "en": "Floor 62",
+    "zh_CN": "第 62 層",
+    "ja": "第 62 層",
+    "ko": "第 62 層",
+    "es": "第 62 層",
+    "_todo": true
+  },
+  "story.f63.intro": {
+    "zh_TW": "第 63 層（ch_09）的入口。",
+    "en": "第 63 層（ch_09）的入口。",
+    "zh_CN": "第 63 層（ch_09）的入口。",
+    "ja": "第 63 層（ch_09）的入口。",
+    "ko": "第 63 層（ch_09）的入口。",
+    "es": "第 63 層（ch_09）的入口。",
+    "_todo": true
+  },
+  "story.f63.name": {
+    "zh_TW": "第 63 層",
+    "en": "Floor 63",
+    "zh_CN": "第 63 層",
+    "ja": "第 63 層",
+    "ko": "第 63 層",
+    "es": "第 63 層",
+    "_todo": true
+  },
+  "story.f64.intro": {
+    "zh_TW": "第 64 層（ch_10）的入口。",
+    "en": "第 64 層（ch_10）的入口。",
+    "zh_CN": "第 64 層（ch_10）的入口。",
+    "ja": "第 64 層（ch_10）的入口。",
+    "ko": "第 64 層（ch_10）的入口。",
+    "es": "第 64 層（ch_10）的入口。",
+    "_todo": true
+  },
+  "story.f64.name": {
+    "zh_TW": "第 64 層",
+    "en": "Floor 64",
+    "zh_CN": "第 64 層",
+    "ja": "第 64 層",
+    "ko": "第 64 層",
+    "es": "第 64 層",
+    "_todo": true
+  },
+  "story.f65.intro": {
+    "zh_TW": "第 65 層（ch_10）的入口。",
+    "en": "第 65 層（ch_10）的入口。",
+    "zh_CN": "第 65 層（ch_10）的入口。",
+    "ja": "第 65 層（ch_10）的入口。",
+    "ko": "第 65 層（ch_10）的入口。",
+    "es": "第 65 層（ch_10）的入口。",
+    "_todo": true
+  },
+  "story.f65.name": {
+    "zh_TW": "第 65 層",
+    "en": "Floor 65",
+    "zh_CN": "第 65 層",
+    "ja": "第 65 層",
+    "ko": "第 65 層",
+    "es": "第 65 層",
+    "_todo": true
+  },
+  "story.f66.intro": {
+    "zh_TW": "第 66 層（ch_10）的入口。",
+    "en": "第 66 層（ch_10）的入口。",
+    "zh_CN": "第 66 層（ch_10）的入口。",
+    "ja": "第 66 層（ch_10）的入口。",
+    "ko": "第 66 層（ch_10）的入口。",
+    "es": "第 66 層（ch_10）的入口。",
+    "_todo": true
+  },
+  "story.f66.name": {
+    "zh_TW": "第 66 層",
+    "en": "Floor 66",
+    "zh_CN": "第 66 層",
+    "ja": "第 66 層",
+    "ko": "第 66 層",
+    "es": "第 66 層",
+    "_todo": true
+  },
+  "story.f67.intro": {
+    "zh_TW": "第 67 層（ch_10）的入口。",
+    "en": "第 67 層（ch_10）的入口。",
+    "zh_CN": "第 67 層（ch_10）的入口。",
+    "ja": "第 67 層（ch_10）的入口。",
+    "ko": "第 67 層（ch_10）的入口。",
+    "es": "第 67 層（ch_10）的入口。",
+    "_todo": true
+  },
+  "story.f67.name": {
+    "zh_TW": "第 67 層",
+    "en": "Floor 67",
+    "zh_CN": "第 67 層",
+    "ja": "第 67 層",
+    "ko": "第 67 層",
+    "es": "第 67 層",
+    "_todo": true
+  },
+  "story.f68.intro": {
+    "zh_TW": "第 68 層（ch_10）的入口。",
+    "en": "第 68 層（ch_10）的入口。",
+    "zh_CN": "第 68 層（ch_10）的入口。",
+    "ja": "第 68 層（ch_10）的入口。",
+    "ko": "第 68 層（ch_10）的入口。",
+    "es": "第 68 層（ch_10）的入口。",
+    "_todo": true
+  },
+  "story.f68.name": {
+    "zh_TW": "第 68 層",
+    "en": "Floor 68",
+    "zh_CN": "第 68 層",
+    "ja": "第 68 層",
+    "ko": "第 68 層",
+    "es": "第 68 層",
+    "_todo": true
+  },
+  "story.f69.intro": {
+    "zh_TW": "第 69 層（ch_10）的入口。",
+    "en": "第 69 層（ch_10）的入口。",
+    "zh_CN": "第 69 層（ch_10）的入口。",
+    "ja": "第 69 層（ch_10）的入口。",
+    "ko": "第 69 層（ch_10）的入口。",
+    "es": "第 69 層（ch_10）的入口。",
+    "_todo": true
+  },
+  "story.f69.name": {
+    "zh_TW": "第 69 層",
+    "en": "Floor 69",
+    "zh_CN": "第 69 層",
+    "ja": "第 69 層",
+    "ko": "第 69 層",
+    "es": "第 69 層",
+    "_todo": true
+  },
+  "story.f70.intro": {
+    "zh_TW": "第 70 層（ch_10）的入口。",
+    "en": "第 70 層（ch_10）的入口。",
+    "zh_CN": "第 70 層（ch_10）的入口。",
+    "ja": "第 70 層（ch_10）的入口。",
+    "ko": "第 70 層（ch_10）的入口。",
+    "es": "第 70 層（ch_10）的入口。",
+    "_todo": true
+  },
+  "story.f70.name": {
+    "zh_TW": "第 70 層",
+    "en": "Floor 70",
+    "zh_CN": "第 70 層",
+    "ja": "第 70 層",
+    "ko": "第 70 層",
+    "es": "第 70 層",
+    "_todo": true
+  },
+  "ev_antechamber_liora_voice": {
+    "zh_TW": "ev_antechamber_liora_voice",
+    "en": "ev_antechamber_liora_voice",
+    "zh_CN": "ev_antechamber_liora_voice",
+    "ja": "ev_antechamber_liora_voice",
+    "ko": "ev_antechamber_liora_voice",
+    "es": "ev_antechamber_liora_voice",
+    "_todo": true
+  },
+  "ev_antechamber_liora_voice_v2": {
+    "zh_TW": "ev_antechamber_liora_voice_v2",
+    "en": "ev_antechamber_liora_voice_v2",
+    "zh_CN": "ev_antechamber_liora_voice_v2",
+    "ja": "ev_antechamber_liora_voice_v2",
+    "ko": "ev_antechamber_liora_voice_v2",
+    "es": "ev_antechamber_liora_voice_v2",
+    "_todo": true
+  },
+  "ev_antechamber_liora_voice_v3": {
+    "zh_TW": "ev_antechamber_liora_voice_v3",
+    "en": "ev_antechamber_liora_voice_v3",
+    "zh_CN": "ev_antechamber_liora_voice_v3",
+    "ja": "ev_antechamber_liora_voice_v3",
+    "ko": "ev_antechamber_liora_voice_v3",
+    "es": "ev_antechamber_liora_voice_v3",
+    "_todo": true
+  },
+  "ev_antechamber_liora_voice_v4": {
+    "zh_TW": "ev_antechamber_liora_voice_v4",
+    "en": "ev_antechamber_liora_voice_v4",
+    "zh_CN": "ev_antechamber_liora_voice_v4",
+    "ja": "ev_antechamber_liora_voice_v4",
+    "ko": "ev_antechamber_liora_voice_v4",
+    "es": "ev_antechamber_liora_voice_v4",
+    "_todo": true
+  },
+  "ev_antechamber_mirror_self": {
+    "zh_TW": "ev_antechamber_mirror_self",
+    "en": "ev_antechamber_mirror_self",
+    "zh_CN": "ev_antechamber_mirror_self",
+    "ja": "ev_antechamber_mirror_self",
+    "ko": "ev_antechamber_mirror_self",
+    "es": "ev_antechamber_mirror_self",
+    "_todo": true
+  },
+  "ev_antechamber_mirror_self_v2": {
+    "zh_TW": "ev_antechamber_mirror_self_v2",
+    "en": "ev_antechamber_mirror_self_v2",
+    "zh_CN": "ev_antechamber_mirror_self_v2",
+    "ja": "ev_antechamber_mirror_self_v2",
+    "ko": "ev_antechamber_mirror_self_v2",
+    "es": "ev_antechamber_mirror_self_v2",
+    "_todo": true
+  },
+  "ev_antechamber_mirror_self_v3": {
+    "zh_TW": "ev_antechamber_mirror_self_v3",
+    "en": "ev_antechamber_mirror_self_v3",
+    "zh_CN": "ev_antechamber_mirror_self_v3",
+    "ja": "ev_antechamber_mirror_self_v3",
+    "ko": "ev_antechamber_mirror_self_v3",
+    "es": "ev_antechamber_mirror_self_v3",
+    "_todo": true
+  },
+  "ev_antechamber_mirror_self_v4": {
+    "zh_TW": "ev_antechamber_mirror_self_v4",
+    "en": "ev_antechamber_mirror_self_v4",
+    "zh_CN": "ev_antechamber_mirror_self_v4",
+    "ja": "ev_antechamber_mirror_self_v4",
+    "ko": "ev_antechamber_mirror_self_v4",
+    "es": "ev_antechamber_mirror_self_v4",
+    "_todo": true
+  },
+  "ev_antechamber_old_sword_rack": {
+    "zh_TW": "ev_antechamber_old_sword_rack",
+    "en": "ev_antechamber_old_sword_rack",
+    "zh_CN": "ev_antechamber_old_sword_rack",
+    "ja": "ev_antechamber_old_sword_rack",
+    "ko": "ev_antechamber_old_sword_rack",
+    "es": "ev_antechamber_old_sword_rack",
+    "_todo": true
+  },
+  "ev_antechamber_old_sword_rack_v2": {
+    "zh_TW": "ev_antechamber_old_sword_rack_v2",
+    "en": "ev_antechamber_old_sword_rack_v2",
+    "zh_CN": "ev_antechamber_old_sword_rack_v2",
+    "ja": "ev_antechamber_old_sword_rack_v2",
+    "ko": "ev_antechamber_old_sword_rack_v2",
+    "es": "ev_antechamber_old_sword_rack_v2",
+    "_todo": true
+  },
+  "ev_antechamber_old_sword_rack_v3": {
+    "zh_TW": "ev_antechamber_old_sword_rack_v3",
+    "en": "ev_antechamber_old_sword_rack_v3",
+    "zh_CN": "ev_antechamber_old_sword_rack_v3",
+    "ja": "ev_antechamber_old_sword_rack_v3",
+    "ko": "ev_antechamber_old_sword_rack_v3",
+    "es": "ev_antechamber_old_sword_rack_v3",
+    "_todo": true
+  },
+  "ev_antechamber_old_sword_rack_v4": {
+    "zh_TW": "ev_antechamber_old_sword_rack_v4",
+    "en": "ev_antechamber_old_sword_rack_v4",
+    "zh_CN": "ev_antechamber_old_sword_rack_v4",
+    "ja": "ev_antechamber_old_sword_rack_v4",
+    "ko": "ev_antechamber_old_sword_rack_v4",
+    "es": "ev_antechamber_old_sword_rack_v4",
+    "_todo": true
+  },
+  "ev_barracks_forge_t3": {
+    "zh_TW": "ev_barracks_forge_t3",
+    "en": "ev_barracks_forge_t3",
+    "zh_CN": "ev_barracks_forge_t3",
+    "ja": "ev_barracks_forge_t3",
+    "ko": "ev_barracks_forge_t3",
+    "es": "ev_barracks_forge_t3",
+    "_todo": true
+  },
+  "ev_barracks_forge_t3_v2": {
+    "zh_TW": "ev_barracks_forge_t3_v2",
+    "en": "ev_barracks_forge_t3_v2",
+    "zh_CN": "ev_barracks_forge_t3_v2",
+    "ja": "ev_barracks_forge_t3_v2",
+    "ko": "ev_barracks_forge_t3_v2",
+    "es": "ev_barracks_forge_t3_v2",
+    "_todo": true
+  },
+  "ev_barracks_forge_t3_v3": {
+    "zh_TW": "ev_barracks_forge_t3_v3",
+    "en": "ev_barracks_forge_t3_v3",
+    "zh_CN": "ev_barracks_forge_t3_v3",
+    "ja": "ev_barracks_forge_t3_v3",
+    "ko": "ev_barracks_forge_t3_v3",
+    "es": "ev_barracks_forge_t3_v3",
+    "_todo": true
+  },
+  "ev_barracks_forge_t3_v4": {
+    "zh_TW": "ev_barracks_forge_t3_v4",
+    "en": "ev_barracks_forge_t3_v4",
+    "zh_CN": "ev_barracks_forge_t3_v4",
+    "ja": "ev_barracks_forge_t3_v4",
+    "ko": "ev_barracks_forge_t3_v4",
+    "es": "ev_barracks_forge_t3_v4",
+    "_todo": true
+  },
+  "ev_barracks_night_fire_v2": {
+    "zh_TW": "ev_barracks_night_fire_v2",
+    "en": "ev_barracks_night_fire_v2",
+    "zh_CN": "ev_barracks_night_fire_v2",
+    "ja": "ev_barracks_night_fire_v2",
+    "ko": "ev_barracks_night_fire_v2",
+    "es": "ev_barracks_night_fire_v2",
+    "_todo": true
+  },
+  "ev_barracks_night_fire_v3": {
+    "zh_TW": "ev_barracks_night_fire_v3",
+    "en": "ev_barracks_night_fire_v3",
+    "zh_CN": "ev_barracks_night_fire_v3",
+    "ja": "ev_barracks_night_fire_v3",
+    "ko": "ev_barracks_night_fire_v3",
+    "es": "ev_barracks_night_fire_v3",
+    "_todo": true
+  },
+  "ev_barracks_night_fire_v4": {
+    "zh_TW": "ev_barracks_night_fire_v4",
+    "en": "ev_barracks_night_fire_v4",
+    "zh_CN": "ev_barracks_night_fire_v4",
+    "ja": "ev_barracks_night_fire_v4",
+    "ko": "ev_barracks_night_fire_v4",
+    "es": "ev_barracks_night_fire_v4",
+    "_todo": true
+  },
+  "ev_cavern_echo_wall": {
+    "zh_TW": "ev_cavern_echo_wall",
+    "en": "ev_cavern_echo_wall",
+    "zh_CN": "ev_cavern_echo_wall",
+    "ja": "ev_cavern_echo_wall",
+    "ko": "ev_cavern_echo_wall",
+    "es": "ev_cavern_echo_wall",
+    "_todo": true
+  },
+  "ev_cavern_echo_wall_v2": {
+    "zh_TW": "ev_cavern_echo_wall_v2",
+    "en": "ev_cavern_echo_wall_v2",
+    "zh_CN": "ev_cavern_echo_wall_v2",
+    "ja": "ev_cavern_echo_wall_v2",
+    "ko": "ev_cavern_echo_wall_v2",
+    "es": "ev_cavern_echo_wall_v2",
+    "_todo": true
+  },
+  "ev_cavern_echo_wall_v3": {
+    "zh_TW": "ev_cavern_echo_wall_v3",
+    "en": "ev_cavern_echo_wall_v3",
+    "zh_CN": "ev_cavern_echo_wall_v3",
+    "ja": "ev_cavern_echo_wall_v3",
+    "ko": "ev_cavern_echo_wall_v3",
+    "es": "ev_cavern_echo_wall_v3",
+    "_todo": true
+  },
+  "ev_cavern_miner_cache": {
+    "zh_TW": "ev_cavern_miner_cache",
+    "en": "ev_cavern_miner_cache",
+    "zh_CN": "ev_cavern_miner_cache",
+    "ja": "ev_cavern_miner_cache",
+    "ko": "ev_cavern_miner_cache",
+    "es": "ev_cavern_miner_cache",
+    "_todo": true
+  },
+  "ev_cavern_miner_cache_v2": {
+    "zh_TW": "ev_cavern_miner_cache_v2",
+    "en": "ev_cavern_miner_cache_v2",
+    "zh_CN": "ev_cavern_miner_cache_v2",
+    "ja": "ev_cavern_miner_cache_v2",
+    "ko": "ev_cavern_miner_cache_v2",
+    "es": "ev_cavern_miner_cache_v2",
+    "_todo": true
+  },
+  "ev_cavern_miner_cache_v3": {
+    "zh_TW": "ev_cavern_miner_cache_v3",
+    "en": "ev_cavern_miner_cache_v3",
+    "zh_CN": "ev_cavern_miner_cache_v3",
+    "ja": "ev_cavern_miner_cache_v3",
+    "ko": "ev_cavern_miner_cache_v3",
+    "es": "ev_cavern_miner_cache_v3",
+    "_todo": true
+  },
+  "ev_cavern_miner_cache_v4": {
+    "zh_TW": "ev_cavern_miner_cache_v4",
+    "en": "ev_cavern_miner_cache_v4",
+    "zh_CN": "ev_cavern_miner_cache_v4",
+    "ja": "ev_cavern_miner_cache_v4",
+    "ko": "ev_cavern_miner_cache_v4",
+    "es": "ev_cavern_miner_cache_v4",
+    "_todo": true
+  },
+  "ev_cavern_twin_crystal": {
+    "zh_TW": "ev_cavern_twin_crystal",
+    "en": "ev_cavern_twin_crystal",
+    "zh_CN": "ev_cavern_twin_crystal",
+    "ja": "ev_cavern_twin_crystal",
+    "ko": "ev_cavern_twin_crystal",
+    "es": "ev_cavern_twin_crystal",
+    "_todo": true
+  },
+  "ev_cavern_twin_crystal_v2": {
+    "zh_TW": "ev_cavern_twin_crystal_v2",
+    "en": "ev_cavern_twin_crystal_v2",
+    "zh_CN": "ev_cavern_twin_crystal_v2",
+    "ja": "ev_cavern_twin_crystal_v2",
+    "ko": "ev_cavern_twin_crystal_v2",
+    "es": "ev_cavern_twin_crystal_v2",
+    "_todo": true
+  },
+  "ev_cavern_twin_crystal_v3": {
+    "zh_TW": "ev_cavern_twin_crystal_v3",
+    "en": "ev_cavern_twin_crystal_v3",
+    "zh_CN": "ev_cavern_twin_crystal_v3",
+    "ja": "ev_cavern_twin_crystal_v3",
+    "ko": "ev_cavern_twin_crystal_v3",
+    "es": "ev_cavern_twin_crystal_v3",
+    "_todo": true
+  },
+  "ev_common_cache_wall_v2": {
+    "zh_TW": "ev_common_cache_wall_v2",
+    "en": "ev_common_cache_wall_v2",
+    "zh_CN": "ev_common_cache_wall_v2",
+    "ja": "ev_common_cache_wall_v2",
+    "ko": "ev_common_cache_wall_v2",
+    "es": "ev_common_cache_wall_v2",
+    "_todo": true
+  },
+  "ev_common_cache_wall_v3": {
+    "zh_TW": "ev_common_cache_wall_v3",
+    "en": "ev_common_cache_wall_v3",
+    "zh_CN": "ev_common_cache_wall_v3",
+    "ja": "ev_common_cache_wall_v3",
+    "ko": "ev_common_cache_wall_v3",
+    "es": "ev_common_cache_wall_v3",
+    "_todo": true
+  },
+  "ev_common_cache_wall_v4": {
+    "zh_TW": "ev_common_cache_wall_v4",
+    "en": "ev_common_cache_wall_v4",
+    "zh_CN": "ev_common_cache_wall_v4",
+    "ja": "ev_common_cache_wall_v4",
+    "ko": "ev_common_cache_wall_v4",
+    "es": "ev_common_cache_wall_v4",
+    "_todo": true
+  },
+  "ev_common_cache_wall_v5": {
+    "zh_TW": "ev_common_cache_wall_v5",
+    "en": "ev_common_cache_wall_v5",
+    "zh_CN": "ev_common_cache_wall_v5",
+    "ja": "ev_common_cache_wall_v5",
+    "ko": "ev_common_cache_wall_v5",
+    "es": "ev_common_cache_wall_v5",
+    "_todo": true
+  },
+  "ev_common_merchant_echo_ash_v2": {
+    "zh_TW": "ev_common_merchant_echo_ash_v2",
+    "en": "ev_common_merchant_echo_ash_v2",
+    "zh_CN": "ev_common_merchant_echo_ash_v2",
+    "ja": "ev_common_merchant_echo_ash_v2",
+    "ko": "ev_common_merchant_echo_ash_v2",
+    "es": "ev_common_merchant_echo_ash_v2",
+    "_todo": true
+  },
+  "ev_common_merchant_echo_ash_v3": {
+    "zh_TW": "ev_common_merchant_echo_ash_v3",
+    "en": "ev_common_merchant_echo_ash_v3",
+    "zh_CN": "ev_common_merchant_echo_ash_v3",
+    "ja": "ev_common_merchant_echo_ash_v3",
+    "ko": "ev_common_merchant_echo_ash_v3",
+    "es": "ev_common_merchant_echo_ash_v3",
+    "_todo": true
+  },
+  "ev_common_merchant_echo_ash_v4": {
+    "zh_TW": "ev_common_merchant_echo_ash_v4",
+    "en": "ev_common_merchant_echo_ash_v4",
+    "zh_CN": "ev_common_merchant_echo_ash_v4",
+    "ja": "ev_common_merchant_echo_ash_v4",
+    "ko": "ev_common_merchant_echo_ash_v4",
+    "es": "ev_common_merchant_echo_ash_v4",
+    "_todo": true
+  },
+  "ev_common_merchant_echo_ash_v5": {
+    "zh_TW": "ev_common_merchant_echo_ash_v5",
+    "en": "ev_common_merchant_echo_ash_v5",
+    "zh_CN": "ev_common_merchant_echo_ash_v5",
+    "ja": "ev_common_merchant_echo_ash_v5",
+    "ko": "ev_common_merchant_echo_ash_v5",
+    "es": "ev_common_merchant_echo_ash_v5",
+    "_todo": true
+  },
+  "ev_common_relic_road_v2": {
+    "zh_TW": "ev_common_relic_road_v2",
+    "en": "ev_common_relic_road_v2",
+    "zh_CN": "ev_common_relic_road_v2",
+    "ja": "ev_common_relic_road_v2",
+    "ko": "ev_common_relic_road_v2",
+    "es": "ev_common_relic_road_v2",
+    "_todo": true
+  },
+  "ev_common_relic_road_v3": {
+    "zh_TW": "ev_common_relic_road_v3",
+    "en": "ev_common_relic_road_v3",
+    "zh_CN": "ev_common_relic_road_v3",
+    "ja": "ev_common_relic_road_v3",
+    "ko": "ev_common_relic_road_v3",
+    "es": "ev_common_relic_road_v3",
+    "_todo": true
+  },
+  "ev_common_relic_road_v4": {
+    "zh_TW": "ev_common_relic_road_v4",
+    "en": "ev_common_relic_road_v4",
+    "zh_CN": "ev_common_relic_road_v4",
+    "ja": "ev_common_relic_road_v4",
+    "ko": "ev_common_relic_road_v4",
+    "es": "ev_common_relic_road_v4",
+    "_todo": true
+  },
+  "ev_common_relic_road_v5": {
+    "zh_TW": "ev_common_relic_road_v5",
+    "en": "ev_common_relic_road_v5",
+    "zh_CN": "ev_common_relic_road_v5",
+    "ja": "ev_common_relic_road_v5",
+    "ko": "ev_common_relic_road_v5",
+    "es": "ev_common_relic_road_v5",
+    "_todo": true
+  },
+  "ev_common_rescue_lost_soldier_v2": {
+    "zh_TW": "ev_common_rescue_lost_soldier_v2",
+    "en": "ev_common_rescue_lost_soldier_v2",
+    "zh_CN": "ev_common_rescue_lost_soldier_v2",
+    "ja": "ev_common_rescue_lost_soldier_v2",
+    "ko": "ev_common_rescue_lost_soldier_v2",
+    "es": "ev_common_rescue_lost_soldier_v2",
+    "_todo": true
+  },
+  "ev_common_rescue_lost_soldier_v3": {
+    "zh_TW": "ev_common_rescue_lost_soldier_v3",
+    "en": "ev_common_rescue_lost_soldier_v3",
+    "zh_CN": "ev_common_rescue_lost_soldier_v3",
+    "ja": "ev_common_rescue_lost_soldier_v3",
+    "ko": "ev_common_rescue_lost_soldier_v3",
+    "es": "ev_common_rescue_lost_soldier_v3",
+    "_todo": true
+  },
+  "ev_common_rescue_lost_soldier_v4": {
+    "zh_TW": "ev_common_rescue_lost_soldier_v4",
+    "en": "ev_common_rescue_lost_soldier_v4",
+    "zh_CN": "ev_common_rescue_lost_soldier_v4",
+    "ja": "ev_common_rescue_lost_soldier_v4",
+    "ko": "ev_common_rescue_lost_soldier_v4",
+    "es": "ev_common_rescue_lost_soldier_v4",
+    "_todo": true
+  },
+  "ev_common_rescue_lost_soldier_v5": {
+    "zh_TW": "ev_common_rescue_lost_soldier_v5",
+    "en": "ev_common_rescue_lost_soldier_v5",
+    "zh_CN": "ev_common_rescue_lost_soldier_v5",
+    "ja": "ev_common_rescue_lost_soldier_v5",
+    "ko": "ev_common_rescue_lost_soldier_v5",
+    "es": "ev_common_rescue_lost_soldier_v5",
+    "_todo": true
+  },
+  "ev_common_shard_wandering_v2": {
+    "zh_TW": "ev_common_shard_wandering_v2",
+    "en": "ev_common_shard_wandering_v2",
+    "zh_CN": "ev_common_shard_wandering_v2",
+    "ja": "ev_common_shard_wandering_v2",
+    "ko": "ev_common_shard_wandering_v2",
+    "es": "ev_common_shard_wandering_v2",
+    "_todo": true
+  },
+  "ev_common_shard_wandering_v3": {
+    "zh_TW": "ev_common_shard_wandering_v3",
+    "en": "ev_common_shard_wandering_v3",
+    "zh_CN": "ev_common_shard_wandering_v3",
+    "ja": "ev_common_shard_wandering_v3",
+    "ko": "ev_common_shard_wandering_v3",
+    "es": "ev_common_shard_wandering_v3",
+    "_todo": true
+  },
+  "ev_common_shard_wandering_v4": {
+    "zh_TW": "ev_common_shard_wandering_v4",
+    "en": "ev_common_shard_wandering_v4",
+    "zh_CN": "ev_common_shard_wandering_v4",
+    "ja": "ev_common_shard_wandering_v4",
+    "ko": "ev_common_shard_wandering_v4",
+    "es": "ev_common_shard_wandering_v4",
+    "_todo": true
+  },
+  "ev_common_shard_wandering_v5": {
+    "zh_TW": "ev_common_shard_wandering_v5",
+    "en": "ev_common_shard_wandering_v5",
+    "zh_CN": "ev_common_shard_wandering_v5",
+    "ja": "ev_common_shard_wandering_v5",
+    "ko": "ev_common_shard_wandering_v5",
+    "es": "ev_common_shard_wandering_v5",
+    "_todo": true
+  },
+  "ev_common_trap_rubble_v2": {
+    "zh_TW": "ev_common_trap_rubble_v2",
+    "en": "ev_common_trap_rubble_v2",
+    "zh_CN": "ev_common_trap_rubble_v2",
+    "ja": "ev_common_trap_rubble_v2",
+    "ko": "ev_common_trap_rubble_v2",
+    "es": "ev_common_trap_rubble_v2",
+    "_todo": true
+  },
+  "ev_common_trap_rubble_v3": {
+    "zh_TW": "ev_common_trap_rubble_v3",
+    "en": "ev_common_trap_rubble_v3",
+    "zh_CN": "ev_common_trap_rubble_v3",
+    "ja": "ev_common_trap_rubble_v3",
+    "ko": "ev_common_trap_rubble_v3",
+    "es": "ev_common_trap_rubble_v3",
+    "_todo": true
+  },
+  "ev_common_trap_rubble_v4": {
+    "zh_TW": "ev_common_trap_rubble_v4",
+    "en": "ev_common_trap_rubble_v4",
+    "zh_CN": "ev_common_trap_rubble_v4",
+    "ja": "ev_common_trap_rubble_v4",
+    "ko": "ev_common_trap_rubble_v4",
+    "es": "ev_common_trap_rubble_v4",
+    "_todo": true
+  },
+  "ev_common_trap_rubble_v5": {
+    "zh_TW": "ev_common_trap_rubble_v5",
+    "en": "ev_common_trap_rubble_v5",
+    "zh_CN": "ev_common_trap_rubble_v5",
+    "ja": "ev_common_trap_rubble_v5",
+    "ko": "ev_common_trap_rubble_v5",
+    "es": "ev_common_trap_rubble_v5",
+    "_todo": true
+  },
+  "ev_common_whisper_old_road_v2": {
+    "zh_TW": "ev_common_whisper_old_road_v2",
+    "en": "ev_common_whisper_old_road_v2",
+    "zh_CN": "ev_common_whisper_old_road_v2",
+    "ja": "ev_common_whisper_old_road_v2",
+    "ko": "ev_common_whisper_old_road_v2",
+    "es": "ev_common_whisper_old_road_v2",
+    "_todo": true
+  },
+  "ev_common_whisper_old_road_v3": {
+    "zh_TW": "ev_common_whisper_old_road_v3",
+    "en": "ev_common_whisper_old_road_v3",
+    "zh_CN": "ev_common_whisper_old_road_v3",
+    "ja": "ev_common_whisper_old_road_v3",
+    "ko": "ev_common_whisper_old_road_v3",
+    "es": "ev_common_whisper_old_road_v3",
+    "_todo": true
+  },
+  "ev_common_whisper_old_road_v4": {
+    "zh_TW": "ev_common_whisper_old_road_v4",
+    "en": "ev_common_whisper_old_road_v4",
+    "zh_CN": "ev_common_whisper_old_road_v4",
+    "ja": "ev_common_whisper_old_road_v4",
+    "ko": "ev_common_whisper_old_road_v4",
+    "es": "ev_common_whisper_old_road_v4",
+    "_todo": true
+  },
+  "ev_common_whisper_old_road_v5": {
+    "zh_TW": "ev_common_whisper_old_road_v5",
+    "en": "ev_common_whisper_old_road_v5",
+    "zh_CN": "ev_common_whisper_old_road_v5",
+    "ja": "ev_common_whisper_old_road_v5",
+    "ko": "ev_common_whisper_old_road_v5",
+    "es": "ev_common_whisper_old_road_v5",
+    "_todo": true
+  },
+  "ev_crypt_choir_echo": {
+    "zh_TW": "ev_crypt_choir_echo",
+    "en": "ev_crypt_choir_echo",
+    "zh_CN": "ev_crypt_choir_echo",
+    "ja": "ev_crypt_choir_echo",
+    "ko": "ev_crypt_choir_echo",
+    "es": "ev_crypt_choir_echo",
+    "_todo": true
+  },
+  "ev_crypt_choir_echo_v3": {
+    "zh_TW": "ev_crypt_choir_echo_v3",
+    "en": "ev_crypt_choir_echo_v3",
+    "zh_CN": "ev_crypt_choir_echo_v3",
+    "ja": "ev_crypt_choir_echo_v3",
+    "ko": "ev_crypt_choir_echo_v3",
+    "es": "ev_crypt_choir_echo_v3",
+    "_todo": true
+  },
+  "ev_crypt_nameless_brick": {
+    "zh_TW": "ev_crypt_nameless_brick",
+    "en": "ev_crypt_nameless_brick",
+    "zh_CN": "ev_crypt_nameless_brick",
+    "ja": "ev_crypt_nameless_brick",
+    "ko": "ev_crypt_nameless_brick",
+    "es": "ev_crypt_nameless_brick",
+    "_todo": true
+  },
+  "ev_crypt_nameless_brick_v2": {
+    "zh_TW": "ev_crypt_nameless_brick_v2",
+    "en": "ev_crypt_nameless_brick_v2",
+    "zh_CN": "ev_crypt_nameless_brick_v2",
+    "ja": "ev_crypt_nameless_brick_v2",
+    "ko": "ev_crypt_nameless_brick_v2",
+    "es": "ev_crypt_nameless_brick_v2",
+    "_todo": true
+  },
+  "ev_crypt_nameless_brick_v3": {
+    "zh_TW": "ev_crypt_nameless_brick_v3",
+    "en": "ev_crypt_nameless_brick_v3",
+    "zh_CN": "ev_crypt_nameless_brick_v3",
+    "ja": "ev_crypt_nameless_brick_v3",
+    "ko": "ev_crypt_nameless_brick_v3",
+    "es": "ev_crypt_nameless_brick_v3",
+    "_todo": true
+  },
+  "ev_crypt_ten_year_candle": {
+    "zh_TW": "ev_crypt_ten_year_candle",
+    "en": "ev_crypt_ten_year_candle",
+    "zh_CN": "ev_crypt_ten_year_candle",
+    "ja": "ev_crypt_ten_year_candle",
+    "ko": "ev_crypt_ten_year_candle",
+    "es": "ev_crypt_ten_year_candle",
+    "_todo": true
+  },
+  "ev_crypt_ten_year_candle_v3": {
+    "zh_TW": "ev_crypt_ten_year_candle_v3",
+    "en": "ev_crypt_ten_year_candle_v3",
+    "zh_CN": "ev_crypt_ten_year_candle_v3",
+    "ja": "ev_crypt_ten_year_candle_v3",
+    "ko": "ev_crypt_ten_year_candle_v3",
+    "es": "ev_crypt_ten_year_candle_v3",
+    "_todo": true
+  },
+  "ev_crypt_ten_year_candle_v4": {
+    "zh_TW": "ev_crypt_ten_year_candle_v4",
+    "en": "ev_crypt_ten_year_candle_v4",
+    "zh_CN": "ev_crypt_ten_year_candle_v4",
+    "ja": "ev_crypt_ten_year_candle_v4",
+    "ko": "ev_crypt_ten_year_candle_v4",
+    "es": "ev_crypt_ten_year_candle_v4",
+    "_todo": true
+  },
+  "ev_library_scholar_whisper": {
+    "zh_TW": "ev_library_scholar_whisper",
+    "en": "ev_library_scholar_whisper",
+    "zh_CN": "ev_library_scholar_whisper",
+    "ja": "ev_library_scholar_whisper",
+    "ko": "ev_library_scholar_whisper",
+    "es": "ev_library_scholar_whisper",
+    "_todo": true
+  },
+  "ev_library_scholar_whisper_v3": {
+    "zh_TW": "ev_library_scholar_whisper_v3",
+    "en": "ev_library_scholar_whisper_v3",
+    "zh_CN": "ev_library_scholar_whisper_v3",
+    "ja": "ev_library_scholar_whisper_v3",
+    "ko": "ev_library_scholar_whisper_v3",
+    "es": "ev_library_scholar_whisper_v3",
+    "_todo": true
+  },
+  "ev_library_scholar_whisper_v4": {
+    "zh_TW": "ev_library_scholar_whisper_v4",
+    "en": "ev_library_scholar_whisper_v4",
+    "zh_CN": "ev_library_scholar_whisper_v4",
+    "ja": "ev_library_scholar_whisper_v4",
+    "ko": "ev_library_scholar_whisper_v4",
+    "es": "ev_library_scholar_whisper_v4",
+    "_todo": true
+  },
+  "ev_library_shelf_collapse": {
+    "zh_TW": "ev_library_shelf_collapse",
+    "en": "ev_library_shelf_collapse",
+    "zh_CN": "ev_library_shelf_collapse",
+    "ja": "ev_library_shelf_collapse",
+    "ko": "ev_library_shelf_collapse",
+    "es": "ev_library_shelf_collapse",
+    "_todo": true
+  },
+  "ev_library_shelf_collapse_v2": {
+    "zh_TW": "ev_library_shelf_collapse_v2",
+    "en": "ev_library_shelf_collapse_v2",
+    "zh_CN": "ev_library_shelf_collapse_v2",
+    "ja": "ev_library_shelf_collapse_v2",
+    "ko": "ev_library_shelf_collapse_v2",
+    "es": "ev_library_shelf_collapse_v2",
+    "_todo": true
+  },
+  "ev_library_shelf_collapse_v3": {
+    "zh_TW": "ev_library_shelf_collapse_v3",
+    "en": "ev_library_shelf_collapse_v3",
+    "zh_CN": "ev_library_shelf_collapse_v3",
+    "ja": "ev_library_shelf_collapse_v3",
+    "ko": "ev_library_shelf_collapse_v3",
+    "es": "ev_library_shelf_collapse_v3",
+    "_todo": true
+  },
+  "ev_library_torn_page_v3": {
+    "zh_TW": "ev_library_torn_page_v3",
+    "en": "ev_library_torn_page_v3",
+    "zh_CN": "ev_library_torn_page_v3",
+    "ja": "ev_library_torn_page_v3",
+    "ko": "ev_library_torn_page_v3",
+    "es": "ev_library_torn_page_v3",
+    "_todo": true
+  },
+  "ev_library_torn_page_v4": {
+    "zh_TW": "ev_library_torn_page_v4",
+    "en": "ev_library_torn_page_v4",
+    "zh_CN": "ev_library_torn_page_v4",
+    "ja": "ev_library_torn_page_v4",
+    "ko": "ev_library_torn_page_v4",
+    "es": "ev_library_torn_page_v4",
+    "_todo": true
+  },
+  "ev_peak_bone_field": {
+    "zh_TW": "ev_peak_bone_field",
+    "en": "ev_peak_bone_field",
+    "zh_CN": "ev_peak_bone_field",
+    "ja": "ev_peak_bone_field",
+    "ko": "ev_peak_bone_field",
+    "es": "ev_peak_bone_field",
+    "_todo": true
+  },
+  "ev_peak_bone_field_v2": {
+    "zh_TW": "ev_peak_bone_field_v2",
+    "en": "ev_peak_bone_field_v2",
+    "zh_CN": "ev_peak_bone_field_v2",
+    "ja": "ev_peak_bone_field_v2",
+    "ko": "ev_peak_bone_field_v2",
+    "es": "ev_peak_bone_field_v2",
+    "_todo": true
+  },
+  "ev_peak_bone_field_v3": {
+    "zh_TW": "ev_peak_bone_field_v3",
+    "en": "ev_peak_bone_field_v3",
+    "zh_CN": "ev_peak_bone_field_v3",
+    "ja": "ev_peak_bone_field_v3",
+    "ko": "ev_peak_bone_field_v3",
+    "es": "ev_peak_bone_field_v3",
+    "_todo": true
+  },
+  "ev_peak_bone_field_v4": {
+    "zh_TW": "ev_peak_bone_field_v4",
+    "en": "ev_peak_bone_field_v4",
+    "zh_CN": "ev_peak_bone_field_v4",
+    "ja": "ev_peak_bone_field_v4",
+    "ko": "ev_peak_bone_field_v4",
+    "es": "ev_peak_bone_field_v4",
+    "_todo": true
+  },
+  "ev_peak_star_crack": {
+    "zh_TW": "ev_peak_star_crack",
+    "en": "ev_peak_star_crack",
+    "zh_CN": "ev_peak_star_crack",
+    "ja": "ev_peak_star_crack",
+    "ko": "ev_peak_star_crack",
+    "es": "ev_peak_star_crack",
+    "_todo": true
+  },
+  "ev_peak_star_crack_v2": {
+    "zh_TW": "ev_peak_star_crack_v2",
+    "en": "ev_peak_star_crack_v2",
+    "zh_CN": "ev_peak_star_crack_v2",
+    "ja": "ev_peak_star_crack_v2",
+    "ko": "ev_peak_star_crack_v2",
+    "es": "ev_peak_star_crack_v2",
+    "_todo": true
+  },
+  "ev_peak_star_crack_v3": {
+    "zh_TW": "ev_peak_star_crack_v3",
+    "en": "ev_peak_star_crack_v3",
+    "zh_CN": "ev_peak_star_crack_v3",
+    "ja": "ev_peak_star_crack_v3",
+    "ko": "ev_peak_star_crack_v3",
+    "es": "ev_peak_star_crack_v3",
+    "_todo": true
+  },
+  "ev_peak_wushang_memory": {
+    "zh_TW": "ev_peak_wushang_memory",
+    "en": "ev_peak_wushang_memory",
+    "zh_CN": "ev_peak_wushang_memory",
+    "ja": "ev_peak_wushang_memory",
+    "ko": "ev_peak_wushang_memory",
+    "es": "ev_peak_wushang_memory",
+    "_todo": true
+  },
+  "ev_peak_wushang_memory_v2": {
+    "zh_TW": "ev_peak_wushang_memory_v2",
+    "en": "ev_peak_wushang_memory_v2",
+    "zh_CN": "ev_peak_wushang_memory_v2",
+    "ja": "ev_peak_wushang_memory_v2",
+    "ko": "ev_peak_wushang_memory_v2",
+    "es": "ev_peak_wushang_memory_v2",
+    "_todo": true
+  },
+  "ev_peak_wushang_memory_v3": {
+    "zh_TW": "ev_peak_wushang_memory_v3",
+    "en": "ev_peak_wushang_memory_v3",
+    "zh_CN": "ev_peak_wushang_memory_v3",
+    "ja": "ev_peak_wushang_memory_v3",
+    "ko": "ev_peak_wushang_memory_v3",
+    "es": "ev_peak_wushang_memory_v3",
+    "_todo": true
+  },
+  "ev_sanctum_crack_prayer": {
+    "zh_TW": "ev_sanctum_crack_prayer",
+    "en": "ev_sanctum_crack_prayer",
+    "zh_CN": "ev_sanctum_crack_prayer",
+    "ja": "ev_sanctum_crack_prayer",
+    "ko": "ev_sanctum_crack_prayer",
+    "es": "ev_sanctum_crack_prayer",
+    "_todo": true
+  },
+  "ev_sanctum_crack_prayer_v2": {
+    "zh_TW": "ev_sanctum_crack_prayer_v2",
+    "en": "ev_sanctum_crack_prayer_v2",
+    "zh_CN": "ev_sanctum_crack_prayer_v2",
+    "ja": "ev_sanctum_crack_prayer_v2",
+    "ko": "ev_sanctum_crack_prayer_v2",
+    "es": "ev_sanctum_crack_prayer_v2",
+    "_todo": true
+  },
+  "ev_sanctum_crack_prayer_v3": {
+    "zh_TW": "ev_sanctum_crack_prayer_v3",
+    "en": "ev_sanctum_crack_prayer_v3",
+    "zh_CN": "ev_sanctum_crack_prayer_v3",
+    "ja": "ev_sanctum_crack_prayer_v3",
+    "ko": "ev_sanctum_crack_prayer_v3",
+    "es": "ev_sanctum_crack_prayer_v3",
+    "_todo": true
+  },
+  "ev_sanctum_crack_prayer_v4": {
+    "zh_TW": "ev_sanctum_crack_prayer_v4",
+    "en": "ev_sanctum_crack_prayer_v4",
+    "zh_CN": "ev_sanctum_crack_prayer_v4",
+    "ja": "ev_sanctum_crack_prayer_v4",
+    "ko": "ev_sanctum_crack_prayer_v4",
+    "es": "ev_sanctum_crack_prayer_v4",
+    "_todo": true
+  },
+  "ev_sanctum_seventh_bell": {
+    "zh_TW": "ev_sanctum_seventh_bell",
+    "en": "ev_sanctum_seventh_bell",
+    "zh_CN": "ev_sanctum_seventh_bell",
+    "ja": "ev_sanctum_seventh_bell",
+    "ko": "ev_sanctum_seventh_bell",
+    "es": "ev_sanctum_seventh_bell",
+    "_todo": true
+  },
+  "ev_sanctum_seventh_bell_v2": {
+    "zh_TW": "ev_sanctum_seventh_bell_v2",
+    "en": "ev_sanctum_seventh_bell_v2",
+    "zh_CN": "ev_sanctum_seventh_bell_v2",
+    "ja": "ev_sanctum_seventh_bell_v2",
+    "ko": "ev_sanctum_seventh_bell_v2",
+    "es": "ev_sanctum_seventh_bell_v2",
+    "_todo": true
+  },
+  "ev_sanctum_seventh_bell_v3": {
+    "zh_TW": "ev_sanctum_seventh_bell_v3",
+    "en": "ev_sanctum_seventh_bell_v3",
+    "zh_CN": "ev_sanctum_seventh_bell_v3",
+    "ja": "ev_sanctum_seventh_bell_v3",
+    "ko": "ev_sanctum_seventh_bell_v3",
+    "es": "ev_sanctum_seventh_bell_v3",
+    "_todo": true
+  },
+  "ev_sanctum_seventh_bell_v4": {
+    "zh_TW": "ev_sanctum_seventh_bell_v4",
+    "en": "ev_sanctum_seventh_bell_v4",
+    "zh_CN": "ev_sanctum_seventh_bell_v4",
+    "ja": "ev_sanctum_seventh_bell_v4",
+    "ko": "ev_sanctum_seventh_bell_v4",
+    "es": "ev_sanctum_seventh_bell_v4",
+    "_todo": true
+  },
+  "ev_sanctum_warden_oath": {
+    "zh_TW": "ev_sanctum_warden_oath",
+    "en": "ev_sanctum_warden_oath",
+    "zh_CN": "ev_sanctum_warden_oath",
+    "ja": "ev_sanctum_warden_oath",
+    "ko": "ev_sanctum_warden_oath",
+    "es": "ev_sanctum_warden_oath",
+    "_todo": true
+  },
+  "ev_sanctum_warden_oath_v2": {
+    "zh_TW": "ev_sanctum_warden_oath_v2",
+    "en": "ev_sanctum_warden_oath_v2",
+    "zh_CN": "ev_sanctum_warden_oath_v2",
+    "ja": "ev_sanctum_warden_oath_v2",
+    "ko": "ev_sanctum_warden_oath_v2",
+    "es": "ev_sanctum_warden_oath_v2",
+    "_todo": true
+  },
+  "ev_sanctum_warden_oath_v3": {
+    "zh_TW": "ev_sanctum_warden_oath_v3",
+    "en": "ev_sanctum_warden_oath_v3",
+    "zh_CN": "ev_sanctum_warden_oath_v3",
+    "ja": "ev_sanctum_warden_oath_v3",
+    "ko": "ev_sanctum_warden_oath_v3",
+    "es": "ev_sanctum_warden_oath_v3",
+    "_todo": true
+  },
+  "ev_sanctum_warden_oath_v4": {
+    "zh_TW": "ev_sanctum_warden_oath_v4",
+    "en": "ev_sanctum_warden_oath_v4",
+    "zh_CN": "ev_sanctum_warden_oath_v4",
+    "ja": "ev_sanctum_warden_oath_v4",
+    "ko": "ev_sanctum_warden_oath_v4",
+    "es": "ev_sanctum_warden_oath_v4",
+    "_todo": true
+  },
+  "story.f01.ambient.1": {
+    "zh_TW": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "en": "Village edge: the well",
+    "zh_CN": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "ja": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "ko": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "es": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」"
+  },
+  "story.f01.ambient.2": {
+    "zh_TW": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "en": "Village edge: the well",
+    "zh_CN": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "ja": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "ko": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
+    "es": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」"
+  },
+  "story.f02.ambient.1": {
+    "zh_TW": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "en": "The drying yard",
+    "zh_CN": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "ja": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "ko": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "es": "風把穀殼吹過腳邊，村子的日子還在繼續。"
+  },
+  "story.f02.ambient.2": {
+    "zh_TW": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "en": "The drying yard",
+    "zh_CN": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "ja": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "ko": "風把穀殼吹過腳邊，村子的日子還在繼續。",
+    "es": "風把穀殼吹過腳邊，村子的日子還在繼續。"
+  },
+  "story.f03.ambient.1": {
+    "zh_TW": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "en": "The old shrine",
+    "zh_CN": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "ja": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "ko": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "es": "祠堂的木像沒有臉——有人刻意磨掉了。"
+  },
+  "story.f03.ambient.2": {
+    "zh_TW": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "en": "The old shrine",
+    "zh_CN": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "ja": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "ko": "祠堂的木像沒有臉——有人刻意磨掉了。",
+    "es": "祠堂的木像沒有臉——有人刻意磨掉了。"
+  },
+  "story.f04.ambient.1": {
+    "zh_TW": "井底的石壁刻著七道痕，其中一道是新的。",
+    "en": "The well of memory",
+    "zh_CN": "井底的石壁刻著七道痕，其中一道是新的。",
+    "ja": "井底的石壁刻著七道痕，其中一道是新的。",
+    "ko": "井底的石壁刻著七道痕，其中一道是新的。",
+    "es": "井底的石壁刻著七道痕，其中一道是新的。"
+  },
+  "story.f04.ambient.2": {
+    "zh_TW": "井底的石壁刻著七道痕，其中一道是新的。",
+    "en": "The well of memory",
+    "zh_CN": "井底的石壁刻著七道痕，其中一道是新的。",
+    "ja": "井底的石壁刻著七道痕，其中一道是新的。",
+    "ko": "井底的石壁刻著七道痕，其中一道是新的。",
+    "es": "井底的石壁刻著七道痕，其中一道是新的。"
+  },
+  "story.f05.ambient.1": {
+    "zh_TW": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "en": "Xiaosui's stall",
+    "zh_CN": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "ja": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "ko": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "es": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」"
+  },
+  "story.f05.ambient.2": {
+    "zh_TW": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "en": "Xiaosui's stall",
+    "zh_CN": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "ja": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "ko": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
+    "es": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」"
+  },
+  "story.f06.ambient.1": {
+    "zh_TW": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "en": "Slope to the gate",
+    "zh_CN": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "ja": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "ko": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "es": "坡道上的腳印比你早一步，方向卻是往下的。"
+  },
+  "story.f06.ambient.2": {
+    "zh_TW": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "en": "Slope to the gate",
+    "zh_CN": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "ja": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "ko": "坡道上的腳印比你早一步，方向卻是往下的。",
+    "es": "坡道上的腳印比你早一步，方向卻是往下的。"
+  },
+  "story.f07.ambient.1": {
+    "zh_TW": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "en": "Village edge: the seal knot",
+    "zh_CN": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "ja": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "ko": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "es": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。"
+  },
+  "story.f07.ambient.2": {
+    "zh_TW": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "en": "Village edge: the seal knot",
+    "zh_CN": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "ja": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "ko": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
+    "es": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。"
+  },
+  "story.f08.ambient.1": {
+    "zh_TW": "林線之後，霧開始有自己的重量。",
+    "en": "Forest path",
+    "zh_CN": "林線之後，霧開始有自己的重量。",
+    "ja": "林線之後，霧開始有自己的重量。",
+    "ko": "林線之後，霧開始有自己的重量。",
+    "es": "林線之後，霧開始有自己的重量。"
+  },
+  "story.f08.ambient.2": {
+    "zh_TW": "林線之後，霧開始有自己的重量。",
+    "en": "Forest path",
+    "zh_CN": "林線之後，霧開始有自己的重量。",
+    "ja": "林線之後，霧開始有自己的重量。",
+    "ko": "林線之後，霧開始有自己的重量。",
+    "es": "林線之後，霧開始有自己的重量。"
+  },
+  "story.f09.ambient.1": {
+    "zh_TW": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "en": "The old sorcerer's campfire",
+    "zh_CN": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "ja": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "ko": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "es": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」"
+  },
+  "story.f09.ambient.2": {
+    "zh_TW": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "en": "The old sorcerer's campfire",
+    "zh_CN": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "ja": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "ko": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
+    "es": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」"
+  },
+  "story.f10.ambient.1": {
+    "zh_TW": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "en": "Broken-arrow snares",
+    "zh_CN": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "ja": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "ko": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "es": "腳下全是折斷的箭——有人不希望你走到這裡。"
+  },
+  "story.f10.ambient.2": {
+    "zh_TW": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "en": "Broken-arrow snares",
+    "zh_CN": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "ja": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "ko": "腳下全是折斷的箭——有人不希望你走到這裡。",
+    "es": "腳下全是折斷的箭——有人不希望你走到這裡。"
+  },
+  "story.f11.ambient.1": {
+    "zh_TW": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "en": "The old arrow",
+    "zh_CN": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "ja": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "ko": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "es": "一支插在樹心的箭，箭羽是你前世的紋樣。"
+  },
+  "story.f11.ambient.2": {
+    "zh_TW": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "en": "The old arrow",
+    "zh_CN": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "ja": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "ko": "一支插在樹心的箭，箭羽是你前世的紋樣。",
+    "es": "一支插在樹心的箭，箭羽是你前世的紋樣。"
+  },
+  "story.f12.ambient.1": {
+    "zh_TW": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "en": "The nameless grave",
+    "zh_CN": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "ja": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "ko": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "es": "無名塚沒有名字，只有一把沒收鞘的劍。"
+  },
+  "story.f12.ambient.2": {
+    "zh_TW": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "en": "The nameless grave",
+    "zh_CN": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "ja": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "ko": "無名塚沒有名字，只有一把沒收鞘的劍。",
+    "es": "無名塚沒有名字，只有一把沒收鞘的劍。"
+  },
+  "story.f13.ambient.1": {
+    "zh_TW": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "en": "Hunting trail in fog",
+    "zh_CN": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "ja": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "ko": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "es": "霧裡的獵徑繞回原處，像有人希望你留在這裡。"
+  },
+  "story.f13.ambient.2": {
+    "zh_TW": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "en": "Hunting trail in fog",
+    "zh_CN": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "ja": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "ko": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
+    "es": "霧裡的獵徑繞回原處，像有人希望你留在這裡。"
+  },
+  "story.f14.ambient.1": {
+    "zh_TW": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "en": "Forest path: the seal knot",
+    "zh_CN": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "ja": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "ko": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "es": "折箭獵手在霧中拉弓，箭尖對著你的胸口。"
+  },
+  "story.f14.ambient.2": {
+    "zh_TW": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "en": "Forest path: the seal knot",
+    "zh_CN": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "ja": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "ko": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
+    "es": "折箭獵手在霧中拉弓，箭尖對著你的胸口。"
+  },
+  "story.f15.ambient.1": {
+    "zh_TW": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "en": "Soldiers before the gate",
+    "zh_CN": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "ja": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "ko": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "es": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。"
+  },
+  "story.f15.ambient.2": {
+    "zh_TW": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "en": "Soldiers before the gate",
+    "zh_CN": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "ja": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "ko": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
+    "es": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。"
+  },
+  "story.f16.ambient.1": {
+    "zh_TW": "石階上刻滿了名字，最後一個位置是空的。",
+    "en": "The gate steps",
+    "zh_CN": "石階上刻滿了名字，最後一個位置是空的。",
+    "ja": "石階上刻滿了名字，最後一個位置是空的。",
+    "ko": "石階上刻滿了名字，最後一個位置是空的。",
+    "es": "石階上刻滿了名字，最後一個位置是空的。"
+  },
+  "story.f16.ambient.2": {
+    "zh_TW": "石階上刻滿了名字，最後一個位置是空的。",
+    "en": "The gate steps",
+    "zh_CN": "石階上刻滿了名字，最後一個位置是空的。",
+    "ja": "石階上刻滿了名字，最後一個位置是空的。",
+    "ko": "石階上刻滿了名字，最後一個位置是空的。",
+    "es": "石階上刻滿了名字，最後一個位置是空的。"
+  },
+  "story.f17.ambient.1": {
+    "zh_TW": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "en": "Corridor of carvings",
+    "zh_CN": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "ja": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "ko": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "es": "走廊兩側的刻痕連成一張臉，你認得那張臉。"
+  },
+  "story.f17.ambient.2": {
+    "zh_TW": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "en": "Corridor of carvings",
+    "zh_CN": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "ja": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "ko": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
+    "es": "走廊兩側的刻痕連成一張臉，你認得那張臉。"
+  },
+  "story.f18.ambient.1": {
+    "zh_TW": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "en": "The ring and the rubbing",
+    "zh_CN": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "ja": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "ko": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "es": "門環上的刻痕與你腰間那把劍的缺口吻合。"
+  },
+  "story.f18.ambient.2": {
+    "zh_TW": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "en": "The ring and the rubbing",
+    "zh_CN": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "ja": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "ko": "門環上的刻痕與你腰間那把劍的缺口吻合。",
+    "es": "門環上的刻痕與你腰間那把劍的缺口吻合。"
+  },
+  "story.f19.ambient.1": {
+    "zh_TW": "門環上的刻痕——可以補，也可以砸。",
+    "en": "The notch on the ring",
+    "zh_CN": "門環上的刻痕——可以補，也可以砸。",
+    "ja": "門環上的刻痕——可以補，也可以砸。",
+    "ko": "門環上的刻痕——可以補，也可以砸。",
+    "es": "門環上的刻痕——可以補，也可以砸。"
+  },
+  "story.f19.ambient.2": {
+    "zh_TW": "門環上的刻痕——可以補，也可以砸。",
+    "en": "The notch on the ring",
+    "zh_CN": "門環上的刻痕——可以補，也可以砸。",
+    "ja": "門環上的刻痕——可以補，也可以砸。",
+    "ko": "門環上的刻痕——可以補，也可以砸。",
+    "es": "門環上的刻痕——可以補，也可以砸。"
+  },
+  "story.f20.ambient.1": {
+    "zh_TW": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "en": "First qi beyond the gate",
+    "zh_CN": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "ja": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "ko": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "es": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。"
+  },
+  "story.f20.ambient.2": {
+    "zh_TW": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "en": "First qi beyond the gate",
+    "zh_CN": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "ja": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "ko": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
+    "es": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。"
+  },
+  "story.f21.ambient.1": {
+    "zh_TW": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "en": "The gate: the seal knot",
+    "zh_CN": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "ja": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "ko": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "es": "守門石巨人的眼窩裡亮著兩點舊火。"
+  },
+  "story.f21.ambient.2": {
+    "zh_TW": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "en": "The gate: the seal knot",
+    "zh_CN": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "ja": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "ko": "守門石巨人的眼窩裡亮著兩點舊火。",
+    "es": "守門石巨人的眼窩裡亮著兩點舊火。"
+  },
+  "story.f22.ambient.1": {
+    "zh_TW": "第 22 層的空氣裡有前世的形狀。",
+    "en": "第 22 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 22 層的空氣裡有前世的形狀。",
+    "ja": "第 22 層的空氣裡有前世的形狀。",
+    "ko": "第 22 層的空氣裡有前世的形狀。",
+    "es": "第 22 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f22.ambient.2": {
+    "zh_TW": "第 22 層的空氣裡有前世的形狀。",
+    "en": "第 22 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 22 層的空氣裡有前世的形狀。",
+    "ja": "第 22 層的空氣裡有前世的形狀。",
+    "ko": "第 22 層的空氣裡有前世的形狀。",
+    "es": "第 22 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f23.ambient.1": {
+    "zh_TW": "第 23 層的空氣裡有前世的形狀。",
+    "en": "第 23 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 23 層的空氣裡有前世的形狀。",
+    "ja": "第 23 層的空氣裡有前世的形狀。",
+    "ko": "第 23 層的空氣裡有前世的形狀。",
+    "es": "第 23 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f23.ambient.2": {
+    "zh_TW": "第 23 層的空氣裡有前世的形狀。",
+    "en": "第 23 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 23 層的空氣裡有前世的形狀。",
+    "ja": "第 23 層的空氣裡有前世的形狀。",
+    "ko": "第 23 層的空氣裡有前世的形狀。",
+    "es": "第 23 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f24.ambient.1": {
+    "zh_TW": "第 24 層的空氣裡有前世的形狀。",
+    "en": "第 24 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 24 層的空氣裡有前世的形狀。",
+    "ja": "第 24 層的空氣裡有前世的形狀。",
+    "ko": "第 24 層的空氣裡有前世的形狀。",
+    "es": "第 24 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f24.ambient.2": {
+    "zh_TW": "第 24 層的空氣裡有前世的形狀。",
+    "en": "第 24 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 24 層的空氣裡有前世的形狀。",
+    "ja": "第 24 層的空氣裡有前世的形狀。",
+    "ko": "第 24 層的空氣裡有前世的形狀。",
+    "es": "第 24 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f25.ambient.1": {
+    "zh_TW": "第 25 層的空氣裡有前世的形狀。",
+    "en": "第 25 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 25 層的空氣裡有前世的形狀。",
+    "ja": "第 25 層的空氣裡有前世的形狀。",
+    "ko": "第 25 層的空氣裡有前世的形狀。",
+    "es": "第 25 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f25.ambient.2": {
+    "zh_TW": "第 25 層的空氣裡有前世的形狀。",
+    "en": "第 25 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 25 層的空氣裡有前世的形狀。",
+    "ja": "第 25 層的空氣裡有前世的形狀。",
+    "ko": "第 25 層的空氣裡有前世的形狀。",
+    "es": "第 25 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f26.ambient.1": {
+    "zh_TW": "第 26 層的空氣裡有前世的形狀。",
+    "en": "第 26 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 26 層的空氣裡有前世的形狀。",
+    "ja": "第 26 層的空氣裡有前世的形狀。",
+    "ko": "第 26 層的空氣裡有前世的形狀。",
+    "es": "第 26 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f26.ambient.2": {
+    "zh_TW": "第 26 層的空氣裡有前世的形狀。",
+    "en": "第 26 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 26 層的空氣裡有前世的形狀。",
+    "ja": "第 26 層的空氣裡有前世的形狀。",
+    "ko": "第 26 層的空氣裡有前世的形狀。",
+    "es": "第 26 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f27.ambient.1": {
+    "zh_TW": "第 27 層的空氣裡有前世的形狀。",
+    "en": "第 27 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 27 層的空氣裡有前世的形狀。",
+    "ja": "第 27 層的空氣裡有前世的形狀。",
+    "ko": "第 27 層的空氣裡有前世的形狀。",
+    "es": "第 27 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f27.ambient.2": {
+    "zh_TW": "第 27 層的空氣裡有前世的形狀。",
+    "en": "第 27 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 27 層的空氣裡有前世的形狀。",
+    "ja": "第 27 層的空氣裡有前世的形狀。",
+    "ko": "第 27 層的空氣裡有前世的形狀。",
+    "es": "第 27 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f28.ambient.1": {
+    "zh_TW": "第 28 層的空氣裡有前世的形狀。",
+    "en": "第 28 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 28 層的空氣裡有前世的形狀。",
+    "ja": "第 28 層的空氣裡有前世的形狀。",
+    "ko": "第 28 層的空氣裡有前世的形狀。",
+    "es": "第 28 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f28.ambient.2": {
+    "zh_TW": "第 28 層的空氣裡有前世的形狀。",
+    "en": "第 28 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 28 層的空氣裡有前世的形狀。",
+    "ja": "第 28 層的空氣裡有前世的形狀。",
+    "ko": "第 28 層的空氣裡有前世的形狀。",
+    "es": "第 28 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f29.ambient.1": {
+    "zh_TW": "第 29 層的空氣裡有前世的形狀。",
+    "en": "第 29 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 29 層的空氣裡有前世的形狀。",
+    "ja": "第 29 層的空氣裡有前世的形狀。",
+    "ko": "第 29 層的空氣裡有前世的形狀。",
+    "es": "第 29 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f29.ambient.2": {
+    "zh_TW": "第 29 層的空氣裡有前世的形狀。",
+    "en": "第 29 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 29 層的空氣裡有前世的形狀。",
+    "ja": "第 29 層的空氣裡有前世的形狀。",
+    "ko": "第 29 層的空氣裡有前世的形狀。",
+    "es": "第 29 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f30.ambient.1": {
+    "zh_TW": "第 30 層的空氣裡有前世的形狀。",
+    "en": "第 30 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 30 層的空氣裡有前世的形狀。",
+    "ja": "第 30 層的空氣裡有前世的形狀。",
+    "ko": "第 30 層的空氣裡有前世的形狀。",
+    "es": "第 30 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f30.ambient.2": {
+    "zh_TW": "第 30 層的空氣裡有前世的形狀。",
+    "en": "第 30 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 30 層的空氣裡有前世的形狀。",
+    "ja": "第 30 層的空氣裡有前世的形狀。",
+    "ko": "第 30 層的空氣裡有前世的形狀。",
+    "es": "第 30 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f31.ambient.1": {
+    "zh_TW": "第 31 層的空氣裡有前世的形狀。",
+    "en": "第 31 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 31 層的空氣裡有前世的形狀。",
+    "ja": "第 31 層的空氣裡有前世的形狀。",
+    "ko": "第 31 層的空氣裡有前世的形狀。",
+    "es": "第 31 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f31.ambient.2": {
+    "zh_TW": "第 31 層的空氣裡有前世的形狀。",
+    "en": "第 31 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 31 層的空氣裡有前世的形狀。",
+    "ja": "第 31 層的空氣裡有前世的形狀。",
+    "ko": "第 31 層的空氣裡有前世的形狀。",
+    "es": "第 31 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f32.ambient.1": {
+    "zh_TW": "第 32 層的空氣裡有前世的形狀。",
+    "en": "第 32 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 32 層的空氣裡有前世的形狀。",
+    "ja": "第 32 層的空氣裡有前世的形狀。",
+    "ko": "第 32 層的空氣裡有前世的形狀。",
+    "es": "第 32 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f32.ambient.2": {
+    "zh_TW": "第 32 層的空氣裡有前世的形狀。",
+    "en": "第 32 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 32 層的空氣裡有前世的形狀。",
+    "ja": "第 32 層的空氣裡有前世的形狀。",
+    "ko": "第 32 層的空氣裡有前世的形狀。",
+    "es": "第 32 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f33.ambient.1": {
+    "zh_TW": "第 33 層的空氣裡有前世的形狀。",
+    "en": "第 33 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 33 層的空氣裡有前世的形狀。",
+    "ja": "第 33 層的空氣裡有前世的形狀。",
+    "ko": "第 33 層的空氣裡有前世的形狀。",
+    "es": "第 33 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f33.ambient.2": {
+    "zh_TW": "第 33 層的空氣裡有前世的形狀。",
+    "en": "第 33 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 33 層的空氣裡有前世的形狀。",
+    "ja": "第 33 層的空氣裡有前世的形狀。",
+    "ko": "第 33 層的空氣裡有前世的形狀。",
+    "es": "第 33 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f34.ambient.1": {
+    "zh_TW": "第 34 層的空氣裡有前世的形狀。",
+    "en": "第 34 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 34 層的空氣裡有前世的形狀。",
+    "ja": "第 34 層的空氣裡有前世的形狀。",
+    "ko": "第 34 層的空氣裡有前世的形狀。",
+    "es": "第 34 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f34.ambient.2": {
+    "zh_TW": "第 34 層的空氣裡有前世的形狀。",
+    "en": "第 34 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 34 層的空氣裡有前世的形狀。",
+    "ja": "第 34 層的空氣裡有前世的形狀。",
+    "ko": "第 34 層的空氣裡有前世的形狀。",
+    "es": "第 34 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f35.ambient.1": {
+    "zh_TW": "第 35 層的空氣裡有前世的形狀。",
+    "en": "第 35 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 35 層的空氣裡有前世的形狀。",
+    "ja": "第 35 層的空氣裡有前世的形狀。",
+    "ko": "第 35 層的空氣裡有前世的形狀。",
+    "es": "第 35 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f35.ambient.2": {
+    "zh_TW": "第 35 層的空氣裡有前世的形狀。",
+    "en": "第 35 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 35 層的空氣裡有前世的形狀。",
+    "ja": "第 35 層的空氣裡有前世的形狀。",
+    "ko": "第 35 層的空氣裡有前世的形狀。",
+    "es": "第 35 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f36.ambient.1": {
+    "zh_TW": "第 36 層的空氣裡有前世的形狀。",
+    "en": "第 36 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 36 層的空氣裡有前世的形狀。",
+    "ja": "第 36 層的空氣裡有前世的形狀。",
+    "ko": "第 36 層的空氣裡有前世的形狀。",
+    "es": "第 36 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f36.ambient.2": {
+    "zh_TW": "第 36 層的空氣裡有前世的形狀。",
+    "en": "第 36 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 36 層的空氣裡有前世的形狀。",
+    "ja": "第 36 層的空氣裡有前世的形狀。",
+    "ko": "第 36 層的空氣裡有前世的形狀。",
+    "es": "第 36 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f37.ambient.1": {
+    "zh_TW": "第 37 層的空氣裡有前世的形狀。",
+    "en": "第 37 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 37 層的空氣裡有前世的形狀。",
+    "ja": "第 37 層的空氣裡有前世的形狀。",
+    "ko": "第 37 層的空氣裡有前世的形狀。",
+    "es": "第 37 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f37.ambient.2": {
+    "zh_TW": "第 37 層的空氣裡有前世的形狀。",
+    "en": "第 37 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 37 層的空氣裡有前世的形狀。",
+    "ja": "第 37 層的空氣裡有前世的形狀。",
+    "ko": "第 37 層的空氣裡有前世的形狀。",
+    "es": "第 37 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f38.ambient.1": {
+    "zh_TW": "第 38 層的空氣裡有前世的形狀。",
+    "en": "第 38 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 38 層的空氣裡有前世的形狀。",
+    "ja": "第 38 層的空氣裡有前世的形狀。",
+    "ko": "第 38 層的空氣裡有前世的形狀。",
+    "es": "第 38 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f38.ambient.2": {
+    "zh_TW": "第 38 層的空氣裡有前世的形狀。",
+    "en": "第 38 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 38 層的空氣裡有前世的形狀。",
+    "ja": "第 38 層的空氣裡有前世的形狀。",
+    "ko": "第 38 層的空氣裡有前世的形狀。",
+    "es": "第 38 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f39.ambient.1": {
+    "zh_TW": "第 39 層的空氣裡有前世的形狀。",
+    "en": "第 39 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 39 層的空氣裡有前世的形狀。",
+    "ja": "第 39 層的空氣裡有前世的形狀。",
+    "ko": "第 39 層的空氣裡有前世的形狀。",
+    "es": "第 39 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f39.ambient.2": {
+    "zh_TW": "第 39 層的空氣裡有前世的形狀。",
+    "en": "第 39 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 39 層的空氣裡有前世的形狀。",
+    "ja": "第 39 層的空氣裡有前世的形狀。",
+    "ko": "第 39 層的空氣裡有前世的形狀。",
+    "es": "第 39 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f40.ambient.1": {
+    "zh_TW": "第 40 層的空氣裡有前世的形狀。",
+    "en": "第 40 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 40 層的空氣裡有前世的形狀。",
+    "ja": "第 40 層的空氣裡有前世的形狀。",
+    "ko": "第 40 層的空氣裡有前世的形狀。",
+    "es": "第 40 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f40.ambient.2": {
+    "zh_TW": "第 40 層的空氣裡有前世的形狀。",
+    "en": "第 40 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 40 層的空氣裡有前世的形狀。",
+    "ja": "第 40 層的空氣裡有前世的形狀。",
+    "ko": "第 40 層的空氣裡有前世的形狀。",
+    "es": "第 40 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f41.ambient.1": {
+    "zh_TW": "第 41 層的空氣裡有前世的形狀。",
+    "en": "第 41 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 41 層的空氣裡有前世的形狀。",
+    "ja": "第 41 層的空氣裡有前世的形狀。",
+    "ko": "第 41 層的空氣裡有前世的形狀。",
+    "es": "第 41 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f41.ambient.2": {
+    "zh_TW": "第 41 層的空氣裡有前世的形狀。",
+    "en": "第 41 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 41 層的空氣裡有前世的形狀。",
+    "ja": "第 41 層的空氣裡有前世的形狀。",
+    "ko": "第 41 層的空氣裡有前世的形狀。",
+    "es": "第 41 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f42.ambient.1": {
+    "zh_TW": "第 42 層的空氣裡有前世的形狀。",
+    "en": "第 42 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 42 層的空氣裡有前世的形狀。",
+    "ja": "第 42 層的空氣裡有前世的形狀。",
+    "ko": "第 42 層的空氣裡有前世的形狀。",
+    "es": "第 42 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f42.ambient.2": {
+    "zh_TW": "第 42 層的空氣裡有前世的形狀。",
+    "en": "第 42 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 42 層的空氣裡有前世的形狀。",
+    "ja": "第 42 層的空氣裡有前世的形狀。",
+    "ko": "第 42 層的空氣裡有前世的形狀。",
+    "es": "第 42 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f43.ambient.1": {
+    "zh_TW": "第 43 層的空氣裡有前世的形狀。",
+    "en": "第 43 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 43 層的空氣裡有前世的形狀。",
+    "ja": "第 43 層的空氣裡有前世的形狀。",
+    "ko": "第 43 層的空氣裡有前世的形狀。",
+    "es": "第 43 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f43.ambient.2": {
+    "zh_TW": "第 43 層的空氣裡有前世的形狀。",
+    "en": "第 43 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 43 層的空氣裡有前世的形狀。",
+    "ja": "第 43 層的空氣裡有前世的形狀。",
+    "ko": "第 43 層的空氣裡有前世的形狀。",
+    "es": "第 43 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f44.ambient.1": {
+    "zh_TW": "第 44 層的空氣裡有前世的形狀。",
+    "en": "第 44 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 44 層的空氣裡有前世的形狀。",
+    "ja": "第 44 層的空氣裡有前世的形狀。",
+    "ko": "第 44 層的空氣裡有前世的形狀。",
+    "es": "第 44 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f44.ambient.2": {
+    "zh_TW": "第 44 層的空氣裡有前世的形狀。",
+    "en": "第 44 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 44 層的空氣裡有前世的形狀。",
+    "ja": "第 44 層的空氣裡有前世的形狀。",
+    "ko": "第 44 層的空氣裡有前世的形狀。",
+    "es": "第 44 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f45.ambient.1": {
+    "zh_TW": "第 45 層的空氣裡有前世的形狀。",
+    "en": "第 45 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 45 層的空氣裡有前世的形狀。",
+    "ja": "第 45 層的空氣裡有前世的形狀。",
+    "ko": "第 45 層的空氣裡有前世的形狀。",
+    "es": "第 45 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f45.ambient.2": {
+    "zh_TW": "第 45 層的空氣裡有前世的形狀。",
+    "en": "第 45 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 45 層的空氣裡有前世的形狀。",
+    "ja": "第 45 層的空氣裡有前世的形狀。",
+    "ko": "第 45 層的空氣裡有前世的形狀。",
+    "es": "第 45 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f46.ambient.1": {
+    "zh_TW": "第 46 層的空氣裡有前世的形狀。",
+    "en": "第 46 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 46 層的空氣裡有前世的形狀。",
+    "ja": "第 46 層的空氣裡有前世的形狀。",
+    "ko": "第 46 層的空氣裡有前世的形狀。",
+    "es": "第 46 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f46.ambient.2": {
+    "zh_TW": "第 46 層的空氣裡有前世的形狀。",
+    "en": "第 46 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 46 層的空氣裡有前世的形狀。",
+    "ja": "第 46 層的空氣裡有前世的形狀。",
+    "ko": "第 46 層的空氣裡有前世的形狀。",
+    "es": "第 46 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f47.ambient.1": {
+    "zh_TW": "第 47 層的空氣裡有前世的形狀。",
+    "en": "第 47 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 47 層的空氣裡有前世的形狀。",
+    "ja": "第 47 層的空氣裡有前世的形狀。",
+    "ko": "第 47 層的空氣裡有前世的形狀。",
+    "es": "第 47 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f47.ambient.2": {
+    "zh_TW": "第 47 層的空氣裡有前世的形狀。",
+    "en": "第 47 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 47 層的空氣裡有前世的形狀。",
+    "ja": "第 47 層的空氣裡有前世的形狀。",
+    "ko": "第 47 層的空氣裡有前世的形狀。",
+    "es": "第 47 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f48.ambient.1": {
+    "zh_TW": "第 48 層的空氣裡有前世的形狀。",
+    "en": "第 48 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 48 層的空氣裡有前世的形狀。",
+    "ja": "第 48 層的空氣裡有前世的形狀。",
+    "ko": "第 48 層的空氣裡有前世的形狀。",
+    "es": "第 48 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f48.ambient.2": {
+    "zh_TW": "第 48 層的空氣裡有前世的形狀。",
+    "en": "第 48 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 48 層的空氣裡有前世的形狀。",
+    "ja": "第 48 層的空氣裡有前世的形狀。",
+    "ko": "第 48 層的空氣裡有前世的形狀。",
+    "es": "第 48 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f49.ambient.1": {
+    "zh_TW": "第 49 層的空氣裡有前世的形狀。",
+    "en": "第 49 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 49 層的空氣裡有前世的形狀。",
+    "ja": "第 49 層的空氣裡有前世的形狀。",
+    "ko": "第 49 層的空氣裡有前世的形狀。",
+    "es": "第 49 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f49.ambient.2": {
+    "zh_TW": "第 49 層的空氣裡有前世的形狀。",
+    "en": "第 49 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 49 層的空氣裡有前世的形狀。",
+    "ja": "第 49 層的空氣裡有前世的形狀。",
+    "ko": "第 49 層的空氣裡有前世的形狀。",
+    "es": "第 49 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f50.ambient.1": {
+    "zh_TW": "第 50 層的空氣裡有前世的形狀。",
+    "en": "第 50 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 50 層的空氣裡有前世的形狀。",
+    "ja": "第 50 層的空氣裡有前世的形狀。",
+    "ko": "第 50 層的空氣裡有前世的形狀。",
+    "es": "第 50 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f50.ambient.2": {
+    "zh_TW": "第 50 層的空氣裡有前世的形狀。",
+    "en": "第 50 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 50 層的空氣裡有前世的形狀。",
+    "ja": "第 50 層的空氣裡有前世的形狀。",
+    "ko": "第 50 層的空氣裡有前世的形狀。",
+    "es": "第 50 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f51.ambient.1": {
+    "zh_TW": "第 51 層的空氣裡有前世的形狀。",
+    "en": "第 51 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 51 層的空氣裡有前世的形狀。",
+    "ja": "第 51 層的空氣裡有前世的形狀。",
+    "ko": "第 51 層的空氣裡有前世的形狀。",
+    "es": "第 51 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f51.ambient.2": {
+    "zh_TW": "第 51 層的空氣裡有前世的形狀。",
+    "en": "第 51 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 51 層的空氣裡有前世的形狀。",
+    "ja": "第 51 層的空氣裡有前世的形狀。",
+    "ko": "第 51 層的空氣裡有前世的形狀。",
+    "es": "第 51 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f52.ambient.1": {
+    "zh_TW": "第 52 層的空氣裡有前世的形狀。",
+    "en": "第 52 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 52 層的空氣裡有前世的形狀。",
+    "ja": "第 52 層的空氣裡有前世的形狀。",
+    "ko": "第 52 層的空氣裡有前世的形狀。",
+    "es": "第 52 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f52.ambient.2": {
+    "zh_TW": "第 52 層的空氣裡有前世的形狀。",
+    "en": "第 52 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 52 層的空氣裡有前世的形狀。",
+    "ja": "第 52 層的空氣裡有前世的形狀。",
+    "ko": "第 52 層的空氣裡有前世的形狀。",
+    "es": "第 52 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f53.ambient.1": {
+    "zh_TW": "第 53 層的空氣裡有前世的形狀。",
+    "en": "第 53 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 53 層的空氣裡有前世的形狀。",
+    "ja": "第 53 層的空氣裡有前世的形狀。",
+    "ko": "第 53 層的空氣裡有前世的形狀。",
+    "es": "第 53 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f53.ambient.2": {
+    "zh_TW": "第 53 層的空氣裡有前世的形狀。",
+    "en": "第 53 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 53 層的空氣裡有前世的形狀。",
+    "ja": "第 53 層的空氣裡有前世的形狀。",
+    "ko": "第 53 層的空氣裡有前世的形狀。",
+    "es": "第 53 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f54.ambient.1": {
+    "zh_TW": "第 54 層的空氣裡有前世的形狀。",
+    "en": "第 54 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 54 層的空氣裡有前世的形狀。",
+    "ja": "第 54 層的空氣裡有前世的形狀。",
+    "ko": "第 54 層的空氣裡有前世的形狀。",
+    "es": "第 54 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f54.ambient.2": {
+    "zh_TW": "第 54 層的空氣裡有前世的形狀。",
+    "en": "第 54 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 54 層的空氣裡有前世的形狀。",
+    "ja": "第 54 層的空氣裡有前世的形狀。",
+    "ko": "第 54 層的空氣裡有前世的形狀。",
+    "es": "第 54 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f55.ambient.1": {
+    "zh_TW": "第 55 層的空氣裡有前世的形狀。",
+    "en": "第 55 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 55 層的空氣裡有前世的形狀。",
+    "ja": "第 55 層的空氣裡有前世的形狀。",
+    "ko": "第 55 層的空氣裡有前世的形狀。",
+    "es": "第 55 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f55.ambient.2": {
+    "zh_TW": "第 55 層的空氣裡有前世的形狀。",
+    "en": "第 55 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 55 層的空氣裡有前世的形狀。",
+    "ja": "第 55 層的空氣裡有前世的形狀。",
+    "ko": "第 55 層的空氣裡有前世的形狀。",
+    "es": "第 55 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f56.ambient.1": {
+    "zh_TW": "第 56 層的空氣裡有前世的形狀。",
+    "en": "第 56 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 56 層的空氣裡有前世的形狀。",
+    "ja": "第 56 層的空氣裡有前世的形狀。",
+    "ko": "第 56 層的空氣裡有前世的形狀。",
+    "es": "第 56 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f56.ambient.2": {
+    "zh_TW": "第 56 層的空氣裡有前世的形狀。",
+    "en": "第 56 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 56 層的空氣裡有前世的形狀。",
+    "ja": "第 56 層的空氣裡有前世的形狀。",
+    "ko": "第 56 層的空氣裡有前世的形狀。",
+    "es": "第 56 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f57.ambient.1": {
+    "zh_TW": "第 57 層的空氣裡有前世的形狀。",
+    "en": "第 57 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 57 層的空氣裡有前世的形狀。",
+    "ja": "第 57 層的空氣裡有前世的形狀。",
+    "ko": "第 57 層的空氣裡有前世的形狀。",
+    "es": "第 57 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f57.ambient.2": {
+    "zh_TW": "第 57 層的空氣裡有前世的形狀。",
+    "en": "第 57 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 57 層的空氣裡有前世的形狀。",
+    "ja": "第 57 層的空氣裡有前世的形狀。",
+    "ko": "第 57 層的空氣裡有前世的形狀。",
+    "es": "第 57 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f58.ambient.1": {
+    "zh_TW": "第 58 層的空氣裡有前世的形狀。",
+    "en": "第 58 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 58 層的空氣裡有前世的形狀。",
+    "ja": "第 58 層的空氣裡有前世的形狀。",
+    "ko": "第 58 層的空氣裡有前世的形狀。",
+    "es": "第 58 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f58.ambient.2": {
+    "zh_TW": "第 58 層的空氣裡有前世的形狀。",
+    "en": "第 58 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 58 層的空氣裡有前世的形狀。",
+    "ja": "第 58 層的空氣裡有前世的形狀。",
+    "ko": "第 58 層的空氣裡有前世的形狀。",
+    "es": "第 58 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f59.ambient.1": {
+    "zh_TW": "第 59 層的空氣裡有前世的形狀。",
+    "en": "第 59 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 59 層的空氣裡有前世的形狀。",
+    "ja": "第 59 層的空氣裡有前世的形狀。",
+    "ko": "第 59 層的空氣裡有前世的形狀。",
+    "es": "第 59 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f59.ambient.2": {
+    "zh_TW": "第 59 層的空氣裡有前世的形狀。",
+    "en": "第 59 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 59 層的空氣裡有前世的形狀。",
+    "ja": "第 59 層的空氣裡有前世的形狀。",
+    "ko": "第 59 層的空氣裡有前世的形狀。",
+    "es": "第 59 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f60.ambient.1": {
+    "zh_TW": "第 60 層的空氣裡有前世的形狀。",
+    "en": "第 60 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 60 層的空氣裡有前世的形狀。",
+    "ja": "第 60 層的空氣裡有前世的形狀。",
+    "ko": "第 60 層的空氣裡有前世的形狀。",
+    "es": "第 60 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f60.ambient.2": {
+    "zh_TW": "第 60 層的空氣裡有前世的形狀。",
+    "en": "第 60 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 60 層的空氣裡有前世的形狀。",
+    "ja": "第 60 層的空氣裡有前世的形狀。",
+    "ko": "第 60 層的空氣裡有前世的形狀。",
+    "es": "第 60 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f61.ambient.1": {
+    "zh_TW": "第 61 層的空氣裡有前世的形狀。",
+    "en": "第 61 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 61 層的空氣裡有前世的形狀。",
+    "ja": "第 61 層的空氣裡有前世的形狀。",
+    "ko": "第 61 層的空氣裡有前世的形狀。",
+    "es": "第 61 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f61.ambient.2": {
+    "zh_TW": "第 61 層的空氣裡有前世的形狀。",
+    "en": "第 61 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 61 層的空氣裡有前世的形狀。",
+    "ja": "第 61 層的空氣裡有前世的形狀。",
+    "ko": "第 61 層的空氣裡有前世的形狀。",
+    "es": "第 61 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f62.ambient.1": {
+    "zh_TW": "第 62 層的空氣裡有前世的形狀。",
+    "en": "第 62 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 62 層的空氣裡有前世的形狀。",
+    "ja": "第 62 層的空氣裡有前世的形狀。",
+    "ko": "第 62 層的空氣裡有前世的形狀。",
+    "es": "第 62 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f62.ambient.2": {
+    "zh_TW": "第 62 層的空氣裡有前世的形狀。",
+    "en": "第 62 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 62 層的空氣裡有前世的形狀。",
+    "ja": "第 62 層的空氣裡有前世的形狀。",
+    "ko": "第 62 層的空氣裡有前世的形狀。",
+    "es": "第 62 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f63.ambient.1": {
+    "zh_TW": "第 63 層的空氣裡有前世的形狀。",
+    "en": "第 63 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 63 層的空氣裡有前世的形狀。",
+    "ja": "第 63 層的空氣裡有前世的形狀。",
+    "ko": "第 63 層的空氣裡有前世的形狀。",
+    "es": "第 63 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f63.ambient.2": {
+    "zh_TW": "第 63 層的空氣裡有前世的形狀。",
+    "en": "第 63 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 63 層的空氣裡有前世的形狀。",
+    "ja": "第 63 層的空氣裡有前世的形狀。",
+    "ko": "第 63 層的空氣裡有前世的形狀。",
+    "es": "第 63 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f64.ambient.1": {
+    "zh_TW": "第 64 層的空氣裡有前世的形狀。",
+    "en": "第 64 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 64 層的空氣裡有前世的形狀。",
+    "ja": "第 64 層的空氣裡有前世的形狀。",
+    "ko": "第 64 層的空氣裡有前世的形狀。",
+    "es": "第 64 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f64.ambient.2": {
+    "zh_TW": "第 64 層的空氣裡有前世的形狀。",
+    "en": "第 64 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 64 層的空氣裡有前世的形狀。",
+    "ja": "第 64 層的空氣裡有前世的形狀。",
+    "ko": "第 64 層的空氣裡有前世的形狀。",
+    "es": "第 64 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f65.ambient.1": {
+    "zh_TW": "第 65 層的空氣裡有前世的形狀。",
+    "en": "第 65 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 65 層的空氣裡有前世的形狀。",
+    "ja": "第 65 層的空氣裡有前世的形狀。",
+    "ko": "第 65 層的空氣裡有前世的形狀。",
+    "es": "第 65 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f65.ambient.2": {
+    "zh_TW": "第 65 層的空氣裡有前世的形狀。",
+    "en": "第 65 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 65 層的空氣裡有前世的形狀。",
+    "ja": "第 65 層的空氣裡有前世的形狀。",
+    "ko": "第 65 層的空氣裡有前世的形狀。",
+    "es": "第 65 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f66.ambient.1": {
+    "zh_TW": "第 66 層的空氣裡有前世的形狀。",
+    "en": "第 66 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 66 層的空氣裡有前世的形狀。",
+    "ja": "第 66 層的空氣裡有前世的形狀。",
+    "ko": "第 66 層的空氣裡有前世的形狀。",
+    "es": "第 66 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f66.ambient.2": {
+    "zh_TW": "第 66 層的空氣裡有前世的形狀。",
+    "en": "第 66 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 66 層的空氣裡有前世的形狀。",
+    "ja": "第 66 層的空氣裡有前世的形狀。",
+    "ko": "第 66 層的空氣裡有前世的形狀。",
+    "es": "第 66 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f67.ambient.1": {
+    "zh_TW": "第 67 層的空氣裡有前世的形狀。",
+    "en": "第 67 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 67 層的空氣裡有前世的形狀。",
+    "ja": "第 67 層的空氣裡有前世的形狀。",
+    "ko": "第 67 層的空氣裡有前世的形狀。",
+    "es": "第 67 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f67.ambient.2": {
+    "zh_TW": "第 67 層的空氣裡有前世的形狀。",
+    "en": "第 67 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 67 層的空氣裡有前世的形狀。",
+    "ja": "第 67 層的空氣裡有前世的形狀。",
+    "ko": "第 67 層的空氣裡有前世的形狀。",
+    "es": "第 67 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f68.ambient.1": {
+    "zh_TW": "第 68 層的空氣裡有前世的形狀。",
+    "en": "第 68 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 68 層的空氣裡有前世的形狀。",
+    "ja": "第 68 層的空氣裡有前世的形狀。",
+    "ko": "第 68 層的空氣裡有前世的形狀。",
+    "es": "第 68 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f68.ambient.2": {
+    "zh_TW": "第 68 層的空氣裡有前世的形狀。",
+    "en": "第 68 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 68 層的空氣裡有前世的形狀。",
+    "ja": "第 68 層的空氣裡有前世的形狀。",
+    "ko": "第 68 層的空氣裡有前世的形狀。",
+    "es": "第 68 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f69.ambient.1": {
+    "zh_TW": "第 69 層的空氣裡有前世的形狀。",
+    "en": "第 69 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 69 層的空氣裡有前世的形狀。",
+    "ja": "第 69 層的空氣裡有前世的形狀。",
+    "ko": "第 69 層的空氣裡有前世的形狀。",
+    "es": "第 69 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f69.ambient.2": {
+    "zh_TW": "第 69 層的空氣裡有前世的形狀。",
+    "en": "第 69 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 69 層的空氣裡有前世的形狀。",
+    "ja": "第 69 層的空氣裡有前世的形狀。",
+    "ko": "第 69 層的空氣裡有前世的形狀。",
+    "es": "第 69 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f70.ambient.1": {
+    "zh_TW": "第 70 層的空氣裡有前世的形狀。",
+    "en": "第 70 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 70 層的空氣裡有前世的形狀。",
+    "ja": "第 70 層的空氣裡有前世的形狀。",
+    "ko": "第 70 層的空氣裡有前世的形狀。",
+    "es": "第 70 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "story.f70.ambient.2": {
+    "zh_TW": "第 70 層的空氣裡有前世的形狀。",
+    "en": "第 70 層的空氣裡有前世的形狀。",
+    "zh_CN": "第 70 層的空氣裡有前世的形狀。",
+    "ja": "第 70 層的空氣裡有前世的形狀。",
+    "ko": "第 70 層的空氣裡有前世的形狀。",
+    "es": "第 70 層的空氣裡有前世的形狀。",
+    "_todo": true
+  },
+  "ev_barracks_deserter": {
+    "zh_TW": "ev_barracks_deserter",
+    "en": "ev_barracks_deserter",
+    "zh_CN": "ev_barracks_deserter",
+    "ja": "ev_barracks_deserter",
+    "ko": "ev_barracks_deserter",
+    "es": "ev_barracks_deserter",
+    "_todo": true
+  },
+  "ev_barracks_deserter_v2": {
+    "zh_TW": "ev_barracks_deserter_v2",
+    "en": "ev_barracks_deserter_v2",
+    "zh_CN": "ev_barracks_deserter_v2",
+    "ja": "ev_barracks_deserter_v2",
+    "ko": "ev_barracks_deserter_v2",
+    "es": "ev_barracks_deserter_v2",
+    "_todo": true
+  },
+  "ev_barracks_deserter_v4": {
+    "zh_TW": "ev_barracks_deserter_v4",
+    "en": "ev_barracks_deserter_v4",
+    "zh_CN": "ev_barracks_deserter_v4",
+    "ja": "ev_barracks_deserter_v4",
+    "ko": "ev_barracks_deserter_v4",
+    "es": "ev_barracks_deserter_v4",
+    "_todo": true
+  },
+  "ev_cavern_echo_wall_v4": {
+    "zh_TW": "ev_cavern_echo_wall_v4",
+    "en": "ev_cavern_echo_wall_v4",
+    "zh_CN": "ev_cavern_echo_wall_v4",
+    "ja": "ev_cavern_echo_wall_v4",
+    "ko": "ev_cavern_echo_wall_v4",
+    "es": "ev_cavern_echo_wall_v4",
+    "_todo": true
+  },
+  "ev_cavern_twin_crystal_v4": {
+    "zh_TW": "ev_cavern_twin_crystal_v4",
+    "en": "ev_cavern_twin_crystal_v4",
+    "zh_CN": "ev_cavern_twin_crystal_v4",
+    "ja": "ev_cavern_twin_crystal_v4",
+    "ko": "ev_cavern_twin_crystal_v4",
+    "es": "ev_cavern_twin_crystal_v4",
+    "_todo": true
+  },
+  "ev_crypt_choir_echo_v2": {
+    "zh_TW": "ev_crypt_choir_echo_v2",
+    "en": "ev_crypt_choir_echo_v2",
+    "zh_CN": "ev_crypt_choir_echo_v2",
+    "ja": "ev_crypt_choir_echo_v2",
+    "ko": "ev_crypt_choir_echo_v2",
+    "es": "ev_crypt_choir_echo_v2",
+    "_todo": true
+  },
+  "ev_crypt_choir_echo_v4": {
+    "zh_TW": "ev_crypt_choir_echo_v4",
+    "en": "ev_crypt_choir_echo_v4",
+    "zh_CN": "ev_crypt_choir_echo_v4",
+    "ja": "ev_crypt_choir_echo_v4",
+    "ko": "ev_crypt_choir_echo_v4",
+    "es": "ev_crypt_choir_echo_v4",
+    "_todo": true
+  },
+  "ev_crypt_nameless_brick_v4": {
+    "zh_TW": "ev_crypt_nameless_brick_v4",
+    "en": "ev_crypt_nameless_brick_v4",
+    "zh_CN": "ev_crypt_nameless_brick_v4",
+    "ja": "ev_crypt_nameless_brick_v4",
+    "ko": "ev_crypt_nameless_brick_v4",
+    "es": "ev_crypt_nameless_brick_v4",
+    "_todo": true
+  },
+  "ev_library_scholar_whisper_v2": {
+    "zh_TW": "ev_library_scholar_whisper_v2",
+    "en": "ev_library_scholar_whisper_v2",
+    "zh_CN": "ev_library_scholar_whisper_v2",
+    "ja": "ev_library_scholar_whisper_v2",
+    "ko": "ev_library_scholar_whisper_v2",
+    "es": "ev_library_scholar_whisper_v2",
+    "_todo": true
+  },
+  "ev_library_torn_page": {
+    "zh_TW": "ev_library_torn_page",
+    "en": "ev_library_torn_page",
+    "zh_CN": "ev_library_torn_page",
+    "ja": "ev_library_torn_page",
+    "ko": "ev_library_torn_page",
+    "es": "ev_library_torn_page",
+    "_todo": true
+  },
+  "ev_library_torn_page_v2": {
+    "zh_TW": "ev_library_torn_page_v2",
+    "en": "ev_library_torn_page_v2",
+    "zh_CN": "ev_library_torn_page_v2",
+    "ja": "ev_library_torn_page_v2",
+    "ko": "ev_library_torn_page_v2",
+    "es": "ev_library_torn_page_v2",
+    "_todo": true
+  },
+  "ev_peak_star_crack_v4": {
+    "zh_TW": "ev_peak_star_crack_v4",
+    "en": "ev_peak_star_crack_v4",
+    "zh_CN": "ev_peak_star_crack_v4",
+    "ja": "ev_peak_star_crack_v4",
+    "ko": "ev_peak_star_crack_v4",
+    "es": "ev_peak_star_crack_v4",
+    "_todo": true
+  },
+  "ev_peak_wushang_memory_v4": {
+    "zh_TW": "ev_peak_wushang_memory_v4",
+    "en": "ev_peak_wushang_memory_v4",
+    "zh_CN": "ev_peak_wushang_memory_v4",
+    "ja": "ev_peak_wushang_memory_v4",
+    "ko": "ev_peak_wushang_memory_v4",
+    "es": "ev_peak_wushang_memory_v4",
+    "_todo": true
   }
 }

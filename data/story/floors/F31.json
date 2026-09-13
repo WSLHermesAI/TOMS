@@ -34,13 +34,13 @@
     ]
   },
   "events": [
-    "ev_common_whisper_old_road_v2",
-    "ev_common_cache_wall",
-    "ev_crypt_nameless_brick",
-    "ev_common_trap_rubble_v4",
-    "ev_crypt_choir_echo",
-    "ev_common_rescue_lost_soldier",
-    "ev_common_cache_wall_v4"
+    "ev_common_relic_road_v4",
+    "ev_common_cache_wall_v5",
+    "ev_common_trap_rubble",
+    "ev_common_shard_wandering_v3",
+    "ev_common_rescue_lost_soldier_v2",
+    "ev_common_trap_rubble_v3",
+    "ev_common_rescue_lost_soldier_v3"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -67,15 +67,20 @@
     ],
     "difficultyTier": 5,
     "eventKinds": [
-      "whisper",
+      "relic",
       "cache",
-      "whisper",
       "trap",
-      "whisper",
+      "memory_shard",
       "rescue",
-      "cache"
+      "trap",
+      "rescue"
     ],
     "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "skeleton",
+      "wraith"
+    ],
     "eventCells": [
       [
         4,

@@ -33,11 +33,11 @@
     ]
   },
   "events": [
-    "ev_common_whisper_old_road_v4",
-    "ev_gate_forge_first_v2",
-    "ev_common_rescue_lost_soldier_v4",
-    "ev_common_cache_wall_v4",
-    "ev_gate_soldier_plate_v4"
+    "ev_gate_soldier_plate",
+    "ev_common_cache_wall",
+    "ev_common_whisper_old_song",
+    "ev_common_relic_chipped_blade",
+    "ev_common_trap_rubble"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -60,13 +60,18 @@
     ],
     "difficultyTier": 3,
     "eventKinds": [
+      "relic",
+      "cache",
       "whisper",
-      "cache",
-      "rescue",
-      "cache",
-      "relic"
+      "relic",
+      "trap"
     ],
-    "eventPoolSource": "provisional",
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "bat",
+      "golem"
+    ],
     "eventCells": [
       [
         4,

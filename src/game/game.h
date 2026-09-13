@@ -14,6 +14,7 @@
 #include "equipment_system.h" // toms::EquippedSet/EquipmentDefinition — see Game::equipped_/equipmentDefs_
 #include "entity_status.h"   // toms::EntityStatus/entityStatusKey — see Game::entityStatus_
 #include "roamer.h"          // toms::Roamer — S1: floor wanderers that chase the player
+#include "run_state.h"       // toms::RunStoryState — S3: choices/counters/side stories/flags/shards
 #include "stage.h"
 #include "title_screen.h"    // toms::TitleScreen/TitleAction — the title phase (New Game/Continue/Settings)
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
@@ -358,6 +359,18 @@ private:
     // data/footprints.json -- character-level 佔格 (doc F8). Keyed by the legend kind, i.e.
     // "monster:golem", so a floor file never has to repeat the same tier for every copy of a type.
     std::map<std::string, toms::FootprintSpec> typeFootprints_;
+    // S3: the run's story state (choices, counters, side-story states, run flags, shards, floor
+    // progress, deaths). GameConditionContext reads it, the run save persists it, and rebirth resets
+    // it (docs/STORY_DATA_SCHEMA.md sections 8/9).
+    toms::RunStoryState run_;
+public:
+    // S3: read-only access for tests and the browser verification probes (jsChoiceMade/jsRunInfo in
+    // emscripten_main.cpp, run_state_test.cpp) -- the run state itself stays owned by Game.
+    const toms::RunStoryState& runState() const { return run_; }
+    // saveCurrentRun() itself stays where it was (private); this is the one public entry the web
+    // harness probe jsSaveNow() needs, without widening the existing declaration's access.
+    void saveRunNow() { saveCurrentRun(); }
+private:
     void finishCombatWin();
     void finishCombatLose();
     void drawPowerBar(float x, float y, float w, float h, const toms::PowerBarParams& bar, float position);

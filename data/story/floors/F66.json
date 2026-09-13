@@ -34,18 +34,18 @@
     ]
   },
   "events": [
-    "ev_common_relic_road_v4",
+    "ev_peak_star_crack_v4",
     "ev_common_cache_wall_v5",
-    "ev_common_rescue_lost_soldier_v5",
-    "ev_common_whisper_old_road",
-    "ev_common_whisper_old_road_v5",
-    "ev_common_rescue_lost_soldier",
-    "ev_common_shard_wandering",
-    "ev_peak_wushang_memory_v4",
-    "ev_peak_star_crack",
+    "ev_common_whisper_old_road_v2",
     "ev_common_cache_wall_v3",
-    "ev_common_merchant_echo_ash_v2",
-    "ev_common_whisper_old_road_v3"
+    "ev_peak_wushang_memory_v3",
+    "ev_common_relic_road",
+    "ev_common_merchant_echo_ash_v3",
+    "ev_common_merchant_echo_ash_v4",
+    "ev_common_trap_rubble_v2",
+    "ev_peak_wushang_memory_v2",
+    "ev_common_trap_rubble",
+    "ev_common_shard_wandering_v2"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -72,20 +72,25 @@
     ],
     "difficultyTier": 10,
     "eventKinds": [
-      "relic",
-      "cache",
-      "rescue",
-      "whisper",
-      "whisper",
-      "rescue",
-      "memory_shard",
-      "relic",
       "whisper",
       "cache",
+      "whisper",
+      "cache",
+      "relic",
+      "relic",
       "merchant_echo",
-      "whisper"
+      "merchant_echo",
+      "trap",
+      "relic",
+      "trap",
+      "memory_shard"
     ],
     "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "demon",
+      "skeleton"
+    ],
     "eventCells": [
       [
         4,

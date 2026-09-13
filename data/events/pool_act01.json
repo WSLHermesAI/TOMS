@@ -1,0 +1,52 @@
+{
+  "_comment": [
+    "S3 — act 1 (village) event pool (docs/SIDE_STORIES.md section 12.3).",
+    "The three seeds are the documented ids; the rest are variants in the same",
+    "namespace so a floor has enough distinct eventIds (section 5.2 forbids a",
+    "repeat within a floor, not across floors). Kinds follow section 12.1."
+  ],
+  "act": "ch_01",
+  "theme": "village",
+  "events": [
+    {
+      "eventId": "ev_village_well",
+      "kind": "whisper",
+      "text": "ev_village_well.text"
+    },
+    {
+      "eventId": "ev_village_chimney",
+      "kind": "relic",
+      "text": "ev_village_chimney.text"
+    },
+    {
+      "eventId": "ev_village_grave_new",
+      "kind": "rescue",
+      "text": "ev_village_grave_new.text"
+    },
+    {
+      "eventId": "ev_village_dog_bowl",
+      "kind": "rescue",
+      "text": "ev_village_dog_bowl.text"
+    },
+    {
+      "eventId": "ev_village_ledger",
+      "kind": "cache",
+      "text": "ev_village_ledger.text"
+    },
+    {
+      "eventId": "ev_village_bell_rope",
+      "kind": "trap",
+      "text": "ev_village_bell_rope.text"
+    },
+    {
+      "eventId": "ev_village_chapel_dust",
+      "kind": "whisper",
+      "text": "ev_village_chapel_dust.text"
+    },
+    {
+      "eventId": "ev_village_old_plough",
+      "kind": "cache",
+      "text": "ev_village_old_plough.text"
+    }
+  ]
+}

@@ -33,12 +33,12 @@
     ]
   },
   "events": [
-    "ev_common_relic_road",
-    "ev_common_cache_wall_v2",
-    "ev_common_rescue_lost_soldier_v4",
-    "ev_library_shelf_collapse_v2",
-    "ev_common_whisper_old_road_v2",
-    "ev_common_trap_rubble"
+    "ev_common_whisper_old_road",
+    "ev_common_cache_wall_v3",
+    "ev_common_merchant_echo_ash_v5",
+    "ev_library_torn_page_v4",
+    "ev_library_shelf_collapse_v3",
+    "ev_library_torn_page_v2"
   ],
   "sideStoryHooks": [
     {
@@ -74,14 +74,19 @@
     ],
     "difficultyTier": 4,
     "eventKinds": [
-      "relic",
-      "cache",
-      "rescue",
-      "trap",
       "whisper",
-      "trap"
+      "cache",
+      "merchant_echo",
+      "relic",
+      "trap",
+      "relic"
     ],
     "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "skeleton",
+      "bat"
+    ],
     "eventCells": [
       [
         1,

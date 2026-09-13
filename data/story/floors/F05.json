@@ -28,13 +28,14 @@
     "count": 4,
     "table": [
       "potion_red",
-      "coin"
+      "coin",
+      "gem_def"
     ]
   },
   "events": [
-    "ev_common_relic_road_v4",
-    "ev_common_cache_wall_v5",
-    "ev_common_whisper_old_road"
+    "ev_village_chapel_dust",
+    "ev_common_cache_wall",
+    "ev_common_merchant_echo_ash"
   ],
   "sideStoryHooks": [
     {
@@ -70,11 +71,16 @@
     ],
     "difficultyTier": 1,
     "eventKinds": [
-      "relic",
+      "whisper",
       "cache",
-      "whisper"
+      "merchant_echo"
     ],
-    "eventPoolSource": "provisional",
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "slime",
+      "bat"
+    ],
     "eventCells": [
       [
         1,

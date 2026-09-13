@@ -34,15 +34,15 @@
     ]
   },
   "events": [
-    "ev_common_whisper_old_road",
-    "ev_barracks_forge_t3_v4",
-    "ev_barracks_forge_t3_v2",
-    "ev_common_rescue_lost_soldier_v5",
-    "ev_barracks_night_fire",
+    "ev_common_relic_road_v5",
+    "ev_common_cache_wall_v4",
     "ev_common_whisper_old_road_v5",
-    "ev_common_rescue_lost_soldier_v2",
-    "ev_common_cache_wall_v2",
-    "ev_common_relic_road_v2"
+    "ev_common_rescue_lost_soldier_v4",
+    "ev_common_whisper_old_road_v4",
+    "ev_common_shard_wandering_v3",
+    "ev_common_cache_wall_v3",
+    "ev_barracks_deserter",
+    "ev_barracks_deserter_v4"
   ],
   "sideStoryHooks": [],
   "story": {
@@ -69,17 +69,22 @@
     ],
     "difficultyTier": 7,
     "eventKinds": [
-      "whisper",
+      "relic",
       "cache",
-      "cache",
-      "rescue",
-      "rescue",
       "whisper",
       "rescue",
+      "whisper",
+      "memory_shard",
       "cache",
-      "relic"
+      "merchant_echo",
+      "merchant_echo"
     ],
     "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "skeleton",
+      "demon"
+    ],
     "eventCells": [
       [
         1,
