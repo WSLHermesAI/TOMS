@@ -87,6 +87,38 @@ public:
         float maxy = std::max({a.y, b.y, c.y, d.y});
         return glm::vec4(minx, miny, maxx - minx, maxy - miny);
     }
+    // Uniform-scale convenience (a UI root is scaled by one number: 1.5 on a phone).
+    void SetLocalScale(float s) { SetLocalScale(glm::vec2(s, s)); }
+
+    // ---- the INVERSE of the world transform (world -> local) ----
+    // Needed by every hit-test that lives under a scaled/moved node: a pointer arrives in world
+    // (screen/design) space and the control it must hit is positioned in the node's LOCAL space, so
+    // the tap has to be mapped back through the same chain the drawing went through. Without this,
+    // scaling a parent makes its children draw bigger and stop responding -- the bug this whole
+    // design exists to avoid (see docs/PROGRESS_REPORT.md, "wrong position and not working").
+    glm::vec2 LocalPoint(const glm::vec2& world) {
+        // Derived from WorldPoint() itself (the path the drawing uses, and the one the test already
+        // proves): sample where the local origin and the two unit axes land in world space, then solve
+        // the 2x2 system. Deliberately not glm::inverse() on the cached mat3 -- that returned ~0 here,
+        // because the cache can still hold its dirty sentinel when read this way, and a silently wrong
+        // inverse is exactly what makes a scaled UI draw big and stop responding to taps.
+        const glm::vec2 o  = WorldPoint(glm::vec2(0.0f, 0.0f));
+        const glm::vec2 ex = WorldPoint(glm::vec2(1.0f, 0.0f)) - o;
+        const glm::vec2 ey = WorldPoint(glm::vec2(0.0f, 1.0f)) - o;
+        const float det = ex.x * ey.y - ey.x * ex.y;
+        if (std::abs(det) < 1e-6f) return world;          // degenerate: never NaN a hit-test
+        const glm::vec2 d = world - o;
+        return glm::vec2((d.x * ey.y - d.y * ey.x) / det,
+                         (ex.x * d.y - ex.y * d.x) / det);
+    }
+    // Inverse of WorldRect: the world [x,y,w,h] box expressed in this node's local space.
+    glm::vec4 LocalRect(const glm::vec4& worldRect) {
+        const glm::vec2 a = LocalPoint(glm::vec2(worldRect.x, worldRect.y));
+        const glm::vec2 b = LocalPoint(glm::vec2(worldRect.x + worldRect.z, worldRect.y + worldRect.w));
+        return glm::vec4(std::min(a.x, b.x), std::min(a.y, b.y),
+                         std::abs(b.x - a.x), std::abs(b.y - a.y));
+    }
+
     void Visit(const std::function<void(Node*)>& fn);
 
     // ---- visibility ----

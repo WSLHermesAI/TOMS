@@ -359,6 +359,11 @@ add_executable(floor_table_test ${GAME_DIR}/floor_table_test.cpp ${GAME_DIR}/flo
 # ui_layout_test: S3.6 ("C") -- the design-size/scale-aware layout primitive the pad, dialogue and
 # battle screens are being moved onto. Pure arithmetic + a measurer callback, so it runs headless.
 add_executable(ui_layout_test ${GAME_DIR}/ui_layout_test.cpp)
+
+# node_transform_test: the scene-graph transform chain (parent-composed world transform + its
+# inverse), which is what a node-based UI scale depends on. Header-only, runs headless.
+add_executable(node_transform_test ${ENGINE_DIR}/node_transform_test.cpp ${ENGINE_DIR}/node.cpp)
+target_include_directories(node_transform_test PRIVATE ${GAME_DIR} ${ENGINE_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 target_include_directories(ui_layout_test PRIVATE ${GAME_DIR} ${ENGINE_DIR} ${JSON_DIR})
 target_include_directories(floor_table_test PRIVATE
     ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
