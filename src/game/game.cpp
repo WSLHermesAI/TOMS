@@ -155,7 +155,9 @@ void Game::newGame(int slot) {
         int free = toms::firstEmptySlot(toms::defaultSaveDir(), title_.slotCount());
         activeSlot_ = (free > 0) ? free : 1;
     }
-    loadStage("stage01");
+    // S3.5: with the tower data present the run starts on its first floor (F01), so progression,
+    // the counter and the save all speak floor ids; otherwise the historical starting stage.
+    loadStage(floorMode() ? floors_.at(1).id : std::string("stage01"));
     saveCurrentRun();
     title_.close();
     title_.setRunInProgress(true);

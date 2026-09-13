@@ -94,9 +94,41 @@ int jsRunInfo(int which) {
     if (which == 3) return r.flag("flag_motive_know_self") ? 1 : 0;   // spot-check a choice flag
     return -1;
 }
+// S3.5 probes: which floor the run is on, how the counter is derived, and a way to jump to one.
+EMSCRIPTEN_KEEPALIVE
+int jsFloorInfo(int which) {
+    if (!g_game) return -1;
+    if (which == 0) return g_game->floorMode() ? 1 : 0;          // is the tower data loaded?
+    if (which == 1) return g_game->floorTable().size();          // 70
+    if (which == 2) return g_game->floorTable().seqOf(g_game->currentFloorId());   // 0 when not a floor
+    return -1;
+}
+// Does the loaded stage's stair fields carry the tower's links? 0: st.up == nextFloor, 1: st.down ==
+// prev floor, 2: both. This is the direct check that a floor's exit leads where the table says.
+EMSCRIPTEN_KEEPALIVE
+int jsFloorLinks() {
+    if (!g_game) return -1;
+    const std::string cur = g_game->currentFloorId();
+    if (cur.empty()) return -1;
+    const toms::FloorTable& t = g_game->floorTable();
+    bool up = (g_game->stage().up == t.next(cur));
+    bool down = (g_game->stage().down == t.prev(cur));
+    return (up && down) ? 2 : (up ? 0 : (down ? 1 : 3));
+}
+EMSCRIPTEN_KEEPALIVE
+int jsFloorNextIsMapped(const char* floorId) {
+    if (!g_game || !floorId) return -1;
+    const toms::FloorInfo* f = g_game->floorTable().find(floorId);
+    if (!f) return -1;
+    return f->nextFloor.empty() ? 0 : 1;
+}
 // Force a run save (the page then reads /save/slotN.json out of IDBFS to verify schemaVersion 3).
 EMSCRIPTEN_KEEPALIVE
 void jsSaveNow() { if (g_game) g_game->saveRunNow(); }
+// Dev/verification only: jump the run to a floor (or a hand-authored stage id) so a page driver can
+// check a boss floor, the counter, etc. without walking the whole maze.
+EMSCRIPTEN_KEEPALIVE
+void jsGoStage(const char* id) { if (g_game && id) g_game->loadStage(id); }
 
 // Diagnostics for the browser build's battle input. The battle scene is driven by taps on canvas
 // rects, which a page driver cannot observe through the DOM (nothing in the canvas reports state),
@@ -213,6 +245,15 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
         if (k == "Enter")      { g_game->invUseSelected(); return EM_TRUE; }
         if (k == "d" || k == "D") { g_game->invDropSelected(); return EM_TRUE; }
         return EM_TRUE; // swallow all other keys while inventory is open
+    }
+    // Stairs confirm (S3.5 finding): the floor-change prompt is raised by stepping onto a floor's
+    // exit tile, and until now its Enter/Esc handling lived only in the desktop entry point
+    // (main.cpp), even though the button itself is labelled "(Enter)". A keyboard-only player in
+    // the browser was stuck at the prompt until they clicked the canvas. Same two bindings here.
+    if (g_game->stairsConfirmOpen()) {
+        if (k == "Enter" || k == " ") { g_game->confirmStageTransition(); return EM_TRUE; }
+        if (k == "Escape")            { g_game->cancelStageTransition();  return EM_TRUE; }
+        return EM_TRUE; // swallow all other keys while the prompt is up
     }
     // In-game menu (Save/Settings/Back to Title) -- the gear icon (tap/click) is the primary
     // way in on touch, but a keyboard attached to the browser gets the same bindings as the

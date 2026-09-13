@@ -120,6 +120,7 @@ if(NOT WEB)
         # S3: per-run story state (choices/counters/side stories/flags/shards) -- its own class, see
         # run_state.h; persisted as RunSaveData schemaVersion 3.
         ${GAME_DIR}/run_state.cpp
+        ${GAME_DIR}/floor_table.cpp
         # Refactor (2026-09-13): game.cpp was a single 3,100-line translation unit; it is now split
         # by responsibility into these units (game.h still declares everything; Game is unchanged
         # as a class, and shared file-local helpers moved to game_helpers.h).
@@ -234,6 +235,7 @@ if(WEB)
         # S3: per-run story state (choices/counters/side stories/flags/shards) -- its own class, see
         # run_state.h; persisted as RunSaveData schemaVersion 3.
         ${GAME_DIR}/run_state.cpp
+        ${GAME_DIR}/floor_table.cpp
         # Refactor (2026-09-13): game.cpp was a single 3,100-line translation unit; it is now split
         # by responsibility into these units (game.h still declares everything; Game is unchanged
         # as a class, and shared file-local helpers moved to game_helpers.h).
@@ -343,8 +345,17 @@ endif()
 # run_state_test: S3 -- per-run story state, the four new condition leaves, and the
 # schemaVersion 3 save round trip including the documented pre-v3 migration.
 add_executable(run_state_test ${GAME_DIR}/run_state_test.cpp ${GAME_DIR}/run_state.cpp
+        ${GAME_DIR}/floor_table.cpp
     ${GAME_DIR}/save_system.cpp ${ENGINE_DIR}/condition.cpp)
 target_include_directories(run_state_test PRIVATE
+    ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+
+# floor_table_test: S3.5 (a)/(b) -- the 70-floor tower as ordered data. Pure logic (chain ordering,
+# prev/next, dangling links, cycles) plus a validator over the shipped data/story/floors set: F01..F70
+# in chain order, ten acts of seven, one boss floor per act naming a map that exists, and every grid's
+# own exit agreeing with the table's nextFloor.
+add_executable(floor_table_test ${GAME_DIR}/floor_table_test.cpp ${GAME_DIR}/floor_table.cpp)
+target_include_directories(floor_table_test PRIVATE
     ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
 # footprint_test: S1 (佔格 footprints + roamers). Pure logic + a validator over data/stages/*.json

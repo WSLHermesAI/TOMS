@@ -15,6 +15,7 @@
 #include "entity_status.h"   // toms::EntityStatus/entityStatusKey — see Game::entityStatus_
 #include "roamer.h"          // toms::Roamer — S1: floor wanderers that chase the player
 #include "run_state.h"       // toms::RunStoryState — S3: choices/counters/side stories/flags/shards
+#include "floor_table.h"     // toms::FloorTable — S3.5: the 70-floor tower as ordered data
 #include "stage.h"
 #include "title_screen.h"    // toms::TitleScreen/TitleAction — the title phase (New Game/Continue/Settings)
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
@@ -363,10 +364,20 @@ private:
     // progress, deaths). GameConditionContext reads it, the run save persists it, and rebirth resets
     // it (docs/STORY_DATA_SCHEMA.md sections 8/9).
     toms::RunStoryState run_;
+    // S3.5: the 70-floor tower as ordered data (data/story/floors/*.json). Empty when that data is
+    // absent, and every use is guarded -- so a checkout without the floors still plays the eleven
+    // hand-authored stages exactly as before.
+    toms::FloorTable floors_;
+    std::string curFloorId_;              // "F07" while the run is on a generated/boss floor, else ""
 public:
     // S3: read-only access for tests and the browser verification probes (jsChoiceMade/jsRunInfo in
     // emscripten_main.cpp, run_state_test.cpp) -- the run state itself stays owned by Game.
     const toms::RunStoryState& runState() const { return run_; }
+    // S3.5 step (a)/(b): the run's progression source. `floorMode()` is false only when the floor
+    // data is missing; `totalStages`/the HUD counter/the hub all read the table when it is present.
+    bool floorMode() const { return !floors_.empty(); }
+    const toms::FloorTable& floorTable() const { return floors_; }
+    const std::string& currentFloorId() const { return curFloorId_; }
     // saveCurrentRun() itself stays where it was (private); this is the one public entry the web
     // harness probe jsSaveNow() needs, without widening the existing declaration's access.
     void saveRunNow() { saveCurrentRun(); }

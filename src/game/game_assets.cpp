@@ -123,6 +123,18 @@ bool Game::loadAssets(const std::string& assetDir) {
     pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
     pl.inv = {"potion_red", "potion_blue", "exp_up"};
 
+    // S3.5: the 70-floor tower (data/story/floors/*.json) as the run's progression source. Loaded
+    // once here; empty when the data is absent, and every use is guarded, so such a checkout plays
+    // the eleven hand-authored stages exactly as before.
+    floors_ = toms::FloorTable::loadFromDirectory(dataDir + "/../data/story/floors");
+    if (floors_.empty()) {
+        fprintf(stderr, "[assets] floor table: absent -- playing the hand-authored stages only\n");
+    } else {
+        fprintf(stderr, "[assets] floor table: %d floors across %d acts (first %s, last %s)\n",
+                floors_.size(), floors_.at(floors_.size()).actIndex,
+                floors_.at(1).id.c_str(), floors_.at(floors_.size()).id.c_str());
+    }
+
     // ---- Title phase boot ----
     // Persisted preferences (language, slot count) + the string table, then show the title.
     // modalActive() includes the title, so the world main.cpp loads next sits inert behind it
@@ -180,16 +192,47 @@ void Game::loadStage(const std::string& id) {
         std::string alt = dataDir + "/../data/stages/" + noUs + ".json";
         if (std::filesystem::exists(alt)) path = alt;
     }
-    // S2: generated floors (the 60 non-boss floors of the 70-floor tower) live in
-    // data/story/floors/<id>.stage.json -- the file layout STORY_DATA_SCHEMA.md section 1.2 asks for,
-    // where <id> is F01..F70. They are written in this same stage schema, so they load through this
-    // unchanged path; only the directory differs, and it is tried last so the hand-authored
-    // data/stages/*.json files (the ten act-boss floors, section 3.2) always win.
-    if (!std::filesystem::exists(path)) {
-        std::string floorPath = dataDir + "/../data/story/floors/" + id + ".stage.json";
-        if (std::filesystem::exists(floorPath)) path = floorPath;
+    // S3.5 (a): a floor id the tower knows (F01..F70) resolves through the floor table instead of
+    // the bare data/stages/ path -- a normal floor to its generated grid, a boss floor to the
+    // hand-authored map the spec names (section 3.2). Ids that are not floors (the eleven
+    // hand-authored stages, e.g. when the floor data is absent) keep the old behaviour below.
+    const toms::FloorInfo* floor = floors_.find(id);
+    bool isFloor = (floor != nullptr);
+    if (isFloor) {
+        std::string rel = floors_.mapRelPath(id);
+        std::string candidate = dataDir + "/../" + rel;
+        if (std::filesystem::exists(candidate)) path = candidate;
+    }
+    if (!isFloor) {
+        // S2 fallback: generated floors also live in data/story/floors/<id>.stage.json (the file
+        // layout STORY_DATA_SCHEMA.md section 1.2 asks for); tried last so the hand-authored
+        // data/stages/*.json files always win.
+        if (!std::filesystem::exists(path)) {
+            std::string floorPath = dataDir + "/../data/story/floors/" + id + ".stage.json";
+            if (std::filesystem::exists(floorPath)) path = floorPath;
+        }
     }
     st = parseStage(path, locale_);
+    curFloorId_ = isFloor ? id : std::string();
+    if (floor) {
+        // The floor -- not the map file -- is the unit the run counts and names. A boss floor's map
+        // is hand-authored and carries the act's own index/name (stage01 has index 1), so without
+        // this the HUD would show the wrong floor number on every boss stage.
+        st.id = floor->id;
+        st.index = floor->seq;                       // 1..70 -> the HUD's "n/totalStages"
+        std::string resolved = floor->nameKey;
+        if (resolved.rfind("story.", 0) == 0) {
+            std::string tr = locale_.tr(resolved);
+            if (!tr.empty() && tr != resolved) resolved = tr;   // missing key -> keep the map's name
+            else resolved = st.name;
+        }
+        if (!resolved.empty()) st.name = resolved;
+        // Progression lives here (S3.5 a): the specs' nextFloor chain, translated into the two
+        // fields the existing stair logic already reads. The generated grids place the goal on 'U'
+        // (far from the entrance) and the way back on 'D' (beside it), which is exactly this.
+        st.up = floor->nextFloor;
+        st.down = floors_.prev(floor->id);
+    }
     // Milestone 7: parseStage() rebuilds every entity fresh from JSON on every call (stairs,
     // Stage Select, etc.), so re-apply any previously-persisted Defeated/Collected status here --
     // otherwise a monster the player already beat or an item they already picked up would come
@@ -250,7 +293,11 @@ void Game::loadStage(const std::string& id) {
     // `id` argument, since the two can differ by underscore normalization above.
     if (std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), st.id) == meta_.unlockedStages.end())
         meta_.unlockedStages.push_back(st.id);
-    // derive total stage count from the stages directory (max index)
+    // derive total stage count: the 70-floor tower when its data is present (S3.5 b, so the HUD
+    // counter is honest), else the historical max index over data/stages/.
+    if (floorMode()) {
+        totalStages = floors_.size();
+    } else {
     totalStages = 1;
     std::string dir = dataDir + "/../data/stages/";
     if (std::filesystem::exists(dir)) {
@@ -261,6 +308,7 @@ void Game::loadStage(const std::string& id) {
                 if (idx > totalStages) totalStages = idx;
             } catch (...) {}
         }
+    }
     }
     // store unlock: when entering the configured unlock stage for the first time,
     // mark the shop as unlocked and pop a one-time "shop unlocked!" dialog.

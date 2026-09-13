@@ -48,6 +48,30 @@ void Game::closeStore() {
 void Game::ensureStageListLoaded() {
     if (stageListLoaded_) return;
     stageListLoaded_ = true;
+    // S3.5 (b): when the tower data is present the hub lists the 70 floors (seq order, names from
+    // the floor specs' i18n keys) instead of the eleven hand-authored files. Locking still reads
+    // meta_.unlockedStages, and StageInfo::id is now a floor id, so loadStage() routes through the
+    // floor table. The hand-authored stages stay on disk: they ARE the ten boss floors' maps.
+    if (floorMode()) {
+        for (const toms::FloorInfo& f : floors_.all()) {
+            StageInfo info;
+            info.id = f.id;
+            info.index = f.seq;
+            info.fileStem = f.id;
+            std::string resolved = f.nameKey;
+            if (resolved.rfind("story.", 0) == 0) {
+                std::string tr = locale_.tr(resolved);
+                resolved = (!tr.empty() && tr != resolved) ? tr : f.id;
+            }
+            info.name = resolved.empty() ? f.id : resolved;
+            // The act title is already authored (S3: story.chNN.title), so a hub row can say which
+            // act it belongs to without inventing another key; falls back to the act id.
+            std::string actTitle = locale_.tr("story." + f.act + ".title");
+            info.preview = (actTitle.empty() || actTitle.rfind("story.", 0) == 0) ? f.act : actTitle;
+            stageList_.push_back(info);
+        }
+        return;
+    }
     std::string dir = dataDir + "/../data/stages/";
     if (!std::filesystem::exists(dir)) return;
     for (auto& e : std::filesystem::directory_iterator(dir)) {

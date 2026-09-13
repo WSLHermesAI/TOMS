@@ -174,7 +174,11 @@ def main():
     args = ap.parse_args()
 
     with open(TEXT, encoding='utf-8') as f:
-        text = json.load(f)
+        doc = json.load(f)
+    # The runtime looks keys up in doc["strings"] (Locale::loadFromFile); the file's other top-level
+    # members are reserved. Writing the keys at the top level produced 463 strings the game could
+    # never find -- tr() simply returned the key, and every fallback in the calling code hid it.
+    text = doc.setdefault('strings', {})
     keys = collect_keys()
     added, authored_n, todo_n = 0, 0, 0
     for key in sorted(keys):
@@ -216,7 +220,7 @@ def main():
         print('gen_story_i18n: repaired %d placeholder(s)' % fixed)
 
     with open(TEXT, 'w', encoding='utf-8') as f:
-        json.dump(text, f, ensure_ascii=False, indent=2)
+        json.dump(doc, f, ensure_ascii=False, indent=2)
         f.write('\n')
     print('gen_story_i18n: %d key(s) referenced, %d added (%d authored, %d placeholder+_todo)'
           % (len(keys), added, authored_n, todo_n))

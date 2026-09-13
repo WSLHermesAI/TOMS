@@ -11,45 +11,31 @@
 
 ## ▶ Next Step
 
-**Next action: S3.5 — 「接上線」: put the 70 floors and the story into play.** (Owner, 2026-09-13:
-*"Now all stages looks same, and story seems not apply … when will story and new 70 levels will be
-applied"* — a correct observation. S1–S3 built the data and the engine primitives; **nothing in the
-game plays them yet**, and that wiring is its own step, not part of S4.)
+**Next action: the rest of the tower's wiring — S3.5 (c) story on screen, then (d) floor events, then (e)
+per-act visuals — or S4's systems. Owner picked the minimal cut (a)+(b) first, and that is now done: the
+70 floors are the run's progression source.**
 
-**The four verified reasons nothing applies yet** (each checked in the source, not assumed):
+**What works now, as a player:** a new game starts on **F01**, the HUD counter is honest (`(1/70)`), walking
+to a floor's exit tile raises the floor-change prompt and moves you to the next floor of the tower (verified
+F15 → F16), each act's seventh floor loads its hand-authored map (village, forest, …) while the HUD still
+counts and names the *floor*, and floors are recorded as reached in `meta_.unlockedStages` (so the native
+Stage Select hub lists all 70, locked until reached, grouped by act title).
 
-1. **The stage list only knows the 11 hand-authored files.** `Game::ensureStageListLoaded()`
-   (game_store.cpp) scans `data/stages/` and nothing else, so the hub lists 11 stages,
-   `totalStages` = 11 and the HUD reads `(1/11)`. `data/story/floors/` is never listed.
-2. **Progression never names a floor.** Stairs follow `st.down` (a stage id) among those 11
-   (game_input.cpp). `loadStage()` *can* load `data/story/floors/Fnn.stage.json` (S2's fallback) but
-   no code path ever asks for one, so F01–F70 are reachable only by a debug boot.
-3. **No code reads `theme`.** `grep -rn theme src/` returns **zero** hits: every stage and every
-   generated floor renders with the same legend/tiles, so all 11 stages look identical — this is why
-   the tower has no visual act progression yet.
-4. **The story keys are referenced but never drawn.** `story.fNN.intro` / `.ambient.1|2`, the chapter
-   titles and the act-gate beats exist (S3, 463 keys) but only `stage.story_note` reaches the screen
-   (the footer line, game_scene_draw.cpp:149). The choice from S3 *does* apply — it gates the elder's
-   dialogue row and persists in the save — but nothing else consumes it yet.
+**Still invisible, and next in line:**
+1. **(c) story on screen** — chapter title on floor entry, the floor's `intro`/`ambient` line in the footer
+   (463 keys are authored and now *loadable*, see the `strings` bug below), and the act-gate beat text at
+   seal floors. Today the footer shows the grid's own `story_note` (「第 16 層（ch_03）」).
+2. **(d) floor events + side-story hooks** — draw from `data/events/pool_act*.json` at each floor's `events`
+   slots (the kinds and pools exist; nothing places them in the world yet).
+3. **(e) per-act visuals** — `theme` is still read by no code, so every act renders with the same tiles;
+   F01 (village) vs F22 (market) vs F43 (library) vs F64 (tomb) look identical apart from layout. Reusing
+   existing tiles with per-act palettes is the cheap version; new art is S8.
+4. **The browser build has no Stage Select at all** (that UI is behind `#ifndef __EMSCRIPTEN__`), so on the
+   web the only way between floors is the stairs — fine for now, but a web hub means porting that screen.
 
-**What S3.5 is (the wiring, in five pieces):**
-
-| # | Piece | Notes |
-|---|---|---|
-| a | **Progression over F01–F70** | drive the run from `data/story/floors/*.json` (`act`, `seal`, `role`, `nextFloor`); a boss floor enters its hand-authored map — the specs already carry `handAuthoredStage` (F07→stage01 … F70→stage10) |
-| b | **Stage list + counter from the floor table** | hub and HUD read 70 floors, grouped by the 10 acts, unlocked by progress (replaces the `data/stages/` scan) |
-| c | **Story on screen** | chapter title on floor entry, the floor's `intro`/`ambient` line in the footer, act-gate beat text at the seal floors |
-| d | **Floor events + side-story hooks** | draw from `data/events/pool_act*.json` at each floor's `events` slots (kinds are already in the data), and surface `sideStoryHooks` |
-| e | **Per-act visuals** | a `theme` → layout/tile-tint/sprite-set mapping so acts actually differ (F01 village vs F22 market vs F43 library vs F64 tomb); reusing existing tiles with per-act palettes is the cheap version, new art is S8 |
-
-Estimated size: (a)+(b)+(c) one session, (d) small, (e) small with existing tiles / S8-sized with new
-art. **A minimal cut exists** if a smaller step is preferred: (a)+(b) alone make the 70 floors
-playable and the counter honest, with no story changes at all.
-
-**After S3.5:** S4 — the systems the story promises: skill tree (`skills.json` + UI), forging
-(`forge.json` + forge UI), the village/barracks hub (`hub.json`) and equipment actives. The first
-three chapters already grant `s_yinqi` / `s_yuqi` / `s_faqi` and `hub.forge`, and validator V4 cannot
-pass until `skills.json` exists.
+**Then S4** — the systems the story promises: skill tree (`skills.json` + UI), forging (`forge.json` + forge
+UI), the village/barracks hub (`hub.json`) and equipment actives. The first three chapters already grant
+`s_yinqi` / `s_yuqi` / `s_faqi` and `hub.forge`, and validator V4 cannot pass until `skills.json` exists.
 
 ## Milestone status
 
@@ -71,6 +57,7 @@ pass until `skills.json` exists.
 | S1 — Entity footprint (1/2/4 grids) + roamers | ✅ Done (2026-09-13) | Engine: `src/game/footprint.h` (legal sizes 1x1/2x1/1x2/2x2 per doc F1, tile coverage, F5 y-sort key, JSON parsing that rejects an illegal size instead of shipping it, and `resolveFootprint()` — the one place that decides stage-file override > character type table > 1x1) and `src/game/roamer.{h,cpp}` (`toms::Roamer`, pure logic behind a `GridQuery` interface: wander with a heading, detect radius 6 / lose radius 9 hysteresis, greedy chase, and a candidate step is only legal when the WHOLE footprint fits on walkable tiles, so it never phases through walls). Data: `data/footprints.json` (character-level tiers — golem/demon 2x1, demonlord_vorkath 2x2 + name). Gameplay: all occupied tiles block/bump (F6), a big monster is never walked into (pure bump: the player fights from the adjacent tile and the boss keeps its cell), one unified y-sorted draw pass with the player included (F5), footprint-sized sprites (F2) and a name banner for the 4-grid/roamer tier. Tests: `footprint_test` — 88 checks, incl. a validator over all 11 shipped stages (legal size, no entity on a wall, no overlap (F7), stairs still reachable with the bigger blockers = anti-softlock). Six monsters in four stage files stood in 1-tile nooks that cannot host their tier (stage10's boss had no 2x2 room) and were moved to the nearest fitting tile. Roamers are engine-ready but not yet placed in shipped data — the two designed ones (王座之影, 前世道兵王) arrive with S2. |
 | S2 — `tools/gen_floors.py` + the 70-floor table | ✅ Done (2026-09-13) | `tools/gen_floors.py` emits **70 floor specs** (`data/story/floors/F01…F70.json`, the section-4 schema: act/indexInAct/seal/role, maze params, enemy mix+range+elites+boss, item table, sampled events, side-story hook, narrative keys, nextFloor, meta) plus **60 playable grids** (`Fnn.stage.json`, every non-boss floor) in the existing stage schema — boss floors are the ten hand-authored `data/stages/*.json` the section-3.2 table maps them to (recorded as `handAuthoredStage`). The maze reuses `tools/gen_mazes.py`'s Wilson + BFS (one implementation, same conventions: cell = 2x2 tiles, 2-tile passages), adds the table's rooms ("event containers") and extra loops, and pads the right/bottom edge with wall so the table's dims come out exact. `tools/validate_story.py` implements V7 (floor↔act↔nextFloor, boss floor → hand-authored stage), V8 (one player start, stairs up/down, maze fully connected, and each key reachable with the doors shut = anti-softlock), V9 (dims/rooms/loops/events/enemy range/elites/items/difficulty vs the table) and V12 (≥1 relic/whisper + ≥1 cache per floor), plus footprint legality/overlap and side-story placement — **6745 checks, ALL PASS**. The engine gained one resolution fallback (`loadStage` also looks in `data/story/floors/<id>.stage.json`), and `footprint_test` now validates the 60 generated grids through the runtime's own `parseStage` (71 stage files, 430 multi-grid entities) so generated data is gated by the game's parser, not just by Python. Verified natively by booting a new game into the generated F64 (63x42): playable, camera follows, 2-grid demons and rooms render (HUD 「第 64 層」). Provisional until their own phase: per-act enemy mixes / item tables (chapters, S3) and the event pools (S3) — the generator prefers `data/events/pool_*.json` the moment those exist. Docs corrected: the section-5.1 formula disagreed with its own table from tier 4 up, so it was replaced by the exact piecewise form the table implies. |
 | S3 — Story data v3 + condition DSL + save v3 | ✅ Done (2026-09-13) | **DSL**: the four leaves the 70-floor story needs — `choiceMade`, `sideStoryState`, `counterAtLeast`, `cycleIndexAtLeast` — added to `src/engine/condition.{h,cpp}` (as *defaulted* virtuals on `ConditionContext`, so every existing context keeps compiling and answers "nothing chosen / cycle 1"), with cases in `condition_eval_test` and a state-backed context in the new `run_state_test`. **State**: `src/game/run_state.{h,cpp}` — `toms::RunStoryState`, the per-run truth for choices (first answer sticks), the three clamped counters (insight/resolve/humanity, `displayAt` from counters.json), side-story states, run flags, memory shards, floor progress + cleared floors, and death counts; `Game` owns one, `GameConditionContext` answers all four leaves from it, `newGame()` resets it and rebirth is `reset(keepShards=true)`. **Save v3**: `kRunSaveSchemaVersion = kMetaSaveSchemaVersion = 3`, the run file now carries choices/counters/sideStories/flags/floor/clearedFloors/shards/deaths and the meta file carries cycleIndex/endingsSeen/hintsUnlocked — and section 9's compatibility rule is implemented: a **pre-v3 file still loads**, with the new fields defaulted (verified live: an old `saveVersion: 1` slot loaded unchanged, and `run_state_test` covers the round trip + migration). **Data**: `data/story.json` v3 (chapters + seals + the old `arc[]` kept as the projection section 12 requires), `data/story/chapters/ch_01…ch_03` (section-4.1 schema: beats, grants, choices, side-story hooks, exit conditions, plus the `enemyMix`/`itemTable` section 6.2 reads), `data/story/flags.json` (25 declarations incl. the whole 8-choice arc) and `counters.json`; `data/events/pool_common.json` + `pool_act01…03.json` (authored, 8+8+8+10 events with the section-12.1 kinds); the boss-floor `story` blocks injected into stage01…03 (section 6.1 step 2). **i18n**: `tools/gen_story_i18n.py` fills `data/text.json` for every key the story data references (453 keys; 86 authored TC/EN, the rest backfilled + `_todo` per section 11.2) and is idempotent. **Generator**: `gen_floors.py` now reads the chapters for enemy mix/item table and the authored pools — floors F01–F21 report `contentSource: chapter` / `eventPoolSource: authored`, F22–F70 stay provisional as designed. |
+| S3.5 — wire the 70 floors + story into play (**option B: (a)+(b) only**) | ✅ Done (2026-09-13) | `src/game/floor_table.{h,cpp}` — `toms::FloorTable`, the tower as ordered data: seq 1..70 derived by **walking the `nextFloor` chain** (not the file names), act/actIndex/indexInAct, role, seal, the i18n name key, and `mapRelPath()` (a normal floor → its generated grid, a boss floor → its hand-authored `stageNN.json`). `loadStage()` resolves floor ids through it and then sets `st.id`/`st.index`/`st.name` **and `st.up`/`st.down`** from the table, so the existing stair logic drives floor-to-floor progression with no new input code; `totalStages` and the hub list now come from the table too (70 floors, act titles as rows). `newGame()` starts on F01. Empty table ⇒ the old eleven-stage behaviour, still guarded. Verified: `floor_table_test` **990 checks** (chain order, prev/next, dangling links and cycles, 10 acts × 7, one boss map per act that exists, 60 grids with exactly one exit whose `connect.up` agrees with the table), **20/20 test binaries**, and in a real browser: New Game → F01 「第 1 層 (1/70)」, `jsFloorLinks()` = both links match the table, stepping onto F15's exit raised the floor prompt and confirming it loaded **F16 (16/70)** with the new floor's links, and the boss floor F07 loads the hand-authored act-1 map as 「村莊外緣・封印結 (7/70)」. |
 | S4-S7 — Skill tree / forging / hub / actives, then endings + rebirth | ⬜ Not started | Schemas in `STORY_DATA_SCHEMA.md` sections 6 (systems), 7 (endings + resolver), 8 (rebirth). |
 | S8 — Art pipeline (shader variants, atlas, rigs) | ⬜ Not started | `ART_AND_ABILITY_DESIGN.md` sections 1.3 / 1.5 / 8; 1,006 animation frames + 469 static images, 3 MB budget. |
 
@@ -2130,6 +2117,43 @@ This is not a defect in S1–S3 — those phases were scoped as data + primitive
 was missing from the roadmap**, and without it two of the three finished phases are invisible to a
 player. It is now item **S3.5** above, ahead of S4. Nothing in S4 (skills/forge/hub/actives) was
 started; that question is answered plainly in the report so the status board cannot imply otherwise.
+
+### 2026-09-13 — S3.5 (a)+(b) done: the 70 floors are the run's progression source (+ two real bugs found)
+
+Owner asked *"Now all stages looks same, and story seems not apply … when will story and new 70 levels will
+be applied"* — this is the wiring step that made S2's floors part of the game rather than data on disk.
+Owner chose the minimal cut: floors playable + an honest counter, no story-visual or per-act-visual changes.
+
+**Built.** `toms::FloorTable` (new `src/game/floor_table.{h,cpp}`, its own class like the camera/roamer/run
+state): parses the 70 specs, orders them by **walking the `nextFloor` chain** so `seq` always matches the way
+the run progresses, keeps act/actIndex/indexInAct/role/seal/name-key, and resolves a floor's map
+(`data/story/floors/Fnn.stage.json` for the 60 generated floors, `data/stages/stageNN.json` for the ten act
+bosses). `loadStage(id)` routes floor ids through it, then sets `st.id`/`st.index`/`st.name` and — the actual
+progression mechanism — `st.up = nextFloor`, `st.down = prev floor`, so the existing stair code carries the
+player floor to floor with no new input handling. `totalStages`, the hub list and `newGame()`'s start floor
+all read the table; a missing table falls back to the historical eleven stages.
+
+**Two real bugs found while verifying (both fixed):**
+1. **The S3 i18n keys were in the wrong place in `data/text.json`.** The runtime looks them up under
+   `doc["strings"]` (`Locale::loadFromFile`); `tools/gen_story_i18n.py` had written all 463 keys at the
+   **top level**, so `Locale::tr()` returned the key itself and every fallback in the calling code hid it —
+   the floor names silently fell back to the map names. Fixed by retargeting the generator, migrating the
+   466 misplaced entries into `strings`, and **fixing validator V6**, which had been checking the same wrong
+   place and therefore passing vacuously.
+2. **The floor-change prompt had no keyboard path on the web.** Its Enter/Esc handling lived only in
+   `src/game/main.cpp` (the desktop entry point) even though the button is labelled "(Enter)"; in the
+   browser a keyboard-only player was stuck at the prompt until they clicked the canvas. Added the same two
+   bindings to the web key handler (`emscripten_main.cpp`), before the in-game-menu branch.
+
+Also fixed in `floor_table.cpp` during development: an underflow in the filename suffix guard
+(`name.size() - 11` on an 8-character name) that made the table crash on its first load.
+
+**Verified.** `floor_table_test: ALL PASS (990 checks)`; 20/20 test binaries; `validate_story: ALL PASS
+(6834 checks)` with V6 now reading `strings`. In a real browser (WebGL2): floor table present (70 floors),
+New Game → F01 with the HUD reading 「第 1 層 (1/70)」, `jsFloorLinks()` = 2 on F01 and on the boss floor,
+**F15's exit tile → the floor prompt → confirm → F16 loaded (16/70)** with the new floor's links correct,
+and F07 loading the hand-authored act-1 map as 「村莊外緣・封印結 (7/70)」 (the floor's own name from
+text.json, i.e. the i18n fix working end to end).
 
 ## Open Questions / Blockers
 

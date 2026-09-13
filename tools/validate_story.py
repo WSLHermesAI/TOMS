@@ -235,6 +235,7 @@ def validate_story_files(specs_by_id, chapters):
         declared = set(k for k in json.load(f) if not k.startswith('_'))
     with open(os.path.join(DATA_DIR, 'text.json'), encoding='utf-8') as f:
         text = json.load(f)
+    text = text.get("strings", text)   # keys live under "strings"; the top level is reserved
 
     def collect_keys(node, out):
         if isinstance(node, dict):
