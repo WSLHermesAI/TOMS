@@ -72,7 +72,9 @@ Recommended order (each item is sized to finish and verify in one sitting):
   delete them any time.
 - Nothing above is currently broken: as of the last commands run (2026-09-13, after the
   source-layout refactor), `tower_vulkan` builds, **17/17 test binaries pass**, the native walk was
-  re-verified under Xvfb, and the deployed web build (commit `af29333`) loads, plays and passes a
+  the **live** GitHub Pages build is now the S1 build (stamp `e7366a0-20260913133106`, deployed
+  2026-09-13): byte-identical to the local build and driven in a browser (title -> New Game ->
+  dungeon, on-screen pad moving the player).
   scripted battle check on the live GitHub Pages site.
 - **Where code goes:** `docs/CODE_LAYOUT.md` (added 2026-09-13) documents every file's
   responsibility, the shared helper headers, and the `toms::Camera` interface — read it before adding
@@ -1930,7 +1932,8 @@ no platform backend to reuse and none vendored for it.
 written but never verified — and the WebGPU build is not the one deployed. Left as the single open
 M2 item rather than guessed at.
 
-**Not deployed:** the live Pages site still serves the pre-M2 build; deploying is a separate call.
+**Deployed later the same day** (see the deploy log entry below): the live Pages site now serves this
+M2 build plus S1.
 
 ### 2026-09-13 — S1 done: entity footprints (1/2/4 grids) + floor roamers
 
@@ -1993,6 +1996,31 @@ validator are in place, so both are data work now.
 
 **Both temp demo edits reverted** (the stage01 demo monsters and a temporary roamer trace), so the
 committed data is the real 11-stage set.
+
+### 2026-09-13 — Deployed: S1 (footprints + roamers) is live on GitHub Pages
+
+Owner: "Commit and push then deploy." Followed the `toms-web-deploy` recipe (that skill is the
+reference for this pipeline).
+
+- `git pull --ff-only origin main` -> already up to date (no upstream commits underneath).
+- Build: `bash build_web.sh webgl` -> wasm 2,598,623 / js 355,067 / data 211,986 B,
+  stamp **`e7366a0-20260913133106`**. The tracked `web/` copy was refreshed from `web-gl/` (all 8
+  files verified byte-identical by md5) and committed to `main` (**`7845c23`**).
+- gh-pages: worktree at `origin/gh-pages`, `scripts/deploy_clean.py` (current stamped set + the
+  plain-named trio, kept the previously referenced `cbe8e17-...` set so a cached page cannot 404,
+  pruned 3 stale sets, touched `.nojekyll`) -> **`c4346f9`** (`bc8ea05..c4346f9  HEAD -> gh-pages`).
+- Live verification (`https://wslhermesai.github.io/TOMS/`), after the CDN caught up (~20 s):
+  - page references `toms_web.e7366a0-20260913133106.js`; `<title>Tower of the Sorcerer</title>`,
+    no `emscripten_logo`, no `id="output"`, no error banner element;
+  - **every artifact returns 200 with a byte size equal to the local build** -- the three stamped
+    files and the three plain-named copies (js 355,067 / wasm 2,598,623 / data 211,986);
+  - driven in a real browser: `window.__tomsReady === true`, Enter/Enter into the dungeon, the
+    on-screen pad's move path walked the player from (1,14) to (4,14) via `jsPlayerInfo`;
+  - **S1 is genuinely live, not just the page**: the deployed build's own log reports
+    `[assets] footprints.json: 3 type(s) bigger than 1x1`, and the served `.data` contains
+    `monster:demonlord_vorkath` -- i.e. `data/footprints.json` is inside the bundle.
+- Nothing else changed in the deploy; `main` stayed at the S1 commit for code and `7845c23` for the
+  artifact copy.
 
 ## Open Questions / Blockers
 
