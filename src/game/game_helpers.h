@@ -112,6 +112,14 @@ inline const GPadBtn GP[] = {
     {6, 880,526, 56,56, "I", 0.30f,0.35f,0.75f,0.80f, 0, 0}, // inventory
     {7,  20,490, 48,48, "P", 0.25f,0.25f,0.25f,0.85f, 0, 0}, // toggle: show/hide gamepad
 };
+
+
+// A (mobile): GP[]'s rects were authored against a 768-tall design. On a smaller design (the browser
+// uses 768x576 on phones) the pad would sit below the visible area, so every consumer goes through
+// this helper -- drawing and hit-testing must shift by the SAME amount, or a button would look right
+// and do nothing. g_padShiftY is set by the platform entry point (0 on desktop).
+inline int kPadShiftY = 0;   // 0 == the authored layout; a smaller mobile design needs this set (C)
+inline GPadBtn gpadBtn(int i) { GPadBtn b = GP[i]; b.y -= kPadShiftY; return b; }
 inline constexpr int GP_N = 8;
 
 

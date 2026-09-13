@@ -32,7 +32,7 @@ void Game::handleTouch(float px, float py, int phase) {
     }
     int id = -1;
     for (int i = 0; i < GP_N; i++) {
-        const GPadBtn& b = GP[i];
+        const GPadBtn b = gpadBtn(i);
         if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) { id = i; break; }
     }
     if (id == 7) { if (phase == 0) gpOn = !gpOn; return; }  // toggle show/hide
@@ -92,7 +92,7 @@ void Game::handleTouch(float px, float py, int phase) {
             if (hit(invCloseRect_)) { toggleInventory(); return; }
         }
         if (id >= 0) {
-            const GPadBtn& b = GP[id];
+            const GPadBtn b = gpadBtn(id);
             if (id <= 3) invMoveSel(b.dx, b.dy);
             else if (id == 4 && phase == 0) invUseSelected();
             else if (id == 5 && phase == 0) invDropSelected();
@@ -133,7 +133,7 @@ void Game::handleTouch(float px, float py, int phase) {
     if (modalActive()) {                     // other modal (store handled above): block world input
         return;
     }
-    const GPadBtn& b = GP[id];
+    const GPadBtn b = gpadBtn(id);
     // Milestone 9 polish: press-and-hold now keeps stepping (setMoveHeldX/Y + update()'s
     // repeat timer) instead of exactly one tile per tap; the matching release is handled
     // above, before the generic phase==2 return. GP[0]/[1] are the Y axis (up/down), GP[2]/[3]

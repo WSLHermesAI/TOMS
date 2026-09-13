@@ -346,7 +346,7 @@ void Game::drawGamepad() {
     float t[4] = {1,1,1,1};
     // P toggle button (drawn in normal play; modals already returned above).
     {
-        const GPadBtn& b = GP[7];
+        const GPadBtn b = gpadBtn(7);
         Quad q; q.rect[0]=b.x; q.rect[1]=b.y; q.rect[2]=b.w; q.rect[3]=b.h;
         q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
         q.tint[0]=b.col[0]; q.tint[1]=b.col[1]; q.tint[2]=b.col[2]; q.tint[3]=b.col[3];
@@ -356,7 +356,7 @@ void Game::drawGamepad() {
     if (!gpOn) return;                 // gamepad hidden: only the toggle remains
     for (int i = 0; i < 7; i++) {
         if ((i == 5 || i == 6) && !inventoryOpen()) continue;  // B/drop + I/close only show inside inventory
-        const GPadBtn& b = GP[i];
+        const GPadBtn b = gpadBtn(i);
         Quad q; q.rect[0]=b.x; q.rect[1]=b.y; q.rect[2]=b.w; q.rect[3]=b.h;
         q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
         q.tint[0]=b.col[0]; q.tint[1]=b.col[1]; q.tint[2]=b.col[2]; q.tint[3]=b.col[3];

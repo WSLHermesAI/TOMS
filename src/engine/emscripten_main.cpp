@@ -3,7 +3,7 @@
 #include "game.h"
 #include "renderer_webgl.h"
 
-namespace toms { extern float g_uiScale; }   // defined in game_text_draw.cpp (B: mobile font scale)   // the web backend that owns kDesignW/setDesignSize (A: mobile design size)
+namespace toms { extern float g_uiScale; extern int g_padShiftY; }   // defined in game_text_draw.cpp (B: mobile font scale)   // the web backend that owns kDesignW/setDesignSize (A: mobile design size)
 #include <emscripten.h>
 #include <emscripten/fetch.h>
 #include <emscripten/html5.h>
@@ -333,7 +333,7 @@ static const char* TOMS_WEB_UI =
 "document.body.appendChild(bpb);"
 "var cv=document.getElementById('canvas');if(cv)cv.style.touchAction='none';"
 "window.__tomsReady=false;"
-"function toBP(e){var r=cv.getBoundingClientRect();var w=(r.width>0)?r.width:1024;var h=(r.height>0)?r.height:768;var t=(e.changedTouches&&e.changedTouches[0])?e.changedTouches[0]:e;var bx=(t.clientX-r.left)/w*1024;var by=(t.clientY-r.top)/h*768;if(!isFinite(bx)||!isFinite(by))return null;return [bx,by];}"
+"function toBP(e){var r=cv.getBoundingClientRect();var w=(r.width>0)?r.width:1024;var h=(r.height>0)?r.height:768;""var dw=cv.width||1024,dh=cv.height||768;"   /* the drawing buffer IS the design size (A) -- */"var t=(e.changedTouches&&e.changedTouches[0])?e.changedTouches[0]:e;""var bx=(t.clientX-r.left)/w*dw;var by=(t.clientY-r.top)/h*dh;""if(!isFinite(bx)||!isFinite(by))return null;return [bx,by];}"
 "function gpCall(p,ph){try{if(typeof Module!=='undefined'&&Module.ccall&&window.__tomsReady)Module.ccall('jsGamepad','null',['number','number','number'],[ph,p[0],p[1]]);}catch(err){showErr('jsGamepad: '+err);}}"
 "function showErr(m){try{console.error('[TOMS] '+m);}catch(e){}}"
 "window.onerror=function(m,s,l,c,e){showErr(m+' @'+l+':'+c+(e&&e.stack?' | '+e.stack:''));return false;};"
@@ -377,8 +377,16 @@ int main() {
     {
         const int cssW = EM_ASM_INT({ return window.innerWidth; });
         const int cssH = EM_ASM_INT({ return window.innerHeight; });
-        if (cssW < 900 || cssH < 560) {
+        // A (a smaller design on phones) is DISABLED until C: the on-canvas pad, the dialogue box and
+        // the battle panels lay themselves out in absolute design pixels authored for 768-tall, so a
+        // 576-tall design puts the pad off-screen and every tap misses (owner report, 2026-09-13:
+        // "the orientation UI buttons get wrong position and not working"). The safe parts of the
+        // mobile fix -- the pointer mapping reading the buffer size, and the portrait prompt -- stay.
+        if (false && (cssW < 900 || cssH < 560)) {
             WebGLRenderer::setDesignSize(768, 576);
+            // The on-canvas pad's rects were authored for a 768-tall design; shifting them by the
+            // difference keeps them on screen (and, because drawing and hit-testing read the same
+            // helper, keeps a visible button and a working button the same thing).
             // B (the extra font scale) stays OFF until C lands: the dialogue and battle screens lay
             // their rows out on a fixed pixel pitch, so growing the glyphs 25% makes the speaker
             // line collide with the first choice row. A (the smaller design) already makes every
