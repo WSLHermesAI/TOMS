@@ -11,75 +11,45 @@
 
 ## ▶ Next Step
 
-**Next action: S4 — the systems the story now promises: skill tree (`skills.json` + UI), forging
-(`forge.json` + forge UI), the village/barracks hub (`hub.json`) and equipment actives.** (S1, S2 and S3
-all shipped 2026-09-13 — see the log entries below; the numbered list further down is the full ordered
-plan and the milestone table is its status board.)
+**Next action: S3.5 — 「接上線」: put the 70 floors and the story into play.** (Owner, 2026-09-13:
+*"Now all stages looks same, and story seems not apply … when will story and new 70 levels will be
+applied"* — a correct observation. S1–S3 built the data and the engine primitives; **nothing in the
+game plays them yet**, and that wiring is its own step, not part of S4.)
 
-**Why S4 next:** S3 made the story's *state* real — choices are recorded, counters accumulate, the save
-keeps them, and the condition DSL can gate on them. What the acts promise next are the systems the first
-three chapters already name in their `grants`: `s_yinqi` / `s_yuqi` / `s_faqi` (skills), `hub.village` /
-`hub.forge`, and the forging unlock. Those ids are declared but nothing implements them yet, so the
-validator's V4 (every grant names a real skill) cannot pass until `skills.json` exists.
+**The four verified reasons nothing applies yet** (each checked in the source, not assumed):
 
-**Last completed (2026-09-13):** the source-layout refactor (`game.cpp` 3,104 -> 268 lines, camera
-extracted to `toms::Camera`) and **M2 — ImGui on the browser backend**, both logged below. Owner
-decisions recorded the same day: **M5's ImGui migrations are cancelled** ("ImGui can't fit all UI
-features") — inventory/shop/dialogue keep the hand-built scene-graph UI, ImGui stays dev tooling.
+1. **The stage list only knows the 11 hand-authored files.** `Game::ensureStageListLoaded()`
+   (game_store.cpp) scans `data/stages/` and nothing else, so the hub lists 11 stages,
+   `totalStages` = 11 and the HUD reads `(1/11)`. `data/story/floors/` is never listed.
+2. **Progression never names a floor.** Stairs follow `st.down` (a stage id) among those 11
+   (game_input.cpp). `loadStage()` *can* load `data/story/floors/Fnn.stage.json` (S2's fallback) but
+   no code path ever asks for one, so F01–F70 are reachable only by a debug boot.
+3. **No code reads `theme`.** `grep -rn theme src/` returns **zero** hits: every stage and every
+   generated floor renders with the same legend/tiles, so all 11 stages look identical — this is why
+   the tower has no visual act progression yet.
+4. **The story keys are referenced but never drawn.** `story.fNN.intro` / `.ambient.1|2`, the chapter
+   titles and the act-gate beats exist (S3, 463 keys) but only `stage.story_note` reaches the screen
+   (the footer line, game_scene_draw.cpp:149). The choice from S3 *does* apply — it gates the elder's
+   dialogue row and persists in the save — but nothing else consumes it yet.
 
-**Start here: a complete design set for the next phase landed on 2026-09-13 (see the log entry
-below), and NONE of it is in the code yet.** `docs/STORY_BIBLE.md`, `docs/SIDE_STORIES.md`,
-`docs/STORY_DATA_SCHEMA.md` and `docs/ART_AND_ABILITY_DESIGN.md` reshape the game: 11 fixed stages
-become **70 generated floors** (10 acts x 7), **15 endings** decided by choices and missed key
-items, **rebirth / NG+** that carries half the power and resets every item, **50 enemies** (with
-1/2/4-grid footprints) and **20 equipment** on a **36-status** system. The old M0-M9 roadmap stays
-correct for what shipped; the new work is tracked as **S1-S8** in the milestone table.
+**What S3.5 is (the wiring, in five pieces):**
 
-Recommended order (each item is sized to finish and verify in one sitting):
+| # | Piece | Notes |
+|---|---|---|
+| a | **Progression over F01–F70** | drive the run from `data/story/floors/*.json` (`act`, `seal`, `role`, `nextFloor`); a boss floor enters its hand-authored map — the specs already carry `handAuthoredStage` (F07→stage01 … F70→stage10) |
+| b | **Stage list + counter from the floor table** | hub and HUD read 70 floors, grouped by the 10 acts, unlocked by progress (replaces the `data/stages/` scan) |
+| c | **Story on screen** | chapter title on floor entry, the floor's `intro`/`ambient` line in the footer, act-gate beat text at the seal floors |
+| d | **Floor events + side-story hooks** | draw from `data/events/pool_act*.json` at each floor's `events` slots (kinds are already in the data), and surface `sideStoryHooks` |
+| e | **Per-act visuals** | a `theme` → layout/tile-tint/sprite-set mapping so acts actually differ (F01 village vs F22 market vs F43 library vs F64 tomb); reusing existing tiles with per-act palettes is the cheap version, new art is S8 |
 
-1. **S1 - Entity footprint (1/2/4 grids).** The owner's most recent request and the smallest engine
-   change: add `footprint` to `Entity` (default 1x1, so every shipped stage JSON stays valid),
-   size/offset entity sprites by footprint in `draw()` with y-sort on the lowest occupied tile,
-   treat all occupied tiles as blocking *and* battle triggers, then add `RoamerController` (wander,
-   detect, chase; never phases through walls) and the name banner for 4-grid roamers/bosses. Verify
-   by placing a 2x1 enemy by hand and walking around it. Note: a maze cell is 2x2 tiles and passages
-   are carved 2 tiles wide, so a 2x2 enemy can traverse the maze with no extra work.
-2. **S2 - `tools/gen_floors.py` + the 70-floor table** (`STORY_DATA_SCHEMA.md` section 5). Emits
-   `data/story/floors/F01..F70.json` (maze up to 63x42, rooms/loops/enemies/items/events per floor)
-   and keeps the 11 hand-authored stage files as the act-boss floors. Connectivity (Wilson + BFS,
-   every floor reachable, stairs present) must be validated before anything else depends on it.
-3. **S3 - Story data + condition DSL + save v3**: `story.json` v3 + `ch_01..ch_03` + the first three
-   acts' event pools, then the four new condition types (`choiceMade`, `sideStoryState`,
-   `counterAtLeast`, `cycleIndexAtLeast`) and save `schemaVersion: 3` -- without that, the act-1
-   motive choice cannot actually persist.
-4. **S4-S7 - the four systems, in the order the docs assume**: skill tree (`skills.json` + UI),
-   forging (`forge.json` + forge UI), village/barracks hub (`hub.json`), equipment actives; then
-   `endings.json` + the priority-order resolver (first-match-wins with a guaranteed fallback); then
-   `cycles.json` (rebirth: cultivation halved, skill effects x0.5, skill points halved, every item,
-   key, material, gold and side-story state reset; enemies +15% per cycle, capped at +120%).
-5. **S8 - Art pipeline** (parallel to all of the above, it blocks nothing): the four new sprite
-   shader uniforms (`uTintMode`, `uRimLight`, `uOverlay`, `uDistort`), `tools/make_variants.py`,
-   `tools/pack_atlas.py`, then the 9 shared body rigs. Budget: 3 MB of art total (currently
-   estimated 2.8 MB with multi-grid enemies -- trim before it grows).
+Estimated size: (a)+(b)+(c) one session, (d) small, (e) small with existing tiles / S8-sized with new
+art. **A minimal cut exists** if a smaller step is preferred: (a)+(b) alone make the 70 floors
+playable and the counter honest, with no story changes at all.
 
-**Still waiting on the owner (no code task attached, carried over from earlier sessions):**
-- Playtest confirmation of hold-to-move feel, the title phase, and the battle scene in a browser.
-- Whether the upstream **battle v2** (real-time auto-moving bars, tap to freeze, attack / defend /
-  super as three independent buttons, multi-touch) feels right. It arrived with the 2026-09-12 pull
-  and **replaces** the press-and-hold Power Bar this repo built in M6.
-- Audio pass (web audio and SFX arrived with the 2026-09-11 multi-language pull).
-- ~~The stray `sprite.frag.spv` / `sprite.vert.spv` in the repo root~~ -- **resolved 2026-09-13**:
-  root-anchored `.gitignore` rules now hide them (`git check-ignore` verified; the tracked
-  `assets/shaders/*.spv` copies are unaffected). The duplicate files themselves were left on disk;
-  delete them any time.
-- Nothing above is currently broken: as of the last commands run (2026-09-13, after the
-  source-layout refactor, M2 and S1), `tower_vulkan` builds, **18/18 test binaries pass**, the native
-  walk was re-verified under Xvfb, and the **live** GitHub Pages build is the S1 build (stamp
-  `e7366a0-20260913133106`, deployed 2026-09-13): byte-identical to the local build and driven in a
-  real browser (title -> New Game -> dungeon, on-screen pad moving the player).
-- **Where code goes:** `docs/CODE_LAYOUT.md` (added 2026-09-13) documents every file's
-  responsibility, the shared helper headers, and the `toms::Camera` interface — read it before adding
-  a new subsystem, so nothing grows back into a 3,000-line file.
+**After S3.5:** S4 — the systems the story promises: skill tree (`skills.json` + UI), forging
+(`forge.json` + forge UI), the village/barracks hub (`hub.json`) and equipment actives. The first
+three chapters already grant `s_yinqi` / `s_yuqi` / `s_faqi` and `hub.forge`, and validator V4 cannot
+pass until `skills.json` exists.
 
 ## Milestone status
 
@@ -2143,6 +2113,23 @@ elder's other nodes. (2) The i18n collector could not see keys inside JSON *arra
 **Not done, on purpose:** the remaining three leaves (`cultivationTier`, `memoryShards`, `endingSeen`),
 `ch_04…ch_10` content, and V3/V4/V5/V13/V14/V16 — each needs the data its own phase creates. Not
 deployed: the live site still serves the S1 build.
+
+### 2026-09-13 — Gap found by the owner: S1–S3 are built but not applied in play
+
+Owner, playing the live build: *"Now all stages looks same, and story seems not apply … when will story
+and new 70 levels will be applied"*. Both halves are correct and the reasons are in the source:
+
+- the stage list scans only `data/stages/` (11 files) and progression follows `st.down` among them, so
+  the 70 generated floors are never named by anything and never load in normal play;
+- `theme` is read by **no code at all**, so every stage renders with the same tiles — the acts have no
+  visual identity;
+- the floor/chapter story keys exist but only `stage.story_note` is drawn, so the story is invisible
+  apart from the one S3 dialogue row (which does work and does persist).
+
+This is not a defect in S1–S3 — those phases were scoped as data + primitives — but the **wiring step
+was missing from the roadmap**, and without it two of the three finished phases are invisible to a
+player. It is now item **S3.5** above, ahead of S4. Nothing in S4 (skills/forge/hub/actives) was
+started; that question is answered plainly in the report so the status board cannot imply otherwise.
 
 ## Open Questions / Blockers
 
