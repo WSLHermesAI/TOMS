@@ -114,6 +114,9 @@ if(NOT WEB)
         # Refactor: the maze camera is its own translation unit + class (was ~120 lines inside
         # game.cpp/game.h mixed with unrelated logic) -- see src/game/camera.h, camera_test.cpp.
         ${GAME_DIR}/camera.cpp
+        # S1: 佔格 footprints (footprint.h) + the floor-wanderer AI (roamer.h/.cpp) -- own files,
+        # like camera.cpp above.
+        ${GAME_DIR}/roamer.cpp
         # Refactor (2026-09-13): game.cpp was a single 3,100-line translation unit; it is now split
         # by responsibility into these units (game.h still declares everything; Game is unchanged
         # as a class, and shared file-local helpers moved to game_helpers.h).
@@ -222,6 +225,9 @@ if(WEB)
         ${GAME_DIR}/save_slots.cpp ${GAME_DIR}/game_settings.cpp
         ${GAME_DIR}/localization.cpp ${GAME_DIR}/title_screen.cpp
         ${GAME_DIR}/camera.cpp
+        # S1: 佔格 footprints (footprint.h) + the floor-wanderer AI (roamer.h/.cpp) -- own files,
+        # like camera.cpp above.
+        ${GAME_DIR}/roamer.cpp
         # Refactor (2026-09-13): game.cpp was a single 3,100-line translation unit; it is now split
         # by responsibility into these units (game.h still declares everything; Game is unchanged
         # as a class, and shared file-local helpers moved to game_helpers.h).
@@ -327,6 +333,15 @@ target_include_directories(texture_test PRIVATE
     $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 target_link_libraries(texture_test PRIVATE ${Vulkan_LIBRARIES} glfw)
 endif()
+
+# footprint_test: S1 (佔格 footprints + roamers). Pure logic + a validator over data/stages/*.json
+# and data/footprints.json -- no Vulkan/renderer dependency, so it runs everywhere, and it is the
+# gate a future floor file has to pass (legal sizes, no entity on a wall, no overlap, stairs still
+# reachable with the bigger blockers).
+add_executable(footprint_test ${GAME_DIR}/footprint_test.cpp ${GAME_DIR}/roamer.cpp
+    ${GAME_DIR}/localization.cpp)
+target_include_directories(footprint_test PRIVATE
+    ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
 # font_test: build the runtime TTF atlas (stb_truetype) and verify glyph UVs.
 # No Vulkan device needed — pure CPU atlas rasterization + Object base.

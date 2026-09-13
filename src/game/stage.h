@@ -7,6 +7,7 @@
 #include <json.hpp>
 #include "object.h"   // Stage derives Trackable so stage loads are leak-checked
 #include "localization.h"   // toms::Locale::field() -- resolves name/story_note if multi-language
+#include "footprint.h"      // toms::Footprint -- S1: 1/2/4-grid entities (doc section 1.7)
 
 struct Entity {
     int x, y;
@@ -20,6 +21,15 @@ struct Entity {
     // tile's raw char). Empty = no override -> resolveEncounterKind() falls back to a default
     // derived from `kind`. No shipped stage sets this yet, so it's empty for every entity today.
     std::string encounterOverride;
+    // ---- S1: 佔格 (footprint) ------------------------------------------------------------------
+    // Parsed from the stage JSON's optional top-level "footprints" map (keyed by this tile's raw
+    // char, same convention as encounter_overrides). Always 1x1 unless a stage says otherwise, so
+    // every shipped stage file keeps parsing exactly as it did before S1 existed.
+    toms::Footprint fp;                 // 1x1 / 2x1 / 1x2 / 2x2 tiles
+    bool roamer = false;                // wanders the floor and chases the player (see roamer.h)
+    std::string displayName;            // banner text for 4-grid entities; empty -> use `id`
+    bool fpExplicit = false;            // true when THIS stage file named the footprint for this
+                                        // tile char (it then beats the character-level type table)
 };
 
 struct Stage : public Trackable {
@@ -77,6 +87,11 @@ inline Stage parseStage(const std::string& path, const toms::Locale& locale) {
     const nlohmann::json* encounterOverrides = nullptr;
     if (j.contains("encounter_overrides") && j["encounter_overrides"].is_object())
         encounterOverrides = &j["encounter_overrides"];
+    // S1: optional per-tile footprint overrides, keyed by raw tile char (see footprint.h for the
+    // accepted forms). Absent from a file -> every entity stays 1x1.
+    const nlohmann::json* footprints = nullptr;
+    if (j.contains("footprints") && j["footprints"].is_object())
+        footprints = &j["footprints"];
     // parse entities
     for (int y = 0; y < (int)s.tiles.size(); y++) {
         for (int x = 0; x < (int)s.tiles[y].size(); x++) {
@@ -90,6 +105,13 @@ inline Stage parseStage(const std::string& path, const toms::Locale& locale) {
             e.id = (pos == std::string::npos) ? e.kind : e.kind.substr(pos+1);
             if (encounterOverrides && encounterOverrides->contains(e.raw) && (*encounterOverrides)[e.raw].is_string())
                 e.encounterOverride = (*encounterOverrides)[e.raw].get<std::string>();
+            if (footprints && footprints->contains(e.raw)) {
+                toms::FootprintSpec spec = toms::footprintSpecFromJson((*footprints)[e.raw], e.raw);
+                e.fp = spec.fp;
+                e.roamer = spec.roamer && spec.fp.big();   // a 1x1 "roamer" has nowhere to roam
+                e.displayName = spec.name;
+                e.fpExplicit = true;
+            }
             s.entities.push_back(e);
         }
     }

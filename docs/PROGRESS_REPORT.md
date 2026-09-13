@@ -11,8 +11,14 @@
 
 ## ▶ Next Step
 
-**Next action: S1 — Entity footprint (1/2/4 grids).** The full ordered plan is the
-numbered list below; the milestone table further down is the status board for it.
+**Next action: S2 — `tools/gen_floors.py` + the 70-floor table.** (S1 — entity footprint — shipped
+2026-09-13, see the log; the numbered list below is the full ordered plan and the milestone table
+further down is its status board.)
+
+**Why S2 next:** S1 gave the engine a real notion of 佔格, so floors can now reserve space for the 8
+two-grid types and the 12 four-grid bosses/events (doc F7) — and `footprint_test` already carries the
+validator a generated floor has to pass (legal sizes, nothing on a wall, no overlap, stairs reachable
+with the bigger blockers), so the generator has a gate to generate *against* rather than a promise.
 
 **Last completed (2026-09-13):** the source-layout refactor (`game.cpp` 3,104 -> 268 lines, camera
 extracted to `toms::Camera`) and **M2 — ImGui on the browser backend**, both logged below. Owner
@@ -89,7 +95,7 @@ Recommended order (each item is sized to finish and verify in one sitting):
 | M10 — Title phase (New Game / Continue / Settings) | ✅ Done | Title screen drawn with the game's own renderer (so it exists on web too), numbered save slots (`save/slotN.json`, atomic writes), settings (`save/settings.json`: language, slot count, font scale), a 6-language text table (`data/text.json` with built-in fallback), and the "start a new game in this empty slot?" confirm dialog (owner-reported: an empty slot previously did nothing). Verified natively under Xvfb with real key events, and again in a browser on the live site. |
 | M11 — Web delivery pipeline | ✅ Done (deployed and verified live) | Root cause of the dead virtual keypad: the WebGL backend reported a 1280x720 design space while the canvas and the page's tap mapping were 1024x768, and `glViewport` used the design size inside a 768-tall buffer, shifting every drawn control 48px below its hit box. Fixed by splitting design space from drawing buffer. The published page is now a hand-maintained clean page (`web/clear.html`: no Emscripten logo, no status/spinner block, no debug console; real byte-level loading progress; animated title screen) that survives rebuilds, and artifact filenames are version-stamped per build so a cached `.data` can never mismatch a fresh page. Live: https://wslhermesai.github.io/TOMS/ |
 | M12 — Source-layout refactor | ✅ Done | `game.cpp` 3,104 -> 268 lines, split into 9 responsibility units; `toms::Camera` extracted to `src/game/camera.{h,cpp}` with 30 unit checks (`camera_test`); shared helpers in `game_helpers.h` / `game_condition.h` / `game_internal.h`; new `docs/CODE_LAYOUT.md`; `texture_test` (the last accepted M0 gap) fixed -- 17/17 tests pass; native walk re-verified under Xvfb. No behaviour change. |
-| S1 — Entity footprint (1/2/4 grids) + roamers | ⬜ Not started | Rules and data contract in `ART_AND_ABILITY_DESIGN.md` sections 1.7 / 3.6: only 1/2/4 grids, fixed 32px per grid, no footprint overlap inside a cell, elites never change footprint, 4 grids means boss-or-special-event. |
+| S1 — Entity footprint (1/2/4 grids) + roamers | ✅ Done (2026-09-13) | Engine: `src/game/footprint.h` (legal sizes 1x1/2x1/1x2/2x2 per doc F1, tile coverage, F5 y-sort key, JSON parsing that rejects an illegal size instead of shipping it, and `resolveFootprint()` — the one place that decides stage-file override > character type table > 1x1) and `src/game/roamer.{h,cpp}` (`toms::Roamer`, pure logic behind a `GridQuery` interface: wander with a heading, detect radius 6 / lose radius 9 hysteresis, greedy chase, and a candidate step is only legal when the WHOLE footprint fits on walkable tiles, so it never phases through walls). Data: `data/footprints.json` (character-level tiers — golem/demon 2x1, demonlord_vorkath 2x2 + name). Gameplay: all occupied tiles block/bump (F6), a big monster is never walked into (pure bump: the player fights from the adjacent tile and the boss keeps its cell), one unified y-sorted draw pass with the player included (F5), footprint-sized sprites (F2) and a name banner for the 4-grid/roamer tier. Tests: `footprint_test` — 88 checks, incl. a validator over all 11 shipped stages (legal size, no entity on a wall, no overlap (F7), stairs still reachable with the bigger blockers = anti-softlock). Six monsters in four stage files stood in 1-tile nooks that cannot host their tier (stage10's boss had no 2x2 room) and were moved to the nearest fitting tile. Roamers are engine-ready but not yet placed in shipped data — the two designed ones (王座之影, 前世道兵王) arrive with S2. |
 | S2 — 70-floor generator | ⬜ Not started | `tools/gen_floors.py` + floor table + connectivity validation (`STORY_DATA_SCHEMA.md` section 5). |
 | S3 — Story data + condition DSL + save v3 | ⬜ Not started | `story.json` v3, `ch_01..ch_03`, event pools, `choiceMade` / `sideStoryState` / counters / `cycleIndex`, save `schemaVersion: 3`. |
 | S4-S7 — Skill tree / forging / hub / actives, then endings + rebirth | ⬜ Not started | Schemas in `STORY_DATA_SCHEMA.md` sections 6 (systems), 7 (endings + resolver), 8 (rebirth). |
@@ -1925,6 +1931,68 @@ written but never verified — and the WebGPU build is not the one deployed. Lef
 M2 item rather than guessed at.
 
 **Not deployed:** the live Pages site still serves the pre-M2 build; deploying is a separate call.
+
+### 2026-09-13 — S1 done: entity footprints (1/2/4 grids) + floor roamers
+
+Owner's decision ("So this will change the code? If it is do it"), after S1 was explained as: let an
+enemy occupy 2 or 4 grids so a boss visually reads as a boss, instead of every entity being one tile.
+
+**New files (own files + classes, same discipline as the camera refactor):**
+- `src/game/footprint.h` — the 佔格 rules from `docs/ART_AND_ABILITY_DESIGN.md` section 1.7, as pure
+  logic: only 1x1/2x1/1x2/2x2 are legal (F1 -- a 3-grid entity cannot be aligned to the 2x2 cell
+  subdivision); `footprintCovers()` (anchor = top-left occupied tile); `footprintSortKey()` (F5: the
+  bottom-most occupied row); JSON parsing that **rejects** an illegal size (with a warning) instead of
+  shipping an unplaceable enemy; and `resolveFootprint()` -- the single place that decides *stage-file
+  override > character type table > 1x1* (F8), shared by the game and the test.
+- `src/game/roamer.{h,cpp}` — `toms::Roamer`, the floor wanderer: wander with a heading, detect radius
+  6 / lose radius 9 hysteresis, greedy chase (bigger gap first, other axis as fallback, then wander so
+  a cornered roamer keeps moving). Walkability arrives through a `GridQuery` interface, so it never
+  touches Stage/Game/Renderer and is unit-testable on a hand-written maze. Two rules are hard
+  requirements, not tuning: a candidate step is only legal when the entity's **whole footprint** lands
+  on walkable tiles inside the grid (F3/F4 -- no phasing through walls, no half-standing outside the
+  maze), and its seed comes from the stage id, so reloading a floor reproduces the same wander.
+- `src/game/footprint_test.cpp` — 88 checks: footprint math, JSON forms and rejections, resolution
+  priority, and the roamer (400-turn no-phasing soak, boundary clamping, detect/chase, hysteresis,
+  a pocket it cannot fit in, same-seed determinism, corridor advance) **plus a data validator over all
+  11 shipped stages**.
+- `data/footprints.json` — character-level tiers (F8): golem/demon 2x1, demonlord_vorkath 2x2 + the
+  banner name. A stage file can still override any single tile with its own `footprints` map.
+
+**Gameplay wiring:** all occupied tiles now block and bump (F6); a multi-grid monster is never walked
+into -- the player fights from the adjacent tile and the boss keeps its cell (F4); drawing is one
+y-sorted pass keyed on the bottom-most occupied row with the player in the same sort (F5), instead of
+"entities in file order, player always last", which only read correctly while everything was one tile
+tall; sprites are footprint-sized (F2) and the 4-grid/roamer tier gets a name banner drawn with the
+game's own CJK-capable text renderer. Roamers take one turn per player turn, seeded from the stage id.
+
+**Six monsters moved by one tile** (stage06/07/09/10): they stood in 1-tile nooks that cannot host
+their character-level tier -- stage10's boss had no 2x2 room at all. The tiles were edited mechanically
+(nearest fitting anchor), preserving the files' CRLF and staying a 6-line diff.
+
+**Verified.**
+- `footprint_test: ALL PASS (88 checks)`, including: *11 multi-grid entities across 11 stages*, no
+  illegal sizes, nothing standing on a wall, no overlapping entities, and **the stairs stay reachable
+  on every shipped stage with the enlarged monsters blocking** (the anti-softlock gate a generated
+  floor will have to pass too).
+- 18/18 test binaries pass; native `tower_vulkan` and `./build_web.sh webgl` both green.
+- Native (Xvfb, real keys): the load log reports `footprints.json: 3 type(s) bigger than 1x1` and
+  `stage_01: 2 entity(ies) occupy more than 1 grid`; the 2x1 golem draws two tiles wide; the 2x2 boss
+  draws with its name banner; bumping the golem's **non-anchor** tile starts the fight (F6).
+- Roamer, from the game's own turn log: `turn 1: (10,9)->(10,10) mode=wander`, ... `turn 7:
+  (15,10)->(16,10)`, `turn 8: (16,10)->(15,10)` (corridor end -> reversed), ... `turn 13:
+  (11,10)->(10,10) mode=chase player=(7,12)` -- one step per player step, heading kept, walls respected,
+  and the mode flipping to chase at distance 6.
+- Web (WebGL2, local build, browser harness): page runs; the 2x1 golem draws two tiles wide; stepping
+  onto its anchor tile starts the battle **and the player stays at (5,13)** (bump, never inside the
+  boss), `jsCombatInfo` reports active=1 / enemyHP 70, battle scene renders.
+
+**Not done, on purpose:** no roamer is placed in shipped data yet -- the two designed ones (王座之影,
+前世道兵王) are floor *events* that arrive with S2's generator, and the remaining roster's tiers (8
+two-grid types, 12 four-grid) come with the art pass (S8). The engine, the type table and the
+validator are in place, so both are data work now.
+
+**Both temp demo edits reverted** (the stage01 demo monsters and a temporary roamer trace), so the
+committed data is the real 11-stage set.
 
 ## Open Questions / Blockers
 

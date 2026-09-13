@@ -68,12 +68,76 @@ void Game::draw() {
         // Milestone 9; now that ts varies per stage, the inset scales with it (same
         // ~1/6 ratio, so this renders identically to before at ts=48).
         float inset = ts / 6.0f, sSize = ts - 2.0f * inset;
+        // S1 (docs/ART_AND_ABILITY_DESIGN.md section 1.7):
+        //   * a multi-grid entity is drawn at footprint * tile size, anchored on its top-left
+        //     occupied tile (F2: each grid keeps its own 32px art density -- this is more detail,
+        //     not a scaled-up sprite);
+        //   * everything on the floor is drawn in ONE y-sorted pass keyed on the bottom-most
+        //     occupied row (F5). Before S1 entities simply drew in file order and the player drew
+        //     last, which only read correctly while every sprite was one tile tall: a 2x2 boss
+        //     would have drawn over the wall above it and the player would always float on top of
+        //     monsters instead of standing behind the ones below them;
+        //   * 4-grid entities (and roamers) get a name banner (F6: a boss you can only circle needs
+        //     to be identifiable without opening a menu).
+        struct FloorSprite {
+            int   sortKey;         // bottom-most occupied row
+            int   tieX;            // stable, left-to-right tie-break within a row
+            float x, y, w, h;      // pixel rect
+            int   layer;
+            std::string banner;    // empty = no banner
+        };
+        std::vector<FloorSprite> floor;
+        floor.reserve(st.entities.size() + 1);
         for (auto& e : st.entities) {
             if (e.consumed) continue;
-            int layer = spriteLayer(entSprite(e.id));
-            ren->drawSprite(spriteQuad(ox + e.x*ts + inset, oy + e.y*ts + inset, sSize, sSize, layer, white));
+            FloorSprite f;
+            f.sortKey = footprintSortKey_T(e);
+            f.tieX = e.x;
+            f.w = e.fp.w * ts - 2.0f * inset;
+            f.h = e.fp.h * ts - 2.0f * inset;
+            f.x = ox + e.x*ts + inset;
+            f.y = oy + e.y*ts + inset;
+            f.layer = spriteLayer(entSprite(e.id));
+            // The banner is for the boss/event tier and for roamers; the text prefers the stage's
+            // own displayName and falls back to the entity id, so a floor file can name its boss
+            // without any new data file having to exist yet.
+            if (e.fp.bossTier() || e.roamer)
+                f.banner = e.displayName.empty() ? e.id : e.displayName;
+            floor.push_back(f);
         }
-        ren->drawSprite(spriteQuad(ox + pl.x*ts + inset, oy + pl.y*ts + inset, sSize, sSize, spriteLayer("player"), white));
+        {
+            FloorSprite f;
+            f.sortKey = footprintSortKey_T(pl.x, pl.y, toms::Footprint{});
+            f.tieX = pl.x;
+            f.w = sSize; f.h = sSize;
+            f.x = ox + pl.x*ts + inset;
+            f.y = oy + pl.y*ts + inset;
+            f.layer = spriteLayer("player");
+            floor.push_back(f);
+        }
+        std::stable_sort(floor.begin(), floor.end(), [](const FloorSprite& a, const FloorSprite& b) {
+            if (a.sortKey != b.sortKey) return a.sortKey < b.sortKey;
+            return a.tieX < b.tieX;
+        });
+        for (auto& f : floor) {
+            ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, white));
+            if (!f.banner.empty()) {
+                // Name banner: a translucent plate centred above the sprite, then the name. Drawn
+                // with the game's own text renderer (CJK-capable), not ImGui -- see the M2 note in
+                // imgui_web.h for why player-facing text never goes through ImGui.
+                const float labelW = (float)f.banner.size() * 13.0f + 16.0f;
+                const float lx = f.x + f.w * 0.5f - labelW * 0.5f;
+                const float ly = f.y - 22.0f;
+                Quad plate; plate.rect[0]=lx; plate.rect[1]=ly; plate.rect[2]=labelW; plate.rect[3]=20.0f;
+                plate.uv[0]=0;plate.uv[1]=0;plate.uv[2]=1;plate.uv[3]=1; plate.solid=true;
+                plate.tint[0]=0.06f;plate.tint[1]=0.05f;plate.tint[2]=0.09f;plate.tint[3]=0.78f;
+                // Stays in whatever node the floor is already drawing in: the plate and the text
+                // must land in the same batch as the sprites they annotate, and there is no
+                // NODE_TEXT in the render-node enum (NODE_UNSPEC/STAGE/CHAR/TALK/BATTLE/STORE).
+                ren->drawSprite(plate);
+                drawText(f.banner, lx + 8.0f, ly + 2.0f, 16, C4(1.0f, 0.86f, 0.55f, 1.0f));
+            }
+        }
 
         ren->setNode(NODE_CHAR);
         drawText(locale_.tr("game.title") + " — " + st.name + " (" + std::to_string(st.index) + "/" + std::to_string(totalStages) + ")", 16, 16, 22, tint);

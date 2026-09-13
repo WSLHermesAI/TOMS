@@ -1,0 +1,28 @@
+{
+  "_comment": [
+    "S1 — 角色級佔格表 (footprint tiers). docs/ART_AND_ABILITY_DESIGN.md §1.7 / rule F8:",
+    "佔格 is a CHARACTER-level property, not a per-floor knob, so it lives here once per enemy type",
+    "instead of being repeated inside every stage file. A stage file can still override any single",
+    "tile with its own top-level \"footprints\" map (keyed by the tile char), and a floor that says",
+    "nothing keeps the tier from this table.",
+    "",
+    "Legal sizes are 1x1, 2x1, 1x2 and 2x2 only (F1): a maze cell is 2x2 tiles and passages are 2",
+    "tiles wide, so anything else cannot be aligned to the cell subdivision and the generator could",
+    "not guarantee it a passage. Each grid keeps its own 32px of art density (F2), so a 2-grid enemy",
+    "is more detail, not a scaled-up sprite.",
+    "",
+    "Tiers in the art document: 30 types at 1 grid, 8 types at 2 grids (大型・壓迫感), 12 boss/event",
+    "entities at 4 grids (首領／特殊事件). Only types that already exist in data are listed; the",
+    "remaining roster arrives with the art pass (S8) and the generated floors (S2).",
+    "",
+    "A footprint is only ever applied where it physically fits: footprint_test.cpp validates every",
+    "shipped stage (legal size, all occupied tiles walkable, no overlap, stairs still reachable with",
+    "the bigger blockers) and fails loudly if a floor file stops satisfying that.",
+    "",
+    "\"name\" is the banner text for the 4-grid tier; \"roamer\": true additionally makes it wander the",
+    "floor and chase the player (see src/game/roamer.h)."
+  ],
+  "monster:golem": { "w": 2, "h": 1 },
+  "monster:demon": { "w": 2, "h": 1 },
+  "monster:demonlord_vorkath": { "w": 2, "h": 2, "name": "沃卡司" }
+}

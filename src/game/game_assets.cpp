@@ -84,6 +84,20 @@ bool Game::loadAssets(const std::string& assetDir) {
         }
     }
 
+    // S1: character-level 佔格 table (docs/ART_AND_ABILITY_DESIGN.md F8). An absent file leaves
+    // every entity at 1x1, i.e. exactly the pre-S1 behavior -- the table is purely additive.
+    {
+        nlohmann::json fpj = readJsonFile(assetDir + "/../data/footprints.json");
+        if (fpj.is_object()) {
+            int n = 0;
+            for (auto it = fpj.begin(); it != fpj.end(); ++it) {
+                if (it.key().empty() || it.key()[0] == '_') continue;   // "_comment"
+                typeFootprints_[it.key()] = toms::footprintSpecFromJson(it.value(), it.key());
+                if (typeFootprints_[it.key()].fp.big()) ++n;
+            }
+            fprintf(stderr, "[assets] footprints.json: %d type(s) bigger than 1x1\n", n);
+        }
+    }
     // load enemy templates
     nlohmann::json ej = readJsonFile(assetDir+"/../data/enemies.json");
     for (auto& [k,v] : ej.items()) enemyTpl[k] = v;
@@ -182,6 +196,39 @@ void Game::loadStage(const std::string& id) {
             e.consumed = true;
             st.tiles[e.y][e.x] = '.';
         }
+    }
+    // S1: resolve every entity's 佔格 now that both sources are known: the stage file's own
+    // "footprints" entry (a per-floor decision) beats data/footprints.json (the character's tier),
+    // which beats 1x1. Done here rather than in parseStage() because parseStage() knows nothing
+    // about the type table -- and routed through the shared helper so footprint_test.cpp's data
+    // validator resolves exactly the way the game does at runtime.
+    int bigCount = 0;
+    for (auto& e : st.entities) {
+        auto it = typeFootprints_.find(e.kind);
+        toms::FootprintSpec typeSpec = (it == typeFootprints_.end()) ? toms::FootprintSpec{} : it->second;
+        toms::FootprintSpec spec = toms::resolveFootprint(
+            toms::FootprintSpec{e.fp, e.roamer, e.displayName}, e.fpExplicit, typeSpec);
+        e.fp = spec.fp;
+        e.roamer = spec.roamer;
+        e.displayName = spec.name;
+        if (e.fp.big()) ++bigCount;
+    }
+    if (bigCount)
+        fprintf(stderr, "[stage] %s: %d entity(ies) occupy more than 1 grid\n", st.id.c_str(), bigCount);
+
+    // S1: (re)build the roamer brains for this floor. Always cleared -- the entity vector was just
+    // rebuilt from JSON, so a stale index would drive a different monster. Seeds are derived from
+    // the stage id + entity index, never from the clock: reloading a floor (stairs up/down, Stage
+    // Select) reproduces the same wander, so a chase stays reproducible instead of being noise.
+    roamers_.clear();
+    for (int i = 0; i < (int)st.entities.size(); ++i) {
+        const Entity& e = st.entities[i];
+        if (!e.roamer || e.consumed) continue;
+        uint32_t h = 2166136261u;   // FNV-1a over the stage id
+        for (char ch : st.id) { h ^= (unsigned char)ch; h *= 16777619u; }
+        roamers_.emplace_back(i, toms::Roamer(e.x, e.y, e.fp, h ^ (uint32_t)(i * 2654435761u)));
+        fprintf(stderr, "[stage] roamer '%s' (%dx%d) at (%d,%d) on %s\n",
+                e.id.c_str(), e.fp.w, e.fp.h, e.x, e.y, st.id.c_str());
     }
     // Milestone 3: entering a floor for the first time advances the main-story beat — this is
     // exactly what connect.up already does today (GAME_DESIGN_DOCUMENT.md §5's 1:1 floor<->beat

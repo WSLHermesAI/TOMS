@@ -30,6 +30,10 @@
 | `game.h` / `game.cpp` | 591 / 268 | `Game` 類別宣告與核心：初始化、`update()`、每幀提交、存檔黏合、TextNode 繪製轉接、F1 debug overlay 的入口。**新增跨系統邏輯前先問：這是不是某個既有單元的職責？** |
 | `camera.h` / `camera.cpp` | 85 / 57 | **`toms::Camera`：迷宮相機（獨立類別）**。模式（Follow/Rooms）、縮放（`viewCols`）、目前位置與目標、視野換算、邊界夾制、平滑移動。 |
 | `camera_test.cpp` | 142 | 相機 30 項純數學測試（縮放換算、邊界夾制、小迷宮置中、Rooms 分區對齊、ease 收斂不超調、與 dt 切割無關）。 |
+| `footprint.h` | 100 | **S1：佔格規則（純邏輯）**。合法尺寸（1x1／2x1／1x2／2x2）、覆蓋判定 `footprintCovers()`、F5 排序鍵 `footprintSortKey()`、JSON 解析（非法尺寸拒絕並回退 1x1）、以及唯一決定來源優先序的 `resolveFootprint()`（樓層覆寫 > `data/footprints.json` 角色表 > 1x1）。 |
+| `roamer.h` / `roamer.cpp` | 90 / 88 | **S1：樓層徘徊者 `toms::Roamer`（獨立類別）**。遊蕩（保留行進方向）、偵測 6 格／放棄 9 格的滯後、貪婪追擊；可走性透過 `GridQuery` 介面傳入，所以與 Stage／Game／Renderer 完全解耦、可單元測試。硬規則：一步僅在**整個佔格**可站且不出界時成立（不穿牆）。 |
+| `footprint_test.cpp` | — | S1 的 88 項檢查：佔格數學、JSON 形式與拒絕、來源優先序、徘徊者（400 回合不穿牆、邊界夾制、偵測/追擊、滯後、卡住的凹槽、同種子可重現）＋**對 11 個關卡的資料驗證器**（尺寸、不可站牆、不可重疊、樓梯仍可達）。 |
+| `data/footprints.json` | — | 角色級佔格表（F8）：golem／demon＝2x1、demonlord_vorkath＝2x2（含名牌名稱）。 |
 | `game_assets.cpp` | 224 | 圖集/材質載入、sprite id 查表、關卡 JSON → `Stage` 格線與實體放置。**STB 實作的唯一定義處。** |
 | `game_text_draw.cpp` | 171 | 文字與長條基本元件：UTF-8 解碼、字符繪製、寬度量測、HP 條、Power Bar、開場 splash。 |
 | `game_scene_draw.cpp` | 430 | 每幀場景：`draw()`（走路/戰鬥/對話/背包的場景切換與走路場景本體）、虛擬手把 overlay、通知、關卡選擇預覽、styling spike。 |
@@ -55,9 +59,10 @@
    與「ease 的目標」永遠來自同一份狀態（以前這兩件事分別寫在 `draw()` 與 `update()` 裡）。
 2. **共用小工具放 `game_helpers.h`，不要複製到兩個 .cpp**：以 `inline` 定義，各單元
    `using namespace toms::game_detail;` 之後照舊直接呼叫，呼叫點不用改。
-3. **`Game` 類別沒有拆**：`game.h` 仍宣告全部成員；拆的是**定義所在的檔案**。這樣既拿到
+3. **規則放純邏輯檔、資料放資料檔**（S1 的作法）：佔格與徘徊者 AI 都不碰 Stage／Renderer（`footprint.h`、`roamer.{h,cpp}`），因為它們必須能被 `footprint_test` 用執行期同一份程式碼驗證；而「哪隻敵人多大」屬於資料（`data/footprints.json`），樓層要覆寫單一格時寫在關卡檔的 `footprints`。**新規則請加在這些純邏輯檔裡並補測試，不要寫進 `Game`。**
+4. **`Game` 類別沒有拆**：`game.h` 仍宣告全部成員；拆的是**定義所在的檔案**。這樣既拿到
    「一檔一職責」的好處，又不用做高風險的類別介面重設計。
-4. **一個定義只能有一個家**：例如 STB 實作只在 `game_assets.cpp` 定義一次
+5. **一個定義只能有一個家**：例如 STB 實作只在 `game_assets.cpp` 定義一次
    （`texture.cpp` 自己那份只服務 `texture_test` 目標）。
 
 ---

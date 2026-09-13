@@ -178,12 +178,23 @@ void Game::movePlayer(int dx, int dy) {
     if (c == 'y') pl.key_yellow--;
     if (c == 'b') pl.key_blue--;
     if (c == 'r') pl.key_red--;
+    // S1: a multi-grid monster is NOT walked into. A 1x1 monster keeps the shipped behavior (the
+    // player steps onto the tile and the fight happens there), but entering a 4-grid boss's cell
+    // would put the player *inside* the boss -- so big footprints are pure bumps: fight from the
+    // adjacent tile and let the boss keep its space (doc F4: the player can only circle it).
+    for (const auto& e : st.entities) {
+        if (e.consumed || !e.fp.big()) continue;
+        if (e.kind.rfind("monster:", 0) != 0) continue;
+        if (entityCovers(e, nx, ny)) { advanceRoamers(); engageMonster(e); return; }
+    }
     pl.x = nx; pl.y = ny;
     audio.play("walk");
+    // The player acted -> the world takes its turn (roamers step once; S1).
+    advanceRoamers();
     // check entity at new cell
     for (auto& e : st.entities) {
         if (e.consumed) continue;
-        if (e.x == nx && e.y == ny) {
+        if (entityCovers(e, nx, ny)) {
             if (e.kind.rfind("monster:",0)==0) {
                 engageMonster(e);
                 return;
@@ -223,7 +234,7 @@ void Game::interact() {
     for (auto& e : st.entities) {
         if (e.consumed) continue;
         if (e.kind.rfind("npc:",0)!=0) continue;
-        if (e.x==pl.x && e.y==pl.y) {
+        if (entityCovers(e, pl.x, pl.y)) {
             std::string npc;
             if (e.id=="villager") npc="villager_elder";
             else if (e.id=="sorcerer") npc="sorcerer_teacher";
@@ -234,6 +245,42 @@ void Game::interact() {
             startDialogue(npc);
             return;
         }
+    }
+}
+
+// S1: one turn for every room-wandering event monster. Walkability is answered here (the roamer
+// class stays pure logic -- see roamer.h) and excludes tiles held by other live entities, so two
+// roamers cannot stack and a roamer cannot walk into the player or an item.
+void Game::advanceRoamers() {
+    if (roamers_.empty()) return;
+    const int gw = (int)st.width, gh = (int)st.height;
+    for (auto& [entIndex, brain] : roamers_) {
+        if (entIndex < 0 || entIndex >= (int)st.entities.size()) continue;
+        const Entity& self = st.entities[entIndex];
+        if (self.consumed) continue;   // fought and cleared: it stops roaming
+        struct Query : toms::GridQuery {
+            const Stage& s; const Entity& me; int myIndex; int px, py;
+            Query(const Stage& s_, const Entity& me_, int idx, int px_, int py_)
+                : s(s_), me(me_), myIndex(idx), px(px_), py(py_) {}
+            bool walkable(int x, int y) const override {
+                if (s.at(x, y) == '#') return false;
+                if (x == px && y == py) return false;   // the player blocks (captured by value:
+                                                        // the world doesn't move mid-turn)
+                for (int i = 0; i < (int)s.entities.size(); ++i) {
+                    const Entity& o = s.entities[i];
+                    if (i == myIndex || o.consumed) continue;
+                    if (o.kind.rfind("monster:", 0) != 0) continue;   // items/NPCs are not obstacles
+                    if (toms::footprintCovers(o.x, o.y, o.fp, x, y)) return false;
+                }
+                (void)me;
+                return true;
+            }
+        } query(st, self, entIndex, pl.x, pl.y);
+        brain.step(query, pl.x, pl.y, gw, gh);
+        // The brain owns the position; write it back so drawing, blocking and bump-to-fight all see
+        // the roamer where it actually is.
+        st.entities[entIndex].x = brain.x();
+        st.entities[entIndex].y = brain.y();
     }
 }
 

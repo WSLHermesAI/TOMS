@@ -13,6 +13,7 @@
 #include "camera.h"       // toms::Camera — maze camera (own file/class)       // toms::PowerBarParams/simulatePosition/... — see CombatState's Phase
 #include "equipment_system.h" // toms::EquippedSet/EquipmentDefinition — see Game::equipped_/equipmentDefs_
 #include "entity_status.h"   // toms::EntityStatus/entityStatusKey — see Game::entityStatus_
+#include "roamer.h"          // toms::Roamer — S1: floor wanderers that chase the player
 #include "stage.h"
 #include "title_screen.h"    // toms::TitleScreen/TitleAction — the title phase (New Game/Continue/Settings)
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
@@ -334,6 +335,29 @@ private:
     // Builds the EnemyInst for a monster tile and starts the fight (or its dialogue gate); shared
     // by the bump-to-fight path in movePlayer() and the harness hook debugStartNearestBattle().
     void engageMonster(const Entity& e);
+    // ---- S1: 佔格 / roamers --------------------------------------------------------------------
+    // True when the entity's footprint covers tile (x,y) -- the anchor is its top-left tile, so a
+    // 2x2 boss "is" on all four of its tiles for blocking (F4/F6), bump-to-fight (F6) and pickup
+    // purposes. One predicate, used by movement, interaction and the roamer grid query alike.
+    bool entityCovers(const Entity& e, int x, int y) const {
+        return toms::footprintCovers(e.x, e.y, e.fp, x, y);
+    }
+    // F5 y-sort key (bottom-most occupied row) for an entity -- and the same thing for a loose
+    // position/footprint pair, so the player (always 1x1) sorts in the same pass as the entities.
+    int footprintSortKey_T(const Entity& e) const { return toms::footprintSortKey(e.y, e.fp); }
+    int footprintSortKey_T(int /*x*/, int y, const toms::Footprint& fp) const {
+        return toms::footprintSortKey(y, fp);
+    }
+    // Advance every roamer one turn (the game is turn-based: one step per player step). Called by
+    // movePlayer() -- a bump into a monster consumes the turn too, so a roamer can corner you.
+    void advanceRoamers();
+    // entity index -> brain, rebuilt by loadStage(). Kept as indices (not Entity*) because a stage
+    // reload replaces the whole entity vector (stairs, Stage Select) and stale pointers would
+    // silently drive the wrong monster.
+    std::vector<std::pair<int, toms::Roamer>> roamers_;
+    // data/footprints.json -- character-level 佔格 (doc F8). Keyed by the legend kind, i.e.
+    // "monster:golem", so a floor file never has to repeat the same tier for every copy of a type.
+    std::map<std::string, toms::FootprintSpec> typeFootprints_;
     void finishCombatWin();
     void finishCombatLose();
     void drawPowerBar(float x, float y, float w, float h, const toms::PowerBarParams& bar, float position);
