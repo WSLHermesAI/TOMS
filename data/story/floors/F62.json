@@ -1,0 +1,129 @@
+{
+  "id": "F62",
+  "act": "ch_09",
+  "indexInAct": 6,
+  "name": "story.f62.name",
+  "seal": "xinmo",
+  "role": "normal",
+  "maze": {
+    "cols": 57,
+    "rows": 38,
+    "rooms": 11,
+    "loops": 10,
+    "seed": "62:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "demon",
+      "wraith"
+    ],
+    "count": [
+      20,
+      28
+    ],
+    "elites": 4,
+    "boss": null
+  },
+  "items": {
+    "count": 12,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road_v2",
+    "ev_common_cache_wall_v5",
+    "ev_antechamber_liora_voice_v2",
+    "ev_common_trap_rubble_v5",
+    "ev_common_rescue_lost_soldier",
+    "ev_common_whisper_old_road_v3",
+    "ev_common_cache_wall_v3",
+    "ev_common_merchant_echo_ash_v5",
+    "ev_antechamber_liora_voice_v3",
+    "ev_antechamber_liora_voice",
+    "ev_common_rescue_lost_soldier_v5"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_09",
+    "intro": "story.f62.intro",
+    "ambient": [
+      "story.f62.ambient.1",
+      "story.f62.ambient.2"
+    ],
+    "beats": [
+      "b_antechamber_f62"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F63",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 9,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "whisper",
+      "trap",
+      "rescue",
+      "whisper",
+      "cache",
+      "merchant_echo",
+      "whisper",
+      "whisper",
+      "rescue"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        7,
+        5
+      ],
+      [
+        7,
+        6
+      ],
+      [
+        7,
+        13
+      ],
+      [
+        7,
+        14
+      ],
+      [
+        8,
+        13
+      ],
+      [
+        8,
+        14
+      ],
+      [
+        10,
+        4
+      ],
+      [
+        6,
+        10
+      ],
+      [
+        6,
+        11
+      ],
+      [
+        7,
+        10
+      ],
+      [
+        7,
+        11
+      ]
+    ]
+  }
+}

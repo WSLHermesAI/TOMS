@@ -1,0 +1,80 @@
+{
+  "id": "F04",
+  "act": "ch_01",
+  "indexInAct": 4,
+  "name": "story.f04.name",
+  "seal": "memory",
+  "role": "normal",
+  "maze": {
+    "cols": 19,
+    "rows": 16,
+    "rooms": 3,
+    "loops": 2,
+    "seed": "04:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      4,
+      6
+    ],
+    "elites": 0,
+    "boss": null
+  },
+  "items": {
+    "count": 4,
+    "table": [
+      "potion_red",
+      "coin"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_road_v2",
+    "ev_common_cache_wall_v2",
+    "ev_common_whisper_old_road_v3"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_01",
+    "intro": "story.f04.intro",
+    "ambient": [
+      "story.f04.ambient.1",
+      "story.f04.ambient.2"
+    ],
+    "beats": [
+      "b_village_f04"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F05",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 1,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "whisper"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        0
+      ]
+    ]
+  }
+}

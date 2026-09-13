@@ -1,0 +1,82 @@
+{
+  "id": "F56",
+  "act": "ch_08",
+  "indexInAct": 7,
+  "name": "story.f56.name",
+  "seal": "shenshi",
+  "role": "boss-stage",
+  "maze": {
+    "cols": 51,
+    "rows": 34,
+    "rooms": 10,
+    "loops": 9,
+    "seed": "56:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "wraith",
+      "demon"
+    ],
+    "count": [
+      18,
+      25
+    ],
+    "elites": 3,
+    "boss": "bell_warden"
+  },
+  "items": {
+    "count": 11,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_sanctum_crack_prayer_v3",
+    "ev_common_cache_wall_v5",
+    "ev_sanctum_seventh_bell_v2",
+    "ev_sanctum_warden_oath_v4",
+    "ev_common_relic_road_v3",
+    "ev_common_cache_wall_v4",
+    "ev_common_whisper_old_road_v5",
+    "ev_common_shard_wandering_v5",
+    "ev_common_shard_wandering_v3",
+    "ev_sanctum_crack_prayer"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_08",
+    "intro": "story.f56.intro",
+    "ambient": [
+      "story.f56.ambient.1",
+      "story.f56.ambient.2"
+    ],
+    "beats": [
+      "b_sanctum_f56"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F57",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 8,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "relic",
+      "whisper",
+      "relic",
+      "cache",
+      "whisper",
+      "memory_shard",
+      "memory_shard",
+      "whisper"
+    ],
+    "eventPoolSource": "provisional"
+  },
+  "handAuthoredStage": "stage08.json"
+}

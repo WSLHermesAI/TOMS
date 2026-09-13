@@ -1,0 +1,99 @@
+{
+  "id": "F22",
+  "act": "ch_04",
+  "indexInAct": 1,
+  "name": "story.f22.name",
+  "seal": "jindan",
+  "role": "normal",
+  "maze": {
+    "cols": 31,
+    "rows": 22,
+    "rooms": 6,
+    "loops": 5,
+    "seed": "22:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "bat"
+    ],
+    "count": [
+      10,
+      14
+    ],
+    "elites": 1,
+    "boss": null
+  },
+  "items": {
+    "count": 7,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_library_scholar_whisper_v2",
+    "ev_common_cache_wall_v5",
+    "ev_library_shelf_collapse_v3",
+    "ev_library_shelf_collapse",
+    "ev_library_torn_page_v4",
+    "ev_common_trap_rubble"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_04",
+    "intro": "story.f22.intro",
+    "ambient": [
+      "story.f22.ambient.1",
+      "story.f22.ambient.2"
+    ],
+    "beats": [
+      "b_library_f22"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F23",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 4,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "trap",
+      "trap",
+      "relic",
+      "trap"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        2,
+        5
+      ]
+    ]
+  }
+}

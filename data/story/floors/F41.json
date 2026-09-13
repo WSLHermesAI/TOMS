@@ -1,0 +1,111 @@
+{
+  "id": "F41",
+  "act": "ch_06",
+  "indexInAct": 6,
+  "name": "story.f41.name",
+  "seal": "yuanying",
+  "role": "normal",
+  "maze": {
+    "cols": 39,
+    "rows": 26,
+    "rooms": 8,
+    "loops": 7,
+    "seed": "41:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "golem",
+      "wraith"
+    ],
+    "count": [
+      14,
+      19
+    ],
+    "elites": 2,
+    "boss": null
+  },
+  "items": {
+    "count": 9,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "potion_blue"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_road_v4",
+    "ev_cavern_miner_cache_v4",
+    "ev_cavern_miner_cache_v3",
+    "ev_common_rescue_lost_soldier_v3",
+    "ev_cavern_miner_cache_v2",
+    "ev_common_merchant_echo_ash_v3",
+    "ev_common_cache_wall_v4",
+    "ev_common_relic_road_v2"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_06",
+    "intro": "story.f41.intro",
+    "ambient": [
+      "story.f41.ambient.1",
+      "story.f41.ambient.2"
+    ],
+    "beats": [
+      "b_cavern_f41"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F42",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 6,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "cache",
+      "rescue",
+      "cache",
+      "merchant_echo",
+      "cache",
+      "relic"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        5,
+        8
+      ],
+      [
+        5,
+        9
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        6,
+        9
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        5,
+        1
+      ]
+    ]
+  }
+}

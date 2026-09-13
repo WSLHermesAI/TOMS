@@ -1,0 +1,118 @@
+{
+  "id": "F48",
+  "act": "ch_07",
+  "indexInAct": 6,
+  "name": "story.f48.name",
+  "seal": "fire",
+  "role": "normal",
+  "maze": {
+    "cols": 45,
+    "rows": 30,
+    "rooms": 9,
+    "loops": 8,
+    "seed": "48:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "demon"
+    ],
+    "count": [
+      16,
+      22
+    ],
+    "elites": 3,
+    "boss": null
+  },
+  "items": {
+    "count": 10,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_road",
+    "ev_common_cache_wall_v4",
+    "ev_common_trap_rubble_v3",
+    "ev_common_relic_road_v3",
+    "ev_common_trap_rubble_v4",
+    "ev_common_relic_road_v5",
+    "ev_common_whisper_old_road_v5",
+    "ev_common_merchant_echo_ash",
+    "ev_barracks_deserter"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_07",
+    "intro": "story.f48.intro",
+    "ambient": [
+      "story.f48.ambient.1",
+      "story.f48.ambient.2"
+    ],
+    "beats": [
+      "b_barracks_f48"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F49",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 7,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "trap",
+      "relic",
+      "trap",
+      "relic",
+      "whisper",
+      "merchant_echo",
+      "merchant_echo"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        7,
+        4
+      ],
+      [
+        7,
+        5
+      ],
+      [
+        7,
+        8
+      ],
+      [
+        7,
+        9
+      ],
+      [
+        8,
+        8
+      ],
+      [
+        8,
+        9
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        8,
+        1
+      ],
+      [
+        1,
+        7
+      ]
+    ]
+  }
+}

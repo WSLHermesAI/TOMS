@@ -1,0 +1,87 @@
+{
+  "id": "F09",
+  "act": "ch_02",
+  "indexInAct": 2,
+  "name": "story.f09.name",
+  "seal": "qi",
+  "role": "normal",
+  "maze": {
+    "cols": 23,
+    "rows": 18,
+    "rooms": 4,
+    "loops": 3,
+    "seed": "09:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      6,
+      8
+    ],
+    "elites": 0,
+    "boss": null
+  },
+  "items": {
+    "count": 5,
+    "table": [
+      "potion_red",
+      "coin",
+      "gem_def"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road_v5",
+    "ev_common_cache_wall_v2",
+    "ev_common_trap_rubble_v2",
+    "ev_common_trap_rubble_v3"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_02",
+    "intro": "story.f09.intro",
+    "ambient": [
+      "story.f09.ambient.1",
+      "story.f09.ambient.2"
+    ],
+    "beats": [
+      "b_forest_f09"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F10",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 2,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "trap",
+      "trap"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        1,
+        6
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        1,
+        3
+      ]
+    ]
+  }
+}

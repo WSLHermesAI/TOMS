@@ -180,6 +180,15 @@ void Game::loadStage(const std::string& id) {
         std::string alt = dataDir + "/../data/stages/" + noUs + ".json";
         if (std::filesystem::exists(alt)) path = alt;
     }
+    // S2: generated floors (the 60 non-boss floors of the 70-floor tower) live in
+    // data/story/floors/<id>.stage.json -- the file layout STORY_DATA_SCHEMA.md section 1.2 asks for,
+    // where <id> is F01..F70. They are written in this same stage schema, so they load through this
+    // unchanged path; only the directory differs, and it is tried last so the hand-authored
+    // data/stages/*.json files (the ten act-boss floors, section 3.2) always win.
+    if (!std::filesystem::exists(path)) {
+        std::string floorPath = dataDir + "/../data/story/floors/" + id + ".stage.json";
+        if (std::filesystem::exists(floorPath)) path = floorPath;
+    }
     st = parseStage(path, locale_);
     // Milestone 7: parseStage() rebuilds every entity fresh from JSON on every call (stairs,
     // Stage Select, etc.), so re-apply any previously-persisted Defeated/Collected status here --

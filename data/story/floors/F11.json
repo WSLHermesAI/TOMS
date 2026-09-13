@@ -1,0 +1,87 @@
+{
+  "id": "F11",
+  "act": "ch_02",
+  "indexInAct": 4,
+  "name": "story.f11.name",
+  "seal": "qi",
+  "role": "normal",
+  "maze": {
+    "cols": 23,
+    "rows": 18,
+    "rooms": 4,
+    "loops": 3,
+    "seed": "11:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      6,
+      8
+    ],
+    "elites": 0,
+    "boss": null
+  },
+  "items": {
+    "count": 5,
+    "table": [
+      "potion_red",
+      "coin",
+      "gem_def"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road",
+    "ev_common_cache_wall_v4",
+    "ev_common_merchant_echo_ash",
+    "ev_forest_broken_arrow"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_02",
+    "intro": "story.f11.intro",
+    "ambient": [
+      "story.f11.ambient.1",
+      "story.f11.ambient.2"
+    ],
+    "beats": [
+      "b_forest_f11"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F12",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 2,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "merchant_echo",
+      "relic"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        0,
+        5
+      ],
+      [
+        0,
+        6
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        6
+      ]
+    ]
+  }
+}

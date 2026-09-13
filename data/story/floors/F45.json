@@ -1,0 +1,122 @@
+{
+  "id": "F45",
+  "act": "ch_07",
+  "indexInAct": 3,
+  "name": "story.f45.name",
+  "seal": "fire",
+  "role": "normal",
+  "maze": {
+    "cols": 45,
+    "rows": 30,
+    "rooms": 9,
+    "loops": 8,
+    "seed": "45:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "demon"
+    ],
+    "count": [
+      16,
+      22
+    ],
+    "elites": 3,
+    "boss": null
+  },
+  "items": {
+    "count": 10,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_road",
+    "ev_barracks_forge_t3_v4",
+    "ev_barracks_forge_t3_v2",
+    "ev_common_rescue_lost_soldier_v5",
+    "ev_barracks_night_fire",
+    "ev_common_whisper_old_road_v5",
+    "ev_common_rescue_lost_soldier_v2",
+    "ev_common_cache_wall_v2",
+    "ev_common_relic_road_v2"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_07",
+    "intro": "story.f45.intro",
+    "ambient": [
+      "story.f45.ambient.1",
+      "story.f45.ambient.2"
+    ],
+    "beats": [
+      "b_barracks_f45"
+    ],
+    "exitUnlocks": {
+      "counters": {
+        "insight": 1
+      }
+    }
+  },
+  "nextFloor": "F46",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 7,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "cache",
+      "rescue",
+      "rescue",
+      "whisper",
+      "rescue",
+      "cache",
+      "relic"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        6
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        7,
+        4
+      ],
+      [
+        7,
+        5
+      ],
+      [
+        8,
+        4
+      ]
+    ]
+  }
+}

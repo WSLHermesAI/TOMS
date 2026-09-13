@@ -1,0 +1,115 @@
+{
+  "id": "F38",
+  "act": "ch_06",
+  "indexInAct": 3,
+  "name": "story.f38.name",
+  "seal": "yuanying",
+  "role": "normal",
+  "maze": {
+    "cols": 39,
+    "rows": 26,
+    "rooms": 8,
+    "loops": 7,
+    "seed": "38:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "golem",
+      "wraith"
+    ],
+    "count": [
+      14,
+      19
+    ],
+    "elites": 2,
+    "boss": null
+  },
+  "items": {
+    "count": 9,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "potion_blue"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road_v5",
+    "ev_cavern_miner_cache_v4",
+    "ev_common_cache_wall_v5",
+    "ev_common_whisper_old_road_v5",
+    "ev_common_trap_rubble_v2",
+    "ev_common_whisper_old_road",
+    "ev_cavern_twin_crystal_v2",
+    "ev_cavern_echo_wall_v3"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_06",
+    "intro": "story.f38.intro",
+    "ambient": [
+      "story.f38.ambient.1",
+      "story.f38.ambient.2"
+    ],
+    "beats": [
+      "b_cavern_f38"
+    ],
+    "exitUnlocks": {
+      "counters": {
+        "insight": 1
+      }
+    }
+  },
+  "nextFloor": "F39",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 6,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "cache",
+      "whisper",
+      "trap",
+      "whisper",
+      "relic",
+      "whisper"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        3,
+        5
+      ],
+      [
+        3,
+        6
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        4,
+        7
+      ]
+    ]
+  }
+}

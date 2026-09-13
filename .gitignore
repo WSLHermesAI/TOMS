@@ -27,6 +27,10 @@ editor/out/
 *.pdb
 *.ilk
 
+# Python bytecode from the tools/ generators (gen_floors.py imports gen_mazes.py)
+__pycache__/
+*.pyc
+
 # runtime logs
 *.log
 

@@ -1,0 +1,93 @@
+{
+  "id": "F18",
+  "act": "ch_03",
+  "indexInAct": 4,
+  "name": "story.f18.name",
+  "seal": "daoji",
+  "role": "normal",
+  "maze": {
+    "cols": 27,
+    "rows": 20,
+    "rooms": 5,
+    "loops": 4,
+    "seed": "18:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "bat",
+      "golem"
+    ],
+    "count": [
+      8,
+      11
+    ],
+    "elites": 1,
+    "boss": null
+  },
+  "items": {
+    "count": 6,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "gem_atk"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road",
+    "ev_common_cache_wall_v5",
+    "ev_common_rescue_lost_soldier_v5",
+    "ev_common_whisper_old_road_v4",
+    "ev_gate_seal_rubbing_v3"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_03",
+    "intro": "story.f18.intro",
+    "ambient": [
+      "story.f18.ambient.1",
+      "story.f18.ambient.2"
+    ],
+    "beats": [
+      "b_gate_f18"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F19",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 3,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "rescue",
+      "whisper",
+      "whisper"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        1,
+        5
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ]
+    ]
+  }
+}

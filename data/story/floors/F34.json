@@ -1,0 +1,106 @@
+{
+  "id": "F34",
+  "act": "ch_05",
+  "indexInAct": 6,
+  "name": "story.f34.name",
+  "seal": "soul",
+  "role": "normal",
+  "maze": {
+    "cols": 35,
+    "rows": 24,
+    "rooms": 7,
+    "loops": 6,
+    "seed": "34:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "wraith"
+    ],
+    "count": [
+      12,
+      16
+    ],
+    "elites": 2,
+    "boss": null
+  },
+  "items": {
+    "count": 8,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "gem_atk",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_road_v3",
+    "ev_common_cache_wall",
+    "ev_common_relic_road_v4",
+    "ev_common_merchant_echo_ash_v5",
+    "ev_common_whisper_old_road",
+    "ev_crypt_ten_year_candle_v4",
+    "ev_crypt_nameless_brick"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_05",
+    "intro": "story.f34.intro",
+    "ambient": [
+      "story.f34.ambient.1",
+      "story.f34.ambient.2"
+    ],
+    "beats": [
+      "b_crypt_f34"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F35",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 5,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "relic",
+      "merchant_echo",
+      "whisper",
+      "relic",
+      "whisper"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        5,
+        4
+      ],
+      [
+        3,
+        9
+      ],
+      [
+        4,
+        9
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        5,
+        6
+      ]
+    ]
+  }
+}

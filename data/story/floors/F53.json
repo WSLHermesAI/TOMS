@@ -1,0 +1,123 @@
+{
+  "id": "F53",
+  "act": "ch_08",
+  "indexInAct": 4,
+  "name": "story.f53.name",
+  "seal": "shenshi",
+  "role": "normal",
+  "maze": {
+    "cols": 51,
+    "rows": 34,
+    "rooms": 10,
+    "loops": 9,
+    "seed": "53:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "wraith",
+      "demon"
+    ],
+    "count": [
+      18,
+      25
+    ],
+    "elites": 3,
+    "boss": null
+  },
+  "items": {
+    "count": 11,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_sanctum_seventh_bell_v2",
+    "ev_common_cache_wall",
+    "ev_common_cache_wall_v4",
+    "ev_common_rescue_lost_soldier_v2",
+    "ev_common_whisper_old_road_v3",
+    "ev_common_trap_rubble",
+    "ev_common_rescue_lost_soldier",
+    "ev_common_cache_wall_v3",
+    "ev_sanctum_crack_prayer_v2",
+    "ev_common_merchant_echo_ash_v3"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_08",
+    "intro": "story.f53.intro",
+    "ambient": [
+      "story.f53.ambient.1",
+      "story.f53.ambient.2"
+    ],
+    "beats": [
+      "b_sanctum_f53"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F54",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 8,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "cache",
+      "rescue",
+      "whisper",
+      "trap",
+      "rescue",
+      "cache",
+      "whisper",
+      "merchant_echo"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        5,
+        15
+      ],
+      [
+        6,
+        14
+      ],
+      [
+        6,
+        15
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        6,
+        9
+      ],
+      [
+        6,
+        1
+      ],
+      [
+        6,
+        5
+      ]
+    ]
+  }
+}

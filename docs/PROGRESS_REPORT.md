@@ -11,14 +11,17 @@
 
 ## ▶ Next Step
 
-**Next action: S2 — `tools/gen_floors.py` + the 70-floor table.** (S1 — entity footprint — shipped
-2026-09-13, see the log; the numbered list below is the full ordered plan and the milestone table
-further down is its status board.)
+**Next action: S3 — story data v3 + the condition DSL + save v3.** (S1 shipped 2026-09-13, S2 shipped
+2026-09-13 — both logged below; the numbered list further down is the full ordered plan and the
+milestone table is its status board.)
 
-**Why S2 next:** S1 gave the engine a real notion of 佔格, so floors can now reserve space for the 8
-two-grid types and the 12 four-grid bosses/events (doc F7) — and `footprint_test` already carries the
-validator a generated floor has to pass (legal sizes, nothing on a wall, no overlap, stairs reachable
-with the bigger blockers), so the generator has a gate to generate *against* rather than a promise.
+**Why S3 next:** S2 now generates all 70 floors, but two thirds of each floor's *meaning* is still
+provisional: the per-act enemy mixes and item tables should come from `data/story/chapters/ch_NN.json`,
+and every floor's events are sampled from a built-in temporary pool because `data/events/pool_act*.json`
+does not exist yet. S3 writes `story.json` v3 + `ch_01…ch_03` + the first three acts' event pools (which
+flips `meta.eventPoolSource` from `provisional` to `authored` — the generator picks them up with no code
+change), adds the four new condition types (`choiceMade` / `sideStoryState` / `counterAtLeast` /
+`cycleIndexAtLeast`) and save `schemaVersion: 3`, without which the act-1 motive choice cannot persist.
 
 **Last completed (2026-09-13):** the source-layout refactor (`game.cpp` 3,104 -> 268 lines, camera
 extracted to `toms::Camera`) and **M2 — ImGui on the browser backend**, both logged below. Owner
@@ -97,7 +100,7 @@ Recommended order (each item is sized to finish and verify in one sitting):
 | M11 — Web delivery pipeline | ✅ Done (deployed and verified live) | Root cause of the dead virtual keypad: the WebGL backend reported a 1280x720 design space while the canvas and the page's tap mapping were 1024x768, and `glViewport` used the design size inside a 768-tall buffer, shifting every drawn control 48px below its hit box. Fixed by splitting design space from drawing buffer. The published page is now a hand-maintained clean page (`web/clear.html`: no Emscripten logo, no status/spinner block, no debug console; real byte-level loading progress; animated title screen) that survives rebuilds, and artifact filenames are version-stamped per build so a cached `.data` can never mismatch a fresh page. Live: https://wslhermesai.github.io/TOMS/ |
 | M12 — Source-layout refactor | ✅ Done | `game.cpp` 3,104 -> 268 lines, split into 9 responsibility units; `toms::Camera` extracted to `src/game/camera.{h,cpp}` with 30 unit checks (`camera_test`); shared helpers in `game_helpers.h` / `game_condition.h` / `game_internal.h`; new `docs/CODE_LAYOUT.md`; `texture_test` (the last accepted M0 gap) fixed -- 17/17 tests pass; native walk re-verified under Xvfb. No behaviour change. |
 | S1 — Entity footprint (1/2/4 grids) + roamers | ✅ Done (2026-09-13) | Engine: `src/game/footprint.h` (legal sizes 1x1/2x1/1x2/2x2 per doc F1, tile coverage, F5 y-sort key, JSON parsing that rejects an illegal size instead of shipping it, and `resolveFootprint()` — the one place that decides stage-file override > character type table > 1x1) and `src/game/roamer.{h,cpp}` (`toms::Roamer`, pure logic behind a `GridQuery` interface: wander with a heading, detect radius 6 / lose radius 9 hysteresis, greedy chase, and a candidate step is only legal when the WHOLE footprint fits on walkable tiles, so it never phases through walls). Data: `data/footprints.json` (character-level tiers — golem/demon 2x1, demonlord_vorkath 2x2 + name). Gameplay: all occupied tiles block/bump (F6), a big monster is never walked into (pure bump: the player fights from the adjacent tile and the boss keeps its cell), one unified y-sorted draw pass with the player included (F5), footprint-sized sprites (F2) and a name banner for the 4-grid/roamer tier. Tests: `footprint_test` — 88 checks, incl. a validator over all 11 shipped stages (legal size, no entity on a wall, no overlap (F7), stairs still reachable with the bigger blockers = anti-softlock). Six monsters in four stage files stood in 1-tile nooks that cannot host their tier (stage10's boss had no 2x2 room) and were moved to the nearest fitting tile. Roamers are engine-ready but not yet placed in shipped data — the two designed ones (王座之影, 前世道兵王) arrive with S2. |
-| S2 — 70-floor generator | ⬜ Not started | `tools/gen_floors.py` + floor table + connectivity validation (`STORY_DATA_SCHEMA.md` section 5). |
+| S2 — `tools/gen_floors.py` + the 70-floor table | ✅ Done (2026-09-13) | `tools/gen_floors.py` emits **70 floor specs** (`data/story/floors/F01…F70.json`, the section-4 schema: act/indexInAct/seal/role, maze params, enemy mix+range+elites+boss, item table, sampled events, side-story hook, narrative keys, nextFloor, meta) plus **60 playable grids** (`Fnn.stage.json`, every non-boss floor) in the existing stage schema — boss floors are the ten hand-authored `data/stages/*.json` the section-3.2 table maps them to (recorded as `handAuthoredStage`). The maze reuses `tools/gen_mazes.py`'s Wilson + BFS (one implementation, same conventions: cell = 2x2 tiles, 2-tile passages), adds the table's rooms ("event containers") and extra loops, and pads the right/bottom edge with wall so the table's dims come out exact. `tools/validate_story.py` implements V7 (floor↔act↔nextFloor, boss floor → hand-authored stage), V8 (one player start, stairs up/down, maze fully connected, and each key reachable with the doors shut = anti-softlock), V9 (dims/rooms/loops/events/enemy range/elites/items/difficulty vs the table) and V12 (≥1 relic/whisper + ≥1 cache per floor), plus footprint legality/overlap and side-story placement — **6745 checks, ALL PASS**. The engine gained one resolution fallback (`loadStage` also looks in `data/story/floors/<id>.stage.json`), and `footprint_test` now validates the 60 generated grids through the runtime's own `parseStage` (71 stage files, 430 multi-grid entities) so generated data is gated by the game's parser, not just by Python. Verified natively by booting a new game into the generated F64 (63x42): playable, camera follows, 2-grid demons and rooms render (HUD 「第 64 層」). Provisional until their own phase: per-act enemy mixes / item tables (chapters, S3) and the event pools (S3) — the generator prefers `data/events/pool_*.json` the moment those exist. Docs corrected: the section-5.1 formula disagreed with its own table from tier 4 up, so it was replaced by the exact piecewise form the table implies. |
 | S3 — Story data + condition DSL + save v3 | ⬜ Not started | `story.json` v3, `ch_01..ch_03`, event pools, `choiceMade` / `sideStoryState` / counters / `cycleIndex`, save `schemaVersion: 3`. |
 | S4-S7 — Skill tree / forging / hub / actives, then endings + rebirth | ⬜ Not started | Schemas in `STORY_DATA_SCHEMA.md` sections 6 (systems), 7 (endings + resolver), 8 (rebirth). |
 | S8 — Art pipeline (shader variants, atlas, rigs) | ⬜ Not started | `ART_AND_ABILITY_DESIGN.md` sections 1.3 / 1.5 / 8; 1,006 animation frames + 469 static images, 3 MB budget. |
@@ -2020,6 +2023,62 @@ reference for this pipeline).
     `monster:demonlord_vorkath` -- i.e. `data/footprints.json` is inside the bundle.
 - Nothing else changed in the deploy; `main` stayed at the S1 commit for code and `7845c23` for the
   artifact copy.
+
+### 2026-09-13 — S2 done: `gen_floors.py` generates the 70-floor data set (+ V7/V8/V9/V12)
+
+Owner: "Do next (it should be S2?)" — yes, S2 is `tools/gen_floors.py` + the floor table, which
+`STORY_DATA_SCHEMA.md` section 13 lists as its M1 ("70 層可生成、可走通").
+
+**What was built.**
+- `tools/gen_floors.py` — reads the section-5.1 / STORY_BIBLE section-5 floor table and writes, per
+  floor: the **spec** (`data/story/floors/Fnn.json`, the section-4 schema) and, for the 60 non-boss
+  floors, a **playable grid** (`Fnn.stage.json`) in the existing stage schema. Boss floors (F07, F14,
+  … F70) carry `handAuthoredStage` pointing at the ten `data/stages/*.json` files section 3.2 maps
+  them to, and get no generated grid. The maze reuses `tools/gen_mazes.py`'s Wilson + BFS (the doc
+  requires reusing it), keeps that file's conventions (cell = 2x2 tiles with one wall between
+  neighbours, so every passage is 2 tiles wide), carves the table's `rooms` as open clusters ("event
+  containers") and opens `loops` extra walls; the remainder of the table's dims becomes wall padding on
+  the right/bottom edge, so the dims come out exact for V9. Entities are placed at cell anchors with
+  footprint-aware chars, and the door/key pair uses `reachable_without_edge` so the key is always on the
+  entrance side.
+- `tools/validate_story.py` — V7, V8, V9, V12 plus footprint legality/overlap and the side-story
+  placement: 70 specs + 60 grids, **6745 checks, ALL PASS**. V8 is the interesting one: besides "one
+  player start / stairs present / the whole maze reachable with doors open", it verifies that **every
+  door's key is reachable with the doors still shut** — a softlock check.
+- Engine: `loadStage()` gained one fallback (`data/story/floors/<id>.stage.json` after the two
+  `data/stages/` forms), so generated floors load through the unchanged `parseStage`, in the file layout
+  section 1.2 asks for.
+- `footprint_test` (S1's C++ gate) now also validates the 60 generated grids **through the runtime's own
+  parser**: 71 stage files, 430 multi-grid entities, all footprints legal/on floor/non-overlapping, and
+  the stairs reachable with the bigger blockers. 18/18 test binaries pass.
+
+**Two real bugs caught by the new checks (both fixed, which is the point of writing them).**
+1. **Softlock on 2 of 60 floors**: `validate_story` V8 flagged `F40`/`F59` "key yellow sits behind its
+   own door" — the generator's first key pick searched the main path without restricting it to the
+   entrance side of the door. Fixed by reusing `gen_mazes.py`'s `reachable_without_edge` (same rule that
+   file already applies).
+2. **The design document contradicted itself**: section 5.1's printed `tile_counts()` formula does not
+   reproduce its own table from tier 4 upward (F29 35x26 vs 35x24, F43 43x30 vs 45x30, F70 53x38 vs
+   63x42). The table is what STORY_BIBLE prints and what V9 checks, so the generator uses the exact
+   piecewise form the table implies and **the formula in the doc was corrected** with a note.
+
+**Verified.**
+- `python3 tools/gen_floors.py` → 70 specs, 60 grids, 10 boss floors, 419 multi-grid enemy placements.
+- `python3 tools/validate_story.py` → ALL PASS (6745 checks).
+- `footprint_test: ALL PASS (388 checks)` over 71 stage files; 18/18 test binaries pass.
+- **Playable proof**: with a temporary two-line change (newGame loads `F64`), the largest generated
+  floor boots in the real native build — HUD 「第 64 層」, bottom line 「第 64 層 (ch_10)」, 63x42 maze with
+  2-tile corridors and open rooms, 2-grid demons and skeletons rendering, camera following while
+  walking (17% frame change). Both temporary edits were reverted and the tree rebuilt clean.
+
+**Known follow-ups (not blockers).**
+- The HUD's stage counter still reads "(64/11)" because `totalStages` comes from the 11 hand-authored
+  stage files; the runtime progression into the 70 floors is its own phase (S3 owns the story/act data
+  that drives it).
+- Enemy mixes, item tables and the event pools are provisional until S3 (chapters + `data/events/`);
+  `meta.eventPoolSource` records which floors used the built-in pool, so the swap is auditable.
+- Not deployed: the generated floors are not reachable from the live build yet (no progression), so a
+  deploy would only add unused data weight.
 
 ## Open Questions / Blockers
 

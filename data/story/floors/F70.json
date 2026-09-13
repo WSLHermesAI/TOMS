@@ -1,0 +1,87 @@
+{
+  "id": "F70",
+  "act": "ch_10",
+  "indexInAct": 7,
+  "name": "story.f70.name",
+  "seal": "digu",
+  "role": "boss-stage",
+  "maze": {
+    "cols": 63,
+    "rows": 42,
+    "rooms": 12,
+    "loops": 11,
+    "seed": "70:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "demon",
+      "skeleton"
+    ],
+    "count": [
+      22,
+      32
+    ],
+    "elites": 4,
+    "boss": "demonlord_vorkath"
+  },
+  "items": {
+    "count": 13,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_peak_wushang_memory_v2",
+    "ev_common_cache_wall_v5",
+    "ev_common_rescue_lost_soldier_v3",
+    "ev_common_shard_wandering_v4",
+    "ev_common_shard_wandering",
+    "ev_common_trap_rubble",
+    "ev_peak_bone_field_v4",
+    "ev_common_merchant_echo_ash_v3",
+    "ev_peak_bone_field_v3",
+    "ev_common_trap_rubble_v2",
+    "ev_common_trap_rubble_v5",
+    "ev_common_whisper_old_road"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_10",
+    "intro": "story.f70.intro",
+    "ambient": [
+      "story.f70.ambient.1",
+      "story.f70.ambient.2"
+    ],
+    "beats": [
+      "b_peak_f70"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": null,
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 10,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "rescue",
+      "memory_shard",
+      "memory_shard",
+      "trap",
+      "relic",
+      "merchant_echo",
+      "relic",
+      "trap",
+      "trap",
+      "whisper"
+    ],
+    "eventPoolSource": "provisional"
+  },
+  "handAuthoredStage": "stage10.json"
+}

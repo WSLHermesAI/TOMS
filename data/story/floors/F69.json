@@ -1,0 +1,136 @@
+{
+  "id": "F69",
+  "act": "ch_10",
+  "indexInAct": 6,
+  "name": "story.f69.name",
+  "seal": "digu",
+  "role": "normal",
+  "maze": {
+    "cols": 63,
+    "rows": 42,
+    "rooms": 12,
+    "loops": 11,
+    "seed": "69:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "demon",
+      "skeleton"
+    ],
+    "count": [
+      22,
+      32
+    ],
+    "elites": 4,
+    "boss": null
+  },
+  "items": {
+    "count": 13,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_peak_wushang_memory_v2",
+    "ev_common_cache_wall",
+    "ev_peak_bone_field_v3",
+    "ev_common_rescue_lost_soldier_v4",
+    "ev_common_trap_rubble_v5",
+    "ev_peak_star_crack_v2",
+    "ev_common_cache_wall_v3",
+    "ev_common_trap_rubble",
+    "ev_common_trap_rubble_v3",
+    "ev_common_whisper_old_road",
+    "ev_common_whisper_old_road_v3",
+    "ev_common_cache_wall_v4"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_10",
+    "intro": "story.f69.intro",
+    "ambient": [
+      "story.f69.ambient.1",
+      "story.f69.ambient.2"
+    ],
+    "beats": [
+      "b_peak_f69"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F70",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 10,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "relic",
+      "rescue",
+      "trap",
+      "whisper",
+      "cache",
+      "trap",
+      "trap",
+      "whisper",
+      "whisper",
+      "cache"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        9,
+        6
+      ],
+      [
+        9,
+        7
+      ],
+      [
+        10,
+        6
+      ],
+      [
+        10,
+        7
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        11,
+        10
+      ]
+    ]
+  }
+}

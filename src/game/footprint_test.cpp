@@ -244,11 +244,24 @@ static void testShippedStages() {
     CHECK(typeTable.count("monster:demonlord_vorkath") == 1, "data/footprints.json carries the boss tier");
 
     Locale locale;   // stage names are plain strings in every shipped file; no table needed
+    // The 11 hand-authored stages AND the 60 generated floors from S2 (tools/gen_floors.py), so the
+    // generator's output is gated by the runtime's own parser + the same footprint rules rather than
+    // only by the Python validator. Anything the generator emits that this test rejects is data the
+    // game would have mis-loaded.
+    std::vector<std::string> stagePaths;
     const char* kStages[] = {"stage01", "stage02", "stage03", "stage04", "stage05", "stage06",
                              "stage07", "stage08", "stage09", "stage10", "stage_11"};
+    for (const char* sid : kStages) stagePaths.push_back(std::string("data/stages/") + sid + ".json");
+    for (int f = 1; f <= 70; ++f) {
+        char buf[64];
+        snprintf(buf, sizeof(buf), "data/story/floors/F%02d.stage.json", f);
+        const std::string p(buf);
+        if (FILE* probe = fopen(p.c_str(), "rb")) { fclose(probe); stagePaths.push_back(p); }
+    }
     int bigTotal = 0, roamerTotal = 0;
-    for (const char* sid : kStages) {
-        const std::string path = std::string("data/stages/") + sid + ".json";
+    for (const std::string& spath : stagePaths) {
+        const std::string& path = spath;
+        const std::string sid = path;
         Stage st = parseStage(path, locale);
         if (st.width <= 0 || st.tiles.empty()) { CHECK(false, (std::string("stage parses: ") + sid).c_str()); continue; }
 
@@ -331,8 +344,8 @@ static void testShippedStages() {
     // Sanity: the type table really does make some shipped monsters big, otherwise this whole
     // validator would pass vacuously.
     CHECK(bigTotal > 0, "the shipped stages actually contain multi-grid entities");
-    fprintf(stderr, "  data: %d multi-grid entities across %d stages (%d roamers)\n",
-            bigTotal, (int)(sizeof(kStages) / sizeof(kStages[0])), roamerTotal);
+    fprintf(stderr, "  data: %d multi-grid entities across %d stage files (%d roamers)\n",
+            bigTotal, (int)stagePaths.size(), roamerTotal);
 }
 
 int main() {

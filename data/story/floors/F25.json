@@ -1,0 +1,99 @@
+{
+  "id": "F25",
+  "act": "ch_04",
+  "indexInAct": 4,
+  "name": "story.f25.name",
+  "seal": "jindan",
+  "role": "normal",
+  "maze": {
+    "cols": 31,
+    "rows": 22,
+    "rooms": 6,
+    "loops": 5,
+    "seed": "25:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "bat"
+    ],
+    "count": [
+      10,
+      14
+    ],
+    "elites": 1,
+    "boss": null
+  },
+  "items": {
+    "count": 7,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_library_scholar_whisper_v2",
+    "ev_common_cache_wall_v2",
+    "ev_common_shard_wandering_v5",
+    "ev_common_cache_wall",
+    "ev_library_scholar_whisper_v4",
+    "ev_common_whisper_old_road_v5"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_04",
+    "intro": "story.f25.intro",
+    "ambient": [
+      "story.f25.ambient.1",
+      "story.f25.ambient.2"
+    ],
+    "beats": [
+      "b_library_f25"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F26",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 4,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "memory_shard",
+      "cache",
+      "whisper",
+      "whisper"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        5,
+        0
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        1,
+        7
+      ],
+      [
+        2,
+        7
+      ],
+      [
+        3,
+        8
+      ],
+      [
+        3,
+        9
+      ]
+    ]
+  }
+}

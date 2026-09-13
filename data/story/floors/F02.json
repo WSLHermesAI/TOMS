@@ -1,0 +1,80 @@
+{
+  "id": "F02",
+  "act": "ch_01",
+  "indexInAct": 2,
+  "name": "story.f02.name",
+  "seal": "memory",
+  "role": "normal",
+  "maze": {
+    "cols": 19,
+    "rows": 16,
+    "rooms": 3,
+    "loops": 2,
+    "seed": "02:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      4,
+      6
+    ],
+    "elites": 0,
+    "boss": null
+  },
+  "items": {
+    "count": 4,
+    "table": [
+      "potion_red",
+      "coin"
+    ]
+  },
+  "events": [
+    "ev_village_chimney",
+    "ev_common_cache_wall_v4",
+    "ev_common_shard_wandering"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_01",
+    "intro": "story.f02.intro",
+    "ambient": [
+      "story.f02.ambient.1",
+      "story.f02.ambient.2"
+    ],
+    "beats": [
+      "b_village_f02"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F03",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 1,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "memory_shard"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        2
+      ]
+    ]
+  }
+}

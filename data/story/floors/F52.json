@@ -1,0 +1,127 @@
+{
+  "id": "F52",
+  "act": "ch_08",
+  "indexInAct": 3,
+  "name": "story.f52.name",
+  "seal": "shenshi",
+  "role": "normal",
+  "maze": {
+    "cols": 51,
+    "rows": 34,
+    "rooms": 10,
+    "loops": 9,
+    "seed": "52:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "wraith",
+      "demon"
+    ],
+    "count": [
+      18,
+      25
+    ],
+    "elites": 3,
+    "boss": null
+  },
+  "items": {
+    "count": 11,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road_v2",
+    "ev_common_cache_wall",
+    "ev_common_cache_wall_v4",
+    "ev_common_cache_wall_v2",
+    "ev_common_trap_rubble_v3",
+    "ev_sanctum_crack_prayer_v3",
+    "ev_common_relic_road_v5",
+    "ev_sanctum_seventh_bell_v2",
+    "ev_sanctum_seventh_bell_v3",
+    "ev_common_relic_road_v4"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_08",
+    "intro": "story.f52.intro",
+    "ambient": [
+      "story.f52.ambient.1",
+      "story.f52.ambient.2"
+    ],
+    "beats": [
+      "b_sanctum_f52"
+    ],
+    "exitUnlocks": {
+      "counters": {
+        "insight": 1
+      }
+    }
+  },
+  "nextFloor": "F53",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 8,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "cache",
+      "cache",
+      "trap",
+      "whisper",
+      "relic",
+      "relic",
+      "relic",
+      "relic"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        7,
+        5
+      ],
+      [
+        3,
+        8
+      ],
+      [
+        3,
+        9
+      ],
+      [
+        4,
+        8
+      ],
+      [
+        4,
+        9
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        7,
+        7
+      ],
+      [
+        7,
+        8
+      ],
+      [
+        7,
+        9
+      ]
+    ]
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "id": "F15",
+  "act": "ch_03",
+  "indexInAct": 1,
+  "name": "story.f15.name",
+  "seal": "daoji",
+  "role": "normal",
+  "maze": {
+    "cols": 27,
+    "rows": 20,
+    "rooms": 5,
+    "loops": 4,
+    "seed": "15:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "bat",
+      "golem"
+    ],
+    "count": [
+      8,
+      11
+    ],
+    "elites": 1,
+    "boss": null
+  },
+  "items": {
+    "count": 6,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "gem_atk"
+    ]
+  },
+  "events": [
+    "ev_gate_seal_rubbing",
+    "ev_gate_forge_first_v3",
+    "ev_common_shard_wandering",
+    "ev_common_cache_wall_v4",
+    "ev_common_trap_rubble_v2"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_03",
+    "intro": "story.f15.intro",
+    "ambient": [
+      "story.f15.ambient.1",
+      "story.f15.ambient.2"
+    ],
+    "beats": [
+      "b_gate_f15"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F16",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 3,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "memory_shard",
+      "cache",
+      "trap"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        4,
+        6
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        5,
+        6
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        2,
+        0
+      ]
+    ]
+  }
+}

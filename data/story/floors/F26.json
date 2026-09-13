@@ -1,0 +1,112 @@
+{
+  "id": "F26",
+  "act": "ch_04",
+  "indexInAct": 5,
+  "name": "story.f26.name",
+  "seal": "jindan",
+  "role": "side-story-stage",
+  "maze": {
+    "cols": 31,
+    "rows": 22,
+    "rooms": 6,
+    "loops": 5,
+    "seed": "26:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "bat"
+    ],
+    "count": [
+      10,
+      14
+    ],
+    "elites": 1,
+    "boss": null
+  },
+  "items": {
+    "count": 7,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road",
+    "ev_common_cache_wall_v2",
+    "ev_common_rescue_lost_soldier_v4",
+    "ev_library_shelf_collapse_v2",
+    "ev_common_whisper_old_road_v2",
+    "ev_common_trap_rubble"
+  ],
+  "sideStoryHooks": [
+    {
+      "sideStoryId": "ss_04",
+      "cell": [
+        23,
+        5
+      ],
+      "trigger": "proximity",
+      "requires": {
+        "type": "storyBeatAtLeast",
+        "value": "ch_04"
+      }
+    }
+  ],
+  "story": {
+    "chapter": "ch_04",
+    "intro": "story.f26.intro",
+    "ambient": [
+      "story.f26.ambient.1",
+      "story.f26.ambient.2"
+    ],
+    "beats": [
+      "b_library_f26"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F27",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 4,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "rescue",
+      "trap",
+      "whisper",
+      "trap"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        1,
+        7
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        3,
+        6
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        0,
+        5
+      ]
+    ]
+  }
+}

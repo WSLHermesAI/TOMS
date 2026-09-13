@@ -1,0 +1,133 @@
+{
+  "id": "F59",
+  "act": "ch_09",
+  "indexInAct": 3,
+  "name": "story.f59.name",
+  "seal": "xinmo",
+  "role": "normal",
+  "maze": {
+    "cols": 57,
+    "rows": 38,
+    "rooms": 11,
+    "loops": 10,
+    "seed": "59:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "demon",
+      "wraith"
+    ],
+    "count": [
+      20,
+      28
+    ],
+    "elites": 4,
+    "boss": null
+  },
+  "items": {
+    "count": 12,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_antechamber_liora_voice_v2",
+    "ev_antechamber_old_sword_rack_v3",
+    "ev_common_cache_wall_v5",
+    "ev_common_rescue_lost_soldier",
+    "ev_common_cache_wall",
+    "ev_common_merchant_echo_ash_v2",
+    "ev_common_shard_wandering_v3",
+    "ev_antechamber_old_sword_rack_v4",
+    "ev_common_relic_road_v4",
+    "ev_common_merchant_echo_ash_v4",
+    "ev_common_merchant_echo_ash_v3"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_09",
+    "intro": "story.f59.intro",
+    "ambient": [
+      "story.f59.ambient.1",
+      "story.f59.ambient.2"
+    ],
+    "beats": [
+      "b_antechamber_f59"
+    ],
+    "exitUnlocks": {
+      "counters": {
+        "insight": 1
+      }
+    }
+  },
+  "nextFloor": "F60",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 9,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "cache",
+      "rescue",
+      "cache",
+      "merchant_echo",
+      "memory_shard",
+      "cache",
+      "relic",
+      "merchant_echo",
+      "merchant_echo"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        8,
+        9
+      ],
+      [
+        8,
+        10
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        9,
+        10
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        4,
+        11
+      ],
+      [
+        4,
+        12
+      ],
+      [
+        5,
+        11
+      ]
+    ]
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "id": "F10",
+  "act": "ch_02",
+  "indexInAct": 3,
+  "name": "story.f10.name",
+  "seal": "qi",
+  "role": "normal",
+  "maze": {
+    "cols": 23,
+    "rows": 18,
+    "rooms": 4,
+    "loops": 3,
+    "seed": "10:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      6,
+      8
+    ],
+    "elites": 0,
+    "boss": null
+  },
+  "items": {
+    "count": 5,
+    "table": [
+      "potion_red",
+      "coin",
+      "gem_def"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_road",
+    "ev_common_cache_wall_v2",
+    "ev_common_relic_road_v2",
+    "ev_forest_old_wizard_mark_v2"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_02",
+    "intro": "story.f10.intro",
+    "ambient": [
+      "story.f10.ambient.1",
+      "story.f10.ambient.2"
+    ],
+    "beats": [
+      "b_forest_f10"
+    ],
+    "exitUnlocks": {
+      "counters": {
+        "insight": 1
+      }
+    }
+  },
+  "nextFloor": "F11",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 2,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "relic",
+      "whisper"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ]
+    ]
+  }
+}

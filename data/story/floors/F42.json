@@ -1,0 +1,78 @@
+{
+  "id": "F42",
+  "act": "ch_06",
+  "indexInAct": 7,
+  "name": "story.f42.name",
+  "seal": "yuanying",
+  "role": "boss-stage",
+  "maze": {
+    "cols": 39,
+    "rows": 26,
+    "rooms": 8,
+    "loops": 7,
+    "seed": "42:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "golem",
+      "wraith"
+    ],
+    "count": [
+      14,
+      19
+    ],
+    "elites": 2,
+    "boss": "twin_golem"
+  },
+  "items": {
+    "count": 9,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "potion_blue"
+    ]
+  },
+  "events": [
+    "ev_cavern_twin_crystal_v2",
+    "ev_cavern_miner_cache_v4",
+    "ev_common_relic_road_v5",
+    "ev_cavern_twin_crystal",
+    "ev_common_rescue_lost_soldier_v4",
+    "ev_common_cache_wall",
+    "ev_cavern_twin_crystal_v4",
+    "ev_common_cache_wall_v4"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_06",
+    "intro": "story.f42.intro",
+    "ambient": [
+      "story.f42.ambient.1",
+      "story.f42.ambient.2"
+    ],
+    "beats": [
+      "b_cavern_f42"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F43",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 6,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "relic",
+      "relic",
+      "rescue",
+      "cache",
+      "relic",
+      "cache"
+    ],
+    "eventPoolSource": "provisional"
+  },
+  "handAuthoredStage": "stage06.json"
+}

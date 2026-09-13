@@ -1,0 +1,111 @@
+{
+  "id": "F39",
+  "act": "ch_06",
+  "indexInAct": 4,
+  "name": "story.f39.name",
+  "seal": "yuanying",
+  "role": "normal",
+  "maze": {
+    "cols": 39,
+    "rows": 26,
+    "rooms": 8,
+    "loops": 7,
+    "seed": "39:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "golem",
+      "wraith"
+    ],
+    "count": [
+      14,
+      19
+    ],
+    "elites": 2,
+    "boss": null
+  },
+  "items": {
+    "count": 9,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "potion_blue"
+    ]
+  },
+  "events": [
+    "ev_cavern_twin_crystal_v3",
+    "ev_common_cache_wall_v4",
+    "ev_common_shard_wandering_v5",
+    "ev_common_rescue_lost_soldier_v3",
+    "ev_common_whisper_old_road_v5",
+    "ev_common_trap_rubble",
+    "ev_common_relic_road",
+    "ev_common_rescue_lost_soldier"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_06",
+    "intro": "story.f39.intro",
+    "ambient": [
+      "story.f39.ambient.1",
+      "story.f39.ambient.2"
+    ],
+    "beats": [
+      "b_cavern_f39"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F40",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 6,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "memory_shard",
+      "rescue",
+      "whisper",
+      "trap",
+      "relic",
+      "rescue"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        6,
+        9
+      ],
+      [
+        7,
+        8
+      ],
+      [
+        7,
+        9
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ]
+    ]
+  }
+}

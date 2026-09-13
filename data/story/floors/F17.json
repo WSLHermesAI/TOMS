@@ -1,0 +1,97 @@
+{
+  "id": "F17",
+  "act": "ch_03",
+  "indexInAct": 3,
+  "name": "story.f17.name",
+  "seal": "daoji",
+  "role": "normal",
+  "maze": {
+    "cols": 27,
+    "rows": 20,
+    "rooms": 5,
+    "loops": 4,
+    "seed": "17:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "bat",
+      "golem"
+    ],
+    "count": [
+      8,
+      11
+    ],
+    "elites": 1,
+    "boss": null
+  },
+  "items": {
+    "count": 6,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "gem_atk"
+    ]
+  },
+  "events": [
+    "ev_gate_soldier_plate_v3",
+    "ev_gate_forge_first_v2",
+    "ev_gate_seal_rubbing",
+    "ev_common_shard_wandering_v3",
+    "ev_gate_forge_first_v4"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_03",
+    "intro": "story.f17.intro",
+    "ambient": [
+      "story.f17.ambient.1",
+      "story.f17.ambient.2"
+    ],
+    "beats": [
+      "b_gate_f17"
+    ],
+    "exitUnlocks": {
+      "counters": {
+        "insight": 1
+      }
+    }
+  },
+  "nextFloor": "F18",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 3,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "whisper",
+      "memory_shard",
+      "cache"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        1,
+        4
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ]
+    ]
+  }
+}

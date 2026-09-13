@@ -1,0 +1,77 @@
+{
+  "id": "F35",
+  "act": "ch_05",
+  "indexInAct": 7,
+  "name": "story.f35.name",
+  "seal": "soul",
+  "role": "boss-stage",
+  "maze": {
+    "cols": 35,
+    "rows": 24,
+    "rooms": 7,
+    "loops": 6,
+    "seed": "35:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "wraith"
+    ],
+    "count": [
+      12,
+      16
+    ],
+    "elites": 2,
+    "boss": "wraith_choir"
+  },
+  "items": {
+    "count": 8,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "gem_atk",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_crypt_nameless_brick_v2",
+    "ev_common_cache_wall_v3",
+    "ev_common_whisper_old_road_v2",
+    "ev_common_relic_road_v2",
+    "ev_common_shard_wandering_v5",
+    "ev_common_relic_road_v5",
+    "ev_common_trap_rubble_v4"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_05",
+    "intro": "story.f35.intro",
+    "ambient": [
+      "story.f35.ambient.1",
+      "story.f35.ambient.2"
+    ],
+    "beats": [
+      "b_crypt_f35"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F36",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 5,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "whisper",
+      "relic",
+      "memory_shard",
+      "relic",
+      "trap"
+    ],
+    "eventPoolSource": "provisional"
+  },
+  "handAuthoredStage": "stage05.json"
+}

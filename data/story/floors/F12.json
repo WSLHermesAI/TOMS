@@ -1,0 +1,100 @@
+{
+  "id": "F12",
+  "act": "ch_02",
+  "indexInAct": 5,
+  "name": "story.f12.name",
+  "seal": "qi",
+  "role": "side-story-stage",
+  "maze": {
+    "cols": 23,
+    "rows": 18,
+    "rooms": 4,
+    "loops": 3,
+    "seed": "12:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      6,
+      8
+    ],
+    "elites": 0,
+    "boss": null
+  },
+  "items": {
+    "count": 5,
+    "table": [
+      "potion_red",
+      "coin",
+      "gem_def"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_road_v5",
+    "ev_common_cache_wall_v5",
+    "ev_common_merchant_echo_ash_v4",
+    "ev_common_rescue_lost_soldier_v3"
+  ],
+  "sideStoryHooks": [
+    {
+      "sideStoryId": "ss_02",
+      "cell": [
+        14,
+        14
+      ],
+      "trigger": "proximity",
+      "requires": {
+        "type": "storyBeatAtLeast",
+        "value": "ch_02"
+      }
+    }
+  ],
+  "story": {
+    "chapter": "ch_02",
+    "intro": "story.f12.intro",
+    "ambient": [
+      "story.f12.ambient.1",
+      "story.f12.ambient.2"
+    ],
+    "beats": [
+      "b_forest_f12"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F13",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 2,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "merchant_echo",
+      "rescue"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        4,
+        4
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        4,
+        1
+      ]
+    ]
+  }
+}

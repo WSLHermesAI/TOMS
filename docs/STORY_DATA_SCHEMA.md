@@ -204,14 +204,26 @@
 
 **生成公式**（`gen_floors.py`）
 
+> **修正（2026-09-13，S2 實作時發現）**：本節原本印的公式與**同一個表格不符**——它算出 F29 是
+> 35×26（表為 35×24）、F43 是 43×30（表為 45×30）、F70 是 53×38（表為 63×42）。
+> 表格（`STORY_BIBLE.md` §5 與驗證器 V9 的依據）才是權威，因此公式以下表的**分段精確式**取代，
+> 已改為與表格一致：
+
 ```python
 def tile_counts(floor_no):                      # floor_no: 1..70
     tier = (floor_no - 1) // 7                  # 0..9
-    base_cols, base_rows = 19 + 4 * tier, 16 + 2 * tier + 2 * (tier >= 4)
-    # 59 以上另加寬度，讓終幕有「塔頂空曠」感
-    if tier >= 8: base_cols += 2 * (tier - 7)
-    return base_cols, base_rows                 # F70 → 63 x 42
+    if tier < 6:
+        cols, rows = 19 + 4 * tier, 16 + 2 * tier          # F01 19x16 … F43 39x26
+    else:
+        cols, rows = 45 + 6 * (tier - 6), 30 + 4 * (tier - 6)   # F43 45x30 … F70 63x42
+    return cols, rows
 ```
+
+**實作狀態（2026-09-13，S2／本文件 §13 的 M1 完成）**：`tools/gen_floors.py` 產生 70 層 spec
+（`data/story/floors/F01…F70.json`）＋ 60 層可玩格線（`F01.stage.json`…，非首領層；首領層對應
+§3.2 的手工關卡），`tools/validate_story.py` 逐項驗證 V7／V8／V9／V12 與防鎖死／佔格規則（6745 項全過）。
+可玩格線採既有 stage schema，因此引擎不需改結構即可載入（`loadStage()` 追加 `data/story/floors/<id>.stage.json` 的搜尋路徑）。
+尚未做（屬後續階段）：幕檔 `ch_01…`、事件池檔案、i18n key、以及 §10 其餘驗證器 V1–V6／V10／V11／V13／V14／V16。
 
 - **必須維持連通性**：沿用 `tools/gen_mazes.py` 的 Wilson 演算法與 BFS 可達性檢查（每層至少 1 條往下一層的路徑）。
 - **環路（loops）**：70 層的長度下，純完美迷宮會過於折磨；每層額外打通 `loops` 條牆，形成迴圈。

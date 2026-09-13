@@ -1,0 +1,129 @@
+{
+  "id": "F57",
+  "act": "ch_09",
+  "indexInAct": 1,
+  "name": "story.f57.name",
+  "seal": "xinmo",
+  "role": "normal",
+  "maze": {
+    "cols": 57,
+    "rows": 38,
+    "rooms": 11,
+    "loops": 10,
+    "seed": "57:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "demon",
+      "wraith"
+    ],
+    "count": [
+      20,
+      28
+    ],
+    "elites": 4,
+    "boss": null
+  },
+  "items": {
+    "count": 12,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road_v5",
+    "ev_common_cache_wall_v5",
+    "ev_common_trap_rubble_v4",
+    "ev_common_trap_rubble_v3",
+    "ev_common_merchant_echo_ash_v2",
+    "ev_common_shard_wandering_v3",
+    "ev_antechamber_liora_voice_v2",
+    "ev_common_merchant_echo_ash_v3",
+    "ev_common_merchant_echo_ash",
+    "ev_common_trap_rubble_v5",
+    "ev_common_relic_road_v2"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_09",
+    "intro": "story.f57.intro",
+    "ambient": [
+      "story.f57.ambient.1",
+      "story.f57.ambient.2"
+    ],
+    "beats": [
+      "b_antechamber_f57"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F58",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 9,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "trap",
+      "trap",
+      "merchant_echo",
+      "memory_shard",
+      "whisper",
+      "merchant_echo",
+      "merchant_echo",
+      "trap",
+      "relic"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        5,
+        4
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        3,
+        8
+      ],
+      [
+        3,
+        9
+      ],
+      [
+        4,
+        8
+      ],
+      [
+        4,
+        9
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        3
+      ]
+    ]
+  }
+}

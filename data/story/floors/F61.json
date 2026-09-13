@@ -1,0 +1,142 @@
+{
+  "id": "F61",
+  "act": "ch_09",
+  "indexInAct": 5,
+  "name": "story.f61.name",
+  "seal": "xinmo",
+  "role": "side-story-stage",
+  "maze": {
+    "cols": 57,
+    "rows": 38,
+    "rooms": 11,
+    "loops": 10,
+    "seed": "61:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "demon",
+      "wraith"
+    ],
+    "count": [
+      20,
+      28
+    ],
+    "elites": 4,
+    "boss": null
+  },
+  "items": {
+    "count": 12,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_antechamber_liora_voice_v4",
+    "ev_common_cache_wall",
+    "ev_common_relic_road_v5",
+    "ev_common_merchant_echo_ash_v2",
+    "ev_common_whisper_old_road_v3",
+    "ev_common_relic_road_v4",
+    "ev_common_shard_wandering_v5",
+    "ev_common_shard_wandering_v3",
+    "ev_common_cache_wall_v5",
+    "ev_common_trap_rubble_v5",
+    "ev_common_relic_road_v3"
+  ],
+  "sideStoryHooks": [
+    {
+      "sideStoryId": "ss_09",
+      "cell": [
+        50,
+        17
+      ],
+      "trigger": "proximity",
+      "requires": {
+        "type": "storyBeatAtLeast",
+        "value": "ch_09"
+      }
+    }
+  ],
+  "story": {
+    "chapter": "ch_09",
+    "intro": "story.f61.intro",
+    "ambient": [
+      "story.f61.ambient.1",
+      "story.f61.ambient.2"
+    ],
+    "beats": [
+      "b_antechamber_f61"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F62",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 9,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "relic",
+      "merchant_echo",
+      "whisper",
+      "relic",
+      "memory_shard",
+      "memory_shard",
+      "cache",
+      "trap",
+      "relic"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        5,
+        16
+      ],
+      [
+        10,
+        14
+      ],
+      [
+        10,
+        15
+      ],
+      [
+        11,
+        14
+      ],
+      [
+        11,
+        15
+      ],
+      [
+        8,
+        4
+      ],
+      [
+        8,
+        5
+      ],
+      [
+        9,
+        4
+      ],
+      [
+        9,
+        5
+      ],
+      [
+        5,
+        13
+      ],
+      [
+        5,
+        14
+      ]
+    ]
+  }
+}

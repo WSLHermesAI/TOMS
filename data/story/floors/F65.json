@@ -1,0 +1,136 @@
+{
+  "id": "F65",
+  "act": "ch_10",
+  "indexInAct": 2,
+  "name": "story.f65.name",
+  "seal": "digu",
+  "role": "normal",
+  "maze": {
+    "cols": 63,
+    "rows": 42,
+    "rooms": 12,
+    "loops": 11,
+    "seed": "65:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "demon",
+      "skeleton"
+    ],
+    "count": [
+      22,
+      32
+    ],
+    "elites": 4,
+    "boss": null
+  },
+  "items": {
+    "count": 13,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_peak_bone_field_v4",
+    "ev_common_cache_wall_v2",
+    "ev_common_whisper_old_road_v2",
+    "ev_common_relic_road_v5",
+    "ev_peak_wushang_memory",
+    "ev_peak_bone_field",
+    "ev_common_whisper_old_road_v5",
+    "ev_common_merchant_echo_ash_v5",
+    "ev_common_shard_wandering",
+    "ev_common_rescue_lost_soldier_v4",
+    "ev_common_trap_rubble",
+    "ev_common_merchant_echo_ash_v2"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_10",
+    "intro": "story.f65.intro",
+    "ambient": [
+      "story.f65.ambient.1",
+      "story.f65.ambient.2"
+    ],
+    "beats": [
+      "b_peak_f65"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F66",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 10,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "whisper",
+      "relic",
+      "relic",
+      "relic",
+      "whisper",
+      "merchant_echo",
+      "memory_shard",
+      "rescue",
+      "trap",
+      "merchant_echo"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        10,
+        8
+      ],
+      [
+        11,
+        7
+      ],
+      [
+        11,
+        8
+      ],
+      [
+        0,
+        6
+      ],
+      [
+        0,
+        7
+      ],
+      [
+        1,
+        6
+      ],
+      [
+        1,
+        7
+      ],
+      [
+        2,
+        16
+      ],
+      [
+        2,
+        17
+      ],
+      [
+        3,
+        16
+      ],
+      [
+        3,
+        17
+      ],
+      [
+        6,
+        10
+      ]
+    ]
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "id": "F47",
+  "act": "ch_07",
+  "indexInAct": 5,
+  "name": "story.f47.name",
+  "seal": "fire",
+  "role": "side-story-stage",
+  "maze": {
+    "cols": 45,
+    "rows": 30,
+    "rooms": 9,
+    "loops": 8,
+    "seed": "47:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "demon"
+    ],
+    "count": [
+      16,
+      22
+    ],
+    "elites": 3,
+    "boss": null
+  },
+  "items": {
+    "count": 10,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road",
+    "ev_common_cache_wall",
+    "ev_common_rescue_lost_soldier",
+    "ev_barracks_night_fire_v2",
+    "ev_common_whisper_old_road_v3",
+    "ev_common_trap_rubble_v2",
+    "ev_common_merchant_echo_ash_v3",
+    "ev_barracks_deserter_v3",
+    "ev_barracks_night_fire"
+  ],
+  "sideStoryHooks": [
+    {
+      "sideStoryId": "ss_07",
+      "cell": [
+        38,
+        17
+      ],
+      "trigger": "proximity",
+      "requires": {
+        "type": "storyBeatAtLeast",
+        "value": "ch_07"
+      }
+    }
+  ],
+  "story": {
+    "chapter": "ch_07",
+    "intro": "story.f47.intro",
+    "ambient": [
+      "story.f47.ambient.1",
+      "story.f47.ambient.2"
+    ],
+    "beats": [
+      "b_barracks_f47"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F48",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 7,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "rescue",
+      "rescue",
+      "whisper",
+      "trap",
+      "merchant_echo",
+      "merchant_echo",
+      "rescue"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        5,
+        12
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        2,
+        9
+      ],
+      [
+        2,
+        10
+      ],
+      [
+        3,
+        9
+      ],
+      [
+        3,
+        10
+      ],
+      [
+        6,
+        1
+      ]
+    ]
+  }
+}

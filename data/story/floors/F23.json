@@ -1,0 +1,99 @@
+{
+  "id": "F23",
+  "act": "ch_04",
+  "indexInAct": 2,
+  "name": "story.f23.name",
+  "seal": "jindan",
+  "role": "normal",
+  "maze": {
+    "cols": 31,
+    "rows": 22,
+    "rooms": 6,
+    "loops": 5,
+    "seed": "23:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "bat"
+    ],
+    "count": [
+      10,
+      14
+    ],
+    "elites": 1,
+    "boss": null
+  },
+  "items": {
+    "count": 7,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_library_scholar_whisper_v4",
+    "ev_common_cache_wall_v2",
+    "ev_common_merchant_echo_ash_v2",
+    "ev_common_relic_road_v4",
+    "ev_common_trap_rubble_v4",
+    "ev_common_relic_road"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_04",
+    "intro": "story.f23.intro",
+    "ambient": [
+      "story.f23.ambient.1",
+      "story.f23.ambient.2"
+    ],
+    "beats": [
+      "b_library_f23"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F24",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 4,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "merchant_echo",
+      "relic",
+      "trap",
+      "relic"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        0,
+        8
+      ],
+      [
+        1,
+        7
+      ],
+      [
+        1,
+        8
+      ],
+      [
+        6,
+        1
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        3
+      ]
+    ]
+  }
+}

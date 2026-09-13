@@ -34,6 +34,8 @@
 | `roamer.h` / `roamer.cpp` | 90 / 88 | **S1：樓層徘徊者 `toms::Roamer`（獨立類別）**。遊蕩（保留行進方向）、偵測 6 格／放棄 9 格的滯後、貪婪追擊；可走性透過 `GridQuery` 介面傳入，所以與 Stage／Game／Renderer 完全解耦、可單元測試。硬規則：一步僅在**整個佔格**可站且不出界時成立（不穿牆）。 |
 | `footprint_test.cpp` | — | S1 的 88 項檢查：佔格數學、JSON 形式與拒絕、來源優先序、徘徊者（400 回合不穿牆、邊界夾制、偵測/追擊、滯後、卡住的凹槽、同種子可重現）＋**對 11 個關卡的資料驗證器**（尺寸、不可站牆、不可重疊、樓梯仍可達）。 |
 | `data/footprints.json` | — | 角色級佔格表（F8）：golem／demon＝2x1、demonlord_vorkath＝2x2（含名牌名稱）。 |
+| `tools/gen_floors.py` | — | **S2 產生器**：依樓層表產生 70 層 spec（`data/story/floors/Fnn.json`）＋ 60 層可玩格線（`Fnn.stage.json`）。迷宮沿用 `tools/gen_mazes.py` 的 Wilson＋BFS（同一份實作、同一套慣例：cell＝2x2 tiles、通道 2 tiles 寬），房間＝事件容器，`loops` 額外打通；右／下邊界以牆補齊到表格尺寸（V9 要求精確值）。 |
+| `tools/validate_story.py` | — | **S2 驗證器**：V7（樓層↔幕↔nextFloor、首領層對應手工關卡）、V8（連通、樓梯、**鑰匙不得在自己的門後**＝防鎖死）、V9（對照樓層表）、V12（每層 ≥1 relic/whisper＋≥1 cache）＋佔格與重疊檢查。 |
 | `game_assets.cpp` | 224 | 圖集/材質載入、sprite id 查表、關卡 JSON → `Stage` 格線與實體放置。**STB 實作的唯一定義處。** |
 | `game_text_draw.cpp` | 171 | 文字與長條基本元件：UTF-8 解碼、字符繪製、寬度量測、HP 條、Power Bar、開場 splash。 |
 | `game_scene_draw.cpp` | 430 | 每幀場景：`draw()`（走路/戰鬥/對話/背包的場景切換與走路場景本體）、虛擬手把 overlay、通知、關卡選擇預覽、styling spike。 |
@@ -62,7 +64,8 @@
 3. **規則放純邏輯檔、資料放資料檔**（S1 的作法）：佔格與徘徊者 AI 都不碰 Stage／Renderer（`footprint.h`、`roamer.{h,cpp}`），因為它們必須能被 `footprint_test` 用執行期同一份程式碼驗證；而「哪隻敵人多大」屬於資料（`data/footprints.json`），樓層要覆寫單一格時寫在關卡檔的 `footprints`。**新規則請加在這些純邏輯檔裡並補測試，不要寫進 `Game`。**
 4. **`Game` 類別沒有拆**：`game.h` 仍宣告全部成員；拆的是**定義所在的檔案**。這樣既拿到
    「一檔一職責」的好處，又不用做高風險的類別介面重設計。
-5. **一個定義只能有一個家**：例如 STB 實作只在 `game_assets.cpp` 定義一次
+5. **產生出來的資料要能被「執行期的解析器」驗證，不只被 Python 驗證**（S2 的作法）：`footprint_test` 用遊戲自己的 `parseStage` 讀 `data/story/floors/*.stage.json`，所以產生器的輸出若遊戲讀不動（尺寸、佔格、重疊、走不到樓梯）測試會先紅。新產生器的輸出請比照辦理（Python 驗證器＋C++ 執行期驗證器各一份）。
+6. **一個定義只能有一個家**：例如 STB 實作只在 `game_assets.cpp` 定義一次
    （`texture.cpp` 自己那份只服務 `texture_test` 目標）。
 
 ---

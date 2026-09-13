@@ -1,0 +1,106 @@
+{
+  "id": "F30",
+  "act": "ch_05",
+  "indexInAct": 2,
+  "name": "story.f30.name",
+  "seal": "soul",
+  "role": "normal",
+  "maze": {
+    "cols": 35,
+    "rows": 24,
+    "rooms": 7,
+    "loops": 6,
+    "seed": "30:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "wraith"
+    ],
+    "count": [
+      12,
+      16
+    ],
+    "elites": 2,
+    "boss": null
+  },
+  "items": {
+    "count": 8,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "gem_atk",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road_v3",
+    "ev_common_cache_wall_v2",
+    "ev_crypt_choir_echo_v2",
+    "ev_crypt_nameless_brick_v4",
+    "ev_common_shard_wandering_v2",
+    "ev_common_whisper_old_road",
+    "ev_common_rescue_lost_soldier_v5"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_05",
+    "intro": "story.f30.intro",
+    "ambient": [
+      "story.f30.ambient.1",
+      "story.f30.ambient.2"
+    ],
+    "beats": [
+      "b_crypt_f30"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F31",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 5,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "whisper",
+      "whisper",
+      "memory_shard",
+      "whisper",
+      "rescue"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        7
+      ]
+    ]
+  }
+}

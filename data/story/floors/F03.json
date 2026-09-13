@@ -1,0 +1,84 @@
+{
+  "id": "F03",
+  "act": "ch_01",
+  "indexInAct": 3,
+  "name": "story.f03.name",
+  "seal": "memory",
+  "role": "normal",
+  "maze": {
+    "cols": 19,
+    "rows": 16,
+    "rooms": 3,
+    "loops": 2,
+    "seed": "03:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      4,
+      6
+    ],
+    "elites": 0,
+    "boss": null
+  },
+  "items": {
+    "count": 4,
+    "table": [
+      "potion_red",
+      "coin"
+    ]
+  },
+  "events": [
+    "ev_village_well_v4",
+    "ev_common_cache_wall_v5",
+    "ev_common_merchant_echo_ash_v5"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_01",
+    "intro": "story.f03.intro",
+    "ambient": [
+      "story.f03.ambient.1",
+      "story.f03.ambient.2"
+    ],
+    "beats": [
+      "b_village_f03"
+    ],
+    "exitUnlocks": {
+      "counters": {
+        "insight": 1
+      }
+    }
+  },
+  "nextFloor": "F04",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 1,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "merchant_echo"
+    ],
+    "eventPoolSource": "provisional",
+    "eventCells": [
+      [
+        2,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        4,
+        1
+      ]
+    ]
+  }
+}
