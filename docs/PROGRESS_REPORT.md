@@ -14,6 +14,11 @@
 **Next action: S1 — Entity footprint (1/2/4 grids).** The full ordered plan is the
 numbered list below; the milestone table further down is the status board for it.
 
+**Last completed (2026-09-13):** the source-layout refactor (`game.cpp` 3,104 -> 268 lines, camera
+extracted to `toms::Camera`) and **M2 — ImGui on the browser backend**, both logged below. Owner
+decisions recorded the same day: **M5's ImGui migrations are cancelled** ("ImGui can't fit all UI
+features") — inventory/shop/dialogue keep the hand-built scene-graph UI, ImGui stays dev tooling.
+
 **Start here: a complete design set for the next phase landed on 2026-09-13 (see the log entry
 below), and NONE of it is in the code yet.** `docs/STORY_BIBLE.md`, `docs/SIDE_STORIES.md`,
 `docs/STORY_DATA_SCHEMA.md` and `docs/ART_AND_ABILITY_DESIGN.md` reshape the game: 11 fixed stages
@@ -73,10 +78,10 @@ Recommended order (each item is sized to finish and verify in one sitting):
 |---|---|---|
 | M0 — Baseline safety net | ✅ Done (gap closed 2026-09-13) | 5/5 headless tests build+pass+verified. `texture_test` was left broken by owner's choice; the 2026-09-13 refactor fixed its build (missing GLFW include dir) and its 2 failing checks (it pointed at `assets/font_atlas.png`, deleted by the TTF-font pull) — see log |
 | M1 — Engine scaffolding | ✅ Done | Game State Machine, Event Bus, Meta/Run save schema — all built, wired minimally, and test-verified. See log. |
-| M2 — UI framework bring-up | 🟡 Done except ImGui-on-web | Dear ImGui wired into `tower_vulkan` as a dev-only F1 overlay + the M5-prerequisite styling spike (F2), both compiled + smoke-tested. **Visual correctness of the styling spike is still unconfirmed** — screenshot capture attempted and abandoned as unreliable in this environment; see log. The original blocker ("no Emscripten toolchain") is gone as of M9's log entry (a real emsdk install was found and the web build now compiles+passes its tests) — the *remaining* gap is narrower: ImGui itself was still never wired into the web renderer, a separate scope decision, not a toolchain-availability one. |
+| M2 — UI framework bring-up | ✅ Done (Vulkan + WebGL2); WebGPU ⬜ | ImGui is wired into **both** backends that can be built and verified here. Desktop: `imgui_layer.cpp` (GLFW + Vulkan). Browser: `src/engine/imgui_web.{h,cpp}` — ImGui core + `imgui_impl_opengl3` in ES3 mode + an Emscripten DOM event bridge (mouse/wheel/touch/keyboard), because the web build has no SDL/GLFW at all. F1 (debug overlay) and F2 (styling spike) now toggle on web exactly as on desktop, and clicks that land on an ImGui window no longer reach the game underneath. **Verified visually on both platforms 2026-09-13** (browser screenshots of the overlay + spike over the title screen and the dungeon; native Xvfb screenshot of both windows) — which also closes the long-standing "styling spike correctness unconfirmed" gap: the NoBackground ImGui panel over the scene-graph 9-slice backdrop reads as one panel. **Still open:** ImGui on the **WebGPU** backend — `navigator.gpu.requestAdapter()` returns null in every browser available here, so it could be written but never seen; not started. **Also not done, now a recorded risk rather than a task:** font-atlas sharing — ImGui uses its built-in ASCII-only font, so locale strings in an ImGui window render as tofu boxes; that is why the toast/stage-select windows stay desktop-only and no player-facing screen uses ImGui. Cost: web wasm 1,960,362 → 2,548,484 B (+588 KB) with ImGui compiled in |
 | M3 — World logic core | ✅ Done | Condition/Flag Evaluator, Entity Status System, Story Controller — all built, test-verified, AND retrofitted into real gameplay (door/key gate, dialogue `requires` gate, beat advancement on floor entry). See log. |
 | M4 — Encounter Resolution + Mission System | ✅ Done | `EncounterKind` resolution (opt-in `dialogue_gate`, `direct_battle` stays default for all shipped content per owner's decision), dialogue `action` verbs (`give`/`setStoryFlag`/`enterBattle`/`startMission` — first real implementation of dialogue actions at all), Mission System (definitions/trackers/daily-reset/event-driven progress) wired to the Event Bus. See log. |
-| M5 — Stage Select + UI migration | 🟡 Half done | Stage Select hub (Tab to open) + Notification/toast system built, compiled, and smoke-tested (not yet owner-visually-confirmed). **Still not done:** migrating Inventory/Shop/Dialogue from hand-built `Node`-tree UI to ImGui — deferred as its own follow-up chunk since it replaces already-working features. See log. |
+| M5 — Stage Select + UI migration | ✅ Done (scope reduced 2026-09-13 by owner decision — ImGui migrations **cancelled**) | Shipped: the Stage Select hub (keyboard `Tab`, per-stage locked/reason/new/completed/mission badges) and the Notification/toast system (Event Bus: new mission, daily reset, level up), both drawn with the game's own scene-graph UI. **Cancelled, not deferred:** migrating Inventory/Shop/Dialogue to ImGui. Owner: *"M5 should not in the plan because ImGui can't fit all UI features."* Those screens keep the hand-built `Node` UI — ImGui cannot express the art-heavy touch-first screens this game needs (custom 9-slice panels, atlas sprite grids, per-item icons, CJK at arbitrary size, the on-canvas virtual pad), and its built-in font would draw every locale string as tofu. ImGui stays M2's dev tooling only. The ImGui stage-select window still exists desktop-only (Tab) as dev parity; the player-facing hub is the game's own. |
 | M6 — Equipment + Power Bar | ✅ Done | Power Bar math + Equipment System built/tested, THEN wired into live combat: real-time hold-duration input, the full Attack→Defense round flow, damage resolution, and rendering all replace the old auto-attack loop. Compiled, regression-tested, and smoke-tested via injected real key-hold/release cycles (win and lose paths both exercised) — **not yet visually confirmed by the owner**. See log. |
 | M7 — Balance & checklist closure | ✅ Done | Whole-tower balance simulation (full-item and zero-item runs) against real `data/*.json`; dialogue `next`-chain integrity check across all files; design-doc checklists closed with evidence; found and fixed a real gap (Entity Status System built in M3 but never wired into live gameplay — floors didn't actually stay cleared). See log. |
 | M8 — Content authoring | ✅ Done (with 3 small system additions the content needed to be reachable) | 9-item `data/equipment.json` sold through the Store (auto-equips), 3-mission `data/missions.json` (once/daily/side) offered and claimable through NPC dialogue, 3 monster types converted to `dialogue_gate`, Stage Select preview text for all 11 floors. Found and fixed 3 real gaps along the way (mission rewards never granted, equipment never loadable/equippable, `applyEquipmentStats` never called) plus 2 unrelated pre-existing dead-content bugs. See log. |
@@ -1868,6 +1873,58 @@ math were scattered through `Game`.
 
 No gameplay values, drawing order or data formats changed; this was a pure move of definitions plus
 one extracted class. Next step is still **S1** (entity footprint), unchanged.
+
+### 2026-09-13 (later still) — M2 closed on the browser backend: ImGui runs on WebGL2
+
+Owner picked **M2** as the next piece of work, with the reasoning *"this won't change current
+feature"*, and separately ruled **M5 out of the plan** (*"ImGui canny fit all UI features"*).
+Both are now recorded above (M2 row / M5 row) and in `IMPLEMENTATION_ROADMAP.md`.
+
+**What M2 was missing.** ImGui had only ever been wired for the Vulkan desktop backend
+(`imgui_layer.cpp` = GLFW + Vulkan). The browser target had no ImGui at all — and no SDL/GLFW
+either: `emscripten_main.cpp` drives the canvas through raw Emscripten HTML5 callbacks, so there was
+no platform backend to reuse and none vendored for it.
+
+**What was built.**
+- `src/engine/imgui_web.{h,cpp}` — the missing browser backend: ImGui core + `imgui_impl_opengl3`
+  in its ES3 flavour (WebGL2 needs no GL loader under Emscripten), plus a DOM event bridge feeding
+  mouse / wheel / touch / keyboard / focus into ImGui's event queue. DisplaySize is the canvas
+  *drawing-buffer* size (not the game's 1024x768 design space — the game maps design->buffer in its
+  own shader, ImGui draws real pixels), and mouse coordinates are mapped CSS px -> buffer px.
+- `emscripten_main.cpp` — ImGui comes up once the WebGL2 context is current; the frame is bracketed
+  `beginFrame()` -> `update()` -> dev windows -> `draw()` -> `endFrame()` (ImGui renders last, on
+  top); **F1 / F2** toggle the debug overlay and the styling spike, the same keys the desktop entry
+  uses; `jsGamepad` and the key handler now yield to ImGui when a dev window owns the pointer or the
+  keyboard, so dragging an ImGui slider cannot also walk the player.
+- `game_scene_draw.cpp` / `game.h` — the F1 overlay, F2 spike and font-scale setter are compiled on
+  every backend now. The ImGui toast windows and the ImGui stage-select window stay desktop-only on
+  purpose (locale/CJK strings would render as tofu boxes with ImGui's built-in font, and the browser
+  build already draws its own — enabling them would change what a browser player sees).
+- `CMakeLists.txt` — the ImGui `FetchContent` moved out of the desktop-only block (the web target
+  needs `${imgui_SOURCE_DIR}` too); the web target now compiles ImGui core + `imgui_impl_opengl3`
+  with `IMGUI_IMPL_OPENGL_ES3`.
+
+**Verified (real evidence, both platforms).**
+- Browser (WebGL2, local build `575c5d2-20260913124217`): `window.__tomsReady === true`, canvas
+  1024x768, F1 shows *TOMS Debug* with live game values (State: MainMenu/Explore, Stage: stage01,
+  HP 120/120, ATK 12, DEF 4, LV 1, EXP 0, Gold 0, "Visible cells 13" straight out of the refactored
+  `toms::Camera`), F2 shows the *M2 Styling Spike* panel over its scene-graph backdrop rect.
+- Browser regression after the change: the on-screen pad still drives the player (pad-up moved tile
+  y 14 -> 10, pad-left/down/up all moved; pad-right is walled at the map edge) and a click that lands
+  *on* an ImGui window leaves the player where it was (the capture guard works).
+- Native (Xvfb, real key events): Enter/Enter into the dungeon, then F1 + F2 -- both windows render
+  over the maze; note the F1/F2 toggles are intentionally skipped while the title phase is up
+  (`main.cpp` line 152), which is why they only appear in-game.
+- Both builds green: native `tower_vulkan` + all 17 test binaries; `./build_web.sh webgl`.
+- Cost, stated plainly: web wasm **1,960,362 -> 2,548,484 B (+588 KB)** now that ImGui is compiled
+  into the browser build.
+
+**Not done (and why):** ImGui on the **WebGPU** backend. `navigator.gpu.requestAdapter()` returns
+`null` for every browser reachable from this environment, so an `imgui_impl_wgpu` wiring could be
+written but never verified — and the WebGPU build is not the one deployed. Left as the single open
+M2 item rather than guessed at.
+
+**Not deployed:** the live Pages site still serves the pre-M2 build; deploying is a separate call.
 
 ## Open Questions / Blockers
 

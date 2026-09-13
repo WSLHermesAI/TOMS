@@ -58,10 +58,19 @@ foundation nearly every later milestone assumes exists.
 This is architecture-doc §2.3 Phase 1 — deliberately the *lowest-risk* way to get ImGui wired into
 all three renderer backends before anything shipped depends on it.
 
+> **Status (2026-09-13): DONE for Vulkan (desktop) and WebGL2 (the deployed browser backend).**
+> WebGPU's ImGui wiring is the one piece still not done, and it is blocked on what this environment
+> can verify: `navigator.gpu.requestAdapter()` returns null here (no WebGPU adapter at all), so a
+> WebGPU ImGui window could be written but never seen. Tracked in PROGRESS_REPORT.md's M2 row.
+> The font-atlas-sharing row below is also not done and is now a recorded *risk*, not a task: ImGui
+> draws with its built-in ASCII-only font, so any ImGui window showing locale strings renders tofu
+> boxes on every platform. That is exactly why the toast/stage-select windows stay desktop-only and
+> why no player-facing screen uses ImGui — see the owner's Milestone 5 decision below.
+
 | Deliverable | Detail |
 |---|---|
-| ImGui backend wiring ×3 | Vulkan (desktop), WebGL2, WebGPU — using ImGui's official backends per architecture-doc §2.2's research; render submitted per the layer order in architecture-doc §3.3 (after scene-graph, before fade overlay) |
-| Font atlas sharing | Feed ImGui the *same* CJK-capable atlas `font.cpp` already bakes, rather than building a second one — validates architecture-doc §2.3 claim #4 before anything depends on it |
+| ImGui backend wiring ×3 | Vulkan (desktop) ✅ `imgui_layer.cpp` (GLFW + Vulkan). WebGL2 ✅ `src/engine/imgui_web.{h,cpp}` (ImGui core + `imgui_impl_opengl3` in ES3 mode + an Emscripten DOM event bridge — this build has no SDL/GLFW, so the input backend had to be written). WebGPU ⬜ not started (no adapter available to verify it here). Render order: after the game's own draw, i.e. ImGui on top |
+| Font atlas sharing | ⬜ Not done — ImGui keeps its built-in font (ASCII only). Font scale *is* shared (`Game::applyUiSettings()` drives `io.FontGlobalScale` on both platforms). See the risk note above |
 | Dev-only debug overlay | Stat sliders (for hand-tracing bestiary fights live), a toggle for the existing `render_iface.h` node-filter/split-screen diagnostic, a log viewer over `log.h` |
 | Styling spike | One throwaway panel styled with `ImGuiWindowFlags_NoDecoration` + transparent background + a scene-graph-drawn 9-slice behind it — **this validates the riskiest unverified claim in the architecture doc (§2.3) before Milestone 5 commits to it.** If this spike looks wrong, revisit the UI framework decision before migrating real screens. |
 
@@ -113,12 +122,22 @@ story" mechanic and the daily/one-time mission control actually get built.
 
 Architecture-doc §10, §2.3 Phases 2–3.
 
+> **Owner decision (2026-09-13) — the two "migrate to ImGui" rows below are CANCELLED, not deferred:**
+> *"M5 should not in the plan because ImGui can't fit all UI features."* The inventory, shop and
+> dialogue screens keep the hand-built scene-graph/`Node` UI they already ship with. Reasons now on
+> record: ImGui cannot express the art-heavy touch-first RPG screens this game needs (custom
+> 9-slice panels, atlas sprite grids, per-item icons, CJK text at arbitrary size, the on-canvas
+> virtual pad), and its built-in font would render every locale string as tofu boxes. ImGui stays
+> what M2 built it for: **developer tooling** (F1 overlay, F2 styling spike, font-scale setting).
+> The Stage Select hub and the notification/toast system from this milestone DID ship, built on the
+> game's own UI code — see the M5 row in PROGRESS_REPORT.md.
+
 | Deliverable | Detail |
 |---|---|
-| Stage Select screen (new) | Built directly in ImGui (per Milestone 2's validated styling approach); per-stage `locked`/`lockReason`/`isNew`/`isCompleted`/`missionBadgeCount` computed from Milestones 3–4's Condition Evaluator + Entity Status + Mission Tracker |
-| Inventory + Shop migrated to ImGui | Replace the hand-built `Node`-tree construction (`NODE_SYSTEM.md`) with ImGui `ImageButton` grids + drag-drop, per architecture-doc §2.3 Phase 2 — behavior unchanged, only construction method changes |
-| Dialogue box migrated to ImGui | Phase 3; wires the new `action` verbs from Milestone 4 into real UI |
-| Notification/Toast system | Minimal — subscribes to the Event Bus for "new mission available," "daily reset," "level up" |
+| Stage Select screen (new) | ⚠️ Shipped, but NOT in ImGui: the owner cancelled the ImGui-based construction. The hub exists with per-stage `locked`/`lockReason`/`isNew`/`isCompleted`/`missionBadgeCount` computed from Milestones 3–4's Condition Evaluator + Entity Status + Mission Tracker. The *ImGui* variant of this window exists too (desktop-only, ⌨ Tab) and now overlaps the browser build's own hub — treat the ImGui one as dev-tool parity, not the player-facing screen |
+| Inventory + Shop migrated to ImGui | ❌ Cancelled 2026-09-13 (owner decision above). Hand-built `Node`/scene-graph UI stays |
+| Dialogue box migrated to ImGui | ❌ Cancelled 2026-09-13 (owner decision above) |
+| Notification/Toast system | ✅ Shipped (Event Bus subscriptions for "new mission available," "daily reset," "level up") — the drawing is the game renderer's own toast; the ImGui toast windows are desktop dev parity only |
 
 **Test additions:** none new (this is UI-construction, covered by manual verification); confirm the
 existing `object_test`-style leak detector reports 0 leaks with the new ImGui-driven screens open

@@ -43,6 +43,8 @@
 | `game_condition.h` | 78 | `GameConditionContext`：把 `Player` + `MetaSaveData` 接上 `toms::ConditionContext`，讓門/鑰匙與對話 `requires` 共用同一套條件求值器。 |
 | `game_internal.h` | 50 | 拆分後各單元共用的 include 集合（後端選擇 + 引擎/遊戲標頭），避免每個檔案各自猜 include 順序。 |
 | `main.cpp` | 333 | 桌面進入點與輸入轉換（含 device→design 座標）。 |
+| `imgui_layer.cpp` | — | **桌面（Vulkan + GLFW）的 ImGui 後端**：初始化、每幀 NewFrame/渲染（`imgui_impl_glfw` + `imgui_impl_vulkan`）。 |
+| `imgui_web.{h,cpp}` | — | **瀏覽器（WebGL2）的 ImGui 後端**（2026-09-13 新增，M2）：ImGui 核心 + `imgui_impl_opengl3`（ES3）+ Emscripten DOM 事件橋（滑鼠/滾輪/觸控/鍵盤/焦點）。此 build 沒有 SDL/GLFW，所以輸入層是自己寫的。 |
 | `title_screen.cpp` / `save_slots.cpp` / `game_settings.cpp` / `localization.cpp` | 288 / 137 / 53 / 132 | 標題畫面資料與繪製、存檔格 I/O、設定、六語言文字表。 |
 | `*_test.cpp` | — | 純邏輯測試（不開視窗）：`camera_test`、`title_screen_test`、`equipment_test`、`mission_test`、`save_test`、`condition_eval_test`、`entity_status_test`、`story_controller_test`、`encounter_resolve_test`。 |
 

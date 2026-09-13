@@ -276,10 +276,11 @@ public:
     // states with no real screen behind them yet (StageSelect, Paused, ...) are simply never
     // returned today.
     toms::GameState currentState() const;
-#ifndef __EMSCRIPTEN__
+    // ---- ImGui dev windows (M2: ImGui is wired into every backend, so these build on web too) ----
     // Milestone 2 dev-only debug overlay (Dear ImGui: stat sliders, node-filter toggle, last
-    // combat log line). Desktop/Vulkan only — the caller (main.cpp) decides when to show it;
-    // this just builds the ImGui:: window content for the current frame.
+    // combat log line). The caller decides when to show it (main.cpp on desktop, the web entry's
+    // F1 handler in emscripten_main.cpp); this just builds the ImGui:: window content for the
+    // current frame.
     void drawDebugOverlay();
     // UI settings: applies uiFontScale_ to ImGui's global font scale. Call once per frame,
     // right after ImGui's NewFrame(), so it's in effect before anything else draws that frame.
@@ -288,9 +289,15 @@ public:
     // screens to the hybrid UI approach): proves a transparent, undecorated ImGui window laid
     // exactly over a scene-graph-drawn backdrop rect reads as one panel, not two overlapping
     // things — see docs/PROGRESS_REPORT.md's M2 log entry for why this needed checking before
-    // any real screen was built on the assumption. Desktop/Vulkan only, dev-only, F2 to toggle.
+    // any real screen was built on the assumption. Dev-only, F2 to toggle.
     void drawStylingSpike();
     void setStylingSpikeVisible(bool v) { stylingSpikeVisible_ = v; }
+#ifndef __EMSCRIPTEN__
+    // These two stay DESKTOP-ONLY: their text comes from the locale table (CJK) and ImGui's
+    // built-in font has no CJK glyphs, so on web they would draw as tofu boxes -- and the browser
+    // build already draws its own stage-select UI and toasts with the game renderer. Enabling them
+    // on web would change what a browser player sees, which M2 deliberately avoids (see
+    // src/engine/imgui_web.h's scope note).
     // Milestone 5: transient toast notifications (level-up, daily mission available, ...),
     // driven by pushNotification() (private, called from the real gameplay events that trigger
     // one). Always drawn when active, not gated behind a dev toggle like F1/F2.
@@ -466,11 +473,10 @@ private:
     MoveHoldAxis moveHoldX_, moveHoldY_;
     static constexpr int kMoveInitialDelayMs = 220;
     static constexpr int kMoveRepeatMs = 110;
-    // M2 styling spike backdrop state. Declared unguarded (unlike drawStylingSpike()/
-    // setStylingSpikeVisible(), which are desktop/ImGui-only) so Game::draw() — shared between
-    // the desktop and web builds — can call drawStylingSpikeBackdrop() unconditionally; it's a
-    // correct no-op on web, where stylingSpikeVisible_ can never be set true (nothing calls
-    // setStylingSpikeVisible() there).
+    // M2 styling spike backdrop state. Declared unguarded so Game::draw() — shared between the
+    // desktop and web builds — can call drawStylingSpikeBackdrop() unconditionally; it is a no-op
+    // whenever stylingSpikeVisible_ is false. Both platform entries now drive it: main.cpp (F2)
+    // and, since M2 closed the web gap, the browser entry (see emscripten_main.cpp's loop()).
     bool stylingSpikeVisible_ = false;
     float stylingSpikeRect_[4] = {0, 0, 0, 0};   // x,y,w,h — set by drawStylingSpike(), read by the backdrop
     void drawStylingSpikeBackdrop();

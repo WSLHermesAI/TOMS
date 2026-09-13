@@ -16,6 +16,21 @@ set(JSON_DIR ${CMAKE_SOURCE_DIR}/external/json)
 set(GAME_DIR   ${CMAKE_SOURCE_DIR}/src/game)
 set(ENGINE_DIR ${CMAKE_SOURCE_DIR}/src/engine)
 
+# Dear ImGui (Milestone 2 — see docs/IMPLEMENTATION_ROADMAP.md). Pinned to v1.90.9, the last
+# release before the Vulkan backend's init API changed shape (RenderPass moved from a second
+# ImGui_ImplVulkan_Init() argument into the InitInfo struct around v1.91).
+# Declared here, NOT inside `if(NOT WEB)`: M2 is "ImGui wired into all three renderer backends",
+# so the browser target needs the same ${imgui_SOURCE_DIR}. Only the backends differ per platform
+# — imgui_impl_glfw + imgui_impl_vulkan on desktop, imgui_impl_opengl3 (ES3) on WebGL2 (see
+# src/engine/imgui_web.h). GLFW itself stays desktop-only (fetched below): it has no business
+# under WASM.
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG        v1.90.9
+)
+FetchContent_MakeAvailable(imgui)
+
 # ============================================================================
 # Desktop target (Windows / Linux) — Vulkan renderer.
 # ============================================================================
@@ -34,19 +49,6 @@ if(NOT WEB)
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(glfw)
-
-    # Dear ImGui (Milestone 2 — see docs/IMPLEMENTATION_ROADMAP.md). Pinned to v1.90.9, the
-    # last release before the Vulkan backend's init API changed shape (RenderPass moved from a
-    # second ImGui_ImplVulkan_Init() argument into the InitInfo struct around v1.91) — keeps
-    # src/engine/imgui_layer.cpp on a well-understood, stable API surface.
-    # Desktop (Vulkan+GLFW) only this milestone; the WebGL2/WebGPU backends are deferred until
-    # the Emscripten toolchain is available to build+test them (see docs/PROGRESS_REPORT.md).
-    FetchContent_Declare(
-        imgui
-        GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG        v1.90.9
-    )
-    FetchContent_MakeAvailable(imgui)
 
     # ---- Vulkan ----
     find_package(Vulkan QUIET)
@@ -227,7 +229,14 @@ if(WEB)
         ${GAME_DIR}/game_scene_draw.cpp ${GAME_DIR}/game_input.cpp
         ${GAME_DIR}/game_inventory.cpp ${GAME_DIR}/game_store.cpp
         ${GAME_DIR}/game_combat.cpp ${GAME_DIR}/game_story.cpp
-        ${GAME_DIR}/game_title_glue.cpp)
+        ${GAME_DIR}/game_title_glue.cpp
+        # M2: Dear ImGui on the browser build. The desktop plumbing (imgui_layer.cpp) is
+        # GLFW+Vulkan and does not exist here, so the web build gets the ImGui core plus the
+        # OpenGL3 backend in its ES3 flavour (the WebGL2 context) and its own event bridge
+        # (src/engine/imgui_web.cpp) -- see imgui_web.h for the scope note.
+        ${imgui_SOURCE_DIR}/imgui.cpp ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${ENGINE_DIR}/imgui_web.cpp)
     if(WEB_BACKEND STREQUAL "WebGPU")
         target_sources(toms_web PRIVATE ${ENGINE_DIR}/renderer_webgpu.cpp)
         target_compile_definitions(toms_web PRIVATE WEBGPU)
@@ -236,10 +245,18 @@ if(WEB)
 
     target_include_directories(toms_web PRIVATE
         ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
+        ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends
         $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
     if(WEB_DEBUG)
         target_compile_options(toms_web PRIVATE -g)
+    endif()
+
+    if(NOT WEB_BACKEND STREQUAL "WebGPU")
+        # imgui_impl_opengl3 has no loader here: with IMGUI_IMPL_OPENGL_ES3 it calls the ES3
+        # entry points directly, which Emscripten's WebGL2 context provides (no GLAD/GLEW).
+        target_compile_definitions(toms_web PRIVATE IMGUI_IMPL_OPENGL_ES3)
+        target_sources(toms_web PRIVATE ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp)
     endif()
 
     # Web renders text via an offscreen Canvas 2D context using the browser's own system

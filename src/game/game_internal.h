@@ -45,7 +45,10 @@
   #endif
 #else
   #include "renderer.h"            // Vulkan backend (desktop build only)
-  #ifndef __EMSCRIPTEN__
-    #include "imgui.h"             // core ImGui API only (backend plumbing is imgui_layer.*)
-  #endif
 #endif
+
+// M2: ImGui is wired into every backend, so the dev windows in game_scene_draw.cpp (F1 debug
+// overlay, F2 styling spike, font scale) build on web too. Only the *core* API is included here --
+// the backend plumbing is platform-specific: imgui_layer.* (GLFW + Vulkan) on desktop build 6,
+// imgui_web.* (OpenGL3/ES3 + Emscripten DOM events) on the web build.
+#include "imgui.h"

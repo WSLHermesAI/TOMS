@@ -256,13 +256,11 @@ void Game::drawGamepad() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Native-only UI (ImGui): the font-scale setter, the F1 debug overlay, the styling spike, the
-// notification toasts and the ImGui stage-select window. On the browser build ImGui is not
-// compiled in at all, so none of these exist there -- the same #ifndef __EMSCRIPTEN__ block the
-// 2026-09-13 split had to carry over from game.cpp (the guard line sat above the first definition
-// and was not part of any function body).
-#ifndef __EMSCRIPTEN__
-
+// ImGui UI, part 1 -- compiled on BOTH desktop and web (M2: ImGui is wired into the Vulkan, WebGL2
+// and WebGPU backends): the font-scale setter, the F1 debug overlay and the F2 styling spike. On
+// the browser build the backend is src/engine/imgui_web.{h,cpp} (OpenGL3/ES3 + an Emscripten DOM
+// event bridge); on desktop it is imgui_layer.cpp (GLFW + Vulkan). Nothing here touches gameplay
+// state a player sees unless they press F1/F2, so the browser build behaves exactly as before.
 void Game::applyUiSettings() {
     ImGui::GetIO().FontGlobalScale = uiFontScale_;
 }
@@ -336,6 +334,13 @@ void Game::drawStylingSpike() {
     ImGui::Text("clicks: %d", clicks);
     ImGui::End();
 }
+
+// ImGui UI, part 2 -- still DESKTOP-ONLY (deliberate, see imgui_web.h's scope note): the toast
+// windows and the ImGui stage-select window. Both draw locale strings (CJK), and ImGui's built-in
+// font has no CJK glyphs -- they would render as tofu boxes -- while the browser build already has
+// its own stage-select UI and toast drawing in the game renderer. Enabling these on web would
+// change what a browser player sees, which the M2 scope explicitly avoids.
+#ifndef __EMSCRIPTEN__
 
 // Milestone 5: transient toast notifications, stacked top-right, each with its own fade-free
 // fixed 3-second lifetime (see pushNotification()/update()'s countdown). Purely additive --

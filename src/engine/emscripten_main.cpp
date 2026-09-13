@@ -9,8 +9,15 @@
 #include <string>
 #include <vector>
 
+#include "imgui_web.h"   // M2: ImGui on the browser build (see imgui_web.h)
+
 static Game* g_game = nullptr;
 static int g_lastClickX = -1, g_lastClickY = -1;
+// M2 dev windows -- the same toggles the desktop entry (main.cpp) has: F1 debug overlay, F2
+// styling spike. Both are compiled on every backend now; they change nothing a player sees unless
+// the key is pressed.
+static bool g_showDebugOverlay = false;
+static bool g_showStylingSpike = false;
 
 // ---- Input wrappers exposed to the virtual gamepad (touch) UI ----
 // They mirror keyCb's routing: inventory nav when inventory open, otherwise blocked
@@ -46,6 +53,9 @@ EMSCRIPTEN_KEEPALIVE
 int jsModalActive() { return (g_game && g_game->modalActive()) ? 1 : 0; }
 EMSCRIPTEN_KEEPALIVE
 void jsGamepad(int phase, int x, int y) {
+    // M2: if the pointer is over an ImGui window (F1/F2 dev tools) the click belongs to ImGui --
+    // otherwise dragging a slider would also move the player / fire a battle tap underneath it.
+    if (toms::imgui_web::wantsMouse()) return;
     if (g_game) g_game->handleTouch((float)x, (float)y, phase);
 }
 // Diagnostics for the browser build's battle input. The battle scene is driven by taps on canvas
@@ -103,8 +113,27 @@ static void fetchBundle(const char* url, const char* dest) {
 
 static void loop() {
     if (!g_game) return;
+    // M2: ImGui runs on the web renderer too. ImGui must see NewFrame() before any ImGui::* call
+    // (the dev windows below) and Render() after the game's own draws have been flushed, so the
+    // frame is bracketed here. DisplaySize is the canvas drawing-buffer size, not the game's
+    // 1024x768 design space: the game maps design->buffer inside its own shader, ImGui draws in
+    // real pixels.
+    int fbW = 0, fbH = 0;
+    emscripten_get_canvas_element_size("#canvas", &fbW, &fbH);
+    toms::imgui_web::beginFrame((float)fbW, (float)fbH);
+
     g_game->update(33);                  // ~30 fps tick (advances combat timer)
+    if (toms::imgui_web::ready()) {
+        // Same order as main.cpp: font scale first, then the dev windows, and
+        // setStylingSpikeVisible(false) before drawStylingSpike() so the backdrop switches off the
+        // frame after F2 is toggled off instead of staying stuck visible.
+        g_game->applyUiSettings();
+        if (g_showDebugOverlay) g_game->drawDebugOverlay();
+        g_game->setStylingSpikeVisible(false);
+        if (g_showStylingSpike) g_game->drawStylingSpike();
+    }
     g_game->draw();
+    toms::imgui_web::endFrame();
     // Mark the runtime ready AFTER the first successful frame so the touch/mouse
     // handlers can safely call jsGamepad (avoids the pre-init abort crash and is
     // reliable across Emscripten versions, unlike Module.runtimeInitialized).
@@ -116,6 +145,14 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
     (void)eventType; (void)userData;
     if (!g_game) return EM_FALSE;
     std::string k = e->key;
+    // M2 dev windows (desktop parity: main.cpp binds F1/F2). Returning EM_TRUE also stops the
+    // browser's own F1 = help default.
+    if (k == "F1") { g_showDebugOverlay  = !g_showDebugOverlay;   return EM_TRUE; }
+    if (k == "F2") { g_showStylingSpike  = !g_showStylingSpike;   return EM_TRUE; }
+    // While an ImGui window is focused, it owns the keyboard (typing in a field or dragging a
+    // slider must not also walk the player / fire battle taps). The title phase keeps its keys:
+    // it is a full-screen boot screen the dev windows are not meant to be used over.
+    if (toms::imgui_web::wantsKeyboard() && !g_game->titleOpen()) return EM_TRUE;
     // Title phase (Boot screen): it owns the keyboard while it is up — same bindings as the
     // desktop build's main.cpp (arrows/WASD to move, Enter/Space to confirm, Esc to go back).
     if (g_game->titleOpen()) {
@@ -276,6 +313,12 @@ int main() {
         }
     }
     g_game->loadStage("stage01");
+
+    // M2: ImGui on the browser build. Must come after the context is current (the OpenGL3 backend
+    // creates its GL objects immediately) and before the first frame (loop() brackets on
+    // beginFrame/endFrame). Failure is not fatal: without ImGui the dev windows simply stay off.
+    if (!toms::imgui_web::init("#canvas"))
+        fprintf(stderr, "[web] ImGui unavailable -- continuing without the dev windows\n");
 
     emscripten_set_main_loop(loop, 30, 0);
     return 0;
