@@ -2206,6 +2206,36 @@ choose; the leading candidate is a device-adaptive *design resolution* (render t
 at a smaller logical size on small screens, which scales up every element -- text, buttons, the pad --
 with one change) plus a dialogue/battle layout pass.
 
+### 2026-09-13 — Mobile pass: A (design size) + D (portrait) shipped; B held back; C is the remaining piece
+
+Owner: *"current version is not friendly for mobile, every thing is too small, especially talking dialogue
+is hard to read and battle phase is too small, the text the buttons all too small"* — then chose A+B, and
+after seeing B's result asked for C and D.
+
+**A — shipped and verified.** The design resolution is runtime-settable (`Renderer::setDesignSize`, wired
+to `WebGLRenderer`) and the browser picks **768x576 instead of 1024x768** on a small viewport, so every
+element — HUD, maze, pad, dialogue, battle — occupies 1.33x more of the same physical screen. Verified in
+a 844x390 phone viewport: canvas buffer 768x576, CSS box 514x386, dialogue readable where it was not
+before. Desktop is untouched. The CSS fit reads the canvas' own buffer size, so design and CSS cannot
+disagree.
+
+**D — shipped.** The game is landscape 4:3, so a phone held upright only showed a sliver; a full-screen
+「請把裝置轉為橫向 · Rotate your device」 prompt now appears in portrait and clears on rotation, injected
+with the rest of the web UI shim (no engine layout involved).
+
+**B — held back on purpose.** The extra 1.25x font scale (`toms::g_uiScale`, applied in drawText AND
+measureText so they cannot drift) makes the dialogue's speaker line **collide with its first choice row**:
+those screens lay rows out on a fixed pixel pitch. It is implemented but left at 1.0 rather than shipped
+overlapping.
+
+**C — the remaining piece, scoped.** Scale the dialogue/battle row pitch, panel heights and button rects by
+`g_uiScale`, then turn B on, and give the battle buttons and dialogue rows >= 44 px touch targets (the pad's
+`GP[]` rects are drawn and hit-tested from one table, so they scale in one place). Sites to touch: the
+dialogue box's speaker line and row pitch, the battle prompt/log lines and `atk/def/superBtnRect_`, and
+`GP[]`. Then rebuild and re-verify the dialogue and battle screens at phone size before deploying.
+
+Deployed: stamp `97fda93-20260913202839` (A+D) — the live site is on it.
+
 ## Open Questions / Blockers
 
 ### 1. `texture_test` fails to build — pre-existing CMake bug, left as-is by owner's decision
