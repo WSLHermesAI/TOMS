@@ -210,6 +210,32 @@ void Game::movePlayer(int dx, int dy) {
                 // or the Stage Select hub) -- see entityStatus_'s declaration in game.h.
                 toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, e.x, e.y), toms::EntityStatus::Collected);
                 toms::globalEventBus().publish(toms::ItemCollected{e.id, curStage});
+            } else if (e.kind.rfind("event:",0)==0) {
+                // S3.5 (d): a floor event. Its text comes from the i18n table (generated for every
+                // event id by tools/gen_story_i18n.py, authored for acts 1-3), and the effect is
+                // derived from the event id's own vocabulary until the pools are loaded at runtime:
+                // shards feed the memory-shard state, traps cost HP, caches/relics give a little back.
+                std::string evId = e.id;
+                std::string text = locale_.tr(evId + ".text");
+                if (text.empty() || text == evId + ".text") text = evId;   // missing -> the id, not blank
+                if (evId.find("shard") != std::string::npos) {
+                    run_.addShard(evId);
+                    notifications_.push_back({text + "  [memory shard " + std::to_string(run_.shardCount()) + "]", 4200});
+                } else if (evId.find("trap") != std::string::npos) {
+                    pl.hp = std::max(1, pl.hp - 8);
+                    notifications_.push_back({text + "  [-8 HP]", 3800});
+                } else if (evId.find("cache") != std::string::npos || evId.find("relic") != std::string::npos) {
+                    pl.hp = std::min(pl.maxhp, pl.hp + 10);
+                    pl.gold += 12;
+                    notifications_.push_back({text + "  [+10 HP, +12 GOLD]", 3800});
+                } else {
+                    run_.setFlag("event_" + evId, true);        // whispers/rescues: remembered, no stat
+                    notifications_.push_back({text, 4200});
+                }
+                e.consumed = true;
+                st.tiles[e.y][e.x] = '.'; // clear from grid
+                toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, e.x, e.y), toms::EntityStatus::Collected);
+                return;
             } else if (e.kind.rfind("npc:",0)==0) {
                 // start dialogue
                 dlgNpc = "enemy_"+e.id; // fallback; real npc ids below
@@ -224,6 +250,7 @@ void Game::movePlayer(int dx, int dy) {
         }
     }
     // stairs check (cell char)
+    ++storyTurns_;                 // S3.5 (c): the footer line rotates with movement, not with time
     if (c=='U' && !st.up.empty()) requestStageTransition(st.up, true);
     else if (c=='D' && !st.down.empty()) requestStageTransition(st.down, false);
 }

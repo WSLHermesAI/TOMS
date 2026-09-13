@@ -101,6 +101,9 @@ int jsFloorInfo(int which) {
     if (which == 0) return g_game->floorMode() ? 1 : 0;          // is the tower data loaded?
     if (which == 1) return g_game->floorTable().size();          // 70
     if (which == 2) return g_game->floorTable().seqOf(g_game->currentFloorId());   // 0 when not a floor
+    if (which == 3) return g_game->themeAct();                       // S3.5 (e): the palette in use
+    if (which == 4) return g_game->storyLineIndex();                 // S3.5 (c): 0 intro, 1.. ambient
+    if (which == 5) return g_game->chapterCardVisible() ? 1 : 0;     // S3.5 (c): act card on screen
     return -1;
 }
 // Does the loaded stage's stair fields carry the tower's links? 0: st.up == nextFloor, 1: st.down ==

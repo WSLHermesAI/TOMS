@@ -59,10 +59,14 @@ void Game::draw() {
         int endX   = std::min(gw, (int)std::ceil(cam_.x()) + viewCols + 1);
         int startY = std::max(0, (int)std::floor(cam_.y()) - 1);
         int endY   = std::min(gh, (int)std::ceil(cam_.y()) + viewRows + 1);
+        // S3.5 (e): the act's palette tints the map tiles. One atlas, ten looks -- no new art needed,
+        // and the maze stays readable because the tint is a light wash rather than a replace.
+        float themeTint[4];
+        toms::floorThemeTint(themeActIndex_, themeTint);
         for (int y = startY; y < endY; y++) for (int x = startX; x < endX; x++) {
             char c = st.at(x,y);
             int layer = spriteLayer(cellSprite(c));
-            ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, white));
+            ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, themeTint));
         }
         // Entity/player sprites were inset by a fixed 8px into their 48px tile before
         // Milestone 9; now that ts varies per stage, the inset scales with it (same
@@ -85,6 +89,7 @@ void Game::draw() {
             float x, y, w, h;      // pixel rect
             int   layer;
             std::string banner;    // empty = no banner
+            bool  plate = false;   // S3.5 (d): an event marker -> solid story plate, not an atlas sprite
         };
         std::vector<FloorSprite> floor;
         floor.reserve(st.entities.size() + 1);
@@ -98,6 +103,10 @@ void Game::draw() {
             f.x = ox + e.x*ts + inset;
             f.y = oy + e.y*ts + inset;
             f.layer = spriteLayer(entSprite(e.id));
+            // S3.5 (d): an event marker is drawn as a solid story plate rather than an atlas sprite --
+            // the atlas has no "relic/whisper/cache" art yet (S8 owns that), and a plate reads as
+            // "something to read here" without pretending to be a creature or an item.
+            f.plate = e.kind.rfind("event:", 0) == 0;
             // The banner is for the boss/event tier and for roamers; the text prefers the stage's
             // own displayName and falls back to the entity id, so a floor file can name its boss
             // without any new data file having to exist yet.
@@ -120,7 +129,17 @@ void Game::draw() {
             return a.tieX < b.tieX;
         });
         for (auto& f : floor) {
-            ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, white));
+            if (f.plate) {
+                // S3.5 (d): a story plate -- a solid tile-sized marker with a lighter inset, so an
+                // event cell is visibly "something to read" on the map.
+                float gold[4] = {0.86f, 0.72f, 0.36f, 0.92f};
+                float inner[4] = {0.28f, 0.34f, 0.46f, 0.95f};
+                ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, gold));
+                float in = f.w * 0.22f;
+                ren->drawSprite(spriteQuad(f.x + in, f.y + in, f.w - 2*in, f.h - 2*in, f.layer + 1, inner));
+            } else {
+                ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, white));
+            }
             if (!f.banner.empty()) {
                 // Name banner: a translucent plate centred above the sprite, then the name. Drawn
                 // with the game's own text renderer (CJK-capable), not ImGui -- see the M2 note in
@@ -146,7 +165,34 @@ void Game::draw() {
         drawText("HP " + std::to_string(pl.hp) + "/" + std::to_string(pl.maxhp), bx+210, by, 18, tint);
         drawText("ATK " + std::to_string(pl.atk) + "  DEF " + std::to_string(pl.def) + "  LV " + std::to_string(pl.lv), bx, by+20, 18, tint);
         drawText("GOLD " + std::to_string(pl.gold) + "  EXP " + std::to_string(pl.exp) + "  " + locale_.tr("hud.keys") + " Y"+std::to_string(pl.key_yellow)+" B"+std::to_string(pl.key_blue)+" R"+std::to_string(pl.key_red) + "  " + locale_.tr("hud.items") + "x" + std::to_string(pl.inv.size()) + " (I)", bx, by+42, 16, tint);
-        drawText(st.story_note, 16, H-30, 16, C4(0.8f,0.85f,1.0f,1));
+        // S3.5 (c): the floor's story line (intro, then its ambient lines as the player moves). The
+        // grid's own story_note is the fallback for hand-authored stages and for floors without one.
+        std::string footerLine = st.story_note;
+        if (!storyIntroKey_.empty()) {
+            int idx = storyLineIndex();                 // 0 = intro, 1..n = ambient
+            std::string key = (idx == 0 || storyAmbientKeys_.empty())
+                              ? storyIntroKey_
+                              : storyAmbientKeys_[(size_t)(idx - 1) % storyAmbientKeys_.size()];
+            std::string tr = locale_.tr(key);
+            if (!tr.empty() && tr.rfind("story.", 0) != 0) footerLine = tr;   // missing key -> keep the note
+        }
+        drawText(footerLine, 16, H-30, 16, C4(0.8f,0.85f,1.0f,1));
+        // S3.5 (c): the act card -- shown for a couple of seconds when an act's first floor loads.
+        if (chapterCardMs_ > 0.0f && !chapterCardTitle_.empty()) {
+            float alpha = std::min(1.0f, chapterCardMs_ / 600.0f);       // fade out over the last 600ms
+            float cw = 620.0f, ch = 116.0f;
+            float cx0 = (W - cw) * 0.5f, cy0 = H * 0.30f;
+            Quad card; card.rect[0]=cx0; card.rect[1]=cy0; card.rect[2]=cw; card.rect[3]=ch;
+            card.uv[0]=0;card.uv[1]=0;card.uv[2]=1;card.uv[3]=1; card.solid=true;
+            card.tint[0]=0.06f; card.tint[1]=0.08f; card.tint[2]=0.14f; card.tint[3]=0.88f*alpha;
+            ren->drawSprite(card);
+            Quad rule; rule.rect[0]=cx0+24.0f; rule.rect[1]=cy0+ch-14.0f; rule.rect[2]=cw-48.0f; rule.rect[3]=2.0f;
+            rule.uv[0]=0;rule.uv[1]=0;rule.uv[2]=1;rule.uv[3]=1; rule.solid=true;
+            rule.tint[0]=0.85f; rule.tint[1]=0.72f; rule.tint[2]=0.35f; rule.tint[3]=0.9f*alpha;
+            ren->drawSprite(rule);
+            drawText(chapterCardTitle_, cx0+28.0f, cy0+18.0f, 26, C4(1.0f,0.94f,0.7f,alpha));
+            drawText(st.name, cx0+28.0f, cy0+64.0f, 18, C4(0.82f,0.86f,0.95f,alpha));
+        }
 
         ren->setNode(NODE_STORE);
         if (!storeOpen) drawStoreIcon();

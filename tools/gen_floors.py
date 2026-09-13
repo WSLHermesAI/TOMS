@@ -534,13 +534,21 @@ def main():
                 used.add(cell)
 
             # events occupy room cells: they are the "event containers" the table counts
+            # S3.5 (d): each event slot becomes a real marker the engine can see (legend kind
+            # "event:<id>"), so a floor's story content is actually in the world instead of being a
+            # list of ids in the spec. One char per slot -- the legend is per floor, so slots can
+            # share nothing and every cell keeps its own event id.
+            EVENT_CHARS = ["E", "F", "G", "I", "J", "K", "L", "M", "N", "O", "P", "Q"]
             event_cells = []
-            for _ in range(len(spec['events'])):
+            for idx, ev_id in enumerate(spec['events']):
                 cell = take_cell(prefer_room=True)
                 if cell is None:
                     break
                 event_cells.append(cell)
                 used.add(cell)
+                ch = EVENT_CHARS[idx % len(EVENT_CHARS)]
+                placements[cell] = ch
+                legend[ch] = "event:" + ev_id
             spec['meta']['eventCells'] = [list(c) for c in event_cells]
             # one door + its key, gating the goal side of the main path (same idea as gen_mazes.py)
             if len(main_path) >= 4:

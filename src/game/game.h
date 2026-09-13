@@ -368,6 +368,16 @@ private:
     // absent, and every use is guarded -- so a checkout without the floors still plays the eleven
     // hand-authored stages exactly as before.
     toms::FloorTable floors_;
+    // S3.5 (c): what the footer says while the run is on a floor -- the floor's own intro line, which
+    // then rotates through its ambient lines as the player moves (storyLineIndex, floor_table.h).
+    std::string storyIntroKey_;
+    std::vector<std::string> storyAmbientKeys_;
+    int storyTurns_ = 0;
+    // S3.5 (c): the act card shown for a couple of seconds when a floor with indexInAct == 1 loads.
+    float chapterCardMs_ = 0.0f;
+    std::string chapterCardTitle_;
+    // S3.5 (e): the act whose palette tints this floor's tiles (floorThemeTint, floor_table.h).
+    int themeActIndex_ = 1;
     std::string curFloorId_;              // "F07" while the run is on a generated/boss floor, else ""
 public:
     // S3: read-only access for tests and the browser verification probes (jsChoiceMade/jsRunInfo in
@@ -378,6 +388,11 @@ public:
     bool floorMode() const { return !floors_.empty(); }
     const toms::FloorTable& floorTable() const { return floors_; }
     const std::string& currentFloorId() const { return curFloorId_; }
+    // S3.5 verification probes (also used by the browser harness): which story line is showing, and
+    // whether the act card is up.
+    int storyLineIndex() const { return toms::storyLineIndex(storyTurns_, (int)storyAmbientKeys_.size()); }
+    bool chapterCardVisible() const { return chapterCardMs_ > 0.0f; }
+    int themeAct() const { return themeActIndex_; }
     // saveCurrentRun() itself stays where it was (private); this is the one public entry the web
     // harness probe jsSaveNow() needs, without widening the existing declaration's access.
     void saveRunNow() { saveCurrentRun(); }

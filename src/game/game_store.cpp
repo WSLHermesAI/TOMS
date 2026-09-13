@@ -66,7 +66,7 @@ void Game::ensureStageListLoaded() {
             info.name = resolved.empty() ? f.id : resolved;
             // The act title is already authored (S3: story.chNN.title), so a hub row can say which
             // act it belongs to without inventing another key; falls back to the act id.
-            std::string actTitle = locale_.tr("story." + f.act + ".title");
+            std::string actTitle = locale_.tr("story." + f.actKey + ".title");
             info.preview = (actTitle.empty() || actTitle.rfind("story.", 0) == 0) ? f.act : actTitle;
             stageList_.push_back(info);
         }

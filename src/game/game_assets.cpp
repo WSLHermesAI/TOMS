@@ -232,6 +232,25 @@ void Game::loadStage(const std::string& id) {
         // (far from the entrance) and the way back on 'D' (beside it), which is exactly this.
         st.up = floor->nextFloor;
         st.down = floors_.prev(floor->id);
+        // S3.5 (c)/(e): the floor's story keys, and the act whose palette this floor renders in.
+        storyIntroKey_ = floor->introKey;
+        storyAmbientKeys_ = floor->ambientKeys;
+        storyTurns_ = 0;
+        themeActIndex_ = floor->actIndex;
+        chapterCardMs_ = 0.0f;
+        if (floor->indexInAct == 1 && !floor->act.empty()) {   // first floor of an act -> act card
+            std::string title = locale_.tr("story." + floor->actKey + ".title");
+            if (title.rfind("story.", 0) != 0) {               // resolved (missing key -> the key)
+                chapterCardTitle_ = title;
+                chapterCardMs_ = 2600.0f;
+            }
+        }
+    } else {
+        storyIntroKey_.clear();
+        storyAmbientKeys_.clear();
+        storyTurns_ = 0;
+        themeActIndex_ = 1;
+        chapterCardMs_ = 0.0f;
     }
     // Milestone 7: parseStage() rebuilds every entity fresh from JSON on every call (stairs,
     // Stage Select, etc.), so re-apply any previously-persisted Defeated/Collected status here --

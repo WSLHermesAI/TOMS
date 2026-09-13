@@ -131,6 +131,14 @@ void testShippedTower() {
         CHECK(f.indexInAct == (i - 1) % 7 + 1, "%s indexInAct %d does not match its position %d",
               f.id.c_str(), f.indexInAct, i);
         CHECK(!f.nameKey.empty(), "%s has no name key (the HUD needs one)", f.id.c_str());
+        // actKey is the act id minus its underscore -- the form the story i18n keys use
+        // ("story.ch01.title"), so the act id and the key stem cannot drift apart.
+        std::string wantActKey = f.act;
+        wantActKey.erase(std::remove(wantActKey.begin(), wantActKey.end(), '_'), wantActKey.end());
+        CHECK(f.actKey == wantActKey, "%s actKey should be '%s', got '%s'",
+              f.id.c_str(), wantActKey.c_str(), f.actKey.c_str());
+        CHECK(!f.actKey.empty() && f.actKey.find('_') == std::string::npos,
+              "%s actKey should carry no underscore, got '%s'", f.id.c_str(), f.actKey.c_str());
         CHECK(f.eventCount > 0, "%s carries no event slots", f.id.c_str());
     }
 

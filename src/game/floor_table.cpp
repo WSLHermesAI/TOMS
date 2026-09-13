@@ -47,13 +47,23 @@ FloorTable FloorTable::fromSpecs(const std::vector<nlohmann::json>& specs) {
         if (f.id.empty()) continue;
         f.act = j.value("act", std::string());
         f.actIndex = actOrdinal(f.act);
+        for (char ch : f.act) if (ch != '_') f.actKey += ch;   // "ch_01" -> "ch01"
         f.indexInAct = j.value("indexInAct", 1);
         f.role = j.value("role", std::string("normal"));
         f.seal = j.value("seal", std::string());
         f.handAuthoredStage = j.value("handAuthoredStage", std::string());
         if (j.contains("nextFloor") && j["nextFloor"].is_string()) f.nextFloor = j["nextFloor"].get<std::string>();
         if (j.contains("name")) f.nameKey = j["name"].is_string() ? j["name"].get<std::string>() : std::string();
-        if (j.contains("events") && j["events"].is_array()) f.eventCount = (int)j["events"].size();
+        if (j.contains("events") && j["events"].is_array()) {
+            f.eventCount = (int)j["events"].size();
+            for (const auto& ev : j["events"]) if (ev.is_string()) f.eventIds.push_back(ev.get<std::string>());
+        }
+        if (j.contains("story") && j["story"].is_object()) {
+            const auto& st = j["story"];
+            if (st.contains("intro") && st["intro"].is_string()) f.introKey = st["intro"].get<std::string>();
+            if (st.contains("ambient") && st["ambient"].is_array())
+                for (const auto& a : st["ambient"]) if (a.is_string()) f.ambientKeys.push_back(a.get<std::string>());
+        }
         byId[f.id] = f;
     }
     if (byId.empty()) return table;
