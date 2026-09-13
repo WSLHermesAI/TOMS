@@ -55,9 +55,10 @@ Recommended order (each item is sized to finish and verify in one sitting):
   super as three independent buttons, multi-touch) feels right. It arrived with the 2026-09-12 pull
   and **replaces** the press-and-hold Power Bar this repo built in M6.
 - Audio pass (web audio and SFX arrived with the 2026-09-11 multi-language pull).
-- The stray `sprite.frag.spv` / `sprite.vert.spv` in the repo root: byte-identical duplicates of
-  `assets/shaders/` (1676 / 3184 bytes, md5 match), untracked and not gitignored -- delete them and
-  add a `.gitignore` rule, or keep?
+- ~~The stray `sprite.frag.spv` / `sprite.vert.spv` in the repo root~~ -- **resolved 2026-09-13**:
+  root-anchored `.gitignore` rules now hide them (`git check-ignore` verified; the tracked
+  `assets/shaders/*.spv` copies are unaffected). The duplicate files themselves were left on disk;
+  delete them any time.
 - Nothing above is currently broken: as of the last commands run, `tower_vulkan` builds and the
   deployed web build (commit `af29333`) loads, plays and passes a scripted battle check on the live
   GitHub Pages site.
