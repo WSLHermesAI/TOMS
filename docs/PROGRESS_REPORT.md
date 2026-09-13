@@ -71,11 +71,10 @@ Recommended order (each item is sized to finish and verify in one sitting):
   `assets/shaders/*.spv` copies are unaffected). The duplicate files themselves were left on disk;
   delete them any time.
 - Nothing above is currently broken: as of the last commands run (2026-09-13, after the
-  source-layout refactor), `tower_vulkan` builds, **17/17 test binaries pass**, the native walk was
-  the **live** GitHub Pages build is now the S1 build (stamp `e7366a0-20260913133106`, deployed
-  2026-09-13): byte-identical to the local build and driven in a browser (title -> New Game ->
-  dungeon, on-screen pad moving the player).
-  scripted battle check on the live GitHub Pages site.
+  source-layout refactor, M2 and S1), `tower_vulkan` builds, **18/18 test binaries pass**, the native
+  walk was re-verified under Xvfb, and the **live** GitHub Pages build is the S1 build (stamp
+  `e7366a0-20260913133106`, deployed 2026-09-13): byte-identical to the local build and driven in a
+  real browser (title -> New Game -> dungeon, on-screen pad moving the player).
 - **Where code goes:** `docs/CODE_LAYOUT.md` (added 2026-09-13) documents every file's
   responsibility, the shared helper headers, and the `toms::Camera` interface — read it before adding
   a new subsystem, so nothing grows back into a 3,000-line file.
