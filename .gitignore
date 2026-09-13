@@ -53,3 +53,6 @@ web-debug/
 # Root-anchored so assets/shaders/*.spv keeps being tracked.
 /sprite.frag.spv
 /sprite.vert.spv
+
+# test output capture
+/log_test_out.log
