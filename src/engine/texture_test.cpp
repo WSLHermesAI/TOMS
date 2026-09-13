@@ -45,18 +45,21 @@ int main() {
         auto got = mgr.Get("sharedTex");        // scoped so the extra ref dies here
         CHECK(got.get() == tex.get(), "TextureManager returns the same texture");
     }
-    // also exercise GetByFullPath (FM79979-style: path is the key, cached)
+    // also exercise GetByFullPath (FM79979-style: path is the key, cached). NOTE: this used to
+    // point at assets/font_atlas.png, which the 2026-09-11 multi-language pull deleted (the bitmap
+    // font atlas was replaced by TTF subsetting), so the two checks below failed from then until
+    // this fix. Any tracked PNG serves the same purpose here.
     {
-        auto tp1 = mgr.GetByFullPath("assets/font_atlas.png", refs);
-        auto tp2 = mgr.GetByFullPath("assets/font_atlas.png", refs);
+        auto tp1 = mgr.GetByFullPath("assets/sprites/golem.png", refs);
+        auto tp2 = mgr.GetByFullPath("assets/sprites/golem.png", refs);
         CHECK(tp1 != nullptr, "GetByFullPath loads from disk");
         CHECK(tp1.get() == tp2.get(), "GetByFullPath returns the SAME cached object on repeat");
     }
-    CHECK(mgr.size() == 2, "manager holds checker + font_atlas path");
+    CHECK(mgr.size() == 2, "manager holds checker + file path");
 
     // 4) release every Texture reference BEFORE tearing down the Vulkan device
     mgr.Remove("sharedTex");
-    mgr.Remove("assets/font_atlas.png");
+    mgr.Remove("assets/sprites/golem.png");
     tex.reset();
     CHECK(mgr.size() == 0, "TextureManager empty after remove");
     CHECK(ObjectRegistry::instance().LiveCount() == 1, "only the (static) TextureManager remains");

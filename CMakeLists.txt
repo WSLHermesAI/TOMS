@@ -109,6 +109,17 @@ if(NOT WEB)
         # Title phase (New Game / Continue / Settings): save slots, preferences, string table.
         ${GAME_DIR}/save_slots.cpp ${GAME_DIR}/game_settings.cpp
         ${GAME_DIR}/localization.cpp ${GAME_DIR}/title_screen.cpp
+        # Refactor: the maze camera is its own translation unit + class (was ~120 lines inside
+        # game.cpp/game.h mixed with unrelated logic) -- see src/game/camera.h, camera_test.cpp.
+        ${GAME_DIR}/camera.cpp
+        # Refactor (2026-09-13): game.cpp was a single 3,100-line translation unit; it is now split
+        # by responsibility into these units (game.h still declares everything; Game is unchanged
+        # as a class, and shared file-local helpers moved to game_helpers.h).
+        ${GAME_DIR}/game_assets.cpp ${GAME_DIR}/game_text_draw.cpp
+        ${GAME_DIR}/game_scene_draw.cpp ${GAME_DIR}/game_input.cpp
+        ${GAME_DIR}/game_inventory.cpp ${GAME_DIR}/game_store.cpp
+        ${GAME_DIR}/game_combat.cpp ${GAME_DIR}/game_story.cpp
+        ${GAME_DIR}/game_title_glue.cpp
         ${imgui_SOURCE_DIR}/imgui.cpp ${imgui_SOURCE_DIR}/imgui_draw.cpp
         ${imgui_SOURCE_DIR}/imgui_tables.cpp ${imgui_SOURCE_DIR}/imgui_widgets.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
@@ -207,7 +218,16 @@ if(WEB)
         ${GAME_DIR}/Audio.cpp
         # Title phase (New Game / Continue / Settings): slots + preferences + string table.
         ${GAME_DIR}/save_slots.cpp ${GAME_DIR}/game_settings.cpp
-        ${GAME_DIR}/localization.cpp ${GAME_DIR}/title_screen.cpp)
+        ${GAME_DIR}/localization.cpp ${GAME_DIR}/title_screen.cpp
+        ${GAME_DIR}/camera.cpp
+        # Refactor (2026-09-13): game.cpp was a single 3,100-line translation unit; it is now split
+        # by responsibility into these units (game.h still declares everything; Game is unchanged
+        # as a class, and shared file-local helpers moved to game_helpers.h).
+        ${GAME_DIR}/game_assets.cpp ${GAME_DIR}/game_text_draw.cpp
+        ${GAME_DIR}/game_scene_draw.cpp ${GAME_DIR}/game_input.cpp
+        ${GAME_DIR}/game_inventory.cpp ${GAME_DIR}/game_store.cpp
+        ${GAME_DIR}/game_combat.cpp ${GAME_DIR}/game_story.cpp
+        ${GAME_DIR}/game_title_glue.cpp)
     if(WEB_BACKEND STREQUAL "WebGPU")
         target_sources(toms_web PRIVATE ${ENGINE_DIR}/renderer_webgpu.cpp)
         target_compile_definitions(toms_web PRIVATE WEBGPU)
@@ -286,8 +306,9 @@ target_include_directories(texture_test PRIVATE
     ${GAME_DIR} ${ENGINE_DIR}
     ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
     ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
+    ${glfw_SOURCE_DIR}/include               # renderer.cpp includes GLFW/glfw3.h
     $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
-target_link_libraries(texture_test PRIVATE ${Vulkan_LIBRARIES})
+target_link_libraries(texture_test PRIVATE ${Vulkan_LIBRARIES} glfw)
 endif()
 
 # font_test: build the runtime TTF atlas (stb_truetype) and verify glyph UVs.
@@ -342,6 +363,9 @@ target_include_directories(mission_test PRIVATE ${GAME_DIR} ${JSON_DIR})
 # Equipment System. Pure-STL / header-plus-json, no Vulkan/GLFW dependency.
 # Run: ./power_bar_test  ./equipment_test
 # ---------------------------------------------------------------------------
+add_executable(camera_test ${GAME_DIR}/camera_test.cpp ${GAME_DIR}/camera.cpp ${GAME_DIR}/camera.h)
+target_include_directories(camera_test PRIVATE ${GAME_DIR})
+
 add_executable(power_bar_test ${ENGINE_DIR}/power_bar_test.cpp ${ENGINE_DIR}/power_bar.cpp ${ENGINE_DIR}/power_bar.h)
 target_include_directories(power_bar_test PRIVATE ${ENGINE_DIR})
 

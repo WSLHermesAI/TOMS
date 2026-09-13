@@ -9,7 +9,8 @@
 #include "game_state.h"  // toms::GameState — see Game::currentState()
 #include "save_system.h" // toms::MetaSaveData — see Game::meta_ (Milestone 3; disk persistence is Milestone 5's job)
 #include "mission_system.h" // toms::MissionDefinition/MissionTracker — see Game::missionDefs_/missionTrackers_
-#include "power_bar.h"       // toms::PowerBarParams/simulatePosition/... — see CombatState's Phase
+#include "power_bar.h"
+#include "camera.h"       // toms::Camera — maze camera (own file/class)       // toms::PowerBarParams/simulatePosition/... — see CombatState's Phase
 #include "equipment_system.h" // toms::EquippedSet/EquipmentDefinition — see Game::equipped_/equipmentDefs_
 #include "entity_status.h"   // toms::EntityStatus/entityStatusKey — see Game::entityStatus_
 #include "stage.h"
@@ -220,10 +221,10 @@ public:
     bool stairsConfirmIsUp() const { return stairsConfirmIsUp_; }
     void confirmStageTransition();
     void cancelStageTransition();
-    // Maze camera mode (see cameraMode_'s declaration for what each value does). Applying a
-    // change re-targets the camera immediately (no confirm dialog needed -- unlike language,
-    // this is a low-stakes, instantly-visible, freely-reversible preference).
-    int cameraModeIndex() const { return (int)cameraMode_; }
+    // Maze camera mode (see toms::Camera::Mode in camera.h). Applying a change re-targets the
+    // camera immediately (no confirm dialog needed -- unlike language, this is a low-stakes,
+    // instantly-visible, freely-reversible preference).
+    int cameraModeIndex() const { return cam_.modeIndex(); }
     void setCameraModeIndex(int m);
     // In-game menu (walking-phase HUD gear icon): Save / Settings (language) / Back to Title.
     bool inGameMenuOpen() const { return inGameMenuOpen_; }
@@ -476,32 +477,15 @@ private:
     int totalStages = 10;   // highest stage index (derived from data/stages at loadStage)
 
     // ---- maze camera ----
-    // Stage grids range from 19x16 to 34x31 tiles (data/stages/*.json) -- too big to keep
-    // shrinking tile size to fit the whole grid on screen (that's what made the maze illegible/
-    // hard to tap on mobile). A fixed tile size + scrolling viewport fixes that at any grid size.
-    // Follow: the viewport pans to keep the player centered (clamped to the grid edges).
-    // Rooms: the grid is divided into fixed viewport-sized sections; the camera slides to
-    // whichever section currently contains the player, only when they cross into a new one.
-    enum class CameraMode { Follow = 0, Rooms = 1 };
-    CameraMode cameraMode_ = CameraMode::Follow;
-    // How many tile columns are visible across the (always 1024px-wide) design canvas; tile
-    // size and row count are both derived from this (see cameraViewportTiles()), so it's a
-    // single "how zoomed in is the camera" knob. Adjustable live from the F1 debug overlay
-    // (real-time, for testing what actually fits on a small screen) and persisted like any
-    // other setting.
-    int viewCols_ = 13;
-    float camX_ = 0, camY_ = 0;                 // current viewport origin, in tile units (floats
-                                                 // so a pan/slide can be mid-tile between frames)
-    float camTargetX_ = 0, camTargetY_ = 0;     // where camX_/camY_ are easing toward
-    // Derives tile size (ts) and viewport size in tiles (cols/rows) from viewCols_ + the
-    // (always 1024x768) design canvas -- the one place this math happens, shared by
-    // update()'s camera targeting and draw()'s actual rendering so they can never disagree.
+    // The camera itself lives in src/game/camera.{h,cpp} as toms::Camera: mode (Follow/Rooms),
+    // zoom (viewCols), the eased position and its target, plus the viewport math and the edge
+    // clamping. Deliberately free of renderer/game coupling (pure math, unit-tested by
+    // camera_test.cpp) -- this class only hands it the drawing area in pixels and the focus tile.
+    toms::Camera cam_;
+    // Adapter: the camera needs the drawing area in pixels (the 1024x768 design canvas unless the
+    // renderer reports otherwise), which only Game knows. Kept as one call site so draw() and
+    // update() can never compute a different viewport.
     void cameraViewportTiles(float& ts, int& cols, int& rows) const;
-    // Recomputes camTargetX_/Y_ from pl.x/y + cameraMode_ (clamped to the stage's edges).
-    void updateCameraTarget();
-    // Jumps the camera straight to its target (no pan) -- called right after loadStage() so a
-    // floor change never visibly scrolls in from the previous floor's camera position.
-    void snapCamera();
     // store system state
     std::vector<StoreItemDef> storeItems_;
     int storeUnlockStage_ = 3;   // stage index at which the shop unlocks (from store.json)

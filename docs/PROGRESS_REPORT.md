@@ -59,15 +59,19 @@ Recommended order (each item is sized to finish and verify in one sitting):
   root-anchored `.gitignore` rules now hide them (`git check-ignore` verified; the tracked
   `assets/shaders/*.spv` copies are unaffected). The duplicate files themselves were left on disk;
   delete them any time.
-- Nothing above is currently broken: as of the last commands run, `tower_vulkan` builds and the
-  deployed web build (commit `af29333`) loads, plays and passes a scripted battle check on the live
-  GitHub Pages site.
+- Nothing above is currently broken: as of the last commands run (2026-09-13, after the
+  source-layout refactor), `tower_vulkan` builds, **17/17 test binaries pass**, the native walk was
+  re-verified under Xvfb, and the deployed web build (commit `af29333`) loads, plays and passes a
+  scripted battle check on the live GitHub Pages site.
+- **Where code goes:** `docs/CODE_LAYOUT.md` (added 2026-09-13) documents every file's
+  responsibility, the shared helper headers, and the `toms::Camera` interface — read it before adding
+  a new subsystem, so nothing grows back into a 3,000-line file.
 
 ## Milestone status
 
 | Milestone | Status | Notes |
 |---|---|---|
-| M0 — Baseline safety net | ✅ Done (with 1 known, accepted gap) | 4/5 headless tests build+pass+verified; `texture_test` left broken, by owner's choice — see log |
+| M0 — Baseline safety net | ✅ Done (gap closed 2026-09-13) | 5/5 headless tests build+pass+verified. `texture_test` was left broken by owner's choice; the 2026-09-13 refactor fixed its build (missing GLFW include dir) and its 2 failing checks (it pointed at `assets/font_atlas.png`, deleted by the TTF-font pull) — see log |
 | M1 — Engine scaffolding | ✅ Done | Game State Machine, Event Bus, Meta/Run save schema — all built, wired minimally, and test-verified. See log. |
 | M2 — UI framework bring-up | 🟡 Done except ImGui-on-web | Dear ImGui wired into `tower_vulkan` as a dev-only F1 overlay + the M5-prerequisite styling spike (F2), both compiled + smoke-tested. **Visual correctness of the styling spike is still unconfirmed** — screenshot capture attempted and abandoned as unreliable in this environment; see log. The original blocker ("no Emscripten toolchain") is gone as of M9's log entry (a real emsdk install was found and the web build now compiles+passes its tests) — the *remaining* gap is narrower: ImGui itself was still never wired into the web renderer, a separate scope decision, not a toolchain-availability one. |
 | M3 — World logic core | ✅ Done | Condition/Flag Evaluator, Entity Status System, Story Controller — all built, test-verified, AND retrofitted into real gameplay (door/key gate, dialogue `requires` gate, beat advancement on floor entry). See log. |
@@ -79,6 +83,7 @@ Recommended order (each item is sized to finish and verify in one sitting):
 | M9 — Platform verification & polish | 🟡 In progress | Full regression now passes on **both** Windows (Debug+Release) and web (WebGL+WebGPU, Emscripten 6.0.9, actually executed under Node not just compiled) for the first time this project has ever had that confirmed. Owner also asked, mid-milestone, for all 11 stages' mazes to be regenerated via Wilson's algorithm with per-floor-growing size — done (`tools/gen_mazes.py`), same entity roster preserved exactly, tile size now dynamic per stage. **Still open:** manual floor-1-to-11 playthrough, a browser/WebGPU playthrough, an audio pass, a docs-accuracy check. See log. |
 | M10 — Title phase (New Game / Continue / Settings) | ✅ Done | Title screen drawn with the game's own renderer (so it exists on web too), numbered save slots (`save/slotN.json`, atomic writes), settings (`save/settings.json`: language, slot count, font scale), a 6-language text table (`data/text.json` with built-in fallback), and the "start a new game in this empty slot?" confirm dialog (owner-reported: an empty slot previously did nothing). Verified natively under Xvfb with real key events, and again in a browser on the live site. |
 | M11 — Web delivery pipeline | ✅ Done (deployed and verified live) | Root cause of the dead virtual keypad: the WebGL backend reported a 1280x720 design space while the canvas and the page's tap mapping were 1024x768, and `glViewport` used the design size inside a 768-tall buffer, shifting every drawn control 48px below its hit box. Fixed by splitting design space from drawing buffer. The published page is now a hand-maintained clean page (`web/clear.html`: no Emscripten logo, no status/spinner block, no debug console; real byte-level loading progress; animated title screen) that survives rebuilds, and artifact filenames are version-stamped per build so a cached `.data` can never mismatch a fresh page. Live: https://wslhermesai.github.io/TOMS/ |
+| M12 — Source-layout refactor | ✅ Done | `game.cpp` 3,104 -> 268 lines, split into 9 responsibility units; `toms::Camera` extracted to `src/game/camera.{h,cpp}` with 30 unit checks (`camera_test`); shared helpers in `game_helpers.h` / `game_condition.h` / `game_internal.h`; new `docs/CODE_LAYOUT.md`; `texture_test` (the last accepted M0 gap) fixed -- 17/17 tests pass; native walk re-verified under Xvfb. No behaviour change. |
 | S1 — Entity footprint (1/2/4 grids) + roamers | ⬜ Not started | Rules and data contract in `ART_AND_ABILITY_DESIGN.md` sections 1.7 / 3.6: only 1/2/4 grids, fixed 32px per grid, no footprint overlap inside a cell, elites never change footprint, 4 grids means boss-or-special-event. |
 | S2 — 70-floor generator | ⬜ Not started | `tools/gen_floors.py` + floor table + connectivity validation (`STORY_DATA_SCHEMA.md` section 5). |
 | S3 — Story data + condition DSL + save v3 | ⬜ Not started | `story.json` v3, `ch_01..ch_03`, event pools, `choiceMade` / `sideStoryState` / counters / `cycleIndex`, save `schemaVersion: 3`. |
@@ -1812,6 +1817,57 @@ S1 is first in the order of work.
 against; the engine currently still ships the 11 hand-authored stages, the M6 press-and-hold battle
 (now replaced upstream by battle v2) and no skill tree, forging, hub, endings resolver or rebirth.
 
+
+### 2026-09-13 (later) — Source-layout refactor: `game.cpp` 3,104 -> 268 lines, camera is its own class
+
+Owner request: *"optimize the code, especially one file over 800 lines, ex: camera system should not
+be in same file, it should have its own file and class to make code easy to maintain."*
+
+**What was wrong.** `src/game/game.cpp` was a single 3,104-line translation unit holding assets,
+text/bar drawing, the whole scene draw, input routing, the backpack UI, shop + stage select + pause
+menu, combat resolution, story/mission glue, title/save glue and the debug overlay. The camera's six
+state fields (`camX_`, `camY_`, `camTargetX_`, `camTargetY_`, `viewCols_`, `cameraMode_`) and its
+math were scattered through `Game`.
+
+**What changed.**
+
+1. **`toms::Camera` is now its own class in its own file** (`src/game/camera.h/.cpp`, 85 + 57 lines):
+   mode (Follow/Rooms), zoom (`viewCols`, clamped to >= 4), current + target position, viewport
+   conversion (tile size / visible columns / rows), edge clamping, small-maze centring, Rooms
+   section alignment and the frame-rate-independent ease. It is deliberately free of Renderer/Stage/
+   Player coupling — the owner of a Camera feeds it the viewport in pixels, the grid size and the
+   focus tile — so it is pure math and unit-testable. `Game` keeps one adapter
+   (`Game::cameraViewportTiles`) because only `Game` knows the renderer's size.
+2. **`game.cpp` split by responsibility** into nine units, with `Game` unchanged as a class
+   (`game.h` still declares everything; only the definition site moved):
+   `game_assets.cpp` (224), `game_text_draw.cpp` (171), `game_scene_draw.cpp` (430),
+   `game_input.cpp` (277), `game_inventory.cpp` (274), `game_store.cpp` (629),
+   `game_combat.cpp` (150), `game_story.cpp` (162), `game_title_glue.cpp` (411). New shared headers:
+   `game_helpers.h` (inline `C4` / `trParam` / `readJsonFile` / `cellSprite` / `entSprite` / sprite
+   order / virtual-pad table / `g_textGame`), `game_condition.h` (`GameConditionContext`),
+   `game_internal.h` (the include set the units share). Largest file is now 629 lines -- nothing
+   above the 800-line threshold -- and `game.cpp` is 268.
+3. **New test: `camera_test.cpp`** (30 checks) -- zoom-to-pixel mapping, viewport rows, clamping to
+   >= 4 columns, edge clamping, centring when the maze is smaller than the viewport, Rooms section
+   alignment, mode index round-trip, snap vs ease, no overshoot, settling exactly, and
+   frame-rate independence (one 200 ms step == 4 x 50 ms).
+4. **`texture_test` fixed** (the last accepted M0 gap): it failed to compile because the target
+   lacked GLFW's include dir while it builds `renderer.cpp`; with that fixed it then failed 2 checks
+   because it pointed at `assets/font_atlas.png`, which the 2026-09-11 multi-language pull deleted
+   (bitmap atlas -> TTF subsetting). It now points at a tracked PNG. **17/17 test binaries pass.**
+5. New reference doc: **`docs/CODE_LAYOUT.md`** (TC) -- per-file responsibilities, the boundary
+   rules for where new code goes, and the `Camera` interface.
+
+**Verification (behaviour must be unchanged).**
+- `tower_vulkan` builds; `./build_web.sh webgl` builds the Emscripten target from the same source list.
+- All 17 test binaries pass, including the new `camera_test: ALL PASS`.
+- Native walk under Xvfb with real key events: title -> New Game -> dungeon, then hold Right/Down --
+  **17.2%** of the frame changed (the maze scrolled; an idle frame differs by 1.5%, which is just the
+  title pulse), the player sprite moved, and the HUD / virtual pad / bottom story line all still drew
+  correctly.
+
+No gameplay values, drawing order or data formats changed; this was a pure move of definitions plus
+one extracted class. Next step is still **S1** (entity footprint), unchanged.
 
 ## Open Questions / Blockers
 

@@ -39,6 +39,11 @@ web-gpu/
 build-web-debug/
 web-debug/
 
+# build_web.sh writes a per-build *stamped* copy of every artifact (toms_web.<sha>-<timestamp>.{js,wasm,data})
+# next to the plain-named ones; the stamp is the cache-buster the page references, and both sets are
+# regenerated on every build, so they are not source. The plain-named copies in web/ stay tracked.
+/web/toms_web.*.*
+
 # Stray shader blobs a local build/run drops in the repo root: byte-identical duplicates of the
 # tracked assets/shaders/ copies (they showed up as untracked noise in every `git status`).
 # Root-anchored so assets/shaders/*.spv keeps being tracked.
