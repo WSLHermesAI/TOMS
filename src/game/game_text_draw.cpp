@@ -22,7 +22,13 @@ static std::u32string utf8_to_utf32(const std::string& s) {
     return out;
 }
 
+// B (mobile): one multiplier for every on-screen text size. Set by the platform entry point (the
+// browser sets 1.25 on small screens), read by drawText/measureText so text and its measurement can
+// never disagree -- the two must use the same scale or centred/right-aligned strings drift.
+namespace toms { float g_uiScale = 1.0f; }
+
 void Game::drawText(const std::string& s, float x, float y, float size, const float tint[4]) {
+    size *= toms::g_uiScale;
     float cx = x;
     std::u32string cps = utf8_to_utf32(s);
     bool fontChanged = false;
@@ -92,6 +98,7 @@ void Game::drawTextPublic(const std::string& s, float x, float y, float sz, cons
 }
 
 float Game::measureText(const std::string& s, float size) const {
+    size *= toms::g_uiScale;      // must match drawText (B)
     float w = 0;
     std::u32string cps = utf8_to_utf32(s);
     float s2 = (font_ ? size / (float)font_->cellSize() : 1.0f);

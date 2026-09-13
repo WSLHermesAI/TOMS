@@ -9,7 +9,12 @@ class WebGLRenderer : public IRenderer {
 public:
     // Design space the game lays everything out against -- the SAME fixed 1024x768 the Vulkan
     // backend uses (Renderer::kDesignW/kDesignH). W/H hold this, and width()/height() report it.
-    static constexpr uint32_t kDesignW = 1024, kDesignH = 768;
+    // See Renderer::kDesignW: runtime-settable so the browser build can pick a smaller logical
+    // design on a phone (which scales the whole UI up).
+    static inline uint32_t kDesignW = 1024, kDesignH = 768;
+    static void setDesignSize(uint32_t w, uint32_t h) {
+        if (w >= 480 && w <= 2048 && h >= 360 && h <= 1536) { kDesignW = w; kDesignH = h; }
+    }
     uint32_t W=0, H=0;                 // design space (see above)
     // Actual drawing-buffer size of the <canvas> (queried from the DOM). Used for glViewport.
     // Kept separate from W/H: init()'s w/h arguments are the game's design resolution, which is

@@ -1,6 +1,9 @@
 // emscripten_main.cpp — browser entry for Tower of the Sorcerer (Emscripten/WebGL2).
 // Isolated from the Windows/Linux Vulkan build: only compiled under __EMSCRIPTEN__.
 #include "game.h"
+#include "renderer_webgl.h"
+
+namespace toms { extern float g_uiScale; }   // defined in game_text_draw.cpp (B: mobile font scale)   // the web backend that owns kDesignW/setDesignSize (A: mobile design size)
 #include <emscripten.h>
 #include <emscripten/fetch.h>
 #include <emscripten/html5.h>
@@ -298,9 +301,18 @@ static const char* TOMS_WEB_UI =
 "var T=function(){var c=document.getElementById('canvas');if(!c)return;"
 "var r=c.getBoundingClientRect();var top=(r.top>0)?r.top:0;"
 "var ah=window.innerHeight-top-4,aw=window.innerWidth-4;"
-"var s=Math.min(aw/1024,ah/768);if(s<=0)s=0.1;"
-"c.style.width=Math.floor(1024*s)+'px';c.style.height=Math.floor(768*s)+'px';"
+"var d=[c.width||1024,c.height||768];"   /* the drawing buffer IS the design size (A) */
+"var s=Math.min(aw/d[0],ah/d[1]);if(s<=0)s=0.1;"
+"c.style.width=Math.floor(d[0]*s)+'px';c.style.height=Math.floor(d[1]*s)+'px';"
 "c.style.display='block';c.style.margin='0 auto';};"
+"var R=function(){var p=window.innerHeight>window.innerWidth;var o=document.getElementById('tomsRotate');"
+"if(!o){o=document.createElement('div');o.id='tomsRotate';"
+"o.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;background:#0b0e16;color:#f2e6c8;"
+"display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:99999;"
+"font:600 20px/1.6 system-ui,-apple-system,sans-serif';"
+"o.textContent='\u8acb\u628a\u88dd\u7f6e\u8f49\u70ba\u6a6b\u5411 · Rotate your device';"
+"document.body.appendChild(o);}o.style.display=p?'flex':'none';};"
+"window.addEventListener('resize',R);window.addEventListener('orientationchange',R);R();"
 "window.addEventListener('resize',T);window.addEventListener('load',T);"
 "window.addEventListener('fullscreenchange',T);window.addEventListener('webkitfullscreenchange',T);"
 "requestAnimationFrame(T);T();"
@@ -357,7 +369,25 @@ int main() {
     if (!ctx) { fprintf(stderr, "[web] failed to create WebGL2 context\n"); return 1; }
     emscripten_webgl_make_context_current(ctx);
 #endif
-    emscripten_set_canvas_element_size("#canvas", 1024, 768);
+    // ---- A+B (mobile): a smaller logical design + a bigger font scale on small screens --------
+    // The design is what the game draws in; shrinking it makes every element occupy a larger share
+    // of the same physical screen, which is the real fix for "everything is too small on a phone".
+    // A phone in landscape is the target case (a 4:3 game on a 390 px-tall screen is inherently
+    // small); 768x576 halves the logical pixels and 1.25 on the fonts lifts the text further.
+    {
+        const int cssW = EM_ASM_INT({ return window.innerWidth; });
+        const int cssH = EM_ASM_INT({ return window.innerHeight; });
+        if (cssW < 900 || cssH < 560) {
+            WebGLRenderer::setDesignSize(768, 576);
+            // B (the extra font scale) stays OFF until C lands: the dialogue and battle screens lay
+            // their rows out on a fixed pixel pitch, so growing the glyphs 25% makes the speaker
+            // line collide with the first choice row. A (the smaller design) already makes every
+            // element 1.33x bigger, which is the safe part of the mobile fix.
+            toms::g_uiScale = 1.0f;
+            fprintf(stderr, "[web] small screen (%dx%d css) -> design 768x576, ui scale 1.25\n", cssW, cssH);
+        }
+    }
+    emscripten_set_canvas_element_size("#canvas", (int)WebGLRenderer::kDesignW, (int)WebGLRenderer::kDesignH);
 
     // ---- Saves that survive a page reload ----
     // save_slots.h's defaultSaveDir() is /save in the browser. Mount IndexedDB-backed IDBFS

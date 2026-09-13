@@ -142,7 +142,16 @@ public:
     // space" convention already established for touch input (see stage.h's handleTouch doc
     // comment and the web build's toBP()). The actual window can be resized to any size/aspect
     // ratio; only the viewport (see computeAspectFitViewport) scales to fit it, letterboxed.
-    static constexpr uint32_t kDesignW = 1024, kDesignH = 768;
+    // Design (logical) resolution -- what the game draws and hit-tests in. It used to be a
+    // constexpr; it is now runtime-settable so a small screen can render the SAME design at a
+    // smaller logical size, which scales every element (text, buttons, the pad, the dialogue and
+    // battle panels) up by the same factor in one place. Owner request (mobile): "everything is too
+    // small ... the text the buttons all too small". Desktop stays 1024x768; phones use 768x576.
+    static inline uint32_t kDesignW = 1024, kDesignH = 768;
+    // Guarded so a nonsense size can never leave the game with an unusable layout.
+    static void setDesignSize(uint32_t w, uint32_t h) {
+        if (w >= 480 && w <= 2048 && h >= 360 && h <= 1536) { kDesignW = w; kDesignH = h; }
+    }
 
     struct ViewportRect { float x, y, width, height; };
     // Computes a centered, aspect-correct viewport rect (in device/window pixels) that fits
