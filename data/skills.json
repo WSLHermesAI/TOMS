@@ -1,0 +1,62 @@
+{
+  "s_yinqi": {
+    "id": "s_yinqi",
+    "lineage": "yinqi",
+    "tier": 0,
+    "cost": 0,
+    "requires": [],
+    "name": { "zh_TW": "引氣", "en": "Qi Drawing", "zh_CN": "引气", "ja": "引氣", "ko": "인기", "es": "Extracción de Qi" },
+    "desc": { "zh_TW": "戰鬥的根本：引動體內之氣，攻擊時多出一分力道。", "en": "The root of combat: draw on your own qi for a little extra force behind every attack.", "zh_CN": "战斗的根本：引动体内之气，攻击时多出一分力道。", "ja": "戦闘の根本。体内の気を引き、攻撃に僅かな力を加える。", "ko": "전투의 근본. 체내의 기를 끌어내 공격에 약간의 힘을 더합니다.", "es": "La base del combate: extrae tu propio qi para dar algo más de fuerza a cada ataque." },
+    "effect": { "atk": 1 }
+  },
+  "s_yinqi_1": {
+    "id": "s_yinqi_1",
+    "lineage": "yinqi",
+    "tier": 1,
+    "cost": 1,
+    "requires": ["s_yinqi"],
+    "name": { "zh_TW": "引氣・貫", "en": "Qi Drawing: Piercing", "zh_CN": "引气・贯", "ja": "引氣・貫", "ko": "인기・관", "es": "Extracción de Qi: Perforante" },
+    "desc": { "zh_TW": "深化引氣之法，出手更為凌厲。", "en": "Deepens Qi Drawing — your attacks land noticeably harder.", "zh_CN": "深化引气之法，出手更为凌厉。", "ja": "引氣をさらに深め、一撃がより鋭くなる。", "ko": "인기를 더욱 심화하여 공격이 한층 매섭습니다.", "es": "Profundiza la Extracción de Qi: tus ataques golpean notablemente más fuerte." },
+    "effect": { "atk": 2 }
+  },
+  "s_yuqi": {
+    "id": "s_yuqi",
+    "lineage": "yuqi",
+    "tier": 0,
+    "cost": 0,
+    "requires": [],
+    "name": { "zh_TW": "禦氣", "en": "Qi Warding", "zh_CN": "御气", "ja": "禦氣", "ko": "어기", "es": "Guardia de Qi" },
+    "desc": { "zh_TW": "以氣護體，格擋時能多卸去一分傷害。", "en": "Ward your body with qi — every guard absorbs a little more damage.", "zh_CN": "以气护体，格挡时能多卸去一分伤害。", "ja": "気で体を守り、防御時により多くの傷害を軽減する。", "ko": "기로 몸을 지켜, 방어 시 피해를 조금 더 흡수합니다.", "es": "Protege tu cuerpo con qi: cada bloqueo absorbe algo más de daño." },
+    "effect": { "def": 1 }
+  },
+  "s_yuqi_1": {
+    "id": "s_yuqi_1",
+    "lineage": "yuqi",
+    "tier": 1,
+    "cost": 1,
+    "requires": ["s_yuqi"],
+    "name": { "zh_TW": "禦氣・壁", "en": "Qi Warding: Bulwark", "zh_CN": "御气・壁", "ja": "禦氣・壁", "ko": "어기・벽", "es": "Guardia de Qi: Baluarte" },
+    "desc": { "zh_TW": "深化禦氣之法，護體之氣如壁。", "en": "Deepens Qi Warding — your ward stands like a wall.", "zh_CN": "深化御气之法，护体之气如壁。", "ja": "禦氣をさらに深め、身を守る気が壁のようになる。", "ko": "어기를 더욱 심화하여 몸을 지키는 기운이 벽처럼 단단해집니다.", "es": "Profundiza la Guardia de Qi: tu protección se vuelve tan firme como un muro." },
+    "effect": { "def": 2 }
+  },
+  "s_faqi": {
+    "id": "s_faqi",
+    "lineage": "faqi",
+    "tier": 0,
+    "cost": 0,
+    "requires": [],
+    "name": { "zh_TW": "法氣", "en": "Technique Qi", "zh_CN": "法气", "ja": "法氣", "ko": "법기", "es": "Qi de Técnica" },
+    "desc": { "zh_TW": "法器與氣脈相通之法，攻守皆略有增益。", "en": "Attunes your qi to your gear — a small, balanced boost to both attack and defense.", "zh_CN": "法器与气脉相通之法，攻守皆略有增益。", "ja": "法器と気脈を通わせる法。攻守双方に僅かな恩恵を与える。", "ko": "법기와 기맥을 통하게 하는 법. 공격과 방어 모두에 소폭의 이득을 줍니다.", "es": "Sintoniza tu qi con tu equipo: una pequeña mejora equilibrada al ataque y la defensa." },
+    "effect": { "atk": 1, "def": 1 }
+  },
+  "s_faqi_1": {
+    "id": "s_faqi_1",
+    "lineage": "faqi",
+    "tier": 1,
+    "cost": 2,
+    "requires": ["s_faqi"],
+    "name": { "zh_TW": "法氣・融", "en": "Technique Qi: Fusion", "zh_CN": "法气・融", "ja": "法氣・融", "ko": "법기・융", "es": "Qi de Técnica: Fusión" },
+    "desc": { "zh_TW": "深化法氣之法，攻守增益更為顯著。", "en": "Deepens Technique Qi — the balanced boost grows more pronounced.", "zh_CN": "深化法气之法，攻守增益更为显著。", "ja": "法氣をさらに深め、攻守双方の恩恵がより顕著になる。", "ko": "법기를 더욱 심화하여 공격과 방어의 이득이 한층 뚜렷해집니다.", "es": "Profundiza el Qi de Técnica: la mejora equilibrada se hace más notable." },
+    "effect": { "atk": 1, "def": 1 }
+  }
+}

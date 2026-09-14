@@ -267,6 +267,78 @@
       "ko": "저장",
       "es": "Guardar Progreso"
     },
+    "ingame_menu.skills": {
+      "zh_TW": "功法",
+      "en": "Skills",
+      "zh_CN": "功法",
+      "ja": "功法",
+      "ko": "무공",
+      "es": "Técnicas"
+    },
+    "skill.points_label": {
+      "zh_TW": "可用點數：{n}",
+      "en": "Points available: {n}",
+      "zh_CN": "可用点数：{n}",
+      "ja": "使用可能ポイント：{n}",
+      "ko": "사용 가능 포인트: {n}",
+      "es": "Puntos disponibles: {n}"
+    },
+    "skill.cost_suffix": {
+      "zh_TW": "{n} 點",
+      "en": "{n} pt",
+      "zh_CN": "{n} 点",
+      "ja": "{n} ポイント",
+      "ko": "{n} 포인트",
+      "es": "{n} pt"
+    },
+    "ingame_menu.forge": {
+      "zh_TW": "鍛造",
+      "en": "Forge",
+      "zh_CN": "锻造",
+      "ja": "鍛造",
+      "ko": "제련",
+      "es": "Forja"
+    },
+    "forge.gold_label": {
+      "zh_TW": "持有金錢：{n}",
+      "en": "Gold on hand: {n}",
+      "zh_CN": "持有金钱：{n}",
+      "ja": "所持ゴールド：{n}",
+      "ko": "보유 골드: {n}",
+      "es": "Oro disponible: {n}"
+    },
+    "forge.unknown_recipe": {
+      "zh_TW": "未知圖譜",
+      "en": "Unknown Blueprint",
+      "zh_CN": "未知图谱",
+      "ja": "未知の設計図",
+      "ko": "미확인 도면",
+      "es": "Plano desconocido"
+    },
+    "forge.recipe_learned_prefix": {
+      "zh_TW": "習得圖譜：",
+      "en": "Blueprint learned: ",
+      "zh_CN": "习得图谱：",
+      "ja": "設計図習得：",
+      "ko": "도면 습득: ",
+      "es": "Plano aprendido: "
+    },
+    "ingame_menu.village": {
+      "zh_TW": "村莊",
+      "en": "Village",
+      "zh_CN": "村庄",
+      "ja": "村",
+      "ko": "마을",
+      "es": "Aldea"
+    },
+    "hub.unknown_location": {
+      "zh_TW": "未知地點",
+      "en": "Unknown Location",
+      "zh_CN": "未知地点",
+      "ja": "未知の場所",
+      "ko": "미확인 장소",
+      "es": "Lugar desconocido"
+    },
     "ingame_menu.back_to_title": {
       "zh_TW": "返回標題",
       "en": "Back to Title",
@@ -754,6 +826,14 @@
       "ja": "購入しました：{name}！",
       "ko": "구매 완료: {name}!",
       "es": "¡Comprado: {name}!"
+    },
+    "skill.unlocked_prefix": {
+      "zh_TW": "習得功法：",
+      "en": "Skill unlocked: ",
+      "zh_CN": "习得功法：",
+      "ja": "功法習得：",
+      "ko": "무공 습득: ",
+      "es": "Técnica desbloqueada: "
     },
     "mission.completed_prefix": {
       "zh_TW": "任務完成：",

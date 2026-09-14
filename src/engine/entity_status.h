@@ -1,6 +1,6 @@
 // entity_status.h — per-stage-tile runtime status for enemies/items/doors/NPCs, persisted via
 // RunSaveData::entityStatus (src/game/save_system.h). See
-// docs/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §5.2 and docs/IMPLEMENTATION_ROADMAP.md
+// docs/architecture/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §5.2 and docs/architecture/IMPLEMENTATION_ROADMAP.md
 // Milestone 3.
 //
 // Stored as plain strings in the map (not a typed struct) so it round-trips through JSON via

@@ -8,6 +8,7 @@ namespace toms { extern float g_uiScale; extern int g_padShiftY; }   // defined 
 #include <emscripten/fetch.h>
 #include <emscripten/html5.h>
 #include <GLES3/gl3.h>
+#include <algorithm>
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -87,6 +88,54 @@ int jsRunCounter(const char* name) {
     if (!g_game || !name) return -999;
     return g_game->runState().counter(name);
 }
+// S4 probes: skill points/owned count, whether a specific id is owned, and a direct-unlock hook
+// (mirrors jsDebugBattle -- exercises Game::tryUnlockSkill without needing pixel-perfect UI taps).
+EMSCRIPTEN_KEEPALIVE
+int jsSkillInfo(int which) {
+    if (!g_game) return -1;
+    if (which == 0) return g_game->runState().skillPoints();
+    if (which == 1) return (int)g_game->runState().skillsOwned().size();
+    return -1;
+}
+EMSCRIPTEN_KEEPALIVE
+int jsHasSkill(const char* id) { return (g_game && id && g_game->runState().hasSkill(id)) ? 1 : 0; }
+EMSCRIPTEN_KEEPALIVE
+int jsUnlockSkill(const char* id) { return (g_game && id && g_game->tryUnlockSkill(id)) ? 1 : 0; }
+// S5 probes: mirrors the S4 skill probes above -- known-recipe count, whether a specific id is
+// known, and a direct-craft hook, so a page driver can exercise Game::tryCraft() without walking
+// to ch_03/F15+ first.
+EMSCRIPTEN_KEEPALIVE
+int jsForgeInfo(int which) {
+    if (!g_game) return -1;
+    if (which == 0) return (int)g_game->forgeRecipesKnown().size();
+    if (which == 1) return g_game->player().gold;
+    return -1;
+}
+EMSCRIPTEN_KEEPALIVE
+int jsHasRecipe(const char* id) {
+    if (!g_game || !id) return 0;
+    const auto& known = g_game->forgeRecipesKnown();
+    return (std::find(known.begin(), known.end(), std::string(id)) != known.end()) ? 1 : 0;
+}
+EMSCRIPTEN_KEEPALIVE
+int jsCraft(const char* id) { return (g_game && id && g_game->tryCraft(id)) ? 1 : 0; }
+EMSCRIPTEN_KEEPALIVE
+void jsAddGold(int n) { if (g_game) g_game->player().gold += n; }
+EMSCRIPTEN_KEEPALIVE
+void jsAddItem(const char* id) { if (g_game && id) g_game->player().inv.push_back(id); }
+// S6 probes: mirrors the S4/S5 probes above -- whether a hub location is unlocked (its run flag
+// is set) and a direct-activate hook, so a page driver can exercise Game::activateHubLocation()
+// without walking to F7 (ch_01's hub.village grant) first.
+EMSCRIPTEN_KEEPALIVE
+int jsHubUnlocked(const char* id) {
+    if (!g_game || !id) return 0;
+    auto& defs = g_game->hubDefs();
+    auto it = defs.find(id);
+    if (it == defs.end()) return 0;
+    return g_game->runState().flag(it->second.unlockFlag) ? 1 : 0;
+}
+EMSCRIPTEN_KEEPALIVE
+int jsActivateHub(const char* id) { return (g_game && id && g_game->activateHubLocation(id)) ? 1 : 0; }
 EMSCRIPTEN_KEEPALIVE
 int jsRunInfo(int which) {
     if (!g_game) return -1;
@@ -159,6 +208,8 @@ int jsPlayerInfo(int which) {
     if (!g_game) return -1;
     if (which == 0) return g_game->player().x;
     if (which == 1) return g_game->player().y;
+    if (which == 2) return g_game->effectiveAtk();   // S4 probe: base + equipment + skills
+    if (which == 3) return g_game->effectiveDef();
     return -1;
 }
 EMSCRIPTEN_KEEPALIVE

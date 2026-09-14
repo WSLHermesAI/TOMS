@@ -157,7 +157,7 @@ public:
     // Computes a centered, aspect-correct viewport rect (in device/window pixels) that fits
     // kDesignW x kDesignH into a deviceW x deviceH window without stretching -- the same
     // "letterbox/pillarbox" technique as the reference cOpenGLRender::
-    // SetAcceptRationWithGameresolution this was ported from (see PROGRESS_REPORT.md).
+    // SetAcceptRationWithGameresolution this was ported from (see docs/progress_report/PROGRESS_REPORT.md).
     static ViewportRect computeAspectFitViewport(uint32_t deviceW, uint32_t deviceH,
                                                   uint32_t targetW, uint32_t targetH);
     // Maps a device/window pixel coordinate (e.g. a GLFW cursor position, already converted to

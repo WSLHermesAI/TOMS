@@ -10,7 +10,7 @@ is read from the existing file and written back unchanged. Do NOT confuse this w
 gen_content.py, the original from-scratch content generator (hardcoded to a different
 machine's path) -- running that would wipe out all of Milestone 8's authored content.
 
-Design (owner-approved, see docs/PROGRESS_REPORT.md Milestone 9 log):
+Design (owner-approved, see docs/progress_report/PROGRESS_REPORT.md Milestone 9 log):
   - Maze *shape* is generated fresh per floor; the *entity roster* (same monster
     types/counts, same NPC, same keys/doors, same items) is preserved exactly from
     today's files and auto-placed onto the new layout by rule:

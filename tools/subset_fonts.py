@@ -12,7 +12,7 @@ future translation needs a codepoint that got left out of a regenerated subset).
 
 Run this again whenever new translated text is added (a new language, new dialogue, new
 item/stage text) so the shipped fonts stay covering everything Font::collectFromFiles()
-will bake at runtime (see Game::loadAssets() in src/game/game.cpp).
+will bake at runtime (see Game::loadAssets() in src/game/core/game.cpp).
 
 Requires: `pip install fonttools`. Needs the FULL (non-subsetted) source fonts, which are
 NOT kept in this repo (that would defeat the point of subsetting) -- download them fresh:

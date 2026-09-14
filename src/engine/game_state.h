@@ -1,6 +1,6 @@
 // game_state.h — the master Game State Machine.
-// See docs/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §4 and
-// docs/IMPLEMENTATION_ROADMAP.md Milestone 1. Names every screen/mode the game can be in and
+// See docs/architecture/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §4 and
+// docs/architecture/IMPLEMENTATION_ROADMAP.md Milestone 1. Names every screen/mode the game can be in and
 // the legal transitions between them. Pure data + validation; owns no gameplay state itself —
 // Game::currentState() (src/game/game.cpp) derives the *current* GameState from the game's real
 // flags for observability, but does not yet route control flow through tryTransition() for the
@@ -50,7 +50,7 @@ inline const char* toString(GameState s) {
 }
 
 // The legal transition table, matching the flow diagram in
-// docs/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §4.2. Every state appears at least once as a
+// docs/architecture/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §4.2. Every state appears at least once as a
 // "from" (no dead ends) and every state is reachable from Boot (no unreachable states) —
 // both invariants are asserted by state_machine_test rather than just assumed here.
 inline const std::vector<std::pair<GameState, GameState>>& transitionTable() {

@@ -11,12 +11,33 @@ set(STB_DIR ${CMAKE_SOURCE_DIR}/external/stb)
 set(JSON_DIR ${CMAKE_SOURCE_DIR}/external/json)
 
 # Source tree split:
-#   src/game/    — gameplay (main, Game, Stage, Audio)
+#   src/game/    — gameplay (main, Game, Stage, Audio), itself split by category (see below)
 #   src/engine/  — node scene-graph + render + core infra (fonts, textures, shaders, tests)
 set(GAME_DIR   ${CMAKE_SOURCE_DIR}/src/game)
 set(ENGINE_DIR ${CMAKE_SOURCE_DIR}/src/engine)
 
-# Dear ImGui (Milestone 2 — see docs/IMPLEMENTATION_ROADMAP.md). Pinned to v1.90.9, the last
+# src/game/ is organized into category subfolders (2026-09-14 reorg) so a reader can find code by
+# what it does rather than scanning one 59-file flat directory:
+#   core/    — the Game class itself + its translation-unit split (game.h + game_*.cpp), main.cpp,
+#              stage.h -- everything that IS the game loop, not a reusable subsystem of it.
+#   systems/ — self-contained gameplay subsystems (equipment/skill/forge/mission, run/story state,
+#              floor table, footprints+roamer AI, camera) -- each pure content+logic with its own
+#              test, no Game dependency.
+#   save/    — persistence: save_system (meta/run schema), save_slots, game_settings.
+#   ui/      — title screen, the design-size layout primitive, the 6-language string table.
+#   audio/   — Audio.h/.cpp (miniaudio wrapper).
+# Every #include "foo.h" inside src/game/ stays a bare filename (unchanged by this reorg) -- name
+# collisions were never possible in the old flat layout, so making every one of these directories
+# part of the include search path (below) preserves that same resolution exactly; only the file
+# LIST below (which .cpp feeds which target) needed each path updated to its new subfolder.
+set(GAME_CORE    ${GAME_DIR}/core)
+set(GAME_SYSTEMS ${GAME_DIR}/systems)
+set(GAME_SAVE    ${GAME_DIR}/save)
+set(GAME_UI      ${GAME_DIR}/ui)
+set(GAME_AUDIO   ${GAME_DIR}/audio)
+set(GAME_INCLUDE_DIRS ${GAME_DIR} ${GAME_CORE} ${GAME_SYSTEMS} ${GAME_SAVE} ${GAME_UI} ${GAME_AUDIO})
+
+# Dear ImGui (Milestone 2 — see docs/architecture/IMPLEMENTATION_ROADMAP.md). Pinned to v1.90.9, the last
 # release before the Vulkan backend's init API changed shape (RenderPass moved from a second
 # ImGui_ImplVulkan_Init() argument into the InitInfo struct around v1.91).
 # Declared here, NOT inside `if(NOT WEB)`: M2 is "ImGui wired into all three renderer backends",
@@ -101,41 +122,43 @@ if(NOT WEB)
     endif()
 
     add_executable(tower_vulkan
-        ${GAME_DIR}/main.cpp ${GAME_DIR}/game.cpp ${ENGINE_DIR}/renderer.cpp
+        ${GAME_CORE}/main.cpp ${GAME_CORE}/game.cpp ${ENGINE_DIR}/renderer.cpp
         ${ENGINE_DIR}/node.cpp ${ENGINE_DIR}/font.cpp
-        ${ENGINE_DIR}/render_iface.h ${GAME_DIR}/Audio.cpp ${ENGINE_DIR}/vk_util.h
-        ${GAME_DIR}/save_system.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/entity_status.cpp
-        ${ENGINE_DIR}/encounter.cpp ${GAME_DIR}/mission_system.cpp
-        ${ENGINE_DIR}/power_bar.cpp ${GAME_DIR}/equipment_system.cpp
+        ${ENGINE_DIR}/render_iface.h ${GAME_AUDIO}/Audio.cpp ${ENGINE_DIR}/vk_util.h
+        ${GAME_SAVE}/save_system.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/entity_status.cpp
+        ${ENGINE_DIR}/encounter.cpp ${GAME_SYSTEMS}/mission_system.cpp
+        ${ENGINE_DIR}/power_bar.cpp ${GAME_SYSTEMS}/equipment_system.cpp ${GAME_SYSTEMS}/skill_system.cpp
+        ${GAME_SYSTEMS}/forge_system.cpp
+        ${GAME_SYSTEMS}/hub_system.cpp
         ${ENGINE_DIR}/imgui_layer.h ${ENGINE_DIR}/imgui_layer.cpp
         # Title phase (New Game / Continue / Settings): save slots, preferences, string table.
-        ${GAME_DIR}/save_slots.cpp ${GAME_DIR}/game_settings.cpp
-        ${GAME_DIR}/localization.cpp ${GAME_DIR}/title_screen.cpp
+        ${GAME_SAVE}/save_slots.cpp ${GAME_SAVE}/game_settings.cpp
+        ${GAME_UI}/localization.cpp ${GAME_UI}/title_screen.cpp
         # Refactor: the maze camera is its own translation unit + class (was ~120 lines inside
         # game.cpp/game.h mixed with unrelated logic) -- see src/game/camera.h, camera_test.cpp.
-        ${GAME_DIR}/camera.cpp
+        ${GAME_SYSTEMS}/camera.cpp
         # S1: 佔格 footprints (footprint.h) + the floor-wanderer AI (roamer.h/.cpp) -- own files,
         # like camera.cpp above.
-        ${GAME_DIR}/roamer.cpp
+        ${GAME_SYSTEMS}/roamer.cpp
         # S3: per-run story state (choices/counters/side stories/flags/shards) -- its own class, see
         # run_state.h; persisted as RunSaveData schemaVersion 3.
-        ${GAME_DIR}/run_state.cpp
-        ${GAME_DIR}/floor_table.cpp
+        ${GAME_SYSTEMS}/run_state.cpp
+        ${GAME_SYSTEMS}/floor_table.cpp
         # Refactor (2026-09-13): game.cpp was a single 3,100-line translation unit; it is now split
         # by responsibility into these units (game.h still declares everything; Game is unchanged
         # as a class, and shared file-local helpers moved to game_helpers.h).
-        ${GAME_DIR}/game_assets.cpp ${GAME_DIR}/game_text_draw.cpp
-        ${GAME_DIR}/game_scene_draw.cpp ${GAME_DIR}/game_input.cpp
-        ${GAME_DIR}/game_inventory.cpp ${GAME_DIR}/game_store.cpp
-        ${GAME_DIR}/game_combat.cpp ${GAME_DIR}/game_story.cpp
-        ${GAME_DIR}/game_title_glue.cpp
+        ${GAME_CORE}/game_assets.cpp ${GAME_CORE}/game_text_draw.cpp
+        ${GAME_CORE}/game_scene_draw.cpp ${GAME_CORE}/game_input.cpp
+        ${GAME_CORE}/game_inventory.cpp ${GAME_CORE}/game_store.cpp
+        ${GAME_CORE}/game_combat.cpp ${GAME_CORE}/game_story.cpp
+        ${GAME_CORE}/game_title_glue.cpp
         ${imgui_SOURCE_DIR}/imgui.cpp ${imgui_SOURCE_DIR}/imgui_draw.cpp
         ${imgui_SOURCE_DIR}/imgui_tables.cpp ${imgui_SOURCE_DIR}/imgui_widgets.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp)
 
     target_include_directories(tower_vulkan PRIVATE
-        ${GAME_DIR} ${ENGINE_DIR}
+        ${GAME_INCLUDE_DIRS} ${ENGINE_DIR}
         ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
         ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
         $ENV{GLM_DIR} $ENV{HOME}/opt/glm
@@ -217,33 +240,35 @@ if(WEB)
 
     add_executable(toms_web
         ${ENGINE_DIR}/emscripten_main.cpp
-        ${GAME_DIR}/game.cpp
+        ${GAME_CORE}/game.cpp
         ${ENGINE_DIR}/renderer_webgl.cpp
         ${ENGINE_DIR}/font.cpp
         ${ENGINE_DIR}/node.cpp
-        ${GAME_DIR}/save_system.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/entity_status.cpp
-        ${ENGINE_DIR}/encounter.cpp ${GAME_DIR}/mission_system.cpp
-        ${ENGINE_DIR}/power_bar.cpp ${GAME_DIR}/equipment_system.cpp
-        ${GAME_DIR}/Audio.cpp
+        ${GAME_SAVE}/save_system.cpp ${ENGINE_DIR}/condition.cpp ${ENGINE_DIR}/entity_status.cpp
+        ${ENGINE_DIR}/encounter.cpp ${GAME_SYSTEMS}/mission_system.cpp
+        ${ENGINE_DIR}/power_bar.cpp ${GAME_SYSTEMS}/equipment_system.cpp ${GAME_SYSTEMS}/skill_system.cpp
+        ${GAME_SYSTEMS}/forge_system.cpp
+        ${GAME_SYSTEMS}/hub_system.cpp
+        ${GAME_AUDIO}/Audio.cpp
         # Title phase (New Game / Continue / Settings): slots + preferences + string table.
-        ${GAME_DIR}/save_slots.cpp ${GAME_DIR}/game_settings.cpp
-        ${GAME_DIR}/localization.cpp ${GAME_DIR}/title_screen.cpp
-        ${GAME_DIR}/camera.cpp
+        ${GAME_SAVE}/save_slots.cpp ${GAME_SAVE}/game_settings.cpp
+        ${GAME_UI}/localization.cpp ${GAME_UI}/title_screen.cpp
+        ${GAME_SYSTEMS}/camera.cpp
         # S1: 佔格 footprints (footprint.h) + the floor-wanderer AI (roamer.h/.cpp) -- own files,
         # like camera.cpp above.
-        ${GAME_DIR}/roamer.cpp
+        ${GAME_SYSTEMS}/roamer.cpp
         # S3: per-run story state (choices/counters/side stories/flags/shards) -- its own class, see
         # run_state.h; persisted as RunSaveData schemaVersion 3.
-        ${GAME_DIR}/run_state.cpp
-        ${GAME_DIR}/floor_table.cpp
+        ${GAME_SYSTEMS}/run_state.cpp
+        ${GAME_SYSTEMS}/floor_table.cpp
         # Refactor (2026-09-13): game.cpp was a single 3,100-line translation unit; it is now split
         # by responsibility into these units (game.h still declares everything; Game is unchanged
         # as a class, and shared file-local helpers moved to game_helpers.h).
-        ${GAME_DIR}/game_assets.cpp ${GAME_DIR}/game_text_draw.cpp
-        ${GAME_DIR}/game_scene_draw.cpp ${GAME_DIR}/game_input.cpp
-        ${GAME_DIR}/game_inventory.cpp ${GAME_DIR}/game_store.cpp
-        ${GAME_DIR}/game_combat.cpp ${GAME_DIR}/game_story.cpp
-        ${GAME_DIR}/game_title_glue.cpp
+        ${GAME_CORE}/game_assets.cpp ${GAME_CORE}/game_text_draw.cpp
+        ${GAME_CORE}/game_scene_draw.cpp ${GAME_CORE}/game_input.cpp
+        ${GAME_CORE}/game_inventory.cpp ${GAME_CORE}/game_store.cpp
+        ${GAME_CORE}/game_combat.cpp ${GAME_CORE}/game_story.cpp
+        ${GAME_CORE}/game_title_glue.cpp
         # M2: Dear ImGui on the browser build. The desktop plumbing (imgui_layer.cpp) is
         # GLFW+Vulkan and does not exist here, so the web build gets the ImGui core plus the
         # OpenGL3 backend in its ES3 flavour (the WebGL2 context) and its own event bridge
@@ -258,7 +283,7 @@ if(WEB)
     endif()
 
     target_include_directories(toms_web PRIVATE
-        ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
+        ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
         ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends
         $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
@@ -334,7 +359,7 @@ if(NOT WEB)
 add_executable(texture_test ${ENGINE_DIR}/texture_test.cpp ${ENGINE_DIR}/texture.cpp ${ENGINE_DIR}/renderer.cpp
     ${ENGINE_DIR}/node.cpp ${ENGINE_DIR}/vk_util.h ${ENGINE_DIR}/render_iface.h)
 target_include_directories(texture_test PRIVATE
-    ${GAME_DIR} ${ENGINE_DIR}
+    ${GAME_INCLUDE_DIRS} ${ENGINE_DIR}
     ${Vulkan_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
     ${STB_DIR} ${JSON_DIR} ${CMAKE_SOURCE_DIR}/external/miniaudio
     ${glfw_SOURCE_DIR}/include               # renderer.cpp includes GLFW/glfw3.h
@@ -344,38 +369,38 @@ endif()
 
 # run_state_test: S3 -- per-run story state, the four new condition leaves, and the
 # schemaVersion 3 save round trip including the documented pre-v3 migration.
-add_executable(run_state_test ${GAME_DIR}/run_state_test.cpp ${GAME_DIR}/run_state.cpp
-        ${GAME_DIR}/floor_table.cpp
-    ${GAME_DIR}/save_system.cpp ${ENGINE_DIR}/condition.cpp)
+add_executable(run_state_test ${GAME_SYSTEMS}/run_state_test.cpp ${GAME_SYSTEMS}/run_state.cpp
+        ${GAME_SYSTEMS}/floor_table.cpp
+    ${GAME_SAVE}/save_system.cpp ${ENGINE_DIR}/condition.cpp)
 target_include_directories(run_state_test PRIVATE
-    ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+    ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
 # floor_table_test: S3.5 (a)/(b) -- the 70-floor tower as ordered data. Pure logic (chain ordering,
 # prev/next, dangling links, cycles) plus a validator over the shipped data/story/floors set: F01..F70
 # in chain order, ten acts of seven, one boss floor per act naming a map that exists, and every grid's
 # own exit agreeing with the table's nextFloor.
-add_executable(floor_table_test ${GAME_DIR}/floor_table_test.cpp ${GAME_DIR}/floor_table.cpp)
+add_executable(floor_table_test ${GAME_SYSTEMS}/floor_table_test.cpp ${GAME_SYSTEMS}/floor_table.cpp)
 
 # ui_layout_test: S3.6 ("C") -- the design-size/scale-aware layout primitive the pad, dialogue and
 # battle screens are being moved onto. Pure arithmetic + a measurer callback, so it runs headless.
-add_executable(ui_layout_test ${GAME_DIR}/ui_layout_test.cpp)
+add_executable(ui_layout_test ${GAME_UI}/ui_layout_test.cpp)
 
 # node_transform_test: the scene-graph transform chain (parent-composed world transform + its
 # inverse), which is what a node-based UI scale depends on. Header-only, runs headless.
 add_executable(node_transform_test ${ENGINE_DIR}/node_transform_test.cpp ${ENGINE_DIR}/node.cpp)
-target_include_directories(node_transform_test PRIVATE ${GAME_DIR} ${ENGINE_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
-target_include_directories(ui_layout_test PRIVATE ${GAME_DIR} ${ENGINE_DIR} ${JSON_DIR})
+target_include_directories(node_transform_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+target_include_directories(ui_layout_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
 target_include_directories(floor_table_test PRIVATE
-    ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+    ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
 # footprint_test: S1 (佔格 footprints + roamers). Pure logic + a validator over data/stages/*.json
 # and data/footprints.json -- no Vulkan/renderer dependency, so it runs everywhere, and it is the
 # gate a future floor file has to pass (legal sizes, no entity on a wall, no overlap, stairs still
 # reachable with the bigger blockers).
-add_executable(footprint_test ${GAME_DIR}/footprint_test.cpp ${GAME_DIR}/roamer.cpp
-    ${GAME_DIR}/localization.cpp)
+add_executable(footprint_test ${GAME_SYSTEMS}/footprint_test.cpp ${GAME_SYSTEMS}/roamer.cpp
+    ${GAME_UI}/localization.cpp)
 target_include_directories(footprint_test PRIVATE
-    ${GAME_DIR} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+    ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
 # font_test: build the runtime TTF atlas (stb_truetype) and verify glyph UVs.
 # No Vulkan device needed — pure CPU atlas rasterization + Object base.
@@ -384,7 +409,7 @@ target_include_directories(font_test PRIVATE
     ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
 # ---------------------------------------------------------------------------
-# Milestone 1 scaffolding tests (see docs/IMPLEMENTATION_ROADMAP.md): Game State Machine,
+# Milestone 1 scaffolding tests (see docs/architecture/IMPLEMENTATION_ROADMAP.md): Game State Machine,
 # Event Bus, Meta/Run save schema. All three are pure-STL / header-plus-json, no
 # Vulkan/GLFW dependency, so they build the same way on every platform.
 # Run: ./state_machine_test  ./event_bus_test  ./save_test
@@ -395,11 +420,11 @@ target_include_directories(state_machine_test PRIVATE ${ENGINE_DIR})
 add_executable(event_bus_test ${ENGINE_DIR}/event_bus_test.cpp ${ENGINE_DIR}/event_bus.h)
 target_include_directories(event_bus_test PRIVATE ${ENGINE_DIR})
 
-add_executable(save_test ${GAME_DIR}/save_test.cpp ${GAME_DIR}/save_system.cpp ${GAME_DIR}/save_system.h)
-target_include_directories(save_test PRIVATE ${GAME_DIR} ${JSON_DIR})
+add_executable(save_test ${GAME_SAVE}/save_test.cpp ${GAME_SAVE}/save_system.cpp ${GAME_SAVE}/save_system.h)
+target_include_directories(save_test PRIVATE ${GAME_INCLUDE_DIRS} ${JSON_DIR})
 
 # ---------------------------------------------------------------------------
-# Milestone 3 scaffolding tests (see docs/IMPLEMENTATION_ROADMAP.md): Condition/Flag
+# Milestone 3 scaffolding tests (see docs/architecture/IMPLEMENTATION_ROADMAP.md): Condition/Flag
 # Evaluator, Entity Status System, Story Controller. All pure-STL / header-plus-json, no
 # Vulkan/GLFW dependency.
 # Run: ./condition_eval_test  ./entity_status_test  ./story_controller_test
@@ -410,42 +435,57 @@ target_include_directories(condition_eval_test PRIVATE ${ENGINE_DIR} ${JSON_DIR}
 add_executable(entity_status_test ${ENGINE_DIR}/entity_status_test.cpp ${ENGINE_DIR}/entity_status.cpp ${ENGINE_DIR}/entity_status.h)
 target_include_directories(entity_status_test PRIVATE ${ENGINE_DIR})
 
-add_executable(story_controller_test ${GAME_DIR}/story_controller_test.cpp ${GAME_DIR}/save_system.cpp ${GAME_DIR}/story_controller.h)
-target_include_directories(story_controller_test PRIVATE ${GAME_DIR} ${JSON_DIR})
+add_executable(story_controller_test ${GAME_SYSTEMS}/story_controller_test.cpp ${GAME_SAVE}/save_system.cpp ${GAME_SYSTEMS}/story_controller.h)
+target_include_directories(story_controller_test PRIVATE ${GAME_INCLUDE_DIRS} ${JSON_DIR})
 
 # ---------------------------------------------------------------------------
-# Milestone 4 scaffolding tests (see docs/IMPLEMENTATION_ROADMAP.md): Encounter Resolution,
+# Milestone 4 scaffolding tests (see docs/architecture/IMPLEMENTATION_ROADMAP.md): Encounter Resolution,
 # Mission System. Pure-STL / header-plus-json, no Vulkan/GLFW dependency.
 # Run: ./encounter_resolve_test  ./mission_test
 # ---------------------------------------------------------------------------
 add_executable(encounter_resolve_test ${ENGINE_DIR}/encounter_resolve_test.cpp ${ENGINE_DIR}/encounter.cpp ${ENGINE_DIR}/encounter.h)
 target_include_directories(encounter_resolve_test PRIVATE ${ENGINE_DIR})
 
-add_executable(mission_test ${GAME_DIR}/mission_test.cpp ${GAME_DIR}/mission_system.cpp ${GAME_DIR}/mission_system.h)
-target_include_directories(mission_test PRIVATE ${GAME_DIR} ${JSON_DIR})
+add_executable(mission_test ${GAME_SYSTEMS}/mission_test.cpp ${GAME_SYSTEMS}/mission_system.cpp ${GAME_SYSTEMS}/mission_system.h)
+target_include_directories(mission_test PRIVATE ${GAME_INCLUDE_DIRS} ${JSON_DIR})
 
 # ---------------------------------------------------------------------------
-# Milestone 6 scaffolding tests (see docs/IMPLEMENTATION_ROADMAP.md): Power Bar minigame math,
+# Milestone 6 scaffolding tests (see docs/architecture/IMPLEMENTATION_ROADMAP.md): Power Bar minigame math,
 # Equipment System. Pure-STL / header-plus-json, no Vulkan/GLFW dependency.
 # Run: ./power_bar_test  ./equipment_test
 # ---------------------------------------------------------------------------
-add_executable(camera_test ${GAME_DIR}/camera_test.cpp ${GAME_DIR}/camera.cpp ${GAME_DIR}/camera.h)
-target_include_directories(camera_test PRIVATE ${GAME_DIR})
+add_executable(camera_test ${GAME_SYSTEMS}/camera_test.cpp ${GAME_SYSTEMS}/camera.cpp ${GAME_SYSTEMS}/camera.h)
+target_include_directories(camera_test PRIVATE ${GAME_INCLUDE_DIRS})
 
 add_executable(power_bar_test ${ENGINE_DIR}/power_bar_test.cpp ${ENGINE_DIR}/power_bar.cpp ${ENGINE_DIR}/power_bar.h)
 target_include_directories(power_bar_test PRIVATE ${ENGINE_DIR})
 
-add_executable(equipment_test ${GAME_DIR}/equipment_test.cpp ${GAME_DIR}/equipment_system.cpp ${ENGINE_DIR}/power_bar.cpp)
-target_include_directories(equipment_test PRIVATE ${GAME_DIR} ${ENGINE_DIR} ${JSON_DIR})
+add_executable(equipment_test ${GAME_SYSTEMS}/equipment_test.cpp ${GAME_SYSTEMS}/equipment_system.cpp ${ENGINE_DIR}/power_bar.cpp)
+target_include_directories(equipment_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
+
+# S4: the skill tree's pure content/math (skill_system.h/.cpp), same shape/reasoning as the
+# Equipment System above. Run: ./skill_system_test
+add_executable(skill_system_test ${GAME_SYSTEMS}/skill_system_test.cpp ${GAME_SYSTEMS}/skill_system.cpp ${GAME_SAVE}/save_system.cpp)
+target_include_directories(skill_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
+
+# S5: forging's pure content/math (forge_system.h/.cpp), same shape as the Equipment/Skill
+# Systems above. Run: ./forge_system_test
+add_executable(forge_system_test ${GAME_SYSTEMS}/forge_system_test.cpp ${GAME_SYSTEMS}/forge_system.cpp ${GAME_SAVE}/save_system.cpp)
+target_include_directories(forge_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
+
+# S6: the village hub's pure content (hub_system.h/.cpp), same shape as the Equipment/Skill/
+# Forge Systems above. Run: ./hub_system_test
+add_executable(hub_system_test ${GAME_SYSTEMS}/hub_system_test.cpp ${GAME_SYSTEMS}/hub_system.cpp ${GAME_SAVE}/save_system.cpp)
+target_include_directories(hub_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
 
 # ---------------------------------------------------------------------------
-# Title phase test (see docs/TITLE_PHASE.md): the New Game / Continue / Settings page state
+# Title phase test (see docs/design/TITLE_PHASE.md): the New Game / Continue / Settings page state
 # machine, save-slot files, persisted settings, and the string table. Pure game logic + file
 # I/O -- no Vulkan/GLFW, so it builds and runs anywhere.
 # Run: ./title_screen_test
 # ---------------------------------------------------------------------------
 add_executable(title_screen_test
-    ${GAME_DIR}/title_screen_test.cpp
-    ${GAME_DIR}/title_screen.cpp ${GAME_DIR}/save_slots.cpp
-    ${GAME_DIR}/save_system.cpp ${GAME_DIR}/game_settings.cpp ${GAME_DIR}/localization.cpp)
-target_include_directories(title_screen_test PRIVATE ${GAME_DIR} ${ENGINE_DIR} ${JSON_DIR})
+    ${GAME_UI}/title_screen_test.cpp
+    ${GAME_UI}/title_screen.cpp ${GAME_SAVE}/save_slots.cpp
+    ${GAME_SAVE}/save_system.cpp ${GAME_SAVE}/game_settings.cpp ${GAME_UI}/localization.cpp)
+target_include_directories(title_screen_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})

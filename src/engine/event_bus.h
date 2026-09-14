@@ -1,5 +1,5 @@
 // event_bus.h — minimal, type-safe pub/sub used to decouple gameplay systems.
-// See docs/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §13 #10 and §8.4 (Mission System progress
+// See docs/architecture/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §13 #10 and §8.4 (Mission System progress
 // ticks). Deliberately small: no priorities, no unsubscribe, no async dispatch — publish() calls
 // every subscriber for that exact event type synchronously, in subscription order. Grow this only
 // when a real consumer (Milestone 4's Mission System) actually needs more.

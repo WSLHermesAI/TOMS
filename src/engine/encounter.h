@@ -1,6 +1,6 @@
 // encounter.h — Encounter Resolution: decides what happens when a stage tile with an enemy/NPC
 // is entered (direct battle, dialogue-first, story-only, or a merchant), per
-// docs/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §5.3 and docs/IMPLEMENTATION_ROADMAP.md
+// docs/architecture/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §5.3 and docs/architecture/IMPLEMENTATION_ROADMAP.md
 // Milestone 4.
 //
 // Scope note (owner decision, this session): `direct_battle` stays the default for every

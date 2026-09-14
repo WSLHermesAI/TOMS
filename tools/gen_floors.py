@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""gen_floors.py — S2: generate the 70-floor data set (docs/STORY_DATA_SCHEMA.md section 5-6).
+"""gen_floors.py — S2: generate the 70-floor data set (docs/story/STORY_DATA_SCHEMA.md section 5-6).
 
 Inputs (the design contract):
-  * docs/STORY_DATA_SCHEMA.md section 5.1 + docs/STORY_BIBLE.md section 5 -- the floor table
+  * docs/story/STORY_DATA_SCHEMA.md section 5.1 + docs/story/STORY_BIBLE.md section 5 -- the floor table
     (maze size, rooms, loops, event nodes, enemy range, elites, items, difficulty tier).
-  * docs/STORY_BIBLE.md section 3 -- the 10 acts (seal, boss, act theme) and section 6 -- the ten
+  * docs/story/STORY_BIBLE.md section 3 -- the 10 acts (seal, boss, act theme) and section 6 -- the ten
     flagship side stories, one per act on that act's 5th floor.
-  * docs/SIDE_STORIES.md section 12 -- the seven event kinds and the per-act pool seeds.
-  * docs/STORY_DATA_SCHEMA.md section 3.2 -- which hand-authored stage is each act's boss floor.
+  * docs/story/SIDE_STORIES.md section 12 -- the seven event kinds and the per-act pool seeds.
+  * docs/story/STORY_DATA_SCHEMA.md section 3.2 -- which hand-authored stage is each act's boss floor.
 
 Outputs, per document section 1.2:
   * data/story/floors/F01.json .. F70.json          -- the floor SPEC (section 4 schema): maze
@@ -22,7 +22,7 @@ Two things are deliberately provisional until the phase that owns them (both are
 it exists, so nothing here blocks that phase):
   * enemy mixes and item tables per act -- the chapters (data/story/chapters/*.json, S3) own these.
   * the event pools (data/events/pool_*.json, S3) -- until they exist this script samples from a
-    built-in pool built from the documented pool seeds in SIDE_STORIES.md section 12.3 plus a
+    built-in pool built from the documented pool seeds in docs/story/SIDE_STORIES.md section 12.3 plus a
     documented common pool. Every generated floor still satisfies section 5.2's constraints
     (no repeated eventId on a floor, at least one relic/whisper, at least one cache).
 
@@ -45,10 +45,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'tools'))
 
 # The maze algorithm and the BFS reachability check are REUSED from tools/gen_mazes.py, as
-# STORY_DATA_SCHEMA.md section 5 requires ("沿用 tools/gen_mazes.py 的 Wilson 演算法與 BFS 可達性檢查").
+# docs/story/STORY_DATA_SCHEMA.md section 5 requires ("沿用 tools/gen_mazes.py 的 Wilson 演算法與 BFS 可達性檢查").
 # One implementation, one set of conventions (cells are SxS tiles with a single wall row/column
 # between neighbours, so every passage is 2 tiles wide -- which is also what makes a 2x2 enemy able
-# to traverse the maze, per ART_AND_ABILITY_DESIGN.md F3).
+# to traverse the maze, per docs/design/ART_AND_ABILITY_DESIGN.md F3).
 from gen_mazes import (cell_block, cell_center_xy, edge_strip, neighbors, wilson_maze,
                        build_adjacency, bfs, path_to, reachable_without_edge)
 
@@ -60,7 +60,7 @@ EVENTS_DIR = os.path.join(ROOT, 'data', 'events')
 CELL_SCALE = 2                      # SxS tiles per maze cell; matches gen_mazes.py's CELL_SCALE_BY_FLOOR
 
 # ---------------------------------------------------------------------------------------------
-# Section 5.1 floor table (identical to STORY_BIBLE.md section 5, which validator V9 checks against)
+# Section 5.1 floor table (identical to docs/story/STORY_BIBLE.md section 5, which validator V9 checks against)
 # ---------------------------------------------------------------------------------------------
 # tier -> (cols, rows, rooms, loops, events, enemy_min, enemy_max, elites, items)
 FLOOR_TABLE = [
@@ -87,7 +87,7 @@ def _stable_hash(text):
 
 
 # ---------------------------------------------------------------------------------------------
-# Acts (STORY_BIBLE.md section 3) -- seal, boss id, flagship side story (section 6)
+# Acts (docs/story/STORY_BIBLE.md section 3) -- seal, boss id, flagship side story (section 6)
 # ---------------------------------------------------------------------------------------------
 ACTS = [
     # id,      seal,              boss id,                    side story, floor-of-ss, theme key
@@ -128,7 +128,7 @@ ITEM_TABLE_BY_ACT = [
     ["gem_atk", "gem_def", "exp_up"], ["gem_atk", "gem_def", "exp_up", "scroll"],
 ]
 
-# Event pool seeds, verbatim from SIDE_STORIES.md section 12.3 (three documented ids per act) --
+# Event pool seeds, verbatim from docs/story/SIDE_STORIES.md section 12.3 (three documented ids per act) --
 # extended with generated variants in the same namespace/kind so a floor can sample `events` of
 # them; the real authored pools (data/events/pool_actNN.json, S3) take over automatically.
 POOL_SEEDS = {
@@ -165,7 +165,7 @@ COMMON_POOL = [                     # section 12.1's kinds, none of them act-spe
 
 def load_footprint_tiers():
     """kind -> (w, h) from data/footprints.json (S1's character-level table). The generator must
-    reserve a whole footprint (ART_AND_ABILITY_DESIGN.md F7), so it needs the same tiers the game
+    reserve a whole footprint (docs/design/ART_AND_ABILITY_DESIGN.md F7), so it needs the same tiers the game
     applies at load time."""
     try:
         with open(FOOTPRINTS, encoding='utf-8') as f:
@@ -183,7 +183,7 @@ def load_footprint_tiers():
 def load_chapter(act_no):
     """The authored chapter file, when the story phase has written it (S3 writes ch_01..ch_03).
 
-    STORY_DATA_SCHEMA.md section 6.2's pseudocode reads act["enemyMix"] / act["itemTable"] from the
+    docs/story/STORY_DATA_SCHEMA.md section 6.2's pseudocode reads act["enemyMix"] / act["itemTable"] from the
     chapter, so a chapter that exists overrides the provisional tables below -- the same pattern as
     the event pools. Returns {} when the chapter is absent."""
     path = os.path.join(ROOT, 'data', 'story', 'chapters', 'ch_%02d.json' % act_no)
@@ -470,7 +470,7 @@ def main():
             grid, _dims, entrance, goal, room_cells, edges, adj = make_grid(
                 cols, rows, rooms, loops, seed)
 
-            # ---- entity placement, footprint-aware (ART_AND_ABILITY_DESIGN.md F7) ----
+            # ---- entity placement, footprint-aware (docs/design/ART_AND_ABILITY_DESIGN.md F7) ----
             used = set()
             placements = {}      # cell -> char
 

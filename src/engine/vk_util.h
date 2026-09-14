@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 
 static inline void vk_check(VkResult r, const char* msg) {
     if (r != VK_SUCCESS) {
@@ -37,7 +38,10 @@ static inline VkShaderModule loadSpv(VkDevice dev, const char* name) {
             return m;
         }
     }
-    std::fprintf(stderr, "cannot open spv %s (tried multiple paths)\n", name);
+    std::error_code ec;
+    std::filesystem::path cwd = std::filesystem::current_path(ec);
+    std::fprintf(stderr, "cannot open spv %s (tried multiple paths); cwd=%s\n",
+                 name, ec ? "<unknown>" : cwd.string().c_str());
     std::abort();
 }
 

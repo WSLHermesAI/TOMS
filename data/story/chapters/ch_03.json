@@ -13,7 +13,7 @@
       "setFlags": ["flag_memory_shard_03"] },
     { "id": "b_gate_finale",  "kind": "boss",     "floor": "F21", "enemyId": "golem" }
   ],
-  "grants": { "skills": ["s_faqi"], "skillPoints": 1, "hub": ["hub.forge"], "unlocks": ["system.forge"] },
+  "grants": { "skills": ["s_faqi"], "skillPoints": 1, "hub": ["hub.forge"], "unlocks": ["system.forge"], "forgeRecipes": ["fr_gatewarden"] },
   "choices": [
     {
       "id": "c_gate_seal",

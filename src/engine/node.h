@@ -95,7 +95,7 @@ public:
     // (screen/design) space and the control it must hit is positioned in the node's LOCAL space, so
     // the tap has to be mapped back through the same chain the drawing went through. Without this,
     // scaling a parent makes its children draw bigger and stop responding -- the bug this whole
-    // design exists to avoid (see docs/PROGRESS_REPORT.md, "wrong position and not working").
+    // design exists to avoid (see docs/progress_report/PROGRESS_REPORT.md, "wrong position and not working").
     glm::vec2 LocalPoint(const glm::vec2& world) {
         // Derived from WorldPoint() itself (the path the drawing uses, and the one the test already
         // proves): sample where the local origin and the two unit axes land in world space, then solve

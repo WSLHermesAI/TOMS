@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gen_story_i18n.py — fill data/text.json with the story keys the S3 data references.
 
-docs/STORY_DATA_SCHEMA.md section 11: `zh_TW` is authoritative, the other five locales may be filled
+docs/story/STORY_DATA_SCHEMA.md section 11: `zh_TW` is authoritative, the other five locales may be filled
 from it and marked `_todo: true` until a translator (or a later phase) writes them properly, and the
 validator (V6) requires that every key the story data references exists.
 
@@ -25,7 +25,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEXT = os.path.join(ROOT, 'data', 'text.json')
 LOCALES = ['zh_TW', 'en', 'zh_CN', 'ja', 'ko', 'es']
 
-# ---- authored content for the S3 acts (STORY_BIBLE.md sections 3/4) ---------------------------
+# ---- authored content for the S3 acts (docs/story/STORY_BIBLE.md sections 3/4) ---------------------------
 ACT_NAMES = {
     'F01': ('村莊外緣・井', 'Village edge: the well'), 'F02': ('曬穀場', 'The drying yard'),
     'F03': ('舊祠堂', 'The old shrine'), 'F04': ('記憶之井', 'The well of memory'),

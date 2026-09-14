@@ -722,7 +722,7 @@ void Renderer::end() {
     // overrides); the viewport scales+centers that fixed image to fit the actual window,
     // letterboxed/pillarboxed rather than stretched, so resizing the window never distorts or
     // reflows the game -- ported from the reference cOpenGLRender::
-    // SetAcceptRationWithGameresolution (see docs/PROGRESS_REPORT.md).
+    // SetAcceptRationWithGameresolution (see docs/progress_report/PROGRESS_REPORT.md).
     ViewportRect fit = computeAspectFitViewport(W, H, kDesignW, kDesignH);
     VkViewport vp{}; vp.x=fit.x; vp.y=fit.y; vp.width=fit.width; vp.height=fit.height; vp.minDepth=0; vp.maxDepth=1;
     VkRect2D sc{}; sc.offset={0,0}; sc.extent={W,H};

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """validate_story.py — validators over the generated 70-floor data set.
 
-Implements the checks STORY_DATA_SCHEMA.md section 13 assigns to the generation phase (its M1 /
+Implements the checks docs/story/STORY_DATA_SCHEMA.md section 13 assigns to the generation phase (its M1 /
 this project's S2): **V7** (floor <-> act mapping), **V8** (maze connected, at least one way down),
-**V9** (floor table matches STORY_BIBLE.md section 5), plus the two invariants this phase's data can
+**V9** (floor table matches docs/story/STORY_BIBLE.md section 5), plus the two invariants this phase's data can
 already be held to: **V12** (every floor has >= 1 relic/whisper event and >= 1 cache) and the
-side-story placement from STORY_BIBLE.md section 6 (each act's flagship story on that act's 5th
+side-story placement from docs/story/STORY_BIBLE.md section 6 (each act's flagship story on that act's 5th
 floor).
 
 It also re-checks the things the runtime will care about once floors are played:
@@ -13,7 +13,7 @@ It also re-checks the things the runtime will care about once floors are played:
   * with doors passable, the exit is reachable from the start (the maze is connected);
   * with doors blocked, every door's key is reachable from the start -- i.e. a key can never sit
     behind its own door, which would softlock the floor;
-  * every entity's whole footprint (ART_AND_ABILITY_DESIGN.md section 1.7) stands on floor tiles,
+  * every entity's whole footprint (docs/design/ART_AND_ABILITY_DESIGN.md section 1.7) stands on floor tiles,
     inside the grid, overlapping nothing else.
 
 The remaining validators from section 10 (V1-V6, V10, V11, V13, V14, V16) belong to the phases that
@@ -407,7 +407,7 @@ def main():
     print('not yet applicable (arrive with their own phase): V3 side-story reachability needs the '
           'side-story data (S5), V4 grant ids need skills.json (S4), V5/V13 need endings.json (S7), '
           'V10 text width + V16 pool depth are advisory reports, V14 needs cycles.json (S7) -- '
-          'see STORY_DATA_SCHEMA.md section 10/13')
+          'see docs/story/STORY_DATA_SCHEMA.md section 10/13')
 
 
 if __name__ == '__main__':

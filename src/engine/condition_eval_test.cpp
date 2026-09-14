@@ -29,7 +29,7 @@ struct MockContext : ConditionContext {
     bool missionActive(const std::string& id) const override { return missionsActive.count(id) != 0; }
     bool stageCleared(const std::string& id) const override { return stagesCleared.count(id) != 0; }
 
-    // ---- S3 leaves (docs/STORY_DATA_SCHEMA.md section 2.2) ----
+    // ---- S3 leaves (docs/story/STORY_DATA_SCHEMA.md section 2.2) ----
     std::map<std::string, std::string> choices;        // choiceId -> optionId
     std::map<std::string, std::string> sideStories;    // sideStoryId -> state
     std::map<std::string, int> counters;
@@ -57,7 +57,7 @@ int main() {
 
     CHECK(evaluate(nlohmann::json(), ctx), "null condition is always true");
 
-    // ---- S3: the four new leaf types (docs/STORY_DATA_SCHEMA.md section 2.2) ----
+    // ---- S3: the four new leaf types (docs/story/STORY_DATA_SCHEMA.md section 2.2) ----
     ctx.choices = {{"c_motive", "opt_know_self"}};
     ctx.sideStories = {{"ss_08", "completed"}};
     ctx.counters = {{"insight", 6}, {"resolve", -3}};

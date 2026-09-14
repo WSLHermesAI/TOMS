@@ -1,7 +1,7 @@
 // condition.h — the shared Condition/Flag Evaluator: one small, data-driven "can the player
 // see/do X right now" engine, reused by dialogue choice gating, door/key checks, and (from
 // Milestone 4/5 onward) mission prerequisites and Stage Select lock reasons.
-// See docs/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §9 and docs/IMPLEMENTATION_ROADMAP.md
+// See docs/architecture/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §9 and docs/architecture/IMPLEMENTATION_ROADMAP.md
 // Milestone 3.
 //
 // A condition is plain JSON — no custom AST/object model, matching this project's existing
@@ -32,7 +32,7 @@ public:
     virtual bool missionActive(const std::string& missionId) const = 0;
     virtual bool stageCleared(const std::string& stageId) const = 0;
 
-    // ---- S3 (docs/STORY_DATA_SCHEMA.md section 2.2) --------------------------------------------
+    // ---- S3 (docs/story/STORY_DATA_SCHEMA.md section 2.2) --------------------------------------------
     // The four leaves the 70-floor story needs. They are DEFAULTED here rather than pure virtual so
     // every existing context (and every test mock) keeps compiling unchanged and simply answers
     // "no choice made / no counter / cycle 1" -- a mock that does not care cannot accidentally make

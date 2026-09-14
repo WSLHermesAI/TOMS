@@ -54,12 +54,12 @@ int main() {
     // 2.0x ceiling: ceil(10*2.0)=20, then ceil(20*1.25)=25.
     CHECK(computeAttackDamage(10, 100.0f) == 25, "P=100 -> 2.0x multiplier AND the Perfect bonus both apply");
     // P~=44% should reproduce the old deterministic base_hit almost exactly (GAME_DESIGN_DOCUMENT's
-    // documented emergent property) -- verified here at baseHit=8 exactly as FIGHT_SCENE_DESIGN.md's
+    // documented emergent property) -- verified here at baseHit=8 exactly as docs/design/FIGHT_SCENE_DESIGN.md's
     // own worked example does.
     CHECK(computeAttackDamage(8, 44.0f) == 8, "P~=44% reproduces the old base_hit (8) almost exactly");
     CHECK(computeAttackDamage(10, 97.0f) > computeAttackDamage(10, 96.0f),
           "crossing the P>=97 Perfect threshold increases damage discontinuously");
-    // Equipment can raise the ceiling above the 2.0x baseline (MAIN_BATTLE_SCENE_DESIGN.md §4.3,
+    // Equipment can raise the ceiling above the 2.0x baseline (docs/design/MAIN_BATTLE_SCENE_DESIGN.md §4.3,
     // e.g. War Hammer maxMult=2.6); the 2-arg call above already covers the 2.0x default.
     // Same Perfect-bonus stacking at P=100: ceil(10*2.6)=26, then ceil(26*1.25)=33.
     CHECK(computeAttackDamage(10, 100.0f, 2.6f) == 33, "a weapon's higher maxMult raises the P=100 ceiling, Perfect bonus still stacks");

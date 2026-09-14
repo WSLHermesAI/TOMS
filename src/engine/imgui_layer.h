@@ -1,10 +1,10 @@
 // imgui_layer.h — Dear ImGui integration for the Vulkan+GLFW desktop renderer.
-// See docs/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §2/§3 and
-// docs/IMPLEMENTATION_ROADMAP.md Milestone 2 ("UI framework bring-up", dev-overlay only).
+// See docs/architecture/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §2/§3 and
+// docs/architecture/IMPLEMENTATION_ROADMAP.md Milestone 2 ("UI framework bring-up", dev-overlay only).
 //
 // Scope: Vulkan+GLFW desktop backend only, wired this milestone. The WebGL2/WebGPU
 // (Emscripten) backends are deferred until the toolchain is available to build+test them
-// (see docs/PROGRESS_REPORT.md) — this file is never compiled into the toms_web target.
+// (see docs/progress_report/PROGRESS_REPORT.md) — this file is never compiled into the toms_web target.
 //
 // Owns a dedicated VkDescriptorPool so it never competes with the sprite/text renderer's own
 // `dsPool` (src/engine/renderer.h) for capacity — purely additive, isolated from the existing
