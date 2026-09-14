@@ -395,6 +395,10 @@ target_include_directories(ui_layout_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_
 # ui_root_test: the one scaled UI root (owner: grow the UI OBJECTS, keep the game resolution).
 add_executable(ui_root_test ${GAME_UI}/ui_root_test.cpp)
 target_include_directories(ui_root_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+# dialogue_layout_test: one geometry description for the dialogue, used by drawing AND hit-testing.
+add_executable(dialogue_layout_test ${GAME_UI}/dialogue_layout_test.cpp)
+target_include_directories(dialogue_layout_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+
 
 target_include_directories(floor_table_test PRIVATE
     ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
