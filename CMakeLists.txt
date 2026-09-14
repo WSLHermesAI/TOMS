@@ -392,6 +392,10 @@ add_executable(ui_layout_test ${GAME_UI}/ui_layout_test.cpp)
 add_executable(node_transform_test ${ENGINE_DIR}/node_transform_test.cpp ${ENGINE_DIR}/node.cpp)
 target_include_directories(node_transform_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 target_include_directories(ui_layout_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
+# ui_root_test: the one scaled UI root (owner: grow the UI OBJECTS, keep the game resolution).
+add_executable(ui_root_test ${GAME_UI}/ui_root_test.cpp)
+target_include_directories(ui_root_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+
 target_include_directories(floor_table_test PRIVATE
     ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
