@@ -13,17 +13,26 @@
 
 ## ▶ Next Step
 
-**Next action: equipment actives (裝備主動技, `data/equipment.json`'s `actives` field)** — the fourth of
-`STORY_DATA_SCHEMA.md`'s four systems (技能樹／鍛造／裝備主動技／村莊樞紐), and the only one of the four
-with zero code against it so far. The village hub's first slice (below) is now real but has nowhere left to
-grow on its own: the only other authored hub flag is `hub.forge` (already read), and the next hub location
-(`hub.crypt_shrine`, ch_05) needs chapter content that doesn't exist yet — so hub growth is blocked on
-story authoring, not engineering. Equipment actives has no such blocker: `data/equipment.json` already
-exists and just needs an `actives` field + the (currently nonexistent) code path that lets combat trigger
-one. No detailed schema for the actives themselves exists yet — same "design it from
-`docs/story/STORY_BIBLE.md`/`ART_AND_ABILITY_DESIGN.md`, then build" shape S4/S5/S6 each needed.
+**Next action: wire equipment actives into combat** — the data + rules now exist and are tested
+(`data/actives.json`, `data/equipment.json`'s `actives`, `src/game/systems/equipment_actives.{h,cpp}`,
+41 headless checks); what is missing is the trigger: a battle control that fires the equipped actives
+(enabled only when `canUseActive()` says yes, greyed while `st_silence` holds or the use is spent), and
+the code in the damage/HP path that applies the returned effect — `guaranteedCrit` + `damageMultiplier`
+on the attack, `surviveLethal` clamping a lethal hit to 1 HP. Then the actives need an on-screen
+affordance a phone player can tap (the board's standing mobile rule), and the two side-story items
+(`qingxiao_blade` / `soul_echo_bell`) need their acquisition path (ss_09 / ss_08).
 
 **Just closed:**
+- **Equipment actives — first slice (2026-09-14)**: the fourth and last of the schema's four systems now
+  has data and rules. `data/actives.json` holds the two actives `ART_AND_ABILITY_DESIGN.md` defines
+  (`a_qingxiao_edge` once-per-battle guaranteed crit x1.8; `a_sanctuary_echo` lethal hit leaves 1 HP,
+  the bell's 8-frame VFX recorded), the two items the doc attaches them to (`qingxiao_blade` A-08,
+  `soul_echo_bell` A-18) were authored into `data/equipment.json` with their documented stats, and every
+  item gained an `actives` array. `src/game/systems/equipment_actives.{h,cpp}` is pure logic in the same
+  shape as skill/forge/hub: which actives an equipped set grants (weapon/armor/talent, deduped), per-battle
+  uses, cooldowns, and the doc's two status interactions — `st_echo` makes the first use skip its cooldown
+  and is consumed by it, `st_silence` blocks every active. `equipment_actives_test` (41 checks, ALL PASS)
+  reads the REAL data files, so it also fails if an item ever references a nonexistent active.
 - **S6 first slice: the village hub** (log part 6, 2026-09-14): `data/hub.json` (1 location so far,
   `hub_village`), a pure/tested `hub_system.h/.cpp` (11 checks), `Game::activateHubLocation()`
   (dispatches by action kind — only `"talk"` exists yet, opens an NPC's dialogue directly from the

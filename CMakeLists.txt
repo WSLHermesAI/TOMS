@@ -130,6 +130,7 @@ if(NOT WEB)
         ${ENGINE_DIR}/power_bar.cpp ${GAME_SYSTEMS}/equipment_system.cpp ${GAME_SYSTEMS}/skill_system.cpp
         ${GAME_SYSTEMS}/forge_system.cpp
         ${GAME_SYSTEMS}/hub_system.cpp
+        ${GAME_SYSTEMS}/equipment_actives.cpp
         ${ENGINE_DIR}/imgui_layer.h ${ENGINE_DIR}/imgui_layer.cpp
         # Title phase (New Game / Continue / Settings): save slots, preferences, string table.
         ${GAME_SAVE}/save_slots.cpp ${GAME_SAVE}/game_settings.cpp
@@ -249,6 +250,7 @@ if(WEB)
         ${ENGINE_DIR}/power_bar.cpp ${GAME_SYSTEMS}/equipment_system.cpp ${GAME_SYSTEMS}/skill_system.cpp
         ${GAME_SYSTEMS}/forge_system.cpp
         ${GAME_SYSTEMS}/hub_system.cpp
+        ${GAME_SYSTEMS}/equipment_actives.cpp
         ${GAME_AUDIO}/Audio.cpp
         # Title phase (New Game / Continue / Settings): slots + preferences + string table.
         ${GAME_SAVE}/save_slots.cpp ${GAME_SAVE}/game_settings.cpp
@@ -477,6 +479,11 @@ target_include_directories(forge_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGI
 # Forge Systems above. Run: ./hub_system_test
 add_executable(hub_system_test ${GAME_SYSTEMS}/hub_system_test.cpp ${GAME_SYSTEMS}/hub_system.cpp ${GAME_SAVE}/save_system.cpp)
 target_include_directories(hub_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
+# S4: equipment actives (裝備主動技) -- data/actives.json + data/equipment.json "​actives",
+# pure logic; run from the repo root because it reads the real data files.
+add_executable(equipment_actives_test ${GAME_SYSTEMS}/equipment_actives_test.cpp ${GAME_SYSTEMS}/equipment_actives.cpp)
+target_include_directories(equipment_actives_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
+
 
 # ---------------------------------------------------------------------------
 # Title phase test (see docs/design/TITLE_PHASE.md): the New Game / Continue / Settings page state
