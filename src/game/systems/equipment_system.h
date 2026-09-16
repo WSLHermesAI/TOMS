@@ -10,6 +10,7 @@
 #include <json.hpp>
 #include <map>
 #include <string>
+#include <vector>
 #include "power_bar.h"
 
 namespace toms {
@@ -31,6 +32,10 @@ struct EquipmentDefinition {
     // Talent id (talent slot only) -- a small string switched on by the talent*() functions
     // below, not a scripting hook, matching this project's `action`/`kind` enum convention.
     std::string talent;
+    // S7 (equipment actives, docs/story/STORY_DATA_SCHEMA.md §1.2/§6.2): ids into
+    // active_system.h's ActiveSkillDefinition map. Almost always empty -- only a handful of
+    // named pieces (per docs/design/ART_AND_ABILITY_DESIGN.md) ever grant one.
+    std::vector<std::string> actives;
 };
 
 nlohmann::json toJson(const EquipmentDefinition& d);
@@ -46,6 +51,11 @@ struct EquippedSet {
 // docs/design/MAIN_BATTLE_SCENE_DESIGN.md §6.2). An empty/unknown slot contributes 0, never throws.
 void applyEquipmentStats(const EquippedSet& eq, const std::map<std::string, EquipmentDefinition>& defs,
                           int& atk, int& def);
+
+// S7: every active id granted by whatever is CURRENTLY equipped (weapon, then armor, then
+// talent) -- today's content has at most one across all three slots, so "first across slots" is
+// not yet a real ordering decision. An empty/unknown slot contributes nothing.
+std::vector<std::string> equippedActives(const EquippedSet& eq, const std::map<std::string, EquipmentDefinition>& defs);
 
 // The equipped weapon's Attack Bar params (or PowerBarParams{}'s baseline geometry if none
 // equipped), with the equipped talent's rampTime modifier applied if it has one (e.g. Focus

@@ -28,6 +28,7 @@ nlohmann::json toJson(const EquipmentDefinition& d) {
         {"maxMult", d.maxMult}
     };
     j["talent"] = d.talent;
+    j["actives"] = d.actives;
     return j;
 }
 
@@ -54,6 +55,7 @@ EquipmentDefinition equipmentFromJson(const nlohmann::json& j) {
         d.maxMult = b.value("maxMult", d.maxMult);
     }
     d.talent = j.value("talent", std::string());
+    d.actives = j.value("actives", std::vector<std::string>{});
     return d;
 }
 
@@ -68,6 +70,15 @@ void applyEquipmentStats(const EquippedSet& eq, const std::map<std::string, Equi
                           int& atk, int& def) {
     if (const auto* w = findEquipped(eq.weaponId, defs)) atk += w->statAtk;
     if (const auto* a = findEquipped(eq.armorId, defs))  def += a->statDef;
+}
+
+std::vector<std::string> equippedActives(const EquippedSet& eq, const std::map<std::string, EquipmentDefinition>& defs) {
+    std::vector<std::string> out;
+    for (const std::string& id : {eq.weaponId, eq.armorId, eq.talentId}) {
+        if (const auto* d = findEquipped(id, defs))
+            out.insert(out.end(), d->actives.begin(), d->actives.end());
+    }
+    return out;
 }
 
 PowerBarParams effectiveAttackBar(const EquippedSet& eq, const std::map<std::string, EquipmentDefinition>& defs) {

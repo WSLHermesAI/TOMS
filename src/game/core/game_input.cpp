@@ -12,6 +12,23 @@ void Game::handleTouch(float px, float py, int phase) {
     // Title phase: every tap goes to the title's own hit-testing (menu rows / save slots /
     // language rows / Back). Checked first — while it is up, it is the only interactive screen.
     if (title_.isOpen()) { if (phase == 0) titleClick(px, py); return; }
+    // M7 (first slice): a tap anywhere dismisses the ending screen -- there is nothing else to
+    // interact with once a run has actually ended, matching the post-victory tap-to-dismiss
+    // convention elsewhere in this file.
+    // M8: when the ending offers 輪迴, it has two REAL buttons -- a tap must land on one of them,
+    // not "anywhere" (there is now an actual choice to make). Only falls back to tap-anywhere
+    // dismiss when rebirth isn't on offer, matching the single-exit screen's own simpler contract.
+    if (endingActive()) {
+        if (phase != 0) return;
+        if (rebirthOffered()) {
+            auto hit = [&](const int r[4]) { return px>=r[0] && px<=r[0]+r[2] && py>=r[1] && py<=r[1]+r[3]; };
+            if (hit(endingRebirthBtnRect_)) rebirth();
+            else if (hit(endingTitleBtnRect_)) dismissEndingScreen();
+            return;
+        }
+        dismissEndingScreen();
+        return;
+    }
     // --- Store overlay: route ALL taps to storeClick. Store buttons (icon / buy / close)
     //     are NOT gamepad rects, so this must run BEFORE the gamepad hit-test below,
     //     otherwise taps on store UI hit `id<0` and are dropped. ---
@@ -49,7 +66,10 @@ void Game::handleTouch(float px, float py, int phase) {
         auto hit = [&](const int r[4]) { return px>=r[0] && px<=r[0]+r[2] && py>=r[1] && py<=r[1]+r[3]; };
         if (hit(atkBtnRect_)) { battleTapAttack(); return; }
         if (hit(defBtnRect_)) { battleTapDefense(); return; }
-        if (cs.superCharge >= CombatState::kSuperThreshold && hit(superBtnRect_)) { battleTapSuper(); return; }
+        if (cs.superCharge >= run_.superMax() && hit(superBtnRect_)) { battleTapSuper(); return; }
+        // S7 (equipment actives, first slice): same "no button at all until it's actually
+        // available" convention as Super above.
+        if (!cs.activeUsed && !toms::equippedActives(equipped_, equipmentDefs_).empty() && hit(activeBtnRect_)) { battleTapActive(); return; }
         return;   // a tap elsewhere in the battle scene does nothing now (no more "whole scene is the surface")
     }
     // Milestone 9 polish: releasing a d-pad button stops "keep moving while held" (see
@@ -179,7 +199,7 @@ void Game::movePlayer(int dx, int dy) {
     };
     if (auto doorIt = kDoorKeyItem.find(c); doorIt != kDoorKeyItem.end()) {
         nlohmann::json req = { {"type", "itemHeld"}, {"itemId", doorIt->second}, {"count", 1} };
-        if (!toms::evaluate(req, GameConditionContext(pl, meta_, missionTrackers_, run_))) return;
+        if (!toms::evaluate(req, GameConditionContext(pl, meta_, missionTrackers_, run_, equipped_))) return;
     }
     if (c == 'y') pl.key_yellow--;
     if (c == 'b') pl.key_blue--;
@@ -250,6 +270,7 @@ void Game::movePlayer(int dx, int dy) {
                 else if (e.id=="king") dlgNpc="king_lieutenant";
                 else if (e.id=="princess") dlgNpc=(curStage=="stage_11")?"princess_victory":"princess_liora";
                 else if (e.id=="handmaiden") dlgNpc="handmaiden";
+                else if (e.id=="skeleton_scholar") dlgNpc="skeleton_scholar";
                 startDialogue(dlgNpc);
             } else if (c=='U' && !st.up.empty()) { requestStageTransition(st.up, true); return; }
             else if (c=='D' && !st.down.empty()) { requestStageTransition(st.down, false); return; }
@@ -279,6 +300,7 @@ void Game::interact() {
             else if (e.id=="king") npc="king_lieutenant";
             else if (e.id=="princess") npc=(curStage=="stage_11")?"princess_victory":"princess_liora";
             else if (e.id=="handmaiden") npc="handmaiden";
+            else if (e.id=="skeleton_scholar") npc="skeleton_scholar";
             else continue;
             startDialogue(npc);
             return;
@@ -359,4 +381,20 @@ bool Game::debugStartNearestBattle() {
     if (!best) return false;
     engageMonster(*best);
     return cs.active;
+}
+
+bool Game::debugEquip(const std::string& equipmentId) {
+    auto it = equipmentDefs_.find(equipmentId);
+    if (it == equipmentDefs_.end()) return false;
+    switch (it->second.slot) {
+        case toms::EquipmentSlot::Weapon: equipped_.weaponId = equipmentId; break;
+        case toms::EquipmentSlot::Armor:  equipped_.armorId  = equipmentId; break;
+        case toms::EquipmentSlot::Talent: equipped_.talentId = equipmentId; break;
+    }
+    return true;
+}
+
+void Game::debugForceLose() {
+    cs.enemy.boss = false;   // a non-boss death is what deathsNonBoss (e_13) actually counts
+    finishCombatLose();
 }

@@ -127,8 +127,15 @@ bool Game::loadAssets(const std::string& assetDir) {
     // S6: the village hub's content (data/hub.json) -- same "load once at boot" shape as skillDefs_/
     // forgeDefs_ above.
     hubDefs_ = toms::loadHubLocations(assetDir + "/../data/hub.json");
+    // S7 (equipment actives, first slice): same "load once at boot" shape as skillDefs_/forgeDefs_/
+    // hubDefs_ above.
+    activeDefs_ = toms::loadActiveSkills(assetDir + "/../data/actives.json");
+    // M7 (first slice): the 15-ending table, same "load once at boot" shape as the above.
+    endingsTable_ = toms::loadEndings(assetDir + "/../data/story/endings.json");
+    // M8 (first slice): the rebirth config, same "load once at boot" shape as the above.
+    cyclesConfig_ = toms::loadCyclesConfig(assetDir + "/../data/story/cycles.json");
     // init player
-    pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
+    pl.maxhp = kStartingHp; pl.hp = kStartingHp; pl.atk = kStartingAtk; pl.def = kStartingDef; pl.gold = 0; pl.exp = 0; pl.lv = 1;
     pl.inv = {"potion_red", "potion_blue", "exp_up"};
 
     // S3.5: the 70-floor tower (data/story/floors/*.json) as the run's progression source. Loaded
@@ -186,7 +193,7 @@ void Game::spriteUV(int layer, float uv[4]) const {
     uv[0]=u0; uv[1]=v0; uv[2]=u1; uv[3]=v1;
 }
 
-void Game::loadStage(const std::string& id) {
+void Game::loadStage(const std::string& id, StageArrival arrival) {
     curStage = id;
     // Resolve the stage JSON. Data ids in connect.up/down use "stage_02" (underscore)
     // while the shipped files are named "stage02.json" (no underscore) — and the
@@ -351,10 +358,28 @@ void Game::loadStage(const std::string& id) {
         storeUnlockDlg = true;
     }
 
-    // place player at '@' or default
+    // M9 (stair alignment): arriving via a specific staircase lands exactly on the matching
+    // stairs tile -- every floor's stairs_down is now forced to sit where the previous floor's
+    // stairs_up landed (see docs/story/STAIR_ALIGNMENT.md), so this is always a real, walkable
+    // spot, not a guess. Fresh loads (new game, Stage Select, rebirth, a debug jump) keep the old
+    // '@'-or-default behavior -- falling back to whichever stair the floor does have if it has
+    // no '@' (true for every floor except F01, the chain's head).
     pl.x = 1; pl.y = (int)st.height - 2;
-    for (auto& e : st.entities)
-        if (e.raw == "@") { pl.x = e.x; pl.y = e.y; }
+    const char* wantKind = (arrival == StageArrival::FromBelow) ? "stairs_down"
+                         : (arrival == StageArrival::FromAbove) ? "stairs_up" : nullptr;
+    bool placed = false;
+    if (wantKind) {
+        for (auto& e : st.entities)
+            if (e.kind == wantKind) { pl.x = e.x; pl.y = e.y; placed = true; break; }
+    }
+    if (!placed) {
+        for (auto& e : st.entities)
+            if (e.raw == "@") { pl.x = e.x; pl.y = e.y; placed = true; break; }
+    }
+    if (!placed) {
+        for (auto& e : st.entities)
+            if (e.kind == "stairs_down" || e.kind == "stairs_up") { pl.x = e.x; pl.y = e.y; break; }
+    }
     // A floor change must never visibly pan in from wherever the camera was on the PREVIOUS
     // floor (different grid, different scale of "makes sense") -- jump straight to the new
     // floor's starting view instead of easing into it.

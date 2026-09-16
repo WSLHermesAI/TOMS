@@ -35,7 +35,9 @@ int main() {
     // 2. loadSkillDefs against the REAL data/skills.json (run from the project root, matching every
     //    other data-file test in this suite).
     auto defs = loadSkillDefs("data/skills.json");
-    CHECK(defs.size() == 6, "data/skills.json has the 3 lineages' root + tier-1 nodes (6 total)");
+    // M9: ch_04's side story ss_04 added a 7th node (s_yinqi_combo, a tier-2 dialogue grant) on
+    // top of the 3 lineages' root + tier-1 nodes.
+    CHECK(defs.size() == 7, "data/skills.json has the 3 lineages' root + tier-1 nodes, plus ss_04's s_yinqi_combo (7 total)");
     CHECK(defs.count("s_yinqi") && defs.count("s_yuqi") && defs.count("s_faqi"),
           "the three chapter-granted roots exist");
     CHECK(defs["s_yinqi"].cost == 0 && defs["s_yuqi"].cost == 0 && defs["s_faqi"].cost == 0,
@@ -85,6 +87,26 @@ int main() {
         int atk = 12, def = 4;
         applySkillEffects(defs, {}, atk, def);
         CHECK(atk == 12 && def == 4, "owning nothing changes nothing");
+    }
+
+    // 5. M8: rebirthScale halves a tier>=1 node's bonus (floored), but a root (tier<=0, a pure
+    //    grant, never purchased) always keeps its full effect regardless of the scale -- matching
+    //    STORY_BIBLE.md §8's explicit carve-out ("純解鎖型技能如「引氣」保留全效").
+    {
+        int atk = 12, def = 4;
+        applySkillEffects(defs, {"s_yinqi", "s_yinqi_1"}, atk, def, 0.5f);
+        CHECK(atk == 14, "root's +1 stays full-effect; tier-1's +2 floors to +1 at half power (12+1+1=14)");
+    }
+    {
+        int atk = 12, def = 4;
+        applySkillEffects(defs, {"s_yinqi"}, atk, def, 0.5f);
+        CHECK(atk == 13, "a lone root is completely unaffected by rebirthScale");
+    }
+    {
+        // default rebirthScale (1.0, unspecified) behaves exactly as every pre-M8 call site expects.
+        int atk = 12, def = 4;
+        applySkillEffects(defs, {"s_yinqi", "s_yinqi_1"}, atk, def);
+        CHECK(atk == 15, "omitting rebirthScale defaults to 1.0 (no change from before M8)");
     }
 
     if (g_fails == 0) { printf("skill_system_test: ALL PASS (%d checks)\n", g_checks); return 0; }

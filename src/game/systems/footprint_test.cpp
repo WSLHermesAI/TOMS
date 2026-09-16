@@ -313,6 +313,11 @@ static void testShippedStages() {
                 if (st.tiles[y][x] == '@') { sx = x; sy = y; }
                 if (st.tiles[y][x] == 'D' || st.tiles[y][x] == 'U') goals.push_back({x, y});
             }
+        // M9 (stair alignment): most floors no longer carry a '@' at all -- arrival now happens
+        // directly on the matching stairs tile (Game::loadStage's new arrival-direction param),
+        // so a floor with no '@' still has a real, walkable start point: whichever stair it has.
+        // Only F01 (the chain head, no incoming stairs) still ships an explicit '@'.
+        if (sx < 0 && !goals.empty()) { sx = goals.back().first; sy = goals.back().second; }
         CHECK(sx >= 0 && !goals.empty(), (sid + std::string(": has a player start and stairs")).c_str());
         if (sx >= 0 && !goals.empty()) {
             auto blockedByMonster = [&](int x, int y) {
@@ -336,8 +341,11 @@ static void testShippedStages() {
                     frontier.push_back({nx, ny});
                 }
             }
-            bool reachable = false;
-            for (auto& g : goals) if (seen.count(g)) reachable = true;
+            // Check every OTHER stair reaches from here -- excluding the start tile itself
+            // (trivially "reachable" from itself, which no longer proves anything now that a
+            // floor's start point can genuinely BE one of its own stairs).
+            bool reachable = true;
+            for (auto& g : goals) if (g != std::make_pair(sx, sy) && !seen.count(g)) reachable = false;
             CHECK(reachable, (sid + std::string(": stairs reachable with multi-grid monsters blocking")).c_str());
         }
     }

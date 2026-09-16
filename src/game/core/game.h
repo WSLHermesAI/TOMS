@@ -15,6 +15,9 @@
 #include "skill_system.h"     // toms::SkillDefinition — see Game::skillDefs_ (S4: the skill tree)
 #include "forge_system.h"     // toms::ForgeRecipeDefinition — see Game::forgeDefs_ (S5: forging)
 #include "hub_system.h"       // toms::HubLocationDefinition — see Game::hubDefs_ (S6: village hub)
+#include "active_system.h"    // toms::ActiveSkillDefinition — see Game::activeDefs_ (S7: equipment actives)
+#include "ending_system.h"    // toms::EndingsTable — see Game::endingsTable_ (M7: the 15-ending resolver)
+#include "cycle_system.h"     // toms::CyclesConfig — see Game::cyclesConfig_ (M8: rebirth)
 #include "entity_status.h"   // toms::EntityStatus/entityStatusKey — see Game::entityStatus_
 #include "roamer.h"          // toms::Roamer — S1: floor wanderers that chase the player
 #include "run_state.h"       // toms::RunStoryState — S3: choices/counters/side stories/flags/shards
@@ -84,7 +87,6 @@ struct CombatState : public Trackable {
         int cooldownMs = 0;   // ms remaining in that cooldown
     };
     static constexpr int kBarCooldownMs = 1500;
-    static constexpr int kSuperThreshold = 5;
 
     EnemyInst enemy;
     int playerHP, enemyHP;
@@ -98,8 +100,18 @@ struct CombatState : public Trackable {
     int enemyClockMs = 0;      // counts up to enemy.atkIntervalMs, then fires and resets to 0
 
     // Super-Attack Gauge: +1 per successful Attack tap, unlocks a guaranteed strong hit
-    // (battleTapSuper()) at kSuperThreshold, then resets.
+    // (battleTapSuper()) at RunStoryState::superMax() (M8: per-run, halved by rebirth() -- no
+    // longer a compile-time constant here), then resets.
     int superCharge = 0;
+
+    // S7 (equipment actives, first slice): whether THIS battle's active (if the equipped gear
+    // grants one) has already been spent -- once-per-battle, not a real cooldown timer, matching
+    // every named active in ART_AND_ABILITY_DESIGN.md ("每場一次"/"每場 1 次"). Armed by
+    // Game::battleTapActive(), consumed by the next resolveAttackTap() -- see its own comment for
+    // why only "guaranteed_crit_next_attack" needs a field here rather than a generic payload.
+    bool activeUsed = false;
+    bool nextAttackGuaranteedCrit = false;
+    float nextAttackCritDamageMult = 1.0f;
 
     // resultPauseMs: only needed for a LOSE (finishCombatLose() sets active=false immediately,
     // but the "you fell" message should stay on screen briefly rather than vanish the same
@@ -129,10 +141,16 @@ struct StoreItemDef {
     int liveCost() const { int c = cost_base; for (int i=1;i<=purchases;i++) c *= cost_multiplier; return c; }
 };
 
+// M9 (stair alignment): which tile a stage load should place the player on. Every floor's
+// stairs_down is now forced to sit exactly where the previous floor's stairs_up landed (see
+// docs/story/STAIR_ALIGNMENT.md), so arriving via a specific staircase has a real, correct tile
+// to land on instead of always falling back to the floor's '@'/default spawn.
+enum class StageArrival { Fresh, FromBelow, FromAbove };
+
 class Game : public Trackable {
 public:
     bool loadAssets(const std::string& assetDir);
-    void loadStage(const std::string& id);
+    void loadStage(const std::string& id, StageArrival arrival = StageArrival::Fresh);
     void update(int dtMs);                 // advances combat timer etc.
     void draw();                          // render current frame
     void drawGamepad();                   // on-canvas touch controls (web build)
@@ -169,6 +187,26 @@ public:
     // Verification hook (web build, see jsDebugBattle in emscripten_main.cpp): start a fight with
     // the nearest monster so a page harness can exercise the battle scene without walking the maze.
     bool debugStartNearestBattle();
+    // Verification hook (see jsEquip in emscripten_main.cpp): equip an item directly by id,
+    // bypassing the Store/Forge entirely, so a page harness can reach equipment (and whatever
+    // actives it grants) that isn't purchasable/craftable through any content authored yet.
+    // Silently does nothing for an unknown id, matching every other debug hook's fail-soft rule.
+    bool debugEquip(const std::string& equipmentId);
+    // Verification hook (see jsForceLose in emscripten_main.cpp): runs the exact same
+    // finishCombatLose() path a real battle loss would (noteDeath, the e_10/e_13 wipe-check,
+    // ending trigger) without needing to actually lose `deathsNonBoss` real fights first.
+    void debugForceLose();
+    // Verification hook (see jsSetFlag in emscripten_main.cpp): sets a run flag directly, skipping
+    // whatever real trigger (a floor event tile, a dialogue action) would normally set it, so a
+    // page harness can reach a flag-gated dialogue choice without re-driving an already-proven
+    // upstream mechanic.
+    void debugSetFlag(const std::string& flag) { run_.setFlag(flag); }
+    // Verification hook (see jsWarpPlayer in emscripten_main.cpp): sets the player's tile
+    // directly, skipping a full maze walk, so a page harness can stand next to a specific stairs
+    // tile and then take ONE real step onto it -- exercising the real transition trigger
+    // (movePlayer's 'U'/'D' check) and the real arrival logic (loadStage's StageArrival) without
+    // having to path through an entire generated maze (and its monsters) first.
+    void debugWarpPlayer(int x, int y) { pl.x = x; pl.y = y; }
     // Battle System v2 (see CombatState's comment): each is a single instantaneous tap, safe to
     // call any time -- a no-op when combat isn't active or that specific bar is still cooling
     // down / the Super gauge isn't full, so callers (main.cpp, emscripten_main.cpp, handleTouch)
@@ -176,6 +214,9 @@ public:
     void battleTapAttack();
     void battleTapDefense();
     void battleTapSuper();
+    // S7 (equipment actives, first slice): the 4th battle action -- a no-op unless the currently
+    // equipped gear grants one (equippedActives()) and it hasn't been spent this battle already.
+    void battleTapActive();
     // inventory UI (9-grid, extendable)
     void toggleInventory();
     void invMoveSel(int dx, int dy);        // move the selection cursor
@@ -188,7 +229,7 @@ public:
     // as a modal overlay too, not just cs.active -- otherwise the world underneath (movement,
     // NPC interact, the store icon, Tab/B shortcuts) keeps responding to input while the victory
     // screen is still up. See docs/progress_report/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
-    bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_; }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu)
+    bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_ || endingActive(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu/ending)
     bool combatWon() const { return cs.won; }
     bool combatActive() const { return cs.active; }
     // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
@@ -400,8 +441,14 @@ public:
     // The atk/def combat actually uses once equipment AND skills both stack (see game_combat.cpp's
     // three call sites) -- exposed read-only so the UI (or a verification probe) can show/check the
     // real number instead of just the base Player stat, which never itself changes for either layer.
-    int effectiveAtk() const { int a=pl.atk,d=pl.def; toms::applyEquipmentStats(equipped_,equipmentDefs_,a,d); toms::applySkillEffects(skillDefs_, run_.skillsOwned(), a, d); return a; }
-    int effectiveDef() const { int a=pl.atk,d=pl.def; toms::applyEquipmentStats(equipped_,equipmentDefs_,a,d); toms::applySkillEffects(skillDefs_, run_.skillsOwned(), a, d); return d; }
+    // M8: after at least one rebirth (cycleIndex > 1), a tier>=1 skill's own bonus applies at half
+    // effect (STORY_BIBLE.md §8) -- see applySkillEffects's own comment for the root-node carve-out.
+    float skillEffectScale() const { return meta_.cycleIndex > 1 ? cyclesConfig_.skillEffectScale : 1.0f; }
+    // M8 verification hook: read-only, matching runState()'s own "expose the meta save's public
+    // facts for tests/harness probes" rule.
+    int metaCycleIndex() const { return meta_.cycleIndex; }
+    int effectiveAtk() const { int a=pl.atk,d=pl.def; toms::applyEquipmentStats(equipped_,equipmentDefs_,a,d); toms::applySkillEffects(skillDefs_, run_.skillsOwned(), a, d, skillEffectScale()); return a; }
+    int effectiveDef() const { int a=pl.atk,d=pl.def; toms::applyEquipmentStats(equipped_,equipmentDefs_,a,d); toms::applySkillEffects(skillDefs_, run_.skillsOwned(), a, d, skillEffectScale()); return d; }
     // S5: forging. forgeDefs() is read-only content; tryCraft() re-checks canCraft() itself (same
     // "never trust the caller" rule as tryUnlockSkill) -- it deducts gold/materials and equips the
     // result in one atomic step, so a UI bug can never spend materials without getting the item.
@@ -421,6 +468,29 @@ public:
     // The hub menu's row order: plain id order (no lineage grouping concept, same reasoning as
     // forgeMenuOrder() above) -- a pure function of hubDefs_.
     std::vector<std::string> hubMenuOrder() const;
+    // S7 (equipment actives, first slice): read-only content. battleTapActive() is the only path
+    // that can spend one -- see its own declaration above.
+    const std::map<std::string, toms::ActiveSkillDefinition>& activeDefs() const { return activeDefs_; }
+    // M7 (first slice): the 15-ending table is read-only content; the only writer of
+    // activeEndingId_ is Game::triggerEnding(), called from finishCombatLose() today (the only
+    // trigger point this slice wires -- see its own comment for why F70/F69's rows aren't reachable
+    // yet). An active ending takes over the whole screen (see modalActive()).
+    const toms::EndingsTable& endingsTable() const { return endingsTable_; }
+    bool endingActive() const { return !activeEndingId_.empty(); }
+    const std::string& activeEndingId() const { return activeEndingId_; }
+    // M8: whether the CURRENTLY showing ending offers 輪迴 at all (STORY_BIBLE.md §8.1: every
+    // ending except e_10 does) AND the cycle cap hasn't already been reached -- the one place both
+    // checks live, so the ending screen's draw code and its input handlers can't disagree about
+    // whether a second button even exists. False (never true) while no ending is showing.
+    bool rebirthOffered() const;
+    // The ending screen's two exits. dismissEndingScreen() always returns to the title (the
+    // "start over" choice, or the only choice when rebirthOffered() is false). rebirth() re-checks
+    // rebirthOffered() itself (never trusts the caller, same rule as tryUnlockSkill/tryCraft) and
+    // is a no-op otherwise; on success it carries STORY_BIBLE.md §8's table forward (skills at half
+    // power, memory shards, forge/actives knowledge already meta-scoped so untouched, +1 cycle)
+    // and resets everything else, landing back on F01.
+    void dismissEndingScreen();
+    bool rebirth();
     // S3.5 step (a)/(b): the run's progression source. `floorMode()` is false only when the floor
     // data is missing; `totalStages`/the HUD counter/the hub all read the table when it is present.
     bool floorMode() const { return !floors_.empty(); }
@@ -527,6 +597,24 @@ private:
     // skillDefs_/forgeDefs_ above. A hub location has no "owned" state of its own (see
     // hub_system.h's own comment) -- unlocking is just reading the run flag its unlockFlag names.
     std::map<std::string, toms::HubLocationDefinition> hubDefs_;
+    // S7 (equipment actives, first slice): content loaded once at boot, same shape as
+    // skillDefs_/forgeDefs_/hubDefs_ above. There is no separate "known" list yet (unlike
+    // forgeRecipesKnown) -- see active_system.h's own comment for why.
+    std::map<std::string, toms::ActiveSkillDefinition> activeDefs_;
+    // M7 (first slice): content loaded once at boot, same shape as skillDefs_/forgeDefs_/hubDefs_/
+    // activeDefs_ above.
+    toms::EndingsTable endingsTable_;
+    // Empty = no ending showing. The one writer is Game::triggerEnding() (game_combat.cpp);
+    // dismissEndingScreen()/rebirth() (public, see their declarations above) both clear it.
+    std::string activeEndingId_;
+    void triggerEnding(const std::string& endingId);
+    // M8 (first slice): the rebirth config, same "load once at boot" shape as the above.
+    toms::CyclesConfig cyclesConfig_;
+    // The starting stats newGame() AND Game::rebirth() both need -- named once here instead of the
+    // literals 12/4/120 living independently in two places (rebirth() computes a HALVED bonus
+    // *over* these, so it needs the exact same baseline newGame() used, not just "looks about
+    // right").
+    static constexpr int kStartingAtk = 12, kStartingDef = 4, kStartingHp = 120;
     // Milestone 4 (Encounter Resolution): when a monster tile resolves to EncounterKind::
     // DialogueGate, the enemy instance is stashed here so a later `action.enterBattle` dialogue
     // choice knows what to fight. hasPendingEncounter_ guards against acting on a stale/unset
@@ -602,6 +690,10 @@ private:
     bool stylingSpikeVisible_ = false;
     float stylingSpikeRect_[4] = {0, 0, 0, 0};   // x,y,w,h — set by drawStylingSpike(), read by the backdrop
     void drawStylingSpikeBackdrop();
+    // M7 (first slice): the ending screen -- a full-screen scene-graph takeover, same "checked
+    // before anything else, nothing renders behind it" pattern as the title screen (see draw()'s
+    // own dispatch), so it works identically on desktop and web with no ImGui dependency.
+    void drawEndingScreen();
     int totalStages = 10;   // highest stage index (derived from data/stages at loadStage)
 
     // ---- maze camera ----
@@ -706,6 +798,16 @@ private:
     int atkBtnRect_[4] = {0,0,0,0};
     int defBtnRect_[4] = {0,0,0,0};
     int superBtnRect_[4] = {0,0,0,0};
+    // S7 (equipment actives, first slice): only nonzero (and only hit-tested) while the currently
+    // equipped gear grants an unused active -- same "no button at all until it's actually
+    // available" convention as superBtnRect_ above.
+    int activeBtnRect_[4] = {0,0,0,0};
+    // M8 (first slice): the ending screen's two exits. Both stay zeroed (never hit-tested) unless
+    // rebirthOffered() is true, matching activeBtnRect_'s own "no button until it's actually
+    // available" convention -- when it's false, the whole screen is a tap-anywhere dismiss instead
+    // (see handleTouch's own ending-active branch).
+    int endingRebirthBtnRect_[4] = {0,0,0,0};
+    int endingTitleBtnRect_[4] = {0,0,0,0};
     // Title screen animation clock (ms, advanced in update()). Drives the pulsing selection
     // highlight / sliding cursor so the title never looks like a static (crashed) frame.
     float titleAnimMs_ = 0.0f;

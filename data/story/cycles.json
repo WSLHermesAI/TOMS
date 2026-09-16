@@ -1,0 +1,24 @@
+{
+  "maxCycles": 9,
+  "carry": {
+    "cultivationTier":        { "op": "halveFloor" },
+    "skills":                 { "op": "keepAll", "effectScale": 0.5, "keepUnlockOnlyFull": true },
+    "skillPoints":            { "op": "halveFloor" },
+    "atkDefBonus":            { "op": "scale", "value": 0.5 },
+    "superMax":               { "op": "halveFloor", "min": 1 },
+    "memoryShards":           { "op": "keepAll" },
+    "forgeRecipesKnown":      { "op": "keepAll" },
+    "activeSkillsKnown":      { "op": "keepAll" },
+    "cycleIndex":             { "op": "increment", "by": 1 }
+  },
+  "reset": {
+    "equipment":       "starting_set",
+    "consumables":     "clear",
+    "keys":            "clear",
+    "materials":       "clear",
+    "gold":            0,
+    "sideStories":     "reset",
+    "flags":           "clear",
+    "counters":        "clear"
+  }
+}

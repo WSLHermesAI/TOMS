@@ -13,6 +13,7 @@
 #include "mission_system.h"    // toms::MissionTracker
 #include "save_system.h"       // toms::MetaSaveData (story flags / cleared stages)
 #include "run_state.h"         // toms::RunStoryState (S3: choices/counters/side stories/floors)
+#include "equipment_system.h"  // toms::EquippedSet (M7: itemHeld() also checks equipped gear)
 #include <map>
 #include <string>
 
@@ -29,17 +30,25 @@ class GameConditionContext : public toms::ConditionContext {
 public:
     // `run` is REQUIRED, not defaulted: a default empty run state would silently answer "no choice
     // made yet" at any call site that forgot to pass it, which is exactly the kind of bug S3 exists
-    // to prevent (the compiler now finds those sites instead).
+    // to prevent (the compiler now finds those sites instead). `equipped` is required for the same
+    // reason, added for M7: several endings' `itemHeld` checks name equipment ids (e.g.
+    // `qingxiao_blade`), and equipping something never adds it to `p.inv` (see buyStoreItem()/
+    // Game::tryCraft() -- equipment is its own registry, not an inventory item), so `itemHeld`
+    // must also recognize the currently equipped weapon/armor/talent or it could never be true for
+    // those ids no matter what the player actually has equipped.
     GameConditionContext(const Player& p, const toms::MetaSaveData& meta,
                           const std::map<std::string, toms::MissionTracker>& missions,
-                          const toms::RunStoryState& run)
-        : p_(p), meta_(meta), missions_(missions), run_(run) {}
+                          const toms::RunStoryState& run, const toms::EquippedSet& equipped)
+        : p_(p), meta_(meta), missions_(missions), run_(run), eq_(equipped) {}
     bool storyFlagSet(const std::string& flag) const override { return toms::hasStoryFlag(meta_, flag); }
+    bool runFlagSet(const std::string& flag) const override { return run_.flag(flag); }
     int  storyBeat() const override { return meta_.currentBeat; }
     bool itemHeld(const std::string& itemId, int count) const override {
         if (itemId == "key_yellow") return p_.key_yellow >= count;
         if (itemId == "key_blue")   return p_.key_blue   >= count;
         if (itemId == "key_red")    return p_.key_red    >= count;
+        // M7: an equipped weapon/armor/talent counts as "held" too (see the constructor's comment).
+        if (itemId == eq_.weaponId || itemId == eq_.armorId || itemId == eq_.talentId) return count <= 1;
         int c = 0; for (auto& s : p_.inv) if (s == itemId) c++;
         return c >= count;
     }
@@ -85,11 +94,16 @@ public:
     }
     int counter(const std::string& name) const override { return run_.counter(name); }
     int cycleIndex() const override { return meta_.cycleIndex; }
+    // M7: e_07's condition ("記憶碎片不足").
+    int memoryShardCount() const override { return run_.shardCount(); }
+    // M7: e_13's condition ("非首領戰死亡累積 ≥12").
+    int deathsNonBoss() const override { return run_.deathsNonBoss(); }
 private:
     const Player& p_;
     const toms::MetaSaveData& meta_;
     const std::map<std::string, toms::MissionTracker>& missions_;
     const toms::RunStoryState& run_;
+    const toms::EquippedSet& eq_;
 };
 
 } // namespace game_detail

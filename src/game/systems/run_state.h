@@ -73,6 +73,13 @@ public:
     // -- one fewer container convention in this file, and the size stays tiny (single digits).
     void addSkillPoints(int delta) { skillPoints_ = std::max(0, skillPoints_ + delta); }
     int skillPoints() const { return skillPoints_; }
+    // M8 (docs/story/STORY_DATA_SCHEMA.md §8): "必殺充能上限｜floor(舊值÷2)（最少1）" -- a per-run
+    // value (not the old compile-time CombatState::kSuperThreshold) so Game::rebirth() can carry it
+    // forward at half power. A brand-new run gets kDefaultSuperMax via reset(); Game::rebirth()
+    // overwrites it with the halved value right after.
+    static constexpr int kDefaultSuperMax = 5;
+    int superMax() const { return superMax_; }
+    void setSuperMax(int v) { superMax_ = std::max(1, v); }
     // Unconditional: the caller (Game::applyChapterGrants / the skill-tree UI) is expected to have
     // already checked canUnlockSkill -- this just applies it (spend the points, own the skill) and
     // is itself idempotent (a second call for an already-owned id is a safe no-op).
@@ -117,6 +124,7 @@ private:
     std::vector<std::string>           shards_;
     int                                 skillPoints_ = 0;
     std::vector<std::string>           skillsOwned_;
+    int                                 superMax_ = kDefaultSuperMax;
     std::string                        floor_ = "F01";
     std::vector<std::string>           clearedFloors_;
     int deathsTotal_ = 0, deathsNonBoss_ = 0;

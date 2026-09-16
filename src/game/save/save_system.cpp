@@ -75,6 +75,7 @@ nlohmann::json toJson(const RunSaveData& r) {
     // S4: the skill tree's run-scoped progress -- see RunStoryState for what writes/reads it.
     j["skillPoints"] = r.skillPoints;
     j["skillsOwned"] = r.skillsOwned;
+    j["superMax"] = r.superMax;
     return j;
 }
 
@@ -121,6 +122,7 @@ RunSaveData runFromJson(const nlohmann::json& j, bool* versionMismatch) {
     // migration, same rule as every other S3/S4 field above.
     r.skillPoints = j.value("skillPoints", 0);
     r.skillsOwned = j.value("skillsOwned", std::vector<std::string>{});
+    r.superMax = j.value("superMax", 5);
     return r;
 }
 

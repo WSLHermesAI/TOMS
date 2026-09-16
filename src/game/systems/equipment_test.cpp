@@ -143,7 +143,27 @@ int main() {
     CHECK(near(talentDefenseMitigationFloor("guardian"), 0.10f), "Guardian's mitigation floor is 0.10 (10%)");
     CHECK(near(talentDefenseMitigationFloor(""), 0.0f), "no talent equipped -> no mitigation floor");
 
-    if (g_fail == 0) { printf("equipment_test: ALL PASS (30 checks)\n"); return 0; }
+    // 9. S7: equippedActives() -- unions whatever the currently equipped weapon/armor/talent grant.
+    {
+        EquipmentDefinition daggersWithActive = defs["daggers"];
+        daggersWithActive.actives = {"a_twin_flash"};
+        std::map<std::string, EquipmentDefinition> defsWithActive = defs;
+        defsWithActive["daggers"] = daggersWithActive;
+
+        EquippedSet none;
+        CHECK(equippedActives(none, defsWithActive).empty(), "nothing equipped -> no actives");
+
+        EquippedSet withDaggers; withDaggers.weaponId = "daggers";
+        auto acts = equippedActives(withDaggers, defsWithActive);
+        CHECK(acts.size() == 1 && acts[0] == "a_twin_flash", "equipping the active-bearing weapon grants it");
+
+        EquippedSet withPlainWand; withPlainWand.weaponId = "wand";
+        CHECK(equippedActives(withPlainWand, defsWithActive).empty(), "a weapon with no actives field grants none");
+
+        CHECK(equippedActives(withDaggers, defs).empty(), "the SAME weapon id in the original (no-actives) registry grants none -- actives live on the definition, not the id");
+    }
+
+    if (g_fail == 0) { printf("equipment_test: ALL PASS (34 checks)\n"); return 0; }
     printf("equipment_test: %d CHECK(s) FAILED\n", g_fail);
     return 1;
 }

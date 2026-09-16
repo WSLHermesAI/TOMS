@@ -157,7 +157,11 @@ int main(int argc, char** argv) {
             // the in-game menu during plain walking -- it no longer quits the app outright (the
             // window's own close button still does that).
             if (escPressed) {
-                if (g.storeModal()) g.storeKey(27);
+                // M8: Escape always means "decline rebirth / go back" -- either dismisses the
+                // single-exit ending screen, or (when rebirth is offered) explicitly picks the
+                // title over it, mirroring Enter/Space's own "confirm the offered path" below.
+                if (g.endingActive()) g.dismissEndingScreen();
+                else if (g.storeModal()) g.storeKey(27);
                 // Milestone 9: Escape cancels a pending stairs transition (say "no").
                 else if (g.stairsConfirmOpen()) g.cancelStageTransition();
                 else if (g.stageSelectOpen()) g.closeStageSelect();
@@ -204,9 +208,14 @@ int main(int argc, char** argv) {
                 if (downPressed) g.dlgMoveSel(1);
             }
             if (enterPressed || spacePressed) {
+                // M7/M8: checked first of all -- once an ending is showing, it is the only
+                // interactive screen (same reasoning as the title-phase check in handleTouch).
+                // Confirms the offered path: rebirth() itself re-checks rebirthOffered(), so
+                // falling back to dismissEndingScreen() is correct even when it isn't offered.
+                if (g.endingActive()) { if (!g.rebirth()) g.dismissEndingScreen(); }
                 // In-game menu: checked first, same reasoning as stairsConfirmOpen() below --
                 // once open it is the topmost modal.
-                if (g.inGameMenuOpen()) g.inGameMenuActivate();
+                else if (g.inGameMenuOpen()) g.inGameMenuActivate();
                 // Milestone 9: confirm a pending stairs transition (say "yes"). Checked first,
                 // same reasoning as combatWon() below -- once open this is the topmost modal.
                 else if (g.stairsConfirmOpen()) g.confirmStageTransition();
@@ -229,6 +238,9 @@ int main(int argc, char** argv) {
             // yet available.
             if (keyPressed(GLFW_KEY_F) && g.combatActive()) g.battleTapDefense();
             if (keyPressed(GLFW_KEY_G) && g.combatActive()) g.battleTapSuper();
+            // S7 (equipment actives, first slice): a 4th independent tap, same "safe no-op
+            // outside combat / not yet available" rule as Defend/Super above.
+            if (keyPressed(GLFW_KEY_H) && g.combatActive()) g.battleTapActive();
             if (keyPressed(GLFW_KEY_I)) g.toggleInventory();
             // Store: B opens the shop (only when no other modal is up)
             if (keyPressed(GLFW_KEY_B) && !g.modalActive()) g.openStore();

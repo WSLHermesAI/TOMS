@@ -43,7 +43,16 @@ struct MockContext : ConditionContext {
     int counter(const std::string& name) const override {
         auto it = counters.find(name); return it == counters.end() ? 0 : it->second;
     }
+    // M9: a separate set from `flags` above -- storyFlagSet reads META flags, runFlagSet reads
+    // RUN flags, and they are genuinely different namespaces in the real game (game_condition.h).
+    std::set<std::string> runFlags;
+    bool runFlagSet(const std::string& f) const override { return runFlags.count(f) != 0; }
     int cycleIndex() const override { return cycle; }
+    // M7
+    int shards = 0;
+    int memoryShardCount() const override { return shards; }
+    int deaths = 0;
+    int deathsNonBoss() const override { return deaths; }
 };
 
 int main() {
@@ -95,6 +104,10 @@ int main() {
     CHECK(!evaluate({{"type","storyBeatAtLeast"},{"value",5}}, ctx), "storyBeatAtLeast: 4>=5 false");
     CHECK(evaluate({{"type","storyFlagSet"},{"flag","beat_04_scholar_hint_given"}}, ctx), "storyFlagSet: set flag true");
     CHECK(!evaluate({{"type","storyFlagSet"},{"flag","never_set"}}, ctx), "storyFlagSet: unset flag false");
+    ctx.runFlags.insert("event_ev_library_torn_page");
+    CHECK(evaluate({{"type","runFlagSet"},{"flag","event_ev_library_torn_page"}}, ctx), "runFlagSet: set run flag true");
+    CHECK(!evaluate({{"type","runFlagSet"},{"flag","beat_04_scholar_hint_given"}}, ctx),
+          "runFlagSet: a META flag of the same kind of name is NOT a run flag -- separate namespaces");
     CHECK(evaluate({{"type","itemHeld"},{"itemId","key_blue"},{"count",1}}, ctx), "itemHeld: held true");
     CHECK(!evaluate({{"type","itemHeld"},{"itemId","key_red"},{"count",1}}, ctx), "itemHeld: not held false");
     CHECK(evaluate({{"type","itemHeld"},{"itemId","gem_atk"},{"count",3}}, ctx), "itemHeld: exact count true");
@@ -148,7 +161,22 @@ int main() {
     CHECK(!evaluate(nlohmann::json{{"all", "not-an-array"}}, ctx), "malformed 'all' (not an array) fails closed");
     CHECK(!evaluate(nlohmann::json::array({1, 2, 3}), ctx), "a bare JSON array (not an object) fails closed");
 
-    if (g_fail == 0) { printf("condition_eval_test: ALL PASS (24 checks)\n"); return 0; }
+    // M7: "always" -- the endings resolver's guaranteed-fallback leaf.
+    CHECK(evaluate(nlohmann::json{{"type","always"}}, ctx), "'always' is unconditionally true");
+
+    // M7: "memoryShards" -- e_07's own condition.
+    ctx.shards = 4;
+    CHECK(!evaluate(nlohmann::json{{"type","memoryShards"},{"min",5}}, ctx), "4 shards does not satisfy a min of 5");
+    ctx.shards = 5;
+    CHECK(evaluate(nlohmann::json{{"type","memoryShards"},{"min",5}}, ctx), "5 shards satisfies a min of 5");
+
+    // M7: "deathsNonBoss" -- e_13's own condition, a dedicated field, not a generic named counter.
+    ctx.deaths = 11;
+    CHECK(!evaluate(nlohmann::json{{"type","deathsNonBoss"},{"min",12}}, ctx), "11 non-boss deaths does not satisfy a min of 12");
+    ctx.deaths = 12;
+    CHECK(evaluate(nlohmann::json{{"type","deathsNonBoss"},{"min",12}}, ctx), "12 non-boss deaths satisfies a min of 12");
+
+    if (g_fail == 0) { printf("condition_eval_test: ALL PASS (29 checks)\n"); return 0; }
     printf("condition_eval_test: %d CHECK(s) FAILED\n", g_fail);
     return 1;
 }

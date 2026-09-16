@@ -15,7 +15,8 @@
     "slot": "weapon",
     "desc": { "zh_TW": "犧牲少許攻擊力，換取極快的蓄力速度與短小精悍的判定帶。", "en": "Sacrifices a bit of Attack for extremely fast charge speed and a compact, precise timing window.", "zh_CN": "牺牲少许攻击力，换取极快的蓄力速度与短小精悍的判定带。", "ja": "攻撃力を少し犠牲にする代わりに、非常に速いチャージ速度と小さく精密な判定帯を得る。", "ko": "공격력을 약간 희생하는 대신 매우 빠른 차지 속도와 작고 정밀한 판정 구간을 얻습니다.", "es": "Sacrifica algo de Ataque a cambio de una carga extremadamente rápida y una franja de acierto compacta y precisa." },
     "stat": { "atk": -2 },
-    "bar": { "v0": 20, "vmax": 260, "rampTime": 1.0, "greenHalf": 8, "blueOuter": 20, "redOuter": 45, "maxMult": 2.2 }
+    "bar": { "v0": 20, "vmax": 260, "rampTime": 1.0, "greenHalf": 8, "blueOuter": 20, "redOuter": 45, "maxMult": 2.2 },
+    "actives": ["a_twin_flash"]
   },
   "war_hammer": {
     "id": "war_hammer",

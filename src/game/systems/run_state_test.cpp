@@ -110,14 +110,29 @@ static void testRunState() {
     rs.unlockSkill("s_yinqi_1", 1);
     CHECK(rs.skillPoints() == 1, "unlocking an already-owned skill again is a no-op (doesn't double-spend)");
 
-    // rebirth: shards survive, everything else resets (section 8) -- skills are re-earned, not kept
+    // M8: superMax defaults to kDefaultSuperMax, is clamped to >=1, and rides along with the rest
+    // of a fresh run's wipe -- see Game::rebirth() (game_story.cpp) for who re-applies it at half
+    // power afterward; that carry-over logic doesn't live here.
+    CHECK(rs.superMax() == toms::RunStoryState::kDefaultSuperMax, "a fresh run's superMax is the default");
+    rs.setSuperMax(2);
+    CHECK(rs.superMax() == 2, "setSuperMax sets it");
+    rs.setSuperMax(0);
+    CHECK(rs.superMax() == 1, "setSuperMax clamps to a minimum of 1");
+    rs.setSuperMax(3);
+
+    // reset(keepShards=true) itself: shards survive, EVERYTHING else -- including skills/points/
+    // superMax -- is wiped, same as a brand-new-game reset(). This is `reset()`'s own, narrow
+    // contract; the "skills/points/superMax actually carry forward at half power" story is
+    // Game::rebirth()'s job (game_story.cpp), which calls this and then immediately restores them
+    // itself -- not tested here, since that needs Game, not just RunStoryState.
     rs.reset(/*keepShards=*/true);
     CHECK(rs.shardCount() == 1, "rebirth keeps the memory shards");
     CHECK(rs.choice("c_motive").empty() && rs.counter("insight") == 0
           && rs.sideStoryState("ss_01").empty() && rs.clearedFloors().empty()
           && rs.deathsTotal() == 0 && rs.floor() == "F01"
-          && rs.skillPoints() == 0 && rs.skillsOwned().empty(),
-          "rebirth resets choices/counters/side stories/floors/deaths/skills");
+          && rs.skillPoints() == 0 && rs.skillsOwned().empty()
+          && rs.superMax() == toms::RunStoryState::kDefaultSuperMax,
+          "reset(keepShards=true) alone wipes choices/counters/side stories/floors/deaths/skills/superMax too");
     rs.reset();
     CHECK(rs.shardCount() == 0, "a fresh new game clears the shards too");
 }
@@ -181,13 +196,14 @@ static void testSaveV3() {
     rs.noteDeath(false);
     rs.addSkillPoints(2);
     rs.unlockSkill("s_yinqi", 0);
+    rs.setSuperMax(3);   // M8
     rs.writeInto(r);
 
     nlohmann::json j = toms::toJson(r);
     CHECK(j["schemaVersion"] == 3 && j.contains("choices") && j.contains("counters")
           && j.contains("sideStories") && j.contains("flags") && j.contains("shards")
           && j.contains("clearedFloors") && j.contains("deathsTotal")
-          && j.contains("skillPoints") && j.contains("skillsOwned"),
+          && j.contains("skillPoints") && j.contains("skillsOwned") && j.contains("superMax"),
           "the v3 run file carries the story state");
 
     bool mismatch = false;
@@ -205,6 +221,7 @@ static void testSaveV3() {
           "floor progress and the current stage both persist");
     CHECK(rs2.skillPoints() == 2 && rs2.hasSkill("s_yinqi"),
           "S4: skill points and owned skills survive the round trip");
+    CHECK(rs2.superMax() == 3, "M8: superMax survives the round trip");
 
     // ---- pre-v3 migration: an OLD file must load, with the new fields defaulted ----
     nlohmann::json old = {
@@ -224,7 +241,8 @@ static void testSaveV3() {
     CHECK(migrated.choices.empty() && migrated.counters.empty() && migrated.sideStories.empty()
           && migrated.shards.empty() && migrated.clearedFloors.empty()
           && migrated.floor == "F01" && migrated.deathsTotal == 0
-          && migrated.skillPoints == 0 && migrated.skillsOwned.empty(),
+          && migrated.skillPoints == 0 && migrated.skillsOwned.empty()
+          && migrated.superMax == 5,
           "pre-v3 story state loads as the documented defaults, never a refusal");
 
     // meta: cycleIndex survives, defaults to 1 for old files

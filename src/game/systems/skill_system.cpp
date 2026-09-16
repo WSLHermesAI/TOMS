@@ -2,6 +2,7 @@
 #include "save_system.h"   // toms::readJsonFileSafe
 
 #include <algorithm>
+#include <cmath>
 
 namespace toms {
 
@@ -64,12 +65,14 @@ bool canUnlockSkill(const std::map<std::string, SkillDefinition>& defs,
 }
 
 void applySkillEffects(const std::map<std::string, SkillDefinition>& defs,
-                        const std::vector<std::string>& owned, int& atk, int& def) {
+                        const std::vector<std::string>& owned, int& atk, int& def,
+                        float rebirthScale) {
     for (auto& id : owned) {
         auto it = defs.find(id);
         if (it == defs.end()) continue;
-        atk += it->second.statAtk;
-        def += it->second.statDef;
+        float scale = (it->second.tier <= 0) ? 1.0f : rebirthScale;
+        atk += (int)std::floor(it->second.statAtk * scale);
+        def += (int)std::floor(it->second.statDef * scale);
     }
 }
 

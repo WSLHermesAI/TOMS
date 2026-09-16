@@ -205,7 +205,12 @@ void testShippedTower() {
             for (char c : row) { if (c == 'U') ++exits; else if (c == 'D') ++backs; }
         }
         CHECK(exits == 1, "%s should have exactly one exit tile ('U'), found %d", f.id.c_str(), exits);
-        CHECK(backs >= 1, "%s has no way back down ('D'), found %d", f.id.c_str(), backs);
+        // M9 (stair alignment): F01 is the chain's true head -- there is no floor below it, so it
+        // correctly has zero 'D' tiles now (it used to carry one anyway, but that tile was always
+        // inert: floors_.prev("F01") is empty regardless of what the grid itself contains).
+        // Every other floor's stairs_down is real and forced to match the previous floor's exit.
+        if (f.id == "F01") CHECK(backs == 0, "F01 (the chain head) should have no 'D' tile, found %d", backs);
+        else CHECK(backs >= 1, "%s has no way back down ('D'), found %d", f.id.c_str(), backs);
     }
     CHECK(checkedGrids == 60, "expected to read 60 grids, read %d", checkedGrids);
 

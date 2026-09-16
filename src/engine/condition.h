@@ -43,6 +43,20 @@ public:
     virtual std::string sideStoryState(const std::string& /*sideStoryId*/) const { return ""; }
     virtual int counter(const std::string& /*counter*/) const { return 0; }
     virtual int cycleIndex() const { return 1; }
+    // M7 (docs/story/STORY_DATA_SCHEMA.md §2.2/§7): e_07's own condition ("記憶碎片不足"). Defaulted
+    // to 0 for the same "an uninterested mock can't accidentally grant something" reason as the S3
+    // leaves above.
+    virtual int memoryShardCount() const { return 0; }
+    // M7: e_13's own condition ("非首領戰死亡累積 ≥12"). RunStoryState::deathsNonBoss() is a
+    // dedicated field, not one of the generic named counters (insight/resolve/humanity), so it
+    // gets its own leaf rather than being smuggled through "counterAtLeast" under a fake name.
+    virtual int deathsNonBoss() const { return 0; }
+    // M9: storyFlagSet() above only ever reads the META save's flags (toms::hasStoryFlag) -- the
+    // RUN-scoped flags a floor event tile sets on itself ("event_<id>", game_input.cpp) and the
+    // ones a choice's own setFlags list writes (e.g. flag_page_returned) live in RunStoryState
+    // instead and had no leaf able to read them back at all until a dialogue choice (ss_04) needed
+    // to gate on one. Defaulted like the S3/M7 leaves above.
+    virtual bool runFlagSet(const std::string& /*flag*/) const { return false; }
 };
 
 // Recursively evaluates `expr` against `ctx`. A null/non-object `expr` is vacuously true (no

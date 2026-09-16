@@ -69,6 +69,9 @@ struct RunSaveData {
     // ---- S4, run scope (the 功法三系 skill tree, data/skills.json) ----
     int skillPoints = 0;
     std::vector<std::string> skillsOwned;
+    // ---- M8, run scope: the Super-Attack Gauge's per-run cap (docs/story/STORY_DATA_SCHEMA.md §8's
+    // "必殺充能上限｜floor(舊值÷2)（最少1）") -- see RunStoryState::kDefaultSuperMax for the baseline.
+    int superMax = 5;
 };
 
 nlohmann::json toJson(const MetaSaveData& m);

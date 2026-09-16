@@ -19,6 +19,14 @@ void Game::draw() {
         ren->end();
         return;
     }
+    // M7 (first slice): an active ending takes over the whole screen the same way the title does
+    // -- nothing behind it is meaningful once a run has actually ended (see triggerEnding()).
+    if (endingActive()) {
+        ren->setNode(NODE_UNSPEC);
+        drawEndingScreen();
+        ren->end();
+        return;
+    }
     float W = (float)ren->width(), H = (float)ren->height();
     // Milestone 9 originally shrank tile size to fit the whole (up to 34x31) grid onto one
     // fixed-size screen -- legible on desktop, but tiny/hard-to-tap on mobile once stages grew
@@ -292,6 +300,12 @@ void Game::draw() {
                 ? trParam(locale_.tr("battle.shield_armed"), "pct", std::to_string((int)std::lround(cs.shieldPower)))
                 : locale_.tr("battle.shield_none");
             drawText(shieldTxt, defX, SY(462), S(14), cs.shieldBanked ? C4(0.55f,0.75f,1.0f,1) : C4(0.6f,0.63f,0.7f,1));
+            // S7 (equipment actives, first slice): a persistent reminder that the crit buff is
+            // armed -- cs.log alone would say so too, but it gets overwritten by the very next
+            // exchange (the enemy's own clock can fire before the player taps Attack), so this
+            // survives until the buff is actually consumed, mirroring shieldTxt's own persistence.
+            if (cs.nextAttackGuaranteedCrit)
+                drawText(locale_.tr("battle.active_armed_hint"), atkX, SY(462), S(14), C4(1.0f, 0.85f, 0.3f, 1));
 
             // Super-Attack Gauge (§4): a row of dots (filled = one banked charge toward a free,
             // no-timing-required strong hit) plus a button that only appears once full. Tapping
@@ -300,14 +314,14 @@ void Game::draw() {
             // now scaled the same way as everything above it.
             drawText(locale_.tr("battle.super_label"), cx, SY(486), S(14), C4(0.9f, 0.9f, 1.0f, 1));
             float dotX = cx + S(110.0f), dotY = SY(486), dotSz = S(12.0f), dotGap = S(6.0f);
-            for (int i = 0; i < CombatState::kSuperThreshold; i++) {
+            for (int i = 0; i < run_.superMax(); i++) {
                 Quad d; d.rect[0]=dotX + i*(dotSz+dotGap); d.rect[1]=dotY; d.rect[2]=dotSz; d.rect[3]=dotSz;
                 d.uv[0]=0; d.uv[1]=0; d.uv[2]=1; d.uv[3]=1; d.solid=true;
                 if (i < cs.superCharge) { d.tint[0]=1.0f; d.tint[1]=0.6f; d.tint[2]=0.25f; d.tint[3]=1; }
                 else                    { d.tint[0]=0.2f; d.tint[1]=0.2f; d.tint[2]=0.25f; d.tint[3]=1; }
                 ren->drawSprite(d);
             }
-            bool superReady = cs.superCharge >= CombatState::kSuperThreshold;
+            bool superReady = cs.superCharge >= run_.superMax();
             if (superReady) {
                 float sX = cx, sY = SY(508), sW = S(500.0f), sH = S(36.0f);
                 superBtnRect_[0]=(int)sX; superBtnRect_[1]=(int)sY; superBtnRect_[2]=(int)sW; superBtnRect_[3]=(int)sH;
@@ -318,6 +332,26 @@ void Game::draw() {
                 drawText(locale_.tr("battle.super_ready"), sX + S(150.0f), sY + S(8.0f), S(16.0f), C4(1,1,1,1));
             } else {
                 superBtnRect_[0]=superBtnRect_[1]=superBtnRect_[2]=superBtnRect_[3]=0;
+            }
+
+            // S7 (equipment actives, first slice): a 4th battle action, only shown once the
+            // currently equipped gear grants an active and it hasn't been spent this battle --
+            // same "no button at all until it's actually available" convention as Super above,
+            // rather than a permanently-visible-but-disabled button.
+            auto activeIds = toms::equippedActives(equipped_, equipmentDefs_);
+            if (!cs.activeUsed && !activeIds.empty()) {
+                auto defIt = activeDefs_.find(activeIds[0]);
+                std::string activeLabel = (defIt != activeDefs_.end()) ? locale_.field(defIt->second.name) : activeIds[0];
+                float aX = cx, aY = SY(552.0f), aW = S(500.0f), aH = S(36.0f);
+                activeBtnRect_[0]=(int)aX; activeBtnRect_[1]=(int)aY; activeBtnRect_[2]=(int)aW; activeBtnRect_[3]=(int)aH;
+                Quad ab; ab.rect[0]=aX; ab.rect[1]=aY; ab.rect[2]=aW; ab.rect[3]=aH;
+                ab.uv[0]=0; ab.uv[1]=0; ab.uv[2]=1; ab.uv[3]=1; ab.solid=true;
+                ab.tint[0]=0.25f; ab.tint[1]=0.55f; ab.tint[2]=0.65f; ab.tint[3]=1;
+                ren->drawSprite(ab);
+                drawText(trParam(locale_.tr("battle.active_ready"), "name", activeLabel),
+                         aX + S(20.0f), aY + S(8.0f), S(15.0f), C4(1,1,1,1));
+            } else {
+                activeBtnRect_[0]=activeBtnRect_[1]=activeBtnRect_[2]=activeBtnRect_[3]=0;
             }
         } else {
             drawText(locale_.tr("battle.continue_hint"), cx, SY(350), S(16), C4(1,1,0.6f,1));
@@ -601,4 +635,63 @@ void Game::drawStylingSpikeBackdrop() {
     inner.uv[0]=0;inner.uv[1]=0;inner.uv[2]=1;inner.uv[3]=1; inner.solid=true;
     inner.tint[0]=0.10f; inner.tint[1]=0.09f; inner.tint[2]=0.16f; inner.tint[3]=0.96f;
     ren->drawSprite(inner);
+}
+
+// M7 (first slice): the ending screen. Drawn with the game's own scene-graph primitives (not
+// ImGui, unlike the styling-spike/stage-select windows above) so it renders identically on
+// desktop and web -- see draw()'s own dispatch, which gives this full-screen priority the same
+// way the title screen gets it.
+void Game::drawEndingScreen() {
+    if (!ren) return;
+    const float W = (float)ren->width(), H = (float)ren->height();
+    static const float gold[4] = {0.95f, 0.82f, 0.45f, 1.0f};
+    static const float white[4] = {1,1,1,1};
+    static const float dim[4]  = {0.62f, 0.65f, 0.75f, 1.0f};
+
+    Quad bg; bg.rect[0]=0; bg.rect[1]=0; bg.rect[2]=W; bg.rect[3]=H;
+    bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1; bg.solid=true;
+    bg.tint[0]=0.04f; bg.tint[1]=0.04f; bg.tint[2]=0.07f; bg.tint[3]=1.0f;
+    ren->drawSprite(bg);
+
+    const toms::EndingDefinition* def = nullptr;
+    for (auto& e : endingsTable_.endings) if (e.id == activeEndingId_) { def = &e; break; }
+    std::string name = def ? locale_.tr(def->nameKey) : activeEndingId_;
+    std::string text = def ? locale_.tr(def->textKey) : "";
+
+    float titleY = H * 0.32f;
+    drawText(name, (W - measureText(name, 32.0f)) * 0.5f, titleY, 32, gold);
+
+    toms::UiLayout ui{W, H};
+    float maxW = W - 160.0f;
+    auto lines = ui.wrap(text, maxW, [&](const std::string& s) { return measureText(s, 18.0f); });
+    float ty = titleY + 60.0f;
+    for (auto& line : lines) {
+        drawText(line, (W - measureText(line, 18.0f)) * 0.5f, ty, 18, white);
+        ty += 28.0f;
+    }
+
+    // M8: two real exits when the ending offers 輪迴 (rebirth), matching the confirm-dialog
+    // button style used elsewhere (e.g. the in-game menu's language-switch Yes/No) rather than a
+    // half-screen tap zone -- explicit rects, drawn and hit-tested from the exact same place.
+    if (rebirthOffered()) {
+        auto button = [&](int rectOut[4], float x, float y, float w, float h, const std::string& label, const float* tint) {
+            rectOut[0]=(int)x; rectOut[1]=(int)y; rectOut[2]=(int)w; rectOut[3]=(int)h;
+            Quad q; q.rect[0]=x; q.rect[1]=y; q.rect[2]=w; q.rect[3]=h;
+            q.uv[0]=0;q.uv[1]=0;q.uv[2]=1;q.uv[3]=1; q.solid=true;
+            q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
+            ren->drawSprite(q);
+            drawText(label, x + (w - measureText(label, 18.0f)) * 0.5f, y + (h-20.0f)*0.5f, 18, white);
+        };
+        static const float rebirthTint[4] = {0.55f, 0.30f, 0.20f, 1.0f};
+        static const float titleTint[4]   = {0.20f, 0.24f, 0.34f, 1.0f};
+        float btnW = 220.0f, btnH = 48.0f, gap = 30.0f, groupW = btnW*2 + gap;
+        float bx = (W - groupW) * 0.5f, by = H - 110.0f;
+        button(endingRebirthBtnRect_, bx, by, btnW, btnH, locale_.tr("ending.rebirth_button"), rebirthTint);
+        button(endingTitleBtnRect_,   bx + btnW + gap, by, btnW, btnH, locale_.tr("ending.title_button"), titleTint);
+    } else {
+        endingRebirthBtnRect_[0]=endingRebirthBtnRect_[1]=endingRebirthBtnRect_[2]=endingRebirthBtnRect_[3]=0;
+        endingTitleBtnRect_[0]=endingTitleBtnRect_[1]=endingTitleBtnRect_[2]=endingTitleBtnRect_[3]=0;
+        std::string hint = locale_.tr("ending.dismiss_hint");
+        drawText(hint, (W - measureText(hint, 15.0f)) * 0.5f, H - 60.0f, 15, dim);
+    }
 }

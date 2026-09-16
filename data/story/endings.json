@@ -1,0 +1,137 @@
+{
+  "resolutionOrder": "firstMatchWins",
+  "fallback": "e_05",
+  "endings": [
+    {
+      "id": "e_01", "name": "story.ending.e01.name", "text": "story.ending.e01.text",
+      "tone": "secret-good", "allowsRebirth": true, "unlocksHint": "hint_e01_cycle",
+      "requires": { "all": [
+        { "type": "cycleIndexAtLeast", "min": 9 },
+        { "type": "counterAtLeast", "counter": "insight", "min": 12 },
+        { "type": "itemHeld", "itemId": "qingxiao_blade" },
+        { "type": "sideStoryState", "sideStoryId": "ss_01", "state": "completed" },
+        { "type": "sideStoryState", "sideStoryId": "ss_02", "state": "completed" },
+        { "type": "sideStoryState", "sideStoryId": "ss_03", "state": "completed" },
+        { "type": "sideStoryState", "sideStoryId": "ss_04", "state": "completed" },
+        { "type": "sideStoryState", "sideStoryId": "ss_05", "state": "completed" },
+        { "type": "sideStoryState", "sideStoryId": "ss_06", "state": "completed" },
+        { "type": "sideStoryState", "sideStoryId": "ss_07", "state": "completed" },
+        { "type": "sideStoryState", "sideStoryId": "ss_08", "state": "completed" },
+        { "type": "sideStoryState", "sideStoryId": "ss_09", "state": "completed" },
+        { "type": "sideStoryState", "sideStoryId": "ss_10", "state": "completed" }
+      ] }
+    },
+    {
+      "id": "e_02", "name": "story.ending.e02.name", "text": "story.ending.e02.text",
+      "tone": "good", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "all": [
+        { "type": "storyFlagSet", "flag": "flag_path_guard" },
+        { "type": "sideStoryState", "sideStoryId": "ss_08", "state": "completed" },
+        { "type": "sideStoryState", "sideStoryId": "ss_10", "state": "completed" },
+        { "type": "itemHeld", "itemId": "star_core_fragment" },
+        { "type": "counterAtLeast", "counter": "humanity", "min": 5 }
+      ] }
+    },
+    {
+      "id": "e_03", "name": "story.ending.e03.name", "text": "story.ending.e03.text",
+      "tone": "good", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "all": [
+        { "type": "storyFlagSet", "flag": "flag_path_guard" },
+        { "type": "counterAtLeast", "counter": "humanity", "min": 3 },
+        { "type": "itemHeld", "itemId": "princess_token" }
+      ] }
+    },
+    {
+      "id": "e_04", "name": "story.ending.e04.name", "text": "story.ending.e04.text",
+      "tone": "good-bittersweet", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "all": [
+        { "type": "storyFlagSet", "flag": "flag_path_vendetta" },
+        { "type": "storyFlagSet", "flag": "flag_blow_kill" },
+        { "type": "counterAtLeast", "counter": "insight", "min": 6 }
+      ] }
+    },
+    {
+      "id": "e_05", "name": "story.ending.e05.name", "text": "story.ending.e05.text",
+      "tone": "neutral", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "all": [
+        { "type": "storyFlagSet", "flag": "flag_blow_stay" },
+        { "type": "counterAtLeast", "counter": "humanity", "min": 3 },
+        { "not": { "type": "itemHeld", "itemId": "key_red" } }
+      ] }
+    },
+    {
+      "id": "e_15", "name": "story.ending.e15.name", "text": "story.ending.e15.text",
+      "tone": "secret-neutral", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "all": [
+        { "type": "counterAtLeast", "counter": "humanity", "min": 8 },
+        { "type": "storyFlagSet", "flag": "flag_bell_liora" },
+        { "not": { "type": "itemHeld", "itemId": "star_core_fragment" } }
+      ] }
+    },
+    {
+      "id": "e_06", "name": "story.ending.e06.name", "text": "story.ending.e06.text",
+      "tone": "bad", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "all": [
+        { "type": "counterAtLeast", "counter": "resolve", "min": 10 },
+        { "type": "storyFlagSet", "flag": "flag_blow_kill" },
+        { "not": { "type": "counterAtLeast", "counter": "insight", "min": 5 } }
+      ] }
+    },
+    {
+      "id": "e_07", "name": "story.ending.e07.name", "text": "story.ending.e07.text",
+      "tone": "bad", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "not": { "type": "memoryShards", "min": 5 } }
+    },
+    {
+      "id": "e_08", "name": "story.ending.e08.name", "text": "story.ending.e08.text",
+      "tone": "bad", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "all": [
+        { "not": { "type": "itemHeld", "itemId": "key_red" } },
+        { "not": { "type": "sideStoryState", "sideStoryId": "ss_10", "state": "completed" } }
+      ] }
+    },
+    {
+      "id": "e_09", "name": "story.ending.e09.name", "text": "story.ending.e09.text",
+      "tone": "bad", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "all": [
+        { "type": "choiceMade", "choiceId": "c_f69_hear_him_out", "optionId": "opt_listen" },
+        { "not": { "type": "counterAtLeast", "counter": "insight", "min": 6 } },
+        { "not": { "type": "counterAtLeast", "counter": "resolve", "min": 6 } }
+      ] }
+    },
+    {
+      "id": "e_10", "name": "story.ending.e10.name", "text": "story.ending.e10.text",
+      "tone": "bad-terminal", "allowsRebirth": false, "unlocksHint": "",
+      "requires": { "type": "cycleIndexAtLeast", "min": 9 }
+    },
+    {
+      "id": "e_11", "name": "story.ending.e11.name", "text": "story.ending.e11.text",
+      "tone": "bad", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "all": [
+        { "type": "itemHeld", "itemId": "emperor_bone_armor" },
+        { "not": { "type": "counterAtLeast", "counter": "insight", "min": 5 } }
+      ] }
+    },
+    {
+      "id": "e_12", "name": "story.ending.e12.name", "text": "story.ending.e12.text",
+      "tone": "bad", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "type": "storyFlagSet", "flag": "flag_star_core_shattered" }
+    },
+    {
+      "id": "e_13", "name": "story.ending.e13.name", "text": "story.ending.e13.text",
+      "tone": "bad", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "type": "deathsNonBoss", "min": 12 }
+    },
+    {
+      "id": "e_14", "name": "story.ending.e14.name", "text": "story.ending.e14.text",
+      "tone": "bad", "allowsRebirth": true, "unlocksHint": "",
+      "requires": { "not": { "any": [
+        { "type": "storyFlagSet", "flag": "flag_motive_know_self" },
+        { "type": "storyFlagSet", "flag": "flag_motive_save_liora" },
+        { "type": "storyFlagSet", "flag": "flag_motive_avenge" },
+        { "type": "storyFlagSet", "flag": "flag_gate_broken" },
+        { "type": "storyFlagSet", "flag": "flag_gate_unsealed" }
+      ] } }
+    }
+  ]
+}

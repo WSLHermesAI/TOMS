@@ -33,6 +33,125 @@
             "es": "He aprendido mucho."
           },
           "next": null
+        },
+        {
+          "requires": {
+            "all": [
+              { "any": [
+                { "type": "runFlagSet", "flag": "event_ev_library_torn_page" },
+                { "type": "runFlagSet", "flag": "event_ev_library_torn_page_v2" },
+                { "type": "runFlagSet", "flag": "event_ev_library_torn_page_v4" }
+              ] },
+              { "not": { "type": "sideStoryState", "sideStoryId": "ss_04", "state": "completed" } }
+            ]
+          },
+          "label": {
+            "zh_TW": "這頁角落的指印，是你的？",
+            "en": "That fingerprint on the corner — is it yours?",
+            "zh_CN": "这页角落的指印，是你的？",
+            "ja": "この頁の端の指紋——お前のものか？",
+            "ko": "이 페이지 모서리의 지문, 당신 것인가?",
+            "es": "Esa huella en la esquina de la página... ¿es tuya?"
+          },
+          "next": "ss04_confront"
+        }
+      ]
+    },
+    "ss04_confront": {
+      "text": {
+        "zh_TW": "……是吾撕下的。十年前吾亦如汝，先一步爬到此處。此頁記著一段口訣，助引氣連綿不絕——汝要交還於書架，還是留下自行研讀？",
+        "en": "...I tore it out myself. Ten years ago I climbed this far, same as you do now. It holds a mnemonic — one that lets Qi Drawing carry from strike to strike. Will you return it to the shelf, or keep it and study it yourself?",
+        "zh_CN": "……是吾撕下的。十年前吾亦如汝，先一步爬到此处。此页记着一段口诀，助引气连绵不绝——汝要交还于书架，还是留下自行研读？",
+        "ja": "……我が破ったのだ。十年前、我もお前と同じくここまで登った。この頁には口訣が記されている——引氣を途切れさせぬ術だ。書架に戻すか、それとも持ち帰り自ら学ぶか？",
+        "ko": "……내가 찢은 것이다. 십 년 전, 나 역시 너처럼 여기까지 올라왔었다. 이 페이지엔 구결이 적혀 있다——인기를 끊이지 않게 하는 법이다. 서가에 돌려놓겠느냐, 아니면 가져가 스스로 익히겠느냐?",
+        "es": "...la arranqué yo mismo. Hace diez años llegué hasta aquí, igual que tú ahora. Contiene una fórmula que hace que la Extracción de Qi fluya de un golpe al siguiente. ¿La devolverás al estante, o la conservarás para estudiarla tú mismo?"
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "交還書架。",
+            "en": "Return it to the shelf.",
+            "zh_CN": "交还书架。",
+            "ja": "書架に戻す。",
+            "ko": "서가에 돌려놓는다.",
+            "es": "La devolveré al estante."
+          },
+          "action": {
+            "type": "makeChoice",
+            "choiceId": "c_library_page",
+            "optionId": "opt_return",
+            "setFlags": ["flag_page_returned"],
+            "counters": { "insight": 1 },
+            "grantSkill": "s_yinqi_combo",
+            "completeSideStory": "ss_04"
+          },
+          "next": "ss04_after_return"
+        },
+        {
+          "label": {
+            "zh_TW": "留下自行研讀。",
+            "en": "Keep it and study it yourself.",
+            "zh_CN": "留下自行研读。",
+            "ja": "持ち帰り自ら学ぶ。",
+            "ko": "가져가 스스로 익힌다.",
+            "es": "La conservaré y la estudiaré yo mismo."
+          },
+          "action": {
+            "type": "makeChoice",
+            "choiceId": "c_library_page",
+            "optionId": "opt_keep",
+            "setFlags": ["flag_page_kept"],
+            "counters": { "resolve": 1 },
+            "grantSkill": "s_yinqi_combo",
+            "completeSideStory": "ss_04"
+          },
+          "next": "ss04_after_study"
+        }
+      ]
+    },
+    "ss04_after_return": {
+      "text": {
+        "zh_TW": "學者的眼窩暗了一瞬，似是釋然。「引氣・連擊」的口訣已刻入汝之筋骨。",
+        "en": "The scholar's empty eye sockets dim for a moment, almost relieved. The Qi Drawing: Combo mnemonic is now yours.",
+        "zh_CN": "学者的眼窝暗了一瞬，似是释然。「引气・连击」的口诀已刻入汝之筋骨。",
+        "ja": "学者の眼窩が一瞬暗くなる——安堵したかのように。「引氣・連撃」の口訣は既にお前の身に刻まれた。",
+        "ko": "학자의 눈구멍이 한순간 어두워진다——안도한 듯이. '인기·연격'의 구결은 이미 네 몸에 새겨졌다.",
+        "es": "Las cuencas vacías del erudito se oscurecen un instante, como aliviadas. La fórmula de Extracción de Qi: Combo ya es tuya."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "多謝。",
+            "en": "My thanks.",
+            "zh_CN": "多谢。",
+            "ja": "感謝する。",
+            "ko": "고맙다.",
+            "es": "Te lo agradezco."
+          },
+          "next": null
+        }
+      ]
+    },
+    "ss04_after_study": {
+      "text": {
+        "zh_TW": "學者沉默良久。「……汝與吾，終究是同一種人。」此後，他不再回應你的提問。",
+        "en": "The scholar is silent for a long while. \"...you and I, in the end, are the same kind.\" After this, he no longer answers your questions.",
+        "zh_CN": "学者沉默良久。「……汝与吾，终究是同一种人。」此后，他不再回应你的提问。",
+        "ja": "学者は長く沈黙した。「……お前も我も、結局は同じ類の者よ。」以後、彼は問いに応えなくなった。",
+        "ko": "학자는 오랫동안 침묵했다. \"……너와 나는, 결국 같은 부류로구나.\" 그 후로 그는 더 이상 질문에 답하지 않는다.",
+        "es": "El erudito guarda silencio largo rato. «...tú y yo, al final, somos la misma clase de persona.» Después de esto, ya no responde a tus preguntas."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "...",
+            "zh_CN": "……",
+            "ja": "……",
+            "ko": "……",
+            "es": "..."
+          },
+          "next": null
         }
       ]
     },

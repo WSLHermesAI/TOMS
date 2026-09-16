@@ -23,6 +23,7 @@ bool evaluate(const nlohmann::json& expr, const ConditionContext& ctx) {
     std::string type = expr.value("type", std::string());
     if (type == "storyBeatAtLeast") return ctx.storyBeat() >= expr.value("value", 0);
     if (type == "storyFlagSet")     return ctx.storyFlagSet(expr.value("flag", std::string()));
+    if (type == "runFlagSet")       return ctx.runFlagSet(expr.value("flag", std::string()));
     if (type == "itemHeld")         return ctx.itemHeld(expr.value("itemId", std::string()), expr.value("count", 1));
     if (type == "statAtLeast")      return ctx.statValue(expr.value("stat", std::string())) >= expr.value("value", 0);
     if (type == "missionComplete")  return ctx.missionComplete(expr.value("missionId", std::string()));
@@ -39,6 +40,13 @@ bool evaluate(const nlohmann::json& expr, const ConditionContext& ctx) {
         return ctx.counter(expr.value("counter", std::string())) >= expr.value("min", 0);
     if (type == "cycleIndexAtLeast")
         return ctx.cycleIndex() >= expr.value("min", 1);
+    // M7 (docs/story/STORY_DATA_SCHEMA.md §7.1): the endings resolver's guaranteed fallback rule
+    // needs an explicit, context-independent "always true" leaf -- a null/absent condition already
+    // means this (see the file comment), but `endings.json`'s own schema spells it out as a real
+    // leaf for clarity in a list that's otherwise all real conditions.
+    if (type == "always") return true;
+    if (type == "memoryShards") return ctx.memoryShardCount() >= expr.value("min", 0);
+    if (type == "deathsNonBoss") return ctx.deathsNonBoss() >= expr.value("min", 0);
 
     return false;   // unknown leaf type -> fail closed
 }

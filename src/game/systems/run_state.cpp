@@ -106,9 +106,15 @@ void RunStoryState::reset(bool keepShards) {
     floor_ = "F01";
     skillPoints_ = 0;
     skillsOwned_.clear();
-    // Section 8: rebirth carries exactly two things forward -- the memory shards, and (on the meta
-    // save, not here) cycleIndex / endingsSeen / hintsUnlocked. Skills are re-earned like every
-    // other run-scoped progress (the chapter grants that fund them fire again from ch_01).
+    superMax_ = kDefaultSuperMax;
+    // Section 8: on its own, this wipes EVERYTHING run-scoped except the shards `keepShards`
+    // preserves (and, on the meta save, not here: cycleIndex/endingsSeen/hintsUnlocked). A brand
+    // New Game calls this with keepShards=false and stops here -- a genuinely fresh run.
+    // Game::rebirth() (M8) is the OTHER caller, with keepShards=true: it calls this first for
+    // exactly the same full wipe, then immediately restores skillsOwned_/skillPoints_/superMax_
+    // itself at their HALVED values (docs/story/STORY_BIBLE.md §8's carry table) via the public
+    // unlockSkill()/addSkillPoints()/setSuperMax() below -- this function only ever produces a
+    // fully-wiped state; it is never the one deciding what a rebirth carries forward.
     if (!keepShards) shards_.clear();
 }
 
@@ -124,6 +130,7 @@ void RunStoryState::writeInto(RunSaveData& r) const {
     r.deathsNonBoss = deathsNonBoss_;
     r.skillPoints = skillPoints_;
     r.skillsOwned = skillsOwned_;
+    r.superMax = superMax_;
 }
 
 void RunStoryState::readFrom(const RunSaveData& r) {
@@ -138,6 +145,7 @@ void RunStoryState::readFrom(const RunSaveData& r) {
     deathsNonBoss_ = r.deathsNonBoss;
     skillPoints_ = r.skillPoints;
     skillsOwned_ = r.skillsOwned;
+    superMax_ = r.superMax;
     // Re-apply the declared clamps: a hand-edited or older save must not smuggle an out-of-range
     // counter past the rules section 8's rebirth maths depends on.
     std::map<std::string, int> snapshot = counters_;

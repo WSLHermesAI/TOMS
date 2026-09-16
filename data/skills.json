@@ -19,6 +19,16 @@
     "desc": { "zh_TW": "深化引氣之法，出手更為凌厲。", "en": "Deepens Qi Drawing — your attacks land noticeably harder.", "zh_CN": "深化引气之法，出手更为凌厉。", "ja": "引氣をさらに深め、一撃がより鋭くなる。", "ko": "인기를 더욱 심화하여 공격이 한층 매섭습니다.", "es": "Profundiza la Extracción de Qi: tus ataques golpean notablemente más fuerte." },
     "effect": { "atk": 2 }
   },
+  "s_yinqi_combo": {
+    "id": "s_yinqi_combo",
+    "lineage": "yinqi",
+    "tier": 2,
+    "cost": 0,
+    "requires": ["s_yinqi_1"],
+    "name": { "zh_TW": "引氣・連擊", "en": "Qi Drawing: Combo", "zh_CN": "引气・连击", "ja": "引氣・連撃", "ko": "인기・연격", "es": "Extracción de Qi: Combo" },
+    "desc": { "zh_TW": "藏書閣殘頁所載的口訣，讓引氣之力連綿不絕。", "en": "A mnemonic from a torn library page — it lets Qi Drawing's force carry from one strike into the next.", "zh_CN": "藏书阁残页所载的口诀，让引气之力连绵不绝。", "ja": "書庫の破れたページに記された口訣。引氣の力を一撃ごとに途切れさせない。", "ko": "서고의 찢어진 페이지에 적힌 구결. 인기의 힘을 끊이지 않게 이어줍니다.", "es": "Una fórmula de una página rasgada de la biblioteca: hace que la fuerza de la Extracción de Qi fluya de un golpe al siguiente." },
+    "effect": { "atk": 2 }
+  },
   "s_yuqi": {
     "id": "s_yuqi",
     "lineage": "yuqi",

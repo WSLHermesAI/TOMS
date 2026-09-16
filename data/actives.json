@@ -1,0 +1,22 @@
+{
+  "a_twin_flash": {
+    "id": "a_twin_flash",
+    "name": {
+      "zh_TW": "疾影斬",
+      "en": "Swift Shadow Strike",
+      "zh_CN": "疾影斩",
+      "ja": "疾影斬",
+      "ko": "질영참",
+      "es": "Golpe de Sombra Veloz"
+    },
+    "desc": {
+      "zh_TW": "灌注雙匕全力，下一次攻擊必定命中要害，傷害 x1.8（每場戰鬥限一次）。",
+      "en": "Channel the twin daggers' full force -- your next attack is guaranteed to strike true, dealing x1.8 damage (once per battle).",
+      "zh_CN": "灌注双匕全力，下一次攻击必定命中要害，伤害 x1.8（每场战斗限一次）。",
+      "ja": "双剣に全力を込める。次の攻撃は必ず急所を突き、ダメージ x1.8（1戦闘につき1回）。",
+      "ko": "쌍검에 온 힘을 담습니다. 다음 공격은 반드시 급소를 맞혀 피해 x1.8 (전투당 1회).",
+      "es": "Concentra toda la fuerza de las dagas gemelas: tu próximo ataque acierta con seguridad, x1.8 de daño (una vez por combate)."
+    },
+    "effect": { "kind": "guaranteed_crit_next_attack", "damageMult": 1.8 }
+  }
+}

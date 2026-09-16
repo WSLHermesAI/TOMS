@@ -88,6 +88,22 @@ int jsRunCounter(const char* name) {
     if (!g_game || !name) return -999;
     return g_game->runState().counter(name);
 }
+EMSCRIPTEN_KEEPALIVE
+int jsStoryFlag(const char* flag) { return (g_game && flag && g_game->runState().flag(flag)) ? 1 : 0; }
+// Dev/verification only: set a run flag directly (mirrors jsForceLose/jsDebugBattle -- skips
+// re-driving an already-proven upstream trigger, e.g. walking onto a specific floor event tile,
+// so a page driver can reach a flag-gated dialogue choice directly).
+EMSCRIPTEN_KEEPALIVE
+void jsSetFlag(const char* flag) { if (g_game && flag) g_game->debugSetFlag(flag); }
+EMSCRIPTEN_KEEPALIVE
+void jsWarpPlayer(int x, int y) { if (g_game) g_game->debugWarpPlayer(x, y); }
+// M9 probe: a side story's state ("" until touched, then available/accepted/declined/completed/failed).
+EMSCRIPTEN_KEEPALIVE
+const char* jsSideStoryState(const char* id) {
+    static std::string s;
+    s = (g_game && id) ? g_game->runState().sideStoryState(id) : "";
+    return s.c_str();
+}
 // S4 probes: skill points/owned count, whether a specific id is owned, and a direct-unlock hook
 // (mirrors jsDebugBattle -- exercises Game::tryUnlockSkill without needing pixel-perfect UI taps).
 EMSCRIPTEN_KEEPALIVE
@@ -136,6 +152,58 @@ int jsHubUnlocked(const char* id) {
 }
 EMSCRIPTEN_KEEPALIVE
 int jsActivateHub(const char* id) { return (g_game && id && g_game->activateHubLocation(id)) ? 1 : 0; }
+// S7 probes (equipment actives, first slice): jsEquip bypasses the Store/Forge entirely so a page
+// driver can reach twin_daggers (its active isn't purchasable/craftable through any authored
+// content yet) without walking through a whole crafting flow just to test the battle button.
+EMSCRIPTEN_KEEPALIVE
+int jsEquip(const char* id) { return (g_game && id && g_game->debugEquip(id)) ? 1 : 0; }
+// M7 probes (first slice): jsForceLose runs the exact finishCombatLose() path a real loss would
+// (without needing to actually lose deathsNonBoss real fights first), so a page driver can reach
+// e_13 (12 non-boss deaths) directly. which==0 -> deathsNonBoss, which==1 -> endingActive.
+EMSCRIPTEN_KEEPALIVE
+void jsForceLose() { if (g_game) g_game->debugForceLose(); }
+EMSCRIPTEN_KEEPALIVE
+int jsEndingInfo(int which) {
+    if (!g_game) return -1;
+    if (which == 0) return g_game->runState().deathsNonBoss();
+    if (which == 1) return g_game->endingActive() ? 1 : 0;
+    return -1;
+}
+EMSCRIPTEN_KEEPALIVE
+const char* jsActiveEndingId() {
+    static std::string s;
+    s = g_game ? g_game->activeEndingId() : "";
+    return s.c_str();
+}
+// M8 probes (first slice): jsRebirth runs the real Game::rebirth() (re-checks rebirthOffered()
+// itself, same as the real UI buttons/keys), so a page driver can exercise it directly.
+// which==0 -> cycleIndex, which==1 -> run_.skillPoints(), which==2 -> run_.superMax(),
+// which==3 -> run_.skillsOwned().size(), which==4 -> pl.gold, which==5 -> rebirthOffered().
+EMSCRIPTEN_KEEPALIVE
+int jsRebirth() { return (g_game && g_game->rebirth()) ? 1 : 0; }
+EMSCRIPTEN_KEEPALIVE
+int jsCycleInfo(int which) {
+    if (!g_game) return -1;
+    if (which == 0) return g_game->metaCycleIndex();
+    if (which == 1) return g_game->runState().skillPoints();
+    if (which == 2) return g_game->runState().superMax();
+    if (which == 3) return (int)g_game->runState().skillsOwned().size();
+    if (which == 4) return g_game->player().gold;
+    if (which == 5) return g_game->rebirthOffered() ? 1 : 0;
+    return -1;
+}
+EMSCRIPTEN_KEEPALIVE
+void jsTapActive() { if (g_game) g_game->battleTapActive(); }
+// which==0 -> activeUsed, which==1 -> nextAttackGuaranteedCrit armed, which==2 -> enemyHP.
+EMSCRIPTEN_KEEPALIVE
+int jsActiveInfo(int which) {
+    if (!g_game) return -1;
+    const CombatState& c = g_game->combat();
+    if (which == 0) return c.activeUsed ? 1 : 0;
+    if (which == 1) return c.nextAttackGuaranteedCrit ? 1 : 0;
+    if (which == 2) return c.enemyHP;
+    return -1;
+}
 EMSCRIPTEN_KEEPALIVE
 int jsRunInfo(int which) {
     if (!g_game) return -1;
@@ -293,6 +361,15 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
         else if (k == "Escape")                             g_game->titleCancel();
         return EM_TRUE;   // swallow everything else while the title is up
     }
+    // M7/M8: checked right after the title -- once an ending is showing, it is the only
+    // interactive screen (same reasoning as handleTouch's own priority ordering). Enter/Space
+    // confirms the offered path (rebirth() re-checks rebirthOffered() itself); Escape always
+    // means "decline rebirth / go back" to the title.
+    if (g_game->endingActive()) {
+        if (k == "Enter" || k == " ") { if (!g_game->rebirth()) g_game->dismissEndingScreen(); }
+        else if (k == "Escape") g_game->dismissEndingScreen();
+        return EM_TRUE;   // swallow everything else while an ending is showing
+    }
     if (k == "i" || k == "I") { g_game->toggleInventory(); return EM_TRUE; }
     if (g_game->inventoryOpen()) {
         if (k == "ArrowLeft")  { g_game->invMoveSel(-1, 0); return EM_TRUE; }
@@ -332,6 +409,7 @@ static EM_BOOL keyCb(int eventType, const EmscriptenKeyboardEvent* e, void* user
         if (k == "Enter" || k == " ")      { g_game->battleTapAttack(); return EM_TRUE; }
         if (k == "f" || k == "F")          { g_game->battleTapDefense(); return EM_TRUE; }
         if (k == "g" || k == "G")          { g_game->battleTapSuper(); return EM_TRUE; }
+        if (k == "h" || k == "H")          { g_game->battleTapActive(); return EM_TRUE; }
         return EM_TRUE;
     }
     if (g_game->modalActive()) return EM_TRUE;

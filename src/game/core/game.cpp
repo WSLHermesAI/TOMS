@@ -107,9 +107,13 @@ void Game::requestStageTransition(const std::string& target, bool isUp) {
 void Game::confirmStageTransition() {
     if (!stairsConfirmOpen_) return;
     std::string target = stairsConfirmTarget_;
+    bool isUp = stairsConfirmIsUp_;
     stairsConfirmOpen_ = false;
     stairsConfirmTarget_.clear();
-    loadStage(target);
+    // M9 (stair alignment): climbing up lands on the new floor's OWN stairs_down (the matching
+    // physical stairwell coming from below); going down lands on its stairs_up (arriving from
+    // above) -- see docs/story/STAIR_ALIGNMENT.md.
+    loadStage(target, isUp ? StageArrival::FromBelow : StageArrival::FromAbove);
     // A floor change is the run's natural checkpoint: write/refresh the slot immediately
     // (rather than waiting for the throttled autosave) so the Continue list is always current.
     saveCurrentRun();
@@ -133,7 +137,7 @@ void Game::cancelStageTransition() {
 void Game::newGame(int slot) {
     // A new game is a genuinely fresh run: default stats and wiped story/entity/meta progress.
     pl = Player();
-    pl.maxhp = 120; pl.hp = 120; pl.atk = 12; pl.def = 4; pl.gold = 0; pl.exp = 0; pl.lv = 1;
+    pl.maxhp = kStartingHp; pl.hp = kStartingHp; pl.atk = kStartingAtk; pl.def = kStartingDef; pl.gold = 0; pl.exp = 0; pl.lv = 1;
     pl.inv = {"potion_red", "potion_blue", "exp_up"};
     pl.x = 1; pl.y = 1;
     entityStatus_.clear();

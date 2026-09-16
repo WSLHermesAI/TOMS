@@ -26,7 +26,7 @@ void Game::enterNode(const std::string& node) {
         // Milestone 3: a choice's optional `requires` gates whether it appears at all, evaluated
         // via the shared Condition Evaluator (condition.h). No shipped dialogue file sets this
         // yet, so `contains("requires")` is false for all of them today -- purely additive.
-        if (c.contains("requires") && !toms::evaluate(c["requires"], GameConditionContext(pl, meta_, missionTrackers_, run_)))
+        if (c.contains("requires") && !toms::evaluate(c["requires"], GameConditionContext(pl, meta_, missionTrackers_, run_, equipped_)))
             continue;
         std::string label = c.contains("label") ? locale_.field(c["label"]) : "";
         std::string next  = c.contains("next")  && !c["next"].is_null()  ? (std::string)c["next"]  : "";
@@ -91,6 +91,14 @@ void Game::runDialogueAction(const nlohmann::json& action) {
             if (action.contains("counters") && action["counters"].is_object())
                 for (auto& [name, delta] : action["counters"].items())
                     if (delta.is_number_integer()) run_.addCounter(name, delta.get<int>());
+            // M9: a main-line choice that's also a side story's payoff (e.g. ss_04's return/study
+            // split) can bundle the skill grant and the side-story completion right here, reusing
+            // the two verbs below instead of inventing a second action per dialogue choice.
+            if (action.contains("grantSkill") && action["grantSkill"].is_string())
+                runDialogueAction({{"type", "unlockSkill"}, {"skillId", action["grantSkill"]}});
+            if (action.contains("completeSideStory") && action["completeSideStory"].is_string())
+                runDialogueAction({{"type", "setSideStoryState"},
+                                    {"sideStoryId", action["completeSideStory"]}, {"state", "completed"}});
         }
     } else if (type == "addCounter") {
         // S3: the three accumulators (insight / resolve / humanity). Clamped by RunStoryState to the
@@ -98,6 +106,24 @@ void Game::runDialogueAction(const nlohmann::json& action) {
         std::string name = action.value("counter", std::string());
         int delta = action.value("delta", 0);
         if (!name.empty() && delta != 0) run_.addCounter(name, delta);
+    } else if (type == "unlockSkill") {
+        // M9: a dialogue-granted skill (e.g. a side story's reward) -- same free-grant path as
+        // Game::applyChapterGrants' own "skills" loop, just reachable from a choice instead of a
+        // chapter's grants block.
+        std::string skillId = action.value("skillId", std::string());
+        if (!skillId.empty() && !run_.hasSkill(skillId)) {
+            auto it = skillDefs_.find(skillId);
+            int cost = (it != skillDefs_.end()) ? it->second.cost : 0;
+            run_.unlockSkill(skillId, cost);
+            std::string name = it != skillDefs_.end() ? locale_.field(it->second.name) : skillId;
+            pushNotification(locale_.tr("skill.unlocked_prefix") + name);
+        }
+    } else if (type == "setSideStoryState") {
+        // M9: side-story progress was tracked in RunStoryState (S3) but nothing ever wrote to it
+        // until now -- a dialogue choice is the natural place a side story actually resolves.
+        std::string sideStoryId = action.value("sideStoryId", std::string());
+        std::string state = action.value("state", std::string());
+        if (!sideStoryId.empty() && !state.empty()) run_.setSideStoryState(sideStoryId, state);
     }
 }
 
@@ -335,6 +361,71 @@ void Game::wireMissionEvents() {
             if (it != missionDefs_.end()) toms::applyProgressEvent(tracker, it->second, "collect", e.itemId);
         }
     });
+}
+
+// M7 (first slice): the one path that can end a run. Not re-validated against the resolver here
+// (unlike tryUnlockSkill/tryCraft/activateHubLocation) -- the caller (finishCombatLose(), the only
+// call site today) already re-checked checkNamedEndings() itself, and there is no player-facing
+// "activate an ending" action to guard against a stale/duplicate click the way those three do.
+void Game::triggerEnding(const std::string& endingId) {
+    activeEndingId_ = endingId;
+    if (std::find(meta_.endingsSeen.begin(), meta_.endingsSeen.end(), endingId) == meta_.endingsSeen.end())
+        meta_.endingsSeen.push_back(endingId);
+    saveCurrentRun();   // a run ending is significant enough to flush immediately, not just markProgressDirty()
+}
+
+bool Game::rebirthOffered() const {
+    if (!endingActive()) return false;
+    if (meta_.cycleIndex >= cyclesConfig_.maxCycles) return false;   // STORY_BIBLE.md §8: capped at 9
+    for (auto& e : endingsTable_.endings)
+        if (e.id == activeEndingId_) return e.allowsRebirth;
+    return false;   // an unknown ending id (content bug) never offers a rebirth it can't carry out
+}
+
+// The "start over" exit -- always available, and the only one when rebirthOffered() is false.
+void Game::dismissEndingScreen() {
+    if (!endingActive()) return;
+    activeEndingId_.clear();
+    returnToTitle();
+}
+
+// M8 (first slice): docs/story/STORY_BIBLE.md §8.1's "入輪迴" -- carries skills (at half effect --
+// see skillEffectScale()), memory shards (already reset(keepShards=true)'s job), skill points and
+// the Super gauge cap (both halved-and-floored), and cycleIndex (+1) forward; resets everything
+// else (equipment to the starting wand, consumables/materials/gold/keys, main-line flags/choices/
+// counters/side-stories, floor back to F01). Forge blueprints and known actives need no code here
+// at all -- they already live on meta_, which this never touches except cycleIndex/endingsSeen.
+bool Game::rebirth() {
+    if (!rebirthOffered()) return false;
+
+    // Capture what carries forward BEFORE the wipe below destroys it.
+    std::vector<std::string> keptSkills = run_.skillsOwned();
+    int halvedSkillPoints = run_.skillPoints() / 2;               // floor: non-negative int division
+    int halvedSuperMax = std::max(1, run_.superMax() / 2);
+    int oldAtkBonus = pl.atk - kStartingAtk, oldDefBonus = pl.def - kStartingDef;
+
+    run_.reset(/*keepShards=*/true);   // the full wipe (see its own comment); shards survive
+    for (auto& id : keptSkills) run_.unlockSkill(id, 0);   // restore ownership at zero cost
+    run_.addSkillPoints(halvedSkillPoints);
+    run_.setSuperMax(halvedSuperMax);
+
+    meta_.cycleIndex += 1;
+
+    pl.atk = kStartingAtk + oldAtkBonus / 2;
+    pl.def = kStartingDef + oldDefBonus / 2;
+    pl.maxhp = kStartingHp; pl.hp = kStartingHp;
+    pl.gold = 0; pl.exp = 0; pl.lv = 1;
+    pl.key_yellow = pl.key_blue = pl.key_red = 0;
+    pl.inv.clear();
+    equipped_ = toms::EquippedSet{};
+    equipped_.weaponId = "wand";
+
+    activeEndingId_.clear();
+    entityStatus_.clear();
+    missionTrackers_.clear();
+    loadStage("F01");
+    saveCurrentRun();
+    return true;
 }
 
 toms::GameState Game::currentState() const {
