@@ -133,16 +133,12 @@ void Game::handleTouch(float px, float py, int phase) {
         // actually on screen.
         if (phase == 0 && n > 0) {
             float W = (float)ren->width(), H = (float)ren->height();
-            for (int i = 0; i < n; i++) {
-                float ty = dialogueRowY(W, H, i);
-                // C: >=44px tap target (mobile touch-target guidance), independent of the tighter
-                // visual row pitch (24*kDialogueScale =~ 34px) -- adjacent rows' zones overlap by a
-                // few px, the normal trade-off for a short vertical list; far better than the old
-                // +-12px zone, which left no margin for a finger at all.
-                if (py >= ty - 22.0f && py <= ty + 22.0f && px >= 56 && px <= W - 56) {
-                    dlgSel = i; chooseDialogue(i); return;
-                }
-            }
+            // C step 2: ask the SAME layout the drawing used (dialogueLayoutFor), so the row a tap
+            // selects is the row that was drawn there -- identical by construction, at any UI scale.
+            // (The old hand-written +-22px zone duplicated these numbers; nearest-baseline wins now.)
+            toms::DialogueLayout dl = dialogueLayoutFor(W, H, n);
+            int row = dl.rowAt(uiRoot_, glm::vec2(px, py));
+            if (row >= 0) { dlgSel = row; chooseDialogue(row); return; }
             // tap elsewhere on the dialogue box = advance to next (keep current selection)
             chooseDialogue(dlgSel); return;
         }

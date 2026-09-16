@@ -498,32 +498,14 @@ int main() {
     if (!ctx) { fprintf(stderr, "[web] failed to create WebGL2 context\n"); return 1; }
     emscripten_webgl_make_context_current(ctx);
 #endif
-    // ---- A+B (mobile): a smaller logical design + a bigger font scale on small screens --------
-    // The design is what the game draws in; shrinking it makes every element occupy a larger share
-    // of the same physical screen, which is the real fix for "everything is too small on a phone".
-    // A phone in landscape is the target case (a 4:3 game on a 390 px-tall screen is inherently
-    // small); 768x576 halves the logical pixels and 1.25 on the fonts lifts the text further.
-    {
-        const int cssW = EM_ASM_INT({ return window.innerWidth; });
-        const int cssH = EM_ASM_INT({ return window.innerHeight; });
-        // A (a smaller design on phones) is DISABLED until C: the on-canvas pad, the dialogue box and
-        // the battle panels lay themselves out in absolute design pixels authored for 768-tall, so a
-        // 576-tall design puts the pad off-screen and every tap misses (owner report, 2026-09-13:
-        // "the orientation UI buttons get wrong position and not working"). The safe parts of the
-        // mobile fix -- the pointer mapping reading the buffer size, and the portrait prompt -- stay.
-        if (false && (cssW < 900 || cssH < 560)) {
-            WebGLRenderer::setDesignSize(768, 576);
-            // The on-canvas pad's rects were authored for a 768-tall design; shifting them by the
-            // difference keeps them on screen (and, because drawing and hit-testing read the same
-            // helper, keeps a visible button and a working button the same thing).
-            // B (the extra font scale) stays OFF until C lands: the dialogue and battle screens lay
-            // their rows out on a fixed pixel pitch, so growing the glyphs 25% makes the speaker
-            // line collide with the first choice row. A (the smaller design) already makes every
-            // element 1.33x bigger, which is the safe part of the mobile fix.
-            toms::g_uiScale = 1.0f;
-            fprintf(stderr, "[web] small screen (%dx%d css) -> design 768x576, ui scale 1.25\n", cssW, cssH);
-        }
-    }
+    // ---- mobile UI scale (owner's rule): keep the game resolution, grow the UI OBJECTS ----------
+    // An earlier attempt shrank the logical DESIGN instead, which also makes elements bigger but
+    // softens the whole render and shrinks how much maze the player sees -- the owner rejected it, and
+    // it also put the pad off-screen because the pad rects are authored in 768-tall design pixels.
+    // That route is gone. The design stays 1024x768 and the maze is untouched; the UI hangs off
+    // Game's UiRoot, so its scale is what grows the UI on a phone. Which screens actually grow is
+    // decided by which ones read their geometry from UiRoot -- the dialogue does now (step 2c); the
+    // pad keeps its own plate scale (1.20, applied below) until it is migrated too.
     emscripten_set_canvas_element_size("#canvas", (int)WebGLRenderer::kDesignW, (int)WebGLRenderer::kDesignH);
 
     // ---- Saves that survive a page reload ----
@@ -569,6 +551,11 @@ int main() {
             // 390 px-tall landscape phone) while keeping the four direction plates visually distinct.
             g_game->setPadScale(1.20f);
             fprintf(stderr, "[web] small screen (%dx%d css): pad plates x1.20 for touch\n", w, h);
+#if 1
+            // UI OBJECTS 1.5x, game resolution unchanged (see the note above emscripten_set_canvas_element_size).
+            g_game->setUiScale(1.5f);
+            fprintf(stderr, "[web] small screen (%dx%d css): UI scale 1.50 (design stays 1024x768)\n", w, h);
+#endif
         }
     }
     if (!g_game->loadAssets("assets")) {

@@ -23,6 +23,7 @@
 #include "run_state.h"       // toms::RunStoryState — S3: choices/counters/side stories/flags/shards
 #include "floor_table.h"     // toms::FloorTable — S3.5: the 70-floor tower as ordered data
 #include "stage.h"
+#include "../ui/ui_root.h"
 #include "title_screen.h"    // toms::TitleScreen/TitleAction — the title phase (New Game/Continue/Settings)
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
 #include "localization.h"    // toms::Locale — key -> localized string (data/text.json)
@@ -845,4 +846,12 @@ private:
     // The "switch to XXX language?" prompt, drawn over the Settings page.
     void drawLanguageConfirmDialog();
     TOMS_OBJECT(Game)
+    // The one scaled root the UI hangs off (owner rule: grow the UI OBJECTS, keep the game
+    // resolution). At 1.0 every mapping is the identity, which is where it sits until the screens
+    // below all read their geometry from it.
+public:
+    toms::UiRoot& uiRoot() { return uiRoot_; }
+    void setUiScale(float s) { uiRoot_.SetScale(s); }
+private:
+    toms::UiRoot uiRoot_;
 };

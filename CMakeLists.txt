@@ -130,9 +130,7 @@ if(NOT WEB)
         ${ENGINE_DIR}/power_bar.cpp ${GAME_SYSTEMS}/equipment_system.cpp ${GAME_SYSTEMS}/skill_system.cpp
         ${GAME_SYSTEMS}/forge_system.cpp
         ${GAME_SYSTEMS}/hub_system.cpp
-        ${GAME_SYSTEMS}/active_system.cpp
-        ${GAME_SYSTEMS}/ending_system.cpp
-        ${GAME_SYSTEMS}/cycle_system.cpp
+        ${GAME_SYSTEMS}/equipment_actives.cpp
         ${ENGINE_DIR}/imgui_layer.h ${ENGINE_DIR}/imgui_layer.cpp
         # Title phase (New Game / Continue / Settings): save slots, preferences, string table.
         ${GAME_SAVE}/save_slots.cpp ${GAME_SAVE}/game_settings.cpp
@@ -252,9 +250,7 @@ if(WEB)
         ${ENGINE_DIR}/power_bar.cpp ${GAME_SYSTEMS}/equipment_system.cpp ${GAME_SYSTEMS}/skill_system.cpp
         ${GAME_SYSTEMS}/forge_system.cpp
         ${GAME_SYSTEMS}/hub_system.cpp
-        ${GAME_SYSTEMS}/active_system.cpp
-        ${GAME_SYSTEMS}/ending_system.cpp
-        ${GAME_SYSTEMS}/cycle_system.cpp
+        ${GAME_SYSTEMS}/equipment_actives.cpp
         ${GAME_AUDIO}/Audio.cpp
         # Title phase (New Game / Continue / Settings): slots + preferences + string table.
         ${GAME_SAVE}/save_slots.cpp ${GAME_SAVE}/game_settings.cpp
@@ -396,6 +392,14 @@ add_executable(ui_layout_test ${GAME_UI}/ui_layout_test.cpp)
 add_executable(node_transform_test ${ENGINE_DIR}/node_transform_test.cpp ${ENGINE_DIR}/node.cpp)
 target_include_directories(node_transform_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 target_include_directories(ui_layout_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
+# ui_root_test: the one scaled UI root (owner: grow the UI OBJECTS, keep the game resolution).
+add_executable(ui_root_test ${GAME_UI}/ui_root_test.cpp)
+target_include_directories(ui_root_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+# dialogue_layout_test: one geometry description for the dialogue, used by drawing AND hit-testing.
+add_executable(dialogue_layout_test ${GAME_UI}/dialogue_layout_test.cpp)
+target_include_directories(dialogue_layout_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
+
+
 target_include_directories(floor_table_test PRIVATE
     ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${STB_DIR} ${JSON_DIR} $ENV{GLM_DIR} $ENV{HOME}/opt/glm)
 
@@ -483,22 +487,11 @@ target_include_directories(forge_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGI
 # Forge Systems above. Run: ./hub_system_test
 add_executable(hub_system_test ${GAME_SYSTEMS}/hub_system_test.cpp ${GAME_SYSTEMS}/hub_system.cpp ${GAME_SAVE}/save_system.cpp)
 target_include_directories(hub_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
+# S4: equipment actives (裝備主動技) -- data/actives.json + data/equipment.json "​actives",
+# pure logic; run from the repo root because it reads the real data files.
+add_executable(equipment_actives_test ${GAME_SYSTEMS}/equipment_actives_test.cpp ${GAME_SYSTEMS}/equipment_actives.cpp)
+target_include_directories(equipment_actives_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
 
-# S7 (first slice): equipment actives' pure content (active_system.h/.cpp), same shape as the
-# Equipment/Skill/Forge/Hub Systems above. Run: ./active_system_test
-add_executable(active_system_test ${GAME_SYSTEMS}/active_system_test.cpp ${GAME_SYSTEMS}/active_system.cpp ${GAME_SAVE}/save_system.cpp)
-target_include_directories(active_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
-
-# M7 (first slice): the 15-ending resolver's pure content/math (ending_system.h/.cpp), built
-# on top of the shared Condition Evaluator (src/engine/condition.cpp). Run: ./ending_system_test
-add_executable(ending_system_test ${GAME_SYSTEMS}/ending_system_test.cpp ${GAME_SYSTEMS}/ending_system.cpp
-    ${GAME_SAVE}/save_system.cpp ${ENGINE_DIR}/condition.cpp)
-target_include_directories(ending_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
-
-# M8 (first slice): the rebirth config loader's pure content (cycle_system.h/.cpp), same shape
-# as the Skill/Forge/Hub/Active/Ending Systems above. Run: ./cycle_system_test
-add_executable(cycle_system_test ${GAME_SYSTEMS}/cycle_system_test.cpp ${GAME_SYSTEMS}/cycle_system.cpp ${GAME_SAVE}/save_system.cpp)
-target_include_directories(cycle_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
 
 # ---------------------------------------------------------------------------
 # Title phase test (see docs/design/TITLE_PHASE.md): the New Game / Continue / Settings page state

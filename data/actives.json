@@ -1,22 +1,44 @@
 {
-  "a_twin_flash": {
-    "id": "a_twin_flash",
+  "a_qingxiao_edge": {
+    "id": "a_qingxiao_edge",
     "name": {
-      "zh_TW": "疾影斬",
-      "en": "Swift Shadow Strike",
-      "zh_CN": "疾影斩",
-      "ja": "疾影斬",
-      "ko": "질영참",
-      "es": "Golpe de Sombra Veloz"
+      "zh_TW": "青霄一線",
+      "en": "Azure Edge",
+      "zh_CN": "青霄一线",
+      "ja": "青霄の一線",
+      "ko": "청소일선",
+      "es": "Filo Azur"
     },
     "desc": {
-      "zh_TW": "灌注雙匕全力，下一次攻擊必定命中要害，傷害 x1.8（每場戰鬥限一次）。",
-      "en": "Channel the twin daggers' full force -- your next attack is guaranteed to strike true, dealing x1.8 damage (once per battle).",
-      "zh_CN": "灌注双匕全力，下一次攻击必定命中要害，伤害 x1.8（每场战斗限一次）。",
-      "ja": "双剣に全力を込める。次の攻撃は必ず急所を突き、ダメージ x1.8（1戦闘につき1回）。",
-      "ko": "쌍검에 온 힘을 담습니다. 다음 공격은 반드시 급소를 맞혀 피해 x1.8 (전투당 1회).",
-      "es": "Concentra toda la fuerza de las dagas gemelas: tu próximo ataque acierta con seguridad, x1.8 de daño (una vez por combate)."
+      "zh_TW": "每場一次，本次攻擊必會心且傷害 ×1.8。",
+      "en": "Once per battle: this attack crits and deals 1.8x damage."
     },
-    "effect": { "kind": "guaranteed_crit_next_attack", "damageMult": 1.8 }
+    "kind": "guaranteedCrit",
+    "damageMultiplier": 1.8,
+    "usesPerBattle": 1,
+    "cooldownSeconds": 0.0,
+    "vfxFrames": 6,
+    "source": "ss_09"
+  },
+  "a_sanctuary_echo": {
+    "id": "a_sanctuary_echo",
+    "name": {
+      "zh_TW": "庇所迴響",
+      "en": "Sanctuary Echo",
+      "zh_CN": "庇所回响",
+      "ja": "聖域の残響",
+      "ko": "성역의 메아리",
+      "es": "Eco del Santuario"
+    },
+    "desc": {
+      "zh_TW": "每場一次，受到致命傷時保留 1 HP。",
+      "en": "Once per battle: lethal damage leaves you at 1 HP."
+    },
+    "kind": "surviveLethal",
+    "damageMultiplier": 1.0,
+    "usesPerBattle": 1,
+    "cooldownSeconds": 0.0,
+    "vfxFrames": 8,
+    "source": "ss_08"
   }
 }

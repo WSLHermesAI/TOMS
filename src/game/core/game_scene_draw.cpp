@@ -368,14 +368,20 @@ void Game::draw() {
         // C: box geometry and row-y both come from game_helpers.h's dialogueBoxRect/dialogueRowY --
         // the same functions game_input.cpp's hit-test calls, so this can't drift out of sync with
         // what's actually tappable (see that helper's comment for why bottom-anchored, not centred).
-        toms::UiRect box = dialogueBoxRect(W, H);
+        // C step 2: geometry comes from ONE description (dialogueLayoutFor -> DialogueLayout), and every
+        // rect goes through uiRoot_ -- the same mapping game_input.cpp's hit-test uses, so what is drawn
+        // and what is tappable cannot drift apart. At scale 1.0 this is the identity: same pixels.
+        toms::DialogueLayout dl = dialogueLayoutFor(W, H, (int)dlgChoices.size());
+        glm::vec4 boxF = uiRoot_.ScreenRect(dl.box);
+        toms::UiRect box; box.x = boxF.x; box.y = boxF.y; box.w = boxF.z; box.h = boxF.w;
         Quad boxQ; boxQ.rect[0]=box.x; boxQ.rect[1]=box.y; boxQ.rect[2]=box.w; boxQ.rect[3]=box.h;
         boxQ.uv[0]=0;boxQ.uv[1]=0;boxQ.uv[2]=1;boxQ.uv[3]=1; boxQ.solid=true;
         boxQ.tint[0]=0.1f;boxQ.tint[1]=0.12f;boxQ.tint[2]=0.2f;boxQ.tint[3]=0.95f; ren->drawSprite(boxQ);
         std::string txt = locale_.field(dlgData["nodes"][dlgNode]["text"]);
-        drawText(txt, 60, box.y + 20.0f * kDialogueScale, 20.0f * kDialogueScale, tint);
+        drawText(txt, box.x + 60.0f * dl.textScale, box.y + 20.0f * dl.textScale, 20.0f * dl.textScale, tint);
         for (size_t i = 0; i < dlgChoices.size(); i++) {
-            float ty = dialogueRowY(W, H, (int)i);
+            glm::vec4 rowF = uiRoot_.ScreenRect(dl.rowRect((int)i));
+            float ty = rowF.y + rowF.w * 0.5f;
             if ((int)i == dlgSel) drawText("▶ " + dlgChoices[i].label, 60, ty, 18.0f * kDialogueScale, C4(1,1.0f,0.6f,1));
             else                   drawText("  " + dlgChoices[i].label, 60, ty, 18.0f * kDialogueScale, C4(1,0.9f,0.5f,1));
         }

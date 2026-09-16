@@ -8,6 +8,8 @@
 // trParam(...), GP[i] exactly as before.
 #pragma once
 
+#include "../ui/ui_root.h"
+#include "../ui/dialogue_layout.h"
 #include <algorithm>
 #include <cstdio>
 #include <cstdint>
@@ -168,6 +170,24 @@ inline UiRect dialogueBoxRect(float W, float H) {
 inline float dialogueRowY(float W, float H, int i) {
     UiRect box = dialogueBoxRect(W, H);
     return box.y + 60.0f * kDialogueScale + (float)i * 24.0f * kDialogueScale;
+}
+
+// The dialogue's geometry as ONE object, for both the draw path and the tap path. Built from the two
+// functions above, so the framing is byte-identical to what the dialogue already used -- this only
+// stops the two paths from describing the same rows differently (the tap zone used to be re-derived by
+// hand, with a visible row height that did not match it). See src/game/ui/dialogue_layout.h.
+inline toms::DialogueLayout dialogueLayoutFor(float W, float H, int rows) {
+    toms::DialogueLayout L;
+    toms::UiRect b = dialogueBoxRect(W, H);
+    L.box = glm::vec4(b.x, b.y, b.w, b.h);
+    L.firstRowY = dialogueRowY(W, H, 0);
+    L.pitch = 24.0f * kDialogueScale;
+    L.halfZone = 22.0f;
+    L.rowLeft = 56.0f;
+    L.rowRight = W - 56.0f;
+    L.textScale = kDialogueScale;
+    L.rowCount = rows;
+    return L;
 }
 
 
