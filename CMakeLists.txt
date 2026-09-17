@@ -131,6 +131,8 @@ if(NOT WEB)
         ${GAME_SYSTEMS}/forge_system.cpp
         ${GAME_SYSTEMS}/hub_system.cpp
         ${GAME_SYSTEMS}/equipment_actives.cpp
+        ${GAME_SYSTEMS}/ending_system.cpp
+        ${GAME_SYSTEMS}/cycle_system.cpp
         ${ENGINE_DIR}/imgui_layer.h ${ENGINE_DIR}/imgui_layer.cpp
         # Title phase (New Game / Continue / Settings): save slots, preferences, string table.
         ${GAME_SAVE}/save_slots.cpp ${GAME_SAVE}/game_settings.cpp
@@ -251,6 +253,8 @@ if(WEB)
         ${GAME_SYSTEMS}/forge_system.cpp
         ${GAME_SYSTEMS}/hub_system.cpp
         ${GAME_SYSTEMS}/equipment_actives.cpp
+        ${GAME_SYSTEMS}/ending_system.cpp
+        ${GAME_SYSTEMS}/cycle_system.cpp
         ${GAME_AUDIO}/Audio.cpp
         # Title phase (New Game / Continue / Settings): slots + preferences + string table.
         ${GAME_SAVE}/save_slots.cpp ${GAME_SAVE}/game_settings.cpp
@@ -491,6 +495,17 @@ target_include_directories(hub_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE
 # pure logic; run from the repo root because it reads the real data files.
 add_executable(equipment_actives_test ${GAME_SYSTEMS}/equipment_actives_test.cpp ${GAME_SYSTEMS}/equipment_actives.cpp)
 target_include_directories(equipment_actives_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
+
+# M7 (first slice): the 15-ending resolver's pure content/math (ending_system.h/.cpp), built
+# on top of the shared Condition Evaluator (src/engine/condition.cpp). Run: ./ending_system_test
+add_executable(ending_system_test ${GAME_SYSTEMS}/ending_system_test.cpp ${GAME_SYSTEMS}/ending_system.cpp
+    ${GAME_SAVE}/save_system.cpp ${ENGINE_DIR}/condition.cpp)
+target_include_directories(ending_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
+
+# M8 (first slice): the rebirth config loader's pure content (cycle_system.h/.cpp), same shape
+# as the Skill/Forge/Hub/Ending Systems above. Run: ./cycle_system_test
+add_executable(cycle_system_test ${GAME_SYSTEMS}/cycle_system_test.cpp ${GAME_SYSTEMS}/cycle_system.cpp ${GAME_SAVE}/save_system.cpp)
+target_include_directories(cycle_system_test PRIVATE ${GAME_INCLUDE_DIRS} ${ENGINE_DIR} ${JSON_DIR})
 
 
 # ---------------------------------------------------------------------------

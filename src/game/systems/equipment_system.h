@@ -33,7 +33,7 @@ struct EquipmentDefinition {
     // below, not a scripting hook, matching this project's `action`/`kind` enum convention.
     std::string talent;
     // S7 (equipment actives, docs/story/STORY_DATA_SCHEMA.md §1.2/§6.2): ids into
-    // active_system.h's ActiveSkillDefinition map. Almost always empty -- only a handful of
+    // equipment_actives.h's ActiveDefinition map. Almost always empty -- only a handful of
     // named pieces (per docs/design/ART_AND_ABILITY_DESIGN.md) ever grant one.
     std::vector<std::string> actives;
 };

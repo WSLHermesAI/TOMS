@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Generate the missing npc_handmaiden.png (deterministic, stdlib only).
+"""Superseded by tools/make_sprites.py (2026-09-17), which rebuilds npc_handmaiden.png on the
+same person-rig every other NPC sprite uses (this file's version was an off-model lavender blob).
+Kept only as historical reference.
+
+Generate the missing npc_handmaiden.png (deterministic, stdlib only).
 Handmaiden = villager body tinted lavender with a small crown dot."""
 import struct, zlib, os
 

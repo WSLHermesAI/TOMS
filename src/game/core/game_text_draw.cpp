@@ -22,10 +22,14 @@ static std::u32string utf8_to_utf32(const std::string& s) {
     return out;
 }
 
-// B (mobile): one multiplier for every on-screen text size. Set by the platform entry point (the
-// browser sets 1.25 on small screens), read by drawText/measureText so text and its measurement can
-// never disagree -- the two must use the same scale or centred/right-aligned strings drift.
-namespace toms { float g_uiScale = 1.0f; int g_padShiftY = 0; }
+// B (mobile): one multiplier for every on-screen text size. Read by drawText/measureText so text
+// and its measurement can never disagree -- the two must use the same scale or centred/right-
+// aligned strings drift. The comment this replaced claimed "the browser sets 1.25 on small
+// screens" -- checked while raising the base value below, and nothing anywhere actually assigns
+// this at runtime (a real, still-open gap, not touched here: small-screen detection was never
+// wired to it). 1.15 (up from 1.0, 2026-09-17 art/UI polish pass) is a flat, always-on bump so
+// every screen's text reads a bit bigger by default, independent of that still-missing feature.
+namespace toms { float g_uiScale = 1.15f; int g_padShiftY = 0; }
 
 void Game::drawText(const std::string& s, float x, float y, float size, const float tint[4]) {
     size *= toms::g_uiScale;

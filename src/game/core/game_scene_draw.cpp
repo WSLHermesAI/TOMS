@@ -334,14 +334,15 @@ void Game::draw() {
                 superBtnRect_[0]=superBtnRect_[1]=superBtnRect_[2]=superBtnRect_[3]=0;
             }
 
-            // S7 (equipment actives, first slice): a 4th battle action, only shown once the
-            // currently equipped gear grants an active and it hasn't been spent this battle --
-            // same "no button at all until it's actually available" convention as Super above,
-            // rather than a permanently-visible-but-disabled button.
+            // Equipment actives: a 4th battle action, only shown once the currently equipped gear
+            // grants an active AND canUseActive() says it's actually usable right now (uses left,
+            // off cooldown, no silence) -- same "no button at all until it's actually available"
+            // convention as Super above, rather than a permanently-visible-but-disabled button.
             auto activeIds = toms::equippedActives(equipped_, equipmentDefs_);
-            if (!cs.activeUsed && !activeIds.empty()) {
-                auto defIt = activeDefs_.find(activeIds[0]);
-                std::string activeLabel = (defIt != activeDefs_.end()) ? locale_.field(defIt->second.name) : activeIds[0];
+            if (!activeIds.empty() && toms::canUseActive(activeIds[0], activeDefs_, cs.activeRuntime, cs.activeStatus)) {
+                // ActiveDefinition carries no display name yet (a real, still-open content gap) --
+                // the button falls back to the raw id rather than inventing a name lookup here.
+                std::string activeLabel = activeIds[0];
                 float aX = cx, aY = SY(552.0f), aW = S(500.0f), aH = S(36.0f);
                 activeBtnRect_[0]=(int)aX; activeBtnRect_[1]=(int)aY; activeBtnRect_[2]=(int)aW; activeBtnRect_[3]=(int)aH;
                 Quad ab; ab.rect[0]=aX; ab.rect[1]=aY; ab.rect[2]=aW; ab.rect[3]=aH;

@@ -67,9 +67,13 @@ void Game::handleTouch(float px, float py, int phase) {
         if (hit(atkBtnRect_)) { battleTapAttack(); return; }
         if (hit(defBtnRect_)) { battleTapDefense(); return; }
         if (cs.superCharge >= run_.superMax() && hit(superBtnRect_)) { battleTapSuper(); return; }
-        // S7 (equipment actives, first slice): same "no button at all until it's actually
-        // available" convention as Super above.
-        if (!cs.activeUsed && !toms::equippedActives(equipped_, equipmentDefs_).empty() && hit(activeBtnRect_)) { battleTapActive(); return; }
+        // Equipment actives: same "no button at all until it's actually available" convention as
+        // Super above -- canUseActive() covers uses-left/cooldown/silence in one call.
+        {
+            auto activeIds = toms::equippedActives(equipped_, equipmentDefs_);
+            if (!activeIds.empty() && toms::canUseActive(activeIds[0], activeDefs_, cs.activeRuntime, cs.activeStatus)
+                && hit(activeBtnRect_)) { battleTapActive(); return; }
+        }
         return;   // a tap elsewhere in the battle scene does nothing now (no more "whole scene is the surface")
     }
     // Milestone 9 polish: releasing a d-pad button stops "keep moving while held" (see

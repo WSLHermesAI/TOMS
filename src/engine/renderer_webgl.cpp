@@ -185,7 +185,7 @@ void WebGLRenderer::end() {
     // pixels into NDC via uRes, so the viewport must span the whole canvas for that mapping to
     // land where the game expects it.
     glViewport(0,0,(GLsizei)bufW,(GLsizei)bufH);
-    glClearColor(0.06f,0.06f,0.1f,1.0f);
+    glClearColor(kBackgroundClearColor[0], kBackgroundClearColor[1], kBackgroundClearColor[2], kBackgroundClearColor[3]);
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

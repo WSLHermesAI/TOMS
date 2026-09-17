@@ -571,6 +571,14 @@
       "ko": "퍼펙트 가드!",
       "es": "¡Bloqueo perfecto!"
     },
+    "battle.sanctuary_survive": {
+      "zh_TW": "聖所回聲響起——你在死亡邊緣留下了 1 點HP。",
+      "en": "The sanctuary's echo answers -- you cling to 1 HP at the edge of death.",
+      "zh_CN": "圣所回声响起——你在死亡边缘留下了 1 点HP。",
+      "ja": "聖域の残響が応える——死の淵で HP1 にしがみつく。",
+      "ko": "성역의 메아리가 응답한다——죽음의 문턱에서 HP 1을 붙잡는다.",
+      "es": "El eco del santuario responde: te aferras a 1 PV al borde de la muerte."
+    },
     "battle.guard_hit": {
       "zh_TW": "你承受了 {dmg} 點傷害。",
       "en": "You took {dmg} damage.",

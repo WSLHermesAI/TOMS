@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Generate two 32x32 RGBA item-icon sprites for Tower of the Sorcerer.
+"""Superseded by tools/make_sprites.py (2026-09-17), which regenerates exp_up.png/scroll.png
+along with every other shipped sprite using a shared outline+shading pass. Kept only as
+historical reference for the original flat-fill versions -- do not run this after make_sprites.py
+without expecting its output to be overwritten back to the old, unshaded look.
+
+Generate two 32x32 RGBA item-icon sprites for Tower of the Sorcerer.
 
 - exp_up.png  : green gem with a white "up arrow"  (EXP bonus item)
 - scroll.png  : a magic scroll / teleport item   (jump to target floor)

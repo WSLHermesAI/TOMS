@@ -13,26 +13,52 @@
 
 ## ▶ Next Step
 
-**Next action: wire equipment actives into combat** — the data + rules now exist and are tested
-(`data/actives.json`, `data/equipment.json`'s `actives`, `src/game/systems/equipment_actives.{h,cpp}`,
-41 headless checks); what is missing is the trigger: a battle control that fires the equipped actives
-(enabled only when `canUseActive()` says yes, greyed while `st_silence` holds or the use is spent), and
-the code in the damage/HP path that applies the returned effect — `guaranteedCrit` + `damageMultiplier`
-on the attack, `surviveLethal` clamping a lethal hit to 1 HP. Then the actives need an on-screen
-affordance a phone player can tap (the board's standing mobile rule), and the two side-story items
-(`qingxiao_blade` / `soul_echo_bell`) need their acquisition path (ss_09 / ss_08).
+**Next action: M9 continued — `ch_05`–`ch_10`**, one chapter at a time (same research-then-scope-
+then-build pattern `ch_04` used). `ch_05` is the natural next pick (unblocks the village hub's next
+location, `hub.crypt_shrine`) but hasn't been scoped yet — check in with the owner before starting.
+Separately, the art/UI polish pass (monster/item sprite quality, text size, background color) that
+prompted the branch reconciliation below is in progress; not yet finished.
 
-**Just closed:**
-- **Equipment actives — first slice (2026-09-14)**: the fourth and last of the schema's four systems now
-  has data and rules. `data/actives.json` holds the two actives `ART_AND_ABILITY_DESIGN.md` defines
-  (`a_qingxiao_edge` once-per-battle guaranteed crit x1.8; `a_sanctuary_echo` lethal hit leaves 1 HP,
-  the bell's 8-frame VFX recorded), the two items the doc attaches them to (`qingxiao_blade` A-08,
-  `soul_echo_bell` A-18) were authored into `data/equipment.json` with their documented stats, and every
-  item gained an `actives` array. `src/game/systems/equipment_actives.{h,cpp}` is pure logic in the same
-  shape as skill/forge/hub: which actives an equipped set grants (weapon/armor/talent, deduped), per-battle
-  uses, cooldowns, and the doc's two status interactions — `st_echo` makes the first use skip its cooldown
-  and is consumed by it, `st_silence` blocks every active. `equipment_actives_test` (41 checks, ALL PASS)
-  reads the REAL data files, so it also fails if an item ever references a nonexistent active.
+**A branch reconciliation happened here (2026-09-17), not a new feature.** Two independent
+development streams had been running against this repo in parallel without either knowing about
+the other — this session's own work (see log part 7: M6 equipment actives, M7 endings, M8 rebirth,
+M9 `ch_04` content + stair alignment) and a separate branch on `github.com/WSLHermesAI/TOMS` (5
+commits: equipment actives' own first slice, plus 4 "Mobile UI scale" steps). A `git merge` of the
+two auto-resolved cleanly for most files but, for `CMakeLists.txt` specifically, took one side's
+edit wholesale for a block both sides had inserted into — which silently dropped this session's
+`ending_system`/`cycle_system` build entries (M7/M8 have no counterpart on the other branch at all,
+so this was pure collateral, not a real conflict) and reverted this file's own banner to the other
+branch's older state. Reconciled by hand, item by item:
+- **Endings (`ending_system.h/.cpp`) and rebirth (`cycle_system.h/.cpp`)**: purely this session's
+  work, nothing to merge — just re-added the three dropped `CMakeLists.txt` lines (source + the two
+  test targets) verbatim.
+- **Equipment actives**: kept, both sides had built the SAME feature independently and differently.
+  The other branch's `equipment_actives.h/.cpp` is the more complete pure-logic layer (real
+  per-active uses-per-battle + cooldown timers + `st_echo`/`st_silence` status hooks, 41 tests) but
+  had never been wired into combat; this session's `active_system.h/.cpp` was simpler but WAS
+  already wired into a real battle button (keyboard `H`, touch, HUD). Kept the richer logic,
+  deleted `active_system.*`, and rewired `battleTapActive()`/the HUD button/the touch hit-test onto
+  `canUseActive()`/`useActive()`. This is a genuine capability upgrade, not just a swap:
+  `surviveLethal` (`a_sanctuary_echo`, lethal hit leaves 1 HP) now actually applies in
+  `resolveEnemyClockFire()`, which nothing had wired before on either branch.
+- **Mobile UI scale (`ui_root.h`, `dialogue_layout.h`)**: purely additive, kept as-is — a different
+  scaling axis (`UiRoot` scales UI element geometry/hit-boxes; `g_uiScale`, this session's own
+  text-size knob, scales font glyph size) that doesn't overlap with anything this session touched.
+- Verified live post-reconciliation: equip `qingxiao_blade`, start a real battle, tap the active —
+  uses-left drops 1→0, `nextAttackGuaranteedCrit` arms, a second tap same battle is correctly inert.
+  Full regression: 30/30 test binaries pass (both `ending_system_test`/`cycle_system_test` AND the
+  incoming `equipment_actives_test`/`ui_root_test`/`dialogue_layout_test` all present and green);
+  both `tower_vulkan` and `toms_web` compile clean.
+
+**Just closed (this session, before the reconciliation above):**
+- **M9 first slice — `ch_04` content + stair alignment** (log part 7, 2026-09-16): see log for
+  full detail — `ch_04.json`/F22-F28 narrative content, `ss_04` made real, a new `runFlagSet`
+  condition leaf; separately, all 70 floors' stairs now physically align (`tools/gen_stairs.py`)
+  and `Game::loadStage()`'s `StageArrival` lands the player on the matching tile.
+- **M8 rebirth, M7 endings, M6 equipment actives (first slice)** (log part 7, 2026-09-16): see log
+  — `cycles.json`/`Game::rebirth()`, the 15-ending resolver, and equipment actives' original first
+  slice (now superseded in content by the reconciliation above, but the combat-wiring pattern it
+  established survived into the reconciled version).
 - **S6 first slice: the village hub** (log part 6, 2026-09-14): `data/hub.json` (1 location so far,
   `hub_village`), a pure/tested `hub_system.h/.cpp` (11 checks), `Game::activateHubLocation()`
   (dispatches by action kind — only `"talk"` exists yet, opens an NPC's dialogue directly from the
@@ -103,9 +129,11 @@ affordance a phone player can tap (the board's standing mobile rule), and the tw
 | S4 — Skill tree | 🟡 In progress (first slice done 2026-09-14) | `data/skills.json` (3 lineages × root+tier-1, 6 nodes), pure/tested `skill_system.h/.cpp`, `RunStoryState` tracking + save v3 fields, the chapter-entry grant pipeline (new: nothing had read a chapter's `grants` at runtime before this), live atk/def effects stacked into combat, a real in-game Skills screen. Verified live in a browser. Still ahead: deeper tiers per lineage (today ships root+1), the real 功法三系 tree STORY_BIBLE §3 places at ch_04/F25 (no chapter data yet). See log part 6. |
 | S5 — Forging | ✅ Done (2026-09-14) | `data/forge.json` (3 recipes), pure/tested `forge_system.h/.cpp`, `MetaSaveData.forgeRecipesKnown` (meta-scoped per STORY_BIBLE §8's rebirth table), the chapter-entry grant pipeline extended for recipes, `Game::tryCraft()`, a real conditionally-shown Forge screen. Verified live via harness probes and a real simulated UI click. Only `fr_gatewarden` is granted yet (ch_03) — the other two authored recipes await ch_04+ chapter data. See log part 6. |
 | S6 — Village hub | 🟡 In progress (first slice done 2026-09-14) | `data/hub.json` (1 location: `hub_village`, gated on `hub.village`), pure/tested `hub_system.h/.cpp`, `Game::activateHubLocation()` (dispatches by action kind — only `"talk"` exists), a real in-game Village screen. The pause menu's Main page generalized from a hardcoded row count into `Game::mainMenuOrder()` (a pure function of both Forge's and Village's unlock flags) to support a second conditional row. Verified live via harness probes and a real simulated UI click. Store's unlock stays independent of `hub.village` (owner's explicit choice). Growth blocked on missing chapter content: the next location (`hub.crypt_shrine`, ch_05) needs a chapter file that doesn't exist yet. See log part 6. |
-| Equipment actives (裝備主動技) | ⬜ Not started | The fourth of `STORY_DATA_SCHEMA.md`'s four systems, zero code so far. `data/equipment.json` needs an `actives` field + a combat-side trigger path. No detailed schema for the actives themselves exists yet — same "design it, then build" shape S4/S5/S6 each needed. |
-| S7 — Endings + rebirth | ⬜ Not started | Schemas in `docs/story/STORY_DATA_SCHEMA.md` sections 7 (endings + resolver) and 8 (rebirth). |
-| S8 — Art pipeline (shader variants, atlas, rigs) | ⬜ Not started | `docs/design/ART_AND_ABILITY_DESIGN.md` sections 1.3 / 1.5 / 8; 1,006 animation frames + 469 static images, 3 MB budget. |
+| Equipment actives (裝備主動技) | ✅ Done (2026-09-17) | The fourth of `STORY_DATA_SCHEMA.md`'s four systems, fully wired: `data/actives.json` (`a_qingxiao_edge` guaranteedCrit x1.8, `a_sanctuary_echo` surviveLethal), `src/game/systems/equipment_actives.h/.cpp` (real uses-per-battle + cooldown + `st_echo`/`st_silence` status hooks, 41 tests), a real 4th battle button (keyboard `H`, touch, HUD) wired through `canUseActive()`/`useActive()`, and both effect kinds actually applying in combat (`guaranteedCrit` on the next attack, `surviveLethal` clamping a lethal hit to 1 HP in `resolveEnemyClockFire()`). Reconciled from two independent implementations of this same system — see the Next Step section's reconciliation note for the full story. Still ahead: the two side-story items (`qingxiao_blade`/`soul_echo_bell`) need their acquisition path (ss_09/ss_08, not authored yet). |
+| M7 — Endings (`endings.json` + resolver + UI) | ✅ Done (first slice, 2026-09-16) | `data/story/endings.json` (all 15), pure/tested `ending_system.h/.cpp`, a real full-screen ending scene wired into `finishCombatLose()`. See log part 7. Still ahead: 14/15 endings need F70 or `cycleIndex≥9`, neither reachable yet. |
+| M8 — Rebirth (輪迴, `cycles.json`) | ✅ Done (first slice, 2026-09-16) | `data/story/cycles.json` + `cycle_system.h/.cpp`, `Game::rebirth()`, a real two-choice ending screen. See log part 7. |
+| M9 — Story content expansion (`ch_04`–`ch_10`) | 🟡 In progress (first slice: `ch_04` done, 2026-09-16; stair alignment done, 2026-09-16) | `ch_04.json` (F22-F28) + `ss_04` made fully real; separately, all 70 floors' stairs now physically align and `Game::loadStage()` lands the player on the matching tile (`tools/gen_stairs.py`, `StageArrival`). See log part 7. Still ahead: `ch_05`–`ch_10` (6 more chapters). |
+| S8 — Art pipeline (shader variants, atlas, rigs) | 🟡 In progress (procedural placeholder pass, 2026-09-17) | `docs/design/ART_AND_ABILITY_DESIGN.md`'s real pipeline (ComfyUI/SDXL-generated pixel art, 1,006 animation frames + 469 static images) is still not started — no image-generation tool available in this environment. In the meantime, `tools/make_sprites.py` (new, supersedes `make_item_icons.py`/`make_missing_sprites.py`) regenerates all 30 shipped sprites with a shared outline+shading pass instead of flat single-tone fills, and fixes a real content bug (`boss_demonlord.png` was byte-identical to `demon.png` — the final boss looked exactly like a trash mob). Also in progress: UI text size (`g_uiScale` default raised 1.0→1.15) and background color (the duplicated clear-color literal in `renderer.cpp`/`renderer_webgl.cpp` unified into one `kBackgroundClearColor` constant in `render_iface.h`). |
 
 Legend: ⬜ Not started · 🟡 In progress · 🟥 Blocked · ✅ Done
 
@@ -125,6 +153,7 @@ no log content was edited, only moved.
 | [4_PROGRESS_REPORT.md](4_PROGRESS_REPORT.md) | 2026-09-11 to 2026-09-13 | Title phase (New Game/Continue/Settings); a real web delivery pipeline; upstream pulls; the 70-floor/15-ending/50-enemy story+art design document set |
 | [5_PROGRESS_REPORT.md](5_PROGRESS_REPORT.md) | 2026-09-13 | The `game.cpp` source-layout refactor; ImGui on the browser backend; S1 (footprints+roamers, deployed live); S2 (`gen_floors.py`, 70-floor data); S3 (story v3, save v3); S3.5 (the 70 floors wired into real play, then story-on-screen/floor-events/per-act visuals); per-floor grid sizes; the mobile pass (A/D shipped, B held back, C scoped) |
 | [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) | 2026-09-14 | "C" (the mobile UI-scale pass) finished — battle screen scale-up completed, dialogue box scaled, two real overflow bugs fixed; S4's first slice — the skill tree's foundation, chapter-entry grant pipeline, live combat effects, a real Skills screen, one real bug caught+fixed live; S5 — forging (`forge.json`, meta-scoped known recipes, `tryCraft`, a real conditionally-shown Forge screen), verified live via harness probes and a real simulated UI click; `src/game/` reorganized into 5 category folders (core/systems/save/ui/audio), zero behavior change, 23/23 tests verified; S6 first slice — the village hub (`hub.json`, `activateHubLocation`, a real Village screen), the Main-page row logic generalized to `mainMenuOrder()`, verified live via a real simulated click through to the elder's dialogue |
+| [7_PROGRESS_REPORT.md](7_PROGRESS_REPORT.md) | 2026-09-16 to 2026-09-17 | Equipment actives' original first slice, the 15-ending resolver, 輪迴 rebirth, `ch_04` story content + `ss_04`, all 70 floors' stairs made to physically align — **note:** this log part's own prose labels these "M6"/"M7"/"M8"/"M9", reusing numbers this table had already assigned to older, unrelated milestones (see rows above) back when this part was written; read it by feature name, not by that number. Also: reconciling this session's work with a parallel branch's own equipment-actives + mobile-UI-scale work (2026-09-17, see the Next Step section above) |
 
 ## Open Questions / Blockers
 

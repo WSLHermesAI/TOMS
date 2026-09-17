@@ -194,12 +194,19 @@ int jsCycleInfo(int which) {
 }
 EMSCRIPTEN_KEEPALIVE
 void jsTapActive() { if (g_game) g_game->battleTapActive(); }
-// which==0 -> activeUsed, which==1 -> nextAttackGuaranteedCrit armed, which==2 -> enemyHP.
+// which==0 -> uses left this battle for the currently-granted active (0 if none granted/none
+// left; 2026-09-17: replaces the old plain activeUsed bool now that equipment_actives.h tracks
+// real per-active uses-per-battle), which==1 -> nextAttackGuaranteedCrit armed, which==2 -> enemyHP.
 EMSCRIPTEN_KEEPALIVE
 int jsActiveInfo(int which) {
     if (!g_game) return -1;
     const CombatState& c = g_game->combat();
-    if (which == 0) return c.activeUsed ? 1 : 0;
+    if (which == 0) {
+        auto ids = g_game->grantedActiveIds();
+        if (ids.empty()) return 0;
+        auto it = c.activeRuntime.find(ids[0]);
+        return it != c.activeRuntime.end() ? it->second.usesLeft : 0;
+    }
     if (which == 1) return c.nextAttackGuaranteedCrit ? 1 : 0;
     if (which == 2) return c.enemyHP;
     return -1;

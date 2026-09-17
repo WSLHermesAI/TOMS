@@ -11,9 +11,11 @@ void Game::startCombat(const EnemyInst& e) {
     cs.shieldBanked = false; cs.shieldPower = 0.0f;
     cs.enemyClockMs = 0;
     cs.superCharge = 0;
-    cs.activeUsed = false;
+    cs.activeRuntime = toms::makeBattleRuntime(activeDefs_);
+    cs.activeStatus = toms::ActiveStatusEffects{};
     cs.nextAttackGuaranteedCrit = false;
     cs.nextAttackCritDamageMult = 1.0f;
+    cs.survivalArmed = false;
     cs.resultPauseMs = 0;
     cs.log = locale_.tr("battle.start");
 }
@@ -132,7 +134,12 @@ void Game::resolveEnemyClockFire() {
     cs.playerHP -= dmg;
     if (dmg > 0) audio.play("enemy_attack");
 
-    if (cs.playerHP <= 0) {
+    if (cs.playerHP <= 0 && cs.survivalArmed) {
+        // a_sanctuary_echo: once per battle, a lethal hit leaves 1 HP instead of ending the fight.
+        cs.survivalArmed = false;
+        cs.playerHP = 1;
+        cs.log = locale_.tr("battle.sanctuary_survive");
+    } else if (cs.playerHP <= 0) {
         cs.log = locale_.tr("battle.player_down");
         finishCombatLose();
     } else {
@@ -179,25 +186,29 @@ void Game::battleTapSuper() {
     }
 }
 
-// S7 (equipment actives, first slice): a no-op unless the currently equipped gear grants an
-// active (equippedActives()) and it hasn't been spent this battle. Only "guaranteed_crit_next_attack"
-// is implemented -- it arms a flag consumed by the next resolveAttackTap(), rather than dealing
-// damage itself the way battleTapSuper() does, matching a_qingxiao_edge's own description ("下一
-// 次攻擊...") as a buff on the next attack, not an attack in its own right. An unrecognized
-// effectKind is a safe no-op (mirrors Game::activateHubLocation's same rule) so a future content
-// typo can never crash, just silently do nothing -- and, notably, never mark activeUsed either,
-// so a real fix doesn't need a save-compatible "undo the misfire" path.
+// Equipment actives (2026-09-17, rewired onto equipment_actives.h -- see CombatState's own
+// comment for why): a no-op unless the currently equipped gear grants an active
+// (equippedActives()) and toms::canUseActive() says this battle still has a use of it, off
+// cooldown, with no st_silence in effect. Only one active fires at a time -- the first slice's
+// single on-screen button -- matching ids[0], same as before this rewire. "guaranteedCrit" arms
+// a flag consumed by the next resolveAttackTap() (a buff on the next attack, not an attack in its
+// own right, per a_qingxiao_edge's "下一次攻擊..." description); "surviveLethal" arms a flag
+// consumed by the next resolveEnemyClockFire() that would otherwise end the fight.
+// ActiveDefinition carries no display name yet (a real, still-open content gap) -- the log falls
+// back to the raw id rather than inventing a name lookup this rewire doesn't own.
 void Game::battleTapActive() {
-    if (!cs.active || cs.activeUsed) return;
+    if (!cs.active) return;
     auto ids = toms::equippedActives(equipped_, equipmentDefs_);
     if (ids.empty()) return;
-    auto it = activeDefs_.find(ids[0]);
-    if (it == activeDefs_.end()) return;
-    const auto& def = it->second;
-    if (def.effectKind != "guaranteed_crit_next_attack") return;
-    cs.nextAttackGuaranteedCrit = true;
-    cs.nextAttackCritDamageMult = def.damageMult;
-    cs.activeUsed = true;
-    cs.log = trParam(locale_.tr("battle.active_armed"), "name", locale_.field(def.name));
+    const std::string& id = ids[0];
+    if (!toms::canUseActive(id, activeDefs_, cs.activeRuntime, cs.activeStatus)) return;
+    toms::ActiveEffect eff = toms::useActive(id, activeDefs_, cs.activeRuntime, cs.activeStatus);
+    if (!eff.fired) return;
+    if (eff.guaranteedCrit) {
+        cs.nextAttackGuaranteedCrit = true;
+        cs.nextAttackCritDamageMult = eff.damageMultiplier;
+    }
+    if (eff.surviveLethal) cs.survivalArmed = true;
+    cs.log = trParam(locale_.tr("battle.active_armed"), "name", id);
     audio.play("confirm_click");
 }

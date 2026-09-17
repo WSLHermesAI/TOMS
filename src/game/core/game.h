@@ -15,7 +15,7 @@
 #include "skill_system.h"     // toms::SkillDefinition — see Game::skillDefs_ (S4: the skill tree)
 #include "forge_system.h"     // toms::ForgeRecipeDefinition — see Game::forgeDefs_ (S5: forging)
 #include "hub_system.h"       // toms::HubLocationDefinition — see Game::hubDefs_ (S6: village hub)
-#include "active_system.h"    // toms::ActiveSkillDefinition — see Game::activeDefs_ (S7: equipment actives)
+#include "equipment_actives.h" // toms::ActiveDefinition — see Game::activeDefs_ (S7: equipment actives)
 #include "ending_system.h"    // toms::EndingsTable — see Game::endingsTable_ (M7: the 15-ending resolver)
 #include "cycle_system.h"     // toms::CyclesConfig — see Game::cyclesConfig_ (M8: rebirth)
 #include "entity_status.h"   // toms::EntityStatus/entityStatusKey — see Game::entityStatus_
@@ -105,14 +105,22 @@ struct CombatState : public Trackable {
     // longer a compile-time constant here), then resets.
     int superCharge = 0;
 
-    // S7 (equipment actives, first slice): whether THIS battle's active (if the equipped gear
-    // grants one) has already been spent -- once-per-battle, not a real cooldown timer, matching
-    // every named active in ART_AND_ABILITY_DESIGN.md ("每場一次"/"每場 1 次"). Armed by
-    // Game::battleTapActive(), consumed by the next resolveAttackTap() -- see its own comment for
-    // why only "guaranteed_crit_next_attack" needs a field here rather than a generic payload.
-    bool activeUsed = false;
+    // Equipment actives (2026-09-17: rewired onto the richer equipment_actives.h pure-logic
+    // layer -- real per-active uses-per-battle + cooldown + st_echo/st_silence status hooks,
+    // reconciled from a parallel branch's implementation of the same S7 slice this session's own
+    // active_system.h had stubbed more simply). activeRuntime is reset fresh every battle by
+    // toms::makeBattleRuntime(activeDefs_); activeStatus is reset too since nothing anywhere sets
+    // st_echo/st_silence yet (a real, still-open gap, not this rewire's job to close).
+    std::map<std::string, toms::ActiveRuntime> activeRuntime;
+    toms::ActiveStatusEffects activeStatus;
+    // "Armed" state for the two effect kinds this project's actives use -- guaranteedCrit arms the
+    // NEXT attack (consumed by resolveAttackTap()), surviveLethal arms against the NEXT lethal hit
+    // (consumed by resolveEnemyClockFire()). Both come from toms::ActiveEffect, not stored there
+    // directly, since CombatState -- not equipment_actives.h -- owns how/when an effect actually
+    // applies to this game's specific attack/defense-tap combat model.
     bool nextAttackGuaranteedCrit = false;
     float nextAttackCritDamageMult = 1.0f;
+    bool survivalArmed = false;
 
     // resultPauseMs: only needed for a LOSE (finishCombatLose() sets active=false immediately,
     // but the "you fell" message should stay on screen briefly rather than vanish the same
@@ -471,7 +479,12 @@ public:
     std::vector<std::string> hubMenuOrder() const;
     // S7 (equipment actives, first slice): read-only content. battleTapActive() is the only path
     // that can spend one -- see its own declaration above.
-    const std::map<std::string, toms::ActiveSkillDefinition>& activeDefs() const { return activeDefs_; }
+    const std::map<std::string, toms::ActiveDefinition>& activeDefs() const { return activeDefs_; }
+    // Which active id(s) the currently equipped gear grants (equipment_system.h's
+    // equippedActives(), applied to the live equipped_/equipmentDefs_) -- exposed read-only so a
+    // page harness (jsActiveInfo) can ask "what's granted right now" without a private-member
+    // accessor for equipped_/equipmentDefs_ themselves.
+    std::vector<std::string> grantedActiveIds() const { return toms::equippedActives(equipped_, equipmentDefs_); }
     // M7 (first slice): the 15-ending table is read-only content; the only writer of
     // activeEndingId_ is Game::triggerEnding(), called from finishCombatLose() today (the only
     // trigger point this slice wires -- see its own comment for why F70/F69's rows aren't reachable
@@ -600,8 +613,9 @@ private:
     std::map<std::string, toms::HubLocationDefinition> hubDefs_;
     // S7 (equipment actives, first slice): content loaded once at boot, same shape as
     // skillDefs_/forgeDefs_/hubDefs_ above. There is no separate "known" list yet (unlike
-    // forgeRecipesKnown) -- see active_system.h's own comment for why.
-    std::map<std::string, toms::ActiveSkillDefinition> activeDefs_;
+    // forgeRecipesKnown) -- nothing in this slice's content grants an active independently of the
+    // equipment that carries it.
+    std::map<std::string, toms::ActiveDefinition> activeDefs_;
     // M7 (first slice): content loaded once at boot, same shape as skillDefs_/forgeDefs_/hubDefs_/
     // activeDefs_ above.
     toms::EndingsTable endingsTable_;

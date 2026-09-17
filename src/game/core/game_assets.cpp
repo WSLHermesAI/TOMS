@@ -129,7 +129,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     hubDefs_ = toms::loadHubLocations(assetDir + "/../data/hub.json");
     // S7 (equipment actives, first slice): same "load once at boot" shape as skillDefs_/forgeDefs_/
     // hubDefs_ above.
-    activeDefs_ = toms::loadActiveSkills(assetDir + "/../data/actives.json");
+    activeDefs_ = toms::loadActiveDefinitions(assetDir + "/../data/actives.json");
     // M7 (first slice): the 15-ending table, same "load once at boot" shape as the above.
     endingsTable_ = toms::loadEndings(assetDir + "/../data/story/endings.json");
     // M8 (first slice): the rebirth config, same "load once at boot" shape as the above.

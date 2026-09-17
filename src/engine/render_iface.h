@@ -7,6 +7,14 @@
 #include <cstdint>
 #include <string>
 
+// The one real background color players see behind every scene (map, HUD, dialogue, battle) on
+// BOTH backends. Was the same literal duplicated separately in renderer.cpp and
+// renderer_webgl.cpp (2026-09-17 art/UI polish pass found it while unifying background color) --
+// they never link into the same binary, so this header is the only place both can share it from.
+// A deep, neutral dark slate/navy -- unchanged in hue from what shipped before, just no longer a
+// magic literal repeated in two files.
+inline constexpr float kBackgroundClearColor[4] = {0.06f, 0.06f, 0.10f, 1.0f};
+
 struct Quad {
     float rect[4];   // x,y,w,h in pixels (dst)
     float uv[4];     // u0,v0,u1,v1 (src atlas)

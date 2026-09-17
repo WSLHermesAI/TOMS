@@ -714,7 +714,8 @@ void Renderer::end() {
 
     VkRenderPassBeginInfo rb{}; rb.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rb.renderPass = renderPass; rb.framebuffer = swapFBs[imgIdx]; rb.renderArea = {0,0,W,H};
-    VkClearValue cv{}; cv.color = {0.06f,0.06f,0.1f,1.0f}; rb.clearValueCount = 1; rb.pClearValues = &cv;
+    VkClearValue cv{}; cv.color = {kBackgroundClearColor[0], kBackgroundClearColor[1], kBackgroundClearColor[2], kBackgroundClearColor[3]};
+    rb.clearValueCount = 1; rb.pClearValues = &cv;
     vkCmdBeginRenderPass(cb, &rb, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     // Dynamic viewport+scissor (enabled in the pipeline) must be set every pass. Game content

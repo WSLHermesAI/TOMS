@@ -389,3 +389,102 @@ above); `data/story/floors/F26.json`'s (the SPEC file, not the regenerated `.sta
 documentation field, which still names the pre-regeneration coordinate -- harmless since nothing reads it at
 runtime (a fact already established during M9/ch_04), but now stale; left as a known, named gap rather than
 silently fixed.
+
+### 2026-09-17 — Branch reconciliation: two independent equipment-actives implementations merged
+
+Discovered mid-task, while polishing art/UI (monster/item sprites, text size, background color) per an
+owner ask: rebuilding to verify the art changes failed to LINK, with errors entirely unrelated to anything
+just touched. Root cause: `git merge` had pulled in a branch from `github.com/WSLHermesAI/TOMS` -- 5 commits
+built independently and in parallel to this session's own work, with no awareness of each other. The merge
+itself completed cleanly (no conflict markers), but for `CMakeLists.txt` specifically it took one side's
+edit wholesale for a block both sides had inserted new lines into, which silently dropped this session's
+`ending_system.cpp`/`cycle_system.cpp` build entries and both their test targets, and separately reverted
+this file's own "Next Step" banner to the other branch's older content.
+
+**Reported to the owner rather than silently patched** (per standing instruction: a surprising repo state
+gets a decision, not a guess) -- asked to "look at both and decide." Findings, feature by feature:
+
+- **Endings/rebirth**: purely this session's own work; the other branch has no counterpart at all. The
+  `CMakeLists.txt` drop was pure collateral damage from the conflict-resolution mechanics above, not a real
+  competing design. Fixed by re-adding the three lines verbatim.
+- **Equipment actives**: a genuine collision -- both branches independently built the SAME S6/M6 slice
+  (the fourth of the four story-driven systems) starting from the same 2026-09-14 common ancestor, under
+  different names. The incoming branch's `equipment_actives.h/.cpp` turned out to be the more complete pure
+  logic (real per-active uses-per-battle + cooldown timers, `st_echo`/`st_silence` status hooks, 41 tests)
+  but was never wired into combat (its own progress report said so explicitly: "Next action: wire equipment
+  actives into combat"). This session's `active_system.h/.cpp` was simpler (no cooldowns, a single
+  `activeUsed` bool) but WAS already wired into a real battle button (`H` key, touch, HUD, verified live
+  during the original M6 slice). Decision: keep the richer logic, delete `active_system.*`, rewire
+  `Game::battleTapActive()` / the HUD button / the touch hit-test onto `canUseActive()`/`useActive()`.
+  `CombatState` traded `activeUsed`/kept `nextAttackGuaranteedCrit`/`nextAttackCritDamageMult` for
+  `activeRuntime`/`activeStatus` (the new per-battle state) plus a new `survivalArmed` flag. This is a real
+  capability upgrade, not a like-for-like swap: `surviveLethal` (`a_sanctuary_echo` -- a lethal hit leaves
+  1 HP) now actually applies, in `resolveEnemyClockFire()`, which NEITHER branch had wired before today.
+  `data/actives.json`/`data/equipment.json` needed no reconciliation -- the incoming branch's authored
+  content (`a_qingxiao_edge`/`a_sanctuary_echo` on `qingxiao_blade`/`soul_echo_bell`) already fully replaced
+  this session's placeholder `a_twin_flash`, with no dangling references either way.
+- **Mobile UI scale** (`ui_root.h`/`dialogue_layout.h`, 4 commits): purely additive, kept as-is untouched.
+  Confirmed it does NOT overlap with this session's own `g_uiScale` bump (see below) -- `UiRoot` scales UI
+  element geometry and hit-boxes (buttons/panels), a completely different axis from `g_uiScale`, which
+  scales font glyph size. They compose, they don't conflict.
+
+**Verified.** Full regression: **30/30 test binaries pass** (`ending_system_test`/`cycle_system_test`
+restored, `equipment_actives_test`/`ui_root_test`/`dialogue_layout_test` from the incoming branch all
+present and green; the stray pre-reconciliation `active_system_test.exe` binary was a stale build artifact,
+not a real failure). Both `tower_vulkan` and `toms_web` compile clean. Browser, headless Chrome, real
+gameplay: `jsEquip("qingxiao_blade")` -> real battle -> `jsTapActive()` -- uses-left 1->0, `nextAttackGuaranteedCrit`
+armed 0->1, a second same-battle tap correctly inert (stays at 0, doesn't go negative) -- confirming the
+rewired combat path behaves identically to how the original M6 slice was verified, just now backed by the
+richer logic.
+
+### 2026-09-17 — Art/UI polish: procedural sprite quality, text size, background color
+
+Owner ask, three parts, each scoped with a quick clarifying question first (no image-generation tool is
+available in this environment, so real pixel art per `ART_AND_ABILITY_DESIGN.md`'s ComfyUI pipeline was
+never on the table -- confirmed with the owner before starting, who chose the procedural-improvement path).
+
+**Monster/item art.** New `tools/make_sprites.py` (Pillow-based -- a new, deliberate dependency exception;
+raw pixel-plotting the outline/shading math for 30 sprites by hand is exactly what a real drawing library
+is for) regenerates every one of the 30 sprites `SPRITE_ORDER` actually loads (`game_helpers.h`), replacing
+`make_item_icons.py`/`make_missing_sprites.py` (kept only as historical reference, both now marked
+superseded). Shared kit: a 1px dark outline stamped on every silhouette edge (readability against the
+floor/wall tiles, which sit in a similar dark tonal range as several monsters), and a top-lit highlight/
+shadow band within each shape instead of the old flat single-tone fills. Found and fixed a real content
+bug while looking at the sheet: `boss_demonlord.png` was byte-identical to `demon.png` -- the final boss
+looked exactly like a regular trash mob. Redrawn bigger, spikier (shoulder spikes + a center horn), and a
+darker/richer palette than the regular demon -- one iteration was needed here: a first pass's horn color
+was too light and ended up washing out the whole silhouette instead of reading as accents, caught by
+re-rendering and looking at it, not assumed correct from the code. Also fixed `npc_king`'s crown and
+`npc_sorcerer`'s hat, both of which turned out invisible on the first pass too (a self-intersecting
+"zigzag" polygon for the crown filled as almost nothing under PIL's winding rule) -- replaced with simple
+non-self-intersecting shapes. `npc_handmaiden` (previously an off-model lavender egg blob, unlike every
+other NPC's actual person silhouette) is now built on the same person rig as the rest of the cast.
+`assets/sprites/manifest.json` corrected to match `SPRITE_ORDER` exactly (it had been stale/incomplete --
+missing `exp_up`/`scroll`/`npc_handmaiden` -- since it isn't actually read by the C++ loader, only
+`SPRITE_ORDER` is).
+
+**Text size.** `g_uiScale` (`game_text_draw.cpp`) raised from 1.0 to 1.15 -- one flat, always-on multiplier
+already read by every `drawText`/`measureText` call, so every screen's text reads a bit bigger with a
+one-line change. Found while touching it: the comment above this variable claimed "the browser sets 1.25 on
+small screens," but nothing anywhere actually assigns it at runtime -- a real, still-open gap (small-screen
+detection was never wired to this specific knob), named here rather than silently "fixed" by inventing that
+wiring as a side effect of an unrelated ask.
+
+**Background color.** The real player-facing clear color (`glClearColor`/`VkClearValue`, NOT the
+`TOMS_SPLIT=1` debug-only quadrant-diagnostic colors, which stay untouched on purpose) was already the same
+literal value duplicated separately in `renderer.cpp` (Vulkan) and `renderer_webgl.cpp` (WebGL) -- not
+actually mismatched, just not a single source of truth. Unified into one `kBackgroundClearColor` constant
+in `render_iface.h` (a header both backends already include, even though they never link into the same
+binary), same deep neutral dark value as before.
+
+**Verified.** All 30 regenerated sprites confirmed 32x32 RGBA (the atlas loader's hard requirement) via a
+script check. Visual review via composited sprite sheets at each iteration (not just "the script ran without
+error") -- this is what caught the boss palette and the invisible crown/hat before calling it done. Full
+regression: 30/30 test binaries pass (none of these three changes touch anything a test exercises directly,
+so this is a "did I break anything else" check, not a feature-specific one). Both `tower_vulkan` and
+`toms_web` compile clean.
+
+**Not done, on purpose:** real hand-authored or AI-generated pixel art (`ART_AND_ABILITY_DESIGN.md`'s own
+scope, blocked on an image-generation tool this environment doesn't have); wiring small-screen detection to
+`g_uiScale` (the "still-open gap" named above); per-locale background/theme variants (out of scope, never
+asked for).
