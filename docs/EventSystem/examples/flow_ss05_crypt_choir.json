@@ -1,86 +1,281 @@
 {
   "_comment": [
     "Example flow for docs/EventSystem — NOT loaded by the game (lives under docs/).",
-    "Story: on F33 the player hears a ghost choir at the crypt altar. Talking to the ghost villager",
-    "offers to help or refuse. Helping leads to a fight with the choir; winning pays out and places",
-    "the grateful ghost on F35 and emits 'choir_silenced' for anyone else who cares."
+    "ONE file for the whole side story even though it spans two stages (F33 -> F35).",
+    "Start: hear the choir on F33 -> talk to the ghost (help / refuse) -> fight the choir ->",
+    "the ghost thanks you on F35 -> End 'end_saved'. Refusing -> End 'end_refused'."
   ],
   "schema": "toms.eventflow/1",
   "id": "flow_ss05_crypt_choir",
-  "title": { "zh_TW": "墓穴合唱", "en": "The Crypt Choir" },
+  "title": {
+    "zh_TW": "墓穴合唱",
+    "en": "The Crypt Choir"
+  },
   "scope": "run",
-  "requires": { "type": "storyBeatAtLeast", "value": "ch_05" },
-  "floors": ["F33", "F35"],
+  "requires": {
+    "type": "storyBeatAtLeast",
+    "value": "ch_05"
+  },
+  "floors": [
+    "F33",
+    "F35"
+  ],
+  "start": [
+    "ev_hear_choir"
+  ],
+  "ends": {
+    "end_saved": {
+      "title": {
+        "zh_TW": "合唱安息",
+        "en": "The choir is laid to rest"
+      },
+      "result": "success"
+    },
+    "end_refused": {
+      "title": {
+        "zh_TW": "拒絕請求",
+        "en": "The plea was refused"
+      },
+      "result": "failure"
+    }
+  },
   "events": [
     {
       "id": "ev_hear_choir",
-      "armed": true,
-      "trigger": { "on": "approach", "floor": "F33", "marker": "m_crypt_altar", "radius": 2 },
+      "title": "Hear the choir",
+      "stage": "F33",
+      "trigger": {
+        "on": "approach",
+        "floor": "F33",
+        "marker": "m_crypt_altar",
+        "radius": 2
+      },
       "steps": [
-        { "type": "play", "anim": "fx_ghost_mist", "at": { "marker": "m_crypt_altar" }, "sfx": "dialogue_popup", "wait": true },
-        { "type": "notify", "text": "flow_ss05.hear_choir.text", "ms": 4000 }
+        {
+          "type": "play",
+          "anim": "fx_ghost_mist",
+          "at": {
+            "marker": "m_crypt_altar"
+          },
+          "sfx": "dialogue_popup",
+          "wait": true
+        },
+        {
+          "type": "notify",
+          "text": "flow_ss05.hear_choir.text",
+          "ms": 4000
+        }
       ],
       "fire": [
-        { "type": "placeRole", "id": "r_ghost", "role": "npc:ghost_villager", "floor": "F33", "at": { "marker": "m_altar_side" } }
+        {
+          "type": "placeRole",
+          "id": "r_ghost",
+          "role": "npc:ghost_villager",
+          "floor": "F33",
+          "at": {
+            "marker": "m_altar_side"
+          }
+        }
       ],
-      "next": ["ev_talk_ghost"]
+      "next": [
+        "ev_talk_ghost"
+      ]
     },
     {
       "id": "ev_talk_ghost",
-      "trigger": { "on": "interact", "floor": "F33", "entity": "npc:ghost_villager" },
+      "title": "Talk to the ghost",
+      "stage": "F33",
+      "trigger": {
+        "on": "interact",
+        "floor": "F33",
+        "entity": "npc:ghost_villager"
+      },
       "steps": [
         {
-          "type": "talk", "dialogue": "ghost_villager", "node": "choir_plea",
+          "type": "talk",
+          "dialogue": "ghost_villager",
+          "node": "choir_plea",
           "onOutcome": {
-            "choice:opt_help":   "continue",
-            "choice:opt_refuse": { "end": "failed" }
+            "choice:opt_help": "continue",
+            "choice:opt_refuse": {
+              "end": "failed"
+            }
           }
         },
-        { "type": "action", "action": { "type": "setSideStoryState", "sideStoryId": "ss_05", "state": "active" } }
+        {
+          "type": "action",
+          "action": {
+            "type": "setSideStoryState",
+            "sideStoryId": "ss_05",
+            "state": "active"
+          }
+        }
       ],
-      "fire": [ { "type": "arm", "events": ["ev_fight_choir"] } ],
+      "fire": [
+        {
+          "type": "arm",
+          "events": [
+            "ev_fight_choir"
+          ]
+        }
+      ],
       "fireOnFail": [
-        { "type": "removeRole", "id": "r_ghost" },
-        { "type": "emit", "signal": "choir_ignored", "data": { "floor": "F33" } }
+        {
+          "type": "removeRole",
+          "id": "r_ghost"
+        },
+        {
+          "type": "emit",
+          "signal": "choir_ignored",
+          "data": {
+            "floor": "F33"
+          }
+        },
+        {
+          "type": "end",
+          "end": "end_refused"
+        }
       ]
     },
     {
       "id": "ev_fight_choir",
-      "trigger": { "on": "approach", "floor": "F33", "marker": "m_crypt_altar" },
+      "title": "Fight the choir",
+      "stage": "F33",
+      "trigger": {
+        "on": "approach",
+        "floor": "F33",
+        "marker": "m_crypt_altar"
+      },
       "steps": [
         {
-          "type": "battle", "enemy": "wraith", "boss": false,
-          "onOutcome": { "win": "continue", "lose": { "end": "failed", "arm": ["ev_fight_choir"] } }
+          "type": "battle",
+          "enemy": "wraith",
+          "boss": false,
+          "onOutcome": {
+            "win": "continue",
+            "lose": {
+              "end": "failed",
+              "arm": [
+                "ev_fight_choir"
+              ]
+            }
+          }
         },
-        { "type": "add", "what": "money", "amount": 60 },
-        { "type": "add", "what": "item",  "itemId": "potion_blue", "count": 1 },
-        { "type": "add", "what": "attr",  "attr": "humanity", "delta": 1 },
-        { "type": "setFlag", "flag": "flag_choir_silenced", "scope": "run" }
+        {
+          "type": "add",
+          "what": "money",
+          "amount": 60
+        },
+        {
+          "type": "add",
+          "what": "item",
+          "itemId": "potion_blue",
+          "count": 1
+        },
+        {
+          "type": "add",
+          "what": "attr",
+          "attr": "humanity",
+          "delta": 1
+        },
+        {
+          "type": "setFlag",
+          "flag": "flag_choir_silenced",
+          "scope": "run"
+        }
       ],
       "fire": [
-        { "type": "removeRole", "id": "r_ghost" },
-        { "type": "placeRole", "id": "r_ghost_thanks", "role": "npc:ghost_villager", "floor": "F35", "at": { "marker": "m_entry_side" } },
-        { "type": "emit", "signal": "choir_silenced", "data": { "floor": "F33", "spared": false } }
+        {
+          "type": "removeRole",
+          "id": "r_ghost"
+        },
+        {
+          "type": "placeRole",
+          "id": "r_ghost_thanks",
+          "role": "npc:ghost_villager",
+          "floor": "F35",
+          "at": {
+            "marker": "m_entry_side"
+          }
+        },
+        {
+          "type": "emit",
+          "signal": "choir_silenced",
+          "data": {
+            "floor": "F33",
+            "spared": false
+          }
+        }
       ],
-      "next": ["ev_ghost_thanks"]
+      "next": [
+        "ev_ghost_thanks"
+      ]
     },
     {
       "id": "ev_ghost_thanks",
-      "trigger": { "on": "interact", "floor": "F35", "entity": "npc:ghost_villager" },
+      "title": "Ghost thanks you (F35)",
+      "stage": "F35",
+      "trigger": {
+        "on": "interact",
+        "floor": "F35",
+        "entity": "npc:ghost_villager"
+      },
       "steps": [
-        { "type": "talk", "dialogue": "ghost_villager", "node": "choir_thanks" },
-        { "type": "action", "action": { "type": "setSideStoryState", "sideStoryId": "ss_05", "state": "completed" } }
+        {
+          "type": "talk",
+          "dialogue": "ghost_villager",
+          "node": "choir_thanks"
+        },
+        {
+          "type": "action",
+          "action": {
+            "type": "setSideStoryState",
+            "sideStoryId": "ss_05",
+            "state": "completed"
+          }
+        }
       ],
-      "fire": [ { "type": "removeRole", "id": "r_ghost_thanks" } ]
+      "fire": [
+        {
+          "type": "removeRole",
+          "id": "r_ghost_thanks"
+        },
+        {
+          "type": "end",
+          "end": "end_saved"
+        }
+      ]
     }
   ],
   "_editor": {
     "nodes": {
-      "ev_hear_choir":   { "x": 40,  "y": 80 },
-      "ev_talk_ghost":   { "x": 320, "y": 80 },
-      "ev_fight_choir":  { "x": 600, "y": 40 },
-      "ev_ghost_thanks": { "x": 880, "y": 40 }
+      "ev_hear_choir": {
+        "x": 40,
+        "y": 80
+      },
+      "ev_talk_ghost": {
+        "x": 320,
+        "y": 80
+      },
+      "ev_fight_choir": {
+        "x": 600,
+        "y": 40
+      },
+      "ev_ghost_thanks": {
+        "x": 880,
+        "y": 40
+      }
     },
-    "notes": [ { "x": 320, "y": 260, "text": "Refuse path ends the flow; another flow may listen for choir_ignored." } ]
+    "notes": [
+      {
+        "x": 320,
+        "y": 260,
+        "text": "Refuse path ends the flow; another flow may listen for choir_ignored."
+      }
+    ],
+    "lanes": [
+      "F33",
+      "F35"
+    ]
   }
 }

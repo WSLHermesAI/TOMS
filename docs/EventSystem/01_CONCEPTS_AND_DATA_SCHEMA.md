@@ -9,7 +9,10 @@ file format** the runtime parses. [02](02_GAME_INTEGRATION.md) covers how the ga
 
 | Term | Meaning |
 |---|---|
-| **Flow** | One file in `data/event_flows/`. A named group of events that tell one piece of content (a side story, a chapter beat, a floor's set pieces). Has its own progress in the save. |
+| **Flow** | One file in `data/event_flows/`. It holds **every related event of one piece of content** (a side story, a chapter beat, a floor's set pieces) **even when they happen on different stages**, from its **Start** to each of its **Ends**. Opening the file shows the whole story. It has its own progress in the save. See §3.1. |
+| **Start** | The flow's entry point: the events listed in `start` are armed when the flow becomes active. The editor draws it as the leftmost node. |
+| **End** | A named outcome of the whole flow (`end_saved`, `end_refused`), reached by an `end` fire output. It is the rightmost node(s) in the editor, and it is what other flows, missions and endings react to. |
+| **Stage** | The floor/stage an event belongs to (`F33`). Taken from its trigger, or set explicitly with `stage`. The editor groups events into one **lane per stage**, in tower order. |
 | **Event** | One node of a flow: a **trigger** (when), optional **requires** (only if), a list of **steps** (what happens), and **fire** outputs (what it leaves behind / what comes next). |
 | **Trigger** | The game moment that starts an event: approaching a cell, talking to or picking up something, defeating an enemy, entering a floor, receiving a signal, … |
 | **Requires** | A condition in the existing [Condition DSL](../../src/engine/condition.h), checked when the trigger fires. False → the event stays armed and does not run. |
@@ -26,7 +29,7 @@ Each event in a flow is in exactly one state. These states are what the save sto
 ```mermaid
 stateDiagram-v2
     [*] --> Dormant
-    Dormant --> Armed : flow starts and event has "armed": true\nOR another event's next / fire.arm
+    Dormant --> Armed : event is listed in the flow's "start"\nOR another event's next / fire.arm
     Armed --> Armed : trigger fires but requires = false
     Armed --> Running : trigger fires and requires = true
     Running --> Running : step i done -> step i+1
@@ -46,8 +49,21 @@ stateDiagram-v2
 - **Done / Failed**: finished. `Failed` is a first-class result, so a flow can react to "the
   player lost the fight" differently from "the player won".
 
-A **flow** is `active` once its own `requires` is true (checked on floor enter and after every
-event finishes). Before that, all of its events are held Dormant.
+The **flow** has its own small lifecycle:
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Inactive
+    Inactive --> Active : flow "requires" true\n(checked on floor enter and after every event)\n→ arm the events in "start"
+    Active --> Ended : an event fires { "type": "end", "end": "<endId>" }
+    Ended --> [*]
+```
+
+- **Inactive:** all of its events are held Dormant.
+- **Ended:** the flow records *which* end was reached. All of its still-armed events are disarmed,
+  and it emits the signal `<flowId>.<endId>`, so other flows, missions and endings can react
+  without knowing its internal event ids.
 
 ## 3. Flow file
 
@@ -59,6 +75,11 @@ event finishes). Before that, all of its events are held Dormant.
   "scope": "run",
   "requires": { "type": "storyBeatAtLeast", "value": "ch_05" },
   "floors": ["F33", "F35"],
+  "start": ["ev_hear_choir"],
+  "ends": {
+    "end_saved":   { "title": { "en": "The choir is laid to rest" }, "result": "success" },
+    "end_refused": { "title": { "en": "The plea was refused" },      "result": "failure" }
+  },
   "events": [ /* §4 */ ],
   "_editor": { /* §9 — ignored by the game */ }
 }
@@ -71,15 +92,45 @@ event finishes). Before that, all of its events are held Dormant.
 | `title` | i18n object or text key | | Shown in the editor and debug overlay only. |
 | `scope` | `"run"` \| `"meta"` | ✔ | Where progress is saved: `run` resets on rebirth (most content), `meta` survives cycles (tutorials, one-time lore). |
 | `requires` | Condition | | Gates the whole flow. Absent = always active. |
-| `floors` | string[] | | Floors/stages this flow touches. Used for loading, the editor's map filter, and the validator. Not a gate. |
-| `events` | Event[] | ✔ | §4. Order does not matter at runtime. |
+| `floors` | string[] | | Floors/stages this flow touches, **in lane order** for the editor. Used for loading, the editor's stage lanes and map filter, and the validator. Not a gate. Derived from the events if omitted. |
+| `start` | string[] | ✔ | Entry events, armed when the flow becomes active. It must not be empty, unless every event is signal-triggered (a "listener" flow). |
+| `ends` | map endId → `{ title, result }` | ✔ | The flow's possible final outcomes. `result` ∈ `success` \| `failure` \| `neutral` (used for colors and reports). Every flow has at least one end. |
+| `events` | Event[] | ✔ | §4. Order does not matter at runtime. The editor saves them in flow order (Start → End, then by stage). |
+
+### 3.1 One file per story, across stages
+
+**Rule: every event that belongs to the same story lives in the same flow file, whichever stage
+it happens on.** A side story that starts on F33 and pays off on F35 is **one** file with two
+stage lanes, not one file per floor.
+
+This is what lets the editor open a single file and show **the whole flow from Start to End**,
+with every event's detail and no hidden jumps to other files.
+
+To keep files self-contained:
+
+- **`next` / `arm` / `disarm` / `goto` only reference events in the same file.** Cross-file ids
+  (`flow_other/ev_b`) are not allowed.
+- **Flows talk to each other only through their public surface:**
+  - another flow's **ends**: the automatic signal `<flowId>.<endId>`
+  - explicitly **emitted signals**
+- **The one exception is shared "listener" flows** (for example a flow that reacts to
+  `choir_silenced` from several stories), which contain only `signal`-triggered events.
+- **Size guideline:** one flow = one story beat or one side story (typically 3–30 events). When a
+  flow gets too big to read, split it at a natural **End**. Chain the next flow with
+  `trigger.on = "signal"` on the previous flow's `<flowId>.<endId>`, so each file still reads Start → End.
+
+`data/event_flows/_index.json` (optional) lists flows by act for the editor's file browser.
+**Stage → flows** lookups ("which flows touch F33?") come from each file's `floors` plus its event
+stages. The editor and the runtime both build that index at load, so nothing needs to be kept in
+sync by hand.
 
 ## 4. Event
 
 ```json
 {
   "id": "ev_hear_choir",
-  "armed": true,
+  "title": "Hear the choir",
+  "stage": "F33",
   "trigger": { "on": "approach", "floor": "F33", "marker": "m_crypt_altar", "radius": 1 },
   "requires": { "not": { "type": "runFlagSet", "flag": "flag_choir_silenced" } },
   "once": true,
@@ -91,8 +142,10 @@ event finishes). Before that, all of its events are held Dormant.
 
 | Field | Type | Default | Notes |
 |---|---|---|---|
-| `id` | string | — | Unique inside the flow. Referenced from outside as `<flowId>/<eventId>`. |
-| `armed` | bool | `false` | Armed as soon as the flow becomes active. At least one event per flow must set this, or be armed by a signal from another flow (the validator checks this). |
+| `id` | string | — | Unique inside the flow. Only referenced from inside the same file (§3.1); the save and traces use `<flowId>/<eventId>`. |
+| `title` | string or i18n | id | A short human name shown on the editor node. |
+| `stage` | string | trigger's `floor` | The stage lane this event is drawn in. **Required** when the trigger has no floor (`signal`, `condition`, `immediate`, `choice`), so every event has a lane. |
+| `note` | string | | A designer/AI comment shown in the editor. Ignored at runtime. |
 | `trigger` | Trigger | — | §5. |
 | `requires` | Condition | none | Checked at trigger time. |
 | `once` | bool | `true` | After Done it stays Done. `false` together with `repeat: true` re-arms it (shops, a respawning guardian). |
@@ -267,8 +320,11 @@ Any blocking step may carry `onOutcome`, which maps an outcome to a routing inst
 
 ### 7.3 Flow control
 
-`{ "type": "arm", "events": ["ev_a", "flow_other/ev_b"] }` and the matching `disarm`. `next` is
-the shorthand for a local `arm`.
+- `{ "type": "arm", "events": ["ev_a", "ev_b"] }` and the matching `disarm`: **same file only**
+  (§3.1). `next` is the shorthand for `arm`.
+- `{ "type": "end", "end": "end_saved" }`: finishes the **whole flow** with that end (§2). It is
+  usually the last fire output of the last event on a path. The editor draws it as an edge into the
+  End node.
 
 ## 8. Validation rules (enforced by `tools/validate_events.py` and the editor)
 
@@ -278,8 +334,21 @@ the shorthand for a local `arm`.
 2. A dangling reference: event ids in `next`/`arm`/`goto`, dialogue files/nodes, enemy/item ids,
    floors, markers, entity kinds, or animation ids not in the manifest.
 3. Steps after `changeScene`, or a `goto` that targets a non-existent step id.
-4. A flow with no entry point: no `armed: true` event, and no `signal` trigger that any flow emits.
+4. A flow with no entry point: `start` is empty and no event has a `signal` trigger that any flow emits.
 5. A `goto` loop inside one event that contains no blocking step (it could never yield).
+6. `next` / `arm` / `disarm` referencing an event in another file (§3.1), or an `end` whose id is
+   not in `ends`.
+7. An event with no resolvable stage (no trigger `floor` and no `stage`).
+8. **No path from Start to any End**: the flow can never finish.
+
+**Warnings** (flow shape):
+
+- An End that no path reaches.
+- A **dead end**: an event path that stops without `next`, `arm` or `end`, so the flow would stay
+  Active forever. It is allowed only for intentional open endings; mark them with `"openEnd": true`
+  on the event.
+- The same story split over several files: two flows that signal each other in both directions,
+  which suggests they should be merged.
 
 **Warnings**:
 
@@ -298,13 +367,21 @@ behavior.
 
 ```json
 "_editor": {
+  "lanes": ["F33", "F35"],
   "nodes": { "ev_hear_choir": { "x": 120, "y": 80 }, "ev_fight_choir": { "x": 420, "y": 80 } },
   "notes": [ { "x": 120, "y": 260, "text": "AI draft 2026-09-23 — reviewed" } ]
 }
 ```
 
+- `lanes` overrides the lane order. It defaults to `floors`, then to tower order.
+- Node `x` is free inside a lane. The lane (`y` band) always comes from the event's stage, so
+  moving an event to another stage in the inspector moves it to that lane.
+- When `nodes` is missing, which is the case for AI-written files, the editor auto-lays out
+  Start → End ([03 §3](03_EVENT_EDITOR.md#3-the-flow-view-start-to-end-across-stages)).
+
 ## 10. Full example
 
-See [`examples/flow_ss05_crypt_choir.json`](examples/flow_ss05_crypt_choir.json). It is a
-four-event side story that uses approach → talk (branching) → battle (win/lose) → add money/item/attr
-→ play → placeRole → emit → a listener in another flow.
+See [`examples/flow_ss05_crypt_choir.json`](examples/flow_ss05_crypt_choir.json). It is one
+file for a side story **across two stages** (F33 → F35). It runs Start → approach → talk
+(branching) → battle (win/lose) → add money/item/attr → play → placeRole → emit, and reaches one
+of two Ends (`end_saved`, `end_refused`).
