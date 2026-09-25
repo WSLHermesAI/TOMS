@@ -74,17 +74,17 @@
     },
     {
       "name": "web-debug",
-      "displayName": "Emscripten/WebGL2 Debug",
-      "description": "Emscripten/WebGL2 (wasm32). The toolchain file supplies the compiler; the desktop presets stay Windows-only.",
+      "displayName": "Web/WASM Debug (WSL/Linux)",
+      "description": "Emscripten/wasm32 from $env{EMSDK}. Signed-off on WSL2: configure OK, 364/422 objects incl. shaderc.js link.",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
         "CMAKE_CROSSCOMPILING_EMULATOR": "node",
         "CMAKE_EXECUTABLE_SUFFIX": ".js",
         "WEB": "ON",
         "CMAKE_C_FLAGS": "-msimd128",
         "CMAKE_CXX_FLAGS": "-msimd128",
-        "CMAKE_EXE_LINKER_FLAGS": "-msimd128"
+        "CMAKE_EXE_LINKER_FLAGS": "-msimd128",
+        "CMAKE_BUILD_TYPE": "Debug"
       },
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-web-debug",
@@ -96,17 +96,17 @@
     },
     {
       "name": "web-release",
-      "displayName": "Emscripten/WebGL2 RelWithDebInfo",
-      "description": "Emscripten/WebGL2 (wasm32). The toolchain file supplies the compiler; the desktop presets stay Windows-only.",
+      "displayName": "Web/WASM Release (WSL/Linux)",
+      "description": "Emscripten/wasm32 from $env{EMSDK}. Build with --parallel 2 on a 16 GB box (see the progress entry) -- -j16 SIGKILLs on glslang/tint.",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
         "CMAKE_CROSSCOMPILING_EMULATOR": "node",
         "CMAKE_EXECUTABLE_SUFFIX": ".js",
         "WEB": "ON",
         "CMAKE_C_FLAGS": "-msimd128",
         "CMAKE_CXX_FLAGS": "-msimd128",
-        "CMAKE_EXE_LINKER_FLAGS": "-msimd128"
+        "CMAKE_EXE_LINKER_FLAGS": "-msimd128",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       },
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-web-release",
@@ -114,6 +114,50 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Linux"
+      }
+    },
+    {
+      "name": "web-debug-windows",
+      "displayName": "Web/WASM Debug (Windows)",
+      "description": "Emscripten/wasm32 from $env{EMSDK} (D:\\Work\\emsdk). Run emsdk_env first so EMSDK is set. Same flags as the WSL presets -- -msimd128 is required on every host.",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "CMAKE_CROSSCOMPILING_EMULATOR": "node",
+        "CMAKE_EXECUTABLE_SUFFIX": ".js",
+        "WEB": "ON",
+        "CMAKE_C_FLAGS": "-msimd128",
+        "CMAKE_CXX_FLAGS": "-msimd128",
+        "CMAKE_EXE_LINKER_FLAGS": "-msimd128",
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-web-debug-windows",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "web-release-windows",
+      "displayName": "Web/WASM Release (Windows)",
+      "description": "Emscripten/wasm32 from $env{EMSDK} (D:\\Work\\emsdk). Run emsdk_env first so EMSDK is set. Same flags as the WSL presets; the host-specific difference is the job count in the build preset.",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "CMAKE_CROSSCOMPILING_EMULATOR": "node",
+        "CMAKE_EXECUTABLE_SUFFIX": ".js",
+        "WEB": "ON",
+        "CMAKE_C_FLAGS": "-msimd128",
+        "CMAKE_CXX_FLAGS": "-msimd128",
+        "CMAKE_EXE_LINKER_FLAGS": "-msimd128",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      },
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-web-release-windows",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
     }
   ],
@@ -136,11 +180,23 @@
     },
     {
       "name": "web-debug",
-      "configurePreset": "web-debug"
+      "configurePreset": "web-debug",
+      "jobs": 2
     },
     {
       "name": "web-release",
-      "configurePreset": "web-release"
+      "configurePreset": "web-release",
+      "jobs": 2
+    },
+    {
+      "name": "web-debug-windows",
+      "configurePreset": "web-debug-windows",
+      "jobs": 8
+    },
+    {
+      "name": "web-release-windows",
+      "configurePreset": "web-release-windows",
+      "jobs": 8
     }
   ]
 }
