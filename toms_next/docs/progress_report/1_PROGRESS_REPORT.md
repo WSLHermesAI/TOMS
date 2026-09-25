@@ -211,3 +211,18 @@ timeout, and the tail only showed spirv-cross `-Wdeprecated-this-capture` warnin
 Then fix the specific failure (likely another Emscripten flag/target issue rather than source). Only after
 the build links does `game/src/main_web.cpp` become the gating item for Phase 2 step 1 -- and until a web
 executable exists, the "plays in Chrome from localhost:8099" acceptance check cannot be run at all.
+
+### 2026-09-25 (addendum 2) — the second failure was the OOM killer, not the compiler
+
+Capturing the build's output on disk paid off immediately. The run ended with
+
+    build exit=137
+
+137 = 128 + 9 = SIGKILL, i.e. the process was killed rather than failing to compile. It died compiling
+`glslang/SPIRV/doc.cpp` with `-j$(nproc)`: bgfx's shader toolchain builds **glslang, tint (Dawn's) and
+spirv-cross** at once, and those are very large translation units, so a full-parallelism build exhausts
+this machine's RAM before it ever reaches the game code.
+
+**Workaround:** build at low parallelism (`-j2`). This is an environment limit, not a defect in the
+project -- a machine with more RAM builds it at full parallelism. Recorded because "exit 137" looks like a
+random failure and would otherwise be re-diagnosed as one.
