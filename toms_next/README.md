@@ -30,6 +30,7 @@ Without Visual Studio open: `tools\build.cmd windows-release`.
 | [03_VISUAL_STUDIO.md](docs/03_VISUAL_STUDIO.md) | open, configure, F5 targets, command-line options, smoke tests, debugging |
 | [04_MIGRATION_PLAN.md](docs/04_MIGRATION_PLAN.md) | phases from the Vulkan project to the full Qt + bgfx engine |
 | [05_TROUBLESHOOTING.md](docs/05_TROUBLESHOOTING.md) | configure, build and runtime problems |
+| [progress_report/](docs/progress_report/PROGRESS_REPORT.md) | **status board**: next step, phase status, what is still open, dated log |
 
 The long-term engine design is in `../docs/EngineBlueprint/`.
 
