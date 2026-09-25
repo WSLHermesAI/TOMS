@@ -14,21 +14,27 @@
 
 ## ▶ Next Step
 
-**Next action: Phase 2, step 1: a web build in toms_next** (bgfx WebGL2 + SDL3 on Emscripten).
+**Next action: finish Phase 2 step 1 on the WSL side — write `game/src/main_web.cpp`.** The presets and
+prerequisites are done and the web configure succeeds (see the 2026-09-25 entry); what is missing is the
+browser entry point:
 
-1. Add `web-debug` / `web-release` presets that use Emscripten from `$env{EMSDK}` (installed at
-   `D:\Work\emsdk`, Emscripten 6.0.9). The desktop presets stay unchanged.
-2. Extend `cmake/TomsPrerequisites.cmake` and `tools/check_env.ps1` with the web prerequisites
-   (emsdk, node, a real Python 3 for the local server), with popups and links like the
-   desktop checks.
-3. `game/src/main_web.cpp`: SDL3's browser main loop plus a port of the browser glue in
-   `src/engine/emscripten_main.cpp` (IDBFS saves, the Canvas-2D system-font path, the JS test hooks).
-4. The ESSL (WebGL2) shaders are already compiled and embedded, so nothing is needed there.
-5. **Check:** stage 1 plays in Chrome and Edge from `http://localhost:8099/...`, and a save
+1. `game/src/main_web.cpp`: SDL3's browser main loop plus a port of the glue in
+   `src/engine/emscripten_main.cpp` (IDBFS saves, the Canvas-2D system-font path, the JS test hooks), and
+   a web branch in `game/CMakeLists.txt` (today it only has `add_executable(toms_game src/main_sdl.cpp)`).
+2. Then the acceptance check: stage 1 plays in Chrome/Edge from `http://localhost:8099/...`, and a save
    survives a page reload.
 
-Until then, the browser version is still built from the old project (`emcmake cmake -S . -B
-build-web -G Ninja -DWEB=ON` in the TOMS root; see `TOMS/docs/building/BUILD_WEB.md`).
+On a Linux/WSL machine the build is:
+
+    export PATH="$HOME/opt/cmake/bin:$HOME/.local/bin:$PATH"; source ~/opt/emsdk/emsdk_env.sh
+    cmake --preset web-release && cmake --build --preset web-release
+
+Prerequisites: `tools/check_env.sh` (the WSL/Linux twin of `check_env.ps1`) — 6 ok, 0 missing as of
+2026-09-25. Windows/Visual Studio remains the path for the desktop and editor presets; the web presets
+are conditioned to Linux and use `$env{EMSDK}` on either platform.
+
+Until step 1 lands, the browser version is still built from the old project
+(`emcmake cmake -S . -B build-web -G Ninja -DWEB=ON` in the TOMS root; see `TOMS/docs/building/BUILD_WEB.md`).
 
 ---
 

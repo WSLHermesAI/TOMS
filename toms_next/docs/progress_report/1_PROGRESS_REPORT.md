@@ -127,3 +127,57 @@ toms::next::BgfxRenderer;` and an empty `vk_util.h`. Not a line of `TOMS/src` wa
 **Also answered:** how to run the editor (the built exe, F5 in VS, or `tools\build.cmd`), and how
 to build the web version today (the old project's `-DWEB=ON` build, WebGL2; toms_next has no web
 build yet, which is now the next step).
+
+
+---
+
+### 2026-09-25 — Phase 2 step 1 (web build), adapted to WSL: presets, prerequisites, and a working web configure
+
+Owner asked to do Phase 2 step 1 here rather than on the Windows box ("1 and after finish write progress
+to today's progress report file"). The step as written targets Windows (emsdk at `D:\Work\emsdk`,
+`check_env.ps1`, Visual Studio F5), so this entry records what the WSL/Linux adaptation needed and what
+it produced. TOMS-side tooling rule applies: nothing under `/mnt/c`, no `cmd.exe`/`powershell.exe`.
+
+**Done**
+
+1. **`tools/check_env.sh`** — a WSL/Linux twin of `tools/check_env.ps1`, same facts, no popups: one line
+   per prerequisite with the exact fix for a failure, then a pass/fail count. It found two real gaps:
+   `cmake` was not on PATH (it lives at `$HOME/opt/cmake/bin`) and **ninja was missing**. ninja 1.13.2
+   was installed without root via `uv tool install ninja`. Now **6 ok, 0 missing**: cmake 3.30.5,
+   ninja 1.13.2, git, node (also the `CMAKE_CROSSCOMPILING_EMULATOR`), python3, and the Emscripten
+   toolchain at `$HOME/opt/emsdk` — **Emscripten 6.0.6** where the Windows box has 6.0.9.
+2. **`web-debug` / `web-release` presets** in `CMakePresets.json`: Ninja, the Emscripten toolchain file
+   from `$env{EMSDK}`, `CMAKE_CROSSCOMPILING_EMULATOR=node`, `CMAKE_EXECUTABLE_SUFFIX=.js`, `WEB=ON`,
+   conditioned to Linux. The desktop presets are untouched.
+   *First attempt failed, and the reason is worth keeping:* the web presets were cloned from
+   `windows-release` and therefore **inherited its `CMAKE_C_COMPILER`/`CMAKE_CXX_COMPILER=cl.exe`**.
+   CMake then detected no compiler, `CMAKE_SIZEOF_VOID_P` came back 0, and the prerequisite check
+   stopped the configure with "A 32-bit compiler is active". The web presets are now **standalone** —
+   no `inherits` — so the Emscripten toolchain supplies the compiler.
+3. **`cmake/TomsPrerequisites.cmake`**: the x64 pointer-size error and the MSVC-version error are now
+   gated behind `if(NOT WEB)`, and the platform notice is web-aware. This is not a loophole — Emscripten
+   targets **wasm32, where 32-bit pointers are correct**, so a desktop x64 rule must not fail a
+   legitimate web build. Without this, Phase 2 could never configure on any machine, Windows included.
+4. **The web configure now succeeds**: `cmake --preset web-release` → `Configuring done (51.0s)` →
+   `Generating done` → build files in `build-web-release`. FetchContent pulled bgfx.cmake
+   v1.161.9510-579 (+ bx/bimg/shaderc), SDL3 3.4.8, Dear ImGui 1.90.9 and glm 1.0.1 into
+   `build-web-release/_deps`. Qt6 is absent here, so `toms_editor` is skipped — correct, the editor is
+   desktop-only and never shipped.
+
+**In flight at the time of writing** — `cmake --build --preset web-release` (bgfx + shaderc + SDL3 +
+ImGui compiled for wasm; long). Its outcome is not recorded here because it is not yet known.
+
+**Still to do to close Phase 2 step 1**
+
+- `game/src/main_web.cpp`: SDL3's browser main loop, plus a port of the browser glue in
+  `src/engine/emscripten_main.cpp` — IDBFS saves, the Canvas-2D system-font path, and the JS test hooks.
+  (`game/CMakeLists.txt` currently has only `add_executable(toms_game src/main_sdl.cpp)`; there is no
+  web branch and no `main_web.cpp` yet.)
+- The acceptance check as written: stage 1 plays in Chrome/Edge from `http://localhost:8099/...`, and a
+  save survives a page reload (that is the part that needs IDBFS, so it depends on `main_web.cpp`).
+
+**Note for the Phase 2 mobile row (decision, not work):** it is written as `setDesignSize` /
+`g_uiScale` — the *old* approach of shrinking the logical design. The TOMS side now has `UiRoot` and
+`Game::setUiScale()` implementing the owner's stated rule (grow the UI **objects**, keep the game
+resolution, never soften the render). When that row is picked up it should use `UiRoot`, not
+`setDesignSize`.

@@ -91,7 +91,12 @@ endfunction()
 # ============================================================================================
 # 1. Platform and compiler
 # ============================================================================================
-if(NOT WIN32)
+if(WEB)
+    # Web build (Emscripten/wasm32): this is a supported target, not a Windows build on the wrong host.
+    toms_prereq_problem(WARNING
+        "Web build: the Windows/Visual Studio checks below are skipped on purpose. Emscripten's wasm32 has 32-bit pointers, and the Emscripten toolchain file supplies the compiler."
+        "docs/02_INSTALL_WINDOWS.md")
+elseif(NOT WIN32)
     toms_prereq_problem(WARNING
         "This project is set up and tested for Windows + Visual Studio. Other platforms are not configured yet."
         "docs/02_INSTALL_WINDOWS.md")
@@ -101,12 +106,12 @@ if(WIN32 AND NOT MSVC)
         "The C++ compiler is not MSVC (found: ${CMAKE_CXX_COMPILER_ID}). Open the folder in Visual Studio, or use a 'x64 Native Tools Command Prompt'. Install the workload 'Desktop development with C++'."
         "https://visualstudio.microsoft.com/downloads/")
 endif()
-if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+if(NOT WEB AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     toms_prereq_problem(ERROR
         "A 32-bit compiler is active. Select the x64 configuration (the presets in CMakePresets.json do this)."
         "docs/03_VISUAL_STUDIO.md")
 endif()
-if(MSVC AND MSVC_VERSION LESS 1930)
+if(NOT WEB AND MSVC AND MSVC_VERSION LESS 1930)
     toms_prereq_problem(ERROR
         "MSVC ${MSVC_VERSION} is too old. Visual Studio 2022 (17.x) or newer is required."
         "https://visualstudio.microsoft.com/downloads/")

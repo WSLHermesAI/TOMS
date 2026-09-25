@@ -1,21 +1,39 @@
 {
   "version": 6,
-  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
   "configurePresets": [
     {
       "name": "windows-base",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "architecture": { "value": "x64", "strategy": "external" },
-      "toolset": { "value": "host=x64", "strategy": "external" },
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "toolset": {
+        "value": "host=x64",
+        "strategy": "external"
+      },
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe"
       },
-      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
       "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] }
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [
+            "Windows"
+          ]
+        }
       }
     },
     {
@@ -23,33 +41,100 @@
       "displayName": "Windows x64 Debug (game + editor)",
       "description": "Debug build of toms_game and toms_editor (the editor needs Qt 6 MSVC 64-bit).",
       "inherits": "windows-base",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     },
     {
       "name": "windows-release",
       "displayName": "Windows x64 Release (game + editor)",
       "description": "Optimized build with debug info; use this for day-to-day play testing.",
       "inherits": "windows-base",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
     },
     {
       "name": "windows-shipping",
       "displayName": "Windows x64 Shipping (game only, no Qt)",
       "description": "What ships: toms_game only. Qt is not searched for.",
       "inherits": "windows-base",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "TOMS_BUILD_EDITOR": "OFF" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "TOMS_BUILD_EDITOR": "OFF"
+      }
     },
     {
       "name": "ci-windows",
       "displayName": "CI (no popups)",
       "inherits": "windows-release",
-      "cacheVariables": { "TOMS_POPUP_WARNINGS": "OFF" }
+      "cacheVariables": {
+        "TOMS_POPUP_WARNINGS": "OFF"
+      }
+    },
+    {
+      "name": "web-debug",
+      "displayName": "Emscripten/WebGL2 Debug",
+      "description": "Emscripten/WebGL2 (wasm32). The toolchain file supplies the compiler; the desktop presets stay Windows-only.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "CMAKE_CROSSCOMPILING_EMULATOR": "node",
+        "CMAKE_EXECUTABLE_SUFFIX": ".js",
+        "WEB": "ON"
+      },
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-web-debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "web-release",
+      "displayName": "Emscripten/WebGL2 RelWithDebInfo",
+      "description": "Emscripten/WebGL2 (wasm32). The toolchain file supplies the compiler; the desktop presets stay Windows-only.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "CMAKE_CROSSCOMPILING_EMULATOR": "node",
+        "CMAKE_EXECUTABLE_SUFFIX": ".js",
+        "WEB": "ON"
+      },
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-web-release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
     }
   ],
   "buildPresets": [
-    { "name": "windows-debug",    "configurePreset": "windows-debug" },
-    { "name": "windows-release",  "configurePreset": "windows-release" },
-    { "name": "windows-shipping", "configurePreset": "windows-shipping" },
-    { "name": "ci-windows",       "configurePreset": "ci-windows" }
+    {
+      "name": "windows-debug",
+      "configurePreset": "windows-debug"
+    },
+    {
+      "name": "windows-release",
+      "configurePreset": "windows-release"
+    },
+    {
+      "name": "windows-shipping",
+      "configurePreset": "windows-shipping"
+    },
+    {
+      "name": "ci-windows",
+      "configurePreset": "ci-windows"
+    },
+    {
+      "name": "web-debug",
+      "configurePreset": "web-debug"
+    },
+    {
+      "name": "web-release",
+      "configurePreset": "web-release"
+    }
   ]
 }
