@@ -121,12 +121,15 @@ Rules:
 
 ## 5. GPU lifetime
 
-GPU objects cannot be freed while a submitted frame may still use them. When the last reference
-drops, the object goes to a **deferred-destroy queue** tagged with the current frame index. It is
-freed once `framesInFlight` frames have completed (fence / frame counter). This is required for
-Vulkan and WebGPU. When the RHI is adopted (Diligent, Dawn; see [07](07_THIRD_PARTY_LIBRARIES.md)),
-its objects are refcounted, but this layer still decides **when** the last reference drops. The
-leak checks count pending deletions too.
+bgfx already defers GPU destruction: `bgfx::destroy(handle)` is queued and executed by the render
+thread after the frames that use the handle are done, so the engine never needs its own fence
+logic. What bgfx does **not** do is refcount or track ownership: its handles are plain 16-bit
+indices, a double `destroy` or a use-after-destroy asserts only in debug builds, and handle pools
+are fixed-size (`BGFX_CONFIG_MAX_TEXTURES` and friends). So this layer wraps every bgfx handle in a
+resource-owned `Ref`, decides **when** the last reference drops, and counts live handles per type
+against the bgfx limits. Memory passed to `bgfx::makeRef` must stay alive for two frames (or use
+`bgfx::copy`); the resource layer owns that lifetime. The leak checks compare live counts with
+`bgfx::getStats()` (`numTextures`, `numVertexBuffers`, …) at shutdown.
 
 Render targets (shadow maps, transient frame-graph targets) are owned by the frame graph (L3.2).
 They are recreated on resize or quality-tier change through the same queue.
@@ -150,8 +153,9 @@ They are recreated on resize or quality-tier change through the same queue.
 
 - Desktop: a file watcher notices a changed file and reloads it **behind the same handle**, so
   every holder sees the new version with no re-acquire.
-- Web / editor: the in-game editor ([10](10_EDITOR_PREFAB_BLUEPRINT.md)) pushes the new file to
-  the same path.
+- Editor: the Qt editor ([10](10_EDITOR_PREFAB_BLUEPRINT.md)) writes into the repo; its own viewport
+  reloads through the same watcher. A running **web** dev build is told by the dev server
+  (`tools/dev_server.py`) to refetch the changed file.
 - A failed reload keeps the old version and logs the error.
 
 ## 8. Leak and memory tooling (R.4), all automated
@@ -195,7 +199,7 @@ eviction cannot fix is a warning in dev builds and an entry in the performance l
 | Part | Recommendation |
 |---|---|
 | Manager, handles, groups, pools, leak checks | **Build.** Small (M effort) and the heart of the engine. No library fits this contract across every resource type |
-| GPU object lifetime | **Adopt** the RHI's refcounted objects (Diligent / Dawn) under our deferred-destroy rule |
+| GPU object lifetime | **Adopt** bgfx's deferred destroy; **build** the refcounted `Ref` wrapper and handle-count checks on top |
 | File IO / packages | **Adopt** PhysicsFS or the SDL3 Storage API + `emscripten_fetch` (L2) |
 | Entity handles / resource cache | **Adopt** `entt::resource_cache` / `entt::handle` if EnTT is chosen for O.1 |
 | Effect pools | **Adopt** the Effekseer manager, sized from R.3 |

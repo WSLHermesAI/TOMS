@@ -1,8 +1,12 @@
-# 10 — In-Game Editor, Prefabs and Code Binding (L6.5 + L9.1–9.2)
+# 10 — Qt Editor, Prefabs and Code Binding (L6.5 + L9.1–9.2)
 
 Part of the [Engine Blueprint](README.md). The goal is an editor that **makes game objects with UI
-and binds them to code**, the way Unreal Blueprints or Cocos Creator prefabs work. It must run
-**inside the game, on desktop (F5 in Visual Studio) and in the browser with no install**.
+and binds them to code**, the way Unreal Blueprints or Cocos Creator prefabs work.
+
+> **Revised 2026-09-25.** The editor is a **Qt6 desktop application** (`toms_editor`) with an
+> embedded **bgfx** viewport that runs the real game code. It is not shipped and has no web build;
+> players on the web only get the game. The earlier plan (an ImGui editor inside the game, also on
+> web) is kept in §1 as the rejected alternative. Integration details: [11](11_BGFX_QT_ARCHITECTURE.md).
 
 ---
 
@@ -10,8 +14,8 @@ and binds them to code**, the way Unreal Blueprints or Cocos Creator prefabs wor
 
 Every option is scored against the same constraints:
 - C++ game code
-- a **web build with no install**
-- Vulkan (desktop) / WebGPU (web)
+- a **web build with no install** (for the game; the editor is desktop-only since 2026-09-25)
+- our own RHI (bgfx since 2026-09-25; the table was scored against Vulkan / WebGPU)
 - debugging in **Visual Studio**
 - **text assets** that AI and git can edit
 - licence
@@ -28,29 +32,37 @@ Facts are dated 2026-09 ([07](07_THIRD_PARTY_LIBRARIES.md)).
 | **Axmol** (cocos2d-x successor) | ✗ no editor | ◐ WASM is "preview" | ✓ | ✓ | a runtime, not an editor |
 | **O3DE / Wicked Engine** | ✓ | ✗ (none known) | ✓ | ✓ | no web |
 | **External authoring tools** feeding our runtime: **LDtk** / **Tiled** (2D levels + entity fields), **Blender** (3D layout; glTF `extras` custom properties → components), **Inky** (Ink dialogue) | partial | n/a (offline tools) | ✓ | ✓ | ⭐ **adopt as a complement** for level/scene layout and dialogue text |
-| **Own editor on Dear ImGui, inside the game** | build | ✓ (same WASM) | ✓ | ✓ | ⭐ **recommended core**: no engine meets C++ + web + VS + own RHI together. Adopt a library for every sub-part (§6) |
+| Own editor on Dear ImGui, inside the game | build | ✓ (same WASM) | ✓ | ✓ | ○ was the pick until 2026-09-25. Editing on web is lost with the Qt choice, but ImGui stays for in-game debug overlays |
+| **Own Qt6 editor app with a bgfx viewport** | build | ✗ (editor only; the game ships on web) | ✓ (links `mt_game`) | ✓ | ⭐ **chosen 2026-09-25**: real desktop widgets (docking, trees, tables, property sheets, undo, file dialogs), the existing `editor/` as a start, and the same bgfx renderer as the game so the viewport is exact |
 
-**Conclusion:** build the editor *shell* ourselves on Dear ImGui, but adopt the heavy parts:
-ECS + reflection (EnTT or flecs), the node-graph UI (imgui-node-editor), gizmos (ImGuizmo), level
-layout (LDtk/Tiled/Blender) and dialogue (Ink). Copy Cocos Creator's prefab and property-binding
-model and Unreal's event-graph model, scoped down.
+**Conclusion:** build the editor *shell* in Qt6, but adopt the heavy parts: docking (Qt Advanced
+Docking System), node graphs (QtNodes), ECS + reflection (EnTT or flecs), level layout
+(LDtk/Tiled/Blender) and dialogue (Ink). Gizmos are drawn by the engine inside the bgfx viewport.
+Copy Cocos Creator's prefab and property-binding model and Unreal's event-graph model, scoped down.
 
-## 2. Editor mode inside the game (9.1)
+## 2. The Qt editor (9.1)
 
-- **Same binary.** A dev build (`ENGINE_EDITOR=ON`) contains the editor. `F12`, `--editor` on
-  desktop or `?editor=1` on web switches **Play ⇄ Edit**. Shipping builds compile it out.
-- **Play-in-editor:** *Play* snapshots the world (serialized through O.3), runs the game, and *Stop*
-  restores the snapshot. The same mechanism powers "play from here" and the Event System's live
-  preview ([EventSystem 04 §5](../EventSystem/04_FLOW_PREVIEW.md#5-live-in-game-preview)).
-- **Panels:** Hierarchy, Inspector, Scene view (2D/3D, with gizmos), Asset browser (from the
-  manifest, R.1), Prefab mode, UI preview (phone / tablet / desktop sizes and UI scales), Console
-  (log), Resource overlay (R.4), Event/graph editor (9.4), Profiler.
-- **Saving files:**
-  - desktop writes into the repo directly
-  - on web, the editor posts files to a tiny local **dev server** (`tools/dev_server.py`, which
-    writes into the repo), or uses the browser File System Access API where available
-  - the local dev server is also what makes web hot reload possible
-- **Undo/redo:** a command stack. Every inspector edit is a property-path command generated from reflection.
+- **Separate executable.** `toms_editor` (Qt6 Widgets) links `eng_*` and `mt_game`. It is built
+  only by desktop presets with `ENGINE_EDITOR=ON`; shipping and web presets never see Qt.
+- **Viewport = the game renderer.** Each Scene / Prefab / UI-preview panel is a `BgfxViewport`
+  widget: a native child window whose handle is passed to bgfx, one bgfx view (or view range) per
+  panel, driven by a Qt timer. The engine draws exactly what the shipped game draws
+  ([11 §2](11_BGFX_QT_ARCHITECTURE.md#2-embedding-bgfx-in-the-qt-editor)).
+- **Play-in-editor:** *Play* snapshots the world (serialized through O.3), runs `mt_game` inside the
+  viewport, and *Stop* restores the snapshot. The same mechanism powers "play from here" and the
+  Event System's live preview ([EventSystem 04 §5](../EventSystem/04_FLOW_PREVIEW.md#5-live-in-game-preview)).
+  *Play standalone* launches the real `mt_app` exe (or the web build) on the current data.
+- **Panels (Qt docks):** Hierarchy (`QTreeView` over the entity model), Inspector (generated from
+  O.2 reflection), Scene view (2D/3D, gizmos drawn by the engine in the viewport), Asset browser
+  (from the manifest, R.1), Prefab mode, UI preview (phone / tablet / desktop sizes and UI scales),
+  Console (log), Resource overlay (R.4), Event/graph editor (9.4, QtNodes), Profiler (bgfx stats).
+- **Saving files:** the editor writes into the repo directly. A running web dev build hot-reloads
+  through the dev server (`tools/dev_server.py`); there is no in-browser editing any more.
+- **Undo/redo:** `QUndoStack`. Every inspector edit is a property-path `QUndoCommand` generated
+  from reflection.
+- **Licence:** Qt6 is used under the LGPLv3 (dynamic linking) or a commercial licence. Because the
+  editor is an internal tool that is not distributed to players, LGPL obligations only apply if the
+  editor itself is given to people outside the team (e.g. modders).
 
 ## 3. Object model (L6.5)
 
@@ -122,14 +134,14 @@ game objects and UI, and the UI preview shows phone, desktop and web sizes at ea
   gives live debugging: execution highlight, breakpoints, pin value watch.
 - **Scope is kept small on purpose**: event graphs for glue and designer-level logic, not a
   replacement for C++ systems.
-- **One node-graph UI** (imgui-node-editor) serves both the visual graphs and the Event Editor.
+- **One node-graph UI** (QtNodes) serves both the visual graphs and the Event Editor.
   Event flows are the specialised graph type ([EventSystem 03](../EventSystem/03_EVENT_EDITOR.md)).
 
 ## 5. Hot reload
 
 | Change | Desktop | Web |
 |---|---|---|
-| Prefab / UI / graph / flow / data | live reload behind the same handle ([08 §7](08_RESOURCE_AND_LIFETIME.md#7-hot-reload)) | the same, pushed by the editor or dev server |
+| Prefab / UI / graph / flow / data | live reload behind the same handle ([08 §7](08_RESOURCE_AND_LIFETIME.md#7-hot-reload)) | the dev server tells the running web build to refetch the changed file |
 | C++ | **MSVC Hot Reload** (`/ZI`, Debug) for small edits; **Live++** (commercial) for heavy use | rebuild and reload the page. A play-in-editor snapshot restores state |
 | Scripting (optional 7.8) | Lua reload | Lua reload |
 
@@ -137,21 +149,25 @@ game objects and UI, and the UI preview shows phone, desktop and web sizes at ea
 
 | Need | Library (licence) |
 |---|---|
-| Editor UI + docking | **Dear ImGui** docking branch (MIT) |
-| Node graphs | **imgui-node-editor** (MIT; mature but slow-moving) · alternative **imnodes** (MIT) |
-| 3D gizmos | **ImGuizmo** (MIT) |
-| Plots (profiler, stats) | **ImPlot** (MIT) |
-| Icons | IconFontCppHeaders + an icon font (check the font's licence) |
-| File dialogs | **nativefiledialog-extended** (zlib, desktop) · `emscripten_browser_file` (MIT) / File System Access API (web) |
+| Editor UI | **Qt6 Widgets** (LGPLv3 / commercial) |
+| Docking | **Qt Advanced Docking System** (LGPL-2.1) · fallback `QDockWidget` |
+| Node graphs | **QtNodes** (paceholder/nodeeditor, BSD-3-Clause) · alternative: own `QGraphicsView` scene |
+| Property inspector | own, generated from O.2 reflection on `QTreeView` + delegates (QtPropertyBrowser is unmaintained) |
+| Undo | `QUndoStack` (Qt) |
+| 3D / 2D gizmos | drawn by the engine in the bgfx viewport; **ImGuizmo** (MIT) via an ImGui overlay inside the viewport if a full gizmo set is wanted |
+| Plots (profiler, stats) | Qt Charts (GPLv3 / commercial; fine for an internal tool) or ImPlot inside the viewport overlay |
+| File dialogs | `QFileDialog` |
+| In-game debug overlays (not the editor) | **Dear ImGui** with bgfx's imgui backend (`ENGINE_DEBUGUI`, dev builds only) |
 | Level layout | **LDtk** (MIT; JSON with a published schema) + LDtkLoader · **Tiled** (editor GPL, which does not affect its output) + tmxlite (zlib) · **Blender** glTF `extras` |
 | Dialogue | **Ink** + **inkcpp** (MIT; full ink 1.1 support) with the Inky editor · Yarn Spinner has **no standalone official C++ runtime** (its C++ runtime lives in the Unreal plugin and is pre-release) and uses a custom licence |
 
 ## 7. Order of building
 
-1. **E-M4:** O.1 ECS + O.2 reflection + O.3 prefabs; editor shell (hierarchy, inspector, asset
+1. **E-M0:** the `toms_editor` shell with one docked `BgfxViewport` (see [06](06_START_PLAN.md)).
+2. **E-M4:** O.1 ECS + O.2 reflection + O.3 prefabs; Qt editor shell (hierarchy, inspector, asset
    browser, undo); prefab mode; UI placement and preview; **C++ method binding (level a)** and
    **Event System binding (level b)**; play-in-editor.
-2. **E-M6:** visual graph runtime + editor (level c), sharing the node UI with the event editor;
+3. **E-M6:** visual graph runtime + editor (level c), sharing the QtNodes UI with the event editor;
    Spine / glTF / FX previews (9.7).
 
 See [06](06_START_PLAN.md) for exit criteria.

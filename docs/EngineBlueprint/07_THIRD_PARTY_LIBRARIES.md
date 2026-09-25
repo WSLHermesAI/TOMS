@@ -4,7 +4,7 @@ Part of the [Engine Blueprint](README.md). **The default is to adopt a reliable 
 only where none fits.** Every pick must build from CMake with **both MSVC and Emscripten**
 (Visual Studio requirement, [05](05_DEV_WORKFLOW_VS.md)).
 
-**Research date: 2026-09-24.** Confidence is marked per row:
+**Research date: 2026-09-24; RHI and editor rows revised 2026-09-25** (bgfx + Qt decision, [11](11_BGFX_QT_ARCHITECTURE.md)). Confidence is marked per row:
 - **✔** checked on the official page when this doc was written
 - **~** from prior knowledge, likely correct, not re-checked
 - **?** could not be confirmed. Re-check before depending on it
@@ -31,15 +31,15 @@ Verdicts: ⭐ recommended · ○ alternative · ✗ avoid.
 
 | Library | Licence | Backends (status) | Web | Verdict | Conf. |
 |---|---|---|---|---|---|
-| **Diligent Engine** | Apache-2.0 | D3D11/12, GL/GLES, **Vulkan**, Metal (**iOS Metal needs a commercial licence**), **WebGPU** (Win/Linux/mac/Web) | ✓ WebGPU + GL | ⭐ RHI 3.1 ([09 §2](09_RENDERING_2D_3D.md#2-decision-card-31-rhi-graphics-api-abstraction)) | ✔ (vcpkg port `diligent-engine` ~, its wasm support ?) |
-| DiligentFX (glTF PBR, shadows, post-FX) | Apache-2.0 | follows Diligent; CI builds web | **which components run on WebGPU/GL is undocumented** | ⭐ start point for 3.6/3.8, **test first** | ✔ / web ? |
-| **sokol_gfx** | Zlib | GL 3.3, GLES3/WebGL2, D3D11, Metal, WebGPU (via emdawnwebgpu since 2025-06); **Vulkan experimental** (added 2025-12, still marked experimental 2026-09) | ✓ WebGL2 + WebGPU | ○ RHI fallback | ✔ |
+| **bgfx** (+ bx, bimg; tools shaderc, texturec, geometryc) | BSD-2-Clause | D3D11/12, GL, GLES, Metal, Vulkan, WebGL2 (Emscripten); WebGPU only via Dawn native | ✓ **WebGL2** | ⭐ **RHI 3.1, chosen 2026-09-25** ([09 §2](09_RENDERING_2D_3D.md#2-decision-card-31-rhi-graphics-api-abstraction)). CMake via **bgfx.cmake** (`bgfx_compile_shaders`) | ✔ |
+| Diligent Engine | Apache-2.0 | D3D11/12, GL/GLES, **Vulkan**, Metal (**iOS Metal needs a commercial licence**), **WebGPU** (Win/Linux/mac/Web) | ✓ WebGPU + GL | ○ was the RHI pick until 2026-09-25; re-open only if browser WebGPU becomes a requirement | ✔ |
+| DiligentFX (glTF PBR, shadows, post-FX) | Apache-2.0 | follows Diligent | — | ✗ (Diligent-only) | ✔ |
+| **sokol_gfx** | Zlib | GL 3.3, GLES3/WebGL2, D3D11, Metal, WebGPU (via emdawnwebgpu since 2025-06); **Vulkan experimental** (added 2025-12, still marked experimental 2026-09) | ✓ WebGL2 + WebGPU | ○ the fallback if browser WebGPU is ever required | ✔ |
 | Dawn (WebGPU native) | BSD-3 | D3D11/12, Vulkan, Metal, GL | browser WebGPU through **emdawnwebgpu** (`--use-port=emdawnwebgpu`); `webgpu.h` is stable, `webgpu_cpp.h` is not | ○ "WebGPU everywhere" (no WebGL2 fallback) | ✔ / native ~ |
 | wgpu-native | MIT OR Apache-2.0 | Vulkan, Metal, D3D12 (+GL) | use emdawnwebgpu on web | ○; needs a Rust toolchain | ✔ |
-| bgfx | BSD-2-Clause | D3D11/12, GL, GLES, Metal, Vulkan, WebGL1/2, WebGPU (**Dawn native only**) | WebGL only | ✗ for us (no browser WebGPU) | ✔ |
 | Filament | Apache-2.0 | GL 4.1+, GLES 3.0+, Metal, Vulkan, WebGL2, **WebGPU experimental**; gltfio; shadows PCF/EVSM/DPCF/PCSS + cascades | ✓ WebGL2 | ✗ as the RHI (owns its loop); ○ reference | ✔ |
-| **Slang** (shader compiler) | Apache-2.0 WITH LLVM-exception | SPIR-V, HLSL, GLSL stable; **WGSL, MSL experimental** | offline tool | ⭐ with SPIRV-Cross / Tint for WGSL/MSL until those targets stabilize | ✔ |
-| SPIRV-Cross, Tint/Naga | Apache-2.0 / BSD-3 / MIT+Apache | SPIR-V → GLSL ES / MSL / WGSL | offline tools | ⭐ helpers | ~ |
+| **bgfx shaderc** | BSD-2-Clause | `.sc` → DXBC/DXIL, SPIR-V, Metal, GLSL, ESSL (WebGL2) | offline tool | ⭐ the only shader compiler needed | ✔ |
+| Slang, SPIRV-Cross, Tint/Naga | Apache-2.0 / BSD-3 / MIT+Apache | cross-compilers | offline tools | ✗ no longer needed (shaderc covers every bgfx backend) | ✔ |
 | **fastgltf** | MIT | — | ✓ | ⭐ 3.5 | ~ |
 | cgltf / tinygltf | MIT / MIT | — | ✓ | ○ / ○ (tinygltf maintenance ?) | ~ |
 | **meshoptimizer + gltfpack** | MIT | — | offline + runtime decode | ⭐ pipeline | ~ |
@@ -48,7 +48,8 @@ Verdicts: ⭐ recommended · ○ alternative · ✗ avoid.
 | **spine-cpp** | Spine Runtimes License: **every developer integrating it needs their own Spine Editor licence** | — | ✓ | ⭐ 3.4 if you use Spine | ✔ |
 | **Rive runtime** | MIT | Metal, Vulkan, D3D11/12, GL/WebGL | ✓ WASM | ○ 3.4 (free alternative) | ✔ |
 | DragonBonesCPP | MIT | — | — | ✗ stale (no activity since 2018) | ✔ |
-| **Effekseer** | MIT | DX9/11/12, Metal, Vulkan, GL, WebGL; EffekseerForWebGL is built with Emscripten, and a new version adds WebGPU | ✓ | ⭐ 3.10 | ✔ |
+| **Effekseer** | MIT | DX9/11/12, Metal, Vulkan, GL, WebGL; EffekseerForWebGL is built with Emscripten | ✓ | ⭐ 3.10 | ✔ |
+| **efkbgfx** (cloudwu) | MIT (check repo) | Effekseer renderer on bgfx; predefined materials work, **user-defined materials not supported** | follows bgfx | ⭐ with Effekseer | ✔ / licence ~ |
 | **Basis Universal / KTX-Software** | Apache-2.0 | — | ✓ (transcoder) | ⭐ small web textures | ~ |
 | stb_image / stb_image_write / stb_rect_pack | Public domain / MIT | — | ✓ | ⭐ (in use) | ~ |
 | **glm** | MIT | — | ✓ | ⭐ 0.1 | ~ |
@@ -66,12 +67,19 @@ Verdicts: ⭐ recommended · ○ alternative · ✗ avoid.
 | Yoga | MIT | flexbox layout for our own widgets | ○ 5.1 | ~ |
 | Clay | Zlib | single-header C layout | ○ 5.1 | ~ |
 | NoesisGUI | commercial | XAML UI | ✗ cost | ~ |
-| **Dear ImGui** (docking branch) | MIT | editor/tools UI | ⭐ L9 (in use) | ~ |
-| **imgui-node-editor** | MIT | node graphs; "slowly moving into stable state" | ⭐ 9.4 / O.4 | ✔ (recent activity ?) |
-| imnodes | MIT | lighter node graphs | ○ | ~ |
-| **ImGuizmo**, **ImPlot** | MIT | 3D gizmos, plots | ⭐ | ~ |
-| **nativefiledialog-extended** | Zlib | desktop file dialogs | ⭐ | ~ |
-| emscripten_browser_file | MIT | web upload/download | ⭐ | ~ |
+| **Dear ImGui** | MIT | in-game debug overlays through bgfx's imgui backend (`examples/common/imgui`); dev builds only | ⭐ `ENGINE_DEBUGUI` (in use) | ~ |
+| **ImGuizmo**, **ImPlot** | MIT | gizmos / plots inside the bgfx viewport overlay | ○ | ~ |
+| imgui-node-editor, imnodes | MIT | node graphs | ✗ replaced by QtNodes in the Qt editor | ✔ |
+
+### 3.1 Editor application (Qt, desktop only, never shipped)
+
+| Library | Licence | Notes | Verdict | Conf. |
+|---|---|---|---|---|
+| **Qt6** (Widgets, Core, Gui) | LGPLv3 / GPL / commercial | editor host; `QWidget::winId()` gives the native handle bgfx renders into | ⭐ 9.1 | ✔ |
+| **Qt Advanced Docking System** | LGPL-2.1 (commercial also offered) | VS-style docking, Qt5 + Qt6 | ⭐ 9.1 | ✔ |
+| **QtNodes** (paceholder/nodeeditor) | BSD-3-Clause | node-graph editor, Qt5 + Qt6, maintained by its author in spare time | ⭐ 9.4 / O.4 | ✔ |
+| Qt Charts | GPLv3 / commercial | profiler graphs in the editor (internal tool, so GPL is acceptable) | ○ | ~ |
+| QtPropertyBrowser | LGPL (Qt Solutions) | unmaintained | ✗ build the inspector on `QTreeView` | ~ |
 
 ## 4. Object model, data, services
 
@@ -111,12 +119,13 @@ Verdicts: ⭐ recommended · ○ alternative · ✗ avoid.
 | Layer | Pick |
 |---|---|
 | Platform | SDL3 |
-| RHI | **Diligent Engine** (Vulkan desktop/Android, WebGPU + GL on web, MoltenVK on Apple); fallback sokol_gfx |
-| Shaders | HLSL/Slang → SPIR-V, + SPIRV-Cross / Tint where Diligent does not already cross-compile |
-| 2D / 3D assets | stb_image, Basis/KTX2, fastgltf, meshoptimizer, ozz-animation |
-| Animation / FX | spine-cpp (if licensed) or Rive; Effekseer |
+| RHI | **bgfx** via bgfx.cmake (D3D11/12 / Vulkan / Metal / GL; **WebGL2** on web) |
+| Shaders | bgfx `.sc` → **shaderc** per backend |
+| 2D / 3D assets | stb_image, bimg / **texturec** (KTX/DDS), fastgltf, meshoptimizer, ozz-animation ([11 §5](11_BGFX_QT_ARCHITECTURE.md#5-3d-models-what-bgfx-supports)) |
+| Animation / FX | spine-cpp (if licensed) or Rive; Effekseer + efkbgfx |
+| Editor | **Qt6** + Qt Advanced Docking System + QtNodes, bgfx viewport (desktop only, not shipped) |
 | Text | Canvas 2D on web (existing), FreeType (+ HarfBuzz, libunibreak) elsewhere |
-| UI | RmlUi (game UI) + Dear ImGui (tools) + imgui-node-editor, ImGuizmo, ImPlot |
+| UI | RmlUi (game UI) + Dear ImGui (in-game debug overlays only) |
 | Object model | flecs (or EnTT) |
 | Data | nlohmann/json + json-schema-validator |
 | Files | SDL3 pref path / Storage + IDBFS on web, miniz packages |
@@ -127,7 +136,7 @@ Verdicts: ⭐ recommended · ○ alternative · ✗ avoid.
 
 **What this saves**, compared with the Build efforts on the cards (AI-assisted, rough):
 - platform layer: L–XL
-- RHI with three backends + 3D + shadows: XL, and the largest saving
+- RHI with every backend (bgfx): XL, and the largest saving. The 3D renderer and shadows are still built on it (L), starting from the bgfx examples
 - UI widget library: L
 - ECS + reflection + serializer: L
 - glTF + skeletal animation: L
@@ -142,6 +151,6 @@ Together that is several months of work the project does not have to write or ma
 |---|---|
 | **Credit in the game/credits screen** | FreeType (FTL) |
 | **Paid licence per developer** | Spine Editor (for spine-cpp); Live++; FMOD (if used) |
-| **Commercial licence** | Diligent Metal backend on iOS (avoided by running Vulkan on MoltenVK) |
+| **LGPL** (editor only, never shipped to players) | Qt6, Qt Advanced Docking System: dynamic linking; obligations only apply if the editor is distributed outside the team |
 | **Copyleft tools** (fine: the output is not covered) | Tiled editor (GPL), LibreSprite (GPL) |
 | **Keep licence texts** | ship a `THIRD_PARTY_LICENSES.txt` generated from `vcpkg.json` (vcpkg installs copyright files per port) |

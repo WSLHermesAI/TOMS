@@ -70,6 +70,7 @@ collected with their sources in [07](07_THIRD_PARTY_LIBRARIES.md). The cards onl
 - **TOMS:** `src/game/core/main.cpp` (GLFW) + `src/engine/emscripten_main.cpp` (593 lines, JS inside strings). Two diverging mains (hacky). **Replace.**
 - **A · Build:** own per-OS layer (L–XL; mobile is costly).
 - **B · Adopt ⭐:** **SDL3** app callbacks (`SDL_AppInit` / `Iterate` / `Event` / `Quit`), which drive the browser loop for you (✓).
+- **Editor note:** the Qt editor has its own Qt event loop and does not use SDL3. The engine loop is therefore an Engine::tick(dt) call that SDL3's SDL_AppIterate (game) or a Qt timer (editor viewport) drives; nothing in L2–L8 may call SDL window or event APIs directly ([11 §2](11_BGFX_QT_ARCHITECTURE.md#2-embedding-bgfx-in-the-qt-editor)).
 - **VS:** F5 on the desktop exe. Web via [05 §4](05_DEV_WORKFLOW_VS.md#4-f5-targets).
 
 ### 1.2 Window, display, DPI, safe area · P0
@@ -91,7 +92,7 @@ collected with their sources in [07](07_THIRD_PARTY_LIBRARIES.md). The cards onl
 - **VS:** an input debug overlay; recorded input replays in tests.
 
 ### 1.4 Device / OS info & capabilities · P1
-- **Needs:** OS, device class (phone/tablet/desktop), locale, GPU caps (WebGPU available? max texture size), memory hints. This feeds the quality tiers (3.12).
+- **Needs:** OS, device class (phone/tablet/desktop), locale, GPU caps (`bgfx::getCaps()`: renderer type, max texture size, instancing, compute, texture formats), memory hints. This feeds the quality tiers (3.12).
 - **TOMS:** mobile detection is `innerWidth<900 || innerHeight<560` (hacky).
 - **A · Build ⭐:** small module over SDL3 + RHI caps (S).
 - **B · Adopt:** SDL3 (✓).
@@ -168,12 +169,12 @@ Full design in [09](09_RENDERING_2D_3D.md). Summary:
 
 | Card | Pri | TOMS | ⭐ Recommendation (see 09 for alternatives) |
 |---|---|---|---|
-| 3.1 RHI | P0 | three hand-written renderers; `render_iface.h` too narrow; WebGPU broken (hacky) | **decision card in 09 §2**: Diligent Engine vs. sokol_gfx vs. WebGPU-everywhere (Dawn) |
+| 3.1 RHI | P0 | three hand-written renderers; `render_iface.h` too narrow; WebGPU broken (hacky) | **decided: bgfx** (09 §2, [11](11_BGFX_QT_ARCHITECTURE.md)); web = WebGL2 |
 | 3.2 Frame graph | P0 | none (sprites pass, then text pass) | build (M) |
 | 3.3 2D renderer | P0 | `batch_renderer.h` (Vulkan only) | build on the RHI (M) |
 | 3.4 Spine 2D | P1 | none | adopt spine-cpp (licence per developer) or Rive (MIT) |
 | 3.5 glTF parser | P1 | none | adopt fastgltf or cgltf |
-| 3.6 3D renderer | P1 | none | build a forward renderer on the RHI; DiligentFX if Diligent is chosen (web status to verify) |
+| 3.6 3D renderer | P1 | none | build a forward renderer on bgfx, starting from the bgfx examples (PBR, shadows, instancing) ([11 §5](11_BGFX_QT_ARCHITECTURE.md#5-3d-models-what-bgfx-supports)) |
 | 3.7 Skeletal anim 3D | P2 | none | adopt ozz-animation |
 | 3.8 Shadows | P1 | none | build CSM + PCF; volumes optional |
 | 3.9 2D/3D composition | P1 | none | build on the frame graph |

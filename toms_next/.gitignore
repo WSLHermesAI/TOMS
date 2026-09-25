@@ -1,0 +1,9 @@
+# build output (CMakePresets.json puts every preset under out/)
+out/
+build*/
+.vs/
+CMakeUserPresets.json
+*.user
+# runtime files written next to the exe
+toms.log
+save/

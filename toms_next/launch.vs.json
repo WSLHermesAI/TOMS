@@ -1,0 +1,36 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "toms_game.exe (bin\\toms_game.exe)",
+      "name": "toms_game (auto renderer)",
+      "currentDir": "${cmake.buildRoot}\\bin"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "toms_game.exe (bin\\toms_game.exe)",
+      "name": "toms_game (Direct3D 11)",
+      "args": [ "--renderer=d3d11" ],
+      "currentDir": "${cmake.buildRoot}\\bin"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "toms_game.exe (bin\\toms_game.exe)",
+      "name": "toms_game (Vulkan)",
+      "args": [ "--renderer=vulkan" ],
+      "currentDir": "${cmake.buildRoot}\\bin"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "toms_editor.exe (bin\\toms_editor.exe)",
+      "name": "toms_editor (Qt + bgfx)",
+      "currentDir": "${cmake.buildRoot}\\bin"
+    }
+  ]
+}

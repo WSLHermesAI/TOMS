@@ -9,7 +9,7 @@ The per-system detail (build vs. adopt, what TOMS has today) lives in the system
 | L0–L7 (runtime) | [02_RUNTIME_SYSTEMS.md](02_RUNTIME_SYSTEMS.md) |
 | L2.5 in depth | [08_RESOURCE_AND_LIFETIME.md](08_RESOURCE_AND_LIFETIME.md) |
 | L3 in depth | [09_RENDERING_2D_3D.md](09_RENDERING_2D_3D.md) |
-| L6.5 + the in-game editor | [10_EDITOR_PREFAB_BLUEPRINT.md](10_EDITOR_PREFAB_BLUEPRINT.md) |
+| L6.5 + the Qt editor | [10_EDITOR_PREFAB_BLUEPRINT.md](10_EDITOR_PREFAB_BLUEPRINT.md), [11_BGFX_QT_ARCHITECTURE.md](11_BGFX_QT_ARCHITECTURE.md) |
 | L8 | [03_GAME_LAYER.md](03_GAME_LAYER.md) |
 | L9 | [04_TOOLS_AND_EDITORS.md](04_TOOLS_AND_EDITORS.md) |
 | QA | [05_DEV_WORKFLOW_VS.md](05_DEV_WORKFLOW_VS.md) |
@@ -31,10 +31,10 @@ flowchart BT
     L65["L6.5 Object model<br/>ECS · reflection · prefabs · visual graphs"]
     L7["L7 Services<br/>events · bus · conditions · data · i18n · audio · progress · script"]
     L8["L8 Game: Magic Tower<br/>combat · equipment · skills · story · floors …"]
-    L9["L9 Tools & editors<br/>in-game editor · stage · event · UI · dialogue · data · pipeline"]
+    L9["L9 Tools & editors (Qt6, desktop only)<br/>editor app · stage · event · UI · dialogue · data · pipeline"]
     L0 --> L1 --> L2 --> L25 --> L3 --> L4 --> L5 --> L6 --> L65 --> L7 --> L8
     L7 --> L9
-    L8 -. "plays inside" .-> L9
+    L8 -. "plays inside (bgfx viewport)" .-> L9
 ```
 
 ### 1.1 Dependency rule
@@ -43,8 +43,10 @@ flowchart BT
    Upward communication is only through interfaces the lower layer defines (callbacks, the event bus,
    handler registries such as [EventSystem's `IStepHandler`](../EventSystem/02_GAME_INTEGRATION.md)).
 2. **Nothing loads a file or creates a GPU/audio object except through L2.5 Resources.**
-3. **L8 (game) never includes L9 (editor).** The editor attaches to the running game through L6.5
-   reflection. A shipping build compiles L9 out entirely (`ENGINE_EDITOR=OFF`).
+3. **L8 (game) never includes L9 (editor), and nothing below L9 includes Qt.** The Qt editor is a
+   separate executable that links the engine and game libraries and drives them through L6.5
+   reflection. Shipping builds never build or link L9 (`ENGINE_EDITOR=OFF`); a CI check fails if
+   any shipped target links a Qt library ([11 §3](11_BGFX_QT_ARCHITECTURE.md#3-shipping-rules)).
 4. **Every engine module has a headless test target** that runs under the VS debugger with no
    window ([05 §3](05_DEV_WORKFLOW_VS.md#3-tests-in-test-explorer)).
 5. Rules 1–3 are enforced by CMake target links (a module links only lower targets) plus a CI
@@ -58,7 +60,7 @@ on the new base; **P1** before content scales; **P2** later or optional.
 | ID | System | Pri | ID | System | Pri |
 |---|---|---|---|---|---|
 | **L0** | **Foundation** | | **L3** | **Render** (detail: [09](09_RENDERING_2D_3D.md)) | |
-| 0.1 | Core types, containers, math | P0 | 3.1 | RHI (Vulkan / Metal / WebGPU / WebGL2) | P0 |
+| 0.1 | Core types, containers, math | P0 | 3.1 | RHI: bgfx (D3D11/12 / Vulkan / Metal / GL / WebGL2) | P0 |
 | 0.2 | Logging, assert, diagnostics | P0 | 3.2 | Frame graph (passes, render targets) | P0 |
 | 0.3 | Object tracking & memory stats | P0 | 3.3 | 2D renderer (batch, order, 9-slice, scissor) | P0 |
 | 0.4 | Time, timers, fixed-step clock | P0 | 3.4 | Spine 2D skeletal | P1 |
@@ -88,7 +90,7 @@ on the new base; **P1** before content scales; **P2** later or optional.
 | O.3 | Prefabs & scene serialization | P1 | 6.4 | Sprite animation & tween | P1 |
 | O.4 | Visual graph runtime (Blueprint-like) | P2 | 6.5 | Timers, sequencing, coroutines | P1 |
 | **L7** | **Services** | | **L9** | **Tools & editors** (detail: [04](04_TOOLS_AND_EDITORS.md)) | |
-| 7.1 | Event system (flows) | P1 | 9.1 | In-game editor framework | P1 |
+| 7.1 | Event system (flows) | P1 | 9.1 | Qt editor framework (+ bgfx viewport) | P1 |
 | 7.2 | Event bus / messaging | P0 | 9.2 | Scene / prefab / UI editor | P1 |
 | 7.3 | Condition evaluator | P1 | 9.3 | Stage / map editor (+ LDtk/Tiled) | P1 |
 | 7.4 | Data registry & catalog | P0 | 9.4 | Event & visual-graph editor | P1 |
@@ -131,28 +133,34 @@ The 12 game systems (L8) are listed in [03](03_GAME_LAYER.md).
     platform/    L1   target eng_platform      -> eng_core
     vfs/         L2   target eng_vfs           -> eng_platform
     resource/    L2.5 target eng_resource      -> eng_vfs
-    render/      L3   targets eng_rhi, eng_framegraph, eng_render2d, eng_render3d, eng_fx
+    render/      L3   targets eng_rhi (bgfx), eng_framegraph, eng_render2d, eng_render3d, eng_fx
+                      shaders/*.sc compiled by bgfx shaderc at build time
     text/        L4   target eng_text          -> eng_render2d
     ui/          L5   target eng_ui            -> eng_text
     scene/       L6   target eng_scene         -> eng_ui
     object/      L6.5 target eng_object        -> eng_scene
     services/    L7   targets eng_event, eng_bus, eng_condition, eng_data, eng_i18n, eng_audio, eng_progress
-    editor/      L9   target eng_editor        (only when ENGINE_EDITOR=ON)
+    debug/       L9-  target eng_debugui       ImGui overlays in dev game builds (bgfx imgui backend; OFF in shipping)
     <module>/tests/   one test target per module, registered with CTest
   games/
-    magictower/  L8   target mt_game (+ mt_game_tests); data/ assets/ live here
+    magictower/  L8   targets mt_game (static lib), mt_app (the SDL3 exe / WASM), mt_game_tests; data/ assets/ live here
+  editor/        L9   target toms_editor (Qt6 exe, desktop only; only when ENGINE_EDITOR=ON)
+                      -> Qt6::Widgets, eng_* , mt_game. Never a dependency of anything else
   tools/              asset pipeline, validators, dev_server.py  (L9.8)
   docs/
 ```
 
-- **One executable per game per platform**, plus the editor built into dev builds of that same
-  executable. There is no separate editor app ([10](10_EDITOR_PREFAB_BLUEPRINT.md)).
+- **Two executables on desktop:** the game (`mt_app`, SDL3 + bgfx) and the editor (`toms_editor`,
+  Qt6 + bgfx). Web builds only `mt_app`. Both link the same `mt_game` library, so the editor's
+  viewport runs the real game code and renderer ([10](10_EDITOR_PREFAB_BLUEPRINT.md),
+  [11](11_BGFX_QT_ARCHITECTURE.md)).
 - **Third-party libraries come from the `vcpkg.json` manifest** (or `FetchContent` for header-only
   libraries). There is no vendored `external/` folder except patches. See
   [07](07_THIRD_PARTY_LIBRARIES.md).
 - **Build flags:**
-  - `ENGINE_EDITOR` (ON in Debug/Dev, OFF in Shipping)
-  - `ENGINE_RHI` (`vulkan|webgpu|webgl2|auto`)
+  - `ENGINE_EDITOR` (ON in Debug/Dev desktop presets; builds `toms_editor` and needs Qt6. OFF in Shipping and on web)
+  - `ENGINE_DEBUGUI` (ImGui overlays inside the game; ON in Debug/Dev, OFF in Shipping)
+  - `ENGINE_RHI` (`auto|d3d11|d3d12|vulkan|gl|webgl2`; picks bgfx's `RendererType`, `auto` = bgfx default per platform)
   - `ENGINE_ASAN`
   - `ENGINE_TRACY`
 
@@ -162,12 +170,12 @@ The 12 game systems (L8) are listed in [03](03_GAME_LAYER.md).
 |---|---|
 | `src/engine/log.h`, `object.h`, `condition.*`, `event_bus.h`, `power_bar.*`, `encounter.*`, `entity_status.*` | L0.2, L0.3, L7.3, L7.2, L8, L8, L8 |
 | `src/engine/node.*`, `scene.h`, `game_state.h` | L5.1 / L6.1 (node tree kept; the state machine becomes the real scene stack) |
-| `src/engine/render_iface.h`, `renderer*.cpp`, `batch_renderer.h`, `texture.*` | replaced by L3.1–3.3 + L2.5 |
+| `src/engine/render_iface.h`, `renderer*.cpp`, `batch_renderer.h`, `texture.*` | replaced by L3.1–3.3 (bgfx) + L2.5. First step: a `BgfxRenderer : IRenderer` port, so the current game runs on bgfx before the rewrite ([11 §6](11_BGFX_QT_ARCHITECTURE.md#6-migration-path-from-toms)) |
 | `src/engine/font.*` (incl. `buildFromCanvas`) | L4.1 / L4.2 (the canvas path is kept) |
 | `src/game/core/main.cpp`, `src/engine/emscripten_main.cpp` | replaced by L1.1 + L1.5 |
 | `src/game/core/game*.cpp` (the `Game` god object) | split into L6.1 scenes + L7 services + L8 systems |
 | `src/game/ui/*` | L5 (the `dialogue_layout.h` pattern, one geometry for draw and hit test, becomes the widget rule) |
 | `src/game/save/*` | L2.3–2.5, L7.7 |
 | `src/game/systems/*` | L8 (reused as-is) |
-| `editor/` (Qt) | replaced by L9.1–9.3 |
+| `editor/` (Qt) | **kept and grown** into `toms_editor` (L9.1–9.4): links the engine, gets a bgfx viewport, loses its hard-coded `catalog.h` |
 | `tools/*.py` | L9.8 |
