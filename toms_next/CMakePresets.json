@@ -81,7 +81,10 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
         "CMAKE_CROSSCOMPILING_EMULATOR": "node",
         "CMAKE_EXECUTABLE_SUFFIX": ".js",
-        "WEB": "ON"
+        "WEB": "ON",
+        "CMAKE_C_FLAGS": "-msimd128",
+        "CMAKE_CXX_FLAGS": "-msimd128",
+        "CMAKE_EXE_LINKER_FLAGS": "-msimd128"
       },
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-web-debug",
@@ -100,7 +103,10 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
         "CMAKE_CROSSCOMPILING_EMULATOR": "node",
         "CMAKE_EXECUTABLE_SUFFIX": ".js",
-        "WEB": "ON"
+        "WEB": "ON",
+        "CMAKE_C_FLAGS": "-msimd128",
+        "CMAKE_CXX_FLAGS": "-msimd128",
+        "CMAKE_EXE_LINKER_FLAGS": "-msimd128"
       },
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-web-release",

@@ -181,3 +181,33 @@ ImGui compiled for wasm; long). Its outcome is not recorded here because it is n
 `Game::setUiScale()` implementing the owner's stated rule (grow the UI **objects**, keep the game
 resolution, never soften the render). When that row is picked up it should use `UiRoot`, not
 `setDesignSize`.
+
+### 2026-09-25 (addendum) — the wasm build's first real blocker, and where it stopped
+
+The `cmake --build --preset web-release` run launched with the first entry **failed at 16/1083**, and the
+reason is one any bgfx-on-Emscripten build hits:
+
+    em++: error: passing any of -msse, -msse2, -msse3, -mssse3, -msse4.1, -msse4.2, ... -mavx2, -mfma,
+    -mfpu=neon flags also requires passing -msimd128 (or -mrelaxed-simd)!
+
+Cause: bgfx.cmake compiles its `bx` utility library with x86 SIMD flags because it looks at the **host**
+as x86_64, while the target is wasm32, where Emscripten rejects x86 SIMD flags outright.
+
+Fix (in the presets, not inside the fetched tree, so a fresh configure cannot undo it): `web-debug` and
+`web-release` now pass **`-msimd128`** in `CMAKE_C_FLAGS`, `CMAKE_CXX_FLAGS` and `CMAKE_EXE_LINKER_FLAGS`.
+That is what the error itself asks for, and it lets Emscripten lower those SSE paths to `simd128`.
+
+**Result:** the fix is correct — the build went from 16 to **389+ object files of 1083** (bgfx, bx, bimg,
+spirv-cross, SDL3, ImGui all compiling for wasm) before stopping again in the shaderc/spirv-cross region.
+The second failure's error text was NOT captured: the rebuild's output was long enough to hit the call
+timeout, and the tail only showed spirv-cross `-Wdeprecated-this-capture` warnings (benign, third-party,
+63 of them) before `ninja: build stopped: subcommand failed`.
+
+**Next action to close this out:** re-run with output on disk so the error survives --
+
+    cmake --build --preset web-release 2>&1 | tee /tmp/web_next_build.log
+    grep -nE "error:|FAILED:" /tmp/web_next_build.log | head
+
+Then fix the specific failure (likely another Emscripten flag/target issue rather than source). Only after
+the build links does `game/src/main_web.cpp` become the gating item for Phase 2 step 1 -- and until a web
+executable exists, the "plays in Chrome from localhost:8099" acceptance check cannot be run at all.
