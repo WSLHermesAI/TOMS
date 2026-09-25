@@ -226,3 +226,36 @@ this machine's RAM before it ever reaches the game code.
 **Workaround:** build at low parallelism (`-j2`). This is an environment limit, not a defect in the
 project -- a machine with more RAM builds it at full parallelism. Recorded because "exit 137" looks like a
 random failure and would otherwise be re-diagnosed as one.
+
+### 2026-09-25 (addendum 3) — the third stop: etcpak's x86 intrinsics, and what to do about it
+
+`-j2` got much further: **364/422 objects and `bin/shaderc.js` LINKED**, so the shader compiler -- the
+heaviest piece and the one Phase 2 actually needs -- is built for wasm. The build then failed compiling
+**bimg's `etcpak/Dither.cpp`** with 20 errors, all from Emscripten's own `ia32intrin.h`:
+
+    error: use of undeclared identifier '__builtin_ia32_readeflags_u32'
+    error: use of undeclared identifier '__builtin_ia32_writeeflags_u32'
+    error: use of undeclared identifier '__builtin_ia32_crc32qi' / crc32hi / crc32si
+    error: use of undeclared identifier '__builtin_ia32_rdpmc' / rdtscp
+
+etcpak is the texture **encoder** inside bimg. It reaches x86 intrinsic paths that have no wasm
+equivalent, and `-msimd128` (which fixed bx) does not cover the *integer* builtins listed above -- those
+are x86-only by definition.
+
+Also worth recording for the memory story: `nproc` is 16 here and the box has 15.8 GB RAM, so `-j16` on
+glslang/tint/spirv-cross translation units is what produced the exit-137 SIGKILL. `-j2` completes them.
+
+**Options for closing it (in preference order), none attempted yet:**
+
+1. **Exclude `bimg_encode` for the web target.** The game's 2D sprite pipeline does not encode textures at
+   runtime -- the old build pre-encodes assets, and `BGFX_BUILD_TOOLS_TEXTURE` is already OFF. If
+   bgfx.cmake's wrapper exposes (or can be given) a bimg-encode toggle, turning it off for web removes the
+   problem instead of working around it. Check `cmake/bgfx.cmake`'s own options, not just bimg's
+   `CMakeLists.txt` (which only has `if(BGFX_BUILD_TOOLS_TEXTURE)`).
+2. **A small compat shim** for the missing builtins (they are only used for CPU feature/flag probing and
+   CRC path selection), compiled into etcpak for wasm.
+3. **Patch the fetched `bimg` source** to skip etcpak on `__EMSCRIPTEN__`. Last resort: a fresh configure
+   silently undoes anything done inside `_deps/`.
+
+**Not yet possible:** `game/src/main_web.cpp` does not exist, so there is still no web executable and the
+Chrome/Edge acceptance check (stage 1 plays; a save survives a reload) has not been run.
