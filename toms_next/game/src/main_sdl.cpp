@@ -147,6 +147,7 @@ struct App {
     InputState in;
     uint64_t lastTicks = 0;
     int frameNo = 0;
+    int backW = 0, backH = 0;   // size bgfx was last initialized/reset with
 };
 
 App* g_app = nullptr;
@@ -158,10 +159,10 @@ bool appInit(App& app) {
         fatalBox(nullptr, "TOMS: SDL could not start", SDL_GetError());
         return false;
     }
-    SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-#ifdef __EMSCRIPTEN__
-    flags |= SDL_WINDOW_FILL_DOCUMENT;   // the canvas follows the page size; the game letterboxes
-#endif
+    // Web: no SDL_WINDOW_FILL_DOCUMENT. shell.html sizes the canvas with CSS (full viewport) and SDL
+    // follows that; fill-document mode depended on a probe that fails at fractional display scaling
+    // (the canvas stayed 1x1) and it also hid the page's own buttons.
+    const SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
     app.window = SDL_CreateWindow("Tower of the Sorcerer (bgfx)", 1280, 720, flags);
     if (!app.window) {
         fatalBox(nullptr, "TOMS: no window", SDL_GetError());
@@ -182,6 +183,7 @@ bool appInit(App& app) {
     int pw = 0, ph = 0;
     SDL_GetWindowSizeInPixels(app.window, &pw, &ph);
     cfg.width = (uint32_t)pw; cfg.height = (uint32_t)ph;
+    app.backW = pw; app.backH = ph;
     cfg.renderer = args.renderer;
     cfg.vsync = args.vsync;
     cfg.debugText = args.stats;
@@ -228,7 +230,6 @@ bool appFrame(App& app) {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_EVENT_QUIT) quit = true;
-        else if (e.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) bgfxHostReset((uint32_t)e.window.data1, (uint32_t)e.window.data2);
         else if (e.type == SDL_EVENT_MOUSE_WHEEL) in.wheel += e.wheel.y;
     }
     readKeyboard(in);
@@ -240,6 +241,11 @@ bool appFrame(App& app) {
     int ww = 1, wh = 1, pw = 1, ph = 1;
     SDL_GetWindowSize(app.window, &ww, &wh);
     SDL_GetWindowSizeInPixels(app.window, &pw, &ph);
+    // Keep bgfx's backbuffer equal to the real drawable size even if a resize event was missed.
+    if (pw > 0 && ph > 0 && (pw != app.backW || ph != app.backH)) {
+        bgfxHostReset((uint32_t)pw, (uint32_t)ph);
+        app.backW = pw; app.backH = ph;
+    }
     in.mouseX = mx * (float)pw / (float)(ww > 0 ? ww : 1);   // window points -> pixels (HiDPI)
     in.mouseY = my * (float)ph / (float)(wh > 0 ? wh : 1);
     in.mouseLeft   = (buttons & SDL_BUTTON_LMASK) != 0;

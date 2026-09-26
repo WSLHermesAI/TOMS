@@ -63,9 +63,10 @@ Bash). The old project's web build (`TOMS/docs/building/BUILD_WEB.md`) still wor
 | W5 | **`11_BGFX_QT_ARCHITECTURE.md`** in EngineBlueprint + UI-tool rows in docs 02/04/07 | the UI-editor research agent stopped before finishing | redo the research: UI editors whose output bgfx can use (RmlUi, NoesisGUI, Rive, Lottie/ThorVG, …); add the glTF/skinning findings |
 | W6 | **"???????" label on stage 1** | shows with both fonts, so it comes from data rather than a missing glyph, but not confirmed | find the source string in `data/` |
 | W7 | **Vulkan ~1 % pixel difference** (glyph/panel edges) | one-pixel rasterisation offset; accepted for now | golden images per backend in phase 2 |
-| W8 | **Commits** | toms_next was committed on `main` by 2026-09-26 (`af203e6` … `8744a3c`); today's web work is uncommitted | owner decides when to commit |
+| W8 | **Commits** | the web build is committed (`e1bd8d8`); the black-canvas fix after it is not yet | owner decides when to commit |
 | W9 | **Web build on a real phone/tablet**, Firefox, Safari | only headless Chrome was run (incl. an 844×390 viewport) | open `serve_web.cmd`'s URL from a phone on the same network (serve with `--bind 0.0.0.0`) |
 | W10 | **Linux/WSL web presets** since the host-shaderc + `bimg_encode` change | not re-run; they now fall back to shaderc-as-wasm (slow, `--parallel 2`) | re-run `cmake --preset web-release` on WSL, or pass `-DTOMS_HOST_SHADERC` |
+| W12 | **Headless tests miss display-scale bugs** | the black-canvas bug (2026-09-26) only showed in a visible window at DPR 2.4 | extend `web_smoke_test.mjs` with a visible-window / `--force-device-scale-factor=2.4` run and a canvas-size check |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
 
 ---

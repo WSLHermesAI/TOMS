@@ -33,3 +33,7 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   reload restores the save; phone-size viewport runs. `tools/web_smoke_test.mjs` kept as the test.
   Desktop build + smoke test still pass. Not yet: a real phone, Firefox/Safari, WSL web presets.
 - **2026-09-26** — **Next:** Phase 2 step 2, the old unit tests + golden-image smoke tests in CTest.
+- **2026-09-26** — **Fixed the black web page** the owner saw: at fractional display scaling (240%)
+  SDL's fill-document probe failed and the canvas stayed 1×1. `shell.html` now sizes the canvas
+  with CSS, fill-document is gone, and the game resets bgfx whenever the drawable size changes.
+  Verified in a visible Chrome window at DPR 2.4 plus the headless and desktop smoke tests.

@@ -103,7 +103,7 @@ fullscreen button and a 背包 (backpack) button.
 | Topic | Web behaviour | Where |
 |---|---|---|
 | Entry point | the same `main_sdl.cpp`; the browser calls one frame per display refresh (`emscripten_set_main_loop_arg`) instead of a while-loop | `game/src/main_sdl.cpp` |
-| Window | SDL3 `SDL_WINDOW_FILL_DOCUMENT`: the canvas fills the page; the game letterboxes 1024×768 inside it | `main_sdl.cpp` |
+| Window | `shell.html` sizes the canvas with CSS (full viewport); SDL follows it and sets the drawing buffer to CSS size × `devicePixelRatio`; the game checks the size every frame and resets bgfx when it changes; the game letterboxes 1024×768 inside. (Not `SDL_WINDOW_FILL_DOCUMENT`: at fractional display scaling its probe failed and the canvas stayed 1×1.) | `game/web/shell.html`, `main_sdl.cpp` |
 | Renderer | bgfx `OpenGL ES 3.0` = WebGL2; the canvas selector (`#canvas`) is passed as the window handle | `main_sdl.cpp`, `engine/src/bgfx_host.cpp` |
 | Shaders | only the ESSL (WebGL2) profile is compiled, by the host `shaderc.exe`, and embedded | `engine/CMakeLists.txt`, `cmake/TomsDependencies.cmake` |
 | Colours | no sRGB (WebGL has no sRGB backbuffer); same look as the old WebGL build, darker than desktop | `bgfx_renderer.cpp`, `bgfx_host.cpp` |
@@ -164,6 +164,7 @@ re-run since the `bimg_encode` fix**; the Windows path is the tested one.
 | First build takes long | no host `shaderc.exe` yet, so the desktop shipping preset is built first | expected once |
 | Configure warning "No host shaderc found" | building without a desktop build | run `tools\build.cmd windows-shipping` once, or pass `-DTOMS_HOST_SHADERC=` |
 | Page stays on "Loading…" or is black | opened from `file://`, or the `.data` file is stale in the browser cache | use `serve_web.cmd`; hard-reload (Ctrl+F5) |
+| Page black but the console shows `TOMS on bgfx (OpenGL ES 3.0)` | the canvas has no size (check in the console: `canvas.width, canvas.height`). Fixed 2026-09-26: builds before that used SDL's fill-document mode, which left a 1×1 canvas at fractional display scaling (e.g. 240%) | rebuild with the current `shell.html`; hard-reload |
 | Continue shows no saves after reload | private browsing (no IndexedDB): saves last for the session only | use a normal window |
 | No sound | browsers block audio until the first user input | click or press a key |
 | `This version of cmake does not support emscripten shared libraries` warnings | Emscripten's toolchain file talking about shared libs, which we do not use | ignore |

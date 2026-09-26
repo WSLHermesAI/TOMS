@@ -80,3 +80,31 @@ URL options, how it works, testing/debugging, Linux/WSL, troubleshooting). READM
 **Not verified:** a real phone or tablet (touch, rotate hint, fullscreen); Firefox and Safari; the
 Linux/WSL web presets since the `bimg_encode` fix; the `web-*-windows` presets from inside the Visual
 Studio IDE (only through `build_web.cmd`).
+
+### 2026-09-26 (later) — owner report: "web version seems not working" (black page) — fixed
+
+The owner's Chrome showed a black page with the 背包/fullscreen buttons, while the console showed a
+healthy start (`bgfx ... OpenGL ES 3.0`, assets, saves, `TOMS on bgfx`).
+
+**Reproduced** only in a *visible* Chrome window at the owner's display scale (devicePixelRatio 2.4):
+the canvas was **1×1** and stayed a few pixels after resizes. Headless Chrome (DPR 1, and the GPU
+run at DPR 1.5) never showed it.
+
+**Cause:** SDL3's `SDL_WINDOW_FILL_DOCUMENT` first decides whether the page sizes the canvas: it sets
+the canvas to 1×1 and reads its CSS size. At a fractional DPR the browser reports ~0.83 px, SDL floors
+it to 0 ≠ 1, concludes "externally sized", turns fill-document off and takes the (tiny) CSS size as
+the window size. At DPR 1 the probe reads exactly 1, fill-document stays on and hides every other
+page element, which is why the headless screenshots had no buttons and the owner's page did.
+
+**Fix:** `shell.html` sizes the canvas itself (`position: fixed; 100vw × 100vh/100dvh`), so SDL
+always takes the external-size path and sets the drawing buffer to CSS size × DPR;
+`SDL_WINDOW_FILL_DOCUMENT` removed; `appFrame` compares the drawable size with bgfx's every frame
+and resets on change (replaces the resize-event handler, also on desktop).
+
+**Verified:** visible Chrome at DPR 2.4: canvas 3336×1939 for a 1390×808 page, follows three
+resizes, full frame rate, title renders with both page buttons. Headless smoke test (new game → save
+→ reload) and the desktop smoke test still pass.
+
+**Lesson for the test:** `web_smoke_test.mjs` runs headless at DPR 1 and cannot catch DPR-dependent
+layout bugs. A run in a visible window at the machine's real scaling is now part of checking web
+changes (W12).

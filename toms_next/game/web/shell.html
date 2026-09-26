@@ -6,8 +6,12 @@
   <title>Tower of the Sorcerer</title>
   <style>
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #05050a; }
-    /* SDL's fill-document mode sizes the canvas to the page; the game letterboxes inside it. */
-    #canvas { display: block; touch-action: none; outline: none; }
+    /* The page sizes the canvas (full viewport) and SDL follows it: SDL sees an externally sized
+       canvas and sets its drawing buffer to this CSS size x devicePixelRatio. Without a CSS size,
+       SDL's probe misreads a 1 px canvas at fractional display scaling (e.g. 240%) and the canvas
+       stayed 1x1 -- a black page. The game letterboxes its 1024x768 image inside. */
+    #canvas { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh;
+              display: block; touch-action: none; outline: none; }
     #toms-status { position: fixed; left: 0; right: 0; top: 45%; text-align: center; color: #f2e6c8;
                    font: 600 18px/1.6 system-ui, -apple-system, "Microsoft JhengHei", sans-serif; pointer-events: none; }
     #toms-error { display: none; position: fixed; left: 8%; right: 8%; top: 20%; padding: 20px; z-index: 100;
