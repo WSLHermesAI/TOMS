@@ -259,3 +259,52 @@ glslang/tint/spirv-cross translation units is what produced the exit-137 SIGKILL
 
 **Not yet possible:** `game/src/main_web.cpp` does not exist, so there is still no web executable and the
 Chrome/Edge acceptance check (stage 1 plays; a save survives a reload) has not been run.
+
+### 2026-09-26 — Phase 2 step 1 on WSL/Linux: the web build now completes (exit 0)
+
+Owner: "I have build a windows web version, now try to build a WSL web version."
+
+**Result:** `cmake --preset web-release && cmake --build --preset web-release -j2` finishes with **exit 0**
+and links, producing in `build-web-release/bin/`:
+
+    toms_game.html     3,265 B
+    toms_game.js     258,223 B
+    toms_game.wasm 2,935,852 B   (2.9 MB; the Windows build is 2.8 MB)
+    toms_game.data   737,853 B   (the --preload-file assets)
+
+`python3 -m http.server 8100 --directory build-web-release/bin` serves it and the bytes are right
+(`toms_game.wasm` -> HTTP 200, 2,935,852). The build went from **1083 steps with a wall of toolchain
+failures to 257 steps, exit 0.**
+
+**What was actually wrong (each fixed in the project's own files, never inside `_deps/`, because a fresh
+configure would silently undo anything done there):**
+
+| # | Symptom | Cause | Fix |
+|---|---|---|---|
+| 1 | `[code=137]` at 16/1083 | SIGKILL/OOM: 16 parallel glslang+tint+spirv-cross TUs on a 16-core/15.8 GB box | build with `-j2` (baked into the preset's `jobs`) |
+| 2 | `em++: -msse4.2 also requires -msimd128` | bgfx.cmake applies x86 SIMD flags because it inspects the HOST, while the target is wasm32 | `-msimd128` in both hosts' presets (Windows needs it too) |
+| 3 | configure aborts: `Invalid character escape '\b'` | **a bug in our CMake**: `cmake/TomsPrerequisites.cmake:248` had a single backslash in a message string (`tools\build.cmd`). Only reachable when no host shaderc exists -- the branch Windows never takes | backslash doubled |
+| 4 | `Unable to open file '.../vs_sprite.sc'` | the fallback's shaderc runs under node in Emscripten's VIRTUAL filesystem, so it cannot open real source paths | `-sNODERAWFS=1` (tool only) |
+| 5 | `RuntimeError: memory access out of bounds` in shaderc.wasm | fixed-size emscripten heap overflowing on a real shader | `-sALLOW_MEMORY_GROWTH=1`, `-sINITIAL_MEMORY`, `-sSTACK_SIZE` |
+| 6 | `--preload-file cannot be used with NODERAWFS` | our own mistake: flag 4 was in the preset's GLOBAL linker flags, so it hit the game too. The two needs are opposite -- the tool must touch real files, the game must use the virtual FS for its preloaded assets | scoped to the shaderc target only, in `cmake/TomsDependencies.cmake` (`if(EMSCRIPTEN AND TARGET shaderc)`), after bgfx.cmake defines it |
+
+**Environment limits found here (not project defects):**
+- The **preferred** route -- importing a host (desktop) shaderc, which is what `build_web.cmd` does on
+  Windows and which is 348 steps instead of 1083 -- **cannot be used on this WSL box**: bgfx.cmake's Linux
+  configure calls `find_package(X11)` and X11 dev headers need root. A Linux box with those headers, or the
+  Windows flow, takes the fast route unchanged.
+- Also needed once: `cmake` on PATH (`$HOME/opt/cmake/bin`) and **ninja** (`uv tool install ninja`, no root).
+
+**NOT verified -- and this is the gap:** the build has **not been run in a browser**. The step's acceptance
+check ("stage 1 plays in Chrome/Edge from `http://localhost:8099/...` and a save survives a page reload")
+needs a browser: `tools/web_smoke_test.mjs` requires Chrome/Edge (absent on this box) and the
+Firefox/Selenium fallback could not be used because this machine currently cannot reach pypi.org
+(`invalid peer certificate: UnknownIssuer`; `github.io` likewise returns HTTP 000). So: build proven,
+serving proven, **rendering unproven**. To close it, on a machine with Chrome:
+
+    python3 -m http.server 8100 --directory build-web-release/bin
+    node tools/web_smoke_test.mjs http://127.0.0.1:8100/toms_game.html /tmp/shots 1280,720
+
+**Note for the Linux build:** `tools/check_env.sh` is the WSL/Linux twin of `check_env.ps1`; the web
+presets are `web-debug`/`web-release` (Linux) and `web-debug-windows`/`web-release-windows` (Windows), all
+reading the toolchain from `$env{EMSDK}`.
