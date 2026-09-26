@@ -206,7 +206,30 @@ Add-Result "Qt 6.5+ (MSVC 2022 64-bit kit) - editor only" ([bool]$qtKit) $false 
     "https://www.qt.io/download-qt-installer-oss"
 
 # ---------------------------------------------------------------------------------------------
-# 15. Optional GPU extras
+# 15. Web build only (optional): Emscripten SDK and a host shaderc
+# ---------------------------------------------------------------------------------------------
+$emsdk = $null
+foreach ($c in @($env:EMSDK, (Join-Path $legacy '..\..\emsdk'), (Join-Path $env:USERPROFILE 'emsdk'), 'C:\emsdk', 'D:\emsdk')) {
+    if ($c -and (Test-Path (Join-Path $c 'emsdk_env.bat'))) { $emsdk = (Resolve-Path $c).Path; break }
+}
+$emVer = $null
+if ($emsdk) {
+    $vf = Join-Path $emsdk 'upstream\emscripten\emscripten-version.txt'
+    if (Test-Path $vf) { $emVer = (Get-Content $vf -Raw).Trim().Trim('"') }
+}
+Add-Result "Emscripten SDK (emsdk) - web build only" ([bool]$emVer) $false `
+    $(if ($emVer) { "Emscripten $emVer at $emsdk" } elseif ($emsdk) { "emsdk at $emsdk, but no Emscripten installed in it" } else { "not found (looked at EMSDK, ..\..\emsdk, %USERPROFILE%\emsdk, C:\emsdk, D:\emsdk)" }) `
+    "git clone https://github.com/emscripten-core/emsdk.git, then in that folder: emsdk install latest, emsdk activate latest. Set EMSDK to the folder if it is elsewhere. Needed only for tools\build_web.cmd." `
+    "https://emscripten.org/docs/getting_started/downloads.html"
+
+$hostShaderc = Get-ChildItem (Join-Path $root 'out\build') -Recurse -Filter shaderc.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+Add-Result "Host shaderc.exe (from a desktop build) - web build only" ([bool]$hostShaderc) $false `
+    $(if ($hostShaderc) { $hostShaderc.FullName } else { "not built yet (tools\build_web.cmd builds the desktop shipping preset first to get it)" }) `
+    "Run tools\build.cmd windows-shipping once, or just run tools\build_web.cmd (it does this for you)." `
+    "toms_next/docs/06_BUILD_WEB.md"
+
+# ---------------------------------------------------------------------------------------------
+# 16. Optional GPU extras
 # ---------------------------------------------------------------------------------------------
 $vk = Test-Path (Join-Path $env:WINDIR 'System32\vulkan-1.dll')
 Add-Result "Vulkan runtime (for --renderer=vulkan)" $vk $false `

@@ -92,10 +92,19 @@ endfunction()
 # 1. Platform and compiler
 # ============================================================================================
 if(WEB)
-    # Web build (Emscripten/wasm32): this is a supported target, not a Windows build on the wrong host.
-    toms_prereq_problem(WARNING
-        "Web build: the Windows/Visual Studio checks below are skipped on purpose. Emscripten's wasm32 has 32-bit pointers, and the Emscripten toolchain file supplies the compiler."
-        "docs/02_INSTALL_WINDOWS.md")
+    # Web build (Emscripten/wasm32): a supported target, not a Windows build on the wrong host. The
+    # Windows/Visual Studio checks below are skipped on purpose: wasm32 has 32-bit pointers and the
+    # Emscripten toolchain file supplies the compiler. (A STATUS line, not a warning: nothing is wrong.)
+    message(STATUS "[toms] web build (Emscripten ${EMSCRIPTEN_VERSION}): desktop compiler checks skipped")
+    if(NOT EMSCRIPTEN)
+        toms_prereq_problem(ERROR
+            "WEB=ON but the Emscripten toolchain is not active. Install emsdk, run emsdk_env, and use a web preset (or tools\\build_web.cmd), which passes the Emscripten toolchain file."
+            "https://emscripten.org/docs/getting_started/downloads.html")
+    elseif(DEFINED EMSCRIPTEN_VERSION AND EMSCRIPTEN_VERSION VERSION_LESS 3.1.60)
+        toms_prereq_problem(WARNING
+            "Emscripten ${EMSCRIPTEN_VERSION} is old; SDL3 and bgfx are tested here with 6.0.x. Update with: emsdk install latest && emsdk activate latest."
+            "https://emscripten.org/docs/getting_started/downloads.html")
+    endif()
 elseif(NOT WIN32)
     toms_prereq_problem(WARNING
         "This project is set up and tested for Windows + Visual Studio. Other platforms are not configured yet."
@@ -151,8 +160,9 @@ toms_prerequisites_stop_on_error()
 # ============================================================================================
 # 4. CJK font (gitignored in the old repo, so a fresh clone does not have it)
 # ============================================================================================
+# The web build does not need it: it draws glyphs with the browser's own fonts (Canvas 2D).
 set(TOMS_CJK_FONT "${TOMS_LEGACY_ROOT}/assets/wqy-zenhei.ttc")
-if(NOT EXISTS "${TOMS_CJK_FONT}")
+if(NOT WEB AND NOT EXISTS "${TOMS_CJK_FONT}")
     if(WIN32 AND EXISTS "$ENV{WINDIR}/Fonts/msjh.ttc")
         toms_prereq_problem(WARNING
             "assets/wqy-zenhei.ttc (16 MB, gitignored) is missing. The game falls back to Windows' Microsoft JhengHei (msjh.ttc); glyph shapes differ from the shipped look. To match: download WenQuanYi Zen Hei and copy wqy-zenhei.ttc into TOMS/assets/."
@@ -177,7 +187,7 @@ endif()
 # 6. Qt 6 for the editor (optional: without it only the game is built)
 # ============================================================================================
 set(TOMS_HAVE_QT OFF)
-if(TOMS_BUILD_EDITOR)
+if(TOMS_BUILD_EDITOR AND NOT WEB)
     # Help find_package: environment variables first, then the default Qt installer locations.
     foreach(_env QT_ROOT_DIR QTDIR Qt6_DIR)
         if(DEFINED ENV{${_env}})
@@ -208,5 +218,34 @@ if(TOMS_BUILD_EDITOR)
         toms_prereq_problem(WARNING
             "Qt 6 (MSVC 2022 64-bit kit, 6.5 or newer; 6.8 LTS recommended) was not found, so toms_editor is skipped. Install it with the Qt Online Installer to C:/Qt (auto-detected), or set the environment variable QTDIR to the kit folder, e.g. C:/Qt/6.8.3/msvc2022_64."
             "https://www.qt.io/download-qt-installer-oss")
+    endif()
+endif()
+
+# ============================================================================================
+# 7. Web only: a shader compiler that runs on THIS machine
+# ============================================================================================
+# shaderc is a build tool: for a web build it must run on the build machine, not in the browser.
+# The desktop build already produced one (out/build/<preset>/bin/shaderc.exe), so the web build
+# uses it instead of compiling glslang, tint, spirv-cross and shaderc itself to wasm and running
+# them under node (slow, and it runs out of memory at full parallelism).
+if(WEB)
+    set(TOMS_HOST_SHADERC "" CACHE FILEPATH "shaderc built for the build machine (used by web builds)")
+    if(NOT TOMS_HOST_SHADERC)
+        file(GLOB _shaderc_candidates
+             "${CMAKE_CURRENT_LIST_DIR}/../out/build/*/bin/shaderc.exe"
+             "${CMAKE_CURRENT_LIST_DIR}/../out/build/*/bin/shaderc")
+        if(_shaderc_candidates)
+            list(GET _shaderc_candidates 0 _shaderc)
+            get_filename_component(_shaderc "${_shaderc}" ABSOLUTE)
+            set(TOMS_HOST_SHADERC "${_shaderc}" CACHE FILEPATH "shaderc built for the build machine (used by web builds)" FORCE)
+        endif()
+    endif()
+    if(TOMS_HOST_SHADERC AND EXISTS "${TOMS_HOST_SHADERC}")
+        message(STATUS "[toms] web build uses the host shader compiler: ${TOMS_HOST_SHADERC}")
+    else()
+        set(TOMS_HOST_SHADERC "" CACHE FILEPATH "" FORCE)
+        toms_prereq_problem(WARNING
+            "No host shaderc found, so this web build compiles shaderc itself to wasm and runs it with node. That is much slower and needs a lot of RAM (build with few jobs). Faster: build any desktop preset once (tools\build.cmd windows-shipping) or pass -DTOMS_HOST_SHADERC=<path to shaderc>."
+            "toms_next/docs/06_BUILD_WEB.md")
     endif()
 endif()

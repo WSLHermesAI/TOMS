@@ -58,7 +58,11 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
                 (fs::path(assetDir_) / ".." / "data").lexically_normal().string();
         return false;
     }
+#ifdef __EMSCRIPTEN__
+    const bool hasFont = true;   // the browser draws glyphs with its own fonts (Font::buildFromCanvas)
+#else
     const bool hasFont = std::getenv("TOMS_FONT") || fs::exists(fs::path(assetDir_) / "wqy-zenhei.ttc");
+#endif
     if (!hasFont) {
         error = "No CJK font is available.\n\nDownload WenQuanYi Zen Hei and copy wqy-zenhei.ttc into\n  " +
                 assetDir_ + "\n\nhttps://sourceforge.net/projects/wqy/files/wqy-zenhei/\n"
@@ -76,6 +80,8 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     TOMS_LOG_INFO("TOMS start (bgfx host, C++{})", __cplusplus / 100);
 
     game_ = std::make_unique<Game>();
+    if (opts.padScale != 1.0f) game_->setPadScale(opts.padScale);
+    if (opts.uiScale != 1.0f) game_->setUiScale(opts.uiScale);
     if (!game_->loadAssets(assetDir_)) {   // creates the renderer: `new Renderer()` = BgfxRenderer
         error = "Game::loadAssets failed for\n  " + assetDir_ + "\nSee the console / toms.log for the file that failed.";
         renderer_ = dynamic_cast<BgfxRenderer*>(game_->renderer());
@@ -204,12 +210,27 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
     }
 
     // Mouse -> handleTouch in design space (down on press, up at the press position on release).
+    // Holding repeats phase 1 (after 320 ms, then every 150 ms), as the old web page did for the
+    // on-screen pad, so holding an arrow plate keeps walking.
     if (in.hasMouse && in.mouseLeft) {
         if (!mouseWasDown_) {
             float bx, by;
             if (renderer_->deviceToDesign(in.mouseX, in.mouseY, bx, by)) {
                 g.handleTouch(bx, by, 0);
                 mouseDesignX_ = bx; mouseDesignY_ = by; mouseHasDesign_ = true;
+            }
+            mouseHeldMs_ = 0;
+            mouseRepeatMs_ = 0;
+        } else if (mouseHasDesign_) {
+            float bx, by;
+            if (renderer_->deviceToDesign(in.mouseX, in.mouseY, bx, by)) { mouseDesignX_ = bx; mouseDesignY_ = by; }
+            mouseHeldMs_ += dtMs;
+            if (mouseHeldMs_ >= 320) {
+                mouseRepeatMs_ += dtMs;
+                if (mouseRepeatMs_ >= 150) {
+                    mouseRepeatMs_ -= 150;
+                    g.handleTouch(mouseDesignX_, mouseDesignY_, 1);
+                }
             }
         }
         mouseWasDown_ = true;
@@ -230,8 +251,12 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         if (showDebugOverlay) g.drawDebugOverlay();
         g.setStylingSpikeVisible(false);
         if (showStylingSpike) g.drawStylingSpike();
+#ifndef __EMSCRIPTEN__
+        // Desktop-only in the legacy code (CJK text in ImGui's font would be tofu; the browser
+        // build draws its own stage select and toasts with the game renderer).
         if (!g.titleOpen()) g.drawNotifications();
         if (g.stageSelectOpen()) g.drawStageSelect();
+#endif
     }
     g.draw();   // -> BgfxRenderer::end(): views kViewClear + kViewGame
     if (debugUi_) imgui_.render(BgfxRenderer::kViewOverlay);

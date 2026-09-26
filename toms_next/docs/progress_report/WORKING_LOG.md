@@ -20,3 +20,16 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   editor on D3D11 at HiDPI, msjh font fallback, no leaks, no Qt DLLs in `toms_game.exe`, shipping
   preset builds without Qt. Not yet: F5 in the IDE, clicking the popups, a fresh machine.
 - **2026-09-25** — **Next:** web build in toms_next (bgfx WebGL2 + SDL3 on Emscripten).
+- **2026-09-26** — **Web build done (Windows):** `tools\build_web.cmd [release|debug]` +
+  `tools\serve_web.cmd`; guide `docs/06_BUILD_WEB.md`. The web build uses the desktop build's
+  `shaderc.exe` (1083 → 348 build steps) and excludes `bimg_encode` (the etcpak blocker). One entry
+  point (`main_sdl.cpp`) for desktop and web; IDBFS saves, phone scaling, hold-to-repeat taps,
+  `game/web/shell.html`. Release `.wasm` 2.8 MB.
+- **2026-09-26** — **Fixed:** LF-only `.cmd` files (cmd.exe `call` bug; now CRLF + `.gitattributes`),
+  an `EM_ASM` regex that lost its backslash, `bgfx::renderFrame()` asserting on single-threaded
+  (web debug) bgfx, `ccall` before runtime init aborting debug builds (`window.tomsReady`), the 33 MB
+  RelWithDebInfo web "release".
+- **2026-09-26** — **Verified** in headless Chrome, release and debug: title → new game → save →
+  reload restores the save; phone-size viewport runs. `tools/web_smoke_test.mjs` kept as the test.
+  Desktop build + smoke test still pass. Not yet: a real phone, Firefox/Safari, WSL web presets.
+- **2026-09-26** — **Next:** Phase 2 step 2, the old unit tests + golden-image smoke tests in CTest.

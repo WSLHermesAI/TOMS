@@ -3,6 +3,7 @@
 #include "embedded_shaders.h"
 #include <cstdio>
 
+#ifndef __EMSCRIPTEN__   // the web build compiles only the ESSL (WebGL2) profile
 #include "dxbc/vs_sprite.sc.bin.h"
 #include "dxbc/fs_sprite.sc.bin.h"
 #include "dxbc/vs_imgui.sc.bin.h"
@@ -15,6 +16,7 @@
 #include "glsl/fs_sprite.sc.bin.h"
 #include "glsl/vs_imgui.sc.bin.h"
 #include "glsl/fs_imgui.sc.bin.h"
+#endif
 #include "essl/vs_sprite.sc.bin.h"
 #include "essl/fs_sprite.sc.bin.h"
 #include "essl/vs_imgui.sc.bin.h"
@@ -32,6 +34,7 @@ struct ProgramBlobs { Blob vs, fs; };
 bool pick(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out) {
     const bool sprite = which == ShaderProgram::Sprite;
     switch (type) {
+#ifndef __EMSCRIPTEN__
     case bgfx::RendererType::Direct3D11:
     case bgfx::RendererType::Direct3D12:   // bgfx's D3D12 backend accepts DXBC (shader model 5)
         out = sprite ? ProgramBlobs{ TOMS_BLOB(vs_sprite_dxbc), TOMS_BLOB(fs_sprite_dxbc) }
@@ -45,7 +48,8 @@ bool pick(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out)
         out = sprite ? ProgramBlobs{ TOMS_BLOB(vs_sprite_glsl), TOMS_BLOB(fs_sprite_glsl) }
                      : ProgramBlobs{ TOMS_BLOB(vs_imgui_glsl),  TOMS_BLOB(fs_imgui_glsl) };
         return true;
-    case bgfx::RendererType::OpenGLES:     // also what the future WebGL2 build uses
+#endif
+    case bgfx::RendererType::OpenGLES:     // also the web build (bgfx's WebGL2 backend reports GLES)
         out = sprite ? ProgramBlobs{ TOMS_BLOB(vs_sprite_essl), TOMS_BLOB(fs_sprite_essl) }
                      : ProgramBlobs{ TOMS_BLOB(vs_imgui_essl),  TOMS_BLOB(fs_imgui_essl) };
         return true;

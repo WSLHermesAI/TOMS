@@ -2,7 +2,11 @@
 
 # ---- shaders: .sc -> shaderc -> headers embedded in the library ----
 set(TOMS_SHADER_OUT ${CMAKE_CURRENT_BINARY_DIR}/shaders)
-set(TOMS_SHADER_PROFILES s_5_0 spirv 430 300_es)   # D3D11/12, Vulkan, OpenGL, GLES/WebGL2
+if(EMSCRIPTEN)
+    set(TOMS_SHADER_PROFILES 300_es)                # the browser only runs WebGL2 (ESSL 3.00)
+else()
+    set(TOMS_SHADER_PROFILES s_5_0 spirv 430 300_es)   # D3D11/12, Vulkan, OpenGL, GLES/WebGL2
+endif()
 bgfx_compile_shaders(TYPE VERTEX
     SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_sprite.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_imgui.sc
     VARYING_DEF  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc

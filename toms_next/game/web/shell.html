@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Tower of the Sorcerer</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #05050a; }
+    /* SDL's fill-document mode sizes the canvas to the page; the game letterboxes inside it. */
+    #canvas { display: block; touch-action: none; outline: none; }
+    #toms-status { position: fixed; left: 0; right: 0; top: 45%; text-align: center; color: #f2e6c8;
+                   font: 600 18px/1.6 system-ui, -apple-system, "Microsoft JhengHei", sans-serif; pointer-events: none; }
+    #toms-error { display: none; position: fixed; left: 8%; right: 8%; top: 20%; padding: 20px; z-index: 100;
+                  background: #1b1020; color: #ffd9d9; border: 1px solid #a05; border-radius: 8px;
+                  font: 15px/1.6 system-ui, sans-serif; white-space: pre-wrap; }
+    .toms-btn { position: fixed; top: 8px; z-index: 50; height: 40px; font: 16px sans-serif; color: #fff;
+                background: #222c; border: 1px solid #555; border-radius: 6px; }
+    #toms-rotate { display: none; position: fixed; inset: 0; z-index: 99; background: #0b0e16; color: #f2e6c8;
+                   align-items: center; justify-content: center; text-align: center; padding: 24px;
+                   font: 600 20px/1.6 system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+  <div id="toms-status">Loading…</div>
+  <div id="toms-error"></div>
+  <div id="toms-rotate">請把裝置轉為橫向 · Rotate your device</div>
+  <button class="toms-btn" id="toms-fullscreen" style="right:8px;width:40px" title="Fullscreen">⛶</button>
+  <button class="toms-btn" id="toms-backpack" style="right:56px;width:54px" title="Backpack">背包</button>
+  <script>
+    function tomsShowError(title, text) {
+      var e = document.getElementById('toms-error');
+      e.textContent = title + '\n\n' + text + '\n\nOpen the browser console (F12) for details.';
+      e.style.display = 'block';
+      document.getElementById('toms-status').style.display = 'none';
+    }
+    var Module = {
+      canvas: document.getElementById('canvas'),
+      print: function (t) { console.log(t); },
+      printErr: function (t) { console.warn(t); },
+      setStatus: function (t) {
+        var s = document.getElementById('toms-status');
+        if (!t) { s.style.display = 'none'; return; }
+        // "Downloading data... (1234/5678)" -> a percentage
+        var m = t.match(/\((\d+(\.\d+)?)\/(\d+)\)/);
+        s.textContent = m ? 'Loading… ' + Math.round(100 * m[1] / m[3]) + '%' : t;
+      },
+      // Calling into C++ (Module.ccall) before this point aborts debug builds, so page code and
+      // tests check window.tomsReady first.
+      onRuntimeInitialized: function () { window.tomsReady = true; document.getElementById('toms-status').style.display = 'none'; },
+      onAbort: function (what) { tomsShowError('The game stopped', String(what || 'unknown error')); }
+    };
+    window.onerror = function (msg) { tomsShowError('Script error', String(msg)); };
+
+    // Portrait phones: ask for landscape (the game is 4:3).
+    function tomsRotateHint() {
+      var portrait = window.innerHeight > window.innerWidth && ('ontouchstart' in window);
+      document.getElementById('toms-rotate').style.display = portrait ? 'flex' : 'none';
+    }
+    window.addEventListener('resize', tomsRotateHint);
+    window.addEventListener('orientationchange', tomsRotateHint);
+    tomsRotateHint();
+
+    document.getElementById('toms-fullscreen').onclick = function () {
+      var d = document.documentElement;
+      if (!document.fullscreenElement) { (d.requestFullscreen || d.webkitRequestFullscreen || function(){}).call(d); }
+      else { (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document); }
+    };
+    document.getElementById('toms-backpack').onclick = function () {
+      if (!window.tomsReady) return;   // still loading
+      try { Module.ccall('jsInventory', null, [], []); } catch (e) { console.warn(e); }
+      document.getElementById('canvas').focus();
+    };
+  </script>
+  {{{ SCRIPT }}}
+</body>
+</html>

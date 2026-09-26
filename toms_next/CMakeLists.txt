@@ -23,6 +23,10 @@ get_filename_component(TOMS_LEGACY_ROOT "${TOMS_LEGACY_ROOT}" ABSOLUTE)
 
 option(TOMS_BUILD_EDITOR    "Build the Qt6 editor (needs Qt 6 built for MSVC 64-bit)" ON)
 option(TOMS_POPUP_WARNINGS  "Show a Windows popup when a prerequisite is missing" ON)
+option(WEB                  "Build for the browser (Emscripten, bgfx WebGL2); set by the web presets" OFF)
+if(WEB)
+    set(TOMS_BUILD_EDITOR OFF CACHE BOOL "" FORCE)   # the Qt editor is desktop-only
+endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(TomsPrerequisites)   # checks everything and records warnings (with download links)
@@ -34,6 +38,13 @@ function(toms_target_defaults target)
         # /utf-8: the game sources contain UTF-8 CJK string literals.
         target_compile_options(${target} PRIVATE /utf-8 /W3 /Zc:__cplusplus)
         target_compile_definitions(${target} PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _CRT_SECURE_NO_WARNINGS)
+    endif()
+    if(EMSCRIPTEN)
+        # The legacy code catches exceptions (nlohmann::json parse errors); Emscripten disables
+        # catching by default, which would turn a bad data file into an abort. The old web build
+        # enabled it too (-sNO_DISABLE_EXCEPTION_CATCHING).
+        target_compile_options(${target} PRIVATE -fexceptions)
+        target_link_options(${target} PRIVATE -fexceptions)
     endif()
 endfunction()
 

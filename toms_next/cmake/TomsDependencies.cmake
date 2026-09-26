@@ -12,8 +12,18 @@ set(BGFX_BUILD_EXAMPLE_COMMON  OFF CACHE BOOL "" FORCE)
 set(BGFX_BUILD_TESTS           OFF CACHE BOOL "" FORCE)
 set(BGFX_INSTALL               OFF CACHE BOOL "" FORCE)
 set(BGFX_CUSTOM_TARGETS        OFF CACHE BOOL "" FORCE)
-set(BGFX_BUILD_TOOLS           ON  CACHE BOOL "" FORCE)
-set(BGFX_BUILD_TOOLS_SHADER    ON  CACHE BOOL "" FORCE)   # shaderc: compiles shaders/*.sc
+if(WEB AND TOMS_HOST_SHADERC)
+    # Web build with a host shaderc (cmake/TomsPrerequisites.cmake found one): build no bgfx tools
+    # for wasm at all, and point bgfx::shaderc at the host executable. It must exist before bgfx.cmake
+    # is processed, because bgfx.cmake only defines bgfx_compile_shaders() if bgfx::shaderc exists.
+    add_executable(bgfx::shaderc IMPORTED GLOBAL)
+    set_target_properties(bgfx::shaderc PROPERTIES IMPORTED_LOCATION "${TOMS_HOST_SHADERC}")
+    set(_toms_bgfx_tools OFF)
+else()
+    set(_toms_bgfx_tools ON)   # desktop, or web without a host shaderc (shaderc.js under node)
+endif()
+set(BGFX_BUILD_TOOLS           ${_toms_bgfx_tools} CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS_SHADER    ${_toms_bgfx_tools} CACHE BOOL "" FORCE)   # shaderc: compiles shaders/*.sc
 set(BGFX_BUILD_TOOLS_BIN2C     OFF CACHE BOOL "" FORCE)
 set(BGFX_BUILD_TOOLS_GEOMETRY  OFF CACHE BOOL "" FORCE)   # geometryc: turn on for 3D models
 set(BGFX_BUILD_TOOLS_TEXTURE   OFF CACHE BOOL "" FORCE)   # texturec: turn on for KTX/DDS textures
@@ -51,6 +61,14 @@ FetchContent_Declare(glm
     GIT_SHALLOW    TRUE)
 
 FetchContent_MakeAvailable(bgfx SDL3 imgui glm)
+
+# bgfx.cmake always defines bimg_encode (texture encoders, used only by the texturec tool) and so
+# `cmake --build` compiles it. Its etcpak sources use x86-only intrinsics that do not exist in
+# wasm, so the web build failed there (2026-09-25, WSL). Nothing we ship encodes textures at
+# runtime: keep it out of the default build. A target that really needs it still pulls it in.
+if(TARGET bimg_encode)
+    set_target_properties(bimg_encode PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
 
 if(TARGET SDL3::SDL3-static)
     set(TOMS_SDL3_TARGET SDL3::SDL3-static)

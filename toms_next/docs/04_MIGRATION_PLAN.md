@@ -33,21 +33,22 @@ same as the Vulkan build; `toms_editor.exe` plays it in the *Play* tab.
 
 **Not done in phase 1 (known gaps):**
 
-- **Web build.** bgfx targets WebGL2 through Emscripten; the ESSL shaders are already compiled.
-  The remaining work is an Emscripten preset, SDL3's Emscripten backend, and porting the JS
-  hooks in `src/engine/emscripten_main.cpp` (IDBFS saves, the canvas font path). This is phase 2.
+- **Web build.** Done in phase 2 (2026-09-26): see [06_BUILD_WEB.md](06_BUILD_WEB.md).
 - **Tests.** The 30 `*_test.cpp` files still build only in the old project. Phase 2 registers
   them with CTest here.
-- **Mobile layout switches** that the web main applies (`setDesignSize`, `g_uiScale`) are not
-  wired yet.
+- **Mobile layout switches:** the web build applies the owner's rule (grow UI objects through
+  `Game::setUiScale` / `setPadScale`, keep the game resolution), not the retired `setDesignSize`.
+  Only screens that read `UiRoot` grow; migrating the rest is game-side work.
 
 ## Phase 2 — Own the platform layer and the tests
 
 1. Register the old unit tests (`src/**/*_test.cpp`) as CTest targets in `toms_next/tests/`, so
    Visual Studio's *Test Explorer* lists them. Add a smoke test that runs `toms_game --frames` and
    compares the screenshot with a stored golden PNG (tolerance for GPU differences).
-2. **Web preset** (`web-debug` / `web-release`, Emscripten from `$env{EMSDK}`): bgfx WebGL2 + SDL3.
-   Port the browser glue from `emscripten_main.cpp` into `game/src/main_web.cpp`.
+2. ✅ **Web build** (2026-09-26): `web-*-windows` / `web-*` presets, `tools\build_web.cmd` +
+   `serve_web.cmd`; the browser glue (IDBFS saves, slot refresh, mobile scale, page buttons) is
+   in `main_sdl.cpp` + `game/web/shell.html` rather than a separate `main_web.cpp`. Verified in
+   headless Chrome: title → new game → save → reload restores the save. See [06](06_BUILD_WEB.md).
 3. Move `src/game/core/main.cpp`'s remaining behaviour (none after phase 1) and delete the GLFW
    path from the old project, or freeze the old project as read-only.
 
@@ -88,7 +89,7 @@ cascaded shadow maps from bgfx's `16-shadowmaps` example, Effekseer through efkb
 |---|---|---|
 | `src/engine/renderer.cpp`, `renderer_webgl.cpp`, `renderer_webgpu.cpp`, `vk_util.h`, `batch_renderer.h`, `texture.*` | not compiled by toms_next | phase 3 (old build retired) |
 | `src/engine/imgui_layer.*`, `imgui_web.*` | replaced by `engine/src/imgui_bgfx.*` | phase 2 / 3 |
-| `src/game/core/main.cpp`, `src/engine/emscripten_main.cpp` | replaced by `game/src/main_sdl.cpp` (+ `main_web.cpp` in phase 2) | phase 2 |
+| `src/game/core/main.cpp`, `src/engine/emscripten_main.cpp` | replaced by `game/src/main_sdl.cpp` (desktop and web) + `game/web/shell.html` | phase 2 |
 | `assets/shaders/*.spv`, `.vert`, `.frag` | replaced by `engine/shaders/*.sc` | phase 3 |
 | `editor/` (Qt stage editor) | compiled into `toms_editor` as a tab | code moves in phase 4 |
 | Root `CMakeLists.txt` (Vulkan/WebGL) | still works, independent | phase 3 |

@@ -14,27 +14,20 @@
 
 ## ▶ Next Step
 
-**Next action: finish Phase 2 step 1 on the WSL side — write `game/src/main_web.cpp`.** The presets and
-prerequisites are done and the web configure succeeds (see the 2026-09-25 entry); what is missing is the
-browser entry point:
+**Next action: Phase 2, step 2: tests.** The web build is done (2026-09-26, [part 2](2_PROGRESS_REPORT.md)):
+`tools\build_web.cmd` + `tools\serve_web.cmd`, guide in [../06_BUILD_WEB.md](../06_BUILD_WEB.md).
 
-1. `game/src/main_web.cpp`: SDL3's browser main loop plus a port of the glue in
-   `src/engine/emscripten_main.cpp` (IDBFS saves, the Canvas-2D system-font path, the JS test hooks), and
-   a web branch in `game/CMakeLists.txt` (today it only has `add_executable(toms_game src/main_sdl.cpp)`).
-2. Then the acceptance check: stage 1 plays in Chrome/Edge from `http://localhost:8099/...`, and a save
-   survives a page reload.
+1. Register the old unit tests (`TOMS/src/**/*_test.cpp`, ~30 files) as CTest targets in
+   `toms_next/tests/`, so Visual Studio's Test Explorer lists them.
+2. Add smoke tests to CTest: `toms_game --frames --screenshot` compared with a stored golden PNG per
+   backend (tolerance; see W7), and `tools/web_smoke_test.mjs` against the web build.
+3. **Check:** CTest green from VS and from the command line.
 
-On a Linux/WSL machine the build is:
+Before that, two quick owner checks would be worth more than more code: play the web build on a real
+phone (W9), and press F5 in the Visual Studio IDE once (W1).
 
-    export PATH="$HOME/opt/cmake/bin:$HOME/.local/bin:$PATH"; source ~/opt/emsdk/emsdk_env.sh
-    cmake --preset web-release && cmake --build --preset web-release
-
-Prerequisites: `tools/check_env.sh` (the WSL/Linux twin of `check_env.ps1`) — 6 ok, 0 missing as of
-2026-09-25. Windows/Visual Studio remains the path for the desktop and editor presets; the web presets
-are conditioned to Linux and use `$env{EMSDK}` on either platform.
-
-Until step 1 lands, the browser version is still built from the old project
-(`emcmake cmake -S . -B build-web -G Ninja -DWEB=ON` in the TOMS root; see `TOMS/docs/building/BUILD_WEB.md`).
+How to build the web version now: `tools\build_web.cmd` (Windows; cmd/PowerShell/Explorer, not Git
+Bash). The old project's web build (`TOMS/docs/building/BUILD_WEB.md`) still works and is independent.
 
 ---
 
@@ -50,9 +43,9 @@ Until step 1 lands, the browser version is still built from the old project
 | 1 | Prerequisite checks with popups + links (`check_env`, CMake configure, runtime) | ✅ console output verified; popups not clicked through |
 | 1 | Visual Studio presets, `launch.vs.json`, `build.cmd` | ◐ presets built from the command line; not yet pressed F5 in the IDE |
 | 1 | Docs 01–05 | ✅ |
-| 2 | Web build (bgfx WebGL2) | ⬜ **next** |
-| 2 | Old unit tests registered with CTest; golden-image smoke test | ⬜ |
-| 2 | Mobile layout switches (`setDesignSize`, `g_uiScale`) | ⬜ |
+| 2 | Web build (bgfx WebGL2): presets, `build_web.cmd`, `serve_web.cmd`, IDBFS saves, page shell, doc 06 | ✅ 2026-09-26, verified in headless Chrome (release + debug) |
+| 2 | Old unit tests registered with CTest; golden-image smoke test | ⬜ **next** |
+| 2 | Mobile scaling on web (`setUiScale` / `setPadScale`, the owner's rule) | ◐ wired for small viewports; only `UiRoot` screens grow (game-side work) |
 | 3 | Move `src/game` into toms_next, drop `game/compat/`, split `Game` | ⬜ |
 | 4 | Editor: data-driven stage editor on the bgfx viewport, docking, inspector, undo, event editor | ⬜ |
 | 5 | 3D on bgfx (glTF, ozz skinning, instancing, shadows, Effekseer) | ⬜ researched only |
@@ -70,7 +63,10 @@ Until step 1 lands, the browser version is still built from the old project
 | W5 | **`11_BGFX_QT_ARCHITECTURE.md`** in EngineBlueprint + UI-tool rows in docs 02/04/07 | the UI-editor research agent stopped before finishing | redo the research: UI editors whose output bgfx can use (RmlUi, NoesisGUI, Rive, Lottie/ThorVG, …); add the glTF/skinning findings |
 | W6 | **"???????" label on stage 1** | shows with both fonts, so it comes from data rather than a missing glyph, but not confirmed | find the source string in `data/` |
 | W7 | **Vulkan ~1 % pixel difference** (glyph/panel edges) | one-pixel rasterisation offset; accepted for now | golden images per backend in phase 2 |
-| W8 | **Nothing is committed** | toms_next/ and the EngineBlueprint edits are uncommitted working-tree changes | owner decides branch/commit (see Q1) |
+| W8 | **Commits** | toms_next was committed on `main` by 2026-09-26 (`af203e6` … `8744a3c`); today's web work is uncommitted | owner decides when to commit |
+| W9 | **Web build on a real phone/tablet**, Firefox, Safari | only headless Chrome was run (incl. an 844×390 viewport) | open `serve_web.cmd`'s URL from a phone on the same network (serve with `--bind 0.0.0.0`) |
+| W10 | **Linux/WSL web presets** since the host-shaderc + `bimg_encode` change | not re-run; they now fall back to shaderc-as-wasm (slow, `--parallel 2`) | re-run `cmake --preset web-release` on WSL, or pass `-DTOMS_HOST_SHADERC` |
+| W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
 
 ---
 
@@ -78,7 +74,8 @@ Until step 1 lands, the browser version is still built from the old project
 
 | Part | Dates | Contents |
 |---|---|---|
-| [1_PROGRESS_REPORT.md](1_PROGRESS_REPORT.md) | 2026-09-25 | Qt + bgfx decision; EngineBlueprint update; bgfx glTF / skinning / morph / instancing research; toms_next phase 1 built and verified |
+| [1_PROGRESS_REPORT.md](1_PROGRESS_REPORT.md) | 2026-09-25 | Qt + bgfx decision; EngineBlueprint update; bgfx glTF / skinning / morph / instancing research; toms_next phase 1 built and verified; WSL web presets and the etcpak stop |
+| [2_PROGRESS_REPORT.md](2_PROGRESS_REPORT.md) | 2026-09-26 | web build done on Windows (host shaderc, `bimg_encode` excluded, one entry point for desktop + web, IDBFS saves); five bugs fixed; doc 06; `web_smoke_test.mjs` |
 
 Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md).
 
@@ -88,8 +85,8 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md).
 
 | # | Question | Default if no answer |
 |---|---|---|
-| Q1 | Commit `toms_next/` + the EngineBlueprint edits on `main`, or on a branch (e.g. `bgfx-qt`)? | nothing committed until asked |
+| Q1 | Commit today's web work on `main` like the earlier toms_next commits, or on a branch? | nothing committed until asked |
 | Q2 | Keep the folder name `toms_next`? | keep |
 | Q3 | Is browser **WebGPU** definitely not needed? (bgfx only does WebGL2 in the browser) | WebGL2 only, as decided 2026-09-25 |
 | Q4 | Game UI library for phase 3: RmlUi, or own widgets? Depends on W5's research | decide after W5 |
-| Q5 | Should the web build in toms_next replace the old `build_web.sh` output (`web/`, `web-gl/`) when it works? | keep the old one until the new one passes its check |
+| Q5 | The toms_next web build now passes its check (2026-09-26). Replace the old `build_web.sh` output (`web/`, `web-gl/`) with it, and where is it published? | keep both until the owner has played the new one (W9) |

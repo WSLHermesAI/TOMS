@@ -1,7 +1,7 @@
 # 05 — Troubleshooting
 
 Start with `tools\check_env.cmd`: most problems are a missing prerequisite, and the checker names
-it and links the download.
+it and links the download. Web-build problems are in [06 §7](06_BUILD_WEB.md#7-troubleshooting).
 
 ## Configure (CMake) problems
 

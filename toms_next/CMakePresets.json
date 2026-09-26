@@ -141,7 +141,7 @@
     {
       "name": "web-release-windows",
       "displayName": "Web/WASM Release (Windows)",
-      "description": "Emscripten/wasm32 from $env{EMSDK} (D:\\Work\\emsdk). Run emsdk_env first so EMSDK is set. Same flags as the WSL presets; the host-specific difference is the job count in the build preset.",
+      "description": "What gets published: optimized, no DWARF (RelWithDebInfo made a 33 MB .wasm; Release is ~3 MB). Emscripten from $env{EMSDK}; use tools\\build_web.cmd, which sets it up. For C++ debugging in the browser use web-debug-windows.",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
         "CMAKE_CROSSCOMPILING_EMULATOR": "node",
@@ -150,7 +150,7 @@
         "CMAKE_C_FLAGS": "-msimd128",
         "CMAKE_CXX_FLAGS": "-msimd128",
         "CMAKE_EXE_LINKER_FLAGS": "-msimd128",
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        "CMAKE_BUILD_TYPE": "Release"
       },
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-web-release-windows",

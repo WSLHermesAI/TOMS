@@ -21,6 +21,9 @@ Everything new lives in this folder. The original project around it (`TOMS/src`,
 
 Without Visual Studio open: `tools\build.cmd windows-release`.
 
+**Web version:** `tools\build_web.cmd`, then `tools\serve_web.cmd` (needs the Emscripten SDK).
+Details: [docs/06_BUILD_WEB.md](docs/06_BUILD_WEB.md).
+
 ## Documents
 
 | Doc | Contents |
@@ -30,6 +33,7 @@ Without Visual Studio open: `tools\build.cmd windows-release`.
 | [03_VISUAL_STUDIO.md](docs/03_VISUAL_STUDIO.md) | open, configure, F5 targets, command-line options, smoke tests, debugging |
 | [04_MIGRATION_PLAN.md](docs/04_MIGRATION_PLAN.md) | phases from the Vulkan project to the full Qt + bgfx engine |
 | [05_TROUBLESHOOTING.md](docs/05_TROUBLESHOOTING.md) | configure, build and runtime problems |
+| [06_BUILD_WEB.md](docs/06_BUILD_WEB.md) | the browser version: emsdk, `build_web.cmd`, `serve_web.cmd`, how it works, debugging |
 | [progress_report/](docs/progress_report/PROGRESS_REPORT.md) | **status board**: next step, phase status, what is still open, dated log |
 
 The long-term engine design is in `../docs/EngineBlueprint/`.

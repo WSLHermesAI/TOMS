@@ -51,6 +51,7 @@ Visual Studio 2026 (v18) also works: its bundled CMake 4.x and Ninja are used au
 |---|---|---|---|
 | **Qt 6.5+ — kit "MSVC 2022 64-bit"** (6.8 LTS recommended) | `toms_editor.exe` only | Qt Online Installer: https://www.qt.io/download-qt-installer-oss | Needs a free Qt account. See below. |
 | **WenQuanYi Zen Hei** font (`wqy-zenhei.ttc`) | the shipped CJK glyph look | https://sourceforge.net/projects/wqy/files/wqy-zenhei/ | It is gitignored (16 MB). Without it the game uses Windows' Microsoft JhengHei (`msjh.ttc`) and says so in the console. |
+| **Emscripten SDK (emsdk)** | the web build only ([06](06_BUILD_WEB.md)) | https://emscripten.org/docs/getting_started/downloads.html | `git clone` it, then `emsdk install latest` + `emsdk activate latest`. Auto-detected next to the TOMS checkout (`D:\Work\emsdk`), in `%USERPROFILE%\emsdk`, `C:\emsdk`, or via `EMSDK`. |
 | **Vulkan runtime** | `--renderer=vulkan` | comes with current NVIDIA/AMD/Intel drivers | Direct3D 11/12 work without it. |
 | **RenderDoc** | GPU frame capture of bgfx | https://renderdoc.org/ | |
 

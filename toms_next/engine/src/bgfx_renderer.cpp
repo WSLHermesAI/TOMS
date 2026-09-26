@@ -90,7 +90,13 @@ uint16_t BgfxRenderer::createAtlas(const std::vector<uint8_t>& px, uint32_t w, u
         std::fprintf(stderr, "[toms] atlas %ux%u exceeds the GPU limit %u -- not uploaded\n", w, h, maxSize);
         return kInvalid;
     }
+#ifdef __EMSCRIPTEN__
+    // WebGL has no sRGB backbuffer, so sampling sRGB textures would darken everything. Same as the
+    // old WebGL renderer: plain RGBA8, blending in gamma space.
+    const uint64_t flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
+#else
     const uint64_t flags = BGFX_TEXTURE_SRGB | BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
+#endif
     return bgfx::createTexture2D((uint16_t)w, (uint16_t)h, false, 1, bgfx::TextureFormat::RGBA8, flags,
                                  bgfx::copy(px.data(), (uint32_t)((size_t)w * h * 4))).idx;
 }

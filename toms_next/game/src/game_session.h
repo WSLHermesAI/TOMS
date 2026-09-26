@@ -39,6 +39,10 @@ struct SessionOptions {
     std::string assetDir;              // empty = auto (see defaultAssetDir)
     std::string startStage = "stage01";
     bool        enableDebugUi = true;  // ImGui windows (F1 / F2 / Tab stage select / toasts)
+    // Mobile: grow the UI objects, keep the 1024x768 game resolution (Game::setUiScale / setPadScale,
+    // the owner's rule). 1.0 = unchanged. The web host sets these on small screens.
+    float       uiScale  = 1.0f;
+    float       padScale = 1.0f;
 };
 
 class GameSession {
@@ -81,6 +85,7 @@ private:
     std::array<bool, (size_t)Key::Count> keyWas_{};
     bool mouseWasDown_ = false, mouseHasDesign_ = false;
     float mouseDesignX_ = 0, mouseDesignY_ = 0;
+    int  mouseHeldMs_ = 0, mouseRepeatMs_ = 0;   // hold-to-repeat taps (the on-screen pad)
 };
 
 }  // namespace toms::next

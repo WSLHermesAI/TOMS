@@ -95,7 +95,12 @@ bgfx::RendererType::Enum parseRendererName(const std::string& in) {
 uint32_t bgfxHostResetFlags() { return g_vsync ? BGFX_RESET_VSYNC : BGFX_RESET_NONE; }
 
 // sRGB backbuffer, like the Vulkan swapchain (VK_FORMAT_B8G8R8A8_SRGB) the old renderer used.
+// WebGL has no sRGB backbuffer; the web build renders in gamma space like the old WebGL renderer.
+#ifdef __EMSCRIPTEN__
+constexpr uint32_t kSwapChainFlags = BGFX_SWAP_CHAIN_NONE;
+#else
 constexpr uint32_t kSwapChainFlags = BGFX_SWAP_CHAIN_SRGB_BACKBUFFER;
+#endif
 
 bool bgfxHostInit(const BgfxHostConfig& cfg, std::string& error) {
     if (g_ready) return true;
@@ -105,8 +110,12 @@ bool bgfxHostInit(const BgfxHostConfig& cfg, std::string& error) {
     }
     g_vsync = cfg.vsync;
 
-    // Calling renderFrame() before init() makes bgfx render on this thread (no render thread).
+    // Calling renderFrame() before init() makes a multi-threaded bgfx render on this thread (no
+    // render thread). A single-threaded bgfx (Emscripten) already does, and its debug build asserts
+    // "only makes sense if used with multi-threaded renderer" if this is called.
+#if BGFX_CONFIG_MULTITHREADED
     bgfx::renderFrame();
+#endif
 
     bgfx::Init init;
     const bgfx::RendererType::Enum type = parseRendererName(cfg.renderer);
