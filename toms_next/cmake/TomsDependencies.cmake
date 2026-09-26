@@ -62,6 +62,20 @@ FetchContent_Declare(glm
 
 FetchContent_MakeAvailable(bgfx SDL3 imgui glm)
 
+# ---- shaderc is a BUILD TOOL when it is not imported (the "no host shaderc" fallback) ----------------
+# In that case bgfx.cmake builds shaderc for the TARGET (wasm) and CMake runs it through node to compile
+# shaders. Two flags are required for that to work, and they must NOT be global:
+#   -sNODERAWFS=1        without it the tool runs in Emscripten's virtual FS and cannot open the real
+#                        source files it is asked to compile ("Unable to open file .../vs_sprite.sc").
+#                        It conflicts with the game's --preload-file, so it belongs on this target only.
+#   -sALLOW_MEMORY_GROWTH=1  glslang/tint need more than a fixed heap; without growth a real shader
+#                        crashes with "RuntimeError: memory access out of bounds".
+# A host (desktop) shaderc -- what the Windows flow builds and imports -- needs neither.
+if(EMSCRIPTEN AND TARGET shaderc)
+    target_link_options(shaderc PRIVATE -sNODERAWFS=1 -sALLOW_MEMORY_GROWTH=1)
+    message(STATUS "[toms] shaderc: wasm build tool gets -sNODERAWFS=1 -sALLOW_MEMORY_GROWTH=1")
+endif()
+
 # bgfx.cmake always defines bimg_encode (texture encoders, used only by the texturec tool) and so
 # `cmake --build` compiles it. Its etcpak sources use x86-only intrinsics that do not exist in
 # wasm, so the web build failed there (2026-09-25, WSL). Nothing we ship encodes textures at
