@@ -83,7 +83,7 @@
         "WEB": "ON",
         "CMAKE_C_FLAGS": "-msimd128",
         "CMAKE_CXX_FLAGS": "-msimd128",
-        "CMAKE_EXE_LINKER_FLAGS": "-msimd128",
+        "CMAKE_EXE_LINKER_FLAGS": "-msimd128 -sNODERAWFS=1 -sFORCE_FILESYSTEM=1 -sEXIT_RUNTIME=1",
         "CMAKE_BUILD_TYPE": "Debug"
       },
       "generator": "Ninja",
@@ -97,7 +97,7 @@
     {
       "name": "web-release",
       "displayName": "Web/WASM Release (WSL/Linux)",
-      "description": "Emscripten/wasm32 from $env{EMSDK}. Build with --parallel 2 on a 16 GB box (see the progress entry) -- -j16 SIGKILLs on glslang/tint.",
+      "description": "Emscripten/wasm32 from $env{EMSDK}. Release, not RelWithDebInfo: DWARF made the wasm 33 MB vs 2.8 MB (their 2026-09-26 finding).",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
         "CMAKE_CROSSCOMPILING_EMULATOR": "node",
@@ -105,8 +105,8 @@
         "WEB": "ON",
         "CMAKE_C_FLAGS": "-msimd128",
         "CMAKE_CXX_FLAGS": "-msimd128",
-        "CMAKE_EXE_LINKER_FLAGS": "-msimd128",
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        "CMAKE_EXE_LINKER_FLAGS": "-msimd128 -sNODERAWFS=1 -sFORCE_FILESYSTEM=1 -sEXIT_RUNTIME=1",
+        "CMAKE_BUILD_TYPE": "Release"
       },
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-web-release",

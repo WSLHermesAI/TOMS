@@ -245,7 +245,7 @@ if(WEB)
     else()
         set(TOMS_HOST_SHADERC "" CACHE FILEPATH "" FORCE)
         toms_prereq_problem(WARNING
-            "No host shaderc found, so this web build compiles shaderc itself to wasm and runs it with node. That is much slower and needs a lot of RAM (build with few jobs). Faster: build any desktop preset once (tools\build.cmd windows-shipping) or pass -DTOMS_HOST_SHADERC=<path to shaderc>."
+            "No host shaderc found, so this web build compiles shaderc itself to wasm and runs it with node. That is much slower and needs a lot of RAM (build with few jobs). Faster: build any desktop preset once (tools\\build.cmd windows-shipping) or pass -DTOMS_HOST_SHADERC=<path to shaderc>."
             "toms_next/docs/06_BUILD_WEB.md")
     endif()
 endif()
