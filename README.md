@@ -11,7 +11,16 @@ All game content is in `assets/`, all source code in `src/`. The original game c
 (`src/core`) is compiled **without edits**; the old Vulkan build itself was removed on 2026-09-27
 and is in git history before commit `979bcf3`.
 
-## Quick start (Windows)
+## Make a release (two double-clicks)
+
+| File | Builds | Result |
+|---|---|---|
+| **`build_windows.bat`** | the shipping Windows game (Release, no editor, no Qt, no console window) | `dist\TOMS-windows\` (+ `.zip`): `toms_game.exe`, `assets\`, the MSVC runtime DLLs. Copy the folder anywhere and double-click `toms_game.exe`. |
+| **`build_web.bat`** | the web game (Release, WebGL2) | `dist\TOMS-web\` (+ `.zip`): `index.html`, `toms_game.js/.wasm/.data`, `.htaccess`, `web.config`. Copy the files to any web server and open its URL. |
+
+Both check the prerequisites first (popups with download links) and print where the result is.
+
+## Quick start for development (Windows)
 
 1. **Check prerequisites:** double-click `tools\check_env.cmd`. Anything missing is listed in a
    popup with its download link. Details: [docs/02_INSTALL_WINDOWS.md](docs/02_INSTALL_WINDOWS.md).

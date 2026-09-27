@@ -46,3 +46,7 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   source files. Desktop, editor and web rebuilt and smoke-tested.
 - **2026-09-27** — **Renamed `src/legacy` → `src/core`** (target `toms_core`, `TOMS_CORE_SRC`): it is the game's
   own code and stays. Desktop, editor and web rebuilt and smoke-tested.
+- **2026-09-27** — **Release scripts:** `build_windows.bat` → `dist/TOMS-windows/` (exe + `assets/` + MSVC runtime DLLs;
+  no console window; finds `assets/media` next to itself) and `build_web.bat` → `dist/TOMS-web/` (`index.html` + js/wasm/data +
+  `.htaccess`/`web.config`), both via `tools/package.ps1`. Verified from copies outside the repo: the exe runs
+  and uses its own assets; the web folder served by a static server passes the smoke test.

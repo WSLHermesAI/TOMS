@@ -17,3 +17,5 @@ assets/media/wqy-zenhei.ttc
 # runtime logs / ImGui layout
 *.log
 imgui.ini
+# packaged builds (build_windows.bat / build_web.bat)
+/dist/

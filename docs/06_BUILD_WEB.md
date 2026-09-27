@@ -4,6 +4,15 @@ The web version is the same `toms_game` as the desktop game: SDL3 + bgfx + the u
 code, compiled to WebAssembly with Emscripten. In the browser, bgfx draws with **WebGL2**. No
 plugin or install is needed; it runs in current Chrome, Edge, Firefox and Safari.
 
+## Release package
+
+Double-click **`build_web.bat`** in the repository root. It runs `tools\build_web.cmd release` and
+then `tools\package.ps1 -Target web`, which writes **`dist\TOMS-web\`** (and `dist\TOMS-web.zip`):
+`index.html` (the page), `toms_game.js`, `toms_game.wasm`, `toms_game.data`, plus `.htaccess`
+(Apache) and `web.config` (IIS) that serve `.wasm` as `application/wasm`. Upload those files to one
+folder of any static web server and open the folder's URL. Verified 2026-09-27 by serving a copy of
+the folder with a plain static server and running `tools/web_smoke_test.mjs` against `/`.
+
 ## Quick start (Windows)
 
 ```bat

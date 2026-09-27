@@ -21,7 +21,9 @@ set "PATH=%VSCMAKE%\CMake\bin;%VSCMAKE%\Ninja;%PATH%"
 cd /d "%~dp0.."
 echo [toms] Visual Studio: %VSDIR%
 echo [toms] preset: %PRESET%
-cmake --preset "%PRESET%"
+set "POPUPS="
+if "%TOMS_NO_POPUPS%"=="1" set "POPUPS=-DTOMS_POPUP_WARNINGS=OFF"
+cmake --preset "%PRESET%" %POPUPS%
 if errorlevel 1 exit /b 1
 cmake --build --preset "%PRESET%"
 if errorlevel 1 exit /b 1

@@ -61,7 +61,8 @@
       "inherits": "windows-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "TOMS_BUILD_EDITOR": "OFF"
+        "TOMS_BUILD_EDITOR": "OFF",
+        "TOMS_WINDOWED_EXE": "ON"
       }
     },
     {

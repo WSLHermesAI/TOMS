@@ -56,6 +56,15 @@ set_target_properties(toms_game PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT toms_game)
 
+# Shipping: a normal Windows app (no console window when double-clicked). main() stays the entry
+# point (SDL_MAIN_HANDLED), so the linker is told to start there. Errors still show as popups;
+# the log goes to toms.log next to the exe.
+option(TOMS_WINDOWED_EXE "Build toms_game.exe without a console window (the shipping preset sets this)" OFF)
+if(MSVC AND TOMS_WINDOWED_EXE)
+    set_target_properties(toms_game PROPERTIES WIN32_EXECUTABLE ON)
+    target_link_options(toms_game PRIVATE /ENTRY:mainCRTStartup)
+endif()
+
 if(EMSCRIPTEN)
     set(_shell ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html)
     # Output: bin/toms_game.html + .js + .wasm + .data (the preset's .js suffix is overridden here).

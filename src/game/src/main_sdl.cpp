@@ -30,6 +30,8 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -195,6 +197,17 @@ bool appInit(App& app) {
 
     SessionOptions opts;
     opts.assetDir = args.assets.empty() ? GameSession::defaultAssetDir() : args.assets;
+#ifndef __EMSCRIPTEN__
+    // A packaged game (build_windows.bat) carries its content next to the exe: <exe dir>/assets/media
+    // (+ assets/data). That wins over the path baked in at build time, unless --assets / ASSET_DIR
+    // say otherwise.
+    if (args.assets.empty() && !std::getenv("ASSET_DIR")) {
+        if (const char* base = SDL_GetBasePath()) {
+            const std::string packaged = std::string(base) + "assets/media";
+            if (std::filesystem::exists(packaged + "/sprites")) opts.assetDir = packaged;
+        }
+    }
+#endif
     opts.startStage = args.stage;
 #ifdef __EMSCRIPTEN__
     opts.enableDebugUi = true;
