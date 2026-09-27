@@ -7,6 +7,7 @@
 // `using namespace toms::game_detail;` and writes C4(...), cellSprite(...), trParam(...).
 #pragma once
 
+#include "../engine/vfs.h"
 #include <algorithm>
 #include <cstdio>
 #include <cstdint>
@@ -42,14 +43,14 @@ inline std::string trParam(std::string s, const std::string& key, const std::str
 // files (tellg reports the right size but read/>> return empty), so this uses C stdio, which
 // reads preloaded data correctly, then json::parse.
 inline nlohmann::json readJsonFile(const std::string& path) {
-    FILE* fp = fopen(path.c_str(), "rb");
-    if (!fp) { fprintf(stderr, "[readJsonFile] cannot open %s\n", path.c_str()); return {}; }
-    fseek(fp, 0, SEEK_END); long sz = ftell(fp); fseek(fp, 0, SEEK_SET);
-    if (sz <= 0) { fclose(fp); fprintf(stderr, "[readJsonFile] empty %s\n", path.c_str()); return {}; }
-    std::string buf((size_t)sz, '\0');
-    size_t rd = fread(&buf[0], 1, (size_t)sz, fp);
-    fclose(fp);
-    if (rd == 0) { fprintf(stderr, "[readJsonFile] read 0 bytes %s\n", path.c_str()); return {}; }
+    // through vfs.h so the same call works on desktop, web (preloaded FS) and Android (APK entries).
+    // On desktop/web this is still C stdio -- deliberately, not ifstream (libc++ ifstream reads nothing
+    // from Emscripten preloaded files), so behaviour here is unchanged.
+    std::string buf;
+    if (!toms::vfsReadAll(path, buf)) {
+        fprintf(stderr, "[readJsonFile] cannot open %s\n", path.c_str());
+        return {};
+    }
     try { return nlohmann::json::parse(buf); }
     catch (const std::exception& e) {
         fprintf(stderr, "[readJsonFile] parse error %s: %s\n", path.c_str(), e.what());
