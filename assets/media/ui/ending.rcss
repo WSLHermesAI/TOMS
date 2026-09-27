@@ -1,0 +1,12 @@
+/* ending.rcss -- the ending screen (ending.rml). */
+body { z-index: 70; background-color: #3b3b4c; text-align: center; }
+
+#name { position: absolute; left: 0; right: 0; top: 246px; font-size: 37px; color: #f9e9b1; }
+#text { position: absolute; left: 80px; right: 80px; top: 312px; font-size: 21px; line-height: 32px; color: #ffffff; }
+#buttons { position: absolute; left: 0; right: 0; top: 658px; }
+#buttons .btn { display: inline-block; width: 220px; height: 48px; line-height: 48px; margin: 0 15px; font-size: 21px; color: #ffffff; }
+.rebirth  { background-color: #c2947b; }
+.rebirth:hover  { background-color: #d2a48b; }
+.to-title { background-color: #7b859c; }
+.to-title:hover { background-color: #8b95ac; }
+#hint { position: absolute; left: 0; right: 0; top: 704px; font-size: 17px; color: #cdd2e0; }

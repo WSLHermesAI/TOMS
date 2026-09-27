@@ -1,0 +1,60 @@
+/* battle.rcss -- the battle screen (battle.rml). Laid out 1.4x larger than the map UI so it
+   reads well on phones (the old screen's "battle scale"). */
+body { z-index: 30; }
+
+#title  { position: absolute; left: 262px; top: 14px; font-size: 38px; color: #ffcaa8; }
+#player { position: absolute; left: 262px; top: 84px; width: 134px; height: 134px; }
+#enemy  { position: absolute; left: 652px; top: 84px; width: 134px; height: 134px; }
+
+.hp      { position: absolute; top: 238px; width: 280px; height: 22px; background-color: #7b7b88; }
+#player-hp { left: 262px; }
+#enemy-hp  { left: 652px; }
+.fill-bar { height: 100%; }
+.fill-bar.good  { background-color: #94f3a8; }
+.fill-bar.bad   { background-color: #f39494; }
+.fill-bar.clock { background-color: #edb17b; }
+.hp-text { position: absolute; top: 262px; font-size: 22px; color: #ffffff; white-space: nowrap; }
+#player-hp-text { left: 262px; }
+#enemy-hp-text  { left: 652px; }
+
+#log { position: absolute; left: 262px; right: 24px; top: 294px; font-size: 22px; color: #ffffff; }
+#continue { position: absolute; left: 262px; top: 340px; font-size: 24px; color: #ffffca; }
+
+#clock-label { position: absolute; left: 262px; top: 324px; font-size: 19px; color: #f3e0ba; }
+#clock { position: absolute; left: 262px; top: 348px; width: 700px; height: 14px; background-color: #7b7b88; }
+
+/* Attack / defence columns: prompt, the five-zone timing bar with its marker, the action button. */
+.column { position: absolute; top: 372px; width: 322px; }
+#attack  { left: 262px; }
+#defense { left: 640px; }
+.prompt  { font-size: 20px; color: #f3f3ff; height: 30px; }
+.power   { position: relative; height: 28px; }
+.zones   { display: flex; height: 100%; }
+.zone        { height: 100%; }
+.zone.red    { background-color: #e08888; }
+.zone.blue   { background-color: #94b1ed; }
+.zone.green  { background-color: #94e6a8; }
+.bar-dim { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: #41414c8c; }
+.marker  { position: absolute; top: -8px; width: 5px; height: 44px; margin-left: -2px; background-color: #ffffff; }
+.action {
+    margin-top: 18px; height: 62px; line-height: 62px; font-size: 21px; color: #ffffff;
+    background-color: #8598b3; text-align: left; padding-left: 18px;
+}
+.action:hover   { background-color: #97aac5; }
+.action:active  { background-color: #a9bcd6; }
+.action.cooling { background-color: #6f7580; }
+.note        { margin-top: 8px; font-size: 19px; color: #cacfd9; }
+.note.shield { color: #c2e0ff; }
+.note.crit   { color: #ffed94; }
+
+#super { position: absolute; left: 262px; top: 530px; height: 24px; }
+#super-label { font-size: 19px; color: #f3f3ff; margin-right: 18px; }
+.dot-slot { display: inline-block; }
+.dot { width: 17px; height: 17px; margin-right: 8px; background-color: #7b7b88; }
+.dot.on { background-color: #ffca88; }
+
+.wide { position: absolute; left: 262px; width: 700px; height: 50px; line-height: 50px; font-size: 22px; color: #ffffff; }
+#super-btn  { top: 562px; background-color: #d9887b; }
+#super-btn:hover  { background-color: #e89a8d; }
+#active-btn { top: 624px; background-color: #88c2d2; }
+#active-btn:hover { background-color: #9ad2e2; }

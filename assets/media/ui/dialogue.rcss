@@ -1,0 +1,20 @@
+/* dialogue.rcss -- the dialogue box (dialogue.rml). Anchored to the bottom and grows upward with
+   the number of choices; on phones it scales up about its bottom edge (Game::setUiScale). */
+body { z-index: 30; }
+
+#box {
+    position: absolute; left: 40px; right: 40px; bottom: 30px; min-height: 238px;
+    padding: 26px 40px 24px 44px;
+    background-color: #5a617bf2; border-radius: 6px;
+    transform-origin: 50% 100%;
+    cursor: pointer;
+}
+#text { font-size: 32px; line-height: 44px; color: #ffffff; margin-bottom: 14px; }
+
+.choice {
+    font-size: 28px; line-height: 40px; color: #fff3ba;
+    padding-left: 8px; border-radius: 4px;
+}
+.choice .arrow { visibility: hidden; margin-right: 10px; }
+.choice:hover, .choice.selected { color: #ffffca; background-color: #ffffff18; }
+.choice.selected .arrow { visibility: visible; }

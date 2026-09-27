@@ -198,30 +198,29 @@ int main() {
         a = t.cancel();
         CHECK(a == TitleAction::None, "cancel on the Menu itself is left to the caller");
 
-        // Click hit-testing agrees with the layout the draw pass uses.
-        TitleLayout L = computeTitleLayout(1024, 768, 3, 2);
-        CHECK(L.menuRowCount == 3, "the layout has three menu rows");
-        CHECK(L.hitMenuRow(512, L.menuRow[1].y + 5) == 1, "a tap in the middle row hits row 1");
-        CHECK(L.hitMenuRow(512, 5) == -1, "a tap in the title area hits no menu row");
-        a = t.click(512, L.menuRow[1].y + 5, L);
+        // Clicks by row (the UI lists rows in keyboard-cursor order; -1 = Back).
+        CHECK(t.clickRow(7) == TitleAction::None, "a row past the menu does nothing");
+        t.hoverRow(2);
+        CHECK(t.menuSelection() == 2, "hovering moves the highlight only");
+        a = t.clickRow(1);
         CHECK(a == TitleAction::OpenContinue, "tapping Continue opens the Continue page");
         CHECK(t.page() == TitlePage::Continue, "the tap actually changed the page");
-        a = t.click(L.backButton.x + 5, L.backButton.y + 5, L);
+        a = t.clickRow(-1);
         CHECK(a == TitleAction::Back, "tapping Back returns to the Menu");
 
         // Settings tap opens the "switch to XXX?" dialog rather than applying instantly.
         t.setPage(TitlePage::Settings);
         t.setLanguageCount(2);
-        a = t.click(L.langRow[1].x + 5, L.langRow[1].y + 5, L);
+        a = t.clickRow(1);
         CHECK(a == TitleAction::AskLanguageChange && t.languageConfirmOpen(),
               "tapping a language row opens the confirm dialog instead of applying it");
         CHECK(t.languageIndex() == 0, "the active language has not changed yet");
         CHECK(t.languageConfirmIndex() == 1, "the dialog names the tapped row");
         t.cancel();   // leave it closed for the next block
 
-        // Slot count is clamped to what the layout can show (8 rows).
+        // Slot count is clamped to what the Continue page lists (8 rows).
         t.setSlotCount(99);
-        CHECK(t.slotCount() == TitleLayout::kMaxSlotRows, "slotCount clamps to the layout max");
+        CHECK(t.slotCount() == TitleScreen::kMaxSlots, "slotCount clamps to the page max");
     }
 
     // ------------------------------------------------- empty-slot "start a new game?" prompt
@@ -276,19 +275,18 @@ int main() {
         CHECK(t.newGameConfirmYesSelected() == armed, "up/down toggles it back");
 
         // Taps: only the two answers are live while the prompt is up.
-        TitleLayout L = computeTitleLayout(1024, 768, 3, 2);
         t.setNewGameConfirmYesSelected(true);
-        a = t.click(L.confirmNo.x + 5, L.confirmNo.y + 5, L);
+        a = t.answerConfirm(false);
         CHECK(a == TitleAction::DismissNewGameConfirm, "tapping No dismisses the prompt");
         t.activate();                           // re-open
-        a = t.click(L.confirmYes.x + 5, L.confirmYes.y + 5, L);
+        a = t.answerConfirm(true);
         CHECK(a == TitleAction::StartNewGameInSlot, "tapping Yes starts the new game");
         t.activate();                           // re-open
-        a = t.click(L.backButton.x + 5, L.backButton.y + 5, L);
+        a = t.clickRow(-1);
         CHECK(a == TitleAction::None, "taps outside the prompt are ignored while it is open");
         CHECK(t.newGameConfirmOpen(), "the prompt survives a stray tap");
-        CHECK(t.click(500, 400, L) == TitleAction::None || !t.newGameConfirmOpen(),
-              "a tap in the scrim does not start a game");
+        CHECK(t.clickRow(0) == TitleAction::None && t.newGameConfirmOpen(),
+              "a tap on a row behind the prompt does not start a game");
     }
 
     // ------------------------------------------------- "switch to XXX language?" prompt
@@ -344,21 +342,19 @@ int main() {
 
         // Taps: THIS is the mobile-critical path -- the dialog must expose a real, always-hit-
         // testable "No" button so a touch player (no keyboard, no Esc) is never stuck on it.
-        TitleLayout L = computeTitleLayout(1024, 768, 3, 3);
         t.setLanguageConfirmYesSelected(true);
-        a = t.click(L.confirmNo.x + 5, L.confirmNo.y + 5, L);
+        a = t.answerConfirm(false);
         CHECK(a == TitleAction::DismissLanguageConfirm, "tapping No dismisses the prompt");
         CHECK(!t.languageConfirmOpen(), "tapping No actually closed it (mobile is not stuck)");
         CHECK(t.languageIndex() == 1, "tapping No did not change the language");
 
         t.moveVertical(1); t.activate();         // re-open on a different row
-        a = t.click(L.confirmYes.x + 5, L.confirmYes.y + 5, L);
+        a = t.answerConfirm(true);
         CHECK(a == TitleAction::SetLanguage, "tapping Yes applies the language");
         CHECK(t.languageIndex() == t.settingsSelection(), "the confirmed row is now active");
 
-        // Settings itself also has a touch-reachable way out (a Back button is now drawn there
-        // by Game::draw(), matching Continue's -- this just proves the hit-test still agrees).
-        a = t.click(L.backButton.x + 5, L.backButton.y + 5, L);
+        // Settings itself also has a touch-reachable way out (title.rml's Back button).
+        a = t.clickRow(-1);
         CHECK(a == TitleAction::Back && t.page() == TitlePage::Menu,
               "tapping Back on Settings returns to the Menu");
     }

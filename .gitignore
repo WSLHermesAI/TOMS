@@ -12,8 +12,6 @@ toms.log
 
 # local Claude Code settings (machine-specific)
 .claude/
-# the CJK font is 16 MB and licensed separately; download it (docs/02_INSTALL_WINDOWS.md)
-assets/media/wqy-zenhei.ttc
 # runtime logs / ImGui layout
 *.log
 imgui.ini

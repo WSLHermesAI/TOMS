@@ -1,0 +1,25 @@
+<rml>
+<head>
+    <title>Stage select</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="stage_select.rcss"/>
+</head>
+<!-- Tab: jump to any floor reached so far. Locked floors are dimmed and say why.
+     Data: stage_select.* (UiStageSelect). -->
+<body data-model="game">
+    <div class="fill scrim"></div>
+    <div id="panel" class="panel">
+        <div id="title">{{stage_select.title}}</div>
+        <div id="hint">{{stage_select.hint}}</div>
+        <div id="list">
+            <div data-for="r, i : stage_select.rows">
+                <div class="row" data-class-disabled="!r.enabled" data-event-click="act('stage_pick', i)">
+                    <div class="label">{{r.label}}</div>
+                    <div class="sub" data-if="r.sub != ''">{{r.sub}}</div>
+                </div>
+            </div>
+        </div>
+        <div id="close" class="btn btn-plain" data-event-click="act('stage_close')">{{stage_select.close_label}}</div>
+    </div>
+</body>
+</rml>

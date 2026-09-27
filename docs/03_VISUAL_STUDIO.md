@@ -50,7 +50,7 @@ link the same `toms_core` library.
 
 Arrows/WASD move · click/tap a map tile to walk there (a monster, door or item: walk up and step in) · Enter/Space interact/attack · F defend · G super · H active · I inventory ·
 B store · Tab stage select · F1 debug overlay · F2 styling spike · Esc menu/back.
-RmlUi store ([08](08_RMLUI.md)): F4 old/new store · F5 reload `assets\media\ui` · F8 RmlUi debugger.
+UI ([08](08_RMLUI.md)): F5 reload `assets\media\ui` · F8 RmlUi debugger.
 
 ### Editor
 
@@ -73,8 +73,7 @@ RmlUi store ([08](08_RMLUI.md)): F4 old/new store · F5 reload `assets\media\ui`
 | `--keys=enter@30,enter@60` | press keys at given frames (smoke tests) |
 | `--clicks=222:140@130` | left-click at a design-space point (1024×768) at a frame (smoke tests) |
 
-Environment variables: `TOMS_FONT`, `TOMS_HIDE`, `TOMS_SPLIT_NODE`, `TOMS_RENDER_DEBUG` (from the
-old build) and `TOMS_OLD_STORE=1` (start with the old store).
+Environment variables (debugging, from the old build): `TOMS_HIDE`, `TOMS_SPLIT_NODE`, `TOMS_RENDER_DEBUG`.
 
 The startup items run in `out\build\<preset>\bin`, so `toms.log` and the `save\` folder are
 written there.

@@ -1,0 +1,44 @@
+/* hud.rcss -- the walking-scene HUD (hud.rml). */
+body { z-index: 10; pointer-events: none; }     /* clicks go through to the map ... */
+.click { pointer-events: auto; cursor: pointer; } /* ... except on these */
+
+#title-line { position: absolute; left: 16px; top: 12px; font-size: 25px; color: #ffffff; }
+#hp-bar  { position: absolute; left: 16px; top: 46px; width: 200px; height: 14px; background-color: #7b7b88; }
+#hp-fill { height: 100%; background-color: #f37b7b; }
+#hp-text { position: absolute; left: 226px; top: 40px; font-size: 21px; color: #ffffff; }
+#stats   { position: absolute; left: 16px; top: 64px; font-size: 21px; color: #ffffff; }
+#res     { position: absolute; left: 16px; top: 88px; font-size: 18px; color: #ffffff; border-radius: 4px; }
+#res:hover { background-color: #ffffff22; }
+
+/* Menu (≡) and store buttons, top right. */
+.icon {
+    position: absolute; top: 10px; width: 50px; height: 50px;
+    background-color: #6f809c; border-radius: 6px; text-align: center;
+}
+.icon:hover { background-color: #8394b0; }
+#menu-btn  { right: 64px; background-color: #6f6f7b; }
+#menu-btn:hover { background-color: #85858f; }
+#store-btn { right: 8px; }
+#store-btn.locked { background-color: #61616880; }
+#store-btn.locked .coin, #store-btn.locked .icon-label { opacity: 0.4; }
+.glyph { font-size: 36px; line-height: 50px; color: #ffffff; }
+.coin  { width: 42px; height: 42px; margin-top: 4px; }
+.icon-label { position: absolute; left: -10px; right: -10px; top: 52px; font-size: 14px; color: #ffffff; }
+
+/* Name plate over a boss / roaming monster: centred on its x, sitting on its y. */
+.banner {
+    position: absolute; transform: translate(-50%, -100%);
+    padding: 1px 8px; font-size: 18px; color: #ffeec2;
+    background-color: #474155c7; border-radius: 3px; white-space: nowrap;
+}
+
+/* The act card, shown for a moment when a new act begins. */
+#chapter {
+    position: absolute; left: 202px; top: 230px; width: 620px; height: 116px;
+    background-color: #475168e0;
+}
+#chapter-title { position: absolute; left: 28px; top: 16px; font-size: 30px; color: #fff8d9; }
+#chapter-sub   { position: absolute; left: 28px; top: 64px; font-size: 21px; color: #e9eef9; }
+#chapter-rule  { position: absolute; left: 24px; right: 24px; bottom: 14px; height: 2px; background-color: #eddc9ee6; }
+
+#footer { position: absolute; left: 16px; right: 16px; top: 736px; font-size: 18px; color: #e6edff; white-space: nowrap; }

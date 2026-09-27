@@ -1,0 +1,39 @@
+<rml>
+<head>
+    <title>HUD</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="hud.rcss"/>
+</head>
+<!-- Over the map while walking: floor name, HP, stats (click = inventory), the menu and store
+     buttons, the story line at the bottom, the act card and the boss/roamer name plates.
+     Only the buttons take clicks; everywhere else a click goes through to the map (walk there).
+     Data: hud.* (UiHud). -->
+<body data-model="game">
+    <div id="title-line">{{hud.title_line}}</div>
+    <div id="hp-bar"><div id="hp-fill" data-style-width="hud.hp_pct + '%'"></div></div>
+    <div id="hp-text">{{hud.hp_text}}</div>
+    <div id="stats">{{hud.stats_line}}</div>
+    <div id="res" class="click" data-event-click="act('hud_inventory')">{{hud.res_line}}</div>
+
+    <div id="menu-btn" class="icon click" data-if="hud.icons" data-event-click="act('hud_menu')">
+        <div class="glyph">≡</div>
+        <div class="icon-label">{{hud.menu_label}}</div>
+    </div>
+    <div id="store-btn" class="icon click" data-class-locked="!hud.store_unlocked" data-event-click="act('hud_store')">
+        <img class="coin" src="../sprites/coin.png"/>
+        <div class="icon-label">{{hud.store_label}}</div>
+    </div>
+
+    <div data-for="b : hud.banners">
+        <div class="banner" data-style-left="b.x + 'px'" data-style-top="b.y + 'px'">{{b.text}}</div>
+    </div>
+
+    <div id="chapter" data-if="hud.chapter_card" data-style-opacity="hud.chapter_alpha">
+        <div id="chapter-title">{{hud.chapter_title}}</div>
+        <div id="chapter-sub">{{hud.chapter_sub}}</div>
+        <div id="chapter-rule"></div>
+    </div>
+
+    <div id="footer">{{hud.footer}}</div>
+</body>
+</rml>

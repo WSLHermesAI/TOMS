@@ -71,3 +71,24 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   one step per 110 ms, gold marker on the destination; keys/d-pad, a new click, any modal or a stage change cancel it.
   Also fixed: a hidden virtual pad still caught taps where its buttons had been. Verified with scripted clicks:
   short walk, long walk around walls into a slime fight.
+- **2026-09-27** — **All UI on RmlUi** (owner: "make all UI with RmlUi"; decisions: ship a cut-down font, keep the F1/F2
+  ImGui dev tools, delete the old UI). 12 documents in `assets/media/ui` (title, HUD, pad, battle, dialogue, inventory,
+  store, menu, dialogs, stage select, ending, overlay) bound to one data model: `Game::buildUiState()` fills
+  `toms::UiState` (`src/core/game/ui/ui_state.h`), buttons call `Game::uiEvent()` (`game_ui.cpp`), `GameUi` binds/shows
+  (`src/game/src/game_ui.*`). Font: Noto Sans CJK TC cut to the game's 2152 characters (793 KB,
+  `tools/make_ui_font.py`). Removed: every hand-drawn UI function and hit-test rect, `font.cpp`/`font.h`,
+  `game_text_draw.cpp`, `stb_truetype.h`, `ui_root`/`ui_layout`/`dialogue_layout` (+ tests), the renderer's text path,
+  the JP/KR font subsets, the wqy-zenhei/msjh font prerequisite, the F4 old-store toggle. RmlUi now also runs on the
+  web build (wasm 5.0 MB, data 1.6 MB). Verified: desktop screenshots of every screen reachable by keys/clicks (title
+  pages + confirm, HUD, pad show/hide, battle incl. attack + cooldown, dialogue, inventory, store, menu + settings +
+  village, stage select, save toast), editor, web smoke test. Not verified: the ending screen and the stairs dialog
+  (not reachable by scripted input), a real phone.
+- **2026-09-27** — **Web text from the browser; per-language fonts.** New RmlUi font engine for the web build
+  (`src/engine/src/rml_canvas_font.*`): measureText() for widths, each distinct string drawn whole with fillText() into
+  a cached texture at the screen's pixel density, so the browser does shaping/bidi/fallback for every script. The web
+  build has no FreeType and no font file any more: download about 2.6 MB -> 1.7 MB gzip (.data 0.84 -> 0.18 MB,
+  .wasm 1.72 -> 1.45 MB). text.json languages gained `web_font` (CSS font list; set for all 6 languages) and `font`
+  (desktop font file, used when it exists; the bundled font stays the fallback). Verified: web smoke test + the canvas
+  resolves the zh_TW list to Microsoft JhengHei in Chrome; desktop switch to 日本語 with a test `font` entry loads
+  Yu Gothic, without it the default. **Also fixed:** on Windows every save and settings write after the first one failed
+  (`std::rename` does not overwrite there) -- now `std::filesystem::rename`; saves and the language setting persist.

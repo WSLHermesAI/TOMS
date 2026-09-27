@@ -3,8 +3,8 @@
 // Owns only the *state machine* of the title phase — which page is showing, what is
 // highlighted, and what the player asked for. Everything with side effects (resetting the
 // player, loading a stage, loading/writing a slot, switching language) is done by Game, which
-// receives a TitleAction from activate()/cancel()/click() and acts on it. That split is what
-// lets title_screen_test exercise the whole flow headlessly, with no renderer or Vulkan.
+// receives a TitleAction from activate()/cancel()/clickRow() and acts on it. That split is what
+// lets title_screen_test exercise the whole flow headlessly, with no renderer or UI.
 //
 // Pages:
 //   Menu     -> New Game | Continue | Settings
@@ -57,44 +57,11 @@ enum class TitleAction {
     DismissLanguageConfirm,
 };
 
-// One clickable row, in design-resolution pixels (1024x768).
-struct TitleRow { float x = 0, y = 0, w = 0, h = 0; bool contains(float px, float py) const {
-    return px >= x && px <= x + w && py >= y && py <= y + h; } };
-
-// Pure layout math, shared by the draw pass and click hit-testing so a tap always lands on the
-// row that was actually drawn (same numbers, one source of truth — no renderer needed, so this
-// is unit-testable).
-struct TitleLayout {
-    static constexpr int kMaxMenuRows = 3;
-    static constexpr int kMaxSlotRows = 8;
-    static constexpr int kMaxLangRows = 4;
-
-    TitleRow menuRow[kMaxMenuRows];
-    int menuRowCount = 0;
-    TitleRow slotRow[kMaxSlotRows];
-    int slotRowCount = 0;
-    TitleRow langRow[kMaxLangRows];
-    int langRowCount = 0;
-    TitleRow backButton;
-    // "Start a new game in this slot?" dialog: panel + its two answer buttons.
-    TitleRow confirmBox;
-    TitleRow confirmYes;
-    TitleRow confirmNo;
-
-    // Row index under the point, or -1. hitBack() is separate because Back is not a list row.
-    int hitMenuRow(float x, float y) const;
-    int hitSlotRow(float x, float y) const;
-    int hitLangRow(float x, float y) const;
-    bool hitBack(float x, float y) const;
-    // 0 = Yes, 1 = No, -1 = neither.
-    int hitConfirmButton(float x, float y) const;
-};
-
-TitleLayout computeTitleLayout(int designW, int designH, int slotCount, int langCount);
-
 class TitleScreen {
 public:
     static constexpr int kMenuItemCount = 3;   // New Game / Continue / Settings
+    static constexpr int kMaxSlots = 8;        // save slots listed on the Continue page
+    static constexpr int kMaxLanguages = 16;
 
     void open();                       // show the title, reset to the Menu page
     void close() { open_ = false; closeConfirm(); closeLanguageConfirm(); }
@@ -134,8 +101,12 @@ public:
     // Esc: Continue/Settings -> Menu; on Menu it is not handled here (caller decides: desktop
     // quits, the browser build ignores it).
     TitleAction cancel();
-    // Tap/click in design space. Uses the layout the draw pass produced.
-    TitleAction click(float px, float py, const TitleLayout& layout);
+    // Mouse/touch, by row: the UI (assets/media/ui/title.rml) lists the current page's rows in
+    // the same order as the keyboard cursor. clickRow(-1) = the Back button. hoverRow() only moves
+    // the highlight. answerConfirm() answers whichever confirm dialog is open.
+    TitleAction clickRow(int row);
+    void hoverRow(int row);
+    TitleAction answerConfirm(bool yes);
 
     int pendingSlot() const { return pendingSlot_; }   // valid for LoadSlot / StartNewGameInSlot
 

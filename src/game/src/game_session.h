@@ -18,12 +18,12 @@ namespace toms::next {
 
 class BgfxRenderer;
 class RmlUi;
-class StoreScreen;
+class GameUi;
 
 enum class Key : uint8_t {
     Up, Down, Left, Right, W, A, S, D,
     Enter, Space, Escape, Tab, F1, F2, F3,
-    F4, F5, F8,                              // RmlUi store: old/new toggle, reload UI, debugger
+    F5, F8,                                  // reload the UI files, RmlUi debugger
     F, G, H, I, B,
     Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9,
     Count
@@ -70,20 +70,16 @@ public:
 
     bool showDebugOverlay = false;     // F1
     bool showStylingSpike = false;     // F2
-    // The RmlUi store (docs/08_RMLUI.md): true while the RmlUi document replaces the old store.
-    // F4 toggles it at run time; env TOMS_OLD_STORE=1 starts with the old one.
-    bool rmlStoreActive() const;
 
     // Asset folder resolution: env ASSET_DIR, else assets/media (baked in at build time).
     static std::string defaultAssetDir();
-    // If assets/media/wqy-zenhei.ttc is missing, points TOMS_FONT at a Windows CJK font.
-    // Returns a note for the user, or "" when nothing had to change.
-    static std::string applyFontFallback(const std::string& assetDir);
+    // The default UI font (assets/media/fonts/NotoSansCJKtc-TOMS.otf, tools/make_ui_font.py);
+    // desktop only -- the web build lets the browser draw text.
+    static std::string uiFontPath(const std::string& assetDir);
 
 private:
     bool keyPressed(const InputState& in, Key k);
-    void startRmlUi();                 // optional: logs and carries on without it on failure
-    bool rmlWantsMouse() const;
+    void applyLanguageFont();          // the UI font for the current language (on change)
 
     std::unique_ptr<Game> game_;
     BgfxRenderer* renderer_ = nullptr;   // created by Game::loadAssets; owned (and freed) by us
@@ -91,13 +87,12 @@ private:
     bool debugUi_ = true;
     std::string assetDir_;
     std::array<bool, (size_t)Key::Count> keyWas_{};
-    bool mouseWasDown_ = false, mouseHasDesign_ = false;
-    float mouseDesignX_ = 0, mouseDesignY_ = 0;
-    int  mouseHeldMs_ = 0, mouseRepeatMs_ = 0;   // hold-to-repeat taps (the on-screen pad)
-    std::unique_ptr<RmlUi> rml_;                 // null when built without TOMS_WITH_RMLUI
-    std::unique_ptr<StoreScreen> store_;
+    bool mouseWasDown_ = false;
+    bool mousePressFree_ = false;                // the current press hit no UI element (map click)
+    std::unique_ptr<RmlUi> rml_;                 // RmlUi on bgfx (rml_ui.h)
+    std::unique_ptr<GameUi> ui_;                 // the game's documents + data model (game_ui.h)
     double uiTime_ = 0;
-    bool rmlPressed_ = false;                    // RmlUi got the button-down of the current press
+    std::string uiLanguage_;                     // language the UI font was last chosen for
 };
 
 }  // namespace toms::next

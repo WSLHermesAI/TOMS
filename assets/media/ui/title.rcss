@@ -1,0 +1,57 @@
+/* title.rcss -- the boot screen (title.rml). */
+body { z-index: 60; background-color: #414155; text-align: center; }
+
+.rule {
+    position: absolute; left: 0; right: 0; height: 2px;
+    background-color: #f9e9b1;
+    animation: 1.4s cubic-in-out infinite alternate pulse;
+}
+#name     { position: absolute; left: 0; right: 0; top: 88px; font-size: 60px; color: #f9e9b1; }
+#subtitle { position: absolute; left: 0; right: 0; top: 156px; font-size: 20px; color: #cad0e1; }
+
+/* The current page: a centred column of rows. Width and start depend on the page. */
+#page { position: absolute; left: 0; right: 0; top: 330px; }
+#page.slots { top: 196px; }
+#page.langs { top: 236px; }
+#header    { font-size: 34px; color: #f9e9b1; margin-bottom: 8px; }
+#subheader { font-size: 22px; color: #cad0e1; margin-bottom: 12px; }
+
+/* One title row: dark panel, gold accent bar on the left, label (+ dimmer second line). */
+.trow {
+    position: relative; cursor: pointer;
+    width: 360px; min-height: 64px; margin: 0 auto 14px auto;
+    background-color: #5d6175f5;
+    text-align: left;
+    transition: background-color 0.12s cubic-out;
+}
+#page.slots .trow { width: 720px; }
+#page.langs .trow { width: 520px; min-height: 48px; margin-bottom: 8px; }
+.trow:hover, .trow.selected { background-color: #7b7d94f5; }
+.accent {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+    background-color: #f9e9b1; opacity: 0.35;
+}
+.accent.back { background-color: #cad0e1; }
+.trow.selected .accent { opacity: 1; animation: 1.4s cubic-in-out infinite alternate pulse; }
+.cursor {
+    position: absolute; left: -30px; top: 14px; font-size: 30px; color: #f9e9b1;
+    visibility: hidden;
+}
+.trow.selected .cursor { visibility: visible; }
+.label { padding: 14px 16px 0 24px; font-size: 28px; color: #eef1f8; white-space: pre; }   /* keep the column spacing */
+#page.langs .label { padding-top: 8px; font-size: 25px; }
+.trow.selected .label { color: #fffbee; }
+.sub   { padding: 2px 16px 10px 24px; font-size: 17px; color: #cad0e1; white-space: pre; }
+
+#back { position: absolute; left: 402px; top: 668px; width: 220px; min-height: 52px; margin: 0; }
+#back .label { padding-top: 10px; text-align: center; }
+#empty-hint { position: absolute; left: 0; right: 0; top: 580px; font-size: 21px; color: #cad0e1; }
+#hint       { position: absolute; left: 0; right: 0; top: 716px; font-size: 18px; color: #cad0e1; }
+
+/* Confirm dialog ("start a new game in slot N?" / "switch to <language>?") */
+#confirm  { position: absolute; left: 232px; top: 279px; width: 560px; height: 210px; }
+#question { margin-top: 34px; font-size: 30px; color: #f9e9b1; }
+#body     { margin-top: 14px; font-size: 18px; color: #cad0e1; }
+#answers  { position: absolute; left: 0; right: 0; bottom: 26px; }
+.answer   { display: inline-block; width: 160px; min-height: 56px; margin: 0 20px; }
+.answer .label { padding-top: 12px; text-align: center; }

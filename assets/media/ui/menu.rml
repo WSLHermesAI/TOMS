@@ -1,0 +1,37 @@
+<rml>
+<head>
+    <title>Menu</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="menu.rcss"/>
+</head>
+<!-- The in-game menu (Esc / the ≡ button): Save, Settings (languages + camera), Skills,
+     Village, Forge, Back to title -- one page at a time, same rows as the keyboard cursor.
+     Dimmed rows are locked / unaffordable. Data: menu.* (UiMenu). -->
+<body data-model="game">
+    <div class="fill scrim"></div>
+    <div id="frame">
+        <div id="panel" class="panel">
+            <div id="header">{{menu.header}}</div>
+            <div id="subheader" data-if="menu.subheader != ''">{{menu.subheader}}</div>
+            <div id="rows">
+                <div data-for="r, i : menu.rows">
+                    <div class="row" data-class-selected="r.selected" data-class-disabled="!r.enabled"
+                         data-event-click="act('menu_row', i)" data-event-mouseover="act('menu_hover', i)">{{r.label}}</div>
+                </div>
+            </div>
+            <div id="close" class="row" data-event-click="act('menu_close')">{{menu.close_label}}</div>
+        </div>
+    </div>
+
+    <div data-if="menu.confirm_open">
+        <div class="fill scrim"></div>
+        <div id="confirm" class="panel">
+            <div id="question">{{menu.confirm_question}}</div>
+            <div id="answers">
+                <div class="row answer" data-class-selected="menu.confirm_yes" data-event-click="act('menu_confirm', 1)">{{menu.yes_label}}</div>
+                <div class="row answer" data-class-selected="!menu.confirm_yes" data-event-click="act('menu_confirm', 0)">{{menu.no_label}}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

@@ -50,6 +50,8 @@ bool Locale::loadFromJson(const nlohmann::json& j) {
             LanguageInfo li;
             li.code = e.value("code", std::string());
             li.name = e.value("name", std::string());
+            li.font = e.value("font", std::string());
+            li.webFont = e.value("web_font", std::string());
             if (!li.code.empty()) langs.push_back(li);
         }
         if (!langs.empty()) { langs_ = langs; idx_ = 0; }

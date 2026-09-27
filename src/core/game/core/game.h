@@ -1,4 +1,5 @@
-// game.h — game logic: player, movement, auto combat, talking, stage flow, draw.
+// game.h — game logic: player, movement, auto combat, talking, stage flow, world drawing.
+// The UI (title, HUD, battle, menus, ...) is RmlUi: buildUiState()/uiEvent() below, ui/ui_state.h.
 #pragma once
 #include <vector>
 #include <string>
@@ -23,12 +24,10 @@
 #include "run_state.h"       // toms::RunStoryState — S3: choices/counters/side stories/flags/shards
 #include "floor_table.h"     // toms::FloorTable — S3.5: the 70-floor tower as ordered data
 #include "stage.h"
-#include "../ui/ui_root.h"
+#include "ui_state.h"       // toms::UiState -- what the UI shows (see buildUiState)
 #include "title_screen.h"    // toms::TitleScreen/TitleAction — the title phase (New Game/Continue/Settings)
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
 #include "localization.h"    // toms::Locale — key -> localized string (data/text.json)
-#include "font.h"        // runtime TTF -> atlas (stb_truetype), replaces offline font_atlas.png
-#include <stb_truetype.h> // complete stbtt_fontinfo for ~Font (unique_ptr member)
 #include "Audio.h"        // SFX (miniaudio) -- native device backends on desktop, Web Audio in the browser
 
 struct Player : public Trackable {
@@ -161,9 +160,15 @@ public:
     bool loadAssets(const std::string& assetDir);
     void loadStage(const std::string& id, StageArrival arrival = StageArrival::Fresh);
     void update(int dtMs);                 // advances combat timer etc.
-    void draw();                          // render current frame
-    void drawGamepad();                   // on-canvas touch controls (web build)
-    void handleTouch(float px, float py, int phase); // px,py in 1024x768 buffer space; phase 0=down 1=repeat 2=up
+    void draw();                          // render the world (map, entities, player) -- UI is RmlUi
+    // A click/tap that no UI element took (design space 1024x768; phase 0 = down, 2 = up): on the
+    // map it walks there (click-to-move) or, on the player's own tile, interacts.
+    void handleTouch(float px, float py, int phase);
+    // ---- UI (RmlUi, see ui/ui_state.h) ----
+    // buildUiState(): what every screen shows this frame. uiEvent(): a button in one of the
+    // assets/media/ui/*.rml documents was pressed ("inv_use", "menu_row" with the row, ...).
+    void buildUiState(toms::UiState& out) const;
+    void uiEvent(const std::string& name, int arg);
     void saveFrame(const std::string& path);
     // input (scripted for headless)
     void movePlayer(int dx, int dy);
@@ -268,29 +273,9 @@ public:
     const std::vector<StoreItemDef>& storeItems() const { return storeItems_; }
     int storeSel() const { return storeSel_; }
     const std::string& toastMsg() const { return toastMsg_; }
-    // input for the store (mouse: pixel coords; keyboard: vk key code / ascii)
-    void storeClick(float x, float y);     // click on the store icon or inside the store UI
-    void storeKey(int key);                // keyboard nav/confirm inside the store UI
+    void storeKey(int key);                // keyboard nav/confirm inside the store (and its unlock popup)
     void openStore();                      // open the store overlay
     void closeStore();                     // close the store overlay
-    // ---- External store UI (the RmlUi store, src/game/src/store_screen.*) ----
-    // When set, draw() leaves the store panel and its toast to the external UI (the unlock dialog
-    // and the HUD icon stay here), and the host sends store mouse input to that UI. Keyboard input
-    // still goes through storeKey(), so both UIs share one selection and one purchase path.
-    void setStoreUiExternal(bool on) { storeUiExternal_ = on; }
-    bool storeUiExternal() const { return storeUiExternal_; }
-    int  storeTab() const { return storeTab_; }
-    void storeSelectTab(int tab) { if (tab >= 0 && tab < 4 && tab != storeTab_) { storeTab_ = tab; storeSel_ = 0; audio.play("confirm_click"); } }
-    void storeSetSelection(int i) { storeSel_ = i; }
-    std::vector<int> storeVisibleItems() const { return storeTabIndices(); }   // storeItems() indices on the current tab
-    void storeBuy(int itemIndex) { buyStoreItem(itemIndex); }
-    std::string storeTitleText() const { return locale_.field(storeTitle_); }
-    int  playerGold() const { return pl.gold; }
-    bool storeItemEquipped(const StoreItemDef& d) const {
-        return !d.equipmentId.empty() &&
-               (d.equipmentId == equipped_.weaponId || d.equipmentId == equipped_.armorId || d.equipmentId == equipped_.talentId);
-    }
-    int  toastRemainingMs() const { return toastTimer_; }
     // Milestone 5: Stage Select hub -- every floor the player has ever reached becomes a
     // replayable, individually-selectable entry (architecture-doc §10). Purely additive: does
     // not change the existing boot flow (still auto-loads stage01), only adds an in-game hub.
@@ -329,13 +314,11 @@ public:
     // page/selection state machine and docs/design/TITLE_PHASE.md for the flow.
     bool titleOpen() const { return title_.isOpen(); }
     const toms::TitleScreen& title() const { return title_; }
-    // Input, in the same shape the other overlays use: a direction move, a confirm, a cancel,
-    // and a design-space (1024x768) tap. Each routes to the current title page.
+    // Keyboard input, in the same shape the other overlays use: a direction move, a confirm and
+    // a cancel. Each routes to the current title page (mouse/touch: uiEvent("title_row", ...)).
     void titleMove(int dx, int dy);
     void titleConfirm();
     void titleCancel();
-    void titleClick(float x, float y);
-    void drawTitleScreen();               // draws the title overlay; no-op unless titleOpen()
     // Starts a brand new run: default player stats, cleared meta/story/entity progress, and a
     // fresh slot (or the lowest-numbered slot when all are taken). Writes the slot immediately.
     // The overload starts the run in a specific slot -- what the Continue page's "start a new
@@ -377,30 +360,13 @@ public:
     // any real screen was built on the assumption. Dev-only, F2 to toggle.
     void drawStylingSpike();
     void setStylingSpikeVisible(bool v) { stylingSpikeVisible_ = v; }
-#ifndef __EMSCRIPTEN__
-    // These two stay DESKTOP-ONLY: their text comes from the locale table (CJK) and ImGui's
-    // built-in font has no CJK glyphs, so on web they would draw as tofu boxes -- and the browser
-    // build already draws its own stage-select UI and toasts with the game renderer. Enabling them
-    // on web would change what a browser player sees, which M2 deliberately avoids.
-    // Milestone 5: transient toast notifications (level-up, daily mission available, ...),
-    // driven by pushNotification() (private, called from the real gameplay events that trigger
-    // one). Always drawn when active, not gated behind a dev toggle like F1/F2.
-    void drawNotifications();
-    // Milestone 5: the Stage Select hub screen content -- call when stageSelectOpen() is true.
-    void drawStageSelect();
-#endif
     // DEBUG: hide individual overlay subsystems to bisect stray-sprite bugs.
     // bit 1 = combat overlay, bit 2 = dialogue overlay, bit 4 = inventory UI.
     int hideMask = 0;
-    // text drawing used by TextNode (render-bound text in the scene graph)
-    void drawTextPublic(const std::string& s, float x, float y, float sz, const float* t);
-    float measureText(const std::string& s, float size) const;   // width in px (for centering)
     CombatState& combat() { return cs; }
     Stage& stage() { return st; }
     const nlohmann::json& enemyTemplate(const std::string& id) const { return enemyTpl.at(id); }
 private:
-    void drawText(const std::string& s, float x, float y, float size, const float tint[4]);
-    void drawBar(float x, float y, float w, float h, float frac, const float col[4]);
     Quad spriteQuad(float x, float y, float w, float h, int layer, const float tint[4]);
     void spriteUV(int layer, float uv[4]) const;
     int spriteLayer(const std::string& id) const; // index into sprite grid
@@ -410,8 +376,8 @@ private:
     // directly (and calls finishCombatWin on a kill); resolveDefenseTap only banks a shield, it
     // doesn't apply damage itself. resolveEnemyClockFire runs whenever the enemy's own real-time
     // clock completes: it spends (and clears) whatever shield is currently banked, or applies full
-    // damage if none is, and calls finishCombatLose on a kill. drawPowerBar renders either bar at
-    // its live auto-moving position (frozen while cooling down after a tap).
+    // damage if none is, and calls finishCombatLose on a kill. The UI shows either bar at its live
+    // auto-moving position (frozen while cooling down after a tap).
     void resolveAttackTap();
     void resolveDefenseTap();
     void resolveEnemyClockFire();
@@ -543,39 +509,26 @@ public:
     int storyLineIndex() const { return toms::storyLineIndex(storyTurns_, (int)storyAmbientKeys_.size()); }
     bool chapterCardVisible() const { return chapterCardMs_ > 0.0f; }
     int themeAct() const { return themeActIndex_; }
-    // C-lite (mobile): enlarge the on-canvas pad's plates and tap targets (1.0 on desktop).
+    // Mobile: enlarge the on-screen pad (1.0 on desktop) and the dialogue box.
     void setPadScale(float s);
+    void setUiScale(float s) { if (s > 0.0f) uiScale_ = s; }
     // saveCurrentRun() itself stays where it was (private); this is the one public entry the web
     // harness probe jsSaveNow() needs, without widening the existing declaration's access.
     void saveRunNow() { saveCurrentRun(); }
 private:
     void finishCombatWin();
     void finishCombatLose();
-    void drawPowerBar(float x, float y, float w, float h, const toms::PowerBarParams& bar, float position);
-    void drawInventory();
-    int spriteForItem(const std::string& id) const;
     std::string itemName(const std::string& id) const;
     std::string itemDesc(const std::string& id) const;
+    std::string itemSpritePath(const std::string& id) const;     // icon image for the UI
+    std::string itemEffectSummary(const std::string& id) const;  // "HP +40 • DEF +1"
+    void buildMenuUi(toms::UiMenu& out) const;                   // the in-game menu part of buildUiState
     // store system
     void loadStore(const std::string& assetDir);   // parse data/store.json
-    void drawStoreIcon();                            // HUD icon (clickable after unlock)
-    void drawStoreUnlockDialog();                   // "store unlocked" popup (confirm button)
-    void drawStoreUI();                              // the shop overlay (card grid)
-    void drawStoreToast();                           // transient "gold not enough" toast
-    // compute the on-screen rects of store UI elements (icon / cards / buttons) for hit-testing
-    void storeCardRects(std::vector<float>& rects, int n) const;  // 4 floats per card: x,y,w,h
-    // Milestone 8: the store outgrew a single row of cards once equipment joined the 3 potions
-    // (12 items total vs. the layout's real capacity of ~3 per row) -- rather than reworking the
-    // existing per-card pixel layout (risky to get right without visual verification), items are
-    // split into tabs of <=3 each, reusing the untouched card layout per tab. Returns the indices
+    // Milestone 8: the store's items are split into tabs of <=3 cards each. Returns the indices
     // into storeItems_ that belong to the current storeTab_ (0=potions,1=weapons,2=armor,3=talents).
     std::vector<int> storeTabIndices() const;
     void buyStoreItem(int idx);                      // purchase + apply effect (or toast if poor)
-    // shared full-screen focus splash (black, alpha 0.5) used by combat / dialogue /
-    // inventory so the player focuses on the active scene. Also gates background
-    // input (movePlayer/interact) while any modal overlay is open.
-    void drawFocusSplash();
-    void drawStoreSplash();   // store modal: full-screen black splash at alpha 0.5 (topmost layer)
 
     IRenderer* ren = nullptr;        // the bgfx renderer, created in loadAssets
     Player pl;
@@ -591,10 +544,6 @@ private:
     bool invOpen = false;
     int invSel = 0;            // selected slot index
     bool gpOn = true;         // on-canvas gamepad: ALWAYS visible by default; toggle button hides it
-    // font atlas map: codepoint -> uv rect
-    std::map<uint32_t, std::array<float,4>> fontMap;
-    std::shared_ptr<Font> font_;   // runtime TTF atlas (replaces font_atlas.png)
-    int fontCols = 32, fontCell = 32, fontW = 0, fontH = 0;
     // dialogue state
     bool inDialogue = false;
     int dlgSel = 0;                     // currently highlighted dialogue choice (gamepad nav)
@@ -691,12 +640,6 @@ private:
     // Milestone 5: transient toast queue -- {message, remaining_ms}, decremented in update().
     std::vector<std::pair<std::string, int>> notifications_;
     void pushNotification(const std::string& msg);
-    // UI setting: multiplier applied to ImGui's base font size (applyUiSettings(), declared
-    // above under the desktop/ImGui guard). Default is bigger than ImGui's own 1.0x default,
-    // since the un-scaled size read as too small against this game's other text. Adjustable via
-    // the slider in drawStageSelect(). In-memory only for now -- no settings file exists yet, so
-    // this resets to default each launch (same "persistence is later work" pattern as meta_).
-    float uiFontScale_ = 1.5f;
     // Milestone 5: Stage Select hub state.
     bool stageSelectOpen_ = false;
     // Milestone 8: `preview` is the recommended-stats blurb shown in Stage Select, authored per
@@ -714,10 +657,7 @@ private:
     bool stairsConfirmOpen_ = false;
     bool stairsConfirmIsUp_ = false;
     std::string stairsConfirmTarget_;
-    int stairsConfirmYesRect_[4] = {0,0,0,0};
-    int stairsConfirmNoRect_[4] = {0,0,0,0};
     void requestStageTransition(const std::string& target, bool isUp);
-    void drawStairsConfirmDialog();
     // Milestone 9 polish: per-axis "held direction" state for setMoveHeldX/Y (declared
     // above) -- holdMs/repeating are ticked in update(). kMoveInitialDelayMs is the pause
     // after the immediate first step before repeating starts (long enough that a quick tap
@@ -739,10 +679,6 @@ private:
     bool stylingSpikeVisible_ = false;
     float stylingSpikeRect_[4] = {0, 0, 0, 0};   // x,y,w,h — set by drawStylingSpike(), read by the backdrop
     void drawStylingSpikeBackdrop();
-    // M7 (first slice): the ending screen -- a full-screen scene-graph takeover, same "checked
-    // before anything else, nothing renders behind it" pattern as the title screen (see draw()'s
-    // own dispatch), so it works identically on desktop and web with no ImGui dependency.
-    void drawEndingScreen();
     int totalStages = 10;   // highest stage index (derived from data/stages at loadStage)
 
     // ---- maze camera ----
@@ -763,19 +699,13 @@ private:
     bool storeOpen = false;      // store overlay open
     int storeSel_ = 0;           // selected card index (keyboard nav), local to the current tab
     int storeTab_ = 0;           // 0=potions,1=weapons,2=armor,3=talents (see storeTabIndices())
-    bool storeUiExternal_ = false;   // see setStoreUiExternal()
     std::string toastMsg_;        // transient message ("金錢不足")
     int toastTimer_ = 0;         // ms remaining for toast
     int shakeTimer_ = 0;         // ms remaining for "not enough gold" shake
-    int storeIconRect[4] = {0,0,0,0}; // on-screen rect of the HUD store icon (for hit-test)
     // Raw json (string or {code:text}) from store.json, resolved via Locale::field() at draw
     // time -- loadStore() runs before the title phase sets locale_ to the player's saved
     // language, so resolving here (instead of once at load) is what makes it show correctly.
     nlohmann::json storeTitle_ = "道具商店";
-    int storeUnlockBtnRect_[4] = {0,0,0,0};   // unlock dialog confirm button rect
-    std::vector<float> storeBtnRects_;        // per-card buy-button rects (4 floats each)
-    std::vector<float> storeTabRects_;        // Milestone 8: per-tab button rects (4 floats each)
-    int storeCloseRect_[4] = {0,0,0,0};       // store close button rect
 
     // ---- in-game menu (walking-phase HUD gear icon): Save / Settings (language) / Back to
     // Title. Built directly as Game state (not a separate testable class, unlike TitleScreen)
@@ -788,10 +718,6 @@ private:
     bool inGameLangConfirmOpen_ = false;  // "switch to XXX?" sub-dialog, mirrors the title's own
     int inGameLangConfirmIdx_ = 0;
     bool inGameLangConfirmYes_ = true;
-    int menuIconRect_[4] = {0,0,0,0};         // HUD gear button (opens the menu)
-    int igmSaveRect_[4] = {0,0,0,0};
-    int igmSettingsRect_[4] = {0,0,0,0};
-    int igmSkillsRect_[4] = {0,0,0,0};         // S4: Main page's new "Skills" row
     // S5/S6: Forge and Village are each their OWN conditional row, gated on their own hub.* flag
     // (set by Game::applyChapterGrants) -- they only appear once the player has actually reached
     // them narratively, rather than showing an always-empty screen from floor 1 the way Skills
@@ -802,65 +728,17 @@ private:
     // rows, "N booleans -> a hand-picked row count" stops being a small special case.
     bool forgeMenuUnlocked() const { return run_.flag("hub.forge"); }
     bool hubMenuUnlocked() const { return run_.flag("hub.village"); }
-    int igmForgeRect_[4] = {0,0,0,0};          // S5: Main page's conditional "Forge" row
-    int igmHubRect_[4] = {0,0,0,0};            // S6: Main page's conditional "Village" row
-    int igmBackToTitleRect_[4] = {0,0,0,0};
     // The Main page's row order/count as a pure function of the two flags above (plus the three
     // always-present rows) -- so draw and every input handler below call this ONE function instead
     // of separately re-deriving "is Forge row 3 or row 4 this time," the same principle
     // skillMenuOrder()/forgeMenuOrder() already apply to their own sub-pages.
     enum class MainMenuRow { Save, Settings, Skills, Village, Forge, BackToTitle };
     std::vector<MainMenuRow> mainMenuOrder() const;
-    // S4/S5/S6: the skill-tree, forge and hub sub-pages. All three reuse igmBackRect_ below for
-    // their own Back button -- Settings/Skills/Forge/Hub are never open at the same time, so
-    // there's nothing to disambiguate. Row order comes from skillMenuOrder()/forgeMenuOrder()/
-    // hubMenuOrder() (pure functions of skillDefs_/forgeDefs_/hubDefs_, not stored state), so draw
-    // and input can never disagree about which id sits at which row.
-    std::vector<float> igmSkillRowRects_;      // per-skill rects, in skillMenuOrder()'s order (4 floats each)
-    std::vector<float> igmForgeRowRects_;      // per-recipe rects, in forgeMenuOrder()'s order (4 floats each)
-    std::vector<float> igmHubRowRects_;        // per-location rects, in hubMenuOrder()'s order (4 floats each)
-    int igmCloseRect_[4] = {0,0,0,0};
-    std::vector<float> igmLangRowRects_;      // per-language rects on the Settings sub-page
-    int igmCameraRowRect_[4] = {0,0,0,0};     // the camera-mode toggle row (always last)
-    int igmBackRect_[4] = {0,0,0,0};          // Settings sub-page's own Back-to-Main button
-    int igmLangYesRect_[4] = {0,0,0,0};
-    int igmLangNoRect_[4] = {0,0,0,0};
     void closeInGameMenu();                // closes the whole menu (any page/dialog)
-    void inGameMenuClick(float x, float y);
-    void drawMenuIcon();
-    void drawInGameMenu();
     // Saves, tears down transient modal/run-in-progress state, and reopens the title (the
     // inverse of newGame()/applyLoadedRun() -- see their resets for what this mirrors).
     void returnToTitle();
 
-    // backpack/inventory overlay hit-test rects (rebuilt each frame in drawInventory)
-    std::vector<float> invCardRects_;         // per-item card rects (4 floats each)
-    int invUseRect_[4] = {0,0,0,0};
-    int invDropRect_[4] = {0,0,0,0};
-    int invCloseRect_[4] = {0,0,0,0};
-    // Battle scene: the on-canvas Power Bar action button (rebuilt each frame in draw()). It is
-    // an affordance plus an exact target for clients without a keyboard (web/touch) -- handleTouch
-    // treats the whole battle scene as the same press-and-hold surface, so this only decides what
-    // gets highlighted, never whether input works at all.
-    // On-canvas battle hit targets (design-space 1024x768 pixels), set in draw()'s battle block,
-    // read in handleTouch() -- unlike the old single-surface press-and-hold model, taps now need
-    // to know WHICH bar/button they landed on, since Attack/Defend/Super are independent.
-    int atkBtnRect_[4] = {0,0,0,0};
-    int defBtnRect_[4] = {0,0,0,0};
-    int superBtnRect_[4] = {0,0,0,0};
-    // S7 (equipment actives, first slice): only nonzero (and only hit-tested) while the currently
-    // equipped gear grants an unused active -- same "no button at all until it's actually
-    // available" convention as superBtnRect_ above.
-    int activeBtnRect_[4] = {0,0,0,0};
-    // M8 (first slice): the ending screen's two exits. Both stay zeroed (never hit-tested) unless
-    // rebirthOffered() is true, matching activeBtnRect_'s own "no button until it's actually
-    // available" convention -- when it's false, the whole screen is a tap-anywhere dismiss instead
-    // (see handleTouch's own ending-active branch).
-    int endingRebirthBtnRect_[4] = {0,0,0,0};
-    int endingTitleBtnRect_[4] = {0,0,0,0};
-    // Title screen animation clock (ms, advanced in update()). Drives the pulsing selection
-    // highlight / sliding cursor so the title never looks like a static (crashed) frame.
-    float titleAnimMs_ = 0.0f;
     // miniaudio backs both desktop (native device backends) and the browser
     // build (Web Audio via Emscripten) behind this one interface -- no-op
     // when no audio device/context is available (e.g. headless CI).
@@ -870,9 +748,6 @@ private:
     toms::TitleScreen title_;
     toms::GameSettings settings_;
     toms::Locale locale_;
-    // Rebuilt every drawTitleScreen() and read back by titleClick(), so a tap always lands on
-    // the row that was actually drawn (one layout function, two consumers).
-    toms::TitleLayout titleLayout_;
     int activeSlot_ = 0;      // 0 = none chosen yet; set by newGame()/continueFromSlot()
     int playTimeSec_ = 0;     // this run's accumulated play time (shown in the Continue list)
     bool saveDirty_ = false;  // progress changed since the last slot write
@@ -885,22 +760,6 @@ private:
     toms::RunSaveData runSaveFromState() const;
     // Applies a loaded slot to the live game state, then loads its stage.
     void applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& r, int slot, int playTimeSec);
-    // One title-row button: framed panel + label + optional sub-label, highlighted when selected.
-    // `pulse` (0..1, from titleAnimMs_) animates the selected row so a fully loaded title screen
-    // never looks like a frozen/crashed frame.
-    void drawTitleButton(const toms::TitleRow& r, const std::string& label,
-                         const std::string& sub, bool selected, const float accent[4], float pulse);
-    // The "start a new game in this (empty) slot?" prompt, drawn over the Continue page.
-    void drawTitleConfirmDialog();
-    // The "switch to XXX language?" prompt, drawn over the Settings page.
-    void drawLanguageConfirmDialog();
+    float uiScale_ = 1.0f;    // setUiScale(): dialogue box size on phones
     TOMS_OBJECT(Game)
-    // The one scaled root the UI hangs off (owner rule: grow the UI OBJECTS, keep the game
-    // resolution). At 1.0 every mapping is the identity, which is where it sits until the screens
-    // below all read their geometry from it.
-public:
-    toms::UiRoot& uiRoot() { return uiRoot_; }
-    void setUiScale(float s) { uiRoot_.SetScale(s); }
-private:
-    toms::UiRoot uiRoot_;
 };

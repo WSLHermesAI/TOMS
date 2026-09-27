@@ -1,0 +1,21 @@
+<rml>
+<head>
+    <title>Dialogue</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="dialogue.rcss"/>
+</head>
+<!-- An NPC conversation: the line, then its choices. Click a choice to pick it; a click
+     elsewhere on the box continues with the highlighted one. Data: dialogue.* (UiDialogue). -->
+<body data-model="game">
+    <div class="fill focus"></div>
+    <div id="box" data-style-transform="'scale(' + dialogue.scale + ')'" data-event-click="act('dlg_advance')">
+        <div id="text">{{dialogue.text}}</div>
+        <div data-for="c, i : dialogue.choices">
+            <div class="choice" data-class-selected="c.selected"
+                 data-event-click="act('dlg_choose', i)" data-event-mouseover="act('dlg_hover', i)">
+                <span class="arrow">▶</span>{{c.label}}
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

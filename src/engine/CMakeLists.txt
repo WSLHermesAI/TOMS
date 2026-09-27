@@ -55,11 +55,12 @@ target_link_libraries(toms_bgfx PUBLIC toms_imgui PRIVATE bgfx bx)
 # bx requires C++20. Only this target sees bgfx headers, so the core game code stays C++17.
 set_target_properties(toms_bgfx PROPERTIES FOLDER "toms" CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
-# RmlUi game UI (docs/08_RMLUI.md). PUBLIC: the game code builds its data models with RmlUi's API.
-if(TOMS_WITH_RMLUI)
-    target_sources(toms_bgfx PRIVATE src/rml_ui.h src/rml_ui.cpp)
-    target_link_libraries(toms_bgfx PUBLIC RmlUi::RmlUi)
-    target_compile_definitions(toms_bgfx PUBLIC TOMS_WITH_RMLUI=1)
+# RmlUi: the game's whole UI (docs/08_RMLUI.md). PUBLIC: the host builds its data model with
+# RmlUi's API.
+target_sources(toms_bgfx PRIVATE src/rml_ui.h src/rml_ui.cpp)
+if(EMSCRIPTEN)   # the browser draws the UI text (no font files on the web)
+    target_sources(toms_bgfx PRIVATE src/rml_canvas_font.h src/rml_canvas_font.cpp)
 endif()
+target_link_libraries(toms_bgfx PUBLIC RmlUi::RmlUi)
 source_group("shaders" FILES shaders/varying.def.sc shaders/vs_sprite.sc shaders/fs_sprite.sc
                              shaders/vs_imgui.sc shaders/fs_imgui.sc shaders/vs_rml.sc)

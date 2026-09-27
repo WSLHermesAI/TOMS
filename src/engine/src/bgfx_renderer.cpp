@@ -73,7 +73,6 @@ void BgfxRenderer::init(uint32_t, uint32_t) {
 
 void BgfxRenderer::destroy() {
     destroyTexture(spriteTex_);
-    destroyTexture(fontTex_);
     if (program_ != kInvalid) { bgfx::destroy(bgfx::ProgramHandle{program_}); program_ = kInvalid; }
     if (sampler_ != kInvalid) { bgfx::destroy(bgfx::UniformHandle{sampler_}); sampler_ = kInvalid; }
 }
@@ -86,7 +85,6 @@ uint16_t BgfxRenderer::createAtlas(const std::vector<uint8_t>& px, uint32_t w, u
     if (w == 0 || h == 0 || px.size() < (size_t)w * h * 4) return kInvalid;
     const uint32_t maxSize = bgfx::getCaps()->limits.maxTextureSize;
     if (w > maxSize || h > maxSize) {
-        // The Vulkan/WebGL renderers failed silently here (no text at all); say so instead.
         std::fprintf(stderr, "[toms] atlas %ux%u exceeds the GPU limit %u -- not uploaded\n", w, h, maxSize);
         return kInvalid;
     }
@@ -112,16 +110,7 @@ void BgfxRenderer::loadSprites(const std::vector<std::vector<uint8_t>>& layers, 
     spriteTex_ = createAtlas(atlas, aw, ah);
 }
 
-void BgfxRenderer::loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) {
-    destroyTexture(fontTex_);
-    fontTex_ = createAtlas(px, w, h);
-}
-
-// bgfx::destroy is deferred until the GPU is done with the texture, so replacing it here is safe
-// (the Vulkan renderer needed care for exactly this).
-void BgfxRenderer::updateFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) { loadFont(px, w, h); }
-
-void BgfxRenderer::begin() { sprites_.clear(); texts_.clear(); }
+void BgfxRenderer::begin() { sprites_.clear(); }
 void BgfxRenderer::setNode(uint8_t n) { node_ = n; }
 void BgfxRenderer::setNodeFilter(uint8_t n) { nodeFilter_ = n; }
 
@@ -131,15 +120,9 @@ void BgfxRenderer::drawSprite(const Quad& q) {
     sprites_.back().node = node_;
 }
 
-void BgfxRenderer::drawText(const Quad& q) {
-    if (nodeFilter_ && node_ != nodeFilter_) return;
-    texts_.push_back(q);
-    texts_.back().node = node_;
-}
-
 void BgfxRenderer::end() {
     lastDrawCalls_ = 0;
-    lastQuadCount_ = sprites_.size() + texts_.size();
+    lastQuadCount_ = sprites_.size();
 
     // View 0: clear the whole backbuffer (letterbox bars included) to the background colour.
     bgfx::setViewRect(kViewClear, 0, 0, (uint16_t)devW_, (uint16_t)devH_);
@@ -157,8 +140,7 @@ void BgfxRenderer::end() {
     bgfx::setViewTransform(kViewGame, nullptr, proj);
 
     if (program_ == kInvalid) return;
-    submitQuads(sprites_, spriteTex_);   // sprites first, then text: the same order as Vulkan/WebGL
-    submitQuads(texts_, fontTex_);
+    submitQuads(sprites_, spriteTex_);   // text and UI are RmlUi's, in view kViewUi
 }
 
 void BgfxRenderer::submitQuads(const std::vector<Quad>& quads, uint16_t texture) {

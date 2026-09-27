@@ -46,7 +46,7 @@ Details: [docs/06_BUILD_WEB.md](docs/06_BUILD_WEB.md).
 | [05_TROUBLESHOOTING.md](docs/05_TROUBLESHOOTING.md) | configure, build and runtime problems |
 | [06_BUILD_WEB.md](docs/06_BUILD_WEB.md) | the browser version: emsdk, `build_web.cmd`, `serve_web.cmd`, how it works, debugging |
 | [07_PUBLISH_GITHUB_PAGES.md](docs/07_PUBLISH_GITHUB_PAGES.md) | publishing the web version to GitHub Pages: setup, `publish_web.bat`, cache-safe file names, rollback |
-| [08_RMLUI.md](docs/08_RMLUI.md) | RmlUi (HTML/CSS) game UI: the RmlUi store, F4/F5/F8, how it renders on bgfx, adding screens |
+| [08_RMLUI.md](docs/08_RMLUI.md) | the game UI (RmlUi, HTML/CSS-like): where each screen lives, how it binds to the game, editing (F5/F8), the UI font, adding screens |
 | [progress_report/](docs/progress_report/PROGRESS_REPORT.md) | **status board**: next step, phase status, what is still open, dated log |
 
 The long-term engine design (`docs/EngineBlueprint/`) was removed with the old project; read it

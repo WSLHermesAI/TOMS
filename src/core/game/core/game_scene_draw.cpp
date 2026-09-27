@@ -1,33 +1,19 @@
-// game_scene_draw.cpp — the per-frame scene: draw() (walking/battle/dialogue/inventory scene
-// selection + the walking scene itself), the virtual gamepad overlay, notifications,
-// stage-select preview, styling spike and the F1 debug overlay. Split out of game.cpp 2026-09-13.
+// game_scene_draw.cpp — the per-frame world: draw() (the map, its entities and the player; the UI
+// on top is RmlUi -- see game_ui.cpp) and the two ImGui developer tools (F1 debug overlay, F2
+// styling spike). Split out of game.cpp 2026-09-13; UI drawing moved to RmlUi 2026-09-27.
 #include "game_internal.h"
 
 using namespace toms::game_detail;
-
-// map a stage cell char to a sprite id (floor/wall/door/stairs)
-// entity id -> sprite id
 
 void Game::draw() {
     ren->begin();
     // Title phase (Boot screen): drawn INSTEAD of the world, then nothing else. There is
     // nothing meaningful to show behind it yet, and skipping the world draw keeps the title's
     // layout independent of whatever stage happens to be loaded underneath it.
-    if (title_.isOpen()) {
-        ren->setNode(NODE_UNSPEC);
-        drawTitleScreen();
-        ren->end();
-        return;
-    }
+    if (title_.isOpen()) { ren->end(); return; }
     // M7 (first slice): an active ending takes over the whole screen the same way the title does
     // -- nothing behind it is meaningful once a run has actually ended (see triggerEnding()).
-    if (endingActive()) {
-        ren->setNode(NODE_UNSPEC);
-        drawEndingScreen();
-        ren->end();
-        return;
-    }
-    float W = (float)ren->width(), H = (float)ren->height();
+    if (endingActive()) { ren->end(); return; }
     // Milestone 9 originally shrank tile size to fit the whole (up to 34x31) grid onto one
     // fixed-size screen -- legible on desktop, but tiny/hard-to-tap on mobile once stages grew
     // past the smallest ones. Now tile size is derived from viewCols_ (how many columns should
@@ -35,12 +21,11 @@ void Game::draw() {
     // updateCameraTarget()'s result every frame in update()) scrolls a viewport over the grid
     // instead -- see cameraMode_'s declaration in game.h for the two modes.
     int gw = st.width, gh = st.height;
-    float oy = 60.0f, bottomMargin = 50.0f;
+    float oy = 60.0f;
     float ts; int viewCols, viewRows; cameraViewportTiles(ts, viewCols, viewRows);
     float ox = -cam_.x() * ts;
     oy -= cam_.y() * ts;
     static const float white[4] = {1,1,1,1};
-    float tint[4] = {1,1,1,1};
 
     const bool showStore = storeModal();
     // Milestone 7 bugfix (still relevant under Battle System v2): this used to fall back to
@@ -98,14 +83,13 @@ void Game::draw() {
         //     last, which only read correctly while every sprite was one tile tall: a 2x2 boss
         //     would have drawn over the wall above it and the player would always float on top of
         //     monsters instead of standing behind the ones below them;
-        //   * 4-grid entities (and roamers) get a name banner (F6: a boss you can only circle needs
-        //     to be identifiable without opening a menu).
+        //   * 4-grid entities (and roamers) get a name banner (F6) -- drawn by the HUD (RmlUi, see
+        //     buildUiState's hud.banners), at this same position.
         struct FloorSprite {
             int   sortKey;         // bottom-most occupied row
             int   tieX;            // stable, left-to-right tie-break within a row
             float x, y, w, h;      // pixel rect
             int   layer;
-            std::string banner;    // empty = no banner
             bool  plate = false;   // S3.5 (d): an event marker -> solid story plate, not an atlas sprite
         };
         std::vector<FloorSprite> floor;
@@ -124,11 +108,6 @@ void Game::draw() {
             // the atlas has no "relic/whisper/cache" art yet (S8 owns that), and a plate reads as
             // "something to read here" without pretending to be a creature or an item.
             f.plate = e.kind.rfind("event:", 0) == 0;
-            // The banner is for the boss/event tier and for roamers; the text prefers the stage's
-            // own displayName and falls back to the entity id, so a floor file can name its boss
-            // without any new data file having to exist yet.
-            if (e.fp.bossTier() || e.roamer)
-                f.banner = e.displayName.empty() ? e.id : e.displayName;
             floor.push_back(f);
         }
         {
@@ -157,315 +136,20 @@ void Game::draw() {
             } else {
                 ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, white));
             }
-            if (!f.banner.empty()) {
-                // Name banner: a translucent plate centred above the sprite, then the name. Drawn
-                // with the game's own text renderer (CJK-capable), not ImGui: ImGui's font has no
-                // CJK glyphs, so player-facing text never goes through ImGui.
-                const float labelW = (float)f.banner.size() * 13.0f + 16.0f;
-                const float lx = f.x + f.w * 0.5f - labelW * 0.5f;
-                const float ly = f.y - 22.0f;
-                Quad plate; plate.rect[0]=lx; plate.rect[1]=ly; plate.rect[2]=labelW; plate.rect[3]=20.0f;
-                plate.uv[0]=0;plate.uv[1]=0;plate.uv[2]=1;plate.uv[3]=1; plate.solid=true;
-                plate.tint[0]=0.06f;plate.tint[1]=0.05f;plate.tint[2]=0.09f;plate.tint[3]=0.78f;
-                // Stays in whatever node the floor is already drawing in: the plate and the text
-                // must land in the same batch as the sprites they annotate, and there is no
-                // NODE_TEXT in the render-node enum (NODE_UNSPEC/STAGE/CHAR/TALK/BATTLE/STORE).
-                ren->drawSprite(plate);
-                drawText(f.banner, lx + 8.0f, ly + 2.0f, 16, C4(1.0f, 0.86f, 0.55f, 1.0f));
-            }
-        }
-
-        ren->setNode(NODE_CHAR);
-        drawText(locale_.tr("game.title") + " — " + st.name + " (" + std::to_string(st.index) + "/" + std::to_string(totalStages) + ")", 16, 16, 22, tint);
-        float bx = 16, by = 44;
-        drawBar(bx, by, 200, 14, (float)pl.hp/pl.maxhp, C4(0.9f,0.2f,0.2f,1));
-        drawText("HP " + std::to_string(pl.hp) + "/" + std::to_string(pl.maxhp), bx+210, by, 18, tint);
-        drawText("ATK " + std::to_string(pl.atk) + "  DEF " + std::to_string(pl.def) + "  LV " + std::to_string(pl.lv), bx, by+20, 18, tint);
-        drawText("GOLD " + std::to_string(pl.gold) + "  EXP " + std::to_string(pl.exp) + "  " + locale_.tr("hud.keys") + " Y"+std::to_string(pl.key_yellow)+" B"+std::to_string(pl.key_blue)+" R"+std::to_string(pl.key_red) + "  " + locale_.tr("hud.items") + "x" + std::to_string(pl.inv.size()) + " (I)", bx, by+42, 16, tint);
-        // S3.5 (c): the floor's story line (intro, then its ambient lines as the player moves). The
-        // grid's own story_note is the fallback for hand-authored stages and for floors without one.
-        std::string footerLine = st.story_note;
-        if (!storyIntroKey_.empty()) {
-            int idx = storyLineIndex();                 // 0 = intro, 1..n = ambient
-            std::string key = (idx == 0 || storyAmbientKeys_.empty())
-                              ? storyIntroKey_
-                              : storyAmbientKeys_[(size_t)(idx - 1) % storyAmbientKeys_.size()];
-            std::string tr = locale_.tr(key);
-            if (!tr.empty() && tr.rfind("story.", 0) != 0) footerLine = tr;   // missing key -> keep the note
-        }
-        drawText(footerLine, 16, H-30, 16, C4(0.8f,0.85f,1.0f,1));
-        // S3.5 (c): the act card -- shown for a couple of seconds when an act's first floor loads.
-        if (chapterCardMs_ > 0.0f && !chapterCardTitle_.empty()) {
-            float alpha = std::min(1.0f, chapterCardMs_ / 600.0f);       // fade out over the last 600ms
-            float cw = 620.0f, ch = 116.0f;
-            float cx0 = (W - cw) * 0.5f, cy0 = H * 0.30f;
-            Quad card; card.rect[0]=cx0; card.rect[1]=cy0; card.rect[2]=cw; card.rect[3]=ch;
-            card.uv[0]=0;card.uv[1]=0;card.uv[2]=1;card.uv[3]=1; card.solid=true;
-            card.tint[0]=0.06f; card.tint[1]=0.08f; card.tint[2]=0.14f; card.tint[3]=0.88f*alpha;
-            ren->drawSprite(card);
-            Quad rule; rule.rect[0]=cx0+24.0f; rule.rect[1]=cy0+ch-14.0f; rule.rect[2]=cw-48.0f; rule.rect[3]=2.0f;
-            rule.uv[0]=0;rule.uv[1]=0;rule.uv[2]=1;rule.uv[3]=1; rule.solid=true;
-            rule.tint[0]=0.85f; rule.tint[1]=0.72f; rule.tint[2]=0.35f; rule.tint[3]=0.9f*alpha;
-            ren->drawSprite(rule);
-            drawText(chapterCardTitle_, cx0+28.0f, cy0+18.0f, 26, C4(1.0f,0.94f,0.7f,alpha));
-            drawText(st.name, cx0+28.0f, cy0+64.0f, 18, C4(0.82f,0.86f,0.95f,alpha));
-        }
-
-        ren->setNode(NODE_STORE);
-        if (!storeOpen) drawStoreIcon();
-        if (!storeOpen && !inGameMenuOpen_) drawMenuIcon();
-        storeBtnRects_.clear();
-        drawStoreToast();
-        drawGamepad();
-        drawStylingSpikeBackdrop();
-        if (stairsConfirmOpen_) drawStairsConfirmDialog();
-        if (inGameMenuOpen_) drawInGameMenu();
-        ren->end();
-        return;
-    }
-
-    // ---- battle scene ----
-    if (showBattle) {
-        ren->setNode(NODE_BATTLE);
-        drawFocusSplash();
-        float cx = W/2 - 250;
-        // Battle UI scale (owner: "make battle scene' UI bigger, it's hard to see on mobile"). The
-        // battle screen is its own modal, so it can be enlarged inside the fixed 1024x768 design
-        // without touching the maze or the on-canvas pad: sizes multiply and positions scale about
-        // the screen centre, so the layout keeps its shape and simply fills more of the screen.
-        const float BS = 1.40f;
-        auto S  = [BS](float v) { return v * BS; };
-        auto SX = [&](float x) { return W * 0.5f + (x - W * 0.5f) * BS; };
-        auto SY = [&](float y) { return H * 0.5f + (y - H * 0.5f) * BS; };
-        drawText(locale_.tr("battle.title") + " " + cs.enemy.name, cx, SY(120), S(26), C4(1,0.6f,0.4f,1));
-        ren->drawSprite(spriteQuad(cx, SY(170), S(96), S(96), spriteLayer("player"), white));
-        ren->drawSprite(spriteQuad(SX(cx+350), SY(170), S(96), S(96), spriteLayer(cs.enemy.boss?"boss_demonlord":entSprite(cs.enemy.id)), white));
-        // C: the player HP bar is anchored at the raw (unscaled) cx with a SCALED width (cx +
-        // S(200)) -- the label used to sit at SX(cx+210) instead, a DIFFERENT anchor convention
-        // that drifts left of the bar's own actual right edge as BS grows, landing the label text
-        // on top of the bar itself at BS=1.40 (confirmed in a real screenshot). Anchoring the label
-        // to where the bar it labels ACTUALLY ends removes the drift instead of just hiding it.
-        float pBarEndX = cx + S(200.0f);
-        drawBar(cx, SY(280), S(200), S(16), (float)cs.playerHP/pl.maxhp, C4(0.3f,0.9f,0.4f,1));
-        drawText(locale_.tr("battle.you") + " HP " + std::to_string(cs.playerHP), pBarEndX + S(10.0f), SY(280), S(18), tint);
-        drawBar(SX(cx+350), SY(280), S(200), S(16), (float)std::max(0,cs.enemyHP)/cs.enemy.hp, C4(0.9f,0.3f,0.3f,1));
-        // The enemy side, unlike the player side, anchors both its bar AND its label through SX --
-        // consistent with each other, but SX(cx+350) is already most of the way to the right edge,
-        // so growing BS pushes the label's TEXT (whose width isn't known until measured) off the
-        // 1024-wide canvas entirely (confirmed in a real screenshot: "史萊姆 H" cut off mid-word).
-        // Clamping its start x by the label's own measured width is what the original battle-scale
-        // pass deferred to "the battle wiring step" -- this is that step.
-        std::string enemyHpLabel = cs.enemy.name + " HP " + std::to_string(std::max(0,cs.enemyHP));
-        float enemyLabelNaturalX = SX(cx+350) + S(200.0f) + S(10.0f);
-        float enemyLabelW = measureText(enemyHpLabel, S(18.0f));
-        float enemyLabelX = std::min(enemyLabelNaturalX, W - enemyLabelW - 16.0f);
-        drawText(enemyHpLabel, enemyLabelX, SY(280), S(18), tint);
-        drawText(cs.log, cx, SY(320), S(18), tint);
-        // Battle System v2 (docs/design/BATTLE_SYSTEM_V2_PROPOSALS.md): the Attack and Defense bars move
-        // on their own, continuously and independently, all the time -- there's no "your turn" to
-        // display, just wherever each marker currently is. A tap (handleTouch/battleTapAttack/
-        // battleTapDefense) resolves instantly from that live position, so unlike the old
-        // press-and-hold model there is nothing here to compute from an accumulated duration.
-        if (cs.active) {
-            // The enemy's own real-time clock -- how close it is to its next attack, completely
-            // independent of either bar below.
-            float enemyFrac = (float)cs.enemyClockMs / (float)std::max(500, cs.enemy.atkIntervalMs);
-            drawText(locale_.tr("battle.enemy_clock"), cx, SY(338), S(14), C4(0.9f, 0.75f, 0.5f, 1));
-            drawBar(cx, SY(353), S(500), S(10), enemyFrac, C4(0.85f, 0.45f, 0.2f, 1));
-
-            float colW = S(230.0f), atkX = cx, defX = cx + colW + S(40.0f);
-            // C: the first pass (owner's "make battle bigger" fix) scaled the header text and the
-            // button rect below each bar, but left the bar's OWN geometry (drawPowerBar's y/height)
-            // and its cooling-dim overlay at the unscaled literals -- a thin, small bar sitting above
-            // an already-enlarged button, and the gap between them growing with BS instead of staying
-            // proportional. Scaling every element inside drawAutoBar the same way closes that gap.
-            auto drawAutoBar = [&](float x, CombatState::AutoBar& bar, const toms::PowerBarParams& params,
-                                    int rect[4], const std::string& promptKey, const std::string& idleLabelKey) {
-                drawText(locale_.tr(promptKey), x, SY(372), S(15), C4(0.9f, 0.9f, 1.0f, 1));
-                float barY = SY(390), barH = S(20.0f);
-                drawPowerBar(x, barY, colW, barH, params, bar.pos);
-                if (bar.cooling) {
-                    Quad dim; dim.rect[0]=x; dim.rect[1]=barY; dim.rect[2]=colW; dim.rect[3]=barH;
-                    dim.uv[0]=0; dim.uv[1]=0; dim.uv[2]=1; dim.uv[3]=1; dim.solid=true;
-                    dim.tint[0]=0.08f; dim.tint[1]=0.08f; dim.tint[2]=0.1f; dim.tint[3]=0.55f;
-                    ren->drawSprite(dim);
-                }
-                float bY = SY(414), bH = S(44);
-                rect[0]=(int)x; rect[1]=(int)bY; rect[2]=(int)colW; rect[3]=(int)bH;
-                Quad cb; cb.rect[0]=x; cb.rect[1]=bY; cb.rect[2]=colW; cb.rect[3]=bH;
-                cb.uv[0]=0; cb.uv[1]=0; cb.uv[2]=1; cb.uv[3]=1; cb.solid=true;
-                if (bar.cooling) { cb.tint[0]=0.16f; cb.tint[1]=0.18f; cb.tint[2]=0.22f; cb.tint[3]=1; }
-                else             { cb.tint[0]=0.24f; cb.tint[1]=0.32f; cb.tint[2]=0.46f; cb.tint[3]=1; }
-                ren->drawSprite(cb);
-                drawText(bar.cooling ? locale_.tr("battle.btn_charging") : locale_.tr(idleLabelKey),
-                          x + S(12.0f), bY + S(14.0f), S(14.0f), C4(1,1,1,1));
-            };
-            drawAutoBar(atkX, cs.atkBar, toms::effectiveAttackBar(equipped_, equipmentDefs_),
-                        atkBtnRect_, "battle.attack_prompt", "battle.btn_hold_attack");
-            drawAutoBar(defX, cs.defBar, toms::effectiveDefenseBar(equipped_, equipmentDefs_),
-                        defBtnRect_, "battle.defense_prompt", "battle.btn_hold_defense");
-
-            std::string shieldTxt = cs.shieldBanked
-                ? trParam(locale_.tr("battle.shield_armed"), "pct", std::to_string((int)std::lround(cs.shieldPower)))
-                : locale_.tr("battle.shield_none");
-            drawText(shieldTxt, defX, SY(462), S(14), cs.shieldBanked ? C4(0.55f,0.75f,1.0f,1) : C4(0.6f,0.63f,0.7f,1));
-            // S7 (equipment actives, first slice): a persistent reminder that the crit buff is
-            // armed -- cs.log alone would say so too, but it gets overwritten by the very next
-            // exchange (the enemy's own clock can fire before the player taps Attack), so this
-            // survives until the buff is actually consumed, mirroring shieldTxt's own persistence.
-            if (cs.nextAttackGuaranteedCrit)
-                drawText(locale_.tr("battle.active_armed_hint"), atkX, SY(462), S(14), C4(1.0f, 0.85f, 0.3f, 1));
-
-            // Super-Attack Gauge (§4): a row of dots (filled = one banked charge toward a free,
-            // no-timing-required strong hit) plus a button that only appears once full. Tapping
-            // it doesn't touch either bar's own cooldown above. This whole block was still at its
-            // pre-C, unscaled literal position/size (the first battle-scale pass never reached it) --
-            // now scaled the same way as everything above it.
-            drawText(locale_.tr("battle.super_label"), cx, SY(486), S(14), C4(0.9f, 0.9f, 1.0f, 1));
-            float dotX = cx + S(110.0f), dotY = SY(486), dotSz = S(12.0f), dotGap = S(6.0f);
-            for (int i = 0; i < run_.superMax(); i++) {
-                Quad d; d.rect[0]=dotX + i*(dotSz+dotGap); d.rect[1]=dotY; d.rect[2]=dotSz; d.rect[3]=dotSz;
-                d.uv[0]=0; d.uv[1]=0; d.uv[2]=1; d.uv[3]=1; d.solid=true;
-                if (i < cs.superCharge) { d.tint[0]=1.0f; d.tint[1]=0.6f; d.tint[2]=0.25f; d.tint[3]=1; }
-                else                    { d.tint[0]=0.2f; d.tint[1]=0.2f; d.tint[2]=0.25f; d.tint[3]=1; }
-                ren->drawSprite(d);
-            }
-            bool superReady = cs.superCharge >= run_.superMax();
-            if (superReady) {
-                float sX = cx, sY = SY(508), sW = S(500.0f), sH = S(36.0f);
-                superBtnRect_[0]=(int)sX; superBtnRect_[1]=(int)sY; superBtnRect_[2]=(int)sW; superBtnRect_[3]=(int)sH;
-                Quad sb; sb.rect[0]=sX; sb.rect[1]=sY; sb.rect[2]=sW; sb.rect[3]=sH;
-                sb.uv[0]=0; sb.uv[1]=0; sb.uv[2]=1; sb.uv[3]=1; sb.solid=true;
-                sb.tint[0]=0.7f; sb.tint[1]=0.25f; sb.tint[2]=0.2f; sb.tint[3]=1;
-                ren->drawSprite(sb);
-                drawText(locale_.tr("battle.super_ready"), sX + S(150.0f), sY + S(8.0f), S(16.0f), C4(1,1,1,1));
-            } else {
-                superBtnRect_[0]=superBtnRect_[1]=superBtnRect_[2]=superBtnRect_[3]=0;
-            }
-
-            // Equipment actives: a 4th battle action, only shown once the currently equipped gear
-            // grants an active AND canUseActive() says it's actually usable right now (uses left,
-            // off cooldown, no silence) -- same "no button at all until it's actually available"
-            // convention as Super above, rather than a permanently-visible-but-disabled button.
-            auto activeIds = toms::equippedActives(equipped_, equipmentDefs_);
-            if (!activeIds.empty() && toms::canUseActive(activeIds[0], activeDefs_, cs.activeRuntime, cs.activeStatus)) {
-                // ActiveDefinition carries no display name yet (a real, still-open content gap) --
-                // the button falls back to the raw id rather than inventing a name lookup here.
-                std::string activeLabel = activeIds[0];
-                float aX = cx, aY = SY(552.0f), aW = S(500.0f), aH = S(36.0f);
-                activeBtnRect_[0]=(int)aX; activeBtnRect_[1]=(int)aY; activeBtnRect_[2]=(int)aW; activeBtnRect_[3]=(int)aH;
-                Quad ab; ab.rect[0]=aX; ab.rect[1]=aY; ab.rect[2]=aW; ab.rect[3]=aH;
-                ab.uv[0]=0; ab.uv[1]=0; ab.uv[2]=1; ab.uv[3]=1; ab.solid=true;
-                ab.tint[0]=0.25f; ab.tint[1]=0.55f; ab.tint[2]=0.65f; ab.tint[3]=1;
-                ren->drawSprite(ab);
-                drawText(trParam(locale_.tr("battle.active_ready"), "name", activeLabel),
-                         aX + S(20.0f), aY + S(8.0f), S(15.0f), C4(1,1,1,1));
-            } else {
-                activeBtnRect_[0]=activeBtnRect_[1]=activeBtnRect_[2]=activeBtnRect_[3]=0;
-            }
-        } else {
-            drawText(locale_.tr("battle.continue_hint"), cx, SY(350), S(16), C4(1,1,0.6f,1));
         }
         drawStylingSpikeBackdrop();
-        ren->end();
-        return;
     }
-
-    // ---- dialogue scene ----
-    if (showTalk) {
-        ren->setNode(NODE_TALK);
-        drawFocusSplash();
-        // C: box geometry and row-y both come from game_helpers.h's dialogueBoxRect/dialogueRowY --
-        // the same functions game_input.cpp's hit-test calls, so this can't drift out of sync with
-        // what's actually tappable (see that helper's comment for why bottom-anchored, not centred).
-        // C step 2: geometry comes from ONE description (dialogueLayoutFor -> DialogueLayout), and every
-        // rect goes through uiRoot_ -- the same mapping game_input.cpp's hit-test uses, so what is drawn
-        // and what is tappable cannot drift apart. At scale 1.0 this is the identity: same pixels.
-        toms::DialogueLayout dl = dialogueLayoutFor(W, H, (int)dlgChoices.size());
-        glm::vec4 boxF = uiRoot_.ScreenRect(dl.box);
-        toms::UiRect box; box.x = boxF.x; box.y = boxF.y; box.w = boxF.z; box.h = boxF.w;
-        Quad boxQ; boxQ.rect[0]=box.x; boxQ.rect[1]=box.y; boxQ.rect[2]=box.w; boxQ.rect[3]=box.h;
-        boxQ.uv[0]=0;boxQ.uv[1]=0;boxQ.uv[2]=1;boxQ.uv[3]=1; boxQ.solid=true;
-        boxQ.tint[0]=0.1f;boxQ.tint[1]=0.12f;boxQ.tint[2]=0.2f;boxQ.tint[3]=0.95f; ren->drawSprite(boxQ);
-        std::string txt = locale_.field(dlgData["nodes"][dlgNode]["text"]);
-        drawText(txt, box.x + 60.0f * dl.textScale, box.y + 20.0f * dl.textScale, 20.0f * dl.textScale, tint);
-        for (size_t i = 0; i < dlgChoices.size(); i++) {
-            glm::vec4 rowF = uiRoot_.ScreenRect(dl.rowRect((int)i));
-            float ty = rowF.y + rowF.w * 0.5f;
-            if ((int)i == dlgSel) drawText("▶ " + dlgChoices[i].label, 60, ty, 18.0f * kDialogueScale, C4(1,1.0f,0.6f,1));
-            else                   drawText("  " + dlgChoices[i].label, 60, ty, 18.0f * kDialogueScale, C4(1,0.9f,0.5f,1));
-        }
-        drawStylingSpikeBackdrop();
-        ren->end();
-        return;
-    }
-
-    // ---- inventory scene ----
-    if (showInv) {
-        ren->setNode(NODE_CHAR);
-        drawInventory();
-        drawStylingSpikeBackdrop();
-        ren->end();
-        return;
-    }
-
-    // ---- store scene ----
-    ren->setNode(NODE_STORE);
-    if (!storeOpen) drawStoreIcon();
-    storeBtnRects_.clear();
-    if (storeUnlockDlg) drawStoreUnlockDialog();
-    else if (storeOpen && !storeUiExternal_) drawStoreUI();
-    if (!(storeOpen && storeUiExternal_)) drawStoreToast();   // the external store shows its own toast
-    drawGamepad();
-
-    drawStylingSpikeBackdrop();
+    // Battle / dialogue / inventory / store: the RmlUi documents fill the screen, no world behind.
     ren->end();
 }
 
-void Game::drawGamepad() {
-    // Hide the whole gamepad (including its P toggle) while a top-layer UI is
-    // active (battle / dialogue / inventory / store). Those UIs are driven by
-    // direct touch/keyboard on their own elements, so the on-canvas D-pad + A
-    // would just clutter the screen and could be mis-tapped.
-    if (modalActive() || cs.won) return;
-    ren->setNode(NODE_CHAR);
-    float t[4] = {1,1,1,1};
-    // P toggle button (drawn in normal play; modals already returned above).
-    {
-        const GPadBtn b = gpadBtn(7);
-        Quad q; q.rect[0]=b.x; q.rect[1]=b.y; q.rect[2]=b.w; q.rect[3]=b.h;
-        q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
-        q.tint[0]=b.col[0]; q.tint[1]=b.col[1]; q.tint[2]=b.col[2]; q.tint[3]=b.col[3];
-        ren->drawSprite(q);
-        {   // centred by measurement so a scaled plate keeps its glyph in the middle
-            const float lsize = 28.0f * toms::game_detail::kPadScale;
-            drawText(b.label, b.x + b.w/2 - measureText(b.label, lsize) * 0.5f,
-                     b.y + b.h/2 - lsize * 0.46f, lsize, t);
-        }
-    }
-    if (!gpOn) return;                 // gamepad hidden: only the toggle remains
-    for (int i = 0; i < 7; i++) {
-        if ((i == 5 || i == 6) && !inventoryOpen()) continue;  // B/drop + I/close only show inside inventory
-        const GPadBtn b = gpadBtn(i);
-        Quad q; q.rect[0]=b.x; q.rect[1]=b.y; q.rect[2]=b.w; q.rect[3]=b.h;
-        q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;
-        q.tint[0]=b.col[0]; q.tint[1]=b.col[1]; q.tint[2]=b.col[2]; q.tint[3]=b.col[3];
-        ren->drawSprite(q);
-        {
-            const float lsize = 30.0f * toms::game_detail::kPadScale;
-            drawText(b.label, b.x + b.w/2 - measureText(b.label, lsize) * 0.5f,
-                     b.y + b.h/2 - lsize * 0.46f, lsize, t);
-        }
-    }
-}
-
 // ---------------------------------------------------------------------------------------------
-// ImGui UI, part 1 -- compiled on BOTH desktop and web: the font-scale setter, the F1 debug
+// ImGui developer tools -- compiled on BOTH desktop and web: the font-scale setter, the F1 debug
 // overlay and the F2 styling spike. The ImGui backend is bgfx (src/engine/src/imgui_bgfx.*),
 // driven by GameSession on both platforms. Nothing here touches gameplay
 // state a player sees unless they press F1/F2, so the browser build behaves exactly as before.
 void Game::applyUiSettings() {
-    ImGui::GetIO().FontGlobalScale = uiFontScale_;
+    ImGui::GetIO().FontGlobalScale = 1.5f;   // ImGui's default font reads small at this resolution
 }
 
 void Game::drawDebugOverlay() {
@@ -542,99 +226,6 @@ void Game::drawStylingSpike() {
     ImGui::End();
 }
 
-// ImGui UI, part 2 -- still DESKTOP-ONLY (deliberate): the toast
-// windows and the ImGui stage-select window. Both draw locale strings (CJK), and ImGui's built-in
-// font has no CJK glyphs -- they would render as tofu boxes -- while the browser build already has
-// its own stage-select UI and toast drawing in the game renderer. Enabling these on web would
-// change what a browser player sees, which the M2 scope explicitly avoids.
-#ifndef __EMSCRIPTEN__
-
-// Milestone 5: transient toast notifications, stacked top-right, each with its own fade-free
-// fixed 3-second lifetime (see pushNotification()/update()'s countdown). Purely additive --
-// nothing else reads/depends on this window.
-void Game::drawNotifications() {
-    if (notifications_.empty() || !ren) return;
-    float W = (float)ren->width();
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoCollapse |
-                             ImGuiWindowFlags_AlwaysAutoResize;
-    float y = 90.0f;   // below the HUD stat block and store icon
-    for (size_t i = 0; i < notifications_.size(); i++) {
-        ImGui::SetNextWindowPos(ImVec2(W - 260.0f, y), ImGuiCond_Always);
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.12f, 0.14f, 0.10f, 0.9f));
-        std::string winId = "##toast" + std::to_string(i);
-        ImGui::Begin(winId.c_str(), nullptr, flags);
-        ImGui::TextColored(ImVec4(0.8f, 1.0f, 0.6f, 1.0f), "%s", notifications_[i].first.c_str());
-        ImGui::End();
-        ImGui::PopStyleColor();
-        y += 48.0f;
-    }
-}
-
-// Milestone 5: the Stage Select hub -- every floor the player has ever reached is individually
-// selectable; a locked stage shows why (architecture-doc §10). Tab to open (see GameSession),
-// blocks background input while open (modalActive() includes stageSelectOpen_).
-void Game::drawStageSelect() {
-    if (!ren) return;
-    float W = (float)ren->width(), H = (float)ren->height();
-    ImGui::SetNextWindowPos(ImVec2(W * 0.5f, H * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(W - 120.0f, H - 100.0f), ImGuiCond_Always);
-    ImGui::Begin(locale_.tr("stageselect.title").c_str(), nullptr,
-                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
-    ImGui::TextWrapped("%s", locale_.tr("stageselect.hint").c_str());
-    ImGui::Separator();
-    // UI settings: font size, applied globally via applyUiSettings() (called every frame from
-    // GameSession). In-memory only for now -- see uiFontScale_'s declaration in game.h for why.
-    if (ImGui::CollapsingHeader(locale_.tr("stageselect.ui_settings_header").c_str())) {
-        ImGui::SliderFloat(locale_.tr("stageselect.font_size_label").c_str(), &uiFontScale_, 0.5f, 2.5f, "%.2fx");
-        ImGui::SameLine();
-        if (ImGui::Button(locale_.tr("stageselect.reset_button").c_str())) uiFontScale_ = 1.5f;
-    }
-    ImGui::Separator();
-    for (size_t i = 0; i < stageList_.size(); i++) {
-        const StageInfo& info = stageList_[i];
-        bool reached = std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), info.id) != meta_.unlockedStages.end();
-        bool locked = false;
-        if (info.index > 1 && i > 0) {
-            const StageInfo& prev = stageList_[i - 1];
-            locked = std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), prev.id) == meta_.unlockedStages.end();
-        }
-        bool isNew = !locked && !reached;
-
-        ImGui::PushID((int)i);
-        ImGui::BeginDisabled(locked);
-        std::string label = std::to_string(info.index) + ". " + info.name;
-        if (reached) label += "  " + locale_.tr("stageselect.reached_tag");
-        if (isNew)   label += "  " + locale_.tr("stageselect.new_tag");
-        if (ImGui::Button(label.c_str(), ImVec2(-1, 0))) {
-            loadStage(info.id);
-            closeStageSelect();
-        }
-        ImGui::EndDisabled();
-        // ImGuiHoveredFlags_AllowWhenDisabled: BeginDisabled() suppresses hover reporting by
-        // default, so the lock-reason tooltip needs this explicit override to show at all.
-        if (locked && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-            ImGui::SetTooltip("%s", trParam(locale_.tr("stageselect.locked_hint"), "floor", std::to_string(info.index - 1)).c_str());
-        // Milestone 8: recommended-stats preview text, shown under every row that has one
-        // (locked rows too -- it's exactly the info a player needs to decide whether to go grind
-        // first, per the roadmap's own "Stage Select preview text (recommended stats)" ask).
-        if (!info.preview.empty()) {
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.75f, 0.8f, 0.9f, 0.85f));
-            ImGui::TextWrapped("  %s", info.preview.c_str());
-            ImGui::PopStyleColor();
-        }
-        ImGui::PopID();
-    }
-    ImGui::End();
-}
-
-// Draws the backdrop rect for the M2 styling spike (see drawStylingSpike() above). Declared
-// unguarded so Game::draw() -- shared between the desktop and web builds -- can call it
-// unconditionally: stylingSpikeVisible_ can only ever become true via the desktop-only
-// setStylingSpikeVisible()/drawStylingSpike(), so this is a correct no-op on the web build.
-#endif  // !__EMSCRIPTEN__ (native-only ImGui UI above; no stubs -- the browser
-        // build simply has no F1 overlay / spike / ImGui stage select)
-
 void Game::drawStylingSpikeBackdrop() {
     if (!stylingSpikeVisible_ || !ren) return;
     float x = stylingSpikeRect_[0], y = stylingSpikeRect_[1], w = stylingSpikeRect_[2], h = stylingSpikeRect_[3];
@@ -650,63 +241,4 @@ void Game::drawStylingSpikeBackdrop() {
     inner.uv[0]=0;inner.uv[1]=0;inner.uv[2]=1;inner.uv[3]=1; inner.solid=true;
     inner.tint[0]=0.10f; inner.tint[1]=0.09f; inner.tint[2]=0.16f; inner.tint[3]=0.96f;
     ren->drawSprite(inner);
-}
-
-// M7 (first slice): the ending screen. Drawn with the game's own scene-graph primitives (not
-// ImGui, unlike the styling-spike/stage-select windows above) so it renders identically on
-// desktop and web -- see draw()'s own dispatch, which gives this full-screen priority the same
-// way the title screen gets it.
-void Game::drawEndingScreen() {
-    if (!ren) return;
-    const float W = (float)ren->width(), H = (float)ren->height();
-    static const float gold[4] = {0.95f, 0.82f, 0.45f, 1.0f};
-    static const float white[4] = {1,1,1,1};
-    static const float dim[4]  = {0.62f, 0.65f, 0.75f, 1.0f};
-
-    Quad bg; bg.rect[0]=0; bg.rect[1]=0; bg.rect[2]=W; bg.rect[3]=H;
-    bg.uv[0]=0;bg.uv[1]=0;bg.uv[2]=1;bg.uv[3]=1; bg.solid=true;
-    bg.tint[0]=0.04f; bg.tint[1]=0.04f; bg.tint[2]=0.07f; bg.tint[3]=1.0f;
-    ren->drawSprite(bg);
-
-    const toms::EndingDefinition* def = nullptr;
-    for (auto& e : endingsTable_.endings) if (e.id == activeEndingId_) { def = &e; break; }
-    std::string name = def ? locale_.tr(def->nameKey) : activeEndingId_;
-    std::string text = def ? locale_.tr(def->textKey) : "";
-
-    float titleY = H * 0.32f;
-    drawText(name, (W - measureText(name, 32.0f)) * 0.5f, titleY, 32, gold);
-
-    toms::UiLayout ui{W, H};
-    float maxW = W - 160.0f;
-    auto lines = ui.wrap(text, maxW, [&](const std::string& s) { return measureText(s, 18.0f); });
-    float ty = titleY + 60.0f;
-    for (auto& line : lines) {
-        drawText(line, (W - measureText(line, 18.0f)) * 0.5f, ty, 18, white);
-        ty += 28.0f;
-    }
-
-    // M8: two real exits when the ending offers 輪迴 (rebirth), matching the confirm-dialog
-    // button style used elsewhere (e.g. the in-game menu's language-switch Yes/No) rather than a
-    // half-screen tap zone -- explicit rects, drawn and hit-tested from the exact same place.
-    if (rebirthOffered()) {
-        auto button = [&](int rectOut[4], float x, float y, float w, float h, const std::string& label, const float* tint) {
-            rectOut[0]=(int)x; rectOut[1]=(int)y; rectOut[2]=(int)w; rectOut[3]=(int)h;
-            Quad q; q.rect[0]=x; q.rect[1]=y; q.rect[2]=w; q.rect[3]=h;
-            q.uv[0]=0;q.uv[1]=0;q.uv[2]=1;q.uv[3]=1; q.solid=true;
-            q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
-            ren->drawSprite(q);
-            drawText(label, x + (w - measureText(label, 18.0f)) * 0.5f, y + (h-20.0f)*0.5f, 18, white);
-        };
-        static const float rebirthTint[4] = {0.55f, 0.30f, 0.20f, 1.0f};
-        static const float titleTint[4]   = {0.20f, 0.24f, 0.34f, 1.0f};
-        float btnW = 220.0f, btnH = 48.0f, gap = 30.0f, groupW = btnW*2 + gap;
-        float bx = (W - groupW) * 0.5f, by = H - 110.0f;
-        button(endingRebirthBtnRect_, bx, by, btnW, btnH, locale_.tr("ending.rebirth_button"), rebirthTint);
-        button(endingTitleBtnRect_,   bx + btnW + gap, by, btnW, btnH, locale_.tr("ending.title_button"), titleTint);
-    } else {
-        endingRebirthBtnRect_[0]=endingRebirthBtnRect_[1]=endingRebirthBtnRect_[2]=endingRebirthBtnRect_[3]=0;
-        endingTitleBtnRect_[0]=endingTitleBtnRect_[1]=endingTitleBtnRect_[2]=endingTitleBtnRect_[3]=0;
-        std::string hint = locale_.tr("ending.dismiss_hint");
-        drawText(hint, (W - measureText(hint, 15.0f)) * 0.5f, H - 60.0f, 15, dim);
-    }
 }

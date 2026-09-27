@@ -4,12 +4,9 @@
 
 #include "bgfx_renderer.h"
 #include "game.h"
+#include "game_ui.h"
 #include "log.h"
-
-#if TOMS_WITH_RMLUI
 #include "rml_ui.h"
-#include "store_screen.h"
-#endif
 
 #include <cstdlib>
 #include <filesystem>
@@ -19,11 +16,6 @@
 namespace fs = std::filesystem;
 
 namespace toms::next {
-
-#if !TOMS_WITH_RMLUI
-class RmlUi {};        // built without RmlUi: the members stay null, the old store is used
-class StoreScreen {};
-#endif
 
 GameSession::GameSession() = default;
 GameSession::~GameSession() { stop(); }
@@ -35,22 +27,6 @@ std::string GameSession::defaultAssetDir() {
 #else
     return "assets";
 #endif
-}
-
-std::string GameSession::applyFontFallback(const std::string& assetDir) {
-    if (std::getenv("TOMS_FONT")) return "";
-    if (fs::exists(fs::path(assetDir) / "wqy-zenhei.ttc")) return "";
-#ifdef _WIN32
-    const char* windir = std::getenv("WINDIR");
-    fs::path fallback = fs::path(windir ? windir : "C:\\Windows") / "Fonts" / "msjh.ttc";
-    if (fs::exists(fallback)) {
-        _putenv_s("TOMS_FONT", fallback.string().c_str());
-        return "assets/wqy-zenhei.ttc is missing, so Microsoft JhengHei (msjh.ttc) is used instead.\n"
-               "For the shipped look, download WenQuanYi Zen Hei and copy wqy-zenhei.ttc into assets/media/:\n"
-               "https://sourceforge.net/projects/wqy/files/wqy-zenhei/";
-    }
-#endif
-    return "";
 }
 
 bool GameSession::start(const SessionOptions& opts, std::string& error) {
@@ -70,14 +46,13 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
         return false;
     }
 #ifdef __EMSCRIPTEN__
-    const bool hasFont = true;   // the browser draws glyphs with its own fonts (Font::buildFromCanvas)
+    const bool uiFiles = fs::exists(fs::path(assetDir_) / "ui" / "hud.rml");   // the browser draws the text
 #else
-    const bool hasFont = std::getenv("TOMS_FONT") || fs::exists(fs::path(assetDir_) / "wqy-zenhei.ttc");
+    const bool uiFiles = fs::exists(uiFontPath(assetDir_)) && fs::exists(fs::path(assetDir_) / "ui" / "hud.rml");
 #endif
-    if (!hasFont) {
-        error = "No CJK font is available.\n\nDownload WenQuanYi Zen Hei and copy wqy-zenhei.ttc into\n  " +
-                assetDir_ + "\n\nhttps://sourceforge.net/projects/wqy/files/wqy-zenhei/\n"
-                "(or set TOMS_FONT to any .ttf/.ttc with Traditional Chinese glyphs)";
+    if (!uiFiles) {
+        error = "The UI files were not found in\n  " + assetDir_ +
+                "\n\nExpected fonts/NotoSansCJKtc-TOMS.otf and ui/*.rml (restore them with: git checkout -- assets)";
         return false;
     }
 
@@ -109,57 +84,47 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     if (const char* sn = std::getenv("TOMS_SPLIT_NODE")) renderer_->setNodeFilter((uint8_t)std::atoi(sn));
     game_->loadStage(opts.startStage);
     keyWas_.fill(false);
-    startRmlUi();
+
+    // The UI: RmlUi on bgfx (view kViewUi), every screen bound to the game (game_ui.h).
+    rml_ = std::make_unique<RmlUi>();
+    ui_ = std::make_unique<GameUi>();
+    if (!rml_->init((int)BgfxRenderer::kDesignW, (int)BgfxRenderer::kDesignH, uiFontPath(assetDir_), error) ||
+        !ui_->init(rml_->context(), game_.get(), (fs::path(assetDir_) / "ui").string(), error)) {
+        error = "The game UI could not start:\n" + error;
+        stop();
+        return false;
+    }
+    uiLanguage_.clear();
+    applyLanguageFont();
     return true;
 }
 
-void GameSession::startRmlUi() {
-#if TOMS_WITH_RMLUI
-    // Same font order as the game's own text: TOMS_FONT / wqy-zenhei first (CJK), then the Noto
-    // fonts for Japanese and Korean glyphs.
-    std::vector<std::string> fonts;
-    auto addFont = [&fonts](const fs::path& p) { if (fs::exists(p)) fonts.push_back(p.generic_string()); };
-    if (const char* f = std::getenv("TOMS_FONT")) addFont(f);
-    addFont(fs::path(assetDir_) / "wqy-zenhei.ttc");
-    addFont(fs::path(assetDir_) / "fonts" / "NotoSansJP-Regular.ttf");
-    addFont(fs::path(assetDir_) / "fonts" / "NotoSansKR-Regular.ttf");
-
-    std::string err;
-    rml_ = std::make_unique<RmlUi>();
-    store_ = std::make_unique<StoreScreen>();
-    if (!rml_->init((int)BgfxRenderer::kDesignW, (int)BgfxRenderer::kDesignH, fonts, err) ||
-        !store_->init(rml_->context(), game_.get(), (fs::path(assetDir_) / "ui").string(), err)) {
-        TOMS_LOG_WARN("RmlUi store disabled: {}", err);
-        store_.reset();
-        if (rml_) rml_->shutdown();
-        rml_.reset();
-        return;
+// The UI font follows the game's language (text.json: "font" on desktop, "web_font" on the web).
+void GameSession::applyLanguageFont() {
+    const toms::Locale& L = game_->locale();
+    if (L.languageCode() == uiLanguage_) return;
+    uiLanguage_ = L.languageCode();
+    const toms::LanguageInfo* info = nullptr;
+    for (const auto& li : L.languages()) if (li.code == uiLanguage_) info = &li;
+    std::string file;
+    if (info && !info->font.empty()) {
+        fs::path p(info->font);
+        file = (p.is_absolute() ? p : fs::path(assetDir_) / p).generic_string();
     }
-    const char* old = std::getenv("TOMS_OLD_STORE");
-    game_->setStoreUiExternal(!(old && *old == '1'));
-    TOMS_LOG_INFO("RmlUi store ready ({})", game_->storeUiExternal() ? "active" : "old store active, F4 switches");
-#endif
+    ui_->setFontFamily(rml_->languageFont(uiLanguage_, file, info ? info->webFont : std::string()));
 }
 
-bool GameSession::rmlStoreActive() const { return store_ && game_ && game_->storeUiExternal(); }
-
-bool GameSession::rmlWantsMouse() const {
-#if TOMS_WITH_RMLUI
-    return rml_ && ((store_ && store_->visible()) || rml_->debuggerVisible());
-#else
-    return false;
-#endif
+std::string GameSession::uiFontPath(const std::string& assetDir) {
+    return (fs::path(assetDir) / "fonts" / "NotoSansCJKtc-TOMS.otf").generic_string();
 }
 
 void GameSession::stop() {
     // Game never deletes its renderer (the old main called Renderer::destroy() by hand), so the
-    // session frees it. Order: the RmlUi screens (they point at Game and own bgfx handles), Game,
-    // then the renderer's GPU handles.
-#if TOMS_WITH_RMLUI
-    if (store_) store_->shutdown();
+    // session frees it. Order: the UI (it points at Game and owns bgfx handles), Game, then the
+    // renderer's GPU handles.
+    if (ui_) ui_->shutdown();
     if (rml_) rml_->shutdown();
-#endif
-    store_.reset();
+    ui_.reset();
     rml_.reset();
     game_.reset();
     if (renderer_) {
@@ -193,6 +158,8 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
     const bool spacePressed = keyPressed(in, Key::Space);
     const bool escPressed   = keyPressed(in, Key::Escape);
 
+    if (keyPressed(in, Key::F5)) ui_->reload();              // re-read assets/media/ui/*.rml/.rcss
+    if (keyPressed(in, Key::F8)) rml_->toggleDebugger();     // RmlUi's element/style inspector
     if (g.titleOpen()) {
         if (upPressed)    g.titleMove(0, -1);
         if (downPressed)  g.titleMove(0,  1);
@@ -207,11 +174,6 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
     if (!g.titleOpen()) {
         if (keyPressed(in, Key::F1)) showDebugOverlay = !showDebugOverlay;
         if (keyPressed(in, Key::F2)) showStylingSpike = !showStylingSpike;
-#if TOMS_WITH_RMLUI
-        if (keyPressed(in, Key::F4) && store_) g.setStoreUiExternal(!g.storeUiExternal());
-        if (keyPressed(in, Key::F5) && store_) store_->reload();
-        if (keyPressed(in, Key::F8) && rml_) rml_->toggleDebugger();
-#endif
         if (escPressed) {
             if (g.endingActive()) g.dismissEndingScreen();
             else if (g.storeModal()) g.storeKey(27);
@@ -273,60 +235,24 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         }
     }
 
-    // Mouse -> handleTouch in design space (down on press, up at the press position on release).
-    // Holding repeats phase 1 (after 320 ms, then every 150 ms), as the old web page did for the
-    // on-screen pad, so holding an arrow plate keeps walking.
-#if TOMS_WITH_RMLUI
-    // While an RmlUi document is up, the mouse goes to RmlUi (in design space) instead of the game.
-    if (rmlWantsMouse()) {
-        float bx, by;
-        Rml::Context* ctx = rml_->context();
-        if (in.hasMouse && renderer_->deviceToDesign(in.mouseX, in.mouseY, bx, by))
-            ctx->ProcessMouseMove((int)bx, (int)by, 0);
-        // Only a press that starts while the document is up goes to RmlUi. The press that opened
-        // the store (the HUD icon, which sits over the store's backdrop) is still held on the first
-        // frames; passing it on would make its release a backdrop click that closes the store.
-        if (in.mouseLeft && !mouseWasDown_) { ctx->ProcessMouseButtonDown(0, 0); rmlPressed_ = true; }
-        if (!in.mouseLeft && rmlPressed_) { ctx->ProcessMouseButtonUp(0, 0); rmlPressed_ = false; }
-        if (in.wheel != 0) ctx->ProcessMouseWheel(-in.wheel, 0);
-        mouseWasDown_ = in.mouseLeft;   // and a press made in the store is not replayed to the game
-        mouseHasDesign_ = false;
-    } else
-#endif
+    // Mouse: the UI first (design space). A press that lands on no UI element -- the HUD is
+    // pointer-events: none except its buttons -- goes on to the map (Game::handleTouch).
     {
-#if TOMS_WITH_RMLUI
-    if (rmlPressed_) {   // the document went away mid-press (e.g. Esc): don't leave RmlUi's button stuck
-        rml_->context()->ProcessMouseButtonUp(0, 0);
-        rmlPressed_ = false;
-    }
-#endif
-    if (in.hasMouse && in.mouseLeft) {
-        if (!mouseWasDown_) {
-            float bx, by;
-            if (renderer_->deviceToDesign(in.mouseX, in.mouseY, bx, by)) {
-                g.handleTouch(bx, by, 0);
-                mouseDesignX_ = bx; mouseDesignY_ = by; mouseHasDesign_ = true;
-            }
-            mouseHeldMs_ = 0;
-            mouseRepeatMs_ = 0;
-        } else if (mouseHasDesign_) {
-            float bx, by;
-            if (renderer_->deviceToDesign(in.mouseX, in.mouseY, bx, by)) { mouseDesignX_ = bx; mouseDesignY_ = by; }
-            mouseHeldMs_ += dtMs;
-            if (mouseHeldMs_ >= 320) {
-                mouseRepeatMs_ += dtMs;
-                if (mouseRepeatMs_ >= 150) {
-                    mouseRepeatMs_ -= 150;
-                    g.handleTouch(mouseDesignX_, mouseDesignY_, 1);
-                }
-            }
+        Rml::Context* ctx = rml_->context();
+        float bx = 0, by = 0;
+        const bool onGame = in.hasMouse && renderer_->deviceToDesign(in.mouseX, in.mouseY, bx, by);
+        if (onGame) ctx->ProcessMouseMove((int)bx, (int)by, 0);
+        if (in.mouseLeft && !mouseWasDown_) {
+            const bool free = ctx->ProcessMouseButtonDown(0, 0);
+            mousePressFree_ = free && onGame;
+            if (mousePressFree_) g.handleTouch(bx, by, 0);
+        } else if (!in.mouseLeft && mouseWasDown_) {
+            ctx->ProcessMouseButtonUp(0, 0);
+            if (mousePressFree_) g.handleTouch(bx, by, 2);
+            mousePressFree_ = false;
         }
-        mouseWasDown_ = true;
-    } else {
-        if (mouseWasDown_ && mouseHasDesign_) g.handleTouch(mouseDesignX_, mouseDesignY_, 2);
-        mouseWasDown_ = false;
-        mouseHasDesign_ = false;
-    }
+        if (in.wheel != 0) ctx->ProcessMouseWheel(-in.wheel, 0);
+        mouseWasDown_ = in.mouseLeft;
     }
 
     // Same order as the old main: ImGui frame, dev windows, ImGui render, then the game draw.
@@ -340,24 +266,17 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         if (showDebugOverlay) g.drawDebugOverlay();
         g.setStylingSpikeVisible(false);
         if (showStylingSpike) g.drawStylingSpike();
-#ifndef __EMSCRIPTEN__
-        // Desktop-only in the core code (CJK text in ImGui's font would be tofu; the browser
-        // build draws its own stage select and toasts with the game renderer).
-        if (!g.titleOpen()) g.drawNotifications();
-        if (g.stageSelectOpen()) g.drawStageSelect();
-#endif
     }
-    g.draw();   // -> BgfxRenderer::end(): views kViewClear + kViewGame
-#if TOMS_WITH_RMLUI
-    if (rml_) {   // RmlUi documents over the game, under ImGui
+    g.draw();   // the world -> BgfxRenderer::end(): views kViewClear + kViewGame
+    {           // the UI over it, under ImGui
         const auto vp = BgfxRenderer::computeAspectFitViewport(deviceW, deviceH, BgfxRenderer::kDesignW, BgfxRenderer::kDesignH);
         rml_->setViewport(vp.x, vp.y, vp.width, vp.height);
-        if (store_) store_->sync();
+        applyLanguageFont();
+        ui_->sync();
         uiTime_ += dtMs / 1000.0;
         rml_->update(uiTime_);
         rml_->render(BgfxRenderer::kViewUi);
     }
-#endif
     if (debugUi_) imgui_.render(BgfxRenderer::kViewOverlay);
     return keepRunning;
 }

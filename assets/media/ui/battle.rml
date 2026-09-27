@@ -1,0 +1,73 @@
+<rml>
+<head>
+    <title>Battle</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="battle.rcss"/>
+</head>
+<!-- Battle v2: the attack and defence bars run on their own; tap a button to strike or guard at
+     the marker's current zone. Super and the equipment active appear only when usable.
+     After a win, a tap anywhere continues. Data: battle.* (UiBattle). -->
+<body data-model="game" data-event-click="act('battle_continue')">
+    <div class="fill focus"></div>
+    <div id="title">{{battle.title}}</div>
+    <img id="player" data-attr-src="battle.player_sprite"/>
+    <img id="enemy" data-attr-src="battle.enemy_sprite"/>
+
+    <div id="player-hp" class="hp"><div class="fill-bar good" data-style-width="battle.player_hp_pct + '%'"></div></div>
+    <div id="player-hp-text" class="hp-text">{{battle.player_hp_text}}</div>
+    <div id="enemy-hp" class="hp"><div class="fill-bar bad" data-style-width="battle.enemy_hp_pct + '%'"></div></div>
+    <div id="enemy-hp-text" class="hp-text">{{battle.enemy_hp_text}}</div>
+    <div id="log">{{battle.log}}</div>
+
+    <div data-if="battle.active">
+        <div id="clock-label">{{battle.clock_label}}</div>
+        <div id="clock"><div class="fill-bar clock" data-style-width="battle.clock_pct + '%'"></div></div>
+
+        <div id="attack" class="column">
+            <div class="prompt">{{battle.attack.prompt}}</div>
+            <div class="power">
+                <div class="zones">
+                    <div class="zone red" data-style-width="battle.attack.red_l + '%'"></div>
+                    <div class="zone blue" data-style-width="battle.attack.blue_l + '%'"></div>
+                    <div class="zone green" data-style-width="battle.attack.green + '%'"></div>
+                    <div class="zone blue" data-style-width="battle.attack.blue_r + '%'"></div>
+                    <div class="zone red" data-style-width="battle.attack.red_r + '%'"></div>
+                </div>
+                <div class="bar-dim" data-visible="battle.attack.cooling"></div>
+                <div class="marker" data-style-left="battle.attack.marker + '%'"></div>
+            </div>
+            <div class="action btn" data-class-cooling="battle.attack.cooling"
+                 data-event-click="act('battle_attack')">{{battle.attack.button_label}}</div>
+            <div class="note crit" data-if="battle.crit_armed">{{battle.crit_hint}}</div>
+        </div>
+
+        <div id="defense" class="column">
+            <div class="prompt">{{battle.defense.prompt}}</div>
+            <div class="power">
+                <div class="zones">
+                    <div class="zone red" data-style-width="battle.defense.red_l + '%'"></div>
+                    <div class="zone blue" data-style-width="battle.defense.blue_l + '%'"></div>
+                    <div class="zone green" data-style-width="battle.defense.green + '%'"></div>
+                    <div class="zone blue" data-style-width="battle.defense.blue_r + '%'"></div>
+                    <div class="zone red" data-style-width="battle.defense.red_r + '%'"></div>
+                </div>
+                <div class="bar-dim" data-visible="battle.defense.cooling"></div>
+                <div class="marker" data-style-left="battle.defense.marker + '%'"></div>
+            </div>
+            <div class="action btn" data-class-cooling="battle.defense.cooling"
+                 data-event-click="act('battle_defend')">{{battle.defense.button_label}}</div>
+            <div class="note" data-class-shield="battle.shield_armed">{{battle.shield_text}}</div>
+        </div>
+
+        <div id="super">
+            <span id="super-label">{{battle.super_label}}</span>
+            <div class="dot-slot" data-for="d : battle.super_dots"><div class="dot" data-class-on="d == 1"></div></div>
+        </div>
+        <div id="super-btn" class="wide btn" data-if="battle.super_ready"
+             data-event-click="act('battle_super')">{{battle.super_button}}</div>
+        <div id="active-btn" class="wide btn" data-if="battle.active_ready"
+             data-event-click="act('battle_active')">{{battle.active_button}}</div>
+    </div>
+    <div id="continue" data-if="!battle.active">{{battle.continue_hint}}</div>
+</body>
+</rml>

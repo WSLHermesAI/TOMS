@@ -51,16 +51,14 @@ if ($Target -eq 'windows') {
         Write-Warning "MSVC runtime DLLs not found under $vs\VC\Redist; players may need the 'Visual C++ Redistributable (x64)'."
     }
 
-    $font = Test-Path (Join-Path $out 'assets\media\wqy-zenhei.ttc')
     @"
 Tower of the Sorcerer (TOMS) - Windows
 
 Run:   double-click toms_game.exe
 Needs: 64-bit Windows 10/11 with a Direct3D 11 capable GPU (any PC from the last ten years).
 Saves: the "save" folder next to toms_game.exe.  Log: toms.log next to toms_game.exe.
-Keys:  arrows/WASD move, Enter interact/attack, I inventory, B store, Tab stage select, Esc menu.
+Keys:  arrows/WASD or click a tile to move, Enter interact/attack, I inventory, B store, Tab stage select, Esc menu.
 Keep the "assets" folder next to toms_game.exe.
-$(if (-not $font) { "`nFont: wqy-zenhei.ttc is not included, so Windows' Microsoft JhengHei font is used.`n" })
 "@ | Set-Content -Encoding UTF8 (Join-Path $out 'README.txt')
 
     Zip-Dir $out (Join-Path $dist 'TOMS-windows.zip')

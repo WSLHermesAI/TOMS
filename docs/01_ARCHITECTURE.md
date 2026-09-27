@@ -90,12 +90,11 @@ removed on 2026-09-27 (they are in the git history).
 | Behaviour | old Vulkan `renderer.cpp` (removed) | `BgfxRenderer` |
 |---|---|---|
 | Design resolution | 1024×768, letterboxed | same (`computeAspectFitViewport`, `deviceToDesign`) |
-| Draw order | all sprites, then all text | same: two batches, one draw call each |
+| Draw order | all sprites, then all text | sprites in one batch; all text and UI is RmlUi ([08](08_RMLUI.md)) |
 | Atlases | RGBA8 sRGB, nearest, clamp | `BGFX_TEXTURE_SRGB`, point, clamp |
 | Blending | src-alpha / inverse src-alpha | `BGFX_STATE_BLEND_ALPHA` |
 | Solid quads | tint only | same (`fs_sprite.sc`) |
 | Background | `kBackgroundClearColor` on an sRGB swapchain | same colour, `BGFX_RESET_SRGB_BACKBUFFER` |
-| Font atlas too large | silently draws no text | logs the size and the GPU limit |
 | `savePNG` | stub | real screenshot via bgfx |
 
 Unlike the Vulkan renderer, `BgfxRenderer` does not own a window. The **host** owns the window
@@ -112,11 +111,12 @@ sequenceDiagram
     participant B as bgfx
     Host->>S: frame(dt, InputState, backbuffer size)
     S->>G: update(dt), key/mouse actions (ported from old main.cpp)
-    S->>S: ImGui new frame; F1/F2/Tab dev windows
-    S->>G: draw()
-    G->>R: begin / drawSprite / drawText / end
-    R->>B: view 0 clear, view 1 letterboxed quads
-    S->>B: view 2 ImGui
+    S->>S: ImGui new frame; F1/F2 developer windows
+    S->>G: draw() (the world)
+    G->>R: begin / drawSprite / end
+    R->>B: view 0 clear, view 1 letterboxed sprites
+    S->>G: buildUiState() -> RmlUi documents (game_ui.cpp)
+    S->>B: view 2 RmlUi (all UI), view 3 ImGui
     Host->>B: bgfx::frame()
 ```
 

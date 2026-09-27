@@ -22,6 +22,12 @@ namespace toms {
 struct LanguageInfo {
     std::string code;   // "zh_TW", "en"
     std::string name;   // endonym shown in Settings: 繁體中文 / English
+    // UI font for this language (docs/08_RMLUI.md, "Fonts"). Desktop: `font` is a .ttf/.otf/.ttc
+    // (relative to assets/media, or absolute); used when set and the file exists, else the
+    // bundled NotoSansCJKtc-TOMS.otf -- which also covers characters `font` lacks. Web: no font
+    // file; the browser draws text with the CSS font list `webFont` (empty = its default).
+    std::string font;
+    std::string webFont;
 };
 
 class Locale {

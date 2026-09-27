@@ -1,23 +1,18 @@
 // game.cpp — implementation of Game.
 #include "game.h"
-#include <cstdio>    // std::snprintf (title screen's play-time column)
 #include "node.h"   // 2D scene-graph Node (parent/child + local/world transform)
 #include "scene.h"  // render binding: GameObject / SpriteNode / TextNode / FullScreenSplash
 
-// Shared file-local helpers (C4 / trParam / readJsonFile / cellSprite / entSprite / GP table /
-// g_textGame) now live in game_helpers.h as inline definitions, since the 2026-09-13 refactor split
+// Shared file-local helpers (C4 / trParam / readJsonFile / cellSprite / entSprite) now live in
+// game_helpers.h as inline definitions, since the 2026-09-13 refactor split
 // the rest of this file into game_*.cpp units that need the same helpers.
 #include "game_helpers.h"
 #include "game_condition.h"   // GameConditionContext (condition.h adapter)
 
 using namespace toms::game_detail;
 
-// TextNode draws through Game's font; g_textGame (bound in loadAssets) now lives in
-// game_helpers.h so the split translation units share one instance.
-void toms_TextNodeDraw(const std::string& s, float x, float y, float sz, const float* t) {
-    if (g_textGame) g_textGame->drawTextPublic(s, x, y, sz, t);
-}
-namespace toms { TextNode::DrawFn TextNode::Draw = ::toms_TextNodeDraw; }
+// The scene graph's TextNode has no text renderer in this game (all text is RmlUi).
+namespace toms { TextNode::DrawFn TextNode::Draw = nullptr; }
 #include "renderer.h"   // Renderer = the bgfx renderer (src/game/compat/renderer.h), desktop and web
 #include "event_bus.h"   // toms::EventBus — see Game::resolveCombatRound / Game::movePlayer
 #include "condition.h"   // toms::evaluate / toms::ConditionContext — see GameConditionContext below
@@ -161,10 +156,6 @@ void Game::update(int dtMs) {
     // S3.5 (c): the act card fades out on its own; everything it shows is also on screen elsewhere
     // (the HUD carries the floor), so a player who ignores it loses nothing.
     if (chapterCardMs_ > 0.0f) chapterCardMs_ = std::max(0.0f, chapterCardMs_ - (float)dtMs);
-    // Title-screen animation clock: advances in every state (the title is drawn long before any
-    // gameplay exists) and wraps so a float never drifts into precision loss on a long session.
-    titleAnimMs_ += (float)dtMs;
-    if (titleAnimMs_ > 3600000.0f) titleAnimMs_ -= 3600000.0f;
     // Title phase: the run's clock only advances while actually playing, and a changed run is
     // flushed to its slot on a throttle (see kAutosaveIntervalMs) rather than on every event --
     // one atomic write per few seconds instead of one per pickup.

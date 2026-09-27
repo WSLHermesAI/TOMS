@@ -70,7 +70,7 @@ Build options:
 
 | Command | Preset | Output folder | Use |
 |---|---|---|---|
-| `tools\build_web.cmd` or `tools\build_web.cmd release` | `web-release-windows` (Release) | `build-web-release-windows\bin\` | what you publish (~3.8 MB total) |
+| `tools\build_web.cmd` or `tools\build_web.cmd release` | `web-release-windows` (Release) | `build-web-release-windows\bin\` | what you publish (~5.3 MB, about 1.7 MB downloaded with gzip) |
 | `tools\build_web.cmd debug` | `web-debug-windows` (Debug, DWARF) | `build-web-debug-windows\bin\` | stepping through C++ in Chrome DevTools |
 
 Set `TOMS_NO_POPUPS=1` before running it to suppress the prerequisite popups (build servers).
@@ -81,8 +81,8 @@ Set `TOMS_NO_POPUPS=1` before running it to suppress the prerequisite popups (bu
 |---|---|---|
 | `toms_game.html` | 3 KB | the page (from `src/game/web/shell.html`) |
 | `toms_game.js` | 0.25 MB | Emscripten's loader |
-| `toms_game.wasm` | 2.8 MB | the game |
-| `toms_game.data` | 0.7 MB | `assets/media` + `assets/data`, mounted at `/assets` and `/data` (fonts and old `.spv` shaders left out) |
+| `toms_game.wasm` | 4.2 MB (1.45 MB gzip) | the game, including RmlUi |
+| `toms_game.data` | 0.75 MB (0.18 MB gzip) | `assets/media` (sprites, sfx, UI documents; no fonts) + `assets/data`, mounted at `/assets` and `/data` |
 
 These four files are the whole game. Copy them to any static web host.
 
@@ -117,7 +117,7 @@ fullscreen button and a 背包 (backpack) button.
 | Renderer | bgfx `OpenGL ES 3.0` = WebGL2; the canvas selector (`#canvas`) is passed as the window handle | `main_sdl.cpp`, `src/engine/src/bgfx_host.cpp` |
 | Shaders | only the ESSL (WebGL2) profile is compiled, by the host `shaderc.exe`, and embedded | `src/engine/CMakeLists.txt`, `cmake/TomsDependencies.cmake` |
 | Colours | no sRGB (WebGL has no sRGB backbuffer); same look as the old WebGL build, darker than desktop | `bgfx_renderer.cpp`, `bgfx_host.cpp` |
-| Text | the browser's own fonts through Canvas 2D (`Font::buildFromCanvas`), so no font file ships | core `src/core/engine/font.cpp` |
+| Text and UI | RmlUi, same documents as desktop (`assets/media/ui`); the browser draws the text with the device's fonts (per-language `web_font` in `text.json`), so no font file ships | `src/engine/src/rml_canvas_font.*`, [08](08_RMLUI.md#fonts) |
 | Renderer object | the core code's `new Renderer()` builds the bgfx renderer on web too (`compat/renderer.h`) | `src/game/compat/` |
 | Saves | IndexedDB mounted at `/save` (IDBFS); the core save code syncs after each write; slots re-read when the initial load finishes | `main_sdl.cpp` (`jsRefreshSlots`) |
 | Phones | viewport < 900×560 css px: pad plates ×1.2, UI ×1.5 (game resolution unchanged); portrait shows "rotate your device" | `main_sdl.cpp`, `src/game/web/shell.html` |

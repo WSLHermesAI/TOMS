@@ -16,7 +16,7 @@ Double-click **`tools\check_env.cmd`** (or run it in a terminal).
 
 The same checks run again automatically when CMake configures the project (inside Visual Studio or
 from `tools\build.cmd`). A missing **required** item stops the configure with a popup; a missing
-**optional** item (Qt, the CJK font) shows a popup once and skips only the part that needs it.
+**optional** item (Qt) shows a popup once and skips only the part that needs it.
 
 ## 1. Required
 
@@ -50,7 +50,7 @@ Visual Studio 2026 (v18) also works: its bundled CMake 4.x and Ninja are used au
 | What | Needed for | Get it | Notes |
 |---|---|---|---|
 | **Qt 6.5+ — kit "MSVC 2022 64-bit"** (6.8 LTS recommended) | `toms_editor.exe` only | Qt Online Installer: https://www.qt.io/download-qt-installer-oss | Needs a free Qt account. See below. |
-| **WenQuanYi Zen Hei** font (`wqy-zenhei.ttc`) | the shipped CJK glyph look | https://sourceforge.net/projects/wqy/files/wqy-zenhei/ | It is gitignored (16 MB). Without it the game uses Windows' Microsoft JhengHei (`msjh.ttc`) and says so in the console. |
+| **Python 3 + fontTools** (`pip install fonttools`) | only to rebuild the UI font after adding text with new characters | https://www.python.org/downloads/ | The font itself is in the repo (`assets/media/fonts/NotoSansCJKtc-TOMS.otf`); see [08](08_RMLUI.md#editing-the-ui). |
 | **Emscripten SDK (emsdk)** | the web build only ([06](06_BUILD_WEB.md)) | https://emscripten.org/docs/getting_started/downloads.html | `git clone` it, then `emsdk install latest` + `emsdk activate latest`. Auto-detected next to the TOMS checkout (`D:\Work\emsdk`), in `%USERPROFILE%\emsdk`, `C:\emsdk`, or via `EMSDK`. |
 | **Vulkan runtime** | `--renderer=vulkan` | comes with current NVIDIA/AMD/Intel drivers | Direct3D 11/12 work without it. |
 | **RenderDoc** | GPU frame capture of bgfx | https://renderdoc.org/ | |
@@ -72,15 +72,6 @@ warn if only a MinGW kit is found.
 
 Qt licence note: the editor links Qt dynamically under the LGPLv3. It is an internal tool and is
 never shipped to players, so the shipped game has no Qt obligations at all.
-
-### CJK font: step by step
-
-1. Download `wqy-zenhei-0.9.45.tar.gz` from https://sourceforge.net/projects/wqy/files/wqy-zenhei/
-2. Extract it (Windows 11 can open `.tar.gz`; otherwise use 7-Zip).
-3. Copy `wqy-zenhei.ttc` to `assets\media\wqy-zenhei.ttc`.
-
-Any other `.ttf` / `.ttc` with Traditional Chinese glyphs can be used through the environment
-variable **`TOMS_FONT`** (full path to the font file).
 
 ## 3. Things you do NOT need to install
 

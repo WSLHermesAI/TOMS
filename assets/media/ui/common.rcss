@@ -1,0 +1,73 @@
+/* common.rcss -- shared by every screen in this folder (see docs/08_RMLUI.md).
+
+   Units: every document is laid out in the game's 1024x768 design space, so px here are design
+   pixels (the game scales the whole UI to the window, letterboxed like the map).
+   Colours: what you write is what you see (the renderer converts for the sRGB screen).
+   Data: every document binds the "game" model -- src/core/game/ui/ui_state.h lists all values;
+   buttons call act('<event>', arg), handled in src/core/game/core/game_ui.cpp (Game::uiEvent).
+   Edit and press F5 in the game to reload; F8 opens RmlUi's debugger. */
+
+/* RmlUi has no default stylesheet: every element starts inline. */
+body, div, p { display: block; }
+span, em, strong { display: inline; }
+img { display: inline-block; }
+
+body {
+    position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+    font-family: toms;
+    font-size: 18px;
+    color: #eef1f8;
+}
+
+/* ---- palette ---- */
+.gold  { color: #f9e9b1; }
+.dim   { color: #cad0e1; }
+.white { color: #ffffff; }
+
+/* ---- full-screen layers ---- */
+.fill  { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.scrim { background-color: #0000009e; }          /* dims whatever is behind a dialog */
+.focus { background-color: #000000cc; }          /* battle / dialogue / inventory backdrop */
+
+/* ---- panels and dialogs ---- */
+.panel {
+    background-color: #65687dfa;
+    border-top: 3px #eddc9e;
+    border-radius: 8px;
+}
+.center-x { margin-left: auto; margin-right: auto; }
+
+/* ---- buttons ---- */
+.btn {
+    cursor: pointer;
+    text-align: center;
+    border-radius: 6px;
+    transition: background-color 0.1s cubic-out;
+}
+.btn-yes   { background-color: #7bba94; color: #ffffff; }
+.btn-yes:hover   { background-color: #8cccaa; }
+.btn-no    { background-color: #ba7b7b; color: #ffffff; }
+.btn-no:hover    { background-color: #cc8c8c; }
+.btn-plain { background-color: #8f8f9c; color: #ffffff; }
+.btn-plain:hover { background-color: #a2a2b0; }
+
+/* A list row / menu button: dark panel, lighter when selected (keyboard) or hovered (mouse). */
+.row {
+    cursor: pointer;
+    background-color: #6f7285f5;
+    border-radius: 6px;
+    transition: background-color 0.1s cubic-out;
+}
+.row:hover, .row.selected { background-color: #8594b0; }
+.row.disabled { color: #9fa3b3; }
+.row.disabled:hover, .row.disabled.selected { background-color: #7a7e92; }
+
+/* Scrollbars of lists with overflow-y: auto (inventory, menu, stage select). */
+scrollbarvertical { width: 10px; }
+scrollbarvertical slidertrack { background-color: #00000040; }
+scrollbarvertical sliderbar { background-color: #cad0e1a0; border-radius: 4px; }
+
+@keyframes pulse {
+    from { opacity: 0.55; }
+    to   { opacity: 1.0; }
+}

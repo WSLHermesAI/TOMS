@@ -1,20 +1,6 @@
-/* store.rcss -- styles for store.rml. The context is the game's 1024x768 design space, so pixel
-   values here are the same units the old hand-drawn store used (game_store.cpp drawStoreUI). */
+/* store.rcss -- the item store (store.rml). */
 
-/* Colours are what you see on screen (the shader converts them for the sRGB backbuffer); they
-   match the old store's look. */
-
-/* RmlUi has no built-in stylesheet: every element is inline until told otherwise. */
-body, div, p { display: block; }
-span { display: inline; }
-
-body {
-    font-family: toms;
-    font-size: 16px;
-    color: #f3f6fd;
-    width: 100%;
-    height: 100%;
-}
+body { z-index: 40; }
 
 /* Full-screen dim behind the panel (the old store's 50% black splash). Clicking it closes. */
 #backdrop {
@@ -35,8 +21,6 @@ body {
 .gold   { color: #ffe984; }
 #hint   { position: absolute; left: 20px; top: 58px; font-size: 14px; color: #e6edffe6; }
 
-.btn { cursor: pointer; text-align: center; border-radius: 6px; }
-
 #close {
     position: absolute; right: 0; top: 2px; width: 90px; height: 34px; line-height: 34px;
     background-color: #ba7b7b; color: #ffffff;
@@ -44,8 +28,8 @@ body {
 #close:hover { background-color: #ce8888; }
 
 #tabs { position: absolute; left: 20px; top: 84px; height: 34px; }
-.tab {
-    float: left; width: 100px; height: 34px; line-height: 34px; margin-right: 12px;
+.tab-slot { float: left; }
+.tab { width: 100px; height: 34px; line-height: 34px; margin-right: 12px;
     font-size: 17px; background-color: #65697be6; color: #e6e9f3;
 }
 .tab:hover  { background-color: #737b97; }
@@ -56,9 +40,10 @@ body {
     position: absolute; left: 0; right: 0; top: 174px; height: 300px;
     display: flex; justify-content: center;
 }
+.card-slot { flex: 0 0 auto; margin: 0 8px; }
 .card {
-    position: relative; box-sizing: border-box; flex: 0 0 auto;
-    width: 290px; height: 300px; margin: 0 8px;
+    position: relative; box-sizing: border-box;
+    width: 290px; height: 300px;
     background-color: #697085f5;
     border: 3px #00000000;
     border-radius: 10px;
@@ -82,10 +67,3 @@ body {
 }
 .buy:hover  { background-color: #88cea4; }
 .buy:active { background-color: #6dac85; }
-
-/* The purchase / not-enough-gold toast (bottom centre, above the panel). */
-#toast {
-    position: absolute; left: 332px; top: 612px; width: 360px; height: 48px; line-height: 48px;
-    text-align: center; font-size: 18px; color: #ffe9e9;
-    background-color: #a85a5af2; border-radius: 8px;
-}

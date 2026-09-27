@@ -1,0 +1,14 @@
+/* overlay.rcss -- toasts and notifications (overlay.rml). */
+body { z-index: 90; pointer-events: none; }
+
+#notifications { position: absolute; right: 16px; top: 132px; width: 300px; }   /* below the HUD buttons */
+.note {
+    margin-bottom: 8px; padding: 8px 12px;
+    font-size: 17px; color: #e6ffca; background-color: #61685ae6; border-radius: 4px;
+}
+
+#toast-row { position: absolute; left: 0; right: 0; top: 608px; text-align: center; }
+#toast {
+    display: inline-block; min-width: 236px; padding: 12px 24px;
+    font-size: 21px; color: #ffe6e6; background-color: #a85a5af2; border-radius: 6px;
+}

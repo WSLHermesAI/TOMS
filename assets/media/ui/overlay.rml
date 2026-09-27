@@ -1,0 +1,15 @@
+<rml>
+<head>
+    <title>Overlay</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="overlay.rcss"/>
+</head>
+<!-- Always on top, never takes clicks: the short toast (purchase, "not enough gold", "saved")
+     and the notification stack (level up, floor events, ...). Data: overlay.* (UiOverlay). -->
+<body data-model="game">
+    <div id="notifications">
+        <div class="note" data-for="n : overlay.notifications">{{n}}</div>
+    </div>
+    <div id="toast-row" data-if="overlay.toast"><span id="toast">{{overlay.toast_text}}</span></div>
+</body>
+</rml>

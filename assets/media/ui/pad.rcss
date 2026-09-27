@@ -1,0 +1,26 @@
+/* pad.rcss -- the on-screen gamepad (pad.rml). Positions are the old pad's (design px). */
+body { z-index: 20; pointer-events: none; }
+
+.key {
+    position: absolute; pointer-events: auto; cursor: pointer;
+    text-align: center; color: #ffffff; border-radius: 4px;
+    background-color: #a8b1c2b2;
+    transition: background-color 0.08s linear-in-out;
+}
+.key:hover  { background-color: #b9c2d3c8; }
+.key:active { background-color: #d0d8e6e0; }
+
+/* The d-pad scales about its own centre (Game::setPadScale on phones). */
+#dpad { position: absolute; left: 20px; top: 510px; width: 240px; height: 188px; transform-origin: 120px 94px; }
+.dir  { width: 72px; height: 72px; font-size: 34px; line-height: 72px; }
+#up    { left: 84px;  top: 0; }
+#down  { left: 84px;  top: 116px; }
+#left  { left: 0;     top: 58px; }
+#right { left: 168px; top: 58px; }
+
+#a { left: 880px; top: 626px; width: 68px; height: 68px; font-size: 34px; line-height: 68px;
+     background-color: #94d99ecc; transform-origin: 34px 34px; }
+#a:hover { background-color: #a6e6b0dd; }
+
+#toggle { left: 20px; top: 490px; width: 48px; height: 48px; font-size: 30px; line-height: 48px;
+          background-color: #888888d9; }

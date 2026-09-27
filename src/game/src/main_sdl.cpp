@@ -54,7 +54,7 @@ bool keyFromName(const std::string& n, Key& out) {
     static const struct { const char* name; Key key; } table[] = {
         {"up", Key::Up}, {"down", Key::Down}, {"left", Key::Left}, {"right", Key::Right},
         {"enter", Key::Enter}, {"space", Key::Space}, {"esc", Key::Escape}, {"tab", Key::Tab},
-        {"f1", Key::F1}, {"f2", Key::F2}, {"f4", Key::F4}, {"f5", Key::F5}, {"f8", Key::F8},
+        {"f1", Key::F1}, {"f2", Key::F2}, {"f5", Key::F5}, {"f8", Key::F8},
         {"i", Key::I}, {"b", Key::B}, {"1", Key::Num1}, {"2", Key::Num2}, {"3", Key::Num3},
     };
     for (auto& e : table) if (n == e.name) { out = e.key; return true; }
@@ -150,7 +150,7 @@ void readKeyboard(InputState& in) {
     in.down[(size_t)Key::Enter] = ks[SDL_SCANCODE_RETURN] || ks[SDL_SCANCODE_KP_ENTER];
     set(Key::Space, SDL_SCANCODE_SPACE); set(Key::Escape, SDL_SCANCODE_ESCAPE); set(Key::Tab, SDL_SCANCODE_TAB);
     set(Key::F1, SDL_SCANCODE_F1); set(Key::F2, SDL_SCANCODE_F2); set(Key::F3, SDL_SCANCODE_F3);
-    set(Key::F4, SDL_SCANCODE_F4); set(Key::F5, SDL_SCANCODE_F5); set(Key::F8, SDL_SCANCODE_F8);
+    set(Key::F5, SDL_SCANCODE_F5); set(Key::F8, SDL_SCANCODE_F8);
     set(Key::F, SDL_SCANCODE_F); set(Key::G, SDL_SCANCODE_G); set(Key::H, SDL_SCANCODE_H);
     set(Key::I, SDL_SCANCODE_I); set(Key::B, SDL_SCANCODE_B);
     const SDL_Scancode nums[9] = {SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3, SDL_SCANCODE_4, SDL_SCANCODE_5,
@@ -238,9 +238,6 @@ bool appInit(App& app) {
         opts.uiScale = 1.5f;
         std::fprintf(stderr, "[web] small screen (%dx%d css): pad x1.20, UI x1.50\n", cssW, cssH);
     }
-#else
-    const std::string fontNote = GameSession::applyFontFallback(opts.assetDir);
-    if (!fontNote.empty()) std::fprintf(stderr, "[toms] %s\n", fontNote.c_str());
 #endif
     if (!app.session.start(opts, err)) {
         fatalBox(app.window, "TOMS: the game could not start", err);

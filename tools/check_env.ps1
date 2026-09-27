@@ -147,18 +147,7 @@ Add-Result "Game code (src\) and content (assets\)" ($missing.Count -eq 0) $true
     "https://github.com/WSLHermesAI/TOMS"
 
 # ---------------------------------------------------------------------------------------------
-# 11. CJK font (gitignored, so a fresh clone does not have it)
-# ---------------------------------------------------------------------------------------------
-$font = Join-Path $root 'assets\media\wqy-zenhei.ttc'
-$msjh = Join-Path $env:WINDIR 'Fonts\msjh.ttc'
-$fontOk = Test-Path $font
-Add-Result "CJK font assets\media\wqy-zenhei.ttc" $fontOk (-not (Test-Path $msjh)) `
-    $(if ($fontOk) { "present" } elseif (Test-Path $msjh) { "missing -> the game falls back to Microsoft JhengHei (msjh.ttc)" } else { "missing, and no Windows fallback font" }) `
-    "Download WenQuanYi Zen Hei (wqy-zenhei-*.tar.gz), extract wqy-zenhei.ttc and copy it to assets\media\." `
-    "https://sourceforge.net/projects/wqy/files/wqy-zenhei/"
-
-# ---------------------------------------------------------------------------------------------
-# 12. D3D shader compiler DLL (shaderc -> Direct3D shaders)
+# 11. D3D shader compiler DLL (shaderc -> Direct3D shaders)
 # ---------------------------------------------------------------------------------------------
 $d3dc = Join-Path $env:WINDIR 'System32\d3dcompiler_47.dll'
 Add-Result "d3dcompiler_47.dll" (Test-Path $d3dc) $true `
@@ -167,7 +156,7 @@ Add-Result "d3dcompiler_47.dll" (Test-Path $d3dc) $true `
     "https://developer.microsoft.com/windows/downloads/windows-sdk/"
 
 # ---------------------------------------------------------------------------------------------
-# 13. Disk space
+# 12. Disk space
 # ---------------------------------------------------------------------------------------------
 $drive = (Get-Item $root).PSDrive
 $freeGb = [math]::Round($drive.Free / 1GB, 1)
@@ -175,7 +164,7 @@ Add-Result "Free disk space (>= 5 GB on $($drive.Name):)" ($freeGb -ge 5) $true 
     "A full debug + release build with bgfx tools takes about 3-4 GB." "https://support.microsoft.com/windows/free-up-drive-space-in-windows"
 
 # ---------------------------------------------------------------------------------------------
-# 14. Qt 6 MSVC 64-bit kit (optional: only toms_editor needs it)
+# 13. Qt 6 MSVC 64-bit kit (optional: only toms_editor needs it)
 # ---------------------------------------------------------------------------------------------
 $qtCandidates = New-Object System.Collections.Generic.List[string]
 foreach ($e in 'QT_ROOT_DIR', 'QTDIR') {
@@ -207,7 +196,7 @@ Add-Result "Qt 6.5+ (MSVC 2022 64-bit kit) - editor only" ([bool]$qtKit) $false 
     "https://www.qt.io/download-qt-installer-oss"
 
 # ---------------------------------------------------------------------------------------------
-# 15. Web build only (optional): Emscripten SDK and a host shaderc
+# 14. Web build only (optional): Emscripten SDK and a host shaderc
 # ---------------------------------------------------------------------------------------------
 $emsdk = $null
 foreach ($c in @($env:EMSDK, (Join-Path $root '..\..\emsdk'), (Join-Path $env:USERPROFILE 'emsdk'), 'C:\emsdk', 'D:\emsdk')) {
@@ -230,7 +219,7 @@ Add-Result "Host shaderc.exe (from a desktop build) - web build only" ([bool]$ho
     "docs/06_BUILD_WEB.md"
 
 # ---------------------------------------------------------------------------------------------
-# 16. Optional GPU extras
+# 15. Optional GPU extras
 # ---------------------------------------------------------------------------------------------
 $vk = Test-Path (Join-Path $env:WINDIR 'System32\vulkan-1.dll')
 Add-Result "Vulkan runtime (for --renderer=vulkan)" $vk $false `

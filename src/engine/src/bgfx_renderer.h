@@ -4,7 +4,7 @@
 // header game/compat/renderer.h aliases `Renderer` to this class, so that code compiles
 // unmodified. Behaviour matches the old Vulkan renderer (removed 2026-09-27; see git history):
 //   - a fixed 1024x768 design resolution, letterboxed into the real backbuffer
-//   - sprites drawn first, then text (two batches, one draw call each)
+//   - sprites in one batch, one draw call (all text and UI is RmlUi, drawn in kViewUi)
 //   - RGBA8 sRGB atlases, point sampling, clamp, straight alpha blending
 //   - solid quads output the tint only
 //
@@ -24,7 +24,7 @@ class BgfxRenderer : public IRenderer {
 public:
     // bgfx views this renderer uses. The host may use views after kViewOverlay (e.g. ImGui).
     static constexpr uint16_t kViewClear   = 0;   // full backbuffer, clears to the background colour
-    static constexpr uint16_t kViewGame    = 1;   // letterboxed design-space view (sprites, then text)
+    static constexpr uint16_t kViewGame    = 1;   // letterboxed design-space view (the world's sprites)
     static constexpr uint16_t kViewUi      = 2;   // RmlUi documents (letterboxed like the game view)
     static constexpr uint16_t kViewOverlay = 3;   // first free view for the host (ImGui dev windows)
 
@@ -34,11 +34,8 @@ public:
     // ---- IRenderer ----
     void init(uint32_t w, uint32_t h) override;   // w/h ignored: the host owns the backbuffer size
     void loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) override;
-    void loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) override;
-    void updateFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) override;
     void begin() override;
     void drawSprite(const Quad& q) override;
-    void drawText(const Quad& q) override;
     void setNode(uint8_t n) override;
     void setNodeFilter(uint8_t n) override;
     void end() override;                          // submits to kViewClear/kViewGame; host calls bgfx::frame()
@@ -74,12 +71,11 @@ private:
     uint16_t program_  = kInvalid;
     uint16_t sampler_  = kInvalid;   // uniform s_tex
     uint16_t spriteTex_ = kInvalid;
-    uint16_t fontTex_   = kInvalid;
     uint32_t devW_ = 1280, devH_ = 720;
     uint8_t  node_ = 0, nodeFilter_ = 0;
     uint32_t lastDrawCalls_ = 0;
     size_t   lastQuadCount_ = 0;
-    std::vector<Quad> sprites_, texts_;
+    std::vector<Quad> sprites_;
 };
 
 }  // namespace toms::next

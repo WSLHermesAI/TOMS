@@ -1,0 +1,18 @@
+/* dialogs.rcss -- the small popups (dialogs.rml). */
+body { z-index: 50; }
+
+#stairs-dim { background-color: #0000008c; }
+#unlock-dim { background-color: #00000080; }
+
+.box { position: absolute; background-color: #616f8af7; border-radius: 6px; }
+.question { position: absolute; left: 30px; right: 30px; top: 28px; font-size: 26px; color: #fff9ca; }
+.body     { position: absolute; left: 30px; right: 30px; top: 76px; font-size: 18px; color: #ffffff; }
+.btn      { height: 40px; line-height: 40px; font-size: 18px; }
+
+#stairs { left: 322px; top: 304px; width: 380px; height: 160px; }
+#stairs .answers { position: absolute; left: 50px; bottom: 24px; }
+#stairs .answers .btn { display: inline-block; width: 130px; margin-right: 20px; }
+
+#unlock { left: 302px; top: 294px; width: 420px; height: 180px; }
+#unlock .question { color: #fff3ba; }
+#unlock-ok { position: absolute; right: 24px; bottom: 20px; width: 120px; }

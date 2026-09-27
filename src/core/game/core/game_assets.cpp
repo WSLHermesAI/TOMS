@@ -31,51 +31,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     }
     // upload full sprite atlas (backend packs the grid + uploads)
     ren->loadSprites(layers, SW, SH);
-    // ---- build the font atlas ----
-    // Runtime atlas build. Desktop: stb_truetype from bundled TTFs (wqy-zenhei for Han,
-    // Noto Sans JP/KR paired in for Kana/Hangul -- see Font::buildFromFiles). Web: an
-    // offscreen Canvas 2D context using the browser's own system fonts (see
-    // Font::buildFromCanvas) -- no TTF file ships in the .data bundle at all, since every
-    // major browser already carries full CJK/Latin/etc. font coverage. Both produce the
-    // identical atlas layout/metric convention, so everything below this block (and all
-    // of Game::drawText()/measureText()) is unaware of which backend built it.
-    {
-        // collect every codepoint used by shipped JSON + HUD labels
-        std::vector<std::string> jsonFiles;
-        for (auto& p : std::filesystem::recursive_directory_iterator(dataDir + "/../data"))
-            if (p.path().extension() == ".json") jsonFiles.push_back(p.path().string());
-        // Comprehensive pre-bake: every glyph the game can display (dialogue +
-        // store + HUD + gamepad labels) so drawText never triggers a runtime
-        // glyph bake -> no mid-frame font-texture re-upload -> no WebGL abort.
-        std::string hud = " #'()*+,-./0123456789:<>@ABCDEFGHIKLOPRSTUVXYZ^_abcdefghijklmnopqrstuvwxy·—…→▶、。「」『』一上下不世並中主久之也了予亡交人什仇仍他付以件份但低住你使來侍便保信們倒值做傳價先入全公共兵具再凋凡出切列別利到則前副力加動勝化匙十升卡印即卷去反取受口可史右司吃合同向否吧吸吾告周命和咒咕唯商啟嘶嚕囚回國圖土在地堅塔墓外大奪女她如姆字存學它守安官定室宮家容寄寶封將對小少展層屬嵌巨巫已希師帶幣平年序店座廳廷弱強形影後徑得從復必怎怕思性怨怪恐恢恨惡意感懂懼成我戰所才打承把拉拯拳持接提揭援損撲撼擇擊擋攀收攻放效救敗教敢散敵數方於明星是晶暗書曾最會有望本村林枚果枯格森樓標機橫檻歐正此歸殿毅每民水永求決沃沉泉法注洞活流消淨深源準滿災為焉煉燃營物獲獻王玩現瓶生用留疊白的目直看真睡知石碎確示祝神祭禁禍福禦穩穴窟立章第等糊紅純紙級終給經緣繼續翅習老者而聖能自與莉莊萊萎著藍藏藥處蝙蝠血行被要見親角解言託記試話該語謝證護變讓買購贈走起足路跳踏身軍軸輕輪迎送透這逝進遇道達選還那重量金錢鍵鑰鑲長門閉開閣關防降陛除雙離零需露靈頂須頭願驗骷髏體高鬥魂魔麼黃黎黑點！（），：；？";
-        std::vector<uint32_t> cps = Font::collectFromFiles(jsonFiles, hud);
-        font_ = std::make_shared<Font>("game-font");
-#ifdef __EMSCRIPTEN__
-        if (!font_->buildFromCanvas(cps, 32, 24)) {
-            std::fprintf(stderr, "font build failed (canvas)\n"); return false;
-        }
-#else
-        std::string ttf = assetDir + "/wqy-zenhei.ttc";
-        if (const char* e = std::getenv("TOMS_FONT")) ttf = e;
-        else if (!std::filesystem::exists(ttf))
-            ttf = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc";
-        std::vector<std::string> fontFiles = {
-            ttf,
-            assetDir + "/fonts/NotoSansJP-Regular.ttf",
-            assetDir + "/fonts/NotoSansKR-Regular.ttf",
-        };
-        if (!font_->buildFromFiles(fontFiles, cps, 32, 24)) {
-            std::fprintf(stderr, "font build failed: %s\n", ttf.c_str()); return false;
-        }
-#endif
-        ren->loadFont(font_->atlas(), font_->atlasW(), font_->atlasH());
-        fontW = (int)font_->atlasW(); fontH = (int)font_->atlasH();
-        fontCols = 32; fontCell = 32;
-        for (uint32_t cp : cps) {
-            const std::array<float,4>* uv = font_->uv(cp);
-            if (uv) fontMap[cp] = *uv;
-        }
-    }
+    // (Text is RmlUi's: see assets/media/fonts/NotoSansCJKtc-TOMS.otf and tools/make_ui_font.py.)
 
     // S1: character-level 佔格 table (docs/design/ART_AND_ABILITY_DESIGN.md F8). An absent file leaves
     // every entity at 1x1, i.e. exactly the pre-S1 behavior -- the table is purely additive.
@@ -166,7 +122,6 @@ bool Game::loadAssets(const std::string& assetDir) {
     }
     // init SFX subsystem (no-op if no audio device/context; headless-safe).
     audio.init(assetDir + "/sfx");
-    g_textGame = this;   // bind TextNode text drawing to this instance
     wireMissionEvents(); // Milestone 4: subscribe mission-progress handlers once per session
     rollDailyMissions(); // Milestone 5: daily-mission reset check, once per session start
     return true;

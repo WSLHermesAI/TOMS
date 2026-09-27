@@ -60,8 +60,6 @@ bool BgfxViewport::restartGame(const QString& stage) {
     SessionOptions opts;
     opts.assetDir = GameSession::defaultAssetDir();
     opts.startStage = stage.toStdString();
-    const std::string fontNote = GameSession::applyFontFallback(opts.assetDir);
-    if (!fontNote.empty()) Q_EMIT statusMessage(QString::fromStdString(fontNote).section('\n', 0, 0));
     std::string err;
     if (!session_.start(opts, err)) {
         timer_.stop();
@@ -150,7 +148,6 @@ void BgfxViewport::setKey(int qtKey, bool down) {
     case Qt::Key_F1: set(Key::F1); break;
     case Qt::Key_F2: set(Key::F2); break;
     case Qt::Key_F3: set(Key::F3); break;
-    case Qt::Key_F4: set(Key::F4); break;
     case Qt::Key_F5: set(Key::F5); break;
     case Qt::Key_F8: set(Key::F8); break;
     case Qt::Key_F: set(Key::F); break;

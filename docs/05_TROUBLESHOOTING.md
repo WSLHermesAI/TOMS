@@ -32,9 +32,10 @@ it and links the download. Web-build problems are in [06 §7](06_BUILD_WEB.md#7-
 |---|---|---|
 | Popup "graphics could not start" | the chosen bgfx backend failed | update the GPU driver; try `--renderer=d3d11` or `--renderer=opengl` |
 | Popup "Game assets were not found" | the exe cannot find `assets\media` | restore it (`git checkout -- assets`), or pass `--assets=<path>` / set `ASSET_DIR` |
-| Popup "No CJK font is available" | `wqy-zenhei.ttc` missing and no `msjh.ttc` | [02 §2](02_INSTALL_WINDOWS.md#cjk-font-step-by-step), or set `TOMS_FONT` |
-| Console: "Microsoft JhengHei (msjh.ttc) is used instead" | `wqy-zenhei.ttc` missing | fine for development; install the font for the shipped look |
-| Text missing, console: "atlas ... exceeds the GPU limit" | the glyph atlas is bigger than the GPU's max texture size | reduce the glyph set / cell size (the old renderers failed silently here) |
+| Popup "The UI files were not found" | `assets\media\ui` or `assets\media\fonts\NotoSansCJKtc-TOMS.otf` missing | restore them: `git checkout -- assets` |
+| Popup "The game UI could not start" + an `.rml` name | an RML/RCSS file has an error | the console / `toms.log` has RmlUi's message; fix the file and restart (or press F5 in a running game) |
+| A character shows as nothing (a gap) in the UI | the character is not in the cut-down UI font | `python tools/make_ui_font.py` ([08](08_RMLUI.md#editing-the-ui)) |
+| Yellow "!" at the top right of the game | RmlUi logged a warning | press F8 (RmlUi debugger) to read it |
 | Editor starts, then "toms_editor.exe - Qt6Core.dll was not found" | Qt DLLs not next to the exe | rebuild (windeployqt runs after every link), or add `<Qt kit>\bin` to `PATH` |
 | Editor: keys do nothing | the game view has no keyboard focus | click the *Play (bgfx)* view |
 | Editor: black view after undocking or moving the view | the native window was recreated | keep the viewport as the central widget/tab ([01 §5](01_ARCHITECTURE.md#5-qt--bgfx-in-the-editor)) |

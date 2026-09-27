@@ -1,0 +1,49 @@
+/* inventory.rcss -- the backpack (inventory.rml). */
+body { z-index: 30; }
+
+#panel { position: absolute; left: 32px; top: 94px; width: 960px; height: 580px; background-color: #5a6175f5; }
+#bar   { height: 64px; background-color: #687288; padding: 6px 22px 0 22px; }
+#title { font-size: 30px; color: #fff6c2; }
+#hint  { font-size: 16px; color: #e9f1ff; }
+
+#empty { position: absolute; left: 22px; right: 22px; top: 86px; bottom: 22px; background-color: #515a6cf5; padding: 40px 18px; }
+#empty-title { font-size: 25px; color: #ffffff; }
+#empty-hint  { margin-top: 12px; font-size: 18px; color: #e9f1ff; }
+#empty-close { position: absolute; right: 18px; bottom: 18px; width: 90px; height: 34px; line-height: 34px; }
+
+/* Left: the item list (scrolls when long). */
+#list {
+    position: absolute; left: 22px; top: 86px; width: 527px; height: 472px;
+    padding: 10px; background-color: #515a6cf5; overflow-y: auto;
+}
+.item {
+    position: relative; height: 66px; margin-bottom: 10px; cursor: pointer;
+    background-color: #686f85fa; border: 2px #00000000;
+}
+.item:hover { background-color: #747c93; }
+.item.selected { background-color: #8088a4; border-color: #ffed7b; }
+.item-icon   { position: absolute; left: 10px; top: 8px; width: 46px; height: 46px; }
+.item-name   { position: absolute; left: 66px; top: 6px; font-size: 21px; color: #ffffff; }
+.item-effect { position: absolute; left: 66px; top: 36px; font-size: 15px; color: #d9ffe4; }
+.item-count  { position: absolute; right: 16px; top: 20px; font-size: 21px; color: #fff9ba; }
+
+/* Right: the selected item. */
+#detail {
+    position: absolute; left: 573px; top: 86px; width: 365px; height: 472px;
+    background-color: #555d75fa;
+}
+#d-title { position: absolute; left: 18px; top: 12px; font-size: 23px; color: #fff9c2; }
+#d-icon  { position: absolute; left: 18px; top: 54px; width: 76px; height: 76px; }
+#d-name  { position: absolute; left: 108px; top: 58px; right: 12px; font-size: 30px; color: #ffffff; }
+#d-id    { position: absolute; left: 108px; top: 96px; font-size: 16px; color: #d9e6f9; }
+#d-file  { position: absolute; left: 18px; top: 138px; font-size: 15px; color: #d9e6f9; }
+#d-desc  { position: absolute; left: 18px; right: 18px; top: 164px; font-size: 18px; color: #f1f6ff; }
+#d-stats { position: absolute; left: 18px; top: 240px; font-size: 15px; color: #d9e6f9; }
+#pills   { position: absolute; left: 18px; top: 264px; }
+.pill    { display: inline-block; margin: 0 8px 8px 0; padding: 4px 10px; font-size: 16px; color: #edfff1; background-color: #61856f; }
+#footer-hint { position: absolute; left: 18px; right: 18px; bottom: 58px; font-size: 15px; color: #d9e6f9; }
+#buttons { position: absolute; left: 18px; right: 18px; bottom: 14px; height: 34px; }
+#buttons .btn { display: inline-block; width: 88px; height: 34px; line-height: 34px; font-size: 17px; margin-right: 10px; }
+#buttons .drop { background-color: #ca8f8a; color: #ffffff; }
+#buttons .drop:hover { background-color: #d9a19c; }
+#buttons .close { position: absolute; right: 0; margin-right: 0; }

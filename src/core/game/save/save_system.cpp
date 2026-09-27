@@ -1,6 +1,7 @@
 #include "save_system.h"
 #include <algorithm>
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 
 namespace toms {
@@ -147,8 +148,12 @@ bool writeJsonAtomic(const std::string& path, const nlohmann::json& j) {
         f << j.dump(2);
         if (!f) { fprintf(stderr, "[save_system] write failed for %s\n", tmp.c_str()); return false; }
     }
-    if (std::rename(tmp.c_str(), path.c_str()) != 0) {
-        fprintf(stderr, "[save_system] rename %s -> %s failed\n", tmp.c_str(), path.c_str());
+    // std::filesystem::rename replaces an existing file on every platform; std::rename does not on
+    // Windows, where it made every save after the first one fail.
+    std::error_code ec;
+    std::filesystem::rename(tmp, path, ec);
+    if (ec) {
+        fprintf(stderr, "[save_system] rename %s -> %s failed: %s\n", tmp.c_str(), path.c_str(), ec.message().c_str());
         return false;
     }
     return true;

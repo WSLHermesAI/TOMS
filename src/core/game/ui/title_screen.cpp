@@ -3,87 +3,6 @@
 
 namespace toms {
 
-// ---------------------------------------------------------------- layout
-
-int TitleLayout::hitMenuRow(float x, float y) const {
-    for (int i = 0; i < menuRowCount; i++) if (menuRow[i].contains(x, y)) return i;
-    return -1;
-}
-int TitleLayout::hitSlotRow(float x, float y) const {
-    for (int i = 0; i < slotRowCount; i++) if (slotRow[i].contains(x, y)) return i;
-    return -1;
-}
-int TitleLayout::hitLangRow(float x, float y) const {
-    for (int i = 0; i < langRowCount; i++) if (langRow[i].contains(x, y)) return i;
-    return -1;
-}
-bool TitleLayout::hitBack(float x, float y) const { return backButton.contains(x, y); }
-
-int TitleLayout::hitConfirmButton(float x, float y) const {
-    if (confirmYes.contains(x, y)) return 0;
-    if (confirmNo.contains(x, y)) return 1;
-    return -1;
-}
-
-TitleLayout computeTitleLayout(int designW, int designH, int slotCount, int langCount) {
-    TitleLayout L;
-    const float W = (float)designW, H = (float)designH;
-
-    // Menu: three stacked buttons, centered.
-    {
-        const float w = 360.0f, h = 64.0f, gap = 78.0f;
-        const float x = (W - w) * 0.5f, y0 = H * 0.43f;
-        for (int i = 0; i < TitleLayout::kMaxMenuRows; i++)
-            L.menuRow[i] = TitleRow{ x, y0 + i * gap, w, h };
-        L.menuRowCount = TitleLayout::kMaxMenuRows;
-    }
-
-    // Continue: one row per slot, fitted into the space above the Back button so any slot
-    // count (1..8) stays inside the screen instead of running off the bottom.
-    {
-        const float w = 720.0f, x = (W - w) * 0.5f;
-        const float y0 = 250.0f, yLim = H - 140.0f;
-        int n = std::max(1, std::min(slotCount, TitleLayout::kMaxSlotRows));
-        float pitch = (yLim - y0) / (float)n;
-        float rh = std::min(64.0f, pitch - 10.0f);
-        if (rh < 24.0f) rh = 24.0f;
-        for (int i = 0; i < n; i++) L.slotRow[i] = TitleRow{ x, y0 + i * pitch, w, rh };
-        L.slotRowCount = n;
-    }
-
-    // Settings: one row per language (highlight doubles as the current selection).
-    {
-        const float w = 520.0f, x = (W - w) * 0.5f;
-        const float y0 = 330.0f, yLim = H - 140.0f;
-        int n = std::max(1, std::min(langCount, TitleLayout::kMaxLangRows));
-        float pitch = (yLim - y0) / (float)n;
-        float rh = std::min(64.0f, pitch - 10.0f);
-        if (rh < 24.0f) rh = 24.0f;
-        for (int i = 0; i < n; i++) L.langRow[i] = TitleRow{ x, y0 + i * pitch, w, rh };
-        L.langRowCount = n;
-    }
-
-    // Back button (Continue / Settings pages).
-    {
-        const float w = 220.0f, h = 52.0f;
-        L.backButton = TitleRow{ (W - w) * 0.5f, H - 100.0f, w, h };
-    }
-
-    // "Start a new game in this slot?" dialog: centered panel with a Yes/No pair.
-    {
-        const float w = 560.0f, h = 210.0f;
-        const float bx = (W - w) * 0.5f, by = (H - h) * 0.5f;
-        L.confirmBox = TitleRow{ bx, by, w, h };
-        const float bw = 160.0f, bh = 56.0f, gap = 40.0f;
-        const float groupW = bw * 2 + gap;
-        const float bx0 = bx + (w - groupW) * 0.5f;
-        const float byy = by + h - bh - 26.0f;
-        L.confirmYes = TitleRow{ bx0, byy, bw, bh };
-        L.confirmNo  = TitleRow{ bx0 + bw + gap, byy, bw, bh };
-    }
-    return L;
-}
-
 // ---------------------------------------------------------------- state machine
 
 void TitleScreen::open() {
@@ -121,12 +40,12 @@ int TitleScreen::selection() const {
 }
 
 void TitleScreen::setSlotCount(int n) {
-    slotCount_ = std::max(1, std::min(n, TitleLayout::kMaxSlotRows));
+    slotCount_ = std::max(1, std::min(n, kMaxSlots));
     if (slotSel_ >= slotCount_) slotSel_ = slotCount_ - 1;
 }
 
 void TitleScreen::setLanguageCount(int n) {
-    langCount_ = std::max(1, std::min(n, TitleLayout::kMaxLangRows));
+    langCount_ = std::max(1, std::min(n, kMaxLanguages));
     if (langIdx_ >= langCount_) langIdx_ = langCount_ - 1;
     if (setSel_ >= langCount_) setSel_ = langCount_ - 1;
 }
@@ -248,40 +167,40 @@ TitleAction TitleScreen::cancel() {
     return TitleAction::None;   // caller decides what Esc means on the Menu page
 }
 
-TitleAction TitleScreen::click(float px, float py, const TitleLayout& layout) {
-    // A dialog swallows taps: only its two answers are live.
-    if (confirmNewGame_) {
-        const int b = layout.hitConfirmButton(px, py);
-        if (b < 0) return TitleAction::None;
-        confirmYes_ = (b == 0);
-        return activate();
-    }
-    if (confirmLanguage_) {
-        const int b = layout.hitConfirmButton(px, py);
-        if (b < 0) return TitleAction::None;
-        confirmLangYes_ = (b == 0);
-        return activate();
-    }
+// A tap on row `row` of the current page (-1 = the Back button). The UI draws the rows in the
+// same order as rows()/the keyboard cursor, so a row index is all a click needs.
+TitleAction TitleScreen::clickRow(int row) {
+    if (confirmNewGame_ || confirmLanguage_) return TitleAction::None;   // a dialog is up: answer it
+    if (row < 0) return page_ == TitlePage::Menu ? TitleAction::None : cancel();
     switch (page_) {
-        case TitlePage::Menu: {
-            int r = layout.hitMenuRow(px, py);
-            if (r < 0 || r >= kMenuItemCount) return TitleAction::None;
-            menuSel_ = r;
+        case TitlePage::Menu:
+            if (row >= kMenuItemCount) return TitleAction::None;
+            menuSel_ = row;
             return activate();
-        }
-        case TitlePage::Continue: {
-            int r = layout.hitSlotRow(px, py);
-            if (r >= 0 && r < slotCount_) { slotSel_ = r; return activate(); }
-            if (layout.hitBack(px, py)) return cancel();
-            return TitleAction::None;
-        }
-        case TitlePage::Settings: {
-            int r = layout.hitLangRow(px, py);
-            if (r >= 0 && r < langCount_) { setSel_ = r; return activate(); }
-            if (layout.hitBack(px, py)) return cancel();
-            return TitleAction::None;
-        }
+        case TitlePage::Continue:
+            if (row >= slotCount_) return TitleAction::None;
+            slotSel_ = row;
+            return activate();
+        case TitlePage::Settings:
+            if (row >= langCount_) return TitleAction::None;
+            setSel_ = row;
+            return activate();
     }
+    return TitleAction::None;
+}
+
+void TitleScreen::hoverRow(int row) {
+    if (confirmNewGame_ || confirmLanguage_ || row < 0) return;
+    switch (page_) {
+        case TitlePage::Menu:     if (row < kMenuItemCount) menuSel_ = row; break;
+        case TitlePage::Continue: if (row < slotCount_) slotSel_ = row; break;
+        case TitlePage::Settings: if (row < langCount_) setSel_ = row; break;
+    }
+}
+
+TitleAction TitleScreen::answerConfirm(bool yes) {
+    if (confirmNewGame_) { confirmYes_ = yes; return activate(); }
+    if (confirmLanguage_) { confirmLangYes_ = yes; return activate(); }
     return TitleAction::None;
 }
 

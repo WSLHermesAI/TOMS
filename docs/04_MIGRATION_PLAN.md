@@ -10,7 +10,7 @@ then it is compiled from where it is.
 |---|---|
 | `BgfxRenderer` implements the existing `IRenderer`; the compat `renderer.h` makes `new Renderer()` build it | `src/engine/src/bgfx_renderer.*`, `src/game/compat/` |
 | SDL3 game executable replaces GLFW + Vulkan `main.cpp` (same controls) | `src/game/src/main_sdl.cpp`, `src/game/src/game_session.*` |
-| ImGui dev windows (F1, F2, Tab stage select, toasts) drawn by bgfx | `src/engine/src/imgui_bgfx.*` |
+| ImGui developer windows (F1, F2) drawn by bgfx (all player UI moved to RmlUi on 2026-09-27, [08](08_RMLUI.md)) | `src/engine/src/imgui_bgfx.*` |
 | Qt editor: bgfx *Play* view running the real game, stage list, session panel, old stage editor as a tab | `src/editor/` |
 | One shader source per program, compiled by shaderc for D3D11/12, Vulkan, GL, GLES | `src/engine/shaders/` |
 | Prerequisite checks with popups and download links; VS presets; `build.cmd` | `cmake/`, `tools/`, `CMakePresets.json` |

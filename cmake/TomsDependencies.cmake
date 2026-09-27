@@ -62,21 +62,16 @@ FetchContent_Declare(glm
 
 FetchContent_MakeAvailable(bgfx SDL3 imgui glm)
 
-# ---- RmlUi (HTML/CSS-like game UI) + FreeType (its font engine) -- desktop spike, 2026-09-27 ----
-# The web build does not use it yet: RmlUi needs font *files*, and the web build ships none (the
-# game draws glyphs with the browser's fonts). See docs/08_RMLUI.md.
-if(NOT DEFINED TOMS_WITH_RMLUI)
-    if(EMSCRIPTEN)
-        set(TOMS_WITH_RMLUI OFF)
-    else()
-        set(TOMS_WITH_RMLUI ON)
-    endif()
-endif()
-set(TOMS_WITH_RMLUI ${TOMS_WITH_RMLUI} CACHE BOOL "Build the RmlUi game UI (store screen)")
-if(TOMS_WITH_RMLUI)
-    set(BUILD_SHARED_LIBS      OFF CACHE BOOL "" FORCE)   # RmlUi defaults to shared; we link statically
+# ---- RmlUi (the game UI, HTML/CSS-like), docs/08_RMLUI.md ----
+# Desktop: FreeType draws the text from font files (assets/media/fonts/NotoSansCJKtc-TOMS.otf by
+# default, tools/make_ui_font.py; per-language fonts from text.json). Web: no FreeType and no font
+# file -- the browser draws the text (src/engine/src/rml_canvas_font.*).
+set(BUILD_SHARED_LIBS      OFF CACHE BOOL "" FORCE)   # RmlUi defaults to shared; we link statically
+if(EMSCRIPTEN)
+    set(RMLUI_FONT_ENGINE  "none" CACHE STRING "" FORCE)
+else()
     foreach(_ft ZLIB BZIP2 PNG HARFBUZZ BROTLI)
-        set(FT_DISABLE_${_ft} ON CACHE BOOL "" FORCE)     # plain TrueType/OpenType, no extra deps
+        set(FT_DISABLE_${_ft} ON CACHE BOOL "" FORCE) # plain TrueType/OpenType, no extra deps
     endforeach()
     FetchContent_Declare(freetype
         GIT_REPOSITORY https://github.com/freetype/freetype.git
@@ -87,25 +82,25 @@ if(TOMS_WITH_RMLUI)
     if(NOT TARGET Freetype::Freetype)
         add_library(Freetype::Freetype ALIAS freetype)
     endif()
-
-    set(RMLUI_SAMPLES              OFF CACHE BOOL "" FORCE)
-    set(BUILD_TESTING              OFF CACHE BOOL "" FORCE)
-    set(RMLUI_FONT_ENGINE          "freetype" CACHE STRING "" FORCE)
-    set(RMLUI_LUA_BINDINGS         OFF CACHE BOOL "" FORCE)
-    set(RMLUI_SVG_PLUGIN           OFF CACHE BOOL "" FORCE)
-    set(RMLUI_LOTTIE_PLUGIN        OFF CACHE BOOL "" FORCE)
-    set(RMLUI_PRECOMPILED_HEADERS  OFF CACHE BOOL "" FORCE)
-    FetchContent_Declare(rmlui
-        GIT_REPOSITORY https://github.com/mikke89/RmlUi.git
-        GIT_TAG        6.3
-        GIT_SHALLOW    TRUE)
-    FetchContent_MakeAvailable(rmlui)
-    foreach(_t freetype rmlui rmlui_core rmlui_debugger)
-        if(TARGET ${_t})
-            set_target_properties(${_t} PROPERTIES FOLDER "third_party/rmlui")
-        endif()
-    endforeach()
+    set(RMLUI_FONT_ENGINE  "freetype" CACHE STRING "" FORCE)
 endif()
+
+set(RMLUI_SAMPLES              OFF CACHE BOOL "" FORCE)
+set(BUILD_TESTING              OFF CACHE BOOL "" FORCE)
+set(RMLUI_LUA_BINDINGS         OFF CACHE BOOL "" FORCE)
+set(RMLUI_SVG_PLUGIN           OFF CACHE BOOL "" FORCE)
+set(RMLUI_LOTTIE_PLUGIN        OFF CACHE BOOL "" FORCE)
+set(RMLUI_PRECOMPILED_HEADERS  OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(rmlui
+    GIT_REPOSITORY https://github.com/mikke89/RmlUi.git
+    GIT_TAG        6.3
+    GIT_SHALLOW    TRUE)
+FetchContent_MakeAvailable(rmlui)
+foreach(_t freetype rmlui rmlui_core rmlui_debugger)
+    if(TARGET ${_t})
+        set_target_properties(${_t} PROPERTIES FOLDER "third_party/rmlui")
+    endif()
+endforeach()
 
 # ---- shaderc is a BUILD TOOL when it is not imported (the "no host shaderc" fallback) ----------------
 # In that case bgfx.cmake builds shaderc for the TARGET (wasm) and CMake runs it through node to compile

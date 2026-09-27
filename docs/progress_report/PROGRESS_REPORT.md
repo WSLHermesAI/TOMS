@@ -47,7 +47,7 @@ Bash). The old project's web build (`TOMS/docs/building/BUILD_WEB.md`) still wor
 | 2 | Web build (bgfx WebGL2): presets, `build_web.cmd`, `serve_web.cmd`, IDBFS saves, page shell, doc 06 | ✅ 2026-09-26, verified in headless Chrome (release + debug) |
 | 2 | Old unit tests registered with CTest; golden-image smoke test | ⬜ **next** |
 | 2 | Mobile scaling on web (`setUiScale` / `setPadScale`, the owner's rule) | ◐ wired for small viewports; only `UiRoot` screens grow (game-side work) |
-| 3 | Edit `src/core` directly: drop `src/game/compat/`, split `Game`, game UI on RmlUi | ◐ RmlUi store test done 2026-09-27 ([08](../08_RMLUI.md)) |
+| 3 | Edit `src/core` directly: drop `src/game/compat/`, split `Game`, game UI on RmlUi | ◐ all UI on RmlUi (desktop + web) 2026-09-27 ([08](../08_RMLUI.md)); compat shim and `Game` split still open |
 | 4 | Editor: data-driven stage editor on the bgfx viewport, docking, inspector, undo, event editor | ⬜ |
 | 5 | 3D on bgfx (glTF, ozz skinning, instancing, shadows, Effekseer) | ⬜ researched only |
 
@@ -68,7 +68,7 @@ Bash). The old project's web build (`TOMS/docs/building/BUILD_WEB.md`) still wor
 | W9 | **Web build on a real phone/tablet**, Firefox, Safari | only headless Chrome was run (incl. an 844×390 viewport) | open `serve_web.cmd`'s URL from a phone on the same network (serve with `--bind 0.0.0.0`) |
 | W10 | **Linux/WSL web build in a browser** | builds and links on WSL (exit 0, 2026-09-26, `817627c`) but was never opened in a browser there, and not re-run since the move to the root | run `tools/web_smoke_test.mjs` against it on a machine with Chrome |
 | W13 | **Web resize while the tab is throttled** | in a visible window at DPR 2.4, one resize (1600×800, wider than the screen) kept the old canvas size while Chrome drew ~9 frames; the next resize caught up | resize the real browser window by hand a few times; if it sticks, also react to the browser `resize` event in `shell.html` |
-| W14 | **CJK font `wqy-zenhei.ttc` lost** | gitignored, deleted with the old folder; desktop uses the JhengHei fallback | download it into `assets/media/` |
+| ~~W14~~ | ~~CJK font `wqy-zenhei.ttc` lost~~ | closed 2026-09-27: the UI is RmlUi with a committed font (`NotoSansCJKtc-TOMS.otf`); no font download any more | — |
 | W12 | **Headless tests miss display-scale bugs** | the black-canvas bug (2026-09-26) only showed in a visible window at DPR 2.4 | extend `web_smoke_test.mjs` with a visible-window / `--force-device-scale-factor=2.4` run and a canvas-size check |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
 
@@ -93,5 +93,5 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md).
 | Q1 | Commit the 2026-09-27 move (root, `assets/` + `src/`) on `main`? | nothing committed until asked |
 | Q2 | ~~Keep the folder name `toms_next`?~~ Answered 2026-09-27: no folder, the project is the root | — |
 | Q3 | Is browser **WebGPU** definitely not needed? (bgfx only does WebGL2 in the browser) | WebGL2 only, as decided 2026-09-25 |
-| Q4 | Game UI library for phase 3: RmlUi, or own widgets? Depends on W5's research | decide after W5 |
+| Q4 | ~~Game UI library for phase 3?~~ Answered 2026-09-27: RmlUi, every screen, desktop and web ([08](../08_RMLUI.md)) | — |
 | Q5 | The bgfx web build now passes its check (2026-09-26). Replace the old `build_web.sh` output (`web/`, `web-gl/`) with it, and where is it published? | keep both until the owner has played the new one (W9) |

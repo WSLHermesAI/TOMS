@@ -67,12 +67,8 @@ public:
     virtual void init(uint32_t w, uint32_t h) = 0;
     // layers: one RGBA buffer per sprite (already decoded). sw/sh = sprite cell size.
     virtual void loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) = 0;
-    virtual void loadFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) = 0;
-    // Re-upload the font atlas after it grew / gained glyphs at runtime (default: no-op).
-    virtual void updateFont(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) { (void)px; (void)w; (void)h; }
     virtual void begin() = 0;
     virtual void drawSprite(const Quad& q) = 0;
-    virtual void drawText(const Quad& q) = 0;
     // Diagnostic: tag subsequent quads with a "node" id (for the 4-way split-screen
     // render). No-op by default; BgfxRenderer stamps it onto each quad.
     virtual void setNode(uint8_t n) { (void)n; }

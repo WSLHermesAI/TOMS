@@ -166,24 +166,7 @@ endif()
 toms_prerequisites_stop_on_error()
 
 # ============================================================================================
-# 4. CJK font (gitignored in the old repo, so a fresh clone does not have it)
-# ============================================================================================
-# The web build does not need it: it draws glyphs with the browser's own fonts (Canvas 2D).
-set(TOMS_CJK_FONT "${TOMS_ASSET_DIR}/wqy-zenhei.ttc")
-if(NOT WEB AND NOT EXISTS "${TOMS_CJK_FONT}")
-    if(WIN32 AND EXISTS "$ENV{WINDIR}/Fonts/msjh.ttc")
-        toms_prereq_problem(WARNING
-            "assets/media/wqy-zenhei.ttc (16 MB, gitignored) is missing. The game falls back to Windows' Microsoft JhengHei (msjh.ttc); glyph shapes differ from the shipped look. To match: download WenQuanYi Zen Hei and copy wqy-zenhei.ttc into assets/media/."
-            "https://sourceforge.net/projects/wqy/files/wqy-zenhei/")
-    else()
-        toms_prereq_problem(WARNING
-            "No CJK font: assets/media/wqy-zenhei.ttc is missing and no Windows fallback font was found. The game will show a popup and exit. Download WenQuanYi Zen Hei and copy wqy-zenhei.ttc into assets/media/."
-            "https://sourceforge.net/projects/wqy/files/wqy-zenhei/")
-    endif()
-endif()
-
-# ============================================================================================
-# 5. D3D shader compiler DLL (shaderc uses it to build the Direct3D shaders)
+# 4. D3D shader compiler DLL (shaderc uses it to build the Direct3D shaders)
 # ============================================================================================
 if(WIN32 AND NOT EXISTS "$ENV{WINDIR}/System32/d3dcompiler_47.dll")
     toms_prereq_problem(WARNING
@@ -192,7 +175,7 @@ if(WIN32 AND NOT EXISTS "$ENV{WINDIR}/System32/d3dcompiler_47.dll")
 endif()
 
 # ============================================================================================
-# 6. Qt 6 for the editor (optional: without it only the game is built)
+# 5. Qt 6 for the editor (optional: without it only the game is built)
 # ============================================================================================
 set(TOMS_HAVE_QT OFF)
 if(TOMS_BUILD_EDITOR AND NOT WEB)
@@ -230,7 +213,7 @@ if(TOMS_BUILD_EDITOR AND NOT WEB)
 endif()
 
 # ============================================================================================
-# 7. Web only: a shader compiler that runs on THIS machine
+# 6. Web only: a shader compiler that runs on THIS machine
 # ============================================================================================
 # shaderc is a build tool: for a web build it must run on the build machine, not in the browser.
 # The desktop build already produced one (out/build/<preset>/bin/shaderc.exe), so the web build

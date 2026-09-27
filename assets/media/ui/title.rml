@@ -1,0 +1,52 @@
+<rml>
+<head>
+    <title>Title</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="title.rcss"/>
+</head>
+<!-- The boot screen: New Game / Continue (save slots) / Settings (language), and their two
+     confirm dialogs. Data: title.* (UiTitle). Rows are the current page's, in keyboard order. -->
+<body data-model="game">
+    <div class="rule" style="top: 74px;"></div>
+    <div class="rule" style="bottom: 62px;"></div>
+    <div id="name">{{title.title}}</div>
+    <div id="subtitle">{{title.subtitle}}</div>
+
+    <div id="page" data-class-menu="title.page == 0" data-class-slots="title.page == 1" data-class-langs="title.page == 2">
+        <div id="header" data-if="title.header != ''">{{title.header}}</div>
+        <div id="subheader" data-if="title.subheader != ''">{{title.subheader}}</div>
+        <div data-for="row, i : title.rows">
+            <div class="trow" data-class-selected="row.selected"
+                 data-event-click="act('title_row', i)" data-event-mouseover="act('title_hover', i)">
+                <div class="accent"></div>
+                <div class="cursor">&gt;</div>
+                <div class="label">{{row.label}}</div>
+                <div class="sub" data-if="row.sub != ''">{{row.sub}}</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="empty-hint" data-if="title.show_empty_hint">{{title.empty_hint}}</div>
+    <div id="back" class="trow" data-if="title.show_back" data-event-click="act('title_back')">
+        <div class="accent back"></div>
+        <div class="label">{{title.back_label}}</div>
+    </div>
+    <div id="hint">{{title.hint}}</div>
+
+    <div data-if="title.confirm_open">
+        <div class="fill scrim"></div>
+        <div id="confirm" class="panel">
+            <div id="question">{{title.confirm_question}}</div>
+            <div id="body" data-if="title.confirm_body != ''">{{title.confirm_body}}</div>
+            <div id="answers">
+                <div class="trow answer" data-class-selected="title.confirm_yes" data-event-click="act('title_confirm', 1)">
+                    <div class="accent"></div><div class="label">{{title.yes_label}}</div>
+                </div>
+                <div class="trow answer" data-class-selected="!title.confirm_yes" data-event-click="act('title_confirm', 0)">
+                    <div class="accent"></div><div class="label">{{title.no_label}}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

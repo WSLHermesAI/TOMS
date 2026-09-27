@@ -9,6 +9,12 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <filesystem>
+#include <set>
+
+#ifdef __EMSCRIPTEN__
+#include "rml_canvas_font.h"
+#endif
 
 // A private stb_image copy for UI images (the core game code owns the public one).
 #define STB_IMAGE_STATIC
@@ -181,12 +187,17 @@ struct RmlUi::Impl {
     SystemInterface system;
     Rml::Context* context = nullptr;
     bool debugger = false;
+#ifdef __EMSCRIPTEN__
+    CanvasFontEngine canvasFont;         // web: the browser draws the text (rml_canvas_font.h)
+#else
+    std::set<std::string> loadedFamilies;   // desktop: language fonts already registered
+#endif
 };
 
 RmlUi::RmlUi() = default;
 RmlUi::~RmlUi() { shutdown(); }
 
-bool RmlUi::init(int designW, int designH, const std::vector<std::string>& fontFiles, std::string& error) {
+bool RmlUi::init(int designW, int designH, const std::string& defaultFont, std::string& error) {
     shutdown();
     impl_ = std::make_unique<Impl>();
     impl_->render.designW = (float)designW;
@@ -194,22 +205,21 @@ bool RmlUi::init(int designW, int designH, const std::vector<std::string>& fontF
     if (!impl_->render.create()) { error = "RmlUi: shader program missing for this renderer"; impl_.reset(); return false; }
     Rml::SetRenderInterface(&impl_->render);
     Rml::SetSystemInterface(&impl_->system);
+#ifdef __EMSCRIPTEN__
+    (void)defaultFont;                                  // no font files on the web
+    Rml::SetFontEngineInterface(&impl_->canvasFont);
+#endif
     if (!Rml::Initialise()) { error = "RmlUi: Rml::Initialise failed"; impl_->render.destroy(); impl_.reset(); return false; }
-
-    int loaded = 0;
-    for (size_t i = 0; i < fontFiles.size(); ++i) {
-        const bool primary = loaded == 0;
-        const std::string family = primary ? "toms" : "toms-fallback-" + std::to_string(i);
-        if (Rml::LoadFontFace(fontFiles[i], family, Rml::Style::FontStyle::Normal, Rml::Style::FontWeight::Auto, !primary, 0)) {
-            std::fprintf(stderr, "[rmlui] font %s: %s\n", primary ? "family 'toms'" : "fallback", fontFiles[i].c_str());
-            ++loaded;
-        }
-    }
-    if (loaded == 0) {
-        error = "RmlUi: no font could be loaded (tried " + std::to_string(fontFiles.size()) + " files)";
+#ifndef __EMSCRIPTEN__
+    // The bundled font is family "toms" AND the fallback face: characters a language's own font
+    // (languageFont) lacks are drawn from it.
+    if (!Rml::LoadFontFace(defaultFont, "toms", Rml::Style::FontStyle::Normal, Rml::Style::FontWeight::Auto, true, 0)) {
+        error = "RmlUi: the UI font could not be loaded: " + defaultFont;
         Rml::Shutdown(); impl_->render.destroy(); impl_.reset();
         return false;
     }
+    std::fprintf(stderr, "[rmlui] font family 'toms' (and fallback): %s\n", defaultFont.c_str());
+#endif
     impl_->context = Rml::CreateContext("game", Rml::Vector2i(designW, designH));
     if (!impl_->context) { error = "RmlUi: CreateContext failed"; shutdown(); return false; }
     Rml::Debugger::Initialise(impl_->context);
@@ -231,9 +241,40 @@ void RmlUi::shutdown() {
 bool RmlUi::ready() const { return impl_ && impl_->context; }
 Rml::Context* RmlUi::context() { return impl_ ? impl_->context : nullptr; }
 
+std::string RmlUi::languageFont(const std::string& code, const std::string& fontFile, const std::string& webFonts) {
+    if (!impl_) return "toms";
+#ifdef __EMSCRIPTEN__
+    (void)fontFile;
+    std::string tag = code;                                   // zh_TW -> zh-TW (BCP 47)
+    std::replace(tag.begin(), tag.end(), '_', '-');
+    impl_->canvasFont.setLanguage(tag, webFonts);
+    return "toms";
+#else
+    (void)webFonts;
+    if (fontFile.empty()) return "toms";
+    const std::string family = "toms-" + code;
+    if (impl_->loadedFamilies.count(family)) return family;
+    std::error_code ec;
+    if (!std::filesystem::exists(fontFile, ec)) {
+        std::fprintf(stderr, "[rmlui] font for '%s' not found, using the default: %s\n", code.c_str(), fontFile.c_str());
+        return "toms";
+    }
+    if (!Rml::LoadFontFace(fontFile, family, Rml::Style::FontStyle::Normal, Rml::Style::FontWeight::Auto, false, 0)) {
+        std::fprintf(stderr, "[rmlui] font for '%s' could not be loaded, using the default: %s\n", code.c_str(), fontFile.c_str());
+        return "toms";
+    }
+    std::fprintf(stderr, "[rmlui] font family '%s': %s\n", family.c_str(), fontFile.c_str());
+    impl_->loadedFamilies.insert(family);
+    return family;
+#endif
+}
+
 void RmlUi::setViewport(float x, float y, float w, float h) {
     if (!impl_) return;
     impl_->render.vpX = x; impl_->render.vpY = y; impl_->render.vpW = w; impl_->render.vpH = h;
+#ifdef __EMSCRIPTEN__
+    if (impl_->render.designW > 0) impl_->canvasFont.setPixelScale(w / impl_->render.designW);
+#endif
 }
 
 void RmlUi::update(double timeSeconds) {

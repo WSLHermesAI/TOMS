@@ -1,0 +1,18 @@
+<rml>
+<head>
+    <title>Ending</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="ending.rcss"/>
+</head>
+<!-- The ending: its name and text, then either Rebirth / Back to title, or "tap to continue".
+     Data: ending.* (UiEnding). -->
+<body data-model="game" data-event-click="act('ending_dismiss')">
+    <div id="name">{{ending.name}}</div>
+    <div id="text">{{ending.text}}</div>
+    <div id="buttons" data-if="ending.rebirth">
+        <div class="btn rebirth" data-event-click="act('ending_rebirth')">{{ending.rebirth_label}}</div>
+        <div class="btn to-title" data-event-click="act('ending_title')">{{ending.title_label}}</div>
+    </div>
+    <div id="hint" data-if="!ending.rebirth">{{ending.hint}}</div>
+</body>
+</rml>

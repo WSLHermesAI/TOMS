@@ -3,27 +3,33 @@
   "languages": [
     {
       "code": "zh_TW",
-      "name": "繁體中文"
+      "name": "繁體中文",
+      "web_font": "'PingFang TC', 'Microsoft JhengHei', 'Noto Sans TC', 'Noto Sans CJK TC', sans-serif"
     },
     {
       "code": "en",
-      "name": "English"
+      "name": "English",
+      "web_font": "system-ui, 'Segoe UI', Roboto, 'Noto Sans', sans-serif"
     },
     {
       "code": "zh_CN",
-      "name": "简体中文"
+      "name": "简体中文",
+      "web_font": "'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', 'Noto Sans CJK SC', sans-serif"
     },
     {
       "code": "ja",
-      "name": "日本語"
+      "name": "日本語",
+      "web_font": "'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', 'Noto Sans JP', 'Noto Sans CJK JP', sans-serif"
     },
     {
       "code": "ko",
-      "name": "한국어"
+      "name": "한국어",
+      "web_font": "'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', 'Noto Sans CJK KR', sans-serif"
     },
     {
       "code": "es",
-      "name": "Español"
+      "name": "Español",
+      "web_font": "system-ui, 'Segoe UI', Roboto, 'Noto Sans', sans-serif"
     }
   ],
   "strings": {

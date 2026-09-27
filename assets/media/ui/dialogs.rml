@@ -1,0 +1,30 @@
+<rml>
+<head>
+    <title>Dialogs</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="dialogs.rcss"/>
+</head>
+<!-- Small yes/no and OK popups: "go up/down the stairs?" (stairs.*) and "the store is open!"
+     (store.unlocked_*). -->
+<body data-model="game">
+    <div data-if="stairs.visible">
+        <div class="fill" id="stairs-dim"></div>
+        <div id="stairs" class="box">
+            <div class="question">{{stairs.question}}</div>
+            <div class="answers">
+                <div class="btn btn-yes" data-event-click="act('stairs', 1)">{{stairs.yes_label}}</div>
+                <div class="btn btn-no" data-event-click="act('stairs', 0)">{{stairs.no_label}}</div>
+            </div>
+        </div>
+    </div>
+
+    <div data-if="store.unlocked_dialog">
+        <div class="fill" id="unlock-dim"></div>
+        <div id="unlock" class="box">
+            <div class="question">{{store.unlocked_title}}</div>
+            <div class="body">{{store.unlocked_body}}</div>
+            <div id="unlock-ok" class="btn btn-yes" data-event-click="act('store_unlocked_ok')">{{store.unlocked_ok}}</div>
+        </div>
+    </div>
+</body>
+</rml>

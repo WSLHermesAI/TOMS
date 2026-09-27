@@ -1,185 +1,19 @@
-// game_input.cpp — input routing: touch/mouse/on-screen-pad hit testing, held-direction
+// game_input.cpp — input: map clicks (click-to-move), held-direction
 // movement, world interaction, and bump-to-fight. Split out of game.cpp 2026-09-13.
 #include "game_internal.h"
 
 using namespace toms::game_detail;
 
 void Game::handleTouch(float px, float py, int phase) {
-    // Guard: ignore invalid coordinates (NaN from a zero-size canvas rect, or
-    // out-of-range). Prevents bad state / out-of-bounds in the hit-test below.
-    if (!(px == px) || !(py == py)) return;            // NaN check
+    // Only clicks that no UI element took arrive here (the RmlUi documents handle every button),
+    // so the one thing left is the map: click-to-move, or interact on the player's own tile.
+    if (!(px == px) || !(py == py)) return;             // NaN (zero-size canvas)
     if (px < 0 || px > 1024 || py < 0 || py > 768) return;
-    // Title phase: every tap goes to the title's own hit-testing (menu rows / save slots /
-    // language rows / Back). Checked first — while it is up, it is the only interactive screen.
-    if (title_.isOpen()) { if (phase == 0) titleClick(px, py); return; }
-    // M7 (first slice): a tap anywhere dismisses the ending screen -- there is nothing else to
-    // interact with once a run has actually ended, matching the post-victory tap-to-dismiss
-    // convention elsewhere in this file.
-    // M8: when the ending offers 輪迴, it has two REAL buttons -- a tap must land on one of them,
-    // not "anywhere" (there is now an actual choice to make). Only falls back to tap-anywhere
-    // dismiss when rebirth isn't on offer, matching the single-exit screen's own simpler contract.
-    if (endingActive()) {
-        if (phase != 0) return;
-        if (rebirthOffered()) {
-            auto hit = [&](const int r[4]) { return px>=r[0] && px<=r[0]+r[2] && py>=r[1] && py<=r[1]+r[3]; };
-            if (hit(endingRebirthBtnRect_)) rebirth();
-            else if (hit(endingTitleBtnRect_)) dismissEndingScreen();
-            return;
-        }
-        dismissEndingScreen();
-        return;
-    }
-    // --- Store overlay: route ALL taps to storeClick. Store buttons (icon / buy / close)
-    //     are NOT gamepad rects, so this must run BEFORE the gamepad hit-test below,
-    //     otherwise taps on store UI hit `id<0` and are dropped. ---
-    if (storeModal()) { if (phase == 0) storeClick(px, py); return; }
-    // In-game menu (Save/Settings/Back to Title): swallow every tap while it is up, same
-    // pattern as the store overlay above.
-    if (inGameMenuOpen_) { if (phase == 0) inGameMenuClick(px, py); return; }
-    // Normal play: a tap on the gear icon (top-right, left of the store icon) opens the
-    // in-game menu; a tap on the store icon opens the shop.
-    if (!modalActive() && phase == 0) {
-        if (px >= menuIconRect_[0] && px <= menuIconRect_[0]+menuIconRect_[2] &&
-            py >= menuIconRect_[1] && py <= menuIconRect_[1]+menuIconRect_[3]) {
-            openInGameMenu();
-            return;
-        }
-        storeClick(px, py);
-        if (storeOpen) return;   // icon tapped -> store opened; consume this tap
-    }
-    int id = -1;
-    for (int i = 0; i < GP_N; i++) {
-        if (!gpOn && i != 7) continue;   // hidden pad: only its show/hide toggle is still there
-        const GPadBtn b = gpadBtn(i);
-        if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) { id = i; break; }
-    }
-    if (id == 7) { if (phase == 0) gpOn = !gpOn; return; }  // toggle show/hide
-    // ---- Battle scene (Battle System v2): each tap is a single, instantaneous action -- there is
-    // no press-and-hold or release to track any more, so (unlike the old model) only phase==0
-    // matters here, and it matters WHICH rect was hit, since Attack/Defend/Super are three
-    // independent actions now instead of one shared "the" action button. Two fingers landing on
-    // two different rects in the same instant (multi-touch) each fire their own handleTouch call
-    // independently, so concurrent attack+defend just falls out of this naturally. Deliberately
-    // handled this early, before the `id` gamepad-rect loop below, so a tap on any of these three
-    // rects (which are not gamepad rects) is never dropped by the `if (id < 0) return;` further
-    // down. cs.won is excluded so the post-victory tap-anywhere-to-dismiss below still works.
-    if (cs.active && !cs.won && phase == 0) {
-        auto hit = [&](const int r[4]) { return px>=r[0] && px<=r[0]+r[2] && py>=r[1] && py<=r[1]+r[3]; };
-        if (hit(atkBtnRect_)) { battleTapAttack(); return; }
-        if (hit(defBtnRect_)) { battleTapDefense(); return; }
-        if (cs.superCharge >= run_.superMax() && hit(superBtnRect_)) { battleTapSuper(); return; }
-        // Equipment actives: same "no button at all until it's actually available" convention as
-        // Super above -- canUseActive() covers uses-left/cooldown/silence in one call.
-        {
-            auto activeIds = toms::equippedActives(equipped_, equipmentDefs_);
-            if (!activeIds.empty() && toms::canUseActive(activeIds[0], activeDefs_, cs.activeRuntime, cs.activeStatus)
-                && hit(activeBtnRect_)) { battleTapActive(); return; }
-        }
-        return;   // a tap elsewhere in the battle scene does nothing now (no more "whole scene is the surface")
-    }
-    // Milestone 9 polish: releasing a d-pad button stops "keep moving while held" (see
-    // setMoveHeldX/Y's declaration in game.h). Checked here, before the generic phase==2
-    // return right below (which would otherwise swallow it), and unconditionally regardless
-    // of what else might be open -- harmless when nothing is currently held, and this is the
-    // one case where a release must never be dropped (an un-cleared held direction would
-    // otherwise keep stepping forever).
-    if (id >= 0 && id <= 3 && phase == 2) { stopMoveHeld(); return; }
-    if (phase == 2) return;                 // touchend on a game button: nothing
-    // Victory screen: tap anywhere to dismiss (cs.won is set on win and must be cleared
-    // or the combat overlay keeps painting forever -> "stuck after defeating enemy").
-    if (cs.won && phase == 0) { dismissVictory(); return; }
-    // Milestone 9: stairs confirm -- Yes/No buttons aren't gamepad rects, so `id` stays
-    // -1 for a desktop mouse click on them; must be checked before `if (id < 0) return;`
-    // below (the exact bug this fixes for dialogue too, right after this block).
-    if (stairsConfirmOpen_) {
-        if (phase == 0) {
-            auto hit = [&](const int r[4]) { return px>=r[0] && px<=r[0]+r[2] && py>=r[1] && py<=r[1]+r[3]; };
-            if (hit(stairsConfirmYesRect_)) { confirmStageTransition(); return; }
-            if (hit(stairsConfirmNoRect_))  { cancelStageTransition(); return; }
-        }
-        return;
-    }
-    // HUD stats line (carries the "(I)" inventory indicator) — tap to open inventory.
-    if (!inventoryOpen() && !inDialogue && !modalActive() && phase == 0) {
-        if (py >= 74 && py <= 104 && px >= 16 && px <= 560) { toggleInventory(); return; }
-    }
-    if (inventoryOpen()) {
-        if (phase == 0) {
-            auto hit = [&](const int r[4]) {
-                return px >= r[0] && px <= r[0] + r[2] && py >= r[1] && py <= r[1] + r[3];
-            };
-            for (size_t i = 0; i + 3 < invCardRects_.size(); i += 4) {
-                int r[4] = { (int)invCardRects_[i+0], (int)invCardRects_[i+1], (int)invCardRects_[i+2], (int)invCardRects_[i+3] };
-                if (hit(r)) { invSel = (int)(i / 4); return; }
-            }
-            if (hit(invUseRect_)) { invUseSelected(); return; }
-            if (hit(invDropRect_)) { invDropSelected(); return; }
-            if (hit(invCloseRect_)) { toggleInventory(); return; }
-        }
-        if (id >= 0) {
-            const GPadBtn b = gpadBtn(id);
-            if (id <= 3) invMoveSel(b.dx, b.dy);
-            else if (id == 4 && phase == 0) invUseSelected();
-            else if (id == 5 && phase == 0) invDropSelected();
-            else if (id == 6 && phase == 0) toggleInventory();
-        }
-        return;
-    }
-    // Milestone 9 bugfix: dialogue tap-to-select never actually worked from a desktop
-    // mouse. `if (id < 0) return;` used to run BEFORE this block -- a click on a
-    // dialogue choice line isn't inside any gamepad-button rect, so `id` was always -1
-    // there and every such click was silently dropped before ever reaching this code.
-    // Moved above that guard; the gamepad D-pad fallback below still needs `id`, which
-    // is already computed further up, so nothing else about it changes.
-    if (inDialogue) {                        // dialogue: tap a choice line to select+confirm
-        int n = (int)dlgChoices.size();
-        // Tap directly on a choice line (drawn at dialogueRowY(), x >= 60) selects & confirms it --
-        // same helper the draw side uses (game_helpers.h), so this can't silently drift from what's
-        // actually on screen.
-        if (phase == 0 && n > 0) {
-            float W = (float)ren->width(), H = (float)ren->height();
-            // C step 2: ask the SAME layout the drawing used (dialogueLayoutFor), so the row a tap
-            // selects is the row that was drawn there -- identical by construction, at any UI scale.
-            // (The old hand-written +-22px zone duplicated these numbers; nearest-baseline wins now.)
-            toms::DialogueLayout dl = dialogueLayoutFor(W, H, n);
-            int row = dl.rowAt(uiRoot_, glm::vec2(px, py));
-            if (row >= 0) { dlgSel = row; chooseDialogue(row); return; }
-            // tap elsewhere on the dialogue box = advance to next (keep current selection)
-            chooseDialogue(dlgSel); return;
-        }
-        // (gamepad D-pad still works too)
-        if (id == 0 && phase == 0 && n > 0) dlgSel = (dlgSel - 1 + n) % n;   // up = prev choice
-        else if (id == 1 && phase == 0 && n > 0) dlgSel = (dlgSel + 1) % n;  // down = next choice
-        else if (id == 4 && phase == 0) chooseDialogue(dlgSel);               // A = select
-        else if (id == 5 && phase == 0) inDialogue = false;                  // B = close
-        return;
-    }
-    // Click-to-move: a tap on the map (not on a pad button) walks to that tile; a tap on the
-    // player's own tile interacts. The HUD text block (top-left) is not map.
-    if (id < 0) {
-        if (phase == 0 && !modalActive() && !(px <= 560 && py < 104)) {
-            int tx, ty;
-            if (screenToTile(px, py, tx, ty)) {
-                if (tx == pl.x && ty == pl.y) { cancelWalk(); interact(); }
-                else walkTo(tx, ty);
-            }
-        }
-        return;
-    }
-    // (The battle scene's hold-to-charge input is handled much earlier, before the generic
-    // `phase == 2` return above -- see the comment there.)
-    if (modalActive()) {                     // other modal (store handled above): block world input
-        return;
-    }
-    const GPadBtn b = gpadBtn(id);
-    // Milestone 9 polish: press-and-hold now keeps stepping (setMoveHeldX/Y + update()'s
-    // repeat timer) instead of exactly one tile per tap; the matching release is handled
-    // above, before the generic phase==2 return. GP[0]/[1] are the Y axis (up/down), GP[2]/[3]
-    // the X axis (left/right) -- each button only ever sets one axis (see GP[]'s own dx/dy).
-    if (id <= 3 && phase == 0) {
-        if (b.dy != 0) setMoveHeldY(b.dy); else setMoveHeldX(b.dx);
-    }
-    else if (id == 4 && phase == 0) interact();
+    if (phase != 0 || modalActive()) return;
+    int tx, ty;
+    if (!screenToTile(px, py, tx, ty)) return;
+    if (tx == pl.x && ty == pl.y) { cancelWalk(); interact(); }
+    else walkTo(tx, ty);
 }
 
 // Milestone 9 polish: see setMoveHeldX/Y's declaration in game.h. A fresh press (or switching

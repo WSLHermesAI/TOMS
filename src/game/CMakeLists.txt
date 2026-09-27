@@ -6,9 +6,9 @@ set(L_GAME   ${L}/game)
 # ---- toms_core: the game code in src/core (every non-test source there) ----
 # The *_test.cpp files are not built yet (CTest, migration phase 2).
 add_library(toms_core STATIC
-    ${L_ENGINE}/node.cpp ${L_ENGINE}/font.cpp ${L_ENGINE}/condition.cpp ${L_ENGINE}/entity_status.cpp
+    ${L_ENGINE}/node.cpp ${L_ENGINE}/condition.cpp ${L_ENGINE}/entity_status.cpp
     ${L_ENGINE}/encounter.cpp ${L_ENGINE}/power_bar.cpp
-    ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_text_draw.cpp
+    ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp
     ${L_GAME}/core/game_scene_draw.cpp ${L_GAME}/core/game_input.cpp ${L_GAME}/core/game_inventory.cpp
     ${L_GAME}/core/game_store.cpp ${L_GAME}/core/game_combat.cpp ${L_GAME}/core/game_story.cpp
     ${L_GAME}/core/game_title_glue.cpp
@@ -34,7 +34,7 @@ target_link_libraries(toms_core PUBLIC toms_imgui glm::glm)
 set_target_properties(toms_core PROPERTIES FOLDER "toms")
 
 # ---- toms_game_host: GameSession, shared by the SDL game and the Qt editor ----
-add_library(toms_game_host STATIC src/game_session.h src/game_session.cpp)
+add_library(toms_game_host STATIC src/game_session.h src/game_session.cpp src/game_ui.h src/game_ui.cpp)
 toms_target_defaults(toms_game_host)
 target_include_directories(toms_game_host PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(toms_game_host PUBLIC toms_core toms_bgfx)
@@ -43,10 +43,6 @@ if(EMSCRIPTEN)
     target_compile_definitions(toms_game_host PRIVATE TOMS_DEFAULT_ASSET_DIR="/assets")
 else()
     target_compile_definitions(toms_game_host PRIVATE TOMS_DEFAULT_ASSET_DIR="${TOMS_ASSET_DIR}")
-endif()
-if(TOMS_WITH_RMLUI)
-    # The RmlUi store (docs/08_RMLUI.md); its documents are assets/media/ui/*.rml / *.rcss.
-    target_sources(toms_game_host PRIVATE src/store_screen.h src/store_screen.cpp)
 endif()
 set_target_properties(toms_game_host PROPERTIES FOLDER "toms")
 
@@ -80,14 +76,14 @@ if(EMSCRIPTEN)
         "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS','UTF8ToString','stringToNewUTF8']"
         "-sEXPORTED_FUNCTIONS=['_main','_malloc','_free']"
         "-sSTACK_SIZE=1048576"
-        # Game content. The fonts are left out: the browser draws glyphs with its own fonts
-        # (Font::buildFromCanvas). The old .spv shaders are not used by bgfx either.
+        # Game content, including the UI documents (assets/media/ui). The fonts are left out:
+        # on the web the browser draws the text (src/engine/src/rml_canvas_font.*).
         "--preload-file=${TOMS_ASSET_DIR}@/assets"
         "--preload-file=${TOMS_DATA_DIR}@/data"
-        "--exclude-file=${TOMS_ASSET_DIR}/fonts/*"
-        "--exclude-file=${TOMS_ASSET_DIR}/wqy-zenhei.ttc")
+        "--exclude-file=${TOMS_ASSET_DIR}/fonts/*")
     # Re-link when content changes, so the .data bundle never goes stale.
     file(GLOB_RECURSE _web_content CONFIGURE_DEPENDS
-         "${TOMS_DATA_DIR}/*.json" "${TOMS_ASSET_DIR}/sprites/*" "${TOMS_ASSET_DIR}/sfx/*")
+         "${TOMS_DATA_DIR}/*.json" "${TOMS_ASSET_DIR}/sprites/*" "${TOMS_ASSET_DIR}/sfx/*"
+         "${TOMS_ASSET_DIR}/ui/*")
     set_property(TARGET toms_game APPEND PROPERTY LINK_DEPENDS ${_web_content})
 endif()

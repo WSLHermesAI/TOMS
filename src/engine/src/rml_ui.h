@@ -22,10 +22,14 @@ public:
     RmlUi(const RmlUi&) = delete;
     RmlUi& operator=(const RmlUi&) = delete;
 
-    // Starts RmlUi (bgfx must be running). fontFiles[0] is registered as family "toms" (use
-    // `font-family: toms;` in RCSS); the others are fallbacks for glyphs the first one lacks
-    // (.ttc collections load face 0). Missing files are skipped; at least one must load.
-    bool init(int designW, int designH, const std::vector<std::string>& fontFiles, std::string& error);
+    // Starts RmlUi (bgfx must be running). Desktop: defaultFont is registered as family "toms"
+    // (`font-family: toms;` in RCSS) and as the fallback for characters other fonts lack. Web:
+    // ignored -- text is drawn by the browser (rml_canvas_font.h), no font file is needed.
+    bool init(int designW, int designH, const std::string& defaultFont, std::string& error);
+    // The font family to use for a language (docs/08_RMLUI.md, "Fonts"). Desktop: registers
+    // fontFile as "toms-<code>" the first time and returns that, or "toms" when fontFile is empty
+    // or missing. Web: switches the browser font list to webFonts (CSS) and returns "toms".
+    std::string languageFont(const std::string& code, const std::string& fontFile, const std::string& webFonts);
     void shutdown();                     // closes all documents; call before bgfx::shutdown
     bool ready() const;
 
