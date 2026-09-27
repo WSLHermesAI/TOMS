@@ -16,7 +16,8 @@ and is in git history before commit `979bcf3`.
 | File | Builds | Result |
 |---|---|---|
 | **`build_windows.bat`** | the shipping Windows game (Release, no editor, no Qt, no console window) | `dist\TOMS-windows\` (+ `.zip`): `toms_game.exe`, `assets\`, the MSVC runtime DLLs. Copy the folder anywhere and double-click `toms_game.exe`. |
-| **`build_web.bat`** | the web game (Release, WebGL2) | `dist\TOMS-web\` (+ `.zip`): `index.html`, `toms_game.js/.wasm/.data`, `.htaccess`, `web.config`. Copy the files to any web server and open its URL. |
+| **`build_web.bat`** | the web game (Release, WebGL2) | `dist\TOMS-web\` (+ `.zip`): `index.html`, `toms_game.<stamp>.js/.wasm/.data`, `.htaccess`, `web.config`. Copy the files to any web server and open its URL. |
+| **`publish_web.bat`** | `build_web.bat` + publish to GitHub Pages (asks before pushing) | live at https://wslhermesai.github.io/TOMS/ ([docs/07](docs/07_PUBLISH_GITHUB_PAGES.md)) |
 
 Both check the prerequisites first (popups with download links) and print where the result is.
 
@@ -44,6 +45,7 @@ Details: [docs/06_BUILD_WEB.md](docs/06_BUILD_WEB.md).
 | [04_MIGRATION_PLAN.md](docs/04_MIGRATION_PLAN.md) | phases from the Vulkan project to the full Qt + bgfx engine |
 | [05_TROUBLESHOOTING.md](docs/05_TROUBLESHOOTING.md) | configure, build and runtime problems |
 | [06_BUILD_WEB.md](docs/06_BUILD_WEB.md) | the browser version: emsdk, `build_web.cmd`, `serve_web.cmd`, how it works, debugging |
+| [07_PUBLISH_GITHUB_PAGES.md](docs/07_PUBLISH_GITHUB_PAGES.md) | publishing the web version to GitHub Pages: setup, `publish_web.bat`, cache-safe file names, rollback |
 | [progress_report/](docs/progress_report/PROGRESS_REPORT.md) | **status board**: next step, phase status, what is still open, dated log |
 
 The long-term engine design (`docs/EngineBlueprint/`) was removed with the old project; read it

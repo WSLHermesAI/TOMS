@@ -50,3 +50,7 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   no console window; finds `assets/media` next to itself) and `build_web.bat` → `dist/TOMS-web/` (`index.html` + js/wasm/data +
   `.htaccess`/`web.config`), both via `tools/package.ps1`. Verified from copies outside the repo: the exe runs
   and uses its own assets; the web folder served by a static server passes the smoke test.
+- **2026-09-27** — **GitHub Pages:** `publish_web.bat` + `tools/publish_pages.ps1` (temporary gh-pages worktree,
+  keeps the previous version, asks before pushing; `dryrun` / `nobuild`); web package files
+  version-stamped (`toms_game.<commit>-<time>.*`); doc `docs/07_PUBLISH_GITHUB_PAGES.md`. Dry run
+  against the real gh-pages OK; not pushed.

@@ -73,10 +73,38 @@ else {
     $out = Join-Path $dist 'TOMS-web'
     Reset-Dir $out
 
-    # index.html is the page itself, so the folder URL opens the game. It loads toms_game.js, which
-    # loads toms_game.wasm and toms_game.data from the same folder.
-    Copy-Item (Join-Path $bin 'toms_game.html') (Join-Path $out 'index.html')
-    foreach ($f in 'toms_game.js', 'toms_game.wasm', 'toms_game.data') { Copy-Item (Join-Path $bin $f) $out }
+    # Version-stamped file names: toms_game.<stamp>.js/.wasm/.data. Web hosts and browsers cache
+    # files (GitHub Pages ~10 minutes); with fixed names a returning player could get a new page with
+    # an old .data file and a black screen. A new stamp is a new URL, so that cannot happen. Only
+    # index.html keeps its name (it is the entry point, and it is small).
+    $sha = (& git -C $root rev-parse --short HEAD 2>$null)
+    if (-not $sha) { $sha = 'nogit' }
+    $stamp = "$sha-$(Get-Date -Format 'yyyyMMddHHmmss')"
+    $js   = "toms_game.$stamp.js"
+    $wasm = "toms_game.$stamp.wasm"
+    $data = "toms_game.$stamp.data"
+
+    # Rewrite exactly the URLs the loader fetches, and fail loudly if Emscripten ever changes them.
+    # The package key "bin/toms_game.data" inside the .js must NOT change: it names the files
+    # inside the .data bundle, not a URL.
+    function Replace-Once([string]$text, [string]$old, [string]$new, [string]$what) {
+        $n = ([regex]::Matches($text, [regex]::Escape($old))).Count
+        if ($n -ne 1) { throw "Versioning: expected '$old' exactly once in $what, found $n. The Emscripten output format changed; update tools\package.ps1." }
+        return $text.Replace($old, $new)
+    }
+    $jsText = [IO.File]::ReadAllText((Join-Path $bin 'toms_game.js'))
+    $jsText = Replace-Once $jsText 'REMOTE_PACKAGE_BASE="toms_game.data"' "REMOTE_PACKAGE_BASE=`"$data`"" 'toms_game.js'
+    $jsText = Replace-Once $jsText 'locateFile("toms_game.wasm")' "locateFile(`"$wasm`")" 'toms_game.js'
+    $html = [IO.File]::ReadAllText((Join-Path $bin 'toms_game.html'))
+    $html = Replace-Once $html 'src=toms_game.js' "src=$js" 'toms_game.html'
+
+    $utf8 = New-Object Text.UTF8Encoding $false
+    [IO.File]::WriteAllText((Join-Path $out 'index.html'), $html, $utf8)
+    [IO.File]::WriteAllText((Join-Path $out $js), $jsText, $utf8)
+    Copy-Item (Join-Path $bin 'toms_game.wasm') (Join-Path $out $wasm)
+    Copy-Item (Join-Path $bin 'toms_game.data') (Join-Path $out $data)
+    Set-Content -Encoding ASCII (Join-Path $out 'version.txt') $stamp
+    Write-Host "[toms] web version stamp: $stamp"
 
     # Servers must send .wasm as application/wasm. Most do already; these cover Apache and IIS.
     @"
@@ -105,7 +133,10 @@ IIS, GitHub Pages, Netlify, an S3 bucket, ...) and open that folder's URL (index
 - It must be served over http(s). Opening index.html from the disk (file://) does not work.
 - .wasm must be served as "application/wasm" (most servers do; .htaccess / web.config set it for
   Apache / IIS).
-- After uploading a new version, a hard reload (Ctrl+F5) avoids a cached old .data file.
+- File names carry a version stamp (see version.txt), so browsers and caches never mix an old
+  .data with a new page. When uploading a new version over an old one, keep the previous
+  toms_game.<stamp>.* files for a while: a page cached for a few minutes still points at them.
+  (tools\publish_pages.ps1 does this for GitHub Pages.)
 - Saves are stored in the browser (IndexedDB) of each player.
 - Local test: tools\serve_web.cmd in the source tree, or  python -m http.server 8099  in this folder.
 "@ | Set-Content -Encoding UTF8 (Join-Path $out 'README.txt')
