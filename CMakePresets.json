@@ -160,6 +160,50 @@
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       }
+    },
+    {
+      "name": "android-debug",
+      "displayName": "Android/arm64 Debug",
+      "description": "NDK arm64-v8a, android-24, c++_shared. Needs ANDROID_NDK + a host shaderc (see docs/07_BUILD_ANDROID.md).",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-android-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "$env{ANDROID_NDK}/build/cmake/android.toolchain.cmake",
+        "ANDROID_ABI": "arm64-v8a",
+        "ANDROID_PLATFORM": "android-24",
+        "ANDROID_STL": "c++_shared",
+        "TOMS_HOST_SHADERC": "$env{TOMS_HOST_SHADERC}",
+        "TOMS_SHADER_PROFILES": "100_es;300_es",
+        "CMAKE_EXE_LINKER_FLAGS": "-Wl,-z,max-page-size=16384"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "android-release",
+      "displayName": "Android/arm64 Release",
+      "description": "NDK arm64-v8a, android-24, c++_shared, 16 KB pages. Needs ANDROID_NDK + TOMS_HOST_SHADERC.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-android-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{ANDROID_NDK}/build/cmake/android.toolchain.cmake",
+        "ANDROID_ABI": "arm64-v8a",
+        "ANDROID_PLATFORM": "android-24",
+        "ANDROID_STL": "c++_shared",
+        "TOMS_HOST_SHADERC": "$env{TOMS_HOST_SHADERC}",
+        "TOMS_SHADER_PROFILES": "100_es;300_es",
+        "CMAKE_EXE_LINKER_FLAGS": "-Wl,-z,max-page-size=16384"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
     }
   ],
   "buildPresets": [
@@ -197,6 +241,16 @@
     {
       "name": "web-release-windows",
       "configurePreset": "web-release-windows",
+      "jobs": 8
+    },
+    {
+      "name": "android-debug",
+      "configurePreset": "android-debug",
+      "jobs": 8
+    },
+    {
+      "name": "android-release",
+      "configurePreset": "android-release",
       "jobs": 8
     }
   ]

@@ -103,3 +103,105 @@ touch→mouse 映射給 UI 層。
 2. **ABI**：只出 `arm64-v8a`，還是也要 `armeabi-v7a`。
 3. **`assets/media` 的實際大小**（決定 A 的痛感；也影響是否該用 Play Asset Delivery）。
 4. **這個設計要不要現在就進實作**，或先等 Phase 2 step 2（CTest）完成。
+
+
+---
+
+# 附錄：完整建置步驟（Windows）與目前會擋住的地方
+
+> 前一節（§1–§6）是設計；這一節是**照著做的步驟**，目標是在你的 Windows 機器上產出第一個 APK。
+> 先說結論：**外殼與 CMake 設定現在就能試**（可以編出 `libtoms_game.so` 並打包成 APK），
+> **但 App 啟動後會讀不到 `assets/`** —— §A4 是必須先做的程式改動，否則會是黑畫面。
+
+## A1. 安裝工具
+
+| 需要 | 取得方式 | 檢查 |
+|---|---|---|
+| JDK 17 | Android Studio 內建，或 Temurin 17 | `java -version` |
+| Android Studio | 官方安裝檔（含 SDK、cmdline-tools、Gradle） | 開得起來 |
+| NDK r27 以上 | Android Studio → SDK Manager → SDK Tools → **NDK (Side by side)** | `%ANDROID_NDK%` 有值 |
+| CMake + Ninja | Visual Studio 的「C++ CMake tools for Windows」（你已經有） | `cmake --version` |
+| adb | SDK 的 platform-tools | `adb version` |
+
+Emscripten **不需要**（那是 web 版的事）。
+
+## A2. 環境變數（命令提示字元）
+
+```bat
+set ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk
+set ANDROID_NDK=%ANDROID_HOME%\ndk\27.2.12479018   &rem 版本號依你安裝的為準
+set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr
+set PATH=%ANDROID_HOME%\platform-tools;%PATH%
+```
+
+## A3. 先取得 host shaderc（與 web 版同一招）
+
+Android 和 web 一樣是**交叉編譯**，所以 shaderc 必須是**主機**工具：
+
+```bat
+tools\build.cmd windows-shipping
+set TOMS_HOST_SHADERC=%CD%\out\build\windows-shipping\bin\shaderc.exe
+```
+
+## A4. 目前會擋住你的程式改動（**必須先做，否則 App 讀不到資產**）
+
+1. **資產**：APK 裡的 `assets/` 是條目不是檔案，`std::ifstream` 全失敗（58 處）。二選一見 §2；
+   建議 B（I/O shim），介面在 §3.1。
+2. **存檔**：`saveDir` 指向 `SDL_GetPrefPath()`（`save_slots.cpp` 已是單一入口，非重寫）。
+3. **RmlUi**：file interface 用同一 shim 讀 `.rml`/`.rcss`/字型。
+4. **觸控給 UI**：RmlUi 吃滑鼠/鍵盤事件，需 touch→mouse 映射。
+5. **日誌**：`log.h` 改寫到 logcat（可選）。
+6. **著色器 profile 分支**：`src/engine/CMakeLists.txt` 目前只有 web 與桌機兩支，需加 Android：
+
+```cmake
+elseif(ANDROID)
+    set(TOMS_SHADER_PROFILES 100_es 300_es)   # GLES2/GLES3
+```
+
+## A5. 編出原生程式庫
+
+```bat
+cmake --preset android-release
+cmake --build --preset android-release
+```
+
+產出：`build-android-release/bin/libtoms_game.so`（arm64-v8a）。
+
+## A6. 打包 APK（SDL3 骨架）
+
+1. 取 SDL3 原始碼裡的 Android 專案骨架（Gradle + `SDLActivity.java` + `AndroidManifest.xml`），
+   複製成 `android/`。
+2. `libtoms_game.so` → `android/app/src/main/jniLibs/arm64-v8a/`
+3. `assets/` 內容 → `android/app/src/main/assets/`（Gradle 會打包進 APK）
+4. `AndroidManifest.xml` 的 Activity 指向 `org.libsdl.app.SDLActivity`，`minSdkVersion 24`。
+5. 執行：
+
+```bat
+cd android && gradlew.bat assembleDebug
+```
+
+產出：`android\app\build\outputs\apk\debug\app-debug.apk`
+
+## A7. 安裝與驗證
+
+```bat
+adb install -r android\app\build\outputs\apk\debug\app-debug.apk
+adb logcat -s toms SDL      &rem 看載入訊息
+adb exec-out screencap -p > shot.png
+```
+
+驗證清單（沿用 Phase 2 step 2 的冒煙測試構想）：
+- [ ] 標題畫面出現（非黑畫面）
+- [ ] 進遊戲 → 移動 → 對話框文字可讀
+- [ ] 存檔 → 從最近使用清單殺掉 App → 重開 → 存檔還在
+- [ ] 真機以玩家視角：按鍵可點、文字可讀（W9 的標準）
+
+## A8. 疑難排解
+
+| 症狀 | 原因 | 處理 |
+|---|---|---|
+| `Could NOT find X11` | 你用了桌機 preset（Linux） | Android 用 `android-*` preset，不要用 `web-*` |
+| 找不到 `libc++_shared.so` | `c++_shared` 需一起打包 | Gradle 會從 NDK 帶；或改 `-DANDROID_STL=c++_static` |
+| shaderc 找不到／是 wasm 版 | host shaderc 沒設 | 見 A3；`TOMS_HOST_SHADERC` 必須指向 `.exe` |
+| 啟動即黑畫面 | §A4 的資產讀取還沒做 | 先做 §3.1 的 shim |
+| Play 上傳被拒（16 KB） | Android 15+ 要求 | preset 已含 `-Wl,-z,max-page-size=16384` |
