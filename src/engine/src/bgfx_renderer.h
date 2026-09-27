@@ -1,8 +1,8 @@
-// bgfx_renderer.h -- IRenderer on bgfx: the drop-in replacement for the Vulkan `Renderer`.
+// bgfx_renderer.h -- IRenderer on bgfx: the game's only renderer (it replaced the Vulkan one).
 //
-// The old game code does `ren = new Renderer();` (src/game/core/game_assets.cpp). The compat
+// The core game code does `ren = new Renderer();` (src/core/game/core/game_assets.cpp). The compat
 // header game/compat/renderer.h aliases `Renderer` to this class, so that code compiles
-// unmodified. Behaviour matches src/engine/renderer.cpp:
+// unmodified. Behaviour matches the old Vulkan renderer (removed 2026-09-27; see git history):
 //   - a fixed 1024x768 design resolution, letterboxed into the real backbuffer
 //   - sprites drawn first, then text (two batches, one draw call each)
 //   - RGBA8 sRGB atlases, point sampling, clamp, straight alpha blending
@@ -25,7 +25,8 @@ public:
     // bgfx views this renderer uses. The host may use views after kViewOverlay (e.g. ImGui).
     static constexpr uint16_t kViewClear   = 0;   // full backbuffer, clears to the background colour
     static constexpr uint16_t kViewGame    = 1;   // letterboxed design-space view (sprites, then text)
-    static constexpr uint16_t kViewOverlay = 2;   // first free view for the host (ImGui)
+    static constexpr uint16_t kViewUi      = 2;   // RmlUi documents (letterboxed like the game view)
+    static constexpr uint16_t kViewOverlay = 3;   // first free view for the host (ImGui dev windows)
 
     BgfxRenderer() = default;
     ~BgfxRenderer() override;
@@ -53,7 +54,7 @@ public:
     uint32_t lastDrawCalls() const { return lastDrawCalls_; }
     size_t   lastQuadCount() const { return lastQuadCount_; }
 
-    // Same API as the Vulkan Renderer (src/engine/renderer.h), so callers port 1:1.
+    // Same API the old Vulkan Renderer had, so callers ported 1:1.
     static inline uint32_t kDesignW = 1024, kDesignH = 768;
     static void setDesignSize(uint32_t w, uint32_t h) {
         if (w >= 480 && w <= 2048 && h >= 360 && h <= 1536) { kDesignW = w; kDesignH = h; }

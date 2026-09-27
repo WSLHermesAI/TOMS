@@ -1,17 +1,18 @@
 # 03 — Build, run and debug in Visual Studio
 
-`toms_next` is a CMake project. Visual Studio opens it directly with **Open Folder**; there is no
+TOMS is a CMake project. Visual Studio opens it directly with **Open Folder**; there is no
 `.sln` to generate or commit.
 
 ## 1. Open the project
 
 1. Run `tools\check_env.cmd` once (see [02](02_INSTALL_WINDOWS.md)).
-2. Visual Studio → **File → Open → Folder…** → select the **`TOMS`** folder (the repository root).
-   Open `toms_next`, not the TOMS root: the root folder is the old Vulkan project.
+2. Visual Studio → **File → Open → Folder…** → select the **`TOMS`** folder (the repository root,
+   the one with `CMakeLists.txt` and `CMakePresets.json`).
 3. Visual Studio reads `CMakePresets.json` and starts configuring. Watch **View → Output →
    CMake**.
-   - The **first configure downloads and builds bgfx, SDL3, Dear ImGui and glm** (a few minutes).
-     Later configures are fast.
+   - The **first configure downloads bgfx, SDL3, Dear ImGui, glm, FreeType and RmlUi** (a few
+     minutes; they are compiled by the first build). Later configures are fast. Each preset keeps
+     its own copy in `out\build\<preset>\_deps`.
    - If a prerequisite is missing, a popup explains what and where to get it
      ([02](02_INSTALL_WINDOWS.md)). The same text is in the CMake output.
 
@@ -47,8 +48,9 @@ link the same `toms_core` library.
 
 ### Game controls
 
-Arrows/WASD move · Enter/Space interact/attack · F defend · G super · H active · I inventory ·
+Arrows/WASD move · click/tap a map tile to walk there (a monster, door or item: walk up and step in) · Enter/Space interact/attack · F defend · G super · H active · I inventory ·
 B store · Tab stage select · F1 debug overlay · F2 styling spike · Esc menu/back.
+RmlUi store ([08](08_RMLUI.md)): F4 old/new store · F5 reload `assets\media\ui` · F8 RmlUi debugger.
 
 ### Editor
 
@@ -63,15 +65,19 @@ B store · Tab stage select · F1 debug overlay · F2 styling spike · Esc menu/
 | Option | Meaning |
 |---|---|
 | `--renderer=auto\|d3d11\|d3d12\|vulkan\|opengl` | bgfx backend (editor: environment variable `TOMS_RENDERER`) |
-| `--assets=<dir>` | the TOMS `assets` folder (default: environment `ASSET_DIR`, else the checkout's `assets`) |
+| `--assets=<dir>` | the media folder, with `assets\data` next to it (default: environment `ASSET_DIR`, else `assets\media` next to the exe, else the checkout's `assets\media`) |
 | `--stage=<id>` | first stage, e.g. `stage03` |
 | `--no-vsync` | uncapped frame rate |
 | `--stats` | bgfx on-screen stats |
 | `--frames=<n> --screenshot=<file.png>` | run n frames, save a PNG, quit (smoke tests) |
 | `--keys=enter@30,enter@60` | press keys at given frames (smoke tests) |
+| `--clicks=222:140@130` | left-click at a design-space point (1024×768) at a frame (smoke tests) |
 
-Environment variables still honoured from the old build: `TOMS_FONT`, `TOMS_HIDE`,
-`TOMS_SPLIT_NODE`, `TOMS_RENDER_DEBUG`.
+Environment variables: `TOMS_FONT`, `TOMS_HIDE`, `TOMS_SPLIT_NODE`, `TOMS_RENDER_DEBUG` (from the
+old build) and `TOMS_OLD_STORE=1` (start with the old store).
+
+The startup items run in `out\build\<preset>\bin`, so `toms.log` and the `save\` folder are
+written there.
 
 ## 5. Build without opening Visual Studio
 
@@ -100,7 +106,9 @@ toms_editor.exe --frames=200 --screenshot=editor.png
   captures are the most reliable.
 - **Which backend is running?** The console prints `bgfx ... ready: renderer=Direct3D 11`; the
   editor shows it in the *Session* dock.
-- **Shaders:** edit `engine\shaders\*.sc` and build. shaderc recompiles them into headers that are
+- **Shaders:** edit `src\engine\shaders\*.sc` and build. shaderc recompiles them into headers that are
   embedded in the exe, so there are no shader files to copy.
+- **UI screens (RmlUi):** edit `assets\media\ui\*.rml` / `.rcss` while the game runs and press F5;
+  F8 shows the element tree and computed styles. No rebuild needed.
 - **Hot keys in the editor do nothing?** Click the game view first; it needs keyboard focus.
 - Problems: [05_TROUBLESHOOTING.md](05_TROUBLESHOOTING.md).

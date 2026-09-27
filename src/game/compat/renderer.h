@@ -1,9 +1,9 @@
-// compat/renderer.h -- shadows src/engine/renderer.h (Vulkan + GLFW) for the bgfx build.
+// compat/renderer.h -- the renderer the core game code creates.
 //
-// The core game code (src/core) does `#include "renderer.h"` and `ren = new Renderer();`. This folder is
-// put FIRST on the include path of toms_core (game/CMakeLists.txt), so those lines pick up
-// the bgfx renderer instead and the core sources compile without a single edit.
-// Remove this shim once the game code is ported to talk to the engine directly (migration phase 3).
+// The core game code (src/core) does `#include "renderer.h"` and `ren = new Renderer();` (desktop
+// and web). This header makes `Renderer` the bgfx renderer. (It used to shadow the old Vulkan
+// renderer.h, removed 2026-09-27.) Remove this shim once the game code uses the engine directly
+// (migration phase 3).
 #pragma once
 #include "bgfx_renderer.h"
 

@@ -1,16 +1,15 @@
 // render_iface.h — backend-agnostic 2D sprite/text renderer interface.
-// Desktop (Windows/Linux) uses the Vulkan implementation (renderer.h).
-// Emscripten/WebGL2 uses renderer_webgl.h. Game talks only to IRenderer,
-// so neither backend leaks into shared game logic.
+// The implementation is BgfxRenderer (src/engine/src/bgfx_renderer.h) on desktop and web.
+// Game talks only to IRenderer, so bgfx never leaks into shared game logic.
 #pragma once
 #include <vector>
 #include <cstdint>
 #include <string>
 
 // The one real background color players see behind every scene (map, HUD, dialogue, battle) on
-// BOTH backends. Was the same literal duplicated separately in renderer.cpp and
-// renderer_webgl.cpp (2026-09-17 art/UI polish pass found it while unifying background color) --
-// they never link into the same binary, so this header is the only place both can share it from.
+// every platform. Was the same literal duplicated separately in the old Vulkan and WebGL
+// renderers (2026-09-17 art/UI polish pass found it while unifying background color; both removed
+// 2026-09-27) -- BgfxRenderer and the game both read it from here.
 // A deep, neutral dark slate/navy -- unchanged in hue from what shipped before, just no longer a
 // magic literal repeated in two files.
 inline constexpr float kBackgroundClearColor[4] = {0.06f, 0.06f, 0.10f, 1.0f};
@@ -75,7 +74,7 @@ public:
     virtual void drawSprite(const Quad& q) = 0;
     virtual void drawText(const Quad& q) = 0;
     // Diagnostic: tag subsequent quads with a "node" id (for the 4-way split-screen
-    // render). No-op by default; the Vulkan renderer stamps it onto each quad.
+    // render). No-op by default; BgfxRenderer stamps it onto each quad.
     virtual void setNode(uint8_t n) { (void)n; }
     // Diagnostic: if n!=0, only emit quads whose node==n (isolate one subsystem).
     virtual void setNodeFilter(uint8_t n) { (void)n; }

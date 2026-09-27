@@ -6,7 +6,7 @@
 
 namespace toms::next {
 
-enum class ShaderProgram { Sprite, ImGui };
+enum class ShaderProgram { Sprite, ImGui, RmlUi };
 
 // Creates the program for the active renderer. Returns an invalid handle (and logs) if the
 // renderer type has no embedded binary (e.g. Metal on Windows builds).

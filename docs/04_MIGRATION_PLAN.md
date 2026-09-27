@@ -1,17 +1,17 @@
-# 04 — Migration plan: from TOMS (Vulkan) to toms_next (Qt + bgfx)
+# 04 — Migration plan: from TOMS (Vulkan) to TOMS on Qt + bgfx
 
 The rule for every phase: **the game stays playable**, and each phase ends with a check you can
 run. The core game code in `src/core` is compiled unmodified until a phase needs to change it; until
 then it is compiled from where it is.
 
-## Phase 1 — The existing game on bgfx, and a Qt editor around it (this folder, done)
+## Phase 1 — The existing game on bgfx, and a Qt editor around it (done)
 
 | Item | Where |
 |---|---|
 | `BgfxRenderer` implements the existing `IRenderer`; the compat `renderer.h` makes `new Renderer()` build it | `src/engine/src/bgfx_renderer.*`, `src/game/compat/` |
 | SDL3 game executable replaces GLFW + Vulkan `main.cpp` (same controls) | `src/game/src/main_sdl.cpp`, `src/game/src/game_session.*` |
 | ImGui dev windows (F1, F2, Tab stage select, toasts) drawn by bgfx | `src/engine/src/imgui_bgfx.*` |
-| Qt editor: bgfx *Play* view running the real game, stage list, session panel, old stage editor as a tab | `editor/` |
+| Qt editor: bgfx *Play* view running the real game, stage list, session panel, old stage editor as a tab | `src/editor/` |
 | One shader source per program, compiled by shaderc for D3D11/12, Vulkan, GL, GLES | `src/engine/shaders/` |
 | Prerequisite checks with popups and download links; VS presets; `build.cmd` | `cmake/`, `tools/`, `CMakePresets.json` |
 | glm fetched instead of the hand-installed `GLM_DIR` copy | `cmake/TomsDependencies.cmake` |
@@ -34,8 +34,8 @@ same as the Vulkan build; `toms_editor.exe` plays it in the *Play* tab.
 **Not done in phase 1 (known gaps):**
 
 - **Web build.** Done in phase 2 (2026-09-26): see [06_BUILD_WEB.md](06_BUILD_WEB.md).
-- **Tests.** The 30 `*_test.cpp` files still build only in the old project. Phase 2 registers
-  them with CTest here.
+- **Tests.** The 30 `*_test.cpp` files (in `src/core`) are not built yet: the old project that
+  built them is gone. Phase 2 registers them with CTest.
 - **Mobile layout switches:** the web build applies the owner's rule (grow UI objects through
   `Game::setUiScale` / `setPadScale`, keep the game resolution), not the retired `setDesignSize`.
   Only screens that read `UiRoot` grow; migrating the rest is game-side work.
@@ -49,8 +49,8 @@ same as the Vulkan build; `toms_editor.exe` plays it in the *Play* tab.
    `serve_web.cmd`; the browser glue (IDBFS saves, slot refresh, mobile scale, page buttons) is
    in `main_sdl.cpp` + `src/game/web/shell.html` rather than a separate `main_web.cpp`. Verified in
    headless Chrome: title → new game → save → reload restores the save. See [06](06_BUILD_WEB.md).
-3. Move `src/game/core/main.cpp`'s remaining behaviour (none after phase 1) and delete the GLFW
-   path from the old project, or freeze the old project as read-only.
+3. ✅ Deleted the GLFW/Vulkan and Emscripten entry points (2026-09-27); their behaviour is in
+   `game_session.cpp` / `main_sdl.cpp` since phase 1.
 
 **Check:** CTest green in VS and CI; the web build plays stage 1 in Chrome and Edge.
 
@@ -83,13 +83,18 @@ The plan is in EngineBlueprint `09_RENDERING_2D_3D.md` and `11_BGFX_QT_ARCHITECT
 fastgltf, ozz-animation (start with its CPU `SkinningJob`, GPU skinning later), bgfx instancing,
 cascaded shadow maps from bgfx's `16-shadowmaps` example, Effekseer through efkbgfx.
 
-## What happens to the old project
+## What happens to the old project's code
 
-| Old | Status after phase 1 | Removed in |
+Since 2026-09-27 the old Vulkan build is gone and this project is the repository root. The old
+game code lives in `src/core` and is compiled by `toms_core`. Every file there that was not
+compiled any more was deleted on 2026-09-27 (git history has them).
+
+| Old | Status | Removed in |
 |---|---|---|
-| `src/engine/renderer.cpp`, `renderer_webgl.cpp`, `renderer_webgpu.cpp`, `vk_util.h`, `batch_renderer.h`, `texture.*` | not compiled by toms_next | phase 3 (old build retired) |
-| `src/engine/imgui_layer.*`, `imgui_web.*` | replaced by `src/engine/src/imgui_bgfx.*` | phase 2 / 3 |
-| `src/game/core/main.cpp`, `src/engine/emscripten_main.cpp` | replaced by `src/game/src/main_sdl.cpp` (desktop and web) + `src/game/web/shell.html` | phase 2 |
-| `assets/shaders/*.spv`, `.vert`, `.frag` | replaced by `src/engine/shaders/*.sc` | phase 3 |
-| `editor/` (Qt stage editor) | compiled into `toms_editor` as a tab | code moves in phase 4 |
-| Root `CMakeLists.txt` (Vulkan/WebGL) | still works, independent | phase 3 |
+| `src/core/engine/renderer.*`, `renderer_webgl.*`, `renderer_webgpu.*`, `vk_util.h`, `batch_renderer.h`, `texture.*` (+ `texture_test.cpp`) | deleted; replaced by `BgfxRenderer` (via `src/game/compat/renderer.h`) | done |
+| `src/core/engine/imgui_layer.*`, `imgui_web.*` | deleted; replaced by `src/engine/src/imgui_bgfx.*` | done |
+| `src/core/game/core/main.cpp`, `src/core/engine/emscripten_main.cpp` | deleted; replaced by `src/game/src/main_sdl.cpp` + `game_session.cpp` + `src/game/web/shell.html` | done |
+| `src/game/compat/renderer.h` (`Renderer` = `BgfxRenderer`) | still used by the core code's `new Renderer()` | phase 3 |
+| Vulkan/GLSL shaders (`.spv`, `.vert`, `.frag`) | deleted with the old build; `src/engine/shaders/*.sc` replace them | done |
+| `src/editor/stage/` (Qt stage editor) | compiled into `toms_editor` as a tab | code moves in phase 4 |
+| Old root `CMakeLists.txt` (Vulkan/WebGL) | deleted 2026-09-27; the root `CMakeLists.txt` is now this project's | done |

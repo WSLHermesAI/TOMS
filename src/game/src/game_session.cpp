@@ -1,18 +1,29 @@
-// game_session.cpp -- see game_session.h. The input block is ported from src/game/core/main.cpp
-// (GLFW keys -> toms::next::Key); keep the two in step until the old main is retired.
+// game_session.cpp -- see game_session.h. The input block was ported from the old GLFW main
+// (src/game/core/main.cpp, removed 2026-09-27; GLFW keys -> toms::next::Key).
 #include "game_session.h"
 
 #include "bgfx_renderer.h"
 #include "game.h"
 #include "log.h"
 
+#if TOMS_WITH_RMLUI
+#include "rml_ui.h"
+#include "store_screen.h"
+#endif
+
 #include <cstdlib>
 #include <filesystem>
 #include <imgui.h>
+#include <vector>
 
 namespace fs = std::filesystem;
 
 namespace toms::next {
+
+#if !TOMS_WITH_RMLUI
+class RmlUi {};        // built without RmlUi: the members stay null, the old store is used
+class StoreScreen {};
+#endif
 
 GameSession::GameSession() = default;
 GameSession::~GameSession() { stop(); }
@@ -98,12 +109,58 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     if (const char* sn = std::getenv("TOMS_SPLIT_NODE")) renderer_->setNodeFilter((uint8_t)std::atoi(sn));
     game_->loadStage(opts.startStage);
     keyWas_.fill(false);
+    startRmlUi();
     return true;
+}
+
+void GameSession::startRmlUi() {
+#if TOMS_WITH_RMLUI
+    // Same font order as the game's own text: TOMS_FONT / wqy-zenhei first (CJK), then the Noto
+    // fonts for Japanese and Korean glyphs.
+    std::vector<std::string> fonts;
+    auto addFont = [&fonts](const fs::path& p) { if (fs::exists(p)) fonts.push_back(p.generic_string()); };
+    if (const char* f = std::getenv("TOMS_FONT")) addFont(f);
+    addFont(fs::path(assetDir_) / "wqy-zenhei.ttc");
+    addFont(fs::path(assetDir_) / "fonts" / "NotoSansJP-Regular.ttf");
+    addFont(fs::path(assetDir_) / "fonts" / "NotoSansKR-Regular.ttf");
+
+    std::string err;
+    rml_ = std::make_unique<RmlUi>();
+    store_ = std::make_unique<StoreScreen>();
+    if (!rml_->init((int)BgfxRenderer::kDesignW, (int)BgfxRenderer::kDesignH, fonts, err) ||
+        !store_->init(rml_->context(), game_.get(), (fs::path(assetDir_) / "ui").string(), err)) {
+        TOMS_LOG_WARN("RmlUi store disabled: {}", err);
+        store_.reset();
+        if (rml_) rml_->shutdown();
+        rml_.reset();
+        return;
+    }
+    const char* old = std::getenv("TOMS_OLD_STORE");
+    game_->setStoreUiExternal(!(old && *old == '1'));
+    TOMS_LOG_INFO("RmlUi store ready ({})", game_->storeUiExternal() ? "active" : "old store active, F4 switches");
+#endif
+}
+
+bool GameSession::rmlStoreActive() const { return store_ && game_ && game_->storeUiExternal(); }
+
+bool GameSession::rmlWantsMouse() const {
+#if TOMS_WITH_RMLUI
+    return rml_ && ((store_ && store_->visible()) || rml_->debuggerVisible());
+#else
+    return false;
+#endif
 }
 
 void GameSession::stop() {
     // Game never deletes its renderer (the old main called Renderer::destroy() by hand), so the
-    // session frees it. Order: Game first, then the renderer's GPU handles.
+    // session frees it. Order: the RmlUi screens (they point at Game and own bgfx handles), Game,
+    // then the renderer's GPU handles.
+#if TOMS_WITH_RMLUI
+    if (store_) store_->shutdown();
+    if (rml_) rml_->shutdown();
+#endif
+    store_.reset();
+    rml_.reset();
     game_.reset();
     if (renderer_) {
         renderer_->destroy();
@@ -150,6 +207,11 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
     if (!g.titleOpen()) {
         if (keyPressed(in, Key::F1)) showDebugOverlay = !showDebugOverlay;
         if (keyPressed(in, Key::F2)) showStylingSpike = !showStylingSpike;
+#if TOMS_WITH_RMLUI
+        if (keyPressed(in, Key::F4) && store_) g.setStoreUiExternal(!g.storeUiExternal());
+        if (keyPressed(in, Key::F5) && store_) store_->reload();
+        if (keyPressed(in, Key::F8) && rml_) rml_->toggleDebugger();
+#endif
         if (escPressed) {
             if (g.endingActive()) g.dismissEndingScreen();
             else if (g.storeModal()) g.storeKey(27);
@@ -206,12 +268,38 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
             for (int k = 0; k < 9; ++k)
                 if (keyPressed(in, (Key)((int)Key::Num1 + k))) g.storeKey((char)('1' + k));
             if (enterPressed) g.storeKey(13);
+            if (leftPressed)  g.storeKey(263);
+            if (rightPressed) g.storeKey(262);
         }
     }
 
     // Mouse -> handleTouch in design space (down on press, up at the press position on release).
     // Holding repeats phase 1 (after 320 ms, then every 150 ms), as the old web page did for the
     // on-screen pad, so holding an arrow plate keeps walking.
+#if TOMS_WITH_RMLUI
+    // While an RmlUi document is up, the mouse goes to RmlUi (in design space) instead of the game.
+    if (rmlWantsMouse()) {
+        float bx, by;
+        Rml::Context* ctx = rml_->context();
+        if (in.hasMouse && renderer_->deviceToDesign(in.mouseX, in.mouseY, bx, by))
+            ctx->ProcessMouseMove((int)bx, (int)by, 0);
+        // Only a press that starts while the document is up goes to RmlUi. The press that opened
+        // the store (the HUD icon, which sits over the store's backdrop) is still held on the first
+        // frames; passing it on would make its release a backdrop click that closes the store.
+        if (in.mouseLeft && !mouseWasDown_) { ctx->ProcessMouseButtonDown(0, 0); rmlPressed_ = true; }
+        if (!in.mouseLeft && rmlPressed_) { ctx->ProcessMouseButtonUp(0, 0); rmlPressed_ = false; }
+        if (in.wheel != 0) ctx->ProcessMouseWheel(-in.wheel, 0);
+        mouseWasDown_ = in.mouseLeft;   // and a press made in the store is not replayed to the game
+        mouseHasDesign_ = false;
+    } else
+#endif
+    {
+#if TOMS_WITH_RMLUI
+    if (rmlPressed_) {   // the document went away mid-press (e.g. Esc): don't leave RmlUi's button stuck
+        rml_->context()->ProcessMouseButtonUp(0, 0);
+        rmlPressed_ = false;
+    }
+#endif
     if (in.hasMouse && in.mouseLeft) {
         if (!mouseWasDown_) {
             float bx, by;
@@ -239,6 +327,7 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         mouseWasDown_ = false;
         mouseHasDesign_ = false;
     }
+    }
 
     // Same order as the old main: ImGui frame, dev windows, ImGui render, then the game draw.
     if (debugUi_) {
@@ -259,6 +348,16 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
 #endif
     }
     g.draw();   // -> BgfxRenderer::end(): views kViewClear + kViewGame
+#if TOMS_WITH_RMLUI
+    if (rml_) {   // RmlUi documents over the game, under ImGui
+        const auto vp = BgfxRenderer::computeAspectFitViewport(deviceW, deviceH, BgfxRenderer::kDesignW, BgfxRenderer::kDesignH);
+        rml_->setViewport(vp.x, vp.y, vp.width, vp.height);
+        if (store_) store_->sync();
+        uiTime_ += dtMs / 1000.0;
+        rml_->update(uiTime_);
+        rml_->render(BgfxRenderer::kViewUi);
+    }
+#endif
     if (debugUi_) imgui_.render(BgfxRenderer::kViewOverlay);
     return keepRunning;
 }

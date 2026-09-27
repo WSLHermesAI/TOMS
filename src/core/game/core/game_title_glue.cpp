@@ -252,7 +252,7 @@ void Game::drawTitleScreen() {
         }
         case toms::TitlePage::Continue: {
             // The renderer draws ALL sprites first, then ALL text glyphs in one later pass
-            // (see WebGLRenderer::end()/flush() -- two texture batches, sprites then text), so
+            // (see BgfxRenderer::end() -- two texture batches, sprites then text), so
             // text can never be visually covered by a later sprite (the dialog's scrim/panel):
             // it always ends up on top. Skip drawing the rows this dialog would otherwise sit
             // on top of, rather than relying on the scrim to hide their labels.

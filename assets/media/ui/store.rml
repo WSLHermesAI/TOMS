@@ -1,0 +1,42 @@
+<rml>
+<head>
+    <title>Store</title>
+    <link type="text/rcss" href="store.rcss"/>
+</head>
+<!-- The item store (RmlUi). All text and numbers come from the "store" data model that
+     src/game/src/store_screen.cpp fills from Game each frame; the events call Game's store
+     functions, so buying works exactly as in the old store. Edit this file or store.rcss and
+     press F5 in the game to reload it; F8 opens RmlUi's debugger; F4 switches to the old store. -->
+<body data-model="store">
+    <div id="backdrop" data-event-click="close"></div>
+
+    <div id="panel">
+        <div id="header">
+            <div id="title">{{title}}</div>
+            <div id="gold">{{gold_label}}: <span class="gold">{{gold}}</span></div>
+            <div id="close" class="btn" data-event-click="close">{{close_label}} X</div>
+        </div>
+        <div id="hint">{{hint}}</div>
+
+        <div id="tabs">
+            <div class="tab btn" data-for="tab, i : tabs" data-class-active="tab.active"
+                 data-event-click="select_tab(i)">{{tab.label}}</div>
+        </div>
+
+        <div id="cards">
+            <div class="card" data-for="item, i : items" data-class-selected="item.selected"
+                 data-event-mouseover="hover(i)">
+                <img class="icon" data-attr-src="item.icon"/>
+                <div class="name">{{item.name}}</div>
+                <div class="desc">{{item.desc}}</div>
+                <div class="effect">{{effect_label}}: {{item.effect}}</div>
+                <div class="status" data-class-equipped="item.equipped">{{item.status}}</div>
+                <div class="price">{{price_label}}: {{item.price}} G</div>
+                <div class="buy btn" data-event-click="buy(i)">{{buy_label}}</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" data-if="toast_visible">{{toast}}</div>
+</body>
+</rml>

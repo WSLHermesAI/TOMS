@@ -81,13 +81,13 @@ using Renderer = toms::next::BgfxRenderer;
 ```
 
 So `#include "renderer.h"` and `new Renderer()` resolve to the bgfx implementation of the same
-`IRenderer` interface (`src/engine/render_iface.h`). An empty `compat/vk_util.h` covers the one
-other Vulkan include. The Vulkan-only files (`renderer.cpp`, `imgui_layer.cpp`, `main.cpp`) are
-simply not compiled.
+`IRenderer` interface (`src/core/engine/render_iface.h`), on desktop and web. The old Vulkan,
+WebGL and WebGPU renderers, their ImGui layers and the old GLFW / Emscripten entry points were
+removed on 2026-09-27 (they are in the git history).
 
 `BgfxRenderer` reproduces the Vulkan renderer's output:
 
-| Behaviour | Vulkan `renderer.cpp` | `BgfxRenderer` |
+| Behaviour | old Vulkan `renderer.cpp` (removed) | `BgfxRenderer` |
 |---|---|---|
 | Design resolution | 1024×768, letterboxed | same (`computeAspectFitViewport`, `deviceToDesign`) |
 | Draw order | all sprites, then all text | same: two batches, one draw call each |
@@ -127,7 +127,7 @@ sequenceDiagram
 - **Input:** `GameSession` takes a toolkit-neutral `InputState` (key levels, mouse in backbuffer
   pixels). SDL3 (`main_sdl.cpp`) and Qt (`bgfx_viewport.cpp`) each fill it from their own events,
   so the game plays the same in both. The key rules are a line-by-line port of the old
-  `src/game/core/main.cpp`.
+  GLFW `main.cpp` (removed 2026-09-27).
 
 ## 5. Qt + bgfx in the editor
 

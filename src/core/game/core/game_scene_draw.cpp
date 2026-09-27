@@ -76,6 +76,15 @@ void Game::draw() {
             int layer = spriteLayer(cellSprite(c));
             ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, themeTint));
         }
+        // Click-to-move destination: a soft gold plate on the target tile while walking there.
+        if (walking() && walkTargetX_ >= 0) {
+            const float m = ts * 0.12f;
+            Quad t; t.rect[0] = ox + walkTargetX_*ts + m; t.rect[1] = oy + walkTargetY_*ts + m;
+            t.rect[2] = ts - 2*m; t.rect[3] = ts - 2*m;
+            t.uv[0] = 0; t.uv[1] = 0; t.uv[2] = 1; t.uv[3] = 1; t.solid = true;
+            t.tint[0] = 1.0f; t.tint[1] = 0.85f; t.tint[2] = 0.3f; t.tint[3] = 0.35f;
+            ren->drawSprite(t);
+        }
         // Entity/player sprites were inset by a fixed 8px into their 48px tile before
         // Milestone 9; now that ts varies per stage, the inset scales with it (same
         // ~1/6 ratio, so this renders identically to before at ts=48).
@@ -150,8 +159,8 @@ void Game::draw() {
             }
             if (!f.banner.empty()) {
                 // Name banner: a translucent plate centred above the sprite, then the name. Drawn
-                // with the game's own text renderer (CJK-capable), not ImGui -- see the M2 note in
-                // imgui_web.h for why player-facing text never goes through ImGui.
+                // with the game's own text renderer (CJK-capable), not ImGui: ImGui's font has no
+                // CJK glyphs, so player-facing text never goes through ImGui.
                 const float labelW = (float)f.banner.size() * 13.0f + 16.0f;
                 const float lx = f.x + f.w * 0.5f - labelW * 0.5f;
                 const float ly = f.y - 22.0f;
@@ -405,8 +414,8 @@ void Game::draw() {
     if (!storeOpen) drawStoreIcon();
     storeBtnRects_.clear();
     if (storeUnlockDlg) drawStoreUnlockDialog();
-    else if (storeOpen) drawStoreUI();
-    drawStoreToast();
+    else if (storeOpen && !storeUiExternal_) drawStoreUI();
+    if (!(storeOpen && storeUiExternal_)) drawStoreToast();   // the external store shows its own toast
     drawGamepad();
 
     drawStylingSpikeBackdrop();
@@ -451,10 +460,9 @@ void Game::drawGamepad() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// ImGui UI, part 1 -- compiled on BOTH desktop and web (M2: ImGui is wired into the Vulkan, WebGL2
-// and WebGPU backends): the font-scale setter, the F1 debug overlay and the F2 styling spike. On
-// the browser build the backend is src/engine/imgui_web.{h,cpp} (OpenGL3/ES3 + an Emscripten DOM
-// event bridge); on desktop it is imgui_layer.cpp (GLFW + Vulkan). Nothing here touches gameplay
+// ImGui UI, part 1 -- compiled on BOTH desktop and web: the font-scale setter, the F1 debug
+// overlay and the F2 styling spike. The ImGui backend is bgfx (src/engine/src/imgui_bgfx.*),
+// driven by GameSession on both platforms. Nothing here touches gameplay
 // state a player sees unless they press F1/F2, so the browser build behaves exactly as before.
 void Game::applyUiSettings() {
     ImGui::GetIO().FontGlobalScale = uiFontScale_;
@@ -534,7 +542,7 @@ void Game::drawStylingSpike() {
     ImGui::End();
 }
 
-// ImGui UI, part 2 -- still DESKTOP-ONLY (deliberate, see imgui_web.h's scope note): the toast
+// ImGui UI, part 2 -- still DESKTOP-ONLY (deliberate): the toast
 // windows and the ImGui stage-select window. Both draw locale strings (CJK), and ImGui's built-in
 // font has no CJK glyphs -- they would render as tofu boxes -- while the browser build already has
 // its own stage-select UI and toast drawing in the game renderer. Enabling these on web would
@@ -564,7 +572,7 @@ void Game::drawNotifications() {
 }
 
 // Milestone 5: the Stage Select hub -- every floor the player has ever reached is individually
-// selectable; a locked stage shows why (architecture-doc §10). Tab to open (see main.cpp),
+// selectable; a locked stage shows why (architecture-doc §10). Tab to open (see GameSession),
 // blocks background input while open (modalActive() includes stageSelectOpen_).
 void Game::drawStageSelect() {
     if (!ren) return;
@@ -576,7 +584,7 @@ void Game::drawStageSelect() {
     ImGui::TextWrapped("%s", locale_.tr("stageselect.hint").c_str());
     ImGui::Separator();
     // UI settings: font size, applied globally via applyUiSettings() (called every frame from
-    // main.cpp). In-memory only for now -- see uiFontScale_'s declaration in game.h for why.
+    // GameSession). In-memory only for now -- see uiFontScale_'s declaration in game.h for why.
     if (ImGui::CollapsingHeader(locale_.tr("stageselect.ui_settings_header").c_str())) {
         ImGui::SliderFloat(locale_.tr("stageselect.font_size_label").c_str(), &uiFontScale_, 0.5f, 2.5f, "%.2fx");
         ImGui::SameLine();

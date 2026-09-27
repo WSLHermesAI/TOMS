@@ -10,7 +10,7 @@ namespace toms {
 
 const std::string& defaultSaveDir() {
 #ifdef __EMSCRIPTEN__
-    // Mounted by emscripten_main.cpp's IDBFS block; falls back to the plain (session-only)
+    // Mounted by src/game/src/main_sdl.cpp's IDBFS block; falls back to the plain (session-only)
     // MEMFS directory when IndexedDB is unavailable.
     static const std::string dir = "/save";
 #else

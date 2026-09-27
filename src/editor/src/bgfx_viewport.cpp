@@ -150,6 +150,9 @@ void BgfxViewport::setKey(int qtKey, bool down) {
     case Qt::Key_F1: set(Key::F1); break;
     case Qt::Key_F2: set(Key::F2); break;
     case Qt::Key_F3: set(Key::F3); break;
+    case Qt::Key_F4: set(Key::F4); break;
+    case Qt::Key_F5: set(Key::F5); break;
+    case Qt::Key_F8: set(Key::F8); break;
     case Qt::Key_F: set(Key::F); break;
     case Qt::Key_G: set(Key::G); break;
     case Qt::Key_H: set(Key::H); break;

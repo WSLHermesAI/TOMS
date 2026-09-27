@@ -1,6 +1,7 @@
-# Working Log — toms_next (Qt6 + bgfx)
+# Working Log — TOMS on Qt6 + bgfx
 
-Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts.
+Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts. Entries before
+2026-09-27 say `toms_next/`: the project's folder then, now the repository root.
 
 - **2026-09-25** — **Decision:** game runtime on bgfx, editor on Qt6, shipped builds contain bgfx
   only (no Qt). Recorded as decided in `docs/EngineBlueprint/` (README, 01, 02, 04–10); Diligent
@@ -54,3 +55,19 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   keeps the previous version, asks before pushing; `dryrun` / `nobuild`); web package files
   version-stamped (`toms_game.<commit>-<time>.*`); doc `docs/07_PUBLISH_GITHUB_PAGES.md`. Dry run
   against the real gh-pages OK; not pushed.
+- **2026-09-27** — **RmlUi store (test):** RmlUi 6.3 + FreeType on bgfx (`src/engine/src/rml_ui.*`, view 2) and the
+  store rewritten as `assets/media/ui/store.rml`/`.rcss` + a data model (`src/game/src/store_screen.*`);
+  `Game` keeps the rules (one small external-UI API in `game.h`). F4 old/new store, F5 reload UI, F8 RmlUi
+  debugger; `--clicks=x:y@f` for scripted mouse tests. Verified on D3D11/D3D12/Vulkan/OpenGL: open, arrow
+  select, buy → toast, tab click, hover select, close; web build still passes (RmlUi off there, old store).
+  Doc `docs/08_RMLUI.md`.
+- **2026-09-27** — **Removed the dead old-renderer code** (19 files, ~3,550 lines): the Vulkan/WebGL/WebGPU renderers,
+  `texture.*`, `vk_util.h`, `batch_renderer.h`, both old ImGui layers, the old GLFW and Emscripten entry points,
+  `texture_test.cpp`, and the `compat/vk_util.h` / `compat/renderer_webgl.h` shims. The core code now includes one
+  `renderer.h` (= `BgfxRenderer`) and does `new Renderer()` on every platform; comments and docs 01/04/06 updated.
+  Desktop game + editor and web release rebuilt; game, RmlUi store, editor and the web smoke test pass.
+- **2026-09-27** — **Click-to-move:** a click/tap on a map tile walks the player there (BFS shortest path over plain floor;
+  the clicked tile itself may be a monster/door/item/NPC/stairs and the last step goes into it like an arrow step),
+  one step per 110 ms, gold marker on the destination; keys/d-pad, a new click, any modal or a stage change cancel it.
+  Also fixed: a hidden virtual pad still caught taps where its buttons had been. Verified with scripted clicks:
+  short walk, long walk around walls into a slime fight.

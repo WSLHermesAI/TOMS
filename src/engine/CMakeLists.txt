@@ -9,6 +9,7 @@ else()
 endif()
 bgfx_compile_shaders(TYPE VERTEX
     SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_sprite.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_imgui.sc
+                 ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_rml.sc
     VARYING_DEF  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc
     OUTPUT_DIR   ${TOMS_SHADER_OUT}
     OUT_FILES_VAR TOMS_VS_FILES
@@ -42,7 +43,8 @@ add_library(toms_bgfx STATIC
     ${TOMS_VS_FILES} ${TOMS_FS_FILES}
     shaders/varying.def.sc
     shaders/vs_sprite.sc shaders/fs_sprite.sc
-    shaders/vs_imgui.sc  shaders/fs_imgui.sc)
+    shaders/vs_imgui.sc  shaders/fs_imgui.sc
+    shaders/vs_rml.sc)
 toms_target_defaults(toms_bgfx)
 target_include_directories(toms_bgfx
     PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -52,5 +54,12 @@ target_include_directories(toms_bgfx
 target_link_libraries(toms_bgfx PUBLIC toms_imgui PRIVATE bgfx bx)
 # bx requires C++20. Only this target sees bgfx headers, so the core game code stays C++17.
 set_target_properties(toms_bgfx PROPERTIES FOLDER "toms" CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
+
+# RmlUi game UI (docs/08_RMLUI.md). PUBLIC: the game code builds its data models with RmlUi's API.
+if(TOMS_WITH_RMLUI)
+    target_sources(toms_bgfx PRIVATE src/rml_ui.h src/rml_ui.cpp)
+    target_link_libraries(toms_bgfx PUBLIC RmlUi::RmlUi)
+    target_compile_definitions(toms_bgfx PUBLIC TOMS_WITH_RMLUI=1)
+endif()
 source_group("shaders" FILES shaders/varying.def.sc shaders/vs_sprite.sc shaders/fs_sprite.sc
-                             shaders/vs_imgui.sc shaders/fs_imgui.sc)
+                             shaders/vs_imgui.sc shaders/fs_imgui.sc shaders/vs_rml.sc)

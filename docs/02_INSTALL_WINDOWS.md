@@ -1,6 +1,6 @@
 # 02 — Install everything (Windows)
 
-This page lists everything `toms_next` needs, where to get it, and how to check it. Items marked
+This page lists everything TOMS needs, where to get it, and how to check it. Items marked
 **required** are needed for the game (`toms_game.exe`). **Qt** is only needed for the editor
 (`toms_editor.exe`).
 

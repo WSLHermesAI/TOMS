@@ -18,24 +18,13 @@ void toms_TextNodeDraw(const std::string& s, float x, float y, float sz, const f
     if (g_textGame) g_textGame->drawTextPublic(s, x, y, sz, t);
 }
 namespace toms { TextNode::DrawFn TextNode::Draw = ::toms_TextNodeDraw; }
-#ifdef __EMSCRIPTEN__
-  #ifdef WEBGPU
-    #include "renderer_webgpu.h"   // WebGPU backend (browser build only)
-  #else
-    #include "renderer_webgl.h"   // WebGL2 backend (browser build only)
-  #endif
-#else
-#include "renderer.h"         // Vulkan backend (desktop build only)
-#endif
-#ifndef __EMSCRIPTEN__
-#include "vk_util.h"   // Vulkan helpers — desktop build only
-#endif
+#include "renderer.h"   // Renderer = the bgfx renderer (src/game/compat/renderer.h), desktop and web
 #include "event_bus.h"   // toms::EventBus — see Game::resolveCombatRound / Game::movePlayer
 #include "condition.h"   // toms::evaluate / toms::ConditionContext — see GameConditionContext below
 #include "story_controller.h" // toms::advanceStoryBeat / setStoryFlag / hasStoryFlag
 #include "encounter.h"   // toms::resolveEncounterKind / toms::EncounterKind — see Game::movePlayer
 #ifndef __EMSCRIPTEN__
-#include "imgui.h"       // core ImGui API only -- backend plumbing lives in imgui_layer.h/.cpp
+#include "imgui.h"       // core ImGui API only -- the bgfx backend is src/engine/src/imgui_bgfx.*
 #endif
 
 #include <json.hpp>
@@ -260,6 +249,14 @@ void Game::update(int dtMs) {
     };
     tickMoveAxis(moveHoldX_, moveHoldX_.dir, 0);
     tickMoveAxis(moveHoldY_, 0, moveHoldY_.dir);
+    // Click-to-move (see walkTo()): one step per kMoveRepeatMs; anything modal ends the walk.
+    if (!walkPath_.empty()) {
+        if (modalActive()) cancelWalk();
+        else {
+            walkTimerMs_ += dtMs;
+            if (walkTimerMs_ >= kMoveRepeatMs) { walkTimerMs_ -= kMoveRepeatMs; walkStep(); }
+        }
+    }
 
     // Maze camera: retarget on the player's tile, then ease toward it (both modes slide --
     // Rooms' target only actually MOVES when the player crosses into a different section, so it

@@ -3,7 +3,7 @@
 #include "game_internal.h"
 
 // Exactly one translation unit in this binary may define the STB image implementation. It lived in
-// game.cpp before the split; texture.cpp carries its own copy for the texture_test target only.
+// game.cpp before the split.
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -11,17 +11,10 @@ using namespace toms::game_detail;
 
 bool Game::loadAssets(const std::string& assetDir) {
     dataDir = assetDir;
-    // Create the backend renderer. Desktop = Vulkan; Emscripten = WebGL2 or WebGPU.
-#ifndef __EMSCRIPTEN__
-    ren = new Renderer();                  // Vulkan (Windows / Linux)
-#else
-  #ifdef WEBGPU
-    ren = new WebGPURenderer();           // WebGPU (browser)
-  #else
-    ren = new WebGLRenderer();            // WebGL2 (browser, default)
-  #endif
-#endif
-    ren->init(1280, 720);   // 16:9; window is locked to this aspect (see VulkanContext::init)
+    // Create the renderer: bgfx on every platform (src/game/compat/renderer.h). The host
+    // (GameSession) owns the window and frees the renderer.
+    ren = new Renderer();
+    ren->init(1280, 720);   // size ignored by the bgfx renderer: the host sets the backbuffer size
     // load sprites into a single 32x32-uniform atlas (GRID_COLS x GRID_ROWS grid)
     const int SW = 32, SH = 32, COLS = 9, ROWS = 3;
     spriteGridCols = COLS;
@@ -152,7 +145,7 @@ bool Game::loadAssets(const std::string& assetDir) {
 
     // ---- Title phase boot ----
     // Persisted preferences (language, slot count) + the string table, then show the title.
-    // modalActive() includes the title, so the world main.cpp loads next sits inert behind it
+    // modalActive() includes the title, so the world the host loads next sits inert behind it
     // until the player chooses New Game or Continue. data/text.json is under data/, which the
     // TTF codepoint collector above already globs, so its glyphs are in the atlas before this
     // runs -- on both desktop and web, since the atlas is now built the same way on both.
@@ -194,6 +187,7 @@ void Game::spriteUV(int layer, float uv[4]) const {
 }
 
 void Game::loadStage(const std::string& id, StageArrival arrival) {
+    cancelWalk();   // a click-to-move route belongs to the old floor
     curStage = id;
     // Resolve the stage JSON. Data ids in connect.up/down use "stage_02" (underscore)
     // while the shipped files are named "stage02.json" (no underscore) — and the

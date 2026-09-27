@@ -7,7 +7,7 @@
 // Layout:
 //   desktop:  save/slot1.json, save/slot2.json, ...   (relative to the game's CWD)
 //   browser:  /save/slot1.json, ...                   (Emscripten IDBFS, persisted to IndexedDB
-//                                                      by flushSaveDir(); see emscripten_main.cpp)
+//                                                      by flushSaveDir(); see src/game/src/main_sdl.cpp)
 #pragma once
 #include "save_system.h"
 #include <string>

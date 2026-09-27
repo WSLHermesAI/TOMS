@@ -49,6 +49,7 @@ void Game::handleTouch(float px, float py, int phase) {
     }
     int id = -1;
     for (int i = 0; i < GP_N; i++) {
+        if (!gpOn && i != 7) continue;   // hidden pad: only its show/hide toggle is still there
         const GPadBtn b = gpadBtn(i);
         if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) { id = i; break; }
     }
@@ -153,7 +154,18 @@ void Game::handleTouch(float px, float py, int phase) {
         else if (id == 5 && phase == 0) inDialogue = false;                  // B = close
         return;
     }
-    if (id < 0) return;
+    // Click-to-move: a tap on the map (not on a pad button) walks to that tile; a tap on the
+    // player's own tile interacts. The HUD text block (top-left) is not map.
+    if (id < 0) {
+        if (phase == 0 && !modalActive() && !(px <= 560 && py < 104)) {
+            int tx, ty;
+            if (screenToTile(px, py, tx, ty)) {
+                if (tx == pl.x && ty == pl.y) { cancelWalk(); interact(); }
+                else walkTo(tx, ty);
+            }
+        }
+        return;
+    }
     // (The battle scene's hold-to-charge input is handled much earlier, before the generic
     // `phase == 2` return above -- see the comment there.)
     if (modalActive()) {                     // other modal (store handled above): block world input
@@ -174,15 +186,95 @@ void Game::handleTouch(float px, float py, int phase) {
 // directions on the same axis) fires one immediate step, same feel as the old one-tap-one-tile
 // behavior; the repeat while still held is ticked in update().
 void Game::setMoveHeldX(int dir) {
+    if (dir != 0) cancelWalk();   // steering by hand takes over from click-to-move
     if (dir == moveHoldX_.dir) return;
     moveHoldX_.dir = dir; moveHoldX_.holdMs = 0; moveHoldX_.repeating = false;
     if (dir != 0) movePlayer(dir, 0);
 }
 
 void Game::setMoveHeldY(int dir) {
+    if (dir != 0) cancelWalk();
     if (dir == moveHoldY_.dir) return;
     moveHoldY_.dir = dir; moveHoldY_.holdMs = 0; moveHoldY_.repeating = false;
     if (dir != 0) movePlayer(0, dir);
+}
+
+// ---- Click-to-move (see walkTo()'s declaration in game.h) ----
+
+bool Game::screenToTile(float px, float py, int& tx, int& ty) const {
+    if (!ren) return false;
+    float ts; int cols, rows; cameraViewportTiles(ts, cols, rows);
+    if (ts <= 0.0f) return false;
+    // draw(): tile (x,y) is at (-camX*ts + x*ts, 60 - camY*ts + y*ts).
+    tx = (int)std::floor(px / ts + cam_.x());
+    ty = (int)std::floor((py - 60.0f) / ts + cam_.y());
+    return tx >= 0 && ty >= 0 && tx < (int)st.width && ty < (int)st.height;
+}
+
+bool Game::walkPassable(int x, int y) const {
+    const char c = st.at(x, y);
+    if (c == '#' || c == 'y' || c == 'b' || c == 'r' || c == 'U' || c == 'D') return false;
+    for (const auto& e : st.entities)
+        if (!e.consumed && entityCovers(e, x, y)) return false;   // monsters, items, NPCs, events
+    return true;
+}
+
+// Breadth-first search from the player to (tx,ty): shortest in steps, 4-way like the arrows.
+bool Game::planWalk(int tx, int ty, std::vector<std::pair<int, int>>& out) const {
+    out.clear();
+    const int gw = (int)st.width, gh = (int)st.height;
+    if (tx < 0 || ty < 0 || tx >= gw || ty >= gh || st.at(tx, ty) == '#') return false;
+    if (tx == pl.x && ty == pl.y) return false;
+    std::vector<int> prev((size_t)gw * gh, -1);
+    std::vector<int> queue;
+    const int start = pl.y * gw + pl.x, goal = ty * gw + tx;
+    prev[start] = start;
+    queue.push_back(start);
+    static const int kDx[4] = {0, 0, -1, 1}, kDy[4] = {-1, 1, 0, 0};
+    for (size_t head = 0; head < queue.size() && prev[goal] < 0; ++head) {
+        const int cx = queue[head] % gw, cy = queue[head] / gw;
+        for (int d = 0; d < 4; ++d) {
+            const int nx = cx + kDx[d], ny = cy + kDy[d];
+            if (nx < 0 || ny < 0 || nx >= gw || ny >= gh) continue;
+            const int n = ny * gw + nx;
+            if (prev[n] >= 0) continue;
+            if (n != goal && !walkPassable(nx, ny)) continue;   // the target itself may be anything
+            prev[n] = queue[head];
+            queue.push_back(n);
+        }
+    }
+    if (prev[goal] < 0) return false;
+    for (int n = goal; n != start; n = prev[n]) out.emplace_back(n % gw, n / gw);
+    std::reverse(out.begin(), out.end());
+    return true;
+}
+
+bool Game::walkTo(int tx, int ty) {
+    cancelWalk();
+    if (modalActive()) return false;
+    std::vector<std::pair<int, int>> path;
+    if (!planWalk(tx, ty, path)) return false;
+    walkPath_ = std::move(path);
+    walkTargetX_ = tx; walkTargetY_ = ty;
+    walkStep();   // first step right away, like a key press; update() paces the rest
+    return true;
+}
+
+void Game::walkStep() {
+    if (walkPath_.empty()) return;
+    // The world moves between steps (roamers): if the next tile is no longer free, re-plan.
+    if (walkPath_.size() > 1 && !walkPassable(walkPath_.front().first, walkPath_.front().second)) {
+        std::vector<std::pair<int, int>> path;
+        if (!planWalk(walkTargetX_, walkTargetY_, path)) { cancelWalk(); return; }
+        walkPath_ = std::move(path);
+    }
+    const auto [nx, ny] = walkPath_.front();
+    if (std::abs(nx - pl.x) + std::abs(ny - pl.y) != 1) { cancelWalk(); return; }
+    walkPath_.erase(walkPath_.begin());
+    movePlayer(nx - pl.x, ny - pl.y);
+    // Didn't get there (a locked door, a bumped boss) or arrived: stop. A battle, dialogue or the
+    // stairs dialog it may have opened is caught by update()'s modal check.
+    if (pl.x != nx || pl.y != ny || walkPath_.empty()) cancelWalk();
 }
 
 void Game::movePlayer(int dx, int dy) {
@@ -366,8 +458,7 @@ void Game::engageMonster(const Entity& e) {
     }
 }
 
-// Verification hook for the browser build's deploy harness (exposed as jsDebugBattle in
-// emscripten_main.cpp): start a fight with the nearest un-consumed monster so the battle scene and
+// Verification hook (see game.h; no host calls it at the moment): start a fight with the nearest un-consumed monster so the battle scene and
 // its input can be driven without walking the maze first. Returns true when a fight is running.
 bool Game::debugStartNearestBattle() {
     if (cs.active) return true;

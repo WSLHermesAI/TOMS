@@ -8,19 +8,23 @@
 #include "dxbc/fs_sprite.sc.bin.h"
 #include "dxbc/vs_imgui.sc.bin.h"
 #include "dxbc/fs_imgui.sc.bin.h"
+#include "dxbc/vs_rml.sc.bin.h"
 #include "spirv/vs_sprite.sc.bin.h"
 #include "spirv/fs_sprite.sc.bin.h"
 #include "spirv/vs_imgui.sc.bin.h"
 #include "spirv/fs_imgui.sc.bin.h"
+#include "spirv/vs_rml.sc.bin.h"
 #include "glsl/vs_sprite.sc.bin.h"
 #include "glsl/fs_sprite.sc.bin.h"
 #include "glsl/vs_imgui.sc.bin.h"
 #include "glsl/fs_imgui.sc.bin.h"
+#include "glsl/vs_rml.sc.bin.h"
 #endif
 #include "essl/vs_sprite.sc.bin.h"
 #include "essl/fs_sprite.sc.bin.h"
 #include "essl/vs_imgui.sc.bin.h"
 #include "essl/fs_imgui.sc.bin.h"
+#include "essl/vs_rml.sc.bin.h"
 
 namespace toms::next {
 namespace {
@@ -31,28 +35,28 @@ struct Blob { const uint8_t* data; uint32_t size; };
 
 struct ProgramBlobs { Blob vs, fs; };
 
+// One profile's three programs. RmlUi reuses the ImGui fragment shader (texture * colour).
+#define TOMS_PROGRAMS(ext)                                                                          \
+    switch (which) {                                                                                \
+    case ShaderProgram::Sprite: out = { TOMS_BLOB(vs_sprite_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
+    case ShaderProgram::ImGui:  out = { TOMS_BLOB(vs_imgui_##ext),  TOMS_BLOB(fs_imgui_##ext) };  break; \
+    case ShaderProgram::RmlUi:  out = { TOMS_BLOB(vs_rml_##ext),    TOMS_BLOB(fs_imgui_##ext) };  break; \
+    }                                                                                               \
+    return true
+
 bool pick(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out) {
-    const bool sprite = which == ShaderProgram::Sprite;
     switch (type) {
 #ifndef __EMSCRIPTEN__
     case bgfx::RendererType::Direct3D11:
     case bgfx::RendererType::Direct3D12:   // bgfx's D3D12 backend accepts DXBC (shader model 5)
-        out = sprite ? ProgramBlobs{ TOMS_BLOB(vs_sprite_dxbc), TOMS_BLOB(fs_sprite_dxbc) }
-                     : ProgramBlobs{ TOMS_BLOB(vs_imgui_dxbc),  TOMS_BLOB(fs_imgui_dxbc) };
-        return true;
+        TOMS_PROGRAMS(dxbc);
     case bgfx::RendererType::Vulkan:
-        out = sprite ? ProgramBlobs{ TOMS_BLOB(vs_sprite_spv), TOMS_BLOB(fs_sprite_spv) }
-                     : ProgramBlobs{ TOMS_BLOB(vs_imgui_spv),  TOMS_BLOB(fs_imgui_spv) };
-        return true;
+        TOMS_PROGRAMS(spv);
     case bgfx::RendererType::OpenGL:
-        out = sprite ? ProgramBlobs{ TOMS_BLOB(vs_sprite_glsl), TOMS_BLOB(fs_sprite_glsl) }
-                     : ProgramBlobs{ TOMS_BLOB(vs_imgui_glsl),  TOMS_BLOB(fs_imgui_glsl) };
-        return true;
+        TOMS_PROGRAMS(glsl);
 #endif
     case bgfx::RendererType::OpenGLES:     // also the web build (bgfx's WebGL2 backend reports GLES)
-        out = sprite ? ProgramBlobs{ TOMS_BLOB(vs_sprite_essl), TOMS_BLOB(fs_sprite_essl) }
-                     : ProgramBlobs{ TOMS_BLOB(vs_imgui_essl),  TOMS_BLOB(fs_imgui_essl) };
-        return true;
+        TOMS_PROGRAMS(essl);
     default:
         return false;
     }

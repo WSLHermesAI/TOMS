@@ -13,6 +13,7 @@
 //   --frames=<n>          quit after n frames (automated tests; desktop)
 //   --screenshot=<png>    save the last frame to a PNG (with --frames; desktop)
 //   --keys=<k@f,...>      press key k at frame f, e.g. enter@30,enter@60 (automated tests)
+//   --clicks=<x:y@f,...>  left-click at design point (x,y) (1024x768 space) at frame f (tests)
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
 #include "game_session.h"
@@ -45,13 +46,16 @@ struct Args {
     bool vsync = true, stats = false;
     struct Press { Key key; int frame; };
     std::vector<Press> presses;
+    struct Click { float x, y; int frame; };
+    std::vector<Click> clicks;
 };
 
 bool keyFromName(const std::string& n, Key& out) {
     static const struct { const char* name; Key key; } table[] = {
         {"up", Key::Up}, {"down", Key::Down}, {"left", Key::Left}, {"right", Key::Right},
         {"enter", Key::Enter}, {"space", Key::Space}, {"esc", Key::Escape}, {"tab", Key::Tab},
-        {"f1", Key::F1}, {"f2", Key::F2}, {"i", Key::I}, {"b", Key::B},
+        {"f1", Key::F1}, {"f2", Key::F2}, {"f4", Key::F4}, {"f5", Key::F5}, {"f8", Key::F8},
+        {"i", Key::I}, {"b", Key::B}, {"1", Key::Num1}, {"2", Key::Num2}, {"3", Key::Num3},
     };
     for (auto& e : table) if (n == e.name) { out = e.key; return true; }
     return false;
@@ -71,6 +75,18 @@ void parseKeys(const std::string& list, Args& a) {
     }
 }
 
+void parseClicks(const std::string& list, Args& a) {
+    size_t pos = 0;
+    while (pos < list.size()) {
+        size_t comma = list.find(',', pos);
+        std::string item = list.substr(pos, comma == std::string::npos ? std::string::npos : comma - pos);
+        float x = 0, y = 0; int f = 0;
+        if (std::sscanf(item.c_str(), "%f:%f@%d", &x, &y, &f) == 3) a.clicks.push_back({x, y, f});
+        if (comma == std::string::npos) break;
+        pos = comma + 1;
+    }
+}
+
 Args parseArgs(const std::vector<std::string>& argv) {
     Args a;
     auto value = [](const std::string& arg, const char* prefix) -> const char* {
@@ -84,6 +100,7 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--frames=")) a.frames = std::atoi(v);
         else if (const char* v = value(s, "--screenshot=")) a.screenshot = v;
         else if (const char* v = value(s, "--keys=")) parseKeys(v, a);
+        else if (const char* v = value(s, "--clicks=")) parseClicks(v, a);
         else if (s == "--no-vsync") a.vsync = false;
         else if (s == "--stats") a.stats = true;
     }
@@ -133,6 +150,7 @@ void readKeyboard(InputState& in) {
     in.down[(size_t)Key::Enter] = ks[SDL_SCANCODE_RETURN] || ks[SDL_SCANCODE_KP_ENTER];
     set(Key::Space, SDL_SCANCODE_SPACE); set(Key::Escape, SDL_SCANCODE_ESCAPE); set(Key::Tab, SDL_SCANCODE_TAB);
     set(Key::F1, SDL_SCANCODE_F1); set(Key::F2, SDL_SCANCODE_F2); set(Key::F3, SDL_SCANCODE_F3);
+    set(Key::F4, SDL_SCANCODE_F4); set(Key::F5, SDL_SCANCODE_F5); set(Key::F8, SDL_SCANCODE_F8);
     set(Key::F, SDL_SCANCODE_F); set(Key::G, SDL_SCANCODE_G); set(Key::H, SDL_SCANCODE_H);
     set(Key::I, SDL_SCANCODE_I); set(Key::B, SDL_SCANCODE_B);
     const SDL_Scancode nums[9] = {SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3, SDL_SCANCODE_4, SDL_SCANCODE_5,
@@ -212,7 +230,7 @@ bool appInit(App& app) {
 #ifdef __EMSCRIPTEN__
     opts.enableDebugUi = true;
     // Small screens (phones): grow the UI objects, keep the game resolution -- same thresholds and
-    // factors as the old web entry (src/engine/emscripten_main.cpp).
+    // factors as the old web entry (emscripten_main.cpp, removed 2026-09-27).
     const int cssW = EM_ASM_INT({ return window.innerWidth; });
     const int cssH = EM_ASM_INT({ return window.innerHeight; });
     if (cssW < 900 || cssH < 560) {
@@ -228,7 +246,7 @@ bool appInit(App& app) {
         fatalBox(app.window, "TOMS: the game could not start", err);
         return false;
     }
-    std::printf("TOMS on bgfx (%s). Arrows/WASD move, Enter interacts, I inventory, B store, "
+    std::printf("TOMS on bgfx (%s). Arrows/WASD or click a tile to move, Enter interacts, I inventory, B store, "
                 "Tab stage select, F1 debug, Esc menu.\n", bgfxHostRendererName().c_str());
     app.lastTicks = SDL_GetTicks();
     return true;
@@ -269,6 +287,16 @@ bool appFrame(App& app) {
 #else
     in.hasMouse = (SDL_GetWindowFlags(app.window) & SDL_WINDOW_MOUSE_FOCUS) != 0;
 #endif
+    for (const auto& c : args.clicks) {                      // scripted clicks (tests)
+        const int d = app.frameNo - c.frame;                 // hover 2 frames, press 2, release, stay
+        if (d < -2 || d > 4) continue;
+        const auto vp = BgfxRenderer::computeAspectFitViewport((uint32_t)pw, (uint32_t)ph,
+                                                               BgfxRenderer::kDesignW, BgfxRenderer::kDesignH);
+        in.mouseX = vp.x + c.x * vp.width / (float)BgfxRenderer::kDesignW;
+        in.mouseY = vp.y + c.y * vp.height / (float)BgfxRenderer::kDesignH;
+        in.mouseLeft = (d == 0 || d == 1);
+        in.hasMouse = true;
+    }
 
     const uint64_t now = SDL_GetTicks();
     const int dtMs = (int)(now - app.lastTicks);

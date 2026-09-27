@@ -3,9 +3,8 @@ set(L        ${TOMS_CORE_SRC})
 set(L_ENGINE ${L}/engine)
 set(L_GAME   ${L}/game)
 
-# ---- toms_core: src/core exactly as it is, minus the Vulkan/GLFW/web-only files ----
-# Same list as the old project's desktop target (tower_vulkan) without main.cpp,
-# renderer.cpp, imgui_layer.cpp and the ImGui GLFW/Vulkan backends.
+# ---- toms_core: the game code in src/core (every non-test source there) ----
+# The *_test.cpp files are not built yet (CTest, migration phase 2).
 add_library(toms_core STATIC
     ${L_ENGINE}/node.cpp ${L_ENGINE}/font.cpp ${L_ENGINE}/condition.cpp ${L_ENGINE}/entity_status.cpp
     ${L_ENGINE}/encounter.cpp ${L_ENGINE}/power_bar.cpp
@@ -21,9 +20,9 @@ add_library(toms_core STATIC
     ${L_GAME}/systems/equipment_actives.cpp ${L_GAME}/systems/ending_system.cpp
     ${L_GAME}/systems/cycle_system.cpp ${L_GAME}/systems/camera.cpp ${L_GAME}/systems/roamer.cpp
     ${L_GAME}/systems/run_state.cpp ${L_GAME}/systems/floor_table.cpp
-    compat/renderer.h compat/vk_util.h)
+    compat/renderer.h)
 toms_target_defaults(toms_core)
-# compat/ MUST come first: its renderer.h / vk_util.h shadow the Vulkan ones in src/engine.
+# compat/renderer.h: `Renderer` = the bgfx renderer (see the header).
 target_include_directories(toms_core BEFORE PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/compat)
 target_include_directories(toms_core PUBLIC
     ${L_GAME} ${L_GAME}/core ${L_GAME}/systems ${L_GAME}/save ${L_GAME}/ui ${L_GAME}/audio
@@ -44,6 +43,10 @@ if(EMSCRIPTEN)
     target_compile_definitions(toms_game_host PRIVATE TOMS_DEFAULT_ASSET_DIR="/assets")
 else()
     target_compile_definitions(toms_game_host PRIVATE TOMS_DEFAULT_ASSET_DIR="${TOMS_ASSET_DIR}")
+endif()
+if(TOMS_WITH_RMLUI)
+    # The RmlUi store (docs/08_RMLUI.md); its documents are assets/media/ui/*.rml / *.rcss.
+    target_sources(toms_game_host PRIVATE src/store_screen.h src/store_screen.cpp)
 endif()
 set_target_properties(toms_game_host PROPERTIES FOLDER "toms")
 

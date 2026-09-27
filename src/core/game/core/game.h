@@ -169,7 +169,7 @@ public:
     void movePlayer(int dx, int dy);
     // Milestone 9 polish: "keep moving while held" instead of exactly one tile per key
     // press/tap -- classic dungeon-crawler feel. Call every frame with the currently-held
-    // direction on each axis (dir in {-1,0,1}, 0 = not held): main.cpp does this for the
+    // direction on each axis (dir in {-1,0,1}, 0 = not held): GameSession does this for the
     // keyboard (level state, not the edge-triggered up/down/left/rightPressed used for
     // menu/inventory-cursor navigation, which should NOT auto-repeat), handleTouch() does it
     // for the virtual/touch d-pad (0 on press-release). X and Y repeat independently -- both
@@ -179,9 +179,20 @@ public:
     void setMoveHeldX(int dir);
     void setMoveHeldY(int dir);
     void stopMoveHeld() { setMoveHeldX(0); setMoveHeldY(0); }
+    // Click-to-move: a tap/click on a map tile walks there (handleTouch). The route is a shortest
+    // path over plain floor only -- it never opens a door, fights, picks up, talks or takes stairs
+    // on the way -- while the clicked tile itself may be anything: the last step goes into it
+    // exactly like an arrow-key step would (a monster = fight, a door = open with a key, ...).
+    // One step every kMoveRepeatMs. Any key/d-pad move, a new click, a modal (battle, dialogue,
+    // stairs confirm) or a stage change cancels it. False when the tile can't be reached.
+    bool walkTo(int tx, int ty);
+    void cancelWalk() { walkPath_.clear(); walkTargetX_ = walkTargetY_ = -1; walkTimerMs_ = 0; }
+    bool walking() const { return !walkPath_.empty(); }
+    // Design-space point -> the map tile drawn there (same camera maths as draw()).
+    bool screenToTile(float px, float py, int& tx, int& ty) const;
     void interact();                       // talk to NPC / trigger dialogue on current cell
     void chooseDialogue(int idx);          // pick a dialogue choice
-    // Bugfix: main.cpp never had any keyboard binding that moved dlgSel at all -- with
+    // Bugfix: the old desktop main never had any keyboard binding that moved dlgSel at all -- with
     // only ever one choice ever shown before this session's content, that went
     // unnoticed; now that real dialogue has 2-5 choices, the player had no way to
     // reach anything but choice 0. Wraps like invMoveSel's cursor.
@@ -193,24 +204,25 @@ public:
     void startDialogue(const std::string& npc);   // open an NPC dialogue (public for tests)
     void enterNode(const std::string& node);      // jump to a dialogue node (public for tests)
     void startCombat(const EnemyInst& e);
-    // Verification hook (web build, see jsDebugBattle in emscripten_main.cpp): start a fight with
-    // the nearest monster so a page harness can exercise the battle scene without walking the maze.
+    // Verification hooks (debugStartNearestBattle .. debugWarpPlayer): the old web entry exposed
+    // them to a page test harness. No host calls them now; a future test harness can re-expose them.
+    // Start a fight with the nearest monster, to exercise the battle scene without walking the maze.
     bool debugStartNearestBattle();
-    // Verification hook (see jsEquip in emscripten_main.cpp): equip an item directly by id,
+    // Verification hook: equip an item directly by id,
     // bypassing the Store/Forge entirely, so a page harness can reach equipment (and whatever
     // actives it grants) that isn't purchasable/craftable through any content authored yet.
     // Silently does nothing for an unknown id, matching every other debug hook's fail-soft rule.
     bool debugEquip(const std::string& equipmentId);
-    // Verification hook (see jsForceLose in emscripten_main.cpp): runs the exact same
+    // Verification hook: runs the exact same
     // finishCombatLose() path a real battle loss would (noteDeath, the e_10/e_13 wipe-check,
     // ending trigger) without needing to actually lose `deathsNonBoss` real fights first.
     void debugForceLose();
-    // Verification hook (see jsSetFlag in emscripten_main.cpp): sets a run flag directly, skipping
+    // Verification hook: sets a run flag directly, skipping
     // whatever real trigger (a floor event tile, a dialogue action) would normally set it, so a
     // page harness can reach a flag-gated dialogue choice without re-driving an already-proven
     // upstream mechanic.
     void debugSetFlag(const std::string& flag) { run_.setFlag(flag); }
-    // Verification hook (see jsWarpPlayer in emscripten_main.cpp): sets the player's tile
+    // Verification hook: sets the player's tile
     // directly, skipping a full maze walk, so a page harness can stand next to a specific stairs
     // tile and then take ONE real step onto it -- exercising the real transition trigger
     // (movePlayer's 'U'/'D' check) and the real arrival logic (loadStage's StageArrival) without
@@ -218,7 +230,7 @@ public:
     void debugWarpPlayer(int x, int y) { pl.x = x; pl.y = y; }
     // Battle System v2 (see CombatState's comment): each is a single instantaneous tap, safe to
     // call any time -- a no-op when combat isn't active or that specific bar is still cooling
-    // down / the Super gauge isn't full, so callers (main.cpp, emscripten_main.cpp, handleTouch)
+    // down / the Super gauge isn't full, so callers (GameSession, handleTouch)
     // don't need to track any battle state themselves, just forward the tap.
     void battleTapAttack();
     void battleTapDefense();
@@ -261,6 +273,24 @@ public:
     void storeKey(int key);                // keyboard nav/confirm inside the store UI
     void openStore();                      // open the store overlay
     void closeStore();                     // close the store overlay
+    // ---- External store UI (the RmlUi store, src/game/src/store_screen.*) ----
+    // When set, draw() leaves the store panel and its toast to the external UI (the unlock dialog
+    // and the HUD icon stay here), and the host sends store mouse input to that UI. Keyboard input
+    // still goes through storeKey(), so both UIs share one selection and one purchase path.
+    void setStoreUiExternal(bool on) { storeUiExternal_ = on; }
+    bool storeUiExternal() const { return storeUiExternal_; }
+    int  storeTab() const { return storeTab_; }
+    void storeSelectTab(int tab) { if (tab >= 0 && tab < 4 && tab != storeTab_) { storeTab_ = tab; storeSel_ = 0; audio.play("confirm_click"); } }
+    void storeSetSelection(int i) { storeSel_ = i; }
+    std::vector<int> storeVisibleItems() const { return storeTabIndices(); }   // storeItems() indices on the current tab
+    void storeBuy(int itemIndex) { buyStoreItem(itemIndex); }
+    std::string storeTitleText() const { return locale_.field(storeTitle_); }
+    int  playerGold() const { return pl.gold; }
+    bool storeItemEquipped(const StoreItemDef& d) const {
+        return !d.equipmentId.empty() &&
+               (d.equipmentId == equipped_.weaponId || d.equipmentId == equipped_.armorId || d.equipmentId == equipped_.talentId);
+    }
+    int  toastRemainingMs() const { return toastTimer_; }
     // Milestone 5: Stage Select hub -- every floor the player has ever reached becomes a
     // replayable, individually-selectable entry (architecture-doc §10). Purely additive: does
     // not change the existing boot flow (still auto-loads stage01), only adds an in-game hub.
@@ -334,9 +364,8 @@ public:
     toms::GameState currentState() const;
     // ---- ImGui dev windows (M2: ImGui is wired into every backend, so these build on web too) ----
     // Milestone 2 dev-only debug overlay (Dear ImGui: stat sliders, node-filter toggle, last
-    // combat log line). The caller decides when to show it (main.cpp on desktop, the web entry's
-    // F1 handler in emscripten_main.cpp); this just builds the ImGui:: window content for the
-    // current frame.
+    // combat log line). The caller decides when to show it (GameSession, F1); this just builds
+    // the ImGui:: window content for the current frame.
     void drawDebugOverlay();
     // UI settings: applies uiFontScale_ to ImGui's global font scale. Call once per frame,
     // right after ImGui's NewFrame(), so it's in effect before anything else draws that frame.
@@ -352,8 +381,7 @@ public:
     // These two stay DESKTOP-ONLY: their text comes from the locale table (CJK) and ImGui's
     // built-in font has no CJK glyphs, so on web they would draw as tofu boxes -- and the browser
     // build already draws its own stage-select UI and toasts with the game renderer. Enabling them
-    // on web would change what a browser player sees, which M2 deliberately avoids (see
-    // src/engine/imgui_web.h's scope note).
+    // on web would change what a browser player sees, which M2 deliberately avoids.
     // Milestone 5: transient toast notifications (level-up, daily mission available, ...),
     // driven by pushNotification() (private, called from the real gameplay events that trigger
     // one). Always drawn when active, not gated behind a dev toggle like F1/F2.
@@ -433,8 +461,8 @@ private:
     int themeActIndex_ = 1;
     std::string curFloorId_;              // "F07" while the run is on a generated/boss floor, else ""
 public:
-    // S3: read-only access for tests and the browser verification probes (jsChoiceMade/jsRunInfo in
-    // emscripten_main.cpp, run_state_test.cpp) -- the run state itself stays owned by Game.
+    // S3: read-only access for tests (run_state_test.cpp) and debug tools -- the run state itself
+    // stays owned by Game.
     const toms::RunStoryState& runState() const { return run_; }
     // S4: the skill tree. skillDefs() is read-only content (the UI enumerates it to draw the tree);
     // tryUnlockSkill() is the one path that can ever spend a point -- it re-checks
@@ -549,7 +577,7 @@ private:
     void drawFocusSplash();
     void drawStoreSplash();   // store modal: full-screen black splash at alpha 0.5 (topmost layer)
 
-    IRenderer* ren = nullptr;        // backend chosen in loadAssets (Vulkan / WebGL)
+    IRenderer* ren = nullptr;        // the bgfx renderer, created in loadAssets
     Player pl;
     Stage st;
     CombatState cs;
@@ -698,10 +726,16 @@ private:
     MoveHoldAxis moveHoldX_, moveHoldY_;
     static constexpr int kMoveInitialDelayMs = 220;
     static constexpr int kMoveRepeatMs = 110;
+    // Click-to-move state (see walkTo()): the remaining steps, first = next tile.
+    std::vector<std::pair<int, int>> walkPath_;
+    int walkTargetX_ = -1, walkTargetY_ = -1;
+    int walkTimerMs_ = 0;
+    bool walkPassable(int x, int y) const;   // a tile the route may cross (plain floor, nothing on it)
+    bool planWalk(int tx, int ty, std::vector<std::pair<int, int>>& out) const;
+    void walkStep();
     // M2 styling spike backdrop state. Declared unguarded so Game::draw() — shared between the
     // desktop and web builds — can call drawStylingSpikeBackdrop() unconditionally; it is a no-op
-    // whenever stylingSpikeVisible_ is false. Both platform entries now drive it: main.cpp (F2)
-    // and, since M2 closed the web gap, the browser entry (see emscripten_main.cpp's loop()).
+    // whenever stylingSpikeVisible_ is false. GameSession drives it (F2) on desktop and web.
     bool stylingSpikeVisible_ = false;
     float stylingSpikeRect_[4] = {0, 0, 0, 0};   // x,y,w,h — set by drawStylingSpike(), read by the backdrop
     void drawStylingSpikeBackdrop();
@@ -729,6 +763,7 @@ private:
     bool storeOpen = false;      // store overlay open
     int storeSel_ = 0;           // selected card index (keyboard nav), local to the current tab
     int storeTab_ = 0;           // 0=potions,1=weapons,2=armor,3=talents (see storeTabIndices())
+    bool storeUiExternal_ = false;   // see setStoreUiExternal()
     std::string toastMsg_;        // transient message ("金錢不足")
     int toastTimer_ = 0;         // ms remaining for toast
     int shakeTimer_ = 0;         // ms remaining for "not enough gold" shake

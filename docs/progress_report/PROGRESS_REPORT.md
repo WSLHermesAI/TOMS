@@ -1,14 +1,15 @@
-# Progress Report — TOMS on Qt6 + bgfx (formerly toms_next)
+# Progress Report — TOMS on Qt6 + bgfx
 
-> **Purpose:** the living status board for `toms_next` and its migration plan
+> **Purpose:** the living status board for TOMS on Qt6 + bgfx and its migration plan
 > ([../04_MIGRATION_PLAN.md](../04_MIGRATION_PLAN.md)). Read the **Next Step** line first when
 > resuming work: it says what to do next. Below it are the phase status table, the **Waiting to
 > finish** list, a **Log** index (the dated entries live in `1_PROGRESS_REPORT.md`,
 > `2_PROGRESS_REPORT.md`, …, oldest first), and **Open Questions**, meaning decisions that need
 > the project owner before work continues.
 >
-> The game-content track (chapters, story, balance) is tracked separately in
-> `TOMS/docs/progress_report/`. It is unaffected by this split, because toms_next compiles the same `src/`.
+> The game's code is `src/core` (compiled unmodified until phase 3) and its content is `assets/`.
+> Until 2026-09-27 this project lived in a `toms_next/` subfolder; it is now the repository root
+> and that folder no longer exists (older dated entries still mention it).
 
 ---
 
@@ -46,7 +47,7 @@ Bash). The old project's web build (`TOMS/docs/building/BUILD_WEB.md`) still wor
 | 2 | Web build (bgfx WebGL2): presets, `build_web.cmd`, `serve_web.cmd`, IDBFS saves, page shell, doc 06 | ✅ 2026-09-26, verified in headless Chrome (release + debug) |
 | 2 | Old unit tests registered with CTest; golden-image smoke test | ⬜ **next** |
 | 2 | Mobile scaling on web (`setUiScale` / `setPadScale`, the owner's rule) | ◐ wired for small viewports; only `UiRoot` screens grow (game-side work) |
-| 3 | Move `src/game` into toms_next, drop `src/game/compat/`, split `Game` | ⬜ |
+| 3 | Edit `src/core` directly: drop `src/game/compat/`, split `Game`, game UI on RmlUi | ◐ RmlUi store test done 2026-09-27 ([08](../08_RMLUI.md)) |
 | 4 | Editor: data-driven stage editor on the bgfx viewport, docking, inspector, undo, event editor | ⬜ |
 | 5 | 3D on bgfx (glTF, ozz skinning, instancing, shadows, Effekseer) | ⬜ researched only |
 
@@ -56,7 +57,7 @@ Bash). The old project's web build (`TOMS/docs/building/BUILD_WEB.md`) still wor
 
 | # | Item | Why it is open | How to close it |
 |---|---|---|---|
-| W1 | **F5 inside the Visual Studio IDE** | builds used the same presets from `tools\build.cmd`; `launch.vs.json` startup items not tried in the IDE | open `toms_next` in VS, F5 `toms_game` and `toms_editor` |
+| W1 | **F5 inside the Visual Studio IDE** | builds used the same presets from `tools\build.cmd`; `launch.vs.json` startup items not tried in the IDE | open the `TOMS` root folder in VS, F5 `toms_game` and `toms_editor` |
 | W2 | **Popups not clicked through** | they block unattended runs; only the console path and the logic were run | run `tools\check_env.cmd` on a machine missing Qt/font; configure once without Qt |
 | W3 | **Fresh-machine test** | this machine already had everything (Qt 6.9.0, VS 2026, SDK, font) | clone on a clean PC/VM, follow `02_INSTALL_WINDOWS.md` only |
 | W4 | **Editor frame rate 26–37 fps** in the smoke test (1972×1634 viewport) | not investigated; may be startup frames, the `QTimer(0)` + vsync interplay, or HiDPI fill | measure with `--stats` over a longer run; compare with `toms_game` at the same size |
@@ -93,4 +94,4 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md).
 | Q2 | ~~Keep the folder name `toms_next`?~~ Answered 2026-09-27: no folder, the project is the root | — |
 | Q3 | Is browser **WebGPU** definitely not needed? (bgfx only does WebGL2 in the browser) | WebGL2 only, as decided 2026-09-25 |
 | Q4 | Game UI library for phase 3: RmlUi, or own widgets? Depends on W5's research | decide after W5 |
-| Q5 | The toms_next web build now passes its check (2026-09-26). Replace the old `build_web.sh` output (`web/`, `web-gl/`) with it, and where is it published? | keep both until the owner has played the new one (W9) |
+| Q5 | The bgfx web build now passes its check (2026-09-26). Replace the old `build_web.sh` output (`web/`, `web-gl/`) with it, and where is it published? | keep both until the owner has played the new one (W9) |

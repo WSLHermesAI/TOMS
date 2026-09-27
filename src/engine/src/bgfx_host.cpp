@@ -12,7 +12,7 @@
 #include <cstdio>
 #include <vector>
 
-// The old Vulkan renderer.cpp owned the stb_image_write implementation; it is not compiled here.
+// The one stb_image_write implementation (it used to live in the old Vulkan renderer.cpp).
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 

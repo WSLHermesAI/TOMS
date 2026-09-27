@@ -37,18 +37,9 @@
 #include "game_settings.h"
 #include "save_system.h"
 
-#ifdef __EMSCRIPTEN__
-  #ifdef WEBGPU
-    #include "renderer_webgpu.h"   // WebGPU backend (browser build only)
-  #else
-    #include "renderer_webgl.h"    // WebGL2 backend (browser build only)
-  #endif
-#else
-  #include "renderer.h"            // Vulkan backend (desktop build only)
-#endif
+#include "renderer.h"   // Renderer = the bgfx renderer (src/game/compat/renderer.h), desktop and web
 
 // M2: ImGui is wired into every backend, so the dev windows in game_scene_draw.cpp (F1 debug
 // overlay, F2 styling spike, font scale) build on web too. Only the *core* API is included here --
-// the backend plumbing is platform-specific: imgui_layer.* (GLFW + Vulkan) on desktop build 6,
-// imgui_web.* (OpenGL3/ES3 + Emscripten DOM events) on the web build.
+// the backend (src/engine/src/imgui_bgfx.*) is set up by the host, src/game/src/game_session.cpp.
 #include "imgui.h"

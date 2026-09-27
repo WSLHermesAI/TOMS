@@ -1,4 +1,4 @@
-// imgui_bgfx.h -- Dear ImGui drawn with bgfx. Replaces src/engine/imgui_layer.* (GLFW + Vulkan).
+// imgui_bgfx.h -- Dear ImGui drawn with bgfx (replaced the old GLFW + Vulkan ImGui layer).
 //
 // Input is fed by the host (SDL3 or Qt) through ImGuiBgfx::Input, so the same class works in the
 // game and in the editor viewport. The game's dev windows (F1 debug, F2 styling spike, Tab stage

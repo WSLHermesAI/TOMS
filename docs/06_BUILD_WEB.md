@@ -118,7 +118,7 @@ fullscreen button and a 背包 (backpack) button.
 | Shaders | only the ESSL (WebGL2) profile is compiled, by the host `shaderc.exe`, and embedded | `src/engine/CMakeLists.txt`, `cmake/TomsDependencies.cmake` |
 | Colours | no sRGB (WebGL has no sRGB backbuffer); same look as the old WebGL build, darker than desktop | `bgfx_renderer.cpp`, `bgfx_host.cpp` |
 | Text | the browser's own fonts through Canvas 2D (`Font::buildFromCanvas`), so no font file ships | core `src/core/engine/font.cpp` |
-| Old renderer | `compat/renderer_webgl.h` makes the core code's `new WebGLRenderer()` build the bgfx renderer | `src/game/compat/` |
+| Renderer object | the core code's `new Renderer()` builds the bgfx renderer on web too (`compat/renderer.h`) | `src/game/compat/` |
 | Saves | IndexedDB mounted at `/save` (IDBFS); the core save code syncs after each write; slots re-read when the initial load finishes | `main_sdl.cpp` (`jsRefreshSlots`) |
 | Phones | viewport < 900×560 css px: pad plates ×1.2, UI ×1.5 (game resolution unchanged); portrait shows "rotate your device" | `main_sdl.cpp`, `src/game/web/shell.html` |
 | JS hooks | `jsRefreshSlots`, `jsInventory`, `jsFrameCount`, `jsTitleOpen` (callable with `Module.ccall`) | `main_sdl.cpp` |

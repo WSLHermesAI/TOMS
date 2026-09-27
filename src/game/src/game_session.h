@@ -3,7 +3,7 @@
 // Both hosts use it: the SDL3 game (main_sdl.cpp) and the Qt editor viewport. The host owns the
 // window and bgfx (bgfx_host.h); the session owns the Game, its BgfxRenderer and ImGui, and turns
 // platform-neutral input into Game calls. The input rules are a line-by-line port of the loop in
-// src/game/core/main.cpp, so the game plays exactly as before.
+// the old GLFW main (removed 2026-09-27), so the game plays exactly as before.
 #pragma once
 #include "imgui_bgfx.h"
 
@@ -17,10 +17,13 @@ class Game;
 namespace toms::next {
 
 class BgfxRenderer;
+class RmlUi;
+class StoreScreen;
 
 enum class Key : uint8_t {
     Up, Down, Left, Right, W, A, S, D,
     Enter, Space, Escape, Tab, F1, F2, F3,
+    F4, F5, F8,                              // RmlUi store: old/new toggle, reload UI, debugger
     F, G, H, I, B,
     Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9,
     Count
@@ -67,6 +70,9 @@ public:
 
     bool showDebugOverlay = false;     // F1
     bool showStylingSpike = false;     // F2
+    // The RmlUi store (docs/08_RMLUI.md): true while the RmlUi document replaces the old store.
+    // F4 toggles it at run time; env TOMS_OLD_STORE=1 starts with the old one.
+    bool rmlStoreActive() const;
 
     // Asset folder resolution: env ASSET_DIR, else assets/media (baked in at build time).
     static std::string defaultAssetDir();
@@ -76,6 +82,8 @@ public:
 
 private:
     bool keyPressed(const InputState& in, Key k);
+    void startRmlUi();                 // optional: logs and carries on without it on failure
+    bool rmlWantsMouse() const;
 
     std::unique_ptr<Game> game_;
     BgfxRenderer* renderer_ = nullptr;   // created by Game::loadAssets; owned (and freed) by us
@@ -86,6 +94,10 @@ private:
     bool mouseWasDown_ = false, mouseHasDesign_ = false;
     float mouseDesignX_ = 0, mouseDesignY_ = 0;
     int  mouseHeldMs_ = 0, mouseRepeatMs_ = 0;   // hold-to-repeat taps (the on-screen pad)
+    std::unique_ptr<RmlUi> rml_;                 // null when built without TOMS_WITH_RMLUI
+    std::unique_ptr<StoreScreen> store_;
+    double uiTime_ = 0;
+    bool rmlPressed_ = false;                    // RmlUi got the button-down of the current press
 };
 
 }  // namespace toms::next
