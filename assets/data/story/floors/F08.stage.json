@@ -1,0 +1,64 @@
+{
+  "id": "F08",
+  "name": {
+    "zh_TW": "第 8 層",
+    "en": "Floor 8"
+  },
+  "subtitle": "F08",
+  "index": 8,
+  "width": 23,
+  "height": 19,
+  "legend": {
+    "#": "wall",
+    ".": "floor",
+    "@": "player_start",
+    "U": "stairs_up",
+    "D": "stairs_down",
+    "1": "monster:bat",
+    "2": "monster:slime",
+    "a": "item:coin",
+    "d": "item:gem_def",
+    "h": "item:potion_blue",
+    "H": "item:potion_red",
+    "E": "event:ev_common_relic_road",
+    "F": "event:ev_common_cache_wall",
+    "G": "event:ev_common_whisper_old_song",
+    "I": "event:ev_common_trap_rubble",
+    "Y": "key:yellow",
+    "y": "door:yellow"
+  },
+  "tiles": [
+    "#######################",
+    "#.....#...........#..##",
+    "#.U..h#...........#..##",
+    "####..#..#..#..#..#..##",
+    "#..#........#..#.....##",
+    "#..#.d..a..I#..#.....##",
+    "#..#######..#..########",
+    "#...........#........##",
+    "#.......H..H#....D...##",
+    "#######..#######..#..##",
+    "#........#.....#..#..##",
+    "#.E..F..G#.....#.Y#..##",
+    "#yy##########..#..#..##",
+    "#.....#..#..#........##",
+    "#.2..2#..#..#.1..1...##",
+    "#..#..#..#..#..#..#..##",
+    "#..#...........#.....##",
+    "#..#.2..2..1..1#.....##",
+    "#######################"
+  ],
+  "story_note": {
+    "zh_TW": "第 8 層（ch_02）",
+    "en": "Floor 8 (ch_02)"
+  },
+  "preview": {
+    "zh_TW": "第 8 層 · 難度階 2",
+    "en": "Floor 8 - tier 2"
+  },
+  "connect": {
+    "up": "F09",
+    "down": "F07"
+  },
+  "footprints": {}
+}

@@ -1,0 +1,277 @@
+{
+  "npcId": "villager_elder",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "年輕人，災禍起源於十年前。黑巫師 Vorkath 封印了安穩之星，並將公主囚於塔頂。",
+        "en": "Young one, the calamity began ten years ago. The Dark Sorcerer Vorkath sealed away the Star of Peace and imprisoned the princess atop the tower.",
+        "zh_CN": "年轻人，灾祸起源于十年前。黑巫师 Vorkath 封印了安稳之星，并将公主囚于塔顶。",
+        "ja": "若者よ、災いは十年前に始まった。闇の魔導士 Vorkath が安寧の星を封じ、王女を塔の頂に幽閉したのだ。",
+        "ko": "젊은이여, 재앙은 십 년 전에 시작되었다. 어둠의 마도사 Vorkath가 평온의 별을 봉인하고, 공주를 탑 꼭대기에 가두었다.",
+        "es": "Joven, la calamidad comenzó hace diez años. El Hechicero Oscuro Vorkath selló la Estrella de la Paz y encerró a la princesa en la cima de la torre."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "我該怎麼做？",
+            "en": "What should I do?",
+            "zh_CN": "我该怎么做？",
+            "ja": "私は何をすればいいのですか？",
+            "ko": "저는 무엇을 해야 하나요?",
+            "es": "¿Qué debo hacer?"
+          },
+          "next": "how"
+        },
+        {
+          "label": {
+            "zh_TW": "（說出自己為何而戰）",
+            "en": "(Say why you fight)",
+            "zh_CN": "（说出自己为何而战）",
+            "ja": "（なぜ戦うのかを語る）",
+            "ko": "（왜 싸우는지 말한다）",
+            "es": "(Di por qué luchas)"
+          },
+          "requires": {
+            "not": {
+              "any": [
+                {
+                  "type": "choiceMade",
+                  "choiceId": "c_motive",
+                  "optionId": "opt_know_self"
+                },
+                {
+                  "type": "choiceMade",
+                  "choiceId": "c_motive",
+                  "optionId": "opt_save_liora"
+                },
+                {
+                  "type": "choiceMade",
+                  "choiceId": "c_motive",
+                  "optionId": "opt_avenge"
+                }
+              ]
+            }
+          },
+          "next": "motive"
+        },
+        {
+          "label": {
+            "zh_TW": "有沒有我能幫上忙的委託？",
+            "en": "Is there a task I can help with?",
+            "zh_CN": "有没有我能帮上忙的委托？",
+            "ja": "何か私に手伝えることはありますか？",
+            "ko": "제가 도울 수 있는 의뢰가 있나요?",
+            "es": "¿Hay alguna tarea en la que pueda ayudar?"
+          },
+          "next": "missions"
+        },
+        {
+          "label": {
+            "zh_TW": "明白了。",
+            "en": "Understood.",
+            "zh_CN": "明白了。",
+            "ja": "分かりました。",
+            "ko": "알겠습니다.",
+            "es": "Entendido."
+          },
+          "next": null
+        }
+      ]
+    },
+    "how": {
+      "text": {
+        "zh_TW": "攀上這十層巫師之塔，變強，最後擊敗 Vorkath。路上寶石能強化你。",
+        "en": "Climb this ten-story Sorcerer's Tower, grow stronger, and defeat Vorkath in the end. The gems along the way will empower you.",
+        "zh_CN": "攀上这十层巫师之塔，变强，最后击败 Vorkath。路上宝石能强化你。",
+        "ja": "この十階建ての魔導士の塔を登り、力をつけ、最後に Vorkath を倒すのだ。道中の宝石が汝を強くしてくれる。",
+        "ko": "이 십 층짜리 마도사의 탑을 오르며 강해져서, 마침내 Vorkath를 물리쳐라. 길을 따라 놓인 보석들이 너를 강하게 해줄 것이다.",
+        "es": "Sube esta Torre del Hechicero de diez pisos, hazte más fuerte y derrota finalmente a Vorkath. Las gemas del camino te fortalecerán."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "我會做到。",
+            "en": "I will do it.",
+            "zh_CN": "我会做到。",
+            "ja": "必ずやり遂げます。",
+            "ko": "반드시 해내겠습니다.",
+            "es": "Lo haré."
+          },
+          "next": null
+        }
+      ]
+    },
+    "missions": {
+      "text": {
+        "zh_TW": "村里這陣子……不太安寧。要是你願意，有件事想請你幫忙。",
+        "en": "The village has not known peace lately... If you're willing, there's something I'd like your help with.",
+        "zh_CN": "村里这阵子……不太安宁。要是你愿意，有件事想请你帮忙。",
+        "ja": "村はこのところ……あまり穏やかではない。もしよければ、頼みたいことがあるのだ。",
+        "ko": "요즘 마을이……좀처럼 평온하지가 않구나. 괜찮다면 부탁하고 싶은 일이 있다.",
+        "es": "El pueblo no ha conocido la paz últimamente... Si estás dispuesto, hay algo con lo que me gustaría que me ayudaras."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "撫平怨靈——委託任務",
+            "en": "Lay the Wraiths to Rest — Mission",
+            "zh_CN": "抚平怨灵——委托任务",
+            "ja": "怨霊を鎮める——依頼",
+            "ko": "원령을 진정시키기 — 의뢰",
+            "es": "Apaciguar a los espectros: misión"
+          },
+          "requires": {
+            "all": [
+              {
+                "type": "stageCleared",
+                "stageId": "stage_05"
+              },
+              {
+                "not": {
+                  "any": [
+                    {
+                      "type": "missionActive",
+                      "missionId": "m_wraith_purge"
+                    },
+                    {
+                      "type": "missionComplete",
+                      "missionId": "m_wraith_purge"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "next": null,
+          "action": {
+            "type": "startMission",
+            "missionId": "m_wraith_purge"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "撫平怨靈——已完成，領取獎勵",
+            "en": "Lay the Wraiths to Rest — Completed, Claim Reward",
+            "zh_CN": "抚平怨灵——已完成，领取奖励",
+            "ja": "怨霊を鎮める——達成済み、報酬を受け取る",
+            "ko": "원령을 진정시키기 — 완료됨, 보상 받기",
+            "es": "Apaciguar a los espectros: completada, reclamar recompensa"
+          },
+          "requires": {
+            "type": "missionComplete",
+            "missionId": "m_wraith_purge"
+          },
+          "next": null,
+          "action": {
+            "type": "claimMission",
+            "missionId": "m_wraith_purge"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "沒事了。",
+            "en": "Never mind.",
+            "zh_CN": "没事了。",
+            "ja": "何でもない。",
+            "ko": "아무것도 아닙니다.",
+            "es": "No es nada."
+          },
+          "next": null
+        }
+      ]
+    },
+    "motive": {
+      "text": {
+        "zh_TW": "在你上山之前，先回答我一個問題：你為什麼要攀上這座塔？",
+        "en": "Before you climb, answer me one thing: why do you climb this tower?",
+        "zh_CN": "在你上山之前，先回答我一个问题：你为什么要攀上这座塔？",
+        "ja": "塔に登る前に一つ答えよ。なぜこの塔を登るのか？",
+        "ko": "탑에 오르기 전에 하나만 답하시오. 왜 이 탑을 오르는가?",
+        "es": "Antes de subir, respóndeme una cosa: ¿por qué subes esta torre?"
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "我想知道自己究竟是誰。",
+            "en": "I want to know who I really am.",
+            "zh_CN": "我想知道自己究竟是谁。",
+            "ja": "自分が何者なのか、知りたい。",
+            "ko": "내가 누구인지 알고 싶다.",
+            "es": "Quiero saber quién soy en realidad."
+          },
+          "action": {
+            "type": "makeChoice",
+            "choiceId": "c_motive",
+            "optionId": "opt_know_self",
+            "setFlags": [
+              "flag_motive_know_self"
+            ]
+          },
+          "next": "motive_done"
+        },
+        {
+          "label": {
+            "zh_TW": "我想救出莉歐拉。",
+            "en": "I want to free Liora.",
+            "zh_CN": "我想救出莉欧拉。",
+            "ja": "リオラを救い出したい。",
+            "ko": "리오라를 구하고 싶다.",
+            "es": "Quiero liberar a Liora."
+          },
+          "action": {
+            "type": "makeChoice",
+            "choiceId": "c_motive",
+            "optionId": "opt_save_liora",
+            "setFlags": [
+              "flag_motive_save_liora"
+            ]
+          },
+          "next": "motive_done"
+        },
+        {
+          "label": {
+            "zh_TW": "我要向沃卡司討回那一刀。",
+            "en": "I will take back that blade from Vorkath.",
+            "zh_CN": "我要向沃卡司讨回那一刀。",
+            "ja": "ヴォルカスからあの一太刀を返してもらう。",
+            "ko": "보르카스에게 그 칼을 되돌려주겠다.",
+            "es": "Le arrancaré esa hoja a Vorkath."
+          },
+          "action": {
+            "type": "makeChoice",
+            "choiceId": "c_motive",
+            "optionId": "opt_avenge",
+            "setFlags": [
+              "flag_motive_avenge"
+            ]
+          },
+          "next": "motive_done"
+        }
+      ]
+    },
+    "motive_done": {
+      "text": {
+        "zh_TW": "記住這個答案。塔頂不會替你回答。",
+        "en": "Remember that answer. The top of the tower will not answer it for you.",
+        "zh_CN": "记住这个答案。塔顶不会替你回答。",
+        "ja": "その答えを忘れるな。塔の頂は代わりに答えてはくれない。",
+        "ko": "그 답을 기억하라. 탑 꼭대기가 대신 답해주지 않는다.",
+        "es": "Recuerda esa respuesta. La cima no responderá por ti."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（記住了。）",
+            "en": "(I will remember.)",
+            "zh_CN": "（记住了。）",
+            "ja": "（忘れない。）",
+            "ko": "（기억하겠다.）",
+            "es": "(Lo recordaré.)"
+          },
+          "next": ""
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "m_golem_slayer": {
+    "missionId": "m_golem_slayer",
+    "kind": "once",
+    "giver": "sorcerer_teacher",
+    "prerequisites": { "type": "storyBeatAtLeast", "value": 2 },
+    "objective": { "type": "defeat", "targetId": "golem", "count": 1 },
+    "rewardExp": 15,
+    "rewardGold": 20,
+    "rewardItemId": ""
+  },
+  "m_daily_slime_bounty": {
+    "missionId": "m_daily_slime_bounty",
+    "kind": "daily",
+    "giver": "sorcerer_teacher",
+    "prerequisites": { "type": "storyFlagSet", "flag": "met_sorcerer" },
+    "objective": { "type": "defeat", "targetId": "slime", "count": 3 },
+    "rewardExp": 0,
+    "rewardGold": 10,
+    "rewardItemId": ""
+  },
+  "m_wraith_purge": {
+    "missionId": "m_wraith_purge",
+    "kind": "side",
+    "giver": "villager_elder",
+    "prerequisites": { "type": "stageCleared", "stageId": "stage_05" },
+    "objective": { "type": "defeat", "targetId": "wraith", "count": 3 },
+    "rewardExp": 20,
+    "rewardGold": 25,
+    "rewardItemId": "potion_red"
+  }
+}

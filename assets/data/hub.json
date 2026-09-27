@@ -1,0 +1,23 @@
+{
+  "hub_village": {
+    "id": "hub_village",
+    "unlockFlag": "hub.village",
+    "name": {
+      "zh_TW": "村莊",
+      "en": "Village",
+      "zh_CN": "村庄",
+      "ja": "村",
+      "ko": "마을",
+      "es": "Aldea"
+    },
+    "desc": {
+      "zh_TW": "劫後餘生的村莊，長老仍守在這裡。",
+      "en": "The village that survived the disaster; the elder still keeps watch here.",
+      "zh_CN": "劫后余生的村庄，长老仍守在这里。",
+      "ja": "災厄を生き延びた村。長老が今も見守っている。",
+      "ko": "재앙에서 살아남은 마을. 장로가 여전히 이곳을 지키고 있습니다.",
+      "es": "El pueblo que sobrevivió al desastre; el anciano aún vigila aquí."
+    },
+    "action": { "kind": "talk", "npc": "villager_elder" }
+  }
+}

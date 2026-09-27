@@ -1,0 +1,52 @@
+{
+  "_comment": [
+    "S3 — act 2 (forest) event pool (docs/SIDE_STORIES.md section 12.3).",
+    "The three seeds are the documented ids; the rest are variants in the same",
+    "namespace so a floor has enough distinct eventIds (section 5.2 forbids a",
+    "repeat within a floor, not across floors). Kinds follow section 12.1."
+  ],
+  "act": "ch_02",
+  "theme": "forest",
+  "events": [
+    {
+      "eventId": "ev_forest_broken_arrow",
+      "kind": "relic",
+      "text": "ev_forest_broken_arrow.text"
+    },
+    {
+      "eventId": "ev_forest_snare",
+      "kind": "trap",
+      "text": "ev_forest_snare.text"
+    },
+    {
+      "eventId": "ev_forest_old_wizard_mark",
+      "kind": "whisper",
+      "text": "ev_forest_old_wizard_mark.text"
+    },
+    {
+      "eventId": "ev_forest_trap_net",
+      "kind": "trap",
+      "text": "ev_forest_trap_net.text"
+    },
+    {
+      "eventId": "ev_forest_hunter_cache",
+      "kind": "cache",
+      "text": "ev_forest_hunter_cache.text"
+    },
+    {
+      "eventId": "ev_forest_stone_marker",
+      "kind": "relic",
+      "text": "ev_forest_stone_marker.text"
+    },
+    {
+      "eventId": "ev_forest_lost_child",
+      "kind": "rescue",
+      "text": "ev_forest_lost_child.text"
+    },
+    {
+      "eventId": "ev_forest_charcoal_kiln",
+      "kind": "cache",
+      "text": "ev_forest_charcoal_kiln.text"
+    }
+  ]
+}

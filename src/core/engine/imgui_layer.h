@@ -1,0 +1,59 @@
+// imgui_layer.h — Dear ImGui integration for the Vulkan+GLFW desktop renderer.
+// See docs/architecture/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §2/§3 and
+// docs/architecture/IMPLEMENTATION_ROADMAP.md Milestone 2 ("UI framework bring-up", dev-overlay only).
+//
+// Scope: Vulkan+GLFW desktop backend only, wired this milestone. The WebGL2/WebGPU
+// (Emscripten) backends are deferred until the toolchain is available to build+test them
+// (see docs/progress_report/PROGRESS_REPORT.md) — this file is never compiled into the toms_web target.
+//
+// Owns a dedicated VkDescriptorPool so it never competes with the sprite/text renderer's own
+// `dsPool` (src/engine/renderer.h) for capacity — purely additive, isolated from the existing
+// render path except for the one hook point in Renderer::end() (renderer.h's `uiOverlayHook`).
+#pragma once
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
+
+namespace toms {
+
+class ImGuiLayer {
+public:
+    // Call once, after the Renderer (renderer.h) has finished Vulkan init (device, render pass,
+    // command pool all valid — i.e. after Game::loadAssets()). Returns false (and logs to
+    // stderr) on any failure; the caller should treat that as "no debug overlay this run",
+    // not a fatal error.
+    bool init(GLFWwindow* window, VkInstance instance, VkPhysicalDevice physical, VkDevice device,
+              uint32_t queueFamily, VkQueue queue, VkRenderPass renderPass, uint32_t imageCount);
+
+    // Call once, before the owning Renderer/VulkanContext is torn down (before Renderer::destroy()).
+    void shutdown();
+
+    // Per-frame sequence (see main.cpp):
+    //   newFrame() -> build ImGui:: window content -> endFrame() -> Renderer::end() (which,
+    //   inside its active render pass, invokes renderDrawData() via Renderer::uiOverlayHook).
+    void newFrame();
+    void endFrame();                            // finalizes ImGui's draw data (ImGui::Render())
+    void renderDrawData(VkCommandBuffer cmd);    // records into an ALREADY-ACTIVE render pass
+
+    bool initialized() const { return initialized_; }
+    // Bugfix: init() bakes in whatever the swapchain's image count is at that moment
+    // (ImGui_ImplVulkan_InitInfo::MinImageCount/ImageCount), and Dear ImGui's own Vulkan
+    // backend sizes its internal per-frame-in-flight resources from that number. Nothing
+    // ever told it when a LATER window resize recreates the swapchain with a *different*
+    // image count (Renderer::recreateSwapchain() only knew about its own cmdBufs/
+    // framebuffers) -- exactly the documented Dear ImGui/Vulkan pitfall ("call
+    // ImGui_ImplVulkan_SetMinImageCount() after changing MinImageCount"), and a very
+    // plausible cause of a real reported crash: VK_ERROR_DEVICE_LOST on the very next
+    // vkQueueSubmit after a resize-triggered "swapchain recreated (images=N)" log line,
+    // consistent with ImGui recording draw commands against stale-sized internal buffers.
+    // Call this whenever Renderer reports its image count changed (see
+    // Renderer::onSwapchainImageCountChanged in renderer.h).
+    void setMinImageCount(uint32_t n);
+
+private:
+    bool initialized_ = false;
+    VkDevice device_ = VK_NULL_HANDLE;
+    VkDescriptorPool descPool_ = VK_NULL_HANDLE;
+};
+
+} // namespace toms

@@ -1,0 +1,59 @@
+{
+  "id": "F01",
+  "name": {
+    "zh_TW": "第 1 層",
+    "en": "Floor 1"
+  },
+  "subtitle": "F01",
+  "index": 1,
+  "width": 19,
+  "height": 16,
+  "legend": {
+    "#": "wall",
+    ".": "floor",
+    "@": "player_start",
+    "U": "stairs_up",
+    "D": "stairs_down",
+    "1": "monster:bat",
+    "2": "monster:slime",
+    "a": "item:coin",
+    "d": "item:gem_def",
+    "h": "item:potion_red",
+    "E": "event:ev_village_well",
+    "F": "event:ev_common_cache_wall",
+    "G": "event:ev_village_ledger",
+    "Y": "key:yellow",
+    "y": "door:yellow"
+  },
+  "tiles": [
+    "###################",
+    "#........#........#",
+    "#.a..d..h#.G..F..h#",
+    "#..####..#..#..####",
+    "#..#.....#..#..#..#",
+    "#..#.....#.U#.E#..#",
+    "#..####..####..#..#",
+    "#.................#",
+    "#.............2...#",
+    "####..#..####yy#..#",
+    "#.....#........#..#",
+    "#.....#.......2#..#",
+    "#######..####..#..#",
+    "#..............#..#",
+    "#.@..Y..1..1..2#..#",
+    "###################"
+  ],
+  "story_note": {
+    "zh_TW": "第 1 層（ch_01）",
+    "en": "Floor 1 (ch_01)"
+  },
+  "preview": {
+    "zh_TW": "第 1 層 · 難度階 1",
+    "en": "Floor 1 - tier 1"
+  },
+  "connect": {
+    "up": "F02",
+    "down": null
+  },
+  "footprints": {}
+}

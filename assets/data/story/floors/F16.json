@@ -1,0 +1,98 @@
+{
+  "id": "F16",
+  "act": "ch_03",
+  "indexInAct": 2,
+  "name": "story.f16.name",
+  "seal": "daoji",
+  "role": "normal",
+  "maze": {
+    "cols": 28,
+    "rows": 22,
+    "rooms": 5,
+    "loops": 4,
+    "seed": "16:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "bat",
+      "golem"
+    ],
+    "count": [
+      8,
+      11
+    ],
+    "elites": 1,
+    "boss": null
+  },
+  "items": {
+    "count": 6,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "gem_atk"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road",
+    "ev_gate_forge_slag",
+    "ev_common_merchant_echo_ash",
+    "ev_common_cache_rat_nest",
+    "ev_gate_old_banner"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_03",
+    "intro": "story.f16.intro",
+    "ambient": [
+      "story.f16.ambient.1",
+      "story.f16.ambient.2"
+    ],
+    "beats": [
+      "b_gate_f16"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F17",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 3,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "merchant_echo",
+      "cache",
+      "relic"
+    ],
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "bat",
+      "golem"
+    ],
+    "eventCells": [
+      [
+        5,
+        6
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        6,
+        6
+      ],
+      [
+        3,
+        8
+      ],
+      [
+        4,
+        7
+      ]
+    ]
+  }
+}

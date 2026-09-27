@@ -1,0 +1,98 @@
+{
+  "id": "F20",
+  "act": "ch_03",
+  "indexInAct": 6,
+  "name": "story.f20.name",
+  "seal": "daoji",
+  "role": "normal",
+  "maze": {
+    "cols": 31,
+    "rows": 23,
+    "rooms": 5,
+    "loops": 4,
+    "seed": "20:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "bat",
+      "golem"
+    ],
+    "count": [
+      8,
+      11
+    ],
+    "elites": 1,
+    "boss": null
+  },
+  "items": {
+    "count": 6,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "gem_atk"
+    ]
+  },
+  "events": [
+    "ev_gate_soldier_plate",
+    "ev_common_cache_wall",
+    "ev_common_whisper_old_song",
+    "ev_common_relic_chipped_blade",
+    "ev_common_trap_rubble"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_03",
+    "intro": "story.f20.intro",
+    "ambient": [
+      "story.f20.ambient.1",
+      "story.f20.ambient.2"
+    ],
+    "beats": [
+      "b_gate_f20"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F21",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 3,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "whisper",
+      "relic",
+      "trap"
+    ],
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "bat",
+      "golem"
+    ],
+    "eventCells": [
+      [
+        3,
+        5
+      ],
+      [
+        3,
+        6
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        5,
+        5
+      ]
+    ]
+  }
+}

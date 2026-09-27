@@ -1,0 +1,60 @@
+{
+  "id": "F03",
+  "name": {
+    "zh_TW": "第 3 層",
+    "en": "Floor 3"
+  },
+  "subtitle": "F03",
+  "index": 3,
+  "width": 20,
+  "height": 17,
+  "legend": {
+    "#": "wall",
+    ".": "floor",
+    "@": "player_start",
+    "U": "stairs_up",
+    "D": "stairs_down",
+    "1": "monster:bat",
+    "2": "monster:slime",
+    "a": "item:coin",
+    "d": "item:gem_def",
+    "h": "item:potion_red",
+    "E": "event:ev_village_chapel_dust",
+    "F": "event:ev_common_cache_wall",
+    "G": "event:ev_common_cache_rat_nest",
+    "Y": "key:yellow",
+    "y": "door:yellow"
+  },
+  "tiles": [
+    "####################",
+    "#..#..#........#..##",
+    "#.h#..#........#..##",
+    "#..#..#######..#..##",
+    "#..#........y.....##",
+    "#..#.......Ey.F..G##",
+    "#..#..####..####..##",
+    "#.....#.....#.....##",
+    "#.....#....2#.U..a##",
+    "####..####..#..#..##",
+    "#.....#..#..#.....##",
+    "#.....#..#.2#.h..d##",
+    "#..#..#..#..########",
+    "#.................##",
+    "#.D..Y..1..1......##",
+    "####################",
+    "####################"
+  ],
+  "story_note": {
+    "zh_TW": "第 3 層（ch_01）",
+    "en": "Floor 3 (ch_01)"
+  },
+  "preview": {
+    "zh_TW": "第 3 層 · 難度階 1",
+    "en": "Floor 3 - tier 1"
+  },
+  "connect": {
+    "up": "F04",
+    "down": "F02"
+  },
+  "footprints": {}
+}

@@ -1,0 +1,52 @@
+{
+  "_comment": [
+    "S3 — act 3 (gate) event pool (docs/SIDE_STORIES.md section 12.3).",
+    "The three seeds are the documented ids; the rest are variants in the same",
+    "namespace so a floor has enough distinct eventIds (section 5.2 forbids a",
+    "repeat within a floor, not across floors). Kinds follow section 12.1."
+  ],
+  "act": "ch_03",
+  "theme": "gate",
+  "events": [
+    {
+      "eventId": "ev_gate_soldier_plate",
+      "kind": "relic",
+      "text": "ev_gate_soldier_plate.text"
+    },
+    {
+      "eventId": "ev_gate_seal_rubbing",
+      "kind": "whisper",
+      "text": "ev_gate_seal_rubbing.text"
+    },
+    {
+      "eventId": "ev_gate_forge_first",
+      "kind": "cache",
+      "text": "ev_gate_forge_first.text"
+    },
+    {
+      "eventId": "ev_gate_broken_ram",
+      "kind": "trap",
+      "text": "ev_gate_broken_ram.text"
+    },
+    {
+      "eventId": "ev_gate_quartermaster_cache",
+      "kind": "cache",
+      "text": "ev_gate_quartermaster_cache.text"
+    },
+    {
+      "eventId": "ev_gate_deserters_kit",
+      "kind": "rescue",
+      "text": "ev_gate_deserters_kit.text"
+    },
+    {
+      "eventId": "ev_gate_old_banner",
+      "kind": "relic",
+      "text": "ev_gate_old_banner.text"
+    },
+    {
+      "eventId": "ev_gate_forge_slag",
+      "kind": "cache",
+      "text": "ev_gate_forge_slag.text"
+    }
+  ]
+}

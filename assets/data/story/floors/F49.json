@@ -1,0 +1,86 @@
+{
+  "id": "F49",
+  "act": "ch_07",
+  "indexInAct": 7,
+  "name": "story.f49.name",
+  "seal": "fire",
+  "role": "boss-stage",
+  "maze": {
+    "cols": 49,
+    "rows": 34,
+    "rooms": 9,
+    "loops": 8,
+    "seed": "49:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "demon"
+    ],
+    "count": [
+      16,
+      22
+    ],
+    "elites": 3,
+    "boss": "traitor_captain"
+  },
+  "items": {
+    "count": 10,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_road",
+    "ev_common_cache_wall_v2",
+    "ev_common_rescue_lost_soldier",
+    "ev_common_trap_rubble",
+    "ev_barracks_forge_t3",
+    "ev_common_shard_wandering",
+    "ev_common_relic_road_v2",
+    "ev_common_merchant_echo_ash_v5",
+    "ev_common_rescue_lost_soldier_v2"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_07",
+    "intro": "story.f49.intro",
+    "ambient": [
+      "story.f49.ambient.1",
+      "story.f49.ambient.2"
+    ],
+    "beats": [
+      "b_barracks_f49"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F50",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 7,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "rescue",
+      "trap",
+      "cache",
+      "memory_shard",
+      "relic",
+      "merchant_echo",
+      "rescue"
+    ],
+    "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "skeleton",
+      "demon"
+    ]
+  },
+  "handAuthoredStage": "stage07.json"
+}

@@ -1,0 +1,129 @@
+{
+  "id": "F40",
+  "act": "ch_06",
+  "indexInAct": 5,
+  "name": "story.f40.name",
+  "seal": "yuanying",
+  "role": "side-story-stage",
+  "maze": {
+    "cols": 43,
+    "rows": 31,
+    "rooms": 8,
+    "loops": 7,
+    "seed": "40:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "golem",
+      "wraith"
+    ],
+    "count": [
+      14,
+      19
+    ],
+    "elites": 2,
+    "boss": null
+  },
+  "items": {
+    "count": 9,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "potion_blue"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road",
+    "ev_cavern_miner_cache",
+    "ev_cavern_miner_cache_v3",
+    "ev_common_relic_road_v3",
+    "ev_common_merchant_echo_ash_v3",
+    "ev_common_rescue_lost_soldier_v4",
+    "ev_common_whisper_old_road",
+    "ev_common_shard_wandering_v5"
+  ],
+  "sideStoryHooks": [
+    {
+      "sideStoryId": "ss_06",
+      "cell": [
+        29,
+        14
+      ],
+      "trigger": "proximity",
+      "requires": {
+        "type": "storyBeatAtLeast",
+        "value": "ch_06"
+      }
+    }
+  ],
+  "story": {
+    "chapter": "ch_06",
+    "intro": "story.f40.intro",
+    "ambient": [
+      "story.f40.ambient.1",
+      "story.f40.ambient.2"
+    ],
+    "beats": [
+      "b_cavern_f40"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F41",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 6,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "cache",
+      "relic",
+      "merchant_echo",
+      "rescue",
+      "whisper",
+      "memory_shard"
+    ],
+    "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "golem",
+      "wraith"
+    ],
+    "eventCells": [
+      [
+        4,
+        9
+      ],
+      [
+        4,
+        10
+      ],
+      [
+        5,
+        9
+      ],
+      [
+        5,
+        10
+      ],
+      [
+        4,
+        12
+      ],
+      [
+        4,
+        13
+      ],
+      [
+        5,
+        12
+      ],
+      [
+        5,
+        13
+      ]
+    ]
+  }
+}

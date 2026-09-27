@@ -1,0 +1,86 @@
+{
+  "id": "F06",
+  "act": "ch_01",
+  "indexInAct": 6,
+  "name": "story.f06.name",
+  "seal": "memory",
+  "role": "normal",
+  "maze": {
+    "cols": 22,
+    "rows": 18,
+    "rooms": 3,
+    "loops": 2,
+    "seed": "06:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      4,
+      6
+    ],
+    "elites": 0,
+    "boss": null
+  },
+  "items": {
+    "count": 4,
+    "table": [
+      "potion_red",
+      "coin",
+      "gem_def"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_song",
+    "ev_common_cache_rat_nest",
+    "ev_village_old_plough"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_01",
+    "intro": "story.f06.intro",
+    "ambient": [
+      "story.f06.ambient.1",
+      "story.f06.ambient.2"
+    ],
+    "beats": [
+      "b_village_f06"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F07",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 1,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "cache"
+    ],
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "slime",
+      "bat"
+    ],
+    "eventCells": [
+      [
+        1,
+        3
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        6
+      ]
+    ]
+  }
+}

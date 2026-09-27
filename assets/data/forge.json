@@ -1,0 +1,23 @@
+{
+  "fr_gatewarden": {
+    "id": "fr_gatewarden",
+    "resultEquipmentId": "guardian_plate",
+    "name": { "zh_TW": "守門者圖譜", "en": "Gatewarden's Blueprint", "zh_CN": "守门者图谱", "ja": "門番の設計図", "ko": "문지기의 도안", "es": "Plano del Guardián de la Puerta" },
+    "desc": { "zh_TW": "解印黃門所得的鍛造圖譜，可用以鍛造守護者鎧甲。", "en": "A forging blueprint earned by unsealing the yellow gate — crafts Guardian Plate.", "zh_CN": "解印黄门所得的锻造图谱，可用以锻造守护者铠甲。", "ja": "黄門の封印を解いて得た鍛造の設計図。守護者の鎧を鍛えられる。", "ko": "황문의 봉인을 풀어 얻은 단조 도안 — 수호자 판금 갑옷을 제작할 수 있습니다.", "es": "Un plano de forja obtenido al desellar la puerta amarilla: forja la Placa del Guardián." },
+    "cost": { "gold": 30, "materials": { "gem_def": 2 } }
+  },
+  "fr_twin_edge": {
+    "id": "fr_twin_edge",
+    "resultEquipmentId": "twin_daggers",
+    "name": { "zh_TW": "雙生匕首圖譜", "en": "Twin Edge Blueprint", "zh_CN": "双生匕首图谱", "ja": "双子の刃の設計図", "ko": "쌍둥이 칼날 도안", "es": "Plano de Filo Gemelo" },
+    "desc": { "zh_TW": "鍛造雙生短匕的圖譜，捨棄部分攻擊力換取極快的蓄力速度。", "en": "Forges Twin Daggers — trades some Attack for a much faster charge speed.", "zh_CN": "锻造双生短匕的图谱，舍弃部分攻击力换取极快的蓄力速度。", "ja": "双生短剣を鍛える設計図。攻撃力を少し犠牲にして非常に速いチャージ速度を得る。", "ko": "쌍둥이 단검을 제작하는 도안 — 공격력을 조금 희생하고 매우 빠른 차지 속도를 얻습니다.", "es": "Forja las Dagas Gemelas: sacrifica algo de Ataque por una carga mucho más rápida." },
+    "cost": { "gold": 20, "materials": { "gem_atk": 2 } }
+  },
+  "fr_hammer_of_dawn": {
+    "id": "fr_hammer_of_dawn",
+    "resultEquipmentId": "war_hammer",
+    "name": { "zh_TW": "破曉之錘圖譜", "en": "Hammer of Dawn Blueprint", "zh_CN": "破晓之锤图谱", "ja": "夜明けの鎚の設計図", "ko": "여명의 망치 도안", "es": "Plano del Martillo del Alba" },
+    "desc": { "zh_TW": "鍛造戰鎚的圖譜，威力沉重但蓄力較慢。", "en": "Forges the War Hammer — heavy power, slower to charge.", "zh_CN": "锻造战锤的图谱，威力沉重但蓄力较慢。", "ja": "戦鎚を鍛える設計図。威力は重いがチャージは遅い。", "ko": "전투 망치를 제작하는 도안 — 강력하지만 차지가 느립니다.", "es": "Forja el Martillo de Guerra: poder pesado, carga más lenta." },
+    "cost": { "gold": 40, "materials": { "gem_atk": 2, "gem_def": 1 } }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "ch_04",
+  "floors": ["F22", "F23", "F24", "F25", "F26", "F27", "F28"],
+  "bossFloor": "F28",
+  "bossStage": "stage04",
+  "title": "story.ch04.title",
+  "seal": "jindan",
+  "beats": [
+    { "id": "b_library_entry",  "kind": "dialogue", "nodeId": "skeleton_scholar.root", "floor": "F26" },
+    { "id": "b_library_page",   "kind": "event",    "eventId": "ev_library_torn_page", "floor": "F25" },
+    { "id": "b_library_finale", "kind": "boss",     "floor": "F28", "enemyId": "skeleton_scholar_boss" }
+  ],
+  "grants": { "skillPoints": 1 },
+  "choices": [
+    {
+      "id": "c_library_page",
+      "prompt": "story.ch04.c4.q",
+      "options": [
+        { "id": "opt_return", "text": "story.ch04.c4.o1", "setFlags": ["flag_page_returned"],
+          "counters": { "insight": 1 } },
+        { "id": "opt_keep",   "text": "story.ch04.c4.o2", "setFlags": ["flag_page_kept"],
+          "counters": { "resolve": 1 } }
+      ],
+      "reversible": false
+    }
+  ],
+  "sideStoryHooks": ["ss_04"],
+  "exitConditions": { "type": "stageCleared", "stageId": "F28" },
+
+  "enemyMix": ["bat", "skeleton"],
+  "itemTable": ["potion_red", "potion_blue", "exp_up"]
+}

@@ -1,0 +1,89 @@
+{
+  "id": "F63",
+  "act": "ch_09",
+  "indexInAct": 7,
+  "name": "story.f63.name",
+  "seal": "xinmo",
+  "role": "boss-stage",
+  "maze": {
+    "cols": 58,
+    "rows": 39,
+    "rooms": 11,
+    "loops": 10,
+    "seed": "63:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "demon",
+      "wraith"
+    ],
+    "count": [
+      20,
+      28
+    ],
+    "elites": 4,
+    "boss": "inner_qingxiao"
+  },
+  "items": {
+    "count": 12,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_road",
+    "ev_antechamber_old_sword_rack_v2",
+    "ev_common_whisper_old_road_v5",
+    "ev_common_whisper_old_road_v3",
+    "ev_common_trap_rubble_v3",
+    "ev_common_rescue_lost_soldier_v5",
+    "ev_common_cache_wall_v2",
+    "ev_antechamber_mirror_self",
+    "ev_common_whisper_old_road_v4",
+    "ev_common_shard_wandering_v4",
+    "ev_common_trap_rubble_v4"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_09",
+    "intro": "story.f63.intro",
+    "ambient": [
+      "story.f63.ambient.1",
+      "story.f63.ambient.2"
+    ],
+    "beats": [
+      "b_antechamber_f63"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F64",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 9,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "whisper",
+      "whisper",
+      "trap",
+      "rescue",
+      "cache",
+      "relic",
+      "whisper",
+      "memory_shard",
+      "trap"
+    ],
+    "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "demon",
+      "wraith"
+    ]
+  },
+  "handAuthoredStage": "stage09.json"
+}

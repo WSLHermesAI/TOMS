@@ -1,0 +1,23 @@
+{
+  "id": "ch_02",
+  "floors": ["F08", "F09", "F10", "F11", "F12", "F13", "F14"],
+  "bossFloor": "F14",
+  "bossStage": "stage02",
+  "title": "story.ch02.title",
+  "seal": "qi",
+  "beats": [
+    { "id": "b_teacher",      "kind": "dialogue", "nodeId": "sorcerer_teacher.qi", "floor": "F09",
+      "setFlags": ["flag_met_sorcerer"] },
+    { "id": "b_forest_snare", "kind": "event",    "eventId": "ev_forest_snare",    "floor": "F10" },
+    { "id": "b_shard_02",     "kind": "memory",   "shardId": "shard_02_the_arrow", "floor": "F11",
+      "setFlags": ["flag_memory_shard_02"] },
+    { "id": "b_forest_finale", "kind": "boss",    "floor": "F14", "enemyId": "bat_matron" }
+  ],
+  "grants": { "skills": ["s_yuqi"], "skillPoints": 1, "unlocks": ["gameplay.shield"] },
+  "choices": [],
+  "sideStoryHooks": ["ss_02"],
+  "exitConditions": { "type": "stageCleared", "stageId": "F14" },
+
+  "enemyMix": ["slime", "bat"],
+  "itemTable": ["potion_red", "coin", "gem_def", "potion_blue"]
+}

@@ -1,0 +1,116 @@
+{
+  "id": "F37",
+  "act": "ch_06",
+  "indexInAct": 2,
+  "name": "story.f37.name",
+  "seal": "yuanying",
+  "role": "normal",
+  "maze": {
+    "cols": 42,
+    "rows": 29,
+    "rooms": 8,
+    "loops": 7,
+    "seed": "37:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "golem",
+      "wraith"
+    ],
+    "count": [
+      14,
+      19
+    ],
+    "elites": 2,
+    "boss": null
+  },
+  "items": {
+    "count": 9,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "potion_blue"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road_v3",
+    "ev_common_cache_wall_v3",
+    "ev_common_shard_wandering_v5",
+    "ev_common_merchant_echo_ash_v2",
+    "ev_common_merchant_echo_ash_v3",
+    "ev_cavern_miner_cache_v2",
+    "ev_common_shard_wandering_v3",
+    "ev_common_relic_road_v4"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_06",
+    "intro": "story.f37.intro",
+    "ambient": [
+      "story.f37.ambient.1",
+      "story.f37.ambient.2"
+    ],
+    "beats": [
+      "b_cavern_f37"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F38",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 6,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "memory_shard",
+      "merchant_echo",
+      "merchant_echo",
+      "cache",
+      "memory_shard",
+      "relic"
+    ],
+    "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "golem",
+      "wraith"
+    ],
+    "eventCells": [
+      [
+        7,
+        10
+      ],
+      [
+        7,
+        11
+      ],
+      [
+        3,
+        10
+      ],
+      [
+        3,
+        11
+      ],
+      [
+        4,
+        10
+      ],
+      [
+        4,
+        11
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ]
+    ]
+  }
+}
