@@ -2,6 +2,7 @@
 #include "rml_ui.h"
 #include "embedded_shaders.h"
 
+#include "../../core/engine/vfs.h"   // vfsReadAll: APK entries on Android, stdio elsewhere
 #include <RmlUi/Debugger.h>
 #include <bgfx/bgfx.h>
 #include <bx/math.h>
@@ -9,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <set>
 
@@ -168,6 +170,43 @@ private:
     float transform[16] = {};
 };
 
+// RmlUi reads its documents (.rml/.rcss) and its fonts through this interface. Its default one uses
+// stdio, which cannot see files inside an APK -- so on Android every document and font needs this path.
+// It is deliberately COMPILED everywhere (so a normal build type-checks it) but INSTALLED only on
+// Android, which is what keeps desktop and web byte-for-byte unchanged: vfsReadAll is the same C stdio
+// read they already used, and RmlUi's own reader stays in charge there.
+class FileInterface final : public Rml::FileInterface {
+public:
+    Rml::FileHandle Open(const Rml::String& path) override {
+        std::string buf;
+        if (!toms::vfsReadAll(path, buf)) return 0;      // 0 == failed open, RmlUi's contract
+        return (Rml::FileHandle) new Entry{std::move(buf), 0};
+    }
+    void Close(Rml::FileHandle file) override { delete (Entry*)file; }
+
+    size_t Read(void* buffer, size_t size, Rml::FileHandle file) override {
+        Entry* e = (Entry*)file;
+        if (!e || e->pos >= e->data.size()) return 0;
+        const size_t n = size < (e->data.size() - e->pos) ? size : (e->data.size() - e->pos);
+        std::memcpy(buffer, e->data.data() + e->pos, n);
+        e->pos += n;
+        return n;
+    }
+    bool Seek(Rml::FileHandle file, long offset, int origin) override {
+        Entry* e = (Entry*)file;
+        if (!e) return false;
+        const long base = origin == SEEK_SET ? 0L : origin == SEEK_CUR ? (long)e->pos : (long)e->data.size();
+        const long target = base + offset;
+        if (target < 0 || (size_t)target > e->data.size()) return false;
+        e->pos = (size_t)target;
+        return true;
+    }
+    size_t Tell(Rml::FileHandle file) override { Entry* e = (Entry*)file; return e ? e->pos : 0; }
+
+private:
+    struct Entry { std::string data; size_t pos = 0; };
+};
+
 class SystemInterface final : public Rml::SystemInterface {
 public:
     double now = 0;
@@ -185,6 +224,7 @@ public:
 struct RmlUi::Impl {
     BgfxRenderInterface render;
     SystemInterface system;
+    FileInterface file;
     Rml::Context* context = nullptr;
     bool debugger = false;
 #ifdef __EMSCRIPTEN__
@@ -205,6 +245,11 @@ bool RmlUi::init(int designW, int designH, const std::string& defaultFont, std::
     if (!impl_->render.create()) { error = "RmlUi: shader program missing for this renderer"; impl_.reset(); return false; }
     Rml::SetRenderInterface(&impl_->render);
     Rml::SetSystemInterface(&impl_->system);
+#if defined(__ANDROID__)
+    // APK entries: RmlUi's default file interface uses stdio and would find neither the .rml/.rcss
+    // documents nor the CJK font, which is a black screen with no UI.
+    Rml::SetFileInterface(&impl_->file);
+#endif
 #ifdef __EMSCRIPTEN__
     (void)defaultFont;                                  // no font files on the web
     Rml::SetFontEngineInterface(&impl_->canvasFont);
