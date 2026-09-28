@@ -16,6 +16,12 @@
 //   --clicks=<x:y@f,...>  left-click at design point (x,y) (1024x768 space) at frame f (tests)
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
+#include "../../core/engine/vfs.h"   // toms::vfsInit: APK entries need the AAssetManager
+#if defined(__ANDROID__)
+#  include <jni.h>
+#  include <android/asset_manager_jni.h>
+#  include <SDL3/SDL_system.h>      // SDL_GetAndroidJNIEnv / SDL_GetAndroidActivity
+#endif
 #include "game_session.h"
 #include "game.h"
 #include "object.h"
@@ -214,6 +220,24 @@ bool appInit(App& app) {
         return false;
     }
 
+#if defined(__ANDROID__)
+    // Everything the game ships with lives INSIDE the APK, so vfs must have the AAssetManager before the
+    // first file is read -- without this every read silently falls back to stdio and finds nothing
+    // (a black screen with no assets). SDL3 exposes the JNI environment and the activity, and
+    // AAssetManager_fromJava is the NDK's documented way to get the manager from the activity.
+    {
+        JNIEnv* env = (JNIEnv*)SDL_GetAndroidJNIEnv();
+        jobject activity = env ? (jobject)SDL_GetAndroidActivity() : nullptr;
+        if (env && activity) {
+            jclass cls = env->GetObjectClass(activity);
+            jmethodID getAssets = cls ? env->GetMethodID(cls, "getAssets", "()Landroid/content/AssetManager;") : nullptr;
+            jobject assets = getAssets ? env->CallObjectMethod(activity, getAssets) : nullptr;
+            if (assets) toms::vfsInit(AAssetManager_fromJava(env, assets));
+        }
+        fprintf(stderr, "[android] vfs assets: %s\n",
+                toms::g_vfsAssetManager ? "ready" : "MISSING -- assets will not load");
+    }
+#endif
     SessionOptions opts;
     opts.assetDir = args.assets.empty() ? GameSession::defaultAssetDir() : args.assets;
 #ifndef __EMSCRIPTEN__
