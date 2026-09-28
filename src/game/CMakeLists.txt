@@ -87,3 +87,14 @@ if(EMSCRIPTEN)
          "${TOMS_ASSET_DIR}/ui/*")
     set_property(TARGET toms_game APPEND PROPERTY LINK_DEPENDS ${_web_content})
 endif()
+
+# Android needs the audio and log system libraries: miniaudio's Android backends (OpenSL ES, and AAudio
+# when the device has it) need OpenSLES, and log.h's __android_log_print needs log. Guarded by TARGET so a
+# renamed target cannot break configure, and inert everywhere else.
+if(ANDROID)
+    foreach(_toms_android_target toms_game toms_core)
+        if(TARGET ${_toms_android_target})
+            target_link_libraries(${_toms_android_target} PRIVATE OpenSLES log)
+        endif()
+    endforeach()
+endif()

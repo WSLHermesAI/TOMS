@@ -18,6 +18,9 @@
 #include <string_view>
 #include <sstream>
 #include <iostream>
+#if defined(__ANDROID__)
+#  include <android/log.h>     // __android_log_print: the only place adb logcat can see
+#endif
 #include <mutex>
 #include <chrono>
 #include <iomanip>
@@ -131,6 +134,20 @@ private:
             std::string("[") + ts + "] " + logLevelName(lvl) + " " +
             floc + ":" + std::to_string(line) + "  " + msg + "\n";
         std::cout << lineStr;
+#if defined(__ANDROID__)
+        {   // On a device stdout goes nowhere visible: Android's log is read with adb logcat. A copy
+            // without the trailing newline, because logcat appends its own per entry -- lineStr itself
+            // is left untouched so the stream and the file sink still see exactly the same text.
+            static const char* kTag = "toms";
+            const int prio = lvl == LogLevel::Fatal ? ANDROID_LOG_FATAL
+                           : lvl == LogLevel::Error ? ANDROID_LOG_ERROR
+                           : lvl == LogLevel::Warn  ? ANDROID_LOG_WARN
+                           : lvl == LogLevel::Info  ? ANDROID_LOG_INFO
+                                                    : ANDROID_LOG_DEBUG;
+            if (!lineStr.empty() && lineStr.back() == '\n') __android_log_print(prio, kTag, "%s", lineStr.substr(0, lineStr.size() - 1).c_str());
+            else                                             __android_log_print(prio, kTag, "%s", lineStr.c_str());
+        }
+#endif
         if (file_.is_open()) file_ << lineStr;
     }
 
