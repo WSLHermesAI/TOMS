@@ -1,4 +1,5 @@
 // floor_table.cpp — see floor_table.h.
+#include "../../engine/vfs.h"
 #include "floor_table.h"
 
 #include <algorithm>
@@ -22,9 +23,8 @@ int actOrdinal(const std::string& act) {
 }
 
 nlohmann::json readJson(const std::string& path) {
-    std::ifstream in(path, std::ios::binary);
-    if (!in) return nlohmann::json();
-    std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    std::string text;
+    if (!toms::vfsReadAll(path, text)) return nlohmann::json();
     if (text.empty()) return nlohmann::json();
     try {
         return nlohmann::json::parse(text);

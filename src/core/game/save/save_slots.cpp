@@ -1,5 +1,6 @@
 #include "save_slots.h"
 #include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #ifdef __EMSCRIPTEN__
@@ -9,13 +10,21 @@
 namespace toms {
 
 const std::string& defaultSaveDir() {
+    // An override wins on every platform -- the host sets it before the first save is touched. Android
+    // needs it: the app cannot write next to its own binary and there is no relative working directory,
+    // so main_sdl.cpp points it at SDL_GetPrefPath(). Desktop and web are unaffected unless someone
+    // deliberately sets TOMS_SAVE_DIR. A function-local static, so it is initialised on first use, i.e.
+    // after the host has had a chance to set the variable.
+    static const std::string dir = [] {
+        if (const char* e = std::getenv("TOMS_SAVE_DIR"); e && *e) return std::string(e);
 #ifdef __EMSCRIPTEN__
-    // Mounted by src/game/src/main_sdl.cpp's IDBFS block; falls back to the plain (session-only)
-    // MEMFS directory when IndexedDB is unavailable.
-    static const std::string dir = "/save";
+        // Mounted by src/game/src/main_sdl.cpp's IDBFS block; falls back to the plain (session-only)
+        // MEMFS directory when IndexedDB is unavailable.
+        return std::string("/save");
 #else
-    static const std::string dir = "save";
+        return std::string("save");
 #endif
+    }();
     return dir;
 }
 

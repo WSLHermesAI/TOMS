@@ -1,5 +1,6 @@
 // stage.h — stage data structures and JSON loader for Tower of the Sorcerer.
 #pragma once
+#include "../../engine/vfs.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -58,12 +59,11 @@ inline Stage parseStage(const std::string& path, const toms::Locale& locale) {
     // Read the whole file into a string first, then json::parse. Using
     // operator>>(istream, json) directly is unreliable under Emscripten's libc++
     // (it can report "empty input" even though the file is present and non-empty).
-    std::ifstream f(path, std::ios::binary);
-    if (!f) {
+    std::string buf;
+    if (!toms::vfsReadAll(path, buf)) {
         fprintf(stderr, "[parseStage] FAILED to open %s\n", path.c_str());
         Stage s; s.id = path; return s;
     }
-    std::string buf((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
     if (buf.empty()) {
         fprintf(stderr, "[parseStage] EMPTY file %s\n", path.c_str());
         Stage s; s.id = path; return s;

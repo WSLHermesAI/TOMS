@@ -1,3 +1,4 @@
+#include "../../engine/vfs.h"
 #include "localization.h"
 #include <cstdio>
 #include <fstream>
@@ -71,9 +72,8 @@ bool Locale::loadFromJson(const nlohmann::json& j) {
 }
 
 bool Locale::loadFromFile(const std::string& path) {
-    std::ifstream f(path, std::ios::binary);
-    if (!f) { fprintf(stderr, "[locale] cannot open %s (using built-in strings)\n", path.c_str()); return false; }
-    std::string buf((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    std::string buf;
+    if (!toms::vfsReadAll(path, buf)) { fprintf(stderr, "[locale] cannot open %s (using built-in strings)\n", path.c_str()); return false; }
     if (buf.empty()) { fprintf(stderr, "[locale] empty %s (using built-in strings)\n", path.c_str()); return false; }
     try {
         return loadFromJson(nlohmann::json::parse(buf));

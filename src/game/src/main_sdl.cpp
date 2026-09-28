@@ -21,6 +21,7 @@
 #  include <jni.h>
 #  include <android/asset_manager_jni.h>
 #  include <SDL3/SDL_system.h>      // SDL_GetAndroidJNIEnv / SDL_GetAndroidActivity
+#  include <SDL3/SDL_filesystem.h>  // SDL_GetPrefPath (app-private save dir)
 #endif
 #include "game_session.h"
 #include "game.h"
@@ -236,6 +237,13 @@ bool appInit(App& app) {
         }
         fprintf(stderr, "[android] vfs assets: %s\n",
                 toms::g_vfsAssetManager ? "ready" : "MISSING -- assets will not load");
+        // Saves cannot live beside the binary on Android: app-private storage, via SDL, and tell the
+        // save layer through the override defaultSaveDir() reads. Done here, before any save is touched.
+        if (char* pref = SDL_GetPrefPath("WSLHermesAI", "TOMS")) {
+            setenv("TOMS_SAVE_DIR", pref, 1);
+            fprintf(stderr, "[android] saves: %s\n", pref);
+            SDL_free(pref);
+        }
     }
 #endif
     SessionOptions opts;
