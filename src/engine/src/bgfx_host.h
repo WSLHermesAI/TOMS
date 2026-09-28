@@ -15,6 +15,12 @@ namespace toms::next {
 struct BgfxHostConfig {
     void*       nativeWindow  = nullptr;   // HWND on Windows
     void*       nativeDisplay = nullptr;   // X11 Display* / wl_display* on Linux, else null
+    // Vulkan needs a SURFACE, not just a window: the Android path creates it with
+    // SDL_Vulkan_CreateSurface and stores it here (VkSurfaceKHR), with the instance in nativeInstance
+    // (VkInstance). Left null everywhere else -- bgfx uses nwh/ndt on desktop, and a null surface is
+    // simply "no Vulkan surface", so nothing changes there.
+    void*       nativeSurface = nullptr;   // VkSurfaceKHR (Android Vulkan)
+    void*       nativeInstance = nullptr;  // VkInstance   (Android Vulkan)
     uint32_t    width  = 1280;
     uint32_t    height = 720;
     std::string renderer = "auto";         // auto | d3d11 | d3d12 | vulkan | opengl | gles

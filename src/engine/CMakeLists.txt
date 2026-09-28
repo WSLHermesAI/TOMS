@@ -5,7 +5,10 @@ set(TOMS_SHADER_OUT ${CMAKE_CURRENT_BINARY_DIR}/shaders)
 if(EMSCRIPTEN)
     set(TOMS_SHADER_PROFILES 300_es)                # the browser only runs WebGL2 (ESSL 3.00)
 elseif(ANDROID)
-    set(TOMS_SHADER_PROFILES 100_es 300_es)         # GLES2 / GLES3 (Android has no D3D/Vulkan/GLSL target here)
+    # GLES2/GLES3 for the OpenGL ES path, and SPIR-V for Vulkan: "auto" prefers Vulkan on a device that
+    # has it and falls back to GLES. Without spirv here, a Vulkan device would pick Vulkan and then have
+    # no shaders to draw with.
+    set(TOMS_SHADER_PROFILES 100_es 300_es spirv)
 else()
     set(TOMS_SHADER_PROFILES s_5_0 spirv 430 300_es)   # D3D11/12, Vulkan, OpenGL, GLES/WebGL2
 endif()
