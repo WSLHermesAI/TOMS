@@ -143,20 +143,24 @@ tools\build.cmd windows-shipping
 set TOMS_HOST_SHADERC=%CD%\out\build\windows-shipping\bin\shaderc.exe
 ```
 
-## A4. 目前會擋住你的程式改動（**必須先做，否則 App 讀不到資產**）
+## A4. 程式改動進度（2026-09-28）
 
-1. **資產**：APK 裡的 `assets/` 是條目不是檔案，`std::ifstream` 全失敗（58 處）。二選一見 §2；
-   建議 B（I/O shim），介面在 §3.1。
-2. **存檔**：`saveDir` 指向 `SDL_GetPrefPath()`（`save_slots.cpp` 已是單一入口，非重寫）。
-3. **RmlUi**：file interface 用同一 shim 讀 `.rml`/`.rcss`/字型。
-4. **觸控給 UI**：RmlUi 吃滑鼠/鍵盤事件，需 touch→mouse 映射。
-5. **日誌**：`log.h` 改寫到 logcat（可選）。
-6. **著色器 profile 分支**：`src/engine/CMakeLists.txt` 目前只有 web 與桌機兩支，需加 Android：
+| # | 項目 | 狀態 | 說明 |
+|---|---|---|---|
+| 1 | 資產 shim | ✅ 完成 | `src/core/engine/vfs.h`（header-only）：Android 走 `AAssetManager`、桌機/web 走原本的 C stdio |
+| 2 | 中央讀取點 | ✅ 完成 | `readJsonFile()` 已改走 `vfsReadAll`，錯誤訊息不變 |
+| 3 | RmlUi 檔案介面 | ✅ 完成 | `rml_ui.cpp` 的 `FileInterface`；**所有平台都編譯、只在 Android 安裝**，桌機/web 行為不變 |
+| 4 | 著色器 profile | ✅ 完成 | `src/engine/CMakeLists.txt` 的 `elseif(ANDROID)` → `100_es 300_es` |
+| 5 | 音效讀取 | ✅ 完成（未經編譯器驗證） | `Audio.cpp`：Android 用 `vfsReadAll` + `ma_decoder_init_memory` 記憶體解碼（含播放中物件池）；其他平台維持原本路徑 |
+| 6 | 背景/前景 | ◐ 部分 | `main_sdl.cpp` 收到 `SDL_EVENT_WILL_ENTER_BACKGROUND` / `DID_ENTER_FOREGROUND`，暫停期間不繪製；**音訊停止/恢復尚未做**（需要 `Audio` 的新 API） |
+| 7 | 存檔目錄 | ⬜ 未做 | `saveDir` 需指向 `SDL_GetPrefPath()`（`save_slots.cpp` 已是單一入口） |
+| 8 | 其餘直接讀取點 | ⬜ 未做 | `localization.cpp`、`floor_table.cpp`、`stage.h`、`game_assets.cpp` |
+| 9 | `log.h` → logcat | ⬜ 未做 | 否則真機上看不到任何訊息 |
+| 10 | Android 連結 | ⬜ 未做 | CMake 需為遊戲庫加 `OpenSLES`（＋ `log`）；目前 CMake 完全沒有 Android 參照 |
+| 11 | APK 外殼 | ⬜ 未做 | SDL3 的 Gradle/`SDLActivity` 骨架 + `jniLibs/arm64-v8a/libtoms_game.so` + `assets/` 打包 |
+| 12 | 實機驗證 | ⬜ 未做 | Windows 產 APK → `adb install` → 標題畫面、對話文字、存檔（詳見 A7） |
 
-```cmake
-elseif(ANDROID)
-    set(TOMS_SHADER_PROFILES 100_es 300_es)   # GLES2/GLES3
-```
+**驗證狀態要說清楚**：1–4 以 web 建置（`build exit=0`，`libtoms_core.a` 與 `toms_game.html` 連結）驗過 —— 其中第 3 項即使只在 Android 安裝，本體仍會在每個平台編譯，所以編譯器真的檢查過它。第 5、6 項的 Android 分支在 `#if defined(__ANDROID__)` 之內，**本機沒有任何 Android 編譯器跑過它們**，這一點不能算已完成驗證。
 
 ## A5. 編出原生程式庫
 

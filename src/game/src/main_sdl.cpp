@@ -161,6 +161,7 @@ void readKeyboard(InputState& in) {
 // Everything one running game needs. Heap-allocated: on the web, main() returns while the
 // browser keeps calling appFrame(), so nothing may live on main()'s stack.
 struct App {
+    bool suspended = false;     // Android: set while backgrounded, so we do not render a suspended app
     Args args;
     SDL_Window* window = nullptr;
     GameSession session;
@@ -258,6 +259,13 @@ bool appFrame(App& app) {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_EVENT_QUIT) quit = true;
+        // Android (and any mobile OS) suspends the app: stop drawing while backgrounded, and resync the
+        // drawable size on return -- a suspended app can come back at a different size, and its GL context
+        // may have been lost. These events never fire on desktop, so this is inert there.
+        else if (e.type == SDL_EVENT_WILL_ENTER_BACKGROUND) app.suspended = true;
+        else if (e.type == SDL_EVENT_DID_ENTER_FOREGROUND) {
+            app.suspended = false;      // the per-frame drawable-size compare handles the rest
+        }
         else if (e.type == SDL_EVENT_MOUSE_WHEEL) in.wheel += e.wheel.y;
     }
     readKeyboard(in);
