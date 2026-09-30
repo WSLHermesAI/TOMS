@@ -10,8 +10,13 @@ elseif(ANDROID)
     # no shaders to draw with. (No GLES2 "100_es": this bgfx's shaderc no longer has that profile, and
     # embedded_shaders.cpp only uses essl/ = 300_es.)
     set(TOMS_SHADER_PROFILES 300_es spirv)
-else()
+elseif(WIN32)
     set(TOMS_SHADER_PROFILES s_5_0 spirv 430 300_es)   # D3D11/12, Vulkan, OpenGL, GLES/WebGL2
+else()
+    # Linux desktop: no D3D, so no s_5_0. shaderc's HLSL support goes through D3D4Linux, which is only
+    # present in a Windows shaderc build -- asking for it on Linux fails with
+    # 'HLSL compiler support through D3D4Linux is not compiled in'. Vulkan + GL + GLES remain.
+    set(TOMS_SHADER_PROFILES spirv 430 300_es)
 endif()
 bgfx_compile_shaders(TYPE VERTEX
     SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_sprite.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_imgui.sc
@@ -63,6 +68,12 @@ set_target_properties(toms_bgfx PROPERTIES FOLDER "toms" CXX_STANDARD 20 CXX_STA
 
 # RmlUi: the game's whole UI (docs/08_RMLUI.md). PUBLIC: the host builds its data model with
 # RmlUi's API.
+# The D3D/HLSL shader set only exists on Windows (s_5_0 needs shaderc's D3D4Linux support), and
+# embedded_shaders.cpp includes those generated headers. One define, set from the same condition that
+# chooses the profiles, so the C++ and the profile list cannot drift apart.
+if(WIN32)
+    target_compile_definitions(toms_bgfx PRIVATE TOMS_SHADER_HAS_DXBC=1)
+endif()
 target_sources(toms_bgfx PRIVATE src/rml_ui.h src/rml_ui.cpp)
 if(EMSCRIPTEN)   # the browser draws the UI text (no font files on the web)
     target_sources(toms_bgfx PRIVATE src/rml_canvas_font.h src/rml_canvas_font.cpp)

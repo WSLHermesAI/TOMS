@@ -6,11 +6,21 @@
 // Web: only ESSL (WebGL2). Android: ESSL (GLES3) + SPIR-V (Vulkan). Desktop: all four.
 #if !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
 #define TOMS_SHADERS_DESKTOP 1
+#if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/vs_sprite.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/fs_sprite.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/vs_imgui.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/fs_imgui.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/vs_rml.sc.bin.h"
+#endif
 #include "glsl/vs_sprite.sc.bin.h"
 #include "glsl/fs_sprite.sc.bin.h"
 #include "glsl/vs_imgui.sc.bin.h"
@@ -51,9 +61,11 @@ struct ProgramBlobs { Blob vs, fs; };
 bool pick(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out) {
     switch (type) {
 #ifdef TOMS_SHADERS_DESKTOP
+#if defined(TOMS_SHADER_HAS_DXBC)
     case bgfx::RendererType::Direct3D11:
     case bgfx::RendererType::Direct3D12:   // bgfx's D3D12 backend accepts DXBC (shader model 5)
         TOMS_PROGRAMS(dxbc);
+#endif
     case bgfx::RendererType::OpenGL:
         TOMS_PROGRAMS(glsl);
 #endif
