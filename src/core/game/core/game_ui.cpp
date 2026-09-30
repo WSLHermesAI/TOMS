@@ -212,9 +212,6 @@ void Game::buildUiState(toms::UiState& u) const {
             h.banners.push_back({e.displayName.empty() ? e.id : e.displayName, x + w * 0.5f, y - 2.0f});
         }
 
-        u.pad.visible = !modalActive() && !cs.won;
-        u.pad.on = gpOn;
-        u.pad.scale = kPadScale;
 
         if (stairsConfirmOpen_) {
             u.stairs.visible = true;
@@ -490,16 +487,6 @@ void Game::uiEvent(const std::string& name, int arg) {
     if (name == "hud_menu")      { if (!modalActive()) { cancelWalk(); openInGameMenu(); } return; }
     if (name == "hud_store")     { if (!modalActive()) { cancelWalk(); openStore(); } return; }
     if (name == "hud_inventory") { if (!modalActive()) { cancelWalk(); toggleInventory(); } return; }
-    // ---- virtual gamepad (press/release: holding a plate keeps walking) ----
-    if (name == "pad_dir") {
-        if (modalActive()) return;
-        if (arg == 0) setMoveHeldY(-1); else if (arg == 1) setMoveHeldY(1);
-        else if (arg == 2) setMoveHeldX(-1); else if (arg == 3) setMoveHeldX(1);
-        return;
-    }
-    if (name == "pad_release") { stopMoveHeld(); return; }
-    if (name == "pad_a")       { cancelWalk(); interact(); return; }
-    if (name == "pad_toggle")  { gpOn = !gpOn; return; }
     // ---- battle ----
     if (name == "battle_attack")   { battleTapAttack(); return; }
     if (name == "battle_defend")   { battleTapDefense(); return; }

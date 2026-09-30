@@ -42,10 +42,9 @@ struct SessionOptions {
     std::string assetDir;              // empty = auto (see defaultAssetDir)
     std::string startStage = "stage01";
     bool        enableDebugUi = true;  // ImGui windows (F1 / F2 / Tab stage select / toasts)
-    // Mobile: grow the UI objects, keep the 1024x768 game resolution (Game::setUiScale / setPadScale,
+    // Mobile: grow the UI objects, keep the 1024x768 game resolution (Game::setUiScale,
     // the owner's rule). 1.0 = unchanged. The web host sets these on small screens.
     float       uiScale  = 1.0f;
-    float       padScale = 1.0f;
 };
 
 class GameSession {

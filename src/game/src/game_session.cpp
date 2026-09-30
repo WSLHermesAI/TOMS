@@ -70,7 +70,6 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     TOMS_LOG_INFO("TOMS start (bgfx host, C++{})", __cplusplus / 100);
 
     game_ = std::make_unique<Game>();
-    if (opts.padScale != 1.0f) game_->setPadScale(opts.padScale);
     if (opts.uiScale != 1.0f) game_->setUiScale(opts.uiScale);
     if (!game_->loadAssets(assetDir_)) {   // creates the renderer: `new Renderer()` = BgfxRenderer
         error = "Game::loadAssets failed for\n  " + assetDir_ + "\nSee the console / toms.log for the file that failed.";

@@ -98,8 +98,6 @@ inline std::string entSprite(const std::string& id) {
     return "floor";
 }
 
-// Mobile: the on-screen pad's size (Game::setPadScale; the RmlUi pad reads it through UiPad::scale).
-inline float kPadScale = 1.0f;
 
 // Milestone 5: local-date rollover for daily missions (architecture-doc section 8.1's "local device
 // midnight" default). Not itself unit-tested (wall-clock dependent) -- the pure logic it feeds,

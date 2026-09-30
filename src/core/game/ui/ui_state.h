@@ -59,12 +59,6 @@ struct UiHud {
     std::vector<UiBanner> banners;
 };
 
-struct UiPad {
-    bool visible = false;              // walking, nothing modal open
-    bool on = true;                    // false: only the P (show/hide) button is shown
-    float scale = 1.0f;                // Game::setPadScale (phones)
-};
-
 struct UiPowerBar {                    // a Battle v2 timing bar; zones and marker in percent
     std::string prompt, button_label;
     bool cooling = false;
@@ -170,7 +164,6 @@ struct UiOverlay {                     // always on top
 struct UiState {
     UiTitle title;
     UiHud hud;
-    UiPad pad;
     UiBattle battle;
     UiDialogue dialogue;
     UiInventory inventory;

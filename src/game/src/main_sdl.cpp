@@ -301,7 +301,6 @@ bool appInit(App& app) {
     const int cssW = EM_ASM_INT({ return window.innerWidth; });
     const int cssH = EM_ASM_INT({ return window.innerHeight; });
     if (cssW < 900 || cssH < 560) {
-        opts.padScale = 1.20f;
         opts.uiScale = 1.5f;
         std::fprintf(stderr, "[web] small screen (%dx%d css): pad x1.20, UI x1.50\n", cssW, cssH);
     }

@@ -16,7 +16,6 @@ namespace {
 struct DocSpec { const char* file; bool (*visible)(const toms::UiState&); };
 const DocSpec kDocs[] = {
     {"hud.rml",          [](const toms::UiState& s) { return s.hud.visible; }},
-    {"pad.rml",          [](const toms::UiState& s) { return s.pad.visible; }},
     {"battle.rml",       [](const toms::UiState& s) { return s.battle.visible; }},
     {"dialogue.rml",     [](const toms::UiState& s) { return s.dialogue.visible; }},
     {"inventory.rml",    [](const toms::UiState& s) { return s.inventory.visible; }},
@@ -84,11 +83,6 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("chapter_sub", &UiHud::chapter_sub);
         s.RegisterMember("chapter_alpha", &UiHud::chapter_alpha);
         s.RegisterMember("banners", &UiHud::banners);
-    }
-    if (auto s = c.RegisterStruct<UiPad>()) {
-        s.RegisterMember("visible", &UiPad::visible);
-        s.RegisterMember("on", &UiPad::on);
-        s.RegisterMember("scale", &UiPad::scale);
     }
     if (auto s = c.RegisterStruct<UiPowerBar>()) {
         s.RegisterMember("prompt", &UiPowerBar::prompt);
@@ -252,7 +246,6 @@ bool GameUi::init(Rml::Context* ctx, Game* game, const std::string& uiDir, std::
     registerTypes(c);
     c.Bind("title", &state_.title);
     c.Bind("hud", &state_.hud);
-    c.Bind("pad", &state_.pad);
     c.Bind("battle", &state_.battle);
     c.Bind("dialogue", &state_.dialogue);
     c.Bind("inventory", &state_.inventory);
@@ -322,7 +315,6 @@ void GameUi::sync() {
     auto take = [](auto& cur, auto& nxt) { if (nxt.visible) cur = std::move(nxt); else cur.visible = false; };
     take(state_.title, next.title);
     take(state_.hud, next.hud);
-    take(state_.pad, next.pad);
     take(state_.battle, next.battle);
     take(state_.dialogue, next.dialogue);
     take(state_.inventory, next.inventory);

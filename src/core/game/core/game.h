@@ -510,7 +510,6 @@ public:
     bool chapterCardVisible() const { return chapterCardMs_ > 0.0f; }
     int themeAct() const { return themeActIndex_; }
     // Mobile: enlarge the on-screen pad (1.0 on desktop) and the dialogue box.
-    void setPadScale(float s);
     void setUiScale(float s) { if (s > 0.0f) uiScale_ = s; }
     // saveCurrentRun() itself stays where it was (private); this is the one public entry the web
     // harness probe jsSaveNow() needs, without widening the existing declaration's access.
@@ -543,7 +542,6 @@ private:
     // inventory UI state
     bool invOpen = false;
     int invSel = 0;            // selected slot index
-    bool gpOn = true;         // on-canvas gamepad: ALWAYS visible by default; toggle button hides it
     // dialogue state
     bool inDialogue = false;
     int dlgSel = 0;                     // currently highlighted dialogue choice (gamepad nav)
