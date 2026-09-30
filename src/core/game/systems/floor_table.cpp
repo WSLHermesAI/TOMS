@@ -106,14 +106,11 @@ FloorTable FloorTable::fromSpecs(const std::vector<nlohmann::json>& specs) {
 
 FloorTable FloorTable::loadFromDirectory(const std::string& dir) {
     std::vector<nlohmann::json> specs;
-    std::error_code ec;
-    if (!std::filesystem::exists(dir, ec)) return FloorTable();
-    for (auto& entry : std::filesystem::directory_iterator(dir, ec)) {
-        const std::string name = entry.path().filename().string();
+    for (const std::string& name : toms::vfsListDir(dir)) {     // vfs: APK folders on Android
         if (name.empty() || name[0] != 'F') continue;
         if (name.size() >= 11 && name.compare(name.size() - 11, 11, ".stage.json") == 0) continue;  // the map
         if (name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
-        nlohmann::json j = readJson(entry.path().string());
+        nlohmann::json j = readJson(dir + "/" + name);
         if (j.is_object()) specs.push_back(j);
     }
     return fromSpecs(specs);

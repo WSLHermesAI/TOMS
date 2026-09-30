@@ -1,0 +1,19 @@
+// The Android app around libmain.so (docs/07_BUILD_ANDROID.md). The native code is NOT built here:
+// tools\build_android.cmd builds it with CMake (the same presets as every other platform) and copies
+// libmain.so + libc++_shared.so into app/libs/<abi>/, then runs gradlew assembleDebug.
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.6.1'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}

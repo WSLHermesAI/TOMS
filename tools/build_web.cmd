@@ -1,17 +1,21 @@
 @echo off
-rem build_web.cmd [release|debug] -- build the browser version of toms_game on Windows.
+rem build_web.cmd [release|debug|mt] -- build the browser version of toms_game on Windows.
 rem   Output: build-web-<release|debug>-windows\bin\toms_game.html (+ .js .wasm .data)
+rem   mt = the multithreaded release: build-web-release-mt-windows (docs\10_THREADS.md)
 rem   Then run tools\serve_web.cmd to play it in the browser.
 rem Needs: emsdk (Emscripten), Visual Studio's CMake + Ninja (or both on PATH), and a host
 rem shaderc (built automatically from the desktop shipping preset if there is none yet).
 setlocal EnableExtensions
 set "KIND=%~1"
 if "%KIND%"=="" set "KIND=release"
-if /i not "%KIND%"=="release" if /i not "%KIND%"=="debug" (
-  echo usage: build_web.cmd [release^|debug]
+if /i not "%KIND%"=="release" if /i not "%KIND%"=="debug" if /i not "%KIND%"=="mt" (
+  echo usage: build_web.cmd [release^|debug^|mt]
   exit /b 2
 )
 set "PRESET=web-%KIND%-windows"
+set "OUTDIR=build-web-%KIND%-windows"
+if /i "%KIND%"=="mt" set "PRESET=web-release-mt-windows"
+if /i "%KIND%"=="mt" set "OUTDIR=build-web-release-mt-windows"
 cd /d "%~dp0.."
 
 rem ---- 1. Emscripten SDK ----
@@ -52,7 +56,7 @@ if errorlevel 1 exit /b 1
 cmake --build --preset "%PRESET%"
 if errorlevel 1 exit /b 1
 echo.
-echo [toms] done: %CD%\build-web-%KIND%-windows\bin\toms_game.html
+echo [toms] done: %CD%\%OUTDIR%\bin\toms_game.html
 echo [toms] play it: tools\serve_web.cmd %KIND%
 exit /b 0
 

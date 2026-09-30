@@ -6,7 +6,7 @@ set(L_GAME   ${L}/game)
 # ---- toms_core: the game code in src/core (every non-test source there) ----
 # The *_test.cpp files are not built yet (CTest, migration phase 2).
 add_library(toms_core STATIC
-    ${L_ENGINE}/node.cpp ${L_ENGINE}/condition.cpp ${L_ENGINE}/entity_status.cpp
+    ${L_ENGINE}/node.cpp ${L_ENGINE}/job_system.cpp ${L_ENGINE}/condition.cpp ${L_ENGINE}/entity_status.cpp
     ${L_ENGINE}/encounter.cpp ${L_ENGINE}/power_bar.cpp
     ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp
     ${L_GAME}/core/game_scene_draw.cpp ${L_GAME}/core/game_input.cpp ${L_GAME}/core/game_inventory.cpp
@@ -31,6 +31,10 @@ target_include_directories(toms_core PUBLIC
     ${TOMS_SRC_DIR}/engine/src)          # bgfx_renderer.h (through compat/renderer.h), no bgfx headers
 # Only ImGui is linked here; bgfx itself stays out of the core code's compile settings.
 target_link_libraries(toms_core PUBLIC toms_imgui glm::glm)
+if(NOT EMSCRIPTEN)   # the job system's worker threads (the web gets -pthread from the root CMakeLists)
+    find_package(Threads REQUIRED)
+    target_link_libraries(toms_core PUBLIC Threads::Threads)
+endif()
 set_target_properties(toms_core PROPERTIES FOLDER "toms")
 
 # ---- toms_game_host: GameSession, shared by the SDL game and the Qt editor ----
@@ -41,13 +45,25 @@ target_link_libraries(toms_game_host PUBLIC toms_core toms_bgfx)
 if(EMSCRIPTEN)
     # The browser build packs assets/ and data/ into toms_game.data, mounted at /assets and /data.
     target_compile_definitions(toms_game_host PRIVATE TOMS_DEFAULT_ASSET_DIR="/assets")
+elseif(ANDROID)
+    # The APK carries the repo's assets/ as its assets root; vfs.h maps "assets/media/..." to the entry
+    # "media/..." (and "assets/media/../data/..." to "data/...").
+    target_compile_definitions(toms_game_host PRIVATE TOMS_DEFAULT_ASSET_DIR="assets/media")
 else()
     target_compile_definitions(toms_game_host PRIVATE TOMS_DEFAULT_ASSET_DIR="${TOMS_ASSET_DIR}")
 endif()
 set_target_properties(toms_game_host PROPERTIES FOLDER "toms")
 
 # ---- toms_game: SDL3 + bgfx, what ships (no Qt). Desktop: toms_game.exe. Web: toms_game.html ----
-add_executable(toms_game src/main_sdl.cpp)
+if(ANDROID)
+    # SDLActivity loads libmain.so and calls SDL_main (main() renamed by SDL_main.h). SDL3 is static, so
+    # its JNI code lives in this library too; keep JNI_OnLoad (it registers SDL's native methods).
+    add_library(toms_game SHARED src/main_sdl.cpp)
+    set_target_properties(toms_game PROPERTIES OUTPUT_NAME main)
+    target_link_options(toms_game PRIVATE "-Wl,--undefined=JNI_OnLoad" "-Wl,-z,max-page-size=16384")
+else()
+    add_executable(toms_game src/main_sdl.cpp)
+endif()
 toms_target_defaults(toms_game)
 target_link_libraries(toms_game PRIVATE toms_game_host ${TOMS_SDL3_TARGET})
 set_target_properties(toms_game PROPERTIES
@@ -81,6 +97,14 @@ if(EMSCRIPTEN)
         "--preload-file=${TOMS_ASSET_DIR}@/assets"
         "--preload-file=${TOMS_DATA_DIR}@/data"
         "--exclude-file=${TOMS_ASSET_DIR}/fonts/*")
+    # The multithreaded web build (preset web-release-mt-windows, docs/10_THREADS.md): Web Workers
+    # started before main(), so the job system never has to wait for one to be created. One spare
+    # beyond the job system's 4 for anything else that starts a thread.
+    option(TOMS_WEB_THREADS "Web build with WebAssembly threads (set by the -mt presets, together with -pthread)" OFF)
+    if(TOMS_WEB_THREADS)
+        target_link_options(toms_game PRIVATE "-sPTHREAD_POOL_SIZE=5")
+        target_compile_definitions(toms_core PRIVATE TOMS_WEB_THREAD_POOL=4)
+    endif()
     # Re-link when content changes, so the .data bundle never goes stale.
     file(GLOB_RECURSE _web_content CONFIGURE_DEPENDS
          "${TOMS_DATA_DIR}/*.json" "${TOMS_ASSET_DIR}/sprites/*" "${TOMS_ASSET_DIR}/sfx/*"
@@ -97,4 +121,6 @@ if(ANDROID)
             target_link_libraries(${_toms_android_target} PRIVATE OpenSLES log)
         endif()
     endforeach()
+    # bgfx's OpenGL ES backend creates its context with EGL (bgfx.cmake links GLESv2 but not EGL)
+    target_link_libraries(toms_game PRIVATE EGL android)
 endif()

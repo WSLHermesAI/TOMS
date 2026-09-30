@@ -74,16 +74,16 @@ void Game::ensureStageListLoaded() {
         return;
     }
     std::string dir = dataDir + "/../data/stages/";
-    if (!std::filesystem::exists(dir)) return;
-    for (auto& e : std::filesystem::directory_iterator(dir)) {
+    for (const std::string& name : toms::vfsListDir(dir)) {   // vfs: APK folders on Android
+        if (name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
         try {
-            nlohmann::json j = readJsonFile(e.path().string());
+            nlohmann::json j = readJsonFile(dir + name);
             if (j.is_null() || !j.contains("id")) continue;
             StageInfo info;
             info.id = j.value("id", std::string());
             info.name = j.contains("name") ? locale_.field(j["name"]) : info.id;
             info.index = j.value("index", 0);
-            info.fileStem = e.path().stem().string();
+            info.fileStem = name.substr(0, name.size() - 5);
             // Milestone 8: recommended-stats blurb, authored per stage JSON's optional top-level
             // "preview" string -- empty for a file that doesn't set one (none did before M8).
             info.preview = j.contains("preview") ? locale_.field(j["preview"]) : std::string();

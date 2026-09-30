@@ -1,7 +1,8 @@
 #include "equipment_actives.h"
 
 #include <algorithm>
-#include <fstream>
+
+#include "vfs.h"
 
 #include "json.hpp"
 
@@ -9,11 +10,10 @@ namespace toms {
 
 std::map<std::string, ActiveDefinition> loadActiveDefinitions(const std::string& path) {
     std::map<std::string, ActiveDefinition> out;
-    std::ifstream f(path);
-    if (!f.good()) return out;                      // absent table = no actives, not a crash
+    std::string text;
+    if (!vfsReadAll(path, text)) return out;       // absent table = no actives, not a crash
     try {
-        nlohmann::json j;
-        f >> j;
+        nlohmann::json j = nlohmann::json::parse(text);
         if (!j.is_object()) return out;
         for (auto it = j.begin(); it != j.end(); ++it) {
             const nlohmann::json& v = it.value();
@@ -34,11 +34,10 @@ std::map<std::string, ActiveDefinition> loadActiveDefinitions(const std::string&
 
 std::map<std::string, std::vector<std::string>> loadEquipmentActives(const std::string& path) {
     std::map<std::string, std::vector<std::string>> out;
-    std::ifstream f(path);
-    if (!f.good()) return out;
+    std::string text;
+    if (!vfsReadAll(path, text)) return out;
     try {
-        nlohmann::json j;
-        f >> j;
+        nlohmann::json j = nlohmann::json::parse(text);
         if (!j.is_object()) return out;
         for (auto it = j.begin(); it != j.end(); ++it) {
             std::vector<std::string> ids;

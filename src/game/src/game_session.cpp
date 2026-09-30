@@ -7,6 +7,8 @@
 #include "game_ui.h"
 #include "log.h"
 #include "rml_ui.h"
+#include "job_system.h"
+#include "vfs.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -34,21 +36,22 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     debugUi_ = opts.enableDebugUi;
     assetDir_ = opts.assetDir.empty() ? defaultAssetDir() : opts.assetDir;
 
-    if (!fs::exists(fs::path(assetDir_) / "sprites")) {
+    // vfs, not std::filesystem: on Android these are entries inside the APK (folders via vfsListDir).
+    if (toms::vfsListDir(assetDir_ + "/sprites").empty()) {
         error = "Game assets were not found at:\n  " + assetDir_ +
                 "\n\nExpected the game's media folder (assets/media, with sprites/ and fonts/). "
                 "Set the environment variable ASSET_DIR, or restore the content with: git checkout -- assets";
         return false;
     }
-    if (!fs::exists(fs::path(assetDir_) / ".." / "data" / "stages")) {
+    if (toms::vfsListDir(assetDir_ + "/../data/stages").empty()) {
         error = "Game data was not found next to the assets folder:\n  " +
                 (fs::path(assetDir_) / ".." / "data").lexically_normal().string();
         return false;
     }
 #ifdef __EMSCRIPTEN__
-    const bool uiFiles = fs::exists(fs::path(assetDir_) / "ui" / "hud.rml");   // the browser draws the text
+    const bool uiFiles = toms::vfsExists(assetDir_ + "/ui/hud.rml");   // the browser draws the text
 #else
-    const bool uiFiles = fs::exists(uiFontPath(assetDir_)) && fs::exists(fs::path(assetDir_) / "ui" / "hud.rml");
+    const bool uiFiles = toms::vfsExists(uiFontPath(assetDir_)) && toms::vfsExists(assetDir_ + "/ui/hud.rml");
 #endif
     if (!uiFiles) {
         error = "The UI files were not found in\n  " + assetDir_ +
@@ -61,6 +64,7 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
         return false;
     }
 
+    toms::JobSystem::start();   // worker threads for parallel work (once; none in the single-threaded web build)
     toms::Logger::instance().setFile("toms.log");
     toms::Logger::instance().setLevel(toms::LogLevel::Info);
     TOMS_LOG_INFO("TOMS start (bgfx host, C++{})", __cplusplus / 100);

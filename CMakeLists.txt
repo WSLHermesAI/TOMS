@@ -63,4 +63,11 @@ if(TOMS_BUILD_EDITOR AND TOMS_HAVE_QT)
     add_subdirectory(src/editor)
 endif()
 
+# CTest: unit tests, screenshot smoke tests, the web smoke test (tests/CMakeLists.txt, docs/09_TESTS.md).
+option(TOMS_BUILD_TESTS "Build the tests (CTest / Visual Studio Test Explorer)" ON)
+if(TOMS_BUILD_TESTS AND NOT WEB AND NOT ANDROID)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
 toms_prerequisites_report()   # prints the summary and shows the popup if anything is missing

@@ -1,8 +1,11 @@
-# 07 — Android：建置與檔案存取設計（design, not yet built）
+# 07 — Android：建置、在模擬器上執行、檔案存取設計
 
-> 本文件是設計稿，尚未實作。目的：讓 Android 版能編譯、能讀到 `assets/`、能把存檔寫進 App 私有目錄，
-> 並且**不必解壓一份資產到裝置上**（見 §2 的取捨）。
-> 相關：`06_BUILD_WEB.md`（web 版建置，已可用）、`04_MIGRATION_PLAN.md`（階段規劃）。
+> **現況（2026-09-30）：已可建置並在模擬器上執行。** `tools\build_android.cmd` 產出 APK，
+> `tools\run_android.cmd` 安裝、啟動並顯示 log。在 Android Studio 的模擬器（Pixel Tablet, API 35, x86_64）
+> 上驗過：標題畫面、新遊戲、地圖、觸控方向盤與點地圖移動、戰鬥、存檔、強制關閉後存檔仍在、讀檔、
+> 背景 → 前景（三次）、返回鍵。**尚未在實體手機上試過**（arm64 版可編譯，見附錄 A5）。
+> 快速開始：附錄 **A0**。§1–§6 是當初的設計討論（已依建議 B 實作），保留作為背景說明。
+> 相關：`06_BUILD_WEB.md`（web 版）、`04_MIGRATION_PLAN.md`（階段規劃）。
 
 ---
 
@@ -107,105 +110,106 @@ touch→mouse 映射給 UI 層。
 
 ---
 
-# 附錄：完整建置步驟（Windows）與目前會擋住的地方
+# 附錄：建置與執行（Windows）
 
-> 前一節（§1–§6）是設計；這一節是**照著做的步驟**，目標是在你的 Windows 機器上產出第一個 APK。
-> 先說結論：**外殼與 CMake 設定現在就能試**（可以編出 `libtoms_game.so` 並打包成 APK），
-> **但 App 啟動後會讀不到 `assets/`** —— §A4 是必須先做的程式改動，否則會是黑畫面。
+## A0. 快速開始
+
+先有一次桌機建置（提供主機用的 `shaderc.exe`，見 A3），並在 Android Studio 開一台模擬器：
+
+```bat
+tools\build_android.cmd            :: x86_64，給模擬器（預設）
+tools\run_android.cmd              :: 安裝到正在跑的模擬器 / 手機、啟動、顯示 log（Ctrl+C 結束）
+tools\build_android.cmd debug      :: arm64-v8a，給實體手機
+tools\build_android.cmd release    :: arm64-v8a Release（APK 未簽章）
+```
+
+`build_android.cmd` 會自己找 SDK（`%LOCALAPPDATA%\Android\Sdk`）、NDK 27、Android Studio 的 JBR（Java）、
+桌機建置的 `shaderc.exe` 與 Visual Studio 的 CMake/Ninja；任一項可用 `ANDROID_HOME`、`ANDROID_NDK`、
+`JAVA_HOME`、`TOMS_HOST_SHADERC` 覆寫。步驟：CMake preset `android-<kind>` 編出 `libmain.so` →
+複製 `libmain.so` + NDK 的 `libc++_shared.so` 到 `android\app\libs\<abi>\` → `android\gradlew assemble…`。
+產出：`android\app\build\outputs\apk\debug\app-debug.apk`。
 
 ## A1. 安裝工具
 
 | 需要 | 取得方式 | 檢查 |
 |---|---|---|
-| JDK 17 | Android Studio 內建，或 Temurin 17 | `java -version` |
-| Android Studio | 官方安裝檔（含 SDK、cmdline-tools、Gradle） | 開得起來 |
-| NDK r27 以上 | Android Studio → SDK Manager → SDK Tools → **NDK (Side by side)** | `%ANDROID_NDK%` 有值 |
-| CMake + Ninja | Visual Studio 的「C++ CMake tools for Windows」（你已經有） | `cmake --version` |
-| adb | SDK 的 platform-tools | `adb version` |
+| Android Studio | 官方安裝檔（含 SDK、JBR = Java 21、模擬器） | 開得起來 |
+| NDK 27 | Android Studio → SDK Manager → SDK Tools → **NDK (Side by side)** | `%LOCALAPPDATA%\Android\Sdk\ndk\27.*` 存在 |
+| 模擬器 | Android Studio → Device Manager → 建一台（x86_64 系統映像） | 能開機 |
+| CMake + Ninja | Visual Studio 的「C++ CMake tools for Windows」（已有） | — |
 
-Emscripten **不需要**（那是 web 版的事）。
+Gradle 8.7 與 Android Gradle Plugin 8.6.1 由 `android\gradlew.bat` 自動下載（已下載過就用快取）。
 
-## A2. 環境變數（命令提示字元）
+## A2. 專案結構
 
-```bat
-set ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk
-set ANDROID_NDK=%ANDROID_HOME%\ndk\27.2.12479018   &rem 版本號依你安裝的為準
-set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr
-set PATH=%ANDROID_HOME%\platform-tools;%PATH%
-```
+| 位置 | 內容 |
+|---|---|
+| `android/` | Gradle 專案（取自 SDL3 的 `android-project` 範本）。`app/build.gradle`：`jniLibs` = `app/libs`（建置時產生，不進版控），`assets` = 倉庫的 `assets/`（APK 內條目為 `media/…`、`data/…`） |
+| `android/app/src/main/java/org/libsdl/app/` | SDL 3.4.8 的 Java 檔（zlib 授權，原樣複製；升級 SDL 時一起換） |
+| `android/app/src/main/java/org/toms/game/TomsActivity.java` | 繼承 `SDLActivity`，只載入 `c++_shared` 與 `main`（SDL 是靜態連結進 `libmain.so` 的） |
+| `CMakePresets.json` | `android-x86_64-debug`（模擬器）、`android-debug` / `android-release`（arm64） |
+| `src/game/CMakeLists.txt` | Android 上 `toms_game` 是 SHARED library，輸出名 `main`；連結 `EGL android OpenSLES log` |
 
-## A3. 先取得 host shaderc（與 web 版同一招）
+## A3. 主機用的 shaderc
 
-Android 和 web 一樣是**交叉編譯**，所以 shaderc 必須是**主機**工具：
+Android 和 web 一樣是**交叉編譯**，shaderc 必須在這台 Windows 上跑。任何一次桌機建置都會產生它
+（`tools\build.cmd windows-shipping` → `out\build\windows-shipping\bin\shaderc.exe`），`build_android.cmd` 會自己找。
+沒有它 CMake 會直接報錯（Android 無法像 web 一樣退回 wasm 版 shaderc）。
 
-```bat
-tools\build.cmd windows-shipping
-set TOMS_HOST_SHADERC=%CD%\out\build\windows-shipping\bin\shaderc.exe
-```
+著色器 profile：`300_es`（GLES 3）+ `spirv`（Vulkan）。這版 bgfx 的 shaderc 已沒有 GLES 2 的 `100_es`，
+而現今 Android 裝置都有 GLES 3。
 
-## A4. 程式改動進度（2026-09-28）
+## A4. 程式改動（2026-09-30 全部完成，並在模擬器上驗證）
 
-| # | 項目 | 狀態 | 說明 |
-|---|---|---|---|
-| 1 | 資產 shim | ✅ 完成 | `src/core/engine/vfs.h`（header-only）：Android 走 `AAssetManager`、桌機/web 走原本的 C stdio |
-| 2 | 中央讀取點 | ✅ 完成 | `readJsonFile()` 已改走 `vfsReadAll`，錯誤訊息不變 |
-| 3 | RmlUi 檔案介面 | ✅ 完成 | `rml_ui.cpp` 的 `FileInterface`；**所有平台都編譯、只在 Android 安裝**，桌機/web 行為不變 |
-| 4 | 著色器 profile | ✅ 完成 | `src/engine/CMakeLists.txt` 的 `elseif(ANDROID)` → `100_es 300_es` |
-| 5 | 音效讀取 | ✅ 完成（未經編譯器驗證） | `Audio.cpp`：Android 用 `vfsReadAll` + `ma_decoder_init_memory` 記憶體解碼（含播放中物件池）；其他平台維持原本路徑 |
-| 6 | 背景/前景 | ◐ 部分 | `main_sdl.cpp` 收到 `SDL_EVENT_WILL_ENTER_BACKGROUND` / `DID_ENTER_FOREGROUND`，暫停期間不繪製；**音訊停止/恢復尚未做**（需要 `Audio` 的新 API） |
-| 7 | 存檔目錄 | ⬜ 未做 | `saveDir` 需指向 `SDL_GetPrefPath()`（`save_slots.cpp` 已是單一入口） |
-| 8 | 其餘直接讀取點 | ⬜ 未做 | `localization.cpp`、`floor_table.cpp`、`stage.h`、`game_assets.cpp` |
-| 9 | `log.h` → logcat | ⬜ 未做 | 否則真機上看不到任何訊息 |
-| 10 | Android 連結 | ⬜ 未做 | CMake 需為遊戲庫加 `OpenSLES`（＋ `log`）；目前 CMake 完全沒有 Android 參照 |
-| 11 | APK 外殼 | ⬜ 未做 | SDL3 的 Gradle/`SDLActivity` 骨架 + `jniLibs/arm64-v8a/libtoms_game.so` + `assets/` 打包 |
-| 12 | 實機驗證 | ⬜ 未做 | Windows 產 APK → `adb install` → 標題畫面、對話文字、存檔（詳見 A7） |
+| # | 項目 | 說明 |
+|---|---|---|
+| 1 | 資產 shim | `src/core/engine/vfs.h`：`vfsReadAll` / `vfsExists` / `vfsListDir`。Android 走 `AAssetManager`（路徑去掉開頭的 `assets/`、解析 `..`）；桌機/web 行為不變 |
+| 2 | 讀檔點全改走 vfs | JSON（`readJsonFile`）、sprite PNG 與 UI 圖片（`stbi_load_from_memory`）、關卡資料夾掃描（`game_assets` / `game_store` / `floor_table`）、`equipment_actives`、`game_session` 的啟動檢查、UI 字型檢查 |
+| 3 | RmlUi 檔案介面 | `rml_ui.cpp` 的 `FileInterface`（.rml/.rcss/字型） |
+| 4 | 進入點 | Android 上不定義 `SDL_MAIN_HANDLED`：`main()` 成為 `SDL_main`，由 `SDLActivity` 呼叫 |
+| 5 | AAssetManager | `main_sdl.cpp` 由 activity 的 `getAssets()` 取得（簽章 `()Landroid/content/res/AssetManager;`） |
+| 6 | 視窗 | bgfx 的視窗 handle = `SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER`（ANativeWindow） |
+| 7 | 背景/前景 | 背景時不繪製；回到前景時 surface 是新的 → `bgfxHostSetWindow()` 讓 bgfx 在新 surface 上重建 EGL surface。bgfx 本身在這裡有 bug（`GlContext::resize` 沿用舊視窗），由 `cmake/TomsDependencies.cmake` 在 configure 時修補 `glcontext_egl.cpp`（只改一次、可重複 configure） |
+| 8 | 觸控與按鍵 | 快速點擊（按下與放開落在同一格之間）仍算按了一格；觸控會先「懸停」一格再按下（UI 與滑鼠同樣的順序）；手機上 `hasMouse` 恆為 true；返回鍵 = Esc |
+| 9 | log | `log.h` 輸出到 logcat（tag `toms`）；`stderr`（`[jobs]`、`[rmlui]` 等）也導到 logcat |
+| 10 | 存檔 | App 私有目錄（`SDL_GetPrefPath` → `/data/data/org.toms.game/files/`） |
+| 11 | 音效 | miniaudio 經 AAudio 輸出；音檔經 vfs 從 APK 讀 |
 
-**驗證狀態要說清楚**：1–4 以 web 建置（`build exit=0`，`libtoms_core.a` 與 `toms_game.html` 連結）驗過 —— 其中第 3 項即使只在 Android 安裝，本體仍會在每個平台編譯，所以編譯器真的檢查過它。第 5、6 項的 Android 分支在 `#if defined(__ANDROID__)` 之內，**本機沒有任何 Android 編譯器跑過它們**，這一點不能算已完成驗證。
+## A5. 驗證結果
 
-## A5. 編出原生程式庫
+模擬器（Pixel Tablet API 35，x86_64，2560×1600，GLES 3.0 經主機 GPU）：
 
-```bat
-cmake --preset android-release
-cmake --build --preset android-release
-```
+- [x] 標題畫面（中文字型、RmlUi 版面）— bgfx 選到 OpenGL ES 3.0；job system 3 個 worker
+- [x] 新遊戲 → 地圖、HUD、觸控方向盤；點方向盤移動一格；點地圖 = 點擊移動（含戰鬥）
+- [x] 存檔 → `am force-stop` → 重開 → 繼續遊戲列出三個存檔 → 讀檔回到原狀態（HP/金幣）
+- [x] Home → 回來（連續三次）畫面正常、可繼續操作
+- [x] 返回鍵開啟遊戲選單（= Esc）
+- [x] arm64-v8a（`tools\build_android.cmd debug`）可編譯、打包 —— **未在實體手機上執行**
+- [ ] 實體手機：玩家視角確認按鍵大小、文字可讀（W9 的標準）
 
-產出：`build-android-release/bin/libtoms_game.so`（arm64-v8a）。
+已知小事：
+- 每次回到前景，logcat 會出現**一次** `EGL_BAD_SURFACE`（bgfx 先送出暫停前排好的那一格），之後正常。
+- `adb shell input tap` 這類極快的點擊已處理；實體手指通常更慢，不受影響。
+- APK 大小：Debug（x86_64）22 MB、Release（arm64）11.6 MB。`app/build.gradle` 設了 `ndkVersion`，Gradle 打包時
+  會去掉 `libmain.so` 的除錯資訊（NDK 連 Release 也帶 `-g`：未去除時 Debug 99 MB、Release 91 MB）；
+  未去除的原檔留在 `android/app/libs/<abi>/`，給 `ndk-stack` 解讀當機堆疊用。遊戲資料本身不到 1 MB。
 
-## A6. 打包 APK（SDL3 骨架）
-
-1. 取 SDL3 原始碼裡的 Android 專案骨架（Gradle + `SDLActivity.java` + `AndroidManifest.xml`），
-   複製成 `android/`。
-2. `libtoms_game.so` → `android/app/src/main/jniLibs/arm64-v8a/`
-3. `assets/` 內容 → `android/app/src/main/assets/`（Gradle 會打包進 APK）
-4. `AndroidManifest.xml` 的 Activity 指向 `org.libsdl.app.SDLActivity`，`minSdkVersion 24`。
-5. 執行：
-
-```bat
-cd android && gradlew.bat assembleDebug
-```
-
-產出：`android\app\build\outputs\apk\debug\app-debug.apk`
-
-## A7. 安裝與驗證
+## A6. 常用指令
 
 ```bat
-adb install -r android\app\build\outputs\apk\debug\app-debug.apk
-adb logcat -s toms SDL      &rem 看載入訊息
-adb exec-out screencap -p > shot.png
+adb logcat -s toms SDL                     &rem 遊戲 log
+adb exec-out screencap -p > shot.png       &rem 截圖（在 PowerShell 裡請經 cmd /c，否則二進位會被改掉）
+adb shell run-as org.toms.game ls files/   &rem 看存檔
+adb shell am force-stop org.toms.game
 ```
 
-驗證清單（沿用 Phase 2 step 2 的冒煙測試構想）：
-- [ ] 標題畫面出現（非黑畫面）
-- [ ] 進遊戲 → 移動 → 對話框文字可讀
-- [ ] 存檔 → 從最近使用清單殺掉 App → 重開 → 存檔還在
-- [ ] 真機以玩家視角：按鍵可點、文字可讀（W9 的標準）
-
-## A8. 疑難排解
+## A7. 疑難排解
 
 | 症狀 | 原因 | 處理 |
 |---|---|---|
-| `Could NOT find X11` | 你用了桌機 preset（Linux） | Android 用 `android-*` preset，不要用 `web-*` |
-| 找不到 `libc++_shared.so` | `c++_shared` 需一起打包 | Gradle 會從 NDK 帶；或改 `-DANDROID_STL=c++_static` |
-| shaderc 找不到／是 wasm 版 | host shaderc 沒設 | 見 A3；`TOMS_HOST_SHADERC` 必須指向 `.exe` |
-| 啟動即黑畫面 | §A4 的資產讀取還沒做 | 先做 §3.1 的 shim |
-| Play 上傳被拒（16 KB） | Android 15+ 要求 | preset 已含 `-Wl,-z,max-page-size=16384` |
+| CMake：`An Android build needs a shaderc for this machine` | 沒有桌機建置 | `tools\build.cmd windows-shipping`，或設 `TOMS_HOST_SHADERC` |
+| 模擬器裝不上（`INSTALL_FAILED_NO_MATCHING_ABIS`） | 模擬器是 x86_64，APK 是 arm64 | 模擬器用 `tools\build_android.cmd`（預設 x86_64） |
+| 啟動即閃退，logcat 有 `JNI DETECTED ERROR` | Java 例外沒清掉 | 看 `F/org.toms.game` 那幾行的例外名稱 |
+| `graphics could not start: no native window handle` | 視窗 handle 沒取到 | 見 A4 第 6 項 |
+| 回到前景後黑畫面、`EGL_BAD_SURFACE` 不斷出現 | bgfx 修補沒套上 | configure 輸出應有 `[toms] bgfx: applied the Android resume fix`；若出現 `bgfx changed` 警告，表示 bgfx 版本變了，要重看修補 |
+| Play 上傳被拒（16 KB 分頁） | Android 15+ 要求 | 已連結 `-Wl,-z,max-page-size=16384` |

@@ -32,6 +32,8 @@ struct BgfxHostConfig {
 // both the SDL loop and the Qt timer expect. On failure, `error` says why and what to try.
 bool bgfxHostInit(const BgfxHostConfig& cfg, std::string& error);
 void bgfxHostReset(uint32_t width, uint32_t height);
+// The window's surface was recreated (Android, back from the background): draw on `nativeWindow` now.
+void bgfxHostSetWindow(void* nativeWindow, uint32_t width, uint32_t height);
 void bgfxHostFrame();                      // bgfx::frame(): submit everything queued this frame
 void bgfxHostShutdown();
 bool bgfxHostReady();

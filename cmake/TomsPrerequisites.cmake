@@ -213,13 +213,13 @@ if(TOMS_BUILD_EDITOR AND NOT WEB)
 endif()
 
 # ============================================================================================
-# 6. Web only: a shader compiler that runs on THIS machine
+# 6. Web and Android: a shader compiler that runs on THIS machine
 # ============================================================================================
 # shaderc is a build tool: for a web build it must run on the build machine, not in the browser.
 # The desktop build already produced one (out/build/<preset>/bin/shaderc.exe), so the web build
 # uses it instead of compiling glslang, tint, spirv-cross and shaderc itself to wasm and running
 # them under node (slow, and it runs out of memory at full parallelism).
-if(WEB)
+if(WEB OR ANDROID)
     set(TOMS_HOST_SHADERC "" CACHE FILEPATH "shaderc built for the build machine (used by web builds)")
     if(NOT TOMS_HOST_SHADERC)
         file(GLOB _shaderc_candidates
@@ -232,7 +232,12 @@ if(WEB)
         endif()
     endif()
     if(TOMS_HOST_SHADERC AND EXISTS "${TOMS_HOST_SHADERC}")
-        message(STATUS "[toms] web build uses the host shader compiler: ${TOMS_HOST_SHADERC}")
+        message(STATUS "[toms] this build uses the host shader compiler: ${TOMS_HOST_SHADERC}")
+    elseif(ANDROID)
+        # No fallback like the web's: a shaderc built for Android cannot run on the build machine.
+        message(FATAL_ERROR "[toms] An Android build needs a shaderc for this machine. Build a desktop preset once "
+                            "(tools\\build.cmd windows-shipping) or pass -DTOMS_HOST_SHADERC=<path to shaderc>. "
+                            "See docs/07_BUILD_ANDROID.md.")
     else()
         set(TOMS_HOST_SHADERC "" CACHE FILEPATH "" FORCE)
         toms_prereq_problem(WARNING

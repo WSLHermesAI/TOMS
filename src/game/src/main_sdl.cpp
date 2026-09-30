@@ -14,6 +14,8 @@
 //   --screenshot=<png>    save the last frame to a PNG (with --frames; desktop)
 //   --keys=<k@f,...>      press key k at frame f, e.g. enter@30,enter@60 (automated tests)
 //   --clicks=<x:y@f,...>  left-click at design point (x,y) (1024x768 space) at frame f (tests)
+//   --fixed-dt=<ms>       every frame advances exactly this long, so a scripted run is identical
+//                         every time (screenshot smoke tests, tests/CMakeLists.txt)
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
 #include "../../core/engine/vfs.h"   // toms::vfsInit: APK entries need the AAssetManager
@@ -22,12 +24,18 @@
 #  include <android/asset_manager_jni.h>
 #  include <SDL3/SDL_system.h>      // SDL_GetAndroidJNIEnv / SDL_GetAndroidActivity
 #  include <SDL3/SDL_filesystem.h>  // SDL_GetPrefPath (app-private save dir)
+#  include <android/log.h>
+#  include <unistd.h>
+#  include <thread>
 #endif
 #include "game_session.h"
 #include "game.h"
+#include "job_system.h"
 #include "object.h"
 
+#if !defined(__ANDROID__)
 #define SDL_MAIN_HANDLED        // keep our own main(); SDL_SetMainReady() below tells SDL
+#endif                          // Android: SDL_main.h renames main() to SDL_main, which SDLActivity calls
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -36,10 +44,12 @@
 #include <emscripten/html5.h>
 #endif
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #include <filesystem>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -51,6 +61,7 @@ struct Args {
     std::string renderer = "auto", assets, stage = "stage01", screenshot;
     int frames = 0;
     bool vsync = true, stats = false;
+    int fixedDtMs = 0;       // > 0: deterministic frame time (tests)
     struct Press { Key key; int frame; };
     std::vector<Press> presses;
     struct Click { float x, y; int frame; };
@@ -108,6 +119,7 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--screenshot=")) a.screenshot = v;
         else if (const char* v = value(s, "--keys=")) parseKeys(v, a);
         else if (const char* v = value(s, "--clicks=")) parseClicks(v, a);
+        else if (const char* v = value(s, "--fixed-dt=")) a.fixedDtMs = std::atoi(v);
         else if (s == "--no-vsync") a.vsync = false;
         else if (s == "--stats") a.stats = true;
     }
@@ -148,8 +160,14 @@ void fatalBox(SDL_Window* window, const std::string& title, const std::string& t
 #endif
 }
 
-void readKeyboard(InputState& in) {
-    const bool* ks = SDL_GetKeyboardState(nullptr);
+// `pressed`: keys that went down during this frame's events. A key pressed AND released between two
+// frames (a quick tap, adb input, some on-screen keyboards) is not down in SDL_GetKeyboardState any
+// more, but still counts as down for one frame.
+void readKeyboard(InputState& in, const bool* pressed) {
+    const bool* sdlKeys = SDL_GetKeyboardState(nullptr);
+    bool ks[SDL_SCANCODE_COUNT];
+    for (int i = 0; i < SDL_SCANCODE_COUNT; ++i) ks[i] = sdlKeys[i] || pressed[i];
+    ks[SDL_SCANCODE_ESCAPE] = ks[SDL_SCANCODE_ESCAPE] || ks[SDL_SCANCODE_AC_BACK];   // Android's Back
     auto set = [&](Key k, SDL_Scancode sc) { in.down[(size_t)k] = ks[sc]; };
     set(Key::Up, SDL_SCANCODE_UP);       set(Key::Down, SDL_SCANCODE_DOWN);
     set(Key::Left, SDL_SCANCODE_LEFT);   set(Key::Right, SDL_SCANCODE_RIGHT);
@@ -169,6 +187,8 @@ void readKeyboard(InputState& in) {
 // browser keeps calling appFrame(), so nothing may live on main()'s stack.
 struct App {
     bool suspended = false;     // Android: set while backgrounded, so we do not render a suspended app
+    bool resumed = false;       // Android: back in the foreground -- the surface is a new one
+    void* nativeWindow = nullptr;   // the window handle bgfx draws on
     Args args;
     SDL_Window* window = nullptr;
     GameSession session;
@@ -176,6 +196,10 @@ struct App {
     uint64_t lastTicks = 0;
     int frameNo = 0;
     int backW = 0, backH = 0;   // size bgfx was last initialized/reset with
+    bool pressedKeys[SDL_SCANCODE_COUNT] = {};   // went down during this frame's events (readKeyboard)
+    bool pressedLeft = false;                    // the same for the left button / a touch
+    bool pressQueued = false;                    // a touch: hovered this frame, pressed the next
+    float lastMx = -1, lastMy = -1;
 };
 
 App* g_app = nullptr;
@@ -183,6 +207,9 @@ App* g_app = nullptr;
 bool appInit(App& app) {
     const Args& args = app.args;
     SDL_SetMainReady();
+#if defined(__ANDROID__)
+    SDL_SetHint(SDL_HINT_ANDROID_TRAP_BACK_BUTTON, "1");   // Back arrives as a key (= Esc) instead of closing the app
+#endif
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         fatalBox(nullptr, "TOMS: SDL could not start", SDL_GetError());
         return false;
@@ -207,7 +234,11 @@ bool appInit(App& app) {
     cfg.nativeWindow = (void*)canvas.c_str();
 #elif defined(_WIN32)
     cfg.nativeWindow = SDL_GetPointerProperty(SDL_GetWindowProperties(app.window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+#elif defined(__ANDROID__)
+    // The ANativeWindow of SDLActivity's surface; bgfx makes its EGL (or Vulkan) surface on it.
+    cfg.nativeWindow = SDL_GetPointerProperty(SDL_GetWindowProperties(app.window), SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER, nullptr);
 #endif
+    app.nativeWindow = cfg.nativeWindow;
     int pw = 0, ph = 0;
     SDL_GetWindowSizeInPixels(app.window, &pw, &ph);
     cfg.width = (uint32_t)pw; cfg.height = (uint32_t)ph;
@@ -231,8 +262,11 @@ bool appInit(App& app) {
         jobject activity = env ? (jobject)SDL_GetAndroidActivity() : nullptr;
         if (env && activity) {
             jclass cls = env->GetObjectClass(activity);
-            jmethodID getAssets = cls ? env->GetMethodID(cls, "getAssets", "()Landroid/content/AssetManager;") : nullptr;
+            jmethodID getAssets = cls ? env->GetMethodID(cls, "getAssets", "()Landroid/content/res/AssetManager;") : nullptr;
             jobject assets = getAssets ? env->CallObjectMethod(activity, getAssets) : nullptr;
+            // A failed lookup leaves a Java exception pending, and the NEXT JNI call (SDL's own) would
+            // then abort the app; clear it so a failure shows up as the log line below instead.
+            if (env->ExceptionCheck()) { env->ExceptionDescribe(); env->ExceptionClear(); }
             if (assets) toms::vfsInit(AAssetManager_fromJava(env, assets));
         }
         fprintf(stderr, "[android] vfs assets: %s\n",
@@ -248,7 +282,7 @@ bool appInit(App& app) {
 #endif
     SessionOptions opts;
     opts.assetDir = args.assets.empty() ? GameSession::defaultAssetDir() : args.assets;
-#ifndef __EMSCRIPTEN__
+#if !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
     // A packaged game (build_windows.bat) carries its content next to the exe: <exe dir>/assets/media
     // (+ assets/data). That wins over the path baked in at build time, unless --assets / ASSET_DIR
     // say otherwise.
@@ -297,10 +331,31 @@ bool appFrame(App& app) {
         else if (e.type == SDL_EVENT_WILL_ENTER_BACKGROUND) app.suspended = true;
         else if (e.type == SDL_EVENT_DID_ENTER_FOREGROUND) {
             app.suspended = false;      // the per-frame drawable-size compare handles the rest
+            app.resumed = true;
         }
         else if (e.type == SDL_EVENT_MOUSE_WHEEL) in.wheel += e.wheel.y;
+        else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode < SDL_SCANCODE_COUNT) app.pressedKeys[e.key.scancode] = true;
+        else if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) app.pressedLeft = true;
     }
-    readKeyboard(in);
+#if defined(__ANDROID__)
+    // In the background there is no surface to draw on: skip the frame (SDL blocks the loop while the
+    // activity is paused anyway). Back in the foreground the surface is NEW, and bgfx must make its
+    // EGL surface on it, or every frame fails with EGL_BAD_SURFACE.
+    if (app.suspended) { SDL_Delay(16); return !quit; }
+    if (void* nwh = SDL_GetPointerProperty(SDL_GetWindowProperties(app.window), SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER, nullptr)) {
+        if (nwh != app.nativeWindow || app.resumed) {
+            int sw = 1, sh = 1;
+            SDL_GetWindowSizeInPixels(app.window, &sw, &sh);
+            bgfxHostSetWindow(nwh, (uint32_t)sw, (uint32_t)sh);
+            app.nativeWindow = nwh;
+            app.backW = sw; app.backH = sh;
+            app.resumed = false;
+            app.lastTicks = SDL_GetTicks();   // no giant frame time for the time spent away
+        }
+    }
+#endif
+    readKeyboard(in, app.pressedKeys);
+    std::fill(std::begin(app.pressedKeys), std::end(app.pressedKeys), false);
     for (const auto& p : args.presses)                       // scripted presses (tests)
         if (app.frameNo >= p.frame && app.frameNo < p.frame + 2) in.down[(size_t)p.key] = true;
 
@@ -316,14 +371,27 @@ bool appFrame(App& app) {
     }
     in.mouseX = mx * (float)pw / (float)(ww > 0 ? ww : 1);   // window points -> pixels (HiDPI)
     in.mouseY = my * (float)ph / (float)(wh > 0 ? wh : 1);
-    in.mouseLeft   = (buttons & SDL_BUTTON_LMASK) != 0;
+    // A press that went down during the events counts even if it is already up again (a quick tap).
+    // A touch moves the pointer and presses at once, but the UI (like a mouse) expects the pointer to
+    // hover before it presses: then this frame only hovers, and the press follows next frame.
+    bool left = (buttons & SDL_BUTTON_LMASK) != 0 || app.pressedLeft;
+    if (app.pressQueued) { left = true; app.pressQueued = false; }
+    else if (app.pressedLeft && (mx != app.lastMx || my != app.lastMy)) { left = false; app.pressQueued = true; }
+    app.pressedLeft = false;
+    app.lastMx = mx; app.lastMy = my;
+    in.mouseLeft   = left;
     in.mouseRight  = (buttons & SDL_BUTTON_RMASK) != 0;
     in.mouseMiddle = (buttons & SDL_BUTTON_MMASK) != 0;
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
     in.hasMouse = true;   // touch arrives as mouse events; there is no "mouse focus" on a phone
 #else
     in.hasMouse = (SDL_GetWindowFlags(app.window) & SDL_WINDOW_MOUSE_FOCUS) != 0;
 #endif
+    if (args.fixedDtMs > 0) {   // a scripted test run: only the scripted keys and clicks count
+        in = InputState{};
+        for (const auto& p : args.presses)
+            if (app.frameNo >= p.frame && app.frameNo < p.frame + 2) in.down[(size_t)p.key] = true;
+    }
     for (const auto& c : args.clicks) {                      // scripted clicks (tests)
         const int d = app.frameNo - c.frame;                 // hover 2 frames, press 2, release, stay
         if (d < -2 || d > 4) continue;
@@ -336,7 +404,7 @@ bool appFrame(App& app) {
     }
 
     const uint64_t now = SDL_GetTicks();
-    const int dtMs = (int)(now - app.lastTicks);
+    const int dtMs = args.fixedDtMs > 0 ? args.fixedDtMs : (int)(now - app.lastTicks);
     app.lastTicks = now;
     if (!app.session.frame(dtMs, in, (uint32_t)pw, (uint32_t)ph)) {
 #ifndef __EMSCRIPTEN__
@@ -354,6 +422,7 @@ bool appFrame(App& app) {
 
 void appShutdown(App& app) {
     app.session.stop();
+    toms::JobSystem::stop();   // join the worker threads before the process exits
     bgfxHostShutdown();
     if (app.window) SDL_DestroyWindow(app.window);
     SDL_Quit();
@@ -380,13 +449,42 @@ EMSCRIPTEN_KEEPALIVE void jsInventory() {
 }
 // For page tests: frames drawn so far and whether the title screen is up.
 EMSCRIPTEN_KEEPALIVE int jsFrameCount() { return g_app ? g_app->frameNo : 0; }
+// Job-system worker threads (0 in the single-threaded build, see docs/10_THREADS.md).
+EMSCRIPTEN_KEEPALIVE int jsWorkerCount() { return toms::JobSystem::workers(); }
 EMSCRIPTEN_KEEPALIVE int jsTitleOpen() {
     return (g_app && g_app->session.game() && g_app->session.game()->titleOpen()) ? 1 : 0;
 }
 }
 #endif
 
+#if defined(__ANDROID__)
+// On Android stderr goes nowhere, but much of the game reports with fprintf(stderr) ("[jobs] ...",
+// "[rmlui] ..."): pipe it into logcat, one entry per line, tag "toms". (The logger's own lines reach
+// logcat directly, log.h; they go to stdout, which is left alone so nothing is logged twice.)
+static void pipeStderrToLogcat() {
+    static int fds[2];
+    if (pipe(fds) != 0) return;
+    setvbuf(stderr, nullptr, _IONBF, 0);
+    dup2(fds[1], STDERR_FILENO);
+    std::thread([] {
+        char buf[512];
+        std::string line;
+        ssize_t n;
+        while ((n = read(fds[0], buf, sizeof buf)) > 0) {
+            for (ssize_t i = 0; i < n; i++) {
+                if (buf[i] != '\n') { line += buf[i]; continue; }
+                __android_log_write(ANDROID_LOG_INFO, "toms", line.c_str());
+                line.clear();
+            }
+        }
+    }).detach();
+}
+#endif
+
 int main(int argc, char** argv) {
+#if defined(__ANDROID__)
+    pipeStderrToLogcat();
+#endif
     std::vector<std::string> argList(argv + 1, argv + argc);
 #ifdef __EMSCRIPTEN__
     for (auto& s : urlArgs()) argList.push_back(s);

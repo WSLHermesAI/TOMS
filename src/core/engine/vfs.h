@@ -14,6 +14,11 @@
 
 #include <cstdio>
 #include <string>
+#include <vector>
+#if !defined(__ANDROID__)
+#  include <filesystem>
+#  include <system_error>
+#endif
 
 #if defined(__ANDROID__)
 #  include <android/asset_manager.h>
@@ -31,15 +36,34 @@ inline void vfsInit(AAssetManager* am) { g_vfsAssetManager = am; }
 inline void vfsInit(void* = nullptr) {}   // no-op: desktop/web read the filesystem directly
 #endif
 
+#if defined(__ANDROID__)
+// "assets/media/../data/x.json" -> "data/x.json": the APK entry name. AAssetManager neither
+// resolves ".." nor accepts the leading "assets/" (entry names are relative to the APK's assets/).
+inline std::string vfsAssetPath(const std::string& path) {
+    std::vector<std::string> parts;
+    size_t i = 0;
+    while (i <= path.size()) {
+        const size_t j = path.find_first_of("/\\", i);
+        const std::string part = path.substr(i, (j == std::string::npos ? path.size() : j) - i);
+        if (part == "..") { if (!parts.empty()) parts.pop_back(); }
+        else if (!part.empty() && part != ".") parts.push_back(part);
+        if (j == std::string::npos) break;
+        i = j + 1;
+    }
+    if (!parts.empty() && parts[0] == "assets") parts.erase(parts.begin());
+    std::string out;
+    for (const std::string& p : parts) { if (!out.empty()) out += '/'; out += p; }
+    return out;
+}
+#endif
+
 // Reads a whole file into `out`. Returns false and leaves `out` unchanged on failure.
-// `path` is the path as the game already writes it ("assets/data/story.json"). On Android the
-// leading "assets/" is stripped, because asset paths inside the APK are relative to that root.
+// `path` is the path as the game already writes it ("assets/data/story.json"). On Android it is
+// turned into the APK entry name (vfsAssetPath: no leading "assets/", ".." resolved).
 inline bool vfsReadAll(const std::string& path, std::string& out) {
 #if defined(__ANDROID__)
     if (g_vfsAssetManager) {
-        std::string assetPath = path;
-        const std::string prefix = "assets/";
-        if (assetPath.rfind(prefix, 0) == 0) assetPath = assetPath.substr(prefix.size());
+        const std::string assetPath = vfsAssetPath(path);
         if (AAsset* a = AAssetManager_open(g_vfsAssetManager, assetPath.c_str(), AASSET_MODE_BUFFER)) {
             const off64_t n = AAsset_getLength64(a);
             if (n > 0) {
@@ -69,12 +93,11 @@ inline bool vfsReadAll(const std::string& path, std::string& out) {
     return true;
 }
 
+// True when the FILE exists (for a folder, ask vfsListDir: APK folders are not openable entries).
 inline bool vfsExists(const std::string& path) {
 #if defined(__ANDROID__)
     if (g_vfsAssetManager) {
-        std::string assetPath = path;
-        const std::string prefix = "assets/";
-        if (assetPath.rfind(prefix, 0) == 0) assetPath = assetPath.substr(prefix.size());
+        const std::string assetPath = vfsAssetPath(path);
         if (AAsset* a = AAssetManager_open(g_vfsAssetManager, assetPath.c_str(), AASSET_MODE_BUFFER)) {
             AAsset_close(a);
             return true;
@@ -83,6 +106,28 @@ inline bool vfsExists(const std::string& path) {
 #endif
     if (FILE* fp = fopen(path.c_str(), "rb")) { fclose(fp); return true; }
     return false;
+}
+
+// The FILE names (no folders, no path) directly inside `dir`, in no particular order; empty when
+// the folder does not exist. Callers join `dir + "/" + name` and read it with vfsReadAll.
+inline std::vector<std::string> vfsListDir(const std::string& dir) {
+    std::vector<std::string> names;
+#if defined(__ANDROID__)
+    if (g_vfsAssetManager) {
+        if (AAssetDir* d = AAssetManager_openDir(g_vfsAssetManager, vfsAssetPath(dir).c_str())) {
+            while (const char* n = AAssetDir_getNextFileName(d)) names.push_back(n);   // files only
+            AAssetDir_close(d);
+        }
+        if (!names.empty()) return names;
+    }
+    (void)dir;
+    return names;
+#else
+    std::error_code ec;
+    for (auto it = std::filesystem::directory_iterator(dir, ec); !ec && it != std::filesystem::directory_iterator(); it.increment(ec))
+        if (it->is_regular_file(ec)) names.push_back(it->path().filename().string());
+    return names;
+#endif
 }
 
 }  // namespace toms

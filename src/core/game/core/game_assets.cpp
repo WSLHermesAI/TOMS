@@ -1,6 +1,8 @@
 // game_assets.cpp — asset/sprite/stage loading: texture atlas, sprite id order lookups,
 // and stage JSON -> Stage grid (+entity placement). Split out of game.cpp 2026-09-13.
 #include "game_internal.h"
+#include "job_system.h"
+#include "vfs.h"
 
 // Exactly one translation unit in this binary may define the STB image implementation. It lived in
 // game.cpp before the split.
@@ -18,16 +20,22 @@ bool Game::loadAssets(const std::string& assetDir) {
     // load sprites into a single 32x32-uniform atlas (GRID_COLS x GRID_ROWS grid)
     const int SW = 32, SH = 32, COLS = 9, ROWS = 3;
     spriteGridCols = COLS;
-    std::vector<std::vector<uint8_t>> layers;
-    layers.reserve(N_SPRITES);
+    // The PNGs decode in parallel (JobSystem; inline where there are no threads): each job writes
+    // only its own slot, and stb_image keeps its error state per thread.
+    std::vector<std::vector<uint8_t>> layers(N_SPRITES);
+    toms::JobSystem::parallelFor(N_SPRITES, [&](int i) {
+        const std::string path = assetDir + "/sprites/" + SPRITE_ORDER[i] + ".png";
+        int w, h, ch;
+        std::string file;   // vfs: inside the APK on Android, a plain file elsewhere
+        if (!toms::vfsReadAll(path, file)) return;
+        if (unsigned char* d = stbi_load_from_memory((const stbi_uc*)file.data(), (int)file.size(), &w, &h, &ch, 4)) {
+            layers[i].assign(d, d + w * h * 4);
+            stbi_image_free(d);
+        }
+    });
     for (int i = 0; i < N_SPRITES; i++) {
-        std::string name = SPRITE_ORDER[i];
-        std::string path = assetDir + "/sprites/" + name + ".png";
-        int w,h,ch; unsigned char* d = stbi_load(path.c_str(), &w, &h, &ch, 4);
-        if (!d) { std::fprintf(stderr, "load fail %s\n", path.c_str()); return false; }
-        layers.emplace_back(d, d + w*h*4);
-        idToLayer[name] = i;
-        stbi_image_free(d);
+        if (layers[i].empty()) { std::fprintf(stderr, "load fail %s/sprites/%s.png\n", assetDir.c_str(), SPRITE_ORDER[i]); return false; }
+        idToLayer[SPRITE_ORDER[i]] = i;
     }
     // upload full sprite atlas (backend packs the grid + uploads)
     ren->loadSprites(layers, SW, SH);
@@ -150,11 +158,11 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     // opening a non-existent path (which makes ifstream fail -> parse throw -> crash
     // when the player steps on stairs / a warp tile).
     std::string path = dataDir + "/../data/stages/" + id + ".json";
-    if (!std::filesystem::exists(path)) {
+    if (!toms::vfsExists(path)) {
         std::string noUs = id;
         noUs.erase(std::remove(noUs.begin(), noUs.end(), '_'), noUs.end());
         std::string alt = dataDir + "/../data/stages/" + noUs + ".json";
-        if (std::filesystem::exists(alt)) path = alt;
+        if (toms::vfsExists(alt)) path = alt;
     }
     // S3.5 (a): a floor id the tower knows (F01..F70) resolves through the floor table instead of
     // the bare data/stages/ path -- a normal floor to its generated grid, a boss floor to the
@@ -165,15 +173,15 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     if (isFloor) {
         std::string rel = floors_.mapRelPath(id);
         std::string candidate = dataDir + "/../" + rel;
-        if (std::filesystem::exists(candidate)) path = candidate;
+        if (toms::vfsExists(candidate)) path = candidate;
     }
     if (!isFloor) {
         // S2 fallback: generated floors also live in data/story/floors/<id>.stage.json (the file
         // layout docs/story/STORY_DATA_SCHEMA.md section 1.2 asks for); tried last so the hand-authored
         // data/stages/*.json files always win.
-        if (!std::filesystem::exists(path)) {
+        if (!toms::vfsExists(path)) {
             std::string floorPath = dataDir + "/../data/story/floors/" + id + ".stage.json";
-            if (std::filesystem::exists(floorPath)) path = floorPath;
+            if (toms::vfsExists(floorPath)) path = floorPath;
         }
     }
     st = parseStage(path, locale_);
@@ -290,10 +298,10 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     } else {
     totalStages = 1;
     std::string dir = dataDir + "/../data/stages/";
-    if (std::filesystem::exists(dir)) {
-        for (auto& e : std::filesystem::directory_iterator(dir)) {
+    {
+        for (const std::string& name : toms::vfsListDir(dir)) {
             try {
-                nlohmann::json j = readJsonFile(e.path().string());
+                nlohmann::json j = readJsonFile(dir + name);
                 int idx = j.value("index", 0);
                 if (idx > totalStages) totalStages = idx;
             } catch (...) {}

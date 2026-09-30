@@ -1,0 +1,43 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace = "org.toms.game"
+    compileSdk 35
+    // The NDK that built libmain.so (tools\build_android.cmd). Knowing it, Gradle strips the debug info
+    // from the libraries it packs (99 MB -> ~21 MB for a Debug libmain.so); the unstripped copy stays in
+    // app/libs/<abi>/ for ndk-stack.
+    ndkVersion "27.2.12479018"
+    defaultConfig {
+        applicationId "org.toms.game"
+        minSdkVersion 24          // = ANDROID_PLATFORM of the CMake presets
+        targetSdkVersion 35
+        versionCode 1
+        versionName "0.1"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets.main {
+        jniLibs.srcDirs = ['libs']            // libs/<abi>/libmain.so, libc++_shared.so (tools\build_android.cmd)
+        assets.srcDirs = ['../../assets']     // the repo's assets/: APK entries media/... and data/...
+    }
+    androidResources {
+        // aapt's default ignore list, plus stray logs
+        ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!*.log'
+    }
+    packagingOptions {
+        jniLibs { useLegacyPackaging = false }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    lint {
+        abortOnError = false
+    }
+}

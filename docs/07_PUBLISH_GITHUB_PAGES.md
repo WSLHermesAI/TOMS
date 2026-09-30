@@ -65,6 +65,9 @@ cached page keeps working until it refreshes. Older versions are removed on the 
 - Open https://wslhermesai.github.io/TOMS/ (after 1–2 minutes). The title screen appears.
 - F12 → Console: `bgfx ... ready: renderer=OpenGL ES 3.0` and `TOMS on bgfx`.
 - A save survives a page reload (stored in the browser's IndexedDB, per player and per browser).
+- Threads: GitHub Pages cannot send the COOP/COEP headers, so on the first visit `coi-serviceworker.js`
+  installs itself and the page reloads once; after that the console shows `[jobs] 4 worker thread(s)` and
+  `crossOriginIsolated` is `true`. `index.html?nothreads` loads the single-threaded build ([10](10_THREADS.md)).
 - The automated test also works against the live site:
   `node tools\web_smoke_test.mjs https://wslhermesai.github.io/TOMS/ out\pages_smoke`
 
@@ -75,7 +78,7 @@ build_web.bat
 git fetch origin gh-pages
 git worktree add --detach ..\TOMS-pages FETCH_HEAD
 cd ..\TOMS-pages
-:: delete the old files (keep the previous toms_game.<stamp>.* if you want cached pages to keep working)
+:: delete the old files (keep the previous toms_game.<stamp>.* and toms_game_mt.<stamp>.* if you want cached pages to keep working)
 git rm -r -q .
 xcopy /e /y /q ..\TOMS\dist\TOMS-web\* .
 type nul > .nojekyll

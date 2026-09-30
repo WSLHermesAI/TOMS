@@ -149,6 +149,16 @@ void bgfxHostReset(uint32_t width, uint32_t height) {
     bgfx::reset(bgfxHostResetFlags(), &sc);
 }
 
+void bgfxHostSetWindow(void* nativeWindow, uint32_t width, uint32_t height) {
+    if (!g_ready || !nativeWindow) return;
+    bgfx::SwapChain sc;
+    sc.nwh    = nativeWindow;   // GlContext::resize() makes the new EGL surface on it (see TomsDependencies.cmake)
+    sc.width  = std::max<uint32_t>(width, 1);
+    sc.height = std::max<uint32_t>(height, 1);
+    sc.flags  = kSwapChainFlags;
+    bgfx::reset(bgfxHostResetFlags(), &sc);
+}
+
 void bgfxHostShutdown() {
     if (!g_ready) return;
     bgfx::shutdown();

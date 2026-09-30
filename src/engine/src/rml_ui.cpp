@@ -123,7 +123,9 @@ public:
     // ---- textures ----
     Rml::TextureHandle LoadTexture(Rml::Vector2i& dimensions, const Rml::String& source) override {
         int w = 0, h = 0, n = 0;
-        stbi_uc* px = stbi_load(source.c_str(), &w, &h, &n, 4);
+        std::string file;   // vfs: APK entries on Android
+        stbi_uc* px = toms::vfsReadAll(source, file)
+            ? stbi_load_from_memory((const stbi_uc*)file.data(), (int)file.size(), &w, &h, &n, 4) : nullptr;
         if (!px) {
             Rml::Log::Message(Rml::Log::LT_WARNING, "image not found: %s", source.c_str());
             return 0;
@@ -299,8 +301,7 @@ std::string RmlUi::languageFont(const std::string& code, const std::string& font
     if (fontFile.empty()) return "toms";
     const std::string family = "toms-" + code;
     if (impl_->loadedFamilies.count(family)) return family;
-    std::error_code ec;
-    if (!std::filesystem::exists(fontFile, ec)) {
+    if (!toms::vfsExists(fontFile)) {
         std::fprintf(stderr, "[rmlui] font for '%s' not found, using the default: %s\n", code.c_str(), fontFile.c_str());
         return "toms";
     }

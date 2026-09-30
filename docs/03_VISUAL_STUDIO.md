@@ -89,7 +89,10 @@ tools\build.cmd windows-shipping
 The script finds Visual Studio with `vswhere`, loads the MSVC x64 environment, and uses Visual
 Studio's bundled CMake and Ninja.
 
-Smoke tests (render the title screen, then stage 1, and write PNGs; the editor also writes
+Tests: `tools\test.cmd` runs all of them (unit, screenshot smoke tests, web), and Visual Studio's
+**Test → Test Explorer** lists the same ones. See [09_TESTS.md](09_TESTS.md).
+
+Quick manual screenshots (render the title screen, then stage 1, and write PNGs; the editor also writes
 `<name>_window.png` with the whole window):
 
 ```bat

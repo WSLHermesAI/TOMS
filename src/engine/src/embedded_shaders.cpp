@@ -3,22 +3,26 @@
 #include "embedded_shaders.h"
 #include <cstdio>
 
-#ifndef __EMSCRIPTEN__   // the web build compiles only the ESSL (WebGL2) profile
+// Web: only ESSL (WebGL2). Android: ESSL (GLES3) + SPIR-V (Vulkan). Desktop: all four.
+#if !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
+#define TOMS_SHADERS_DESKTOP 1
 #include "dxbc/vs_sprite.sc.bin.h"
 #include "dxbc/fs_sprite.sc.bin.h"
 #include "dxbc/vs_imgui.sc.bin.h"
 #include "dxbc/fs_imgui.sc.bin.h"
 #include "dxbc/vs_rml.sc.bin.h"
-#include "spirv/vs_sprite.sc.bin.h"
-#include "spirv/fs_sprite.sc.bin.h"
-#include "spirv/vs_imgui.sc.bin.h"
-#include "spirv/fs_imgui.sc.bin.h"
-#include "spirv/vs_rml.sc.bin.h"
 #include "glsl/vs_sprite.sc.bin.h"
 #include "glsl/fs_sprite.sc.bin.h"
 #include "glsl/vs_imgui.sc.bin.h"
 #include "glsl/fs_imgui.sc.bin.h"
 #include "glsl/vs_rml.sc.bin.h"
+#endif
+#ifndef __EMSCRIPTEN__
+#include "spirv/vs_sprite.sc.bin.h"
+#include "spirv/fs_sprite.sc.bin.h"
+#include "spirv/vs_imgui.sc.bin.h"
+#include "spirv/fs_imgui.sc.bin.h"
+#include "spirv/vs_rml.sc.bin.h"
 #endif
 #include "essl/vs_sprite.sc.bin.h"
 #include "essl/fs_sprite.sc.bin.h"
@@ -46,14 +50,16 @@ struct ProgramBlobs { Blob vs, fs; };
 
 bool pick(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out) {
     switch (type) {
-#ifndef __EMSCRIPTEN__
+#ifdef TOMS_SHADERS_DESKTOP
     case bgfx::RendererType::Direct3D11:
     case bgfx::RendererType::Direct3D12:   // bgfx's D3D12 backend accepts DXBC (shader model 5)
         TOMS_PROGRAMS(dxbc);
-    case bgfx::RendererType::Vulkan:
-        TOMS_PROGRAMS(spv);
     case bgfx::RendererType::OpenGL:
         TOMS_PROGRAMS(glsl);
+#endif
+#ifndef __EMSCRIPTEN__
+    case bgfx::RendererType::Vulkan:
+        TOMS_PROGRAMS(spv);
 #endif
     case bgfx::RendererType::OpenGLES:     // also the web build (bgfx's WebGL2 backend reports GLES)
         TOMS_PROGRAMS(essl);

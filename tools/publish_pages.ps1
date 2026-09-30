@@ -47,7 +47,7 @@ try {
     }
 
     # ---- 2. replace the site, keep the newest $Keep previous stamped versions ----
-    $stampOf = { param($name) if ($name -match '^toms_game\.(.+)\.(js|wasm|data)$') { $Matches[1] } }
+    $stampOf = { param($name) if ($name -match '^toms_game(?:_mt)?\.(.+)\.(js|wasm|data)$') { $Matches[1] } }
     $previous = @(Get-ChildItem $script:wt -File | ForEach-Object { & $stampOf $_.Name } | Where-Object { $_ } |
                   Sort-Object -Unique | Sort-Object { ($_ -split '-')[-1] } -Descending | Select-Object -First $Keep)
     Get-ChildItem $script:wt -Force | Where-Object { $_.Name -ne '.git' } | ForEach-Object {

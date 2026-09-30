@@ -7,8 +7,12 @@ plugin or install is needed; it runs in current Chrome, Edge, Firefox and Safari
 ## Release package
 
 Double-click **`build_web.bat`** in the repository root. It runs `tools\build_web.cmd release` and
-then `tools\package.ps1 -Target web`, which writes **`dist\TOMS-web\`** (and `dist\TOMS-web.zip`):
-`index.html` (the page), `toms_game.<stamp>.js`, `.wasm`, `.data` (version-stamped so caches never mix releases; the stamp is in `version.txt`), plus `.htaccess`
+`tools\build_web.cmd mt` (the multithreaded variant, [10](10_THREADS.md)), then `tools\package.ps1 -Target web`,
+which writes **`dist\TOMS-web\`** (and `dist\TOMS-web.zip`):
+`index.html` (the page; it loads the threaded build where the browser allows threads and the single-threaded
+one otherwise), `toms_game.<stamp>.js/.wasm/.data` and `toms_game_mt.<stamp>.js/.wasm/.data` (version-stamped so
+caches never mix releases; the stamp is in `version.txt`), `coi-serviceworker.js` (gives hosts like GitHub Pages
+the headers threads need), plus `.htaccess`
 (Apache) and `web.config` (IIS) that serve `.wasm` as `application/wasm`. Upload those files to one
 folder of any static web server and open the folder's URL. For GitHub Pages use `publish_web.bat`
 ([07](07_PUBLISH_GITHUB_PAGES.md)). Verified 2026-09-27 by serving a copy of
@@ -91,7 +95,11 @@ These four files are the whole game. Copy them to any static web host.
 ```bat
 tools\serve_web.cmd              :: release build, port 8099
 tools\serve_web.cmd debug 8100   :: debug build on another port
+tools\serve_web.cmd mt           :: the multithreaded build (tools\build_web.cmd mt)
+tools\serve_web.cmd dist         :: the package of build_web.bat, as a player gets it
 ```
+
+The server (`tools\serve_web.py`) sends the two cross-origin-isolation headers, so threads work locally.
 
 Browsers refuse to run WebAssembly from `file://`, so opening `toms_game.html` by double-click
 does not work. Use the server. Stop it with Ctrl+C.

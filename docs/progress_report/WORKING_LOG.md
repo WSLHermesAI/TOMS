@@ -92,3 +92,33 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   resolves the zh_TW list to Microsoft JhengHei in Chrome; desktop switch to 日本語 with a test `font` entry loads
   Yu Gothic, without it the default. **Also fixed:** on Windows every save and settings write after the first one failed
   (`std::rename` does not overwrite there) -- now `std::filesystem::rename`; saves and the language setting persist.
+- **2026-09-30** — **Phase 2 step 2 done: tests in CTest** (`tests/CMakeLists.txt`, doc 09, `tools\test.cmd`, test
+  presets; Visual Studio Test Explorer). 25 unit tests (the core's `*_test.cpp`, linked against `toms_core`, run in
+  `assets/`), 10 screenshot smoke tests (`toms_game --fixed-dt=16` + scripted keys/clicks + `tests/tools/image_diff`
+  against `tests/golden/*.png`: title, map, menu, inventory, dialogue, battle, store on D3D11, the map on D3D12/Vulkan/
+  OpenGL), and the web smoke test (`web_smoke_test.mjs` now serves a folder itself, asserts, exits 77 = skipped). New
+  `--fixed-dt` makes a run deterministic and ignores real input. Result: 36/36 pass in ~45 s; D3D11/D3D12/Vulkan match
+  the references exactly, OpenGL 0.022%; a deliberately changed HP bar colour fails with a diff image. Shipping preset
+  builds no tests. Also: board refreshed (W6/W7/W8/Q1 closed, Android track added, two docs numbered 07 noted).
+- **2026-09-30** — **Threads: job system + multithreaded web build** (doc 10). `toms::JobSystem` (`src/core/engine`):
+  `parallelFor` over hardware-1 workers (8 here), inline with zero workers; used for the sprite PNG decode; unit
+  test (fixed two bugs it found: a nested call re-locking with zero workers, and the pool's threads aborting the
+  process at exit). Web: a second build `web-release-mt-windows` (`-pthread`, 5 pre-started workers, 4 for jobs);
+  `build_web.bat` builds both; the packaged `index.html` loads the threaded one when `crossOriginIsolated`, else the
+  single-threaded one; `coi-serviceworker.js` (v0.1.7, MIT) adds the headers on GitHub Pages; `?nothreads` opts out.
+  `serve_web.cmd mt|dist` + `tools/serve_web.py` (sends COOP/COEP). Verified in headless Chrome: threaded build with
+  headers -> 4 workers; the package on a server without headers -> threaded after the service worker's reload; with
+  `?nothreads` -> 0 workers; the threaded build without isolation does not start (why the fallback exists). 40/40
+  tests pass (`tools\test.cmd`). Not tried: a real phone, Safari, the live GitHub Pages site (not published).
+- **2026-09-30** — **Android: first build, runs on the emulator** (doc 07 appendix). `android/` Gradle project from
+  SDL3's template (`TomsActivity` loads `libmain.so`; the repo's `assets/` are the APK's assets); `toms_game` is a shared
+  `libmain.so` on Android; preset `android-x86_64-debug` for the emulator; `tools\build_android.cmd` / `run_android.cmd`.
+  Fixes the first run needed: the host shaderc for Android (bgfx tried to build an Android shaderc); no `100_es` profile
+  in this shaderc (Android: `300_es` + `spirv`) and no D3D/GL headers in `embedded_shaders.cpp`; link `EGL`; the
+  ANativeWindow for bgfx; the `getAssets` JNI signature (`android/content/res/AssetManager`); `vfsListDir` + `..`
+  resolution, and every remaining `std::filesystem` / `stbi_load` / `ifstream` read moved to vfs; stderr piped to
+  logcat; quick taps/keys latched for a frame and a touch hovers one frame before it presses; resume after background
+  (bgfx's `GlContext::resize` reused the old window: patched at configure time in `TomsDependencies.cmake`, plus
+  `bgfxHostSetWindow`); Back = Esc. Verified on the Pixel Tablet API 35 emulator: title, new game, pad + tap-to-walk,
+  battle, save survives force-stop, load, 3x background/foreground, Back. arm64 compiles. Desktop 36/36 and web 4/4
+  tests still pass. Not tried: a real phone.

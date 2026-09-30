@@ -12,9 +12,10 @@ set(BGFX_BUILD_EXAMPLE_COMMON  OFF CACHE BOOL "" FORCE)
 set(BGFX_BUILD_TESTS           OFF CACHE BOOL "" FORCE)
 set(BGFX_INSTALL               OFF CACHE BOOL "" FORCE)
 set(BGFX_CUSTOM_TARGETS        OFF CACHE BOOL "" FORCE)
-if(WEB AND TOMS_HOST_SHADERC)
-    # Web build with a host shaderc (cmake/TomsPrerequisites.cmake found one): build no bgfx tools
-    # for wasm at all, and point bgfx::shaderc at the host executable. It must exist before bgfx.cmake
+if((WEB OR ANDROID) AND TOMS_HOST_SHADERC)
+    # Web/Android build with a host shaderc (cmake/TomsPrerequisites.cmake found one): build no bgfx
+    # tools for wasm/Android at all (an Android shaderc could not run here), and point bgfx::shaderc at
+    # the host executable. It must exist before bgfx.cmake
     # is processed, because bgfx.cmake only defines bgfx_compile_shaders() if bgfx::shaderc exists.
     add_executable(bgfx::shaderc IMPORTED GLOBAL)
     set_target_properties(bgfx::shaderc PROPERTIES IMPORTED_LOCATION "${TOMS_HOST_SHADERC}")
@@ -61,6 +62,28 @@ FetchContent_Declare(glm
     GIT_SHALLOW    TRUE)
 
 FetchContent_MakeAvailable(bgfx SDL3 imgui glm)
+
+# bgfx fix (Android): an app that comes back from the background gets a NEW surface (ANativeWindow).
+# bgfx::reset() passes it on (SwapChain::nwh), but GlContext::resize() rebuilt the EGL surface on the
+# window it was created with, so every frame after a resume failed with EGL_BAD_SURFACE. Take the new
+# window when there is one. Applied to the fetched source at configure time; checks first, so it is
+# written once and a re-configure leaves the file (and the build) alone.
+set(_toms_egl "${bgfx_SOURCE_DIR}/bgfx/src/glcontext_egl.cpp")
+if(EXISTS "${_toms_egl}")
+    file(READ "${_toms_egl}" _toms_egl_src)
+    if(NOT _toms_egl_src MATCHES "TOMS: surface recreated on resume")
+        set(_toms_egl_old "#\tif BX_PLATFORM_ANDROID\n\t\tif (m_ownsContext\n")
+        set(_toms_egl_new "#\tif BX_PLATFORM_ANDROID\n\t\tif (NULL != _swapChain.nwh) { m_nwh = (EGLNativeWindowType)_swapChain.nwh; }   // TOMS: surface recreated on resume\n\t\tif (m_ownsContext\n")
+        string(FIND "${_toms_egl_src}" "${_toms_egl_old}" _toms_egl_at)
+        if(_toms_egl_at EQUAL -1)
+            message(WARNING "[toms] bgfx changed: the Android resume fix in cmake/TomsDependencies.cmake no longer applies (${_toms_egl})")
+        else()
+            string(REPLACE "${_toms_egl_old}" "${_toms_egl_new}" _toms_egl_src "${_toms_egl_src}")
+            file(WRITE "${_toms_egl}" "${_toms_egl_src}")
+            message(STATUS "[toms] bgfx: applied the Android resume fix to glcontext_egl.cpp")
+        endif()
+    endif()
+endif()
 
 # ---- RmlUi (the game UI, HTML/CSS-like), docs/08_RMLUI.md ----
 # Desktop: FreeType draws the text from font files (assets/media/fonts/NotoSansCJKtc-TOMS.otf by

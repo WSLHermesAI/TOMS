@@ -78,9 +78,6 @@ else {
     $sha = (& git -C $root rev-parse --short HEAD 2>$null)
     if (-not $sha) { $sha = 'nogit' }
     $stamp = "$sha-$(Get-Date -Format 'yyyyMMddHHmmss')"
-    $js   = "toms_game.$stamp.js"
-    $wasm = "toms_game.$stamp.wasm"
-    $data = "toms_game.$stamp.data"
 
     # Rewrite exactly the URLs the loader fetches, and fail loudly if Emscripten ever changes them.
     # The package key "bin/toms_game.data" inside the .js must NOT change: it names the files
@@ -90,17 +87,47 @@ else {
         if ($n -ne 1) { throw "Versioning: expected '$old' exactly once in $what, found $n. The Emscripten output format changed; update tools\package.ps1." }
         return $text.Replace($old, $new)
     }
-    $jsText = [IO.File]::ReadAllText((Join-Path $bin 'toms_game.js'))
-    $jsText = Replace-Once $jsText 'REMOTE_PACKAGE_BASE="toms_game.data"' "REMOTE_PACKAGE_BASE=`"$data`"" 'toms_game.js'
-    $jsText = Replace-Once $jsText 'locateFile("toms_game.wasm")' "locateFile(`"$wasm`")" 'toms_game.js'
-    $html = [IO.File]::ReadAllText((Join-Path $bin 'toms_game.html'))
-    $html = Replace-Once $html 'src=toms_game.js' "src=$js" 'toms_game.html'
-
     $utf8 = New-Object Text.UTF8Encoding $false
+    # One build (single-threaded or multithreaded) -> its stamped .js/.wasm/.data in $out.
+    function Copy-WebBuild([string]$from, [string]$prefix) {
+        $j = "$prefix.$stamp.js"; $w = "$prefix.$stamp.wasm"; $d = "$prefix.$stamp.data"
+        $t = [IO.File]::ReadAllText((Join-Path $from 'toms_game.js'))
+        $t = Replace-Once $t 'REMOTE_PACKAGE_BASE="toms_game.data"' "REMOTE_PACKAGE_BASE=`"$d`"" "$from\toms_game.js"
+        $t = Replace-Once $t 'locateFile("toms_game.wasm")' "locateFile(`"$w`")" "$from\toms_game.js"
+        [IO.File]::WriteAllText((Join-Path $out $j), $t, $utf8)
+        Copy-Item (Join-Path $from 'toms_game.wasm') (Join-Path $out $w)
+        Copy-Item (Join-Path $from 'toms_game.data') (Join-Path $out $d)
+        return $j
+    }
+    $js = Copy-WebBuild $bin 'toms_game'
+    $html = [IO.File]::ReadAllText((Join-Path $bin 'toms_game.html'))
+
+    # The multithreaded build (tools\build_web.cmd mt), when it has been built: the page loads it on
+    # a cross-origin-isolated page and the single-threaded one otherwise; coi-serviceworker.js makes
+    # hosts that cannot send the COOP/COEP headers (GitHub Pages) isolated. docs\10_THREADS.md.
+    $binMt = Join-Path $root 'build-web-release-mt-windows\bin'
+    $haveMt = @('toms_game.js', 'toms_game.wasm', 'toms_game.data' | Where-Object { -not (Test-Path (Join-Path $binMt $_)) }).Count -eq 0
+    if ($haveMt) {
+        $jsMt = Copy-WebBuild $binMt 'toms_game_mt'
+        Copy-Item (Join-Path $root 'src\game\web\coi-serviceworker.js') (Join-Path $out 'coi-serviceworker.js')
+        $head = '<script>window.tomsNoThreads=/[?&]nothreads\b/.test(location.search);' +
+                'window.coi=window.tomsNoThreads?{shouldRegister:function(){return false}}:{quiet:true}</script>' +
+                '<script src=coi-serviceworker.js></script>'
+        $loader = '<script>(function(){var mt=!window.tomsNoThreads&&self.crossOriginIsolated===true&&typeof SharedArrayBuffer!=="undefined";' +
+                  'window.tomsThreaded=mt;' +
+                  # First visit on a host without the headers: coi-serviceworker is about to reload the
+                  # page (isolated); do not start downloading the single-threaded build meanwhile.
+                  'var soon=!mt&&!window.tomsNoThreads&&window.isSecureContext&&"serviceWorker" in navigator&&!navigator.serviceWorker.controller;' +
+                  "function go(){var s=document.createElement('script');s.async=true;s.src=mt?'$jsMt':'$js';document.body.appendChild(s)}" +
+                  'setTimeout(go,soon?4000:0)})()</script>'
+        $html = Replace-Once $html '<head>' "<head>$head" 'toms_game.html'
+        $html = Replace-Once $html '<script async src=toms_game.js></script>' $loader 'toms_game.html'
+        Write-Host "[toms] web: single-threaded + multithreaded builds, page picks one ($binMt)"
+    } else {
+        $html = Replace-Once $html 'src=toms_game.js' "src=$js" 'toms_game.html'
+        Write-Host "[toms] web: single-threaded build only (no $binMt; build it with tools\build_web.cmd mt)"
+    }
     [IO.File]::WriteAllText((Join-Path $out 'index.html'), $html, $utf8)
-    [IO.File]::WriteAllText((Join-Path $out $js), $jsText, $utf8)
-    Copy-Item (Join-Path $bin 'toms_game.wasm') (Join-Path $out $wasm)
-    Copy-Item (Join-Path $bin 'toms_game.data') (Join-Path $out $data)
     Set-Content -Encoding ASCII (Join-Path $out 'version.txt') $stamp
     Write-Host "[toms] web version stamp: $stamp"
 

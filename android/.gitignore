@@ -1,0 +1,30 @@
+# Gradle: caches and build output
+.gradle/
+.kotlin/
+build/
+app/build/
+# written by tools\build_android.cmd: libmain.so + libc++_shared.so per ABI (built by CMake)
+app/libs/
+# machine-specific (the SDK path)
+local.properties
+
+# Android Studio (when the project is opened there)
+.idea/
+*.iml
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# packaged apps anywhere outside build/ (e.g. a copied APK)
+*.apk
+*.aab
+*.apks
+output-metadata.json
+
+# signing keys and their passwords: never commit these
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+google-services.json

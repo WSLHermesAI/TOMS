@@ -62,7 +62,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "TOMS_BUILD_EDITOR": "OFF",
-        "TOMS_WINDOWED_EXE": "ON"
+        "TOMS_WINDOWED_EXE": "ON",
+        "TOMS_BUILD_TESTS": "OFF"
       }
     },
     {
@@ -162,6 +163,29 @@
       }
     },
     {
+      "name": "web-release-mt-windows",
+      "displayName": "Web/WASM Release, multithreaded (Windows)",
+      "description": "Like web-release-windows, plus WebAssembly threads (-pthread, a pool of pre-started Web Workers for the job system). Runs only on a cross-origin-isolated page; the published page picks it or the single-threaded build (docs/10_THREADS.md).",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "CMAKE_CROSSCOMPILING_EMULATOR": "node",
+        "CMAKE_EXECUTABLE_SUFFIX": ".js",
+        "WEB": "ON",
+        "CMAKE_C_FLAGS": "-msimd128 -pthread",
+        "CMAKE_CXX_FLAGS": "-msimd128 -pthread",
+        "CMAKE_EXE_LINKER_FLAGS": "-msimd128 -pthread",
+        "CMAKE_BUILD_TYPE": "Release",
+        "TOMS_WEB_THREADS": "ON"
+      },
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-web-release-mt-windows",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
       "name": "android-debug",
       "displayName": "Android/arm64 Debug",
       "description": "NDK arm64-v8a, android-24, c++_shared. Needs ANDROID_NDK + a host shaderc (see docs/07_BUILD_ANDROID.md).",
@@ -174,7 +198,29 @@
         "ANDROID_PLATFORM": "android-24",
         "ANDROID_STL": "c++_shared",
         "TOMS_HOST_SHADERC": "$env{TOMS_HOST_SHADERC}",
-        "TOMS_SHADER_PROFILES": "100_es;300_es",
+        "TOMS_SHADER_PROFILES": "300_es;spirv",
+        "CMAKE_EXE_LINKER_FLAGS": "-Wl,-z,max-page-size=16384"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "android-x86_64-debug",
+      "displayName": "Android/x86_64 Debug (emulator)",
+      "description": "NDK x86_64 for the Android Studio emulator, android-24, c++_shared. Needs ANDROID_NDK + TOMS_HOST_SHADERC.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-android-x86_64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "$env{ANDROID_NDK}/build/cmake/android.toolchain.cmake",
+        "ANDROID_ABI": "x86_64",
+        "ANDROID_PLATFORM": "android-24",
+        "ANDROID_STL": "c++_shared",
+        "TOMS_HOST_SHADERC": "$env{TOMS_HOST_SHADERC}",
+        "TOMS_SHADER_PROFILES": "300_es;spirv",
         "CMAKE_EXE_LINKER_FLAGS": "-Wl,-z,max-page-size=16384"
       },
       "condition": {
@@ -196,7 +242,7 @@
         "ANDROID_PLATFORM": "android-24",
         "ANDROID_STL": "c++_shared",
         "TOMS_HOST_SHADERC": "$env{TOMS_HOST_SHADERC}",
-        "TOMS_SHADER_PROFILES": "100_es;300_es",
+        "TOMS_SHADER_PROFILES": "300_es;spirv",
         "CMAKE_EXE_LINKER_FLAGS": "-Wl,-z,max-page-size=16384"
       },
       "condition": {
@@ -244,14 +290,59 @@
       "jobs": 8
     },
     {
+      "name": "web-release-mt-windows",
+      "configurePreset": "web-release-mt-windows",
+      "jobs": 8
+    },
+    {
       "name": "android-debug",
       "configurePreset": "android-debug",
+      "jobs": 8
+    },
+    {
+      "name": "android-x86_64-debug",
+      "configurePreset": "android-x86_64-debug",
       "jobs": 8
     },
     {
       "name": "android-release",
       "configurePreset": "android-release",
       "jobs": 8
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "windows-debug",
+      "configurePreset": "windows-debug",
+      "displayName": "Debug: unit + smoke + web tests",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "windows-release",
+      "configurePreset": "windows-release",
+      "displayName": "Release: unit + smoke + web tests",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "ci-windows",
+      "configurePreset": "ci-windows",
+      "displayName": "CI: unit + smoke + web tests",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
     }
   ]
 }

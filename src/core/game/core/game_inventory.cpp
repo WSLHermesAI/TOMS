@@ -26,7 +26,7 @@ void Game::applyItem(const std::string& id) {
     }
     if (eff.contains("warp")) {
         std::string dst = it->second.value("warp_to", std::string(""));
-        if (!dst.empty() && std::filesystem::exists(dataDir + "/../data/stages/" + dst + ".json"))
+        if (!dst.empty() && toms::vfsExists(dataDir + "/../data/stages/" + dst + ".json"))
             loadStage(dst);
     }
     audio.play("get_item");
