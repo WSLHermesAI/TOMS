@@ -29,3 +29,8 @@ frames/
 tools/__pycache__/
 tower_vulkan
 assets/wqy-zenhei.ttc
+
+# built Emscripten sites. They were untracked already (979bcf3 removed web/ from tracking) and the deploy
+# script regenerates them; keeping ~167MB of generated bundles out of git.
+web/
+web-gl/
