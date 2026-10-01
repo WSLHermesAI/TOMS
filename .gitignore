@@ -17,3 +17,13 @@ toms.log
 imgui.ini
 # packaged builds (build_windows.bat / build_web.bat)
 /dist/
+
+# rootless dependency drops: apt-get download writes .deb files into the CWD (the repo root)
+*.deb
+frames/
+
+# stray artifacts found in the tree (not build outputs, not sources)
+*.spv   # shader binaries compiled at the repo root
+tools/__pycache__/   # python bytecode from repo tools
+tower_vulkan   # stale pre-restructure binary left in the tree
+assets/wqy-zenhei.ttc   # downloaded CJK font (16MB); not referenced by any code, only by old progress notes
