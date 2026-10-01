@@ -8,7 +8,7 @@ This page lists everything TOMS needs, where to get it, and how to check it. Ite
 [11 — 新電腦上從零開始 (AI runbook)](11_NEW_MACHINE_SETUP.md) first: the git settings that matter
 (`git clone --recurse-submodules`, `git config core.longpaths true`), what you do *not* need
 (no Git LFS, no symlink setup), a paste-ready instruction block for an AI agent, and the acceptance
-checklist.
+checklist. SSH keys (and how to push from a second computer) have their own page: [12](12_SSH_KEY_SETUP.md).
 
 ## 0. Check what you already have
 

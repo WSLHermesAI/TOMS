@@ -107,6 +107,9 @@ git config --global user.email "你的信箱"
 
 ### 2.4 認證方式（本機實測）
 
+> 金鑰的原理、在別台電腦上的三種做法、Windows/WSL 兩套 `~/.ssh` 的差異與排錯：
+> 見 [`12_SSH_KEY_SETUP.md`](12_SSH_KEY_SETUP.md)。
+
 **本機用的是 SSH 金鑰，不是密碼也不是 token：**
 
 | 項目 | 實測結果 |
