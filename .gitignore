@@ -22,8 +22,10 @@ imgui.ini
 *.deb
 frames/
 
-# stray artifacts found in the tree (not build outputs, not sources)
-*.spv   # shader binaries compiled at the repo root
-tools/__pycache__/   # python bytecode from repo tools
-tower_vulkan   # stale pre-restructure binary left in the tree
-assets/wqy-zenhei.ttc   # downloaded CJK font (16MB); not referenced by any code, only by old progress notes
+# stray artifacts found in the tree (not build outputs, not sources).
+# Patterns only -- a '#' is a comment only at the START of a line, so trailing comments make the
+# whole line a literal pattern that matches nothing.
+*.spv
+tools/__pycache__/
+tower_vulkan
+assets/wqy-zenhei.ttc
