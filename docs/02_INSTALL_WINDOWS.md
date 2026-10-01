@@ -4,6 +4,12 @@ This page lists everything TOMS needs, where to get it, and how to check it. Ite
 **required** are needed for the game (`toms_game.exe`). **Qt** is only needed for the editor
 (`toms_editor.exe`).
 
+**Setting up a machine you have not used before?** Read
+[11 — 新電腦上從零開始 (AI runbook)](11_NEW_MACHINE_SETUP.md) first: the git settings that matter
+(`git clone --recurse-submodules`, `git config core.longpaths true`), what you do *not* need
+(no Git LFS, no symlink setup), a paste-ready instruction block for an AI agent, and the acceptance
+checklist.
+
 ## 0. Check what you already have
 
 Double-click **`tools\check_env.cmd`** (or run it in a terminal).
@@ -30,7 +36,7 @@ from `tools\build.cmd`). A missing **required** item stops the configure with a 
 | 6 | **Ninja** | build tool used by the presets | bundled with item 3; or https://github.com/ninja-build/ninja/releases | VS copy first, then `PATH` |
 | 7 | **Git for Windows** | the first configure clones bgfx, SDL3, Dear ImGui and glm | https://git-scm.com/download/win | `git` on `PATH` |
 | 8 | **Internet access to github.com** (first configure only) | same as 7 | — | HTTPS request to github.com |
-| 9 | **`src/` and `assets/`** of this repository | the game code (`src/core`, `src/third_party`, `src/editor/stage`) is compiled; `assets/media` + `assets/data` are loaded / packed | part of the clone: `git clone https://github.com/WSLHermesAI/TOMS` | files exist |
+| 9 | **`src/` and `assets/`** of this repository | the game code (`src/core`, `src/third_party`, `src/editor/stage`) is compiled; `assets/media` + `assets/data` are loaded / packed | part of the clone: `git clone --recurse-submodules https://github.com/WSLHermesAI/TOMS` | files exist |
 | 10 | **~5 GB free disk** | bgfx + tools + two configurations | — | drive free space |
 
 ### Visual Studio: what to tick
