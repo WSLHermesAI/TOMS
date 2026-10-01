@@ -105,13 +105,41 @@ git config --global user.name  "你的名字"
 git config --global user.email "你的信箱"
 ```
 
-### 2.4 認證方式
+### 2.4 認證方式（本機實測）
 
-- 本機 remote 是 SSH：`git@github.com:WSLHermesAI/TOMS.git`。
-- `docs/02_INSTALL_WINDOWS.md` 給的是 HTTPS URL。兩者都可以：
-  - **SSH**：新電腦要有 SSH key 並加到 GitHub 帳號；
-  - **HTTPS**：repo 若為私有，需要 Personal Access Token（當密碼用）。
-- 兩者互換：`git remote set-url origin <新URL>`。
+**本機用的是 SSH 金鑰，不是密碼也不是 token：**
+
+| 項目 | 實測結果 |
+|---|---|
+| remote | `git@github.com:WSLHermesAI/TOMS.git`（SSH） |
+| 金鑰 | `~/.ssh/id_ed25519`（ED25519，權限 `600`）＋ `~/.ssh/id_ed25519.pub`（`644`） |
+| 指紋 | `SHA256:0AhSQKxzlEc4C+1+uP8z8wmeWOmh3SKnVAjubwNbFvg` |
+| 對應的 GitHub 帳號 | **WSLHermesAI**（`ssh -T git@github.com` 會回 `Hi WSLHermesAI!`） |
+| credential helper | 未設定；`~/.git-credentials` 不存在 → **沒有儲存任何密碼或 PAT** |
+| `~/.ssh/config` | 沒有（用預設 identity 與預設主機設定） |
+
+驗證方式（**注意**：GitHub 不提供 shell，成功時 SSH 仍回傳非 0；要看輸出文字）：
+
+```bash
+ssh -T git@github.com
+# 期望：「Hi WSLHermesAI! You've successfully authenticated, but GitHub does not provide shell access.」
+```
+
+**重要：這個 repo 是公開的**（匿名 HTTPS 讀取測試通過）。
+所以在新電腦上：
+
+- **clone 完全不需要認證**（用 HTTPS 匿名即可）：
+  `git clone --recurse-submodules https://github.com/WSLHermesAI/TOMS.git`
+- **只有要 push 時才需要認證**。三種做法：
+  1. **在該機器產生新金鑰**（建議，一機一鑰）：
+     `ssh-keygen -t ed25519 -C "<你的信箱>"`，把 `~/.ssh/id_ed25519.pub` 的內容貼到
+     GitHub → Settings → SSH and GPG keys → New SSH key；remote 用 SSH URL。
+  2. **複製既有金鑰**（最快，但等於共用同一身分；私鑰權限必須 `600`）。
+  3. **HTTPS + Personal Access Token**：`git remote set-url origin https://github.com/WSLHermesAI/TOMS.git`，
+     設定 `git config --global credential.helper manager`（Windows）後首次 push 輸入 PAT 當密碼。
+
+本機的金鑰在無互動（`BatchMode`、沒有密碼提示）下就能通過認證，**請把 `~/.ssh/id_ed25519` 當成機密**：
+不要提交進版控、不要貼給 AI 或聊天視窗、不要放到共用資料夾。
 
 ### 2.5 大小與完整性（實測）
 
