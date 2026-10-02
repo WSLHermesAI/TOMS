@@ -38,6 +38,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("sub", &UiRow::sub);
         s.RegisterMember("selected", &UiRow::selected);
         s.RegisterMember("enabled", &UiRow::enabled);
+        s.RegisterMember("section", &UiRow::section);
     }
     c.RegisterArray<std::vector<UiRow>>();
     if (auto s = c.RegisterStruct<UiBanner>()) {

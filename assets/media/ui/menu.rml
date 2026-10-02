@@ -15,6 +15,7 @@
             <div id="subheader" data-if="menu.subheader != ''">{{menu.subheader}}</div>
             <div id="rows">
                 <div data-for="r, i : menu.rows">
+                    <div class="section" data-if="r.section != ''">{{r.section}}</div>
                     <div class="row" data-class-selected="r.selected" data-class-disabled="!r.enabled"
                          data-event-click="act('menu_row', i)" data-event-mouseover="act('menu_hover', i)">{{r.label}}<span class="rsub" data-if="r.sub != ''">{{r.sub}}</span></div>
                 </div>

@@ -233,13 +233,37 @@
       "ko": "카메라: 구역 표시",
       "es": "Cámara: Por Secciones"
     },
-    "settings.style_row": {
-      "zh_TW": "畫面風格：{style}",
-      "en": "Art style: {style}",
-      "zh_CN": "画面风格：{style}",
-      "ja": "画風：{style}",
-      "ko": "그래픽 스타일: {style}",
-      "es": "Estilo gráfico: {style}"
+    "settings.style_section": {
+      "zh_TW": "畫面風格",
+      "en": "Art style",
+      "zh_CN": "画面风格",
+      "ja": "画風",
+      "ko": "그래픽 스타일",
+      "es": "Estilo gráfico"
+    },
+    "settings.other_section": {
+      "zh_TW": "其他",
+      "en": "Other",
+      "zh_CN": "其他",
+      "ja": "その他",
+      "ko": "기타",
+      "es": "Otros"
+    },
+    "settings.style_apply_now": {
+      "zh_TW": "遊戲圖片會立即重新載入。",
+      "en": "The game's images reload right away.",
+      "zh_CN": "游戏图片会立即重新加载。",
+      "ja": "ゲームの画像をすぐに読み込み直します。",
+      "ko": "게임 이미지를 바로 다시 불러옵니다.",
+      "es": "Las imágenes del juego se recargan al instante."
+    },
+    "settings.style_apply_title": {
+      "zh_TW": "回到標題畫面時套用。",
+      "en": "Applies when you return to the title screen.",
+      "zh_CN": "回到标题画面时生效。",
+      "ja": "タイトル画面に戻ると反映されます。",
+      "ko": "타이틀 화면으로 돌아가면 적용됩니다.",
+      "es": "Se aplica al volver a la pantalla de título."
     },
     "settings.style_original": {
       "zh_TW": "原版",
@@ -257,21 +281,13 @@
       "ko": "그래픽 스타일을 \"{style}\"(으)로 바꾸시겠습니까?",
       "es": "¿Cambiar el estilo gráfico a \"{style}\"?"
     },
-    "settings.style_restart": {
-      "zh_TW": "需要重新啟動遊戲才會套用。",
-      "en": "Restart the game to apply it.",
-      "zh_CN": "需要重新启动游戏才会生效。",
-      "ja": "ゲームを再起動すると反映されます。",
-      "ko": "게임을 다시 시작하면 적용됩니다.",
-      "es": "Reinicia el juego para aplicarlo."
-    },
     "settings.style_pending": {
-      "zh_TW": "重新啟動遊戲後套用",
-      "en": "Applies after a restart",
-      "zh_CN": "重新启动游戏后生效",
-      "ja": "再起動後に反映",
-      "ko": "다시 시작한 후 적용",
-      "es": "Se aplica al reiniciar"
+      "zh_TW": "回到標題畫面後套用",
+      "en": "Applies on the title screen",
+      "zh_CN": "回到标题画面后生效",
+      "ja": "タイトル画面で反映",
+      "ko": "타이틀 화면에서 적용",
+      "es": "Se aplica en el título"
     },
     "settings.hint": {
       "zh_TW": "左右鍵切換  Esc 返回",
@@ -5272,8 +5288,12 @@
       "es": "Volver al Título (Esc)"
     },
     "story.ending.e01.name": {
-      "zh_TW": "九轉歸一", "en": "Nine Turns, One Truth", "zh_CN": "九转归一",
-      "ja": "九轉歸一", "ko": "구전귀일", "es": "Nueve Ciclos, Una Verdad"
+      "zh_TW": "九轉歸一",
+      "en": "Nine Turns, One Truth",
+      "zh_CN": "九转归一",
+      "ja": "九轉歸一",
+      "ko": "구전귀일",
+      "es": "Nueve Ciclos, Una Verdad"
     },
     "story.ending.e01.text": {
       "zh_TW": "九輪之後，你終於看清了每一段記憶的真相——這一次，你選擇帶著全部的自己重新開始。",
@@ -5284,8 +5304,12 @@
       "es": "九輪之後，你終於看清了每一段記憶的真相——這一次，你選擇帶著全部的自己重新開始。"
     },
     "story.ending.e02.name": {
-      "zh_TW": "承星而立", "en": "Standing Beneath the Star", "zh_CN": "承星而立",
-      "ja": "承星而立", "ko": "승성이립", "es": "De Pie Bajo la Estrella"
+      "zh_TW": "承星而立",
+      "en": "Standing Beneath the Star",
+      "zh_CN": "承星而立",
+      "ja": "承星而立",
+      "ko": "승성이립",
+      "es": "De Pie Bajo la Estrella"
     },
     "story.ending.e02.text": {
       "zh_TW": "你留在星光之下，與這座塔一同守望，成為它新的支柱。",
@@ -5296,8 +5320,12 @@
       "es": "你留在星光之下，與這座塔一同守望，成為它新的支柱。"
     },
     "story.ending.e03.name": {
-      "zh_TW": "守此一方", "en": "Guardian of This Land", "zh_CN": "守此一方",
-      "ja": "守此一方", "ko": "수차일방", "es": "Guardián de Esta Tierra"
+      "zh_TW": "守此一方",
+      "en": "Guardian of This Land",
+      "zh_CN": "守此一方",
+      "ja": "守此一方",
+      "ko": "수차일방",
+      "es": "Guardián de Esta Tierra"
     },
     "story.ending.e03.text": {
       "zh_TW": "你放下了復仇，選擇守護這片你曾經視為家鄉的土地。",
@@ -5308,8 +5336,12 @@
       "es": "你放下了復仇，選擇守護這片你曾經視為家鄉的土地。"
     },
     "story.ending.e04.name": {
-      "zh_TW": "斬業歸天", "en": "Cutting Karma, Ascending", "zh_CN": "斩业归天",
-      "ja": "斬業歸天", "ko": "참업귀천", "es": "Cortando el Karma, Ascendiendo"
+      "zh_TW": "斬業歸天",
+      "en": "Cutting Karma, Ascending",
+      "zh_CN": "斩业归天",
+      "ja": "斬業歸天",
+      "ko": "참업귀천",
+      "es": "Cortando el Karma, Ascendiendo"
     },
     "story.ending.e04.text": {
       "zh_TW": "業障已斬，你終於能安心離去——只是這份平靜，帶著一絲苦澀。",
@@ -5320,8 +5352,12 @@
       "es": "業障已斬，你終於能安心離去——只是這份平靜，帶著一絲苦澀。"
     },
     "story.ending.e05.name": {
-      "zh_TW": "凡人之餘", "en": "What Remains of a Mortal", "zh_CN": "凡人之余",
-      "ja": "凡人之餘", "ko": "범인지여", "es": "Lo que Queda de un Mortal"
+      "zh_TW": "凡人之餘",
+      "en": "What Remains of a Mortal",
+      "zh_CN": "凡人之余",
+      "ja": "凡人之餘",
+      "ko": "범인지여",
+      "es": "Lo que Queda de un Mortal"
     },
     "story.ending.e05.text": {
       "zh_TW": "你選擇留下，做一個平凡人，不再糾結於封印與宿命。",
@@ -5332,8 +5368,12 @@
       "es": "你選擇留下，做一個平凡人，不再糾結於封印與宿命。"
     },
     "story.ending.e06.name": {
-      "zh_TW": "新沃卡司", "en": "The New Vorkath", "zh_CN": "新沃卡司",
-      "ja": "新沃卡司", "ko": "신 보르카스", "es": "El Nuevo Vorkath"
+      "zh_TW": "新沃卡司",
+      "en": "The New Vorkath",
+      "zh_CN": "新沃卡司",
+      "ja": "新沃卡司",
+      "ko": "신 보르카스",
+      "es": "El Nuevo Vorkath"
     },
     "story.ending.e06.text": {
       "zh_TW": "怨恨蒙蔽了雙眼，你在不知不覺間，走上了與沃卡司相同的道路。",
@@ -5344,8 +5384,12 @@
       "es": "怨恨蒙蔽了雙眼，你在不知不覺間，走上了與沃卡司相同的道路。"
     },
     "story.ending.e07.name": {
-      "zh_TW": "塔的養分", "en": "Nourishment for the Tower", "zh_CN": "塔的养分",
-      "ja": "塔的養分", "ko": "탑의 양분", "es": "Alimento para la Torre"
+      "zh_TW": "塔的養分",
+      "en": "Nourishment for the Tower",
+      "zh_CN": "塔的养分",
+      "ja": "塔的養分",
+      "ko": "탑의 양분",
+      "es": "Alimento para la Torre"
     },
     "story.ending.e07.text": {
       "zh_TW": "記憶不足以支撐你的元神，塔悄然吸收了你僅剩的一切。",
@@ -5356,8 +5400,12 @@
       "es": "記憶不足以支撐你的元神，塔悄然吸收了你僅剩的一切。"
     },
     "story.ending.e08.name": {
-      "zh_TW": "無名之塚", "en": "An Unmarked Grave", "zh_CN": "无名之冢",
-      "ja": "無名之塚", "ko": "무명지총", "es": "Una Tumba Sin Nombre"
+      "zh_TW": "無名之塚",
+      "en": "An Unmarked Grave",
+      "zh_CN": "无名之冢",
+      "ja": "無名之塚",
+      "ko": "무명지총",
+      "es": "Una Tumba Sin Nombre"
     },
     "story.ending.e08.text": {
       "zh_TW": "沒有反咒之鑰，你的名字終究無人記得，只留下一座無名的墳塚。",
@@ -5368,8 +5416,12 @@
       "es": "沒有反咒之鑰，你的名字終究無人記得，只留下一座無名的墳塚。"
     },
     "story.ending.e09.name": {
-      "zh_TW": "師弟的勝利", "en": "The Junior's Victory", "zh_CN": "师弟的胜利",
-      "ja": "師弟的勝利", "ko": "사제의 승리", "es": "La Victoria del Discípulo"
+      "zh_TW": "師弟的勝利",
+      "en": "The Junior's Victory",
+      "zh_CN": "师弟的胜利",
+      "ja": "師弟的勝利",
+      "ko": "사제의 승리",
+      "es": "La Victoria del Discípulo"
     },
     "story.ending.e09.text": {
       "zh_TW": "你聽完了他的話，在動搖中成為了他的繼承者。",
@@ -5380,8 +5432,12 @@
       "es": "你聽完了他的話，在動搖中成為了他的繼承者。"
     },
     "story.ending.e10.name": {
-      "zh_TW": "魂飛魄散", "en": "Soul Scattered, Spirit Lost", "zh_CN": "魂飞魄散",
-      "ja": "魂飛魄散", "ko": "혼비백산", "es": "Alma Dispersa, Espíritu Perdido"
+      "zh_TW": "魂飛魄散",
+      "en": "Soul Scattered, Spirit Lost",
+      "zh_CN": "魂飞魄散",
+      "ja": "魂飛魄散",
+      "ko": "혼비백산",
+      "es": "Alma Dispersa, Espíritu Perdido"
     },
     "story.ending.e10.text": {
       "zh_TW": "第九輪的秘術終究耗盡，這一次，沒有輪迴可以再接住你的靈魂。",
@@ -5392,8 +5448,12 @@
       "es": "第九輪的秘術終究耗盡，這一次，沒有輪迴可以再接住你的靈魂。"
     },
     "story.ending.e11.name": {
-      "zh_TW": "傀儡之王", "en": "The Puppet King", "zh_CN": "傀儡之王",
-      "ja": "傀儡之王", "ko": "괴뢰지왕", "es": "El Rey Títere"
+      "zh_TW": "傀儡之王",
+      "en": "The Puppet King",
+      "zh_CN": "傀儡之王",
+      "ja": "傀儡之王",
+      "ko": "괴뢰지왕",
+      "es": "El Rey Títere"
     },
     "story.ending.e11.text": {
       "zh_TW": "你取得了帝骨，卻未能看透其中代價，於是成為了塔的新守門者，一尊沉默的傀儡。",
@@ -5404,8 +5464,12 @@
       "es": "你取得了帝骨，卻未能看透其中代價，於是成為了塔的新守門者，一尊沉默的傀儡。"
     },
     "story.ending.e12.name": {
-      "zh_TW": "星核之燼", "en": "Ashes of the Star Core", "zh_CN": "星核之烬",
-      "ja": "星核之燼", "ko": "성핵지신", "es": "Cenizas del Núcleo Estelar"
+      "zh_TW": "星核之燼",
+      "en": "Ashes of the Star Core",
+      "zh_CN": "星核之烬",
+      "ja": "星核之燼",
+      "ko": "성핵지신",
+      "es": "Cenizas del Núcleo Estelar"
     },
     "story.ending.e12.text": {
       "zh_TW": "星核裂痕終究擴散至極限，一切在崩解的光芒中化為灰燼。",
@@ -5416,8 +5480,12 @@
       "es": "星核裂痕終究擴散至極限，一切在崩解的光芒中化為灰燼。"
     },
     "story.ending.e13.name": {
-      "zh_TW": "凡人之死", "en": "Death of a Mortal", "zh_CN": "凡人之死",
-      "ja": "凡人之死", "ko": "범인지사", "es": "Muerte de un Mortal"
+      "zh_TW": "凡人之死",
+      "en": "Death of a Mortal",
+      "zh_CN": "凡人之死",
+      "ja": "凡人之死",
+      "ko": "범인지사",
+      "es": "Muerte de un Mortal"
     },
     "story.ending.e13.text": {
       "zh_TW": "肉身在一次次的墜落中耗盡，秘術尚未來得及施展，你便已離開了這座塔。",
@@ -5428,8 +5496,12 @@
       "es": "肉身在一次次的墜落中耗盡，秘術尚未來得及施展，你便已離開了這座塔。"
     },
     "story.ending.e14.name": {
-      "zh_TW": "沉默的塔", "en": "The Silent Tower", "zh_CN": "沉默的塔",
-      "ja": "沉默的塔", "ko": "침묵의 탑", "es": "La Torre Silenciosa"
+      "zh_TW": "沉默的塔",
+      "en": "The Silent Tower",
+      "zh_CN": "沉默的塔",
+      "ja": "沉默的塔",
+      "ko": "침묵의 탑",
+      "es": "La Torre Silenciosa"
     },
     "story.ending.e14.text": {
       "zh_TW": "直到塔頂，你始終沒有做出任何選擇——沉默，也是一種答案。",
@@ -5440,8 +5512,12 @@
       "es": "直到塔頂，你始終沒有做出任何選擇——沉默，也是一種答案。"
     },
     "story.ending.e15.name": {
-      "zh_TW": "青梅之約", "en": "A Childhood Promise", "zh_CN": "青梅之约",
-      "ja": "青梅之約", "ko": "청매지약", "es": "Una Promesa de la Infancia"
+      "zh_TW": "青梅之約",
+      "en": "A Childhood Promise",
+      "zh_CN": "青梅之约",
+      "ja": "青梅之約",
+      "ko": "청매지약",
+      "es": "Una Promesa de la Infancia"
     },
     "story.ending.e15.text": {
       "zh_TW": "你留在塔中，與她一同，在廢墟之上重新種下一個家。",

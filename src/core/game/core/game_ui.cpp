@@ -54,16 +54,16 @@ std::string Game::artStyleName(int idx) const {
     return locale_.field(artStyles_[idx].name);
 }
 
-// The Settings pages' art style rows (none when only the original art exists). `selected` is the
-// highlighted style index (out of range = none). The chosen style is ticked; if it is not the one
-// loaded at startup, its row says it applies after a restart.
+// The Settings pages' art style section (none when only the original art exists). `selected` is
+// the highlighted style index (out of range = none). The chosen style is ticked; while it is not
+// the one in use (chosen during a run), its row says it applies back on the title screen.
 void Game::appendArtStyleRows(std::vector<toms::UiRow>& rows, int selected) const {
     if (artStyles_.size() < 2) return;
     const int chosen = chosenArtStyle();
     for (int i = 0; i < (int)artStyles_.size(); i++) {
         toms::UiRow r;
-        r.label = std::string(i == chosen ? "[x] " : "[ ] ") +
-                  trParam(locale_.tr("settings.style_row"), "style", artStyleName(i));
+        if (i == 0) r.section = locale_.tr("settings.style_section");
+        r.label = std::string(i == chosen ? "[x] " : "[ ] ") + artStyleName(i);
         if (i == chosen && chosen != loadedArtStyle_) r.sub = locale_.tr("settings.style_pending");
         r.selected = i == selected;
         rows.push_back(r);
@@ -153,19 +153,19 @@ void Game::buildUiState(toms::UiState& u) const {
             }
             case toms::TitlePage::Settings: {
                 t.header = L.tr("settings.header");
-                t.subheader = L.tr("settings.language");
                 const auto& langs = L.languages();
                 for (int i = 0; i < (int)langs.size(); i++)
                     t.rows.push_back({std::string(i == L.languageIndex() ? "[x] " : "[ ] ") + langs[i].name, "",
                                       title_.settingsSelection() == i, true});
-                appendArtStyleRows(t.rows, title_.settingsSelection() - (int)langs.size());
+                if (!t.rows.empty()) t.rows[0].section = L.tr("settings.language");   // section 1: language
+                appendArtStyleRows(t.rows, title_.settingsSelection() - (int)langs.size());   // section 2: art style
                 t.show_back = true;
                 t.hint = L.tr("settings.hint");
                 if (title_.styleConfirmOpen()) {
                     t.confirm_open = true;
                     t.confirm_question = trParam(L.tr("settings.style_confirm"), "style",
                                                  artStyleName(title_.styleConfirmIndex()));
-                    t.confirm_body = L.tr("settings.style_restart");
+                    t.confirm_body = L.tr("settings.style_apply_now");   // the title reloads the images at once
                     t.confirm_yes = title_.styleConfirmYesSelected();
                 }
                 if (title_.languageConfirmOpen()) {
@@ -441,13 +441,15 @@ void Game::buildMenuUi(toms::UiMenu& m) const {
         case InGameMenuPage::Settings: {
             m.page = 1;
             m.header = L.tr("settings.header");
-            m.subheader = L.tr("settings.language");
             const auto& langs = L.languages();
             for (size_t i = 0; i < langs.size(); i++)
                 m.rows.push_back({std::string((int)i == L.languageIndex() ? "[x] " : "[ ] ") + langs[i].name, "", sel(i), true});
+            if (!m.rows.empty()) m.rows[0].section = L.tr("settings.language");   // section: language
+            appendArtStyleRows(m.rows, inGameMenuSel_ - (int)langs.size());       // section: art style
+            const size_t cam = m.rows.size();                                      // section: other
             m.rows.push_back({L.tr(cam_.mode() == toms::Camera::Mode::Rooms ? "settings.camera_rooms" : "settings.camera_follow"),
-                              "", sel(langs.size()), true});
-            appendArtStyleRows(m.rows, inGameMenuSel_ - (int)langs.size() - 1);
+                              "", sel(cam), true});
+            m.rows[cam].section = L.tr("settings.other_section");
             break;
         }
         case InGameMenuPage::Skills: {
@@ -501,7 +503,7 @@ void Game::buildMenuUi(toms::UiMenu& m) const {
     if (inGameLangConfirmOpen_ && inGameConfirmIsStyle_) {
         m.confirm_open = true;
         m.confirm_question = trParam(L.tr("settings.style_confirm"), "style", artStyleName(inGameLangConfirmIdx_));
-        m.confirm_body = L.tr("settings.style_restart");
+        m.confirm_body = L.tr("settings.style_apply_title");   // a run never changes look under the player
         m.confirm_yes = inGameLangConfirmYes_;
     } else if (inGameLangConfirmOpen_) {
         const auto& langs = L.languages();

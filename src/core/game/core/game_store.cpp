@@ -140,8 +140,8 @@ void Game::inGameMenuMove(int delta) {
         int n = std::max(1, (int)hubMenuOrder().size());
         inGameMenuSel_ = ((inGameMenuSel_ + delta) % n + n) % n;
     } else {
-        // languages + the camera toggle row + the art style rows (none when only the original exists)
-        int n = std::max(1, locale_.languageCount() + 1 + (artStyles_.size() > 1 ? (int)artStyles_.size() : 0));
+        // languages, the art style rows (none when only the original exists), the camera toggle row
+        int n = std::max(1, locale_.languageCount() + settingsStyleRowCount() + 1);
         inGameMenuSel_ = ((inGameMenuSel_ + delta) % n + n) % n;
     }
 }
@@ -222,20 +222,19 @@ void Game::inGameMenuActivate() {
         inGameLangConfirmIdx_ = inGameMenuSel_;
         inGameLangConfirmYes_ = true;
         audio.play("confirm_click");
-    } else if (inGameMenuSel_ == locale_.languageCount()) {
+    } else if (inGameMenuSel_ < locale_.languageCount() + settingsStyleRowCount()) {
+        // An art style row: same confirm dialog, which also says the new style applies on the way
+        // back to the title (a run never changes look under the player; see refreshArtStyle).
+        inGameLangConfirmOpen_ = true;
+        inGameConfirmIsStyle_ = true;
+        inGameLangConfirmIdx_ = inGameMenuSel_ - locale_.languageCount();
+        inGameLangConfirmYes_ = true;
+        audio.play("confirm_click");
+    } else if (inGameMenuSel_ == locale_.languageCount() + settingsStyleRowCount()) {
         // The camera row (always last): cycles instantly, no confirm dialog needed -- unlike
         // language, this is a low-stakes preference whose effect the player already sees behind
         // this very menu (the maze keeps scrolling/paging under the scrim).
         setCameraModeIndex(1 - cameraModeIndex());
-        audio.play("confirm_click");
-    } else if (artStyles_.size() > 1 && inGameMenuSel_ > locale_.languageCount() &&
-               inGameMenuSel_ <= locale_.languageCount() + (int)artStyles_.size()) {
-        // An art style row (after the camera row): same confirm dialog, which also says the new
-        // style shows after a restart (the sprite atlas is built once at startup).
-        inGameLangConfirmOpen_ = true;
-        inGameConfirmIsStyle_ = true;
-        inGameLangConfirmIdx_ = inGameMenuSel_ - locale_.languageCount() - 1;
-        inGameLangConfirmYes_ = true;
         audio.play("confirm_click");
     }
 }
@@ -285,6 +284,7 @@ void Game::returnToTitle() {
     notifications_.clear();
     title_.setRunInProgress(false);
     title_.open();
+    refreshArtStyle();   // a style chosen during the run applies now (nothing of the run is on screen)
     refreshSlots();
 }
 

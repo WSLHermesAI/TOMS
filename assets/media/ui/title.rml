@@ -17,6 +17,7 @@
         <div id="header" data-if="title.header != ''">{{title.header}}</div>
         <div id="subheader" data-if="title.subheader != ''">{{title.subheader}}</div>
         <div data-for="row, i : title.rows">
+            <div class="section" data-if="row.section != ''">{{row.section}}</div>
             <div class="trow" data-class-selected="row.selected"
                  data-event-click="act('title_row', i)" data-event-mouseover="act('title_hover', i)">
                 <div class="accent"></div>

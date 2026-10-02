@@ -40,11 +40,14 @@ body { z-index: 60; background-color: #414155; text-align: center; }
 .trow.selected .cursor { visibility: visible; }
 .label { padding: 14px 16px 0 24px; font-size: 28px; color: #eef1f8; white-space: pre; }   /* keep the column spacing */
 #page.langs .label { padding-top: 8px; font-size: 25px; }
+/* Settings' section headings (Language / Art style), left-aligned over their rows */
+#page.langs .section { width: 520px; margin: 4px auto 6px auto; text-align: left; font-size: 20px; color: #f9e9b1; }
 /* Settings with the art style rows too (more than 6 rows): shorter rows so the list stays above
    the Back button; a row's second line ("applies after a restart") moves to its right end. */
 #page.langs.compact { top: 226px; }
 #page.langs.compact #subheader { margin-bottom: 8px; }
-#page.langs.compact .trow { min-height: 36px; margin-bottom: 5px; }
+#page.langs.compact .trow { min-height: 34px; margin-bottom: 4px; }
+#page.langs.compact .section { margin: 8px auto 4px auto; font-size: 18px; }
 #page.langs.compact .label { padding-top: 4px; font-size: 21px; }
 #page.langs.compact .cursor { top: 2px; font-size: 26px; }
 #page.langs.compact .sub { position: absolute; right: 16px; top: 9px; padding: 0; font-size: 15px; }

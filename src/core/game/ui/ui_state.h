@@ -21,6 +21,7 @@ struct UiRow {
     std::string sub;          // second, dimmer line ("" = none)
     bool selected = false;    // keyboard cursor / hover
     bool enabled = true;      // false = shown dimmed (locked skill, unaffordable recipe, ...)
+    std::string section;      // a heading drawn above this row ("" = none): Settings' Language / Art style
 };
 
 // A world-anchored name plate over a boss or roaming monster (design-space position).

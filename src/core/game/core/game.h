@@ -335,9 +335,12 @@ public:
     void saveCurrentRun();
     // Applies settings_.language to the string table and persists settings.json.
     void applyLanguage();
-    // Remembers art style `idx` (into artStyles()) in settings.json. Sprites are loaded once at
-    // startup, so it shows after a restart; the Settings dialog tells the player that.
+    // Remembers art style `idx` (into artStyles()) in settings.json. On the title screen it is
+    // applied at once (refreshArtStyle); chosen during a run, it applies on the way back to the title.
     void applyArtStyle(int idx);
+    // Loads the chosen style's sprites if they are not the ones in use -- only while the title
+    // screen is up (returnToTitle and the title's Settings page call it).
+    void refreshArtStyle();
     const std::vector<toms::ArtStyle>& artStyles() const { return artStyles_; }
     int loadedArtStyle() const { return loadedArtStyle_; }                  // in use since startup
     int chosenArtStyle() const { return toms::artStyleIndex(artStyles_, settings_.artStyle); }
@@ -531,6 +534,8 @@ private:
     std::string uiSpritePath(std::string id) const;
     std::string artStyleName(int idx) const;                     // localized, "Original" for 0
     void appendArtStyleRows(std::vector<toms::UiRow>& rows, int selected) const;   // Settings pages
+    int settingsStyleRowCount() const { return artStyles_.size() > 1 ? (int)artStyles_.size() : 0; }
+    bool loadSpriteAtlas(int style);   // builds + uploads the atlas for one art style
     std::string itemEffectSummary(const std::string& id) const;  // "HP +40 • DEF +1"
     void buildMenuUi(toms::UiMenu& out) const;                   // the in-game menu part of buildUiState
     // store system

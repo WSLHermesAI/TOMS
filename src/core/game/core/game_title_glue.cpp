@@ -68,14 +68,15 @@ void Game::applyLanguage() {
 }
 
 void Game::applyArtStyle(int idx) {
-    // Only remembered here: the sprite atlas (and the UI's image paths) are built from the style
-    // that was chosen when the game started (loadAssets), so the new one shows after a restart --
-    // the confirm dialog that led here said so.
+    // Persisted, then loaded at once if the title screen is up; chosen during a run it waits for
+    // the way back to the title (returnToTitle -> refreshArtStyle), so a run never changes look
+    // under the player. The confirm dialog that led here says which of the two happens.
     if (idx < 0 || idx >= (int)artStyles_.size()) idx = 0;
     settings_.artStyle = artStyles_[idx].id;
     title_.setStyleIndex(idx);
     toms::ensureSaveDir(toms::defaultSaveDir());
     toms::saveGameSettings(toms::defaultSaveDir() + "/settings.json", settings_);
+    refreshArtStyle();
 }
 
 void Game::applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& r,

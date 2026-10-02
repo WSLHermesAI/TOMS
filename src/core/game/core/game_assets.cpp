@@ -11,22 +11,15 @@
 
 using namespace toms::game_detail;
 
-bool Game::loadAssets(const std::string& assetDir) {
-    dataDir = assetDir;
-    // Create the renderer: bgfx on every platform (src/game/compat/renderer.h). The host
-    // (GameSession) owns the window and frees the renderer.
-    ren = new Renderer();
-    ren->init(1280, 720);   // size ignored by the bgfx renderer: the host sets the backbuffer size
-    // Art style (Settings > art style): read the choice now, because the atlas is built once here.
-    // A style replaces some or all sprites (assets/media/styles/<id>/sprites/<sprite>.png); the
-    // others keep the original art. See art_styles.h.
-    artStyles_ = toms::artStylesFromJson(readJsonFile(assetDir + "/styles/styles.json"));
-    loadedArtStyle_ = toms::artStyleIndex(artStyles_,
-        toms::loadGameSettings(toms::defaultSaveDir() + "/settings.json").artStyle);
-    const std::string styleDir = loadedArtStyle_ > 0
-        ? assetDir + "/styles/" + artStyles_[loadedArtStyle_].id + "/sprites/" : std::string();
-    styledSprites_.clear();
-
+// Builds the sprite atlas for art style `style` (index into artStyles_; 0 = the original art) and
+// uploads it, replacing the previous atlas. A style replaces some or all sprites
+// (assets/media/styles/<id>/sprites/<sprite>.png); the others keep the original art. Runs at startup
+// (loadAssets) and again when the player is on the title screen with another style chosen
+// (refreshArtStyle). On failure the previous atlas and loadedArtStyle_ stay as they were.
+bool Game::loadSpriteAtlas(int style) {
+    const std::string& assetDir = dataDir;
+    if (style < 0 || style >= (int)artStyles_.size()) style = 0;
+    const std::string styleDir = style > 0 ? assetDir + "/styles/" + artStyles_[style].id + "/sprites/" : std::string();
     // load sprites into a single uniform atlas (COLS columns). The cell size is the sprites' own
     // pixel size (32x32 in assets/media; a style may ship 64x64 -- tools/art/make_variant.py).
     const int COLS = 9;
@@ -48,10 +41,11 @@ bool Game::loadAssets(const std::string& assetDir) {
         }
     });
     int SW = 0, SH = 0;
+    std::vector<std::string> replaced;
     for (int i = 0; i < N_SPRITES; i++) {
         if (layers[i].empty()) { std::fprintf(stderr, "load fail %s/sprites/%s.png\n", assetDir.c_str(), SPRITE_ORDER[i]); return false; }
         idToLayer[SPRITE_ORDER[i]] = i;
-        if (styled[i]) styledSprites_.push_back(SPRITE_ORDER[i]);
+        if (styled[i]) replaced.push_back(SPRITE_ORDER[i]);
         SW = std::max(SW, widths[i]); SH = std::max(SH, heights[i]);
     }
     // One atlas cell size: a smaller sprite (an original 32px one next to a 64px style) is scaled
@@ -68,9 +62,33 @@ bool Game::loadAssets(const std::string& assetDir) {
         layers[i].swap(big);
     }
     std::fprintf(stderr, "[assets] sprites: %d x %dx%d px, art style '%s' (%d replaced)\n", N_SPRITES, SW, SH,
-                 artStyles_[loadedArtStyle_].id.empty() ? "original" : artStyles_[loadedArtStyle_].id.c_str(),
-                 (int)styledSprites_.size());
+                 artStyles_[style].id.empty() ? "original" : artStyles_[style].id.c_str(), (int)replaced.size());
     ren->loadSprites(layers, SW, SH);
+    loadedArtStyle_ = style;
+    styledSprites_.swap(replaced);   // uiSpritePath() follows the new style from the next UI frame
+    return true;
+}
+
+// The chosen style (Settings) takes effect only while the title screen is up -- nothing from a run
+// is on screen then. Called when the title reopens (returnToTitle) and right after the choice was
+// made on the title's own Settings page (applyArtStyle). Restarting the game also applies it.
+void Game::refreshArtStyle() {
+    if (!ren || !title_.isOpen()) return;
+    const int chosen = chosenArtStyle();
+    if (chosen != loadedArtStyle_) loadSpriteAtlas(chosen);
+}
+
+bool Game::loadAssets(const std::string& assetDir) {
+    dataDir = assetDir;
+    // Create the renderer: bgfx on every platform (src/game/compat/renderer.h). The host
+    // (GameSession) owns the window and frees the renderer.
+    ren = new Renderer();
+    ren->init(1280, 720);   // size ignored by the bgfx renderer: the host sets the backbuffer size
+    // Art styles (Settings > art style; art_styles.h): start with the one settings.json names.
+    artStyles_ = toms::artStylesFromJson(readJsonFile(assetDir + "/styles/styles.json"));
+    if (!loadSpriteAtlas(toms::artStyleIndex(artStyles_,
+            toms::loadGameSettings(toms::defaultSaveDir() + "/settings.json").artStyle)))
+        return false;
     // (Text is RmlUi's: see assets/media/fonts/NotoSansCJKtc-TOMS.otf and tools/make_ui_font.py.)
 
     // S1: character-level 佔格 table (docs/design/ART_AND_ABILITY_DESIGN.md F8). An absent file leaves
