@@ -18,6 +18,11 @@ clone、（可選）產生 SSH 金鑰並引導貼到 GitHub、建置與測試。
 所有管理員工作集中在**一次** UAC 內完成；clone 與金鑰則以一般使用者身分執行（避免 git 的 *dubious ownership*）。
 紀錄檔：`%TEMP%\TOMS_setup.log`、`%TEMP%\TOMS_setup_admin.log`。
 
+途中會問 **AI 美術工具（ComfyUI，可略過）**：(1) 在本機安裝 ComfyUI＋下載模型（約 13 GB，需 8 GB 以上 VRAM 的 NVIDIA 顯卡）、
+(2) 使用另一台機器上的 ComfyUI 伺服器（輸入網址，會檢查連線與伺服器缺哪些模型）、(3) 略過。
+之後可隨時重跑 `tools\setup_ai_art.cmd`。設定存在使用者環境變數 `COMFYUI_URL`／`COMFYUI_SERVER`（AIGamestyle 的腳本讀後者）。
+不需要管理員權限。
+
 手動做的話：
 
 ```bat

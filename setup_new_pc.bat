@@ -94,7 +94,8 @@ $welcome = "This will set up TOMS on this PC:`n`n" +
            "  2. Enable Windows long paths`n" +
            "  3. Clone the TOMS repository`n" +
            "  4. (optional) Create an SSH key so you can push to GitHub`n" +
-           "  5. (optional) Build and test the game`n`n" +
+           "  5. (optional) AI art tools: install ComfyUI + models here, or use a remote server`n" +
+           "  6. (optional) Build and test the game`n`n" +
            "Steps 1-2 need administrator permission. A dialog like this one will`n" +
            "warn you each time BEFORE Windows asks, so you know when to click 'Yes'.`n`n" +
            "Installing Visual Studio downloads several GB and can take 30-60 minutes.`n`nContinue?"
@@ -299,6 +300,14 @@ if ((Show-Box $sshText 'TOMS setup - SSH key' 'YesNo' 'Question') -eq 'Yes') {
             }
         }
     }
+}
+
+# ------------------------------------------------------------------ 5b. AI art tools (optional)
+# Asks: install ComfyUI + models here, use a ComfyUI server on another machine, or skip. No admin rights needed.
+$aiArt = Join-Path $repo 'tools\setup_ai_art.ps1'
+if (Test-Path $aiArt) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $aiArt -FromSetup
+    Log "AI art setup finished (exit $LASTEXITCODE); rerun any time: tools\setup_ai_art.cmd"
 }
 
 # ------------------------------------------------------------------ 6. environment check + build + test
