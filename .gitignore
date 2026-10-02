@@ -1,4 +1,8 @@
 # build output (CMakePresets.json puts every preset under out/)
+# Everything generated lives in Build/: CMake build trees (Build/<preset>), packaged games
+# (Build/dist), AI art experiments (Build/art_out, Build/assets_variants), the font download cache.
+/Build/
+# older locations (before 2026-10-02), kept so stale copies stay out of git
 out/
 build*/
 .vs/
@@ -36,8 +40,6 @@ web/
 web-gl/
 
 # AI sprite experiments (tools/art/reskin_sprites.py); pick results and copy them on purpose
-art_out/
-assets_variants/
 
 # Python bytecode caches (tools/*.py)
 __pycache__/

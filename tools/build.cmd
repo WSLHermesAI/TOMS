@@ -27,7 +27,7 @@ cmake --preset "%PRESET%" %POPUPS%
 if errorlevel 1 exit /b 1
 cmake --build --preset "%PRESET%"
 if errorlevel 1 exit /b 1
-echo [toms] done. Executables: %CD%\out\build\%PRESET%\bin
+echo [toms] done. Executables: %CD%\Build\%PRESET%\bin
 exit /b 0
 
 :novs

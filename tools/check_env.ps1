@@ -111,7 +111,7 @@ Add-Result "Git" ([bool]$git) $true `
 # ---------------------------------------------------------------------------------------------
 # 8. Network (only needed until the first configure has downloaded the dependencies)
 # ---------------------------------------------------------------------------------------------
-$depsCached = @(Get-ChildItem (Join-Path $root 'out\build') -Directory -ErrorAction SilentlyContinue |
+$depsCached = @(Get-ChildItem (Join-Path $root 'Build') -Directory -ErrorAction SilentlyContinue |
     Where-Object { Test-Path (Join-Path $_.FullName '_deps\bgfx-src') }).Count -gt 0
 $net = $false
 try {
@@ -212,7 +212,7 @@ Add-Result "Emscripten SDK (emsdk) - web build only" ([bool]$emVer) $false `
     "git clone https://github.com/emscripten-core/emsdk.git, then in that folder: emsdk install latest, emsdk activate latest. Set EMSDK to the folder if it is elsewhere. Needed only for tools\build_web.cmd." `
     "https://emscripten.org/docs/getting_started/downloads.html"
 
-$hostShaderc = Get-ChildItem (Join-Path $root 'out\build') -Recurse -Filter shaderc.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+$hostShaderc = Get-ChildItem (Join-Path $root 'Build') -Recurse -Filter shaderc.exe -ErrorAction SilentlyContinue | Select-Object -First 1
 Add-Result "Host shaderc.exe (from a desktop build) - web build only" ([bool]$hostShaderc) $false `
     $(if ($hostShaderc) { $hostShaderc.FullName } else { "not built yet (tools\build_web.cmd builds the desktop shipping preset first to get it)" }) `
     "Run tools\build.cmd windows-shipping once, or just run tools\build_web.cmd (it does this for you)." `

@@ -1,7 +1,7 @@
 @echo off
 rem build_web.cmd [release|debug|mt] -- build the browser version of toms_game on Windows.
-rem   Output: build-web-<release|debug>-windows\bin\toms_game.html (+ .js .wasm .data)
-rem   mt = the multithreaded release: build-web-release-mt-windows (docs\10_THREADS.md)
+rem   Output: Build\web-<release|debug>-windows\bin\toms_game.html (+ .js .wasm .data)
+rem   mt = the multithreaded release: Build\web-release-mt-windows (docs\10_THREADS.md)
 rem   Then run tools\serve_web.cmd to play it in the browser.
 rem Needs: emsdk (Emscripten), Visual Studio's CMake + Ninja (or both on PATH), and a host
 rem shaderc (built automatically from the desktop shipping preset if there is none yet).
@@ -13,9 +13,9 @@ if /i not "%KIND%"=="release" if /i not "%KIND%"=="debug" if /i not "%KIND%"=="m
   exit /b 2
 )
 set "PRESET=web-%KIND%-windows"
-set "OUTDIR=build-web-%KIND%-windows"
+set "OUTDIR=Build\web-%KIND%-windows"
 if /i "%KIND%"=="mt" set "PRESET=web-release-mt-windows"
-if /i "%KIND%"=="mt" set "OUTDIR=build-web-release-mt-windows"
+if /i "%KIND%"=="mt" set "OUTDIR=Build\web-release-mt-windows"
 cd /d "%~dp0.."
 
 rem ---- 1. Emscripten SDK ----
@@ -39,11 +39,11 @@ where ninja >nul 2>&1 || goto :nocmake
 
 rem ---- 3. Host shaderc (the web build compiles shaders on this machine) ----
 set "HOST_SHADERC="
-for /f "delims=" %%f in ('dir /b /s "out\build\shaderc.exe" 2^>nul') do if not defined HOST_SHADERC set "HOST_SHADERC=%%f"
+for /f "delims=" %%f in ('dir /b /s "Build\shaderc.exe" 2^>nul') do if not defined HOST_SHADERC set "HOST_SHADERC=%%f"
 if not defined HOST_SHADERC (
   echo [toms] No host shaderc yet: building the desktop shipping preset once to get one...
   call "%~dp0build.cmd" windows-shipping || exit /b 1
-  for /f "delims=" %%f in ('dir /b /s "out\build\shaderc.exe" 2^>nul') do if not defined HOST_SHADERC set "HOST_SHADERC=%%f"
+  for /f "delims=" %%f in ('dir /b /s "Build\shaderc.exe" 2^>nul') do if not defined HOST_SHADERC set "HOST_SHADERC=%%f"
 )
 if not defined HOST_SHADERC goto :noshaderc
 echo [toms] host shaderc: %HOST_SHADERC%

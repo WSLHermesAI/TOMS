@@ -10,7 +10,7 @@
       "name": "windows-base",
       "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "binaryDir": "${sourceDir}/Build/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -89,7 +89,7 @@
         "CMAKE_BUILD_TYPE": "Debug"
       },
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-web-debug",
+      "binaryDir": "${sourceDir}/Build/web-debug",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -111,7 +111,7 @@
         "CMAKE_BUILD_TYPE": "Release"
       },
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-web-release",
+      "binaryDir": "${sourceDir}/Build/web-release",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -133,7 +133,7 @@
         "CMAKE_BUILD_TYPE": "Debug"
       },
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-web-debug-windows",
+      "binaryDir": "${sourceDir}/Build/web-debug-windows",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -155,7 +155,7 @@
         "CMAKE_BUILD_TYPE": "Release"
       },
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-web-release-windows",
+      "binaryDir": "${sourceDir}/Build/web-release-windows",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -178,7 +178,7 @@
         "TOMS_WEB_THREADS": "ON"
       },
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-web-release-mt-windows",
+      "binaryDir": "${sourceDir}/Build/web-release-mt-windows",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -190,7 +190,7 @@
       "displayName": "Android/arm64 Debug",
       "description": "NDK arm64-v8a, android-24, c++_shared. Needs ANDROID_NDK + a host shaderc (see docs/07_BUILD_ANDROID.md).",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-android-debug",
+      "binaryDir": "${sourceDir}/Build/android-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_TOOLCHAIN_FILE": "$env{ANDROID_NDK}/build/cmake/android.toolchain.cmake",
@@ -212,7 +212,7 @@
       "displayName": "Android/x86_64 Debug (emulator)",
       "description": "NDK x86_64 for the Android Studio emulator, android-24, c++_shared. Needs ANDROID_NDK + TOMS_HOST_SHADERC.",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-android-x86_64-debug",
+      "binaryDir": "${sourceDir}/Build/android-x86_64-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_TOOLCHAIN_FILE": "$env{ANDROID_NDK}/build/cmake/android.toolchain.cmake",
@@ -234,7 +234,7 @@
       "displayName": "Android/arm64 Release",
       "description": "NDK arm64-v8a, android-24, c++_shared, 16 KB pages. Needs ANDROID_NDK + TOMS_HOST_SHADERC.",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-android-release",
+      "binaryDir": "${sourceDir}/Build/android-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_TOOLCHAIN_FILE": "$env{ANDROID_NDK}/build/cmake/android.toolchain.cmake",

@@ -153,7 +153,7 @@ Gradle 8.7 與 Android Gradle Plugin 8.6.1 由 `android\gradlew.bat` 自動下�
 ## A3. 主機用的 shaderc
 
 Android 和 web 一樣是**交叉編譯**，shaderc 必須在這台 Windows 上跑。任何一次桌機建置都會產生它
-（`tools\build.cmd windows-shipping` → `out\build\windows-shipping\bin\shaderc.exe`），`build_android.cmd` 會自己找。
+（`tools\build.cmd windows-shipping` → `Build\windows-shipping\bin\shaderc.exe`），`build_android.cmd` 會自己找。
 沒有它 CMake 會直接報錯（Android 無法像 web 一樣退回 wasm 版 shaderc）。
 
 著色器 profile：`300_es`（GLES 3）+ `spirv`（Vulkan）。這版 bgfx 的 shaderc 已沒有 GLES 2 的 `100_es`，

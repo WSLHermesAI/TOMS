@@ -18,7 +18,7 @@ would otherwise show as an empty box):
     python tools/make_ui_font.py --check  # only report characters the current subset lacks
 
 Needs Python 3 with fontTools (pip install fonttools). The full source font is downloaded once
-into out/font-cache/ (not committed). License: SIL Open Font License 1.1 (assets/media/fonts/OFL.txt).
+into Build/font-cache/ (not committed). License: SIL Open Font License 1.1 (assets/media/fonts/OFL.txt).
 """
 import json
 import pathlib
@@ -28,7 +28,7 @@ import urllib.request
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE_URL = ("https://github.com/notofonts/noto-cjk/raw/main/Sans/OTF/TraditionalChinese/"
               "NotoSansCJKtc-Regular.otf")
-SOURCE = ROOT / "out" / "font-cache" / "NotoSansCJKtc-Regular.otf"
+SOURCE = ROOT / "Build" / "font-cache" / "NotoSansCJKtc-Regular.otf"
 OUTPUT = ROOT / "assets" / "media" / "fonts" / "NotoSansCJKtc-TOMS.otf"
 
 # Written by C++ code rather than data files (HUD separators, arrows, check marks).

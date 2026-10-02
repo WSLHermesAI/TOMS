@@ -93,9 +93,9 @@ toms_smoke_test(stage_opengl stage       opengl  0.5  --frames=120 --keys=enter@
 #   web.page_nothreads   the packaged page with ?nothreads: the single-threaded fallback
 # docs/10_THREADS.md
 find_program(TOMS_NODE node)
-set(TOMS_WEB_BUILD_DIR    "${CMAKE_SOURCE_DIR}/build-web-release-windows/bin"    CACHE PATH "Single-threaded web build tested by the 'web' label")
-set(TOMS_WEB_MT_BUILD_DIR "${CMAKE_SOURCE_DIR}/build-web-release-mt-windows/bin" CACHE PATH "Multithreaded web build tested by the 'web' label")
-set(TOMS_WEB_PACKAGE_DIR  "${CMAKE_SOURCE_DIR}/dist/TOMS-web"                    CACHE PATH "Packaged web page tested by the 'web' label")
+set(TOMS_WEB_BUILD_DIR    "${CMAKE_SOURCE_DIR}/Build/web-release-windows/bin"    CACHE PATH "Single-threaded web build tested by the 'web' label")
+set(TOMS_WEB_MT_BUILD_DIR "${CMAKE_SOURCE_DIR}/Build/web-release-mt-windows/bin" CACHE PATH "Multithreaded web build tested by the 'web' label")
+set(TOMS_WEB_PACKAGE_DIR  "${CMAKE_SOURCE_DIR}/Build/dist/TOMS-web"              CACHE PATH "Packaged web page tested by the 'web' label")
 function(toms_web_test name dir)
     add_test(NAME web.${name}
              COMMAND "${TOMS_NODE}" "${CMAKE_SOURCE_DIR}/tools/web_smoke_test.mjs" "${dir}" "${CMAKE_BINARY_DIR}/test-run/web_${name}" ${ARGN})

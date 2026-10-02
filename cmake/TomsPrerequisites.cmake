@@ -216,15 +216,15 @@ endif()
 # 6. Web and Android: a shader compiler that runs on THIS machine
 # ============================================================================================
 # shaderc is a build tool: for a web build it must run on the build machine, not in the browser.
-# The desktop build already produced one (out/build/<preset>/bin/shaderc.exe), so the web build
+# The desktop build already produced one (Build/<preset>/bin/shaderc.exe), so the web build
 # uses it instead of compiling glslang, tint, spirv-cross and shaderc itself to wasm and running
 # them under node (slow, and it runs out of memory at full parallelism).
 if(WEB OR ANDROID)
     set(TOMS_HOST_SHADERC "" CACHE FILEPATH "shaderc built for the build machine (used by web builds)")
     if(NOT TOMS_HOST_SHADERC)
         file(GLOB _shaderc_candidates
-             "${CMAKE_CURRENT_LIST_DIR}/../out/build/*/bin/shaderc.exe"
-             "${CMAKE_CURRENT_LIST_DIR}/../out/build/*/bin/shaderc")
+             "${CMAKE_CURRENT_LIST_DIR}/../Build/*/bin/shaderc.exe"
+             "${CMAKE_CURRENT_LIST_DIR}/../Build/*/bin/shaderc")
         if(_shaderc_candidates)
             list(GET _shaderc_candidates 0 _shaderc)
             get_filename_component(_shaderc "${_shaderc}" ABSOLUTE)

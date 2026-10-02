@@ -329,7 +329,7 @@ $built = $false
 if ((Show-Box $buildText 'TOMS setup - build' 'YesNo' 'Question') -eq 'Yes') {
     $env:TOMS_NO_POPUPS = '1'
     & "$repo\tools\build.cmd" windows-release
-    $built = ($LASTEXITCODE -eq 0) -and (Test-Path "$repo\out\build\windows-release\bin\toms_game.exe")
+    $built = ($LASTEXITCODE -eq 0) -and (Test-Path "$repo\Build\windows-release\bin\toms_game.exe")
     Log "build ok = $built" $(if ($built) { 'Green' } else { 'Red' })
     if ($built) {
         & "$repo\tools\test.cmd" windows-release
@@ -345,7 +345,7 @@ if ($built) {
     $summary += "Build: OK`nTests: " + $(if ($testsOk) { 'all passed' } else { 'FAILED (see console)' }) +
                 "`n`nStart the game now?"
     if ((Show-Box $summary 'TOMS setup - done' 'YesNo' 'Information') -eq 'Yes') {
-        Start-Process "$repo\out\build\windows-release\bin\toms_game.exe" -WorkingDirectory "$repo\out\build\windows-release\bin"
+        Start-Process "$repo\Build\windows-release\bin\toms_game.exe" -WorkingDirectory "$repo\Build\windows-release\bin"
     }
 } else {
     $summary += "Build: not run (or failed). Later: tools\build.cmd windows-release`n`n" +

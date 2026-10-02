@@ -44,10 +44,10 @@ self.crossOriginIsolated". So there are two web builds, and the page picks one:
 
 | Build | Preset / command | Output |
 |---|---|---|
-| single-threaded | `tools\build_web.cmd` (`web-release-windows`) | `build-web-release-windows\bin` |
-| multithreaded | `tools\build_web.cmd mt` (`web-release-mt-windows`: `-pthread`, 5 pre-started workers, the job system uses 4) | `build-web-release-mt-windows\bin` |
+| single-threaded | `tools\build_web.cmd` (`web-release-windows`) | `Build\web-release-windows\bin` |
+| multithreaded | `tools\build_web.cmd mt` (`web-release-mt-windows`: `-pthread`, 5 pre-started workers, the job system uses 4) | `Build\web-release-mt-windows\bin` |
 
-`build_web.bat` builds both and `tools\package.ps1` puts both in `dist\TOMS-web` (`toms_game.<stamp>.*` and
+`build_web.bat` builds both and `tools\package.ps1` puts both in `Build\dist\TOMS-web` (`toms_game.<stamp>.*` and
 `toms_game_mt.<stamp>.*`). A player downloads only one. `index.html` decides at load time:
 
 ```js

@@ -8,7 +8,7 @@ plugin or install is needed; it runs in current Chrome, Edge, Firefox and Safari
 
 Double-click **`build_web.bat`** in the repository root. It runs `tools\build_web.cmd release` and
 `tools\build_web.cmd mt` (the multithreaded variant, [10](10_THREADS.md)), then `tools\package.ps1 -Target web`,
-which writes **`dist\TOMS-web\`** (and `dist\TOMS-web.zip`):
+which writes **`Build\dist\TOMS-web\`** (and `Build\dist\TOMS-web.zip`):
 `index.html` (the page; it loads the threaded build where the browser allows threads and the single-threaded
 one otherwise), `toms_game.<stamp>.js/.wasm/.data` and `toms_game_mt.<stamp>.js/.wasm/.data` (version-stamped so
 caches never mix releases; the stamp is in `version.txt`), `coi-serviceworker.js` (gives hosts like GitHub Pages
@@ -22,7 +22,7 @@ the folder with a plain static server and running `tools/web_smoke_test.mjs` aga
 
 ```bat
 cd TOMS
-tools\build_web.cmd            :: builds build-web-release-windows\bin\toms_game.html
+tools\build_web.cmd            :: builds Build\web-release-windows\bin\toms_game.html
 tools\serve_web.cmd            :: serves it and opens http://localhost:8099/toms_game.html
 ```
 
@@ -63,7 +63,7 @@ emsdk's Python for the local web server.
 
 1. **Finds and loads emsdk** (`emsdk_env.bat`), so `emcc` and emsdk's `node` are on PATH.
 2. **Finds CMake and Ninja**: Visual Studio's copies (through `vswhere`), otherwise PATH.
-3. **Finds a host `shaderc.exe`** in `out\build\*\bin\`. Shaders are compiled on *this* machine
+3. **Finds a host `shaderc.exe`** in `Build\*\bin\`. Shaders are compiled on *this* machine
    at build time, so the web build needs a Windows `shaderc.exe`, the same one the desktop build
    uses. **If none exists yet, it first builds the `windows-shipping` desktop preset** to get one.
    That is the slow part of a first run.
@@ -74,8 +74,8 @@ Build options:
 
 | Command | Preset | Output folder | Use |
 |---|---|---|---|
-| `tools\build_web.cmd` or `tools\build_web.cmd release` | `web-release-windows` (Release) | `build-web-release-windows\bin\` | what you publish (~5.3 MB, about 1.7 MB downloaded with gzip) |
-| `tools\build_web.cmd debug` | `web-debug-windows` (Debug, DWARF) | `build-web-debug-windows\bin\` | stepping through C++ in Chrome DevTools |
+| `tools\build_web.cmd` or `tools\build_web.cmd release` | `web-release-windows` (Release) | `Build\web-release-windows\bin\` | what you publish (~5.3 MB, about 1.7 MB downloaded with gzip) |
+| `tools\build_web.cmd debug` | `web-debug-windows` (Debug, DWARF) | `Build\web-debug-windows\bin\` | stepping through C++ in Chrome DevTools |
 
 Set `TOMS_NO_POPUPS=1` before running it to suppress the prerequisite popups (build servers).
 

@@ -5,7 +5,7 @@ Each 32x32 sprite in assets/media/sprites is scaled up (nearest) to 1024, redraw
 while ControlNet keeps its outline, its background removed (InspyrenetRembg), then scaled back down to the
 game's sprite size: each sprite is reduced to a small palette first and every output pixel takes the most
 common colour of its block (keeps pixel-art edges crisp, unlike averaging). Outputs never touch assets/: they go
-to art_out/<run>/ together with contact sheets for picking the best seed.
+to Build/art_out/<run>/ together with contact sheets for picking the best seed.
 
   python tools/art/reskin_sprites.py --sprites slime,wall,player
   python tools/art/reskin_sprites.py --sprites all --seeds 2 --style "bright cartoon, Game Boy Advance style"
@@ -269,7 +269,7 @@ def main():
     p.add_argument("--controlnet", default="controlnet-union-sdxl-promax.safetensors")
     p.add_argument("--vae", default="sdxl.vae.safetensors")
     p.add_argument("--server", default=os.environ.get("COMFYUI_URL") or "http://127.0.0.1:8188")
-    p.add_argument("--out", default=None, help="output folder (default art_out/<date-time>)")
+    p.add_argument("--out", default=None, help="output folder (default Build/art_out/<date-time>)")
     a = p.parse_args()
 
     if a.reprocess:
@@ -290,7 +290,7 @@ def main():
     if unknown:
         sys.exit(f"unknown sprite id(s): {', '.join(unknown)}  (known: {', '.join(SUBJECTS)})")
     sizes = [int(s) for s in a.sizes.split(",")]
-    out = Path(a.out) if a.out else ROOT / "art_out" / time.strftime("%Y%m%d-%H%M%S")
+    out = Path(a.out) if a.out else ROOT / "Build" / "art_out" / time.strftime("%Y%m%d-%H%M%S")
     (out / "raw").mkdir(parents=True, exist_ok=True)
 
     comfy = Comfy(a.server)

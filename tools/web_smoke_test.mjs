@@ -9,7 +9,7 @@
 //   --expect-threads=    yes: the page must run with job-system workers; no: without
 //   --query=             appended to the page URL (e.g. nothreads, the page's opt-out)
 //
-// Give it a folder (build-web-release-windows\bin, or dist\TOMS-web) and it serves that folder
+// Give it a folder (Build\web-release-windows\bin, or Build\dist\TOMS-web) and it serves that folder
 // itself; or give it the URL of a running server (tools\serve_web.cmd). Needs Node 22+ (built-in
 // WebSocket; emsdk's node is older) and Chrome or Edge. Each run starts with an empty browser
 // profile, so no save from an earlier run is there.

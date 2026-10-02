@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
   Packages a finished build into a folder (and a zip) you can hand out.
-    -Target windows : dist\TOMS-windows\  toms_game.exe + assets\ + the MSVC runtime DLLs.
+    -Target windows : Build\dist\TOMS-windows\  toms_game.exe + assets\ + the MSVC runtime DLLs.
                       Copy the folder anywhere and double-click toms_game.exe.
-    -Target web     : dist\TOMS-web\      index.html + toms_game.js/.wasm/.data (+ server MIME config).
+    -Target web     : Build\dist\TOMS-web\      index.html + toms_game.js/.wasm/.data (+ server MIME config).
                       Copy the folder's files to any web server.
   Called by build_windows.bat / build_web.bat after the build.
 #>
@@ -11,7 +11,7 @@ param([Parameter(Mandatory = $true)][ValidateSet('windows', 'web')][string]$Targ
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$dist = Join-Path $root 'dist'
+$dist = Join-Path $root 'Build\dist'
 New-Item -ItemType Directory -Force $dist | Out-Null
 
 function Reset-Dir([string]$path) {
@@ -24,7 +24,7 @@ function Zip-Dir([string]$dir, [string]$zip) {
 }
 
 if ($Target -eq 'windows') {
-    $bin = Join-Path $root 'out\build\windows-shipping\bin'
+    $bin = Join-Path $root 'Build\windows-shipping\bin'
     $exe = Join-Path $bin 'toms_game.exe'
     if (-not (Test-Path $exe)) { throw "No $exe. Build first: tools\build.cmd windows-shipping" }
     $out = Join-Path $dist 'TOMS-windows'
@@ -64,7 +64,7 @@ Keep the "assets" folder next to toms_game.exe.
     Zip-Dir $out (Join-Path $dist 'TOMS-windows.zip')
 }
 else {
-    $bin = Join-Path $root 'build-web-release-windows\bin'
+    $bin = Join-Path $root 'Build\web-release-windows\bin'
     foreach ($f in 'toms_game.html', 'toms_game.js', 'toms_game.wasm', 'toms_game.data') {
         if (-not (Test-Path (Join-Path $bin $f))) { throw "No $bin\$f. Build first: tools\build_web.cmd release" }
     }
@@ -105,7 +105,7 @@ else {
     # The multithreaded build (tools\build_web.cmd mt), when it has been built: the page loads it on
     # a cross-origin-isolated page and the single-threaded one otherwise; coi-serviceworker.js makes
     # hosts that cannot send the COOP/COEP headers (GitHub Pages) isolated. docs\10_THREADS.md.
-    $binMt = Join-Path $root 'build-web-release-mt-windows\bin'
+    $binMt = Join-Path $root 'Build\web-release-mt-windows\bin'
     $haveMt = @('toms_game.js', 'toms_game.wasm', 'toms_game.data' | Where-Object { -not (Test-Path (Join-Path $binMt $_)) }).Count -eq 0
     if ($haveMt) {
         $jsMt = Copy-WebBuild $binMt 'toms_game_mt'

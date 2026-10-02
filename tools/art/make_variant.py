@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """Builds a playable art variant of TOMS from picked reskin results (tools/art/reskin_sprites.py).
 
-  python tools/art/make_variant.py --run art_out/dark16 --name dark16
-  python tools/art/make_variant.py --run art_out/dark16 --name dark16 --pick slime=art_out/trial2:1003 --pick wall=1001
+  python tools/art/make_variant.py --run Build/art_out/dark16 --name dark16
+  python tools/art/make_variant.py --run Build/art_out/dark16 --name dark16 --pick slime=Build/art_out/trial2:1003 --pick wall=1001
 
 Picks live in <run>/picks.json (sprite id -> seed). The first call writes it with the first seed of every
 sprite; edit it, or pass --pick id=seed (from --run) / --pick id=<other run folder>:seed, which also updates
 the file. Sprites without a pick keep the original art.
 
-Result: assets_variants/<name>/media (a copy of assets/media with the picked sprites) and
-assets_variants/<name>/data (a copy of assets/data: the game reads <assets>/../data). assets/ is not touched.
-Play it with:  toms_game.exe --assets=assets_variants/<name>/media
+Result: Build/assets_variants/<name>/media (a copy of assets/media with the picked sprites) and
+Build/assets_variants/<name>/data (a copy of assets/data: the game reads <assets>/../data). assets/ is not touched.
+Play it with:  toms_game.exe --assets=Build/assets_variants/<name>/media
 
 --install instead adds the picks to the game as a selectable art style (Settings > art style; the
 choice applies after a restart): assets/media/styles/<name>/sprites/ + an entry in
 assets/media/styles/styles.json, with the display name from --title. Sprites without a pick keep the
 original art, which the game scales to the style's size by itself.
 
-  python tools/art/make_variant.py --run art_out/dark16 --name dark16 --size 64 --install \
+  python tools/art/make_variant.py --run Build/art_out/dark16 --name dark16 --size 64 --install \
       --title "zh_TW=暗黑奇幻 16-bit,en=Dark fantasy 16-bit"
 
 --size picks the sprite size (default: the game's 32; 64 shows much more of the AI detail). The engine takes
@@ -39,8 +39,8 @@ DATA = ROOT / "assets" / "data"
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--run", required=True, help="reskin run folder, e.g. art_out/dark16")
-    p.add_argument("--name", required=True, help="variant name -> assets_variants/<name>")
+    p.add_argument("--run", required=True, help="reskin run folder, e.g. Build/art_out/dark16")
+    p.add_argument("--name", required=True, help="variant name -> Build/assets_variants/<name>")
     p.add_argument("--pick", action="append", default=[], help="id=seed or id=<run folder>:seed (repeatable)")
     p.add_argument("--size", type=int, default=None, help="sprite size in px (default: assets/media's, i.e. 32)")
     p.add_argument("--install", action="store_true",
@@ -86,7 +86,7 @@ def main():
         install_style(a, chosen, size)
         return
 
-    out = ROOT / "assets_variants" / a.name
+    out = ROOT / "Build" / "assets_variants" / a.name
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(MEDIA, out / "media")
@@ -111,7 +111,7 @@ def main():
 
     print(f"[variant] {size}px: {len(chosen)} sprites replaced, {len(upscaled)} original(s) scaled up, the rest original -> {out}")
     print(f"[variant] picks: {picks_file}")
-    builds = [ROOT / "out" / "build" / b / "bin" / "toms_game.exe" for b in
+    builds = [ROOT / "Build" / b / "bin" / "toms_game.exe" for b in
               ("windows-release", "windows-shipping", "windows-debug", "ci-windows")]
     exe = next((b for b in builds if b.exists()), builds[0])
     print(f'[variant] play:  "{exe}" --assets="{out / "media"}"')

@@ -34,7 +34,7 @@ tools\build.cmd windows-release
 tools\test.cmd
 ```
 
-跑 `dist\TOMS-windows\toms_game.exe`（或 `out\build\windows-release\bin\`）就算成功。
+跑 `Build\dist\TOMS-windows\toms_game.exe`（或 `Build\windows-release\bin\`）就算成功。
 **不需要** Git LFS、不需要處理 symlink、不怕大小寫衝突、換行已經由 `.gitattributes` 處理好。
 
 ---
@@ -56,19 +56,19 @@ tools\test.cmd
    → 驗收：git -C TOMS submodule status 有輸出；git -C TOMS status -sb 乾淨（沒有 Modified/Untracked）
 2. git 設定
    git -C TOMS config core.longpaths true
-   → 理由：建置目錄 out\build\...\_deps\... 很深，Windows 未開長路徑會在建置時失敗
+   → 理由：建置目錄 Build\...\_deps\... 很深，Windows 未開長路徑會在建置時失敗
 3. 環境檢查
    tools\check_env.cmd          （會開彈窗列出缺少的項目與下載連結）
    → 驗收：必需要素全 [ OK ]；缺 Visual Studio 2026 + Desktop development with C++、CMake、Ninja、Git for Windows
 4. 設定 + 建置（第一次會下載並編譯 bgfx / SDL3 / Dear ImGui / glm，數分鐘）
    tools\build.cmd windows-release
-   → 驗收：exit code 0，且 out\build\windows-release\bin\ 內有 toms_game.exe
+   → 驗收：exit code 0，且 Build\windows-release\bin\ 內有 toms_game.exe
 5. 測試
    tools\test.cmd                     （全部，約 45 秒）
    tools\test.cmd windows-release -L unit   （只跑單元測試，不到 1 秒）
    → 驗收：貼出 ctest 的 pass/fail 統計
 6. 執行遊戲
-   跑 out\build\windows-release\bin\toms_game.exe（或 build_windows.bat 產出的 dist\TOMS-windows\toms_game.exe）
+   跑 Build\windows-release\bin\toms_game.exe（或 build_windows.bat 產出的 Build\dist\TOMS-windows\toms_game.exe）
    → 驗收：視窗開啟、看得到標題畫面。若失敗，貼出完整錯誤，不要猜。
 
 回報時請明確區分三件事，不要混在一起講：
@@ -188,10 +188,10 @@ ssh -T git@github.com
 | 指令 | 產出 |
 |---|---|
 | `tools\check_env.cmd` | 環境檢查（`-NoGui` 為純文字） |
-| `tools\build.cmd windows-release` | `out\build\windows-release\bin\`（`toms_game.exe`） |
+| `tools\build.cmd windows-release` | `Build\windows-release\bin\`（`toms_game.exe`） |
 | `tools\build.cmd windows-debug` | 同上，Debug |
-| `build_windows.bat` | 出貨包 `dist\TOMS-windows\`（含 `assets\` 與 MSVC runtime，可整個資料夾複製走） |
-| `build_web.bat` / `publish_web.bat` | `dist\TOMS-web\` / 發佈到 GitHub Pages |
+| `build_windows.bat` | 出貨包 `Build\dist\TOMS-windows\`（含 `assets\` 與 MSVC runtime，可整個資料夾複製走） |
+| `build_web.bat` / `publish_web.bat` | `Build\dist\TOMS-web\` / 發佈到 GitHub Pages |
 | `tools\test.cmd [preset] [-L unit]` | CTest（VS 的 Test Explorer 也看得到同一批測試） |
 
 CMake preset 名稱（`CMakePresets.json`）：
@@ -207,9 +207,9 @@ CMake preset 名稱（`CMakePresets.json`）：
 
 依序確認，**沒過的就說沒過**：
 
-1. `git status` 乾淨（不會因為建置而變髒——`out/`、`dist/`、`web/`、`web-gl/` 都已 ignore）。
+1. `git status` 乾淨（不會因為建置而變髒——所有產出都在已 ignore 的 `Build/` 底下）。
 2. `tools\check_env.cmd` 必需要素全 OK。
-3. `tools\build.cmd windows-release` → `exit 0` 且存在 `out\build\windows-release\bin\toms_game.exe`。
+3. `tools\build.cmd windows-release` → `exit 0` 且存在 `Build\windows-release\bin\toms_game.exe`。
 4. `tools\test.cmd` → CTest 全綠。
 5. 執行 `toms_game.exe` → 標題畫面出現（**玩家可見**才算完成）。
 6. 隨便動一下（點擊移動、開背包）→ 確認輸入有反應，不是靜態畫面。
@@ -219,7 +219,7 @@ CMake preset 名稱（`CMakePresets.json`）：
 ## 6. 常見陷阱（含本次實測踩到的）
 
 ### Windows
-- **路徑太長** → `core.longpaths true`（見 2.3）。建置樹 `out\build\*\_deps\*` 很深。
+- **路徑太長** → `core.longpaths true`（見 2.3）。建置樹 `Build\*\_deps\*` 很深。
 - **Qt 找不到** → 編輯器不會被建置（其餘照常）。確認 Qt kit 是 **MSVC 2022 64-bit**。
 - **git 不在 PATH** → 第一次 configure 要 clone bgfx/SDL3/ImGui/glm，會直接失敗。
 - **第一次 configure 需連 github.com**；離線環境要先在有網路的機器建置過。
@@ -237,7 +237,7 @@ CMake preset 名稱（`CMakePresets.json`）：
   （Linux 不含 `s_5_0`，因為那需要 shaderc 的 D3D4Linux 支援）。
 
 ### 一律適用
-- **不要**把 `out/`、`dist/`、`web/`、`web-gl/`、`*.deb`、`.spv` 提交進版控。
+- **不要**把 `Build/`（建置、打包、AI 美術實驗）、`*.deb`、`.spv` 提交進版控。
 - 本專案**沒有** LFS、沒有 symlink、沒有大小寫衝突——遇到相關問題請先懷疑環境，不是 repo。
 
 ---

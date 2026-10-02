@@ -27,8 +27,8 @@ goto :args
 
 :run
 cd /d "%ROOT%"
-if not exist "out\build\%PRESET%\CTestTestfile.cmake" (
-  echo [toms] out\build\%PRESET% has no tests yet: run tools\build.cmd %PRESET% first.
+if not exist "Build\%PRESET%\CTestTestfile.cmake" (
+  echo [toms] Build\%PRESET% has no tests yet: run tools\build.cmd %PRESET% first.
   exit /b 1
 )
 "%CTEST%" --preset "%PRESET%" -j 4%ARGS%

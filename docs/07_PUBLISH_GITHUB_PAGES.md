@@ -28,11 +28,11 @@ Double-click **`publish_web.bat`** in the repository root, or run it in a comman
 |---|---|
 | `publish_web.bat` | builds the web release (`build_web.bat`), prepares the site, **asks**, then pushes |
 | `publish_web.bat dryrun` | builds and prepares, shows what would change, pushes **nothing** |
-| `publish_web.bat nobuild` | publishes the existing `dist\TOMS-web` without rebuilding |
+| `publish_web.bat nobuild` | publishes the existing `Build\dist\TOMS-web` without rebuilding |
 
 What happens:
 
-1. `build_web.bat` builds the web release and packages it into `dist\TOMS-web\` with
+1. `build_web.bat` builds the web release and packages it into `Build\dist\TOMS-web\` with
    **version-stamped file names**: `toms_game.<commit>-<time>.js/.wasm/.data` (the stamp is also
    in `version.txt`). Only `index.html` keeps its name.
 2. `tools\publish_pages.ps1` checks out `gh-pages` into a temporary git worktree under `%TEMP%`,
@@ -109,5 +109,5 @@ git push --force origin <good-commit>:refs/heads/gh-pages
 | Push rejected / asks for a password | no push access, or git is not signed in | sign in through Git Credential Manager; check repository permissions |
 | Old version still shows | page cached (up to ~10 min) | wait, or Ctrl+F5 |
 | Black page | see [06 §7](06_BUILD_WEB.md#7-troubleshooting); check `canvas.width` in the console | |
-| `No packaged web build in dist\TOMS-web` | nothing built yet | run `build_web.bat` (or `publish_web.bat` without `nobuild`) |
+| `No packaged web build in Build\dist\TOMS-web` | nothing built yet | run `build_web.bat` (or `publish_web.bat` without `nobuild`) |
 | `Versioning: expected '...' exactly once` while packaging | a new Emscripten changed how the loader names its files | update the three replacements in `tools\package.ps1` |

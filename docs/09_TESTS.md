@@ -28,7 +28,7 @@ They run on Direct3D 11, and the map scene also runs on Direct3D 12, Vulkan and 
 
 - `toms_game --fixed-dt=16 --frames=N --keys=… --clicks=… --screenshot=…`: every frame advances exactly 16 ms and
   real mouse/keyboard input is ignored, so a scene is the same pixels on every run.
-- Each test runs in a fresh folder under `out\build\<preset>\test-run\<name>\`, so no earlier save changes the
+- Each test runs in a fresh folder under `Build\<preset>\test-run\<name>\`, so no earlier save changes the
   title screen.
 - `image_diff` (`tests/tools/image_diff.cpp`) counts pixels that differ by more than a small amount per colour
   channel. Limits: 0.1% of the screen on Direct3D 11, which matches exactly in practice, and 0.5% on the other

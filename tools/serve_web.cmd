@@ -10,10 +10,10 @@ set "KIND=%~1"
 if "%KIND%"=="" set "KIND=release"
 set "PORT=%~2"
 if "%PORT%"=="" set "PORT=8099"
-set "WEBDIR=%~dp0..\build-web-%KIND%-windows\bin"
+set "WEBDIR=%~dp0..\Build\web-%KIND%-windows\bin"
 set "PAGE=toms_game.html"
-if /i "%KIND%"=="mt" set "WEBDIR=%~dp0..\build-web-release-mt-windows\bin"
-if /i "%KIND%"=="dist" set "WEBDIR=%~dp0..\dist\TOMS-web"
+if /i "%KIND%"=="mt" set "WEBDIR=%~dp0..\Build\web-release-mt-windows\bin"
+if /i "%KIND%"=="dist" set "WEBDIR=%~dp0..\Build\dist\TOMS-web"
 if /i "%KIND%"=="dist" set "PAGE=index.html"
 if not exist "%WEBDIR%\%PAGE%" (
   echo [toms] %WEBDIR%\%PAGE% not found. Build it first: tools\build_web.cmd %KIND%  ^(dist: build_web.bat^)

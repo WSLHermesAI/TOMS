@@ -37,23 +37,23 @@ save/settings.json  "artStyle": "<id>"      玩家的選擇（"" = 原版）
 前置：`tools\setup_ai_art.cmd`（安裝 ComfyUI + 模型，或指向遠端伺服器）。
 
 ```bat
-:: 1. 產生候選圖（每張 4 個 seed）-> art_out/<run>/
-python tools/art/reskin_sprites.py --sprites all --seeds 4 --style "dark fantasy dungeon crawler, 16-bit SNES JRPG style" --out art_out/dark16
+:: 1. 產生候選圖（每張 4 個 seed）-> Build/art_out/<run>/
+python tools/art/reskin_sprites.py --sprites all --seeds 4 --style "dark fantasy dungeon crawler, 16-bit SNES JRPG style" --out Build/art_out/dark16
 
-:: 2. 看 art_out/<run>/sheet_32.png / sheet_64.png，挑 seed（寫進 art_out/<run>/picks.json，可只改要換的）
-python tools/art/make_variant.py --run art_out/dark16 --name dark16 --pick slime=1003 --pick wall=1002
+:: 2. 看 Build/art_out/<run>/sheet_32.png / sheet_64.png，挑 seed（寫進 Build/art_out/<run>/picks.json，可只改要換的）
+python tools/art/make_variant.py --run Build/art_out/dark16 --name dark16 --pick slime=1003 --pick wall=1002
 
-:: 3a. 先試玩（不動 assets/）：assets_variants/<name>/
-out\build\windows-release\bin\toms_game.exe --assets=D:\...\TOMS\assets_variants\dark16\media
+:: 3a. 先試玩（不動 assets/）：Build/assets_variants/<name>/
+Build\windows-release\bin\toms_game.exe --assets=D:\...\TOMS\assets_variants\dark16\media
 
 :: 3b. 加進遊戲成為可選風格（寫入 assets/media/styles/）
-python tools/art/make_variant.py --run art_out/dark16 --name dark16 --size 64 --install --title "zh_TW=暗黑奇幻 16-bit,en=Dark fantasy 16-bit"
+python tools/art/make_variant.py --run Build/art_out/dark16 --name dark16 --size 64 --install --title "zh_TW=暗黑奇幻 16-bit,en=Dark fantasy 16-bit"
 
 :: 4. 風格名稱若用到新字，重建 UI 字型（它也會讀 styles.json）
 python tools/make_ui_font.py
 ```
 
-`art_out/` 與 `assets_variants/` 不進版控；`assets/media/styles/` 要進版控（那是出貨內容）。
+`Build/art_out/` 與 `Build/assets_variants/` 不進版控；`assets/media/styles/` 要進版控（那是出貨內容）。
 
 ## 4. 已知限制
 

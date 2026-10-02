@@ -12,7 +12,7 @@ TOMS is a CMake project. Visual Studio opens it directly with **Open Folder**; t
    CMake**.
    - The **first configure downloads bgfx, SDL3, Dear ImGui, glm, FreeType and RmlUi** (a few
      minutes; they are compiled by the first build). Later configures are fast. Each preset keeps
-     its own copy in `out\build\<preset>\_deps`.
+     its own copy in `Build\<preset>\_deps`.
    - If a prerequisite is missing, a popup explains what and where to get it
      ([02](02_INSTALL_WINDOWS.md)). The same text is in the CMake output.
 
@@ -27,7 +27,7 @@ The toolbar's configuration dropdown lists the presets:
 | **Windows x64 Shipping (game only, no Qt)** | `toms_game` only; Qt is not searched for | what ships; works on machines without Qt |
 | CI (no popups) | like Release, never shows popups | build servers |
 
-Build outputs go to `out\build\<preset>\bin\`.
+Build outputs go to `Build\<preset>\bin\`.
 
 ## 3. Run and debug (F5)
 
@@ -75,7 +75,7 @@ UI ([08](08_RMLUI.md)): F5 reload `assets\media\ui` · F8 RmlUi debugger.
 
 Environment variables (debugging, from the old build): `TOMS_HIDE`, `TOMS_SPLIT_NODE`, `TOMS_RENDER_DEBUG`.
 
-The startup items run in `out\build\<preset>\bin`, so `toms.log` and the `save\` folder are
+The startup items run in `Build\<preset>\bin`, so `toms.log` and the `save\` folder are
 written there.
 
 ## 5. Build without opening Visual Studio
@@ -96,7 +96,7 @@ Quick manual screenshots (render the title screen, then stage 1, and write PNGs;
 `<name>_window.png` with the whole window):
 
 ```bat
-cd out\build\windows-release\bin
+cd Build\windows-release\bin
 toms_game.exe --frames=60 --screenshot=title.png
 toms_game.exe --frames=120 --keys=enter@30 --screenshot=stage.png
 toms_editor.exe --frames=200 --screenshot=editor.png

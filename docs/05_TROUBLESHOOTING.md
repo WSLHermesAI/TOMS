@@ -39,6 +39,6 @@ it and links the download. Web-build problems are in [06 §7](06_BUILD_WEB.md#7-
 | Editor starts, then "toms_editor.exe - Qt6Core.dll was not found" | Qt DLLs not next to the exe | rebuild (windeployqt runs after every link), or add `<Qt kit>\bin` to `PATH` |
 | Editor: keys do nothing | the game view has no keyboard focus | click the *Play (bgfx)* view |
 | Editor: black view after undocking or moving the view | the native window was recreated | keep the viewport as the central widget/tab ([01 §5](01_ARCHITECTURE.md#5-qt--bgfx-in-the-editor)) |
-| Saves are not where the old build put them | the working directory differs | saves go to `save\` in the working directory (`out\build\<preset>\bin` under F5) |
+| Saves are not where the old build put them | the working directory differs | saves go to `save\` in the working directory (`Build\<preset>\bin` under F5) |
 | Screenshot or screen-recording tool shows the editor's game view as white or black | tools that capture a window through GDI cannot read a DXGI flip-model swap chain | capture the screen or desktop region instead (the editor's own `--screenshot` does this), or use `toms_game --screenshot` / RenderDoc |
 | Text edges look one pixel different between `--renderer=vulkan` and Direct3D | backend rasterisation rules | expected; compare golden images per backend |

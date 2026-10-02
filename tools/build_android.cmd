@@ -34,7 +34,7 @@ if not exist "%JAVA_HOME%\bin\java.exe" (
   exit /b 1
 )
 if "%TOMS_HOST_SHADERC%"=="" for %%p in (windows-shipping windows-release ci-windows windows-debug) do (
-  if not defined TOMS_HOST_SHADERC if exist "%ROOT%\out\build\%%p\bin\shaderc.exe" set "TOMS_HOST_SHADERC=%ROOT%\out\build\%%p\bin\shaderc.exe"
+  if not defined TOMS_HOST_SHADERC if exist "%ROOT%\Build\%%p\bin\shaderc.exe" set "TOMS_HOST_SHADERC=%ROOT%\Build\%%p\bin\shaderc.exe"
 )
 if "%TOMS_HOST_SHADERC%"=="" (
   echo [toms] No shaderc.exe from a desktop build. Build one first: tools\build.cmd windows-shipping
@@ -62,9 +62,9 @@ set "LIBS=android\app\libs\%ABI%"
 if exist android\app\libs rmdir /s /q android\app\libs
 mkdir "%LIBS%"
 set "LIBMAIN="
-for /r "build-%PRESET%\bin" %%f in (libmain.so) do if exist "%%f" set "LIBMAIN=%%f"
+for /r "Build\%PRESET%\bin" %%f in (libmain.so) do if exist "%%f" set "LIBMAIN=%%f"
 if "%LIBMAIN%"=="" (
-  echo [toms] libmain.so not found under build-%PRESET%\bin
+  echo [toms] libmain.so not found under Build\%PRESET%\bin
   goto :failed
 )
 copy /y "%LIBMAIN%" "%LIBS%\" >nul
