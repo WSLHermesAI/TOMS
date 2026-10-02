@@ -3,3 +3,5 @@
 *.bat text eol=crlf
 *.ps1 text eol=crlf
 *.sh  text eol=lf
+# setup_new_pc.bat is downloaded on its own (GitHub "raw") onto new PCs: store it byte-for-byte so it stays CRLF.
+setup_new_pc.bat -text

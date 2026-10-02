@@ -10,6 +10,16 @@
 
 ## 0. 一句話總結
 
+**最省事：雙擊 [`setup_new_pc.bat`](../setup_new_pc.bat)**（可以單獨下載這一個檔到新電腦：
+`https://raw.githubusercontent.com/WSLHermesAI/TOMS/main/setup_new_pc.bat`）。
+它會用 winget 安裝缺少的 Git / Visual Studio 2026（winget `Microsoft.VisualStudio.Community`；C++ 工作負載、CMake tools、Windows SDK）、開啟長路徑、
+clone、（可選）產生 SSH 金鑰並引導貼到 GitHub、建置與測試。
+**需要管理員權限的步驟會先跳出對話框提醒**，看到 Windows「是否允許此應用程式變更您的裝置？」時按「是」。
+所有管理員工作集中在**一次** UAC 內完成；clone 與金鑰則以一般使用者身分執行（避免 git 的 *dubious ownership*）。
+紀錄檔：`%TEMP%\TOMS_setup.log`、`%TEMP%\TOMS_setup_admin.log`。
+
+手動做的話：
+
 ```bat
 git clone --recurse-submodules git@github.com:WSLHermesAI/TOMS.git
 cd TOMS
@@ -44,7 +54,7 @@ tools\test.cmd
    → 理由：建置目錄 out\build\...\_deps\... 很深，Windows 未開長路徑會在建置時失敗
 3. 環境檢查
    tools\check_env.cmd          （會開彈窗列出缺少的項目與下載連結）
-   → 驗收：必需要素全 [ OK ]；缺 Visual Studio 2022 + Desktop development with C++、CMake、Ninja、Git for Windows
+   → 驗收：必需要素全 [ OK ]；缺 Visual Studio 2026 + Desktop development with C++、CMake、Ninja、Git for Windows
 4. 設定 + 建置（第一次會下載並編譯 bgfx / SDL3 / Dear ImGui / glm，數分鐘）
    tools\build.cmd windows-release
    → 驗收：exit code 0，且 out\build\windows-release\bin\ 內有 toms_game.exe
@@ -158,7 +168,7 @@ ssh -T git@github.com
 
 | 用途 | 需要 | 說明 |
 |---|---|---|
-| 遊戲（必備） | Windows 10/11 x64、Visual Studio 2022 + *Desktop development with C++*、CMake 3.24+、Ninja、Git for Windows | 見 `docs/02_INSTALL_WINDOWS.md` §1 |
+| 遊戲（必備） | Windows 10/11 x64、Visual Studio 2026 + *Desktop development with C++*、CMake 3.24+、Ninja、Git for Windows | 見 `docs/02_INSTALL_WINDOWS.md` §1 |
 | 編輯器 `toms_editor` | **Qt 6.5+（建議 6.8 LTS，MSVC 2022 64-bit kit）** | 沒裝 Qt 也能建置遊戲，只是不會建編輯器 |
 | 網頁版 | Emscripten SDK | 見 `docs/06_BUILD_WEB.md` |
 | Android | JDK 17 + Android SDK/NDK 27 | 見 `docs/07_BUILD_ANDROID.md` |
