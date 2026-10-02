@@ -17,27 +17,59 @@ bool Game::loadAssets(const std::string& assetDir) {
     // (GameSession) owns the window and frees the renderer.
     ren = new Renderer();
     ren->init(1280, 720);   // size ignored by the bgfx renderer: the host sets the backbuffer size
-    // load sprites into a single 32x32-uniform atlas (GRID_COLS x GRID_ROWS grid)
-    const int SW = 32, SH = 32, COLS = 9, ROWS = 3;
+    // Art style (Settings > art style): read the choice now, because the atlas is built once here.
+    // A style replaces some or all sprites (assets/media/styles/<id>/sprites/<sprite>.png); the
+    // others keep the original art. See art_styles.h.
+    artStyles_ = toms::artStylesFromJson(readJsonFile(assetDir + "/styles/styles.json"));
+    loadedArtStyle_ = toms::artStyleIndex(artStyles_,
+        toms::loadGameSettings(toms::defaultSaveDir() + "/settings.json").artStyle);
+    const std::string styleDir = loadedArtStyle_ > 0
+        ? assetDir + "/styles/" + artStyles_[loadedArtStyle_].id + "/sprites/" : std::string();
+    styledSprites_.clear();
+
+    // load sprites into a single uniform atlas (COLS columns). The cell size is the sprites' own
+    // pixel size (32x32 in assets/media; a style may ship 64x64 -- tools/art/make_variant.py).
+    const int COLS = 9;
     spriteGridCols = COLS;
     // The PNGs decode in parallel (JobSystem; inline where there are no threads): each job writes
     // only its own slot, and stb_image keeps its error state per thread.
     std::vector<std::vector<uint8_t>> layers(N_SPRITES);
+    std::vector<int> widths(N_SPRITES, 0), heights(N_SPRITES, 0);
+    std::vector<char> styled(N_SPRITES, 0);
     toms::JobSystem::parallelFor(N_SPRITES, [&](int i) {
-        const std::string path = assetDir + "/sprites/" + SPRITE_ORDER[i] + ".png";
-        int w, h, ch;
         std::string file;   // vfs: inside the APK on Android, a plain file elsewhere
-        if (!toms::vfsReadAll(path, file)) return;
+        if (!styleDir.empty() && toms::vfsReadAll(styleDir + SPRITE_ORDER[i] + ".png", file)) styled[i] = 1;
+        else if (!toms::vfsReadAll(assetDir + "/sprites/" + SPRITE_ORDER[i] + ".png", file)) return;
+        int w, h, ch;
         if (unsigned char* d = stbi_load_from_memory((const stbi_uc*)file.data(), (int)file.size(), &w, &h, &ch, 4)) {
             layers[i].assign(d, d + w * h * 4);
+            widths[i] = w; heights[i] = h;
             stbi_image_free(d);
         }
     });
+    int SW = 0, SH = 0;
     for (int i = 0; i < N_SPRITES; i++) {
         if (layers[i].empty()) { std::fprintf(stderr, "load fail %s/sprites/%s.png\n", assetDir.c_str(), SPRITE_ORDER[i]); return false; }
         idToLayer[SPRITE_ORDER[i]] = i;
+        if (styled[i]) styledSprites_.push_back(SPRITE_ORDER[i]);
+        SW = std::max(SW, widths[i]); SH = std::max(SH, heights[i]);
     }
-    // upload full sprite atlas (backend packs the grid + uploads)
+    // One atlas cell size: a smaller sprite (an original 32px one next to a 64px style) is scaled
+    // up with nearest-neighbour, which keeps pixel art crisp.
+    for (int i = 0; i < N_SPRITES; i++) {
+        if (widths[i] == SW && heights[i] == SH) continue;
+        std::fprintf(stderr, "[assets] %s.png is %dx%d: scaled to %dx%d\n", SPRITE_ORDER[i], widths[i], heights[i], SW, SH);
+        std::vector<uint8_t> big((size_t)SW * SH * 4);
+        for (int y = 0; y < SH; y++)
+            for (int x = 0; x < SW; x++) {
+                const uint8_t* src = &layers[i][((size_t)(y * heights[i] / SH) * widths[i] + (x * widths[i] / SW)) * 4];
+                std::copy(src, src + 4, &big[((size_t)y * SW + x) * 4]);
+            }
+        layers[i].swap(big);
+    }
+    std::fprintf(stderr, "[assets] sprites: %d x %dx%d px, art style '%s' (%d replaced)\n", N_SPRITES, SW, SH,
+                 artStyles_[loadedArtStyle_].id.empty() ? "original" : artStyles_[loadedArtStyle_].id.c_str(),
+                 (int)styledSprites_.size());
     ren->loadSprites(layers, SW, SH);
     // (Text is RmlUi's: see assets/media/fonts/NotoSansCJKtc-TOMS.otf and tools/make_ui_font.py.)
 
@@ -124,6 +156,8 @@ bool Game::loadAssets(const std::string& assetDir) {
         title_.setSlotCount(settings_.slotCount);
         title_.setLanguageCount(locale_.languageCount());
         title_.setLanguageIndex(locale_.languageIndex());
+        title_.setStyleCount((int)artStyles_.size());
+        title_.setStyleIndex(chosenArtStyle());
         title_.open();
         refreshSlots();
         if (!haveSettings) applyLanguage();   // write defaults once, so the file exists

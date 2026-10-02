@@ -77,6 +77,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("icons", &UiHud::icons);
         s.RegisterMember("store_unlocked", &UiHud::store_unlocked);
         s.RegisterMember("store_label", &UiHud::store_label);
+        s.RegisterMember("store_icon", &UiHud::store_icon);
         s.RegisterMember("menu_label", &UiHud::menu_label);
         s.RegisterMember("chapter_card", &UiHud::chapter_card);
         s.RegisterMember("chapter_title", &UiHud::chapter_title);
@@ -199,6 +200,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("close_label", &UiMenu::close_label);
         s.RegisterMember("confirm_open", &UiMenu::confirm_open);
         s.RegisterMember("confirm_question", &UiMenu::confirm_question);
+        s.RegisterMember("confirm_body", &UiMenu::confirm_body);
         s.RegisterMember("yes_label", &UiMenu::yes_label);
         s.RegisterMember("no_label", &UiMenu::no_label);
         s.RegisterMember("confirm_yes", &UiMenu::confirm_yes);

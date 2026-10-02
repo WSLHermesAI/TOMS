@@ -27,6 +27,7 @@
 #include "ui_state.h"       // toms::UiState -- what the UI shows (see buildUiState)
 #include "title_screen.h"    // toms::TitleScreen/TitleAction — the title phase (New Game/Continue/Settings)
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
+#include "art_styles.h"      // toms::ArtStyle — the selectable art styles (assets/media/styles)
 #include "localization.h"    // toms::Locale — key -> localized string (data/text.json)
 #include "Audio.h"        // SFX (miniaudio) -- native device backends on desktop, Web Audio in the browser
 
@@ -334,6 +335,12 @@ public:
     void saveCurrentRun();
     // Applies settings_.language to the string table and persists settings.json.
     void applyLanguage();
+    // Remembers art style `idx` (into artStyles()) in settings.json. Sprites are loaded once at
+    // startup, so it shows after a restart; the Settings dialog tells the player that.
+    void applyArtStyle(int idx);
+    const std::vector<toms::ArtStyle>& artStyles() const { return artStyles_; }
+    int loadedArtStyle() const { return loadedArtStyle_; }                  // in use since startup
+    int chosenArtStyle() const { return toms::artStyleIndex(artStyles_, settings_.artStyle); }
     int activeSlot() const { return activeSlot_; }
     int playTimeSec() const { return playTimeSec_; }
     const toms::Locale& locale() const { return locale_; }
@@ -520,6 +527,10 @@ private:
     std::string itemName(const std::string& id) const;
     std::string itemDesc(const std::string& id) const;
     std::string itemSpritePath(const std::string& id) const;     // icon image for the UI
+    // A sprite's image path for the .rml files: the loaded art style's copy when it has one.
+    std::string uiSpritePath(std::string id) const;
+    std::string artStyleName(int idx) const;                     // localized, "Original" for 0
+    void appendArtStyleRows(std::vector<toms::UiRow>& rows, int selected) const;   // Settings pages
     std::string itemEffectSummary(const std::string& id) const;  // "HP +40 • DEF +1"
     void buildMenuUi(toms::UiMenu& out) const;                   // the in-game menu part of buildUiState
     // store system
@@ -537,6 +548,10 @@ private:
     std::vector<std::string> spriteIds;
     std::map<std::string,int> idToLayer;
     int spriteGridCols = 9;
+    // art styles (assets/media/styles/styles.json); style 0 = the original art
+    std::vector<toms::ArtStyle> artStyles_{toms::ArtStyle{}};
+    int loadedArtStyle_ = 0;                  // the one whose sprites were loaded at startup
+    std::vector<std::string> styledSprites_;  // sprite ids that style replaces (for uiSpritePath)
     // item definitions (id -> json from data/items.json)
     std::map<std::string, nlohmann::json> itemDefs;
     // inventory UI state
@@ -716,6 +731,7 @@ private:
     bool inGameLangConfirmOpen_ = false;  // "switch to XXX?" sub-dialog, mirrors the title's own
     int inGameLangConfirmIdx_ = 0;
     bool inGameLangConfirmYes_ = true;
+    bool inGameConfirmIsStyle_ = false;   // that dialog is about an art style (idx = style index)
     // S5/S6: Forge and Village are each their OWN conditional row, gated on their own hub.* flag
     // (set by Game::applyChapterGrants) -- they only appear once the player has actually reached
     // them narratively, rather than showing an always-empty screen from floor 1 the way Skills

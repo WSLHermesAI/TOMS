@@ -140,7 +140,8 @@ void Game::inGameMenuMove(int delta) {
         int n = std::max(1, (int)hubMenuOrder().size());
         inGameMenuSel_ = ((inGameMenuSel_ + delta) % n + n) % n;
     } else {
-        int n = std::max(1, locale_.languageCount() + 1);   // languages + the camera toggle row
+        // languages + the camera toggle row + the art style rows (none when only the original exists)
+        int n = std::max(1, locale_.languageCount() + 1 + (artStyles_.size() > 1 ? (int)artStyles_.size() : 0));
         inGameMenuSel_ = ((inGameMenuSel_ + delta) % n + n) % n;
     }
 }
@@ -151,7 +152,8 @@ void Game::inGameMenuActivate() {
         const bool yes = inGameLangConfirmYes_;
         const int idx = inGameLangConfirmIdx_;
         inGameLangConfirmOpen_ = false;
-        if (yes) { title_.setLanguageIndex(idx); applyLanguage(); }
+        if (yes && inGameConfirmIsStyle_) applyArtStyle(idx);
+        else if (yes) { title_.setLanguageIndex(idx); applyLanguage(); }
         audio.play("confirm_click");
         return;
     }
@@ -216,6 +218,7 @@ void Game::inGameMenuActivate() {
         // Settings page: activating a language row opens the "switch to XXX?" dialog,
         // mirroring the title screen's own confirm dialog (see AskLanguageChange).
         inGameLangConfirmOpen_ = true;
+        inGameConfirmIsStyle_ = false;
         inGameLangConfirmIdx_ = inGameMenuSel_;
         inGameLangConfirmYes_ = true;
         audio.play("confirm_click");
@@ -224,6 +227,15 @@ void Game::inGameMenuActivate() {
         // language, this is a low-stakes preference whose effect the player already sees behind
         // this very menu (the maze keeps scrolling/paging under the scrim).
         setCameraModeIndex(1 - cameraModeIndex());
+        audio.play("confirm_click");
+    } else if (artStyles_.size() > 1 && inGameMenuSel_ > locale_.languageCount() &&
+               inGameMenuSel_ <= locale_.languageCount() + (int)artStyles_.size()) {
+        // An art style row (after the camera row): same confirm dialog, which also says the new
+        // style shows after a restart (the sprite atlas is built once at startup).
+        inGameLangConfirmOpen_ = true;
+        inGameConfirmIsStyle_ = true;
+        inGameLangConfirmIdx_ = inGameMenuSel_ - locale_.languageCount() - 1;
+        inGameLangConfirmYes_ = true;
         audio.play("confirm_click");
     }
 }

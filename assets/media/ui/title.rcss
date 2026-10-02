@@ -40,6 +40,14 @@ body { z-index: 60; background-color: #414155; text-align: center; }
 .trow.selected .cursor { visibility: visible; }
 .label { padding: 14px 16px 0 24px; font-size: 28px; color: #eef1f8; white-space: pre; }   /* keep the column spacing */
 #page.langs .label { padding-top: 8px; font-size: 25px; }
+/* Settings with the art style rows too (more than 6 rows): shorter rows so the list stays above
+   the Back button; a row's second line ("applies after a restart") moves to its right end. */
+#page.langs.compact { top: 226px; }
+#page.langs.compact #subheader { margin-bottom: 8px; }
+#page.langs.compact .trow { min-height: 36px; margin-bottom: 5px; }
+#page.langs.compact .label { padding-top: 4px; font-size: 21px; }
+#page.langs.compact .cursor { top: 2px; font-size: 26px; }
+#page.langs.compact .sub { position: absolute; right: 16px; top: 9px; padding: 0; font-size: 15px; }
 .trow.selected .label { color: #fffbee; }
 .sub   { padding: 2px 16px 10px 24px; font-size: 17px; color: #cad0e1; white-space: pre; }
 
@@ -53,5 +61,6 @@ body { z-index: 60; background-color: #414155; text-align: center; }
 #question { margin-top: 34px; font-size: 30px; color: #f9e9b1; }
 #body     { margin-top: 14px; font-size: 18px; color: #cad0e1; }
 #answers  { position: absolute; left: 0; right: 0; bottom: 26px; }
+#confirm.with-body { top: 254px; height: 260px; }   /* a two-line question + the body line still clear the answers */
 .answer   { display: inline-block; width: 160px; min-height: 56px; margin: 0 20px; }
 .answer .label { padding-top: 12px; text-align: center; }

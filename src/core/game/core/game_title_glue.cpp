@@ -67,6 +67,17 @@ void Game::applyLanguage() {
     toms::saveGameSettings(toms::defaultSaveDir() + "/settings.json", settings_);
 }
 
+void Game::applyArtStyle(int idx) {
+    // Only remembered here: the sprite atlas (and the UI's image paths) are built from the style
+    // that was chosen when the game started (loadAssets), so the new one shows after a restart --
+    // the confirm dialog that led here said so.
+    if (idx < 0 || idx >= (int)artStyles_.size()) idx = 0;
+    settings_.artStyle = artStyles_[idx].id;
+    title_.setStyleIndex(idx);
+    toms::ensureSaveDir(toms::defaultSaveDir());
+    toms::saveGameSettings(toms::defaultSaveDir() + "/settings.json", settings_);
+}
+
 void Game::applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& r,
                           int slot, int playSec) {
     meta_ = m;
@@ -117,11 +128,14 @@ void Game::handleTitleAction(toms::TitleAction a) {
         case toms::TitleAction::LoadSlot:            continueFromSlot(title_.pendingSlot()); break;
         case toms::TitleAction::OpenContinue:        refreshSlots(); break;   // always show current files
         case toms::TitleAction::SetLanguage:         applyLanguage(); break;
+        case toms::TitleAction::SetArtStyle:         applyArtStyle(title_.styleIndex()); break;
         // The confirm dialogs are drawn and answered by the title itself; these are informational.
         case toms::TitleAction::AskNewGameInSlot:
         case toms::TitleAction::DismissNewGameConfirm:
         case toms::TitleAction::AskLanguageChange:
         case toms::TitleAction::DismissLanguageConfirm:
+        case toms::TitleAction::AskStyleChange:
+        case toms::TitleAction::DismissStyleConfirm:
         case toms::TitleAction::OpenSettings:
         case toms::TitleAction::Back:
         case toms::TitleAction::None:                break;

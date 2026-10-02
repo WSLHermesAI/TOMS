@@ -11,6 +11,7 @@ nlohmann::json toJson(const GameSettings& s) {
     j["uiFontScale"] = s.uiFontScale;
     j["cameraMode"] = s.cameraMode;
     j["viewCols"] = s.viewCols;
+    j["artStyle"] = s.artStyle;
     return j;
 }
 
@@ -33,6 +34,7 @@ GameSettings gameSettingsFromJson(const nlohmann::json& j) {
     if (vc < 4) vc = 4;      // cameraViewportTiles() floors at 4 anyway; keep the setting sane
     if (vc > 60) vc = 60;    // past this a tile is a couple px, not a testing scenario
     s.viewCols = vc;
+    s.artStyle = j.value("artStyle", std::string());
     return s;
 }
 

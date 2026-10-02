@@ -10,12 +10,6 @@ using namespace toms::game_detail;
 
 namespace {
 
-std::string spritePath(std::string id) {        // atlas sprite id -> image path used by the .rml files
-    if (id.empty()) id = "coin";
-    if (id.size() < 4 || id.compare(id.size() - 4, 4, ".png") != 0) id += ".png";
-    return "../sprites/" + id;                   // relative to assets/media/ui/
-}
-
 std::string fmtPlayTime(int sec) {
     if (sec < 0) sec = 0;
     char b[32];
@@ -45,9 +39,40 @@ toms::UiPowerBar powerBar(const toms::PowerBarParams& p, const CombatState::Auto
 
 }  // namespace
 
+// atlas sprite id (or "<id>.png") -> image path used by the .rml files, relative to assets/media/ui/.
+// The art style loaded at startup wins for the sprites it replaces, so the UI matches the map.
+std::string Game::uiSpritePath(std::string id) const {
+    if (id.empty()) id = "coin";
+    if (id.size() > 4 && id.compare(id.size() - 4, 4, ".png") == 0) id.resize(id.size() - 4);
+    if (loadedArtStyle_ > 0 && std::find(styledSprites_.begin(), styledSprites_.end(), id) != styledSprites_.end())
+        return "../styles/" + artStyles_[loadedArtStyle_].id + "/sprites/" + id + ".png";
+    return "../sprites/" + id + ".png";
+}
+
+std::string Game::artStyleName(int idx) const {
+    if (idx <= 0 || idx >= (int)artStyles_.size()) return locale_.tr("settings.style_original");
+    return locale_.field(artStyles_[idx].name);
+}
+
+// The Settings pages' art style rows (none when only the original art exists). `selected` is the
+// highlighted style index (out of range = none). The chosen style is ticked; if it is not the one
+// loaded at startup, its row says it applies after a restart.
+void Game::appendArtStyleRows(std::vector<toms::UiRow>& rows, int selected) const {
+    if (artStyles_.size() < 2) return;
+    const int chosen = chosenArtStyle();
+    for (int i = 0; i < (int)artStyles_.size(); i++) {
+        toms::UiRow r;
+        r.label = std::string(i == chosen ? "[x] " : "[ ] ") +
+                  trParam(locale_.tr("settings.style_row"), "style", artStyleName(i));
+        if (i == chosen && chosen != loadedArtStyle_) r.sub = locale_.tr("settings.style_pending");
+        r.selected = i == selected;
+        rows.push_back(r);
+    }
+}
+
 std::string Game::itemSpritePath(const std::string& id) const {
     auto it = itemDefs.find(id);
-    return spritePath(it == itemDefs.end() ? "coin" : it->second.value("sprite", std::string("coin.png")));
+    return uiSpritePath(it == itemDefs.end() ? "coin" : it->second.value("sprite", std::string("coin.png")));
 }
 
 std::string Game::itemEffectSummary(const std::string& id) const {
@@ -133,8 +158,16 @@ void Game::buildUiState(toms::UiState& u) const {
                 for (int i = 0; i < (int)langs.size(); i++)
                     t.rows.push_back({std::string(i == L.languageIndex() ? "[x] " : "[ ] ") + langs[i].name, "",
                                       title_.settingsSelection() == i, true});
+                appendArtStyleRows(t.rows, title_.settingsSelection() - (int)langs.size());
                 t.show_back = true;
                 t.hint = L.tr("settings.hint");
+                if (title_.styleConfirmOpen()) {
+                    t.confirm_open = true;
+                    t.confirm_question = trParam(L.tr("settings.style_confirm"), "style",
+                                                 artStyleName(title_.styleConfirmIndex()));
+                    t.confirm_body = L.tr("settings.style_restart");
+                    t.confirm_yes = title_.styleConfirmYesSelected();
+                }
                 if (title_.languageConfirmOpen()) {
                     const int idx = title_.languageConfirmIndex();
                     t.confirm_open = true;
@@ -194,6 +227,7 @@ void Game::buildUiState(toms::UiState& u) const {
         h.icons = !inGameMenuOpen_;
         h.store_unlocked = storeUnlocked_;
         h.store_label = L.tr("store.icon_label");
+        h.store_icon = uiSpritePath("coin");
         h.menu_label = L.tr("ingame_menu.title");
         if (chapterCardMs_ > 0.0f && !chapterCardTitle_.empty()) {
             h.chapter_card = true;
@@ -251,8 +285,8 @@ void Game::buildUiState(toms::UiState& u) const {
         b.visible = true;
         b.active = cs.active;
         b.title = L.tr("battle.title") + " " + cs.enemy.name;
-        b.player_sprite = spritePath("player");
-        b.enemy_sprite = spritePath(cs.enemy.boss ? "boss_demonlord" : entSprite(cs.enemy.id));
+        b.player_sprite = uiSpritePath("player");
+        b.enemy_sprite = uiSpritePath(cs.enemy.boss ? "boss_demonlord" : entSprite(cs.enemy.id));
         b.player_hp_pct = pct((float)cs.playerHP, (float)pl.maxhp);
         b.enemy_hp_pct = pct((float)std::max(0, cs.enemyHP), (float)cs.enemy.hp);
         b.player_hp_text = L.tr("battle.you") + " HP " + std::to_string(cs.playerHP);
@@ -351,7 +385,7 @@ void Game::buildUiState(toms::UiState& u) const {
         for (size_t i = 0; i < idx.size(); i++) {
             const StoreItemDef& d = storeItems_[idx[i]];
             toms::UiStoreItem it;
-            it.icon = spritePath(d.sprite);
+            it.icon = uiSpritePath(d.sprite);
             it.name = L.field(d.name);
             it.desc = L.field(d.desc);
             it.effect = L.field(d.effect_text);
@@ -413,6 +447,7 @@ void Game::buildMenuUi(toms::UiMenu& m) const {
                 m.rows.push_back({std::string((int)i == L.languageIndex() ? "[x] " : "[ ] ") + langs[i].name, "", sel(i), true});
             m.rows.push_back({L.tr(cam_.mode() == toms::Camera::Mode::Rooms ? "settings.camera_rooms" : "settings.camera_follow"),
                               "", sel(langs.size()), true});
+            appendArtStyleRows(m.rows, inGameMenuSel_ - (int)langs.size() - 1);
             break;
         }
         case InGameMenuPage::Skills: {
@@ -463,7 +498,12 @@ void Game::buildMenuUi(toms::UiMenu& m) const {
             break;
         }
     }
-    if (inGameLangConfirmOpen_) {
+    if (inGameLangConfirmOpen_ && inGameConfirmIsStyle_) {
+        m.confirm_open = true;
+        m.confirm_question = trParam(L.tr("settings.style_confirm"), "style", artStyleName(inGameLangConfirmIdx_));
+        m.confirm_body = L.tr("settings.style_restart");
+        m.confirm_yes = inGameLangConfirmYes_;
+    } else if (inGameLangConfirmOpen_) {
         const auto& langs = L.languages();
         m.confirm_open = true;
         m.confirm_question = trParam(L.tr("settings.language_confirm"), "lang",

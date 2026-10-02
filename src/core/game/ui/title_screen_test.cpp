@@ -5,7 +5,9 @@
 #include "title_screen.h"
 #include "game_settings.h"
 #include "localization.h"
+#include "art_styles.h"
 #include <cstdio>
+#include <fstream>
 #include <filesystem>
 
 using namespace toms;
@@ -357,6 +359,73 @@ int main() {
         a = t.clickRow(-1);
         CHECK(a == TitleAction::Back && t.page() == TitlePage::Menu,
               "tapping Back on Settings returns to the Menu");
+    }
+
+    // ------------------------------------------------- art styles: list + Settings rows + prompt
+    // (Settings > art style; the choice is persisted and applies after a restart)
+    {
+        // styles.json parsing: the original is always style 0; bad and duplicate ids are skipped.
+        auto styles = artStylesFromJson(nlohmann::json::parse(R"({"styles":[
+            {"id":"dark16","name":{"en":"Dark"}}, {"id":"dark16"}, {"id":"../evil"}, {"id":""}, {"id":"cute"}]})"));
+        CHECK(styles.size() == 3, "original + 2 valid styles (dup / path / empty ids skipped)");
+        CHECK(styles[0].id.empty() && styles[1].id == "dark16" && styles[2].id == "cute", "style order is kept");
+        CHECK(artStyleIndex(styles, "cute") == 2, "artStyleIndex finds a style");
+        CHECK(artStyleIndex(styles, "gone") == 0, "an unknown (removed) style falls back to the original");
+        CHECK(artStylesFromJson(nlohmann::json()).size() == 1, "no styles.json = only the original");
+
+        // The shipped list, when present (the test runs in assets/): every listed style has sprites.
+        std::ifstream shipped("media/styles/styles.json");
+        if (shipped) {
+            auto list = artStylesFromJson(nlohmann::json::parse(shipped, nullptr, false));
+            for (size_t i = 1; i < list.size(); i++)
+                CHECK(std::filesystem::is_directory("media/styles/" + list[i].id + "/sprites"),
+                      "every style in media/styles/styles.json has a sprites folder");
+        }
+
+        // Settings persistence round trip.
+        GameSettings s;
+        s.artStyle = "dark16";
+        CHECK(gameSettingsFromJson(toJson(s)).artStyle == "dark16", "artStyle survives settings.json");
+        CHECK(gameSettingsFromJson(nlohmann::json::object()).artStyle.empty(), "a missing artStyle = original");
+
+        TitleScreen t;
+        t.setLanguageCount(2);
+        t.setStyleCount(1);
+        CHECK(t.settingsRowCount() == 2, "only the original style: no style rows on Settings");
+        t.setStyleCount(3);
+        CHECK(t.settingsRowCount() == 5, "3 styles: 2 language rows + 3 style rows");
+        t.open();
+        t.setPage(TitlePage::Settings);
+
+        // A style row (row 2+ = style index row-2) asks first, with no change yet.
+        TitleAction a = t.clickRow(3);
+        CHECK(a == TitleAction::AskStyleChange && t.styleConfirmOpen() && t.styleConfirmIndex() == 1,
+              "tapping a style row opens the restart prompt for that style");
+        CHECK(t.styleIndex() == 0 && !t.languageConfirmOpen(), "nothing changes while the prompt is up");
+        CHECK(t.clickRow(0) == TitleAction::None, "rows ignore taps while the prompt is up");
+        a = t.answerConfirm(false);
+        CHECK(a == TitleAction::DismissStyleConfirm && t.styleIndex() == 0, "No keeps the current style");
+
+        t.clickRow(4);
+        a = t.cancel();
+        CHECK(a == TitleAction::DismissStyleConfirm && !t.styleConfirmOpen() && t.page() == TitlePage::Settings,
+              "Esc closes the prompt and stays on Settings");
+
+        t.clickRow(4);
+        a = t.answerConfirm(true);
+        CHECK(a == TitleAction::SetArtStyle && t.styleIndex() == 2, "Yes chooses the style (caller persists it)");
+
+        // A language row still opens the language prompt, not the style one.
+        a = t.clickRow(1);
+        CHECK(a == TitleAction::AskLanguageChange && !t.styleConfirmOpen(), "language rows are unaffected");
+        t.cancel();
+
+        // Keyboard: the cursor walks languages then styles, and wraps.
+        t.setPage(TitlePage::Settings);
+        for (int i = 0; i < 4; i++) t.moveVertical(1);
+        CHECK(t.settingsSelection() == (t.languageIndex() + 4) % 5, "the cursor reaches the style rows");
+        t.setStyleIndex(7);
+        CHECK(t.styleIndex() == 2, "an out-of-range style index is ignored");
     }
 
     if (g_fail == 0) { printf("title_screen_test: ALL PASS\n"); return 0; }

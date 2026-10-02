@@ -30,6 +30,10 @@ struct GameSettings {
     // row count are both derived from this (see Game::cameraViewportTiles() in game.cpp).
     // Adjustable live from the F1 debug overlay for testing what fits on a smaller screen.
     int viewCols = 13;
+    // Art style: the folder name under assets/media/styles/ whose sprites replace the original
+    // ones ("" = the original art). Read once at startup (Game::loadAssets), so changing it in
+    // Settings takes effect after a restart -- the Settings dialog says so.
+    std::string artStyle;
 };
 
 nlohmann::json toJson(const GameSettings& s);

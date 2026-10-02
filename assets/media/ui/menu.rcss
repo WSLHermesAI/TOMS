@@ -7,9 +7,16 @@ body { z-index: 45; }
 #subheader { margin-top: 6px; font-size: 18px; color: #cad0e1; }
 #rows { margin-top: 18px; max-height: 520px; overflow-y: auto; }
 .row  { height: 56px; line-height: 56px; margin-bottom: 10px; padding-left: 18px; font-size: 21px; color: #ffffff; text-align: left; }
+.rsub { float: right; margin-right: 16px; font-size: 15px; color: #cad0e1; }   /* "applies after a restart" */
+/* Long pages (Settings with the art style rows, ...): shorter rows, so the whole list fits without
+   scrolling and the keyboard cursor never sits on a row scrolled out of view. */
+#panel.compact #rows .row { height: 42px; line-height: 42px; margin-bottom: 6px; font-size: 19px; }
 #close { display: block; width: 140px; height: 46px; line-height: 46px; margin: 10px auto 0 auto; padding: 0; text-align: center; }
 
 #confirm  { position: absolute; left: 232px; top: 279px; width: 560px; height: 210px; text-align: center; }
 #question { margin-top: 60px; font-size: 28px; color: #f9e9b1; }
+#confirm.with-body { top: 254px; height: 260px; }   /* a two-line question + the body line still clear the answers */
+#confirm.with-body #question { margin-top: 30px; }
+#body     { margin-top: 10px; font-size: 18px; color: #cad0e1; }
 #answers  { position: absolute; left: 0; right: 0; bottom: 26px; }
 .answer   { display: inline-block; width: 160px; height: 56px; line-height: 56px; margin: 0 20px; padding: 0; text-align: center; }

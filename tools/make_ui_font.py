@@ -6,7 +6,8 @@ assets/media/fonts/NotoSansCJKtc-TOMS.otf, is the default and the fallback for e
 language can name its own font in data/text.json, see docs/08_RMLUI.md). The web build does not use
 it: the browser draws the text there. Shipping the full Noto Sans CJK TC (16 MB) would be wasteful,
 so this keeps only the characters that appear in the game's text:
-every string in assets/data/**/*.json, every .rml/.rcss file in assets/media/ui, printable ASCII
+every string in assets/data/**/*.json and assets/media/styles/styles.json (art style names), every
+.rml/.rcss file in assets/media/ui, printable ASCII
 and a few symbols the code itself writes. Noto Sans CJK covers Traditional and Simplified Chinese,
 Japanese kana and Korean hangul, so one file serves every language in data/text.json.
 
@@ -48,7 +49,9 @@ def json_strings(value, out):
 
 def wanted_codepoints():
     texts = [EXTRA, "".join(chr(c) for c in range(0x20, 0x7F))]
-    for path in sorted((ROOT / "assets" / "data").rglob("*.json")):
+    json_files = sorted((ROOT / "assets" / "data").rglob("*.json"))
+    json_files += sorted((ROOT / "assets" / "media" / "styles").glob("*.json"))   # art style names
+    for path in json_files:
         try:
             json_strings(json.loads(path.read_text(encoding="utf-8")), texts)
         except (ValueError, UnicodeDecodeError) as e:

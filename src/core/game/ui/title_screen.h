@@ -9,7 +9,7 @@
 // Pages:
 //   Menu     -> New Game | Continue | Settings
 //   Continue -> one row per save slot (data/save/slotN.json) + Back
-//   Settings -> language rows + Back
+//   Settings -> language rows, then art style rows (only when there is more than one style) + Back
 //
 // game_state.h already names these screens (GameState::MainMenu / GameState::Settings) and
 // already allows MainMenu -> {StageSelect, Settings} and Settings -> MainMenu, so the title
@@ -55,6 +55,12 @@ enum class TitleAction {
     AskLanguageChange,
     // The dialog was answered No (or Esc): stay on Settings, nothing changes.
     DismissLanguageConfirm,
+    // An art style row was activated: show "switch the art style to XXX? (needs a restart)".
+    AskStyleChange,
+    // That dialog was answered Yes: caller persists styleIndex() (it shows after a restart).
+    SetArtStyle,
+    // That dialog was answered No (or Esc): nothing changes.
+    DismissStyleConfirm,
 };
 
 class TitleScreen {
@@ -64,7 +70,7 @@ public:
     static constexpr int kMaxLanguages = 16;
 
     void open();                       // show the title, reset to the Menu page
-    void close() { open_ = false; closeConfirm(); closeLanguageConfirm(); }
+    void close() { open_ = false; closeConfirm(); closeLanguageConfirm(); closeStyleConfirm(); }
     bool isOpen() const { return open_; }
 
     TitlePage page() const { return page_; }
@@ -80,6 +86,13 @@ public:
     void setLanguageCount(int n);
     void setLanguageIndex(int i);
     int languageIndex() const { return langIdx_; }
+    // Art styles: rows after the languages on the Settings page. 0 = no style rows (only the
+    // original art exists); otherwise the style count including the original.
+    int styleCount() const { return styleCount_; }
+    void setStyleCount(int n);
+    void setStyleIndex(int i);
+    int styleIndex() const { return styleIdx_; }        // the chosen style (persisted by Game)
+    int settingsRowCount() const { return langCount_ + styleCount_; }
 
     void setSummaries(std::vector<SlotSummary> s) { slots_ = std::move(s); }
     const std::vector<SlotSummary>& summaries() const { return slots_; }
@@ -128,6 +141,12 @@ public:
     bool languageConfirmYesSelected() const { return confirmLangYes_; }
     void setLanguageConfirmYesSelected(bool yes) { confirmLangYes_ = yes; }
 
+    // ---- "Switch the art style to XXX? It applies after a restart." confirm dialog ----
+    bool styleConfirmOpen() const { return confirmStyle_; }
+    int styleConfirmIndex() const { return confirmStyleIdx_; }
+    bool styleConfirmYesSelected() const { return confirmStyleYes_; }
+    bool anyConfirmOpen() const { return confirmNewGame_ || confirmLanguage_ || confirmStyle_; }
+
 private:
     bool open_ = false;
     TitlePage page_ = TitlePage::Menu;
@@ -149,6 +168,13 @@ private:
     int confirmLangIdx_ = 0;        // language row the dialog is about
     bool confirmLangYes_ = true;    // which answer is highlighted (Yes is the default)
     void closeLanguageConfirm() { confirmLanguage_ = false; confirmLangIdx_ = 0; confirmLangYes_ = true; }
+
+    int styleCount_ = 0;
+    int styleIdx_ = 0;
+    bool confirmStyle_ = false;     // dialog visible
+    int confirmStyleIdx_ = 0;       // style the dialog is about
+    bool confirmStyleYes_ = true;
+    void closeStyleConfirm() { confirmStyle_ = false; confirmStyleIdx_ = 0; confirmStyleYes_ = true; }
 };
 
 } // namespace toms

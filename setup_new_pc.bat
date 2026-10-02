@@ -283,7 +283,14 @@ if ((Show-Box $sshText 'TOMS setup - SSH key' 'YesNo' 'Question') -eq 'Yes') {
                            "  4. Click 'Add SSH key'`n`n" +
                            "Click OK when done (Cancel to skip the test).`n`n" +
                            "Never share the file WITHOUT .pub - that is the private key.") 'TOMS setup - add the key on GitHub' 'OKCancel' 'Information'
-        if ($added -eq 'OK') {
+        $checker = Join-Path $repo 'tools\check_git_ssh.ps1'
+        if ($added -eq 'OK' -and (Test-Path $checker)) {
+            # Full check: which ssh git runs (TortoiseGit plink, broken GIT_SSH_COMMAND / core.sshCommand),
+            # key fingerprint, login, remote -> SSH, fetch and push --dry-run, identity. Offers the fixes.
+            & powershell -NoProfile -ExecutionPolicy Bypass -File $checker -Repo $repo
+            Log "git/SSH check finished (exit $LASTEXITCODE); rerun any time: tools\check_git_ssh.cmd"
+        } elseif ($added -eq 'OK') {
+            # Older checkout without the checker: at least test the login.
             # GitHub has no shell, so ssh -T exits with 1 even on success: read the text (docs/12 section 5.1).
             $reply = (& $ssh -T -o StrictHostKeyChecking=accept-new git@github.com 2>&1 | ForEach-Object { "$_" }) -join "`n"
             Log "ssh -T: $reply"

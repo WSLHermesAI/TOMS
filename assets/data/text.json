@@ -233,6 +233,46 @@
       "ko": "카메라: 구역 표시",
       "es": "Cámara: Por Secciones"
     },
+    "settings.style_row": {
+      "zh_TW": "畫面風格：{style}",
+      "en": "Art style: {style}",
+      "zh_CN": "画面风格：{style}",
+      "ja": "画風：{style}",
+      "ko": "그래픽 스타일: {style}",
+      "es": "Estilo gráfico: {style}"
+    },
+    "settings.style_original": {
+      "zh_TW": "原版",
+      "en": "Original",
+      "zh_CN": "原版",
+      "ja": "オリジナル",
+      "ko": "오리지널",
+      "es": "Original"
+    },
+    "settings.style_confirm": {
+      "zh_TW": "確定要把畫面風格換成「{style}」嗎？",
+      "en": "Switch the art style to \"{style}\"?",
+      "zh_CN": "确定要把画面风格换成“{style}”吗？",
+      "ja": "画風を「{style}」に切り替えますか？",
+      "ko": "그래픽 스타일을 \"{style}\"(으)로 바꾸시겠습니까?",
+      "es": "¿Cambiar el estilo gráfico a \"{style}\"?"
+    },
+    "settings.style_restart": {
+      "zh_TW": "需要重新啟動遊戲才會套用。",
+      "en": "Restart the game to apply it.",
+      "zh_CN": "需要重新启动游戏才会生效。",
+      "ja": "ゲームを再起動すると反映されます。",
+      "ko": "게임을 다시 시작하면 적용됩니다.",
+      "es": "Reinicia el juego para aplicarlo."
+    },
+    "settings.style_pending": {
+      "zh_TW": "重新啟動遊戲後套用",
+      "en": "Applies after a restart",
+      "zh_CN": "重新启动游戏后生效",
+      "ja": "再起動後に反映",
+      "ko": "다시 시작한 후 적용",
+      "es": "Se aplica al reiniciar"
+    },
     "settings.hint": {
       "zh_TW": "左右鍵切換  Esc 返回",
       "en": "Left/Right: change   Esc: back",

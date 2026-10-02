@@ -12,7 +12,8 @@
     <div id="name">{{title.title}}</div>
     <div id="subtitle">{{title.subtitle}}</div>
 
-    <div id="page" data-class-menu="title.page == 0" data-class-slots="title.page == 1" data-class-langs="title.page == 2">
+    <div id="page" data-class-menu="title.page == 0" data-class-slots="title.page == 1" data-class-langs="title.page == 2"
+         data-class-compact="title.rows.size > 6">
         <div id="header" data-if="title.header != ''">{{title.header}}</div>
         <div id="subheader" data-if="title.subheader != ''">{{title.subheader}}</div>
         <div data-for="row, i : title.rows">
@@ -35,7 +36,7 @@
 
     <div data-if="title.confirm_open">
         <div class="fill scrim"></div>
-        <div id="confirm" class="panel">
+        <div id="confirm" class="panel" data-class-with-body="title.confirm_body != ''">
             <div id="question">{{title.confirm_question}}</div>
             <div id="body" data-if="title.confirm_body != ''">{{title.confirm_body}}</div>
             <div id="answers">

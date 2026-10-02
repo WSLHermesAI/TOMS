@@ -1,0 +1,15 @@
+{
+  "styles": [
+    {
+      "id": "dark16",
+      "name": {
+        "zh_TW": "暗黑奇幻 16-bit",
+        "en": "Dark fantasy 16-bit",
+        "zh_CN": "暗黑奇幻 16-bit",
+        "ja": "ダークファンタジー",
+        "ko": "다크 판타지",
+        "es": "Fantasía oscura"
+      }
+    }
+  ]
+}

@@ -163,6 +163,13 @@ git config --get core.sshCommand    # 若專案特別指定
 
 ## 5. 驗證與排錯
 
+> **最快：雙擊 `tools\check_git_ssh.cmd`**（`setup_new_pc.bat` 在加完金鑰後也會自動跑）。
+> 依 git 實際使用的順序檢查並提議修正：`GIT_SSH_COMMAND`／`GIT_SSH` 是否壞掉、`core.sshCommand`
+> （路徑含空白如 `C:/Program Files/...` 會壞；改用 `C:/Windows/System32/OpenSSH/ssh.exe`）、
+> **TortoiseGit 是否用 plink**（plink 不讀 `~/.ssh` 金鑰 → `No supported authentication methods available (server sent: publickey)`，
+> GitHub 上金鑰顯示 *Never used*）、金鑰指紋、登入帳號、remote 是否為 SSH、`git fetch` 與 `git push --dry-run`、`user.email`。
+> 修正只在按「是」後才套用；`-NoGui` 只檢查不修改。
+
 ### 5.1 正確的驗證方式（含一個會誤判的陷阱）
 
 ```bash

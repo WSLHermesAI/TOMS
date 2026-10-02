@@ -53,6 +53,7 @@ struct UiHud {
     bool icons = false;                // menu + store buttons (hidden while the in-game menu is up)
     bool store_unlocked = false;
     std::string store_label, menu_label;
+    std::string store_icon;            // the store button's coin (follows the art style)
     bool chapter_card = false;
     std::string chapter_title, chapter_sub;
     float chapter_alpha = 0;           // 0..1, fades out
@@ -132,8 +133,8 @@ struct UiMenu {                        // in-game menu (Esc / the ≡ button)
     std::string header, subheader;
     std::vector<UiRow> rows;
     std::string close_label;           // main page: Close; sub-pages: Back
-    bool confirm_open = false;         // "Switch to <language>?"
-    std::string confirm_question, yes_label, no_label;
+    bool confirm_open = false;         // "Switch to <language>?" / "Switch the art style to ...?"
+    std::string confirm_question, confirm_body, yes_label, no_label;
     bool confirm_yes = true;
 };
 

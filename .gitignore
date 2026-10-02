@@ -34,3 +34,11 @@ assets/wqy-zenhei.ttc
 # script regenerates them; keeping ~167MB of generated bundles out of git.
 web/
 web-gl/
+
+# AI sprite experiments (tools/art/reskin_sprites.py); pick results and copy them on purpose
+art_out/
+assets_variants/
+
+# Python bytecode caches (tools/*.py)
+__pycache__/
+*.pyc
