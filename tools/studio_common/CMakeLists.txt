@@ -21,3 +21,14 @@ target_link_libraries(studio_common PUBLIC Qt6::Widgets)
 if(WIN32)
     target_link_libraries(studio_common PRIVATE shell32)   # CommandLineToArgvW
 endif()
+
+# studio_bgfx: GameCanvasView -- an editor canvas drawn by the game's own renderer (toms_bgfx's
+# BgfxRenderer), so the atlas, anim and particle editors preview exactly what toms_game draws.
+if(TARGET toms_bgfx AND NOT TARGET studio_bgfx)
+    add_library(studio_bgfx STATIC GameCanvasView.h GameCanvasView.cpp)
+    set_target_properties(studio_bgfx PROPERTIES AUTOMOC ON FOLDER "tools/studio")
+    if(COMMAND toms_target_defaults)
+        toms_target_defaults(studio_bgfx)
+    endif()
+    target_link_libraries(studio_bgfx PUBLIC studio_common toms_bgfx glm::glm)
+endif()

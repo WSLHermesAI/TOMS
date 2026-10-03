@@ -5,6 +5,31 @@ position / rotation / scale / colour keys, sprite changes and events. Character 
 scenes, simple effects. It replaces FM79979's MPDI (flat list of paths) with a node hierarchy:
 moving a group moves everything in it, and the tree decides what draws on top.
 
+**The game's renderer draws the editor views.** The atlas, anim and particle editors draw their
+canvases with toms_game's own `BgfxRenderer` (`GameCanvasView` in `tools/studio_common`, library
+`studio_bgfx`), so what an editor shows is pixel for pixel what the game shows:
+- **Same rendering as the game:** point-sampled sRGB textures, straight-alpha and additive
+  blending, the same sprite batch, and for particles the GPU simulation.
+- **Game content** (the atlas page, the sprite being edited, the clip's sprites, the particles) is
+  drawn by the renderer in the canvas's native window.
+- **Editing visuals** (outlines, selection, handles, pivots, 9-slice guides, gizmos, labels,
+  status text) keep their QPainter code and are drawn on top as a transparent overlay.
+- **One bgfx per editor process.** It follows the canvas being shown: the atlas editor's page and
+  sprite-edit canvases share it.
+- **Coordinate hints** (View > *Show Coordinates*, on by default), as in Cocos Creator's scene view:
+  faint lines with the x values along the bottom edge and the y values along the left edge. The
+  step follows the zoom (1, 2, 5 × 10ⁿ content pixels, at least 90 screen pixels apart): every 500
+  zoomed out, every 10 or every 1 zoomed in. Values are the game's coordinates (y grows downwards).
+- **QPainter fallback:** View > *Preview with the Game Renderer* (on by default; applies after a
+  restart), the offscreen `--selftest`, a failed bgfx start, and a standalone build of the atlas
+  tool (no game engine) all draw with QPainter as before.
+- **`--selftest-gpu`** (on screen) checks each editor with the game renderer and saves bgfx
+  screenshots:
+  - `atlas_editor --selftest-gpu project.atlasproj outdir`: the page, sprite-edit mode and back;
+  - `anim_editor --selftest-gpu clip.anim outdir`;
+  - `particle_editor --selftest-gpu effects.particle outdir`.
+
+
 **Status:** the runtime and file format (phase 1) and the editor `anim_editor` (phase 3, see
 [Editor](#editor)) are done. Next: one plugin-based studio app holding both the atlas and the anim
 editor (phase 2), and a multi-track timeline (phase 4).

@@ -13,6 +13,9 @@
 #include "dxbc/fs_sprite.sc.bin.h"
 #endif
 #if defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/vs_sprite_inst.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/vs_imgui.sc.bin.h"
 #endif
 #if defined(TOMS_SHADER_HAS_DXBC)
@@ -25,6 +28,7 @@
 #include "dxbc/fs_rml.sc.bin.h"
 #endif
 #include "glsl/vs_sprite.sc.bin.h"
+#include "glsl/vs_sprite_inst.sc.bin.h"
 #include "glsl/fs_sprite.sc.bin.h"
 #include "glsl/vs_imgui.sc.bin.h"
 #include "glsl/fs_imgui.sc.bin.h"
@@ -33,6 +37,7 @@
 #endif
 #ifndef __EMSCRIPTEN__
 #include "spirv/vs_sprite.sc.bin.h"
+#include "spirv/vs_sprite_inst.sc.bin.h"
 #include "spirv/fs_sprite.sc.bin.h"
 #include "spirv/vs_imgui.sc.bin.h"
 #include "spirv/fs_imgui.sc.bin.h"
@@ -40,11 +45,34 @@
 #include "spirv/fs_rml.sc.bin.h"
 #endif
 #include "essl/vs_sprite.sc.bin.h"
+#include "essl/vs_sprite_inst.sc.bin.h"
 #include "essl/fs_sprite.sc.bin.h"
 #include "essl/vs_imgui.sc.bin.h"
 #include "essl/fs_imgui.sc.bin.h"
 #include "essl/vs_rml.sc.bin.h"
 #include "essl/fs_rml.sc.bin.h"
+
+// The compute path (cs_sprite.sc, vs_sprite_cs.sc): D3D (DXBC), OpenGL 4.3 (GLSL) and Vulkan (SPIR-V).
+#if defined(TOMS_SHADER_HAS_COMPUTE)
+#if defined(TOMS_SHADERS_DESKTOP) && defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/cs_sprite.sc.bin.h"
+#include "dxbc/cs_fx_spawn.sc.bin.h"
+#include "dxbc/cs_fx_update.sc.bin.h"
+#include "dxbc/vs_sprite_cs.sc.bin.h"
+#endif
+#if defined(TOMS_SHADERS_DESKTOP)
+#include "glsl/cs_sprite.sc.bin.h"
+#include "glsl/cs_fx_spawn.sc.bin.h"
+#include "glsl/cs_fx_update.sc.bin.h"
+#include "glsl/vs_sprite_cs.sc.bin.h"
+#endif
+#ifndef __EMSCRIPTEN__
+#include "spirv/cs_sprite.sc.bin.h"
+#include "spirv/cs_fx_spawn.sc.bin.h"
+#include "spirv/cs_fx_update.sc.bin.h"
+#include "spirv/vs_sprite_cs.sc.bin.h"
+#endif
+#endif
 
 namespace toms::next {
 namespace {
@@ -55,16 +83,51 @@ struct Blob { const uint8_t* data; uint32_t size; };
 
 struct ProgramBlobs { Blob vs, fs; };
 
-// One profile's three programs.
+// One profile's programs.
 #define TOMS_PROGRAMS(ext)                                                                          \
     switch (which) {                                                                                \
     case ShaderProgram::Sprite: out = { TOMS_BLOB(vs_sprite_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
+    case ShaderProgram::SpriteInstanced: out = { TOMS_BLOB(vs_sprite_inst_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
     case ShaderProgram::ImGui:  out = { TOMS_BLOB(vs_imgui_##ext),  TOMS_BLOB(fs_imgui_##ext) };  break; \
     case ShaderProgram::RmlUi:  out = { TOMS_BLOB(vs_rml_##ext),    TOMS_BLOB(fs_rml_##ext) };    break; \
     }                                                                                               \
     return true
 
+// The compute path's two programs; false = this backend has none (the batch uses instancing).
+bool pickCompute(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out) {
+#if defined(TOMS_SHADER_HAS_COMPUTE)
+#define TOMS_COMPUTE(ext)                                                                           \
+    switch (which) {                                                                                \
+    case ShaderProgram::SpriteCompute: out = ProgramBlobs{TOMS_BLOB(cs_sprite_##ext), {}}; break;   \
+    case ShaderProgram::FxSpawn:       out = ProgramBlobs{TOMS_BLOB(cs_fx_spawn_##ext), {}}; break; \
+    case ShaderProgram::FxUpdate:      out = ProgramBlobs{TOMS_BLOB(cs_fx_update_##ext), {}}; break;\
+    default: out = ProgramBlobs{TOMS_BLOB(vs_sprite_cs_##ext), TOMS_BLOB(fs_sprite_##ext)}; break;  \
+    }                                                                                               \
+    return true
+    switch (type) {
+#if defined(TOMS_SHADERS_DESKTOP) && defined(TOMS_SHADER_HAS_DXBC)
+    case bgfx::RendererType::Direct3D11:
+    case bgfx::RendererType::Direct3D12: TOMS_COMPUTE(dxbc);
+#endif
+#if defined(TOMS_SHADERS_DESKTOP)
+    case bgfx::RendererType::OpenGL: TOMS_COMPUTE(glsl);
+#endif
+#ifndef __EMSCRIPTEN__
+    case bgfx::RendererType::Vulkan: TOMS_COMPUTE(spv);
+#endif
+    default: return false;
+    }
+#undef TOMS_COMPUTE
+#else
+    (void)which; (void)type; (void)out;
+    return false;
+#endif
+}
+
 bool pick(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out) {
+    if (which == ShaderProgram::SpriteCompute || which == ShaderProgram::SpriteFromCompute || which == ShaderProgram::FxSpawn ||
+        which == ShaderProgram::FxUpdate)
+        return pickCompute(which, type, out);
     switch (type) {
 #ifdef TOMS_SHADERS_DESKTOP
 #if defined(TOMS_SHADER_HAS_DXBC)
@@ -91,10 +154,14 @@ bool pick(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out)
 bgfx::ProgramHandle createEmbeddedProgram(ShaderProgram which) {
     ProgramBlobs b{};
     if (!pick(which, bgfx::getRendererType(), b)) {
+        if (which != ShaderProgram::Sprite && which != ShaderProgram::ImGui && which != ShaderProgram::RmlUi)
+            return BGFX_INVALID_HANDLE;   // optional programs: the caller falls back
         std::fprintf(stderr, "[toms] no embedded shaders for renderer '%s'\n",
                      bgfx::getRendererName(bgfx::getRendererType()));
         return BGFX_INVALID_HANDLE;
     }
+    if (!b.fs.data)   // a compute program: one shader
+        return bgfx::createProgram(bgfx::createShader(bgfx::makeRef(b.vs.data, b.vs.size)), true);
     bgfx::ShaderHandle vs = bgfx::createShader(bgfx::makeRef(b.vs.data, b.vs.size));
     bgfx::ShaderHandle fs = bgfx::createShader(bgfx::makeRef(b.fs.data, b.fs.size));
     return bgfx::createProgram(vs, fs, true /* destroy shaders with the program */);

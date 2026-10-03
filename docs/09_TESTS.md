@@ -12,14 +12,36 @@ Visual Studio lists the same tests in **Test → Test Explorer** (from the CMake
 click. Underneath is `ctest`, CMake's test runner (Visual Studio ships it; `tools\test.cmd` finds it), so
 `ctest --preset windows-release` works too in a prompt that has it on `PATH`.
 
+**All the unit tests are one program,** `bin\tests\toms_tests.exe`, so Visual Studio's target
+list has one entry for them instead of thirty. Each test file keeps its own `main()`; the build
+renames it to `toms_test_<name>`, and a generated driver runs the one named on the command line.
+CTest still runs and reports every test on its own. Run it in `assets\`:
+
+```
+toms_tests save_test      one test (the names are the file names: save_test, particle_fx_test, ...)
+toms_tests --list         every name
+toms_tests --all          all of them in one go
+```
+
+**Editors on the game renderer** (not in CTest: they open a window). `atlas_editor`, `anim_editor`
+and `particle_editor` each have `--selftest-gpu <file> <outdir>`. It checks the viewport runs on
+toms_game's renderer, draws and edits there, and saves bgfx screenshots to compare. The offscreen
+`--selftest` checks the QPainter fallback.
+
+To debug one in Visual Studio, pick **"toms_tests (one unit test)"** in the target list and change
+its `args` in `launch.vs.json`. Because every test is linked into the same program, a type or
+helper a test defines for itself goes in an anonymous namespace. Two tests each had a different
+`struct MockContext`, and linked together one silently replaced the other.
+
 ## What runs
 
 | Label | Tests | What they check | Needs |
 |---|---|---|---|
 | `unit` | 34 | the game's own `*_test.cpp` programs next to the code in `src/core` (saves, title flow, conditions, battle bars, camera, equipment, skills, forge, hub, endings, cycles, floors, footprints, missions, node animations, particle effects, …), including checks on the shipped `assets/data` | nothing |
 | `atlas` | 3 | `atlas.core`: the atlas tool's packer, child sprites, every export format read back, and old `.pi` files rebuilt pixel for pixel; `atlas_sprites_test`: every sprite name the code, data and UI use is in the game's atlases; `atlas.assets_up_to_date`: `assets/media/atlas/game.atlasproj` opens from its packed atlas alone and its other files are current ([14](14_ATLAS_TOOL.md)); `atlas.fx_up_to_date`: the same for the particle sprites `fx.atlasproj` ([17](17_PARTICLES.md)) | nothing (all three are also in `unit`; `atlas_sprites_test` only there) |
+| `particle` | 1 | `particle.check_recipes`: `particle_editor --headless check` on `docs/examples/fx_recipes.particle` (it parses, every sprite is in its atlases, curves / pools / bursts are sane; [17](17_PARTICLES.md)) | the Qt editor build (also in `unit`) |
 | `anim` | 2 | `anim.check_preview` / `anim.check_recipes`: `anim_editor --headless check` on `tests/smoke/anim_preview.anim` and on the recipe examples `docs/examples/anim_recipes.anim` (they parse, every sprite is in the game atlas, no overlapping keys; [15](15_ANIMATION.md), [16](16_ANIMATION_RECIPES.md)) | the Qt editor build (also in `unit`) |
-| `smoke` | 12 | the real `toms_game` plays a scripted scene; its screenshot must match the reference image in `tests/golden/` (including `smoke.anim` and `smoke.fx`: an `.anim` clip and a particle effect over the map) | a GPU; each test opens a window for about 2 s |
+| `smoke` | 15 | the real `toms_game` plays a scripted scene; its screenshot must match the reference image in `tests/golden/` (including `smoke.anim` and `smoke.fx`: an `.anim` clip and a particle effect over the map; `smoke.fx_cpu` / `fx_compute`: the same through the sprite batch's other paths, and `smoke.fx_gpu`: with every emitter simulated on the GPU -- all against the same image) | a GPU; each test opens a window for about 2 s |
 | `web` | 4 | `tools/web_smoke_test.mjs` in headless Chrome: title → new game → save → reload → the save is still there, no page errors. Against the single-threaded build, the threaded build (served with the isolation headers), and the packaged page twice: on a server without the headers (it must become threaded through its service worker) and with `?nothreads` ([10](10_THREADS.md)) | the web builds / package (`build_web.bat`), Node 22+, Chrome or Edge; a missing one is **skipped**, not failed |
 
 The smoke scenes are title, map (HUD + pad), in-game menu, inventory, dialogue, battle (after one attack), store, and a node animation over the map (`--anim`, [15](15_ANIMATION.md)).

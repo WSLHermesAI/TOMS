@@ -13,10 +13,17 @@
 #include "Theme.h"
 #include "atlas_cli.h"
 #include "atlas_store.h"
+#if TOMS_ATLAS_GAME_RENDERER
+#include "AtlasCanvas.h"
+#include "SpriteEditCanvas.h"
+#include "bgfx_host.h"
+#endif
 
 #include <QApplication>
 #include <QDir>
 #include <QDockWidget>
+#include <QElapsedTimer>
+#include <QMouseEvent>
 #include <QEventLoop>
 #include <QFileInfo>
 #include <QScrollArea>
@@ -24,6 +31,7 @@
 #include <QTimer>
 #include <QUndoStack>
 
+#include <cmath>
 #include <cstdio>
 
 namespace {
@@ -231,6 +239,78 @@ int runSelfTest(MainWindow& w, const QString& project, const QString& outDir)
 
 }  // namespace
 
+#if TOMS_ATLAS_GAME_RENDERER
+// Right-drag on a canvas: it must pan (the content moves with the mouse), as middle-drag does.
+static bool rightDragPans(CanvasView* view)
+{
+    const QPointF before = view->contentToWidget(QPointF(0, 0));
+    const QPointF a(view->width() / 2.0, view->height() / 2.0), b = a + QPointF(60, 25);
+    auto send = [&](QEvent::Type type, const QPointF& at, Qt::MouseButton button, Qt::MouseButtons buttons) {
+        QMouseEvent e(type, at, view->mapToGlobal(at), button, buttons, Qt::NoModifier);
+        QApplication::sendEvent(view, &e);
+    };
+    send(QEvent::MouseButtonPress, a, Qt::RightButton, Qt::RightButton);
+    for (int i = 1; i <= 4; i++) send(QEvent::MouseMove, a + (b - a) * (i / 4.0), Qt::NoButton, Qt::RightButton);
+    send(QEvent::MouseButtonRelease, b, Qt::RightButton, Qt::NoButton);
+    QCoreApplication::processEvents();
+    const QPointF moved = view->contentToWidget(QPointF(0, 0)) - before;
+    return std::fabs(moved.x() - 60) < 1 && std::fabs(moved.y() - 25) < 1;
+}
+
+// The canvases with the game renderer (on screen): the page, then sprite edit mode (bgfx moves to
+// the other canvas of the stack), then the page again; a bgfx screenshot of each.
+int runGpuSelfTest(MainWindow& w, const QString& project, const QString& outDir)
+{
+    QDir().mkpath(outDir);
+    AtlasDocument* doc = w.document();
+    QString err;
+    if (!doc->open(project, &err)) {
+        std::fprintf(stderr, "selftest: %s\n", err.toUtf8().constData());
+        return 2;
+    }
+    waitForBuild(doc);
+    auto pump = [](int ms) {
+        QElapsedTimer t;
+        t.start();
+        while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    };
+    auto shot = [&](GameCanvasView* view, const char* name) {
+        const int before = toms::next::bgfxHostScreenshotsWritten();
+        view->saveGameRendererShot(QDir(outDir).filePath(QString::fromLatin1(name)));
+        QElapsedTimer t;
+        t.start();
+        while (toms::next::bgfxHostScreenshotsWritten() == before && t.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+        return toms::next::bgfxHostScreenshotsWritten() > before;
+    };
+    bool ok = true;
+    auto check = [&](bool good, const char* what) {
+        std::printf("selftest: %-60s %s\n", what, good ? "ok" : "FAILED");
+        ok &= good;
+    };
+    CanvasPanel* panel = w.canvasPanel();
+    pump(600);
+    check(panel->atlasCanvas()->usingGameRenderer(), "the atlas canvas runs on the game renderer");
+    std::printf("selftest:   %s\n", panel->atlasCanvas()->rendererName().toUtf8().constData());
+    if (!panel->atlasCanvas()->usingGameRenderer()) return 1;
+    check(shot(panel->atlasCanvas(), "atlas_gpu.png"), "atlas_gpu.png (the page, bgfx screenshot)");
+    check(rightDragPans(panel->atlasCanvas()), "right-drag pans the page canvas");
+    const QString sprite = QString::fromStdString(doc->snapshot()->result.regions.front().name);
+    panel->enterEditMode(sprite);
+    pump(600);
+    check(panel->editCanvas()->usingGameRenderer() && panel->editCanvas()->framesDrawn() > 0,
+          "sprite edit mode: bgfx moved to the edit canvas");
+    check(shot(panel->editCanvas(), "edit_gpu.png"), "edit_gpu.png (the sprite)");
+    check(rightDragPans(panel->editCanvas()), "right-drag pans the sprite edit canvas");
+    panel->exitEditMode();
+    const int before = panel->atlasCanvas()->framesDrawn();
+    pump(600);
+    check(panel->atlasCanvas()->framesDrawn() > before, "back to the page: bgfx draws the atlas canvas again");
+    check(shot(panel->atlasCanvas(), "atlas_back.png"), "atlas_back.png");
+    std::printf("selftest: %s\n", ok ? "ok" : "FAILED");
+    return ok ? 0 : 1;
+}
+#endif
+
 int main(int argc, char** argv)
 {
     const std::vector<std::string> args = utf8CommandLine(argc, argv);
@@ -252,6 +332,13 @@ int main(int argc, char** argv)
     MainWindow w;
     // QApplication has removed its own options (-platform ...) from arguments().
     const QStringList qargs = QCoreApplication::arguments().mid(1);
+#if TOMS_ATLAS_GAME_RENDERER
+    if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest-gpu")) {   // on screen: the game renderer
+        w.resize(1440, 900);
+        w.show();
+        return runGpuSelfTest(w, qargs[1], qargs[2]);
+    }
+#endif
     if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest")) {
         w.resize(1440, 900);
         w.show();

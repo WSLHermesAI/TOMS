@@ -2,6 +2,7 @@
 // (src/game/core/main.cpp, removed 2026-09-27; GLFW keys -> toms::next::Key).
 #include "game_session.h"
 
+#include "bgfx_host.h"       // the F3 HUD: debug text, backend name, compute caps
 #include "bgfx_renderer.h"
 #include "game.h"
 #include "game_ui.h"
@@ -10,6 +11,7 @@
 #include "job_system.h"
 #include "vfs.h"
 
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <imgui.h>
@@ -85,6 +87,17 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     }
     if (const char* hm = std::getenv("TOMS_HIDE")) game_->hideMask = std::atoi(hm);
     if (const char* sn = std::getenv("TOMS_SPLIT_NODE")) renderer_->setNodeFilter((uint8_t)std::atoi(sn));
+    showHud = opts.showFps;
+    if (opts.fxGpuThreshold >= 0) game_->overrideParticleGpuThreshold(opts.fxGpuThreshold);
+    bgfxHostSetHud(showHud);
+    if (opts.spritePath != "auto") {   // --sprite-path / --no-instancing
+        using P = BgfxRenderer::SpritePath;
+        const P p = opts.spritePath == "compute" ? P::Compute : opts.spritePath == "instancing" ? P::Instancing
+                  : opts.spritePath == "cpu"     ? P::Cpu     : P::Auto;
+        renderer_->setSpritePath(p);
+        std::fprintf(stderr, "[toms] sprite batch: %s (asked for %s)\n", BgfxRenderer::spritePathName(renderer_->spritePath()),
+                     opts.spritePath.c_str());
+    }
     game_->loadStage(opts.startStage);
     keyWas_.fill(false);
     if (!opts.previewAnim.empty()) {   // --anim=<file>#<clip> (a developer/test option)
@@ -297,7 +310,36 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         rml_->render(BgfxRenderer::kViewUi);
     }
     if (debugUi_) imgui_.render(BgfxRenderer::kViewOverlay);
+    if (keyPressed(in, Key::F3)) {   // anywhere, title included
+        showHud = !showHud;
+        bgfxHostSetHud(showHud);
+    }
+    drawHud();
     return keepRunning;
+}
+
+// FPS 60.0 (16.7 ms) | Direct3D 11 | sprites: GPU instancing | compute: yes | 1234 quads, 3 draws
+void GameSession::drawHud() {
+    const double now = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    if (hudClock_ < 0) hudClock_ = now;
+    hudFrames_++;
+    if (now - hudClock_ >= 0.5 || (hudFps_ == 0 && hudFrames_ >= 10 && now > hudClock_)) {   // a first value soon
+        hudFps_ = hudFrames_ / (now - hudClock_);
+        hudMs_ = (now - hudClock_) * 1000.0 / hudFrames_;
+        hudClock_ = now;
+        hudFrames_ = 0;
+    }
+    if (!showHud || !renderer_) return;
+    char line[256];
+    // "quads drawn/asked": a frame that could not draw everything shows it.
+    std::snprintf(line, sizeof line,
+                  "FPS %5.1f (%5.2f ms) | %s | sprites: %s | compute: %s | %zu/%zu quads, %u draws | fx %d alive, GPU %d/%d emitters (>%d)",
+                  hudFps_, hudMs_, bgfxHostRendererName().c_str(),
+                  BgfxRenderer::spritePathName(renderer_->spritePath()),
+                  bgfxHostSupportsCompute() ? "yes" : "no", renderer_->lastDrawnQuads(), renderer_->lastQuadCount(),
+                  renderer_->lastDrawCalls(), game_ ? game_->previewFxLive() : 0, game_ ? game_->previewFxGpuEmitters() : 0,
+                  game_ ? game_->previewFxEmitters() : 0, game_ ? game_->particleGpuThreshold() : 0);
+    bgfxHostHudText(line);
 }
 
 }  // namespace toms::next

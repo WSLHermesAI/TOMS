@@ -25,7 +25,11 @@ atlas::IRect toIRect(const QRect& r) { return atlas::IRect{r.x(), r.y(), r.width
 }  // namespace
 
 SpriteEditCanvas::SpriteEditCanvas(AtlasDocument* doc, QWidget* parent)
+#if TOMS_ATLAS_GAME_RENDERER
+    : GameCanvasView(GameCanvasView::gameRendererWanted(QStringLiteral("AtlasEditor")), parent)
+#else
     : CanvasView(parent)
+#endif
     , m_doc(doc)
 {
     connect(doc, &AtlasDocument::buildFinished, this, &SpriteEditCanvas::reload);
@@ -145,6 +149,19 @@ QRect SpriteEditCanvas::clampToImage(QRect r) const
 
 // ---- painting -----------------------------------------------------------------------------------
 
+#if TOMS_ATLAS_GAME_RENDERER
+SpriteEditCanvas::~SpriteEditCanvas() { releaseGameRenderer(); }
+
+void SpriteEditCanvas::paintGameScene(const GameScene& s)
+{
+    if (m_image.isNull()) return;
+    s.image(m_tex.cached(QStringLiteral("sprite"), m_image), toWidget(QRectF(QPointF(0, 0), QSizeF(m_image.size()))));
+}
+#else
+SpriteEditCanvas::~SpriteEditCanvas() = default;
+static bool overGameScene() { return false; }
+#endif
+
 void SpriteEditCanvas::paintContent(QPainter& p)
 {
     const Theme::Colors& tc = Theme::colors();
@@ -155,7 +172,7 @@ void SpriteEditCanvas::paintContent(QPainter& p)
     }
     const QRectF imgRect = toWidget(QRectF(QPointF(0, 0), QSizeF(m_image.size())));
     p.setRenderHint(QPainter::SmoothPixmapTransform, zoom() < 1.0);
-    p.drawImage(imgRect, m_image);
+    if (!overGameScene()) p.drawImage(imgRect, m_image);   // else the game renderer drew it
 
     // Pixel grid once pixels are big enough to aim at.
     if (zoom() >= 8) {

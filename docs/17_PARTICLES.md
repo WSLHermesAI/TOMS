@@ -1,8 +1,12 @@
 # 17 — Particle effects (`.particle`)
 
-**Status:** phase 1 is done (the format, the runtime `toms::fx`, the `fx` atlas, 11 example
-effects, `toms_game --fx=`, tests). Next: the editor (phase 2). Sections 1 and 2 explain the
-design; 3 and 4 describe what is built.
+**Status:** phases 1 and 2 are done.
+- **Phase 1:** the format, the runtime `toms::fx`, the `fx` atlas, 11 example effects,
+  `toms_game --fx=`, tests.
+- **Phase 2:** the editor `particle_editor`; section 5 describes it.
+
+Next: phase 2b (blend modes in the renderer) and phase 3 (effects on `.anim` nodes). Sections 1
+and 2 explain the design; 3–5 describe what is built.
 
 A new particle system for TOMS: a JSON file format, a 2D
 runtime that draws from the packed sprite atlases ([14](14_ATLAS_TOOL.md)) like `.anim`
@@ -282,6 +286,74 @@ if (fx.finished()) ...                            // a one-shot is done
   particles at any frame rate: 60 × 1/60 s and 40 × 0.025 s match.
 - **Cost:** 2,000 live particles take 0.075 ms per frame (update + quads, native release build;
   printed by `particle_fx_test`).
+- **Hardware path (the renderer, not the particles):** the sprite batch that draws particles,
+  `.anim` nodes and sprites builds its vertices on the GPU.
+  - **How:** instancing, `vs_sprite_inst.sc`. One 64-byte instance per quad (its four corners, uv
+    rect, tint) instead of four CPU-written vertices and six indices.
+  - **Where:** it is used whenever the backend has the instanced program, which today is every one
+    TOMS runs on (D3D11/12, Vulkan, OpenGL, GLES3 / WebGL2). This bgfx no longer has an
+    instancing cap: every backend it supports can instance.
+  - **Fallback:** without it (or with `toms_game --no-instancing`) the CPU path runs.
+  - **Same pixels:** both paths are pixel-identical on all four Windows backends; `smoke.fx_cpu`
+    keeps them so.
+  - **This replaces FM79979's `cParticleBatchRender`.** That one used a compute shader for the same
+    vertex expansion and then read the vertices back to the CPU; instancing needs no compute (not in
+    WebGL2) and no readback.
+  - **Three paths** (`--sprite-path=`, all pixel-identical, each kept so by a screenshot test):
+    - **instancing** (the default)
+    - **compute:** `cs_sprite.sc` expands quads into a GPU vertex buffer the draw reads; this is
+      FM79979's `cParticleBatchRender` without its readback.
+    - **cpu**
+  - **Measured** (D3D11, F3 line, every particle alive and drawn):
+
+    | Live particles | CPU vertices | GPU instancing | GPU compute |
+    |---|---|---|---|
+    | 30,000 | 1.70 ms (588 FPS) | 1.37 ms (730 FPS) | 1.76 ms (569 FPS) |
+    | 300,000 | 27.1–27.8 ms (36–37 FPS) | 19.3–21.8 ms (46–52 FPS) | 19.0–20.2 ms (50–53 FPS) |
+
+    "auto" picks instancing: it is as fast as compute and works everywhere.
+  - **All paths use persistent GPU buffers** that grow as needed. Before, the CPU and instancing
+    paths used bgfx's per-frame transient buffers (a few MB): at 300,000 quads they dropped about
+    256,000 quads every frame, so only about 44,000 were drawn. The F3 line shows
+    `drawn/asked quads` and the effect's live particles, so a drop cannot hide again.
+  - **Where the CPU time goes** (`particle_fx_test`, 30,000 particles): about 0.23 ms for the
+    motion (update) and about 1.2 ms building quads (colour / size curves, rotation, corners). GPU
+    simulation (below) removes both.
+
+**GPU simulation** (big emitters; `cs_fx_spawn.sc` + `cs_fx_update.sc`)
+
+- **What moves to the GPU:** the whole particle update. That is position, velocity, gravity,
+  drag, radial / tangential forces, colour / size / speed / spin over life (curves baked into
+  64-entry tables), the flipbook frame and the rotation, plus the quad. The vertices are written
+  straight into the buffer the draw reads, and nothing is read back.
+- **What stays on the CPU:** spawning (when, where, the seeded random values, a free slot), so a
+  GPU emitter makes the same particles as the CPU would. The CPU knows when each slot frees,
+  because a particle's life is fixed at birth, so `liveCount()`, `finished()` and the pool cap
+  work as before (`particle_fx_test`: equal live counts every frame).
+- **Which emitters:** `EffectInstance::setGpuSimulation(renderer, threshold)` sets it up, and
+  each emitter's `"simulation"` decides:
+
+  | `"simulation"` (set in the particle editor, Render > Simulation) | Simulated on |
+  |---|---|
+  | `"auto"` (default) | the GPU when `maxParticles` is above the game's threshold, else the CPU |
+  | `"gpu"` | the GPU whenever the device has compute shaders, else the CPU |
+  | `"cpu"` | always the CPU |
+
+- **The threshold** is the game setting `particleGpuThreshold` (`save/settings.json`; 0 = never).
+  The default is **5000 on desktop and 3000 on phones**. `toms_game --fx-gpu-threshold=N`
+  overrides it for one run.
+- **Where it runs:** D3D11/12, Vulkan, OpenGL 4.3. The browser (WebGL2) and GLES3 phones have no
+  compute shaders, so every emitter simulates on the CPU there. The particle editor's preview
+  always simulates on the CPU.
+- **Matches the CPU:** the fire, magic circle and snow, simulated on the GPU, differ from the CPU
+  by at most a few colour levels on D3D11/12, Vulkan and OpenGL (the curve tables, float
+  rounding). `smoke.fx_gpu` checks it against the same reference image as `smoke.fx`.
+  - **Draw order differs:** particles of one GPU emitter draw in slot order, not birth order. That
+    is invisible with `add` blending, but can differ slightly where `normal`-blended particles
+    overlap.
+- **Measured** (300,000 live particles, D3D11): GPU simulation 78–85 FPS (11.7–12.8 ms), CPU
+  simulation 33–35 FPS (28.7–30.4 ms), about 2.4× faster.
+- **F3 line:** shows `GPU n/m emitters (>threshold)`.
 - **Preview:** `toms_game --fx=<file>#<effect>` draws an effect centred over whatever is on
   screen, seed 1, and replays a one-shot 0.5 s after it ends. Problems and missing sprites go
   to the log (`[fx] ...`).
@@ -293,10 +365,84 @@ if (fx.finished()) ...                            // a one-shot is done
 
 ## 5. Editor UI (`particle_editor`, Qt)
 
-It is built from the same parts as `anim_editor`: `studio_common` (Theme, Icons, CanvasView,
-SpriteImageCache, Console), the Sprites dock with one tab per atlas, the undo stack and
-`--headless check`. It is written as a plugin so it can join the studio app (atlas + anim +
-particles) later.
+```
+particle_editor [file.particle]                                       the editor
+particle_editor --headless check file.particle                        parse + check; exit 0 ok, 2 errors, 3 usage
+particle_editor --headless render file.particle#effect out.png [frames] [every]
+                                                                      a contact sheet (8 moments, 0.15 s apart)
+particle_editor --selftest file.particle outdir                       automated check (-platform offscreen; QPainter preview)
+particle_editor --selftest-gpu file.particle outdir                   the same for the game-renderer preview (on screen)
+```
+
+**The preview uses the game's renderer.** The viewport is a `GameCanvasView` (shared with the atlas
+and anim editors, `tools/studio_common`): a native window that toms_game's `BgfxRenderer` draws
+into (`ParticleViewportGpu.cpp`), with the gizmo and status line as a QPainter overlay on top:
+- **Same as the game:** the same sprite batch, textures (point-sampled sRGB), blending and GPU
+  particle simulation. Emitters set to `"gpu"`, or `"auto"` ones above the toolbar's **GPU sim
+  above** value (5000, like the desktop game setting; 0 = never), are simulated on the GPU, just
+  as the game would.
+- **Also drawn through that renderer:** the background, grid, origin and gizmo (as solid quads).
+  The status line is bgfx debug text: backend, FPS, live particles, GPU-simulated emitters and
+  draw calls.
+- **When it falls back to QPainter (CPU simulation):** View > *Preview with the Game Renderer*
+  (off; applies after a restart), the offscreen selftest, a failed bgfx start, and
+  `--headless render`.
+- **Checked by `--selftest-gpu`:** Direct3D 11 at 60 FPS (vsync); the gizmo works in the native
+  window. GPU vs CPU simulation in the editor:
+  - magic circle and hit sparks are identical within a few colour levels;
+  - the torch differs on 0.18% of pixels: a flipbook frame can switch on a tiny age difference,
+    and normal-blend smoke draws in slot order;
+  - snow differs on 0.47%: after 300 steps of random swirl, flakes drift by about a pixel.
+
+Visual Studio: the **"particle_editor (recipes)"** target. `--headless render` is the quick way to
+review an effect someone (or an AI) wrote without opening the editor.
+
+**What is built** (tools/particle/qt; the sketch below was the plan, and the editor follows it):
+
+- **Effects dock:** the effects and their emitters.
+  - The checkbox hides an emitter in the preview only; double-click / F2 renames.
+  - The toolbar adds effects and emitters, duplicates, deletes, and moves emitters up / down.
+- **Viewport:** the game's own simulation (`EffectInstance`) drawn as the game draws it.
+  - **Gizmo** of the selected emitter: drag the centre square to move it, the arrow for its
+    direction (Shift: 15° steps), the arc ends for the spread, the round handle for the shape's
+    size.
+  - **Moving the effect:** a click fires the effect there; Ctrl+drag moves it while it plays
+    (world-space particles stay behind); double-click puts it back at 0,0.
+  - **View:** right-drag / middle / Space+drag pans, the wheel zooms.
+  - **Sprites dropped** into the viewport make a new emitter there (several: a flipbook).
+  - **Status line:** time, live particles, quads, batches, step time, seed.
+- **Playback toolbar:**
+  - Play / pause (Space), Restart (R), Step (.).
+  - Replay one-shots, speed 0.1×–2×.
+  - The preview seed and New Seed; background (checker, dark, light, a picture); grid.
+  - After every edit the preview replays to the same moment with the same seed, so a change
+    shows at once, without starting over.
+- **Inspector:** one collapsible section per module.
+  - Ranges are min–max with a link (linked = one value).
+  - **Colour over life** is a gradient bar: drag stops, double-click a stop for its colour,
+    double-click the bar to add one, right-click deletes.
+  - **Size / speed / spin over life** are curve graphs: drag keys, double-click adds,
+    right-click deletes, and the ease of the selected key is set below.
+  - **Bursts** are a table. **Flipbook frames** take dropped sprites and are reordered by
+    dragging.
+  - **Blend:** a preset, or "custom…" with src / dst factors.
+  - **Shape:** shows only the fields its type uses.
+- **Sprites dock:** one tab per atlas, with thumbnails.
+  - Double-click: the selected emitter draws that sprite.
+  - Drag a sprite into the viewport for a new emitter, or onto the Flipbook frames.
+  - + / − add or remove atlases (stored relative to the `.particle`, like `.anim`).
+- **Timeline:** a ruler to scrub (paused; replayed with the seed, so exact) and one lane per
+  emitter with its start..stop bar and burst ticks. Drag the bar's ends or middle.
+- **Problems / Log:** `checkParticles` live (double-click selects the emitter), plus opened /
+  saved files.
+- **Effect > Add Preset:** any of the 11 recipe effects (built into the editor), with the
+  atlases they need.
+- **Undo / redo** for every edit; a held spin arrow or a drag is one step.
+
+**Not yet:** the anim editor does not show effects (phase 3), and multiply / screen / custom
+blends draw as normal (phase 2b), in the editor as in the game.
+
+The plan's layout sketch:
 
 ```
 ┌ File  Edit  Effect  View  Help ───────────────────────────────────────────────────────────────┐
@@ -388,7 +534,7 @@ Stage1 `.prt`, and Snow and Stage1 `.prtg`). A converter (`atlaspack`-style CLI,
 | Phase | What | Done when |
 |---|---|---|
 | **1. Runtime + format** ✅ | `toms::fx` (parse/write, `EffectInstance`, `appendQuads`); `particle_fx_test` (JSON round trip, determinism with a seed, life/curve/force math, pool limits, burst timing); `toms_game --fx=` preview and a smoke screenshot test; a `docs/examples/fx_recipes.particle` checked by ctest, plus a recipes section like [16](16_ANIMATION_RECIPES.md) | ctest green; the fire, sparks and heal presets render in the game |
-| **2. Editor** | `particle_editor` (layout above): docks, gizmo, inspector modules, gradient and curve widgets, presets, timeline lanes, `--headless check` / `--render`, `--selftest` | selftest + screenshots; a new effect made without touching JSON |
+| **2. Editor** ✅ | `particle_editor` (layout above): docks, gizmo, inspector modules, gradient and curve widgets, presets, timeline lanes, `--headless check` / `--render`, `--selftest` | selftest + screenshots; a new effect made without touching JSON |
 | **2b. Blend modes** | `Quad` blend id + bgfx state per pair, `multiply`/`screen` shader mix, the same `blend` field for `.anim` nodes | batches split by blend; a golden image per preset |
 | **3. Anim integration** | `"effect"` on anim nodes (follows the world transform, colour and visibility), `fx:` events for bursts; shown in the anim editor's viewport; the battle `attack` example gets a hit spark | a battle clip with sparks plays the same in both editors and the game |
 | **4. Studio** | particles become the third plugin of the studio app (atlas + anim + particles) | one app, three editors |

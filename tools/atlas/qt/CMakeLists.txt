@@ -33,7 +33,12 @@ add_executable(atlas_editor WIN32
     MainWindow.h         MainWindow.cpp)
 set_target_properties(atlas_editor PROPERTIES AUTOMOC ON AUTORCC ON)
 atlas_defaults(atlas_editor)
+# studio_bgfx: the canvases draw the images with the game's own renderer (GameCanvasView).
 target_link_libraries(atlas_editor PRIVATE Qt6::Widgets Qt6::Concurrent atlas_cli studio_common)
+if(TARGET studio_bgfx)   # the TOMS build (a standalone atlas tool has no game engine: QPainter)
+    target_link_libraries(atlas_editor PRIVATE studio_bgfx)
+    target_compile_definitions(atlas_editor PRIVATE TOMS_ATLAS_GAME_RENDERER=1)
+endif()
 set_target_properties(atlas_editor PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
 # Copy the Qt DLLs and plugins next to the exe, so double-click and F5 both work.

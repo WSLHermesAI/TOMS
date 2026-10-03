@@ -20,7 +20,7 @@ else()
 endif()
 bgfx_compile_shaders(TYPE VERTEX
     SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_sprite.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_imgui.sc
-                 ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_rml.sc
+                 ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_rml.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_sprite_inst.sc
     VARYING_DEF  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc
     OUTPUT_DIR   ${TOMS_SHADER_OUT}
     OUT_FILES_VAR TOMS_VS_FILES
@@ -37,6 +37,32 @@ bgfx_compile_shaders(TYPE FRAGMENT
     PROFILES     ${TOMS_SHADER_PROFILES}
     AS_HEADERS)
 
+# The sprite batch's compute path (cs_sprite.sc + vs_sprite_cs.sc): only for the profiles that have
+# compute shaders -- not ESSL 3.00 (WebGL2 / GLES3), which keeps the instancing path.
+set(TOMS_COMPUTE_PROFILES ${TOMS_SHADER_PROFILES})
+list(REMOVE_ITEM TOMS_COMPUTE_PROFILES 300_es)
+set(TOMS_CS_FILES "")
+if(TOMS_COMPUTE_PROFILES)
+    bgfx_compile_shaders(TYPE COMPUTE
+        SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/cs_sprite.sc
+                     ${CMAKE_CURRENT_SOURCE_DIR}/shaders/cs_fx_spawn.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/cs_fx_update.sc
+        VARYING_DEF  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc
+        OUTPUT_DIR   ${TOMS_SHADER_OUT}
+        OUT_FILES_VAR _cs
+        INCLUDE_DIRS ${bgfx_SOURCE_DIR}/bgfx/src
+        PROFILES     ${TOMS_COMPUTE_PROFILES}
+        AS_HEADERS)
+    bgfx_compile_shaders(TYPE VERTEX
+        SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_sprite_cs.sc
+        VARYING_DEF  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc
+        OUTPUT_DIR   ${TOMS_SHADER_OUT}
+        OUT_FILES_VAR _vscs
+        INCLUDE_DIRS ${bgfx_SOURCE_DIR}/bgfx/src
+        PROFILES     ${TOMS_COMPUTE_PROFILES}
+        AS_HEADERS)
+    set(TOMS_CS_FILES ${_cs} ${_vscs})
+endif()
+
 # ---- Dear ImGui core (same v1.90.9 as the old build; no platform backend, we feed input) ----
 add_library(toms_imgui STATIC
     ${imgui_SOURCE_DIR}/imgui.cpp
@@ -52,9 +78,10 @@ add_library(toms_bgfx STATIC
     src/bgfx_host.h       src/bgfx_host.cpp
     src/imgui_bgfx.h      src/imgui_bgfx.cpp
     src/embedded_shaders.h src/embedded_shaders.cpp
-    ${TOMS_VS_FILES} ${TOMS_FS_FILES}
+    ${TOMS_VS_FILES} ${TOMS_FS_FILES} ${TOMS_CS_FILES}
     shaders/varying.def.sc
-    shaders/vs_sprite.sc shaders/fs_sprite.sc
+    shaders/cs_sprite.sc shaders/vs_sprite_cs.sc shaders/cs_fx_spawn.sc shaders/cs_fx_update.sc
+    shaders/vs_sprite.sc shaders/fs_sprite.sc shaders/vs_sprite_inst.sc
     shaders/vs_imgui.sc  shaders/fs_imgui.sc
     shaders/vs_rml.sc    shaders/fs_rml.sc)
 toms_target_defaults(toms_bgfx)
@@ -75,10 +102,14 @@ set_target_properties(toms_bgfx PROPERTIES FOLDER "toms" CXX_STANDARD 20 CXX_STA
 if(WIN32)
     target_compile_definitions(toms_bgfx PRIVATE TOMS_SHADER_HAS_DXBC=1)
 endif()
+if(TOMS_COMPUTE_PROFILES)   # the compute path's shaders were built (see above)
+    target_compile_definitions(toms_bgfx PRIVATE TOMS_SHADER_HAS_COMPUTE=1)
+endif()
 target_sources(toms_bgfx PRIVATE src/rml_ui.h src/rml_ui.cpp)
 if(EMSCRIPTEN)   # the browser draws the UI text (no font files on the web)
     target_sources(toms_bgfx PRIVATE src/rml_canvas_font.h src/rml_canvas_font.cpp)
 endif()
 target_link_libraries(toms_bgfx PUBLIC RmlUi::RmlUi)
-source_group("shaders" FILES shaders/varying.def.sc shaders/vs_sprite.sc shaders/fs_sprite.sc
+source_group("shaders" FILES shaders/varying.def.sc shaders/vs_sprite.sc shaders/fs_sprite.sc shaders/vs_sprite_inst.sc
+                             shaders/cs_sprite.sc shaders/vs_sprite_cs.sc shaders/cs_fx_spawn.sc shaders/cs_fx_update.sc
                              shaders/vs_imgui.sc shaders/fs_imgui.sc shaders/vs_rml.sc shaders/fs_rml.sc)

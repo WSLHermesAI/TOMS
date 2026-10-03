@@ -42,6 +42,9 @@ struct SessionOptions {
     std::string assetDir;              // empty = auto (see defaultAssetDir)
     std::string startStage = "stage01";
     std::string previewAnim;           // "<file>#<clip>": play this .anim clip over the screen (--anim)
+    std::string spritePath = "auto";   // auto | compute | instancing | cpu (--sprite-path, bgfx_renderer.h)
+    bool showFps = false;              // the F3 HUD from the start (--fps)
+    int fxGpuThreshold = -1;           // --fx-gpu-threshold (-1: GameSettings::particleGpuThreshold)
     std::string previewFx;             // "<file>#<effect>": play this particle effect over the screen (--fx)
     bool        enableDebugUi = true;  // ImGui windows (F1 / F2 / Tab stage select / toasts)
     // Mobile: grow the UI objects, keep the 1024x768 game resolution (Game::setUiScale,
@@ -71,6 +74,7 @@ public:
 
     bool showDebugOverlay = false;     // F1
     bool showStylingSpike = false;     // F2
+    bool showHud = false;              // F3: FPS, backend, sprite batch path (--fps starts with it on)
 
     // Asset folder resolution: env ASSET_DIR, else assets/media (baked in at build time).
     static std::string defaultAssetDir();
@@ -86,6 +90,10 @@ private:
     BgfxRenderer* renderer_ = nullptr;   // created by Game::loadAssets; owned (and freed) by us
     ImGuiBgfx imgui_;
     bool debugUi_ = true;
+    // The HUD's frame rate: real time (not the game's dt, which --fixed-dt fakes), over half a second.
+    double hudClock_ = -1, hudFps_ = 0, hudMs_ = 0;
+    int hudFrames_ = 0;
+    void drawHud();
     std::string assetDir_;
     std::array<bool, (size_t)Key::Count> keyWas_{};
     bool mouseWasDown_ = false;

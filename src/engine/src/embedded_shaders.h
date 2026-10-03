@@ -6,7 +6,11 @@
 
 namespace toms::next {
 
-enum class ShaderProgram { Sprite, ImGui, RmlUi };
+// The sprite batch's GPU paths: SpriteInstanced (vs_sprite_inst.sc + fs_sprite.sc, one instance per
+// quad); SpriteCompute (cs_sprite.sc, a compute program) + SpriteFromCompute (vs_sprite_cs.sc +
+// fs_sprite.sc) for the compute path -- those two are invalid where the backend has no compute shaders.
+// FxSpawn / FxUpdate (cs_fx_*.sc): GPU-simulated particles (IRenderer::drawGpuParticles), also compute only.
+enum class ShaderProgram { Sprite, ImGui, RmlUi, SpriteInstanced, SpriteCompute, SpriteFromCompute, FxSpawn, FxUpdate };
 
 // Creates the program for the active renderer. Returns an invalid handle (and logs) if the
 // renderer type has no embedded binary (e.g. Metal on Windows builds).

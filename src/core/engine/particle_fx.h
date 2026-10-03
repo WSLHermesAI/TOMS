@@ -22,6 +22,8 @@
 #include "render_iface.h"
 
 #include <cstdint>
+#include <memory>
+#include <queue>
 #include <string>
 #include <vector>
 
@@ -130,7 +132,14 @@ struct Emitter {
     int order = 0;                     // among the effect's emitters, higher = in front
     bool alignToVelocity = false;      // turn each particle to its direction of motion (+ rotation)
     bool oldestOnTop = false;          // default: new particles draw over old ones
+
+    // Where the game simulates it (set in the particle editor). Auto: by its size -- on the GPU when
+    // maxParticles is above the game's threshold (GameSettings::particleGpuThreshold). Gpu: on the GPU
+    // whenever the device can (compute shaders), else the CPU. Cpu: always the CPU.
+    enum class Simulation { Auto, Cpu, Gpu };
+    Simulation simulation = Simulation::Auto;
 };
+const char* simulationName(Emitter::Simulation s);   // "auto", "cpu", "gpu"
 
 struct Effect {
     std::string name;
@@ -168,7 +177,8 @@ public:
     void play(const Effect* effect, uint32_t seed = 0);
     void stop(bool clear = false);     // no more particles; clear = remove the live ones too
     void update(float dt);             // seconds
-    // Effect time t from a fresh play with the same seed (the editor's scrubbing).
+    // Effect time t from a fresh play with the same seed (the editor's scrubbing). With a prewarm
+    // the effect starts at that time, so an earlier t stays there.
     void seek(float t);
 
     // Where the effect is: its origin, rotation and scale (anim::placement). World-space
@@ -185,11 +195,42 @@ public:
     int liveCount(size_t emitter) const;
 
     // The quads in draw order (emitters by order, then by their place in the list). placement
-    // is applied after the transform (e.g. the camera); tint multiplies every colour.
+    // is applied after the transform (e.g. the camera); tint multiplies every colour. Only the
+    // CPU-simulated emitters: draw() is what also draws the GPU ones.
     void appendQuads(const toms::anim::AtlasSet& atlases, const glm::mat3& placement, const float tint[4],
                      std::vector<Quad>& out, std::vector<std::string>* missing = nullptr) const;
 
+    // GPU simulation, decided per emitter in play() (so call this first), where `ren` has compute
+    // shaders (IRenderer::supportsGpuParticles): Emitter::simulation "gpu" = on the GPU, "cpu" = never,
+    // "auto" = when its maxParticles is above `threshold` (0 = never). The CPU still spawns (the same particles as on the
+    // CPU, from the same seed); the GPU moves them, applies the curves and builds their quads.
+    // The game's setting: GameSettings::particleGpuThreshold (desktop 5000, phones 3000).
+    void setGpuSimulation(IRenderer* ren, int threshold) { gpuRen_ = ren; gpuThreshold_ = threshold; }
+    int gpuEmitters() const;   // emitters simulated on the GPU now
+    bool gpuEmitter(size_t emitter) const { return emitter < gpu_.size() && gpu_[emitter] != nullptr; }
+    // Draws everything through `ren`, in draw order: CPU emitters as quads (as appendQuads), GPU
+    // ones with IRenderer::drawGpuParticles (which also runs their simulation steps since the last draw).
+    void draw(IRenderer* ren, const toms::anim::AtlasSet& atlases, const glm::mat3& placement, const float tint[4],
+              std::vector<std::string>* missing = nullptr);
+
 private:
+    // One GPU-simulated emitter: the renderer's buffers, which slots are free, when each used slot
+    // frees (a particle's life is fixed at birth, so the CPU knows without reading anything back),
+    // the newborns since the last draw, and the curves baked into tables.
+    struct Gpu {
+        IRenderer* ren = nullptr;
+        uint32_t id = 0;
+        int capacity = 0;
+        std::vector<int> freeSlots;   // a stack
+        std::priority_queue<std::pair<long long, int>, std::vector<std::pair<long long, int>>, std::greater<>> frees;   // (step, slot)
+        std::vector<float> spawn;     // GpuParticleFrame spawn records
+        uint32_t pendingSteps = 0;
+        std::vector<float> colorLut, scalarLut;
+        ~Gpu() { if (ren && id) ren->releaseGpuParticles(id); }
+    };
+    void startGpu(size_t emitter);
+    void appendEmitterQuads(size_t emitter, const toms::anim::AtlasSet& atlases, const glm::mat3& placement, const glm::vec4& tint,
+                            std::vector<Quad>& out, std::vector<std::string>* missing) const;
     struct Pool {   // structure of arrays, in birth order (oldest first)
         std::vector<glm::vec2> pos, vel;
         std::vector<float> age, life, size, rot, spin, radial, tangential;
@@ -201,7 +242,7 @@ private:
         void reserve(int n);
     };
     void step(float dt);
-    void emit(size_t e, int n);
+    void spawn(size_t e, int n);   // (not "emit": Qt defines that as a macro)
     uint32_t next();
     float rand01();
     float pick(const Range& r) { return r.fixed() ? r.min : r.min + (r.max - r.min) * rand01(); }
@@ -214,6 +255,10 @@ private:
     float carry_ = 0;         // update time not simulated yet
     uint32_t seed_ = 0, rng_ = 0;
     bool stopped_ = false;
+    IRenderer* gpuRen_ = nullptr;
+    int gpuThreshold_ = 0;
+    std::vector<std::shared_ptr<Gpu>> gpu_;   // per emitter; null = simulated on the CPU
+    long long stepIndex_ = 0;                 // steps since play()
 };
 
 }  // namespace toms::fx

@@ -122,3 +122,31 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   `bgfxHostSetWindow`); Back = Esc. Verified on the Pixel Tablet API 35 emulator: title, new game, pad + tap-to-walk,
   battle, save survives force-stop, load, 3x background/foreground, Back. arm64 compiles. Desktop 36/36 and web 4/4
   tests still pass. Not tried: a real phone.
+- **2026-10-03** — **Atlas tool** (doc 14, commit `c8b9b38`).
+  - `tools/atlas`: a `.atlasproj` project, a packer, `.atlas`/`.plist`/XML export.
+  - `atlas_editor` (Qt) and a web build of the same core; a command line and tests.
+  - The game loads several atlases.
+- **2026-10-03** — **Node animations** (docs 15–16, commit `904cdaa`).
+  - `.anim` + `AnimPlayer`. A `PoseCache` updates only animated channels; keys hold only their own
+    channels.
+  - `anim_editor`: Add Atlas takes several files; dropping several sprites on the timeline inserts
+    sprite keys with a time gap.
+  - Doc 16 is a recipe book for hand- or AI-written clips (fade, move, the battle attack example).
+- **2026-10-03** — **Particles** (doc 17, commit `b8cf970` and later).
+  - A `.particle` JSON format with every src/dst blend factor; the `toms::fx` runtime: deterministic
+    1/60 s steps, a seeded RNG, seek.
+  - `particle_editor` with presets and headless check/render; 11 example effects; an `fx` atlas.
+  - `toms_game --fx=` preview and an F3 HUD.
+- **2026-10-03** — **GPU** (not committed).
+  - The sprite batch has instancing, compute and CPU paths on persistent buffers.
+  - GPU particle simulation in compute shaders, with no readback: 300 000 particles at 78–85 FPS
+    against 33–35 on the CPU.
+  - Game setting `particleGpuThreshold` (5000 desktop / 3000 phone) and a per-emitter
+    Auto/CPU/GPU flag in the editor; the GPU is used only where compute is supported.
+- **2026-10-03** — **Editors on the game renderer** (not committed).
+  - `GameCanvasView`: the atlas, anim and particle views draw with toms_game's `BgfxRenderer`, with
+    a QPainter overlay and a QPainter fallback.
+  - Right-drag pans every editor view.
+  - Each editor has `--selftest-gpu`, and all three pass on D3D11.
+  - The unit tests are merged into `toms_tests`; `launch.vs.json` was trimmed.
+  - CTest: 46/50; the 4 `smoke.stage*` failures already failed before (W16).

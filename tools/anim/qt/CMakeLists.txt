@@ -26,7 +26,8 @@ add_executable(anim_editor WIN32
 set_target_properties(anim_editor PROPERTIES AUTOMOC ON FOLDER "tools/anim"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 toms_target_defaults(anim_editor)
-target_link_libraries(anim_editor PRIVATE Qt6::Widgets studio_common anim_tools)
+# studio_bgfx: the viewport draws with the game's own renderer (GameCanvasView).
+target_link_libraries(anim_editor PRIVATE Qt6::Widgets studio_common studio_bgfx anim_tools)
 
 # Copy the Qt DLLs and plugins next to the exe, so double-click and F5 both work.
 if(WIN32)

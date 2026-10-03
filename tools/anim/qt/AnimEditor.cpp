@@ -64,7 +64,7 @@ AnimEditor::AnimEditor(QMainWindow* host)
     : QObject(host)
     , m_host(host)
     , m_doc(new AnimDocument(this))
-    , m_viewport(new AnimViewport(m_doc, host))
+    , m_viewport(new AnimViewport(m_doc, GameCanvasView::gameRendererWanted(QStringLiteral("AnimEditor")), host))
 {
     m_transport = new AnimTransport(m_doc, host);
     createActions();
@@ -336,11 +336,23 @@ void AnimEditor::createMenus()
     play->addAction(tr("Next Key"), QKeySequence(Qt::Key_Period), m_transport, [this] { m_transport->stepKey(1); });
 
     m_viewMenu = new QMenu(tr("&View"), m_host);
+    {   // the viewport's renderer: the game's (bgfx, the same pixels as toms_game) or QPainter
+        QAction* a = m_viewMenu->addAction(tr("Preview with the Game Renderer (after a restart)"));
+        a->setCheckable(true);
+        a->setChecked(settings().value(QStringLiteral("preview/gameRenderer"), true).toBool());
+        a->setToolTip(tr("Draw the viewport with toms_game's renderer (bgfx): exactly the game's pixels. Off: QPainter."));
+        connect(a, &QAction::toggled, this, [this](bool on) {
+            settings().setValue(QStringLiteral("preview/gameRenderer"), on);
+            m_host->statusBar()->showMessage(tr("The renderer changes the next time the editor starts."), 8000);
+        });
+        m_viewMenu->addSeparator();
+    }
     m_viewMenu->addAction(m_fitAct);
     m_viewMenu->addAction(m_frameAct);
     m_viewMenu->addAction(m_zoomInAct);
     m_viewMenu->addAction(m_zoomOutAct);
     m_viewMenu->addAction(m_gridAct);
+    CanvasView::addCoordinatesAction(m_viewMenu);
     m_viewMenu->addSeparator();
     for (QDockWidget* d : docks()) m_viewMenu->addAction(d->toggleViewAction());
     m_viewMenu->addSeparator();

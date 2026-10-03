@@ -15,6 +15,16 @@
 
 ## ▶ Next Step
 
+**The content tools are in** (2026-10-03, [4_PROGRESS_REPORT.md](4_PROGRESS_REPORT.md)):
+- **Three editors:** `atlas_editor`, `anim_editor` and `particle_editor`. All three preview with
+  toms_game's own renderer.
+- **Particles:** the new `.particle` JSON format. Particles simulate on the GPU when an emitter
+  asks for it or is over the `particleGpuThreshold` setting (5000 desktop, 3000 phone).
+- **Docs:** [../14_ATLAS_TOOL.md](../14_ATLAS_TOOL.md), [../15_ANIMATION.md](../15_ANIMATION.md),
+  [../16_ANIMATION_RECIPES.md](../16_ANIMATION_RECIPES.md), [../17_PARTICLES.md](../17_PARTICLES.md).
+- **Due now:** the **legacy import bridge** (`.prt`/`.prtg` → `.particle`, `.pi`/`.mpdi` →
+  atlas/`.anim`).
+
 **Phase 2 is done** (2026-09-30): `tools\test.cmd` runs 40 tests in ~80 s: 26 unit tests, 10 screenshot
 smoke tests (7 scenes on D3D11, the map on D3D12/Vulkan/OpenGL), and 4 web tests (single- and multithreaded
 builds, the published page with and without threads). Visual Studio's Test Explorer lists the same ones.
@@ -61,6 +71,10 @@ the Visual Studio IDE (W1).
 | 2 | Job system + multithreaded web build (the page chooses; `coi-serviceworker` for GitHub Pages), doc 10 | ✅ 2026-09-30, verified in headless Chrome; not on a phone or Safari |
 | A | Android (`07_BUILD_ANDROID.md`): file access through `vfs.h`, saves, logcat, audio, shaders, linking, the APK (`android/`, `tools\build_android.cmd` / `run_android.cmd`) | ◐ 2026-09-30 runs on the emulator (x86_64); arm64 compiles; not yet on a real phone; audio pause in the background open |
 | 4 | Editor: data-driven stage editor on the bgfx viewport, docking, inspector, undo, event editor | ⬜ |
+| T | Atlas tool (`.atlasproj` → `.atlas`/`.plist`/XML; Qt + web), doc 14 | ✅ 2026-10-03 |
+| T | Node animations (`.anim`, per-channel keys, `anim_editor`), docs 15–16 | ✅ 2026-10-03 |
+| T | Particles (`.particle` JSON, `particle_editor`, GPU simulation, CPU/GPU threshold), doc 17 | ◐ 2026-10-03 editor + runtime done; legacy import, multiply/screen blend, effects on `.anim` nodes open |
+| T | Editors preview with toms_game's `BgfxRenderer`; right-drag pans | ✅ 2026-10-03 on D3D11 |
 | 5 | 3D on bgfx (glTF, ozz skinning, instancing, shadows, Effekseer) | ⬜ researched only |
 
 ---
@@ -83,6 +97,8 @@ the Visual Studio IDE (W1).
 | ~~W14~~ | ~~CJK font `wqy-zenhei.ttc` lost~~ | closed 2026-09-27: the UI is RmlUi with a committed font (`NotoSansCJKtc-TOMS.otf`); no font download any more | — |
 | W12 | **Headless tests miss display-scale bugs** | the black-canvas bug (2026-09-26) only showed in a visible window at DPR 2.4 | extend `web_smoke_test.mjs` with a visible-window / `--force-device-scale-factor=2.4` run and a canvas-size check |
 | W15 | **Two docs numbered 07** | `07_BUILD_ANDROID.md` and `07_PUBLISH_GITHUB_PAGES.md` | renumber one (links in README / docs point at both) |
+| W16 | **`smoke.stage*` fail** (4 of 50 CTest) | already failing before 2026-10-03; not investigated | run `tools	est.cmd`, compare the diff images, refresh the references or fix the cause |
+| W17 | **GPU particles off D3D11** | measured and tested on D3D11 only; the web (GLES 3.0) has no compute and uses the CPU | run `toms_game --fx=docs/examples/fx_recipes.particle#… --fps` on D3D12/Vulkan/OpenGL and an Android phone |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
 
 ---
@@ -93,6 +109,7 @@ the Visual Studio IDE (W1).
 |---|---|---|
 | [1_PROGRESS_REPORT.md](1_PROGRESS_REPORT.md) | 2026-09-25 | Qt + bgfx decision; EngineBlueprint update; bgfx glTF / skinning / morph / instancing research; toms_next phase 1 built and verified; WSL web presets and the etcpak stop |
 | [3_PROGRESS_REPORT.md](3_PROGRESS_REPORT.md) | 2026-09-27 | the project moved to the repository root; old code/content restored and organised as `assets/` (content) + `src/` (code); desktop, editor and web rebuilt and verified from there |
+| [4_PROGRESS_REPORT.md](4_PROGRESS_REPORT.md) | 2026-10-03 | atlas tool; `.anim` runtime + editor + recipes; `.particle` format, runtime, editor; GPU sprite paths and GPU particle simulation; the editors on the game renderer; merged test runner |
 | [2_PROGRESS_REPORT.md](2_PROGRESS_REPORT.md) | 2026-09-26 | web build done on Windows (host shaderc, `bimg_encode` excluded, one entry point for desktop + web, IDBFS saves); five bugs fixed; doc 06; `web_smoke_test.mjs` |
 
 Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md).

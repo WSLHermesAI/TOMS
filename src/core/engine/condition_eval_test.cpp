@@ -10,6 +10,7 @@ using namespace toms;
 static int g_fail = 0;
 #define CHECK(cond, msg) do { if(!(cond)){ printf("FAIL: %s\n", msg); g_fail++; } } while(0)
 
+namespace {   // test-local: toms_tests links every test into one program
 struct MockContext : ConditionContext {
     std::set<std::string> flags;
     int beat = 0;
@@ -54,6 +55,7 @@ struct MockContext : ConditionContext {
     int deaths = 0;
     int deathsNonBoss() const override { return deaths; }
 };
+}  // namespace
 
 int main() {
     MockContext ctx;

@@ -13,6 +13,7 @@ static int g_checks = 0, g_fails = 0;
 // Minimal mock, matching condition_eval_test.cpp's own shape -- this file only needs to prove
 // the RESOLVER (judgeEnding/checkNamedEndings), not re-litigate the leaves condition_eval_test
 // already covers exhaustively.
+namespace {   // test-local: toms_tests links every test into one program
 struct MockContext : ConditionContext {
     std::set<std::string> flags;
     bool storyFlagSet(const std::string& f) const override { return flags.count(f) != 0; }
@@ -35,6 +36,7 @@ struct MockContext : ConditionContext {
     int memoryShardCount() const override { return shards; }
     int deathsNonBoss() const override { return deaths; }
 };
+}  // namespace
 
 int main() {
     // 1. EndingDefinition JSON round-trip.

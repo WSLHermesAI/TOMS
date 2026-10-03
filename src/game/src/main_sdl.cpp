@@ -10,6 +10,11 @@
 //   --stage=<id>          first stage to load (default stage01)
 //   --no-vsync            uncapped frame rate (desktop)
 //   --stats               bgfx's on-screen stats overlay
+//   --sprite-path=<p>     how the sprite batch makes its vertices: auto (default: instancing, else compute,
+//                         else cpu) | instancing | compute | cpu (bgfx_renderer.h); --no-instancing = cpu
+//   --fps                 start with the F3 performance line on (FPS, backend, GPU / CPU sprite path)
+//   --fx-gpu-threshold=N  particle emitters above N particles run on the GPU (0 = never); this run only,
+//                         the saved setting (particleGpuThreshold: desktop 5000, phones 3000) is unchanged
 //   --frames=<n>          quit after n frames (automated tests; desktop)
 //   --screenshot=<png>    save the last frame to a PNG (with --frames; desktop)
 //   --keys=<k@f,...>      press key k at frame f, e.g. enter@30,enter@60 (automated tests)
@@ -62,7 +67,9 @@ namespace {
 struct Args {
     std::string renderer = "auto", assets, stage = "stage01", screenshot, anim, fx;
     int frames = 0;
-    bool vsync = true, stats = false;
+    bool vsync = true, stats = false, fps = false;
+    std::string spritePath = "auto";
+    int fxGpuThreshold = -1;
     int fixedDtMs = 0;       // > 0: deterministic frame time (tests)
     struct Press { Key key; int frame; };
     std::vector<Press> presses;
@@ -126,6 +133,10 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--fx=")) a.fx = v;
         else if (s == "--no-vsync") a.vsync = false;
         else if (s == "--stats") a.stats = true;
+        else if (s == "--no-instancing") a.spritePath = "cpu";
+        else if (const char* v = value(s, "--sprite-path=")) a.spritePath = v;
+        else if (s == "--fps") a.fps = true;
+        else if (const char* v = value(s, "--fx-gpu-threshold=")) a.fxGpuThreshold = std::max(0, std::atoi(v));
     }
     return a;
 }
@@ -300,6 +311,9 @@ bool appInit(App& app) {
     opts.startStage = args.stage;
     opts.previewAnim = args.anim;
     opts.previewFx = args.fx;
+    opts.spritePath = args.spritePath;
+    opts.showFps = args.fps;
+    opts.fxGpuThreshold = args.fxGpuThreshold;
 #ifdef __EMSCRIPTEN__
     opts.enableDebugUi = true;
     // Small screens (phones): grow the UI objects, keep the game resolution -- same thresholds and

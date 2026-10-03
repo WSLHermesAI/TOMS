@@ -303,6 +303,17 @@ void testSeed() {
     CHECK(!a.empty() && sameQuads(a, b), "same seed, same updates: the same particles (%zu)", a.size());
     CHECK(!sameQuads(a, c), "another seed: other particles");
     CHECK(sameQuads(a, s), "seek(1.3) == play + 78 updates");
+    {   // With a prewarm the effect starts at that time: seek(t) lands at t, an earlier t stays at the start.
+        Effect warm = e;
+        warm.prewarm = 1.0f;
+        EffectInstance fx;
+        fx.play(&warm, 9);
+        CHECK(near(fx.time(), 1.0f, 0.02f) && fx.liveCount() > 0, "prewarm 1 s: starts at 1 s with particles");
+        fx.seek(1.5f);
+        CHECK(near(fx.time(), 1.5f, 0.02f), "seek(1.5) with a prewarm: time 1.5 (%f)", fx.time());
+        fx.seek(0.5f);
+        CHECK(near(fx.time(), 1.0f, 0.02f), "seek(0.5) with a 1 s prewarm: stays at 1 s");
+    }
     // Odd frame lengths still land on the same steps (fixed 1/60 s steps; time carries over).
     EffectInstance x, y;
     x.play(&e, 5); y.play(&e, 5);
@@ -376,28 +387,134 @@ void testExamples() {
     }
 }
 
-// Not a pass/fail check (machines differ): the cost of 2000 live particles per frame, printed.
+// A renderer that "has" GPU particles: it records what EffectInstance asks of it.
+struct GpuRecorder : IRenderer {
+    int created = 0, released = 0, draws = 0, quads = 0;
+    long long spawned = 0, steps = 0;
+    uint32_t lastCapacity = 0, lastFrames = 0;
+    void init(uint32_t, uint32_t) override {}
+    void loadSprites(const std::vector<std::vector<uint8_t>>&, uint32_t, uint32_t) override {}
+    void loadSpriteAtlas(const std::vector<uint8_t>&, uint32_t, uint32_t, const std::string&) override {}
+    void begin() override {}
+    void drawSprite(const Quad&) override { quads++; }
+    void end() override {}
+    uint32_t width() const override { return 1024; }
+    uint32_t height() const override { return 768; }
+    bool supportsGpuParticles() const override { return true; }
+    uint32_t createGpuParticles(uint32_t capacity) override { lastCapacity = capacity; return uint32_t(++created); }
+    void releaseGpuParticles(uint32_t) override { released++; }
+    void drawGpuParticles(const GpuParticleFrame& f) override {
+        draws++;
+        spawned += f.spawnCount;
+        steps += f.steps;
+        lastFrames = f.frameCount;
+    }
+};
+
+void testGpuSimulation() {
+    const toms::AtlasFile atlas = makeAtlas();
+    const toms::anim::AtlasSet set(atlas);
+    ParticleFile f = parse(R"({"effects": [{"name": "g", "duration": 3, "emitters": [
+      {"name": "big", "sprite": "dot", "maxParticles": 400, "life": [0.2, 1.3], "speed": [10, 50], "spread": 180,
+       "emission": {"rate": 300, "bursts": [{"t": 0.5, "count": 150}]}},
+      {"name": "small", "flipbook": {"frames": ["f0", "f1"]}, "maxParticles": 50, "life": 0.5, "emission": {"rate": 40}}]}]})");
+    const Effect& e = f.effects[0];
+    GpuRecorder gpu;
+    EffectInstance onGpu, onCpu;
+    onGpu.setGpuSimulation(&gpu, 100);   // "big" (400) on the GPU, "small" (50) on the CPU
+    onGpu.play(&e, 21);
+    onCpu.play(&e, 21);
+    CHECK(onGpu.gpuEmitters() == 1 && onGpu.gpuEmitter(0) && !onGpu.gpuEmitter(1) && gpu.lastCapacity == 400,
+          "threshold 100: the 400-particle emitter on the GPU, the 50 one on the CPU");
+    // Frame by frame the GPU emitter's live count (kept on the CPU from each particle's life) is the
+    // CPU simulation's: the same particles are born and die in the same steps.
+    bool same = true;
+    int most = 0, frames = 0;
+    for (int i = 0; i < 300; i++) {
+        onGpu.update(1.0f / 60);
+        onCpu.update(1.0f / 60);
+        onGpu.draw(&gpu, set, glm::mat3(1.0f), nullptr);
+        frames++;
+        if (onGpu.liveCount(0) != onCpu.liveCount(0) || onGpu.liveCount(1) != onCpu.liveCount(1)) {
+            if (same) fprintf(stderr, "  frame %d: GPU %d/%d, CPU %d/%d\n", i, onGpu.liveCount(0), onGpu.liveCount(1), onCpu.liveCount(0), onCpu.liveCount(1));
+            same = false;
+        }
+        most = std::max(most, onGpu.liveCount(0));
+    }
+    CHECK(same && most > 200, "GPU emitter live counts == the CPU simulation's, every frame (most %d)", most);
+    CHECK(gpu.draws == frames && gpu.steps == 300, "one GPU draw per frame; 300 steps handed over (%lld)", gpu.steps);
+    CHECK(gpu.quads > 0, "the CPU emitter still draws as quads");
+    CHECK(onGpu.finished() == onCpu.finished(), "finished() agrees");
+    // The pool cap holds on the GPU too: never more live than maxParticles.
+    CHECK(most <= 400, "never above maxParticles");
+    // Threshold 0 = never; a renderer without compute = never.
+    EffectInstance never;
+    never.setGpuSimulation(&gpu, 0);
+    never.play(&e, 1);
+    CHECK(never.gpuEmitters() == 0, "threshold 0: everything on the CPU");
+    struct NoCompute : GpuRecorder {
+        bool supportsGpuParticles() const override { return false; }
+    } plain;
+    EffectInstance noCompute;
+    noCompute.setGpuSimulation(&plain, 1);
+    noCompute.play(&e, 1);
+    CHECK(noCompute.gpuEmitters() == 0, "a renderer without GPU particles: everything on the CPU");
+    // The editor's per-emitter choice: "gpu" below the threshold, "cpu" above it.
+    ParticleFile forced = parse(R"({"effects": [{"name": "f", "emitters": [
+      {"name": "small", "sprite": "dot", "maxParticles": 10, "simulation": "gpu"},
+      {"name": "big", "sprite": "dot", "maxParticles": 100000, "simulation": "cpu"},
+      {"name": "auto", "sprite": "dot", "maxParticles": 100000}]}]})");
+    EffectInstance chosen;
+    chosen.setGpuSimulation(&gpu, 5000);
+    chosen.play(&forced.effects[0], 1);
+    CHECK(chosen.gpuEmitter(0) && !chosen.gpuEmitter(1) && chosen.gpuEmitter(2),
+          "simulation: gpu (10 particles) on the GPU, cpu (100000) on the CPU, auto by the threshold");
+    noCompute.play(&forced.effects[0], 1);
+    CHECK(noCompute.gpuEmitters() == 0, "\"gpu\" without compute shaders: the CPU");
+    CHECK(particlesToJson(forced).find("\"simulation\": \"gpu\"") != std::string::npos &&
+              particlesToJson(forced).find("\"simulation\": \"auto\"") == std::string::npos,
+          "written when not auto");
+    ParticleFile bad;
+    std::string err;
+    CHECK(!parseParticles(R"({"effects": [{"name": "x", "emitters": [{"name": "m", "simulation": "fast"}]}]})", bad, &err),
+          "simulation: an unknown value is an error");
+    // Released when the instance plays again or goes away.
+    const int before = gpu.released;
+    onGpu.play(nullptr);
+    CHECK(gpu.released == before + 1, "the GPU emitter's buffers are released");
+}
+
+// Not a pass/fail check (machines differ): the cost of 2000 and 30000 live particles per frame,
+// simulation and quad building apart, printed.
 void benchmark() {
     const toms::AtlasFile atlas = makeAtlas();
     const toms::anim::AtlasSet set(atlas);
-    ParticleFile f = parse(R"({"effects": [{"name": "b", "emitters": [{"name": "m", "sprite": "dot", "maxParticles": 2000,
-      "life": 4, "speed": [20, 60], "spread": 180, "spin": [-90, 90], "emission": {"rate": 0, "bursts": [{"t": 0, "count": 2000}]},
-      "overLife": {"color": [{"t": 0, "v": [1, 1, 1, 1]}, {"t": 1, "v": [1, 1, 1, 0]}], "size": [{"t": 0, "v": 1}, {"t": 1, "v": 2}]},
-      "forces": {"gravity": [0, 30], "drag": 0.5, "tangential": [-10, 10]}}]}]})");
-    EffectInstance fx;
-    fx.play(&f.effects[0], 3);
-    std::vector<Quad> q;
-    q.reserve(2000);
-    const int frames = 120;
-    const auto t0 = std::chrono::steady_clock::now();
-    for (int i = 0; i < frames; i++) {
-        fx.update(1.0f / 60);
-        q.clear();
-        fx.appendQuads(set, glm::mat3(1.0f), nullptr, q);
+    for (int count : {2000, 30000}) {
+        const std::string n = std::to_string(count);
+        ParticleFile f = parse(R"({"effects": [{"name": "b", "emitters": [{"name": "m", "sprite": "dot", "maxParticles": )" + n + R"(,
+          "life": 4, "speed": [20, 60], "spread": 180, "spin": [-90, 90], "emission": {"rate": 0, "bursts": [{"t": 0, "count": )" + n + R"(}]},
+          "overLife": {"color": [{"t": 0, "v": [1, 1, 1, 1]}, {"t": 1, "v": [1, 1, 1, 0]}], "size": [{"t": 0, "v": 1}, {"t": 1, "v": 2}]},
+          "forces": {"gravity": [0, 30], "drag": 0.5, "tangential": [-10, 10]}}]}]})");
+        EffectInstance fx;
+        fx.play(&f.effects[0], 3);
+        std::vector<Quad> q;
+        q.reserve(size_t(count));
+        const int frames = 120;
+        double simMs = 0, quadMs = 0;
+        for (int i = 0; i < frames; i++) {
+            const auto t0 = std::chrono::steady_clock::now();
+            fx.update(1.0f / 60);
+            const auto t1 = std::chrono::steady_clock::now();
+            q.clear();
+            fx.appendQuads(set, glm::mat3(1.0f), nullptr, q);
+            const auto t2 = std::chrono::steady_clock::now();
+            simMs += std::chrono::duration<double, std::milli>(t1 - t0).count();
+            quadMs += std::chrono::duration<double, std::milli>(t2 - t1).count();
+        }
+        std::printf("particle_fx_test: %d particles: update %.3f ms + quads %.3f ms per frame\n", fx.liveCount(), simMs / frames,
+                    quadMs / frames);
+        CHECK(fx.liveCount() == count && int(q.size()) == count, "benchmark: %d live, %d quads", count, count);
     }
-    const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count() / frames;
-    std::printf("particle_fx_test: %d particles, update + quads %.3f ms per frame\n", fx.liveCount(), ms);
-    CHECK(fx.liveCount() == 2000 && q.size() == 2000, "benchmark: 2000 live, 2000 quads");
 }
 
 }  // namespace
@@ -409,6 +526,7 @@ int main() {
     testSeed();
     testCheck();
     testExamples();
+    testGpuSimulation();
     benchmark();
     std::printf("particle_fx_test: %d check(s), %d failed\n", g_checks, g_fails);
     return g_fails ? 1 : 0;

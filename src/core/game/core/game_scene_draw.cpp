@@ -174,10 +174,11 @@ bool Game::playPreviewFx(const std::string& file, const std::string& effect, std
     const toms::fx::Effect* e = previewFxFile_.find(effect);
     // Placed before play(): the prewarm already makes world-space particles where the effect is.
     previewFx_.setTransform(toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f));
+    previewFx_.setGpuSimulation(ren, particleGpuThreshold());   // big emitters on the GPU (setting)
     previewFx_.play(e, e->seed ? e->seed : 1u);
     previewFxIdle_ = 0;
-    std::fprintf(stderr, "[fx] preview %s#%s (%zu emitter(s), seed %u)\n", file.c_str(), effect.c_str(), e->emitters.size(),
-                 previewFx_.seed());
+    std::fprintf(stderr, "[fx] preview %s#%s (%zu emitter(s), %d on the GPU above %d particles, seed %u)\n", file.c_str(),
+                 effect.c_str(), e->emitters.size(), previewFx_.gpuEmitters(), particleGpuThreshold(), previewFx_.seed());
     return true;
 }
 
@@ -236,9 +237,7 @@ void Game::drawPreviewAnim() {
     if (previewFx_.effect()) {
         const size_t known = previewMissing_.size();
         previewFx_.setTransform(toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f));
-        previewQuads_.clear();
-        previewFx_.appendQuads(previewFxSet_, glm::mat3(1.0f), nullptr, previewQuads_, &previewMissing_);
-        for (const Quad& q : previewQuads_) ren->drawSprite(q);
+        previewFx_.draw(ren, previewFxSet_, glm::mat3(1.0f), nullptr, &previewMissing_);   // CPU quads + GPU emitters
         for (size_t i = known; i < previewMissing_.size(); i++)
             std::fprintf(stderr, "[fx] sprite '%s' is not in the atlas\n", previewMissing_[i].c_str());
     }

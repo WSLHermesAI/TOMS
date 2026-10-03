@@ -1,6 +1,15 @@
 #pragma once
 
+// Inside the TOMS build the canvases draw their image with the game's renderer (GameCanvasView,
+// tools/studio_common's studio_bgfx); a standalone build of the atlas tool has no game engine and
+// paints with QPainter (CanvasView).
+#if TOMS_ATLAS_GAME_RENDERER
+#include "GameCanvasView.h"
+using AtlasCanvasBase = GameCanvasView;
+#else
 #include "CanvasView.h"
+using AtlasCanvasBase = CanvasView;
+#endif
 
 #include <QSet>
 #include <QStringList>
@@ -12,12 +21,14 @@ namespace atlas { struct Region; }
 // outlined solid, child sprites dashed, dedupe aliases badged, pinned sprites marked.
 // Click/rubber-band selects (kept in sync with the Sprites dock through the document); dragging
 // an image sprite moves it and pins it there; double-click opens it in sprite edit mode.
-class AtlasCanvas : public CanvasView
+class AtlasCanvas : public AtlasCanvasBase
 {
     Q_OBJECT
 
 public:
+    // Drawn with the game's renderer (GameCanvasView) unless the setting "preview/gameRenderer" is off.
     explicit AtlasCanvas(AtlasDocument* doc, QWidget* parent = nullptr);
+    ~AtlasCanvas() override;
 
     int page() const { return m_page; }
     void setPage(int page);
@@ -32,6 +43,10 @@ signals:
 protected:
     QSize contentSize() const override;
     void paintContent(QPainter& p) override;
+#if TOMS_ATLAS_GAME_RENDERER
+    void paintGameScene(const GameScene& s) override;   // the image, as the game samples it
+    void gameRendererChanged(toms::next::BgfxRenderer* ren) override { m_tex.attach(ren); }
+#endif
     bool event(QEvent* e) override;   // tooltips
     void mousePressEvent(QMouseEvent* e) override;
     void mouseMoveEvent(QMouseEvent* e) override;
@@ -68,4 +83,7 @@ private:
     QStringList m_dragNames;
     QRectF m_rubber;                // content
     QStringList m_selectionAtPress;
+#if TOMS_ATLAS_GAME_RENDERER
+    GameTextures m_tex;   // the image as a game-renderer texture
+#endif
 };

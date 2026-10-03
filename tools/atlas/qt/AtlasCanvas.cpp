@@ -25,7 +25,11 @@ const std::vector<atlas::Region> kNoRegions;   // iterated when there is no buil
 }  // namespace
 
 AtlasCanvas::AtlasCanvas(AtlasDocument* doc, QWidget* parent)
+#if TOMS_ATLAS_GAME_RENDERER
+    : GameCanvasView(GameCanvasView::gameRendererWanted(QStringLiteral("AtlasEditor")), parent)
+#else
     : CanvasView(parent)
+#endif
     , m_doc(doc)
 {
     connect(doc, &AtlasDocument::buildFinished, this, &AtlasCanvas::onBuildFinished);
@@ -138,6 +142,21 @@ QString AtlasCanvas::tooltipFor(const QString& name) const
     return t;
 }
 
+#if TOMS_ATLAS_GAME_RENDERER
+AtlasCanvas::~AtlasCanvas() { releaseGameRenderer(); }
+
+void AtlasCanvas::paintGameScene(const GameScene& s)
+{
+    const BuildSnapshotPtr snap = m_doc->snapshot();
+    if (!snap || snap->pages.isEmpty()) return;
+    const QImage& page = snap->pages[std::min<int>(m_page, int(snap->pages.size()) - 1)];
+    s.image(m_tex.cached(QStringLiteral("page"), page), toWidget(QRectF(QPointF(0, 0), QSizeF(page.size()))));
+}
+#else
+AtlasCanvas::~AtlasCanvas() = default;
+static bool overGameScene() { return false; }
+#endif
+
 void AtlasCanvas::paintContent(QPainter& p)
 {
     const BuildSnapshotPtr snap = m_doc->snapshot();
@@ -153,7 +172,7 @@ void AtlasCanvas::paintContent(QPainter& p)
     const QImage& page = snap->pages[std::min<int>(m_page, int(snap->pages.size()) - 1)];
     const QRectF pageRect = toWidget(QRectF(QPointF(0, 0), QSizeF(page.size())));
     p.setRenderHint(QPainter::SmoothPixmapTransform, zoom() < 1.0);
-    p.drawImage(pageRect, page);
+    if (!overGameScene()) p.drawImage(pageRect, page);   // else the game renderer drew it
 
     // Aliases share their owner's frame: count them for a badge on the owner.
     QHash<QString, int> aliasCount;

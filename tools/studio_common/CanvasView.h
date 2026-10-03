@@ -1,14 +1,19 @@
 #pragma once
 
 #include <QTransform>
+#include <QVector>
 #include <QWidget>
 
 // Zoom/pan base for the editors' canvases (tools/studio_common: shared by the atlas and anim
 // editors). Content is in content pixels -- by default an image with (0,0) top-left, or any
 // rectangle a subclass returns from contentRect() (the anim viewport centres its origin); the view
-// maps it to the widget with a uniform zoom and an offset. Wheel zooms around the cursor; the middle
+// maps it to the widget with a uniform zoom and an offset. Wheel zooms around the cursor; dragging
+// with the right button (a right click without moving still opens the context menu), the middle
 // button, or Space + left button, pans. Subclasses paint in widget coordinates using
 // toWidget()/toContent() so outlines stay one screen pixel wide at every zoom.
+class QAction;
+class QMenu;
+
 class CanvasView : public QWidget
 {
     Q_OBJECT
@@ -17,7 +22,19 @@ public:
     explicit CanvasView(QWidget* parent = nullptr);
 
     double zoom() const { return m_zoom; }
+    QPointF contentToWidget(const QPointF& c) const { return toWidget(c); }   // (tests: did the view pan?)
     void setZoom(double zoom);   // around the widget centre
+
+    // Coordinate hints, as in Cocos Creator's scene view: faint lines every "step" content pixels,
+    // with the x values along the bottom edge and the y values along the left edge. The step follows
+    // the zoom (1, 2, 5 x 10^n content pixels, at least kCoordinateSpacing screen pixels apart): every
+    // 500 pixels zoomed out, every 10 or every pixel zoomed in. One switch for every canvas of the
+    // editor (View > Show Coordinates, remembered in the editor's settings).
+    static constexpr double kCoordinateSpacing = 90;   // screen pixels between two hints, at least
+    static double coordinateStep(double zoom);          // content pixels between two hints
+    static bool coordinatesShown();
+    static void setCoordinatesShown(bool on);           // repaints every canvas
+    static QAction* addCoordinatesAction(QMenu* menu);  // the View menu's checkable toggle
 
 public slots:
     void zoomIn();
@@ -41,6 +58,8 @@ protected:
     QPoint pixelAt(const QPointF& widgetPos) const;   // content pixel under a widget point (floor)
     // Fit the next time the content is shown (after loading a new image or entering a mode).
     void requestFit() { m_fitPending = true; update(); }
+    // For subclasses that paint without QPainter (a bgfx viewport): runs a pending fit, as paintEvent does.
+    void preparePaint() { if (m_fitPending && !contentRect().isEmpty()) fitToView(); }
 
     // Fills the widget, then the checkerboard where the content is.
     void paintBackground(QPainter& p);
@@ -49,9 +68,12 @@ protected:
     bool panMove(QMouseEvent* e);
     bool panRelease(QMouseEvent* e);
     bool isPanning() const { return m_panning; }
+    // The coordinate hints over everything else (paintEvent and the game renderer's overlay call it).
+    void paintCoordinates(QPainter& p);
     // Draws a small text box (sizes, coordinates) at a widget position.
     static void drawLabel(QPainter& p, const QPointF& at, const QString& text);
 
+    bool event(QEvent* e) override;   // drops the context menu that ends a right-button pan
     void wheelEvent(QWheelEvent* e) override;
     void keyPressEvent(QKeyEvent* e) override;
     void keyReleaseEvent(QKeyEvent* e) override;
@@ -68,4 +90,7 @@ private:
     bool m_spaceDown = false;
     bool m_panning = false;
     QPointF m_panLast;
+    bool m_rightDown = false;        // right button held: becomes a pan once it moves a few pixels
+    QPointF m_rightStart;
+    bool m_eatContextMenu = false;   // the right button panned: its release is not a click
 };

@@ -1,6 +1,15 @@
 #pragma once
 
+// Inside the TOMS build the canvases draw their image with the game's renderer (GameCanvasView,
+// tools/studio_common's studio_bgfx); a standalone build of the atlas tool has no game engine and
+// paints with QPainter (CanvasView).
+#if TOMS_ATLAS_GAME_RENDERER
+#include "GameCanvasView.h"
+using AtlasCanvasBase = GameCanvasView;
+#else
 #include "CanvasView.h"
+using AtlasCanvasBase = CanvasView;
+#endif
 
 #include <QImage>
 #include <QRect>
@@ -16,12 +25,14 @@ class AtlasDocument;
 //     Esc goes back up to the parent, and from an image sprite back to the atlas
 // Every coordinate snaps to whole pixels (the pivot to half pixels) and is committed on release
 // as one undo step.
-class SpriteEditCanvas : public CanvasView
+class SpriteEditCanvas : public AtlasCanvasBase
 {
     Q_OBJECT
 
 public:
+    // Drawn with the game's renderer (GameCanvasView) unless the setting "preview/gameRenderer" is off.
     explicit SpriteEditCanvas(AtlasDocument* doc, QWidget* parent = nullptr);
+    ~SpriteEditCanvas() override;
 
     QString target() const { return m_target; }
     void setTarget(const QString& name);
@@ -34,6 +45,10 @@ signals:
 protected:
     QSize contentSize() const override { return m_image.size(); }
     void paintContent(QPainter& p) override;
+#if TOMS_ATLAS_GAME_RENDERER
+    void paintGameScene(const GameScene& s) override;   // the image, as the game samples it
+    void gameRendererChanged(toms::next::BgfxRenderer* ren) override { m_tex.attach(ren); }
+#endif
     void mousePressEvent(QMouseEvent* e) override;
     void mouseMoveEvent(QMouseEvent* e) override;
     void mouseReleaseEvent(QMouseEvent* e) override;
@@ -76,4 +91,7 @@ private:
     int m_splitSide = -1;
     int m_liveSplit[4] = {0, 0, 0, 0};
     QPointF m_livePivot;   // 0..1 of the focus rect
+#if TOMS_ATLAS_GAME_RENDERER
+    GameTextures m_tex;   // the image as a game-renderer texture
+#endif
 };

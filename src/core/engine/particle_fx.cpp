@@ -66,6 +66,10 @@ bool Blend::fromPreset(const std::string& name, Blend& out) {
 
 const char* shapeName(Shape::Type t) { return kShapeNames[t]; }
 
+const char* simulationName(Emitter::Simulation s) {
+    return s == Emitter::Simulation::Gpu ? "gpu" : s == Emitter::Simulation::Cpu ? "cpu" : "auto";
+}
+
 const Effect* ParticleFile::find(const std::string& name) const {
     for (const Effect& e : effects)
         if (e.name == name) return &e;
@@ -137,7 +141,7 @@ template <class T, class F> void curveFrom(const json& j, Curve<T>& c, F value, 
 void emitterFrom(const json& j, Emitter& e, const std::string& effectName) {
     onlyKnown(j, {"name", "offset", "start", "stop", "space", "maxParticles", "emission", "shape", "life", "direction",
                   "spread", "speed", "size", "rotation", "spin", "color", "sprite", "overLife", "forces", "flipbook",
-                  "render"},
+                  "render", "simulation"},
               effectName + "/?");
     e.name = j.value("name", std::string());
     const std::string w = effectName + "/" + e.name;
@@ -150,6 +154,11 @@ void emitterFrom(const json& j, Emitter& e, const std::string& effectName) {
         e.localSpace = s == "local";
     }
     if (j.contains("maxParticles")) e.maxParticles = (int)num(j["maxParticles"], w + ".maxParticles");
+    if (j.contains("simulation")) {
+        const std::string s = j["simulation"].is_string() ? j["simulation"].get<std::string>() : std::string();
+        if (s != "auto" && s != "cpu" && s != "gpu") fail(w + ".simulation", "must be \"auto\", \"cpu\" or \"gpu\"");
+        e.simulation = s == "gpu" ? Emitter::Simulation::Gpu : s == "cpu" ? Emitter::Simulation::Cpu : Emitter::Simulation::Auto;
+    }
     if (j.contains("emission")) {
         const json& em = j["emission"];
         onlyKnown(em, {"rate", "bursts"}, w + ".emission");
@@ -280,6 +289,7 @@ json emitterJson(const Emitter& e) {
     if (e.stop != d.stop) j["stop"] = e.stop;
     if (e.localSpace) j["space"] = "local";
     if (e.maxParticles != d.maxParticles) j["maxParticles"] = e.maxParticles;
+    if (e.simulation != d.simulation) j["simulation"] = simulationName(e.simulation);
     json em = json::object();
     if (e.rate != d.rate) em["rate"] = e.rate;
     if (!e.bursts.empty()) {
@@ -492,6 +502,7 @@ void EffectInstance::play(const Effect* effect, uint32_t seed) {
     effect_ = effect;
     pools_.clear();
     drawOrder_.clear();
+    gpu_.clear();   // the previous play's GPU buffers go now (also for play(nullptr))
     time_ = 0;
     carry_ = 0;
     stopped_ = false;
@@ -504,21 +515,66 @@ void EffectInstance::play(const Effect* effect, uint32_t seed) {
     }
     seed_ = seed;
     rng_ = seed;
+    stepIndex_ = 0;
     pools_.resize(effect->emitters.size());
+    gpu_.assign(effect->emitters.size(), nullptr);
     for (size_t i = 0; i < pools_.size(); i++) {
-        pools_[i].reserve(std::max(1, effect->emitters[i].maxParticles));
-        pools_[i].burstsDone.assign(effect->emitters[i].bursts.size(), 0);
+        const Emitter& em = effect->emitters[i];
+        pools_[i].burstsDone.assign(em.bursts.size(), 0);
         drawOrder_.push_back(i);
+        using Sim = Emitter::Simulation;
+        const bool wantGpu = em.simulation == Sim::Gpu ||
+                             (em.simulation == Sim::Auto && gpuThreshold_ > 0 && em.maxParticles > gpuThreshold_);
+        if (wantGpu && gpuRen_ && gpuRen_->supportsGpuParticles()) startGpu(i);   // else (no compute) the CPU
+        if (!gpu_[i]) pools_[i].reserve(std::max(1, em.maxParticles));   // a GPU emitter's particles live on the GPU
     }
     std::stable_sort(drawOrder_.begin(), drawOrder_.end(),
                      [&](size_t a, size_t b) { return effect->emitters[a].order < effect->emitters[b].order; });
     for (int n = (int)std::lround(effect->prewarm / kStep); n > 0; n--) step(kStep);
 }
 
+void EffectInstance::startGpu(size_t ei) {
+    const Emitter& em = effect_->emitters[ei];
+    auto g = std::make_shared<Gpu>();
+    g->ren = gpuRen_;
+    g->capacity = std::max(1, em.maxParticles);
+    g->id = gpuRen_->createGpuParticles(uint32_t(g->capacity));
+    if (!g->id) {   // no buffers: this emitter stays on the CPU
+        g->ren = nullptr;
+        gpu_[ei] = nullptr;
+        return;
+    }
+    g->freeSlots.resize(size_t(g->capacity));
+    for (int s = 0; s < g->capacity; s++) g->freeSlots[size_t(s)] = g->capacity - 1 - s;   // slot 0 first
+    // The curves as tables over the life (the GPU interpolates between entries).
+    constexpr uint32_t n = GpuParticleFrame::kLut;
+    g->colorLut.resize(n * 4);
+    g->scalarLut.resize(n * 4);
+    for (uint32_t i = 0; i < n; i++) {
+        const float u = float(i) / float(n - 1);
+        const glm::vec4 col = em.colorOverLife.at(u, glm::vec4(1.0f));
+        for (int k = 0; k < 4; k++) g->colorLut[i * 4 + k] = col[k];
+        g->scalarLut[i * 4 + 0] = em.sizeOverLife.at(u, 1.0f);
+        g->scalarLut[i * 4 + 1] = em.speedOverLife.at(u, 1.0f);
+        g->scalarLut[i * 4 + 2] = em.spinOverLife.at(u, 1.0f);
+        g->scalarLut[i * 4 + 3] = 0;
+    }
+    gpu_[ei] = g;
+}
+
+int EffectInstance::gpuEmitters() const {
+    int n = 0;
+    for (const auto& g : gpu_) n += g != nullptr;
+    return n;
+}
+
 void EffectInstance::stop(bool clear) {
     stopped_ = true;
-    if (clear)
+    if (clear) {
         for (Pool& p : pools_) p.count = 0;
+        for (size_t i = 0; i < gpu_.size(); i++)
+            if (gpu_[i]) startGpu(i);   // fresh, empty buffers
+    }
 }
 
 void EffectInstance::update(float dt) {
@@ -538,9 +594,9 @@ void EffectInstance::seek(float t) {
     const Effect* e = effect_;
     const uint32_t s = seed_;
     const glm::mat3 m = transform_;
-    play(e, s);
     transform_ = m;
-    for (int n = (int)std::lround(std::max(0.0f, t) / kStep); n > 0; n--) step(kStep);
+    play(e, s);   // starts at the prewarm time
+    for (int n = (int)std::lround((t - time_) / kStep); n > 0; n--) step(kStep);
 }
 
 bool EffectInstance::emitting() const {
@@ -553,11 +609,15 @@ bool EffectInstance::finished() const { return !emitting() && liveCount() == 0; 
 
 int EffectInstance::liveCount() const {
     int n = 0;
-    for (const Pool& p : pools_) n += p.count;
+    for (size_t i = 0; i < pools_.size(); i++) n += liveCount(i);
     return n;
 }
 
-int EffectInstance::liveCount(size_t emitter) const { return emitter < pools_.size() ? pools_[emitter].count : 0; }
+int EffectInstance::liveCount(size_t emitter) const {
+    if (emitter >= pools_.size()) return 0;
+    if (const Gpu* g = gpu_[emitter].get()) return g->capacity - int(g->freeSlots.size());
+    return pools_[emitter].count;
+}
 
 namespace {
 
@@ -570,10 +630,11 @@ glm::vec2 applyLinear(const glm::mat3& m, const glm::vec2& d) { const glm::vec3 
 
 }  // namespace
 
-void EffectInstance::emit(size_t ei, int n) {
+void EffectInstance::spawn(size_t ei, int n) {
     const Emitter& em = effect_->emitters[ei];
     Pool& p = pools_[ei];
-    n = std::min(n, std::max(1, em.maxParticles) - p.count);
+    Gpu* gpu = gpu_[ei].get();
+    n = std::min(n, gpu ? int(gpu->freeSlots.size()) : std::max(1, em.maxParticles) - p.count);
     const Shape& sh = em.shape;
     for (; n > 0; n--) {
         // Where on the shape, and the direction it leaves in.
@@ -623,18 +684,38 @@ void EffectInstance::emit(size_t ei, int n) {
             pos = apply(transform_, pos);
             vel = applyLinear(transform_, vel);
         }
+        // The same random values in the same order on both paths: a GPU emitter's particles are
+        // the ones the CPU would have made.
+        const float life = std::max(0.001f, pick(em.life));
+        const float size = pick(em.size), rot = pick(em.rotation), spin = pick(em.spin);
+        const float radial = pick(em.radial), tangential = pick(em.tangential);
+        const glm::vec4 color = em.color == em.color2 ? em.color : em.color + (em.color2 - em.color) * rand01();
+        const int frame = em.randomFrame && !em.frames.empty() ? int(next() % (uint32_t)em.frames.size()) : 0;
+        if (gpu) {   // a record for the GPU, into a free slot
+            const int slot = gpu->freeSlots.back();
+            gpu->freeSlots.pop_back();
+            // Born in this step, after the steps already waiting for the next draw: it skips those.
+            const float age = -float(gpu->pendingSteps) * kStep;
+            const float rec[20] = {pos.x, pos.y, vel.x, vel.y, age, life, size, rot, spin, radial, tangential, float(frame),
+                                   color.r, color.g, color.b, color.a, float(slot), 0, 0, 0};
+            gpu->spawn.insert(gpu->spawn.end(), rec, rec + 20);
+            // It dies in the step where its age reaches its life: the k-th step of its life, k = ceil(life / dt).
+            const long long k = std::max(1LL, (long long)std::ceil(life / kStep - 1e-4));
+            gpu->frees.push({stepIndex_ + k - 1, slot});
+            continue;
+        }
         const int i = p.count++;
         p.pos[(size_t)i] = pos;
         p.vel[(size_t)i] = vel;
         p.age[(size_t)i] = 0;
-        p.life[(size_t)i] = std::max(0.001f, pick(em.life));
-        p.size[(size_t)i] = pick(em.size);
-        p.rot[(size_t)i] = pick(em.rotation);
-        p.spin[(size_t)i] = pick(em.spin);
-        p.radial[(size_t)i] = pick(em.radial);
-        p.tangential[(size_t)i] = pick(em.tangential);
-        p.color[(size_t)i] = em.color == em.color2 ? em.color : em.color + (em.color2 - em.color) * rand01();
-        p.frame[(size_t)i] = em.randomFrame && !em.frames.empty() ? int(next() % (uint32_t)em.frames.size()) : 0;
+        p.life[(size_t)i] = life;
+        p.size[(size_t)i] = size;
+        p.rot[(size_t)i] = rot;
+        p.spin[(size_t)i] = spin;
+        p.radial[(size_t)i] = radial;
+        p.tangential[(size_t)i] = tangential;
+        p.color[(size_t)i] = color;
+        p.frame[(size_t)i] = frame;
     }
 }
 
@@ -645,6 +726,12 @@ void EffectInstance::step(float dt) {
     for (size_t ei = 0; ei < fx.emitters.size(); ei++) {
         const Emitter& em = fx.emitters[ei];
         Pool& p = pools_[ei];
+        Gpu* gpu = gpu_[ei].get();
+        if (gpu)   // the slots of particles that die in this step take newborns again
+            while (!gpu->frees.empty() && gpu->frees.top().first <= stepIndex_) {
+                gpu->freeSlots.push_back(gpu->frees.top().second);
+                gpu->frees.pop();
+            }
         // Emission within the emitter's active window [start, end).
         if (!stopped_) {
             const float end = std::min(effectEnd, em.stop > 0 ? em.stop : 1e30f);
@@ -657,7 +744,7 @@ void EffectInstance::step(float dt) {
                 p.spawnCarry += double(em.rate) * inside;
                 const int n = int(p.spawnCarry + 1e-6);   // 60 x (10/60) must give 10, not 9.9999
                 p.spawnCarry -= n;
-                emit(ei, n);
+                spawn(ei, n);
             }
             for (size_t bi = 0; bi < em.bursts.size(); bi++) {
                 const Burst& bu = em.bursts[bi];
@@ -668,9 +755,13 @@ void EffectInstance::step(float dt) {
                     const float at = em.start + bu.t + (repeats ? k * bu.interval : 0.0f);
                     if (at >= t1 || at >= end) break;
                     p.burstsDone[bi]++;
-                    if (at >= t0 || k == 0) emit(ei, (int)std::lround(pick(bu.count)));
+                    if (at >= t0 || k == 0) spawn(ei, (int)std::lround(pick(bu.count)));
                 }
             }
+        }
+        if (gpu) {   // the GPU simulates it, at the next draw
+            gpu->pendingSteps++;
+            continue;
         }
         // Simulation; dead particles leave, the rest keep their birth order.
         const glm::vec2 origin = em.localSpace ? em.offset : apply(transform_, em.offset);
@@ -704,6 +795,7 @@ void EffectInstance::step(float dt) {
         p.count = w;
     }
     time_ = t1;
+    stepIndex_++;
     if (fx.loop && fx.duration > 0 && time_ >= fx.duration) {   // start over: bursts fire again
         time_ -= fx.duration;
         for (Pool& p : pools_) std::fill(p.burstsDone.begin(), p.burstsDone.end(), 0);
@@ -714,17 +806,22 @@ void EffectInstance::appendQuads(const toms::anim::AtlasSet& atlases, const glm:
                                  std::vector<Quad>& out, std::vector<std::string>* missing) const {
     if (!effect_) return;
     const glm::vec4 tintV = tint ? glm::vec4(tint[0], tint[1], tint[2], tint[3]) : glm::vec4(1.0f);
+    for (size_t ei : drawOrder_)
+        if (!gpu_[ei]) appendEmitterQuads(ei, atlases, placement, tintV, out, missing);
+}
+
+void EffectInstance::appendEmitterQuads(size_t ei, const toms::anim::AtlasSet& atlases, const glm::mat3& placement,
+                                        const glm::vec4& tintV, std::vector<Quad>& out, std::vector<std::string>* missing) const {
     auto report = [&](const std::string& ref) {
         if (missing && std::find(missing->begin(), missing->end(), ref) == missing->end()) missing->push_back(ref);
     };
     struct Look { const toms::AtlasRegion* r = nullptr; uint16_t tex = kSpriteAtlasTexture; };
     std::vector<Look> looks;
-    for (size_t ei : drawOrder_) {
+    {
         const Emitter& em = effect_->emitters[ei];
         const Pool& p = pools_[ei];
-        if (p.count == 0) continue;
+        if (p.count == 0) return;
         // The sprites of this emitter, looked up once per draw.
-        looks.clear();
         const std::vector<std::string> single{em.sprite};
         const std::vector<std::string>& refs = em.frames.empty() ? single : em.frames;
         for (const std::string& ref : refs) {
@@ -783,4 +880,69 @@ void EffectInstance::appendQuads(const toms::anim::AtlasSet& atlases, const glm:
     }
 }
 
+void EffectInstance::draw(IRenderer* ren, const toms::anim::AtlasSet& atlases, const glm::mat3& placement, const float tint[4],
+                          std::vector<std::string>* missing) {
+    if (!effect_ || !ren) return;
+    const glm::vec4 tintV = tint ? glm::vec4(tint[0], tint[1], tint[2], tint[3]) : glm::vec4(1.0f);
+    std::vector<Quad> quads;
+    for (size_t ei : drawOrder_) {
+        Gpu* g = gpu_[ei].get();
+        if (!g) {
+            quads.clear();
+            appendEmitterQuads(ei, atlases, placement, tintV, quads, missing);
+            for (const Quad& q : quads) ren->drawSprite(q);
+            continue;
+        }
+        const Emitter& em = effect_->emitters[ei];
+        // The sprite / flipbook frames: their uv rects and, for size 1, their rects around the centre.
+        const std::vector<std::string> single{em.sprite};
+        const std::vector<std::string>& refs = em.frames.empty() ? single : em.frames;
+        const uint32_t frames = std::min<uint32_t>((uint32_t)refs.size(), GpuParticleFrame::kMaxFrames);
+        float uv[GpuParticleFrame::kMaxFrames * 4] = {}, rect[GpuParticleFrame::kMaxFrames * 4] = {};
+        uint16_t texture = kSpriteAtlasTexture;
+        for (uint32_t f = 0; f < frames; f++) {
+            uint16_t tex = kSpriteAtlasTexture;
+            const toms::AtlasRegion* r = atlases.find(refs[f], &tex);
+            if (!r || r->origW <= 0) {   // nothing to draw for this frame (a zero rect)
+                if (missing && std::find(missing->begin(), missing->end(), refs[f]) == missing->end()) missing->push_back(refs[f]);
+                continue;
+            }
+            if (f == 0) texture = tex;   // one texture per draw: frames on other pages draw from the first's
+            std::copy(r->uv, r->uv + 4, uv + f * 4);
+            const float k = 1.0f / float(r->origW);
+            rect[f * 4 + 0] = (r->offX - 0.5f * r->origW) * k;
+            rect[f * 4 + 1] = (r->offY - 0.5f * r->origH) * k;
+            rect[f * 4 + 2] = rect[f * 4 + 0] + r->w * k;
+            rect[f * 4 + 3] = rect[f * 4 + 1] + r->h * k;
+        }
+        GpuParticleFrame fr;
+        fr.emitter = g->id;
+        fr.spawn = g->spawn.data();
+        fr.spawnCount = uint32_t(g->spawn.size() / 20);
+        fr.steps = g->pendingSteps;
+        fr.dt = kStep;
+        fr.gravity[0] = em.gravity.x;
+        fr.gravity[1] = em.gravity.y;
+        fr.dragPerStep = em.drag > 0 ? std::exp(-em.drag * kStep) : 1.0f;
+        const glm::vec2 origin = em.localSpace ? em.offset : apply(transform_, em.offset);
+        fr.origin[0] = origin.x;
+        fr.origin[1] = origin.y;
+        fr.alignToVelocity = em.alignToVelocity;
+        fr.colorLut = g->colorLut.data();
+        fr.scalarLut = g->scalarLut.data();
+        fr.frameCount = std::max(1u, frames);
+        fr.fps = em.framesByFps && frames > 1 ? em.fps : 0.0f;
+        fr.frameUv = uv;
+        fr.frameRect = rect;
+        const glm::mat3 m = em.localSpace ? placement * transform_ : placement;
+        fr.xform[0] = m[0][0]; fr.xform[1] = m[1][0]; fr.xform[2] = m[2][0];
+        fr.xform[3] = m[0][1]; fr.xform[4] = m[1][1]; fr.xform[5] = m[2][1];
+        for (int k = 0; k < 4; k++) fr.tint[k] = tintV[k];
+        fr.texture = texture;
+        fr.additive = em.blend == Blend::add();
+        ren->drawGpuParticles(fr);
+        g->spawn.clear();
+        g->pendingSteps = 0;
+    }
+}
 }  // namespace toms::fx

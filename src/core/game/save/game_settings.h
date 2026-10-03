@@ -12,6 +12,15 @@ namespace toms {
 
 constexpr int kGameSettingsSchemaVersion = 1;
 
+// Particle emitters with more than this many particles (maxParticles) are simulated on the GPU,
+// where the renderer has compute shaders (docs/17_PARTICLES.md); 0 = always on the CPU. Phones get
+// a lower default: their CPUs are slower, so the GPU pays off sooner.
+#if defined(__ANDROID__) || defined(TOMS_IOS)
+constexpr int kDefaultParticleGpuThreshold = 3000;
+#else
+constexpr int kDefaultParticleGpuThreshold = 5000;
+#endif
+
 struct GameSettings {
     int schemaVersion = kGameSettingsSchemaVersion;
     // Language code into data/text.json's "languages" list ("zh_TW" default — this project's
@@ -34,6 +43,8 @@ struct GameSettings {
     // ones ("" = the original art). Read once at startup (Game::loadAssets), so changing it in
     // Settings takes effect after a restart -- the Settings dialog says so.
     std::string artStyle;
+    // See kDefaultParticleGpuThreshold. Read whenever a particle effect starts.
+    int particleGpuThreshold = kDefaultParticleGpuThreshold;
 };
 
 nlohmann::json toJson(const GameSettings& s);

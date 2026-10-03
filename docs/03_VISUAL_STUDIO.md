@@ -72,6 +72,9 @@ UI ([08](08_RMLUI.md)): F5 reload `assets\media\ui` · F8 RmlUi debugger.
 | `--stage=<id>` | first stage, e.g. `stage03` |
 | `--no-vsync` | uncapped frame rate |
 | `--stats` | bgfx on-screen stats |
+| `--fps` | start with the performance line on (F3 toggles it): FPS, frame time, backend, sprite path, compute support, quads, draw calls |
+| `--fx-gpu-threshold=N` | particle emitters above N particles are simulated on the GPU (0 = never); this run only. The saved setting is `particleGpuThreshold` (desktop 5000, phones 3000) |
+| `--sprite-path=auto\|instancing\|compute\|cpu` | how the sprite batch makes its vertices; auto = instancing (fastest measured), else compute, else CPU. `--no-instancing` = `cpu` |
 | `--frames=<n> --screenshot=<file.png>` | run n frames, save a PNG, quit (smoke tests) |
 | `--keys=enter@30,enter@60` | press keys at given frames (smoke tests) |
 | `--clicks=222:140@130` | left-click at a design-space point (1024×768) at a frame (smoke tests) |
@@ -93,7 +96,13 @@ The script finds Visual Studio with `vswhere`, loads the MSVC x64 environment, a
 Studio's bundled CMake and Ninja.
 
 Tests: `tools\test.cmd` runs all of them (unit, screenshot smoke tests, web), and Visual Studio's
-**Test → Test Explorer** lists the same ones. See [09_TESTS.md](09_TESTS.md).
+**Test → Test Explorer** lists the same ones. The unit tests are one program, `toms_tests`
+(debug one with the **"toms_tests (one unit test)"** target). See [09_TESTS.md](09_TESTS.md).
+
+**Particle effects:** **"particle_editor (recipes)"** opens the particle editor
+(`bin\particle_editor.exe`) with `docs/examples/fx_recipes.particle`. **"toms_game (particle
+preview: torch_fire)"** plays one effect over the game; change `#torch_fire` in its `args` to see
+another, e.g. `#heal` or `#hit_sparks` ([17](17_PARTICLES.md)).
 
 Quick manual screenshots (render the title screen, then stage 1, and write PNGs; the editor also writes
 `<name>_window.png` with the whole window):

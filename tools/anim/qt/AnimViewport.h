@@ -1,20 +1,22 @@
 #pragma once
 
 #include "AnimDocument.h"
-#include "CanvasView.h"
+#include "GameCanvasView.h"
 #include "render_iface.h"
 
 #include <QTransform>
 
 #include <vector>
 
-// The clip at the playhead, drawn with QPainter from the same evaluate() + appendQuads() the game
-// uses (anim_player.h), so it shows exactly what the game draws. Content coordinates are clip
+// The clip at the playhead, drawn by the game's own renderer (GameCanvasView: toms_game's
+// BgfxRenderer) from the same evaluate() + appendQuads() the game uses (anim_player.h), so it shows
+// exactly what the game draws; outlines, the gizmo and the status text are QPainter on top. Where
+// the game renderer cannot start (the offscreen selftest) the quads are painted with QPainter. Content coordinates are clip
 // space (pixels, y down, origin = where the game places the clip). Click selects the topmost
 // node under the cursor; the selected node gets a Move (W) / Rotate (E) / Scale (R) gizmo whose
 // drags go through AnimDocument::setChannel (auto-key on: a key at the playhead; off: rest value).
 // Sprites dragged in from the Sprites dock become nodes under the selected node.
-class AnimViewport : public CanvasView
+class AnimViewport : public GameCanvasView
 {
     Q_OBJECT
 
@@ -30,7 +32,8 @@ public:
         QRect src;          // the pixels on the page (from the quad's uv)
     };
 
-    explicit AnimViewport(AnimDocument* doc, QWidget* parent = nullptr);
+    AnimViewport(AnimDocument* doc, bool gameRenderer, QWidget* parent = nullptr);
+    ~AnimViewport() override;
 
     Tool tool() const { return m_tool; }
     void setTool(Tool t);
@@ -57,6 +60,8 @@ protected:
     QSize contentSize() const override;
     QRectF contentRect() const override { return m_stage; }
     void paintContent(QPainter& p) override;
+    void paintGameScene(const GameScene& s) override;   // grid, origin, the clip's sprites (as the game)
+    void gameRendererChanged(toms::next::BgfxRenderer* ren) override;
     void mousePressEvent(QMouseEvent* e) override;
     void mouseMoveEvent(QMouseEvent* e) override;
     void mouseReleaseEvent(QMouseEvent* e) override;
@@ -100,4 +105,6 @@ private:
     animed::Value m_startPos, m_startRot, m_startScale;
     double m_lastAngle = 0, m_angleSum = 0;
     int m_dragSerial = 0;
+    GameTextures m_tex;                // the document's atlases as GPU textures (game renderer)
+    bool m_atlasDirty = true;
 };

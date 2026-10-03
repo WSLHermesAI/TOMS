@@ -72,6 +72,40 @@ inline bool packAtlas(const std::vector<std::vector<uint8_t>>& layers,
     return true;
 }
 
+// GPU-simulated particles (particle_fx.h, docs/17_PARTICLES.md): an emitter whose particles live
+// in GPU buffers. The CPU only spawns (it decides when, where and with which random values, and
+// which slot each newborn takes); a compute shader moves every particle, applies the curves and
+// writes its quad, which is drawn where drawGpuParticles was called among the sprites.
+//
+// One spawn record = 5 vec4 (20 floats):
+//   [0] pos.x, pos.y, vel.x, vel.y         [2] spin, radial, tangential, first flipbook frame
+//   [1] age, life, size, rotation          [3] colour r, g, b, a
+//   [4] slot, 0, 0, 0
+// A newborn's age is -(steps it waits) * dt: born in the k-th of this draw's steps, it skips k.
+struct GpuParticleFrame {
+    uint32_t emitter = 0;                     // createGpuParticles
+    const float* spawn = nullptr;             // spawnCount records
+    uint32_t spawnCount = 0;
+    uint32_t steps = 0;                       // simulation steps since the last draw
+    float dt = 1.0f / 60.0f;
+    float gravity[2] = {0, 0};
+    float dragPerStep = 1;                    // velocity *= this each step
+    float origin[2] = {0, 0};                 // radial / tangential forces act around this
+    bool alignToVelocity = false;
+    const float* colorLut = nullptr;          // kLut x rgba over the life (multiplies the colour)
+    const float* scalarLut = nullptr;         // kLut x (size, speed, spin, 0) multipliers
+    uint32_t frameCount = 1;                  // flipbook frames (1 = the sprite)
+    float fps = 0;                            // 0: frames across the life; else loop at fps
+    const float* frameUv = nullptr;           // frameCount x (u0, v0, u1, v1)
+    const float* frameRect = nullptr;         // frameCount x (x0, y0, x1, y1) for size 1
+    float xform[6] = {1, 0, 0, 0, 1, 0};      // particle space -> screen: x' = a x + b y + c, y' = d x + e y + f
+    float tint[4] = {1, 1, 1, 1};
+    uint16_t texture = kSpriteAtlasTexture;
+    bool additive = false;
+    static constexpr uint32_t kLut = 64;
+    static constexpr uint32_t kMaxFrames = 16;
+};
+
 class IRenderer {
 public:
     virtual ~IRenderer() = default;
@@ -100,4 +134,10 @@ public:
     virtual uint32_t height() const = 0;
     // Desktop-only: dump the current frame to PNG. WebGL build overrides as no-op.
     virtual void savePNG(const std::string& path) { (void)path; }
+    // GPU-simulated particles (GpuParticleFrame above): only where the backend runs compute shaders.
+    virtual bool supportsGpuParticles() const { return false; }
+    virtual uint32_t createGpuParticles(uint32_t capacity) { (void)capacity; return 0; }   // 0 = none
+    virtual void releaseGpuParticles(uint32_t emitter) { (void)emitter; }
+    // Between begin() and end(): simulates and draws the emitter at this point among the sprites.
+    virtual void drawGpuParticles(const GpuParticleFrame& f) { (void)f; }
 };

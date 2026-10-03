@@ -285,9 +285,21 @@ void MainWindow::createMenus()
     m_spriteMenu->addAction(m_deleteAct);
 
     m_viewMenu = menuBar()->addMenu(tr("&View"));
+    {   // the viewport's renderer: the game's (bgfx, the same pixels as toms_game) or QPainter
+        QAction* a = m_viewMenu->addAction(tr("Preview with the Game Renderer (after a restart)"));
+        a->setCheckable(true);
+        a->setChecked(settings().value(QStringLiteral("preview/gameRenderer"), true).toBool());
+        a->setToolTip(tr("Draw the pages and sprites with toms_game's renderer (bgfx): exactly the game's pixels. Off: QPainter."));
+        connect(a, &QAction::toggled, this, [this](bool on) {
+            settings().setValue(QStringLiteral("preview/gameRenderer"), on);
+            statusBar()->showMessage(tr("The renderer changes the next time the editor starts."), 8000);
+        });
+        m_viewMenu->addSeparator();
+    }
     m_viewMenu->addAction(m_fitAct);
     m_viewMenu->addAction(m_zoomInAct);
     m_viewMenu->addAction(m_zoomOutAct);
+    CanvasView::addCoordinatesAction(m_viewMenu);
     m_viewMenu->addSeparator();
     m_viewMenu->addAction(m_outlinesAct);
     m_viewMenu->addAction(m_childrenAct);

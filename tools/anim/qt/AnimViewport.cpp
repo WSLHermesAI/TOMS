@@ -1,5 +1,7 @@
 #include "AnimViewport.h"
 
+#include "bgfx_renderer.h"   // GameScene::ren (the game renderer)
+
 #include "Theme.h"
 #include "anim_player.h"
 
@@ -71,11 +73,12 @@ void drawArrowHead(QPainter& p, const QPointF& tip, const QPointF& dir, double s
 
 }  // namespace
 
-AnimViewport::AnimViewport(AnimDocument* doc, QWidget* parent)
-    : CanvasView(parent)
+AnimViewport::AnimViewport(AnimDocument* doc, bool gameRenderer, QWidget* parent)
+    : GameCanvasView(gameRenderer, parent)
     , m_doc(doc)
 {
     setAcceptDrops(true);
+    connect(doc, &AnimDocument::atlasChanged, this, [this] { m_atlasDirty = true; });
     connect(doc, &AnimDocument::fileChanged, this, qOverload<>(&QWidget::update));
     connect(doc, &AnimDocument::selectionChanged, this, qOverload<>(&QWidget::update));
     connect(doc, &AnimDocument::timeChanged, this, qOverload<>(&QWidget::update));
@@ -175,13 +178,57 @@ void AnimViewport::frameClip()
 
 // ---- painting -----------------------------------------------------------------------------------
 
+AnimViewport::~AnimViewport() { releaseGameRenderer(); }
+
+void AnimViewport::gameRendererChanged(toms::next::BgfxRenderer* ren)
+{
+    m_tex.attach(ren);
+    m_atlasDirty = true;
+}
+
+void AnimViewport::paintGameScene(const GameScene& s)
+{
+    const Theme::Colors& tc = Theme::colors();
+    if (m_atlasDirty) {
+        m_atlasDirty = false;
+        std::vector<std::tuple<std::string, std::string, const toms::AtlasFile*>> atlases;
+        for (int i = 0; i < m_doc->atlasCount(); i++)
+            if (m_doc->atlasAt(i).ok)
+                atlases.emplace_back(m_doc->atlasId(i).toStdString(), m_doc->atlasAt(i).path.toStdString(), &m_doc->atlasAt(i).atlas);
+        m_tex.setAtlases(atlases);
+    }
+    if (m_grid && zoom() * 16 >= 6) {
+        const QPointF a = toContent(QPointF(0, 0)), b = toContent(QPointF(width(), height()));
+        for (double x = std::floor(a.x() / 16) * 16; x <= b.x(); x += 16) {
+            const double wx = std::round(toWidget(QPointF(x, 0)).x()) + 0.5;
+            s.line(QPointF(wx, 0), QPointF(wx, height()), 1, tc.grid);
+        }
+        for (double y = std::floor(a.y() / 16) * 16; y <= b.y(); y += 16) {
+            const double wy = std::round(toWidget(QPointF(0, y)).y()) + 0.5;
+            s.line(QPointF(0, wy), QPointF(width(), wy), 1, tc.grid);
+        }
+    }
+    const QPointF o = toWidget(QPointF(0, 0));   // origin cross: where the game places the clip
+    s.line(QPointF(std::round(o.x()) + 0.5, 0), QPointF(std::round(o.x()) + 0.5, height()), 1, tc.gridAxis);
+    s.line(QPointF(0, std::round(o.y()) + 0.5), QPointF(width(), std::round(o.y()) + 0.5), 1, tc.gridAxis);
+    // The clip, exactly as the game draws it (Game::drawPreviewAnim): evaluate + appendQuads.
+    const toms::anim::Clip* clip = m_doc->clip();
+    if (!clip) return;
+    std::vector<NodePose> poses;
+    toms::anim::evaluate(*clip, m_doc->time(), poses);
+    std::vector<Quad> quads;
+    toms::anim::appendQuads(poses, m_tex.atlasSet(), GameScene::placement(viewTransform()), nullptr, quads);
+    for (const Quad& q : quads) s.ren.drawSprite(q);
+}
+
 void AnimViewport::paintContent(QPainter& p)
 {
     rebuild();
     const Theme::Colors& tc = Theme::colors();
     const QTransform view = viewTransform();
+    const bool over = overGameScene();   // the game renderer drew the grid, origin and sprites
 
-    if (m_grid && zoom() * 16 >= 6) {
+    if (!over && m_grid && zoom() * 16 >= 6) {
         const QPointF a = toContent(QPointF(0, 0)), b = toContent(QPointF(width(), height()));
         p.setPen(QPen(tc.grid, 1));
         for (double x = std::floor(a.x() / 16) * 16; x <= b.x(); x += 16) {
@@ -193,7 +240,7 @@ void AnimViewport::paintContent(QPainter& p)
             p.drawLine(QPointF(0, wy), QPointF(width(), wy));
         }
     }
-    {   // origin cross: where the game places the clip
+    if (!over) {   // origin cross: where the game places the clip
         const QPointF o = toWidget(QPointF(0, 0));
         p.setPen(QPen(tc.gridAxis, 1));
         p.drawLine(QPointF(std::round(o.x()) + 0.5, 0), QPointF(std::round(o.x()) + 0.5, height()));
@@ -205,7 +252,7 @@ void AnimViewport::paintContent(QPainter& p)
     p.setRenderHint(QPainter::SmoothPixmapTransform, false);
     p.setRenderHint(QPainter::Antialiasing, false);
     for (const DrawItem& it : m_items) {
-        if (it.src.isEmpty() || !it.images) continue;
+        if (over || it.src.isEmpty() || !it.images) continue;
         const QImage img = it.images->tinted(it.page, it.src, it.quad.tint);
         if (img.isNull()) continue;
         p.setTransform(quadTransform(it.quad, it.src.size()) * view);

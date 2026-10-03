@@ -22,12 +22,14 @@
 #include "Theme.h"
 #include "anim_check.h"
 #include "anim_player.h"
+#include "bgfx_host.h"
 
 #include <QApplication>
 #include <QComboBox>
 #include <QDir>
 #include <QDockWidget>
 #include <QDoubleSpinBox>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
@@ -777,6 +779,56 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
     return ok ? 0 : 1;
 }
 
+// Right-drag on a canvas: it must pan (the content moves with the mouse), as middle-drag does.
+static bool rightDragPans(CanvasView* view)
+{
+    const QPointF before = view->contentToWidget(QPointF(0, 0));
+    const QPointF a(view->width() / 2.0, view->height() / 2.0), b = a + QPointF(60, 25);
+    auto send = [&](QEvent::Type type, const QPointF& at, Qt::MouseButton button, Qt::MouseButtons buttons) {
+        QMouseEvent e(type, at, view->mapToGlobal(at), button, buttons, Qt::NoModifier);
+        QApplication::sendEvent(view, &e);
+    };
+    send(QEvent::MouseButtonPress, a, Qt::RightButton, Qt::RightButton);
+    for (int i = 1; i <= 4; i++) send(QEvent::MouseMove, a + (b - a) * (i / 4.0), Qt::NoButton, Qt::RightButton);
+    send(QEvent::MouseButtonRelease, b, Qt::RightButton, Qt::NoButton);
+    QCoreApplication::processEvents();
+    const QPointF moved = view->contentToWidget(QPointF(0, 0)) - before;
+    return std::fabs(moved.x() - 60) < 1 && std::fabs(moved.y() - 25) < 1;
+}
+
+// The viewport with the game renderer (on screen): it starts, draws, and a bgfx screenshot of the
+// clip at a fixed time is saved for comparing with toms_game --anim.
+int runGpuSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
+{
+    qApp->setProperty("toms.selftest", true);
+    QDir().mkpath(outDir);
+    AnimEditor* ed = w.editor();
+    auto pump = [](int ms) {
+        QElapsedTimer t;
+        t.start();
+        while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    };
+    bool ok = check(ed->openFile(file, false), "open the clip");
+    pump(500);
+    AnimViewport* view = ed->viewport();
+    ok &= check(view->usingGameRenderer(), "the viewport runs on the game renderer");
+    std::printf("selftest:   %s\n", view->rendererName().toUtf8().constData());
+    if (!view->usingGameRenderer()) return 1;
+    ed->document()->setTime(0.5f);
+    const int f0 = view->framesDrawn();
+    pump(600);
+    ok &= check(view->framesDrawn() > f0, "frames are drawn");
+    ok &= check(rightDragPans(view), "right-drag pans the viewport (game renderer window)");
+    const int before = toms::next::bgfxHostScreenshotsWritten();
+    view->saveGameRendererShot(QDir(outDir).filePath(QStringLiteral("anim_gpu.png")));
+    QElapsedTimer t;
+    t.start();
+    while (toms::next::bgfxHostScreenshotsWritten() == before && t.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    ok &= check(toms::next::bgfxHostScreenshotsWritten() > before, "anim_gpu.png (bgfx screenshot)");
+    std::printf("selftest: %s\n", ok ? "ok" : "FAILED");
+    return ok ? 0 : 1;
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -805,6 +857,17 @@ int main(int argc, char** argv)
         w.resize(1440, 900);
         w.show();
         const int code = runSelfTest(w, qargs[1], qargs[2]);
+        std::fflush(stdout);
+        return code;
+    }
+    if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest-gpu")) {   // on screen: the game renderer
+        Console::attachParent();
+        qApp->setProperty("toms.selftest", true);
+        AnimMainWindow w;
+        w.setDarkTheme(true);
+        w.resize(1440, 900);
+        w.show();
+        const int code = runGpuSelfTest(w, qargs[1], qargs[2]);
         std::fflush(stdout);
         return code;
     }

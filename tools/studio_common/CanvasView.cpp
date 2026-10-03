@@ -2,7 +2,11 @@
 
 #include "Theme.h"
 
+#include <QAction>
+#include <QApplication>
 #include <QKeyEvent>
+#include <QMenu>
+#include <QSettings>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QWheelEvent>
@@ -13,6 +17,90 @@
 namespace {
 constexpr double kMinZoom = 1.0 / 32, kMaxZoom = 64.0;
 constexpr int kCheckerCell = 8;   // screen pixels: the pattern does not scale with the zoom
+const QString kCoordinatesKey = QStringLiteral("view/coordinates");
+
+bool& coordinatesFlag()
+{
+    static bool on = QSettings().value(kCoordinatesKey, true).toBool();
+    return on;
+}
+
+QString coordinateText(double v, double step)
+{
+    if (std::fabs(v) < step * 1e-6) return QStringLiteral("0");
+    return QString::number(std::lround(v));   // steps are whole content pixels
+}
+}
+
+double CanvasView::coordinateStep(double zoom)
+{
+    // The smallest 1/2/5 x 10^n (at least one content pixel) that keeps the hints apart on screen.
+    const double want = kCoordinateSpacing / std::max(zoom, 1e-6);
+    double base = 1;
+    while (base * 10 <= want) base *= 10;
+    for (double m : {1.0, 2.0, 5.0, 10.0})
+        if (base * m >= want) return base * m;
+    return base * 10;
+}
+
+bool CanvasView::coordinatesShown() { return coordinatesFlag(); }
+
+void CanvasView::setCoordinatesShown(bool on)
+{
+    coordinatesFlag() = on;
+    QSettings().setValue(kCoordinatesKey, on);
+    for (QWidget* w : QApplication::allWidgets())
+        if (auto* view = qobject_cast<CanvasView*>(w)) view->update();
+}
+
+QAction* CanvasView::addCoordinatesAction(QMenu* menu)
+{
+    QAction* a = menu->addAction(tr("Show Coordinates"));
+    a->setCheckable(true);
+    a->setChecked(coordinatesShown());
+    a->setToolTip(tr("X/Y values along the canvas edges; the step follows the zoom"));
+    connect(a, &QAction::toggled, a, [](bool on) { setCoordinatesShown(on); });
+    return a;
+}
+
+void CanvasView::paintCoordinates(QPainter& p)
+{
+    if (!coordinatesShown()) return;
+    const Theme::Colors& tc = Theme::colors();
+    const double step = coordinateStep(m_zoom);
+    const QPointF c0 = toContent(QPointF(0, 0)), c1 = toContent(QPointF(width(), height()));
+    p.save();
+    p.setRenderHint(QPainter::Antialiasing, false);
+    QFont f = p.font();
+    f.setPointSizeF(std::max(7.0, f.pointSizeF() - 1));
+    p.setFont(f);
+    const QFontMetrics fm(f);
+    QColor line = tc.grid;
+    line.setAlpha(std::min(255, line.alpha() * 2));
+    QColor text = tc.label;
+    text.setAlpha(170);
+    const double bottom = height() - fm.descent() - 3;   // x values sit on the bottom edge
+    const double leftReserve = fm.horizontalAdvance(QStringLiteral("-00000")) + 6;   // the y column's corner
+
+    // Vertical lines, x values along the bottom.
+    for (double x = std::ceil(c0.x() / step) * step; x <= c1.x(); x += step) {
+        const double wx = std::round(toWidget(QPointF(x, 0)).x()) + 0.5;
+        p.setPen(QPen(line, 1));
+        p.drawLine(QPointF(wx, 0), QPointF(wx, height()));
+        if (wx < leftReserve) continue;   // the corner belongs to the y values
+        p.setPen(text);
+        p.drawText(QPointF(wx + 3, bottom), coordinateText(x, step));
+    }
+    // Horizontal lines, y values along the left edge (above each line).
+    for (double y = std::ceil(c0.y() / step) * step; y <= c1.y(); y += step) {
+        const double wy = std::round(toWidget(QPointF(0, y)).y()) + 0.5;
+        p.setPen(QPen(line, 1));
+        p.drawLine(QPointF(0, wy), QPointF(width(), wy));
+        if (wy > height() - fm.height() - 4) continue;   // the corner belongs to the x values
+        p.setPen(text);
+        p.drawText(QPointF(4, wy - 3), coordinateText(y, step));
+    }
+    p.restore();
 }
 
 CanvasView::CanvasView(QWidget* parent)
@@ -112,6 +200,12 @@ void CanvasView::drawLabel(QPainter& p, const QPointF& at, const QString& text)
 
 bool CanvasView::panPress(QMouseEvent* e)
 {
+    if (e->button() == Qt::RightButton) {   // a pan once it moves; a plain click stays a context menu
+        m_rightDown = true;
+        m_rightStart = e->position();
+        m_eatContextMenu = false;
+        return true;
+    }
     if (e->button() == Qt::MiddleButton || (e->button() == Qt::LeftButton && m_spaceDown)) {
         m_panning = true;
         m_panLast = e->position();
@@ -123,6 +217,13 @@ bool CanvasView::panPress(QMouseEvent* e)
 
 bool CanvasView::panMove(QMouseEvent* e)
 {
+    if (m_rightDown && !m_panning && (e->buttons() & Qt::RightButton)) {
+        if ((e->position() - m_rightStart).manhattanLength() < 4) return true;
+        m_panning = true;
+        m_eatContextMenu = true;
+        m_panLast = m_rightStart;
+        setCursor(Qt::ClosedHandCursor);
+    }
     if (!m_panning) return false;
     m_offset += e->position() - m_panLast;
     m_panLast = e->position();
@@ -132,10 +233,27 @@ bool CanvasView::panMove(QMouseEvent* e)
 
 bool CanvasView::panRelease(QMouseEvent* e)
 {
+    if (e->button() == Qt::RightButton && m_rightDown) {
+        m_rightDown = false;
+        if (!m_panning) return false;   // a click: the context menu follows as usual
+        m_panning = false;
+        setCursor(m_spaceDown ? Qt::OpenHandCursor : Qt::ArrowCursor);
+        return true;
+    }
     if (!m_panning || (e->button() != Qt::MiddleButton && e->button() != Qt::LeftButton)) return false;
     m_panning = false;
     setCursor(m_spaceDown ? Qt::OpenHandCursor : Qt::ArrowCursor);
     return true;
+}
+
+bool CanvasView::event(QEvent* e)
+{
+    if (e->type() == QEvent::ContextMenu && m_eatContextMenu) {
+        m_eatContextMenu = false;
+        e->accept();
+        return true;
+    }
+    return QWidget::event(e);
 }
 
 void CanvasView::wheelEvent(QWheelEvent* e)
@@ -178,4 +296,5 @@ void CanvasView::paintEvent(QPaintEvent*)
     QPainter p(this);
     paintBackground(p);
     paintContent(p);
+    paintCoordinates(p);
 }

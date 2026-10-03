@@ -45,6 +45,21 @@
     {
       "type": "default",
       "project": "CMakeLists.txt",
+      "projectTarget": "particle_editor.exe (bin\\particle_editor.exe)",
+      "name": "particle_editor (recipes)",
+      "args": [ "${workspaceRoot}\\docs\\examples\\fx_recipes.particle" ]
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "toms_tests.exe (bin\\tests\\toms_tests.exe)",
+      "name": "toms_tests (one unit test)",
+      "args": [ "particle_fx_test" ],
+      "currentDir": "${workspaceRoot}\\assets"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
       "projectTarget": "toms_game.exe (bin\\toms_game.exe)",
       "name": "toms_game (particle preview: torch_fire)",
       "args": [ "--fx=${workspaceRoot}\\docs\\examples\\fx_recipes.particle#torch_fire" ]

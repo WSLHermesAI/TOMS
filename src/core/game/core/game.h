@@ -357,6 +357,13 @@ public:
     // The same for a particle effect (toms_game --fx=<file>#<effect>): centred, a one-shot effect
     // starts again 0.5 s after it ends. The seed is the effect's, else 1, so screenshots repeat.
     bool playPreviewFx(const std::string& file, const std::string& effect, std::string& error);
+    int previewFxLive() const { return previewFx_.liveCount(); }   // the --fx effect's live particles (HUD)
+    int previewFxGpuEmitters() const { return previewFx_.gpuEmitters(); }
+    int previewFxEmitters() const { return previewFx_.effect() ? (int)previewFx_.effect()->emitters.size() : 0; }
+    // Particle emitters above this many particles run on the GPU (GameSettings::particleGpuThreshold;
+    // `toms_game --fx-gpu-threshold=N` overrides it for this run without saving it).
+    int particleGpuThreshold() const { return fxGpuThresholdOverride_ >= 0 ? fxGpuThresholdOverride_ : settings_.particleGpuThreshold; }
+    void overrideParticleGpuThreshold(int n) { fxGpuThresholdOverride_ = n; }
     // The UI's sprite sheet: RCSS made from spriteAtlas_, which GameUi serves to RmlUi as
     // "_atlas.rcss" -- so the UI draws from the same packed texture as the map. Empty without a
     // prebuilt atlas. The revision changes whenever another atlas is loaded (art style switch).
@@ -600,6 +607,7 @@ private:
     std::vector<std::unique_ptr<toms::AtlasFile>> previewFxAtlases_;
     std::vector<uint16_t> previewFxTextures_;
     float previewFxIdle_ = 0;                         // seconds since a one-shot effect finished
+    int fxGpuThresholdOverride_ = -1;                 // --fx-gpu-threshold (-1: the setting)
     // art styles (assets/media/styles/styles.json); style 0 = the original art
     std::vector<toms::ArtStyle> artStyles_{toms::ArtStyle{}};
     int loadedArtStyle_ = 0;                  // the one whose sprites were loaded at startup

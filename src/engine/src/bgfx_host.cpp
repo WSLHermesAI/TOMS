@@ -1,6 +1,7 @@
 // bgfx_host.cpp -- see bgfx_host.h.
 #include "bgfx_host.h"
 
+#include <cstring>
 #include <bgfx/bgfx.h>
 #include <bx/allocator.h>
 #include <bx/debug.h>
@@ -22,6 +23,7 @@ namespace {
 bool g_ready = false;
 bool g_vsync = true;
 uint32_t g_debug = BGFX_DEBUG_NONE;
+bool g_stats = false, g_hud = false;   // --stats overlay, F3 HUD: both make g_debug
 std::atomic<int> g_screenshots{0};
 
 // bgfx reports fatal errors, traces and screenshots through this callback.
@@ -175,9 +177,38 @@ std::string bgfxHostRendererName() {
     return g_ready ? bgfx::getRendererName(bgfx::getRendererType()) : "(not started)";
 }
 
-void bgfxHostSetDebugText(bool on) {
-    g_debug = on ? BGFX_DEBUG_STATS : BGFX_DEBUG_NONE;
+namespace {
+void applyDebug() {
+    g_debug = (g_stats ? BGFX_DEBUG_STATS : 0u) | (g_hud ? BGFX_DEBUG_TEXT : 0u);
     if (g_ready) bgfx::setDebug(g_debug);
+}
+}  // namespace
+
+void bgfxHostSetDebugText(bool on) {
+    g_stats = on;
+    applyDebug();
+}
+
+void bgfxHostSetHud(bool on) {
+    g_hud = on;
+    applyDebug();
+}
+
+void bgfxHostHudText(const char* text) {
+    if (!g_ready || !g_hud) return;
+    bgfx::dbgTextClear();
+    uint16_t row = 1;   // one line per newline
+    for (const char* p = text; *p && row < 64; row++) {
+        const char* e = std::strchr(p, '\n');
+        const int n = e ? int(e - p) : int(std::strlen(p));
+        bgfx::dbgTextPrintf(1, row, 0x0f, "%.*s", n, p);
+        if (!e) break;
+        p = e + 1;
+    }
+}
+
+bool bgfxHostSupportsCompute() {
+    return g_ready && (bgfx::getCaps()->supported & BGFX_CAPS_COMPUTE) != 0;
 }
 
 int bgfxHostScreenshotsWritten() { return g_screenshots.load(); }

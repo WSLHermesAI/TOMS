@@ -40,6 +40,10 @@ bool bgfxHostReady();
 std::string bgfxHostRendererName();       // e.g. "Direct3D 11"; "(not started)" before init
 
 void bgfxHostSetDebugText(bool on);
+// The one-line performance HUD (F3 / --fps): bgfx debug text, top-left. Set it every frame.
+void bgfxHostSetHud(bool on);
+void bgfxHostHudText(const char* text);   // several lines: a newline between them
+bool bgfxHostSupportsCompute();          // BGFX_CAPS_COMPUTE on the active backend
 
 // Number of screenshots written by the bgfx callback (tests wait for this to change).
 int bgfxHostScreenshotsWritten();

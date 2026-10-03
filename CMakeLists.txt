@@ -83,6 +83,9 @@ if(NOT WEB AND NOT ANDROID)
     # The node animation tooling (docs/15_ANIMATION.md): toms_anim (the runtime without the game)
     # and, with Qt, anim_editor. Shares tools/studio_common with the atlas editor.
     add_subdirectory(tools/anim)
+    # Particle effects (docs/17_PARTICLES.md): toms_fx (the runtime without the game) and, with
+    # Qt, particle_editor. Shares tools/studio_common too.
+    add_subdirectory(tools/particle)
     if(TOMS_BUILD_TESTS)
         # The project opens from its packed atlas alone, and its other files (plist, rcss, the
         # art styles' atlases) match what it builds.
