@@ -95,6 +95,14 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
             std::fprintf(stderr, "[anim] --anim=%s: %s\n", opts.previewAnim.c_str(),
                          hash == std::string::npos ? "expected <file>#<clip>" : animError.c_str());
     }
+    if (!opts.previewFx.empty()) {     // --fx=<file>#<effect> (a developer/test option)
+        const size_t hash = opts.previewFx.rfind('#');
+        std::string fxError;
+        if (hash == std::string::npos ||
+            !game_->playPreviewFx(opts.previewFx.substr(0, hash), opts.previewFx.substr(hash + 1), fxError))
+            std::fprintf(stderr, "[fx] --fx=%s: %s\n", opts.previewFx.c_str(),
+                         hash == std::string::npos ? "expected <file>#<effect>" : fxError.c_str());
+    }
 
     // The UI: RmlUi on bgfx (view kViewUi), every screen bound to the game (game_ui.h).
     rml_ = std::make_unique<RmlUi>();

@@ -1,0 +1,366 @@
+{
+  "version": 1,
+  "atlases": [
+    "../../assets/media/atlas/fx.atlas",
+    "../../assets/media/atlas/game.atlas"
+  ],
+  "effects": [
+    {
+      "name": "torch_fire",
+      "prewarm": 1.0,
+      "emitters": [
+        {
+          "name": "flames",
+          "maxParticles": 60,
+          "emission": { "rate": 40 },
+          "shape": { "type": "circle", "radius": 5 },
+          "life": [0.45, 0.8],
+          "direction": -90, "spread": 12,
+          "speed": [35, 60],
+          "size": [14, 20],
+          "rotation": [-8, 8],
+          "color": [[1, 0.85, 0.45, 1], [1, 0.6, 0.25, 1]],
+          "flipbook": { "frames": ["fx:flame_0", "fx:flame_1", "fx:flame_2", "fx:flame_3"], "mode": "fps", "fps": 10, "randomStart": true },
+          "overLife": {
+            "color": [
+              { "t": 0, "v": [1, 1, 1, 0] },
+              { "t": 0.15, "v": [1, 1, 1, 1] },
+              { "t": 0.6, "v": [1, 0.55, 0.3, 0.8], "ease": "quadraticIn" },
+              { "t": 1, "v": [0.6, 0.15, 0.05, 0] }
+            ],
+            "size": [ { "t": 0, "v": 1, "ease": "quadraticIn" }, { "t": 1, "v": 0.35 } ]
+          },
+          "forces": { "gravity": [0, -20] },
+          "render": { "blend": "add", "order": 1 }
+        },
+        {
+          "name": "embers",
+          "maxParticles": 20,
+          "emission": { "rate": 6 },
+          "shape": { "type": "circle", "radius": 6 },
+          "life": [0.8, 1.4],
+          "direction": -90, "spread": 25,
+          "speed": [30, 70],
+          "size": [2, 4],
+          "color": [1, 0.7, 0.3, 1],
+          "sprite": "fx:dot",
+          "overLife": { "color": [ { "t": 0.6, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 0.4, 0.2, 0] } ] },
+          "forces": { "drag": 0.6, "tangential": [-20, 20] },
+          "render": { "blend": "add", "order": 2 }
+        },
+        {
+          "name": "smoke",
+          "offset": [0, -26],
+          "maxParticles": 20,
+          "emission": { "rate": 5 },
+          "life": [1.5, 2.2],
+          "direction": -90, "spread": 15,
+          "speed": [15, 25],
+          "size": [16, 22],
+          "rotation": [0, 360], "spin": [-30, 30],
+          "color": [0.25, 0.22, 0.2, 1],
+          "sprite": "fx:smoke",
+          "overLife": {
+            "color": [ { "t": 0, "v": [1, 1, 1, 0] }, { "t": 0.25, "v": [1, 1, 1, 0.45] }, { "t": 1, "v": [1, 1, 1, 0] } ],
+            "size": [ { "t": 0, "v": 0.6, "ease": "quadraticOut" }, { "t": 1, "v": 2 } ]
+          },
+          "render": { "order": 0 }
+        }
+      ]
+    },
+    {
+      "name": "hit_sparks",
+      "duration": 0.6,
+      "emitters": [
+        {
+          "name": "sparks",
+          "maxParticles": 30,
+          "emission": { "rate": 0, "bursts": [ { "t": 0, "count": [12, 16] } ] },
+          "shape": { "type": "point", "outward": true },
+          "life": [0.2, 0.4],
+          "speed": [150, 260],
+          "size": [14, 22],
+          "color": [[1, 0.95, 0.7, 1], [1, 0.7, 0.3, 1]],
+          "sprite": "fx:spark",
+          "overLife": {
+            "color": [ { "t": 0.5, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 0.5, 0.2, 0] } ],
+            "size": [ { "t": 0, "v": 1 }, { "t": 1, "v": 0.4 } ]
+          },
+          "forces": { "drag": 4, "gravity": [0, 200] },
+          "render": { "blend": "add", "alignToVelocity": true, "order": 1 }
+        },
+        {
+          "name": "flash",
+          "maxParticles": 1,
+          "emission": { "rate": 0, "bursts": [ { "t": 0, "count": 1 } ] },
+          "life": 0.15,
+          "speed": 0,
+          "size": 40,
+          "rotation": [0, 45],
+          "color": [1, 0.95, 0.8, 1],
+          "sprite": "fx:star",
+          "overLife": {
+            "color": [ { "t": 0, "v": [1, 1, 1, 1], "ease": "quadraticIn" }, { "t": 1, "v": [1, 1, 1, 0] } ],
+            "size": [ { "t": 0, "v": 0.6, "ease": "backOut" }, { "t": 1, "v": 1.3 } ]
+          },
+          "render": { "blend": "add", "order": 2 }
+        }
+      ]
+    },
+    {
+      "name": "slash_ring",
+      "duration": 0.4,
+      "emitters": [
+        {
+          "name": "ring",
+          "maxParticles": 1,
+          "emission": { "rate": 0, "bursts": [ { "t": 0, "count": 1 } ] },
+          "life": 0.3,
+          "speed": 0,
+          "size": 24,
+          "color": [0.8, 0.9, 1, 1],
+          "sprite": "fx:ring",
+          "overLife": {
+            "color": [ { "t": 0, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0], "ease": "quadraticIn" } ],
+            "size": [ { "t": 0, "v": 1, "ease": "cubicOut" }, { "t": 1, "v": 3 } ]
+          },
+          "render": { "blend": "add" }
+        }
+      ]
+    },
+    {
+      "name": "heal",
+      "duration": 1.2,
+      "emitters": [
+        {
+          "name": "sparkles",
+          "space": "local",
+          "maxParticles": 40,
+          "stop": 0.8,
+          "emission": { "rate": 40 },
+          "shape": { "type": "box", "size": [32, 8] },
+          "life": [0.6, 1.0],
+          "direction": -90, "spread": 8,
+          "speed": [30, 60],
+          "size": [8, 14],
+          "rotation": [0, 90], "spin": [-120, 120],
+          "color": [[0.5, 1, 0.6, 1], [0.8, 1, 0.9, 1]],
+          "sprite": "fx:star",
+          "overLife": {
+            "color": [ { "t": 0, "v": [1, 1, 1, 0] }, { "t": 0.2, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0] } ],
+            "size": [ { "t": 0, "v": 0.5, "ease": "backOut" }, { "t": 0.3, "v": 1 }, { "t": 1, "v": 0.6 } ]
+          },
+          "render": { "blend": "add", "order": 1 }
+        },
+        {
+          "name": "glow",
+          "space": "local",
+          "maxParticles": 1,
+          "emission": { "rate": 0, "bursts": [ { "t": 0, "count": 1 } ] },
+          "life": 1.0,
+          "speed": 0,
+          "size": 72,
+          "color": [0.4, 1, 0.5, 0.6],
+          "sprite": "fx:glow",
+          "overLife": { "color": [ { "t": 0, "v": [1, 1, 1, 0] }, { "t": 0.3, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0] } ] },
+          "render": { "blend": "screen", "order": 0 }
+        }
+      ]
+    },
+    {
+      "name": "magic_circle",
+      "emitters": [
+        {
+          "name": "orbit",
+          "maxParticles": 80,
+          "emission": { "rate": 30 },
+          "shape": { "type": "circle", "radius": 36, "edge": true },
+          "life": [1.5, 2.5],
+          "speed": 0,
+          "size": [4, 7],
+          "color": [[0.6, 0.5, 1, 1], [0.4, 0.8, 1, 1]],
+          "sprite": "fx:dot",
+          "overLife": { "color": [ { "t": 0, "v": [1, 1, 1, 0] }, { "t": 0.2, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0] } ] },
+          "forces": { "tangential": 60, "radial": -8, "drag": 0.5 },
+          "render": { "blend": "add" }
+        },
+        {
+          "name": "ring",
+          "maxParticles": 3,
+          "emission": { "rate": 1.2 },
+          "life": 2.4,
+          "speed": 0,
+          "size": 80,
+          "color": [0.5, 0.6, 1, 0.5],
+          "sprite": "fx:ring",
+          "overLife": {
+            "color": [ { "t": 0, "v": [1, 1, 1, 0] }, { "t": 0.3, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0] } ],
+            "size": [ { "t": 0, "v": 0.9 }, { "t": 1, "v": 1.1 } ]
+          },
+          "render": { "blend": "add", "order": -1 }
+        }
+      ]
+    },
+    {
+      "name": "smoke_puff",
+      "duration": 1.2,
+      "emitters": [
+        {
+          "name": "puff",
+          "maxParticles": 12,
+          "emission": { "rate": 0, "bursts": [ { "t": 0, "count": [7, 10] } ] },
+          "shape": { "type": "circle", "radius": 8, "outward": true },
+          "life": [0.7, 1.1],
+          "spread": 20,
+          "speed": [20, 50],
+          "size": [18, 28],
+          "rotation": [0, 360], "spin": [-40, 40],
+          "color": [0.85, 0.85, 0.85, 1],
+          "sprite": "fx:smoke",
+          "overLife": {
+            "color": [ { "t": 0, "v": [1, 1, 1, 0.8] }, { "t": 1, "v": [1, 1, 1, 0], "ease": "quadraticIn" } ],
+            "size": [ { "t": 0, "v": 0.6, "ease": "cubicOut" }, { "t": 1, "v": 1.6 } ],
+            "speed": [ { "t": 0, "v": 1, "ease": "quadraticOut" }, { "t": 1, "v": 0.1 } ]
+          },
+          "forces": { "gravity": [0, -15] }
+        }
+      ]
+    },
+    {
+      "name": "dust_landing",
+      "duration": 0.8,
+      "emitters": [
+        {
+          "name": "dust",
+          "maxParticles": 12,
+          "emission": { "rate": 0, "bursts": [ { "t": 0, "count": [8, 10] } ] },
+          "shape": { "type": "line", "length": 24 },
+          "life": [0.4, 0.7],
+          "direction": 180, "spread": 70,
+          "speed": [20, 45],
+          "size": [8, 14],
+          "color": [0.75, 0.68, 0.55, 0.8],
+          "sprite": "fx:smoke",
+          "overLife": {
+            "color": [ { "t": 0, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0] } ],
+            "size": [ { "t": 0, "v": 0.7 }, { "t": 1, "v": 1.4 } ]
+          },
+          "forces": { "drag": 3, "gravity": [0, -10] }
+        }
+      ]
+    },
+    {
+      "name": "coin_burst",
+      "duration": 1.6,
+      "emitters": [
+        {
+          "name": "coins",
+          "maxParticles": 12,
+          "emission": { "rate": 0, "bursts": [ { "t": 0, "count": [6, 9] } ] },
+          "life": [1.0, 1.4],
+          "direction": -90, "spread": 50,
+          "speed": [140, 220],
+          "size": [14, 18],
+          "spin": [-360, 360],
+          "sprite": "game:coin",
+          "overLife": { "color": [ { "t": 0.75, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0] } ] },
+          "forces": { "gravity": [0, 420] }
+        },
+        {
+          "name": "glints",
+          "maxParticles": 8,
+          "emission": { "rate": 0, "bursts": [ { "t": 0.05, "count": 6 } ] },
+          "shape": { "type": "circle", "radius": 10 },
+          "life": [0.3, 0.5],
+          "speed": [10, 30], "spread": 180,
+          "size": [8, 12],
+          "color": [1, 0.9, 0.5, 1],
+          "sprite": "fx:star",
+          "overLife": { "color": [ { "t": 0, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0] } ] },
+          "render": { "blend": "add", "order": 1 }
+        }
+      ]
+    },
+    {
+      "name": "level_up",
+      "duration": 1.5,
+      "emitters": [
+        {
+          "name": "pillar",
+          "maxParticles": 60,
+          "stop": 0.9,
+          "emission": { "rate": 60 },
+          "shape": { "type": "box", "size": [36, 4] },
+          "life": [0.5, 0.8],
+          "direction": -90, "spread": 2,
+          "speed": [120, 180],
+          "size": [10, 16],
+          "color": [[1, 0.9, 0.4, 1], [1, 1, 0.8, 1]],
+          "sprite": "fx:spark",
+          "overLife": { "color": [ { "t": 0, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0] } ] },
+          "forces": { "drag": 1.5 },
+          "render": { "blend": "add", "alignToVelocity": true }
+        },
+        {
+          "name": "rings",
+          "maxParticles": 3,
+          "emission": { "rate": 0, "bursts": [ { "t": 0, "count": 1, "repeat": 2, "interval": 0.25 } ] },
+          "life": 0.6,
+          "speed": 0,
+          "size": 30,
+          "color": [1, 0.9, 0.5, 1],
+          "sprite": "fx:ring",
+          "overLife": {
+            "color": [ { "t": 0, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0] } ],
+            "size": [ { "t": 0, "v": 0.5, "ease": "quadraticOut" }, { "t": 1, "v": 2.5 } ]
+          },
+          "render": { "blend": "add", "order": 1 }
+        }
+      ]
+    },
+    {
+      "name": "snow",
+      "prewarm": 4.0,
+      "emitters": [
+        {
+          "name": "flakes",
+          "maxParticles": 260,
+          "emission": { "rate": 40 },
+          "shape": { "type": "box", "size": [640, 10] },
+          "offset": [0, -200],
+          "life": [4, 6],
+          "direction": 90, "spread": 15,
+          "speed": [40, 70],
+          "size": [3, 7],
+          "color": [[1, 1, 1, 0.9], [0.8, 0.9, 1, 0.7]],
+          "sprite": "fx:dot",
+          "overLife": { "color": [ { "t": 0, "v": [1, 1, 1, 0] }, { "t": 0.1, "v": [1, 1, 1, 1] }, { "t": 0.85, "v": [1, 1, 1, 1] }, { "t": 1, "v": [1, 1, 1, 0] } ] },
+          "forces": { "tangential": [-6, 6] }
+        }
+      ]
+    },
+    {
+      "name": "dark_aura",
+      "emitters": [
+        {
+          "name": "shadow",
+          "maxParticles": 30,
+          "emission": { "rate": 14 },
+          "shape": { "type": "circle", "radius": 14 },
+          "life": [1.0, 1.6],
+          "direction": -90, "spread": 30,
+          "speed": [10, 25],
+          "size": [20, 30],
+          "rotation": [0, 360], "spin": [-30, 30],
+          "color": [0.45, 0.3, 0.6, 1],
+          "sprite": "fx:smoke",
+          "overLife": {
+            "color": [ { "t": 0, "v": [1, 1, 1, 0] }, { "t": 0.3, "v": [1, 1, 1, 0.8] }, { "t": 1, "v": [1, 1, 1, 0] } ],
+            "size": [ { "t": 0, "v": 0.7 }, { "t": 1, "v": 1.4 } ]
+          },
+          "render": { "blend": "multiply" }
+        }
+      ]
+    }
+  ]
+}

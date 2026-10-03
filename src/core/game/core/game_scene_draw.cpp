@@ -152,22 +152,53 @@ bool Game::playPreviewAnim(const std::string& file, const std::string& clip, std
     toms::anim::AnimFile f;
     if (!toms::anim::parseAnim(text, f, &error)) { error = file + ": " + error; return false; }
     if (!f.find(clip)) { error = file + " has no clip '" + clip + "'"; return false; }
-    // Its atlases, in order. ".../atlas/game.atlas" (the original art's or an art style's) is the
-    // game's own sprite atlas: drawn with the loaded one, so the clip follows the chosen art style.
-    // Any other atlas is loaded here, one texture per page.
-    for (uint16_t t : previewTextures_) ren->releaseTexture(t);
-    previewTextures_.clear();
-    previewAtlases_.clear();
-    previewSet_ = toms::anim::AtlasSet();
+    loadPreviewAtlases(file, f.atlases, previewSet_, previewAtlases_, previewTextures_);
+    previewAnim_ = std::move(f);
+    previewPlayer_.play(previewAnim_.find(clip));
+    previewMissing_.clear();
+    std::fprintf(stderr, "[anim] preview %s#%s (%.2fs, %zu atlas(es))\n", file.c_str(), clip.c_str(),
+                 previewAnim_.find(clip)->duration(), previewSet_.entries.size());
+    return true;
+}
+
+bool Game::playPreviewFx(const std::string& file, const std::string& effect, std::string& error) {
+    std::string text;
+    if (!toms::vfsReadAll(file, text)) { error = "cannot read " + file; return false; }
+    toms::fx::ParticleFile f;
+    if (!toms::fx::parseParticles(text, f, &error)) { error = file + ": " + error; return false; }
+    if (!f.find(effect)) { error = file + " has no effect '" + effect + "'"; return false; }
+    loadPreviewAtlases(file, f.atlases, previewFxSet_, previewFxAtlases_, previewFxTextures_);
+    for (const toms::fx::Problem& p : toms::fx::checkParticles(f, &previewFxSet_))
+        std::fprintf(stderr, "[fx] %s %s: %s\n", p.warning ? "warning" : "error", p.where.c_str(), p.text.c_str());
+    previewFxFile_ = std::move(f);
+    const toms::fx::Effect* e = previewFxFile_.find(effect);
+    // Placed before play(): the prewarm already makes world-space particles where the effect is.
+    previewFx_.setTransform(toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f));
+    previewFx_.play(e, e->seed ? e->seed : 1u);
+    previewFxIdle_ = 0;
+    std::fprintf(stderr, "[fx] preview %s#%s (%zu emitter(s), seed %u)\n", file.c_str(), effect.c_str(), e->emitters.size(),
+                 previewFx_.seed());
+    return true;
+}
+
+// Its atlases, in order. ".../atlas/game.atlas" (the original art's or an art style's) is the
+// game's own sprite atlas: drawn with the loaded one, so the preview follows the chosen art style.
+// Any other atlas is loaded here, one texture per page.
+void Game::loadPreviewAtlases(const std::string& file, const std::vector<toms::anim::AtlasRef>& refs, toms::anim::AtlasSet& set,
+                              std::vector<std::unique_ptr<toms::AtlasFile>>& owned, std::vector<uint16_t>& textures) {
+    for (uint16_t t : textures) ren->releaseTexture(t);
+    textures.clear();
+    owned.clear();
+    set = toms::anim::AtlasSet();
     const std::string dir = file.find_last_of("/\\") == std::string::npos ? std::string() : file.substr(0, file.find_last_of("/\\") + 1);
-    for (const toms::anim::AtlasRef& ref : f.atlases) {
+    for (const toms::anim::AtlasRef& ref : refs) {
         const std::string& rel = ref.path;
         const std::string path = rel.size() > 1 && (rel[0] == '/' || rel[1] == ':') ? rel : dir + rel;
         const size_t slash = path.find_last_of("/\\");
         const std::string name = path.substr(slash + 1);
         const std::string parent = slash == std::string::npos ? std::string() : path.substr(0, slash);
         if (name == "game.atlas" && parent.size() >= 5 && parent.compare(parent.size() - 5, 5, "atlas") == 0) {
-            previewSet_.add(spriteAtlas_, ref.id);
+            set.add(spriteAtlas_, ref.id);
             continue;
         }
         std::string atlasText, atlasErr;
@@ -187,27 +218,30 @@ bool Game::playPreviewAnim(const std::string& file, const std::string& clip, std
                 tex = ren->loadTexture(std::vector<uint8_t>(px, px + (size_t)w * h * 4), (uint32_t)w, (uint32_t)h);
                 stbi_image_free(px);
                 pg.w = w; pg.h = h;
-                if (tex != kSpriteAtlasTexture) previewTextures_.push_back(tex);
+                if (tex != kSpriteAtlasTexture) textures.push_back(tex);
             } else {
                 std::fprintf(stderr, "[anim] cannot load the atlas page %s\n", pg.file.c_str());
             }
             pages.push_back(tex);
         }
         atlas->computeUVs();
-        previewSet_.add(*atlas, ref.id, pages);
-        previewAtlases_.push_back(std::move(atlas));
+        set.add(*atlas, ref.id, pages);
+        owned.push_back(std::move(atlas));
     }
-    if (f.atlases.empty()) previewSet_.add(spriteAtlas_);   // no atlas named: the game's own
-    previewAnim_ = std::move(f);
-    previewPlayer_.play(previewAnim_.find(clip));
-    previewMissing_.clear();
-    std::fprintf(stderr, "[anim] preview %s#%s (%.2fs, %zu atlas(es))\n", file.c_str(), clip.c_str(),
-                 previewAnim_.find(clip)->duration(), previewSet_.entries.size());
-    return true;
+    if (refs.empty()) set.add(spriteAtlas_);   // no atlas named: the game's own
 }
 
-// The preview clip, centred on the screen, over the world (before ren->end()).
+// The preview clip and/or effect, centred on the screen, over the world (before ren->end()).
 void Game::drawPreviewAnim() {
+    if (previewFx_.effect()) {
+        const size_t known = previewMissing_.size();
+        previewFx_.setTransform(toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f));
+        previewQuads_.clear();
+        previewFx_.appendQuads(previewFxSet_, glm::mat3(1.0f), nullptr, previewQuads_, &previewMissing_);
+        for (const Quad& q : previewQuads_) ren->drawSprite(q);
+        for (size_t i = known; i < previewMissing_.size(); i++)
+            std::fprintf(stderr, "[fx] sprite '%s' is not in the atlas\n", previewMissing_[i].c_str());
+    }
     if (!previewPlayer_.showing()) return;
     const size_t known = previewMissing_.size();
     toms::anim::evaluate(*previewPlayer_.clip(), previewPlayer_.time(), previewPoses_);

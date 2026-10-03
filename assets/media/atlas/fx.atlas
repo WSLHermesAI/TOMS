@@ -1,0 +1,37 @@
+fx.png
+size: 126, 170
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+dot
+  bounds: 51, 118, 30, 30
+  offsets: 1, 1, 32, 32
+flame_0
+  bounds: 46, 67, 22, 47
+  offsets: 5, 0, 32, 48
+flame_1
+  bounds: 72, 63, 22, 47
+  offsets: 5, 0, 32, 48
+flame_2
+  bounds: 46, 67, 22, 47
+  offsets: 5, 0, 32, 48
+flame_3
+  bounds: 98, 63, 22, 47
+  offsets: 5, 0, 32, 48
+glow
+  bounds: 67, 1, 58, 58
+  offsets: 3, 3, 64, 64
+ring
+  bounds: 1, 1, 62, 62
+  offsets: 1, 1, 64, 64
+smoke
+  bounds: 1, 67, 41, 52
+  offsets: 4, 8, 64, 64
+spark
+  bounds: 51, 152, 63, 12
+  offsets: 1, 0, 64, 12
+square
+  bounds: 85, 114, 8, 8
+star
+  bounds: 1, 123, 46, 46
+  offsets: 1, 1, 48, 48

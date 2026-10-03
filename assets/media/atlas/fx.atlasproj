@@ -1,0 +1,38 @@
+{
+  "animations": [],
+  "embedded": true,
+  "name": "fx",
+  "output": {
+    "dir": ".",
+    "formats": [
+      "atlas",
+      "plist"
+    ]
+  },
+  "references": [],
+  "settings": {
+    "alphaThreshold": 0,
+    "border": 0,
+    "dedupe": true,
+    "defaultPivot": [
+      0.5,
+      0.5
+    ],
+    "extrude": 1,
+    "filter": "Linear",
+    "fixedSize": false,
+    "heuristic": "auto",
+    "maxHeight": 2048,
+    "maxWidth": 2048,
+    "minHeight": 16,
+    "minWidth": 16,
+    "padding": 2,
+    "powerOfTwo": false,
+    "premultiplyAlpha": false,
+    "square": false,
+    "trim": true
+  },
+  "sprites": [],
+  "variants": [],
+  "version": 1
+}

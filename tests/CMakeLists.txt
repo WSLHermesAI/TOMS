@@ -17,7 +17,7 @@
 # layout -- so they run in assets/, the parent of assets/data.
 set(_core "${TOMS_CORE_SRC}")
 set(TOMS_UNIT_TESTS
-    engine/anim_clip_test
+    engine/anim_clip_test           engine/particle_fx_test
     engine/condition_eval_test      engine/encounter_resolve_test  engine/entity_status_test
     engine/job_system_test
     engine/event_bus_test           engine/log_test                engine/node_test
@@ -85,6 +85,10 @@ toms_smoke_test(store        store       d3d11   0.1  --stage=stage02 --frames=1
 # rotation, easing, draw order and additive blending through the real sprite batch.
 toms_smoke_test(anim         anim        d3d11   0.1  --frames=110 --keys=enter@30
                 "--anim=${CMAKE_CURRENT_SOURCE_DIR}/smoke/anim_preview.anim#orbit")
+# A particle effect (docs/examples/fx_recipes.particle, particle_fx.h) over the map: a prewarmed
+# fire from the fx atlas -- flipbook frames, additive and normal emitters, colour/size curves, seed 1.
+toms_smoke_test(fx           fx          d3d11   0.1  --frames=110 --keys=enter@30
+                "--fx=${CMAKE_SOURCE_DIR}/docs/examples/fx_recipes.particle#torch_fire")
 toms_smoke_test(stage_d3d12  stage       d3d12   0.5  --frames=120 --keys=enter@30)
 toms_smoke_test(stage_vulkan stage       vulkan  0.5  --frames=120 --keys=enter@30)
 toms_smoke_test(stage_opengl stage       opengl  0.5  --frames=120 --keys=enter@30)

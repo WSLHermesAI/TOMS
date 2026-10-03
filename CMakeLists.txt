@@ -89,6 +89,10 @@ if(NOT WEB AND NOT ANDROID)
         add_test(NAME atlas.assets_up_to_date
                  COMMAND atlaspack build "${TOMS_ASSET_DIR}/atlas/game.atlasproj" --all-variants --check --quiet)
         set_tests_properties(atlas.assets_up_to_date PROPERTIES LABELS "unit;atlas" TIMEOUT 60)
+        # The particle sprites (tools/atlas/make_fx_sprites.py, docs/17_PARTICLES.md), the same way.
+        add_test(NAME atlas.fx_up_to_date
+                 COMMAND atlaspack build "${TOMS_ASSET_DIR}/atlas/fx.atlasproj" --check --quiet)
+        set_tests_properties(atlas.fx_up_to_date PROPERTIES LABELS "unit;atlas" TIMEOUT 60)
     endif()
 endif()
 

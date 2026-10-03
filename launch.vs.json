@@ -45,6 +45,13 @@
     {
       "type": "default",
       "project": "CMakeLists.txt",
+      "projectTarget": "toms_game.exe (bin\\toms_game.exe)",
+      "name": "toms_game (particle preview: torch_fire)",
+      "args": [ "--fx=${workspaceRoot}\\docs\\examples\\fx_recipes.particle#torch_fire" ]
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
       "projectTarget": "atlaspack.exe (bin\\atlaspack.exe)",
       "name": "atlaspack (rebuild game atlas)",
       "args": [ "build", "${workspaceRoot}\\assets\\media\\atlas\\game.atlasproj", "--all-variants" ]

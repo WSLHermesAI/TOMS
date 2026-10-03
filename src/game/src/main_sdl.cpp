@@ -17,6 +17,7 @@
 //   --fixed-dt=<ms>       every frame advances exactly this long, so a scripted run is identical
 //                         every time (screenshot smoke tests, tests/CMakeLists.txt)
 //   --anim=<file>#<clip>  play one clip of an .anim file over the screen (anim_clip.h; tests)
+//   --fx=<file>#<effect>  play one particle effect of a .particle file over the screen (particle_fx.h)
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
 #include "../../core/engine/vfs.h"   // toms::vfsInit: APK entries need the AAssetManager
@@ -59,7 +60,7 @@ using namespace toms::next;
 namespace {
 
 struct Args {
-    std::string renderer = "auto", assets, stage = "stage01", screenshot, anim;
+    std::string renderer = "auto", assets, stage = "stage01", screenshot, anim, fx;
     int frames = 0;
     bool vsync = true, stats = false;
     int fixedDtMs = 0;       // > 0: deterministic frame time (tests)
@@ -122,6 +123,7 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--clicks=")) parseClicks(v, a);
         else if (const char* v = value(s, "--fixed-dt=")) a.fixedDtMs = std::atoi(v);
         else if (const char* v = value(s, "--anim=")) a.anim = v;
+        else if (const char* v = value(s, "--fx=")) a.fx = v;
         else if (s == "--no-vsync") a.vsync = false;
         else if (s == "--stats") a.stats = true;
     }
@@ -297,6 +299,7 @@ bool appInit(App& app) {
 #endif
     opts.startStage = args.stage;
     opts.previewAnim = args.anim;
+    opts.previewFx = args.fx;
 #ifdef __EMSCRIPTEN__
     opts.enableDebugUi = true;
     // Small screens (phones): grow the UI objects, keep the game resolution -- same thresholds and

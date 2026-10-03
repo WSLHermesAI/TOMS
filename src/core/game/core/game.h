@@ -30,6 +30,7 @@
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
 #include "art_styles.h"      // toms::ArtStyle — the selectable art styles (assets/media/styles)
 #include "atlas_file.h"      // toms::AtlasFile — the prebuilt sprite atlas (tools/atlas)
+#include "particle_fx.h"     // toms::fx — particle effects on the atlases (docs/17_PARTICLES.md)
 #include "anim_player.h"     // toms::anim — node animations on that atlas (anim_clip.h)
 #include "localization.h"    // toms::Locale — key -> localized string (data/text.json)
 #include "Audio.h"        // SFX (miniaudio) -- native device backends on desktop, Web Audio in the browser
@@ -353,6 +354,9 @@ public:
     // whatever is on screen, centred, looping; its events are logged. Draws with the real
     // AnimPlayer through the sprite batch, so a screenshot shows exactly what the game would draw.
     bool playPreviewAnim(const std::string& file, const std::string& clip, std::string& error);
+    // The same for a particle effect (toms_game --fx=<file>#<effect>): centred, a one-shot effect
+    // starts again 0.5 s after it ends. The seed is the effect's, else 1, so screenshots repeat.
+    bool playPreviewFx(const std::string& file, const std::string& effect, std::string& error);
     // The UI's sprite sheet: RCSS made from spriteAtlas_, which GameUi serves to RmlUi as
     // "_atlas.rcss" -- so the UI draws from the same packed texture as the map. Empty without a
     // prebuilt atlas. The revision changes whenever another atlas is loaded (art style switch).
@@ -586,6 +590,16 @@ private:
     std::vector<Quad> previewQuads_;
     std::vector<std::string> previewMissing_;          // sprites already reported missing
     void drawPreviewAnim();
+    // The atlases a preview file names (relative to it), into `set`; a ".../atlas/game.atlas" is
+    // the game's own loaded atlas. Loaded ones are kept in `owned` / `textures`.
+    void loadPreviewAtlases(const std::string& file, const std::vector<toms::anim::AtlasRef>& refs, toms::anim::AtlasSet& set,
+                            std::vector<std::unique_ptr<toms::AtlasFile>>& owned, std::vector<uint16_t>& textures);
+    toms::fx::ParticleFile previewFxFile_;    // playPreviewFx
+    toms::fx::EffectInstance previewFx_;
+    toms::anim::AtlasSet previewFxSet_;
+    std::vector<std::unique_ptr<toms::AtlasFile>> previewFxAtlases_;
+    std::vector<uint16_t> previewFxTextures_;
+    float previewFxIdle_ = 0;                         // seconds since a one-shot effect finished
     // art styles (assets/media/styles/styles.json); style 0 = the original art
     std::vector<toms::ArtStyle> artStyles_{toms::ArtStyle{}};
     int loadedArtStyle_ = 0;                  // the one whose sprites were loaded at startup
