@@ -41,6 +41,7 @@ struct InputState {
 struct SessionOptions {
     std::string assetDir;              // empty = auto (see defaultAssetDir)
     std::string startStage = "stage01";
+    std::string previewAnim;           // "<file>#<clip>": play this .anim clip over the screen (--anim)
     bool        enableDebugUi = true;  // ImGui windows (F1 / F2 / Tab stage select / toasts)
     // Mobile: grow the UI objects, keep the 1024x768 game resolution (Game::setUiScale,
     // the owner's rule). 1.0 = unchanged. The web host sets these on small screens.

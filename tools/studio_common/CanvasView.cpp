@@ -42,25 +42,31 @@ void CanvasView::zoomIn() { setZoom(std::pow(2.0, std::floor(std::log2(m_zoom) *
 
 void CanvasView::zoomOut() { setZoom(std::pow(2.0, std::ceil(std::log2(m_zoom) * 2 - 1.0001) / 2)); }
 
+QTransform CanvasView::viewTransform() const
+{
+    return QTransform(m_zoom, 0, 0, m_zoom, m_offset.x(), m_offset.y());
+}
+
 void CanvasView::fitToView()
 {
-    const QSize cs = contentSize();
-    if (cs.isEmpty() || width() < 40 || height() < 40) return;   // stays pending until it can fit
+    const QRectF cr = contentRect();
+    if (cr.isEmpty() || width() < 40 || height() < 40) return;   // stays pending until it can fit
     m_fitPending = false;
     const double margin = 24;
-    double z = std::min((width() - 2 * margin) / cs.width(), (height() - 2 * margin) / cs.height());
+    double z = std::min((width() - 2 * margin) / cr.width(), (height() - 2 * margin) / cr.height());
     // Prefer an integer zoom when magnifying (crisp pixels), any value when shrinking.
     if (z > 1) z = std::floor(z);
     m_zoom = std::clamp(z, kMinZoom, kMaxZoom);
-    m_offset = QPointF((width() - cs.width() * m_zoom) / 2, (height() - cs.height() * m_zoom) / 2);
+    m_offset = QPointF((width() - cr.width() * m_zoom) / 2 - cr.left() * m_zoom,
+                       (height() - cr.height() * m_zoom) / 2 - cr.top() * m_zoom);
     m_offset = QPointF(std::round(m_offset.x()), std::round(m_offset.y()));
     update();
     emit zoomChanged(m_zoom);
 }
 
-void CanvasView::centerOn(const QRectF& contentRect)
+void CanvasView::centerOn(const QRectF& area)
 {
-    const QRectF w = toWidget(contentRect);
+    const QRectF w = toWidget(area);
     if (rect().contains(w.toAlignedRect())) return;
     m_offset += QPointF(width() / 2.0, height() / 2.0) - w.center();
     update();
@@ -76,8 +82,8 @@ void CanvasView::paintBackground(QPainter& p)
 {
     const Theme::Colors& tc = Theme::colors();
     p.fillRect(rect(), tc.canvasBackground);
-    const QSize cs = contentSize();
-    if (cs.isEmpty()) return;
+    const QRectF cr = contentRect();
+    if (cr.isEmpty()) return;
     QPixmap checker(kCheckerCell * 2, kCheckerCell * 2);
     checker.fill(tc.checkerLight);
     {
@@ -85,7 +91,7 @@ void CanvasView::paintBackground(QPainter& p)
         cp.fillRect(0, 0, kCheckerCell, kCheckerCell, tc.checkerDark);
         cp.fillRect(kCheckerCell, kCheckerCell, kCheckerCell, kCheckerCell, tc.checkerDark);
     }
-    const QRectF area = toWidget(QRectF(QPointF(0, 0), QSizeF(cs)));
+    const QRectF area = toWidget(cr);
     p.fillRect(area, QBrush(checker));
     p.setPen(QPen(tc.pageBorder, 1));
     p.setBrush(Qt::NoBrush);
@@ -168,7 +174,7 @@ void CanvasView::resizeEvent(QResizeEvent* e)
 
 void CanvasView::paintEvent(QPaintEvent*)
 {
-    if (m_fitPending && !contentSize().isEmpty()) fitToView();
+    if (m_fitPending && !contentRect().isEmpty()) fitToView();
     QPainter p(this);
     paintBackground(p);
     paintContent(p);

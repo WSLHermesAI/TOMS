@@ -1,0 +1,314 @@
+{
+  "version": 1,
+  "atlases": ["../../assets/media/atlas/game.atlas"],
+  "clips": [
+    {
+      "name": "fade_in",
+      "length": 0.5,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "slime",
+            "sprite": "slime",
+            "tracks": {
+              "color": [
+                { "t": 0.0, "v": [1, 1, 1, 0], "ease": "quadraticOut" },
+                { "t": 0.5, "v": [1, 1, 1, 1] }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "fade_out",
+      "length": 0.5,
+      "stayAtLastFrame": false,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "slime",
+            "sprite": "slime",
+            "tracks": {
+              "color": [
+                { "t": 0.0, "v": [1, 1, 1, 1], "ease": "quadraticIn" },
+                { "t": 0.5, "v": [1, 1, 1, 0] }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "slide_in",
+      "length": 0.4,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "slime",
+            "sprite": "slime",
+            "tracks": {
+              "pos": [
+                { "t": 0.0, "v": [-64, 0], "ease": "cubicOut" },
+                { "t": 0.4, "v": [0, 0] }
+              ],
+              "color": [
+                { "t": 0.0, "v": [1, 1, 1, 0] },
+                { "t": 0.2, "v": [1, 1, 1, 1] }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_bob",
+      "length": 1.0,
+      "playCount": -1,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "slime",
+            "sprite": "slime",
+            "tracks": {
+              "pos": [
+                { "t": 0.0, "v": [0, 0], "ease": "sinusoidalInOut" },
+                { "t": 0.5, "v": [0, -3], "ease": "sinusoidalInOut" },
+                { "t": 1.0, "v": [0, 0] }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "hop",
+      "length": 0.45,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "slime",
+            "sprite": "slime",
+            "tracks": {
+              "pos": [
+                { "t": 0.0, "v": [0, 0], "ease": "quadraticOut" },
+                { "t": 0.18, "v": [0, -16], "ease": "quadraticIn" },
+                { "t": 0.36, "v": [0, 0] }
+              ],
+              "scale": [
+                { "t": 0.36, "v": [1, 1], "ease": "quadraticOut" },
+                { "t": 0.4, "v": [1.2, 0.8], "ease": "backOut" },
+                { "t": 0.45, "v": [1, 1] }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "pulse",
+      "length": 0.4,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "gem",
+            "sprite": "gem_atk",
+            "tracks": {
+              "scale": [
+                { "t": 0.0, "v": [1, 1], "ease": "quadraticOut" },
+                { "t": 0.15, "v": [1.3, 1.3], "ease": "backOut" },
+                { "t": 0.4, "v": [1, 1] }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "blink",
+      "length": 0.6,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "slime",
+            "sprite": "slime",
+            "tracks": {
+              "visible": [
+                { "t": 0.0, "v": false },
+                { "t": 0.1, "v": true },
+                { "t": 0.2, "v": false },
+                { "t": 0.3, "v": true },
+                { "t": 0.4, "v": false },
+                { "t": 0.5, "v": true }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "spin",
+      "length": 1.0,
+      "playCount": -1,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "coin",
+            "sprite": "coin",
+            "tracks": {
+              "rot": [
+                { "t": 0.0, "v": 0 },
+                { "t": 1.0, "v": 360 }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "flipbook",
+      "length": 0.45,
+      "playCount": -1,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "key",
+            "sprite": "key_yellow",
+            "tracks": {
+              "sprite": [
+                { "t": 0.0, "v": "key_yellow" },
+                { "t": 0.15, "v": "key_blue" },
+                { "t": 0.3, "v": "key_red" }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "hurt",
+      "length": 0.3,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "slime",
+            "sprite": "slime",
+            "tracks": {
+              "pos": [
+                { "t": 0.0, "v": [0, 0] },
+                { "t": 0.05, "v": [-4, 0] },
+                { "t": 0.1, "v": [4, 0] },
+                { "t": 0.15, "v": [-3, 0] },
+                { "t": 0.2, "v": [2, 0] },
+                { "t": 0.25, "v": [0, 0] }
+              ],
+              "color": [
+                { "t": 0.0, "v": [1, 0.3, 0.3, 1], "ease": "quadraticIn" },
+                { "t": 0.3, "v": [1, 1, 1, 1] }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "die",
+      "length": 0.6,
+      "stayAtLastFrame": false,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "slime",
+            "sprite": "slime",
+            "tracks": {
+              "color": [
+                { "t": 0.0, "v": [1, 0.3, 0.3, 1] },
+                { "t": 0.1, "v": [1, 1, 1, 1], "ease": "quadraticIn" },
+                { "t": 0.6, "v": [1, 1, 1, 0] }
+              ],
+              "scale": [
+                { "t": 0.1, "v": [1, 1], "ease": "quadraticIn" },
+                { "t": 0.6, "v": [1.4, 0.2] }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "attack",
+      "length": 0.8,
+      "root": {
+        "name": "attacker",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "player",
+            "tracks": {
+              "pos": [
+                { "t": 0.0, "v": [0, 0], "ease": "quadraticOut" },
+                { "t": 0.15, "v": [28, 0] },
+                { "t": 0.45, "v": [28, 0], "ease": "quadraticInOut" },
+                { "t": 0.75, "v": [0, 0] }
+              ],
+              "event": [
+                { "t": 0.28, "v": "hit" }
+              ]
+            },
+            "children": [
+              {
+                "name": "weapon",
+                "sprite": "gem_atk",
+                "pos": [12, 4],
+                "pivot": [0.5, 0.9],
+                "order": 1,
+                "tracks": {
+                  "visible": [
+                    { "t": 0.0, "v": false },
+                    { "t": 0.15, "v": true },
+                    { "t": 0.5, "v": false }
+                  ],
+                  "rot": [
+                    { "t": 0.15, "v": -100 },
+                    { "t": 0.2, "v": -100, "ease": "cubicOut" },
+                    { "t": 0.32, "v": 80 }
+                  ]
+                }
+              },
+              {
+                "name": "slash_fx",
+                "sprite": "gem_atk",
+                "pos": [30, 0],
+                "order": 2,
+                "blend": "add",
+                "inheritColor": false,
+                "tracks": {
+                  "color": [
+                    { "t": 0.22, "v": [1, 1, 1, 0] },
+                    { "t": 0.26, "v": [1, 1, 1, 1], "ease": "quadraticOut" },
+                    { "t": 0.4, "v": [1, 1, 1, 0] }
+                  ],
+                  "scale": [
+                    { "t": 0.22, "v": [0.6, 0.6], "ease": "quadraticOut" },
+                    { "t": 0.4, "v": [1.6, 1.6] }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

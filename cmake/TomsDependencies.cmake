@@ -1,10 +1,57 @@
 # TomsDependencies.cmake -- third-party libraries, fetched from GitHub at configure time.
 #
 # The first configure downloads and builds bgfx (+ bx, bimg, shaderc), SDL3 and Dear ImGui.
-# That needs git and internet access, and takes a few minutes. Later configures reuse the
-# download in <build>/_deps. Versions are pinned so every machine builds the same thing.
+# That needs git and internet access, and takes a few minutes. Versions are pinned so every
+# machine builds the same thing.
+#
+# The SOURCES are downloaded once into TOMS_DEPS_DIR and shared by every preset (windows-debug,
+# windows-release, web, android ...); only the compiled output stays per preset in
+# <build>/_deps. After a library has been downloaded at its pinned tag, <name>.tag next to it
+# records that tag, and every later configure -- any preset -- uses the folder as it is
+# (FETCHCONTENT_SOURCE_DIR_<NAME>) without running git on it. Changing a GIT_TAG below downloads
+# that library again, once.
+#
+# A lock serializes the downloads: Visual Studio reconfigures its preset on its own whenever a
+# CMake file changes, and two configures cloning into the same folder at once would wreck it.
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
+set(TOMS_DEPS_DIR "${CMAKE_SOURCE_DIR}/Build/_deps-src" CACHE PATH
+    "Downloaded third-party sources, shared by every preset (outside the repo to share across clones)")
+file(MAKE_DIRECTORY "${TOMS_DEPS_DIR}")
+file(LOCK "${TOMS_DEPS_DIR}/.lock" GUARD FILE TIMEOUT 1800 RESULT_VARIABLE _toms_deps_lock)
+if(_toms_deps_lock)
+    message(FATAL_ERROR "[toms] could not lock ${TOMS_DEPS_DIR}/.lock: ${_toms_deps_lock}")
+endif()
+
+# toms_declare_dep(<name> <git repository> <tag> [more FetchContent_Declare arguments])
+function(toms_declare_dep name repo tag)
+    set(dir "${TOMS_DEPS_DIR}/${name}")
+    string(TOUPPER "${name}" up)
+    set(have "")
+    if(EXISTS "${TOMS_DEPS_DIR}/${name}.tag")
+        file(READ "${TOMS_DEPS_DIR}/${name}.tag" have)
+        string(STRIP "${have}" have)
+    endif()
+    if(have STREQUAL tag AND EXISTS "${dir}")
+        # Already downloaded at this tag: use it as it is (no git, no network).
+        set(FETCHCONTENT_SOURCE_DIR_${up} "${dir}" PARENT_SCOPE)
+    endif()
+    FetchContent_Declare(${name}
+        GIT_REPOSITORY ${repo}
+        GIT_TAG        ${tag}
+        GIT_SHALLOW    TRUE
+        SOURCE_DIR     "${dir}"
+        ${ARGN})
+    set_property(GLOBAL PROPERTY TOMS_DEP_TAG_${name} "${tag}")
+endfunction()
+
+# After FetchContent_MakeAvailable: remember the tag each library now has on disk.
+function(toms_deps_fetched)
+    foreach(name IN LISTS ARGN)
+        get_property(tag GLOBAL PROPERTY TOMS_DEP_TAG_${name})
+        file(WRITE "${TOMS_DEPS_DIR}/${name}.tag" "${tag}\n")
+    endforeach()
+endfunction()
 
 # ---- bgfx (through bgfx.cmake, which also builds the shaderc tool) ----
 set(BGFX_BUILD_EXAMPLES        OFF CACHE BOOL "" FORCE)
@@ -28,40 +75,27 @@ set(BGFX_BUILD_TOOLS_SHADER    ${_toms_bgfx_tools} CACHE BOOL "" FORCE)   # shad
 set(BGFX_BUILD_TOOLS_BIN2C     OFF CACHE BOOL "" FORCE)
 set(BGFX_BUILD_TOOLS_GEOMETRY  OFF CACHE BOOL "" FORCE)   # geometryc: turn on for 3D models
 set(BGFX_BUILD_TOOLS_TEXTURE   OFF CACHE BOOL "" FORCE)   # texturec: turn on for KTX/DDS textures
-FetchContent_Declare(bgfx
-    GIT_REPOSITORY https://github.com/bkaradzic/bgfx.cmake.git
-    GIT_TAG        v1.161.9510-579
-    GIT_SHALLOW    TRUE
-    GIT_PROGRESS   TRUE)
+toms_declare_dep(bgfx https://github.com/bkaradzic/bgfx.cmake.git v1.161.9510-579 GIT_PROGRESS   TRUE)
 
 # ---- SDL3 (window, input and the main loop of the game executable) ----
 set(SDL_SHARED       OFF CACHE BOOL "" FORCE)
 set(SDL_STATIC       ON  CACHE BOOL "" FORCE)
 set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 set(SDL_EXAMPLES     OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(SDL3
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        release-3.4.8
-    GIT_SHALLOW    TRUE
-    GIT_PROGRESS   TRUE)
+toms_declare_dep(SDL3 https://github.com/libsdl-org/SDL.git release-3.4.8 GIT_PROGRESS   TRUE)
 
 # ---- Dear ImGui: the same version the old build pins (the game's debug windows use its API) ----
-FetchContent_Declare(imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG        v1.90.9
-    GIT_SHALLOW    TRUE)
+toms_declare_dep(imgui https://github.com/ocornut/imgui.git v1.90.9)
 
 # ---- glm: node.h needs it. The old build found it through the GLM_DIR environment variable
 # (a hand-installed copy); fetching it removes that hidden prerequisite. Header-only.
 set(GLM_BUILD_LIBRARY OFF CACHE BOOL "" FORCE)
 set(GLM_BUILD_TESTS   OFF CACHE BOOL "" FORCE)
 set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(glm
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG        1.0.1
-    GIT_SHALLOW    TRUE)
+toms_declare_dep(glm https://github.com/g-truc/glm.git 1.0.1)
 
 FetchContent_MakeAvailable(bgfx SDL3 imgui glm)
+toms_deps_fetched(bgfx SDL3 imgui glm)
 
 # bgfx fix (Android): an app that comes back from the background gets a NEW surface (ANativeWindow).
 # bgfx::reset() passes it on (SwapChain::nwh), but GlContext::resize() rebuilt the EGL surface on the
@@ -96,11 +130,9 @@ else()
     foreach(_ft ZLIB BZIP2 PNG HARFBUZZ BROTLI)
         set(FT_DISABLE_${_ft} ON CACHE BOOL "" FORCE) # plain TrueType/OpenType, no extra deps
     endforeach()
-    FetchContent_Declare(freetype
-        GIT_REPOSITORY https://github.com/freetype/freetype.git
-        GIT_TAG        VER-2-14-3
-        GIT_SHALLOW    TRUE)
+    toms_declare_dep(freetype https://github.com/freetype/freetype.git VER-2-14-3)
     FetchContent_MakeAvailable(freetype)
+    toms_deps_fetched(freetype)
     # RmlUi only needs the target Freetype::Freetype to exist (its find_package is not REQUIRED).
     if(NOT TARGET Freetype::Freetype)
         add_library(Freetype::Freetype ALIAS freetype)
@@ -114,11 +146,10 @@ set(RMLUI_LUA_BINDINGS         OFF CACHE BOOL "" FORCE)
 set(RMLUI_SVG_PLUGIN           OFF CACHE BOOL "" FORCE)
 set(RMLUI_LOTTIE_PLUGIN        OFF CACHE BOOL "" FORCE)
 set(RMLUI_PRECOMPILED_HEADERS  OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(rmlui
-    GIT_REPOSITORY https://github.com/mikke89/RmlUi.git
-    GIT_TAG        6.3
-    GIT_SHALLOW    TRUE)
+toms_declare_dep(rmlui https://github.com/mikke89/RmlUi.git 6.3)
 FetchContent_MakeAvailable(rmlui)
+toms_deps_fetched(rmlui)
+file(LOCK "${TOMS_DEPS_DIR}/.lock" RELEASE)   # downloads done: other configures may go on
 foreach(_t freetype rmlui rmlui_core rmlui_debugger)
     if(TARGET ${_t})
         set_target_properties(${_t} PROPERTIES FOLDER "third_party/rmlui")

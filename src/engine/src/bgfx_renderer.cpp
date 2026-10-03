@@ -75,6 +75,8 @@ void BgfxRenderer::init(uint32_t, uint32_t) {
 void BgfxRenderer::destroy() {
     withdrawAllTextures();
     destroyTexture(spriteTex_);
+    for (uint16_t& t : extraTex_) destroyTexture(t);
+    extraTex_.clear();
     if (program_ != kInvalid) { bgfx::destroy(bgfx::ProgramHandle{program_}); program_ = kInvalid; }
     if (sampler_ != kInvalid) { bgfx::destroy(bgfx::UniformHandle{sampler_}); sampler_ = kInvalid; }
 }
@@ -121,6 +123,20 @@ void BgfxRenderer::loadSpriteAtlas(const std::vector<uint8_t>& rgba, uint32_t w,
         lendTexture(file, SharedTexture{spriteTex_, (int)w, (int)h, true});
 }
 
+uint16_t BgfxRenderer::loadTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h) {
+    const uint16_t t = createAtlas(rgba, w, h);   // same sampling as the sprite atlas
+    if (t == kInvalid) return kSpriteAtlasTexture;
+    extraTex_.push_back(t);
+    return t;
+}
+
+void BgfxRenderer::releaseTexture(uint16_t texture) {
+    auto it = std::find(extraTex_.begin(), extraTex_.end(), texture);
+    if (it == extraTex_.end()) return;   // not ours (or the sprite atlas): nothing to free
+    destroyTexture(*it);
+    extraTex_.erase(it);
+}
+
 void BgfxRenderer::begin() { sprites_.clear(); }
 void BgfxRenderer::setNode(uint8_t n) { node_ = n; }
 void BgfxRenderer::setNodeFilter(uint8_t n) { nodeFilter_ = n; }
@@ -158,8 +174,13 @@ void BgfxRenderer::submitQuads(const std::vector<Quad>& quads, uint16_t texture)
     const bgfx::VertexLayout& layout = spriteLayout();
     size_t first = 0;
     while (first < quads.size()) {
-        // Transient buffers are limited per frame; submit in chunks that fit (16-bit indices).
-        uint32_t want = (uint32_t)std::min<size_t>(quads.size() - first, 65532 / 4);
+        // One draw call per run of quads with the same texture and blending (normally the whole frame), and
+        // transient buffers are limited per frame: submit in chunks that fit (16-bit indices).
+        const bool additive = quads[first].additive;
+        const uint16_t tex = quads[first].texture;
+        size_t runEnd = first + 1;
+        while (runEnd < quads.size() && quads[runEnd].additive == additive && quads[runEnd].texture == tex) ++runEnd;
+        uint32_t want = (uint32_t)std::min<size_t>(runEnd - first, 65532 / 4);
         uint32_t availV = bgfx::getAvailTransientVertexBuffer(want * 4, layout) / 4;
         uint32_t availI = bgfx::getAvailTransientIndexBuffer(want * 6) / 6;
         uint32_t n = std::min({want, availV, availI});
@@ -176,22 +197,28 @@ void BgfxRenderer::submitQuads(const std::vector<Quad>& quads, uint16_t texture)
         for (uint32_t i = 0; i < n; ++i) {
             const Quad& q = quads[first + i];
             const float x0 = q.rect[0], y0 = q.rect[1], x1 = q.rect[0] + q.rect[2], y1 = q.rect[1] + q.rect[3];
+            const float rectCorners[8] = {x0, y0, x1, y0, x1, y1, x0, y1};
+            const float* c = q.hasCorners ? q.corners : rectCorners;
             const float u0 = q.uv[0], v0 = q.uv[1], u1 = q.uv[2], v1 = q.uv[3];
             const float s = q.solid ? 1.0f : 0.0f;
             const float* t = q.tint;
-            v[i * 4 + 0] = {x0, y0, u0, v0, t[0], t[1], t[2], t[3], s};
-            v[i * 4 + 1] = {x1, y0, u1, v0, t[0], t[1], t[2], t[3], s};
-            v[i * 4 + 2] = {x1, y1, u1, v1, t[0], t[1], t[2], t[3], s};
-            v[i * 4 + 3] = {x0, y1, u0, v1, t[0], t[1], t[2], t[3], s};
+            v[i * 4 + 0] = {c[0], c[1], u0, v0, t[0], t[1], t[2], t[3], s};
+            v[i * 4 + 1] = {c[2], c[3], u1, v0, t[0], t[1], t[2], t[3], s};
+            v[i * 4 + 2] = {c[4], c[5], u1, v1, t[0], t[1], t[2], t[3], s};
+            v[i * 4 + 3] = {c[6], c[7], u0, v1, t[0], t[1], t[2], t[3], s};
             const uint16_t b = (uint16_t)(i * 4);
             idx[i * 6 + 0] = b; idx[i * 6 + 1] = b + 1; idx[i * 6 + 2] = b + 2;
             idx[i * 6 + 3] = b; idx[i * 6 + 4] = b + 2; idx[i * 6 + 5] = b + 3;
         }
         bgfx::setVertexBuffer(0, &tvb);
         bgfx::setIndexBuffer(&tib);
-        if (texture != kInvalid)
-            bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{texture});
-        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+        const uint16_t use = tex == kSpriteAtlasTexture ? texture : tex;   // the sprite atlas, or a loadTexture one
+        if (use != kInvalid)
+            bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{use});
+        // Straight alpha: additive scales the colour by its alpha and adds it.
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+                       (additive ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE)
+                                 : BGFX_STATE_BLEND_ALPHA));
         bgfx::submit(kViewGame, bgfx::ProgramHandle{program_});
         ++lastDrawCalls_;
         first += n;

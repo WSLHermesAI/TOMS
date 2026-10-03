@@ -35,6 +35,8 @@ public:
     void init(uint32_t w, uint32_t h) override;   // w/h ignored: the host owns the backbuffer size
     void loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) override;
     void loadSpriteAtlas(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, const std::string& file) override;
+    uint16_t loadTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h) override;
+    void releaseTexture(uint16_t texture) override;
     void begin() override;
     void drawSprite(const Quad& q) override;
     void setNode(uint8_t n) override;
@@ -72,6 +74,7 @@ private:
     uint16_t program_  = kInvalid;
     uint16_t sampler_  = kInvalid;   // uniform s_tex
     uint16_t spriteTex_ = kInvalid;
+    std::vector<uint16_t> extraTex_;   // loadTexture (freed by releaseTexture or destroy)
     uint32_t devW_ = 1280, devH_ = 720;
     uint8_t  node_ = 0, nodeFilter_ = 0;
     uint32_t lastDrawCalls_ = 0;

@@ -3,6 +3,9 @@
 // styling spike). Split out of game.cpp 2026-09-13; UI drawing moved to RmlUi 2026-09-27.
 #include "game_internal.h"
 
+#include <stb_image.h>   // declarations only (game_assets.cpp has the implementation)
+#include <memory>
+
 using namespace toms::game_detail;
 
 void Game::draw() {
@@ -10,10 +13,10 @@ void Game::draw() {
     // Title phase (Boot screen): drawn INSTEAD of the world, then nothing else. There is
     // nothing meaningful to show behind it yet, and skipping the world draw keeps the title's
     // layout independent of whatever stage happens to be loaded underneath it.
-    if (title_.isOpen()) { ren->end(); return; }
+    if (title_.isOpen()) { drawPreviewAnim(); ren->end(); return; }
     // M7 (first slice): an active ending takes over the whole screen the same way the title does
     // -- nothing behind it is meaningful once a run has actually ended (see triggerEnding()).
-    if (endingActive()) { ren->end(); return; }
+    if (endingActive()) { drawPreviewAnim(); ren->end(); return; }
     // Milestone 9 originally shrank tile size to fit the whole (up to 34x31) grid onto one
     // fixed-size screen -- legible on desktop, but tiny/hard-to-tap on mobile once stages grew
     // past the smallest ones. Now tile size is derived from viewCols_ (how many columns should
@@ -140,7 +143,80 @@ void Game::draw() {
         drawStylingSpikeBackdrop();
     }
     // Battle / dialogue / inventory / store: the RmlUi documents fill the screen, no world behind.
-    ren->end();
+    drawPreviewAnim(); ren->end();
+}
+
+bool Game::playPreviewAnim(const std::string& file, const std::string& clip, std::string& error) {
+    std::string text;
+    if (!toms::vfsReadAll(file, text)) { error = "cannot read " + file; return false; }
+    toms::anim::AnimFile f;
+    if (!toms::anim::parseAnim(text, f, &error)) { error = file + ": " + error; return false; }
+    if (!f.find(clip)) { error = file + " has no clip '" + clip + "'"; return false; }
+    // Its atlases, in order. ".../atlas/game.atlas" (the original art's or an art style's) is the
+    // game's own sprite atlas: drawn with the loaded one, so the clip follows the chosen art style.
+    // Any other atlas is loaded here, one texture per page.
+    for (uint16_t t : previewTextures_) ren->releaseTexture(t);
+    previewTextures_.clear();
+    previewAtlases_.clear();
+    previewSet_ = toms::anim::AtlasSet();
+    const std::string dir = file.find_last_of("/\\") == std::string::npos ? std::string() : file.substr(0, file.find_last_of("/\\") + 1);
+    for (const toms::anim::AtlasRef& ref : f.atlases) {
+        const std::string& rel = ref.path;
+        const std::string path = rel.size() > 1 && (rel[0] == '/' || rel[1] == ':') ? rel : dir + rel;
+        const size_t slash = path.find_last_of("/\\");
+        const std::string name = path.substr(slash + 1);
+        const std::string parent = slash == std::string::npos ? std::string() : path.substr(0, slash);
+        if (name == "game.atlas" && parent.size() >= 5 && parent.compare(parent.size() - 5, 5, "atlas") == 0) {
+            previewSet_.add(spriteAtlas_, ref.id);
+            continue;
+        }
+        std::string atlasText, atlasErr;
+        auto atlas = std::make_unique<toms::AtlasFile>();
+        if (!toms::vfsReadAll(path, atlasText) || !toms::parseAtlas(atlasText, *atlas, &atlasErr)) {
+            std::fprintf(stderr, "[anim] cannot load the atlas %s %s\n", path.c_str(), atlasErr.c_str());
+            continue;
+        }
+        std::vector<uint16_t> pages;
+        for (toms::AtlasPage& pg : atlas->pages) {
+            std::string png;
+            int w = 0, h = 0, ch = 0;
+            unsigned char* px = toms::vfsReadAll(path.substr(0, slash + 1) + pg.file, png)
+                ? stbi_load_from_memory((const stbi_uc*)png.data(), (int)png.size(), &w, &h, &ch, 4) : nullptr;
+            uint16_t tex = kSpriteAtlasTexture;
+            if (px) {
+                tex = ren->loadTexture(std::vector<uint8_t>(px, px + (size_t)w * h * 4), (uint32_t)w, (uint32_t)h);
+                stbi_image_free(px);
+                pg.w = w; pg.h = h;
+                if (tex != kSpriteAtlasTexture) previewTextures_.push_back(tex);
+            } else {
+                std::fprintf(stderr, "[anim] cannot load the atlas page %s\n", pg.file.c_str());
+            }
+            pages.push_back(tex);
+        }
+        atlas->computeUVs();
+        previewSet_.add(*atlas, ref.id, pages);
+        previewAtlases_.push_back(std::move(atlas));
+    }
+    if (f.atlases.empty()) previewSet_.add(spriteAtlas_);   // no atlas named: the game's own
+    previewAnim_ = std::move(f);
+    previewPlayer_.play(previewAnim_.find(clip));
+    previewMissing_.clear();
+    std::fprintf(stderr, "[anim] preview %s#%s (%.2fs, %zu atlas(es))\n", file.c_str(), clip.c_str(),
+                 previewAnim_.find(clip)->duration(), previewSet_.entries.size());
+    return true;
+}
+
+// The preview clip, centred on the screen, over the world (before ren->end()).
+void Game::drawPreviewAnim() {
+    if (!previewPlayer_.showing()) return;
+    const size_t known = previewMissing_.size();
+    toms::anim::evaluate(*previewPlayer_.clip(), previewPlayer_.time(), previewPoses_);
+    previewQuads_.clear();
+    toms::anim::appendQuads(previewPoses_, previewSet_, toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f),
+                            nullptr, previewQuads_, &previewMissing_);
+    for (const Quad& q : previewQuads_) ren->drawSprite(q);
+    for (size_t i = known; i < previewMissing_.size(); i++)
+        std::fprintf(stderr, "[anim] sprite '%s' is not in the atlas\n", previewMissing_[i].c_str());
 }
 
 // ---------------------------------------------------------------------------------------------

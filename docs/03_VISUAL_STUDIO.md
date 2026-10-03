@@ -11,8 +11,9 @@ TOMS is a CMake project. Visual Studio opens it directly with **Open Folder**; t
 3. Visual Studio reads `CMakePresets.json` and starts configuring. Watch **View → Output →
    CMake**.
    - The **first configure downloads bgfx, SDL3, Dear ImGui, glm, FreeType and RmlUi** (a few
-     minutes; they are compiled by the first build). Later configures are fast. Each preset keeps
-     its own copy in `Build\<preset>\_deps`.
+     minutes; they are compiled by the first build). Later configures are fast. The sources are
+     downloaded once into `Build\_deps-src` and shared by every preset; each preset keeps only its
+     own compiled copy in `Build\<preset>\_deps`.
    - If a prerequisite is missing, a popup explains what and where to get it
      ([02](02_INSTALL_WINDOWS.md)). The same text is in the CMake output.
 

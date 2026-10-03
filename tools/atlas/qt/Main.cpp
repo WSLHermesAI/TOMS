@@ -6,6 +6,7 @@
 //   atlas_editor --headless build game.atlasproj    same as `atlaspack build game.atlasproj`
 #include "AtlasDocument.h"
 #include "CanvasPanel.h"
+#include "Console.h"
 #include "Icons.h"
 #include "MainWindow.h"
 #include "ReferencesDialog.h"
@@ -25,30 +26,7 @@
 
 #include <cstdio>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 namespace {
-
-#ifdef _WIN32
-// The exe is a GUI-subsystem program, so it starts without a console. Output that is already
-// redirected (a pipe or a file, as in build scripts) is kept; otherwise borrow the console of the
-// shell that started us so the messages show up there.
-void attachParentConsole()
-{
-    auto usable = [](DWORD which) {
-        HANDLE h = GetStdHandle(which);
-        return h && h != INVALID_HANDLE_VALUE && GetFileType(h) != FILE_TYPE_UNKNOWN;
-    };
-    const bool out = usable(STD_OUTPUT_HANDLE), err = usable(STD_ERROR_HANDLE);
-    if (out && err) return;
-    if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;
-    FILE* f = nullptr;
-    if (!out) freopen_s(&f, "CONOUT$", "w", stdout);
-    if (!err) freopen_s(&f, "CONOUT$", "w", stderr);
-}
-#endif
 
 // Waits (running the event loop) until the document has no build pending.
 void waitForBuild(AtlasDocument* doc, int timeoutMs = 30000)
@@ -257,9 +235,7 @@ int main(int argc, char** argv)
 {
     const std::vector<std::string> args = utf8CommandLine(argc, argv);
     if (!args.empty() && args[0] == "--headless") {
-#ifdef _WIN32
-        attachParentConsole();
-#endif
+        Console::attachParent();
         const int code = atlasCliMain(std::vector<std::string>(args.begin() + 1, args.end()));
         std::fflush(stdout);
         std::fflush(stderr);

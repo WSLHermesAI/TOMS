@@ -87,6 +87,14 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     if (const char* sn = std::getenv("TOMS_SPLIT_NODE")) renderer_->setNodeFilter((uint8_t)std::atoi(sn));
     game_->loadStage(opts.startStage);
     keyWas_.fill(false);
+    if (!opts.previewAnim.empty()) {   // --anim=<file>#<clip> (a developer/test option)
+        const size_t hash = opts.previewAnim.rfind('#');
+        std::string animError;
+        if (hash == std::string::npos ||
+            !game_->playPreviewAnim(opts.previewAnim.substr(0, hash), opts.previewAnim.substr(hash + 1), animError))
+            std::fprintf(stderr, "[anim] --anim=%s: %s\n", opts.previewAnim.c_str(),
+                         hash == std::string::npos ? "expected <file>#<clip>" : animError.c_str());
+    }
 
     // The UI: RmlUi on bgfx (view kViewUi), every screen bound to the game (game_ui.h).
     rml_ = std::make_unique<RmlUi>();

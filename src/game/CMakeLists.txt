@@ -8,6 +8,7 @@ set(L_GAME   ${L}/game)
 add_library(toms_core STATIC
     ${L_ENGINE}/node.cpp ${L_ENGINE}/job_system.cpp ${L_ENGINE}/condition.cpp ${L_ENGINE}/entity_status.cpp
     ${L_ENGINE}/encounter.cpp ${L_ENGINE}/power_bar.cpp
+    ${L_ENGINE}/anim_clip.cpp ${L_ENGINE}/anim_player.cpp
     ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp
     ${L_GAME}/core/game_scene_draw.cpp ${L_GAME}/core/game_input.cpp ${L_GAME}/core/game_inventory.cpp
     ${L_GAME}/core/game_store.cpp ${L_GAME}/core/game_combat.cpp ${L_GAME}/core/game_story.cpp
@@ -28,6 +29,7 @@ target_include_directories(toms_core PUBLIC
     ${L_GAME} ${L_GAME}/core ${L_GAME}/systems ${L_GAME}/save ${L_GAME}/ui ${L_GAME}/audio
     ${L_ENGINE}
     ${TOMS_THIRD_PARTY_DIR}/stb ${TOMS_THIRD_PARTY_DIR}/json ${TOMS_THIRD_PARTY_DIR}/miniaudio
+    ${TOMS_THIRD_PARTY_DIR}             # <tweeny/easing.h> (anim_clip.cpp)
     ${TOMS_SRC_DIR}/engine/src)          # bgfx_renderer.h (through compat/renderer.h), no bgfx headers
 # Only ImGui is linked here; bgfx itself stays out of the core code's compile settings.
 target_link_libraries(toms_core PUBLIC toms_imgui glm::glm)

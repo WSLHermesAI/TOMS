@@ -17,6 +17,7 @@
 # layout -- so they run in assets/, the parent of assets/data.
 set(_core "${TOMS_CORE_SRC}")
 set(TOMS_UNIT_TESTS
+    engine/anim_clip_test
     engine/condition_eval_test      engine/encounter_resolve_test  engine/entity_status_test
     engine/job_system_test
     engine/event_bus_test           engine/log_test                engine/node_test
@@ -80,6 +81,10 @@ toms_smoke_test(inventory    inventory   d3d11   0.1  --frames=110 --keys=enter@
 toms_smoke_test(dialogue     dialogue    d3d11   0.1  --frames=190 --keys=enter@30,esc@80,down@90,down@95,down@100,enter@110,enter@130)
 toms_smoke_test(battle       battle      d3d11   0.1  --frames=420 --keys=enter@30,enter@380 --clicks=788:656@100)
 toms_smoke_test(store        store       d3d11   0.1  --stage=stage02 --frames=150 --keys=enter@30,enter@60,enter@90,b@120)
+# A node animation (tests/smoke/anim_preview.anim, anim_clip.h) over the map: nested transforms,
+# rotation, easing, draw order and additive blending through the real sprite batch.
+toms_smoke_test(anim         anim        d3d11   0.1  --frames=110 --keys=enter@30
+                "--anim=${CMAKE_CURRENT_SOURCE_DIR}/smoke/anim_preview.anim#orbit")
 toms_smoke_test(stage_d3d12  stage       d3d12   0.5  --frames=120 --keys=enter@30)
 toms_smoke_test(stage_vulkan stage       vulkan  0.5  --frames=120 --keys=enter@30)
 toms_smoke_test(stage_opengl stage       opengl  0.5  --frames=120 --keys=enter@30)

@@ -30,6 +30,7 @@
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
 #include "art_styles.h"      // toms::ArtStyle — the selectable art styles (assets/media/styles)
 #include "atlas_file.h"      // toms::AtlasFile — the prebuilt sprite atlas (tools/atlas)
+#include "anim_player.h"     // toms::anim — node animations on that atlas (anim_clip.h)
 #include "localization.h"    // toms::Locale — key -> localized string (data/text.json)
 #include "Audio.h"        // SFX (miniaudio) -- native device backends on desktop, Web Audio in the browser
 
@@ -348,6 +349,10 @@ public:
     // The prebuilt sprite atlas in use (tools/atlas): look a sprite up by name for its child rect,
     // pivot, 9-slice or tags. Empty when the game fell back to the runtime grid.
     const toms::AtlasFile& spriteAtlas() const { return spriteAtlas_; }
+    // Developer/test hook (toms_game --anim=<file>#<clip>): plays one clip of an .anim file over
+    // whatever is on screen, centred, looping; its events are logged. Draws with the real
+    // AnimPlayer through the sprite batch, so a screenshot shows exactly what the game would draw.
+    bool playPreviewAnim(const std::string& file, const std::string& clip, std::string& error);
     // The UI's sprite sheet: RCSS made from spriteAtlas_, which GameUi serves to RmlUi as
     // "_atlas.rcss" -- so the UI draws from the same packed texture as the map. Empty without a
     // prebuilt atlas. The revision changes whenever another atlas is loaded (art style switch).
@@ -572,6 +577,15 @@ private:
     std::vector<std::array<float, 4>> spriteUVs_;
     std::vector<std::array<float, 4>> spriteTrim_;   // x, y, w, h of the kept pixels, as fractions of the original
     toms::AtlasFile spriteAtlas_;
+    toms::anim::AnimFile previewAnim_;        // playPreviewAnim
+    toms::anim::AnimPlayer previewPlayer_;
+    toms::anim::AtlasSet previewSet_;                               // its atlases, in lookup order
+    std::vector<std::unique_ptr<toms::AtlasFile>> previewAtlases_;  // the ones that are not the game's
+    std::vector<uint16_t> previewTextures_;                         // their pages (ren->loadTexture)
+    std::vector<toms::anim::NodePose> previewPoses_;   // per-frame scratch
+    std::vector<Quad> previewQuads_;
+    std::vector<std::string> previewMissing_;          // sprites already reported missing
+    void drawPreviewAnim();
     // art styles (assets/media/styles/styles.json); style 0 = the original art
     std::vector<toms::ArtStyle> artStyles_{toms::ArtStyle{}};
     int loadedArtStyle_ = 0;                  // the one whose sprites were loaded at startup

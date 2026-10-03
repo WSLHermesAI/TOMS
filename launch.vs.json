@@ -38,6 +38,13 @@
     {
       "type": "default",
       "project": "CMakeLists.txt",
+      "projectTarget": "anim_editor.exe (bin\\anim_editor.exe)",
+      "name": "anim_editor (preview clip)",
+      "args": [ "${workspaceRoot}\\tests\\smoke\\anim_preview.anim" ]
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
       "projectTarget": "atlaspack.exe (bin\\atlaspack.exe)",
       "name": "atlaspack (rebuild game atlas)",
       "args": [ "build", "${workspaceRoot}\\assets\\media\\atlas\\game.atlasproj", "--all-variants" ]

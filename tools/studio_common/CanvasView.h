@@ -1,9 +1,12 @@
 #pragma once
 
+#include <QTransform>
 #include <QWidget>
 
-// Zoom/pan base for the two canvases. Content is in image pixels, (0,0) top-left; the view maps
-// it to the widget with a uniform zoom and an offset. Wheel zooms around the cursor; the middle
+// Zoom/pan base for the editors' canvases (tools/studio_common: shared by the atlas and anim
+// editors). Content is in content pixels -- by default an image with (0,0) top-left, or any
+// rectangle a subclass returns from contentRect() (the anim viewport centres its origin); the view
+// maps it to the widget with a uniform zoom and an offset. Wheel zooms around the cursor; the middle
 // button, or Space + left button, pans. Subclasses paint in widget coordinates using
 // toWidget()/toContent() so outlines stay one screen pixel wide at every zoom.
 class CanvasView : public QWidget
@@ -20,13 +23,17 @@ public slots:
     void zoomIn();
     void zoomOut();
     void fitToView();
-    void centerOn(const QRectF& contentRect);   // scrolls (no zoom change) when it is out of view
+    void centerOn(const QRectF& area);   // scrolls (no zoom change) when it is out of view
 
 signals:
     void zoomChanged(double zoom);
 
 protected:
     virtual QSize contentSize() const = 0;
+    // The content area (fit, checkerboard): (0,0)..contentSize() unless a subclass says otherwise.
+    virtual QRectF contentRect() const { return QRectF(QPointF(0, 0), QSizeF(contentSize())); }
+    // Content -> widget, for painting content with QPainter::setTransform.
+    QTransform viewTransform() const;
 
     QPointF toContent(const QPointF& w) const { return (w - m_offset) / m_zoom; }
     QPointF toWidget(const QPointF& c) const { return c * m_zoom + m_offset; }

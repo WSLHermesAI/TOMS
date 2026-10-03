@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "atlases": ["../../assets/media/atlas/game.atlas"],
+  "clips": [
+    {
+      "name": "orbit",
+      "length": 1.0,
+      "playCount": -1,
+      "root": {
+        "name": "stage",
+        "scale": [3, 3],
+        "children": [
+          { "name": "ground", "sprite": "floor", "order": -1, "scale": [2, 2] },
+          {
+            "name": "slime",
+            "sprite": "slime",
+            "tracks": {
+              "pos":   [ { "t": 0, "v": [0, 0], "ease": "quadraticOut" }, { "t": 0.5, "v": [0, -12], "ease": "quadraticIn" }, { "t": 1, "v": [0, 0] } ],
+              "scale": [ { "t": 0, "v": [1, 1] }, { "t": 0.5, "v": [1.2, 0.8], "ease": "backOut" }, { "t": 1, "v": [1, 1] } ],
+              "event": [ { "t": 0.5, "v": "hit" } ]
+            },
+            "children": [
+              {
+                "name": "orbit",
+                "tracks": { "rot": [ { "t": 0, "v": 0 }, { "t": 1, "v": 360 } ] },
+                "children": [
+                  { "name": "gem", "sprite": "gem_atk", "pos": [24, 0], "scale": [0.5, 0.5] },
+                  { "name": "coin", "sprite": "coin", "pos": [-24, 0], "scale": [0.5, 0.5], "blend": "add", "color": [1, 1, 1, 0.8] }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -158,6 +158,10 @@ void Game::newGame(int slot) {
 
 
 void Game::update(int dtMs) {
+    if (previewPlayer_.clip()) {   // --anim preview: advances with the game clock, logs its events
+        previewPlayer_.update(dtMs);
+        for (const std::string& e : previewPlayer_.takeEvents()) std::fprintf(stderr, "[anim] event %s\n", e.c_str());
+    }
     // S3.5 (c): the act card fades out on its own; everything it shows is also on screen elsewhere
     // (the HUD carries the floor), so a player who ignores it loses nothing.
     if (chapterCardMs_ > 0.0f) chapterCardMs_ = std::max(0.0f, chapterCardMs_ - (float)dtMs);

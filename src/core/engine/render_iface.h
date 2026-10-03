@@ -14,11 +14,22 @@
 // magic literal repeated in two files.
 inline constexpr float kBackgroundClearColor[4] = {0.06f, 0.06f, 0.10f, 1.0f};
 
+// Quad::texture of the sprite atlas (BgfxRenderer::loadSprites / loadSpriteAtlas).
+inline constexpr uint16_t kSpriteAtlasTexture = 0xFFFF;
+
 struct Quad {
     float rect[4];   // x,y,w,h in pixels (dst)
     float uv[4];     // u0,v0,u1,v1 (src atlas)
     float tint[4];   // rgba
     bool  solid = false;  // true => draw flat tint, ignore the texture (solid-color rect)
+    // Rotated / scaled / mirrored sprites (anim_player.h): the four corners in pixels -- top-left,
+    // top-right, bottom-right, bottom-left of the uv rect. When set, rect is ignored.
+    bool  hasCorners = false;
+    float corners[8] = {};
+    bool  additive = false;   // blend by adding (glows, sparks) instead of alpha blending
+    // The texture: the sprite atlas (default), or one from IRenderer::loadTexture (another atlas an
+    // animation uses). Quads with the same texture and blending still go in one draw call.
+    uint16_t texture = kSpriteAtlasTexture;
     // Diagnostic-only: which "node" (subsystem) produced this quad. 0 = unspecified.
     // Used by the 4-way split-screen render (TOMS_SPLIT=1) to isolate a stray-sprite bug.
     // 1=stage/map+entities+player, 2=character(player/HUD stat), 3=talk/dialogue, 4=battle/combat.
@@ -72,6 +83,11 @@ public:
     // PNG it came from: the UI draws its icons from that same file and borrows this texture instead
     // of loading it again.
     virtual void loadSpriteAtlas(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, const std::string& file) = 0;
+    // Another texture (RGBA8, straight alpha, point sampled like the sprite atlas) for Quad::texture,
+    // e.g. a second atlas an animation draws from. Returns kSpriteAtlasTexture when it could not be
+    // made (the quads then draw from the sprite atlas). releaseTexture frees it.
+    virtual uint16_t loadTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h) { (void)rgba; (void)w; (void)h; return kSpriteAtlasTexture; }
+    virtual void releaseTexture(uint16_t texture) { (void)texture; }
     virtual void begin() = 0;
     virtual void drawSprite(const Quad& q) = 0;
     // Diagnostic: tag subsequent quads with a "node" id (for the 4-way split-screen

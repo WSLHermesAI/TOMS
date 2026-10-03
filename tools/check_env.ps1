@@ -111,8 +111,10 @@ Add-Result "Git" ([bool]$git) $true `
 # ---------------------------------------------------------------------------------------------
 # 8. Network (only needed until the first configure has downloaded the dependencies)
 # ---------------------------------------------------------------------------------------------
-$depsCached = @(Get-ChildItem (Join-Path $root 'Build') -Directory -ErrorAction SilentlyContinue |
-    Where-Object { Test-Path (Join-Path $_.FullName '_deps\bgfx-src') }).Count -gt 0
+# Shared sources (Build\_deps-src, cmake/TomsDependencies.cmake), or an older per-preset download.
+$depsCached = (Test-Path (Join-Path $root 'Build\_deps-src\bgfx')) -or
+    (@(Get-ChildItem (Join-Path $root 'Build') -Directory -ErrorAction SilentlyContinue |
+    Where-Object { Test-Path (Join-Path $_.FullName '_deps\bgfx-src') }).Count -gt 0)
 $net = $false
 try {
     $req = [System.Net.WebRequest]::Create('https://github.com')

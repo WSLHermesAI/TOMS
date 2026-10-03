@@ -80,6 +80,9 @@ if(NOT WEB AND NOT ANDROID)
         set(ATLAS_BUILD_EDITOR OFF)   # TomsPrerequisites found no usable Qt kit
     endif()
     add_subdirectory(tools/atlas)
+    # The node animation tooling (docs/15_ANIMATION.md): toms_anim (the runtime without the game)
+    # and, with Qt, anim_editor. Shares tools/studio_common with the atlas editor.
+    add_subdirectory(tools/anim)
     if(TOMS_BUILD_TESTS)
         # The project opens from its packed atlas alone, and its other files (plist, rcss, the
         # art styles' atlases) match what it builds.

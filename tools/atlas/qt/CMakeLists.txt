@@ -10,13 +10,16 @@ if(NOT TARGET Qt6::Concurrent)
     return()
 endif()
 
+# Theme, Icons, CanvasView (and the console helpers) live in tools/studio_common, shared with the
+# anim editor (tools/anim).
+if(NOT TARGET studio_common)
+    add_subdirectory("${ATLAS_TOMS_ROOT}/tools/studio_common" "${CMAKE_BINARY_DIR}/tools/studio_common")
+endif()
+
 add_executable(atlas_editor WIN32
     Main.cpp
     AtlasDocument.h      AtlasDocument.cpp
     Commands.h           Commands.cpp
-    Theme.h              Theme.cpp
-    Icons.h              Icons.cpp
-    CanvasView.h         CanvasView.cpp
     AtlasCanvas.h        AtlasCanvas.cpp
     SpriteEditCanvas.h   SpriteEditCanvas.cpp
     CanvasPanel.h        CanvasPanel.cpp
@@ -30,7 +33,7 @@ add_executable(atlas_editor WIN32
     MainWindow.h         MainWindow.cpp)
 set_target_properties(atlas_editor PROPERTIES AUTOMOC ON AUTORCC ON)
 atlas_defaults(atlas_editor)
-target_link_libraries(atlas_editor PRIVATE Qt6::Widgets Qt6::Concurrent atlas_cli)
+target_link_libraries(atlas_editor PRIVATE Qt6::Widgets Qt6::Concurrent atlas_cli studio_common)
 set_target_properties(atlas_editor PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
 # Copy the Qt DLLs and plugins next to the exe, so double-click and F5 both work.
