@@ -2,6 +2,7 @@
 <head>
     <title>Battle</title>
     <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="_atlas.rcss"/>
     <link type="text/rcss" href="battle.rcss"/>
 </head>
 <!-- Battle v2: the attack and defence bars run on their own; tap a button to strike or guard at
@@ -10,8 +11,8 @@
 <body data-model="game" data-event-click="act('battle_continue')">
     <div class="fill focus"></div>
     <div id="title">{{battle.title}}</div>
-    <img id="player" data-attr-src="battle.player_sprite"/>
-    <img id="enemy" data-attr-src="battle.enemy_sprite"/>
+    <img id="player" data-attr-sprite="battle.player_sprite"/>
+    <img id="enemy" data-attr-sprite="battle.enemy_sprite"/>
 
     <div id="player-hp" class="hp"><div class="fill-bar good" data-style-width="battle.player_hp_pct + '%'"></div></div>
     <div id="player-hp-text" class="hp-text">{{battle.player_hp_text}}</div>

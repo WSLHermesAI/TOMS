@@ -2,6 +2,7 @@
 <head>
     <title>HUD</title>
     <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="_atlas.rcss"/>
     <link type="text/rcss" href="hud.rcss"/>
 </head>
 <!-- Over the map while walking: floor name, HP, stats (click = inventory), the menu and store
@@ -20,7 +21,7 @@
         <div class="icon-label">{{hud.menu_label}}</div>
     </div>
     <div id="store-btn" class="icon click" data-class-locked="!hud.store_unlocked" data-event-click="act('hud_store')">
-        <img class="coin" src="../sprites/coin.png" data-attr-src="hud.store_icon"/>
+        <img class="coin" sprite="coin" data-attr-sprite="hud.store_icon"/>
         <div class="icon-label">{{hud.store_label}}</div>
     </div>
 

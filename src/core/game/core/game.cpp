@@ -32,6 +32,11 @@ namespace toms { TextNode::DrawFn TextNode::Draw = nullptr; }
 Quad Game::spriteQuad(float x, float y, float w, float h, int layer, const float tint[4]) {
     Quad q; q.rect[0]=x; q.rect[1]=y; q.rect[2]=w; q.rect[3]=h;
     spriteUV(layer, q.uv);
+    // A trimmed sprite in the prebuilt atlas covers only part of its tile: shrink the quad to match.
+    if (layer >= 0 && layer < (int)spriteTrim_.size()) {
+        const std::array<float, 4>& t = spriteTrim_[layer];
+        q.rect[0] = x + t[0] * w; q.rect[1] = y + t[1] * h; q.rect[2] = t[2] * w; q.rect[3] = t[3] * h;
+    }
     q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
     return q;
 }

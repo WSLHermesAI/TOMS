@@ -11,6 +11,66 @@
 
 using namespace toms::game_detail;
 
+// A prebuilt atlas made by tools/atlas (project media/atlas/game.atlasproj, which keeps its images
+// in the atlas itself): media/atlas/game.atlas + game.png for the original art,
+// media/styles/<id>/atlas/ for each art style. It replaces the grid
+// built in loadSpriteAtlas: sprites keep their own sizes, the .atlas carries child sprites, pivots,
+// 9-slices and tags (spriteAtlas_), and the web build fetches one image instead of thirty. Every
+// sprite in SPRITE_ORDER must be in it, on its first page -- otherwise the grid is used, as before.
+bool Game::loadPrebuiltSpriteAtlas(int style) {
+    const std::string dir = style > 0 ? dataDir + "/styles/" + artStyles_[style].id + "/atlas/" : dataDir + "/atlas/";
+    std::string text;
+    if (!toms::vfsReadAll(dir + "game.atlas", text)) return false;   // none: the grid, quietly
+    toms::AtlasFile atlas;
+    std::string err;
+    if (!toms::parseAtlas(text, atlas, &err) || atlas.pages.empty()) {
+        std::fprintf(stderr, "[assets] %sgame.atlas: %s -- using the sprite grid\n", dir.c_str(), err.empty() ? "no pages" : err.c_str());
+        return false;
+    }
+    for (int i = 0; i < N_SPRITES; i++) {
+        const toms::AtlasRegion* r = atlas.find(SPRITE_ORDER[i]);
+        if (!r || r->page != 0) {
+            std::fprintf(stderr, "[assets] %sgame.atlas has no sprite '%s'%s -- using the sprite grid\n", dir.c_str(),
+                         SPRITE_ORDER[i], r ? " on its first page" : "");
+            return false;
+        }
+    }
+    std::string file;
+    int w = 0, h = 0, ch = 0;
+    unsigned char* d = nullptr;
+    if (toms::vfsReadAll(dir + atlas.pages[0].file, file))
+        d = stbi_load_from_memory((const stbi_uc*)file.data(), (int)file.size(), &w, &h, &ch, 4);
+    if (!d) {
+        std::fprintf(stderr, "[assets] cannot load %s%s -- using the sprite grid\n", dir.c_str(), atlas.pages[0].file.c_str());
+        return false;
+    }
+    std::vector<uint8_t> px(d, d + (size_t)w * h * 4);
+    stbi_image_free(d);
+    if (atlas.pages[0].w != w || atlas.pages[0].h != h) {   // the image wins; UVs follow it
+        std::fprintf(stderr, "[assets] %s is %dx%d, game.atlas says %dx%d\n", atlas.pages[0].file.c_str(), w, h,
+                     atlas.pages[0].w, atlas.pages[0].h);
+        atlas.pages[0].w = w;
+        atlas.pages[0].h = h;
+        atlas.computeUVs();
+    }
+    spriteUVs_.assign(N_SPRITES, {});
+    spriteTrim_.assign(N_SPRITES, {0.0f, 0.0f, 1.0f, 1.0f});
+    for (int i = 0; i < N_SPRITES; i++) {
+        const toms::AtlasRegion* r = atlas.find(SPRITE_ORDER[i]);
+        std::copy(r->uv, r->uv + 4, spriteUVs_[i].begin());
+        if (r->origW > 0 && r->origH > 0)
+            spriteTrim_[i] = {(float)r->offX / r->origW, (float)r->offY / r->origH, (float)r->w / r->origW, (float)r->h / r->origH};
+        idToLayer[SPRITE_ORDER[i]] = i;
+    }
+    ren->loadSpriteAtlas(px, (uint32_t)w, (uint32_t)h, dir + atlas.pages[0].file);
+    std::fprintf(stderr, "[assets] sprites: prebuilt atlas %sgame.atlas, %dx%d, %zu region(s), art style '%s'\n", dir.c_str(),
+                 w, h, atlas.regions.size(), artStyles_[style].id.empty() ? "original" : artStyles_[style].id.c_str());
+    spriteAtlas_ = std::move(atlas);
+    spriteAtlasRevision_++;   // the UI's sprite sheet (uiSpritesheet) follows from the next frame
+    loadedArtStyle_ = style;
+    return true;
+}
+
 // Builds the sprite atlas for art style `style` (index into artStyles_; 0 = the original art) and
 // uploads it, replacing the previous atlas. A style replaces some or all sprites
 // (assets/media/styles/<id>/sprites/<sprite>.png); the others keep the original art. Runs at startup
@@ -20,6 +80,7 @@ bool Game::loadSpriteAtlas(int style) {
     const std::string& assetDir = dataDir;
     if (style < 0 || style >= (int)artStyles_.size()) style = 0;
     const std::string styleDir = style > 0 ? assetDir + "/styles/" + artStyles_[style].id + "/sprites/" : std::string();
+    if (loadPrebuiltSpriteAtlas(style)) return true;
     // load sprites into a single uniform atlas (COLS columns). The cell size is the sprites' own
     // pixel size (32x32 in assets/media; a style may ship 64x64 -- tools/art/make_variant.py).
     const int COLS = 9;
@@ -64,8 +125,11 @@ bool Game::loadSpriteAtlas(int style) {
     std::fprintf(stderr, "[assets] sprites: %d x %dx%d px, art style '%s' (%d replaced)\n", N_SPRITES, SW, SH,
                  artStyles_[style].id.empty() ? "original" : artStyles_[style].id.c_str(), (int)replaced.size());
     ren->loadSprites(layers, SW, SH);
+    spriteUVs_.clear();
+    spriteTrim_.clear();
+    spriteAtlas_ = toms::AtlasFile();   // no prebuilt atlas: the UI has no sprite sheet either
+    spriteAtlasRevision_++;
     loadedArtStyle_ = style;
-    styledSprites_.swap(replaced);   // uiSpritePath() follows the new style from the next UI frame
     return true;
 }
 
@@ -192,8 +256,12 @@ int Game::spriteLayer(const std::string& id) const {
     return it == idToLayer.end() ? 0 : it->second;
 }
 
-// UV rect for a sprite in the uniform grid atlas.
+// UV rect for a sprite: from the prebuilt atlas, or its cell in the uniform grid atlas.
 void Game::spriteUV(int layer, float uv[4]) const {
+    if (layer >= 0 && layer < (int)spriteUVs_.size()) {
+        std::copy(spriteUVs_[layer].begin(), spriteUVs_[layer].end(), uv);
+        return;
+    }
     int cols = spriteGridCols;
     int gx = layer % cols, gy = layer / cols;
     float u0 = (float)gx / cols, v0 = (float)gy / (float)((N_SPRITES + cols - 1) / cols);

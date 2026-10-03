@@ -2,6 +2,7 @@
 <head>
     <title>Store</title>
     <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="_atlas.rcss"/>
     <link type="text/rcss" href="store.rcss"/>
 </head>
 <!-- The item store: tabs, up to three cards per tab, buy buttons. A click outside the panel
@@ -26,7 +27,7 @@
         <div id="cards">
             <div class="card-slot" data-for="item, i : store.items">
             <div class="card" data-class-selected="item.selected" data-event-mouseover="act('store_hover', i)">
-                <img class="icon" data-attr-src="item.icon"/>
+                <img class="icon" data-attr-sprite="item.icon"/>
                 <div class="name">{{item.name}}</div>
                 <div class="desc">{{item.desc}}</div>
                 <div class="effect">{{store.effect_label}}: {{item.effect}}</div>

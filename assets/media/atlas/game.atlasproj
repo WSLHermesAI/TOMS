@@ -1,0 +1,87 @@
+{
+  "animations": [],
+  "embedded": true,
+  "name": "game",
+  "output": {
+    "dir": ".",
+    "formats": [
+      "atlas",
+      "plist"
+    ]
+  },
+  "references": [
+    {
+      "path": "../sprites",
+      "prefix": "",
+      "recursive": false
+    }
+  ],
+  "settings": {
+    "alphaThreshold": 0,
+    "border": 0,
+    "dedupe": true,
+    "defaultPivot": [
+      0.5,
+      0.5
+    ],
+    "extrude": 1,
+    "filter": "Nearest",
+    "fixedSize": false,
+    "heuristic": "auto",
+    "maxHeight": 2048,
+    "maxWidth": 2048,
+    "minHeight": 16,
+    "minWidth": 16,
+    "padding": 2,
+    "powerOfTwo": false,
+    "premultiplyAlpha": false,
+    "square": false,
+    "trim": false
+  },
+  "sprites": [],
+  "variants": [
+    {
+      "id": "dark16",
+      "images": [
+        "bat",
+        "boss_demonlord",
+        "coin",
+        "demon",
+        "door_blue",
+        "door_red",
+        "door_yellow",
+        "exp_up",
+        "gem_atk",
+        "gem_def",
+        "golem",
+        "key_blue",
+        "key_red",
+        "key_yellow",
+        "npc_handmaiden",
+        "npc_king",
+        "npc_princess",
+        "npc_sorcerer",
+        "npc_villager",
+        "player",
+        "potion_blue",
+        "potion_red",
+        "scroll",
+        "skeleton",
+        "slime",
+        "stairs_down",
+        "stairs_up",
+        "wall",
+        "wraith"
+      ],
+      "output": {
+        "dir": "../styles/dark16/atlas",
+        "formats": [
+          "atlas",
+          "plist"
+        ]
+      },
+      "reference": "../styles/dark16/sprites"
+    }
+  ],
+  "version": 1
+}

@@ -1,6 +1,7 @@
 // game.h — game logic: player, movement, auto combat, talking, stage flow, world drawing.
 // The UI (title, HUD, battle, menus, ...) is RmlUi: buildUiState()/uiEvent() below, ui/ui_state.h.
 #pragma once
+#include <array>
 #include <vector>
 #include <string>
 #include <map>
@@ -28,6 +29,7 @@
 #include "title_screen.h"    // toms::TitleScreen/TitleAction — the title phase (New Game/Continue/Settings)
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
 #include "art_styles.h"      // toms::ArtStyle — the selectable art styles (assets/media/styles)
+#include "atlas_file.h"      // toms::AtlasFile — the prebuilt sprite atlas (tools/atlas)
 #include "localization.h"    // toms::Locale — key -> localized string (data/text.json)
 #include "Audio.h"        // SFX (miniaudio) -- native device backends on desktop, Web Audio in the browser
 
@@ -343,6 +345,16 @@ public:
     void refreshArtStyle();
     const std::vector<toms::ArtStyle>& artStyles() const { return artStyles_; }
     int loadedArtStyle() const { return loadedArtStyle_; }                  // in use since startup
+    // The prebuilt sprite atlas in use (tools/atlas): look a sprite up by name for its child rect,
+    // pivot, 9-slice or tags. Empty when the game fell back to the runtime grid.
+    const toms::AtlasFile& spriteAtlas() const { return spriteAtlas_; }
+    // The UI's sprite sheet: RCSS made from spriteAtlas_, which GameUi serves to RmlUi as
+    // "_atlas.rcss" -- so the UI draws from the same packed texture as the map. Empty without a
+    // prebuilt atlas. The revision changes whenever another atlas is loaded (art style switch).
+    std::string uiSpritesheet() const;
+    int spriteAtlasRevision() const { return spriteAtlasRevision_; }
+    // Sprites the UI or the data (items, store) can ask for that the atlas lacks; empty = fine.
+    std::vector<std::string> missingUiSprites() const;
     int chosenArtStyle() const { return toms::artStyleIndex(artStyles_, settings_.artStyle); }
     int activeSlot() const { return activeSlot_; }
     int playTimeSec() const { return playTimeSec_; }
@@ -529,13 +541,15 @@ private:
     void finishCombatLose();
     std::string itemName(const std::string& id) const;
     std::string itemDesc(const std::string& id) const;
-    std::string itemSpritePath(const std::string& id) const;     // icon image for the UI
-    // A sprite's image path for the .rml files: the loaded art style's copy when it has one.
-    std::string uiSpritePath(std::string id) const;
+    std::string itemSprite(const std::string& id) const;         // the item's icon (uiSprite name)
+    // A sprite id (or "<id>.png") as the .rml files name it: <img data-attr-sprite="..."/>.
+    std::string uiSprite(std::string id) const;
     std::string artStyleName(int idx) const;                     // localized, "Original" for 0
     void appendArtStyleRows(std::vector<toms::UiRow>& rows, int selected) const;   // Settings pages
     int settingsStyleRowCount() const { return artStyles_.size() > 1 ? (int)artStyles_.size() : 0; }
     bool loadSpriteAtlas(int style);   // builds + uploads the atlas for one art style
+    // The prebuilt atlas (<dir>/atlas/game.atlas from tools/atlas) for the style, if there is one.
+    bool loadPrebuiltSpriteAtlas(int style);
     std::string itemEffectSummary(const std::string& id) const;  // "HP +40 • DEF +1"
     void buildMenuUi(toms::UiMenu& out) const;                   // the in-game menu part of buildUiState
     // store system
@@ -553,10 +567,15 @@ private:
     std::vector<std::string> spriteIds;
     std::map<std::string,int> idToLayer;
     int spriteGridCols = 9;
+    // With a prebuilt atlas: every sprite's UVs by layer, and the whole atlas (child sprites,
+    // pivots, 9-slices and tags by name). Empty = the runtime grid (spriteGridCols).
+    std::vector<std::array<float, 4>> spriteUVs_;
+    std::vector<std::array<float, 4>> spriteTrim_;   // x, y, w, h of the kept pixels, as fractions of the original
+    toms::AtlasFile spriteAtlas_;
     // art styles (assets/media/styles/styles.json); style 0 = the original art
     std::vector<toms::ArtStyle> artStyles_{toms::ArtStyle{}};
     int loadedArtStyle_ = 0;                  // the one whose sprites were loaded at startup
-    std::vector<std::string> styledSprites_;  // sprite ids that style replaces (for uiSpritePath)
+    int spriteAtlasRevision_ = 0;             // +1 per atlas load (uiSpritesheet changed)
     // item definitions (id -> json from data/items.json)
     std::map<std::string, nlohmann::json> itemDefs;
     // inventory UI state

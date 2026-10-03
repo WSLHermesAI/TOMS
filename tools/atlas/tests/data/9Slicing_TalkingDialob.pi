@@ -1,0 +1,23 @@
+<!-- Author:leeyo,Time:8/19/2024 11:25:17 AM -->
+<PuzzleImage PI_tri="9Slicing_TalkingDialob.ti" PI_morphing="9Slicing_TalkingDialob.mx" OriginalNameSort="bg_01,LeftUp,RightUp,CentertUp" ImageName="9Slicing_TalkingDialob.png" Count="4" GeneratePuzzleimageUnit="0" ImageDistance="1,1">
+    <PuzzleUnit Name="bg_01" UV="0,0,0.390625,0.390625" OffsetPos="0,0" Size="100,100" OriginalSize="100,100" ShowPosInPI="0,0" TriangulatorPoints="0.00,0.00,0.00,99.00,0.00,0.00,99.00,99.00,0.00,0.00,99.00,0.00">
+        <sTrianglesToDrawIndicesBuffer IndexBufferCount="6" IndexBufferBinarySize="24" VertexBufferCount="4" PosBufferBinarySize="48" UVBufferBinarySize="32" />
+    </PuzzleUnit>
+    <PuzzleUnit Name="CentertUp" UV="0.0703125,0,0.3203125,0.0703125" OffsetPos="0,0" Size="64,18" OriginalSize="64,18" ShowPosInPI="18,0" TriangulatorPoints="0.00,0.00,0.00,63.00,0.00,0.00,63.00,17.00,0.00,0.00,17.00,0.00">
+        <sTrianglesToDrawIndicesBuffer IndexBufferCount="6" IndexBufferBinarySize="24" VertexBufferCount="4" PosBufferBinarySize="48" UVBufferBinarySize="32" />
+    </PuzzleUnit>
+    <PuzzleUnit Name="LeftUp" UV="0,0,0.0703125,0.0703125" OffsetPos="0,0" Size="18,18" OriginalSize="18,18" ShowPosInPI="0,0" TriangulatorPoints="0.00,0.00,0.00,17.00,0.00,0.00,17.00,17.00,0.00,0.00,17.00,0.00">
+        <sTrianglesToDrawIndicesBuffer IndexBufferCount="6" IndexBufferBinarySize="24" VertexBufferCount="4" PosBufferBinarySize="48" UVBufferBinarySize="32" />
+    </PuzzleUnit>
+    <PuzzleUnit Name="RightUp" UV="0.3242188,0,0.390625,0.0703125" OffsetPos="0,0" Size="17,18" OriginalSize="17,18" ShowPosInPI="83,0" TriangulatorPoints="0.00,0.00,0.00,16.00,0.00,0.00,16.00,17.00,0.00,0.00,17.00,0.00">
+        <sTrianglesToDrawIndicesBuffer IndexBufferCount="6" IndexBufferBinarySize="24" VertexBufferCount="4" PosBufferBinarySize="48" UVBufferBinarySize="32" />
+    </PuzzleUnit>
+
+
+
+  <PuzzleUnitChild Name="LeftUp" AttachParent="bg_01" RelativePos="0.00,0.00,0.00" />
+  <PuzzleUnitChild Name="CentertUp" AttachParent="bg_01" RelativePos="18.00,0.00,0.00" />
+  <PuzzleUnitChild Name="RightUp" AttachParent="bg_01" RelativePos="83.00,0.00,0.00" />
+
+
+</PuzzleImage>

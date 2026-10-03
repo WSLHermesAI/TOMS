@@ -108,7 +108,7 @@ if(EMSCRIPTEN)
     # Re-link when content changes, so the .data bundle never goes stale.
     file(GLOB_RECURSE _web_content CONFIGURE_DEPENDS
          "${TOMS_DATA_DIR}/*.json" "${TOMS_ASSET_DIR}/sprites/*" "${TOMS_ASSET_DIR}/sfx/*"
-         "${TOMS_ASSET_DIR}/ui/*")
+         "${TOMS_ASSET_DIR}/ui/*" "${TOMS_ASSET_DIR}/atlas/*" "${TOMS_ASSET_DIR}/styles/*")
     set_property(TARGET toms_game APPEND PROPERTY LINK_DEPENDS ${_web_content})
 endif()
 

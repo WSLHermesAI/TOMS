@@ -54,7 +54,7 @@ struct UiHud {
     bool icons = false;                // menu + store buttons (hidden while the in-game menu is up)
     bool store_unlocked = false;
     std::string store_label, menu_label;
-    std::string store_icon;            // the store button's coin (follows the art style)
+    std::string store_icon;            // the store button's coin: a sprite name (_atlas.rcss)
     bool chapter_card = false;
     std::string chapter_title, chapter_sub;
     float chapter_alpha = 0;           // 0..1, fades out
@@ -71,7 +71,7 @@ struct UiPowerBar {                    // a Battle v2 timing bar; zones and mark
 struct UiBattle {
     bool visible = false;
     bool active = false;               // fighting (false: won, showing "tap to continue")
-    std::string title, player_sprite, enemy_sprite;
+    std::string title, player_sprite, enemy_sprite;   // sprite names (_atlas.rcss)
     float player_hp_pct = 0, enemy_hp_pct = 0;
     std::string player_hp_text, enemy_hp_text, log, continue_hint;
     std::string clock_label;
@@ -97,7 +97,7 @@ struct UiDialogue {
 };
 
 struct UiInvItem {
-    std::string icon, name, effect;
+    std::string icon, name, effect;    // icon: a sprite name (_atlas.rcss)
     bool selected = false;
 };
 
@@ -113,7 +113,7 @@ struct UiInventory {
 
 struct UiStoreTab { std::string label; bool active = false; };
 struct UiStoreItem {
-    std::string icon, name, desc, effect, status, price;
+    std::string icon, name, desc, effect, status, price;   // icon: a sprite name (_atlas.rcss)
     bool selected = false, equipped = false;
 };
 

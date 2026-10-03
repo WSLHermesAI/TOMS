@@ -1,0 +1,65 @@
+game.png
+size: 406, 338
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+bat
+  bounds: 1, 1, 64, 64
+boss_demonlord
+  bounds: 1, 69, 64, 64
+coin
+  bounds: 1, 137, 64, 64
+demon
+  bounds: 1, 205, 64, 64
+door_blue
+  bounds: 1, 273, 64, 64
+door_red
+  bounds: 69, 1, 64, 64
+door_yellow
+  bounds: 137, 1, 64, 64
+exp_up
+  bounds: 205, 1, 64, 64
+floor
+  bounds: 341, 273, 32, 32
+gem_atk
+  bounds: 273, 1, 64, 64
+gem_def
+  bounds: 341, 1, 64, 64
+golem
+  bounds: 69, 69, 64, 64
+key_blue
+  bounds: 69, 137, 64, 64
+key_red
+  bounds: 69, 205, 64, 64
+key_yellow
+  bounds: 69, 273, 64, 64
+npc_handmaiden
+  bounds: 137, 69, 64, 64
+npc_king
+  bounds: 205, 69, 64, 64
+npc_princess
+  bounds: 273, 69, 64, 64
+npc_sorcerer
+  bounds: 341, 69, 64, 64
+npc_villager
+  bounds: 137, 137, 64, 64
+player
+  bounds: 137, 205, 64, 64
+potion_blue
+  bounds: 137, 273, 64, 64
+potion_red
+  bounds: 205, 137, 64, 64
+scroll
+  bounds: 273, 137, 64, 64
+skeleton
+  bounds: 341, 137, 64, 64
+slime
+  bounds: 205, 205, 64, 64
+stairs_down
+  bounds: 205, 273, 64, 64
+stairs_up
+  bounds: 273, 205, 64, 64
+wall
+  bounds: 341, 205, 64, 64
+wraith
+  bounds: 273, 273, 64, 64

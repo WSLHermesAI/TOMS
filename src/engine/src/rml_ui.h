@@ -40,6 +40,11 @@ public:
     void update(double timeSeconds);     // animations, data bindings, layout
     void render(uint16_t viewId);        // submits the UI to this bgfx view
 
+    // A document made in memory: any RmlUi file request whose file name is `fileName` (whatever
+    // folder it is linked from) reads `text` instead of a file. The game serves its sprite sheet
+    // this way (GameUi, "_atlas.rcss"). Takes effect for documents loaded afterwards.
+    static void setVirtualFile(const std::string& fileName, const std::string& text);
+
     void toggleDebugger();               // RmlUi's element/style inspector
     bool debuggerVisible() const;
 

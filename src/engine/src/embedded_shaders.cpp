@@ -21,11 +21,15 @@
 #if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/vs_rml.sc.bin.h"
 #endif
+#if defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/fs_rml.sc.bin.h"
+#endif
 #include "glsl/vs_sprite.sc.bin.h"
 #include "glsl/fs_sprite.sc.bin.h"
 #include "glsl/vs_imgui.sc.bin.h"
 #include "glsl/fs_imgui.sc.bin.h"
 #include "glsl/vs_rml.sc.bin.h"
+#include "glsl/fs_rml.sc.bin.h"
 #endif
 #ifndef __EMSCRIPTEN__
 #include "spirv/vs_sprite.sc.bin.h"
@@ -33,12 +37,14 @@
 #include "spirv/vs_imgui.sc.bin.h"
 #include "spirv/fs_imgui.sc.bin.h"
 #include "spirv/vs_rml.sc.bin.h"
+#include "spirv/fs_rml.sc.bin.h"
 #endif
 #include "essl/vs_sprite.sc.bin.h"
 #include "essl/fs_sprite.sc.bin.h"
 #include "essl/vs_imgui.sc.bin.h"
 #include "essl/fs_imgui.sc.bin.h"
 #include "essl/vs_rml.sc.bin.h"
+#include "essl/fs_rml.sc.bin.h"
 
 namespace toms::next {
 namespace {
@@ -49,12 +55,12 @@ struct Blob { const uint8_t* data; uint32_t size; };
 
 struct ProgramBlobs { Blob vs, fs; };
 
-// One profile's three programs. RmlUi reuses the ImGui fragment shader (texture * colour).
+// One profile's three programs.
 #define TOMS_PROGRAMS(ext)                                                                          \
     switch (which) {                                                                                \
     case ShaderProgram::Sprite: out = { TOMS_BLOB(vs_sprite_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
     case ShaderProgram::ImGui:  out = { TOMS_BLOB(vs_imgui_##ext),  TOMS_BLOB(fs_imgui_##ext) };  break; \
-    case ShaderProgram::RmlUi:  out = { TOMS_BLOB(vs_rml_##ext),    TOMS_BLOB(fs_imgui_##ext) };  break; \
+    case ShaderProgram::RmlUi:  out = { TOMS_BLOB(vs_rml_##ext),    TOMS_BLOB(fs_rml_##ext) };    break; \
     }                                                                                               \
     return true
 

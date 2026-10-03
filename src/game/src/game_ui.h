@@ -32,6 +32,8 @@ public:
 
 private:
     bool loadDocuments(std::string& error);
+    // Hands RmlUi the game's sprite sheet ("_atlas.rcss", made from the atlas the map uses).
+    void publishSprites();
 
     struct Doc { std::string file; Rml::ElementDocument* doc = nullptr; bool shown = false; };
     Rml::Context* ctx_ = nullptr;
@@ -41,6 +43,7 @@ private:
     toms::UiState state_;
     bool model_ = false;
     std::string family_ = "toms";
+    int spriteRevision_ = -1;   // Game::spriteAtlasRevision() the documents were loaded with
 };
 
 }  // namespace toms::next

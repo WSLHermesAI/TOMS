@@ -22,6 +22,7 @@ set(TOMS_UNIT_TESTS
     engine/event_bus_test           engine/log_test                engine/node_test
     engine/node_transform_test      engine/object_test             engine/power_bar_test
     engine/state_machine_test
+    game/core/atlas_sprites_test
     game/save/save_test
     game/systems/camera_test        game/systems/cycle_system_test     game/systems/ending_system_test
     game/systems/equipment_actives_test game/systems/equipment_test    game/systems/floor_table_test

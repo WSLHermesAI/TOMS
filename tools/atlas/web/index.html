@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOMS Atlas</title>
+<meta name="description" content="Sprite atlas editor (TOMS atlas tool, WebAssembly build)">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='1' width='6' height='6' fill='%234f9cf7'/%3E%3Crect x='9' y='1' width='6' height='9' fill='%23e6a23c'/%3E%3Crect x='1' y='9' width='6' height='6' fill='%2367c23a'/%3E%3C/svg%3E">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<header id="toolbar">
+  <span class="brand">TOMS Atlas</span>
+  <div class="group">
+    <button id="newBtn" title="New project">New</button>
+    <button id="openBtn" title="Open: pick the .atlasproj together with its packed .atlas and PNG page(s), or a .zip made by Save (Ctrl+O)">Open...</button>
+    <button id="openFolderBtn" title="Open the folder holding the .atlasproj and its packed atlas (Ctrl+Shift+O)">Open folder...</button>
+    <button id="saveBtn" title="Download one .zip: the .atlasproj, its packed atlas (.atlas + PNG pages, which hold the images), the .plist and the other formats, and every variant's atlas (Ctrl+S)">Save</button>
+  </div>
+  <div class="group">
+    <button id="importBtn" title="Import an atlas: pick the .pi / .atlas / .json together with its PNG page(s)">Import atlas...</button>
+    <button id="refsBtn" title="Import new or changed art from the reference folders">Import from references...</button>
+    <button id="extractBtn" title="Download every image as a separate PNG (.zip)">Extract images...</button>
+    <button id="exportBtn" class="primary" title="Download the output formats (always with the .plist) of the base art or the picked variant, without the project (Ctrl+E)">Export files</button>
+  </div>
+  <div class="group">
+    <button id="undoBtn" title="Undo (Ctrl+Z)" disabled>Undo</button>
+    <button id="redoBtn" title="Redo (Ctrl+Y)" disabled>Redo</button>
+  </div>
+  <select id="variantSel" title="Which art to build: the base art or a variant"></select>
+  <span class="grow"></span>
+  <button id="themeBtn" title="Theme: dark / light / follow the system">Dark</button>
+  <input id="openInput" type="file" accept=".atlasproj,.atlas,.png,.zip" multiple hidden>
+  <input id="openFolderInput" type="file" webkitdirectory multiple hidden>
+  <input id="importInput" type="file" accept=".pi,.atlas,.json,.txt,.png" multiple hidden>
+  <input id="filesInput" type="file" accept="image/png" multiple hidden>
+  <input id="folderInput" type="file" webkitdirectory multiple hidden>
+</header>
+
+<main id="layout">
+  <aside id="left" class="panel">
+    <div class="panel-head">
+      <b>Sprites</b> <span id="spriteCount" class="count">0</span>
+      <span class="grow"></span>
+      <button id="addFilesBtn" title="Add PNG files">+ Files</button>
+      <button id="addFolderBtn" title="Add a folder of PNGs (names: the path below the folder)">+ Folder</button>
+    </div>
+    <div class="panel-tools">
+      <input id="spriteFilter" type="search" placeholder="Filter by name or tag" spellcheck="false">
+      <button id="collapseBtn" class="icon" title="Collapse / expand all">&#8597;</button>
+      <button id="deleteBtn" class="icon" title="Delete the selected sprites (Del)">&#10005;</button>
+    </div>
+    <ul id="spriteTree" tabindex="0"></ul>
+  </aside>
+  <div class="splitter v" data-split="left"></div>
+
+  <section id="center">
+    <div id="viewbar">
+      <div id="pageTabs" class="tabs"></div>
+      <div id="editBar" hidden>
+        <button id="backBtn" title="Back to the atlas (Esc)">&#8592; Atlas</button>
+        <span id="editLabel"></span>
+        <span class="hint">drag: new child &middot; handles: resize &middot; circle: pivot &middot; dashed lines: 9-slice</span>
+      </div>
+      <span class="grow"></span>
+      <button id="outlinesBtn" title="Show sprite outlines">Outlines</button>
+      <button id="zoomOutBtn" class="icon" title="Zoom out (-)">&minus;</button>
+      <span id="zoomLabel">100%</span>
+      <button id="zoomInBtn" class="icon" title="Zoom in (+)">+</button>
+      <button id="fitBtn" title="Fit (F)">Fit</button>
+      <button id="oneBtn" title="Actual size (1)">1:1</button>
+    </div>
+    <div id="viewport">
+      <canvas id="view"></canvas>
+      <div id="tip" hidden></div>
+      <div id="emptyHint">
+        <p><b>Drop PNG files or folders here</b></p>
+        <p>or <b>Open...</b> a project (.atlasproj + its packed .atlas and PNG, its folder, or a saved .zip), or <b>Import atlas...</b> (.pi / .atlas / .json + PNG)</p>
+        <p class="small">Double-click a sprite to edit it: draw child sprites, pivot, 9-slice. Wheel zooms, middle drag or Space+drag pans.</p>
+      </div>
+    </div>
+  </section>
+  <div class="splitter h" data-split="bottom"></div>
+  <section id="bottom" class="panel">
+    <div id="bottomTabs" class="tabs">
+      <button id="tab-problems" data-tab="problems">Problems</button>
+      <button data-tab="anims">Animations</button>
+      <button data-tab="logpane">Log</button>
+    </div>
+    <ul id="problems" class="pane"></ul>
+    <div id="anims" class="pane" hidden></div>
+    <div id="logpane" class="pane" hidden><div id="log"></div></div>
+  </section>
+
+  <div class="splitter v" data-split="right"></div>
+  <aside id="right" class="panel">
+    <div class="panel-head"><b>Properties</b></div>
+    <div id="propsBody"></div>
+  </aside>
+</main>
+<footer id="status"></footer>
+<div id="dropHint"><div>Drop PNG files, folders, a project folder or .zip, or an atlas (.pi/.atlas/.json + PNG)</div></div>
+<div id="loading">Loading the atlas tool...</div>
+</body>
+</html>

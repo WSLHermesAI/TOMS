@@ -70,4 +70,23 @@ if(TOMS_BUILD_TESTS AND NOT WEB AND NOT ANDROID)
     add_subdirectory(tests)
 endif()
 
+# The sprite atlas tool (tools/atlas, docs/14_ATLAS_TOOL.md): atlaspack and atlas_editor (Qt).
+# The game's atlas project, assets/media/atlas/game.atlasproj, keeps its images inside the packed
+# atlas next to it (game.atlas + game.png, one more per art style), so there is nothing to generate
+# at build time: the editor writes those files when the project is saved, and they are committed.
+if(NOT WEB AND NOT ANDROID)
+    set(ATLAS_BUILD_EDITOR ${TOMS_BUILD_EDITOR} CACHE BOOL "Build the Qt atlas editor (tools/atlas/qt)")
+    if(NOT TOMS_HAVE_QT)
+        set(ATLAS_BUILD_EDITOR OFF)   # TomsPrerequisites found no usable Qt kit
+    endif()
+    add_subdirectory(tools/atlas)
+    if(TOMS_BUILD_TESTS)
+        # The project opens from its packed atlas alone, and its other files (plist, rcss, the
+        # art styles' atlases) match what it builds.
+        add_test(NAME atlas.assets_up_to_date
+                 COMMAND atlaspack build "${TOMS_ASSET_DIR}/atlas/game.atlasproj" --all-variants --check --quiet)
+        set_tests_properties(atlas.assets_up_to_date PROPERTIES LABELS "unit;atlas" TIMEOUT 60)
+    endif()
+endif()
+
 toms_prerequisites_report()   # prints the summary and shows the popup if anything is missing

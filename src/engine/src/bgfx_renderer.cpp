@@ -1,6 +1,7 @@
 // bgfx_renderer.cpp -- see bgfx_renderer.h.
 #include "bgfx_renderer.h"
 #include "embedded_shaders.h"
+#include "shared_textures.h"
 
 #include <bgfx/bgfx.h>
 #include <bx/math.h>
@@ -72,6 +73,7 @@ void BgfxRenderer::init(uint32_t, uint32_t) {
 }
 
 void BgfxRenderer::destroy() {
+    withdrawAllTextures();
     destroyTexture(spriteTex_);
     if (program_ != kInvalid) { bgfx::destroy(bgfx::ProgramHandle{program_}); program_ = kInvalid; }
     if (sampler_ != kInvalid) { bgfx::destroy(bgfx::UniformHandle{sampler_}); sampler_ = kInvalid; }
@@ -106,8 +108,17 @@ void BgfxRenderer::loadSprites(const std::vector<std::vector<uint8_t>>& layers, 
         std::fprintf(stderr, "[toms] loadSprites: bad layers\n");
         return;
     }
+    withdrawAllTextures();   // the runtime grid is no file the UI could ask for
     destroyTexture(spriteTex_);
     spriteTex_ = createAtlas(atlas, aw, ah);
+}
+
+void BgfxRenderer::loadSpriteAtlas(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, const std::string& file) {
+    withdrawAllTextures();   // before the old texture goes: the UI must not draw with it again
+    destroyTexture(spriteTex_);
+    spriteTex_ = createAtlas(rgba, w, h);
+    if (spriteTex_ != kInvalid && !file.empty())   // the UI's icons come from the same file (shared_textures.h)
+        lendTexture(file, SharedTexture{spriteTex_, (int)w, (int)h, true});
 }
 
 void BgfxRenderer::begin() { sprites_.clear(); }

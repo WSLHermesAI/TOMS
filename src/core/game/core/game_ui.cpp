@@ -39,14 +39,32 @@ toms::UiPowerBar powerBar(const toms::PowerBarParams& p, const CombatState::Auto
 
 }  // namespace
 
-// atlas sprite id (or "<id>.png") -> image path used by the .rml files, relative to assets/media/ui/.
-// The art style loaded at startup wins for the sprites it replaces, so the UI matches the map.
-std::string Game::uiSpritePath(std::string id) const {
+// atlas sprite id (or "<id>.png") -> the sprite name the .rml files use (uiSpritesheet). The art
+// style in use is the atlas loaded, so the UI matches the map without naming the style.
+std::string Game::uiSprite(std::string id) const {
     if (id.empty()) id = "coin";
     if (id.size() > 4 && id.compare(id.size() - 4, 4, ".png") == 0) id.resize(id.size() - 4);
-    if (loadedArtStyle_ > 0 && std::find(styledSprites_.begin(), styledSprites_.end(), id) != styledSprites_.end())
-        return "../styles/" + artStyles_[loadedArtStyle_].id + "/sprites/" + id + ".png";
-    return "../sprites/" + id + ".png";
+    return toms::rmlSpriteName(id);
+}
+
+// The page images are named as seen from assets/media/ui/, where the .rml documents are.
+std::string Game::uiSpritesheet() const {
+    if (spriteAtlas_.pages.empty()) return std::string();
+    const std::string dir = loadedArtStyle_ > 0 ? "../styles/" + artStyles_[loadedArtStyle_].id + "/atlas/" : "../atlas/";
+    return toms::rmlSpritesheets(spriteAtlas_, dir);
+}
+
+std::vector<std::string> Game::missingUiSprites() const {
+    std::vector<std::string> names(SPRITE_ORDER, SPRITE_ORDER + N_SPRITES);
+    for (const auto& kv : itemDefs) names.push_back(kv.second.value("sprite", std::string()));
+    for (const StoreItemDef& s : storeItems_) names.push_back(s.sprite);
+    std::vector<std::string> missing;
+    for (std::string n : names) {
+        if (n.empty()) continue;
+        if (n.size() > 4 && n.compare(n.size() - 4, 4, ".png") == 0) n.resize(n.size() - 4);
+        if (!spriteAtlas_.find(n) && std::find(missing.begin(), missing.end(), n) == missing.end()) missing.push_back(n);
+    }
+    return missing;
 }
 
 std::string Game::artStyleName(int idx) const {
@@ -70,9 +88,9 @@ void Game::appendArtStyleRows(std::vector<toms::UiRow>& rows, int selected) cons
     }
 }
 
-std::string Game::itemSpritePath(const std::string& id) const {
+std::string Game::itemSprite(const std::string& id) const {
     auto it = itemDefs.find(id);
-    return uiSpritePath(it == itemDefs.end() ? "coin" : it->second.value("sprite", std::string("coin.png")));
+    return uiSprite(it == itemDefs.end() ? "coin" : it->second.value("sprite", std::string("coin.png")));
 }
 
 std::string Game::itemEffectSummary(const std::string& id) const {
@@ -227,7 +245,7 @@ void Game::buildUiState(toms::UiState& u) const {
         h.icons = !inGameMenuOpen_;
         h.store_unlocked = storeUnlocked_;
         h.store_label = L.tr("store.icon_label");
-        h.store_icon = uiSpritePath("coin");
+        h.store_icon = uiSprite("coin");
         h.menu_label = L.tr("ingame_menu.title");
         if (chapterCardMs_ > 0.0f && !chapterCardTitle_.empty()) {
             h.chapter_card = true;
@@ -285,8 +303,8 @@ void Game::buildUiState(toms::UiState& u) const {
         b.visible = true;
         b.active = cs.active;
         b.title = L.tr("battle.title") + " " + cs.enemy.name;
-        b.player_sprite = uiSpritePath("player");
-        b.enemy_sprite = uiSpritePath(cs.enemy.boss ? "boss_demonlord" : entSprite(cs.enemy.id));
+        b.player_sprite = uiSprite("player");
+        b.enemy_sprite = uiSprite(cs.enemy.boss ? "boss_demonlord" : entSprite(cs.enemy.id));
         b.player_hp_pct = pct((float)cs.playerHP, (float)pl.maxhp);
         b.enemy_hp_pct = pct((float)std::max(0, cs.enemyHP), (float)cs.enemy.hp);
         b.player_hp_text = L.tr("battle.you") + " HP " + std::to_string(cs.playerHP);
@@ -346,10 +364,10 @@ void Game::buildUiState(toms::UiState& u) const {
         v.stats_label = L.tr("inventory.stats_label");
         v.empty = pl.inv.empty();
         for (size_t i = 0; i < pl.inv.size(); i++)
-            v.items.push_back({itemSpritePath(pl.inv[i]), itemName(pl.inv[i]), itemEffectSummary(pl.inv[i]), (int)i == invSel});
+            v.items.push_back({itemSprite(pl.inv[i]), itemName(pl.inv[i]), itemEffectSummary(pl.inv[i]), (int)i == invSel});
         if (!pl.inv.empty()) {
             const std::string& id = pl.inv[std::max(0, std::min(invSel, (int)pl.inv.size() - 1))];
-            v.d_icon = itemSpritePath(id);
+            v.d_icon = itemSprite(id);
             v.d_name = itemName(id);
             v.d_id = "ID: " + id;
             auto it = itemDefs.find(id);
@@ -385,7 +403,7 @@ void Game::buildUiState(toms::UiState& u) const {
         for (size_t i = 0; i < idx.size(); i++) {
             const StoreItemDef& d = storeItems_[idx[i]];
             toms::UiStoreItem it;
-            it.icon = uiSpritePath(d.sprite);
+            it.icon = uiSprite(d.sprite);
             it.name = L.field(d.name);
             it.desc = L.field(d.desc);
             it.effect = L.field(d.effect_text);

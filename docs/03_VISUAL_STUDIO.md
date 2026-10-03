@@ -39,6 +39,8 @@ Choose the startup item in the **Select Startup Item** dropdown (next to the gre
 | **toms_game (Direct3D 11)** | forces `--renderer=d3d11` |
 | **toms_game (Vulkan)** | forces `--renderer=vulkan` |
 | **toms_editor (Qt + bgfx)** | the editor; its *Play (bgfx)* tab runs the same game code |
+| **atlas_editor (game atlas)** | the sprite atlas editor with `assets\media\atlas\game.atlasproj` open ([14](14_ATLAS_TOOL.md)) |
+| **atlaspack (rebuild game atlas)** | `atlaspack build assets\media\atlas\game.atlasproj --all-variants`, no window |
 
 These come from `launch.vs.json`. If the dropdown only shows `toms_game.exe` / `toms_editor.exe`,
 that works too (default arguments).

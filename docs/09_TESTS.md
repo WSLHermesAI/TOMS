@@ -17,6 +17,7 @@ click. Underneath is `ctest`, CMake's test runner (Visual Studio ships it; `tool
 | Label | Tests | What they check | Needs |
 |---|---|---|---|
 | `unit` | 26 | the game's own `*_test.cpp` programs next to the code in `src/core` (saves, title flow, conditions, battle bars, camera, equipment, skills, forge, hub, endings, cycles, floors, footprints, missions, …), including checks on the shipped `assets/data` | nothing |
+| `atlas` | 3 | `atlas.core`: the atlas tool's packer, child sprites, every export format read back, and old `.pi` files rebuilt pixel for pixel; `atlas_sprites_test`: every sprite name the code, data and UI use is in the game's atlases; `atlas.assets_up_to_date`: `assets/media/atlas/game.atlasproj` opens from its packed atlas alone and its other files are current ([14](14_ATLAS_TOOL.md)) | nothing (all three are also in `unit`; `atlas_sprites_test` only there) |
 | `smoke` | 10 | the real `toms_game` plays a scripted scene; its screenshot must match the reference image in `tests/golden/` | a GPU; each test opens a window for about 2 s |
 | `web` | 4 | `tools/web_smoke_test.mjs` in headless Chrome: title → new game → save → reload → the save is still there, no page errors. Against the single-threaded build, the threaded build (served with the isolation headers), and the packaged page twice: on a server without the headers (it must become threaded through its service worker) and with `?nothreads` ([10](10_THREADS.md)) | the web builds / package (`build_web.bat`), Node 22+, Chrome or Edge; a missing one is **skipped**, not failed |
 

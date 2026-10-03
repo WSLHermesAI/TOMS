@@ -3,6 +3,7 @@
 #include "embedded_shaders.h"
 
 #include "../../core/engine/vfs.h"   // vfsReadAll: APK entries on Android, stdio elsewhere
+#include "shared_textures.h"         // the sprite atlas the map renderer lends to the UI
 #include <RmlUi/Debugger.h>
 #include <bgfx/bgfx.h>
 #include <bx/math.h>
@@ -12,6 +13,7 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <map>
 #include <set>
 
 #ifdef __EMSCRIPTEN__
@@ -101,10 +103,11 @@ public:
         // The desktop backbuffer is sRGB (bgfx_host.cpp) and RCSS colours are sRGB, so the shader
         // linearizes them; the web backbuffer is not sRGB, so they pass through.
 #ifdef __EMSCRIPTEN__
-        const float p[4] = {0, 0, 0, 0};
+        float p[4] = {0, 0, 0, 0};
 #else
-        const float p[4] = {1, 0, 0, 0};
+        float p[4] = {1, 0, 0, 0};
 #endif
+        p[1] = borrowed.count(texture) ? 1.0f : 0.0f;   // straight alpha: fs_rml premultiplies it
         bgfx::setUniform(params, p);
         if (scissorOn) {
             // RmlUi gives the region in UI pixels; bgfx wants backbuffer pixels.
@@ -121,7 +124,19 @@ public:
     }
 
     // ---- textures ----
+    // Textures borrowed from the map renderer (shared_textures.h): never destroyed here, and drawn
+    // with u_rmlParams.y = 1 because their alpha is straight.
+    std::set<Rml::TextureHandle> borrowed;
+    int lentVersion = 0;   // lentTexturesVersion() when `borrowed` was last valid
+
     Rml::TextureHandle LoadTexture(Rml::Vector2i& dimensions, const Rml::String& source) override {
+        if (const SharedTexture* s = findLentTexture(source)) {   // the sprite atlas: already on the GPU
+            dimensions = {s->w, s->h};
+            const Rml::TextureHandle t = (Rml::TextureHandle)s->handle + 1;
+            if (borrowed.insert(t).second)
+                Rml::Log::Message(Rml::Log::LT_INFO, "%s: the map's texture, shared (%dx%d)", source.c_str(), s->w, s->h);
+            return t;
+        }
         int w = 0, h = 0, n = 0;
         std::string file;   // vfs: APK entries on Android
         stbi_uc* px = toms::vfsReadAll(source, file)
@@ -154,6 +169,7 @@ public:
         return bgfx::isValid(t) ? (Rml::TextureHandle)t.idx + 1 : 0;
     }
     void ReleaseTexture(Rml::TextureHandle texture) override {
+        if (borrowed.erase(texture)) return;   // the map renderer owns it
         if (texture) bgfx::destroy(bgfx::TextureHandle{(uint16_t)(texture - 1)});
     }
 
@@ -172,16 +188,23 @@ private:
     float transform[16] = {};
 };
 
-// RmlUi reads its documents (.rml/.rcss) and its fonts through this interface. Its default one uses
-// stdio, which cannot see files inside an APK -- so on Android every document and font needs this path.
-// It is deliberately COMPILED everywhere (so a normal build type-checks it) but INSTALLED only on
-// Android, which is what keeps desktop and web byte-for-byte unchanged: vfsReadAll is the same C stdio
-// read they already used, and RmlUi's own reader stays in charge there.
+// Documents made in memory (RmlUi::setVirtualFile), by file name.
+std::map<std::string, std::string>& virtualFiles() {
+    static std::map<std::string, std::string> files;
+    return files;
+}
+
+// RmlUi reads its documents (.rml/.rcss) and its fonts through this interface, on every platform:
+// vfsReadAll sees inside the APK on Android (RmlUi's default stdio reader cannot) and is plain C stdio
+// elsewhere, and the game's in-memory sprite sheet (virtualFiles) is served from here.
 class FileInterface final : public Rml::FileInterface {
 public:
     Rml::FileHandle Open(const Rml::String& path) override {
         std::string buf;
-        if (!toms::vfsReadAll(path, buf)) return 0;      // 0 == failed open, RmlUi's contract
+        const size_t slash = path.find_last_of("/\\");
+        auto v = virtualFiles().find(slash == std::string::npos ? path : path.substr(slash + 1));
+        if (v != virtualFiles().end()) buf = v->second;
+        else if (!toms::vfsReadAll(path, buf)) return 0;   // 0 == failed open, RmlUi's contract
         return (Rml::FileHandle) new Entry{std::move(buf), 0};
     }
     void Close(Rml::FileHandle file) override { delete (Entry*)file; }
@@ -247,11 +270,7 @@ bool RmlUi::init(int designW, int designH, const std::string& defaultFont, std::
     if (!impl_->render.create()) { error = "RmlUi: shader program missing for this renderer"; impl_.reset(); return false; }
     Rml::SetRenderInterface(&impl_->render);
     Rml::SetSystemInterface(&impl_->system);
-#if defined(__ANDROID__)
-    // APK entries: RmlUi's default file interface uses stdio and would find neither the .rml/.rcss
-    // documents nor the CJK font, which is a black screen with no UI.
-    Rml::SetFileInterface(&impl_->file);
-#endif
+    Rml::SetFileInterface(&impl_->file);   // APK entries on Android, the in-memory sprite sheet everywhere
 #ifdef __EMSCRIPTEN__
     (void)defaultFont;                                  // no font files on the web
     Rml::SetFontEngineInterface(&impl_->canvasFont);
@@ -270,6 +289,7 @@ bool RmlUi::init(int designW, int designH, const std::string& defaultFont, std::
     impl_->context = Rml::CreateContext("game", Rml::Vector2i(designW, designH));
     if (!impl_->context) { error = "RmlUi: CreateContext failed"; shutdown(); return false; }
     Rml::Debugger::Initialise(impl_->context);
+    impl_->render.lentVersion = lentTexturesVersion();
     return true;
 }
 
@@ -325,6 +345,13 @@ void RmlUi::setViewport(float x, float y, float w, float h) {
 
 void RmlUi::update(double timeSeconds) {
     if (!ready()) return;
+    // The map renderer lent another texture (art style switch): drop every texture RmlUi holds so
+    // nothing draws with the old one; they reload, from the new loan, when next needed.
+    if (impl_->render.lentVersion != lentTexturesVersion()) {
+        Rml::ReleaseTextures();
+        impl_->render.borrowed.clear();
+        impl_->render.lentVersion = lentTexturesVersion();
+    }
     impl_->system.now = timeSeconds;
     impl_->context->Update();
 }
@@ -342,6 +369,8 @@ void RmlUi::render(uint16_t viewId) {
     bgfx::touch(viewId);
     impl_->context->Render();
 }
+
+void RmlUi::setVirtualFile(const std::string& fileName, const std::string& text) { virtualFiles()[fileName] = text; }
 
 void RmlUi::toggleDebugger() {
     if (!ready()) return;

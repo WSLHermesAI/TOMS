@@ -29,6 +29,7 @@ bgfx_compile_shaders(TYPE VERTEX
     AS_HEADERS)
 bgfx_compile_shaders(TYPE FRAGMENT
     SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_sprite.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_imgui.sc
+                 ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_rml.sc
     VARYING_DEF  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc
     OUTPUT_DIR   ${TOMS_SHADER_OUT}
     OUT_FILES_VAR TOMS_FS_FILES
@@ -55,7 +56,7 @@ add_library(toms_bgfx STATIC
     shaders/varying.def.sc
     shaders/vs_sprite.sc shaders/fs_sprite.sc
     shaders/vs_imgui.sc  shaders/fs_imgui.sc
-    shaders/vs_rml.sc)
+    shaders/vs_rml.sc    shaders/fs_rml.sc)
 toms_target_defaults(toms_bgfx)
 target_include_directories(toms_bgfx
     PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -80,4 +81,4 @@ if(EMSCRIPTEN)   # the browser draws the UI text (no font files on the web)
 endif()
 target_link_libraries(toms_bgfx PUBLIC RmlUi::RmlUi)
 source_group("shaders" FILES shaders/varying.def.sc shaders/vs_sprite.sc shaders/fs_sprite.sc
-                             shaders/vs_imgui.sc shaders/fs_imgui.sc shaders/vs_rml.sc)
+                             shaders/vs_imgui.sc shaders/fs_imgui.sc shaders/vs_rml.sc shaders/fs_rml.sc)

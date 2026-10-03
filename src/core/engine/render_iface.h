@@ -67,6 +67,11 @@ public:
     virtual void init(uint32_t w, uint32_t h) = 0;
     // layers: one RGBA buffer per sprite (already decoded). sw/sh = sprite cell size.
     virtual void loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) = 0;
+    // A prebuilt sprite atlas page (RGBA8, w x h; tools/atlas). Replaces what loadSprites() made;
+    // the game then takes each sprite's UVs from the .atlas file instead of the grid. `file` is the
+    // PNG it came from: the UI draws its icons from that same file and borrows this texture instead
+    // of loading it again.
+    virtual void loadSpriteAtlas(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, const std::string& file) = 0;
     virtual void begin() = 0;
     virtual void drawSprite(const Quad& q) = 0;
     // Diagnostic: tag subsequent quads with a "node" id (for the 4-way split-screen

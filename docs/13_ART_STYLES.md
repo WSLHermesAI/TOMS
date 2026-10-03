@@ -29,6 +29,10 @@ save/settings.json  "artStyle": "<id>"      玩家的選擇（"" = 原版）
 
 - 風格裡沒有的圖沿用 `assets/media/sprites/` 的原版。
 - 尺寸可以不同（例如風格 64px、原版 32px）：遊戲取最大的尺寸，較小的圖以 nearest-neighbour 放大（像素維持銳利）。
+- 每個風格有預先打包好的 atlas：`assets/media/styles/<id>/atlas/game.atlas` + `game.png`，是
+  `assets/media/atlas/game.atlasproj` 的一個 variant（見 [14](14_ATLAS_TOOL.md)）；風格的圖就存在這張打包好的
+  texture 裡，`styles/<id>/sprites/` 只是匯入用的參考資料夾。有它時遊戲直接用它（每張圖維持原本尺寸）；
+  沒有它時才在啟動時組上面那種格狀 atlas。
 - 地圖、戰鬥畫面、背包/商店圖示、HUD 商店按鈕都跟著風格。
 - 因為放在 `assets/media/` 底下，Windows 打包（`build_windows.bat`）、網頁版、Android 都會自動帶上。
 
@@ -51,6 +55,11 @@ python tools/art/make_variant.py --run Build/art_out/dark16 --name dark16 --size
 
 :: 4. 風格名稱若用到新字，重建 UI 字型（它也會讀 styles.json）
 python tools/make_ui_font.py
+
+:: 5. 在 assets/media/atlas/game.atlasproj 的 "variants" 加一筆（照 dark16 那筆：id、
+::    "reference": "../styles/<id>/sprites"、output dir "../styles/<id>/atlas"），然後把風格的圖匯入並存檔
+::    （編輯器：選這個 variant -> Import From References）。見 docs/14_ATLAS_TOOL.md
+Build\windows-release\bin\atlaspack.exe refs assets\media\atlas\game.atlasproj --variant <id> --import all
 ```
 
 `Build/art_out/` 與 `Build/assets_variants/` 不進版控；`assets/media/styles/` 要進版控（那是出貨內容）。
@@ -68,7 +77,7 @@ python tools/make_ui_font.py
 | 檔案 | 內容 |
 |---|---|
 | `src/core/game/core/art_styles.h` | 讀 `styles.json`、風格索引 |
-| `src/core/game/core/game_assets.cpp` | `loadSpriteAtlas(style)` 組 atlas（含尺寸統一）；`refreshArtStyle()` 在標題畫面套用新選擇 |
+| `src/core/game/core/game_assets.cpp` | `loadPrebuiltSpriteAtlas(style)` 讀預先打包的 atlas；沒有時 `loadSpriteAtlas(style)` 組格狀 atlas（含尺寸統一）；`refreshArtStyle()` 在標題畫面套用新選擇 |
 | `src/core/game/ui/title_screen.*` | 設定頁的風格列與確認視窗（`title_screen_test` 有測） |
 | `src/core/game/core/game_ui.cpp` / `game_store.cpp` | 兩個設定頁的區塊與列、確認視窗文字、UI 圖片路徑；`returnToTitle()` 觸發套用 |
 | `assets/data/text.json` | `settings.style_*` 六種語言 |

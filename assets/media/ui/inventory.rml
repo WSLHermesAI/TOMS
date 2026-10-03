@@ -2,6 +2,7 @@
 <head>
     <title>Inventory</title>
     <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="_atlas.rcss"/>
     <link type="text/rcss" href="inventory.rcss"/>
 </head>
 <!-- The backpack: item list on the left (click to select), the selected item's details and
@@ -24,7 +25,7 @@
             <div id="list">
                 <div data-for="it, i : inventory.items">
                     <div class="item" data-class-selected="it.selected" data-event-click="act('inv_select', i)">
-                        <img class="item-icon" data-attr-src="it.icon"/>
+                        <img class="item-icon" data-attr-sprite="it.icon"/>
                         <div class="item-name">{{it.name}}</div>
                         <div class="item-effect">{{it.effect}}</div>
                         <div class="item-count">x1</div>
@@ -33,7 +34,7 @@
             </div>
             <div id="detail">
                 <div id="d-title">{{inventory.detail_title}}</div>
-                <img id="d-icon" data-attr-src="inventory.d_icon"/>
+                <img id="d-icon" data-attr-sprite="inventory.d_icon"/>
                 <div id="d-name">{{inventory.d_name}}</div>
                 <div id="d-id">{{inventory.d_id}}</div>
                 <div id="d-file">{{inventory.icon_label}}: {{inventory.d_icon_file}}</div>

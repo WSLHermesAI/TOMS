@@ -27,6 +27,20 @@
       "project": "CMakeLists.txt",
       "projectTarget": "toms_editor.exe (bin\\toms_editor.exe)",
       "name": "toms_editor (Qt + bgfx)"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "atlas_editor.exe (bin\\atlas_editor.exe)",
+      "name": "atlas_editor (game atlas)",
+      "args": [ "${workspaceRoot}\\assets\\media\\atlas\\game.atlasproj" ]
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "atlaspack.exe (bin\\atlaspack.exe)",
+      "name": "atlaspack (rebuild game atlas)",
+      "args": [ "build", "${workspaceRoot}\\assets\\media\\atlas\\game.atlasproj", "--all-variants" ]
     }
   ]
 }

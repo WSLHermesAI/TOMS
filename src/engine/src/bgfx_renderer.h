@@ -34,6 +34,7 @@ public:
     // ---- IRenderer ----
     void init(uint32_t w, uint32_t h) override;   // w/h ignored: the host owns the backbuffer size
     void loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) override;
+    void loadSpriteAtlas(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, const std::string& file) override;
     void begin() override;
     void drawSprite(const Quad& q) override;
     void setNode(uint8_t n) override;

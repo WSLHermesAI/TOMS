@@ -20,7 +20,7 @@ is the same on desktop and web.
 | `src/game/src/game_ui.*` | binds `UiState` to RmlUi as the data model `game`, loads the documents, shows and hides them |
 | `src/engine/src/rml_ui.*` | RmlUi on bgfx: render interface, system interface, font loading, debugger |
 | `src/engine/src/rml_canvas_font.*` | web only: RmlUi's font engine on an HTML canvas (the browser draws the text) |
-| `src/engine/shaders/vs_rml.sc` | RmlUi's vertex shader (the fragment shader is ImGui's `fs_imgui.sc`) |
+| `src/engine/shaders/vs_rml.sc`, `fs_rml.sc` | RmlUi's shaders (`fs_rml.sc` premultiplies the game's straight-alpha sprite atlas, which the UI borrows) |
 
 The rules stay in `Game`, the text comes from `data/text.json` through `Locale`, and the look lives in the `.rcss`
 files. There is no UI logic in the host.
@@ -58,7 +58,13 @@ warning; the debugger shows which.
   the map.
 - **Colours:** the value you write is the colour on screen. The shader converts for the desktop's sRGB backbuffer; the
   web has no sRGB backbuffer, so there it passes through.
-- **Images:** `src="../sprites/<id>.png"`, relative to the document. Loaded as sRGB, point-sampled.
+- **Game sprites (icons):** from the packed atlas, by name: `<img sprite="coin"/>`, or bound with
+  `data-attr-sprite="..."` (the model holds sprite names, `Game::uiSprite`). A document that shows sprites links
+  `<link type="text/rcss" href="_atlas.rcss"/>`. That stylesheet is not a file: the game makes it in memory from the
+  atlas it loaded for the map (`Game::uiSpritesheet`), so the UI always matches the map and the art style. When the
+  style changes, the documents reload with the new sheet. `atlas_sprites_test` fails if a sprite name used by the
+  code, `assets/data` or an `.rml` is missing from an atlas ([14](14_ATLAS_TOOL.md)).
+- **Other images:** `src="..."`, relative to the document. Loaded as sRGB, point-sampled.
 - **RmlUi has no default stylesheet.** `common.rcss` makes `div`/`p` block; anything else needs a `display`.
 - **New text (desktop):** after adding characters that are not yet used anywhere (a new dialogue line, a new symbol
   in an `.rml`), run `python tools/make_ui_font.py`, which needs Python 3 with fontTools. `--check` lists what is

@@ -2,6 +2,7 @@
 #include "game_ui.h"
 
 #include "game.h"
+#include "rml_ui.h"
 
 #include <RmlUi/Core.h>
 
@@ -267,6 +268,7 @@ bool GameUi::init(Rml::Context* ctx, Game* game, const std::string& uiDir, std::
     });
 
     game_->buildUiState(state_);   // the documents bind to a filled model
+    publishSprites();
     if (!loadDocuments(error)) return false;
     sync();                        // show the right documents before the first frame is drawn
     return true;
@@ -283,6 +285,18 @@ bool GameUi::loadDocuments(std::string& error) {
         docs_.push_back(d);
     }
     return true;
+}
+
+// Every document that shows sprites links "_atlas.rcss": the RmlUi @spritesheet for the atlas the
+// game loaded (Game::uiSpritesheet). It is made in memory from that atlas, so the UI and the map
+// always agree, and a .rml file only names sprites (<img data-attr-sprite="..."/>).
+void GameUi::publishSprites() {
+    spriteRevision_ = game_->spriteAtlasRevision();
+    const std::string sheet = game_->uiSpritesheet();
+    if (sheet.empty()) Rml::Log::Message(Rml::Log::LT_ERROR, "no prebuilt sprite atlas: the UI has no icons (assets/media/atlas)");
+    for (const std::string& name : game_->missingUiSprites())
+        Rml::Log::Message(Rml::Log::LT_ERROR, "sprite '%s' is used by the game data but is not in the atlas", name.c_str());
+    RmlUi::setVirtualFile("_atlas.rcss", sheet);
 }
 
 void GameUi::setFontFamily(const std::string& family) {
@@ -311,6 +325,10 @@ void GameUi::reload() {
 
 void GameUi::sync() {
     if (!ctx_ || !game_) return;
+    if (game_->spriteAtlasRevision() != spriteRevision_) {   // another art style: new sheet, reload
+        publishSprites();
+        reload();
+    }
     // A screen that is closing keeps its last values while it hides: its rows would otherwise
     // vanish under elements that are still bound to them (and flash empty for a frame).
     toms::UiState next;
