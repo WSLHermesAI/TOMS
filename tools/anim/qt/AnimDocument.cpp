@@ -112,6 +112,14 @@ AnimDocument::AnimDocument(QObject* parent)
     , m_undo(new QUndoStack(this))
 {
     connect(m_undo, &QUndoStack::cleanChanged, this, [this] { emit dirtyChanged(isDirty()); });
+    // First of the clipChanged slots: a clip that becomes current starts unmodified.
+    connect(this, &AnimDocument::clipChanged, this, &AnimDocument::markClipBase);
+    // The solo is a node of the current clip: another clip, or the node gone, ends it.
+    connect(this, &AnimDocument::clipChanged, this, [this] { setSolo(std::nullopt); });
+    connect(this, &AnimDocument::fileChanged, this, [this] {
+        const Clip* c = clip();
+        if (m_solo && (!c || !nodeAt(c->root, *m_solo))) setSolo(std::nullopt);
+    });
     newFile();
 }
 
@@ -190,10 +198,29 @@ bool AnimDocument::save(const QString& path, QString* error)
     const bool hadAbsolute = !m_absoluteInFile.isEmpty();
     m_absoluteInFile.clear();
     m_undo->setClean();
+    markClipBase();   // saved: the clip's changes are kept
     if (moved) emit filePathChanged();
     if (moved || hadAbsolute) emit atlasChanged();   // the stored (relative) paths changed
     emit dirtyChanged(false);
     emit message(tr("Saved %1").arg(QDir::toNativeSeparators(abs)));
+    return true;
+}
+
+bool AnimDocument::writeBackup(const QString& path, QString* error) const
+{
+    AnimFile f = m_state.file;
+    f.atlases.clear();
+    for (int i = 0; i < m_state.atlasesAbs.size(); i++) {
+        toms::anim::AtlasRef r;
+        r.path = u8(QDir::fromNativeSeparators(m_state.atlasesAbs[i]));
+        r.id = i < m_state.atlasIds.size() ? u8(m_state.atlasIds[i]) : toms::anim::defaultAtlasId(r.path);
+        f.atlases.push_back(r);
+    }
+    QSaveFile out(path);
+    if (!out.open(QIODevice::WriteOnly) || out.write(QByteArray::fromStdString(toms::anim::animToJson(f))) < 0 || !out.commit()) {
+        if (error) *error = out.errorString();
+        return false;
+    }
     return true;
 }
 
@@ -634,6 +661,38 @@ const Clip* AnimDocument::clip() const
     return &m_state.file.clips[size_t(m_state.clip)];
 }
 
+std::string AnimDocument::clipJson(const Clip& c)
+{
+    AnimFile f;
+    f.clips.push_back(c);
+    return toms::anim::animToJson(f);
+}
+
+void AnimDocument::markClipBase()
+{
+    const Clip* c = clip();
+    m_clipBaseIndex = c ? m_state.clip : -1;
+    m_clipBase = c ? *c : Clip();
+    m_clipBaseJson = c ? clipJson(*c) : std::string();
+}
+
+bool AnimDocument::clipModified() const
+{
+    const Clip* c = clip();
+    return c && m_clipBaseIndex == m_state.clip && clipJson(*c) != m_clipBaseJson;
+}
+
+bool AnimDocument::discardClipChanges()
+{
+    if (!clipModified()) return false;
+    const Clip base = m_clipBase;
+    return edit(tr("Discard changes to clip %1").arg(qs(base.name)), [&](AnimState& s) {
+        s.file.clips[size_t(s.clip)] = base;
+        s.node.clear();
+        return true;
+    });
+}
+
 void AnimDocument::setClipIndex(int index)
 {
     if (index < 0 || index >= int(m_state.file.clips.size()) || index == m_state.clip) return;
@@ -683,7 +742,38 @@ void AnimDocument::setTime(float t)
     t = std::clamp(t, 0.0f, 3600.0f);
     if (t == m_time) return;
     m_time = t;
+    setPreviewTime(-1);
     emit timeChanged(m_time);
+}
+
+void AnimDocument::setSolo(const std::optional<NodePath>& path)
+{
+    if (path == m_solo) return;
+    m_solo = path;
+    emit soloChanged();
+}
+
+bool AnimDocument::soloShows(const Node* n) const
+{
+    const Clip* c = clip();
+    if (!m_solo || !c) return true;
+    const Node* top = nodeAt(c->root, *m_solo);
+    if (!top) return true;
+    std::function<bool(const Node&)> inside = [&](const Node& x) {
+        if (&x == n) return true;
+        for (const Node& k : x.children)
+            if (inside(k)) return true;
+        return false;
+    };
+    return inside(*top);
+}
+
+void AnimDocument::setPreviewTime(float t)
+{
+    if (!std::isfinite(t) || t < 0) t = -1;
+    if (t == m_preview) return;
+    m_preview = t;
+    emit previewTimeChanged();
 }
 
 float AnimDocument::duration() const
@@ -1134,8 +1224,11 @@ bool AnimDocument::deleteClip(int index)
     return edit(tr("Delete clip"), [&](AnimState& s) {
         if (index < 0 || index >= int(s.file.clips.size())) return false;
         s.file.clips.erase(s.file.clips.begin() + index);
-        s.clip = std::min(index, int(s.file.clips.size()) - 1);
-        s.node.clear();
+        if (index < s.clip) s.clip--;   // another clip: the current one stays current
+        else if (index == s.clip) {
+            s.clip = std::min(index, int(s.file.clips.size()) - 1);
+            s.node.clear();
+        }
         return true;
     });
 }

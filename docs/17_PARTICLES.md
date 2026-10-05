@@ -374,6 +374,8 @@ particle_editor --selftest file.particle outdir                       automated 
 particle_editor --selftest-gpu file.particle outdir                   the same for the game-renderer preview (on screen)
 ```
 
+**Undo, history and backups** work as in the atlas and anim editors ([15](15_ANIMATION.md)): Ctrl+Z / Ctrl+Y, a History dock, and automatic backups (File > Backups).
+
 **The preview uses the game's renderer.** The viewport is a `GameCanvasView` (shared with the atlas
 and anim editors, `tools/studio_common`): a native window that toms_game's `BgfxRenderer` draws
 into (`ParticleViewportGpu.cpp`), with the gizmo and status line as a QPainter overlay on top:

@@ -2,6 +2,7 @@
 
 #include "AnimationDock.h"
 #include "AtlasCanvas.h"
+#include "AutoBackup.h"
 #include "AtlasDocument.h"
 #include "CanvasPanel.h"
 #include "GridSliceDialog.h"
@@ -222,8 +223,14 @@ void MainWindow::createDocks()
     m_propsDock = new PropertiesDock(m_doc, this);
     m_animDock = new AnimationDock(m_doc, this);
     m_problemsDock = new ProblemsDock(m_doc, this);
+    m_historyDock = createHistoryDock(m_doc->undoStack(), this);
+    m_backup = new AutoBackup(m_doc->undoStack(), QStringLiteral(".atlasproj"), [this] { return m_doc->filePath(); },
+                              [this](const QString& p, QString* e) { return m_doc->writeBackup(p, e); }, this);
+    connect(m_backup, &AutoBackup::message, this, [this](const QString& t) { statusBar()->showMessage(t, 5000); });
     addDockWidget(Qt::LeftDockWidgetArea, m_spriteDock);
     addDockWidget(Qt::RightDockWidgetArea, m_propsDock);
+    tabifyDockWidget(m_propsDock, m_historyDock);
+    m_propsDock->raise();
     addDockWidget(Qt::BottomDockWidgetArea, m_problemsDock);
     addDockWidget(Qt::BottomDockWidgetArea, m_animDock);
     tabifyDockWidget(m_problemsDock, m_animDock);
@@ -255,6 +262,8 @@ void MainWindow::createMenus()
     file->addAction(m_exportAct);
     file->addAction(m_exportAllAct);
     file->addAction(m_extractAct);
+    file->addSeparator();
+    m_backup->addMenu(file, this);
     file->addSeparator();
     file->addAction(m_quitAct);
 
@@ -307,7 +316,7 @@ void MainWindow::createMenus()
     m_viewMenu->addAction(m_darkAct);
     m_viewMenu->addAction(m_lightAct);
     m_viewMenu->addSeparator();
-    for (QDockWidget* d : std::initializer_list<QDockWidget*>{m_spriteDock, m_propsDock, m_animDock, m_problemsDock})
+    for (QDockWidget* d : std::initializer_list<QDockWidget*>{m_spriteDock, m_propsDock, m_animDock, m_problemsDock, m_historyDock})
         m_viewMenu->addAction(d->toggleViewAction());
 
     QMenu* help = menuBar()->addMenu(tr("&Help"));

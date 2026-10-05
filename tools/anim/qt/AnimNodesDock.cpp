@@ -1,10 +1,13 @@
 #include "AnimNodesDock.h"
 
 #include "Icons.h"
+#include "anim_keys.h"
 
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QCursor>
 #include <QHeaderView>
+#include <QMenu>
 #include <QMimeData>
 #include <QToolBar>
 #include <QVBoxLayout>
@@ -17,7 +20,7 @@ namespace {
 
 const char* kSpriteMime = "application/x-toms-sprite";
 constexpr int kPathRole = Qt::UserRole + 1;
-enum Column { ColName, ColSprite, ColOrder, ColEye };
+enum Column { ColName, ColSprite, ColOrder, ColPlay, ColSolo, ColEye };
 
 NodePath itemPath(const QTreeWidgetItem* it) { return it ? pathFromString(it->data(ColName, kPathRole).toString()) : NodePath(); }
 
@@ -29,12 +32,20 @@ AnimNodeTree::AnimNodeTree(AnimDocument* doc, QWidget* parent)
     : QTreeWidget(parent)
     , m_doc(doc)
 {
-    setColumnCount(4);
-    setHeaderLabels({tr("Node"), tr("Sprite"), tr("Order"), QString()});
+    setColumnCount(6);
+    setHeaderLabels({tr("Node"), tr("Sprite"), tr("Order"), QString(), QString(), QString()});
+    headerItem()->setIcon(ColSolo, Icons::icon(Icons::Id::Solo));
+    headerItem()->setToolTip(ColSolo, tr("Solo: the viewport draws only that node and its children (click a row's icon; again to end)"));
+    headerItem()->setIcon(ColPlay, Icons::icon(Icons::Id::Loop));
+    headerItem()->setToolTip(ColPlay, tr("Playback: once and stay / once then hide / loop (click a row's icon)"));
     header()->setStretchLastSection(false);
     header()->setSectionResizeMode(ColName, QHeaderView::Stretch);
     header()->setSectionResizeMode(ColSprite, QHeaderView::Stretch);
     header()->setSectionResizeMode(ColOrder, QHeaderView::ResizeToContents);
+    header()->setSectionResizeMode(ColPlay, QHeaderView::Fixed);
+    header()->resizeSection(ColPlay, 26);
+    header()->setSectionResizeMode(ColSolo, QHeaderView::Fixed);
+    header()->resizeSection(ColSolo, 26);
     header()->setSectionResizeMode(ColEye, QHeaderView::Fixed);
     header()->resizeSection(ColEye, 26);
     setUniformRowHeights(true);
@@ -126,6 +137,7 @@ AnimNodesDock::AnimNodesDock(AnimDocument* doc, QWidget* parent)
 
     connect(doc, &AnimDocument::fileChanged, this, &AnimNodesDock::rebuild);
     connect(doc, &AnimDocument::clipChanged, this, &AnimNodesDock::rebuild);
+    connect(doc, &AnimDocument::soloChanged, this, &AnimNodesDock::rebuild);
     connect(doc, &AnimDocument::atlasChanged, this, &AnimNodesDock::rebuild);   // "(auto: id)" follows the lookup
     connect(doc, &AnimDocument::selectionChanged, this, &AnimNodesDock::syncSelection);
     connect(m_tree, &QTreeWidget::itemSelectionChanged, this, [this] {
@@ -134,9 +146,10 @@ AnimNodesDock::AnimNodesDock(AnimDocument* doc, QWidget* parent)
         if (!sel.isEmpty()) m_doc->selectNode(itemPath(sel.first()));
     });
     connect(m_tree, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem* it, int col) {
-        if (col != ColEye) return;
         const NodePath p = itemPath(it);
-        m_doc->editNode(p, tr("Toggle visible"), [](Node& n) { n.visible = !n.visible; });
+        if (col == ColEye) m_doc->editNode(p, tr("Toggle visible"), [](Node& n) { n.visible = !n.visible; });
+        if (col == ColPlay) playbackMenu(p, QCursor::pos());
+        if (col == ColSolo) m_doc->setSolo(m_doc->solo() == p ? std::nullopt : std::optional<NodePath>(p));
     });
     connect(m_tree, &QTreeWidget::itemChanged, this, [this](QTreeWidgetItem* it, int col) {
         if (m_updating || col != ColName) return;
@@ -164,6 +177,30 @@ QTreeWidgetItem* AnimNodesDock::itemFor(const NodePath& path) const
     return it;
 }
 
+void AnimNodesDock::playbackMenu(const NodePath& path, const QPoint& globalPos)
+{
+    const toms::anim::Clip* clip = m_doc->clip();
+    const Node* node = clip ? animed::nodeAt(clip->root, path) : nullptr;
+    if (!node) return;
+    const int cur = node->loop ? 2 : node->stayAtLastFrame ? 0 : 1;
+    QMenu menu(this);
+    const QString names[3] = {tr("Once, stay at the last key"), tr("Once, then hide"), tr("Loop")};
+    const Icons::Id icons[3] = {Icons::Id::Play, Icons::Id::Stop, Icons::Id::Loop};
+    for (int i = 0; i < 3; i++) {
+        QAction* a = menu.addAction(Icons::icon(icons[i]), names[i]);
+        a->setCheckable(true);
+        a->setChecked(i == cur);
+        a->setData(i);
+    }
+    QAction* chosen = menu.exec(globalPos);
+    if (!chosen) return;
+    const int i = chosen->data().toInt();
+    m_doc->editNode(path, tr("Playback"), [i](Node& n) {
+        n.loop = i == 2;
+        n.stayAtLastFrame = i != 1;
+    });
+}
+
 void AnimNodesDock::rebuild()
 {
     m_updating = true;
@@ -189,6 +226,20 @@ void AnimNodesDock::rebuild()
             it->setText(ColOrder, QString::number(n.order));
             it->setTextAlignment(ColOrder, Qt::AlignCenter);
             it->setToolTip(ColOrder, tr("order: < 0 draws before the parent's own sprite"));
+            // Playback: a looping / hiding node shows it; a plain one has a faint play icon to click.
+            const QIcon play = Icons::icon(n.loop ? Icons::Id::Loop : n.stayAtLastFrame ? Icons::Id::Play : Icons::Id::Stop);
+            it->setIcon(ColPlay, n.loop || !n.stayAtLastFrame ? play : QIcon(play.pixmap(m_tree->iconSize(), QIcon::Disabled)));
+            it->setToolTip(ColPlay, (n.loop ? tr("Loop: plays its keys again, forever (also after the clip ends)")
+                                     : n.stayAtLastFrame ? tr("Once, stay at the last key")
+                                                         : tr("Once, then hide (with its children)")) +
+                                        tr("\nClick to change"));
+            const bool solo = m_doc->solo() == p;
+            const QIcon target = Icons::icon(Icons::Id::Solo);
+            it->setIcon(ColSolo, solo ? target : QIcon(target.pixmap(m_tree->iconSize(), QIcon::Disabled)));
+            it->setToolTip(ColSolo, solo ? tr("Solo: only this node and its children are drawn (click to end)")
+                                         : tr("Solo: draw only this node and its children"));
+            if (m_doc->solo() && !m_doc->soloShows(&n))   // not drawn now
+                it->setForeground(ColName, palette().color(QPalette::PlaceholderText));
             it->setIcon(ColEye, Icons::icon(n.visible ? Icons::Id::Eye : Icons::Id::EyeOff));
             it->setToolTip(ColEye, tr("Rest visibility (click to toggle)"));
             Qt::ItemFlags f = Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsDropEnabled;

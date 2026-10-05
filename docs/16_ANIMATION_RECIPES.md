@@ -55,6 +55,8 @@ that is checked by `ctest` (`anim.check_recipes`). Copy from it.
 | `order` | `0` | draw order among siblings (higher = in front); `< 0` = behind the parent's own sprite |
 | `blend` | `"normal"` | `"add"` = additive (glows, flashes, slashes) |
 | `inheritColor` | `true` | `false` = ignore the parents' colour/fade |
+| `loop` | `false` | `true` = after its last key, play its keys (and its children's) again, forever, also after the clip ends |
+| `stayAtLastFrame` | `true` | on a node: `false` = hide it and its children after its last key |
 | `tracks` | none | the keys, one array per channel (below) |
 | `children` | none | child nodes: they move, turn, scale and fade with this node |
 
@@ -180,6 +182,25 @@ right, getting smaller each time:
 
 **Die** (`die`, 0.6 s, `"stayAtLastFrame": false`): a red flash, then the node fades out
 while it squashes flat (scale to `[1.4, 0.2]`).
+
+**Popup with parts that stay, go and loop** (`popup` in
+[examples/anim_child_timing.anim](examples/anim_child_timing.anim)):
+- **The panel** scales in with `backOut` and stays (the default).
+- **A flash** under it fades out and has `"stayAtLastFrame": false`, so it is gone afterwards.
+- **A badge** pops in later (0.3–0.6 s) and stays.
+- **An `orbit` group** with `"loop": true` turns 0 → 360 over 0.5–2.5 s, carrying a coin around.
+- **A slime** with `"loop": true` bobs up and down (keys at 0.6, 1.1, 1.6 s, with the same value
+  at the first and last key so the loop is seamless).
+
+After 2.5 s the clip has ended: the panel and badge hold, the flash is hidden, and the coin and
+slime keep moving.
+```json
+{ "name": "orbit", "loop": true,
+  "tracks": { "rot": [ { "t": 0.5, "v": 0 }, { "t": 2.5, "v": 360 } ] },
+  "children": [ { "name": "coin", "sprite": "coin", "pos": [70, 0] } ] }
+```
+A seamless loop needs the **same value at its first and last key** (0 and 360 degrees are the same
+angle).
 
 ## 5. Battle example: step in, swing, step back (`attack`)
 

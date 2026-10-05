@@ -120,6 +120,21 @@ template <class T> T sampleStep(const std::vector<Key<T>>& keys, float t, const 
 }
 
 template <class T> float lastTime(const std::vector<Key<T>>& keys) { return keys.empty() ? 0.0f : keys.back().t; }
+template <class T> void firstTime(const std::vector<Key<T>>& keys, float& m, bool& any) {
+    if (keys.empty()) return;
+    m = any ? std::min(m, keys.front().t) : keys.front().t;
+    any = true;
+}
+void firstKey(const Node& n, float& m, bool& any) {
+    firstTime(n.posKeys, m, any);
+    firstTime(n.scaleKeys, m, any);
+    firstTime(n.rotKeys, m, any);
+    firstTime(n.colorKeys, m, any);
+    firstTime(n.spriteKeys, m, any);
+    firstTime(n.eventKeys, m, any);
+    firstTime(n.visibleKeys, m, any);
+    for (const Node& c : n.children) firstKey(c, m, any);
+}
 
 }  // namespace
 
@@ -137,7 +152,44 @@ float Node::lastKeyTime() const {
     return m;
 }
 
+float Node::firstKeyTime() const {
+    float m = 0;
+    bool any = false;
+    firstKey(*this, m, any);
+    return m;
+}
+
+bool Node::hasKeys() const {
+    float m = 0;
+    bool any = false;
+    firstKey(*this, m, any);
+    return any;
+}
+
 float Clip::duration() const { return length > 0 ? length : root.lastKeyTime(); }
+
+float nodeTime(const Node& n, float t, float first, float last, bool* ended) {
+    if (ended) *ended = false;
+    if (!(t > last)) return t;
+    if (n.loop) {
+        const float len = last - first;
+        if (len <= 1e-6f) return t;   // keys at one time only: nothing to repeat
+        return first + std::fmod(t - first, len);
+    }
+    if (!n.stayAtLastFrame && ended) *ended = true;
+    return t;
+}
+
+namespace {
+bool anyLoop(const Node& n) {
+    if (n.loop) return true;
+    for (const Node& c : n.children)
+        if (anyLoop(c)) return true;
+    return false;
+}
+}  // namespace
+
+bool hasLoopingNodes(const Clip& c) { return anyLoop(c.root); }
 
 std::string defaultAtlasId(const std::string& path) {
     const size_t slash = path.find_last_of("/\\");
@@ -185,13 +237,15 @@ namespace {
 
 void walk(const Node& n, float t, const glm::mat3& parentWorld, const glm::vec4& parentColor, bool parentVisible,
           int depth, std::vector<NodePose>& out) {
+    bool ended = false;
+    if (n.timed()) t = nodeTime(n, t, n.firstKeyTime(), n.lastKeyTime(), &ended);
     NodePose me;
     me.node = &n;
     me.depth = depth;
     me.world = parentWorld * localTransform(n, t);
     const glm::vec4 own = colorAt(n, t);
     me.color = n.inheritColor ? parentColor * own : own;
-    me.visible = parentVisible && visibleAt(n, t);
+    me.visible = parentVisible && visibleAt(n, t) && !ended;
     me.sprite = spriteAt(n, t);
     // Children in order (stable: equal orders keep their list order).
     std::vector<const Node*> kids;
@@ -301,6 +355,11 @@ int PoseCache::addItems(const Node& n, int parent, int depth) {
     it.scale = n.scale;
     it.color = n.color;
     it.visible = n.visible;
+    it.timed = n.timed();
+    if (it.timed) {
+        it.first = n.firstKeyTime();
+        it.last = n.lastKeyTime();
+    }
     animated_ += it.animated;
     items_.push_back(it);   // parents before their children: seek() updates in this order
     // Draw order as walk(): children with order < 0, the node itself, the rest.
@@ -327,16 +386,24 @@ void PoseCache::seek(float t) {
     for (Item& it : items_) {
         NodePose& p = poses_[it.pose];
         bool local = all, colour = all, vis = all, sprite = false;
+        const Item* parent = it.parent >= 0 ? &items_[(size_t)it.parent] : nullptr;
+        it.time = parent ? parent->time : t;   // a looping ancestor's time passes down
+        if (it.timed) {
+            bool ended = false;
+            it.time = nodeTime(*it.node, it.time, it.first, it.last, &ended);
+            vis |= ended != it.ended;
+            it.ended = ended;
+        }
         if (it.animated) {   // only the tracks that have keys; a node without keys skips all of this
             const Node& n = *it.node;
-            local |= advance(n.posKeys, t, it.cursor[kPos], it.held[kPos], it.pos, all);
-            local |= advance(n.rotKeys, t, it.cursor[kRot], it.held[kRot], it.rot, all);
-            local |= advance(n.scaleKeys, t, it.cursor[kScale], it.held[kScale], it.scale, all);
-            colour |= advance(n.colorKeys, t, it.cursor[kColor], it.held[kColor], it.color, all);
-            vis |= advanceStep(n.visibleKeys, t, it.cursor[kVisible], it.held[kVisible], it.visible, all);
-            sprite = advanceStep(n.spriteKeys, t, it.cursor[kSprite], it.held[kSprite], p.sprite, all);
+            const float nt = it.time;
+            local |= advance(n.posKeys, nt, it.cursor[kPos], it.held[kPos], it.pos, all);
+            local |= advance(n.rotKeys, nt, it.cursor[kRot], it.held[kRot], it.rot, all);
+            local |= advance(n.scaleKeys, nt, it.cursor[kScale], it.held[kScale], it.scale, all);
+            colour |= advance(n.colorKeys, nt, it.cursor[kColor], it.held[kColor], it.color, all);
+            vis |= advanceStep(n.visibleKeys, nt, it.cursor[kVisible], it.held[kVisible], it.visible, all);
+            sprite = advanceStep(n.spriteKeys, nt, it.cursor[kSprite], it.held[kSprite], p.sprite, all);
         }
-        const Item* parent = it.parent >= 0 ? &items_[(size_t)it.parent] : nullptr;
         const NodePose* pp = parent ? &poses_[parent->pose] : nullptr;
         if (local) it.local = compose(it.pos, it.rot, it.scale);
         it.worldChanged = local || (parent && parent->worldChanged);
@@ -347,7 +414,7 @@ void PoseCache::seek(float t) {
             p.color = it.node->inheritColor ? (pp ? pp->color : glm::vec4(1.0f)) * own : own;
         }
         it.visibleChanged = vis || (parent && parent->visibleChanged);
-        if (it.visibleChanged) p.visible = (pp ? pp->visible : true) && it.visible;
+        if (it.visibleChanged) p.visible = (pp ? pp->visible : true) && it.visible && !it.ended;
         const bool changed = it.worldChanged || it.colorChanged || it.visibleChanged || sprite;
         changed_[it.pose] = changed;
         changedCount_ += changed;
@@ -395,6 +462,8 @@ json nodeToJson(const Node& n) {
     if (n.order != 0) j["order"] = n.order;
     if (n.blend == Blend::Add) j["blend"] = "add";
     if (!n.inheritColor) j["inheritColor"] = false;
+    if (n.loop) j["loop"] = true;
+    if (!n.stayAtLastFrame) j["stayAtLastFrame"] = false;
     json tr = json::object();
     auto v2 = [](const glm::vec2& v) { return vec(v); };
     auto v4 = [](const glm::vec4& v) { return vec(v); };
@@ -458,6 +527,8 @@ void nodeFromJson(const json& j, Node& n, const std::string& where) {
     if (blend != "normal" && blend != "add") throw std::runtime_error(here + ": blend must be normal or add");
     n.blend = blend == "add" ? Blend::Add : Blend::Normal;
     n.inheritColor = j.value("inheritColor", true);
+    n.loop = j.value("loop", false);
+    n.stayAtLastFrame = j.value("stayAtLastFrame", true);
     if (j.contains("tracks")) {
         const json& tr = j["tracks"];
         keysFromJson(tr, "pos", n.posKeys, toVec2, here);

@@ -9,6 +9,17 @@
 //              color (r,g,b,a 0..1)  -- interpolated, one easing per key for the segment it starts
 //              sprite ("atlas:name", see SpriteRef)  visible  event  -- stepped (holds until the next key)
 //
+// Each node can play its keys its own way (Node::loop, Node::stayAtLastFrame). A node's key range is
+// first..last key over its subtree (its own tracks and every descendant's):
+//   default            plays once; after its last key it holds that pose (stays on screen, nothing updates)
+//   stayAtLastFrame=0  plays once; after its last key it and its subtree are hidden
+//   loop               after its last key it plays first..last again, forever -- also after the clip's
+//                      own timeline has ended (AnimPlayer keeps time running for it: a popup whose
+//                      parts stop and stay while a sparkle keeps flying around)
+// The time a node gets passes down: a looping group loops its whole subtree, and a looping child
+// inside it loops in the group's time. Event keys follow the clip's timeline only (they do not repeat
+// with a looping node).
+//
 // Coordinates are screen pixels, y down. Rotation is in degrees and NOT wrapped: 0 -> 720 spins
 // twice. A channel without keys keeps the node's rest value; before its first key it holds the
 // first key's value, after its last key the last.
@@ -64,6 +75,8 @@ struct Node {
     int order = 0;                     // among siblings; < 0 draws before the parent's own sprite
     Blend blend = Blend::Normal;
     bool inheritColor = true;
+    bool loop = false;                 // after its key range: play it again (see the top)
+    bool stayAtLastFrame = true;       // after its key range (not looping): false = hide the subtree
 
     std::vector<Key<glm::vec2>> posKeys, scaleKeys;
     std::vector<Key<float>> rotKeys;
@@ -74,6 +87,9 @@ struct Node {
     std::vector<Node> children;
 
     float lastKeyTime() const;         // over this node's tracks and its subtree
+    float firstKeyTime() const;        // over this node's tracks and its subtree (0 without keys)
+    bool hasKeys() const;              // any key in this node's tracks or its subtree
+    bool timed() const { return loop || !stayAtLastFrame; }   // plays its range its own way
 };
 
 struct Clip {
@@ -132,6 +148,13 @@ struct NodePose {
     bool visible = true;               // false: hidden (itself or a parent)
 };
 
+// The time a node's tracks (and its children) see when its parent's time is t, with its key range
+// first..last: wraps into the range for a looping node. `ended` (optional) is set when a
+// stayAtLastFrame=false node is past its range (hidden).
+float nodeTime(const Node& n, float t, float first, float last, bool* ended = nullptr);
+// Any node in the clip loops (the clip keeps moving after its timeline ends).
+bool hasLoopingNodes(const Clip& c);
+
 // The local transform of a node at time t: T(pos) * R(rot) * S(scale).
 glm::mat3 localTransform(const Node& n, float t);
 // Every node of the clip at time t (clip time, 0..duration), in draw order (see the top). Hidden
@@ -168,6 +191,10 @@ private:
         float rot = 0;
         glm::vec4 color{1};            // own, unclamped (before the parents' colour)
         bool visible = true;           // own
+        bool timed = false;            // loop or !stayAtLastFrame: its time is remapped
+        float first = 0, last = 0;     // its subtree's key range (timed nodes)
+        float time = 0;                // the time its tracks saw in the last seek
+        bool ended = false;            // stayAtLastFrame=false and past its range: hidden
         glm::mat3 local{1.0f};
         bool worldChanged = false, colorChanged = false, visibleChanged = false;   // in this seek
     };

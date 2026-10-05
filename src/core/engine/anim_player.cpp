@@ -92,6 +92,7 @@ void appendQuads(const std::vector<NodePose>& poses, const AtlasSet& atlases, co
 void AnimPlayer::play(const Clip* clip) {
     clip_ = clip;
     cache_.bind(clip);
+    loops_ = clip && hasLoopingNodes(*clip);
     quadAtlases_ = nullptr;
     elapsed_ = 0;
     started_ = false;
@@ -116,6 +117,12 @@ float AnimPlayer::time() const {
     if (d <= 0) return 0;
     if (finished()) return (float)d;
     return (float)std::fmod(elapsed_, d);
+}
+
+float AnimPlayer::poseTime() const {
+    if (!clip_ || !finished() || !loops_) return time();
+    const double d = clip_->duration();
+    return (float)(elapsed_ - (double)(clip_->playCount - 1) * d);   // into the last play, past its end
 }
 
 void AnimPlayer::update(int dtMs) {
@@ -149,7 +156,7 @@ std::vector<std::string> AnimPlayer::takeEvents() {
 
 void AnimPlayer::draw(IRenderer* ren, const AtlasSet& atlases, const glm::mat3& place, const float tint[4]) const {
     if (!ren || !showing()) return;
-    cache_.seek(time());
+    cache_.seek(poseTime());
     const std::vector<NodePose>& poses = cache_.poses();
     const glm::vec4 t = tint ? glm::vec4(tint[0], tint[1], tint[2], tint[3]) : glm::vec4(1.0f);
     const bool all = quads_.size() != poses.size() || quadAtlases_ != &atlases || quadPlace_ != place || quadTint_ != t;

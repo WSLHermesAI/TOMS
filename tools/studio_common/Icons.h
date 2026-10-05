@@ -15,7 +15,7 @@ enum class Id {
     Error, Warning, Info,
     // anim editor
     Move, Rotate, Scale, KeyOn, KeyOff, KeyNone, Eye, EyeOff, Stop, Loop, Node, SpriteNode,
-    Duplicate, Event, Rename, AutoKey, Snap, Forward
+    Duplicate, Event, Rename, AutoKey, Snap, Forward, Solo
 };
 
 QIcon icon(Id id);

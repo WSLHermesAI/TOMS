@@ -219,6 +219,14 @@ QPixmap render(Id id)
         p.setPen(ink(kInk, 3));
         drawArrow(p, QPointF(6, 16), QPointF(26, 16));
         break;
+    case Id::Solo:   // a target: show only this
+        p.setPen(ink(kOrange, 2.5));
+        p.setBrush(Qt::NoBrush);
+        p.drawEllipse(QPointF(16, 16), 11, 11);
+        p.setPen(Qt::NoPen);
+        p.setBrush(kOrange);
+        p.drawEllipse(QPointF(16, 16), 5, 5);
+        break;
     case Id::Error:
     case Id::Warning:
     case Id::Info:

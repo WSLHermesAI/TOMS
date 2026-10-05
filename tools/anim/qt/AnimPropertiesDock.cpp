@@ -110,8 +110,15 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
     m_blend->addItems({tr("normal"), tr("add")});
     m_inheritColor = new QCheckBox(tr("Inherit colour"), m_nodeBox);
     m_restVisible = new QCheckBox(tr("Visible (rest)"), m_nodeBox);
+    m_playback = new QComboBox(m_nodeBox);
+    m_playback->addItems({tr("Once, stay at the last key"), tr("Once, then hide"), tr("Loop")});
+    m_playback->setToolTip(tr("How this node plays its keys (with its children's: first..last key of the subtree).\n"
+                              "Once, stay: holds its last pose (drawn, nothing updates).\n"
+                              "Once, then hide: hidden with its children after its last key.\n"
+                              "Loop: plays first..last key again, forever, also after the clip has ended."));
     nf->addRow(tr("Name"), m_name);
     nf->addRow(tr("Sprite"), m_sprite);
+    nf->addRow(tr("Playback"), m_playback);
     nf->addRow(tr("Pivot"), m_atlasPivot);
     nf->addRow(QString(), row(m_nodeBox, {{QStringLiteral("x"), m_pivotX}, {QStringLiteral("y"), m_pivotY}}));
     nf->addRow(tr("Order"), m_order);
@@ -224,6 +231,12 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
     connect(m_restVisible, &QCheckBox::toggled, this, [this](bool on) {
         if (!m_updating) m_doc->editSelected(tr("Visible"), [on](Node& n) { n.visible = on; });
     });
+    connect(m_playback, &QComboBox::activated, this, [this](int i) {
+        if (!m_updating) m_doc->editSelected(tr("Playback"), [i](Node& n) {
+            n.loop = i == 2;
+            n.stayAtLastFrame = i != 1;
+        });
+    });
     for (QDoubleSpinBox* s : {m_posX, m_posY}) connect(s, &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Pos); });
     connect(m_rot, &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Rot); });
     for (QDoubleSpinBox* s : {m_scaleX, m_scaleY}) connect(s, &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Scale); });
@@ -307,6 +320,7 @@ void AnimPropertiesDock::refresh()
         m_blend->setCurrentIndex(n->blend == toms::anim::Blend::Add ? 1 : 0);
         m_inheritColor->setChecked(n->inheritColor);
         m_restVisible->setChecked(n->visible);
+        m_playback->setCurrentIndex(n->loop ? 2 : n->stayAtLastFrame ? 0 : 1);
     } else {
         m_nodeBox->setTitle(tr("Node"));
     }

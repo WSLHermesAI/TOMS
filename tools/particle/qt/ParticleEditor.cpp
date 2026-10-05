@@ -2,6 +2,7 @@
 
 #include "EffectsDock.h"
 #include "FxSpritesDock.h"
+#include "AutoBackup.h"
 #include "Icons.h"
 #include "InspectorDock.h"
 #include "ParticleDocument.h"
@@ -153,6 +154,10 @@ void ParticleEditor::createDocks()
     m_inspector = new InspectorDock(m_doc, m_host);
     m_timeline = new TimelineDock(m_doc, m_play, m_host);
     m_sprites = new FxSpritesDock(m_doc, m_host);
+    m_history = createHistoryDock(m_doc->undoStack(), m_host);
+    m_backup = new AutoBackup(m_doc->undoStack(), QStringLiteral(".particle"), [this] { return m_doc->filePath(); },
+                              [this](const QString& p, QString* e) { return m_doc->writeBackup(p, e); }, this);
+    connect(m_backup, &AutoBackup::message, this, [this](const QString& t) { m_host->statusBar()->showMessage(t, 5000); });
     m_problemsDock = new QDockWidget(tr("Problems / Log"), m_host);
     m_problemsDock->setObjectName(QStringLiteral("ParticleProblemsDock"));
     m_problems = new QListWidget(m_problemsDock);
@@ -176,6 +181,8 @@ void ParticleEditor::createDocks()
     m_host->addDockWidget(Qt::LeftDockWidgetArea, m_effects);
     m_host->addDockWidget(Qt::LeftDockWidgetArea, m_sprites);
     m_host->addDockWidget(Qt::RightDockWidgetArea, m_inspector);
+    m_host->tabifyDockWidget(m_inspector, m_history);
+    m_inspector->raise();
     m_host->addDockWidget(Qt::BottomDockWidgetArea, m_timeline);
     m_host->addDockWidget(Qt::BottomDockWidgetArea, m_problemsDock);
     m_host->tabifyDockWidget(m_timeline, m_problemsDock);
@@ -196,6 +203,8 @@ void ParticleEditor::createMenus()
     file->addAction(m_saveAsAct);
     file->addSeparator();
     file->addAction(m_addAtlasAct);
+    file->addSeparator();
+    m_backup->addMenu(file, m_host);
     file->addSeparator();
     file->addAction(m_quitAct);
     rebuildRecentMenu();
@@ -231,7 +240,7 @@ void ParticleEditor::createMenus()
     });
     m_viewMenu->addSeparator();
     for (QDockWidget* d : {static_cast<QDockWidget*>(m_effects), static_cast<QDockWidget*>(m_sprites), static_cast<QDockWidget*>(m_inspector),
-                           static_cast<QDockWidget*>(m_timeline), m_problemsDock})
+                           static_cast<QDockWidget*>(m_timeline), m_problemsDock, m_history})
         m_viewMenu->addAction(d->toggleViewAction());
     m_viewMenu->addSeparator();
 

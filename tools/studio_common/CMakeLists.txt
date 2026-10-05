@@ -7,6 +7,7 @@ add_library(studio_common STATIC
     Theme.h            Theme.cpp
     Icons.h            Icons.cpp
     CanvasView.h       CanvasView.cpp
+    AutoBackup.h       AutoBackup.cpp
     SpriteImageCache.h SpriteImageCache.cpp
     Console.h          Console.cpp)
 set_target_properties(studio_common PROPERTIES AUTOMOC ON FOLDER "tools/studio")

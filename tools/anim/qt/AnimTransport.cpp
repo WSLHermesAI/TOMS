@@ -207,6 +207,7 @@ void AnimTransport::pause()
 {
     if (!m_playing) return;
     m_playing = false;
+    m_doc->setPreviewTime(-1);   // back to the playhead (edits happen there)
     m_timer->stop();
     updateWidgets();
     emit playingChanged(false);
@@ -250,6 +251,11 @@ void AnimTransport::advance(int ms)
         emit eventsFired(names, m_player.time());
     }
     if (m_player.finished()) {
+        if (m_player.showing() && toms::anim::hasLoopingNodes(m_clip)) {
+            // As in the game: the clip's timeline is over, its looping nodes keep playing (pause stops).
+            m_doc->setPreviewTime(m_player.poseTime());
+            return;
+        }
         pause();
         if (!m_player.showing()) emit m_doc->message(tr("Clip finished (stayAtLastFrame is off: the game hides it now)."));
     }

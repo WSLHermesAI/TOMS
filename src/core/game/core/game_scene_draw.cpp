@@ -243,7 +243,7 @@ void Game::drawPreviewAnim() {
     }
     if (!previewPlayer_.showing()) return;
     const size_t known = previewMissing_.size();
-    toms::anim::evaluate(*previewPlayer_.clip(), previewPlayer_.time(), previewPoses_);
+    toms::anim::evaluate(*previewPlayer_.clip(), previewPlayer_.poseTime(), previewPoses_);
     previewQuads_.clear();
     toms::anim::appendQuads(previewPoses_, previewSet_, toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f),
                             nullptr, previewQuads_, &previewMissing_);

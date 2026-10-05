@@ -41,6 +41,8 @@ public:
     QString displayName() const;
     bool isDirty() const;
     QUndoStack* undoStack() const { return m_undo; }
+    // A copy for AutoBackup: atlas paths absolute; the document does not change.
+    bool writeBackup(const QString& path, QString* error) const;
     QString toJson() const;
 
     // A new untitled file: one effect with one emitter drawing fx:dot from the fx atlas (when found).

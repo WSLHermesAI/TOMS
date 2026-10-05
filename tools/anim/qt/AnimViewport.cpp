@@ -82,6 +82,8 @@ AnimViewport::AnimViewport(AnimDocument* doc, bool gameRenderer, QWidget* parent
     connect(doc, &AnimDocument::fileChanged, this, qOverload<>(&QWidget::update));
     connect(doc, &AnimDocument::selectionChanged, this, qOverload<>(&QWidget::update));
     connect(doc, &AnimDocument::timeChanged, this, qOverload<>(&QWidget::update));
+    connect(doc, &AnimDocument::previewTimeChanged, this, qOverload<>(&QWidget::update));
+    connect(doc, &AnimDocument::soloChanged, this, qOverload<>(&QWidget::update));
     connect(doc, &AnimDocument::fileReset, this, &AnimViewport::frameClip);
     connect(doc, &AnimDocument::clipChanged, this, &AnimViewport::frameClip);
     connect(doc, &AnimDocument::atlasChanged, this, &AnimViewport::frameClip);
@@ -125,6 +127,7 @@ void AnimViewport::buildFrame(float t, std::vector<NodePose>& poses, std::vector
     std::vector<NodePose> one(1);
     std::vector<Quad> quads;
     for (const NodePose& pose : poses) {
+        if (!m_doc->soloShows(pose.node)) continue;   // solo: only that node's subtree
         one[0] = pose;
         quads.clear();
         toms::anim::appendQuads(one, atlases, place, nullptr, quads, missing);
@@ -147,7 +150,7 @@ void AnimViewport::buildFrame(float t, std::vector<NodePose>& poses, std::vector
 void AnimViewport::rebuild()
 {
     std::vector<std::string> missing;
-    buildFrame(m_doc->time(), m_poses, m_items, &missing);
+    buildFrame(m_doc->previewTime(), m_poses, m_items, &missing);
     m_missing.clear();
     for (const std::string& s : missing) m_missing << QString::fromStdString(s);
 }
@@ -172,8 +175,10 @@ void AnimViewport::updateStage()
 void AnimViewport::frameClip()
 {
     updateStage();
+    rebuild();
     requestFit();
     fitToView();
+    update();
 }
 
 // ---- painting -----------------------------------------------------------------------------------
@@ -215,7 +220,10 @@ void AnimViewport::paintGameScene(const GameScene& s)
     const toms::anim::Clip* clip = m_doc->clip();
     if (!clip) return;
     std::vector<NodePose> poses;
-    toms::anim::evaluate(*clip, m_doc->time(), poses);
+    toms::anim::evaluate(*clip, m_doc->previewTime(), poses);
+    if (m_doc->solo())   // only the solo node's subtree
+        poses.erase(std::remove_if(poses.begin(), poses.end(), [this](const NodePose& p) { return !m_doc->soloShows(p.node); }),
+                    poses.end());
     std::vector<Quad> quads;
     toms::anim::appendQuads(poses, m_tex.atlasSet(), GameScene::placement(viewTransform()), nullptr, quads);
     for (const Quad& q : quads) s.ren.drawSprite(q);
@@ -283,6 +291,11 @@ void AnimViewport::paintContent(QPainter& p)
     QString info = clip ? QStringLiteral("%1   t = %2 s / %3 s").arg(QString::fromStdString(clip->name))
                                   .arg(m_doc->time(), 0, 'f', 3).arg(clip->duration(), 0, 'f', 3)
                         : tr("no clip");
+    if (clip && m_doc->solo())
+        if (const Node* sn = nodeAt(clip->root, *m_doc->solo()))
+            info += tr("   SOLO: %1").arg(QString::fromStdString(sn->name));
+    if (clip && m_doc->previewTime() > m_doc->time())
+        info += tr("   (ended: looping nodes play on, +%1 s)").arg(m_doc->previewTime() - m_doc->time(), 0, 'f', 1);
     if (m_doc->atlasCount() == 0) info += tr("   (no atlas: add one under Properties > Atlases)");
     else if (!m_doc->atlasLoaded()) info += tr("   (an atlas did not load: see Problems)");
     drawLabel(p, QPointF(8, 8), info);

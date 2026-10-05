@@ -265,6 +265,29 @@ bool AtlasDocument::open(const QString& pathIn, QString* error)
     return true;
 }
 
+bool AtlasDocument::writeBackup(const QString& path, QString* error) const
+{
+    const QFileInfo fi(path);
+    const QDir dir(QDir(fi.absolutePath()).filePath(fi.completeBaseName()));
+    if (!QDir().mkpath(dir.absolutePath())) {
+        if (error) *error = tr("cannot create %1").arg(QDir::toNativeSeparators(dir.absolutePath()));
+        return false;
+    }
+    Project copy = m_project;
+    copy.embedded = true;
+    copy.output.dir = ".";   // stays next to the project copy
+    for (atlas::Variant& v : copy.variants)   // absolute: kept as they are by the save
+        v.output.dir = u8(QDir::fromNativeSeparators(dir.filePath(QStringLiteral("variants/") + qs(v.id))));
+    const std::string target = u8(QDir::fromNativeSeparators(dir.filePath(qs(copy.name.empty() ? std::string("atlas") : copy.name) +
+                                                                             QStringLiteral(".atlasproj"))));
+    (void)QtConcurrent::run([copy, target]() mutable {
+        std::string err;
+        if (!atlas::saveProjectAll(target, copy, {kAlwaysExported}, nullptr, &err))
+            std::fprintf(stderr, "[atlas] backup failed: %s\n", err.c_str());
+    });
+    return true;
+}
+
 bool AtlasDocument::save(const QString& path, SaveReport* report, QString* error)
 {
     if (m_saving) {

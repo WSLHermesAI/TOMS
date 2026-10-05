@@ -5,7 +5,9 @@
 #include <QCheckBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
+#include <QApplication>
 #include <QListWidget>
+#include <QMessageBox>
 #include <QSignalBlocker>
 #include <QSpinBox>
 #include <QToolBar>
@@ -71,9 +73,12 @@ AnimClipsDock::AnimClipsDock(AnimDocument* doc, QWidget* parent)
     QAction* ren = tb->addAction(Icons::icon(Icons::Id::Rename), tr("Rename clip"));
     QAction* del = tb->addAction(Icons::icon(Icons::Id::Remove), tr("Delete clip"));
     connect(add, &QAction::triggered, this, [this] { m_doc->addClip(QStringLiteral("clip")); });
-    connect(dup, &QAction::triggered, this, [this] { m_doc->duplicateClip(m_doc->clipIndex()); });
+    // The toolbar acts on the highlighted row (a single click), which need not be the open clip.
+    auto row = [this] { return m_list->currentRow() >= 0 ? m_list->currentRow() : m_doc->clipIndex(); };
+    connect(dup, &QAction::triggered, this, [this, row] { m_doc->duplicateClip(row()); });
     connect(ren, &QAction::triggered, this, &AnimClipsDock::beginRename);
-    connect(del, &QAction::triggered, this, [this] { m_doc->deleteClip(m_doc->clipIndex()); });
+    connect(del, &QAction::triggered, this, [this, row] { m_doc->deleteClip(row()); });
+    ren->setToolTip(tr("Rename clip (F2)"));
 
     const ClipFields f = ClipFields::create(doc, body, &m_updating);
     m_length = f.length;
@@ -85,7 +90,9 @@ AnimClipsDock::AnimClipsDock(AnimDocument* doc, QWidget* parent)
     form->addRow(tr("Plays"), m_playCount);
     form->addRow(QString(), m_stay);
 
-    m_list->setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed);
+    // Double-click (or Enter) opens a clip; F2 or the Rename button renames it.
+    m_list->setEditTriggers(QAbstractItemView::EditKeyPressed);
+    m_list->setToolTip(tr("Double-click a clip to open it (F2 renames)"));
     auto* l = new QVBoxLayout(body);
     l->setContentsMargins(4, 2, 4, 4);
     l->setSpacing(2);
@@ -96,14 +103,40 @@ AnimClipsDock::AnimClipsDock(AnimDocument* doc, QWidget* parent)
 
     connect(doc, &AnimDocument::fileChanged, this, &AnimClipsDock::rebuild);
     connect(doc, &AnimDocument::clipChanged, this, &AnimClipsDock::rebuild);
-    connect(m_list, &QListWidget::currentRowChanged, this, [this](int row) {
-        if (!m_updating && row >= 0) m_doc->setClipIndex(row);
+    connect(m_list, &QListWidget::itemActivated, this, [this](QListWidgetItem* it) { openClip(m_list->row(it)); });
+    connect(m_list, &QListWidget::itemClicked, this, [this](QListWidgetItem* it) {
+        if (m_list->row(it) != m_doc->clipIndex())
+            emit m_doc->message(tr("Double-click “%1” to open it (the viewport shows the bold clip).").arg(it->text()));
     });
     connect(m_list, &QListWidget::itemChanged, this, [this](QListWidgetItem* it) {
         if (m_updating) return;
         if (!m_doc->renameClip(m_list->row(it), it->text())) rebuild();
     });
     rebuild();
+}
+
+bool AnimClipsDock::openClip(int row, int discard)
+{
+    const auto& clips = m_doc->file().clips;
+    if (row < 0 || row >= int(clips.size())) return false;
+    if (row == m_doc->clipIndex()) return true;
+    if (m_doc->clipModified()) {
+        const QString cur = QString::fromStdString(clips[size_t(m_doc->clipIndex())].name);
+        const QString next = QString::fromStdString(clips[size_t(row)].name);
+        bool yes = discard == 1;
+        if (discard < 0)
+            yes = QMessageBox::question(this, tr("Open Clip"),
+                                        tr("The clip \u201c%1\u201d has changes.\n\nDiscard all changes to \u201c%1\u201d and open \u201c%2\u201d?\n"
+                                           "(Edit > Undo brings them back.)").arg(cur, next),
+                                        QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+        if (!yes) {
+            rebuild();   // the highlight goes back to the open clip
+            return false;
+        }
+        m_doc->discardClipChanges();
+    }
+    m_doc->setClipIndex(row);
+    return true;
 }
 
 void AnimClipsDock::beginRename()
@@ -126,6 +159,9 @@ void AnimClipsDock::rebuild()
         const Clip& c = clips[i];
         it->setToolTip(tr("%1 s, %2").arg(c.duration(), 0, 'f', 3).arg(c.playCount < 0 ? tr("loops") : tr("plays %1×").arg(c.playCount)));
         it->setIcon(Icons::icon(c.playCount < 0 ? Icons::Id::Loop : Icons::Id::Play));
+        QFont font = m_list->font();
+        font.setBold(int(i) == m_doc->clipIndex());   // the open clip
+        it->setFont(font);
     }
     m_list->setCurrentRow(m_doc->clipIndex());
     ClipFields{m_length, m_playCount, m_stay}.refresh(m_doc);

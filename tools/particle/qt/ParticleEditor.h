@@ -79,6 +79,8 @@ private:
 
     QMainWindow* m_host;
     ParticleDocument* m_doc;
+    class AutoBackup* m_backup = nullptr;
+    QDockWidget* m_history = nullptr;
     ParticlePlayback* m_play;
     ParticleViewport* m_viewport;
     EffectsDock* m_effects = nullptr;

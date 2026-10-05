@@ -51,6 +51,7 @@ private:
     QSpinBox* m_order;
     QComboBox* m_blend;
     QCheckBox *m_inheritColor, *m_restVisible;
+    QComboBox* m_playback;   // once + stay / once + hide / loop
     QLabel* m_playLabel;
     QDoubleSpinBox *m_posX, *m_posY, *m_rot, *m_scaleX, *m_scaleY, *m_color[4];
     QLabel* m_spriteHere;

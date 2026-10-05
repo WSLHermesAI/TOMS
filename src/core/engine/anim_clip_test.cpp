@@ -4,6 +4,8 @@
 //   tracks     linear / eased / stepped segments, before-first and after-last, unwrapped rotation
 //   tree       world = parent * T R S, draw order by `order`, colour inheritance, hidden subtrees
 //   cache      PoseCache == evaluate() (any seek order); only keyed tracks / changed poses update
+//   child      a child's keys outlive its parent's: it keeps animating, the clip lasts to its last key
+//   playback   per node: once + stay, once + hide, loop (its subtree's key range, also after the end)
 //   player     play count, looping, stay-at-last-frame, events (time 0, loop wrap, exactly once)
 //   quads      corners from pivot + trim offsets + world transform, uv, tint, additive, missing sprites
 //   json       round trip and errors
@@ -199,6 +201,130 @@ void testPoseCache() {
     CHECK(cache.changedCount() == 0, "after every last key nothing changes");
     evaluate(s, 2.0f, ref);
     CHECK(samePoses(cache.poses(), ref, 2.0f), "and the poses are still right");
+}
+
+// A child's keys can start and end at other times than its parent's: it keeps animating after the
+// parent's last key (and before its own first key it holds that key's value).
+void testChildOutlivesParent() {
+    Clip c;
+    c.name = "c";
+    c.root.name = "root";
+    c.root.posKeys = {{0.0f, {0, 0}, {}}, {0.5f, {100, 0}, {}}};   // the parent stops at 0.5
+    Node kid;
+    kid.name = "kid";
+    kid.sprite = "s";
+    kid.posKeys = {{0.3f, {0, 0}, {}}, {1.5f, {0, 120}, {}}};        // the child runs 0.3 .. 1.5
+    kid.rotKeys = {{1.0f, 0.0f, {}}, {2.0f, 90.0f, {}}};            // and turns 1.0 .. 2.0
+    c.root.children.push_back(kid);
+    CHECK(near(c.duration(), 2.0f), "duration = the child's last key: %f", c.duration());
+
+    AnimPlayer p;   // its time, and a PoseCache seeked to it each frame (as AnimPlayer::draw does)
+    PoseCache cache;
+    cache.bind(&c);
+    p.play(&c);
+    p.update(0);
+    cache.seek(p.time());
+    std::vector<NodePose> ref;
+    bool same = true, moved = true;
+    glm::vec2 last = apply(cache.poses()[1].world, 0, 0);
+    for (int f = 1; f <= 120; f++) {   // 60 fps to 2.0 s
+        p.update(f * 1000 / 60 - (f - 1) * 1000 / 60);
+        const float t = p.time();
+        cache.seek(t);
+        evaluate(c, t, ref);
+        same = same && samePoses(cache.poses(), ref, t);
+        const glm::vec2 at = apply(cache.poses()[1].world, 0, 0);
+        if (t > 0.55f && t < 1.45f) moved = moved && at.y > last.y;   // still moving after the parent stopped
+        last = at;
+    }
+    CHECK(same, "the player's poses == evaluate() every frame");
+    CHECK(moved, "the child keeps moving after the parent's last key");
+    CHECK(near2(apply(cache.poses()[1].world, 0, 0), 100, 120, 1e-3f), "child at the end: parent (100,0) + own (0,120)");
+    p.update(50);   // (the 60 fps steps sum to a hair under 2 s)
+    CHECK(near(p.time(), 2.0f, 1e-3f) && p.finished(), "the clip ends at the child's last key, not the parent's");
+}
+
+// Per-node playback: a node plays once and stays (default), plays once and hides, or loops its
+// subtree's key range -- also after the clip's own timeline has ended.
+void testNodePlayback() {
+    Clip c;
+    c.name = "popup";
+    c.root.name = "root";
+    Node pop; pop.name = "pop"; pop.sprite = "s";                      // once, stays
+    pop.scaleKeys = {{0.0f, {0, 0}, {}}, {0.3f, {1, 1}, {}}};
+    Node flash; flash.name = "flash"; flash.sprite = "s"; flash.stayAtLastFrame = false;   // once, then hides
+    flash.colorKeys = {{0.0f, {1, 1, 1, 1}, {}}, {0.2f, {1, 1, 1, 0.5f}, {}}};
+    Node spark; spark.name = "spark"; spark.sprite = "s"; spark.loop = true;              // loops 0.5..1.0
+    spark.posKeys = {{0.5f, {0, 0}, {}}, {1.0f, {10, 0}, {}}};
+    Node orbit; orbit.name = "orbit"; orbit.loop = true;                                 // a looping group
+    orbit.rotKeys = {{0.0f, 0.0f, {}}, {1.0f, 360.0f, {}}};
+    Node dot; dot.name = "dot"; dot.sprite = "s";                                        // runs in orbit's time
+    dot.posKeys = {{0.0f, {20, 0}, {}}, {0.5f, {40, 0}, {}}};
+    orbit.children.push_back(dot);
+    c.root.children = {pop, flash, spark, orbit};
+    CHECK(near(c.duration(), 1.0f) && hasLoopingNodes(c), "duration 1.0, has looping nodes");
+
+    std::vector<NodePose> ps;
+    auto find = [&](const char* name) -> const NodePose& {
+        for (const NodePose& p : ps)
+            if (p.node->name == name) return p;
+        return ps.front();
+    };
+    evaluate(c, 0.75f, ps);
+    CHECK(near2(apply(find("spark").world, 0, 0), 5, 0), "spark mid-range at 0.75");
+    evaluate(c, 1.25f, ps);
+    CHECK(near2(apply(find("spark").world, 0, 0), 5, 0), "spark looped: 1.25 plays as 0.75");
+    CHECK(near2(apply(find("dot").world, 0, 0), 0, 30, 1e-3f), "orbit looped to 0.25 (90 deg), dot in orbit's time (x 30): %f %f",
+          apply(find("dot").world, 0, 0).x, apply(find("dot").world, 0, 0).y);
+    evaluate(c, 0.1f, ps);
+    CHECK(find("flash").visible, "flash shows during its keys");
+    evaluate(c, 0.3f, ps);
+    CHECK(!find("flash").visible && find("pop").visible, "flash hidden after its last key; pop stays");
+    evaluate(c, 7.6f, ps);
+    CHECK(near(find("pop").world[0][0], 1.0f) && !find("flash").visible && near2(apply(find("spark").world, 0, 0), 2, 0, 1e-3f),
+          "long after the end: pop holds, flash hidden, spark still looping (7.6 -> 0.6)");
+
+    PoseCache cache;
+    cache.bind(&c);
+    std::vector<NodePose> ref;
+    bool same = true;
+    auto at = [&](float t) {
+        cache.seek(t);
+        evaluate(c, t, ref);
+        same = same && samePoses(cache.poses(), ref, t);
+    };
+    for (int f = 0; f <= 300; f++) at(f / 60.0f);   // 0 .. 5 s
+    for (float t : {0.2f, 0.19f, 1.0f, 1.5f, 0.3f, 4.0f, 0.0f}) at(t);
+    unsigned seed = 3;
+    for (int i = 0; i < 300; i++) {
+        seed = seed * 1103515245u + 12345u;
+        at(float((seed >> 8) % 5000) / 1000.0f);
+    }
+    CHECK(same, "PoseCache == evaluate() with looping / hiding nodes, any seek order");
+
+    AnimPlayer p;
+    p.play(&c);
+    p.update(0);
+    p.update(1750);
+    CHECK(p.finished() && near(p.time(), 1.0f) && near(p.poseTime(), 1.75f, 1e-3f),
+          "after the clip's end: time() holds 1.0, poseTime() runs on (%f)", p.poseTime());
+    Clip still = c;
+    still.root.children[2].loop = false;
+    still.root.children[3].loop = false;
+    AnimPlayer q;
+    q.play(&still);
+    q.update(0);
+    q.update(1750);
+    CHECK(near(q.poseTime(), 1.0f), "without looping nodes poseTime() stops at the end");
+
+    AnimFile f;
+    f.clips.push_back(c);
+    AnimFile back;
+    std::string err;
+    CHECK(parseAnim(animToJson(f), back, &err) && back.clips[0].root.children[1].stayAtLastFrame == false &&
+              back.clips[0].root.children[2].loop && back.clips[0].root.children[0].stayAtLastFrame &&
+              !back.clips[0].root.children[0].loop,
+          "loop / stayAtLastFrame round-trip through JSON");
 }
 
 void testPlayer() {
@@ -409,6 +535,8 @@ int main() {
     testTree();
     testPoseCache();
     testPlayer();
+    testChildOutlivesParent();
+    testNodePlayback();
     testQuads();
     testJson();
     std::printf("anim_clip_test: %d check(s), %d failed\n", g_checks, g_fails);

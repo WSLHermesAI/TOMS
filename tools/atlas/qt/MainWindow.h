@@ -86,6 +86,8 @@ private:
     void refreshVariants();
 
     AtlasDocument* m_doc;
+    class AutoBackup* m_backup = nullptr;
+    QDockWidget* m_historyDock = nullptr;
     CanvasPanel* m_panel;
     SpriteTreeDock* m_spriteDock = nullptr;
     PropertiesDock* m_propsDock = nullptr;

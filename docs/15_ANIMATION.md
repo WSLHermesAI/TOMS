@@ -20,6 +20,20 @@ canvases with toms_game's own `BgfxRenderer` (`GameCanvasView` in `tools/studio_
   faint lines with the x values along the bottom edge and the y values along the left edge. The
   step follows the zoom (1, 2, 5 × 10ⁿ content pixels, at least 90 screen pixels apart): every 500
   zoomed out, every 10 or every 1 zoomed in. Values are the game's coordinates (y grows downwards).
+- **Undo / redo and backups** (all three editors):
+  - **Undo / redo:** Edit > Undo / Redo (Ctrl+Z / Ctrl+Y, or the toolbar arrows) step through
+    every edit.
+  - **History dock** (View > History; it is a tab next to Properties): lists every step, oldest
+    first. Click one to undo or redo up to it.
+  - **Automatic backups:** a copy is written every 5 minutes (only when something changed) and
+    after every 20 edits.
+    - **Where:** `%LOCALAPPDATA%\TOMS\<Editor>ackups\<file>\<file>_<date-time>.<ext>`, never
+      next to the file.
+    - **How many:** the newest 20 per file are kept.
+    - **Opening one:** atlas and image paths in a backup are absolute, so it opens from there.
+      Save As puts it back. An atlas backup is a folder: the project and its packed atlas.
+    - **Settings:** File > Backups > Settings (every N minutes, after N edits, how many to keep, on
+      / off). The same menu has *Back Up Now* and *Open Backup Folder*.
 - **QPainter fallback:** View > *Preview with the Game Renderer* (on by default; applies after a
   restart), the offscreen `--selftest`, a failed bgfx start, and a standalone build of the atlas
   tool (no game engine) all draw with QPainter as before.
@@ -87,9 +101,30 @@ see [16_ANIMATION_RECIPES.md](16_ANIMATION_RECIPES.md).
   each atlas in turn, the first that has it winning. The editor writes every reference qualified.
   A game that draws with an `AtlasSet` that has no atlas with the id falls back to the bare lookup.
 - **Clip:** `length` in seconds (0 or absent = up to the last key); `playCount` (-1 = loop forever); `stayAtLastFrame`.
+- **Every node runs on the clip's one timeline.** A child's keys can start and end at other times
+  than its parent's: after the parent's last key the parent holds its last pose and the child keeps
+  animating (inside the parent's held transform). With `length` 0 the clip lasts until the last key
+  of **any** node. A fixed `length` cuts every node off at that time: keys after it never play (the
+  Problems dock warns: "key at …, after the clip's length").
 - **Node:** `name`, `sprite` (absent = a group that only moves its children), rest values `pos`
   `rot` `scale` `color` `visible`, `pivot` (0..1 of the sprite, top-left = 0,0; absent = the
-  atlas's `x_pivot`, else the centre), `order`, `blend` (`normal` / `add`), `inheritColor`, `children`.
+  atlas's `x_pivot`, else the centre), `order`, `blend` (`normal` / `add`), `inheritColor`, `loop`, `stayAtLastFrame`, `children`.
+- **How a node plays** (each node on its own; its range is first..last key of its subtree):
+
+  | Setting | After the node's last key | Use |
+  |---|---|---|
+  | default | holds its last pose: still drawn, nothing updates | parts that pop in and stay |
+  | `"stayAtLastFrame": false` | hidden, with its children | a flash or burst that goes away |
+  | `"loop": true` | plays first..last again, forever, **also after the clip has ended** | sparkles, a coin flying around, a bobbing arrow |
+
+  - **Looping keeps going after the clip ends.** For a clip that plays once, the clip ends at its
+    last key, as before: the game's `finished()` is true, and the other nodes hold or hide. The
+    looping nodes keep playing for as long as the clip is shown (`AnimPlayer::poseTime()` keeps
+    running).
+  - **A looping group loops its whole subtree**, and the children's own settings apply inside the
+    group's time.
+  - **Event keys** fire on the clip's timeline only; they do not repeat with a looping node.
+  - **Example:** the `popup` clip in [examples/anim_child_timing.anim](examples/anim_child_timing.anim).
 - **Tracks:** `pos` `scale` (x, y), `rot` (degrees, clockwise, not wrapped: 0 → 720 is two turns),
   `color` (r, g, b, a 0..1) are interpolated; `sprite` `visible` `event` step. A channel without
   keys keeps the rest value. Before the first key it holds that key, after the last the last.
@@ -200,11 +235,11 @@ Atlas paths are always stored relative:
 
 | View | What it does |
 |---|---|
-| **Clips** | add / duplicate / rename / delete clips; length (0 = up to the last key), plays (-1 = loop), stay at last frame |
-| **Nodes** | the node tree with each node's rest sprite (`name (id)`): add child / sibling / sprite node, duplicate, delete, rename (F2), drag & drop to reparent or reorder (list order = draw order among equal `order`), eye = rest `visible`, `order` column |
+| **Clips** | **double-click** (or Enter) opens a clip, shown in bold; when the open clip has changes since it was opened or saved, it asks *Discard all changes to “A” and open “B”?* (Yes discards, as one undo step; No stays); F2 or the toolbar renames; add / duplicate / rename / delete act on the highlighted clip; length (0 = up to the last key), plays (-1 = loop), stay at last frame |
+| **Nodes** | the node tree with each node's rest sprite (`name (id)`): a **Playback** column (↻: click a row's icon for once and stay ▶ / once then hide ■ / loop ↻); a **Solo** column (◎: click a row's target to draw only that node and its children while the clip plays as usual: the parents still move them, their own sprites are hidden; click again, or open another clip, to end; preview only, not saved; the status line shows `SOLO: name`); add child / sibling / sprite node, duplicate, delete, rename (F2), drag & drop to reparent or reorder (list order = draw order among equal `order`), eye = rest `visible`, `order` column |
 | **Sprites** | one tab per atlas (titled with its id and sprite count, in lookup order), each listing that atlas's sprites with thumbnails; the filter applies to every tab (the titles then show how many match); each row is one atlas's copy and picking it stores that atlas (`id:name`); a name in more than one atlas has a small badge ("also in X; each copy is usable"); the filter matches `id:name`; drag a sprite into the viewport (a node under the selected node, at the drop point) or onto a node; double-click = the selected node's sprite (a sprite key at the playhead with auto-key) |
 | **Viewport** | the clip at the playhead; click selects the topmost node; **Move (W)** / **Rotate (E)** / **Scale (R)** gizmo. With **Auto-key (N, on by default)** a drag writes a key at the playhead, without it the rest value (a key exactly at the playhead is updated either way). Ctrl = pixel snap while moving, Shift = 15° steps / keep proportions; middle mouse pans, wheel zooms |
-| **Properties** | clip settings; the **Atlases** list (above); the node's rest settings (name, sprite, pivot, order, blend, inherit colour, visible); the values at the playhead, each channel with a key button (◆ key here: click removes; ◇ animated: click keys the shown value; dotted: no track); the ease of the key at / before the playhead (any Tweeny ease, or Bezier… with a curve editor) |
+| **Properties** | clip settings; the **Atlases** list (above); the node's rest settings (name, sprite, pivot, order, blend, inherit colour, visible, **Playback**: once and stay / once then hide / loop); the values at the playhead, each channel with a key button (◆ key here: click removes; ◇ animated: click keys the shown value; dotted: no track); the ease of the key at / before the playhead (any Tweeny ease, or Bezier… with a curve editor) |
 | **Keys** | the MPDI-style key list (below) |
 | **Events** | the selected node's event keys: add at the playhead, remove, edit time / name |
 | **Timeline** | placeholder for the phase 4 multi-track timeline; takes dropped sprites (below) |

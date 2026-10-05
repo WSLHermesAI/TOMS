@@ -2,6 +2,8 @@
 
 #include "SpriteImageCache.h"
 #include "anim_clip.h"
+
+#include <optional>
 #include "anim_check.h"
 #include "anim_keys.h"
 #include "anim_player.h"
@@ -59,6 +61,9 @@ public:
     // atlas is stored relative to `path`; when one cannot be (another drive), nothing is written
     // and `error` names it.
     bool save(const QString& path, QString* error);
+    // A copy for AutoBackup: atlas paths absolute (it opens from the backups folder); the document
+    // (path, saved state) does not change.
+    bool writeBackup(const QString& path, QString* error) const;
     // The atlas paths relative to an .anim at `animPath`; false (and `error`) when one can only
     // be absolute.
     bool relativeAtlases(const QString& animPath, std::vector<toms::anim::AtlasRef>& out, QString* error) const;
@@ -132,12 +137,27 @@ public:
     int clipIndex() const { return m_state.clip; }
     const toms::anim::Clip* clip() const;
     void setClipIndex(int index);
+    // The current clip differs from how it was when it became current (or when the file was last
+    // saved, if later).
+    bool clipModified() const;
+    // Puts the current clip back to that state (one undo step). False when it is not modified.
+    bool discardClipChanges();
     const NodePath& selectedPath() const { return m_state.node; }
     const toms::anim::Node* selectedNode() const;
     void selectNode(const NodePath& path);
     bool selectNodeByName(const QString& name);   // first match, depth first
     float time() const { return m_time; }
-    void setTime(float t);
+    void setTime(float t);   // also ends a preview time
+    // The time the viewport draws: time(), or -- while playback runs on after the clip's end for its
+    // looping nodes -- a later time. Editing still happens at time().
+    float previewTime() const { return m_preview >= 0 ? m_preview : m_time; }
+    // Solo (preview only, not saved): the viewport draws just this node and its children (in their
+    // place: the parents still move them, their own sprites are not drawn). Empty = everything.
+    const std::optional<NodePath>& solo() const { return m_solo; }
+    void setSolo(const std::optional<NodePath>& path);
+    // The nodes the viewport draws under the solo (null when there is no solo: all of them).
+    bool soloShows(const toms::anim::Node* n) const;
+    void setPreviewTime(float t);   // < 0 = back to time()
     float duration() const;
     bool autoKey() const { return m_autoKey; }
     void setAutoKey(bool on);
@@ -201,6 +221,8 @@ signals:
     void clipChanged();
     void selectionChanged();
     void timeChanged(float t);
+    void previewTimeChanged();
+    void soloChanged();
     void atlasChanged();
     void dirtyChanged(bool dirty);
     void filePathChanged();
@@ -221,6 +243,13 @@ private:
     QString m_filePath;
     QUndoStack* m_undo;
     float m_time = 0;
+    toms::anim::Clip m_clipBase;     // see clipModified()
+    std::string m_clipBaseJson;
+    int m_clipBaseIndex = -1;
+    void markClipBase();
+    static std::string clipJson(const toms::anim::Clip& c);
+    float m_preview = -1;   // see previewTime()
+    std::optional<NodePath> m_solo;
     bool m_autoKey = true;
     bool m_keyTogether = false;
 

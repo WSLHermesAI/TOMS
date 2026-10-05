@@ -18,6 +18,20 @@ canvases with toms_game's own `BgfxRenderer` (`GameCanvasView` in `tools/studio_
   faint lines with the x values along the bottom edge and the y values along the left edge. The
   step follows the zoom (1, 2, 5 × 10ⁿ content pixels, at least 90 screen pixels apart): every 500
   zoomed out, every 10 or every 1 zoomed in. Values are the game's coordinates (y grows downwards).
+- **Undo / redo and backups** (all three editors):
+  - **Undo / redo:** Edit > Undo / Redo (Ctrl+Z / Ctrl+Y, or the toolbar arrows) step through
+    every edit.
+  - **History dock** (View > History; it is a tab next to Properties): lists every step, oldest
+    first. Click one to undo or redo up to it.
+  - **Automatic backups:** a copy is written every 5 minutes (only when something changed) and
+    after every 20 edits.
+    - **Where:** `%LOCALAPPDATA%\TOMS\<Editor>ackups\<file>\<file>_<date-time>.<ext>`, never
+      next to the file.
+    - **How many:** the newest 20 per file are kept.
+    - **Opening one:** atlas and image paths in a backup are absolute, so it opens from there.
+      Save As puts it back. An atlas backup is a folder: the project and its packed atlas.
+    - **Settings:** File > Backups > Settings (every N minutes, after N edits, how many to keep, on
+      / off). The same menu has *Back Up Now* and *Open Backup Folder*.
 - **QPainter fallback:** View > *Preview with the Game Renderer* (on by default; applies after a
   restart), the offscreen `--selftest`, a failed bgfx start, and a standalone build of the atlas
   tool (no game engine) all draw with QPainter as before.

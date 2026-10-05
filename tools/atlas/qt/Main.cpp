@@ -22,6 +22,8 @@
 #include <QApplication>
 #include <QDir>
 #include <QDockWidget>
+#include <QDateTime>
+#include <QThread>
 #include <QElapsedTimer>
 #include <QMouseEvent>
 #include <QEventLoop>
@@ -183,6 +185,35 @@ int runSelfTest(MainWindow& w, const QString& project, const QString& outDir)
     std::printf("selftest: embedded save/reopen %s (%zu image(s) in %s)\n", okSave ? "ok" : "FAILED", reopened.images.size(),
                 QDir::toNativeSeparators(savePath).toUtf8().constData());
 
+    // Backup copy: a whole project + packed atlas in its own folder (written in the background);
+    // the project's own packed atlas is not touched.
+    bool okBackup = false;
+    {
+        const QDateTime storeTime = QFileInfo(store).lastModified();
+        const QString bdir = QDir(outDir).filePath(QStringLiteral("backup"));
+        QDir(bdir).removeRecursively();
+        QString berr;
+        okBackup = doc->writeBackup(QDir(bdir).filePath(QStringLiteral("proj_1.atlasproj")), &berr);
+        const QString bproj = QDir(QDir(bdir).filePath(QStringLiteral("proj_1"))).filePath(QString::fromStdString(doc->project().name) +
+                                                                                           QStringLiteral(".atlasproj"));
+        atlas::Project back;
+        QElapsedTimer t;
+        t.start();
+        bool loaded = false;
+        while (okBackup && !loaded && t.elapsed() < 30000) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+            QThread::msleep(50);
+            atlas::Project p;
+            std::string e;
+            loaded = QFileInfo::exists(bproj) && atlas::openProject(bproj.toStdString(), p, &e) && p.images.size() == imageCount;
+            if (loaded) back = std::move(p);
+        }
+        QThread::msleep(300);   // the rest of the background save
+        okBackup = okBackup && loaded && QFileInfo(store).lastModified() == storeTime;
+        std::printf("selftest: backup copy %s (%zu image(s), the project's own atlas untouched)\n", okBackup ? "ok" : "FAILED",
+                    back.images.size());
+    }
+
     w.canvasPanel()->enterEditMode(pick);
     waitForBuild(doc);
     for (const SpriteInfo& s : snap->sprites)
@@ -234,7 +265,7 @@ int runSelfTest(MainWindow& w, const QString& project, const QString& outDir)
     std::printf("selftest: export copy (+plist) %s\n", okExport ? "ok" : "FAILED");
     std::printf("selftest: %zu sprite(s), %zu page(s), %d error(s), %d warning(s), build %lld ms\n", snap->result.regions.size(),
                 snap->result.pages.size(), snap->result.errorCount(), snap->result.warningCount(), (long long)snap->elapsedMs);
-    return okMain && okEdit && okLight && okEdits && okImages && okExport && okSave ? 0 : 1;
+    return okMain && okEdit && okLight && okEdits && okImages && okExport && okSave && okBackup ? 0 : 1;
 }
 
 }  // namespace

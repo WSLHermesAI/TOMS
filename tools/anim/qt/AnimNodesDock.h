@@ -45,6 +45,7 @@ signals:
 private:
     void rebuild();
     void syncSelection();
+    void playbackMenu(const NodePath& path, const QPoint& globalPos);   // the Playback column's menu
     QTreeWidgetItem* itemFor(const NodePath& path) const;
 
     AnimDocument* m_doc;

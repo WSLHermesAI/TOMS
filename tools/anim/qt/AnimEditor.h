@@ -5,6 +5,7 @@
 #include <QSettings>
 
 class AnimClipsDock;
+class AutoBackup;
 class AnimDocument;
 class AnimEventsDock;
 class AnimKeyListDock;
@@ -49,6 +50,7 @@ public:
     AnimEventsDock* eventsDock() const { return m_events; }
     AnimProblemsDock* problemsDock() const { return m_problems; }
     AnimTransport* transport() const { return m_transport; }
+    AnimClipsDock* clipsDock() const { return m_clips; }
 
     bool openFile(const QString& path, bool askForAtlas = true);
     bool maybeSave();
@@ -86,6 +88,8 @@ private:
     AnimDocument* m_doc;
     AnimViewport* m_viewport;
     AnimClipsDock* m_clips = nullptr;
+    QDockWidget* m_history = nullptr;
+    AutoBackup* m_backup = nullptr;
     AnimNodesDock* m_nodes = nullptr;
     AnimSpritesDock* m_sprites = nullptr;
     AnimPropertiesDock* m_props = nullptr;

@@ -185,6 +185,24 @@ bool ParticleDocument::open(const QString& path, QString* error)
     return true;
 }
 
+bool ParticleDocument::writeBackup(const QString& path, QString* error) const
+{
+    toms::fx::ParticleFile f = m_state.file;
+    f.atlases.clear();
+    for (int i = 0; i < m_state.atlasesAbs.size(); i++) {
+        toms::anim::AtlasRef r;
+        r.path = u8(QDir::fromNativeSeparators(m_state.atlasesAbs[i]));
+        r.id = u8(m_state.atlasIds.value(i));
+        f.atlases.push_back(r);
+    }
+    QSaveFile out(path);
+    if (!out.open(QIODevice::WriteOnly) || out.write(toms::fx::particlesToJson(f).c_str()) < 0 || !out.commit()) {
+        if (error) *error = out.errorString();
+        return false;
+    }
+    return true;
+}
+
 bool ParticleDocument::saveTo(const QString& path, QString* error)
 {
     const QDir dir = QFileInfo(path).absoluteDir();

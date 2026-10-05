@@ -64,6 +64,10 @@ public:
 
     const Clip* clip() const { return clip_; }
     float time() const;                // clip time now (0..duration)
+    // The time the poses are drawn at: time(), except after the last play of a clip with looping
+    // nodes, where it keeps running past the duration so those nodes keep playing (the others hold
+    // their last keys there).
+    float poseTime() const;
     bool finished() const;             // played playCount times (never, for a looping clip)
     bool showing() const;              // something to draw: running, or finished with stayAtLastFrame
 
@@ -80,6 +84,7 @@ private:
     const Clip* clip_ = nullptr;
     double elapsed_ = 0;               // seconds since play()
     bool started_ = false;             // events at time 0 have been sent
+    bool loops_ = false;               // the clip has looping nodes (poseTime() runs on after the end)
     std::vector<std::string> events_;
     mutable PoseCache cache_;
     mutable std::vector<Quad> quads_;                // per pose

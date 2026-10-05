@@ -76,6 +76,10 @@ public:
     QString displayName() const;   // file name, or "Untitled"
     bool isDirty() const;
     QUndoStack* undoStack() const { return m_undo; }
+    // A copy for AutoBackup: the project and its packed atlas (where an embedded project keeps its
+    // images) in a folder named after `path` (without the extension), every output inside it --
+    // never the project's own output folders. Writes in the background; the document does not change.
+    bool writeBackup(const QString& path, QString* error) const;
 
     void newProject();
     // Opens a project; a folder project is converted to an embedded one (and left dirty).

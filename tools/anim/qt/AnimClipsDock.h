@@ -18,6 +18,9 @@ class AnimClipsDock : public QDockWidget
 public:
     explicit AnimClipsDock(AnimDocument* doc, QWidget* parent = nullptr);
     void beginRename();
+    // Makes clip `row` the current one (double-click / Enter). When the current clip has changes,
+    // asks first whether to discard them; `discard` answers instead (tests). False = stayed.
+    bool openClip(int row, int discard = -1);
 
 private:
     void rebuild();

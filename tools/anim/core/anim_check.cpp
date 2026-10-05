@@ -130,6 +130,8 @@ void checkNode(const Node& n, int clip, const Clip& c, std::vector<int>& path, c
     if (bad) add(out, Problem::Error, clip, path, where, "a value is not a finite number");
     if (n.hasPivot && (n.pivot.x < -1 || n.pivot.x > 2 || n.pivot.y < -1 || n.pivot.y > 2))
         add(out, Problem::Info, clip, path, where, "pivot lies far outside the sprite");
+    if (n.loop && !(n.lastKeyTime() - n.firstKeyTime() > 1e-4f))
+        add(out, Problem::Warning, clip, path, where, "loops, but it and its children have no keys over time (nothing to repeat)");
     for (size_t i = 0; i < n.children.size(); i++) {
         path.push_back((int)i);
         checkNode(n.children[i], clip, c, path, where, atlases, out);

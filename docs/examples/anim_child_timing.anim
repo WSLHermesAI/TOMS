@@ -1,0 +1,262 @@
+{
+  "version": 1,
+  "atlases": ["../../assets/media/atlas/game.atlas"],
+  "clips": [
+    {
+      "name": "popup",
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "panel",
+            "sprite": "player",
+            "tracks": {
+              "scale": [
+                { "t": 0.0, "v": [0, 0], "ease": "backOut" },
+                { "t": 0.4, "v": [2, 2] }
+              ]
+            },
+            "children": [
+              {
+                "name": "flash",
+                "sprite": "gem_atk",
+                "blend": "add",
+                "stayAtLastFrame": false,
+                "tracks": {
+                  "scale": [
+                    { "t": 0.0, "v": [0.5, 0.5], "ease": "quadraticOut" },
+                    { "t": 0.4, "v": [2, 2] }
+                  ],
+                  "color": [
+                    { "t": 0.0, "v": [1, 1, 1, 1] },
+                    { "t": 0.4, "v": [1, 1, 1, 0] }
+                  ]
+                }
+              },
+              {
+                "name": "badge",
+                "sprite": "key_yellow",
+                "pos": [16, -16],
+                "tracks": {
+                  "color": [
+                    { "t": 0.3, "v": [1, 1, 1, 0] },
+                    { "t": 0.6, "v": [1, 1, 1, 1] }
+                  ],
+                  "scale": [
+                    { "t": 0.3, "v": [0.2, 0.2], "ease": "backOut" },
+                    { "t": 0.6, "v": [0.5, 0.5] }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name": "orbit",
+            "loop": true,
+            "tracks": {
+              "rot": [
+                { "t": 0.5, "v": 0 },
+                { "t": 2.5, "v": 360 }
+              ]
+            },
+            "children": [
+              {
+                "name": "coin",
+                "sprite": "coin",
+                "pos": [70, 0],
+                "tracks": {
+                  "color": [
+                    { "t": 0.5, "v": [1, 1, 1, 0] },
+                    { "t": 0.7, "v": [1, 1, 1, 1] }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name": "bob",
+            "sprite": "slime",
+            "pos": [0, 60],
+            "loop": true,
+            "tracks": {
+              "pos": [
+                { "t": 0.6, "v": [0, 60], "ease": "sinusoidalInOut" },
+                { "t": 1.1, "v": [0, 50], "ease": "sinusoidalInOut" },
+                { "t": 1.6, "v": [0, 60] }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "child_outlives_parent",
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "player",
+            "sprite": "player",
+            "tracks": {
+              "pos": [
+                { "t": 0.0, "v": [-80, 0], "ease": "cubicOut" },
+                { "t": 0.5, "v": [0, 0] }
+              ]
+            },
+            "children": [
+              {
+                "name": "coin",
+                "sprite": "coin",
+                "pos": [0, -40],
+                "tracks": {
+                  "pos": [
+                    { "t": 0.3, "v": [0, -40], "ease": "sinusoidalInOut" },
+                    { "t": 1.5, "v": [60, -40] }
+                  ]
+                },
+                "children": [
+                  {
+                    "name": "gem",
+                    "sprite": "gem_atk",
+                    "pos": [0, -32],
+                    "tracks": {
+                      "rot": [
+                        { "t": 1.0, "v": 0 },
+                        { "t": 2.0, "v": 360 }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "child_starts_late",
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "slime",
+            "sprite": "slime",
+            "tracks": {
+              "pos": [
+                { "t": 0.0, "v": [-60, 0], "ease": "quadraticOut" },
+                { "t": 1.0, "v": [0, 0] }
+              ]
+            },
+            "children": [
+              {
+                "name": "key",
+                "sprite": "key_yellow",
+                "pos": [0, -40],
+                "tracks": {
+                  "color": [
+                    { "t": 0.8, "v": [1, 1, 1, 0] },
+                    { "t": 1.2, "v": [1, 1, 1, 1] }
+                  ],
+                  "pos": [
+                    { "t": 1.0, "v": [0, -40], "ease": "backOut" },
+                    { "t": 2.0, "v": [0, -90] }
+                  ],
+                  "scale": [
+                    { "t": 1.5, "v": [1, 1], "ease": "quadraticInOut" },
+                    { "t": 2.5, "v": [2, 2] }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "group_staggered",
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "group",
+            "tracks": {
+              "pos": [
+                { "t": 0.0, "v": [0, 40], "ease": "cubicOut" },
+                { "t": 0.5, "v": [0, 0] }
+              ]
+            },
+            "children": [
+              {
+                "name": "coin_a",
+                "sprite": "coin",
+                "pos": [-40, 0],
+                "tracks": {
+                  "pos": [
+                    { "t": 0.0, "v": [-40, 0], "ease": "quadraticOut" },
+                    { "t": 0.5, "v": [-40, -40], "ease": "quadraticIn" },
+                    { "t": 1.0, "v": [-40, 0] }
+                  ]
+                }
+              },
+              {
+                "name": "coin_b",
+                "sprite": "coin",
+                "tracks": {
+                  "pos": [
+                    { "t": 0.5, "v": [0, 0], "ease": "quadraticOut" },
+                    { "t": 1.0, "v": [0, -40], "ease": "quadraticIn" },
+                    { "t": 1.5, "v": [0, 0] }
+                  ]
+                }
+              },
+              {
+                "name": "coin_c",
+                "sprite": "coin",
+                "pos": [40, 0],
+                "tracks": {
+                  "pos": [
+                    { "t": 1.0, "v": [40, 0], "ease": "quadraticOut" },
+                    { "t": 1.5, "v": [40, -40], "ease": "quadraticIn" },
+                    { "t": 2.0, "v": [40, 0] }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "fixed_length_cuts",
+      "length": 0.5,
+      "root": {
+        "name": "root",
+        "children": [
+          {
+            "name": "player",
+            "sprite": "player",
+            "tracks": {
+              "pos": [
+                { "t": 0.0, "v": [-80, 0], "ease": "cubicOut" },
+                { "t": 0.5, "v": [0, 0] }
+              ]
+            },
+            "children": [
+              {
+                "name": "coin",
+                "sprite": "coin",
+                "pos": [0, -40],
+                "tracks": {
+                  "pos": [
+                    { "t": 0.3, "v": [0, -40], "ease": "sinusoidalInOut" },
+                    { "t": 1.5, "v": [60, -40] }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

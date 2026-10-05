@@ -350,6 +350,17 @@ int runSelfTest(ParticleMainWindow& w, const QString& file, const QString& outDi
                 "atlas paths stored relative");
     ok &= check(ed->openFile(saved) && doc->toJson() == json, "reopen: the same file");
 
+    // Backup copy: opens from anywhere (absolute atlas paths), the document is unchanged.
+    {
+        const QString backup = QDir(outDir).filePath(QStringLiteral("backup_1.particle"));
+        const size_t effects = doc->file().effects.size();
+        QString berr;
+        ok &= check(doc->writeBackup(backup, &berr) && !doc->isDirty() && doc->filePath() == QFileInfo(saved).absoluteFilePath(),
+                    "backup copy written, the document unchanged");
+        ok &= check(ed->openFile(backup) && doc->file().effects.size() == effects && doc->atlasCount() == 2 && doc->problems().empty(),
+                    "the backup opens: same effects, both atlases found");
+    }
+
     std::printf("selftest: %s\n", ok ? "ok" : "FAILED");
     return ok ? 0 : 1;
 }

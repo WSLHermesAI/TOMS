@@ -7,6 +7,8 @@
 //                                                 on the atlas's drive (atlas paths are stored relative)
 #include "AnimAtlasesPanel.h"
 #include "AnimDocument.h"
+#include "AnimClipsDock.h"
+#include "AutoBackup.h"
 #include "AnimEditor.h"
 #include "AnimKeyListDock.h"
 #include "AnimMainWindow.h"
@@ -545,6 +547,82 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
     processEvents();
     ok &= check(std::fabs(doc->time() - 0.5f) < 1e-4f && fired.contains(QStringLiteral("hit")), "play to t=0.5 fires 'hit'");
 
+    // 4b. A looping node keeps playing after the clip's end: the playhead stays at the end (edits go
+    // there), the viewport draws a later time; pausing goes back to the playhead.
+    {
+        const QString before = doc->toJson();
+        doc->editClip(QStringLiteral("loop root"), [](toms::anim::Clip& c) { c.root.loop = true; c.playCount = 1; });
+        const bool clipLoop = ed->transport()->loopAction()->isChecked();
+        ed->transport()->loopAction()->setChecked(false);   // the clip plays once, its node loops
+        const float d = doc->duration();
+        doc->setTime(0);
+        ed->transport()->play();
+        ed->transport()->advance(int(d * 1000) + 700);
+        processEvents();
+        ok &= check(ed->transport()->isPlaying() && std::fabs(doc->time() - d) < 1e-4f && doc->previewTime() > d + 0.6f,
+                    "loop node: playback runs on past the end (playhead at the end, preview later)");
+        ed->transport()->pause();
+        ok &= check(doc->previewTime() == doc->time(), "pause: the preview is the playhead again");
+        doc->undoStack()->undo();
+        ok &= check(doc->toJson() == before, "loop undone");
+        ed->transport()->loopAction()->setChecked(clipLoop);
+    }
+
+    // 4c. Clips dock: double-click opens a clip; a changed clip asks to discard its changes first.
+    {
+        AnimClipsDock* clips = ed->clipsDock();
+        const int start = doc->undoStack()->index();
+        const int home = doc->clipIndex();
+        const size_t clipCount = doc->file().clips.size();
+        doc->addClip(QStringLiteral("other"));
+        const int other = doc->clipIndex();
+        ok &= check(!doc->clipModified() && clips->openClip(home) && doc->clipIndex() == home,
+                    "open a clip: an unchanged clip switches without asking");
+        doc->editClip(QStringLiteral("len"), [](toms::anim::Clip& c) { c.length = 2.5f; });
+        ok &= check(doc->clipModified(), "an edit marks the clip changed");
+        ok &= check(!clips->openClip(other, 0) && doc->clipIndex() == home && doc->clipModified(),
+                    "No: stays on the changed clip, changes kept");
+        ok &= check(clips->openClip(other, 1) && doc->clipIndex() == other, "Yes: opens the other clip");
+        ok &= check(doc->file().clips[size_t(home)].length != 2.5f, "Yes: the changes to the first clip are discarded");
+        doc->undoStack()->undo();
+        ok &= check(doc->file().clips[size_t(home)].length == 2.5f, "undo brings the discarded changes back");
+        doc->setClipIndex(home);
+        doc->deleteClip(other);
+        ok &= check(doc->clipIndex() == home, "deleting another clip keeps the open one");
+        doc->undoStack()->setIndex(start);
+        doc->setClipIndex(home);
+        ok &= check(doc->file().clips.size() == clipCount && doc->clipIndex() == home, "clips test undone");
+    }
+
+    // 4d. Automatic backups: after `edits` edits a copy goes to the backups folder; only `keep` stay;
+    // the copy opens (absolute atlas paths). The user's settings are put back afterwards.
+    {
+        const AutoBackup::Settings saved = AutoBackup::settings();
+        AutoBackup::setSettings({true, 60, 3, 2});
+        const QString dir = QDir(AutoBackup::folder()).filePath(QFileInfo(doc->filePath()).completeBaseName());
+        QDir(dir).removeRecursively();
+        auto count = [&] { return int(QDir(dir).entryList({QStringLiteral("*.anim")}, QDir::Files).size()); };
+        const int start = doc->undoStack()->index();
+        for (int i = 1; i <= 2; i++) doc->editClip(QStringLiteral("b"), [i](toms::anim::Clip& c) { c.length = 1.0f + 0.1f * float(i); });
+        ok &= check(count() == 0, "backup: not before 3 edits");
+        doc->editClip(QStringLiteral("b"), [](toms::anim::Clip& c) { c.length = 1.3f; });
+        ok &= check(count() == 1, "backup: written after 3 edits");
+        for (int i = 4; i <= 9; i++) doc->editClip(QStringLiteral("b"), [i](toms::anim::Clip& c) { c.length = 1.0f + 0.1f * float(i); });
+        ok &= check(count() == 2, "backup: only the newest 2 are kept");
+        const QStringList files = QDir(dir).entryList({QStringLiteral("*.anim")}, QDir::Files, QDir::Name);
+        toms::anim::AnimFile back;
+        std::string err;
+        QFile f(QDir(dir).filePath(files.isEmpty() ? QString() : files.last()));
+        ok &= check(f.open(QIODevice::ReadOnly) && toms::anim::parseAnim(f.readAll().toStdString(), back, &err) &&
+                        !back.atlases.empty() && QDir::isAbsolutePath(QString::fromStdString(back.atlases[0].path)) &&
+                        std::fabs(back.clips[size_t(doc->clipIndex())].length - 1.9f) < 1e-4f,
+                    "backup: the newest copy has the last edit and absolute atlas paths");
+        f.close();
+        doc->undoStack()->setIndex(start);
+        QDir(dir).removeRecursively();
+        AutoBackup::setSettings(saved);
+    }
+
     // 5. Screenshots.
     processEvents();
     ok &= check(w.grab().save(QDir(outDir).filePath(QStringLiteral("main.png"))), "main.png");
@@ -825,6 +903,51 @@ int runGpuSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir
     t.start();
     while (toms::next::bgfxHostScreenshotsWritten() == before && t.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
     ok &= check(toms::next::bgfxHostScreenshotsWritten() > before, "anim_gpu.png (bgfx screenshot)");
+    auto shot = [&](const char* name) {
+        const int n = toms::next::bgfxHostScreenshotsWritten();
+        view->saveGameRendererShot(QDir(outDir).filePath(QString::fromLatin1(name)));
+        QElapsedTimer st;
+        st.start();
+        while (toms::next::bgfxHostScreenshotsWritten() == n && st.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+        return toms::next::bgfxHostScreenshotsWritten() > n;
+    };
+    // Double-click another clip in the Clips dock (real mouse events): the viewport shows that clip.
+    if (ed->document()->file().clips.size() > 1) {
+        auto* list = ed->clipsDock()->findChild<QListWidget*>();
+        ed->clipsDock()->show();
+        ed->clipsDock()->raise();
+        pump(200);
+        const QPoint at = list->visualItemRect(list->item(1)).center();
+        for (QEvent::Type type : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease, QEvent::MouseButtonDblClick, QEvent::MouseButtonRelease}) {
+            QMouseEvent e(type, QPointF(at), list->viewport()->mapToGlobal(QPointF(at)), Qt::LeftButton,
+                          type == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::LeftButton, Qt::NoModifier);
+            QApplication::sendEvent(list->viewport(), &e);
+        }
+        const int f1 = view->framesDrawn();
+        pump(600);
+        ok &= check(ed->document()->clipIndex() == 1, "double-click opens clip 2");
+        ok &= check(view->framesDrawn() > f1, "the viewport redraws after the switch");
+        ok &= check(shot("anim_clip2.png"), "anim_clip2.png (the second clip)");
+    }
+    // Solo the first child of the root's first child (in anim_child_timing's second clip: the coin
+    // and the gem it carries): the player is not drawn, the coin and gem are, in their place.
+    {
+        AnimDocument* doc = ed->document();
+        const toms::anim::Clip* c = doc->clip();
+        if (c && !c->root.children.empty() && !c->root.children[0].children.empty()) {
+            const NodePath solo{0, 0};
+            doc->setSolo(solo);
+            const toms::anim::Node& parent = c->root.children[0];
+            const toms::anim::Node& kid = parent.children[0];
+            ok &= check(doc->soloShows(&kid) && !doc->soloShows(&parent) && !doc->soloShows(&c->root) &&
+                            (kid.children.empty() || doc->soloShows(&kid.children[0])),
+                        "solo: the node and its children are drawn, its parents not");
+            pump(300);
+            ok &= check(shot("anim_solo.png"), "anim_solo.png (solo)");
+            doc->setClipIndex(0);
+            ok &= check(!doc->solo(), "another clip ends the solo");
+        }
+    }
     std::printf("selftest: %s\n", ok ? "ok" : "FAILED");
     return ok ? 0 : 1;
 }

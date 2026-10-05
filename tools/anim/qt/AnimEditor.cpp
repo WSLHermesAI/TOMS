@@ -2,6 +2,7 @@
 
 #include "AnimAtlasesPanel.h"
 #include "AnimClipsDock.h"
+#include "AutoBackup.h"
 #include "AnimDocument.h"
 #include "AnimKeyListDock.h"
 #include "AnimNodesDock.h"
@@ -95,7 +96,7 @@ QString AnimEditor::title() const { return m_doc->displayName() + QStringLiteral
 
 QList<QDockWidget*> AnimEditor::docks() const
 {
-    return {m_clips, m_nodes, m_sprites, m_props, m_keys, m_events, m_timeline, m_problems};
+    return {m_clips, m_nodes, m_sprites, m_props, m_history, m_keys, m_events, m_timeline, m_problems};
 }
 
 // ---- construction -------------------------------------------------------------------------------
@@ -231,6 +232,10 @@ void AnimEditor::createDocks()
     m_keys = new AnimKeyListDock(m_doc, m_host);
     m_events = new AnimEventsDock(m_doc, m_host);
     m_problems = new AnimProblemsDock(m_doc, m_host);
+    m_history = createHistoryDock(m_doc->undoStack(), m_host);
+    m_backup = new AutoBackup(m_doc->undoStack(), QStringLiteral(".anim"), [this] { return m_doc->filePath(); },
+                              [this](const QString& p, QString* e) { return m_doc->writeBackup(p, e); }, this);
+    connect(m_backup, &AutoBackup::message, this, [this](const QString& t) { m_host->statusBar()->showMessage(t, 5000); });
     m_timeline = new QDockWidget(tr("Timeline"), m_host);
     m_timeline->setObjectName(QStringLiteral("AnimTimelineDock"));
     auto* placeholder = new QLabel(tr("The multi-track timeline comes in Phase 4.\n"
@@ -288,6 +293,8 @@ void AnimEditor::createMenus()
     file->addSeparator();
     file->addAction(m_addAtlasAct);
     file->addAction(m_reloadAtlasAct);
+    file->addSeparator();
+    m_backup->addMenu(file, m_host);
     file->addSeparator();
     file->addAction(m_quitAct);
 
@@ -405,6 +412,8 @@ void AnimEditor::install()
     m_host->splitDockWidget(m_clips, m_nodes, Qt::Vertical);
     m_host->splitDockWidget(m_nodes, m_sprites, Qt::Vertical);
     m_host->addDockWidget(Qt::RightDockWidgetArea, m_props);
+    m_host->tabifyDockWidget(m_props, m_history);
+    m_props->raise();
     m_host->addDockWidget(Qt::BottomDockWidgetArea, m_keys);
     m_host->tabifyDockWidget(m_keys, m_events);
     m_host->tabifyDockWidget(m_events, m_timeline);
