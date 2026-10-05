@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event Editor Tutorial</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .steps { width: 340px; }
+  .steps .body { padding-top: 6px; }
+  .part { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; margin: 10px 0 5px; text-transform: uppercase; }
+  .step { border: 1px solid var(--line); border-radius: 5px; padding: 7px 10px; margin-bottom: 6px; background: var(--panel-2); opacity: .5; }
+  .step.cur { opacity: 1; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .step.done { opacity: .8; border-color: #2f6b4b; }
+  .step.playing { animation: pulse 1s ease infinite alternate; }
+  @keyframes pulse { to { box-shadow: 0 0 0 3px var(--accent) inset; } }
+  .step h4 { margin: 0; font-size: 13px; display: flex; gap: 8px; align-items: center; }
+  .step .num { width: 20px; height: 20px; border-radius: 50%; background: var(--line); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex: none; }
+  .step.cur .num { background: var(--accent); color: #fff; }
+  .step.done .num { background: var(--ok); color: #111; }
+  .step p { margin: 6px 0 2px; }
+  .step .why { color: var(--muted); font-size: 12px; }
+  .step .actions { margin-top: 6px; }
+  .step code, .modal code, .insp code { background: #111317; padding: 0 4px; border-radius: 3px; }
+  .playbar { display: flex; gap: 6px; margin-bottom: 4px; }
+  .playbar button { flex: 1; }
+  .finish { border: 1px solid var(--ok); border-radius: 5px; padding: 10px; background: #1f3a2c; margin-top: 8px; }
+
+  .work { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .top { flex: 1 1 52%; display: flex; min-height: 0; border-bottom: 1px solid var(--line); }
+  .bottom { flex: 1 1 48%; display: flex; flex-direction: column; min-height: 0; }
+  .tree li.pool { display: flex; justify-content: space-between; align-items: center; }
+  .tree li.pool button { padding: 0 6px; font-size: 11px; }
+  .tree li.ghost { padding-left: 16px; color: #ff9b9b; }
+  .tree .new { color: var(--ok); font-size: 10px; font-weight: 700; margin-left: 4px; }
+  .insp { padding: 12px 18px; max-width: 780px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .err { color: var(--bad); font-size: 12px; margin-top: 2px; }
+  .lang { display: grid; grid-template-columns: 54px 1fr; gap: 6px; align-items: start; margin-bottom: 4px; }
+  .lang span { color: var(--muted); padding-top: 4px; }
+  .preview { background: #0d0f12; border: 2px solid #6b5a3a; border-radius: 6px; padding: 10px 14px; color: #f3e6c8; font-size: 15px; min-height: 44px; }
+  .preview small { display: block; color: #a89a7c; font-size: 11px; }
+  .chip.wrong { border-color: var(--warn); }
+  .banner-bad { border: 1px solid #6b2a2a; background: #3a1b1b; border-radius: 5px; padding: 10px 12px; margin-bottom: 10px; }
+  .banner-warn { border: 1px solid #6a5420; background: #3a2f14; border-radius: 5px; padding: 8px 12px; margin-bottom: 10px; color: #ffd98a; }
+  .popover { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px; box-shadow: 0 6px 20px #000a; z-index: 5; width: 470px; }
+  .popover .act { margin: 6px 0 2px; color: var(--muted); font-size: 11px; }
+  .popover .act.rec { color: var(--ok); }
+  .popover .grid { display: flex; flex-wrap: wrap; gap: 2px 10px; }
+  .popover .scroll { max-height: 230px; overflow: auto; }
+  .empty { padding: 26px; color: var(--muted); }
+
+  .dhead { display: flex; gap: 8px; align-items: center; padding: 5px 10px; background: var(--panel-2); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .seg button.on { background: #2d5d9a; border-color: #3b74bd; }
+  .tabs2 button { font-weight: 600; }
+  .dhead .grow { flex: 1; }
+  #pane { flex: 1; overflow: auto; position: relative; }
+  .node rect { stroke-width: 1.5; }
+  .node text { font-size: 12px; fill: #fff; pointer-events: none; }
+  .node { cursor: pointer; }
+  .node.faded { opacity: .33; }
+  .node.hl rect.box { stroke: #fff; stroke-width: 2.5; }
+  .node.isnew rect.box { filter: drop-shadow(0 0 6px #4cd18a); }
+  .edge { fill: none; stroke: #5d6570; stroke-width: 1.2; }
+  .edge.faded { opacity: .18; }
+  .edge.hl { stroke: #fff; stroke-width: 2; }
+  .edge.miss { stroke: var(--bad); stroke-dasharray: 5 3; }
+  .edge.fresh { stroke: var(--ok); stroke-width: 2.5; stroke-dasharray: 600; stroke-dashoffset: 600; animation: grow 1.1s ease forwards; }
+  @keyframes grow { to { stroke-dashoffset: 0; } }
+  .colhead { fill: var(--muted); font-size: 11px; letter-spacing: .05em; }
+  .note { fill: var(--bad); font-size: 12px; }
+
+  .plist { padding: 8px 12px; }
+  .batch { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; align-items: center; }
+  .batch .chap { border: 1px solid var(--line); background: var(--panel); border-radius: 4px; padding: 3px 8px; }
+  .rulechips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .rulechip { border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 1px 10px; cursor: pointer; font-size: 12px; }
+  .rulechip.on { border-color: var(--accent); background: #24395a; }
+  .sev-error { color: var(--bad); } .sev-warn { color: var(--warn); } .sev-info { color: var(--muted); }
+  td.fix { text-align: right; white-space: nowrap; }
+  td.where { color: var(--muted); font-size: 12px; }
+
+  .modal-bg { position: fixed; inset: 0; background: #000a; display: none; align-items: center; justify-content: center; z-index: 10; }
+  .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; width: min(920px, 94vw); max-height: 86vh; display: flex; flex-direction: column; }
+  .modal header, .modal footer { padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .modal footer { border-top: 1px solid var(--line); border-bottom: none; text-align: right; }
+  .modal .content { overflow: auto; padding: 10px 14px; }
+  .file { margin-bottom: 14px; }
+  .file .path { font-weight: 600; margin-bottom: 4px; }
+  pre.diff { margin: 0; background: #111317; border: 1px solid var(--line); border-radius: 4px; padding: 8px; font: 12px/1.5 Consolas, "Cascadia Mono", monospace; overflow: auto; max-height: 260px; }
+  pre.diff .add { color: #7ee2a8; background: #173323; display: block; }
+  pre.diff .del { color: #ff9b9b; background: #3a1b1b; display: block; }
+  pre.diff .ctx { color: #8b929c; display: block; }
+  .flash { animation: flash 1.2s ease 2; }
+
+  /* Play demo: the spotlight frames the control the next action uses; the console narrates */
+  #spot { position: fixed; z-index: 40; pointer-events: none; border: 2px solid #ffd24c; border-radius: 6px; display: none;
+    box-shadow: 0 0 0 4px #ffd24c55, 0 0 0 9999px #00000070; transition: top .35s ease, left .35s ease, width .35s ease, height .35s ease; }
+  #spot.go { animation: spotgo .45s ease 2; }
+  @keyframes spotgo { 50% { box-shadow: 0 0 0 10px #ffd24c99, 0 0 0 9999px #00000070; } }
+  #spotLabel { position: fixed; z-index: 41; pointer-events: none; display: none; background: #ffd24c; color: #1b1b1b; font-weight: 700;
+    font-size: 12px; padding: 3px 9px; border-radius: 4px; white-space: nowrap; transition: top .35s ease, left .35s ease; }
+  #console { position: fixed; z-index: 50; right: 14px; bottom: 30px; width: 480px; background: #0f1114f2; border: 1px solid #4a505a;
+    border-radius: 6px; box-shadow: 0 8px 28px #000c; display: none; flex-direction: column; font: 12px/1.5 Consolas, "Cascadia Mono", monospace; }
+  #console header { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-bottom: 1px solid #333840; font-family: inherit; color: #d7dbe0; }
+  #console header .grow { flex: 1; }
+  #console header button { padding: 0 7px; font-size: 11px; }
+  #conNext { padding: 8px 10px; border-bottom: 1px solid #333840; color: #ffd24c; min-height: 40px; }
+  #conNext .lbl { color: #8b929c; display: block; font-size: 11px; }
+  #conNext .bar { height: 3px; background: #333840; margin-top: 6px; border-radius: 2px; overflow: hidden; }
+  #conNext .bar i { display: block; height: 100%; width: 0; background: #ffd24c; }
+  #conLog { max-height: 170px; overflow: auto; padding: 6px 10px; }
+  #console.min #conLog { display: none; }
+  .cl { white-space: pre-wrap; color: #8b929c; }
+  .cl .t { color: #5d6570; }
+  .cl.step { color: #4c9eff; font-weight: 700; margin-top: 4px; }
+  .cl.next.cur { color: #ffd24c; }
+  .cl.done { color: #7ee2a8; }
+  .cl.warn { color: #ff9f43; }
+  .cl .where { color: #a98bff; }
+  @keyframes flash { 50% { box-shadow: 0 0 0 3px var(--ok); } }
+</style>
+</head>
+<body>
+<div class="banner">TUTORIAL · on a copy of the current TOMS event data (<span id="snap"></span>) · nothing is written to disk<span class="spacer"></span>
+  <a href="index.html">All mockups</a> <a href="#" id="reset">Reset tutorial</a></div>
+<div class="menubar"><span>File</span><span>Edit</span><span>View</span>
+  <div class="tabs"><div class="tab">Stage</div><div class="tab">Anim</div><div class="tab">Particles</div><div class="tab on">Events<span id="dirtyMark" class="dirty"></span></div></div>
+  <div class="grow"></div><button id="undo" title="Ctrl+Z">Undo</button> <button class="primary" id="save" title="Ctrl+S">Save</button></div>
+
+<div class="main">
+  <div class="dock steps">
+    <h3>Tutorial</h3>
+    <div class="body"><div class="playbar"><button id="play">▶ Play demo</button><button id="stop" disabled>■ Stop</button>
+      <select id="speed" title="Demo speed" style="flex:none"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div><div id="steps"></div></div>
+  </div>
+  <div class="work">
+    <div class="top">
+      <div class="dock" style="width:230px">
+        <h3>Events</h3>
+        <div class="body"><button id="newBtn" style="width:100%;margin-bottom:6px">+ New event</button><ul class="tree" id="tree"></ul></div>
+      </div>
+      <div class="center"><div id="form"></div></div>
+    </div>
+    <div class="bottom">
+      <div class="dhead">
+        <span class="seg tabs2"><button id="tDiagram" class="on">Relationship diagram</button><button id="tProblems">Problems</button></span>
+        <span id="diagCtl"><span class="seg"><button id="mFocus" class="on">Focus: selected</button><button id="mFull">Full map</button></span>
+          <select id="chapSel" title="Chapters shown in the full map"></select></span>
+        <span class="grow"></span><span class="muted" id="dinfo"></span></div>
+      <div id="pane"></div>
+    </div>
+  </div>
+  <div class="dock right" style="width:210px">
+    <h3>History</h3>
+    <div class="body"><ul class="tree" id="hist"></ul></div>
+  </div>
+</div>
+<div class="statusbar"><span id="status">Ready</span><span id="probs"></span></div>
+<div class="toast" id="toast"></div>
+<div id="spot"></div><div id="spotLabel"></div>
+<div id="console"><header><b>▶ Demo console</b><span class="muted" id="conStep"></span><span class="grow"></span>
+  <button id="conMin" title="Show or hide the log">log</button><button id="conClose" title="Close">✕</button></header>
+  <div id="conNext"></div><div id="conLog"></div></div>
+<div class="modal-bg" id="modalBg"><div class="modal">
+  <header><b>Save changes</b> <span class="muted">· a backup of each file is copied first, then these files are written</span></header>
+  <div class="content" id="diffs"></div>
+  <footer><button id="mCancel">Cancel</button> <button class="primary" id="mWrite">Write files</button></footer>
+</div></div>
+
+<script src="data.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const KINDS = ['relic', 'whisper', 'cache', 'trap', 'rescue', 'merchant_echo', 'memory_shard'];
+const LANGS = ['zh_TW', 'en', 'zh_CN', 'ja', 'ko', 'es'];
+const kindColor = k => getComputedStyle(document.documentElement).getPropertyValue('--k-' + k).trim() || '#777';
+const actOfPool = p => /^pool_act(\d+)$/.test(p) ? 'ch_' + p.slice(8) : null;   // pool_common -> null (any chapter)
+const poolForAct = a => 'pool_act' + a.slice(3);
+const ACTS = [...new Set(DATA.floors.map(f => f.act))];
+$('snap').textContent = 'assets/data, ' + (DATA.snapshot || 'snapshot');
+
+// ---------- state: the in-memory graph the editor holds; `base` is what is on disk ----------
+const fresh = () => ({
+  pools: [...DATA.pools],
+  events: DATA.events.map(e => ({ id: e.id, kind: e.kind, pool: e.pool, text: e.text })),
+  floors: DATA.floors.map(f => ({ id: f.id, act: f.act, events: [...f.events] })),
+  texts: JSON.parse(JSON.stringify(DATA.texts)),
+});
+let S, base, selected, undoStack, flags, mode, tab, chapView, hlNode, freshEdges = new Set(), newCounter, doneSet, showInfo;
+function reset() {
+  S = fresh(); base = clone(S); selected = null; undoStack = []; mode = 'focus'; tab = 'diagram'; chapView = 'ch_01-03'; hlNode = null;
+  newCounter = 1; doneSet = new Set(); showInfo = false;
+  flags = { full: false, clickedFloor: false, saves: 0, lastSaveStep: -1, problemsTab: false, saw: new Set() };
+  $('hist').innerHTML = '<li class="muted">Loaded assets/data</li>';
+  renderAll();
+}
+function clone(x) { return JSON.parse(JSON.stringify(x)); }
+const ev = id => S.events.find(e => e.id === id);
+const floorsOf = id => S.floors.filter(f => f.events.includes(id));
+const tutEv = () => S.events.find(e => e.tutorial);
+const isMissing = id => !ev(id) && S.floors.some(f => f.events.includes(id));
+const modelEdges = () => new Set([...S.floors.flatMap(f => f.events.map(id => f.id + '>' + id)), ...S.events.flatMap(e => [e.pool + '>' + e.id, e.id + '>' + e.text])]);
+const strip = s => ({ pools: s.pools, events: s.events.map(({ isNew, tutorial, ...r }) => r), floors: s.floors, texts: s.texts });
+const dirty = () => JSON.stringify(strip(S)) !== JSON.stringify(strip(base));
+const textOf = e => S.texts[e.text] || {};
+const isPlaceholder = (key, t) => !t || t._todo || !t.zh_TW || t.zh_TW === key || t.zh_TW === key.replace(/\.text$/, '');
+
+// every edit snapshots first, so one Undo restores everything the edit touched (pool, floors, text)
+function edit(label, fn) {
+  undoStack.push({ s: clone(S), sel: selected, label });
+  const before = modelEdges();
+  fn();
+  freshEdges = new Set([...modelEdges()].filter(k => !before.has(k)));
+  $('hist').insertAdjacentHTML('beforeend', `<li>${esc(label)}</li>`);
+  renderAll();
+}
+$('undo').onclick = () => { const u = undoStack.pop(); if (!u) return; S = u.s; selected = u.sel; $('hist').lastElementChild.remove(); renderAll(); };
+
+// ---------- problems: the validator, run after every edit ----------
+const RULES = {
+  missing_event: { name: 'Missing event id', sev: 'error', icon: '⛔' },
+  missing_text:  { name: 'Missing text key', sev: 'error', icon: '⛔' },
+  orphan:        { name: 'Orphan event',     sev: 'warn',  icon: '⚠' },
+  no_kind:       { name: 'No kind',          sev: 'warn',  icon: '⚠' },
+  placeholder:   { name: 'Placeholder text', sev: 'warn',  icon: '⚠' },
+  wrong_chapter: { name: 'Wrong chapter',    sev: 'warn',  icon: '⚠' },
+  untranslated:  { name: 'Untranslated',     sev: 'info',  icon: 'ⓘ' },
+};
+function problems() {
+  const out = [], seen = new Set();
+  S.floors.forEach(f => f.events.forEach(id => { if (!ev(id) && !seen.has(id)) { seen.add(id);
+    const fl = floorsOf(id); out.push({ rule: 'missing_event', id, where: fl.map(x => x.id).join(', '), act: fl[0].act }); } }));
+  S.events.forEach(e => {
+    const t = S.texts[e.text], fl = floorsOf(e.id), act = actOfPool(e.pool);
+    if (!fl.length) out.push({ rule: 'orphan', id: e.id, where: e.pool });
+    if (!t) out.push({ rule: 'missing_text', id: e.id, where: e.text });
+    else if (isPlaceholder(e.text, t)) out.push({ rule: 'placeholder', id: e.id, where: e.text });
+    else if (!t.en || t.en === t.zh_TW) out.push({ rule: 'untranslated', id: e.id, where: e.text });
+    if (!e.kind) out.push({ rule: 'no_kind', id: e.id, where: e.pool });
+    fl.filter(f => act && f.act !== act).forEach(f => out.push({ rule: 'wrong_chapter', id: e.id, where: `${f.id} is ${f.act}, ${e.pool} is ${act}`, floor: f.id }));
+  });
+  return out;
+}
+
+// ---------- actions ----------
+function guessKind(id) {
+  const baseId = id.replace(/_v\d+$/, ''); if (baseId !== id && ev(baseId)) return ev(baseId).kind;   // a variant keeps its original's kind
+  return KINDS.find(k => id.includes(k.replace('memory_', ''))) || '';
+}
+function selectSubject(id, opts = {}) {
+  selected = id; hlNode = null; flags.saw.add(id);
+  if (mode === 'full') { const f = floorsOf(id)[0]; if (f && !actsInView().includes(f.act)) chapView = f.act; }
+  if (opts.toDiagram) { tab = 'diagram'; mode = 'focus'; }   // coming from Problems: show just this case
+  renderAll();
+}
+function createEvent(pool) {
+  pool = pool || (selected && ev(selected) ? ev(selected).pool : 'pool_act01');
+  let id; do { id = `ev_new_event_${newCounter++}`; } while (ev(id) || S.texts[id + '.text']);
+  edit(`New event ${id} in ${pool}`, () => {
+    const e = { id, kind: '', pool, text: id + '.text', isNew: true };
+    if (!tutEv()) e.tutorial = true;
+    S.events.push(e); S.texts[e.text] = Object.fromEntries(LANGS.map(l => [l, ''])); selected = id;
+  });
+  setTimeout(() => { const i = $('fId'); if (i) { i.focus(); i.select(); } }, 0);
+}
+function idError(id, self) {
+  if (!/^ev_[a-z0-9_]+$/.test(id)) return 'Use ev_ then lowercase letters, digits and _ (e.g. ev_village_scarecrow)';
+  if (S.events.some(e => e.id === id && e !== self)) return `${id} already exists in ${ev(id).pool}`;
+  return '';
+}
+function renameEvent(e, nu) {
+  const old = e.id, touched = floorsOf(old);
+  edit(`Rename ${old} → ${nu}`, () => {
+    touched.forEach(f => f.events[f.events.indexOf(old)] = nu);
+    const t = S.texts[e.text]; delete S.texts[e.text];
+    e.id = nu; e.text = nu + '.text'; S.texts[e.text] = t || {}; selected = nu;
+  });
+}
+function addFloors(e, ids) { edit(`Connect ${e.id} to ${ids.join(', ')}`, () => ids.forEach(id => S.floors.find(f => f.id === id).events.push(e.id))); }
+function setText(e, lang, value) { edit(`Text ${e.id} [${lang}]`, () => { const t = S.texts[e.text] = S.texts[e.text] || {}; t[lang] = value; if (lang === 'zh_TW') delete t._todo; }); }
+
+// a missing id becomes a real event: ev_common_* variants go to pool_common, the rest to their chapter's pool.
+// The text key is the placeholder string that already exists under the bare id, so text.json needs no new key.
+function makeRecord(id, act) {
+  const pool = id.startsWith('ev_common_') ? 'pool_common' : poolForAct(act);
+  if (!S.pools.includes(pool)) S.pools.push(pool);
+  const text = S.texts[id] ? id : id + '.text';
+  if (!S.texts[text]) S.texts[text] = Object.fromEntries(LANGS.map(l => [l, '']));
+  S.events.push({ id, kind: guessKind(id), pool, text, isNew: true });
+  return pool;
+}
+function createFromMissing(id) {
+  const act = floorsOf(id)[0].act;
+  edit(`Create ${id} in ${id.startsWith('ev_common_') ? 'pool_common' : poolForAct(act)}`, () => { makeRecord(id, act); selected = id; });
+}
+function createChapter(act) {
+  const ids = problems().filter(p => p.rule === 'missing_event' && p.act === act).map(p => p.id);
+  if (!ids.length) return;
+  edit(`Create ${ids.length} missing events for ${act}`, () => ids.forEach(id => makeRecord(id, act)));
+  toast(`Created ${ids.length} events for ${act}.\nCommon variants went to pool_common, the rest to ${poolForAct(act)}.\nThey still need kinds and text: see the Problems tab.`);
+}
+function removeFromFloors(id) { edit(`Remove ${id} from ${floorsOf(id).map(f => f.id).join(', ')}`, () => floorsOf(id).forEach(f => f.events.splice(f.events.indexOf(id), 1))); selected = null; renderAll(); }
+function deleteEvent(e) { edit(`Delete ${e.id}`, () => { S.events.splice(S.events.indexOf(e), 1); selected = null; }); }
+function moveToPool(e, pool) { edit(`Move ${e.id} to ${pool}`, () => { S.events.splice(S.events.indexOf(e), 1); e.pool = pool; S.events.push(e); }); }
+
+// ---------- tutorial ----------
+const DEMO_TEXT = { zh_TW: '洞壁傳回的回聲，比你的聲音晚了一拍。', en: 'The cavern wall echoes you back, one beat too late.' };
+const STEPS = [
+  { part: 'Part 1 · Create an event', t: 'Create a new event',
+    p: 'Click <b>+ New event</b>, or the <b>+</b> next to <code>pool_act01</code> in the Events tree. A blank event appears, selected in the inspector.',
+    why: 'The pool decides which chapter can roll it. pool_act01 is the village (ch_01); pool_common is shared by every chapter.',
+    done: () => !!tutEv(), show: () => createEvent('pool_act01') },
+  { t: 'Name it and choose a kind',
+    p: 'Type <code>ev_village_scarecrow</code> in <b>eventId</b> and press Tab. Then choose a <b>kind</b>, for example <code>whisper</code>.',
+    why: 'Ids are unique across every pool. The text key follows the id: <code>&lt;id&gt;.text</code>.',
+    done: () => { const e = tutEv(); return e && !/^ev_new_event_/.test(e.id) && e.kind; },
+    show: () => { const e = tutEv(); if (/^ev_new_event_/.test(e.id)) renameEvent(e, ev('ev_village_scarecrow') ? 'ev_village_scarecrow_2' : 'ev_village_scarecrow');
+      if (!e.kind) edit(`Kind of ${e.id} → whisper`, () => e.kind = 'whisper'); } },
+  { t: 'Write the text',
+    p: 'Type the <b>zh_TW</b> line the player reads, and <b>en</b>. The preview shows it in the game dialog box.',
+    why: 'This text goes into text.json under the event\'s text key.',
+    done: () => { const e = tutEv(); return e && (textOf(e).zh_TW || '').trim(); },
+    show: () => { const e = tutEv(); edit(`Text ${e.id}`, () => Object.assign(S.texts[e.text], { zh_TW: '稻草人轉過頭來看你。', en: 'The scarecrow turns its head to watch you.' })); } },
+  { t: 'Connect it to floors',
+    p: 'Under <b>Floors that can roll it</b>, click <b>+ Add floor…</b>, tick <b>F02</b> and <b>F04</b>, then <b>Connect</b>. Green edges grow in the diagram.',
+    why: 'Each floor file lists the events it can roll. With no floor, the event never appears in game.',
+    done: () => { const e = tutEv(); return e && floorsOf(e.id).length > 0; },
+    show: () => { const e = tutEv(); selectSubject(e.id, { toDiagram: true }); addFloors(e, ['F02', 'F04'].filter(f => !floorsOf(e.id).some(x => x.id === f))); } },
+  { t: 'Watch the relationship diagram',
+    p: 'Switch the diagram to <b>Full map</b>. Your event glows green. Click one of its floors, <b>F02</b>, to light up everything that floor can roll.',
+    why: 'Read left to right: a floor rolls events, a pool owns events, an event shows a text key.',
+    done: () => flags.full && flags.clickedFloor,
+    show: () => { tab = 'diagram'; setMode('full'); const f = floorsOf(tutEv().id)[0]; if (f) clickNode(f.id); } },
+  { t: 'Save',
+    p: 'Press <b>Save</b> (or Ctrl+S), read the change to each file, then click <b>Write files</b>.',
+    why: 'One save writes the pool file, every connected floor and text.json together.',
+    done: () => flags.saves > 0, show: auto => openSave(auto) },
+
+  { part: 'Part 2 · Find problems', t: 'Open the Problems tab',
+    p: 'Click <b>Problems</b> above the diagram. The validator checks the data after every edit; each row is one id.',
+    why: '⛔ errors break the game (a floor rolls an id nobody defined). ⚠ warnings are content that never shows or is unfinished. Untranslated (ⓘ) is hidden until you tick it.',
+    done: () => flags.problemsTab, show: () => setTab('problems') },
+  { t: 'Inspect an orphan event',
+    p: 'In the list, click the <b>Orphan event</b> row <code>ev_village_bell_rope</code>. The diagram shows its pool and text key, but <b>no floor</b> on the left.',
+    why: 'An orphan is defined in a pool, but no floor lists it, so the player can never meet it.',
+    done: () => flags.saw.has('ev_village_bell_rope'), show: () => selectSubject('ev_village_bell_rope', { toDiagram: true }) },
+  { t: 'Inspect a missing event id',
+    p: 'Back in <b>Problems</b>, click <code>ev_cavern_echo_wall</code> (⛔ Missing event id). F38 and F41 point at a <b style="color:var(--bad)">red node</b>: an id no pool defines.',
+    why: 'Floors F22–F70 (ch_04 to ch_10) list 92 such ids: those chapters have no pool files yet. Each id has only a _todo placeholder in text.json.',
+    done: () => flags.saw.has('ev_cavern_echo_wall'), show: () => selectSubject('ev_cavern_echo_wall', { toDiagram: true }) },
+
+  { part: 'Part 3 · Solve them', t: 'Fix the orphan: connect it',
+    p: 'Select <code>ev_village_bell_rope</code>, click <b>+ Add floor…</b>, tick <b>F06</b> (ch_01, green = the pool\'s chapter), then <b>Connect</b>. The orphan row disappears.',
+    why: 'The other fix is Delete, if the event is not wanted. Connecting it is right when the event was written but forgotten.',
+    done: () => ev('ev_village_bell_rope') && floorsOf('ev_village_bell_rope').length > 0,
+    show: () => { selectSubject('ev_village_bell_rope', { toDiagram: true }); addFloors(ev('ev_village_bell_rope'), ['F06']); } },
+  { t: 'Fix a missing id: create the event',
+    p: 'Select <code>ev_cavern_echo_wall</code>. The inspector offers <b>Create in pool_act06</b>; click it. Then choose a <b>kind</b> (<code>whisper</code>) and replace the placeholder <b>zh_TW</b> text with a real line.',
+    why: 'The editor creates pool_act06.json since it does not exist yet, and links the event to the placeholder string already in text.json. If the floor reference were a typo, <b>Remove from floors</b> is the other fix.',
+    done: () => { const e = ev('ev_cavern_echo_wall'); return e && e.kind && !isPlaceholder(e.text, textOf(e)); },
+    show: () => { if (!ev('ev_cavern_echo_wall')) createFromMissing('ev_cavern_echo_wall'); const e = ev('ev_cavern_echo_wall');
+      if (!e.kind) edit(`Kind of ${e.id} → whisper`, () => e.kind = 'whisper');
+      edit(`Text ${e.id}`, () => { const t = S.texts[e.text]; LANGS.forEach(l => { if (t[l] === e.id) t[l] = ''; }); Object.assign(t, DEMO_TEXT); delete t._todo; }); selectSubject(e.id, { toDiagram: true }); } },
+  { t: 'Fix a whole chapter at once',
+    p: 'In <b>Problems</b>, the bar at the top groups missing ids by chapter. Click <b>ch_04: create 23</b>.',
+    why: 'Variants such as ev_common_cache_wall_v3 go to pool_common and keep their original\'s kind; the library events go to a new pool_act04. They are now real events, and show as ⚠ No kind and ⚠ Placeholder text: the writing work that is left.',
+    done: () => !problems().some(p => p.rule === 'missing_event' && p.act === 'ch_04'), show: () => { setTab('problems'); createChapter('ch_04'); } },
+  { t: 'Save and check',
+    p: 'Press <b>Save</b>. The diff now includes the new <code>pool_act04.json</code> and <code>pool_act06.json</code> files. Write them, then look at the problem count in the status bar.',
+    why: 'In the real editor, Save never blocks on warnings: you can save unfinished text and come back to it.',
+    done: () => flags.lastSaveStep >= 12, show: auto => openSave(auto) },
+];
+function currentStep() {
+  STEPS.forEach((s, i) => { if (!doneSet.has(i)) try { if (s.done()) doneSet.add(i); } catch (_) {} });   // a finished step stays finished
+  const i = STEPS.findIndex((s, i) => !doneSet.has(i)); return i < 0 ? STEPS.length : i;
+}
+function renderSteps() {
+  const cur = currentStep();
+  $('steps').innerHTML = STEPS.map((s, i) => `${s.part ? `<div class="part">${s.part}</div>` : ''}<div class="step ${doneSet.has(i) ? 'done' : i === cur ? 'cur' : ''}${i === playing ? ' playing' : ''}" id="st${i}">
+      <h4><span class="num">${doneSet.has(i) ? '✓' : i + 1}</span>${s.t}</h4>
+      ${i === cur ? `<p>${s.p}</p><p class="why">${s.why}</p><div class="actions"><button data-show="${i}">Show me</button></div>` : ''}</div>`).join('')
+    + (cur === STEPS.length ? `<div class="finish"><b>All done.</b> You created an event, read its relationships, found three kinds of problem and fixed them.
+       <p class="why">Still open: ${(() => { const c = {}; problems().forEach(p => c[p.rule] = (c[p.rule] || 0) + 1);
+         return Object.entries(c).map(([k, n]) => `${n} ${RULES[k].name.toLowerCase()}`).join(', '); })()}. The missing ids are chapters ch_05 to ch_10: fix them the same way as ch_04, then give the new events kinds and real text.</p></div>` : '');
+  $('steps').querySelectorAll('[data-show]').forEach(b => b.onclick = () => STEPS[b.dataset.show].show(false));
+  const c = $('st' + cur); if (c && playing >= 0) c.scrollIntoView({ block: 'nearest' });
+}
+
+// ▶ Play demo: every step is a short script of actions on the real UI. Before each action the console says what
+// comes next and where, and the spotlight frames that control; then the action runs and the console logs it.
+let playing = -1, stopReq = false, speed = 1;
+const wait = ms => new Promise(r => setTimeout(r, ms / speed));
+const q = sel => () => document.querySelector(sel);
+const fire = el => el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+const rowOf = id => () => [...document.querySelectorAll('#pane tr.row')].find(tr => tr.querySelector('b')?.textContent === id);
+const floorBox = id => () => { const i = document.querySelector(`.popover input[value="${id}"]`); return i && i.parentElement; };
+async function typeInto(el, text) {
+  el.focus(); el.value = ''; el.dispatchEvent(new Event('input'));
+  for (const ch of text) { el.value += ch; el.dispatchEvent(new Event('input')); await wait(45); }
+  el.dispatchEvent(new Event('change'));
+}
+const act = {
+  click: (where, say, get) => ({ where, say, get, run: el => fire(el) }),
+  type:  (where, say, get, text) => ({ where, say, get, run: el => typeInto(el, text) }),
+  pick:  (where, say, get, value) => ({ where, say, get, run: el => { el.value = value; el.dispatchEvent(new Event('change')); } }),
+  tick:  (where, say, get) => ({ where, say, get, run: el => { el.querySelector('input').checked = true; } }),
+};
+const DEMO = [
+  () => [act.click('Events tree · pool_act01', 'Click + next to pool_act01: a blank event is created in that pool', q('[data-new="pool_act01"]'))],
+  () => [act.type('Inspector · eventId', 'Type the id ev_village_scarecrow (the text key follows it)', q('#fId'), 'ev_village_scarecrow'),
+         act.pick('Inspector · kind', 'Choose the kind: whisper', q('#fKind'), 'whisper')],
+  () => [act.type('Inspector · Text zh_TW', 'Write the zh_TW line the player reads', q('[data-lang="zh_TW"]'), '稻草人轉過頭來看你。'),
+         act.type('Inspector · Text en', 'Write the English line', q('[data-lang="en"]'), 'The scarecrow turns its head to watch you.')],
+  () => [act.click('Inspector · Floors', 'Open + Add floor… to pick the floors that can roll it', q('#addFloor')),
+         act.tick('Floor picker · ch_01', 'Tick F02 (green chapter = matches pool_act01)', floorBox('F02')),
+         act.tick('Floor picker · ch_01', 'Tick F04', floorBox('F04')),
+         act.click('Floor picker', 'Click Connect: F02 and F04 now list the event; watch the green edges', q('#popOk'))],
+  () => [act.click('Diagram', 'Switch the diagram to Full map', q('#mFull')),
+         act.click('Diagram · floor F02', 'Click floor F02 to light up everything it can roll', q('#pane .node[data-id="F02"]'))],
+  () => [act.click('Toolbar · Save', 'Press Save: the dialog shows the change to each file', q('#save')),
+         act.click('Save dialog', 'Write the 4 files (each is backed up first)', q('#mWrite'))],
+  () => [act.click('Bottom pane · Problems', 'Open the Problems tab: the validator\'s list', q('#tProblems'))],
+  () => [act.click('Problems · orphan row', 'Click ev_village_bell_rope: a pool and text key, but no floor', rowOf('ev_village_bell_rope'))],
+  () => [act.click('Bottom pane · Problems', 'Back to the Problems list', q('#tProblems')),
+         act.click('Problems · missing id row', 'Click ev_cavern_echo_wall: F38 and F41 point at a red node', rowOf('ev_cavern_echo_wall'))],
+  () => [act.click('Events tree', 'Select the orphan ev_village_bell_rope', q('li.ev[data-id="ev_village_bell_rope"]')),
+         act.click('Inspector · Floors', 'Open + Add floor…', q('#addFloor')),
+         act.tick('Floor picker · ch_01', 'Tick F06, a village floor', floorBox('F06')),
+         act.click('Floor picker', 'Click Connect: the orphan is fixed', q('#popOk'))],
+  () => [act.click('Bottom pane · Problems', 'Open Problems again', q('#tProblems')),
+         act.click('Problems · missing id row', 'Select ev_cavern_echo_wall', rowOf('ev_cavern_echo_wall')),
+         act.click('Inspector · Fix it', 'Create it in pool_act06 (the pool file is created too)', q('#mkEv')),
+         act.pick('Inspector · kind', 'It has no kind yet: choose whisper', q('#fKind'), 'whisper'),
+         act.type('Inspector · Text zh_TW', 'Replace the placeholder with the real line', q('[data-lang="zh_TW"]'), DEMO_TEXT.zh_TW),
+         act.type('Inspector · Text en', 'And the English line', q('[data-lang="en"]'), DEMO_TEXT.en)],
+  () => [act.click('Bottom pane · Problems', 'Open Problems', q('#tProblems')),
+         act.click('Problems · by chapter', 'Create all of ch_04\'s missing ids in one step', q('[data-act="ch_04"]'))],
+  () => [act.click('Toolbar · Save', 'Press Save: two new pool files are in the list', q('#save')),
+         act.click('Save dialog', 'Write the files', q('#mWrite'))],
+];
+
+// spotlight: follows its target every frame, since edits re-render the panels
+let spotGet = null;
+function spot(get, label) {
+  spotGet = get; $('spotLabel').textContent = label;
+  $('spot').style.display = $('spotLabel').style.display = 'block';
+  $('spot').classList.remove('go'); placeSpot();
+}
+function hideSpot() { spotGet = null; $('spot').style.display = $('spotLabel').style.display = 'none'; }
+function placeSpot() {
+  const el = spotGet && spotGet(), r = el && el.isConnected && el.getBoundingClientRect();
+  const show = !!(r && r.width && r.height);   // the target can vanish once the action runs (dialog closed, row fixed)
+  if (spotGet) $('spot').style.display = $('spotLabel').style.display = show ? 'block' : 'none';
+  if (show) {
+    const p = 5, sp = $('spot').style, lb = $('spotLabel');
+    sp.left = r.left - p + 'px'; sp.top = r.top - p + 'px'; sp.width = r.width + 2 * p + 'px'; sp.height = r.height + 2 * p + 'px';
+    const above = r.top > 34;
+    lb.style.left = Math.max(6, Math.min(r.left - p, innerWidth - lb.offsetWidth - 6)) + 'px';
+    lb.style.top = (above ? r.top - p - 26 : r.bottom + p + 4) + 'px';
+  }
+}
+(function follow() { placeSpot(); requestAnimationFrame(follow); })();
+setInterval(placeSpot, 120);   // rAF pauses in background tabs; keep the frame on its target anyway
+
+// console
+const t0 = { v: 0 };
+const stamp = () => { const s = Math.floor((Date.now() - t0.v) / 1000); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+function log(msg, cls = '', where = '') {
+  const d = document.createElement('div');
+  d.className = 'cl ' + cls;
+  d.innerHTML = `<span class="t">${stamp()}</span> ${esc(msg)}${where ? ` <span class="where">[${esc(where)}]</span>` : ''}`;
+  $('conLog').appendChild(d); $('conLog').scrollTop = 1e6;
+  return { el: d, done(note) { d.classList.remove('cur'); d.classList.add(note ? 'warn' : 'done'); d.innerHTML = d.innerHTML.replace('next →', note ? '⚠' : '✓') + (note ? ` (${esc(note)})` : ''); } };
+}
+function showNext(i, a, ms) {
+  $('conStep').textContent = i >= 0 ? `step ${i + 1}/${STEPS.length}` : '';
+  $('conNext').innerHTML = a ? `<span class="lbl">NEXT · ${esc(a.where)}</span>${esc(a.say)}<div class="bar"><i id="conBar"></i></div>` : `<span class="lbl">NEXT</span>${esc(i)}`;
+  if (a) requestAnimationFrame(() => { const b = $('conBar'); if (b) { b.style.transition = `width ${ms / speed}ms linear`; b.style.width = '100%'; } });
+}
+$('conMin').onclick = () => $('console').classList.toggle('min');
+$('conClose').onclick = () => { if (playing < 0) $('console').style.display = 'none'; };
+$('speed').onchange = () => speed = +$('speed').value;
+
+$('play').onclick = async () => {
+  stopReq = false; $('play').disabled = true; $('stop').disabled = false;
+  $('console').style.display = 'flex'; $('conLog').innerHTML = ''; t0.v = Date.now();
+  log('▶ Demo started. Yellow = what happens next; the frame shows where.', 'step');
+  for (let i = currentStep(); i < STEPS.length && !stopReq; i = currentStep()) {
+    playing = i; renderSteps();
+    log(`Step ${i + 1}/${STEPS.length} · ${STEPS[i].t}`, 'step');
+    showNext(`Step ${i + 1}: ${STEPS[i].t}`); hideSpot(); await wait(1000);
+    for (const a of DEMO[i]()) {
+      if (stopReq) break;
+      const line = log('next → ' + a.say, 'next cur', a.where);
+      let el = a.get();
+      if (!el) { line.done('not on screen, using Show me'); STEPS[i].show(true); await wait(2600); break; }
+      el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      spot(a.get, '▶ ' + a.where); showNext(i, a, 1600);
+      await wait(1600); if (stopReq) break;
+      $('spot').classList.add('go');
+      el = a.get() || el;
+      await a.run(el);
+      line.done();
+      await wait(800);
+    }
+    hideSpot();
+    if (stopReq) break;
+    await wait(300);
+    if (currentStep() === i) { log(`Step ${i + 1} did not finish; stopping here.`, 'warn'); break; }
+    log(`✓ Step ${i + 1} done`, 'done');
+  }
+  const finished = currentStep() === STEPS.length;
+  log(stopReq ? '■ Stopped. Press ▶ Play demo to continue from this step.' : finished ? '■ Demo finished. All 13 steps are done.' : '■ Demo paused.', 'step');
+  showNext(stopReq ? 'Stopped' : finished ? 'Finished. Reset tutorial to watch again.' : 'Paused');
+  hideSpot(); playing = -1; $('play').disabled = false; $('stop').disabled = true; renderSteps();
+};
+$('stop').onclick = () => { stopReq = true; };
+
+// ---------- events tree ----------
+let showMissing = false;
+function renderTree() {
+  const missing = problems().filter(p => p.rule === 'missing_event');
+  $('tree').innerHTML = [...S.pools].sort().map(p => `<li class="pool"><span>▾ ${p}${base.pools.includes(p) ? '' : ' <span class="new">NEW</span>'}</span><button data-new="${p}" title="New event in ${p}">+</button></li>` +
+    S.events.filter(e => e.pool === p).map(e => `<li class="ev${e.id === selected ? ' sel' : ''}" data-id="${esc(e.id)}"><span class="dot" style="background:${kindColor(e.kind)}"></span>${esc(e.id.replace(/^ev_/, ''))}${e.isNew ? '<span class="new">NEW</span>' : ''}${floorsOf(e.id).length ? '' : ' <span class="warnTag">⚠</span>'}</li>`).join('')).join('')
+    + (missing.length ? `<li class="pool" id="missHead" style="cursor:pointer;color:#ff9b9b"><span>${showMissing ? '▾' : '▸'} ⛔ No pool (${missing.length})</span></li>` +
+      (showMissing ? missing.map(p => `<li class="ghost${p.id === selected ? ' sel' : ''}" data-id="${p.id}">${p.id.replace(/^ev_/, '')}</li>`).join('') : '') : '');
+  $('tree').querySelectorAll('li.ev, li.ghost').forEach(li => li.onclick = () => selectSubject(li.dataset.id));
+  $('tree').querySelectorAll('[data-new]').forEach(b => b.onclick = () => createEvent(b.dataset.new));
+  if ($('missHead')) $('missHead').onclick = () => { showMissing = !showMissing; renderTree(); };
+}
+
+// ---------- inspector ----------
+function renderForm() {
+  if (selected && isMissing(selected)) return renderMissing(selected);
+  const e = selected && ev(selected);
+  if (!e) { $('form').innerHTML = '<div class="empty">Select an event in the tree or a row in Problems, or click <b>+ New event</b>.</div>'; return; }
+  const fl = floorsOf(e.id), act = actOfPool(e.pool), t = textOf(e), ph = isPlaceholder(e.text, S.texts[e.text]);
+  $('form').innerHTML = `<div class="insp">
+    ${!fl.length ? '<div class="banner-warn">⚠ <b>Orphan:</b> no floor can roll this event, so it never appears in game. Fix: <b>+ Add floor…</b> below, or <button id="delEv">Delete event</button></div>' : ''}
+    <div class="row2">
+      <div class="field"><label>eventId</label><input type="text" id="fId" value="${esc(e.id)}"><div class="err" id="idErr"></div></div>
+      <div class="field"><label>kind</label><select id="fKind">${e.kind ? '' : '<option value="" selected>(choose a kind)</option>'}${KINDS.map(k => `<option${k === e.kind ? ' selected' : ''}>${k}</option>`).join('')}</select></div>
+      <div class="field"><label>pool <span class="muted">(${act || 'any chapter'})</span></label><select id="fPool">${[...S.pools].sort().map(p => `<option${p === e.pool ? ' selected' : ''}>${p}</option>`).join('')}</select></div>
+      <div class="field"><label>text key</label><input type="text" value="${esc(e.text)}" disabled></div>
+    </div>
+    <div class="field" style="position:relative"><label>Floors that can roll it (${fl.length})</label>
+      <div class="chips">${fl.map(f => { const wrong = act && f.act !== act;
+        return `<span class="chip${wrong ? ' wrong' : ''}" title="${wrong ? `${f.id} is ${f.act}, but ${e.pool} is ${act}` : f.act}">${f.id} <span class="muted">${f.act}</span>${wrong ? ' <span class="warnTag">⚠</span>' : ''}<button data-rm="${f.id}" title="Disconnect">✕</button></span>`; }).join('')}
+        <button id="addFloor">+ Add floor…</button></div>
+      <div id="pop"></div>
+    </div>
+    <div class="field"><label>Text ${ph ? '<span class="warnTag">⚠ placeholder: write the real line</span>' : ''}</label>${LANGS.map(l => `<div class="lang"><span>${l}</span><textarea rows="1" data-lang="${l}" placeholder="${l === 'zh_TW' ? 'The line the player reads' : 'untranslated'}">${esc(t[l])}</textarea></div>`).join('')}</div>
+    <div class="field"><label>Preview (game dialog)</label><div class="preview" id="pv"><small>${esc(e.kind || 'kind?')}</small>${esc(t.zh_TW) || '<span class="muted">…</span>'}</div></div>
+  </div>`;
+
+  $('fId').onchange = () => { const nu = $('fId').value.trim(); if (nu === e.id) return;
+    const err = idError(nu, e); if (err) { $('idErr').textContent = err; return; } renameEvent(e, nu); };
+  $('fId').oninput = () => { const nu = $('fId').value.trim(); $('idErr').textContent = nu === e.id ? '' : idError(nu, e); };
+  $('fKind').onchange = () => edit(`Kind of ${e.id} → ${$('fKind').value}`, () => e.kind = $('fKind').value);
+  $('fPool').onchange = () => moveToPool(e, $('fPool').value);
+  if ($('delEv')) $('delEv').onclick = () => deleteEvent(e);
+  document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => edit(`Disconnect ${e.id} from ${b.dataset.rm}`, () => {
+    const f = S.floors.find(x => x.id === b.dataset.rm); f.events.splice(f.events.indexOf(e.id), 1); }));
+  document.querySelectorAll('[data-lang]').forEach(ta => {
+    ta.oninput = () => { if (ta.dataset.lang === 'zh_TW') $('pv').innerHTML = `<small>${esc(e.kind || 'kind?')}</small>${esc(ta.value)}`; };
+    ta.onchange = () => setText(e, ta.dataset.lang, ta.value);
+  });
+  $('addFloor').onclick = () => {
+    $('pop').innerHTML = `<div class="popover"><div style="margin-bottom:4px">Floors that can roll <b>${esc(e.id)}</b></div><div class="scroll">${ACTS.map(a =>
+      `<div class="act${a === act ? ' rec' : ''}">${a}${a === act ? ' · matches ' + e.pool : ''}</div><div class="grid">${S.floors.filter(f => f.act === a).map(f =>
+        `<label><input type="checkbox" value="${f.id}"${fl.includes(f) ? ' checked disabled' : ''}>${f.id}</label>`).join('')}</div>`).join('')}</div>
+      <div style="margin-top:8px;text-align:right"><button id="popCancel">Cancel</button> <button class="primary" id="popOk">Connect</button></div></div>`;
+    const recTop = $('pop').querySelector('.act.rec'); if (recTop) recTop.scrollIntoView({ block: 'nearest' });
+    $('popCancel').onclick = () => $('pop').innerHTML = '';
+    $('popOk').onclick = () => { const ids = [...document.querySelectorAll('.popover input:checked:not(:disabled)')].map(i => i.value);
+      $('pop').innerHTML = ''; if (ids.length) addFloors(e, ids); };
+  };
+}
+function renderMissing(id) {
+  const fl = floorsOf(id), act = fl[0].act, pool = id.startsWith('ev_common_') ? 'pool_common' : poolForAct(act), t = S.texts[id];
+  $('form').innerHTML = `<div class="insp">
+    <div class="banner-bad"><b class="sev-error">⛔ Missing event id: ${esc(id)}</b><br>
+      ${fl.length} floor(s) list this id, but no pool defines it. When one of these floors rolls it, there is no event to show.</div>
+    <div class="field"><label>Listed by</label><div class="chips">${fl.map(f => `<span class="chip">${f.id} <span class="muted">${f.act}</span></span>`).join('')}</div></div>
+    <div class="field"><label>Text</label>${t ? `A placeholder exists in text.json under <code>${esc(id)}</code>${t._todo ? ' (marked _todo)' : ''}: “${esc(t.zh_TW)}”` : '<span class="muted">No string in text.json yet.</span>'}</div>
+    <div class="field"><label>Fix it</label>
+      <p><button class="primary" id="mkEv">Create in ${pool}</button> <span class="muted">${S.pools.includes(pool) ? '' : `${pool}.json does not exist yet; it will be created. `}Kind guess: <b>${guessKind(id) || 'none, choose one'}</b></span></p>
+      <p><button id="mkCh">Create all ${problems().filter(p => p.rule === 'missing_event' && p.act === act).length} missing ids of ${act}</button></p>
+      <p><button id="rmRef">Remove from floors</button> <span class="muted">if the id is a typo or the event was dropped</span></p></div>
+  </div>`;
+  $('mkEv').onclick = () => createFromMissing(id);
+  $('mkCh').onclick = () => createChapter(act);
+  $('rmRef').onclick = () => removeFromFloors(id);
+}
+
+// ---------- bottom pane: diagram or problems ----------
+function setTab(t) { tab = t; if (t === 'problems') flags.problemsTab = true; renderAll(); }
+function setMode(m) { mode = m; if (m === 'full') flags.full = true; hlNode = null; renderAll(); }
+$('tDiagram').onclick = () => setTab('diagram'); $('tProblems').onclick = () => setTab('problems');
+$('mFocus').onclick = () => setMode('focus'); $('mFull').onclick = () => setMode('full');
+$('chapSel').innerHTML = `<option value="ch_01-03">ch_01–ch_03 (have pools)</option>` + ACTS.map(a => `<option value="${a}">${a} · ${DATA.floors.filter(f => f.act === a).map(f => f.id).filter((x, i, l) => i === 0 || i === l.length - 1).join('–')}</option>`).join('');
+$('chapSel').onchange = () => { chapView = $('chapSel').value; hlNode = null; renderAll(); };
+const actsInView = () => chapView === 'ch_01-03' ? ['ch_01', 'ch_02', 'ch_03'] : [chapView];
+
+const COL = { floor: 14, pool: 100, event: 262, text: 538 }, W = { floor: 64, pool: 132, event: 250, text: 250 }, H = 24, GAP = 8;
+function renderDiagram() {
+  const sub = selected, subEv = sub && ev(sub), subMiss = sub && isMissing(sub);
+  let events = [], ghosts = [], floors, note = '';
+  if (mode === 'focus') {
+    if (!subEv && !subMiss) { $('pane').innerHTML = '<div class="empty">Select an event, or a row in Problems, to see what it connects to.</div>'; $('dinfo').textContent = ''; return; }
+    floors = floorsOf(sub);
+    const others = [...new Set(floors.flatMap(f => f.events))].filter(id => id !== sub && ev(id)).map(ev)
+      .sort((a, b) => a.pool.localeCompare(b.pool) || a.id.localeCompare(b.id));
+    if (subEv) events = [subEv, ...others]; else { ghosts = [sub]; events = others; }
+    if (!floors.length) note = '⚠ No floor';
+    $('dinfo').textContent = `${sub}: ${floors.length} floor(s) · faded = other events those floors roll`;
+  } else {
+    const acts = actsInView(); floors = S.floors.filter(f => acts.includes(f.act));
+    const rolled = new Set(floors.flatMap(f => f.events));
+    events = S.events.filter(e => rolled.has(e.id) || acts.includes(actOfPool(e.pool)) || (e.pool === 'pool_common' && !floorsOf(e.id).length))
+      .sort((a, b) => a.pool.localeCompare(b.pool) || (a.isNew ? 1 : 0) - (b.isNew ? 1 : 0) || a.id.localeCompare(b.id));
+    ghosts = [...rolled].filter(id => !ev(id)).sort();
+    $('dinfo').textContent = `${floors.length} floors · ${events.length} events${ghosts.length ? ` · ${ghosts.length} missing` : ''} · click any node`;
+  }
+  const nodes = [], edges = [], rowY = i => 34 + i * (H + GAP);
+  const inView = new Set([...events.map(e => e.id), ...ghosts]);
+  events.forEach((e, i) => {
+    const t = S.texts[e.text], warn = !floorsOf(e.id).length || !e.kind || isPlaceholder(e.text, t);
+    nodes.push({ id: e.id, type: 'event', x: COL.event, y: rowY(i), w: W.event, fill: '#30343b', stroke: kindColor(e.kind), label: e.id + (e.isNew ? '  NEW' : ''), isNew: e.isNew, warn });
+    if (mode === 'full' || e.id === sub) { nodes.push({ id: '#' + e.text, type: 'text', x: COL.text, y: rowY(i), w: W.text, fill: t ? 'var(--textkey)' : '#4a2222', stroke: t ? '#3fa06f' : 'var(--bad)', label: e.text + (t && t._todo ? '  (todo)' : ''), isNew: e.isNew }); edges.push({ from: e.id, to: '#' + e.text }); }
+  });
+  ghosts.forEach((id, j) => {
+    const y = rowY(events.length + j);
+    nodes.push({ id, type: 'ghost', x: COL.event, y, w: W.event, fill: '#4a2222', stroke: 'var(--bad)', label: '⛔ ' + id, warn: true });
+    if (S.texts[id] && mode === 'focus') nodes.push({ id: '#' + id, type: 'text', x: COL.text, y, w: W.text, fill: '#3a3320', stroke: 'var(--warn)', label: id + '  (placeholder)' });
+  });
+  [...new Set(events.map(e => e.pool))].forEach(p => {
+    const ys = nodes.filter(n => n.type === 'event' && ev(n.id).pool === p).map(n => n.y);
+    nodes.push({ id: p, type: 'pool', x: COL.pool, y: (Math.min(...ys) + Math.max(...ys)) / 2, w: W.pool, fill: 'var(--pool)', stroke: '#5b8fd6', label: p + (base.pools.includes(p) ? '' : '  NEW'), isNew: !base.pools.includes(p) });
+    events.filter(e => e.pool === p).forEach(e => edges.push({ from: p, to: e.id }));
+  });
+  const span = Math.max(events.length + ghosts.length, 1) * (H + GAP), step = floors.length > 1 ? Math.max(H + 4, span / floors.length) : 0;
+  floors.forEach((f, i) => {
+    nodes.push({ id: f.id, type: 'floor', x: COL.floor, y: 34 + i * step, w: W.floor, fill: 'var(--floor)', stroke: '#7a828d', label: f.id });
+    f.events.forEach(id => inView.has(id) && edges.push({ from: f.id, to: id, miss: !ev(id) }));
+  });
+
+  const focusId = hlNode || sub, near = new Set([focusId]);
+  edges.forEach(e => { if (e.from === focusId || e.to === focusId) { near.add(e.from); near.add(e.to); } });
+  if (subEv && near.has(sub)) near.add('#' + subEv.text);
+  if (subMiss) near.add('#' + sub);
+  const pos = Object.fromEntries(nodes.map(n => [n.id, n]));
+  let s = `<svg width="${COL.text + W.text + 20}" height="${Math.max(...nodes.map(n => n.y)) + 50}">`;
+  [['FLOORS', COL.floor], ['POOLS', COL.pool], ['EVENTS', COL.event], ['TEXT KEYS', COL.text]].forEach(([t, x]) => s += `<text class="colhead" x="${x}" y="20">${t}</text>`);
+  if (note) s += `<text class="note" x="${COL.floor}" y="${rowY(0) + 16}">${note}</text>`;
+  edges.forEach(e => {
+    const a = pos[e.from], b = pos[e.to]; if (!a || !b) return;
+    const x1 = a.x + a.w, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = (x1 + x2) / 2;
+    const fresh = freshEdges.has(e.from + '>' + e.to.replace(/^#/, '')), on = focusId && (e.from === focusId || e.to === focusId);
+    s += `<path class="edge${fresh ? ' fresh' : ''}${e.miss ? ' miss' : ''}${!fresh && on ? ' hl' : ''}${!fresh && !on && focusId ? ' faded' : ''}" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}"/>`;
+  });
+  nodes.forEach(n => {
+    const faded = focusId && !near.has(n.id);
+    s += `<g class="node${faded ? ' faded' : ''}${n.id === focusId ? ' hl' : ''}${n.isNew ? ' isnew' : ''}" data-id="${esc(n.id)}">
+      <rect class="box" x="${n.x}" y="${n.y}" width="${n.w}" height="${H}" rx="4" fill="${n.fill}" stroke="${n.warn && n.type === 'event' ? 'var(--warn)' : n.stroke}"${n.warn ? ' stroke-dasharray="5 3"' : ''}/>
+      ${n.type === 'event' ? `<rect x="${n.x}" y="${n.y}" width="5" height="${H}" fill="${n.stroke}"/>` : ''}
+      <text x="${n.x + 10}" y="${n.y + 16}">${esc(n.label)}${n.warn && n.type === 'event' ? ' ⚠' : ''}</text></g>`;
+  });
+  $('pane').innerHTML = s + '</svg>';
+  freshEdges = new Set();
+  $('pane').querySelectorAll('.node').forEach(g => g.onclick = () => clickNode(g.dataset.id));
+  if (mode === 'full' && focusId && pos[focusId]) $('pane').scrollTop = pos[focusId].y - $('pane').clientHeight / 2;
+}
+function clickNode(id) {
+  if (id.startsWith('#')) return;
+  if (ev(id) || isMissing(id)) { selected = id; hlNode = null; flags.saw.add(id); }
+  else { hlNode = id; const te = tutEv(); if (mode === 'full' && te && floorsOf(te.id).some(f => f.id === id)) flags.clickedFloor = true; }
+  renderAll();
+  const f = S.floors.find(x => x.id === id);
+  if (f) $('status').textContent = `${f.id} (${f.act}) can roll: ${f.events.join(', ')}`;
+}
+
+let ruleOff = new Set(['untranslated']);
+function renderProblems() {
+  const all = problems();
+  const list = all.filter(p => !ruleOff.has(p.rule)).sort((a, b) => Object.keys(RULES).indexOf(a.rule) - Object.keys(RULES).indexOf(b.rule) || a.id.localeCompare(b.id));
+  const byAct = {}; all.filter(p => p.rule === 'missing_event').forEach(p => byAct[p.act] = (byAct[p.act] || 0) + 1);
+  const shown = list.slice(0, 150);
+  $('pane').innerHTML = `<div class="plist">
+    <div class="rulechips">${Object.entries(RULES).map(([k, r]) => { const n = all.filter(p => p.rule === k).length;
+      return `<span class="rulechip${ruleOff.has(k) ? '' : ' on'}" data-rule="${k}"><span class="sev-${r.sev}">${r.icon}</span> ${r.name} <b>${n}</b></span>`; }).join('')}</div>
+    ${Object.keys(byAct).length ? `<div class="batch"><span class="muted">Missing ids by chapter:</span>${Object.keys(byAct).sort().map(a => `<button class="chap" data-act="${a}">${a}: create ${byAct[a]}</button>`).join('')}</div>` : ''}
+    <table><thead><tr><th></th><th>Id</th><th>Problem</th><th>Where</th><th></th></tr></thead><tbody>
+    ${shown.map((p, i) => { const R = RULES[p.rule]; return `<tr class="row${p.id === selected ? ' sel' : ''}" data-i="${i}"><td class="sev-${R.sev}">${R.icon}</td><td><b>${esc(p.id)}</b></td><td>${R.name}</td><td class="where">${esc(p.where)}</td><td class="fix">${fixButtons(p, i)}</td></tr>`; }).join('')
+      || '<tr><td colspan="5" class="muted">No problems. 🎉</td></tr>'}
+    ${list.length > shown.length ? `<tr><td colspan="5" class="muted">… and ${list.length - shown.length} more</td></tr>` : ''}
+    </tbody></table></div>`;
+  $('dinfo').textContent = `${all.filter(p => RULES[p.rule].sev === 'error').length} errors · ${all.filter(p => RULES[p.rule].sev === 'warn').length} warnings · click a row to see it in the diagram`;
+  $('pane').querySelectorAll('[data-rule]').forEach(c => c.onclick = () => { ruleOff.has(c.dataset.rule) ? ruleOff.delete(c.dataset.rule) : ruleOff.add(c.dataset.rule); renderAll(); });
+  $('pane').querySelectorAll('[data-act]').forEach(b => b.onclick = () => createChapter(b.dataset.act));
+  $('pane').querySelectorAll('tr.row').forEach(tr => tr.onclick = ev => { if (ev.target.tagName !== 'BUTTON') selectSubject(shown[tr.dataset.i].id, { toDiagram: true }); });
+  $('pane').querySelectorAll('[data-fix]').forEach(b => b.onclick = () => runFix(shown[b.dataset.i], b.dataset.fix));
+}
+function fixButtons(p, i) {
+  const b = (k, label) => `<button data-i="${i}" data-fix="${k}">${label}</button>`;
+  return { missing_event: b('create', 'Create event') + ' ' + b('remove', 'Remove from floors'),
+           orphan: b('connect', 'Add floor…') + ' ' + b('delete', 'Delete'),
+           no_kind: b('open', 'Choose kind'), placeholder: b('open', 'Write text'), missing_text: b('mktext', 'Create text'),
+           wrong_chapter: b('common', 'Move to pool_common') + ' ' + b('disc', 'Disconnect'), untranslated: b('open', 'Open text') }[p.rule];
+}
+function runFix(p, k) {
+  const e = ev(p.id);
+  if (k === 'create') createFromMissing(p.id);
+  else if (k === 'remove') removeFromFloors(p.id);
+  else if (k === 'delete') deleteEvent(e);
+  else if (k === 'common') moveToPool(e, 'pool_common');
+  else if (k === 'disc') edit(`Disconnect ${e.id} from ${p.floor}`, () => { const f = S.floors.find(x => x.id === p.floor); f.events.splice(f.events.indexOf(e.id), 1); });
+  else if (k === 'mktext') edit(`Create text ${e.text}`, () => S.texts[e.text] = Object.fromEntries(LANGS.map(l => [l, ''])));
+  else { selectSubject(p.id); if (k === 'connect') $('addFloor').click();
+    const el = k === 'open' && (p.rule === 'no_kind' ? $('fKind') : document.querySelector('[data-lang="zh_TW"]'));
+    if (el) { el.classList.add('flash'); el.focus(); } }
+}
+
+// ---------- save: show each file's change, then "write" ----------
+function diffFiles() {
+  const out = [], line = r => `    { "eventId": "${r.id}", "kind": "${r.kind}", "text": "${r.text}" },`;
+  [...S.pools].sort().forEach(p => {
+    const a = base.events.filter(e => e.pool === p).map(line), b = S.events.filter(e => e.pool === p).map(line);
+    if (a.join() === b.join()) return;
+    const A = new Set(a), B = new Set(b), isNew = !base.pools.includes(p);
+    out.push({ path: `assets/data/events/${p}.json${isNew ? '  (new file)' : ''}`, body: [[isNew ? 'add' : 'ctx', '{'], [isNew ? 'add' : 'ctx', '  "events": ['],
+      ...a.filter(l => !B.has(l)).map(l => ['del', l]), ...b.map(l => [A.has(l) ? 'ctx' : 'add', l]), [isNew ? 'add' : 'ctx', '  ]'], [isNew ? 'add' : 'ctx', '}']] });
+  });
+  S.floors.forEach((f, i) => {
+    const a = base.floors[i].events, b = f.events; if (a.join() === b.join()) return;
+    out.push({ path: `assets/data/story/floors/${f.id}.json`, body: [['ctx', `  "id": "${f.id}", "act": "${f.act}", ...`], ['ctx', '  "events": ['],
+      ...a.filter(x => !b.includes(x)).map(x => ['del', `    "${x}",`]), ...b.map(x => [a.includes(x) ? 'ctx' : 'add', `    "${x}",`]), ['ctx', '  ],']] });
+  });
+  const tl = (k, v) => `    "${k}": { ${Object.entries(v).filter(([l, s]) => s).map(([l, s]) => `"${l}": ${JSON.stringify(s)}`).join(', ')} },`;
+  const body = [];
+  Object.keys(base.texts).filter(k => !S.texts[k]).forEach(k => body.push(['del', tl(k, base.texts[k])]));
+  Object.keys(S.texts).forEach(k => { if (!base.texts[k]) body.push(['add', tl(k, S.texts[k])]);
+    else if (JSON.stringify(base.texts[k]) !== JSON.stringify(S.texts[k])) body.push(['del', tl(k, base.texts[k])], ['add', tl(k, S.texts[k])]); });
+  if (body.length) out.push({ path: 'assets/data/text.json', body: [['ctx', '  "strings": {'], ['ctx', '    ...'], ...body, ['ctx', '  }']] });
+  // the last item before a closing bracket has no comma, as in the real file
+  out.forEach(f => f.body.forEach((x, i) => { const next = f.body[i + 1]; if (next && /^\s*[\]}],?$/.test(next[1]) && x[0] !== 'del') x[1] = x[1].replace(/,$/, ''); }));
+  return out;
+}
+function openSave(auto) {
+  const files = diffFiles();
+  if (!files.length) return toast('Nothing to save');
+  const warn = problems().filter(p => RULES[p.rule].sev !== 'info').length;
+  $('diffs').innerHTML = `<p class="muted">${files.length} file(s) change.${warn ? ` ${warn} problem(s) remain; saving is still allowed.` : ''}</p>`
+    + files.map(f => `<div class="file"><div class="path">${f.path}</div><pre class="diff">${f.body.map(([c, l]) => `<span class="${c}">${c === 'add' ? '+ ' : c === 'del' ? '- ' : '  '}${esc(l)}</span>`).join('')}</pre></div>`).join('');
+  $('mWrite').textContent = `Write ${files.length} file${files.length > 1 ? 's' : ''}`;
+  $('modalBg').style.display = 'flex';
+  if (auto) setTimeout(() => $('mWrite').click(), 2200); else $('mWrite').classList.add('flash');
+}
+$('save').onclick = () => openSave(false);
+$('mCancel').onclick = () => $('modalBg').style.display = 'none';
+$('mWrite').onclick = () => {
+  if ($('modalBg').style.display !== 'flex') return;
+  const n = diffFiles().length, step = currentStep();
+  base = clone(S); flags.saves++; flags.lastSaveStep = step; $('modalBg').style.display = 'none'; $('mWrite').classList.remove('flash');
+  S.events.forEach(e => delete e.isNew);
+  $('hist').insertAdjacentHTML('beforeend', `<li style="color:var(--ok)">Saved ${n} file(s)</li>`);
+  toast(`Saved ${n} file(s). Backups are in the editor's backup folder.`); renderAll();
+};
+addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSave(false); }
+  if (e.ctrlKey && e.key === 'z' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); $('undo').click(); }
+  if (e.key === 'Escape') { if (playing >= 0) stopReq = true; else $('modalBg').style.display = 'none'; }
+});
+
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3800); }
+function renderAll() {
+  renderTree(); renderForm();
+  $('tDiagram').classList.toggle('on', tab === 'diagram'); $('tProblems').classList.toggle('on', tab === 'problems');
+  $('mFocus').classList.toggle('on', mode === 'focus'); $('mFull').classList.toggle('on', mode === 'full');
+  $('diagCtl').style.display = tab === 'diagram' ? '' : 'none'; $('chapSel').style.display = mode === 'full' ? '' : 'none'; $('chapSel').value = chapView;
+  const all = problems(), errs = all.filter(p => RULES[p.rule].sev === 'error').length, warns = all.filter(p => RULES[p.rule].sev === 'warn').length;
+  $('tProblems').textContent = `Problems (${errs + warns})`;
+  if (tab === 'diagram') renderDiagram(); else renderProblems();
+  renderSteps();
+  const d = dirty(); $('dirtyMark').textContent = d ? ' •' : '';
+  $('probs').textContent = `⛔ ${errs} errors · ⚠ ${warns} warnings${d ? ' · unsaved changes' : ''}`;
+}
+$('newBtn').onclick = () => createEvent();
+$('reset').onclick = e => { e.preventDefault(); reset(); };
+reset();
+</script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+{
+  "id": "F54",
+  "act": "ch_08",
+  "indexInAct": 5,
+  "name": "story.f54.name",
+  "seal": "shenshi",
+  "role": "side-story-stage",
+  "maze": {
+    "cols": 52,
+    "rows": 36,
+    "rooms": 10,
+    "loops": 9,
+    "seed": "54:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "wraith",
+      "demon"
+    ],
+    "count": [
+      18,
+      25
+    ],
+    "elites": 3,
+    "boss": null
+  },
+  "items": {
+    "count": 11,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_common_whisper_old_road_v5",
+    "ev_common_cache_wall",
+    "ev_common_rescue_lost_soldier",
+    "ev_sanctum_warden_oath_v4",
+    "ev_common_shard_wandering_v3",
+    "ev_common_relic_road_v3",
+    "ev_common_cache_wall_v4",
+    "ev_common_relic_road_v4",
+    "ev_common_trap_rubble",
+    "ev_common_merchant_echo_ash_v3"
+  ],
+  "sideStoryHooks": [
+    {
+      "sideStoryId": "ss_08",
+      "cell": [
+        14,
+        23
+      ],
+      "trigger": "proximity",
+      "requires": {
+        "type": "storyBeatAtLeast",
+        "value": "ch_08"
+      }
+    }
+  ],
+  "story": {
+    "chapter": "ch_08",
+    "intro": "story.f54.intro",
+    "ambient": [
+      "story.f54.ambient.1",
+      "story.f54.ambient.2"
+    ],
+    "beats": [
+      "b_sanctum_f54"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F55",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 8,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "rescue",
+      "whisper",
+      "memory_shard",
+      "relic",
+      "cache",
+      "relic",
+      "trap",
+      "merchant_echo"
+    ],
+    "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "wraith",
+      "demon"
+    ],
+    "eventCells": [
+      [
+        7,
+        4
+      ],
+      [
+        7,
+        5
+      ],
+      [
+        2,
+        10
+      ],
+      [
+        3,
+        10
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        6,
+        9
+      ],
+      [
+        6,
+        6
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        7,
+        6
+      ],
+      [
+        7,
+        7
+      ]
+    ]
+  }
+}

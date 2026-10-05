@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event Editor — Inspector</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .form { max-width: 720px; padding: 16px 22px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .lang { border: 1px solid var(--line); border-radius: 4px; padding: 8px; margin-bottom: 8px; background: var(--panel); }
+  .lang header { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  .lang.todo { border-color: #6a5420; }
+  .preview { background: #0d0f12; border: 2px solid #6b5a3a; border-radius: 6px; padding: 14px 18px; font-size: 16px; color: #f3e6c8; min-height: 56px; font-family: "Microsoft JhengHei", "PingFang TC", serif; }
+  .preview small { display: block; color: #a89a7c; font-size: 11px; margin-bottom: 6px; }
+  .popover { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px; box-shadow: 0 6px 20px #000a; z-index: 5; width: 380px; }
+  .popover .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; max-height: 260px; overflow: auto; }
+  .popover label { font-size: 11px; white-space: nowrap; }
+  .hist li { padding: 2px 4px; font-size: 12px; border-bottom: 1px solid var(--line); list-style: none; }
+  .hist { margin: 0; padding: 0; }
+  #search { width: 100%; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="banner">MOCKUP 2 / 3 · Event inspector · edits stay in this page; Save only reports what would be written<span class="spacer"></span>
+  <a href="01_flow_map.html">← Flow map</a> <a href="index.html">All mockups</a> <a href="03_problems.html">Next: problems →</a></div>
+<div class="menubar"><span>File</span><span>Edit</span><span>View</span>
+  <div class="tabs"><div class="tab">Stage</div><div class="tab">Anim</div><div class="tab">Particles</div><div class="tab on">Events<span id="dirtyMark" class="dirty"></span></div></div>
+  <div class="grow"></div><button id="undo">Undo</button> <button class="primary" id="save">Save (Ctrl+S)</button></div>
+
+<div class="main">
+  <div class="dock" style="width:250px">
+    <h3>Events</h3>
+    <div class="body"><button id="newBtn" style="width:100%;margin-bottom:6px">+ New event</button><input id="search" placeholder="Search ids…  (Ctrl+F)"><ul class="tree" id="tree"></ul></div>
+  </div>
+  <div class="center"><div class="form" id="form"></div></div>
+  <div class="dock right" style="width:240px">
+    <h3>History</h3>
+    <div class="body"><ul class="hist" id="hist"><li class="muted">Loaded assets/data</li></ul></div>
+  </div>
+</div>
+<div class="statusbar"><span id="status">Ready</span></div>
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const KINDS = [...new Set(DATA.events.map(e => e.kind))];
+const LANGS = ['zh_TW', 'en', 'zh_CN', 'ja', 'ko', 'es'];
+const kindColor = k => getComputedStyle(document.documentElement).getPropertyValue('--k-' + k).trim();
+const events = DATA.events.map(e => ({ ...e, str: { ...e.str }, todo: {} }));
+const floors = DATA.floors.map(f => ({ ...f, events: [...f.events] }));
+// a language is "todo" when it is just a copy of zh_TW, which is the case for all of them today
+events.forEach(e => LANGS.forEach(l => e.todo[l] = l !== 'zh_TW' && e.str[l] === e.str.zh_TW));
+
+let cur = events.find(e => e.id === decodeURIComponent(location.hash.slice(1))) || events.find(e => e.id === 'ev_common_cache_wall');
+const undo = [], dirtyFiles = new Set();
+
+function edit(label, files, apply, revert) {
+  apply(); undo.push({ label, revert, files });
+  files.forEach(f => dirtyFiles.add(f));
+  $('hist').insertAdjacentHTML('beforeend', `<li>${label}</li>`);
+  $('dirtyMark').textContent = ' •';
+  $('status').textContent = `${dirtyFiles.size} file(s) changed`;
+  render();
+}
+$('undo').onclick = () => { const u = undo.pop(); if (!u) return; u.revert(); $('hist').lastElementChild.remove();
+  if (!undo.length) { dirtyFiles.clear(); $('dirtyMark').textContent = ''; } render(); };
+$('save').onclick = () => toast(dirtyFiles.size ? 'Would write (with a backup first):\n' + [...dirtyFiles].sort().join('\n') : 'Nothing to save');
+addEventListener('keydown', e => { if (e.ctrlKey && e.key === 's') { e.preventDefault(); $('save').click(); }
+  if (e.ctrlKey && e.key === 'z' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) $('undo').click();
+  if (e.ctrlKey && e.key === 'f') { e.preventDefault(); $('search').focus(); } });
+
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3200); }
+const floorsOf = id => floors.filter(f => f.events.includes(id));
+
+function renderTree() {
+  const q = $('search').value.toLowerCase();
+  let h = '';
+  DATA.pools.forEach(p => {
+    const ev = events.filter(e => e.pool === p && e.id.toLowerCase().includes(q));
+    if (!ev.length) return;
+    h += `<li class="pool">▾ ${p}</li>` + ev.map(e => `<li class="ev${e === cur ? ' sel' : ''}" data-id="${e.id}"><span class="dot" style="background:${kindColor(e.kind)}"></span>${e.id.replace(/^ev_/, '')}${floorsOf(e.id).length ? '' : ' <span class="warnTag">⚠</span>'}</li>`).join('');
+  });
+  $('tree').innerHTML = h;
+  $('tree').querySelectorAll('li.ev').forEach(li => li.onclick = () => { cur = events.find(e => e.id === li.dataset.id); history.replaceState(null, '', '#' + cur.id); render(); });
+}
+
+function render() {
+  renderTree();
+  const e = cur, fl = floorsOf(e.id);
+  $('form').innerHTML = `
+    <h2 style="margin:0 0 14px;font-weight:600">${e.id} <span class="kind" style="background:${kindColor(e.kind)}">${e.kind}</span></h2>
+    <div class="row2">
+      <div class="field"><label>eventId</label><input type="text" id="fId" value="${e.id}"></div>
+      <div class="field"><label>kind</label><select id="fKind">${KINDS.map(k => `<option${k === e.kind ? ' selected' : ''}>${k}</option>`).join('')}</select></div>
+      <div class="field"><label>pool</label><select id="fPool">${DATA.pools.map(p => `<option${p === e.pool ? ' selected' : ''}>${p}</option>`).join('')}</select></div>
+      <div class="field"><label>text key</label><input type="text" value="${e.text}" disabled></div>
+    </div>
+    <div class="field" style="position:relative"><label>Floors that can roll it (${fl.length})</label>
+      <div class="chips">${fl.map(f => `<span class="chip">${f.id} <span class="muted">${f.act}</span><button data-rm="${f.id}" title="Remove from ${f.id}">✕</button></span>`).join('')}
+        <button id="addFloor">+ Add floor…</button></div>
+      ${fl.length ? '' : '<p class="warnTag">⚠ Orphan: no floor lists this event, so it never appears in game.</p>'}
+      <div id="pop"></div>
+    </div>
+    <div class="field"><label>Text</label>
+      ${LANGS.map(l => `<div class="lang${e.todo[l] ? ' todo' : ''}"><header><span>${l}</span><label><input type="checkbox" data-todo="${l}"${e.todo[l] ? ' checked' : ''}> todo</label></header>
+        <textarea rows="2" data-lang="${l}">${e.str[l] || ''}</textarea></div>`).join('')}
+    </div>
+    <div class="field"><label>Preview (game dialog, zh_TW)</label><div class="preview"><small>${e.kind}</small>${e.str.zh_TW || ''}</div></div>`;
+
+  $('fId').onchange = ev => { const old = e.id, nu = ev.target.value.trim(); if (!nu || nu === old) return;
+    const touched = floorsOf(old);
+    edit(`Rename ${old} → ${nu}`, [e.pool + '.json', 'text.json', ...touched.map(f => f.id + '.json')],
+      () => { touched.forEach(f => f.events[f.events.indexOf(old)] = nu); e.id = nu; e.text = nu + '.text'; },
+      () => { touched.forEach(f => f.events[f.events.indexOf(nu)] = old); e.id = old; e.text = old + '.text'; }); };
+  $('fKind').onchange = ev => { const old = e.kind, nu = ev.target.value;
+    edit(`Kind of ${e.id}: ${old} → ${nu}`, [e.pool + '.json'], () => e.kind = nu, () => e.kind = old); };
+  $('fPool').onchange = ev => { const old = e.pool, nu = ev.target.value;
+    edit(`Move ${e.id} to ${nu}`, [old + '.json', nu + '.json'], () => e.pool = nu, () => e.pool = old); };
+  document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { const f = floors.find(x => x.id === b.dataset.rm), i = f.events.indexOf(e.id);
+    edit(`Remove ${e.id} from ${f.id}`, [f.id + '.json'], () => f.events.splice(i, 1), () => f.events.splice(i, 0, e.id)); });
+  document.querySelectorAll('[data-lang]').forEach(t => t.onchange = () => { const l = t.dataset.lang, old = e.str[l], nu = t.value, oldTodo = e.todo[l];
+    edit(`Text ${e.id} [${l}]`, ['text.json'], () => { e.str[l] = nu; e.todo[l] = false; }, () => { e.str[l] = old; e.todo[l] = oldTodo; }); });
+  document.querySelectorAll('[data-todo]').forEach(c => c.onchange = () => { const l = c.dataset.todo, v = c.checked;
+    edit(`${v ? 'Mark' : 'Clear'} todo ${e.id} [${l}]`, ['text.json'], () => e.todo[l] = v, () => e.todo[l] = !v); });
+  $('addFloor').onclick = () => {
+    $('pop').innerHTML = `<div class="popover"><div class="muted" style="margin-bottom:6px">Tick the floors that can roll <b>${e.id}</b></div><div class="grid">
+      ${floors.map(f => `<label title="${f.act}"><input type="checkbox" value="${f.id}"${f.events.includes(e.id) ? ' checked disabled' : ''}>${f.id}</label>`).join('')}</div>
+      <div style="margin-top:8px;text-align:right"><button id="popCancel">Cancel</button> <button class="primary" id="popOk">Add</button></div></div>`;
+    $('popCancel').onclick = () => $('pop').innerHTML = '';
+    $('popOk').onclick = () => { const pick = [...document.querySelectorAll('.popover input:checked:not(:disabled)')].map(i => floors.find(f => f.id === i.value));
+      if (!pick.length) return $('pop').innerHTML = '';
+      edit(`Add ${e.id} to ${pick.map(f => f.id).join(', ')}`, pick.map(f => f.id + '.json'), () => pick.forEach(f => f.events.push(e.id)), () => pick.forEach(f => f.events.pop())); };
+  };
+}
+$('search').oninput = renderTree;
+// a new event goes into the selected event's pool; the full walk-through is 04_tutorial.html
+let newN = 1;
+$('newBtn').onclick = () => { let id; do { id = `ev_new_event_${newN++}`; } while (events.some(e => e.id === id));
+  const e = { id, kind: KINDS[0], pool: cur.pool, text: id + '.text', str: Object.fromEntries(LANGS.map(l => [l, ''])), todo: Object.fromEntries(LANGS.map(l => [l, l !== 'zh_TW'])) };
+  edit(`New event ${id} in ${e.pool}`, [e.pool + '.json', 'text.json'], () => { events.push(e); cur = e; }, () => { events.splice(events.indexOf(e), 1); cur = events[0]; });
+  $('fId').focus(); $('fId').select(); };
+render();
+</script>
+</body>
+</html>

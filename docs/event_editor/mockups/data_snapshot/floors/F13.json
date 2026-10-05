@@ -1,0 +1,93 @@
+{
+  "id": "F13",
+  "act": "ch_02",
+  "indexInAct": 6,
+  "name": "story.f13.name",
+  "seal": "qi",
+  "role": "normal",
+  "maze": {
+    "cols": 26,
+    "rows": 21,
+    "rooms": 4,
+    "loops": 3,
+    "seed": "13:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      6,
+      8
+    ],
+    "elites": 0,
+    "boss": null
+  },
+  "items": {
+    "count": 5,
+    "table": [
+      "potion_red",
+      "coin",
+      "gem_def",
+      "potion_blue"
+    ]
+  },
+  "events": [
+    "ev_forest_old_wizard_mark",
+    "ev_common_cache_wall",
+    "ev_common_trap_rubble",
+    "ev_forest_charcoal_kiln"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_02",
+    "intro": "story.f13.intro",
+    "ambient": [
+      "story.f13.ambient.1",
+      "story.f13.ambient.2"
+    ],
+    "beats": [
+      "b_forest_f13"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F14",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 2,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "trap",
+      "cache"
+    ],
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "slime",
+      "bat"
+    ],
+    "eventCells": [
+      [
+        4,
+        3
+      ],
+      [
+        5,
+        2
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        0,
+        6
+      ]
+    ]
+  }
+}

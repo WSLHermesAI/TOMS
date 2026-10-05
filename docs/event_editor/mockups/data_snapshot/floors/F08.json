@@ -1,0 +1,93 @@
+{
+  "id": "F08",
+  "act": "ch_02",
+  "indexInAct": 1,
+  "name": "story.f08.name",
+  "seal": "qi",
+  "role": "normal",
+  "maze": {
+    "cols": 23,
+    "rows": 19,
+    "rooms": 4,
+    "loops": 3,
+    "seed": "08:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      6,
+      8
+    ],
+    "elites": 0,
+    "boss": null
+  },
+  "items": {
+    "count": 5,
+    "table": [
+      "potion_red",
+      "coin",
+      "gem_def",
+      "potion_blue"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road",
+    "ev_common_cache_wall",
+    "ev_common_whisper_old_song",
+    "ev_common_trap_rubble"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_02",
+    "intro": "story.f08.intro",
+    "ambient": [
+      "story.f08.ambient.1",
+      "story.f08.ambient.2"
+    ],
+    "beats": [
+      "b_forest_f08"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F09",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 2,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "whisper",
+      "trap"
+    ],
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "slime",
+      "bat"
+    ],
+    "eventCells": [
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        6
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        2,
+        6
+      ]
+    ]
+  }
+}

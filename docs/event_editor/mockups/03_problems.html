@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event Editor — Problems</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .rules { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rule { border: 1px solid var(--line); background: var(--panel-2); border-radius: 14px; padding: 3px 12px; cursor: pointer; }
+  .rule.on { border-color: var(--accent); background: #24395a; }
+  .rule b { margin-left: 4px; }
+  .sev-error { color: var(--bad); } .sev-warn { color: var(--warn); } .sev-info { color: var(--muted); }
+  td.floors { color: var(--muted); font-size: 12px; max-width: 360px; }
+  td.fix { white-space: nowrap; text-align: right; }
+  .chapters { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .chap { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; }
+  .chap .n { font-size: 20px; font-weight: 600; color: var(--bad); }
+  .wrap { padding: 12px 16px; }
+  h4 { margin: 4px 0 8px; color: var(--muted); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="banner">MOCKUP 3 / 3 · Problems dock (shown full-size) · the real problems in today's data<span class="spacer"></span>
+  <a href="02_event_inspector.html">← Inspector</a> <a href="index.html">All mockups</a></div>
+<div class="menubar"><span>File</span><span>Edit</span><span>View</span>
+  <div class="tabs"><div class="tab">Stage</div><div class="tab">Anim</div><div class="tab">Particles</div><div class="tab on">Events</div></div>
+  <div class="grow"></div><button class="primary" disabled>Save</button></div>
+<div class="toolbar"><div class="rules" id="rules"></div><div class="grow"></div><input id="q" placeholder="Filter by id or floor…" style="width:220px"></div>
+
+<div class="main">
+  <div class="center"><div class="wrap">
+    <div id="chapWrap"><h4>Missing events by chapter: floors list these ids, but no pool defines them</h4><div class="chapters" id="chapters"></div></div>
+    <table><thead><tr><th style="width:28px"></th><th>Id</th><th>Rule</th><th>Where</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+  </div></div>
+</div>
+<div class="statusbar"><span id="status"></span><span>Double-click a row to select it in the flow map</span></div>
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const RULES = {
+  missing_event: { name: 'Missing event id', sev: 'error', icon: '⛔', fix: 'Create event in pool…' },
+  orphan:        { name: 'Orphan event',     sev: 'warn',  icon: '⚠',  fix: 'Add to floors…' },
+  missing_text:  { name: 'Missing text key', sev: 'error', icon: '⛔', fix: 'Create text' },
+  untranslated:  { name: 'Untranslated',     sev: 'info',  icon: 'ⓘ',  fix: 'Open text' },
+};
+const actOf = Object.fromEntries(DATA.floors.map(f => [f.id, f.act]));
+
+// one row per id: a missing id listed by 5 floors is one problem with 5 places, not 5 rows
+const byKey = new Map();
+DATA.problems.forEach(p => {
+  const k = p.rule + '|' + p.id;
+  if (!byKey.has(k)) byKey.set(k, { ...p, where: [] });
+  byKey.get(k).where.push(p.where.replace('.json', ''));
+});
+const rows = [...byKey.values()];
+Object.keys(RULES).forEach(r => RULES[r].count = rows.filter(x => x.rule === r).length);
+
+let on = new Set(['missing_event', 'orphan', 'missing_text']);
+function renderRules() {
+  $('rules').innerHTML = Object.entries(RULES).map(([k, r]) =>
+    `<span class="rule${on.has(k) ? ' on' : ''}" data-r="${k}"><span class="sev-${r.sev}">${r.icon}</span> ${r.name}<b>${r.count}</b></span>`).join('');
+  $('rules').querySelectorAll('.rule').forEach(s => s.onclick = () => { on.has(s.dataset.r) ? on.delete(s.dataset.r) : on.add(s.dataset.r); render(); });
+}
+
+function render() {
+  renderRules();
+  const q = $('q').value.toLowerCase();
+  const list = rows.filter(r => on.has(r.rule) && (!q || r.id.toLowerCase().includes(q) || r.where.some(w => w.toLowerCase().includes(q))))
+    .sort((a, b) => ['missing_event', 'missing_text', 'orphan', 'untranslated'].indexOf(a.rule) - ['missing_event', 'missing_text', 'orphan', 'untranslated'].indexOf(b.rule) || a.id.localeCompare(b.id));
+  $('rows').innerHTML = list.map((r, i) => { const R = RULES[r.rule];
+    const where = r.rule === 'missing_event' ? `listed by ${r.where.length} floor${r.where.length > 1 ? 's' : ''}: ${r.where.join(', ')}` : r.where.join(', ');
+    return `<tr class="row" data-i="${i}"><td class="sev-${R.sev}">${R.icon}</td><td><b>${r.id}</b></td><td>${R.name}</td><td class="floors">${where}</td>
+      <td class="fix"><button data-fix="${i}">${R.fix}</button></td></tr>`; }).join('') || '<tr><td colspan="5" class="muted">No problems match.</td></tr>';
+  $('rows').querySelectorAll('[data-fix]').forEach(b => b.onclick = ev => { ev.stopPropagation(); const r = list[b.dataset.fix];
+    toast(r.rule === 'missing_event' ? `Would create ${r.id} in the pool for ${actOf[r.where[0]]}\nand link it to its placeholder text.` : `${RULES[r.rule].fix}: ${r.id}`); });
+  $('rows').querySelectorAll('tr.row').forEach(tr => {
+    tr.onclick = () => { $('rows').querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); tr.classList.add('sel'); };
+    tr.ondblclick = () => location.href = '01_flow_map.html'; });
+  $('status').textContent = `${list.length} shown · ${rows.length} total`;
+  $('chapWrap').style.display = on.has('missing_event') ? '' : 'none';
+}
+
+// chapter summary: the batch fix for chapters 4-10
+const chap = {};
+rows.filter(r => r.rule === 'missing_event').forEach(r => { const a = actOf[r.where[0]]; (chap[a] = chap[a] || []).push(r.id); });
+$('chapters').innerHTML = Object.keys(chap).sort().map(a => `<div class="chap"><div class="muted">${a} → pool_act${a.slice(3)}</div><div class="n">${chap[a].length}</div>
+  <button data-a="${a}" style="margin-top:4px;width:100%">Create pool + ${chap[a].length} events</button></div>`).join('');
+$('chapters').querySelectorAll('[data-a]').forEach(b => b.onclick = () => toast(`Would create pool_act${b.dataset.a.slice(3)}.json with ${chap[b.dataset.a].length} events.\nKinds are guessed from the ids (cache, relic, whisper…) and marked todo.`));
+
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3500); }
+$('q').oninput = render;
+render();
+</script>
+</body>
+</html>

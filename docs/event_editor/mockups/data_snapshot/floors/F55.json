@@ -1,0 +1,128 @@
+{
+  "id": "F55",
+  "act": "ch_08",
+  "indexInAct": 6,
+  "name": "story.f55.name",
+  "seal": "shenshi",
+  "role": "normal",
+  "maze": {
+    "cols": 53,
+    "rows": 36,
+    "rooms": 10,
+    "loops": 9,
+    "seed": "55:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "wraith",
+      "demon"
+    ],
+    "count": [
+      18,
+      25
+    ],
+    "elites": 3,
+    "boss": null
+  },
+  "items": {
+    "count": 11,
+    "table": [
+      "gem_atk",
+      "gem_def",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_sanctum_crack_prayer_v4",
+    "ev_common_cache_wall_v4",
+    "ev_common_rescue_lost_soldier_v3",
+    "ev_common_shard_wandering_v3",
+    "ev_common_cache_wall_v2",
+    "ev_common_trap_rubble_v4",
+    "ev_common_merchant_echo_ash",
+    "ev_common_merchant_echo_ash_v3",
+    "ev_common_rescue_lost_soldier_v5",
+    "ev_sanctum_seventh_bell"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_08",
+    "intro": "story.f55.intro",
+    "ambient": [
+      "story.f55.ambient.1",
+      "story.f55.ambient.2"
+    ],
+    "beats": [
+      "b_sanctum_f55"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F56",
+  "meta": {
+    "targetMinutes": [
+      6,
+      10
+    ],
+    "difficultyTier": 8,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "rescue",
+      "memory_shard",
+      "cache",
+      "trap",
+      "merchant_echo",
+      "merchant_echo",
+      "rescue",
+      "relic"
+    ],
+    "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "wraith",
+      "demon"
+    ],
+    "eventCells": [
+      [
+        1,
+        11
+      ],
+      [
+        1,
+        12
+      ],
+      [
+        2,
+        11
+      ],
+      [
+        2,
+        12
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        14
+      ],
+      [
+        4,
+        15
+      ]
+    ]
+  }
+}

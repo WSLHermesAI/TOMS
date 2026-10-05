@@ -1,0 +1,79 @@
+{
+  "id": "F28",
+  "act": "ch_04",
+  "indexInAct": 7,
+  "name": "story.f28.name",
+  "seal": "jindan",
+  "role": "boss-stage",
+  "maze": {
+    "cols": 36,
+    "rows": 26,
+    "rooms": 6,
+    "loops": 5,
+    "seed": "28:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "bat"
+    ],
+    "count": [
+      10,
+      14
+    ],
+    "elites": 1,
+    "boss": "skeleton_scholar_boss"
+  },
+  "items": {
+    "count": 7,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_library_torn_page_v4",
+    "ev_common_cache_wall_v3",
+    "ev_common_whisper_old_road_v5",
+    "ev_library_scholar_whisper",
+    "ev_common_relic_road_v4",
+    "ev_common_relic_road_v3"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_04",
+    "intro": "story.f28.intro",
+    "ambient": [
+      "story.f28.ambient.1",
+      "story.f28.ambient.2"
+    ],
+    "beats": [
+      "b_library_f28"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F29",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 4,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "whisper",
+      "whisper",
+      "relic",
+      "relic"
+    ],
+    "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "skeleton",
+      "bat"
+    ]
+  },
+  "handAuthoredStage": "stage04.json"
+}

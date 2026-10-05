@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event Editor Mockups</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: block; overflow: auto; }
+  .page { max-width: 920px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-weight: 600; margin: 0 0 6px; }
+  .lead { color: var(--muted); margin: 0 0 24px; max-width: 640px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .card { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px; text-decoration: none; color: var(--text); }
+  .card:hover { border-color: var(--accent); }
+  .card .n { color: var(--accent); font-size: 12px; font-weight: 600; }
+  .card h2 { font-size: 16px; margin: 4px 0 8px; font-weight: 600; }
+  .card p { color: var(--muted); margin: 0 0 6px; }
+  .card ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); }
+  .stats { display: flex; gap: 24px; flex-wrap: wrap; margin: 28px 0 0; padding: 14px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+  .stats div b { display: block; font-size: 22px; }
+  .stats .bad b { color: var(--bad); } .stats .warn b { color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Event editor: mockups</h1>
+  <p class="lead">How the planned Events tab in <code>toms_editor</code> would look. The data is real: it was exported from
+    <code>assets/data</code> into <code>data.js</code>. Nothing here writes to disk. The design is in
+    <a href="../02_EDITOR_DESIGN.md">02_EDITOR_DESIGN.md</a>.</p>
+
+  <a class="card" href="04_tutorial.html" style="margin-bottom:14px;border-color:#2f6b4b"><div class="n" style="color:var(--ok)">START HERE · INTERACTIVE TUTORIAL</div><h2>Create an event · read relationships · find problems · fix them</h2>
+    <p>13 guided steps in a working mini-editor, on a copy of the current TOMS event data. Each step has a <b>Show me</b> button, and <b>▶ Play demo</b> runs it all by itself. Save shows the exact change to each JSON file.</p></a>
+  <div class="cards">
+    <a class="card" href="01_flow_map.html"><div class="n">1 · EXISTS IN CODE (read-only)</div><h2>Flow map</h2>
+      <p>Floors → pools → events → text keys, with the filter bar from <code>EventFlowView</code>.</p>
+      <ul><li>Click <b>ev_common_cache_wall</b></li><li>Tick 只看有問題的, floors 1–70</li></ul></a>
+    <a class="card" href="02_event_inspector.html"><div class="n">2 · PHASE 2</div><h2>Event inspector</h2>
+      <p>Edit an event's id, kind, pool, floors and text in each language, with undo and History.</p>
+      <ul><li>Rename an id: its floors follow</li><li>+ Add floor…, then Save</li></ul></a>
+    <a class="card" href="03_problems.html"><div class="n">3 · PHASE 3</div><h2>Problems</h2>
+      <p>The validator's list, one row per id, with quick fixes and a batch fix per chapter.</p>
+      <ul><li>See what chapters 4–10 are missing</li><li>Toggle the Untranslated rule</li></ul></a>
+  </div>
+
+  <div class="stats" id="stats"></div>
+</div>
+<script src="data.js"></script>
+<script>
+  const p = DATA.problems, uniq = r => new Set(p.filter(x => x.rule === r).map(x => x.id)).size;
+  document.getElementById('stats').innerHTML = `
+    <div><span class="muted">Pools</span><b>${DATA.pools.length}</b></div>
+    <div><span class="muted">Events</span><b>${DATA.events.length}</b></div>
+    <div><span class="muted">Floors</span><b>${DATA.floors.length}</b></div>
+    <div class="bad"><span class="muted">Missing event ids</span><b>${uniq('missing_event')}</b></div>
+    <div class="warn"><span class="muted">Orphan events</span><b>${uniq('orphan')}</b></div>
+    <div><span class="muted">Untranslated</span><b>${uniq('untranslated')}</b></div>`;
+</script>
+</body>
+</html>

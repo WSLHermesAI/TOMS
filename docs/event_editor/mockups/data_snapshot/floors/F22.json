@@ -1,0 +1,104 @@
+{
+  "id": "F22",
+  "act": "ch_04",
+  "indexInAct": 1,
+  "name": "story.f22.name",
+  "seal": "jindan",
+  "role": "normal",
+  "maze": {
+    "cols": 32,
+    "rows": 24,
+    "rooms": 6,
+    "loops": 5,
+    "seed": "22:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "bat"
+    ],
+    "count": [
+      10,
+      14
+    ],
+    "elites": 1,
+    "boss": null
+  },
+  "items": {
+    "count": 7,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "exp_up"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road_v3",
+    "ev_common_cache_wall_v3",
+    "ev_common_shard_wandering_v2",
+    "ev_common_rescue_lost_soldier_v4",
+    "ev_common_cache_wall_v5",
+    "ev_library_shelf_collapse"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_04",
+    "intro": "story.f22.intro",
+    "ambient": [
+      "story.f22.ambient.1",
+      "story.f22.ambient.2"
+    ],
+    "beats": [
+      "b_library_f22"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F23",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 4,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "memory_shard",
+      "rescue",
+      "cache",
+      "trap"
+    ],
+    "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "skeleton",
+      "bat"
+    ],
+    "eventCells": [
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        2,
+        5
+      ]
+    ]
+  }
+}

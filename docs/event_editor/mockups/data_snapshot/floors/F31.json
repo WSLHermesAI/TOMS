@@ -1,0 +1,115 @@
+{
+  "id": "F31",
+  "act": "ch_05",
+  "indexInAct": 3,
+  "name": "story.f31.name",
+  "seal": "soul",
+  "role": "normal",
+  "maze": {
+    "cols": 38,
+    "rows": 27,
+    "rooms": 7,
+    "loops": 6,
+    "seed": "31:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "skeleton",
+      "wraith"
+    ],
+    "count": [
+      12,
+      16
+    ],
+    "elites": 2,
+    "boss": null
+  },
+  "items": {
+    "count": 8,
+    "table": [
+      "potion_red",
+      "potion_blue",
+      "gem_atk",
+      "scroll"
+    ]
+  },
+  "events": [
+    "ev_common_relic_road_v4",
+    "ev_common_cache_wall_v5",
+    "ev_common_trap_rubble",
+    "ev_common_shard_wandering_v3",
+    "ev_common_rescue_lost_soldier_v2",
+    "ev_common_trap_rubble_v3",
+    "ev_common_rescue_lost_soldier_v3"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_05",
+    "intro": "story.f31.intro",
+    "ambient": [
+      "story.f31.ambient.1",
+      "story.f31.ambient.2"
+    ],
+    "beats": [
+      "b_crypt_f31"
+    ],
+    "exitUnlocks": {
+      "counters": {
+        "insight": 1
+      }
+    }
+  },
+  "nextFloor": "F32",
+  "meta": {
+    "targetMinutes": [
+      4,
+      7
+    ],
+    "difficultyTier": 5,
+    "eventKinds": [
+      "relic",
+      "cache",
+      "trap",
+      "memory_shard",
+      "rescue",
+      "trap",
+      "rescue"
+    ],
+    "eventPoolSource": "provisional",
+    "contentSource": "provisional",
+    "enemyMix": [
+      "skeleton",
+      "wraith"
+    ],
+    "eventCells": [
+      [
+        5,
+        7
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        6,
+        1
+      ]
+    ]
+  }
+}

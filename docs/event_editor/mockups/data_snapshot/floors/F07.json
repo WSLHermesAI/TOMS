@@ -1,0 +1,73 @@
+{
+  "id": "F07",
+  "act": "ch_01",
+  "indexInAct": 7,
+  "name": "story.f07.name",
+  "seal": "memory",
+  "role": "boss-stage",
+  "maze": {
+    "cols": 23,
+    "rows": 18,
+    "rooms": 3,
+    "loops": 2,
+    "seed": "07:toms-s2"
+  },
+  "enemies": {
+    "mix": [
+      "slime",
+      "bat"
+    ],
+    "count": [
+      4,
+      6
+    ],
+    "elites": 0,
+    "boss": "slime_king"
+  },
+  "items": {
+    "count": 4,
+    "table": [
+      "potion_red",
+      "coin",
+      "gem_def"
+    ]
+  },
+  "events": [
+    "ev_village_chapel_dust",
+    "ev_village_old_plough",
+    "ev_common_rescue_lost_soldier"
+  ],
+  "sideStoryHooks": [],
+  "story": {
+    "chapter": "ch_01",
+    "intro": "story.f07.intro",
+    "ambient": [
+      "story.f07.ambient.1",
+      "story.f07.ambient.2"
+    ],
+    "beats": [
+      "b_village_f07"
+    ],
+    "exitUnlocks": {}
+  },
+  "nextFloor": "F08",
+  "meta": {
+    "targetMinutes": [
+      2,
+      4
+    ],
+    "difficultyTier": 1,
+    "eventKinds": [
+      "whisper",
+      "cache",
+      "rescue"
+    ],
+    "eventPoolSource": "authored",
+    "contentSource": "chapter",
+    "enemyMix": [
+      "slime",
+      "bat"
+    ]
+  },
+  "handAuthoredStage": "stage01.json"
+}
