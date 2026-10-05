@@ -204,6 +204,9 @@ toms_gltf_test(gltf_shadow_all_opengl gltf_shadow_all   instancing     opengl   
 #   web.page_coi         the packaged page (build_web.bat) on a server WITHOUT the headers, like
 #                        GitHub Pages: coi-serviceworker must make it isolated -> threaded build
 #   web.page_nothreads   the packaged page with ?nothreads: the single-threaded fallback
+#   web.page_gpu         the packaged page on the REAL GPU (ANGLE -> Direct3D 11 on Windows), not the
+#                        SwiftShader software GPU the others use: stricter about shaders (2026-10-05:
+#                        the glTF shader linked on SwiftShader and failed on the GPU, stopping the game)
 # docs/10_THREADS.md
 find_program(TOMS_NODE node)
 set(TOMS_WEB_BUILD_DIR    "${CMAKE_SOURCE_DIR}/Build/web-release-windows/bin"    CACHE PATH "Single-threaded web build tested by the 'web' label")
@@ -219,4 +222,5 @@ if(TOMS_NODE)
     toms_web_test(smoke_mt       "${TOMS_WEB_MT_BUILD_DIR}" --isolate --expect-threads=yes)
     toms_web_test(page_coi       "${TOMS_WEB_PACKAGE_DIR}"  --expect-threads=yes)
     toms_web_test(page_nothreads "${TOMS_WEB_PACKAGE_DIR}"  --query=nothreads --expect-threads=no)
+    toms_web_test(page_gpu       "${TOMS_WEB_PACKAGE_DIR}"  --expect-threads=yes --gpu)
 endif()

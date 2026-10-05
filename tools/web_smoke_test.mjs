@@ -2,12 +2,16 @@
 // title screen -> Enter (new game) -> Esc + Enter (in-game menu: Save) -> page reload -> the save is back.
 //
 //   node tools/web_smoke_test.mjs <web build folder | URL> <folder for screenshots> [width,height]
-//        [--isolate] [--expect-threads=yes|no] [--query=a=b]
+//        [--isolate] [--expect-threads=yes|no] [--query=a=b] [--gpu]
 //
 //   --isolate            the built-in server sends COOP/COEP (cross-origin isolation), which the
 //                        multithreaded build needs (docs/10_THREADS.md)
 //   --expect-threads=    yes: the page must run with job-system workers; no: without
 //   --query=             appended to the page URL (e.g. nothreads, the page's opt-out)
+//   --gpu                the real GPU (Windows: ANGLE on Direct3D 11, what Chrome uses there) instead of
+//                        the SwiftShader software GPU. The real path is stricter: a shader that links on
+//                        SwiftShader can fail there (2026-10-05: fs_mesh with shadow lookups).
+// Every WebGL shader that fails to compile or link is logged ([webgl] ...) and fails the run.
 //
 // Give it a folder (Build\web-release-windows\bin, or Build\dist\TOMS-web) and it serves that folder
 // itself; or give it the URL of a running server (tools\serve_web.cmd). Needs Node 22+ (built-in
@@ -24,7 +28,7 @@ const SKIP = 77;
 const flags = process.argv.slice(2).filter(a => a.startsWith('--'));
 const [target, outDir, windowSize] = process.argv.slice(2).filter(a => !a.startsWith('--'));
 const flag = name => { const f = flags.find(a => a === '--' + name || a.startsWith('--' + name + '=')); return f === undefined ? undefined : (f.split('=').slice(1).join('=') || true); };
-const isolate = !!flag('isolate'), expectThreads = flag('expect-threads'), query = flag('query');
+const isolate = !!flag('isolate'), expectThreads = flag('expect-threads'), query = flag('query'), gpu = !!flag('gpu');
 if (!target || !outDir) { console.log('usage: node web_smoke_test.mjs <web build folder | URL> <screenshot folder> [w,h]'); process.exit(2); }
 if (typeof WebSocket === 'undefined') { console.log(`SKIP: Node ${process.version} has no built-in WebSocket (needs Node 22+)`); process.exit(SKIP); }
 const chrome = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
@@ -57,7 +61,9 @@ console.log('testing', url);
 rmSync(outDir + '/prof', { recursive: true, force: true });   // a fresh profile: no saves from earlier runs
 mkdirSync(outDir + '/prof', { recursive: true });
 const port = 9333;
-const proc = spawn(chrome, ['--headless=new', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
+const gpuFlags = gpu ? [process.platform === 'win32' ? '--use-angle=d3d11' : '--use-angle=default', '--enable-gpu', '--ignore-gpu-blocklist']
+                    : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
+const proc = spawn(chrome, ['--headless=new', ...gpuFlags,
   '--window-size=' + (windowSize || '1280,720'), `--remote-debugging-port=${port}`, `--user-data-dir=${outDir}/prof`, 'about:blank']);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -97,6 +103,14 @@ ws.onmessage = ev => { const m = JSON.parse(ev.data); if (m.id && pending.has(m.
   else if (m.method === 'Runtime.consoleAPICalled') logs.push(m.params.args.map(a => a.value ?? a.description).join(' '));
   else if (m.method === 'Runtime.exceptionThrown') errors.push(m.params.exceptionDetails?.exception?.description || m.params.exceptionDetails?.text); };
 await send('Runtime.enable'); await send('Page.enable');
+// Report every WebGL shader that fails to compile or link (bgfx itself only says "Failed to compile shader").
+await send('Page.addScriptToEvaluateOnNewDocument', { source: `(() => {
+  const P = WebGL2RenderingContext.prototype, cs = P.compileShader, lp = P.linkProgram;
+  P.compileShader = function (sh) { cs.call(this, sh); if (!this.getShaderParameter(sh, this.COMPILE_STATUS))
+    console.log('[webgl] shader compile failed: ' + JSON.stringify(this.getShaderInfoLog(sh)) + ' ' + JSON.stringify((this.getShaderSource(sh) || '').slice(0, 200))); };
+  P.linkProgram = function (p) { lp.call(this, p); if (!this.getProgramParameter(p, this.LINK_STATUS))
+    console.log('[webgl] program link failed: ' + JSON.stringify(this.getProgramInfoLog(p))); };
+})();` });
 try {
   await send('Page.navigate', { url });
   await waitReady();
@@ -125,6 +139,7 @@ try {
   check(s.frames > 10, 'the game keeps drawing frames after the reload');
 } catch (e) { check(false, 'the run finished: ' + e.message); }
 check(errors.length === 0, 'no uncaught page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
+check(!logs.some(l => l.startsWith('[webgl]')), 'every WebGL shader compiles and links');
 console.log('--- page console (filtered) ---');
 for (const l of logs) if (!/getInternalformatParameter/.test(l)) console.log(l);
 console.log(failures.length ? `FAILED (${failures.length})` : 'PASSED');

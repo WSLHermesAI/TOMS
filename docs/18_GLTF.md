@@ -27,6 +27,15 @@ In Visual Studio: the launch targets *gltf_viewer (skinned test model)* and *glt
 | Extensions | `EXT_mesh_gpu_instancing`, `KHR_materials_unlit`, `KHR_texture_transform`, `KHR_materials_emissive_strength`, `KHR_mesh_quantization`, `KHR_materials_pbrSpecularGlossiness` (as base colour + roughness), `KHR_materials_transmission` + `KHR_materials_volume` (glass, approximated: see-through with its reflections, no refraction of what is behind) |
 
 **Not yet supported:**
+- **No shadows on OpenGL ES / WebGL** (the web build, Android's GLES path).
+  - **Why:** WebGL on Windows runs through ANGLE on Direct3D, and it cannot link the glTF fragment
+    shader with its shadow lookups (a dynamically indexed array of shadow matrices). The link fails
+    with an empty log and bgfx stops the game; it only fails on the real GPU, not on Chrome's
+    SwiftShader that the older web tests used.
+  - **What happens now:** that shader build (`BGFX_SHADER_LANGUAGE_ESSL`) leaves the shadow code out
+    and `GltfRenderer::shadowsSupported()` is false there. Lighting is otherwise the same.
+  - **To bring them back:** read the shadow matrices from a small float texture (`texelFetch`)
+    instead of a uniform array.
 - **Compressed files are refused** with a message naming the extension, when the file *requires*
   it: `KHR_draco_mesh_compression`, `EXT_meshopt_compression`, `KHR_texture_basisu` (KTX2). To use
   such a file, re-export it without them, e.g. with `gltf-transform`.

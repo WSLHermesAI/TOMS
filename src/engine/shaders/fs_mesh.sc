@@ -8,6 +8,11 @@ $input v_worldPos, v_normal, v_tangent, v_texcoord0, v_color0
 //   with 1/d^2 and their range, spots between their cones), each with an optional shadow map in the
 //   shadow atlas (3x3 hardware PCF; a point light has 6 tiles, one per cube face). A hemisphere
 //   ambient (sky / ground) with an analytic environment BRDF. Then exposure, ACES tone mapping, sRGB.
+//
+//   OpenGL ES / WebGL2 (BGFX_SHADER_LANGUAGE_ESSL): no shadow lookups. WebGL on Windows runs through
+//   ANGLE -> Direct3D, which cannot link this shader with them (the dynamically indexed shadow matrix
+//   array): the link fails with an empty log and the game stopped (2026-10-05). GltfRenderer reports
+//   no shadow support on that backend, so nothing asks for them there.
 #include <bgfx_shader.sh>
 
 SAMPLER2D(s_baseColor, 0);
@@ -126,6 +131,63 @@ float shadowAt(vec3 worldPos, int tile, float bias)
     return lit / 9.0;
 }
 
+// One light's light at this point, with its shadow. Called once per light with constant array indices
+// (main()), which keeps the program simple for the WebGL path too.
+vec3 shadeLight(vec4 lp, vec4 ld, vec4 lc, vec4 ls, vec3 worldPos, vec3 Ng, vec3 N, vec3 V, vec3 diffuse, vec3 f0, float a,
+                inout float firstShadow)
+{
+    vec3 L = -ld.xyz;
+    float att = 1.0;
+    float dist = 1.0;
+    if (lp.w > 0.5)   // point / spot
+    {
+        vec3 toL = lp.xyz - worldPos;
+        dist = max(length(toL), 1e-4);
+        L = toL / dist;
+        att = 1.0 / (dist * dist);
+        if (ld.w > 0.0)   // KHR_lights_punctual's smooth range window
+        {
+            float r = dist / ld.w;
+            float w = clamp(1.0 - r * r * r * r, 0.0, 1.0);
+            att *= w * w;
+        }
+        if (lp.w > 1.5)   // spot cone
+        {
+            float t = clamp((dot(-L, ld.xyz) - ls.x) * ls.y, 0.0, 1.0);
+            att *= t * t;
+        }
+    }
+    if (att <= 0.0) return vec3_splat(0.0);
+    float lit = 1.0;
+#if !BGFX_SHADER_LANGUAGE_ESSL
+    if (lc.w >= 0.0 && u_lightCount.w > 0.5)
+    {
+        int tile = int(lc.w + 0.5);
+        if (lp.w > 0.5 && lp.w < 1.5)   // point: the cube face the point is on
+        {
+            vec3 d = worldPos - lp.xyz;
+            vec3 ad = abs(d);
+            int face = 0;
+            if (ad.x >= ad.y && ad.x >= ad.z) face = d.x > 0.0 ? 0 : 1;
+            else if (ad.y >= ad.z) face = d.y > 0.0 ? 2 : 3;
+            else face = d.z > 0.0 ? 4 : 5;
+            tile += face;
+        }
+        // Against acne: a normal offset (more where the light grazes the surface) and, for point / spot
+        // lights, a step towards the light -- both about a shadow texel in world units, which for a
+        // perspective map grows with the distance (a depth-buffer bias would be far too big far away).
+        float texelWorld = ls.w * (lp.w > 0.5 ? dist : 1.0);
+        // (x3 more at grazing angles: a low-poly curved surface's real facets would shadow its smooth
+        // shading near the terminator)
+        vec3 at = worldPos + Ng * texelWorld * (1.0 + 3.0 * (1.0 - clamp(dot(Ng, L), 0.0, 1.0)));
+        if (lp.w > 0.5) at += L * texelWorld;
+        lit = shadowAt(at, tile, ls.z);
+        if (firstShadow > 1.5) firstShadow = lit;
+    }
+#endif
+    return directLight(L, lc.rgb * (att * lit), N, V, diffuse, f0, a);
+}
+
 vec3 aces(vec3 x)
 {
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
@@ -199,66 +261,18 @@ void main()
     vec3 diffuse = base.rgb * (1.0 - metallic) * (1.0 - transmission);   // glass: light goes through
     vec3 f0 = mix(vec3_splat(0.04), base.rgb, metallic);
 
-    // The lights.
+    // The lights (up to 4; unrolled, see shadeLight()).
     vec3 color = vec3_splat(0.0);
     float firstShadow = 2.0;   // the first shadowed light's term (debug view 5)
     vec3 Ng = normalize(v_normal);   // the surface (not the normal map) for the shadow offset
-    for (int i = 0; i < 4; i++)
-    {
-        if (float(i) >= u_lightCount.x) break;
-        vec4 lp = u_lightPos[i];
-        vec4 ld = u_lightDirs[i];
-        vec4 lc = u_lightColors[i];
-        vec4 ls = u_lightSpot[i];
-        vec3 L = -ld.xyz;
-        float att = 1.0;
-        float dist = 1.0;
-        if (lp.w > 0.5)   // point / spot
-        {
-            vec3 toL = lp.xyz - v_worldPos;
-            dist = max(length(toL), 1e-4);
-            L = toL / dist;
-            att = 1.0 / (dist * dist);
-            if (ld.w > 0.0)   // KHR_lights_punctual's smooth range window
-            {
-                float r = dist / ld.w;
-                float w = clamp(1.0 - r * r * r * r, 0.0, 1.0);
-                att *= w * w;
-            }
-            if (lp.w > 1.5)   // spot cone
-            {
-                float t = clamp((dot(-L, ld.xyz) - ls.x) * ls.y, 0.0, 1.0);
-                att *= t * t;
-            }
-        }
-        if (att <= 0.0) continue;
-        float lit = 1.0;
-        if (lc.w >= 0.0 && u_lightCount.w > 0.5)
-        {
-            int tile = int(lc.w + 0.5);
-            if (lp.w > 0.5 && lp.w < 1.5)   // point: the cube face the point is on
-            {
-                vec3 d = v_worldPos - lp.xyz;
-                vec3 ad = abs(d);
-                int face = 0;
-                if (ad.x >= ad.y && ad.x >= ad.z) face = d.x > 0.0 ? 0 : 1;
-                else if (ad.y >= ad.z) face = d.y > 0.0 ? 2 : 3;
-                else face = d.z > 0.0 ? 4 : 5;
-                tile += face;
-            }
-            // Against acne: a normal offset (more where the light grazes the surface) and, for point / spot
-            // lights, a step towards the light -- both about a shadow texel in world units, which for a
-            // perspective map grows with the distance (a depth-buffer bias would be far too big far away).
-            float texelWorld = ls.w * (lp.w > 0.5 ? dist : 1.0);
-            // (x3 more at grazing angles: a low-poly curved surface's real facets would shadow its smooth
-            // shading near the terminator)
-            vec3 at = v_worldPos + Ng * texelWorld * (1.0 + 3.0 * (1.0 - clamp(dot(Ng, L), 0.0, 1.0)));
-            if (lp.w > 0.5) at += L * texelWorld;
-            lit = shadowAt(at, tile, ls.z);
-            if (firstShadow > 1.5) firstShadow = lit;
-        }
-        color += directLight(L, lc.rgb * (att * lit), N, V, diffuse, f0, a);
-    }
+    if (u_lightCount.x > 0.5)
+        color += shadeLight(u_lightPos[0], u_lightDirs[0], u_lightColors[0], u_lightSpot[0], v_worldPos, Ng, N, V, diffuse, f0, a, firstShadow);
+    if (u_lightCount.x > 1.5)
+        color += shadeLight(u_lightPos[1], u_lightDirs[1], u_lightColors[1], u_lightSpot[1], v_worldPos, Ng, N, V, diffuse, f0, a, firstShadow);
+    if (u_lightCount.x > 2.5)
+        color += shadeLight(u_lightPos[2], u_lightDirs[2], u_lightColors[2], u_lightSpot[2], v_worldPos, Ng, N, V, diffuse, f0, a, firstShadow);
+    if (u_lightCount.x > 3.5)
+        color += shadeLight(u_lightPos[3], u_lightDirs[3], u_lightColors[3], u_lightSpot[3], v_worldPos, Ng, N, V, diffuse, f0, a, firstShadow);
 
     // Ambient: hemisphere irradiance + a reflection of the same hemisphere.
     float NoV = clamp(abs(dot(N, V)), 1e-4, 1.0);

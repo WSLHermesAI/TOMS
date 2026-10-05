@@ -253,9 +253,12 @@ bool GltfRenderer::init() {
     const bgfx::Caps* caps = bgfx::getCaps();
     // Depth compare sampling is in every bgfx backend; what can differ is a depth format that can be
     // both rendered to and sampled.
-    r.shadowCaps = bgfx::isValid(r.shadow) && (caps->formats[bgfx::TextureFormat::D16] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0 &&
+    // OpenGL ES / WebGL: fs_mesh.sc is built without shadow lookups there (WebGL on Windows cannot link it
+    // with them -- see the shader), so no shadows on that backend.
+    r.shadowCaps = bgfx::isValid(r.shadow) && bgfx::getRendererType() != bgfx::RendererType::OpenGLES &&
+                   (caps->formats[bgfx::TextureFormat::D16] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0 &&
                    (caps->formats[bgfx::TextureFormat::D16] & BGFX_CAPS_FORMAT_TEXTURE_2D) != 0;
-    if (!r.shadowCaps) std::fprintf(stderr, "[gltf] no shadow maps on this backend (no renderable + sampleable depth format)\n");
+    if (!r.shadowCaps) std::fprintf(stderr, "[gltf] no shadow maps on this backend\n");
     // A 1x1 depth texture so the sampler always has something of the right kind bound.
     r.dummyShadow = bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::D16, BGFX_TEXTURE_RT | BGFX_SAMPLER_COMPARE_LEQUAL);
     for (int i = 0; i < kMaxShadowTiles; i++) {
