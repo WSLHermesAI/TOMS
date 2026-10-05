@@ -150,3 +150,27 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - Each editor has `--selftest-gpu`, and all three pass on D3D11.
   - The unit tests are merged into `toms_tests`; `launch.vs.json` was trimmed.
   - CTest: 46/50; the 4 `smoke.stage*` failures already failed before (W16).
+- **2026-10-03** — **Editor coordinate hints** (evening, `0115a6a`): x/y values along the canvas edges, with
+  a step that follows the zoom (1/2/5 × 10ⁿ); View > Show Coordinates.
+- **2026-10-05** — **Anim editor** (`fedbd88`).
+  - **Per-node playback:** once and stay / once then hide / loop (`loop`, `stayAtLastFrame`).
+    Looping nodes keep playing after the clip ends.
+  - **Clips dock:** double-click opens a clip and asks before discarding changes.
+  - **Nodes tree:** Playback and Solo columns.
+  - Test file `docs/examples/anim_child_timing.anim`.
+- **2026-10-05** — **Editors: History dock and automatic backups.**
+  - **Backups:** every 5 min if changed and every 20 edits, keeping 20, in `%LOCALAPPDATA%`.
+  - **Atlas backups:** a project + packed atlas folder.
+- **2026-10-05** — **glTF 2.0** (`306fb0f`, doc 18).
+  - **Loader:** cgltf; skins, morphs, animations, cameras, lights, instancing, PBR extensions.
+  - **Renderer:** PBR, GPU skinning, CPU morph, instanced draws, glass, up to 4 lights, a shadow
+    atlas (directional / spot 1 tile, point 6).
+  - **Viewer:** `gltf_viewer` (donmccurdy-style panel, keyboard camera, file cameras with
+    look-around while riding).
+  - **Bug:** D3D lit every model from below (`gl_FrontFacing`); fixed.
+  - **Tests:** 52 unit checks, 17 `smoke.gltf_*` (incl. Vulkan / OpenGL); 12 Khronos samples render.
+- **2026-10-05** — **3D title** (`8f26862`).
+  - `VirtualCity.glb` behind the title menu (`TitleScene`, `BgfxRenderer::setSceneViews`).
+  - Same on D3D11 / Vulkan / OpenGL, and in the web build.
+  - `smoke.title` reference updated.
+  - **Web package built and tested; publishing waits for the owner's GitHub sign-in (W18).**

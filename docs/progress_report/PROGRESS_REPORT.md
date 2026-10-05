@@ -15,6 +15,18 @@
 
 ## ▶ Next Step
 
+**3D is in the engine** (2026-10-05, [5_PROGRESS_REPORT.md](5_PROGRESS_REPORT.md), [../18_GLTF.md](../18_GLTF.md)):
+- **glTF 2.0:** skins, morph targets, instancing, PBR, glTF cameras and lights, and shadow maps for
+  directional, point and spot lights.
+- **Viewer:** `gltf_viewer`, plus 17 screenshot tests.
+- **In the game:** the title screen plays `VirtualCity.glb` behind its menu.
+
+**Owner, first:**
+- **Publish:** run `publish_web.bat nobuild` and answer **y** (W18). The web package is built and
+  tested; only the push needs your GitHub sign-in.
+- **Still due:** the **legacy import bridge** (`.prt`/`.prtg` → `.particle`, `.pi`/`.mpdi` →
+  atlas/`.anim`).
+
 **The content tools are in** (2026-10-03, [4_PROGRESS_REPORT.md](4_PROGRESS_REPORT.md)):
 - **Three editors:** `atlas_editor`, `anim_editor` and `particle_editor`. All three preview with
   toms_game's own renderer.
@@ -75,6 +87,8 @@ the Visual Studio IDE (W1).
 | T | Node animations (`.anim`, per-channel keys, `anim_editor`), docs 15–16 | ✅ 2026-10-03 |
 | T | Particles (`.particle` JSON, `particle_editor`, GPU simulation, CPU/GPU threshold), doc 17 | ◐ 2026-10-03 editor + runtime done; legacy import, multiply/screen blend, effects on `.anim` nodes open |
 | T | Editors preview with toms_game's `BgfxRenderer`; right-drag pans | ✅ 2026-10-03 on D3D11 |
+| T | Anim editor: per-node playback (once / hide / loop), solo, clip switching with discard prompt; editors: History dock + automatic backups | ✅ 2026-10-05 |
+| 5 | glTF 2.0 on bgfx (`gltf_model`, `GltfRenderer`, `gltf_viewer`): skins, morphs, instancing, PBR, cameras, lights, shadow maps; the title's 3D background | ◐ 2026-10-05 desktop D3D11/Vulkan/OpenGL + web verified; not on a phone; no IBL / cascades yet |
 | 5 | 3D on bgfx (glTF, ozz skinning, instancing, shadows, Effekseer) | ⬜ researched only |
 
 ---
@@ -99,6 +113,8 @@ the Visual Studio IDE (W1).
 | W15 | **Two docs numbered 07** | `07_BUILD_ANDROID.md` and `07_PUBLISH_GITHUB_PAGES.md` | renumber one (links in README / docs point at both) |
 | W16 | **`smoke.stage*` fail** (4 of 50 CTest) | already failing before 2026-10-03; not investigated | run `tools	est.cmd`, compare the diff images, refresh the references or fix the cause |
 | W17 | **GPU particles off D3D11** | measured and tested on D3D11 only; the web (GLES 3.0) has no compute and uses the CPU | run `toms_game --fx=docs/examples/fx_recipes.particle#… --fps` on D3D12/Vulkan/OpenGL and an Android phone |
+| W18 | **Web build not published yet** | the push to `gh-pages` needs the owner's GitHub sign-in (Git Credential Manager), which a non-interactive session cannot do | run `publish_web.bat nobuild`, sign in once, answer **y**; check https://wslhermesai.github.io/TOMS/ after 1–2 min |
+| W19 | **3D title on phones** | built for Android and checked in headless Chrome only; shadows are off there, the model adds 3 MB | run the APK / the web page on a real phone; watch the frame rate on the title |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
 
 ---
@@ -109,6 +125,7 @@ the Visual Studio IDE (W1).
 |---|---|---|
 | [1_PROGRESS_REPORT.md](1_PROGRESS_REPORT.md) | 2026-09-25 | Qt + bgfx decision; EngineBlueprint update; bgfx glTF / skinning / morph / instancing research; toms_next phase 1 built and verified; WSL web presets and the etcpak stop |
 | [3_PROGRESS_REPORT.md](3_PROGRESS_REPORT.md) | 2026-09-27 | the project moved to the repository root; old code/content restored and organised as `assets/` (content) + `src/` (code); desktop, editor and web rebuilt and verified from there |
+| [5_PROGRESS_REPORT.md](5_PROGRESS_REPORT.md) | 2026-10-03 evening, 2026-10-05 | editor coordinate hints; anim editor per-node playback, solo, clip switching; History + auto backups; glTF 2.0 loader, renderer, viewer, shadows, cameras; the 3D title; web build ready to publish |
 | [4_PROGRESS_REPORT.md](4_PROGRESS_REPORT.md) | 2026-10-03 | atlas tool; `.anim` runtime + editor + recipes; `.particle` format, runtime, editor; GPU sprite paths and GPU particle simulation; the editors on the game renderer; merged test runner |
 | [2_PROGRESS_REPORT.md](2_PROGRESS_REPORT.md) | 2026-09-26 | web build done on Windows (host shaderc, `bimg_encode` excluded, one entry point for desktop + web, IDBFS saves); five bugs fixed; doc 06; `web_smoke_test.mjs` |
 
