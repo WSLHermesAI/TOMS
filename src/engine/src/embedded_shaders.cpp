@@ -27,6 +27,30 @@
 #if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/fs_rml.sc.bin.h"
 #endif
+#if defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/vs_mesh.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/vs_mesh_inst.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/fs_mesh.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/vs_line.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/fs_line.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/fs_shadow.sc.bin.h"
+#endif
+#include "glsl/vs_mesh.sc.bin.h"
+#include "glsl/vs_mesh_inst.sc.bin.h"
+#include "glsl/fs_mesh.sc.bin.h"
+#include "glsl/vs_line.sc.bin.h"
+#include "glsl/fs_line.sc.bin.h"
+#include "glsl/fs_shadow.sc.bin.h"
 #include "glsl/vs_sprite.sc.bin.h"
 #include "glsl/vs_sprite_inst.sc.bin.h"
 #include "glsl/fs_sprite.sc.bin.h"
@@ -36,6 +60,12 @@
 #include "glsl/fs_rml.sc.bin.h"
 #endif
 #ifndef __EMSCRIPTEN__
+#include "spirv/vs_mesh.sc.bin.h"
+#include "spirv/vs_mesh_inst.sc.bin.h"
+#include "spirv/fs_mesh.sc.bin.h"
+#include "spirv/vs_line.sc.bin.h"
+#include "spirv/fs_line.sc.bin.h"
+#include "spirv/fs_shadow.sc.bin.h"
 #include "spirv/vs_sprite.sc.bin.h"
 #include "spirv/vs_sprite_inst.sc.bin.h"
 #include "spirv/fs_sprite.sc.bin.h"
@@ -44,6 +74,12 @@
 #include "spirv/vs_rml.sc.bin.h"
 #include "spirv/fs_rml.sc.bin.h"
 #endif
+#include "essl/vs_mesh.sc.bin.h"
+#include "essl/vs_mesh_inst.sc.bin.h"
+#include "essl/fs_mesh.sc.bin.h"
+#include "essl/vs_line.sc.bin.h"
+#include "essl/fs_line.sc.bin.h"
+#include "essl/fs_shadow.sc.bin.h"
 #include "essl/vs_sprite.sc.bin.h"
 #include "essl/vs_sprite_inst.sc.bin.h"
 #include "essl/fs_sprite.sc.bin.h"
@@ -89,7 +125,13 @@ struct ProgramBlobs { Blob vs, fs; };
     case ShaderProgram::Sprite: out = { TOMS_BLOB(vs_sprite_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
     case ShaderProgram::SpriteInstanced: out = { TOMS_BLOB(vs_sprite_inst_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
     case ShaderProgram::ImGui:  out = { TOMS_BLOB(vs_imgui_##ext),  TOMS_BLOB(fs_imgui_##ext) };  break; \
-    case ShaderProgram::RmlUi:  out = { TOMS_BLOB(vs_rml_##ext),    TOMS_BLOB(fs_rml_##ext) };    break; \
+    case ShaderProgram::RmlUi:  out = { TOMS_BLOB(vs_rml_##ext),    TOMS_BLOB(fs_rml_##ext) };    break;\
+    case ShaderProgram::Mesh:   out = { TOMS_BLOB(vs_mesh_##ext),   TOMS_BLOB(fs_mesh_##ext) };   break;\
+    case ShaderProgram::MeshInstanced: out = { TOMS_BLOB(vs_mesh_inst_##ext), TOMS_BLOB(fs_mesh_##ext) }; break;\
+    case ShaderProgram::Line:   out = { TOMS_BLOB(vs_line_##ext),   TOMS_BLOB(fs_line_##ext) };   break;\
+    case ShaderProgram::MeshShadow: out = { TOMS_BLOB(vs_mesh_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
+    case ShaderProgram::MeshShadowInstanced: out = { TOMS_BLOB(vs_mesh_inst_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
+    default: return false;                                                                         \
     }                                                                                               \
     return true
 

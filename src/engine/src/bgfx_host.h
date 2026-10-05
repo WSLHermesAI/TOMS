@@ -26,6 +26,7 @@ struct BgfxHostConfig {
     std::string renderer = "auto";         // auto | d3d11 | d3d12 | vulkan | opengl | gles
     bool        vsync = true;
     bool        debugText = false;         // bgfx's on-screen stats overlay
+    int         msaa = 0;                  // 0, 2, 4, 8, 16: multisampled backbuffer (3D viewers; the 2D game draws with none)
 };
 
 // Initializes bgfx in single-threaded mode (bgfx::renderFrame() before bgfx::init), which is what

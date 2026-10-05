@@ -52,6 +52,20 @@
     {
       "type": "default",
       "project": "CMakeLists.txt",
+      "projectTarget": "gltf_viewer.exe (bin\\gltf_viewer.exe)",
+      "name": "gltf_viewer (skinned test model)",
+      "args": [ "${workspaceRoot}\\tests\\gltf\\skin_tube.gltf" ]
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "gltf_viewer.exe (bin\\gltf_viewer.exe)",
+      "name": "gltf_viewer (Fox sample, after tools/gltf_viewer/fetch_samples.py)",
+      "args": [ "${workspaceRoot}\\Build\\gltf_samples\\Fox.glb" ]
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
       "projectTarget": "toms_tests.exe (bin\\tests\\toms_tests.exe)",
       "name": "toms_tests (one unit test)",
       "args": [ "particle_fx_test" ],

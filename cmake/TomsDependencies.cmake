@@ -94,8 +94,13 @@ set(GLM_BUILD_TESTS   OFF CACHE BOOL "" FORCE)
 set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 toms_declare_dep(glm https://github.com/g-truc/glm.git 1.0.1)
 
-FetchContent_MakeAvailable(bgfx SDL3 imgui glm)
-toms_deps_fetched(bgfx SDL3 imgui glm)
+# ---- cgltf: glTF 2.0 (.gltf / .glb) parsing for 3D models (src/core/engine/gltf_model.*, docs/18_GLTF.md).
+# One header (MIT). SOURCE_SUBDIR points at a folder without a CMakeLists.txt, so FetchContent only
+# downloads it (its own CMakeLists builds cgltf's tests).
+toms_declare_dep(cgltf https://github.com/jkuhlmann/cgltf.git v1.15 SOURCE_SUBDIR "no-cmake")
+
+FetchContent_MakeAvailable(bgfx SDL3 imgui glm cgltf)
+toms_deps_fetched(bgfx SDL3 imgui glm cgltf)
 
 # bgfx fix (Android): an app that comes back from the background gets a NEW surface (ANativeWindow).
 # bgfx::reset() passes it on (SwapChain::nwh), but GlContext::resize() rebuilt the EGL surface on the

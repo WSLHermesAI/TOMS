@@ -8,7 +8,7 @@ set(L_GAME   ${L}/game)
 add_library(toms_core STATIC
     ${L_ENGINE}/node.cpp ${L_ENGINE}/job_system.cpp ${L_ENGINE}/condition.cpp ${L_ENGINE}/entity_status.cpp
     ${L_ENGINE}/encounter.cpp ${L_ENGINE}/power_bar.cpp
-    ${L_ENGINE}/anim_clip.cpp ${L_ENGINE}/anim_player.cpp ${L_ENGINE}/particle_fx.cpp
+    ${L_ENGINE}/anim_clip.cpp ${L_ENGINE}/anim_player.cpp ${L_ENGINE}/particle_fx.cpp ${L_ENGINE}/gltf_model.cpp ${L_ENGINE}/stb_image_impl.cpp
     ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp
     ${L_GAME}/core/game_scene_draw.cpp ${L_GAME}/core/game_input.cpp ${L_GAME}/core/game_inventory.cpp
     ${L_GAME}/core/game_store.cpp ${L_GAME}/core/game_combat.cpp ${L_GAME}/core/game_story.cpp
@@ -38,6 +38,8 @@ if(NOT EMSCRIPTEN)   # the job system's worker threads (the web gets -pthread fr
     target_link_libraries(toms_core PUBLIC Threads::Threads)
 endif()
 set_target_properties(toms_core PROPERTIES FOLDER "toms")
+# cgltf (gltf_model.cpp): one header, fetched by cmake/TomsDependencies.cmake.
+target_include_directories(toms_core PRIVATE ${cgltf_SOURCE_DIR})
 
 # ---- toms_game_host: GameSession, shared by the SDL game and the Qt editor ----
 add_library(toms_game_host STATIC src/game_session.h src/game_session.cpp src/game_ui.h src/game_ui.cpp)

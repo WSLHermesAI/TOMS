@@ -86,6 +86,9 @@ if(NOT WEB AND NOT ANDROID)
     # Particle effects (docs/17_PARTICLES.md): toms_fx (the runtime without the game) and, with
     # Qt, particle_editor. Shares tools/studio_common too.
     add_subdirectory(tools/particle)
+    # 3D models (docs/18_GLTF.md): gltf_viewer, glTF 2.0 on the engine's renderer (skins, morph
+    # targets, EXT_mesh_gpu_instancing, PBR), checked by the smoke.gltf_* tests.
+    add_subdirectory(tools/gltf_viewer)
     if(TOMS_BUILD_TESTS)
         # The project opens from its packed atlas alone, and its other files (plist, rcss, the
         # art styles' atlases) match what it builds.

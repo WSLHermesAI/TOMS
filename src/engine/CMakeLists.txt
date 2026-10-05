@@ -37,6 +37,27 @@ bgfx_compile_shaders(TYPE FRAGMENT
     PROFILES     ${TOMS_SHADER_PROFILES}
     AS_HEADERS)
 
+# 3D meshes (glTF models, src/engine/src/gltf_renderer.*, docs/18_GLTF.md) and debug lines: their own
+# varyings (varying_mesh.def.sc); mesh_common.sh (GPU skinning) is included from this folder.
+bgfx_compile_shaders(TYPE VERTEX
+    SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_mesh.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_mesh_inst.sc
+                 ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_line.sc
+    VARYING_DEF  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying_mesh.def.sc
+    OUTPUT_DIR   ${TOMS_SHADER_OUT}
+    OUT_FILES_VAR TOMS_MESH_VS_FILES
+    INCLUDE_DIRS ${bgfx_SOURCE_DIR}/bgfx/src ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+    PROFILES     ${TOMS_SHADER_PROFILES}
+    AS_HEADERS)
+bgfx_compile_shaders(TYPE FRAGMENT
+    SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_mesh.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_line.sc
+                 ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_shadow.sc
+    VARYING_DEF  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying_mesh.def.sc
+    OUTPUT_DIR   ${TOMS_SHADER_OUT}
+    OUT_FILES_VAR TOMS_MESH_FS_FILES
+    INCLUDE_DIRS ${bgfx_SOURCE_DIR}/bgfx/src ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+    PROFILES     ${TOMS_SHADER_PROFILES}
+    AS_HEADERS)
+
 # The sprite batch's compute path (cs_sprite.sc + vs_sprite_cs.sc): only for the profiles that have
 # compute shaders -- not ESSL 3.00 (WebGL2 / GLES3), which keeps the instancing path.
 set(TOMS_COMPUTE_PROFILES ${TOMS_SHADER_PROFILES})
@@ -78,8 +99,10 @@ add_library(toms_bgfx STATIC
     src/bgfx_host.h       src/bgfx_host.cpp
     src/imgui_bgfx.h      src/imgui_bgfx.cpp
     src/embedded_shaders.h src/embedded_shaders.cpp
-    ${TOMS_VS_FILES} ${TOMS_FS_FILES} ${TOMS_CS_FILES}
-    shaders/varying.def.sc
+    src/gltf_renderer.h   src/gltf_renderer.cpp
+    ${TOMS_VS_FILES} ${TOMS_FS_FILES} ${TOMS_CS_FILES} ${TOMS_MESH_VS_FILES} ${TOMS_MESH_FS_FILES}
+    shaders/varying.def.sc shaders/varying_mesh.def.sc shaders/mesh_common.sh
+    shaders/vs_mesh.sc shaders/vs_mesh_inst.sc shaders/fs_mesh.sc shaders/vs_line.sc shaders/fs_line.sc shaders/fs_shadow.sc
     shaders/cs_sprite.sc shaders/vs_sprite_cs.sc shaders/cs_fx_spawn.sc shaders/cs_fx_update.sc
     shaders/vs_sprite.sc shaders/fs_sprite.sc shaders/vs_sprite_inst.sc
     shaders/vs_imgui.sc  shaders/fs_imgui.sc
@@ -90,7 +113,7 @@ target_include_directories(toms_bgfx
             ${TOMS_CORE_SRC}/engine                # render_iface.h (the IRenderer contract)
     PRIVATE ${TOMS_SHADER_OUT}
             ${TOMS_THIRD_PARTY_DIR}/stb)
-target_link_libraries(toms_bgfx PUBLIC toms_imgui PRIVATE bgfx bx)
+target_link_libraries(toms_bgfx PUBLIC toms_imgui glm::glm PRIVATE bgfx bx)
 # bx requires C++20. Only this target sees bgfx headers, so the core game code stays C++17.
 set_target_properties(toms_bgfx PROPERTIES FOLDER "toms" CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
@@ -112,4 +135,6 @@ endif()
 target_link_libraries(toms_bgfx PUBLIC RmlUi::RmlUi)
 source_group("shaders" FILES shaders/varying.def.sc shaders/vs_sprite.sc shaders/fs_sprite.sc shaders/vs_sprite_inst.sc
                              shaders/cs_sprite.sc shaders/vs_sprite_cs.sc shaders/cs_fx_spawn.sc shaders/cs_fx_update.sc
-                             shaders/vs_imgui.sc shaders/fs_imgui.sc shaders/vs_rml.sc shaders/fs_rml.sc)
+                             shaders/vs_imgui.sc shaders/fs_imgui.sc shaders/vs_rml.sc shaders/fs_rml.sc
+                             shaders/varying_mesh.def.sc shaders/mesh_common.sh shaders/vs_mesh.sc shaders/vs_mesh_inst.sc
+                             shaders/fs_mesh.sc shaders/vs_line.sc shaders/fs_line.sc)

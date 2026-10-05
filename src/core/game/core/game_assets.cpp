@@ -4,9 +4,7 @@
 #include "job_system.h"
 #include "vfs.h"
 
-// Exactly one translation unit in this binary may define the STB image implementation. It lived in
-// game.cpp before the split.
-#define STB_IMAGE_IMPLEMENTATION
+// The stb_image implementation is in engine/stb_image_impl.cpp.
 #include <stb_image.h>
 
 using namespace toms::game_detail;

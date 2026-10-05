@@ -22,6 +22,7 @@ namespace {
 
 bool g_ready = false;
 bool g_vsync = true;
+int g_msaa = 0;   // BgfxHostConfig::msaa
 uint32_t g_debug = BGFX_DEBUG_NONE;
 bool g_stats = false, g_hud = false;   // --stats overlay, F3 HUD: both make g_debug
 std::atomic<int> g_screenshots{0};
@@ -94,7 +95,17 @@ bgfx::RendererType::Enum parseRendererName(const std::string& in) {
 }
 
 // Device/frame settings go in the reset flags; per-surface settings (size, sRGB) in the SwapChain.
-uint32_t bgfxHostResetFlags() { return g_vsync ? BGFX_RESET_VSYNC : BGFX_RESET_NONE; }
+uint32_t bgfxHostResetFlags() {
+    uint32_t f = g_vsync ? BGFX_RESET_VSYNC : BGFX_RESET_NONE;
+    switch (g_msaa) {
+    case 2: f |= BGFX_RESET_MSAA_X2; break;
+    case 4: f |= BGFX_RESET_MSAA_X4; break;
+    case 8: f |= BGFX_RESET_MSAA_X8; break;
+    case 16: f |= BGFX_RESET_MSAA_X16; break;
+    default: break;
+    }
+    return f;
+}
 
 // sRGB backbuffer, like the Vulkan swapchain (VK_FORMAT_B8G8R8A8_SRGB) the old renderer used.
 // WebGL has no sRGB backbuffer; the web build renders in gamma space like the old WebGL renderer.
@@ -111,6 +122,7 @@ bool bgfxHostInit(const BgfxHostConfig& cfg, std::string& error) {
         return false;
     }
     g_vsync = cfg.vsync;
+    g_msaa = cfg.msaa;
 
     // Calling renderFrame() before init() makes a multi-threaded bgfx render on this thread (no
     // render thread). A single-threaded bgfx (Emscripten) already does, and its debug build asserts

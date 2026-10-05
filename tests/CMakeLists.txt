@@ -23,7 +23,7 @@
 # relative to the working directory -- the old project's layout -- so they run in assets/.
 set(_core "${TOMS_CORE_SRC}")
 set(TOMS_UNIT_TESTS
-    engine/anim_clip_test           engine/particle_fx_test
+    engine/anim_clip_test           engine/particle_fx_test        engine/gltf_model_test
     engine/condition_eval_test      engine/encounter_resolve_test  engine/entity_status_test
     engine/job_system_test
     engine/event_bus_test           engine/log_test                engine/node_test
@@ -153,6 +153,48 @@ toms_smoke_test(fx_gpu       fx          d3d11   0.1  --frames=110 --keys=enter@
 toms_smoke_test(stage_d3d12  stage       d3d12   0.5  --frames=120 --keys=enter@30)
 toms_smoke_test(stage_vulkan stage       vulkan  0.5  --frames=120 --keys=enter@30)
 toms_smoke_test(stage_opengl stage       opengl  0.5  --frames=120 --keys=enter@30)
+
+# glTF models (docs/18_GLTF.md) in tools/gltf_viewer, on the test models of tests/gltf/
+# (tools/gltf_viewer/make_test_models.py): GPU skinning (linear and cubic spline), morph targets,
+# EXT_mesh_gpu_instancing, PBR materials (metal / roughness, texture + KHR_texture_transform, emissive,
+# alpha mask / blend, unlit). The animation time is frozen (--time), the panel hidden (--no-ui).
+# The reference images come from Direct3D 11; another backend compares with the same image (golden).
+function(toms_gltf_test name golden model renderer tolerance)
+    list(JOIN ARGN "|" _extra)
+    set(_args "${CMAKE_CURRENT_SOURCE_DIR}/gltf/${model}.gltf|--renderer=${renderer}|--size=1280x800|--no-ui|--frames=10")
+    if(_extra)
+        string(APPEND _args "|${_extra}")
+    endif()
+    add_test(NAME smoke.${name}
+             COMMAND ${CMAKE_COMMAND}
+                     -DGAME=$<TARGET_FILE:gltf_viewer> -DDIFF=$<TARGET_FILE:image_diff>
+                     -DNAME=${name} -DGOLDEN=${TOMS_GOLDEN_DIR}/${golden}.png
+                     -DWORK=${CMAKE_BINARY_DIR}/test-run/${name} -DTOLERANCE=${tolerance}
+                     "-DGAME_ARGS=${_args}"
+                     -P ${CMAKE_CURRENT_SOURCE_DIR}/smoke/run_smoke.cmake)
+    set_tests_properties(smoke.${name} PROPERTIES LABELS "smoke;gltf" RUN_SERIAL TRUE TIMEOUT 120)
+endfunction()
+#              name                 reference           model          backend  tolerance  scene
+toms_gltf_test(gltf_skin            gltf_skin           skin_tube      d3d11    0.1  --anim=bend --time=0.5)
+toms_gltf_test(gltf_skin_cubic      gltf_skin_cubic     skin_tube      d3d11    0.1  --anim=wave --time=0.7 --yaw=80)
+toms_gltf_test(gltf_morph           gltf_morph          morph_cube     d3d11    0.1  --anim=breathe --time=1.4)
+toms_gltf_test(gltf_morph_step      gltf_morph_step     morph_cube     d3d11    0.1  --anim=steps --time=1.2)
+toms_gltf_test(gltf_instancing      gltf_instancing     instancing     d3d11    0.1  --pitch=35)
+toms_gltf_test(gltf_pbr             gltf_pbr            pbr_materials  d3d11    0.1  --yaw=15 --pitch=8)
+toms_gltf_test(gltf_debug_normals   gltf_debug_normals  pbr_materials  d3d11    0.1  --yaw=15 --pitch=8 --debug=1)
+# Shadow maps (one atlas): the default key light (directional), a point light (6 cube faces), a spot
+# light, and all three at once; skinned and instanced casters on the ground.
+toms_gltf_test(gltf_shadow_dir      gltf_shadow_dir     skin_tube      d3d11    0.1  --anim=bend --time=0.5 --pitch=30 --zoom=1.4)
+toms_gltf_test(gltf_shadow_point    gltf_shadow_point   instancing     d3d11    0.1  --light=point --pitch=40 --zoom=1.6)
+toms_gltf_test(gltf_shadow_spot     gltf_shadow_spot    skin_tube      d3d11    0.1  --light=spot --anim=bend --time=0.5 --pitch=30 --zoom=1.4)
+toms_gltf_test(gltf_shadow_all      gltf_shadow_all     instancing     d3d11    0.1  --light=all --pitch=40 --zoom=1.6)
+# The same shaders on the other backends (SPIR-V, GLSL), compared with the Direct3D 11 images.
+toms_gltf_test(gltf_skin_vulkan     gltf_skin           skin_tube      vulkan   0.5  --anim=bend --time=0.5)
+toms_gltf_test(gltf_pbr_vulkan      gltf_pbr            pbr_materials  vulkan   0.5  --yaw=15 --pitch=8)
+toms_gltf_test(gltf_skin_opengl     gltf_skin           skin_tube      opengl   0.5  --anim=bend --time=0.5)
+toms_gltf_test(gltf_pbr_opengl      gltf_pbr            pbr_materials  opengl   0.5  --yaw=15 --pitch=8)
+toms_gltf_test(gltf_shadow_all_vulkan gltf_shadow_all   instancing     vulkan   0.5  --light=all --pitch=40 --zoom=1.6)
+toms_gltf_test(gltf_shadow_all_opengl gltf_shadow_all   instancing     opengl   0.5  --light=all --pitch=40 --zoom=1.6)
 
 # ---- web smoke tests --------------------------------------------------------------------------
 # tools/web_smoke_test.mjs in headless Chrome (title -> new game -> save -> reload). Each test is
