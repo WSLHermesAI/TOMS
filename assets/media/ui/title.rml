@@ -6,7 +6,7 @@
 </head>
 <!-- The boot screen: New Game / Continue (save slots) / Settings (language), and their two
      confirm dialogs. Data: title.* (UiTitle). Rows are the current page's, in keyboard order. -->
-<body data-model="game">
+<body data-model="game" data-class-scene="title.scene">
     <div class="rule" style="top: 74px;"></div>
     <div class="rule" style="bottom: 62px;"></div>
     <div id="name">{{title.title}}</div>

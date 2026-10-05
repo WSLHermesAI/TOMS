@@ -4,6 +4,8 @@
 #include "shared_textures.h"
 
 #include <bgfx/bgfx.h>
+
+#include <vector>
 #include <bx/math.h>
 
 #include <algorithm>
@@ -327,6 +329,21 @@ void BgfxRenderer::end() {
     lastDrawnQuads_ = 0;
     lastGpuEmitters_ = 0;
     lastQuadCount_ = sprites_.size();
+
+    // A 3D scene behind the sprites (setSceneViews): run its views right after the clear.
+    if (sceneCount_ != appliedSceneCount_ || sceneCount_ > 0) {
+        if (sceneCount_ > 0 && sceneFirst_ > kViewOverlay) {
+            std::vector<bgfx::ViewId> order;
+            const uint16_t end = uint16_t(sceneFirst_ + sceneCount_);
+            order.push_back(kViewClear);
+            for (uint16_t v = sceneFirst_; v < end; v++) order.push_back(v);
+            for (uint16_t v = 1; v < sceneFirst_; v++) order.push_back(v);
+            bgfx::setViewOrder(0, (uint16_t)order.size(), order.data());
+        } else {
+            bgfx::setViewOrder(0, UINT16_MAX, nullptr);   // back to the plain id order
+        }
+        appliedSceneCount_ = sceneCount_;
+    }
 
     // View 0: clear the whole backbuffer (letterbox bars included) to the background colour.
     bgfx::setViewRect(kViewClear, 0, 0, (uint16_t)devW_, (uint16_t)devH_);

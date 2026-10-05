@@ -103,8 +103,27 @@ struct Node {
     glm::vec3 scale{1.0f};
     int mesh = -1, skin = -1;
     int light = -1;                      // KHR_lights_punctual
+    int camera = -1;
     std::vector<float> weights;          // morph weights on the node (else the mesh's)
     std::vector<glm::mat4> instances;    // EXT_mesh_gpu_instancing: local matrices, empty = one draw
+};
+
+// A camera of the file. A node places it: it looks down the node's -Z axis, +Y up.
+struct Camera {
+    std::string name;                    // the camera's name, else its node's (or a parent's)
+    bool perspective = true;
+    float yfov = 0.8f;                   // perspective: vertical field of view, radians
+    float aspectRatio = 0.0f;            // perspective: 0 = use the window's
+    float xmag = 1.0f, ymag = 1.0f;      // orthographic: half width / height
+    float znear = 0.01f;
+    float zfar = 0.0f;                   // 0 = infinite (perspective)
+};
+
+// A camera where its node is now (Pose::cameras()).
+struct PlacedCamera {
+    int camera = -1;                     // index into Model::cameras
+    int node = -1;
+    glm::mat4 world{1.0f};               // rotation + position only (a node's scale taken out)
 };
 
 // KHR_lights_punctual. A node places it: the light shines down the node's -Z axis.
@@ -169,6 +188,7 @@ struct Model {
     std::vector<Node> nodes;
     std::vector<Skin> skins;
     std::vector<Light> lights;           // KHR_lights_punctual
+    std::vector<Camera> cameras;
     std::vector<Animation> animations;
     std::vector<Scene> scenes;
     int scene = 0;                       // the default scene
@@ -219,6 +239,8 @@ public:
 
     // The file's lights (KHR_lights_punctual) where their nodes are now (call after updateWorld()).
     std::vector<PlacedLight> lights() const;
+    // The file's cameras where their nodes are now (animated cameras move; call after updateWorld()).
+    std::vector<PlacedCamera> cameras() const;
 
     // Bounds of the default scene in world space at this pose (skinned meshes skinned on the CPU,
     // instances included). False when there is nothing to bound.

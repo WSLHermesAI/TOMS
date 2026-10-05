@@ -14,9 +14,14 @@
 //     --light=default|point|spot|all|file   the light rig (file = the model's KHR_lights_punctual)
 //     --shadows=0|1 --ground=0|1            shadow maps (default on), the floor that catches them
 //     --shadow-bias=<x>                     scales the shadow offsets (acne vs. detached shadows)
+//     --camera=<index|name>                 look through one of the file's cameras (C cycles them)
+//     --look=<yaw>,<pitch>                  ... turned by that much in its own frame (degrees; as a left drag)
 //
 // Mouse: left drag orbits, right / middle drag pans, wheel zooms. Keys: Space play/pause, F frame,
-// G grid, K skeleton, B bounds, W wireframe, R auto-rotate, H panel, 1..9 solo an animation, Esc quit.
+// G grid, K skeleton, B bounds, W wireframe, R auto-rotate, H panel, 1..9 solo an animation, Esc quit;
+// arrow keys move the camera (left / right / up / down on the screen, while held), + / - change that speed,
+// C cycles through the file's cameras (and back to the free orbit camera). On a file camera, left drag
+// looks around and the wheel zooms -- still riding the camera's animation (double-click: look ahead again).
 #include "bgfx_host.h"
 #include "gltf_model.h"
 #include "gltf_renderer.h"
@@ -50,6 +55,8 @@ struct Args {
     bool ui = true, shadows = true, ground = true;
     std::string light = "default";
     float shadowBias = 1.0f;
+    std::string camera;
+    float lookYaw = 0.0f, lookPitch = 0.0f;
 };
 
 const char* value(const std::string& s, const char* key) {
@@ -76,6 +83,8 @@ Args parseArgs(int argc, char** argv) {
         else if (const char* v = value(s, "--shadows=")) a.shadows = std::atoi(v) != 0;
         else if (const char* v = value(s, "--ground=")) a.ground = std::atoi(v) != 0;
         else if (const char* v = value(s, "--shadow-bias=")) a.shadowBias = (float)std::atof(v);
+        else if (const char* v = value(s, "--camera=")) a.camera = v;
+        else if (const char* v = value(s, "--look=")) std::sscanf(v, "%f,%f", &a.lookYaw, &a.lookPitch);
         else if (!s.empty() && s[0] != '-') a.file = s;
     }
     return a;
@@ -143,6 +152,21 @@ struct Viewer {
     float fps = 0.0f, fpsAccum = 0.0f;
     int fpsFrames = 0;
     bool dragOrbit = false, dragPan = false;
+    // -1 = the free orbit camera, else one of the file's cameras (index into pose.cameras()). Moving
+    // the view (drag, wheel, arrows) leaves a file camera for the free one, from the same spot.
+    int activeCamera = -1;
+    // Looking around from a file camera, in its own frame (it keeps riding its node's animation):
+    // a head turn (yaw about the camera's up), a nod (pitch about its right), a zoom of its lens.
+    float lookYaw = 0.0f, lookPitch = 0.0f, lookZoom = 1.0f;
+    bool dragLook = false;
+    void selectCamera(int i) {
+        activeCamera = i;
+        lookYaw = lookPitch = 0.0f;
+        lookZoom = 1.0f;
+    }
+    // Arrow keys: the camera moves moveSpeed x the model's radius per second (+ / - change it).
+    float moveSpeed = 1.0f;
+    static constexpr float kMoveStep = 1.5f, kMoveMin = 1.0f / 64.0f, kMoveMax = 64.0f;
 
     float maxDuration() const {
         float d = 0.0f;
@@ -183,6 +207,17 @@ struct Viewer {
                      model->morphTargetCount(), model->instanceCount(), model->animations.size());
         for (const std::string& w : model->warnings) std::fprintf(stderr, "[gltf]   warning: %s\n", w.c_str());
         for (const std::string& e : model->ignoredExtensions) std::fprintf(stderr, "[gltf]   ignored extension: %s\n", e.c_str());
+        activeCamera = -1;
+        if (!args.camera.empty()) {   // --camera=<index|name>
+            const std::vector<gltf::PlacedCamera> cams = pose.cameras();
+            for (size_t i = 0; i < cams.size(); i++)
+                if (std::to_string(i) == args.camera || model->cameras[(size_t)cams[i].camera].name == args.camera) {
+                    selectCamera((int)i);
+                    lookYaw = args.lookYaw;
+                    lookPitch = args.lookPitch;
+                    break;
+                }
+        }
         const std::string title = "TOMS glTF Viewer - " + file;
         SDL_SetWindowTitle(window, title.c_str());
         frameScene();
@@ -349,14 +384,23 @@ struct Viewer {
             break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
             if (uiMouse) break;
+            if (activeCamera >= 0 && e.button.button == SDL_BUTTON_LEFT) {   // look around, still on the camera
+                if (e.button.clicks >= 2) lookYaw = lookPitch = 0.0f;
+                dragLook = true;
+                break;
+            }
             if (e.button.button == SDL_BUTTON_LEFT) dragOrbit = true;
             else dragPan = true;
+            toFreeCamera();
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
-            dragOrbit = dragPan = false;
+            dragOrbit = dragPan = dragLook = false;
             break;
         case SDL_EVENT_MOUSE_MOTION:
-            if (dragOrbit) {
+            if (dragLook) {   // drag right: look right; drag up: look up
+                lookYaw -= e.motion.xrel * 0.25f;
+                lookPitch = std::clamp(lookPitch - e.motion.yrel * 0.25f, -89.0f, 89.0f);
+            } else if (dragOrbit) {
                 yaw -= e.motion.xrel * 0.4f;
                 pitch = std::clamp(pitch + e.motion.yrel * 0.4f, -89.0f, 89.0f);
             } else if (dragPan) {
@@ -367,20 +411,34 @@ struct Viewer {
             }
             break;
         case SDL_EVENT_MOUSE_WHEEL:
-            if (!uiMouse) distance *= std::pow(0.88f, e.wheel.y);
+            if (uiMouse) break;
+            if (activeCamera >= 0) {   // zoom the camera's lens, still on it
+                lookZoom = std::clamp(lookZoom * std::pow(0.9f, e.wheel.y), 0.05f, 2.5f);
+                break;
+            }
+            distance *= std::pow(0.88f, e.wheel.y);
             break;
         case SDL_EVENT_KEY_DOWN:
             if (ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureKeyboard) break;
             switch (e.key.key) {
             case SDLK_ESCAPE: quit = true; break;
             case SDLK_SPACE: paused = !paused; break;
-            case SDLK_F: frameScene(); break;
+            case SDLK_F:
+                activeCamera = -1;
+                frameScene();
+                break;
+            case SDLK_C: cycleCamera(); break;
             case SDLK_G: grid = !grid; break;
             case SDLK_K: skeleton = !skeleton; break;
             case SDLK_B: boundsBox = !boundsBox; break;
             case SDLK_W: wireframe = !wireframe; break;
             case SDLK_R: autoRotate = !autoRotate; break;
             case SDLK_H: showUi = !showUi; break;
+            case SDLK_EQUALS:   // the + key (Shift not needed)
+            case SDLK_PLUS:
+            case SDLK_KP_PLUS: moveSpeed = std::min(moveSpeed * kMoveStep, kMoveMax); break;
+            case SDLK_MINUS:
+            case SDLK_KP_MINUS: moveSpeed = std::max(moveSpeed / kMoveStep, kMoveMin); break;
             default:
                 if (model && e.key.key >= SDLK_1 && e.key.key <= SDLK_9) {
                     const size_t i = size_t(e.key.key - SDLK_1);
@@ -394,6 +452,54 @@ struct Viewer {
             break;
         default: break;
         }
+    }
+
+    // ---- the file's cameras -----------------------------------------------------------------------
+    std::string cameraLabel(size_t i, const gltf::PlacedCamera& pc) const {
+        const gltf::Camera& c = model->cameras[(size_t)pc.camera];
+        return std::to_string(i + 1) + ". " + (c.name.empty() ? "camera " + std::to_string(pc.camera) : c.name) +
+               (c.perspective ? "" : " (orthographic)");
+    }
+
+    void cycleCamera() {
+        const int n = model ? (int)pose.cameras().size() : 0;
+        selectCamera(n == 0 ? -1 : (activeCamera + 2) % (n + 1) - 1);   // -1, 0 .. n-1, -1, ...
+    }
+
+    // The file camera's transform now, with the look-around on top (in the camera's own frame).
+    glm::mat4 lookedCamera(const gltf::PlacedCamera& pc) const {
+        const glm::mat4 turn = glm::rotate(glm::mat4(1.0f), glm::radians(lookYaw), glm::vec3(0, 1, 0));
+        return pc.world * glm::rotate(turn, glm::radians(lookPitch), glm::vec3(1, 0, 0));
+    }
+
+    // Leave a file camera for the free orbit camera, looking from the same place the same way.
+    void toFreeCamera() {
+        if (activeCamera < 0) return;
+        const std::vector<gltf::PlacedCamera> cams = pose.cameras();
+        if (activeCamera < (int)cams.size()) {
+            const glm::mat4 w = lookedCamera(cams[(size_t)activeCamera]);
+            const glm::vec3 eyePos(w[3]), fwd = -glm::normalize(glm::vec3(w[2]));
+            const glm::vec3 c = (sceneMin + sceneMax) * 0.5f;
+            const float d = std::max(glm::dot(c - eyePos, fwd), radius * 0.25f);   // orbit around what it looks at
+            target = eyePos + fwd * d;
+            distance = d;
+            pitch = glm::degrees(std::asin(std::clamp(-fwd.y, -1.0f, 1.0f)));
+            yaw = glm::degrees(std::atan2(-fwd.x, -fwd.z));
+        }
+        activeCamera = -1;
+    }
+
+    // Held arrow keys move the camera (and what it looks at) across the screen.
+    void moveWithKeys(float dt) {
+        if (ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureKeyboard) return;
+        const bool* k = SDL_GetKeyboardState(nullptr);
+        const float x = float(k[SDL_SCANCODE_RIGHT]) - float(k[SDL_SCANCODE_LEFT]);
+        const float y = float(k[SDL_SCANCODE_UP]) - float(k[SDL_SCANCODE_DOWN]);
+        if (x == 0.0f && y == 0.0f) return;
+        toFreeCamera();
+        const glm::mat4 v = viewMatrix();
+        const glm::vec3 right(v[0][0], v[1][0], v[2][0]), up(v[0][1], v[1][1], v[2][1]);
+        target += (right * x + up * y) * (moveSpeed * radius * std::min(dt, 0.1f));
     }
 
     float pixelScale() const {   // window points -> backbuffer pixels
@@ -543,6 +649,36 @@ struct Viewer {
             for (const std::string& wn : m.warnings) ImGui::TextColored(ImVec4(1, 0.6f, 0.3f, 1), "! %s", wn.c_str());
         }
 
+        {
+            const std::vector<gltf::PlacedCamera> cams = pose.cameras();
+            if (!cams.empty() && ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
+                const std::string current = activeCamera >= 0 && activeCamera < (int)cams.size()
+                                                ? cameraLabel((size_t)activeCamera, cams[(size_t)activeCamera])
+                                                : std::string("free (orbit)");
+                if (ImGui::BeginCombo("camera", current.c_str())) {
+                    if (ImGui::Selectable("free (orbit)", activeCamera < 0)) selectCamera(-1);
+                    for (size_t i = 0; i < cams.size(); i++)
+                        if (ImGui::Selectable(cameraLabel(i, cams[i]).c_str(), activeCamera == (int)i)) selectCamera((int)i);
+                    ImGui::EndCombo();
+                }
+                ImGui::TextWrapped("%zu in the file. C cycles. On a camera: left drag looks around, the wheel zooms "
+                                   "(it keeps riding the animation); right drag or the arrows go free from there.", cams.size());
+                if (activeCamera >= 0 && activeCamera < (int)cams.size()) {
+                    const gltf::Camera& c = model->cameras[(size_t)cams[(size_t)activeCamera].camera];
+                    ImGui::Text("look: %.0f deg right, %.0f deg up, zoom %.2fx", -lookYaw, lookPitch, 1.0f / lookZoom);
+                    if (ImGui::SmallButton("look ahead (double-click)")) {
+                        lookYaw = lookPitch = 0.0f;
+                        lookZoom = 1.0f;
+                    }
+                    if (c.perspective)
+                        ImGui::TextDisabled("perspective, fov %.0f deg, near %g, far %s", glm::degrees(c.yfov), c.znear,
+                                            c.zfar > 0 ? std::to_string(c.zfar).c_str() : "infinite");
+                    else
+                        ImGui::TextDisabled("orthographic, %g x %g, near %g, far %g", c.xmag * 2, c.ymag * 2, c.znear, c.zfar);
+                }
+            }
+        }
+
         if (!model->animations.empty() && ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) {
             if (ImGui::Button(paused ? "Play" : "Pause")) paused = !paused;
             ImGui::SameLine();
@@ -595,6 +731,8 @@ struct Viewer {
             ImGui::Checkbox("auto-rotate (R)", &autoRotate);
             ImGui::ColorEdit3("background", &background.x, ImGuiColorEditFlags_NoInputs);
             ImGui::SliderFloat("fov", &fov, 10.0f, 100.0f, "%.0f deg");
+            ImGui::SliderFloat("move speed", &moveSpeed, kMoveMin, kMoveMax, "%.2fx", ImGuiSliderFlags_Logarithmic);
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Arrow keys move the camera; + / - change this");
             static const char* views[] = {"lit", "normals", "base colour", "metal / rough", "uv", "shadow (first light)"};
             ImGui::Combo("view", &frame.debug, views, 6);
         }
@@ -718,6 +856,7 @@ struct Viewer {
         if (args.time >= 0.0f) time = args.time;
         else if (!paused) time += double(dt) * speed;
         if (autoRotate) yaw += dt * 20.0f;
+        moveWithKeys(dt);
 
         // UI first (it decides whether the mouse belongs to it).
         float mx = 0, my = 0;
@@ -740,10 +879,31 @@ struct Viewer {
         // Shadows cover the model and the floor around it (where its shadow falls).
         frame.boundsMin = glm::vec3(sceneMin.x - radius, sceneMin.y, sceneMin.z - radius);
         frame.boundsMax = glm::vec3(sceneMax.x + radius, sceneMax.y, sceneMax.z + radius);
-        frame.eye = eye();
-        frame.view = viewMatrix();
-        const float zn = std::max(distance - radius * 4.0f, distance * 0.002f);
-        frame.proj = GltfRenderer::projection(fov, float(fbW) / float(std::max(fbH, 1)), zn, distance + radius * 50.0f);
+        const float aspect = float(fbW) / float(std::max(fbH, 1));
+        const std::vector<gltf::PlacedCamera> cams = model ? pose.cameras() : std::vector<gltf::PlacedCamera>();
+        if (activeCamera >= (int)cams.size()) activeCamera = -1;
+        if (activeCamera >= 0) {   // through the file's camera (it moves with its node's animation)
+            const gltf::PlacedCamera& pc = cams[(size_t)activeCamera];
+            const gltf::Camera& c = model->cameras[(size_t)pc.camera];
+            const glm::mat4 world = lookedCamera(pc);
+            frame.eye = glm::vec3(world[3]);
+            frame.view = glm::inverse(world);
+            const float zn = std::max(c.znear, 1e-4f);
+            const float zf = c.zfar > zn ? c.zfar : zn + radius * 100.0f + glm::length(frame.eye - target);
+            if (c.perspective) {
+                const float fovY = 2.0f * std::atan(std::tan(c.yfov * 0.5f) * lookZoom);   // the wheel zooms the lens
+                frame.proj = GltfRenderer::projection(glm::degrees(fovY), aspect, zn, zf);
+            } else {   // the window's aspect, the camera's height
+                const float ym = c.ymag * lookZoom, xm = ym * aspect;
+                frame.proj = bgfx::getCaps()->homogeneousDepth ? glm::orthoRH_NO(-xm, xm, -ym, ym, zn, zf)
+                                                               : glm::orthoRH_ZO(-xm, xm, -ym, ym, zn, zf);
+            }
+        } else {
+            frame.eye = eye();
+            frame.view = viewMatrix();
+            const float zn = std::max(distance - radius * 4.0f, distance * 0.002f);
+            frame.proj = GltfRenderer::projection(fov, aspect, zn, distance + radius * 50.0f);
+        }
         frame.srgbOut = false;   // the host's backbuffer is sRGB: the GPU encodes
         if (showUi && fbW > 0) {   // centre the model in the part the panel leaves free
             const float panel = std::min(380.0f * uiScale, float(fbW) * 0.34f) + 16.0f * uiScale;

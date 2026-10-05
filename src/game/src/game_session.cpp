@@ -1,6 +1,7 @@
 // game_session.cpp -- see game_session.h. The input block was ported from the old GLFW main
 // (src/game/core/main.cpp, removed 2026-09-27; GLFW keys -> toms::next::Key).
 #include "game_session.h"
+#include "title_scene.h"
 
 #include "bgfx_host.h"       // the F3 HUD: debug text, backend name, compute caps
 #include "bgfx_renderer.h"
@@ -89,6 +90,18 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     if (const char* sn = std::getenv("TOMS_SPLIT_NODE")) renderer_->setNodeFilter((uint8_t)std::atoi(sn));
     showHud = opts.showFps;
     if (opts.fxGpuThreshold >= 0) game_->overrideParticleGpuThreshold(opts.fxGpuThreshold);
+    if (opts.titleScene != "none") {   // the 3D scene behind the title; without it the title is plain
+        const std::string path = opts.titleScene.empty() ? assetDir_ + "/models/VirtualCity.glb" : opts.titleScene;
+        if (!opts.titleScene.empty() || toms::vfsExists(path)) {
+            titleScene_ = std::make_unique<TitleScene>();
+            std::string why;
+            if (!titleScene_->load(path, why)) {
+                std::fprintf(stderr, "[title] no 3D scene: %s\n", why.c_str());
+                titleScene_->shutdown();
+                titleScene_.reset();
+            }
+        }
+    }
     bgfxHostSetHud(showHud);
     if (opts.spritePath != "auto") {   // --sprite-path / --no-instancing
         using P = BgfxRenderer::SpritePath;
@@ -154,6 +167,8 @@ void GameSession::stop() {
     // Game never deletes its renderer (the old main called Renderer::destroy() by hand), so the
     // session frees it. Order: the UI (it points at Game and owns bgfx handles), Game, then the
     // renderer's GPU handles.
+    if (titleScene_) titleScene_->shutdown();   // its GPU buffers, while bgfx is up
+    titleScene_.reset();
     if (ui_) ui_->shutdown();
     if (rml_) rml_->shutdown();
     ui_.reset();
@@ -299,6 +314,11 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         g.setStylingSpikeVisible(false);
         if (showStylingSpike) g.drawStylingSpike();
     }
+    // The title's 3D scene: its own views, run between the screen clear and the sprites.
+    const bool scene = titleScene_ && g.titleOpen();
+    if (scene) titleScene_->draw(dtMs / 1000.0, deviceW, deviceH);
+    renderer_->setSceneViews(TitleScene::kFirstView, scene ? GltfRenderer::kViews : 0);
+    if (ui_) ui_->setTitleScene(scene);
     g.draw();   // the world -> BgfxRenderer::end(): views kViewClear + kViewGame
     {           // the UI over it, under ImGui
         const auto vp = BgfxRenderer::computeAspectFitViewport(deviceW, deviceH, BgfxRenderer::kDesignW, BgfxRenderer::kDesignH);

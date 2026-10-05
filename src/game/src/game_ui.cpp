@@ -50,6 +50,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
     c.RegisterArray<std::vector<UiBanner>>();
     if (auto s = c.RegisterStruct<UiTitle>()) {
         s.RegisterMember("visible", &UiTitle::visible);
+        s.RegisterMember("scene", &UiTitle::scene);
         s.RegisterMember("title", &UiTitle::title);
         s.RegisterMember("subtitle", &UiTitle::subtitle);
         s.RegisterMember("hint", &UiTitle::hint);
@@ -335,6 +336,7 @@ void GameUi::sync() {
     game_->buildUiState(next);
     auto take = [](auto& cur, auto& nxt) { if (nxt.visible) cur = std::move(nxt); else cur.visible = false; };
     take(state_.title, next.title);
+    state_.title.scene = titleScene_;
     take(state_.hud, next.hud);
     take(state_.battle, next.battle);
     take(state_.dialogue, next.dialogue);

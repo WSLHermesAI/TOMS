@@ -32,6 +32,7 @@ struct UiBanner {
 
 struct UiTitle {
     bool visible = false;
+    bool scene = false;                // a 3D scene is drawn behind the title (the host's TitleScene): see-through body
     std::string title, subtitle, hint;
     int page = 0;                      // 0 menu, 1 continue (save slots), 2 settings (languages)
     std::string header, subheader;     // page heading ("" on the menu page)

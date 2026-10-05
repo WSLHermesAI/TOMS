@@ -118,7 +118,29 @@ renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
   counter-clockwise ones front, so that flag is backwards on D3D (it once lit every model from
   below).
 
-## 3. The viewer
+## 3. In the game: the title scene
+
+The title screen draws a glTF scene behind its menu: `assets/media/models/VirtualCity.glb` by
+default (`src/game/src/title_scene.*`, owned by `GameSession`).
+
+- **Animation and cameras:** it plays the file's first animation in a loop and looks through the
+  file's own cameras, cutting to the next every 10 s.
+  - Each camera keeps its path and where it looks, but its horizon is held level: banking cameras
+    look odd behind a menu.
+  - A file without cameras gets a slow orbit.
+- **Draw order:** `BgfxRenderer::setSceneViews(first, count)` orders the scene's bgfx views (from
+  `TitleScene::kFirstView` = 16) after the screen clear (view 0) and before the sprites, RmlUi and
+  ImGui (views 1..3), with `bgfx::setViewOrder`. With `count = 0` the plain id order is back.
+- **The menu over it:** `title.rml`'s body has `data-class-scene="title.scene"`, and
+  `body.scene { background-color: transparent; }` replaces the opaque `#414155` while the scene is
+  drawn. The scene is drawn a little dark (exposure 0.75) so the menu stays readable.
+- **Cost:** shadows (2048 atlas) on desktop; none on Android and the web. The scene draws only while
+  the title is open.
+- **Choosing the scene:** `toms_game --title-scene=<file.glb|none>`. Without the file, or if it does
+  not load, the title is plain as before (the log says why).
+- **Not verified:** the web and Android builds. The model adds 3 MB to their packed assets.
+
+## 4. The viewer
 
 | Input | Does |
 |---|---|
@@ -126,11 +148,22 @@ renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
 | left drag / right or middle drag / wheel | orbit / pan / zoom |
 | `Space` `F` `G` `K` `B` `W` `R` `H` | play-pause, frame, grid, skeleton, bounds, wireframe, auto-rotate, panel |
 | `1`..`9` | play only that animation |
+| arrow keys (held) | move the camera left / right / up / down on the screen |
+| `C` | the next of the file's cameras (then back to the free camera) |
+| on a file camera: left drag / wheel / double-click | look around / zoom / look ahead again, still riding its animation |
+| `+` / `-` (or numpad) | faster / slower arrow-key movement (x1.5 per press; also *move speed* in Display) |
 
 **The panel:**
 - **Model:** counts (vertices, triangles, nodes, meshes, materials, textures, skins and joints,
   morph targets, instances), and every extension, green when drawn and orange when ignored, plus
   warnings.
+- **Camera** (when the file has cameras): *free (orbit)* or one of the file's cameras, by name
+  (unnamed ones take their node's or a parent's name). An animated camera node moves the view.
+  Perspective cameras keep their field of view and near / far; orthographic ones their height.
+  **Riding a camera:** left drag looks around (yaw about the camera's up, pitch about its right, in
+  the camera's own frame) and the wheel zooms its lens; the camera keeps following its node's
+  animation. A double-click (or *look ahead*) looks straight ahead again. Right / middle drag or the
+  arrow keys leave for the free camera, from where the file camera was looking.
 - **Animation:** play / pause, speed, a time slider, and a checkbox per animation (several can
   play together).
 - **Morph targets:** a slider per weight, which overrides the animation for that weight.
@@ -154,10 +187,10 @@ renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
 - `--anim=<index|name|none>`, `--time=<s>` (freezes the animations at that time);
 - `--frames=<n> --screenshot=<png>`;
 - `--yaw= --pitch= --zoom=`, `--size=WxH`, `--no-ui`, `--debug=<0..5>`;
-- `--light=default|point|spot|all|file`, `--shadows=0|1`, `--ground=0|1`, `--shadow-bias=<x>`;
+- `--camera=<index|name>` (one of the file's cameras) and `--look=<yaw>,<pitch>` (turned in its own frame, degrees), `--light=default|point|spot|all|file`, `--shadows=0|1`, `--ground=0|1`, `--shadow-bias=<x>`;
 - `--renderer=d3d11|d3d12|vulkan|opengl`.
 
-## 4. Tests
+## 5. Tests
 
 - **Unit test `gltf_model_test`:** 47 checks on the test models.
   - **Skin:** rest-pose joint matrices are identity; slerp at 0.25 s; the cubic spline's Hermite

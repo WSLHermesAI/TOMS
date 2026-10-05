@@ -50,7 +50,12 @@ struct SessionOptions {
     // Mobile: grow the UI objects, keep the 1024x768 game resolution (Game::setUiScale,
     // the owner's rule). 1.0 = unchanged. The web host sets these on small screens.
     float       uiScale  = 1.0f;
+    // The 3D scene behind the title (title_scene.h): a .glb / .gltf path, "" = the default
+    // (<assets>/models/VirtualCity.glb, when it exists), "none" = the plain title (--title-scene).
+    std::string titleScene;
 };
+
+class TitleScene;
 
 class GameSession {
 public:
@@ -100,6 +105,7 @@ private:
     bool mousePressFree_ = false;                // the current press hit no UI element (map click)
     std::unique_ptr<RmlUi> rml_;                 // RmlUi on bgfx (rml_ui.h)
     std::unique_ptr<GameUi> ui_;                 // the game's documents + data model (game_ui.h)
+    std::unique_ptr<TitleScene> titleScene_;     // the 3D scene behind the title (title_scene.h)
     double uiTime_ = 0;
     std::string uiLanguage_;                     // language the UI font was last chosen for
 };

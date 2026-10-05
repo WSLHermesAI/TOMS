@@ -29,6 +29,8 @@ public:
     void reload();   // re-read every .rml/.rcss from disk (F5)
     // The font family for every document (RmlUi::languageFont): overrides the RCSS "toms".
     void setFontFamily(const std::string& family);
+    // A 3D scene is drawn behind the title (title.scene: the title's body turns see-through).
+    void setTitleScene(bool on) { titleScene_ = on; }
 
 private:
     bool loadDocuments(std::string& error);
@@ -41,6 +43,7 @@ private:
     std::string dir_;
     std::vector<Doc> docs_;
     toms::UiState state_;
+    bool titleScene_ = false;
     bool model_ = false;
     std::string family_ = "toms";
     int spriteRevision_ = -1;   // Game::spriteAtlasRevision() the documents were loaded with

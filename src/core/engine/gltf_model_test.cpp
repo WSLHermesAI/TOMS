@@ -190,6 +190,29 @@ void testErrors() {
         CHECK(placed.size() == 1 && near3(placed[0].position, {1, 4, 2}) && near3(placed[0].direction, {0, -1, 0}, 1e-4f),
               "placed by its node: at (1, 4, 2), shining down -Y");
     }
+    // Cameras: a perspective one on a scaled node under a named parent, and an orthographic one.
+    const char* cams = R"({"asset":{"version":"2.0"},
+        "cameras":[{"type":"perspective","perspective":{"yfov":0.9,"znear":0.5,"zfar":500,"aspectRatio":1.5}},
+                   {"type":"orthographic","name":"top","orthographic":{"xmag":4,"ymag":3,"znear":0.1,"zfar":50}}],
+        "scene":0,"scenes":[{"nodes":[0,2]}],
+        "nodes":[{"name":"car","translation":[10,0,0],"children":[1]},
+                 {"camera":0,"translation":[0,2,5],"scale":[20,20,20]},
+                 {"camera":1,"translation":[0,30,0],"rotation":[-0.7071068,0,0,0.7071068]}]})";
+    CHECK(loadModelFromMemory(cams, std::strlen(cams), ".", m) && m.cameras.size() == 2, "two cameras");
+    if (m.cameras.size() == 2) {
+        const Camera& a = m.cameras[0];
+        const Camera& b = m.cameras[1];
+        CHECK(a.perspective && near(a.yfov, 0.9f) && near(a.znear, 0.5f) && near(a.zfar, 500.0f) && near(a.aspectRatio, 1.5f) &&
+                  a.name == "car",
+              "perspective: fov, near, far, aspect; unnamed -> its parent's name (%s)", a.name.c_str());
+        CHECK(!b.perspective && near(b.xmag, 4.0f) && near(b.ymag, 3.0f) && b.name == "top", "orthographic: xmag, ymag, name");
+        Pose pose;
+        pose.bind(&m);
+        const std::vector<PlacedCamera> placed = pose.cameras();
+        CHECK(placed.size() == 2 && near3(glm::vec3(placed[0].world[3]), {10, 2, 5}) && near(glm::length(glm::vec3(placed[0].world[0])), 1.0f),
+              "placed: at (10, 2, 5) through its parent, the node's x20 scale taken out");
+        CHECK(placed.size() == 2 && near3(-glm::vec3(placed[1].world[2]), {0, -1, 0}, 1e-4f), "the top camera looks straight down");
+    }
     const char* extra = R"({"asset":{"version":"2.0"},"extensionsUsed":["KHR_materials_clearcoat"]})";
     CHECK(loadModelFromMemory(extra, std::strlen(extra), ".", m) && m.ignoredExtensions.size() == 1, "an optional one is listed as ignored");
 }

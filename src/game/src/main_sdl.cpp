@@ -15,6 +15,8 @@
 //   --fps                 start with the F3 performance line on (FPS, backend, GPU / CPU sprite path)
 //   --fx-gpu-threshold=N  particle emitters above N particles run on the GPU (0 = never); this run only,
 //                         the saved setting (particleGpuThreshold: desktop 5000, phones 3000) is unchanged
+//   --title-scene=<f|none> the 3D scene behind the title: a .glb / .gltf, or none (default:
+//                         assets/media/models/VirtualCity.glb when it is there; docs/18_GLTF.md)
 //   --frames=<n>          quit after n frames (automated tests; desktop)
 //   --screenshot=<png>    save the last frame to a PNG (with --frames; desktop)
 //   --keys=<k@f,...>      press key k at frame f, e.g. enter@30,enter@60 (automated tests)
@@ -70,6 +72,7 @@ struct Args {
     bool vsync = true, stats = false, fps = false;
     std::string spritePath = "auto";
     int fxGpuThreshold = -1;
+    std::string titleScene;            // --title-scene=<file|none>
     int fixedDtMs = 0;       // > 0: deterministic frame time (tests)
     struct Press { Key key; int frame; };
     std::vector<Press> presses;
@@ -137,6 +140,7 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--sprite-path=")) a.spritePath = v;
         else if (s == "--fps") a.fps = true;
         else if (const char* v = value(s, "--fx-gpu-threshold=")) a.fxGpuThreshold = std::max(0, std::atoi(v));
+        else if (const char* v = value(s, "--title-scene=")) a.titleScene = v;
     }
     return a;
 }
@@ -314,6 +318,7 @@ bool appInit(App& app) {
     opts.spritePath = args.spritePath;
     opts.showFps = args.fps;
     opts.fxGpuThreshold = args.fxGpuThreshold;
+    opts.titleScene = args.titleScene;
 #ifdef __EMSCRIPTEN__
     opts.enableDebugUi = true;
     // Small screens (phones): grow the UI objects, keep the game resolution -- same thresholds and

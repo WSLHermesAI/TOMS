@@ -378,6 +378,36 @@ bool convert(const cgltf_data* d, const std::string& baseDir, Model& m, std::str
         }
     }
 
+    // Cameras. Unnamed ones take their node's name, else the nearest named parent's.
+    m.cameras.resize(d->cameras_count);
+    for (size_t i = 0; i < d->cameras_count; i++) {
+        const cgltf_camera& s = d->cameras[i];
+        Camera& o = m.cameras[i];
+        o.name = s.name ? s.name : "";
+        if (s.type == cgltf_camera_type_orthographic) {
+            o.perspective = false;
+            o.xmag = s.data.orthographic.xmag;
+            o.ymag = s.data.orthographic.ymag;
+            o.znear = s.data.orthographic.znear;
+            o.zfar = s.data.orthographic.zfar;
+        } else {
+            o.yfov = s.data.perspective.yfov;
+            o.aspectRatio = s.data.perspective.has_aspect_ratio ? s.data.perspective.aspect_ratio : 0.0f;
+            o.znear = s.data.perspective.znear;
+            o.zfar = s.data.perspective.has_zfar ? s.data.perspective.zfar : 0.0f;
+        }
+    }
+    for (size_t i = 0; i < d->nodes_count; i++) {
+        const int cam = indexOf(d->nodes[i].camera, d->cameras);
+        m.nodes[i].camera = cam;
+        if (cam < 0 || !m.cameras[(size_t)cam].name.empty()) continue;
+        for (const cgltf_node* n = &d->nodes[i]; n; n = n->parent)
+            if (n->name && *n->name) {
+                m.cameras[(size_t)cam].name = n->name;
+                break;
+            }
+    }
+
     // Lights (KHR_lights_punctual).
     m.lights.resize(d->lights_count);
     for (size_t i = 0; i < d->lights_count; i++) {
@@ -701,6 +731,28 @@ void Pose::jointMatrices(int skin, std::vector<glm::mat4>& out) const {
     const Skin& s = model_->skins[(size_t)skin];
     out.resize(std::min(s.joints.size(), (size_t)kMaxJoints));
     for (size_t j = 0; j < out.size(); j++) out[j] = world_[(size_t)s.joints[j]] * s.inverseBind[j];
+}
+
+std::vector<PlacedCamera> Pose::cameras() const {
+    std::vector<PlacedCamera> out;
+    if (!model_) return out;
+    for (size_t i = 0; i < model_->nodes.size() && i < world_.size(); i++) {
+        const int cam = model_->nodes[i].camera;
+        if (cam < 0 || cam >= (int)model_->cameras.size()) continue;
+        PlacedCamera p;
+        p.camera = cam;
+        p.node = (int)i;
+        const glm::mat4& w = world_[i];
+        // Rotation only: a scaled (or mirrored) node must not stretch the view.
+        glm::vec3 z = glm::vec3(w[2]), y = glm::vec3(w[1]);
+        z = glm::length(z) > 0 ? glm::normalize(z) : glm::vec3(0, 0, 1);
+        glm::vec3 x = glm::cross(y, z);
+        x = glm::length(x) > 0 ? glm::normalize(x) : glm::vec3(1, 0, 0);
+        y = glm::cross(z, x);
+        p.world = glm::mat4(glm::vec4(x, 0), glm::vec4(y, 0), glm::vec4(z, 0), w[3]);
+        out.push_back(p);
+    }
+    return out;
 }
 
 std::vector<PlacedLight> Pose::lights() const {

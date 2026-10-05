@@ -37,6 +37,11 @@ public:
     static constexpr uint16_t kViewUi      = 2;   // RmlUi documents (letterboxed like the game view)
     static constexpr uint16_t kViewOverlay = 3;   // first free view for the host (ImGui dev windows)
 
+    // A 3D scene behind everything (GltfRenderer, e.g. the title's TitleScene) in views
+    // first .. first + count - 1: from the next end() on they run after kViewClear and before
+    // kViewGame / kViewUi / kViewOverlay (bgfx::setViewOrder). count 0 = none (plain id order).
+    void setSceneViews(uint16_t first, uint16_t count) { sceneFirst_ = first; sceneCount_ = count; }
+
     BgfxRenderer() = default;
     ~BgfxRenderer() override;
 
@@ -95,6 +100,8 @@ public:
     bool deviceToDesign(double deviceX, double deviceY, float& outX, float& outY) const;
 
 private:
+    uint16_t sceneFirst_ = 0, sceneCount_ = 0;     // setSceneViews()
+    uint16_t appliedSceneCount_ = 0;
     void submitQuads(const std::vector<Quad>& quads, uint16_t texture);
     // The GPU paths; false = they could not take these quads (no buffer space): use the next path.
     bool submitQuadsInstanced(const std::vector<Quad>& quads, uint16_t texture);

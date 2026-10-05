@@ -1,5 +1,8 @@
 /* title.rcss -- the boot screen (title.rml). */
 body { z-index: 60; background-color: #414155; text-align: center; }
+/* A 3D scene behind the title (the host's TitleScene, docs/18_GLTF.md): the body is see-through (the
+   scene is drawn a little dark instead, so there is no 4:3 box over a wide screen). */
+body.scene { background-color: transparent; }
 
 .rule {
     position: absolute; left: 0; right: 0; height: 2px;
