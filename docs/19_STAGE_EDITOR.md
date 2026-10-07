@@ -22,6 +22,18 @@ start, and **event objects**. It reads and writes the same files the game loads:
 
 `python tools/stage_editor/web/make_bundle.py` refreshes the copy after the data changes.
 
+**Size.** Everything can be made bigger:
+
+| What | How |
+|---|---|
+| Interface (text, buttons, panels) | 🔍 list in the top bar, or **Alt + =** bigger, **Alt + -** smaller, **Alt + 0** back to the default. The choice is remembered by the browser |
+| Map zoom | **Mouse wheel over the map** zooms in and out around the cursor (the cell under the mouse stays put); also **+** / **−** next to the zoom % and the **+** / **-** keys |
+| Map pan | **Right-mouse drag** (a right click without moving is still the eyedropper), **middle-mouse drag**, or hold **Space** and drag; **Shift + wheel** scrolls sideways; the scrollbars. The view can pan past the map's edges |
+| Defaults | [`tools/stage_editor/web/settings.js`](../tools/stage_editor/web/settings.js): `uiScale` (1.25 = 125 %), `mapZoom` (2 = 64 px tiles), `language`. Edit, save, press F5 |
+
+A size picked in the editor wins over `settings.js` until **Alt + 0** (or *settings.js* in the 🔍 list).
+The browser's own zoom (**Ctrl + =** / **Ctrl + -**) also works.
+
 ## 2. Using it
 
 - **Floor:** pick from the list, or press `[` / `]`. A ● marks floors with unsaved changes, and ★
@@ -32,8 +44,15 @@ start, and **event objects**. It reads and writes the same files the game loads:
   event by pool. Search matches id, kind and text. A placed event looks like the game's story plate
   (gold with a slate inset), plus a dot in its kind colour. A red dot means no pool defines it.
 - **Tools:** 🖌 Paint (B), ▭ Rectangle (R), ⌫ Erase (E), ↖ Select / move (V: drag an object to move
-  it). Right-click picks the cell under the cursor as the brush. Grid (G), zoom (+ / −), Undo / Redo
+  it). Right-click (without dragging) picks the cell under the cursor as the brush; right-drag pans the view. Grid (G), zoom (+ / −), Undo / Redo
   (Ctrl+Z / Ctrl+Y), Save (Ctrl+S), Delete clears the selected cell.
+- **Objects need free floor.** Monsters, NPCs, items, keys, doors, stairs, events and the player start
+  go only on empty floor, and a big monster (golem and demon 2×1, Vorkath 2×2) needs every cell of its
+  footprint free. While an object brush hovers the map, a preview follows the cursor: green outline where
+  it fits, red where a wall, another object (including the extra cells of a big monster) or the map
+  edge is in the way. Red cells are not painted, the rectangle tool skips them (*N cells skipped*), a
+  drag-move onto them is refused, and the status bar says what is in the way. Walls and floor still paint
+  over anything; to replace an object, erase or move it first.
 - **Inspector:** the selected cell: its object and legend char, a monster's HP / ATK / DEF and size,
   an item's effect, or an event's kind, pool, text (zh_TW and en) and the floors that can roll it, with
   *Replace with*. Below: the floor's name, `connect.up` / `connect.down`, size, and its events list.

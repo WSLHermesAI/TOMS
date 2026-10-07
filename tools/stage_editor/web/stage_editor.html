@@ -13,6 +13,7 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
+  html { overflow: hidden; }   /* the zoomed body fills the window; panels scroll, never the page */
   body { background: var(--bg); color: var(--text); font: 13px/1.4 "Segoe UI", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
     display: flex; flex-direction: column; overflow: hidden; }
   button, select, input { font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px; padding: 3px 7px; }
@@ -68,6 +69,8 @@
   .brushInfo b { color: var(--text); }
   #wrap { flex: 1; overflow: auto; position: relative; background: #121316; }
   #cv { display: block; margin: 16px; image-rendering: pixelated; cursor: crosshair; }
+  #wrap.panning, #wrap.panning #cv { cursor: grabbing; }
+  #wrap.spacePan #cv { cursor: grab; }
   .bottom { height: 150px; border-top: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; }
   .bottom h3 { margin: 0; padding: 5px 10px; font-size: 12px; font-weight: 600; color: var(--muted); background: var(--panel-2); border-bottom: 1px solid var(--line); }
   #probs { overflow: auto; flex: 1; }
@@ -141,6 +144,7 @@
   <button id="openDir" data-i18n="openDir"></button>
   <span id="src" class="src"></span>
   <span class="grow"></span>
+  <label id="uiSizeLbl">🔍 <select id="uiSize"></select></label>
   <label title="Language / 語言">🌐 <select id="uiLang"><option value="en">English</option><option value="zh_TW">繁體中文</option></select></label>
   <button id="save" class="primary" data-i18n="save" title="Ctrl+S"></button>
 </div>
@@ -198,6 +202,7 @@
   <footer><span class="grow" id="saveNote"></span><button id="mCancel" data-i18n="cancel"></button><button id="mDownload" data-i18n="download"></button><button id="mWrite" class="primary" data-i18n="writeDisk"></button></footer>
 </div></div>
 
+<script src="settings.js"></script>
 <script src="stage_bundle.js"></script>
 <script>
 'use strict';
@@ -240,6 +245,9 @@ const I18N = {
     autoListed: id => `${id} was added to this floor's events list (it can roll it now).`,
     unsavedLeave: 'You have unsaved changes.',
     lines: (n) => `${n} line(s)`,
+    blockedWall: (x, y) => `Can't place it here: wall at ${x}, ${y}.`, blockedObj: (what, x, y) => `Can't place it here: ${what} is at ${x}, ${y}. Erase or move it first.`,
+    blockedEdge: "Can't place it here: it would stick out of the map.", blockedN: n => `${n} cell(s) skipped: a wall or another object is in the way.`,
+    uiSizeTip: 'Interface size. Keys: Alt + = bigger, Alt + - smaller, Alt + 0 back to settings.js. Default in settings.js.', fromFile: p => `settings.js (${p}%)`,
     tSafe: '◇ Safe cells', tAuto: '🎲 Auto-place events…', apTitle: 'Place events automatically', apThis: 'This floor', apAll: 'All floors (one click)',
     apMissing: 'Only events in the list that are not placed yet', apReplace: 'Move every event to a new random cell', apSeed: 'Seed', apRun: 'Place',
     apNote: 'Events go only on cells the player reaches on the way up without opening optional doors, so a key can never be "spent" on an event. They are spread out, never next to stairs, doors or the start, and only events that fire on a tile are placed. The same seed gives the same result; everything stays editable and undoable.',
@@ -292,6 +300,9 @@ const I18N = {
     autoListed: id => `已把 ${id} 加入此樓層的事件清單（現在它能抽到這個事件）。`,
     unsavedLeave: '有未儲存的變更。',
     lines: (n) => `${n} 行`,
+    blockedWall: (x, y) => `不能放在這裡：${x}, ${y} 是牆壁。`, blockedObj: (what, x, y) => `不能放在這裡：${x}, ${y} 已經有 ${what}。請先擦除或移走它。`,
+    blockedEdge: '不能放在這裡：它會超出地圖。', blockedN: n => `略過 ${n} 格：有牆壁或其他物件擋住。`,
+    uiSizeTip: '介面大小。按鍵：Alt + = 放大、Alt + - 縮小、Alt + 0 回到 settings.js。預設值寫在 settings.js。', fromFile: p => `settings.js（${p}%）`,
     tSafe: '◇ 安全格', tAuto: '🎲 自動放置事件…', apTitle: '自動放置事件', apThis: '這個樓層', apAll: '所有樓層（一鍵完成）',
     apMissing: '只放清單中還沒放置的事件', apReplace: '把每個事件移到新的隨機格子', apSeed: '種子', apRun: '放置',
     apNote: '事件只會放在玩家往上走、不必打開非必要的門就能到達的格子，所以鑰匙不會被「浪費」在事件上。事件會分散，不會緊貼樓梯、門或起點，而且只放「踩到格子觸發」的事件。相同種子會得到相同結果；放好後仍可編輯、可復原。',
@@ -314,8 +325,10 @@ const I18N = {
   },
 };
 const LANG_KEY = 'toms-stage-editor-lang';
+const ES = typeof EDITOR_SETTINGS === 'object' && EDITOR_SETTINGS ? EDITOR_SETTINGS : {};   // settings.js (optional)
 let LANG = (() => { const u = new URLSearchParams(location.search).get('lang'); if (I18N[u]) return u;
   try { const v = localStorage.getItem(LANG_KEY); if (I18N[v]) return v; } catch (_) {}
+  if (I18N[ES.language]) return ES.language;
   return /^zh/i.test(navigator.language || '') ? 'zh_TW' : 'en'; })();
 const t = (k, ...a) => { const v = I18N[LANG][k] ?? I18N.en[k]; return typeof v === 'function' ? v(...a) : v; };
 const L = o => o && typeof o === 'object' ? (o[LANG] || o.en || o.zh_TW || '') : (o || '');   // a localised name object
@@ -364,10 +377,44 @@ function footprintOf(st, ch, sem) {
   const f = (o && typeof o === 'object') ? o : BUNDLE.footprints[sem];
   return { w: (f && f.w) || 1, h: (f && f.h) || 1 };
 }
+// the cells an object would cover at x,y: a big monster spills right and down, like the game draws it
+function fpCells(d, sem, x, y) {
+  if (!sem.startsWith('monster:')) return [[x, y]];
+  const ch = Object.keys(d.st.legend).find(c => d.st.legend[c] === sem), fp = footprintOf(d.st, ch, sem), out = [];
+  for (let dy = 0; dy < fp.h; dy++) for (let dx = 0; dx < fp.w; dx++) out.push([x + dx, y + dy]);
+  return out;
+}
+// cells covered by the extra part of big monsters (their anchor cell already holds their char)
+function bigCover(d, ignore) {
+  const m = new Map();
+  d.grid.forEach((r, y) => r.forEach((c, x) => { const sem2 = semAt(d, x, y);
+    if (!sem2 || !sem2.startsWith('monster:') || (ignore && ignore[0] === x && ignore[1] === y)) return;
+    fpCells(d, sem2, x, y).slice(1).forEach(([a, b]) => m.set(a + ',' + b, { sem: sem2, x, y })); }));
+  return m;
+}
+// Can `sem` go at x,y? Terrain (wall / floor) always can. Any object needs every cell of its footprint to be
+// empty floor: no wall, no other object, no part of a big monster, inside the map. `ignore` is the cell of an
+// object being moved, which does not block itself. { ok, same, cells, why: { kind, x, y, what } }
+function placeCheck(d, x, y, sem, ignore) {
+  const cells = fpCells(d, sem, x, y);
+  if (!isEntity(sem)) return { ok: true, cells };
+  if (!ignore && semAt(d, x, y) === sem) return { ok: true, same: true, cells };   // painting over the same object does nothing
+  const cover = bigCover(d, ignore);
+  for (const [cx, cy] of cells) {
+    if (cy < 0 || cx < 0 || cy >= d.grid.length || cx >= d.grid[0].length) return { ok: false, cells, why: { kind: 'edge' } };
+    const own = ignore && cx === ignore[0] && cy === ignore[1], c = d.grid[cy][cx];
+    if (!own && c === '#') return { ok: false, cells, why: { kind: 'wall', x: cx, y: cy } };
+    if (!own && c !== '.') return { ok: false, cells, why: { kind: 'obj', x: cx, y: cy, what: nameOf(semAt(d, cx, cy) || '?') } };
+    const cv2 = cover.get(cx + ',' + cy); if (cv2) return { ok: false, cells, why: { kind: 'obj', x: cx, y: cy, what: nameOf(cv2.sem) } };
+  }
+  return { ok: true, cells };
+}
+const whyText = w => w.kind === 'edge' ? t('blockedEdge') : w.kind === 'wall' ? t('blockedWall', w.x, w.y) : t('blockedObj', w.what, w.x, w.y);
+function setStatus(msg, bad) { const el = $('status'); el.textContent = msg || ''; el.style.color = bad ? 'var(--bad)' : ''; }
 
 // ---------------- sprites ----------------
 const IMG = {};
-BUNDLE.sprites.forEach(n => { const im = new Image(); im.onload = () => { IMG[n] = im; drawAll(); renderPalette(); }; im.src = SPRITE_DIR + n + '.png'; });
+BUNDLE.sprites.forEach(n => { const im = new Image(); im.onload = () => { IMG[n] = im; drawAll(); renderPalette(); if (typeof drawBrushIcon === 'function') drawBrushIcon(); }; im.src = SPRITE_DIR + n + '.png'; });
 const FALLBACK = { wall: '#5b5b66', floor: '#2b2b33', stairs: '#e0a83a', door: '#c98b2b', key: '#d8c84a', player: '#3aa0ff', npc: '#46c46a', monster: '#e0473a', item: '#b46bff' };
 function drawSem(g, sem, x, y, w, h) {
   if (!sem) return;
@@ -429,8 +476,8 @@ function charFor(d, sem) {
 }
 
 // ---------------- state ----------------
-let showSafe = false, placeMode = null;
-let tool = 'paint', brush = 'wall', zoom = 1.5, showGrid = true, selCell = null, hoverCell = null, flashCells = [];
+let showSafe = false, placeMode = null; const PAD = { x: 16, y: 16 };
+let tool = 'paint', brush = 'wall', zoom = Math.max(.5, Math.min(4, +ES.mapZoom || 1.5)), showGrid = true, selCell = null, hoverCell = null, flashCells = [];
 function snapshot(d) { return JSON.stringify({ grid: d.grid, legend: d.st.legend, spec: d.spec, connect: d.st.connect, name: d.st.name }); }
 function restore(d, s) { const o = JSON.parse(s); d.grid = o.grid; d.st.legend = o.legend; d.spec = o.spec; d.st.connect = o.connect; d.st.name = o.name; }
 function beginEdit(d) { d.pending = snapshot(d); }
@@ -461,6 +508,8 @@ function drawAll() {
   if (!cur) return;
   const d = docOf(cur), H = d.grid.length, W = d.grid[0].length, s = Math.round(TS * zoom);
   cv.width = W * s; cv.height = H * s; g.imageSmoothingEnabled = false;
+  const wrapEl = $('wrap'); PAD.x = Math.max(16, Math.round(wrapEl.clientWidth / 2)); PAD.y = Math.max(16, Math.round(wrapEl.clientHeight / 2));
+  cv.style.margin = `${PAD.y}px ${PAD.x}px`;
   // ground first, then objects in row order (a 2-wide monster spills to the right, like the game)
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) drawSem(g, semAt(d, x, y) === 'wall' ? 'wall' : 'floor', x * s, y * s, s, s);
   const reach = reachableCells(d);
@@ -482,7 +531,17 @@ function drawAll() {
   if (rectDrag) { const [x0, y0, x1, y1] = rectBounds(); g.fillStyle = 'rgba(76,158,255,.22)'; g.fillRect(x0 * s, y0 * s, (x1 - x0 + 1) * s, (y1 - y0 + 1) * s);
     g.strokeStyle = '#4c9eff'; g.lineWidth = 2; g.strokeRect(x0 * s + 1, y0 * s + 1, (x1 - x0 + 1) * s - 2, (y1 - y0 + 1) * s - 2); }
   flashCells.forEach(([x, y]) => { g.strokeStyle = '#ff5d5d'; g.lineWidth = 3; g.strokeRect(x * s + 1.5, y * s + 1.5, s - 3, s - 3); });
-  if (hoverCell) { g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1; g.strokeRect(hoverCell[0] * s + .5, hoverCell[1] * s + .5, s - 1, s - 1); }
+  const ghostSem = moveFrom ? semAt(d, ...moveFrom) : (tool === 'paint' || (tool === 'rect' && !rectDrag)) && isEntity(brush) ? brush : null;
+  if (hoverCell && ghostSem && !panDrag && !(moveFrom && hoverCell[0] === moveFrom[0] && hoverCell[1] === moveFrom[1])) {
+    const chk = placeCheck(d, hoverCell[0], hoverCell[1], ghostSem, moveFrom || null), [hx, hy] = hoverCell;
+    const fpc = ghostSem.startsWith('monster:') ? fpCells(d, ghostSem, hx, hy) : [[hx, hy]];
+    const fw = Math.max(...fpc.map(c => c[0])) - hx + 1, fh = Math.max(...fpc.map(c => c[1])) - hy + 1;
+    if (!chk.same) { g.globalAlpha = .6; drawSem(g, ghostSem, hx * s, hy * s, fw * s, fh * s); g.globalAlpha = 1; }
+    if (!chk.ok) { g.fillStyle = 'rgba(255,60,60,.45)'; fpc.forEach(([a, b]) => g.fillRect(a * s, b * s, s, s)); }
+    g.strokeStyle = chk.ok ? '#4cd18a' : '#ff3c3c'; g.lineWidth = 3; g.strokeRect(hx * s + 1.5, hy * s + 1.5, fw * s - 3, fh * s - 3);
+    cv.style.cursor = chk.ok ? '' : 'not-allowed';
+    if (!chk.ok && !painting) setStatus(whyText(chk.why), true); else if (!painting && $('status').style.color) setStatus('');
+  } else { cv.style.cursor = ''; if (hoverCell) { g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1; g.strokeRect(hoverCell[0] * s + .5, hoverCell[1] * s + .5, s - 1, s - 1); } }
   if (selCell) { g.strokeStyle = '#ffd24c'; g.lineWidth = 2.5; g.strokeRect(selCell[0] * s + 1.5, selCell[1] * s + 1.5, s - 3, s - 3); }
   $('zoomLbl').textContent = Math.round(zoom * 100) + '%';
 }
@@ -638,13 +697,14 @@ function autoPlace(fids, mode, seed) {
 
 // mouse
 let painting = false, rectDrag = null, moveFrom = null, paintCount = 0;
-const cellAt = ev => { const r = cv.getBoundingClientRect(), s = Math.round(TS * zoom); return [Math.floor((ev.clientX - r.left) / s), Math.floor((ev.clientY - r.top) / s)]; };
+const cellAt = ev => { const r = cv.getBoundingClientRect(), f = cv.width / (r.width || 1), s = Math.round(TS * zoom);
+  return [Math.floor((ev.clientX - r.left) * f / s), Math.floor((ev.clientY - r.top) * f / s)]; };
 const inGrid = ([x, y]) => { const d = docOf(cur); return y >= 0 && x >= 0 && y < d.grid.length && x < d.grid[0].length; };
 const rectBounds = () => [Math.min(rectDrag.a[0], rectDrag.b[0]), Math.min(rectDrag.a[1], rectDrag.b[1]), Math.max(rectDrag.a[0], rectDrag.b[0]), Math.max(rectDrag.a[1], rectDrag.b[1])];
 cv.addEventListener('contextmenu', ev => ev.preventDefault());
 cv.addEventListener('mousedown', ev => {
   const c = cellAt(ev); if (!inGrid(c)) return; const d = docOf(cur);
-  if (ev.button === 2) { const sem = semAt(d, ...c); if (sem) setBrush(sem); return; }   // right click: eyedropper
+  if (ev.button !== 0) return;   // right / middle buttons pan (and a right click is the eyedropper): see the pan handlers
   selCell = c; flashCells = [];
   if (tool === 'select') { if (isEntity(semAt(d, ...c))) moveFrom = c; renderInspector(); drawAll(); return; }
   beginEdit(d); paintCount = 0;
@@ -662,17 +722,21 @@ addEventListener('mouseup', ev => {
   if (!cur) return; const d = docOf(cur);
   if (painting) { painting = false; commitEdit(d, tool === 'erase' ? t('hErase', paintCount) : t('hPaint', nameOf(brush), paintCount)); }
   if (rectDrag) { const [x0, y0, x1, y1] = rectBounds(); rectDrag = null;
-    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (putSem(d, x, y, brush)) paintCount++;
-    commitEdit(d, t('hPaint', nameOf(brush), paintCount)); drawAll(); }
+    let blocked = 0;   // objects only go on free floor; cells already filled by this same rectangle count as taken
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { if (!placeCheck(d, x, y, brush).ok) { blocked++; continue; } if (putSem(d, x, y, brush)) paintCount++; }
+    commitEdit(d, t('hPaint', nameOf(brush), paintCount)); drawAll(); setStatus(blocked ? t('blockedN', blocked) : '', !!blocked); }
   if (moveFrom) { const to = hoverCell; const from = moveFrom; moveFrom = null;
-    if (to && (to[0] !== from[0] || to[1] !== from[1])) { const sem = semAt(d, ...from);
-      edit(t('hMove', nameOf(sem)), dd => { const ch = dd.grid[from[1]][from[0]]; dd.grid[from[1]][from[0]] = '.'; dd.grid[to[1]][to[0]] = ch; });
-      selCell = to; renderInspector(); drawAll(); } }
+    if (to && (to[0] !== from[0] || to[1] !== from[1])) { const sem = semAt(d, ...from), chk = placeCheck(d, to[0], to[1], sem, from);
+      if (!chk.ok) { setStatus(whyText(chk.why), true); drawAll(); }
+      else { setStatus(''); edit(t('hMove', nameOf(sem)), dd => { const ch = dd.grid[from[1]][from[0]]; dd.grid[from[1]][from[0]] = '.'; dd.grid[to[1]][to[0]] = ch; });
+        selCell = to; renderInspector(); drawAll(); } } }
 });
 function paintAt([x, y]) {
   const d = docOf(cur);
   if (tool === 'erase') { if (d.grid[y][x] !== '.') { d.grid[y][x] = '.'; paintCount++; } }
-  else if (putSem(d, x, y, brush)) paintCount++;
+  else { const chk = placeCheck(d, x, y, brush);
+    if (!chk.ok) { setStatus(whyText(chk.why), true); drawAll(); return; }
+    if (putSem(d, x, y, brush)) { paintCount++; setStatus(''); } }
   if (brush === 'player_start' && tool === 'paint') painting = false;   // one start only
   drawAll();
 }
@@ -719,9 +783,11 @@ function renderEventPalette() {
       return list.length ? `<div class="muted" style="font-size:11px;margin:4px 0 2px">${p}</div><ul class="evlist">${list.map(e => row(e.id)).join('')}</ul>` : ''; }).join('')}</div>`;
   $('evPal').querySelectorAll('li').forEach(li => li.onclick = () => setBrush('event:' + li.dataset.ev));
 }
+function drawBrushIcon() { const sem = brush, bc = $('brushIcon').getContext('2d'); bc.clearRect(0, 0, 24, 24); bc.imageSmoothingEnabled = false;
+  if (isEntity(sem) && !sem.startsWith('event:')) drawSem(bc, 'floor', 0, 0, 24, 24); drawSem(bc, sem, 0, 0, 24, 24); }
 function setBrush(sem) {
   brush = sem; if (tool === 'erase' || tool === 'select') setTool('paint');
-  const bc = $('brushIcon').getContext('2d'); bc.clearRect(0, 0, 24, 24); bc.imageSmoothingEnabled = false; if (isEntity(sem) && !sem.startsWith('event:')) drawSem(bc, 'floor', 0, 0, 24, 24); drawSem(bc, sem, 0, 0, 24, 24);
+  drawBrushIcon();
   $('brushName').textContent = nameOf(sem) + (sem.startsWith('event:') && evById[sem.slice(6)] ? ' · ' + evById[sem.slice(6)].kind : '');
   renderPalette(); renderEventPalette();
 }
@@ -826,7 +892,7 @@ function renderProblems() {
   $('probs').querySelectorAll('.pr[data-i]').forEach(r => r.onclick = ev => { const p = list[+r.dataset.i];
     if (ev.target.dataset.fix) { edit(t('hListAdd', p.id), dd => dd.spec.events.push(p.id)); return; }
     if (p.brush) setBrush(p.brush);
-    flashCells = p.cells; if (p.cells[0]) { selCell = p.cells[0]; const s = Math.round(TS * zoom); $('wrap').scrollTo({ left: p.cells[0][0] * s - 200, top: p.cells[0][1] * s - 120, behavior: 'smooth' }); }
+    flashCells = p.cells; if (p.cells[0]) { selCell = p.cells[0]; const s = Math.round(TS * zoom); $('wrap').scrollTo({ left: PAD.x + p.cells[0][0] * s - 200, top: PAD.y + p.cells[0][1] * s - 120, behavior: 'smooth' }); }
     renderInspector(); drawAll(); setTimeout(() => { flashCells = []; drawAll(); }, 1600); });
 }
 
@@ -882,6 +948,7 @@ function renderFloorSel() {
   const any = FLOORS.some(f => isDirty(f.id)); $('save').textContent = t('save') + (any ? ' •' : '');
 }
 function openFloor(id) { cur = id; selCell = null; flashCells = []; renderPlaceBar(); renderFloorSel(); renderPalette(); renderEventPalette(); renderInspector(); renderProblems(); drawAll();
+  $('wrap').scrollLeft = PAD.x - 16; $('wrap').scrollTop = PAD.y - 16;
   try { history.replaceState(null, '', '#' + id); } catch (_) {} }
 $('floorSel').onchange = () => openFloor($('floorSel').value);
 const step = n => { const i = FLOORS.findIndex(f => f.id === cur); openFloor(FLOORS[(i + n + FLOORS.length) % FLOORS.length].id); };
@@ -949,9 +1016,60 @@ $('mDownload').onclick = () => { const files = changedFiles();
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(el._h); el._h = setTimeout(() => el.classList.remove('show'), 3200); }
 $('undo').onclick = undo; $('redo').onclick = redo;
 $('gridBtn').onclick = () => { showGrid = !showGrid; $('gridBtn').classList.toggle('on', showGrid); drawAll(); };
-$('zoomIn').onclick = () => { zoom = Math.min(3, zoom + .25); drawAll(); }; $('zoomOut').onclick = () => { zoom = Math.max(.5, zoom - .25); drawAll(); };
+const zoomCenter = factor => { const r = $('wrap').getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, zoom * factor); };
+$('zoomIn').onclick = () => zoomCenter(1.25); $('zoomOut').onclick = () => zoomCenter(1 / 1.25);
 $('evSearch').oninput = renderEventPalette;
+const UI_KEY = 'toms-stage-editor-ui', UI_STEPS = [.75, .9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.25, 2.5];
+const fileScale = Math.max(.75, Math.min(2.5, +ES.uiScale || 1));
+let uiScale = (() => { try { const v = parseFloat(localStorage.getItem(UI_KEY)); if (v >= .75 && v <= 2.5) return v; } catch (_) {} return fileScale; })();
+function applyUiScale() {
+  const b = document.body.style; b.zoom = uiScale; b.width = `calc(100vw / ${uiScale})`; b.height = `calc(100vh / ${uiScale})`;
+  let fromFile = true; try { fromFile = !localStorage.getItem(UI_KEY); } catch (_) {}
+  $('uiSize').innerHTML = `<option value="">${t('fromFile', Math.round(fileScale * 100))}</option>` + UI_STEPS.map(v => `<option value="${v}">${Math.round(v * 100)}%</option>`).join('');
+  $('uiSize').value = fromFile ? '' : String(uiScale); $('uiSizeLbl').title = t('uiSizeTip');
+}
+function setUiScale(v) {   // null = back to settings.js
+  try { if (v == null) localStorage.removeItem(UI_KEY); else localStorage.setItem(UI_KEY, String(v)); } catch (_) {}
+  uiScale = v == null ? fileScale : v; applyUiScale(); drawAll();
+}
+$('uiSize').onchange = () => setUiScale($('uiSize').value ? parseFloat($('uiSize').value) : null);
+// Mouse wheel over the map: zoom around the cursor, so the cell under the mouse stays put (Ctrl + wheel and a
+// trackpad pinch do the same). Shift + wheel keeps the browser's sideways scroll. Positions are measured in
+// the map's own CSS pixels (f converts screen pixels when the interface size scales the page).
+function zoomAt(clientX, clientY, newZoom) {
+  const wrap = $('wrap'), wr = wrap.getBoundingClientRect(), cr = cv.getBoundingClientRect(), f = cv.width / (cr.width || 1);
+  const mx = (clientX - wr.left) * f, my = (clientY - wr.top) * f, s0 = Math.round(TS * zoom);
+  const u = (wrap.scrollLeft + mx - PAD.x) / s0, v = (wrap.scrollTop + my - PAD.y) / s0;   // map position under the cursor, in cells
+  zoom = Math.max(.5, Math.min(4, Math.round(newZoom * 100) / 100)); drawAll();
+  const s1 = Math.round(TS * zoom); wrap.scrollLeft = u * s1 + PAD.x - mx; wrap.scrollTop = v * s1 + PAD.y - my;
+}
+$('wrap').addEventListener('wheel', ev => {
+  if (ev.shiftKey && !ev.ctrlKey) return;
+  ev.preventDefault(); zoomAt(ev.clientX, ev.clientY, zoom * (ev.deltaY < 0 ? 1.15 : 1 / 1.15));
+}, { passive: false });
+// pan: right- or middle-mouse drag, or hold Space and drag. A right click that does not move is the eyedropper.
+let panDrag = null, spaceDown = false;
+$('wrap').addEventListener('contextmenu', ev => ev.preventDefault());
+$('wrap').addEventListener('mousedown', ev => {
+  if (!(ev.button === 2 || ev.button === 1 || (ev.button === 0 && spaceDown))) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const f = cv.width / (cv.getBoundingClientRect().width || 1);
+  panDrag = { x: ev.clientX, y: ev.clientY, l: $('wrap').scrollLeft, t: $('wrap').scrollTop, f, btn: ev.button, moved: false };
+}, true);
+addEventListener('mousemove', ev => { if (!panDrag) return; const w = $('wrap');
+  if (!panDrag.moved && Math.abs(ev.clientX - panDrag.x) + Math.abs(ev.clientY - panDrag.y) > 4) { panDrag.moved = true; w.classList.add('panning'); }
+  if (panDrag.moved) { w.scrollLeft = panDrag.l - (ev.clientX - panDrag.x) * panDrag.f; w.scrollTop = panDrag.t - (ev.clientY - panDrag.y) * panDrag.f; } });
+addEventListener('mouseup', ev => { if (!panDrag) return; const p = panDrag; panDrag = null; $('wrap').classList.remove('panning');
+  if (p.btn === 2 && !p.moved && cur) { const c = cellAt(ev); if (inGrid(c)) { const sem = semAt(docOf(cur), ...c); if (sem) setBrush(sem); } } });
+addEventListener('keydown', ev => { if (ev.key === ' ' && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)) { ev.preventDefault(); spaceDown = true; $('wrap').classList.add('spacePan'); } });
+addEventListener('keyup', ev => { if (ev.key === ' ') { spaceDown = false; $('wrap').classList.remove('spacePan'); } });
+addEventListener('blur', () => { spaceDown = false; $('wrap').classList.remove('spacePan'); });
 addEventListener('keydown', ev => {
+  if (ev.altKey && !ev.ctrlKey && (ev.key === '=' || ev.key === '+' || ev.key === '-' || ev.key === '0')) {   // Alt + = / - / 0: interface size
+    ev.preventDefault(); if (ev.key === '0') return setUiScale(null);
+    const next = ev.key === '-' ? [...UI_STEPS].reverse().find(v => v < uiScale - 1e-6) : UI_STEPS.find(v => v > uiScale + 1e-6);
+    return next ? setUiScale(next) : undefined;
+  }
   if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) && !ev.ctrlKey) return;
   const k = ev.key.toLowerCase();
   if (ev.ctrlKey && k === 'z') { ev.preventDefault(); undo(); } else if (ev.ctrlKey && k === 'y') { ev.preventDefault(); redo(); }
@@ -972,9 +1090,9 @@ function applyStatic() {
   if (!window.showDirectoryPicker) $('openDir').title = t('openUnsupported');
 }
 $('uiLang').onchange = () => { LANG = $('uiLang').value; try { localStorage.setItem(LANG_KEY, LANG); } catch (_) {}
-  applyStatic(); renderFloorSel(); renderPalette(); renderEventPalette(); renderInspector(); renderProblems(); setBrush(brush); };
+  applyStatic(); applyUiScale(); renderFloorSel(); renderPalette(); renderEventPalette(); renderInspector(); renderProblems(); setBrush(brush); };
 
-applyStatic(); setTool('paint'); $('gridBtn').classList.add('on');
+applyStatic(); applyUiScale(); setTool('paint'); $('gridBtn').classList.add('on');
 openFloor(FLOORS.some(f => f.id === location.hash.slice(1)) ? location.hash.slice(1) : FLOORS[0].id);
 setBrush('wall');
 (() => {   // ?floor=F02&place=ev_x&kind=whisper&floors=F02,F04 -- opened by the event editor's "+ Add floor…"
