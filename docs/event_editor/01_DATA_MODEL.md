@@ -8,7 +8,9 @@ check the rules on every platform.
 
 ### Pools: `assets/data/events/pool_*.json`
 
-One file per pool. A floor rolls events from its chapter's pool and from the common pool.
+One file per pool. A pool groups related events (`pool_act01` holds the village events); it does
+not decide where they appear. Each floor's own `events` list decides that, from any pool, because
+one floor can host several characters' stories. The game does not read pool files at run time.
 
 ```json
 {
@@ -84,7 +86,6 @@ Rules worth adding in the editor (not in `event_graph.cpp` yet):
 - **Duplicate id:** the same `eventId` in two pools. Today the second one is silently skipped.
 - **Pool mix:** a floor whose events break the generator's rule of at least one relic or whisper and
   at least one cache (the constraint noted in `pool_common.json`'s comment).
-- **Wrong chapter:** a floor rolling an act-specific event from another chapter's pool.
 
 ## 4. What the current data shows
 

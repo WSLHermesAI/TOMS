@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOMS Stage Editor</title>
+<style>
+  :root {
+    --bg: #1c1e22; --panel: #25282d; --panel-2: #2c3036; --line: #3a3f47; --text: #d7dbe0; --muted: #8b929c;
+    --accent: #4c9eff; --warn: #ff9f43; --bad: #ff5d5d; --ok: #4cd18a;
+    --k-relic: #e0b44c; --k-whisper: #a98bff; --k-cache: #3fc2b5; --k-trap: #ff6b6b; --k-rescue: #7bd86a;
+    --k-merchant_echo: #ff8fc7; --k-memory_shard: #74c6ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--text); font: 13px/1.4 "Segoe UI", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+    display: flex; flex-direction: column; overflow: hidden; }
+  button, select, input { font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px; padding: 3px 7px; }
+  button { cursor: pointer; } button:hover:not(:disabled) { border-color: var(--accent); } button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: #2d5d9a; border-color: #3b74bd; }
+  button.on { background: #2d5d9a; border-color: #3b74bd; }
+  code { background: #111317; padding: 0 4px; border-radius: 3px; }
+
+  .bar { display: flex; gap: 6px; align-items: center; padding: 5px 10px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .bar .title { font-weight: 700; margin-right: 8px; }
+  .bar .grow { flex: 1; }
+  .bar .sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+  .dirty { color: var(--warn); }
+  .src { color: var(--muted); font-size: 12px; }
+  .src.live { color: var(--ok); }
+
+  .main { flex: 1; display: flex; min-height: 0; }
+  .dock { background: var(--panel); display: flex; flex-direction: column; min-height: 0; }
+  .dock.left { width: 270px; border-right: 1px solid var(--line); }
+  .dock.right { width: 320px; border-left: 1px solid var(--line); }
+  .dock h3 { margin: 0; padding: 6px 10px; font-size: 12px; font-weight: 600; color: var(--muted); background: var(--panel-2);
+    border-bottom: 1px solid var(--line); text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 6px; }
+  .dock h3 .grow { flex: 1; }
+  .dock .body { overflow: auto; padding: 8px 10px; }
+  .dock .body.grow { flex: 1; }
+
+  /* palette */
+  .pgroup { margin-bottom: 8px; }
+  .pgroup > .ph { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 6px 0 4px; cursor: pointer; user-select: none; }
+  .pgrid { display: flex; flex-wrap: wrap; gap: 4px; }
+  .pitem { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 4px; background: #15171a; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
+  .pitem:hover { border-color: var(--accent); }
+  .pitem.sel { border-color: #ffd24c; box-shadow: 0 0 0 1px #ffd24c; }
+  .pitem img, .pitem canvas { width: 32px; height: 32px; image-rendering: pixelated; }
+  .pitem .ch { position: absolute; right: 2px; bottom: 0; font: 10px Consolas, monospace; color: var(--muted); }
+  .evlist { list-style: none; margin: 0; padding: 0; }
+  .evlist li { display: flex; align-items: center; gap: 6px; padding: 2px 4px; border-radius: 3px; cursor: pointer; white-space: nowrap; overflow: hidden; }
+  .evlist li:hover { background: var(--panel-2); }
+  .evlist li.sel { background: #3a3214; outline: 1px solid #ffd24c; }
+  .evlist li .plate { width: 14px; height: 14px; flex: none; border-radius: 2px; background: #dbb85c; display: inline-flex; align-items: center; justify-content: center; }
+  .evlist li .plate i { width: 7px; height: 7px; background: #475775; }
+  .evlist li .k { color: var(--muted); font-size: 11px; }
+  .evlist li .n { margin-left: auto; color: var(--muted); font-size: 11px; }
+  .evlist li.bad { color: #ff9b9b; }
+  .evlist li.placed .n { color: var(--ok); }
+  #evSearch { width: 100%; margin-bottom: 4px; }
+
+  /* canvas */
+  .center { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .tools { display: flex; gap: 4px; align-items: center; padding: 4px 8px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+  .tools .grow { flex: 1; }
+  .brushInfo { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+  .brushInfo b { color: var(--text); }
+  #wrap { flex: 1; overflow: auto; position: relative; background: #121316; }
+  #cv { display: block; margin: 16px; image-rendering: pixelated; cursor: crosshair; }
+  .bottom { height: 150px; border-top: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; }
+  .bottom h3 { margin: 0; padding: 5px 10px; font-size: 12px; font-weight: 600; color: var(--muted); background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  #probs { overflow: auto; flex: 1; }
+  #probs .pr { display: flex; gap: 8px; padding: 2px 10px; cursor: pointer; }
+  #probs .pr:hover { background: var(--panel-2); }
+  .sev-error { color: var(--bad); } .sev-warn { color: var(--warn); } .sev-info { color: var(--muted); }
+  #probs .fix { margin-left: auto; padding: 0 6px; font-size: 11px; }
+
+  /* inspector */
+  .field { margin-bottom: 9px; }
+  .field > label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 2px; }
+  .field input[type=text], .field input[type=number], .field select { width: 100%; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 12px; }
+  .kv span:nth-child(odd) { color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; font-size: 12px; cursor: pointer; }
+  .chip.bad { border-color: var(--bad); color: #ff9b9b; }
+  .chip.placed { border-color: #2f6b4b; }
+  .txt { background: #0d0f12; border: 1px solid #6b5a3a; border-radius: 4px; padding: 6px 8px; color: #f3e6c8; white-space: pre-line; margin-top: 3px; }
+  .muted { color: var(--muted); }
+  .warnTag { color: var(--warn); }
+
+  .statusbar { display: flex; gap: 16px; padding: 3px 10px; background: var(--panel); border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; }
+  .statusbar #hover { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+
+  .modal-bg { position: fixed; inset: 0; background: #000a; display: none; align-items: center; justify-content: center; z-index: 10; }
+  .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; width: min(920px, 94vw); max-height: 86vh; display: flex; flex-direction: column; }
+  .modal header, .modal footer { padding: 10px 14px; }
+  .modal header { border-bottom: 1px solid var(--line); }
+  .modal footer { border-top: 1px solid var(--line); display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+  .modal footer .grow { flex: 1; color: var(--muted); font-size: 12px; }
+  .modal .content { overflow: auto; padding: 10px 14px; }
+  .file { margin-bottom: 12px; }
+  .file .path { font-weight: 600; margin-bottom: 4px; }
+  pre.diff { margin: 0; background: #111317; border: 1px solid var(--line); border-radius: 4px; padding: 8px; font: 12px/1.45 Consolas, "Cascadia Mono", monospace; overflow: auto; max-height: 240px; }
+  pre.diff .add { color: #7ee2a8; background: #173323; display: block; }
+  pre.diff .del { color: #ff9b9b; background: #3a1b1b; display: block; }
+  pre.diff .ctx { color: #8b929c; display: block; }
+  .btabs { display: flex; gap: 2px; padding: 3px 8px 0; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  .btabs button { border-radius: 4px 4px 0 0; border-bottom: none; font-size: 12px; }
+  .btabs .grow { flex: 1; }
+  table.story { border-collapse: collapse; width: 100%; font-size: 12px; }
+  table.story th, table.story td { text-align: left; padding: 2px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.story th { color: var(--muted); position: sticky; top: 0; background: var(--panel); }
+  table.story tr.r { cursor: pointer; } table.story tr.r:hover { background: var(--panel-2); }
+  table.story tr.cur { background: #2d4a70; }
+  table.story td.iss { white-space: normal; }
+  .ky { display: inline-block; min-width: 14px; padding: 0 4px; border-radius: 3px; color: #111; font-weight: 700; font-size: 11px; margin-right: 2px; text-align: center; }
+  .ky.yellow { background: #e0c34c; } .ky.blue { background: #6aa8ff; } .ky.red { background: #ff7b7b; }
+  #placeBar { display: none; gap: 8px; align-items: center; padding: 5px 10px; background: #1f3a2c; border-bottom: 1px solid #2f6b4b; flex-wrap: wrap; }
+  #placeBar.on { display: flex; }
+  #placeBar .grow { flex: 1; }
+  .apPanel { position: absolute; z-index: 8; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 18px #000b; padding: 10px 12px; width: 340px; display: none; }
+  .apPanel.on { display: block; }
+  .apPanel label { display: block; margin: 3px 0; }
+  .apPanel .note { color: var(--muted); font-size: 11.5px; margin: 6px 0; }
+  .toast { position: fixed; right: 16px; bottom: 32px; background: #2d5d9a; color: #fff; padding: 8px 14px; border-radius: 4px; box-shadow: 0 4px 14px #0008;
+    opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 460px; white-space: pre-line; z-index: 20; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <span class="title" data-i18n="title"></span>
+  <label><span data-i18n="floor"></span> <select id="floorSel"></select></label>
+  <button id="prevF" title="[">◀</button><button id="nextF" title="]">▶</button>
+  <span class="sep"></span>
+  <button id="undo" data-i18n="undo" title="Ctrl+Z"></button><button id="redo" data-i18n="redo" title="Ctrl+Y"></button>
+  <span class="sep"></span>
+  <button id="openDir" data-i18n="openDir"></button>
+  <span id="src" class="src"></span>
+  <span class="grow"></span>
+  <label title="Language / 語言">🌐 <select id="uiLang"><option value="en">English</option><option value="zh_TW">繁體中文</option></select></label>
+  <button id="save" class="primary" data-i18n="save" title="Ctrl+S"></button>
+</div>
+
+<div class="main">
+  <div class="dock left">
+    <h3 data-i18n="palette"></h3>
+    <div class="body" id="palette"></div>
+    <h3><span data-i18n="eventsH"></span><span class="grow"></span></h3>
+    <div class="body grow"><input id="evSearch" type="search" data-i18n-ph="evSearch"><div id="evPal"></div></div>
+  </div>
+
+  <div class="center">
+    <div class="tools">
+      <button data-tool="paint" data-i18n="tPaint" title="B"></button>
+      <button data-tool="rect" data-i18n="tRect" title="R"></button>
+      <button data-tool="erase" data-i18n="tErase" title="E"></button>
+      <button data-tool="select" data-i18n="tSelect" title="V"></button>
+      <span class="sep"></span>
+      <button id="gridBtn" data-i18n="tGrid" title="G"></button>
+      <button id="zoomOut" title="-">−</button><span id="zoomLbl" class="muted"></span><button id="zoomIn" title="+">+</button>
+      <span class="sep"></span>
+      <button id="safeBtn" data-i18n="tSafe"></button>
+      <span style="position:relative"><button id="apBtn" data-i18n="tAuto"></button>
+        <div class="apPanel" id="apPanel">
+          <b data-i18n="apTitle"></b>
+          <label><input type="radio" name="apScope" value="floor" checked> <span data-i18n="apThis"></span></label>
+          <label><input type="radio" name="apScope" value="all"> <span data-i18n="apAll"></span></label>
+          <hr style="border:none;border-top:1px solid var(--line)">
+          <label><input type="radio" name="apMode" value="missing" checked> <span data-i18n="apMissing"></span></label>
+          <label><input type="radio" name="apMode" value="all"> <span data-i18n="apReplace"></span></label>
+          <label><span data-i18n="apSeed"></span> <input id="apSeed" type="number" value="1" style="width:80px"> <button id="apDice">🎲</button></label>
+          <div class="note" data-i18n="apNote"></div>
+          <div style="text-align:right"><button id="apCancel" data-i18n="cancel"></button> <button id="apRun" class="primary" data-i18n="apRun"></button></div>
+        </div></span>
+      <span class="grow"></span>
+      <span class="brushInfo"><span data-i18n="brush"></span> <canvas id="brushIcon" width="24" height="24"></canvas> <b id="brushName"></b></span>
+    </div>
+    <div id="placeBar"><span id="pmText"></span><span class="grow"></span>
+      <button id="pmSuggest" data-i18n="pmSuggest"></button><button id="pmAuto" class="primary" data-i18n="pmAuto"></button><button id="pmNext"></button><button id="pmClose" title="✕">✕</button></div>
+    <div id="wrap"><canvas id="cv"></canvas></div>
+    <div class="bottom"><div class="btabs"><button id="bChecks" class="on"></button><button id="bStory"></button><span class="grow"></span><span class="muted" id="storySum" style="font-size:12px;padding:3px 6px"></span></div><div id="probs"></div></div>
+  </div>
+
+  <div class="dock right">
+    <h3 data-i18n="inspector"></h3>
+    <div class="body grow" id="insp"></div>
+  </div>
+</div>
+<div class="statusbar"><span id="hover"></span><span id="status"></span></div>
+<div class="toast" id="toast"></div>
+<div class="modal-bg" id="modalBg"><div class="modal">
+  <header><b data-i18n="saveTitle"></b> <span class="muted" id="saveSub"></span></header>
+  <div class="content" id="diffs"></div>
+  <footer><span class="grow" id="saveNote"></span><button id="mCancel" data-i18n="cancel"></button><button id="mDownload" data-i18n="download"></button><button id="mWrite" class="primary" data-i18n="writeDisk"></button></footer>
+</div></div>
+
+<script src="stage_bundle.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const SPRITE_DIR = '../../../assets/media/sprites/';   // the game's own sprites; a coloured square stands in if they cannot load
+const TS = 32;                                          // the game's tile size (manifest "tile")
+
+// ---------------- strings ----------------
+const I18N = {
+  en: {
+    title: 'TOMS Stage Editor', floor: 'Floor', undo: 'Undo', redo: 'Redo', openDir: 'Open project folder…', save: 'Save',
+    srcBundle: d => `bundle copy (${d})`, srcLive: 'project folder (live)', openUnsupported: 'This browser cannot open folders. Use Chrome or Edge from http://localhost; Save will download the files instead.',
+    palette: 'Palette', eventsH: 'Events', evSearch: 'Find event: id, kind or text', inspector: 'Inspector',
+    tPaint: '🖌 Paint', tRect: '▭ Rectangle', tErase: '⌫ Erase', tSelect: '↖ Select / move', tGrid: '# Grid', brush: 'Brush:',
+    gTerrain: 'Terrain', gStairs: 'Stairs', gDoors: 'Doors', gKeys: 'Keys', gPlayer: 'Player', gMonsters: 'Monsters', gNpcs: 'NPCs', gItems: 'Items',
+    evThisFloor: 'This floor can roll', evAll: 'All events', placedN: n => n ? `✓ ${n}` : '', notDefined: 'not defined in any pool',
+    floorPanel: 'Floor', name: 'Name', size: 'Size (w × h)', resize: 'Apply size', connectUp: 'Stairs up to', connectDown: 'Stairs down to',
+    rollList: n => `Events this floor can roll (${n})`, rollHint: 'Green = placed on the grid. Click one to paint it.',
+    handAuthored: f => `Hand-made boss stage (${f}).`, generated: 'Generated grid: running the generator again would replace hand edits.',
+    cell: (x, y) => `Cell ${x}, ${y}`, kindLbl: 'Object', charLbl: 'Legend char', none: 'Floor (empty)', wall: 'Wall',
+    hp: 'HP', atk: 'ATK', def: 'DEF', footprint: 'Size', effect: 'Effect', evKind: 'Kind', evPool: 'Pool', evText: 'Text', evFloors: 'Floors that can roll it',
+    replaceWith: 'Replace with', clearCell: 'Clear cell', useAsBrush: 'Use as brush',
+    probsH: n => `Checks (${n})`, noProbs: 'No problems on this floor.',
+    pNoStart: 'No stairs and no player start: the player would appear at the bottom-left corner.', pManyStart: n => `${n} player starts (@); only one is used.`,
+    pUnknownChar: (c, x, y) => `Char '${c}' at ${x},${y} has no legend entry.`,
+    pEvUndefined: id => `${id} is placed but no pool defines it.`, pEvNotListed: id => `${id} is placed but not in this floor's events list.`,
+    pEvDup: (id, n) => `${id} is placed ${n} times; one floor should not repeat an event.`, pEvUnplaced: id => `${id} is in the events list but not placed.`,
+    pNoUp: to => `connect.up is ${to} but there is no stairs-up tile.`, pUpNoTarget: 'A stairs-up tile, but connect.up is empty.',
+    pNoDown: to => `connect.down is ${to} but there is no stairs-down tile.`, pDownNoTarget: 'A stairs-down tile, but connect.down is empty.',
+    pUnreach: n => `${n} object(s) cannot be reached from where the player arrives.`, pFootprint: (id, x, y) => `${id} at ${x},${y} is wider than the free cells next to it.`,
+    pBorder: 'The outer edge has open cells.', fixAddList: 'Add to list', fixShow: 'Show',
+    hoverCell: (x, y, c, what) => `(${x}, ${y})  '${c}'  ${what}`,
+    saveTitle: 'Save changes', saveSub: n => `· ${n} file(s) change`, nothingToSave: 'Nothing to save.', cancel: 'Cancel', download: 'Download files', writeDisk: 'Write to project',
+    saveNoteLive: 'Writes into the opened project folder.', saveNoteBundle: 'No project folder is open: Download saves each file; copy them into assets/data.',
+    savedN: n => `Saved ${n} file(s) to the project folder.`, downloadedN: n => `Downloaded ${n} file(s).`,
+    loadedLive: n => `Loaded ${n} floors from the project folder.`, notProject: 'That folder has no assets/data/story/floors. Pick the TOMS folder.',
+    hPaint: (what, n) => `Paint ${what} (${n} cell${n > 1 ? 's' : ''})`, hErase: n => `Erase ${n} cell(s)`, hMove: (what) => `Move ${what}`, hListAdd: id => `Add ${id} to the floor's events list`,
+    hResize: (w, h) => `Resize to ${w} × ${h}`, hConnect: (d, v) => `connect.${d} → ${v || '(none)'}`, hName: 'Rename floor',
+    autoListed: id => `${id} was added to this floor's events list (it can roll it now).`,
+    unsavedLeave: 'You have unsaved changes.',
+    lines: (n) => `${n} line(s)`,
+    tSafe: '◇ Safe cells', tAuto: '🎲 Auto-place events…', apTitle: 'Place events automatically', apThis: 'This floor', apAll: 'All floors (one click)',
+    apMissing: 'Only events in the list that are not placed yet', apReplace: 'Move every event to a new random cell', apSeed: 'Seed', apRun: 'Place',
+    apNote: 'Events go only on cells the player reaches on the way up without opening optional doors, so a key can never be "spent" on an event. They are spread out, never next to stairs, doors or the start, and only events that fire on a tile are placed. The same seed gives the same result; everything stays editable and undoable.',
+    apDone: (n, f, s) => `Placed ${n} event(s) on ${f} floor(s).${s ? `\nSkipped ${s}: see Story.` : ''}`, hAuto: n => `Auto-place ${n} event(s)`,
+    apSkipNoCell: (id, f) => `${f}: no safe free cell for ${id}`, apSkipUndef: n => `${n} listed id(s) that no pool defines were left out`,
+    bChecks: n => `Checks (${n})`, bStory: n => `Story · all floors (${n})`,
+    stFloor: 'Floor', stIn: 'Keys in', stFound: 'Found', stUp: 'Doors on the way up', stOut: 'Keys out', stEv: 'Events', stIss: 'Issues',
+    storySum: (e, w) => `${e} blocking · ${w} warnings`, topFloor: 'top floor',
+    sNoStart: 'No stairs and no player start.', sUpWalled: 'The stairs up cannot be reached at all (walls).',
+    sNeedKeys: (n, c, have, found) => `The way up needs ${n} ${c} key(s); ${have} carried in + ${found} on this floor.`,
+    sEvUnreach: id => `${id} is walled off: no path reaches it.`, sEvNoKey: id => `${id} needs a key that is not available by this floor.`,
+    sEvOptional: id => `${id} is behind a door that is not on the way up: a player who spends the key there may not get up.`,
+    sNeedsEvent: (e, x, f) => `${e} needs ${x} done, but ${x} ${f ? 'first appears on ' + f : 'is placed nowhere'}.`,
+    sNeedsVar: (e, v, n, can) => `${e} needs ${v} ≥ ${n}, but events up to this floor can only reach ${can}.`,
+    sStairLock: (to, x) => `The stair to ${to} waits for ${x}, which cannot be done by this floor.`,
+    pReservedChar: (sem, c, want) => `${sem} uses '${c}', but the game only treats '${want}' as ${sem}.`,
+    pmText: (id, f) => `📍 Place ${id} on ${f}: click a cell (green = safe), or let the editor pick.`, pmPlaced: (id, x, y) => `✓ ${id} is at ${x}, ${y}. Move it with Select, or place it on the next floor.`,
+    pmSuggest: 'Suggest a cell', pmAuto: 'Place it for me', pmNext: f => `Next: ${f} ▶`, pmDone: 'Done ✓', pmNoCell: 'No safe free cell on this floor.',
+    pendingEvent: 'From the event editor; not saved in a pool yet.',
+  },
+  zh_TW: {
+    title: 'TOMS 關卡編輯器', floor: '樓層', undo: '復原', redo: '重做', openDir: '開啟專案資料夾…', save: '儲存',
+    srcBundle: d => `資料副本（${d}）`, srcLive: '專案資料夾（即時）', openUnsupported: '這個瀏覽器無法開啟資料夾。請用 Chrome 或 Edge 從 http://localhost 開啟；儲存會改為下載檔案。',
+    palette: '物件', eventsH: '事件', evSearch: '搜尋事件：ID、類型或文字', inspector: '屬性',
+    tPaint: '🖌 畫筆', tRect: '▭ 矩形', tErase: '⌫ 擦除', tSelect: '↖ 選取／移動', tGrid: '# 格線', brush: '畫筆：',
+    gTerrain: '地形', gStairs: '樓梯', gDoors: '門', gKeys: '鑰匙', gPlayer: '玩家', gMonsters: '怪物', gNpcs: 'NPC', gItems: '道具',
+    evThisFloor: '此樓層可抽到', evAll: '所有事件', placedN: n => n ? `✓ ${n}` : '', notDefined: '沒有任何事件池定義它',
+    floorPanel: '樓層', name: '名稱', size: '大小（寬 × 高）', resize: '套用大小', connectUp: '往上樓梯通往', connectDown: '往下樓梯通往',
+    rollList: n => `此樓層可抽到的事件（${n}）`, rollHint: '綠色 = 已放在地圖上。點一下即可用它作畫。',
+    handAuthored: f => `手工製作的頭目關卡（${f}）。`, generated: '自動產生的地圖：重新執行產生器會覆蓋手動修改。',
+    cell: (x, y) => `格子 ${x}, ${y}`, kindLbl: '物件', charLbl: '圖例字元', none: '地板（空）', wall: '牆壁',
+    hp: '生命', atk: '攻擊', def: '防禦', footprint: '佔格', effect: '效果', evKind: '類型', evPool: '事件池', evText: '文字', evFloors: '可抽到它的樓層',
+    replaceWith: '換成', clearCell: '清除格子', useAsBrush: '用作畫筆',
+    probsH: n => `檢查（${n}）`, noProbs: '這個樓層沒有問題。',
+    pNoStart: '沒有樓梯也沒有玩家起點：玩家會出現在左下角。', pManyStart: n => `有 ${n} 個玩家起點（@）；只會用一個。`,
+    pUnknownChar: (c, x, y) => `${x},${y} 的字元 '${c}' 不在圖例中。`,
+    pEvUndefined: id => `${id} 已放置，但沒有任何事件池定義它。`, pEvNotListed: id => `${id} 已放置，但不在此樓層的事件清單中。`,
+    pEvDup: (id, n) => `${id} 放了 ${n} 次；同一樓層不應重複事件。`, pEvUnplaced: id => `${id} 在事件清單中，但沒有放在地圖上。`,
+    pNoUp: to => `connect.up 是 ${to}，但沒有往上樓梯格。`, pUpNoTarget: '有往上樓梯格，但 connect.up 是空的。',
+    pNoDown: to => `connect.down 是 ${to}，但沒有往下樓梯格。`, pDownNoTarget: '有往下樓梯格，但 connect.down 是空的。',
+    pUnreach: n => `有 ${n} 個物件從玩家抵達的位置走不到。`, pFootprint: (id, x, y) => `${x},${y} 的 ${id} 比旁邊的空格還寬。`,
+    pBorder: '外圈有開放的格子。', fixAddList: '加入清單', fixShow: '顯示',
+    hoverCell: (x, y, c, what) => `（${x}, ${y}）  '${c}'  ${what}`,
+    saveTitle: '儲存變更', saveSub: n => `· 有 ${n} 個檔案變更`, nothingToSave: '沒有需要儲存的變更。', cancel: '取消', download: '下載檔案', writeDisk: '寫入專案',
+    saveNoteLive: '會寫入已開啟的專案資料夾。', saveNoteBundle: '尚未開啟專案資料夾：「下載檔案」會逐一下載，請複製到 assets/data。',
+    savedN: n => `已將 ${n} 個檔案存到專案資料夾。`, downloadedN: n => `已下載 ${n} 個檔案。`,
+    loadedLive: n => `已從專案資料夾載入 ${n} 個樓層。`, notProject: '這個資料夾沒有 assets/data/story/floors。請選 TOMS 資料夾。',
+    hPaint: (what, n) => `畫 ${what}（${n} 格）`, hErase: n => `擦除 ${n} 格`, hMove: (what) => `移動 ${what}`, hListAdd: id => `把 ${id} 加入樓層事件清單`,
+    hResize: (w, h) => `改大小為 ${w} × ${h}`, hConnect: (d, v) => `connect.${d} → ${v || '（無）'}`, hName: '重新命名樓層',
+    autoListed: id => `已把 ${id} 加入此樓層的事件清單（現在它能抽到這個事件）。`,
+    unsavedLeave: '有未儲存的變更。',
+    lines: (n) => `${n} 行`,
+    tSafe: '◇ 安全格', tAuto: '🎲 自動放置事件…', apTitle: '自動放置事件', apThis: '這個樓層', apAll: '所有樓層（一鍵完成）',
+    apMissing: '只放清單中還沒放置的事件', apReplace: '把每個事件移到新的隨機格子', apSeed: '種子', apRun: '放置',
+    apNote: '事件只會放在玩家往上走、不必打開非必要的門就能到達的格子，所以鑰匙不會被「浪費」在事件上。事件會分散，不會緊貼樓梯、門或起點，而且只放「踩到格子觸發」的事件。相同種子會得到相同結果；放好後仍可編輯、可復原。',
+    apDone: (n, f, s) => `已在 ${f} 個樓層放置 ${n} 個事件。${s ? `\n略過 ${s} 項：請看「劇情」。` : ''}`, hAuto: n => `自動放置 ${n} 個事件`,
+    apSkipNoCell: (id, f) => `${f}：沒有安全的空格可放 ${id}`, apSkipUndef: n => `${n} 個沒有事件池定義的 ID 沒有放置`,
+    bChecks: n => `檢查（${n}）`, bStory: n => `劇情 · 所有樓層（${n}）`,
+    stFloor: '樓層', stIn: '帶入鑰匙', stFound: '本層鑰匙', stUp: '往上需開的門', stOut: '帶出鑰匙', stEv: '事件', stIss: '問題',
+    storySum: (e, w) => `${e} 個卡關 · ${w} 個警告`, topFloor: '頂樓',
+    sNoStart: '沒有樓梯也沒有玩家起點。', sUpWalled: '往上的樓梯完全走不到（被牆擋住）。',
+    sNeedKeys: (n, c, have, found) => `往上需要 ${n} 把 ${c} 鑰匙；帶入 ${have} 把 + 本層 ${found} 把。`,
+    sEvUnreach: id => `${id} 被牆圍住：沒有路能到達。`, sEvNoKey: id => `${id} 需要一把到這一層為止拿不到的鑰匙。`,
+    sEvOptional: id => `${id} 在不屬於往上路線的門後：玩家若把鑰匙用在那裡，可能就上不去了。`,
+    sNeedsEvent: (e, x, f) => `${e} 需要 ${x} 已完成，但 ${x} ${f ? '最早出現在 ' + f : '沒有放在任何地方'}。`,
+    sNeedsVar: (e, v, n, can) => `${e} 需要 ${v} ≥ ${n}，但到這一層為止的事件最多只能讓它到 ${can}。`,
+    sStairLock: (to, x) => `通往 ${to} 的樓梯要等 ${x}，但到這一層為止無法完成它。`,
+    pReservedChar: (sem, c, want) => `${sem} 用了 '${c}'，但遊戲只把 '${want}' 當作 ${sem}。`,
+    pmText: (id, f) => `📍 把 ${id} 放到 ${f}：點一個格子（綠色 = 安全），或讓編輯器幫你選。`, pmPlaced: (id, x, y) => `✓ ${id} 在 ${x}, ${y}。可用「選取」移動它，或放到下一個樓層。`,
+    pmSuggest: '建議一個格子', pmAuto: '幫我放', pmNext: f => `下一個：${f} ▶`, pmDone: '完成 ✓', pmNoCell: '這個樓層沒有安全的空格。',
+    pendingEvent: '來自事件編輯器；還沒存進事件池。',
+  },
+};
+const LANG_KEY = 'toms-stage-editor-lang';
+let LANG = (() => { const u = new URLSearchParams(location.search).get('lang'); if (I18N[u]) return u;
+  try { const v = localStorage.getItem(LANG_KEY); if (I18N[v]) return v; } catch (_) {}
+  return /^zh/i.test(navigator.language || '') ? 'zh_TW' : 'en'; })();
+const t = (k, ...a) => { const v = I18N[LANG][k] ?? I18N.en[k]; return typeof v === 'function' ? v(...a) : v; };
+const L = o => o && typeof o === 'object' ? (o[LANG] || o.en || o.zh_TW || '') : (o || '');   // a localised name object
+
+// ---------------- what can go on a cell ----------------
+// A semantic is the legend's value ("wall", "monster:slime", "event:ev_village_well"). Chars are per file:
+// a placed semantic reuses the char this file already uses for it, else its usual char, else any free one.
+const PREFERRED = { wall: '#', floor: '.', player_start: '@', stairs_up: 'U', stairs_down: 'D',
+  'door:yellow': 'y', 'door:blue': 'b', 'door:red': 'r', 'key:yellow': 'Y', 'key:blue': 'B', 'key:red': 'R',
+  'npc:sorcerer': 's', 'npc:villager': 'v', 'npc:king': 'k', 'npc:princess': 'p', 'npc:handmaiden': 'm',
+  'monster:slime': '1', 'monster:bat': '2', 'monster:golem': '3', 'monster:skeleton': '4', 'monster:wraith': '5', 'monster:demon': '6',
+  'monster:demonlord_vorkath': 'Z', 'item:gem_atk': 'a', 'item:gem_def': 'd', 'item:potion_red': 'h', 'item:potion_blue': 'H', 'item:coin': 'c' };
+const FREE_CHARS = 'EFGIJKLMNOPQSTVWXefgijlnoqtuwxz7890ACM$%&*+=?!^~<>';
+const NPC_NAMES = { sorcerer: { en: 'Sorcerer', zh_TW: '法師' }, villager: { en: 'Villager', zh_TW: '村民' }, king: { en: 'King', zh_TW: '國王' },
+  princess: { en: 'Princess', zh_TW: '公主' }, handmaiden: { en: 'Handmaiden', zh_TW: '侍女' }, skeleton_scholar: { en: 'Skeleton scholar', zh_TW: '骷髏學者' } };
+const BASIC = { wall: { en: 'Wall', zh_TW: '牆壁' }, floor: { en: 'Floor', zh_TW: '地板' }, player_start: { en: 'Player start', zh_TW: '玩家起點' },
+  stairs_up: { en: 'Stairs up', zh_TW: '往上樓梯' }, stairs_down: { en: 'Stairs down', zh_TW: '往下樓梯' } };
+const COLORS = { yellow: { en: 'yellow', zh_TW: '黃' }, blue: { en: 'blue', zh_TW: '藍' }, red: { en: 'red', zh_TW: '紅' } };
+
+const evById = Object.fromEntries(BUNDLE.events.map(e => [e.id, e]));
+const kindColor = k => getComputedStyle(document.documentElement).getPropertyValue('--k-' + k).trim() || '#888';
+function spriteOf(sem) {
+  if (sem === 'player_start') return 'player';
+  if (sem === 'wall' || sem === 'floor' || sem === 'stairs_up' || sem === 'stairs_down') return sem;
+  const [cat, id] = sem.split(':');
+  if (cat === 'door' || cat === 'key') return cat + '_' + id;
+  if (cat === 'monster') return id === 'demonlord_vorkath' ? 'boss_demonlord' : id;
+  if (cat === 'npc') return BUNDLE.sprites.includes('npc_' + id) ? 'npc_' + id : 'skeleton';
+  if (cat === 'item') return id;
+  return null;   // events are drawn as plates
+}
+function nameOf(sem) {
+  if (BASIC[sem]) return L(BASIC[sem]);
+  const [cat, id] = sem.split(':');
+  if (cat === 'monster') return L(BUNDLE.enemies[id] && BUNDLE.enemies[id].name) || id;
+  if (cat === 'item') return L(BUNDLE.items[id] && BUNDLE.items[id].name) || id;
+  if (cat === 'npc') return L(NPC_NAMES[id]) || id;
+  if (cat === 'door') return (LANG === 'zh_TW' ? L(COLORS[id]) + '門' : L(COLORS[id]) + ' door');
+  if (cat === 'key') return (LANG === 'zh_TW' ? L(COLORS[id]) + '鑰匙' : L(COLORS[id]) + ' key');
+  if (cat === 'event') return id;
+  return sem;
+}
+const isEntity = sem => !!sem && !['wall', 'floor'].includes(sem);
+function footprintOf(st, ch, sem) {
+  const o = st.footprints && st.footprints[ch];
+  const f = (o && typeof o === 'object') ? o : BUNDLE.footprints[sem];
+  return { w: (f && f.w) || 1, h: (f && f.h) || 1 };
+}
+
+// ---------------- sprites ----------------
+const IMG = {};
+BUNDLE.sprites.forEach(n => { const im = new Image(); im.onload = () => { IMG[n] = im; drawAll(); renderPalette(); }; im.src = SPRITE_DIR + n + '.png'; });
+const FALLBACK = { wall: '#5b5b66', floor: '#2b2b33', stairs: '#e0a83a', door: '#c98b2b', key: '#d8c84a', player: '#3aa0ff', npc: '#46c46a', monster: '#e0473a', item: '#b46bff' };
+function drawSem(g, sem, x, y, w, h) {
+  if (!sem) return;
+  if (sem.startsWith('event:')) {   // the game's story plate: gold with a slate inset (game_scene_draw.cpp)
+    g.fillStyle = 'rgba(219,184,92,0.92)'; g.fillRect(x, y, w, h);
+    const i = Math.min(w, h) * 0.22; g.fillStyle = 'rgba(71,87,117,0.95)'; g.fillRect(x + i, y + i, w - 2 * i, h - 2 * i);
+    return;
+  }
+  const sp = spriteOf(sem), im = sp && IMG[sp];
+  if (im) { g.drawImage(im, x, y, w, h); return; }
+  const cat = sem.includes(':') ? sem.split(':')[0] : sem.startsWith('stairs') ? 'stairs' : sem === 'player_start' ? 'player' : sem;
+  g.fillStyle = FALLBACK[cat] || '#888'; g.fillRect(x + 2, y + 2, w - 4, h - 4);
+  g.fillStyle = '#fff'; g.font = `${Math.floor(h * 0.42)}px Consolas`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText((sem.split(':')[1] || sem)[0].toUpperCase(), x + w / 2, y + h / 2);
+}
+
+// ---------------- documents ----------------
+// One working copy per floor: the stage grid (tiles as rows of chars) and the floor spec. Undo is per floor.
+const DOCS = {};
+let FLOORS = BUNDLE.floors, dirHandle = null, cur = null;
+function docOf(id) {
+  if (!DOCS[id]) {
+    const f = FLOORS.find(x => x.id === id), st = JSON.parse(JSON.stringify(f.stage)), spec = JSON.parse(JSON.stringify(f.spec));
+    DOCS[id] = { f, st, spec, grid: st.tiles.map(r => r.split('')), undo: [], redo: [], origStage: fmtJson(f.stage, f.stageEol), origSpec: fmtJson(f.spec, f.specEol) };
+  }
+  return DOCS[id];
+}
+function fmtJson(obj, eol) { let s = JSON.stringify(obj, null, 2); if (eol && eol.finalNewline) s += '\n'; return eol && eol.crlf ? s.replace(/\n/g, '\r\n') : s; }
+// The stage as it would be written: rows back to strings, legend in its original order. A char this session
+// added and no cell uses any more is dropped; entries the file already had stay (hand-made stages list them all).
+function stageOut(d) {
+  const st = JSON.parse(JSON.stringify(d.st)), orig = d.f.stage.legend;
+  st.tiles = d.grid.map(r => r.join('')); st.height = d.grid.length; st.width = d.grid[0].length;
+  const used = new Set(st.tiles.join(''));
+  st.legend = Object.fromEntries(Object.entries(st.legend).filter(([c, v]) => used.has(c) || orig[c] === v));
+  return st;
+}
+const stageText = d => fmtJson(stageOut(d), d.f.stageEol);
+const specText = d => fmtJson(d.spec, d.f.specEol);
+const isDirty = id => DOCS[id] && (stageText(DOCS[id]) !== DOCS[id].origStage || specText(DOCS[id]) !== DOCS[id].origSpec);
+
+function semAt(d, x, y) { const c = d.grid[y] && d.grid[y][x]; if (c === undefined) return null; if (c === '#') return 'wall'; if (c === '.') return 'floor'; if (c === '@') return 'player_start'; return d.st.legend[c] || null; }
+// The game reads these chars directly (game_input.cpp: movePlayer / walkPassable), not through the legend.
+const RESERVED = { 'door:yellow': 'y', 'door:blue': 'b', 'door:red': 'r', stairs_up: 'U', stairs_down: 'D' };
+function charFor(d, sem) {
+  if (sem === 'wall') return '#'; if (sem === 'floor') return '.'; if (sem === 'player_start') return '@';
+  if (RESERVED[sem]) {   // a door or stair always gets its own char; whatever used that char moves to a free one
+    const c = RESERVED[sem], lg0 = d.st.legend;
+    if (lg0[c] && lg0[c] !== sem) { const other = lg0[c], usedC = new Set([...Object.keys(lg0), ...d.grid.flat()]), nc = [...FREE_CHARS].find(x => !usedC.has(x));
+      delete lg0[c]; lg0[nc] = other; d.grid.forEach(r => r.forEach((ch, i) => { if (ch === c) r[i] = nc; })); }
+    lg0[c] = sem; return c;
+  }
+  const lg = d.st.legend, have = Object.keys(lg).find(c => lg[c] === sem);
+  if (have) return have;
+  const usedChars = new Set([...Object.keys(lg), ...d.grid.flat()]);
+  const pick = (PREFERRED[sem] && !usedChars.has(PREFERRED[sem])) ? PREFERRED[sem] : [...FREE_CHARS].find(c => !usedChars.has(c));
+  lg[pick] = sem;
+  return pick;
+}
+
+// ---------------- state ----------------
+let showSafe = false, placeMode = null;
+let tool = 'paint', brush = 'wall', zoom = 1.5, showGrid = true, selCell = null, hoverCell = null, flashCells = [];
+function snapshot(d) { return JSON.stringify({ grid: d.grid, legend: d.st.legend, spec: d.spec, connect: d.st.connect, name: d.st.name }); }
+function restore(d, s) { const o = JSON.parse(s); d.grid = o.grid; d.st.legend = o.legend; d.spec = o.spec; d.st.connect = o.connect; d.st.name = o.name; }
+function beginEdit(d) { d.pending = snapshot(d); }
+function commitEdit(d, label) {
+  if (!d.pending) return; if (d.pending === snapshot(d)) { d.pending = null; return; }
+  d.undo.push({ s: d.pending, label }); d.redo = []; d.pending = null; afterEdit();
+}
+function commitEditQuiet(d, label) { if (!d.pending) return; if (d.pending === snapshot(d)) { d.pending = null; return; } d.undo.push({ s: d.pending, label }); d.redo = []; d.pending = null; }
+function edit(label, fn) { const d = docOf(cur); beginEdit(d); fn(d); commitEdit(d, label); }
+function undo() { const d = docOf(cur), u = d.undo.pop(); if (!u) return; d.redo.push({ s: snapshot(d), label: u.label }); restore(d, u.s); afterEdit(); toast('↶ ' + u.label); }
+function redo() { const d = docOf(cur), r = d.redo.pop(); if (!r) return; d.undo.push({ s: snapshot(d), label: r.label }); restore(d, r.s); afterEdit(); toast('↷ ' + r.label); }
+function afterEdit() { storyVer++; renderFloorSel(); drawAll(); renderInspector(); renderProblems(); renderEventPalette(); renderPlaceBar(); }
+
+// painting one cell; an event that the floor does not list yet is added to its spec, so the floor can roll it
+function putSem(d, x, y, sem, quiet) {
+  if (!d.grid[y] || d.grid[y][x] === undefined) return false;
+  if (sem === 'player_start') d.grid.forEach(r => r.forEach((c, i) => { if (c === '@') r[i] = '.'; }));
+  const c = charFor(d, sem); if (d.grid[y][x] === c) return false;
+  d.grid[y][x] = c;
+  if (sem.startsWith('event:')) { const id = sem.slice(6); d.spec.events = d.spec.events || [];
+    if (!d.spec.events.includes(id)) { d.spec.events.push(id); if (!quiet) toast(t('autoListed', id)); } }
+  return true;
+}
+
+// ---------------- canvas ----------------
+const cv = $('cv'), g = cv.getContext('2d');
+function drawAll() {
+  if (!cur) return;
+  const d = docOf(cur), H = d.grid.length, W = d.grid[0].length, s = Math.round(TS * zoom);
+  cv.width = W * s; cv.height = H * s; g.imageSmoothingEnabled = false;
+  // ground first, then objects in row order (a 2-wide monster spills to the right, like the game)
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) drawSem(g, semAt(d, x, y) === 'wall' ? 'wall' : 'floor', x * s, y * s, s, s);
+  const reach = reachableCells(d);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const ch = d.grid[y][x], sem = semAt(d, x, y);
+    if (!isEntity(sem)) { if (sem === null && ch !== undefined) { g.fillStyle = 'rgba(255,93,93,.55)'; g.fillRect(x * s, y * s, s, s); } continue; }
+    const fp = sem.startsWith('monster:') ? footprintOf(d.st, ch, sem) : { w: 1, h: 1 };
+    drawSem(g, sem, x * s, y * s, fp.w * s, fp.h * s);
+    if (sem.startsWith('event:')) {   // editor hint: the event's kind colour in the corner, and a red corner if no pool defines it
+      const e = evById[sem.slice(6)]; g.fillStyle = e ? kindColor(e.kind) : '#ff5d5d'; g.beginPath(); g.arc(x * s + s - 6, y * s + 6, 4, 0, 7); g.fill();
+    }
+    if (reach && !reach.has(x + ',' + y) && sem !== 'player_start') { g.strokeStyle = 'rgba(255,159,67,.9)'; g.setLineDash([4, 3]); g.lineWidth = 2; g.strokeRect(x * s + 2, y * s + 2, s - 4, s - 4); g.setLineDash([]); }
+  }
+  if (showSafe || placeMode) { g.fillStyle = 'rgba(76,209,138,.22)'; g.strokeStyle = 'rgba(76,209,138,.55)'; g.lineWidth = 1;
+    safeCells(cur).forEach(([x, y]) => { g.fillRect(x * s + 3, y * s + 3, s - 6, s - 6); g.strokeRect(x * s + 3.5, y * s + 3.5, s - 7, s - 7); }); }
+  if (showGrid) { g.strokeStyle = 'rgba(255,255,255,.08)'; g.lineWidth = 1; g.beginPath();
+    for (let x = 0; x <= W; x++) { g.moveTo(x * s + .5, 0); g.lineTo(x * s + .5, H * s); }
+    for (let y = 0; y <= H; y++) { g.moveTo(0, y * s + .5); g.lineTo(W * s, y * s + .5); } g.stroke(); }
+  if (rectDrag) { const [x0, y0, x1, y1] = rectBounds(); g.fillStyle = 'rgba(76,158,255,.22)'; g.fillRect(x0 * s, y0 * s, (x1 - x0 + 1) * s, (y1 - y0 + 1) * s);
+    g.strokeStyle = '#4c9eff'; g.lineWidth = 2; g.strokeRect(x0 * s + 1, y0 * s + 1, (x1 - x0 + 1) * s - 2, (y1 - y0 + 1) * s - 2); }
+  flashCells.forEach(([x, y]) => { g.strokeStyle = '#ff5d5d'; g.lineWidth = 3; g.strokeRect(x * s + 1.5, y * s + 1.5, s - 3, s - 3); });
+  if (hoverCell) { g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1; g.strokeRect(hoverCell[0] * s + .5, hoverCell[1] * s + .5, s - 1, s - 1); }
+  if (selCell) { g.strokeStyle = '#ffd24c'; g.lineWidth = 2.5; g.strokeRect(selCell[0] * s + 1.5, selCell[1] * s + 1.5, s - 3, s - 3); }
+  $('zoomLbl').textContent = Math.round(zoom * 100) + '%';
+}
+// Where the player appears, in the game's order (game_assets.cpp, loadStage): the stairs down (arriving from
+// below), else '@', else any stairs. Generated floors have no '@'; the player always lands on a stair.
+function startCell(d) {
+  const find = test => { for (let y = 0; y < d.grid.length; y++) for (let x = 0; x < d.grid[y].length; x++) if (test(x, y)) return [x, y]; return null; };
+  return find((x, y) => semAt(d, x, y) === 'stairs_down') || find((x, y) => d.grid[y][x] === '@')
+    || find((x, y) => semAt(d, x, y) === 'stairs_up');
+}
+// cells reachable from there: walls block; doors, monsters and everything else can be passed in the end
+function reachableCells(d) {
+  const H = d.grid.length, W = d.grid[0].length, seen = new Set(), start = startCell(d);
+  if (!start) return null;
+  const q = [start]; seen.add(start.join(','));
+  while (q.length) { const [x, y] = q.shift();
+    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = x + dx, ny = y + dy, k = nx + ',' + ny;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H || seen.has(k) || d.grid[ny][nx] === '#') return; seen.add(k); q.push([nx, ny]); }); }
+  return seen;
+}
+
+// ---------------- story: keys and doors, floor by floor ----------------
+// The game's rules: a y / b / r door takes one key of its colour; keys are picked up on contact; U and D end
+// the floor. Monsters are treated as beatable (their stats are not simulated). Every order of opening doors
+// is tried (doors are few), so "the player spent the only key on the wrong door" is found, not guessed.
+const DOOR_CH = { y: 'yellow', b: 'blue', r: 'red' }, KCOLS = ['yellow', 'blue', 'red'];
+const popcount = m => { let n = 0; while (m) { n += m & 1; m >>>= 1; } return n; };
+function floorFacts(d) {
+  const H = d.grid.length, W = d.grid[0].length, doors = [], keyAt = new Map(), ups = [];
+  d.grid.forEach((r, y) => r.forEach((c, x) => { if (DOOR_CH[c]) doors.push({ x, y, col: DOOR_CH[c] });
+    const s2 = semAt(d, x, y) || ''; if (s2.startsWith('key:')) keyAt.set(x + ',' + y, s2.slice(4)); if (c === 'U') ups.push(x + ',' + y); }));
+  return { H, W, doors, keyAt, ups, start: startCell(d), doorIdx: new Map(doors.map((o, i) => [o.x + ',' + o.y, i])) };
+}
+function floodMask(d, F, mask) {
+  const seen = new Set(), found = { yellow: 0, blue: 0, red: 0 }, frontier = new Set();
+  if (!F.start) return { seen, found, frontier };
+  const q = [F.start]; seen.add(F.start.join(','));
+  while (q.length) { const [x, y] = q.pop(), k = x + ',' + y; if (F.keyAt.has(k)) found[F.keyAt.get(k)]++;
+    const c0 = d.grid[y][x]; if ((c0 === 'U' || c0 === 'D') && !(x === F.start[0] && y === F.start[1])) continue;   // a stair ends the floor
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, nk = nx + ',' + ny;
+      if (nx < 0 || ny < 0 || nx >= F.W || ny >= F.H || seen.has(nk) || d.grid[ny][nx] === '#') continue;
+      const di = F.doorIdx.get(nk); if (di !== undefined && !(mask & (1 << di))) { frontier.add(di); continue; }
+      seen.add(nk); q.push([nx, ny]); } }
+  return { seen, found, frontier };
+}
+function explore(d, keysIn) {
+  const F = floorFacts(d), states = new Map(), q = [0], ups = F.ups;
+  const mk = mask => { const fl = floodMask(d, F, mask), opened = { yellow: 0, blue: 0, red: 0 }, left = {};
+    F.doors.forEach((o, i) => { if (mask & (1 << i)) opened[o.col]++; });
+    KCOLS.forEach(c => left[c] = (keysIn[c] || 0) + fl.found[c] - opened[c]);
+    return { mask, ...fl, opened, left, up: ups.some(u => fl.seen.has(u)), n: popcount(mask) }; };
+  states.set(0, mk(0));
+  while (q.length && states.size < 4096) { const m = q.shift(), st0 = states.get(m);
+    st0.frontier.forEach(i => { if (i > 30 || st0.left[F.doors[i].col] <= 0) return; const nm = m | (1 << i); if (!states.has(nm)) { states.set(nm, mk(nm)); q.push(nm); } }); }
+  const all = [...states.values()], upStates = all.filter(x => x.up), tot = x => KCOLS.reduce((a, c) => a + x.left[c], 0);
+  const route = upStates.slice().sort((a, b) => a.n - b.n || tot(b) - tot(a))[0] || null;      // fewest doors to the way up
+  const carry = upStates.slice().sort((a, b) => tot(b) - tot(a) || b.seen.size - a.seen.size)[0] || null;   // most keys still in hand
+  const widest = all.slice().sort((a, b) => b.seen.size - a.seen.size)[0];
+  return { F, all, upStates, route, carry, widest, anySeen: new Set(all.flatMap(x => [...x.seen])) };
+}
+function chainOrder() {
+  const sp = Object.fromEntries(FLOORS.map(f => [f.id, docOf(f.id).spec])), out = [], seen = new Set();
+  let f = sp.F01 ? 'F01' : FLOORS[0].id;
+  while (f && sp[f] && !seen.has(f)) { seen.add(f); out.push(f); f = sp[f].nextFloor; }
+  FLOORS.forEach(x => { if (!seen.has(x.id)) out.push(x.id); }); return out;
+}
+let storyCache = null, storyVer = 0;
+function storyCheck() {
+  if (storyCache && storyCache.ver === storyVer) return storyCache.rows;
+  const rows = []; let keys = { yellow: 0, blue: 0, red: 0 };
+  chainOrder().forEach((fid, idx) => {
+    const d = docOf(fid), ex = explore(d, keys), row = { fid, idx, keysIn: { ...keys }, ex, issues: [], top: !ex.F.ups.length && !(d.st.connect && d.st.connect.up) };
+    if (!ex.F.start) row.issues.push({ sev: 'error', msg: t('sNoStart') });
+    else if (!row.top && !ex.route) { const inf = explore(d, { yellow: 99, blue: 99, red: 99 });
+      if (!inf.route) row.issues.push({ sev: 'error', msg: t('sUpWalled') });
+      else KCOLS.filter(c => inf.route.opened[c] > (keys[c] || 0) + inf.route.found[c]).forEach(c => row.issues.push({ sev: 'error', msg: t('sNeedKeys', inf.route.opened[c], c, keys[c] || 0, inf.route.found[c]) })); }
+    d.grid.forEach((r, y) => r.forEach((c, x) => { const s2 = semAt(d, x, y); if (!s2 || !s2.startsWith('event:')) return; const k = x + ',' + y;
+      if (!ex.anySeen.has(k)) { row.inf = row.inf || explore(d, { yellow: 99, blue: 99, red: 99 });
+        row.issues.push({ sev: 'error', msg: t(row.inf.anySeen.has(k) ? 'sEvNoKey' : 'sEvUnreach', s2.slice(6)), cell: [x, y] }); }
+      else if (!row.top && ex.upStates.length && !ex.upStates.some(u => u.seen.has(k))) row.issues.push({ sev: 'warn', msg: t('sEvOptional', s2.slice(6)), cell: [x, y] }); }));
+    if (ex.carry) keys = { ...ex.carry.left };
+    rows.push(row);
+  });
+  logicOrderIssues(rows);
+  storyCache = { ver: storyVer, rows }; return rows;
+}
+// event logic (06_EVENT_LOGIC.md): what an event needs must be possible on its floor or before
+function logicOrderIssues(rows) {
+  const idxOf = {}, at = (id, i) => { if (idxOf[id] === undefined || i < idxOf[id]) { idxOf[id] = i; return true; } return false; };
+  rows.forEach(r => { const d = docOf(r.fid); d.grid.forEach((row, y) => row.forEach((c, x) => { const s2 = semAt(d, x, y) || '';
+    if (s2.startsWith('event:')) at(s2.slice(6), r.idx); if (s2.startsWith('npc:')) at('npc:' + s2.slice(4), r.idx); })); });
+  for (let pass = 0, ch = true; ch && pass < 20; pass++) { ch = false;   // talk / linked / variable-fired events appear where what fires them is
+    BUNDLE.events.forEach(e => { const tr = e.trigger || {};
+      if (tr.on === 'talk' && idxOf['npc:' + tr.npc] !== undefined) ch = at(e.id, idxOf['npc:' + tr.npc]) || ch;
+      if (tr.on === 'varChanged') BUNDLE.events.forEach(o => { if ((o.actions || []).some(a => a.var === tr.var) && idxOf[o.id] !== undefined) ch = at(e.id, idxOf[o.id]) || ch; });
+      if (idxOf[e.id] !== undefined) (e.next || []).forEach(n => { ch = at(n, idxOf[e.id]) || ch; }); }); }
+  const rowAt = i => rows.find(r => r.idx === i);
+  BUNDLE.events.forEach(e => { const i = idxOf[e.id]; if (i === undefined || !e.requires) return;
+    const leaves = e.requires.type ? [e.requires] : (e.requires.all || []);
+    leaves.forEach(l => {
+      if (l.type === 'runFlagSet' && String(l.flag).startsWith('event_')) { const x = l.flag.slice(6), j = idxOf[x];
+        if (j === undefined || j > i) rowAt(i).issues.push({ sev: 'warn', msg: t('sNeedsEvent', e.id, x, j === undefined ? null : rowAt(j).fid) }); }
+      if (l.type === 'varAtLeast') { let can = 0;
+        BUNDLE.events.forEach(o => (o.actions || []).forEach(a => { if (a.var !== l.var || idxOf[o.id] === undefined || idxOf[o.id] > i) return;
+          if (a.type === 'addVar' && a.delta > 0) can += a.delta; if (a.type === 'setVar') can = Math.max(can, a.value); }));
+        if (can < l.value) rowAt(i).issues.push({ sev: 'warn', msg: t('sNeedsVar', e.id, l.var, l.value, can) }); }
+    }); });
+  rows.forEach(r => (docOf(r.fid).spec.stairs || []).forEach(sp => { const x = sp.unlock && sp.unlock.eventDone; if (!x) return; const j = idxOf[x];
+    if (j === undefined || j > r.idx) r.issues.push({ sev: 'error', msg: t('sStairLock', sp.to, x) }); }));
+}
+
+// ---------------- safe cells and auto-placement ----------------
+// A safe cell is free floor the player reaches on the fewest-doors way up (on the top floor: without any door),
+// not next to stairs, the start or a door, so an event there can never cost the key the way up needs.
+function safeCells(fid) {
+  const d = docOf(fid), row = storyCheck().find(r => r.fid === fid); if (!row) return [];
+  const ex = row.ex, base = ex.route || ex.all[0]; if (!base) return [];
+  const near = (x, y) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const c = d.grid[y + dy] && d.grid[y + dy][x + dx];
+    if (c === 'U' || c === 'D' || c === '@' || DOOR_CH[c]) return true; } return false; };
+  return [...base.seen].map(k => k.split(',').map(Number)).filter(([x, y]) => d.grid[y][x] === '.' && !near(x, y));
+}
+const isStepEvent = id => { const e = evById[id]; return !e || !e.trigger || e.trigger.on === 'step'; };
+function mulberry(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let x = Math.imul(seed ^ seed >>> 15, 1 | seed); x = x + Math.imul(x ^ x >>> 7, 61 | x) ^ x; return ((x ^ x >>> 14) >>> 0) / 4294967296; }; }
+const hashStr = str => [...str].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+// picks spread-out cells: far from other objects, a little random, rooms over corridors
+function pickCell(d, cands, rng) {
+  if (!cands.length) return null;
+  const objs = []; d.grid.forEach((r, y) => r.forEach((c, x) => { if (c !== '.' && c !== '#') objs.push([x, y]); }));
+  const open = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([a, b]) => d.grid[y + b] && d.grid[y + b][x + a] && d.grid[y + b][x + a] !== '#').length;
+  let best = null, bs = -1;
+  cands.forEach(([x, y]) => { const spread = objs.length ? Math.min(...objs.map(([a, b]) => Math.abs(a - x) + Math.abs(b - y))) : 10;
+    const sc = Math.min(spread, 8) + (open(x, y) >= 3 ? 2 : 0) + rng() * 3; if (sc > bs) { bs = sc; best = [x, y]; } });
+  return best;
+}
+function autoPlace(fids, mode, seed) {
+  let placed = 0, floorsN = 0; const skipped = []; let undef = 0;
+  fids.forEach(fid => {
+    const d = docOf(fid), listed = (d.spec.events || []).filter(isStepEvent), rng = mulberry(hashStr(seed + ':' + fid));
+    const isPlaced = id => d.grid.some(r => r.some(c => d.st.legend[c] === 'event:' + id));
+    const todo = listed.filter(id => { if (!evById[id]) { undef++; return false; } return mode === 'all' || !isPlaced(id); });
+    if (!todo.length) return;
+    beginEdit(d);
+    if (mode === 'all') d.grid.forEach(r => r.forEach((c, i) => { const s2 = d.st.legend[c]; if (s2 && s2.startsWith('event:') && todo.includes(s2.slice(6))) r[i] = '.'; }));
+    let cands = safeCells(fid), n = 0;   // events do not change keys or doors, so the story check from before the loop still holds
+    todo.forEach(id => { const cell = pickCell(d, cands, rng); if (!cell) { skipped.push(t('apSkipNoCell', id, fid)); return; }
+      putSem(d, cell[0], cell[1], 'event:' + id, true); n++;
+      cands = cands.filter(([x, y]) => Math.abs(x - cell[0]) + Math.abs(y - cell[1]) > 1); });
+    commitEditQuiet(d, t('hAuto', n)); placed += n; if (n) floorsN++;
+  });
+  if (undef) skipped.push(t('apSkipUndef', undef));
+  storyVer++; afterEdit(); return { placed, floorsN, skipped };
+}
+
+// mouse
+let painting = false, rectDrag = null, moveFrom = null, paintCount = 0;
+const cellAt = ev => { const r = cv.getBoundingClientRect(), s = Math.round(TS * zoom); return [Math.floor((ev.clientX - r.left) / s), Math.floor((ev.clientY - r.top) / s)]; };
+const inGrid = ([x, y]) => { const d = docOf(cur); return y >= 0 && x >= 0 && y < d.grid.length && x < d.grid[0].length; };
+const rectBounds = () => [Math.min(rectDrag.a[0], rectDrag.b[0]), Math.min(rectDrag.a[1], rectDrag.b[1]), Math.max(rectDrag.a[0], rectDrag.b[0]), Math.max(rectDrag.a[1], rectDrag.b[1])];
+cv.addEventListener('contextmenu', ev => ev.preventDefault());
+cv.addEventListener('mousedown', ev => {
+  const c = cellAt(ev); if (!inGrid(c)) return; const d = docOf(cur);
+  if (ev.button === 2) { const sem = semAt(d, ...c); if (sem) setBrush(sem); return; }   // right click: eyedropper
+  selCell = c; flashCells = [];
+  if (tool === 'select') { if (isEntity(semAt(d, ...c))) moveFrom = c; renderInspector(); drawAll(); return; }
+  beginEdit(d); paintCount = 0;
+  if (tool === 'rect') { rectDrag = { a: c, b: c }; drawAll(); return; }
+  painting = true; paintAt(c);
+});
+cv.addEventListener('mousemove', ev => {
+  const c = cellAt(ev); hoverCell = inGrid(c) ? c : null; showHover();
+  if (painting && hoverCell) paintAt(c);
+  if (rectDrag && hoverCell) { rectDrag.b = c; }
+  drawAll();
+});
+cv.addEventListener('mouseleave', () => { hoverCell = null; drawAll(); $('hover').textContent = ''; });
+addEventListener('mouseup', ev => {
+  if (!cur) return; const d = docOf(cur);
+  if (painting) { painting = false; commitEdit(d, tool === 'erase' ? t('hErase', paintCount) : t('hPaint', nameOf(brush), paintCount)); }
+  if (rectDrag) { const [x0, y0, x1, y1] = rectBounds(); rectDrag = null;
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (putSem(d, x, y, brush)) paintCount++;
+    commitEdit(d, t('hPaint', nameOf(brush), paintCount)); drawAll(); }
+  if (moveFrom) { const to = hoverCell; const from = moveFrom; moveFrom = null;
+    if (to && (to[0] !== from[0] || to[1] !== from[1])) { const sem = semAt(d, ...from);
+      edit(t('hMove', nameOf(sem)), dd => { const ch = dd.grid[from[1]][from[0]]; dd.grid[from[1]][from[0]] = '.'; dd.grid[to[1]][to[0]] = ch; });
+      selCell = to; renderInspector(); drawAll(); } }
+});
+function paintAt([x, y]) {
+  const d = docOf(cur);
+  if (tool === 'erase') { if (d.grid[y][x] !== '.') { d.grid[y][x] = '.'; paintCount++; } }
+  else if (putSem(d, x, y, brush)) paintCount++;
+  if (brush === 'player_start' && tool === 'paint') painting = false;   // one start only
+  drawAll();
+}
+function showHover() {
+  if (!hoverCell) return; const d = docOf(cur), [x, y] = hoverCell, c = d.grid[y][x], sem = semAt(d, x, y);
+  let what = sem ? nameOf(sem) : '?';
+  if (sem && sem.startsWith('event:')) { const e = evById[sem.slice(6)], tx = e && BUNDLE.texts[e.text]; what += e ? ` · ${e.kind} · ${L(tx) || ''}` : ` · ⛔ ${t('notDefined')}`; }
+  if (sem && sem.startsWith('monster:')) { const m = BUNDLE.enemies[sem.slice(8)]; if (m) what += ` · ${t('hp')} ${m.hp} ${t('atk')} ${m.atk} ${t('def')} ${m.def}`; }
+  $('hover').textContent = t('hoverCell', x, y, c, what);
+}
+
+// ---------------- palette ----------------
+let collapsedGroups = new Set();
+function paletteGroups() {
+  const items = Object.keys(BUNDLE.items).filter(k => !k.startsWith('key_'));
+  const npcs = [...new Set(['sorcerer', 'villager', 'king', 'princess', 'handmaiden', ...FLOORS.flatMap(f => Object.values(f.stage.legend).filter(v => v.startsWith('npc:')).map(v => v.slice(4)))])];
+  return [
+    ['gTerrain', ['wall', 'floor']], ['gStairs', ['stairs_up', 'stairs_down']], ['gPlayer', ['player_start']],
+    ['gDoors', ['door:yellow', 'door:blue', 'door:red']], ['gKeys', ['key:yellow', 'key:blue', 'key:red']],
+    ['gMonsters', Object.keys(BUNDLE.enemies).map(k => 'monster:' + k)], ['gNpcs', npcs.map(k => 'npc:' + k)], ['gItems', items.map(k => 'item:' + k)],
+  ];
+}
+function iconCanvas(sem, size = 32) { const c = document.createElement('canvas'); c.width = c.height = size; const gg = c.getContext('2d'); gg.imageSmoothingEnabled = false;
+  if (isEntity(sem) && !sem.startsWith('event:')) drawSem(gg, 'floor', 0, 0, size, size); drawSem(gg, sem, 0, 0, size, size); return c; }
+function renderPalette() {
+  const d = cur && docOf(cur);
+  $('palette').innerHTML = paletteGroups().map(([gk, list]) => `<div class="pgroup"><div class="ph" data-g="${gk}">${collapsedGroups.has(gk) ? '▸' : '▾'} ${t(gk)}</div>
+    ${collapsedGroups.has(gk) ? '' : `<div class="pgrid">${list.map(sem => `<div class="pitem${sem === brush ? ' sel' : ''}" data-sem="${sem}" title="${esc(nameOf(sem))} · ${sem}"><span class="ch">${d ? esc((Object.keys(d.st.legend).find(c => d.st.legend[c] === sem)) || PREFERRED[sem] || '') : ''}</span></div>`).join('')}</div>`}</div>`).join('');
+  $('palette').querySelectorAll('.pitem').forEach(el => { el.prepend(iconCanvas(el.dataset.sem)); el.onclick = () => setBrush(el.dataset.sem); });
+  $('palette').querySelectorAll('.ph').forEach(h => h.onclick = () => { const k = h.dataset.g; collapsedGroups.has(k) ? collapsedGroups.delete(k) : collapsedGroups.add(k); renderPalette(); });
+}
+function renderEventPalette() {
+  if (!cur) return; const d = docOf(cur), q = $('evSearch').value.trim().toLowerCase();
+  const placed = {}; d.grid.flat().forEach(c => { const s = d.st.legend[c]; if (s && s.startsWith('event:')) placed[s.slice(6)] = (placed[s.slice(6)] || 0) + 1; });
+  const match = id => { if (!q) return true; const e = evById[id], tx = e && BUNDLE.texts[e.text];
+    return [id, e && e.kind, e && e.pool, tx && tx.zh_TW, tx && tx.en].some(v => v && String(v).toLowerCase().includes(q)); };
+  const row = id => { const e = evById[id], sem = 'event:' + id;
+    return `<li class="${sem === brush ? 'sel' : ''}${e ? '' : ' bad'}${placed[id] ? ' placed' : ''}" data-ev="${esc(id)}" title="${esc(e ? L(BUNDLE.texts[e.text]) : t('notDefined'))}">
+      <span class="plate"><i></i></span><span>${esc(id)}</span>${e ? `<span class="k" style="color:${kindColor(e.kind)}">${e.kind}</span>` : '<span class="k">⛔</span>'}<span class="n">${t('placedN', placed[id] || 0)}</span></li>`; };
+  const mine = (d.spec.events || []).filter(match);
+  const pools = [...new Set(BUNDLE.events.map(e => e.pool))];
+  $('evPal').innerHTML = `<div class="pgroup"><div class="ph">${t('evThisFloor')} (${(d.spec.events || []).length})</div><ul class="evlist">${mine.map(row).join('')}</ul></div>`
+    + `<div class="pgroup"><div class="ph">${t('evAll')}</div>${pools.map(p => { const list = BUNDLE.events.filter(e => e.pool === p && match(e.id));
+      return list.length ? `<div class="muted" style="font-size:11px;margin:4px 0 2px">${p}</div><ul class="evlist">${list.map(e => row(e.id)).join('')}</ul>` : ''; }).join('')}</div>`;
+  $('evPal').querySelectorAll('li').forEach(li => li.onclick = () => setBrush('event:' + li.dataset.ev));
+}
+function setBrush(sem) {
+  brush = sem; if (tool === 'erase' || tool === 'select') setTool('paint');
+  const bc = $('brushIcon').getContext('2d'); bc.clearRect(0, 0, 24, 24); bc.imageSmoothingEnabled = false; if (isEntity(sem) && !sem.startsWith('event:')) drawSem(bc, 'floor', 0, 0, 24, 24); drawSem(bc, sem, 0, 0, 24, 24);
+  $('brushName').textContent = nameOf(sem) + (sem.startsWith('event:') && evById[sem.slice(6)] ? ' · ' + evById[sem.slice(6)].kind : '');
+  renderPalette(); renderEventPalette();
+}
+function setTool(tl) { tool = tl; document.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === tl)); cv.style.cursor = tl === 'select' ? 'default' : 'crosshair'; }
+document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => setTool(b.dataset.tool));
+
+// ---------------- inspector ----------------
+function renderInspector() {
+  if (!cur) return; const d = docOf(cur);
+  if (!selCell || !inGrid(selCell)) return renderFloorPanel(d);
+  const [x, y] = selCell, c = d.grid[y][x], sem = semAt(d, x, y);
+  let body = `<div class="field"><label>${t('cell', x, y)}</label><div class="kv"><span>${t('kindLbl')}</span><span>${sem ? esc(nameOf(sem)) : '⛔ ?'}</span><span>${t('charLbl')}</span><span><code>${esc(c)}</code> → <code>${esc(sem || '?')}</code></span></div></div>`;
+  if (sem && sem.startsWith('monster:')) { const m = BUNDLE.enemies[sem.slice(8)] || {}, fp = footprintOf(d.st, c, sem);
+    body += `<div class="field"><div class="kv"><span>${t('hp')}</span><span>${m.hp ?? '?'}</span><span>${t('atk')}</span><span>${m.atk ?? '?'}</span><span>${t('def')}</span><span>${m.def ?? '?'}</span><span>${t('footprint')}</span><span>${fp.w} × ${fp.h}</span></div></div>`; }
+  if (sem && sem.startsWith('item:')) { const it = BUNDLE.items[sem.slice(5)] || {}; body += `<div class="field"><div class="kv"><span>${t('effect')}</span><span>${esc(JSON.stringify(it.effect || {}))}</span></div></div>`; }
+  if (sem && sem.startsWith('event:')) { const id = sem.slice(6), e = evById[id], tx = e && BUNDLE.texts[e.text];
+    if (e && e.pending) body += `<p class="muted" style="font-size:12px">${t('pendingEvent')}</p>`;
+    const rollers = FLOORS.filter(f => (docOf(f.id).spec.events || []).includes(id)).map(f => f.id);
+    body += e ? `<div class="field"><div class="kv"><span>${t('evKind')}</span><span style="color:${kindColor(e.kind)}">${e.kind}</span><span>${t('evPool')}</span><span>${e.pool}</span></div></div>
+      <div class="field"><label>${t('evText')} · zh_TW</label><div class="txt">${esc(tx && tx.zh_TW) || '—'}</div><label style="margin-top:4px">en</label><div class="txt">${esc(tx && tx.en) || '—'}</div></div>`
+      : `<p class="warnTag">⛔ ${t('notDefined')}</p>`;
+    body += `<div class="field"><label>${t('evFloors')} (${rollers.length})</label><div class="chips">${rollers.map(f => `<span class="chip" data-floor="${f}">${f}</span>`).join('')}</div></div>`; }
+  if (sem && sem.startsWith('event:')) {
+    body += `<div class="field"><label>${t('replaceWith')}</label><select id="replEv">${BUNDLE.events.map(e => `<option${'event:' + e.id === sem ? ' selected' : ''}>${e.id}</option>`).join('')}</select></div>`; }
+  body += `<p><button id="useBrush">${t('useAsBrush')}</button> <button id="clearCell">${t('clearCell')}</button></p>`;
+  $('insp').innerHTML = body + `<hr style="border:none;border-top:1px solid var(--line);margin:12px 0">` + floorPanelHtml(d);
+  $('useBrush').onclick = () => sem && setBrush(sem);
+  $('clearCell').onclick = () => edit(t('hErase', 1), dd => dd.grid[y][x] = '.');
+  if ($('replEv')) $('replEv').onchange = () => edit(t('hPaint', $('replEv').value, 1), dd => putSem(dd, x, y, 'event:' + $('replEv').value));
+  $('insp').querySelectorAll('.chip[data-floor]').forEach(ch => ch.onclick = () => openFloor(ch.dataset.floor));
+  bindFloorPanel(d);
+}
+function floorPanelHtml(d) {
+  const st = d.st, spec = d.spec, placed = new Set(d.grid.flat().map(c => st.legend[c]).filter(s => s && s.startsWith('event:')).map(s => s.slice(6)));
+  return `<div class="field"><label>${t('floorPanel')}</label><b>${d.f.id}</b> <span class="muted">${esc(spec.act || '')} · ${esc(spec.role || '')}</span>
+      <div class="muted" style="font-size:12px">${spec.handAuthoredStage ? t('handAuthored', esc(d.f.stagePath)) : t('generated')}</div></div>
+    <div class="row2"><div class="field"><label>${t('name')} · zh_TW</label><input type="text" id="nmZh" value="${esc(st.name && st.name.zh_TW)}"></div>
+      <div class="field"><label>en</label><input type="text" id="nmEn" value="${esc(st.name && st.name.en)}"></div></div>
+    <div class="row2"><div class="field"><label>${t('connectUp')}</label><input type="text" id="cUp" value="${esc(st.connect && st.connect.up || '')}"></div>
+      <div class="field"><label>${t('connectDown')}</label><input type="text" id="cDown" value="${esc(st.connect && st.connect.down || '')}"></div></div>
+    <div class="field"><label>${t('size')}</label><div style="display:flex;gap:6px"><input type="number" id="szW" min="5" max="60" value="${d.grid[0].length}" style="width:70px"> × <input type="number" id="szH" min="5" max="60" value="${d.grid.length}" style="width:70px"> <button id="szApply">${t('resize')}</button></div></div>
+    <div class="field"><label>${t('rollList', (spec.events || []).length)}</label><div class="chips">${(spec.events || []).map(id => `<span class="chip${evById[id] ? '' : ' bad'}${placed.has(id) ? ' placed' : ''}" data-ev="${esc(id)}">${placed.has(id) ? '✓ ' : ''}${esc(id)}</span>`).join('')}</div>
+      <div class="muted" style="font-size:11px;margin-top:3px">${t('rollHint')}</div></div>`;
+}
+function renderFloorPanel(d) { $('insp').innerHTML = floorPanelHtml(d); bindFloorPanel(d); }
+function bindFloorPanel(d) {
+  const nm = (k, el) => el.onchange = () => edit(t('hName'), dd => { dd.st.name = { ...(dd.st.name || {}), [k]: el.value }; });
+  nm('zh_TW', $('nmZh')); nm('en', $('nmEn'));
+  const cn = (k, el) => el.onchange = () => { const v = el.value.trim() || null; edit(t('hConnect', k, v), dd => { dd.st.connect = { ...(dd.st.connect || {}), [k]: v }; }); };
+  cn('up', $('cUp')); cn('down', $('cDown'));
+  $('szApply').onclick = () => { const W = Math.max(5, Math.min(60, +$('szW').value || 5)), H = Math.max(5, Math.min(60, +$('szH').value || 5));
+    edit(t('hResize', W, H), dd => { const old = dd.grid; dd.grid = Array.from({ length: H }, (_, y) => Array.from({ length: W }, (_, x) =>
+      (y === 0 || x === 0 || y === H - 1 || x === W - 1) ? '#' : (old[y] && old[y][x] !== undefined && y < old.length - 1 && x < old[0].length - 1 ? old[y][x] : '.'))); });
+    selCell = null; renderInspector(); };
+  $('insp').querySelectorAll('.chip[data-ev]').forEach(ch => ch.onclick = () => setBrush('event:' + ch.dataset.ev));
+}
+
+// ---------------- checks ----------------
+function problems(d) {
+  const out = [], st = d.st, H = d.grid.length, W = d.grid[0].length, starts = [], evCells = {};
+  let up = false, down = false, border = false;
+  d.grid.forEach((r, y) => r.forEach((c, x) => {
+    if (c === '@') starts.push([x, y]);
+    const sem = semAt(d, x, y);
+    if (sem === null) out.push({ sev: 'error', msg: t('pUnknownChar', c, x, y), cells: [[x, y]] });
+    if (sem === 'stairs_up') up = true; if (sem === 'stairs_down') down = true;
+    if ((y === 0 || x === 0 || y === H - 1 || x === W - 1) && c !== '#') border = true;
+    if (sem && sem.startsWith('event:')) (evCells[sem.slice(6)] = evCells[sem.slice(6)] || []).push([x, y]);
+    if (sem && sem.startsWith('monster:')) { const fp = footprintOf(st, c, sem);
+      for (let dy = 0; dy < fp.h; dy++) for (let dx = 0; dx < fp.w; dx++) if ((dx || dy) && (!d.grid[y + dy] || d.grid[y + dy][x + dx] !== '.'))
+        { out.push({ sev: 'warn', msg: t('pFootprint', sem.slice(8), x, y), cells: [[x, y]] }); dx = dy = 99; } }
+  }));
+  if (!startCell(d)) out.push({ sev: 'error', msg: t('pNoStart'), cells: [] });
+  Object.entries(st.legend).forEach(([c, v]) => { if (RESERVED[v] && c !== RESERVED[v]) out.push({ sev: 'error', msg: t('pReservedChar', v, c, RESERVED[v]), cells: [] }); });
+  if (starts.length > 1) out.push({ sev: 'warn', msg: t('pManyStart', starts.length), cells: starts });
+  Object.entries(evCells).forEach(([id, cells]) => {
+    if (!evById[id]) out.push({ sev: 'error', msg: t('pEvUndefined', id), cells });
+    if (!(d.spec.events || []).includes(id)) out.push({ sev: 'warn', msg: t('pEvNotListed', id), cells, fix: 'list', id });
+    if (cells.length > 1) out.push({ sev: 'warn', msg: t('pEvDup', id, cells.length), cells });
+  });
+  (d.spec.events || []).filter(id => !evCells[id]).forEach(id => out.push({ sev: 'info', msg: t('pEvUnplaced', id), cells: [], brush: 'event:' + id }));
+  const cu = st.connect && st.connect.up, cd = st.connect && st.connect.down;
+  if (cu && !up) out.push({ sev: 'warn', msg: t('pNoUp', cu), cells: [] }); if (!cu && up) out.push({ sev: 'warn', msg: t('pUpNoTarget'), cells: [] });
+  if (cd && !down) out.push({ sev: 'warn', msg: t('pNoDown', cd), cells: [] }); if (!cd && down) out.push({ sev: 'warn', msg: t('pDownNoTarget'), cells: [] });
+  { const reach = reachableCells(d) || new Set(), lost = [];
+    d.grid.forEach((r, y) => r.forEach((c, x) => { if (isEntity(semAt(d, x, y)) && !reach.has(x + ',' + y)) lost.push([x, y]); }));
+    if (lost.length) out.push({ sev: 'warn', msg: t('pUnreach', lost.length), cells: lost }); }
+  if (border) out.push({ sev: 'info', msg: t('pBorder'), cells: [] });
+  return out;
+}
+let bottomTab = 'checks';
+function renderProblems() {
+  if (!cur) return; const rows = storyCheck(), mine = rows.find(r => r.fid === cur), icon = { error: '⛔', warn: '⚠', info: 'ⓘ' };
+  const list = [...problems(docOf(cur)), ...(mine ? mine.issues.map(p => ({ sev: p.sev, msg: p.msg, cells: p.cell ? [p.cell] : [] })) : [])];
+  const allIss = rows.flatMap(r => r.issues), nErr = allIss.filter(p => p.sev === 'error').length, nWarn = allIss.filter(p => p.sev === 'warn').length;
+  $('bChecks').textContent = t('bChecks', list.filter(p => p.sev !== 'info').length); $('bStory').textContent = t('bStory', nErr + nWarn);
+  $('bChecks').classList.toggle('on', bottomTab === 'checks'); $('bStory').classList.toggle('on', bottomTab === 'story');
+  $('storySum').textContent = t('storySum', nErr, nWarn);
+  if (bottomTab === 'story') return renderStory(rows, icon);
+  $('probs').innerHTML = list.length ? list.map((p, i) => `<div class="pr" data-i="${i}"><span class="sev-${p.sev}">${icon[p.sev]}</span><span>${esc(p.msg)}</span>${p.fix ? `<button class="fix" data-fix="${i}">${t('fixAddList')}</button>` : ''}</div>`).join('')
+    : `<div class="pr muted">${t('noProbs')}</div>`;
+  $('probs').querySelectorAll('.pr[data-i]').forEach(r => r.onclick = ev => { const p = list[+r.dataset.i];
+    if (ev.target.dataset.fix) { edit(t('hListAdd', p.id), dd => dd.spec.events.push(p.id)); return; }
+    if (p.brush) setBrush(p.brush);
+    flashCells = p.cells; if (p.cells[0]) { selCell = p.cells[0]; const s = Math.round(TS * zoom); $('wrap').scrollTo({ left: p.cells[0][0] * s - 200, top: p.cells[0][1] * s - 120, behavior: 'smooth' }); }
+    renderInspector(); drawAll(); setTimeout(() => { flashCells = []; drawAll(); }, 1600); });
+}
+
+// ---------------- floors ----------------
+const keyChips = k => KCOLS.filter(c => k[c]).map(c => `<span class="ky ${c}">${k[c]}</span>`).join('') || '<span class="muted">0</span>';
+function renderStory(rows, icon) {
+  $('probs').innerHTML = `<table class="story"><thead><tr><th>${t('stFloor')}</th><th>${t('stIn')}</th><th>${t('stFound')}</th><th>${t('stUp')}</th><th>${t('stOut')}</th><th>${t('stEv')}</th><th>${t('stIss')}</th></tr></thead><tbody>
+    ${rows.map(r => { const ex = r.ex, rt = ex.route, d = docOf(r.fid), placed = d.grid.flat().filter(c => (d.st.legend[c] || '').startsWith('event:')).length;
+      const found = { yellow: 0, blue: 0, red: 0 }; ex.F.keyAt.forEach(c => found[c]++);
+      return `<tr class="r${r.fid === cur ? ' cur' : ''}" data-f="${r.fid}"><td><b>${r.fid}</b> <span class="muted">${esc(d.spec.act || '')}</span></td><td>${keyChips(r.keysIn)}</td><td>${keyChips(found)}</td>
+        <td>${r.top ? `<span class="muted">${t('topFloor')}</span>` : rt ? keyChips(rt.opened) : '⛔'}</td><td>${ex.carry ? keyChips(ex.carry.left) : '—'}</td>
+        <td>${placed}/${(d.spec.events || []).length}</td><td class="iss">${r.issues.map(p => `<span class="sev-${p.sev}">${icon[p.sev]}</span> ${esc(p.msg)}`).join('<br>')}</td></tr>`; }).join('')}</tbody></table>`;
+  $('probs').querySelectorAll('tr.r').forEach(tr => tr.onclick = () => { openFloor(tr.dataset.f); const r = rows.find(x => x.fid === tr.dataset.f), c = r && r.issues.find(p => p.cell);
+    if (c) { flashCells = [c.cell]; selCell = c.cell; renderInspector(); drawAll(); setTimeout(() => { flashCells = []; drawAll(); }, 1600); } });
+  const curRow = $('probs').querySelector('tr.cur'); if (curRow) curRow.scrollIntoView({ block: 'nearest' });
+}
+$('bChecks').onclick = () => { bottomTab = 'checks'; renderProblems(); };
+$('bStory').onclick = () => { bottomTab = 'story'; renderProblems(); };
+
+// ---------------- auto-place panel ----------------
+$('apBtn').onclick = ev2 => { ev2.stopPropagation(); $('apPanel').classList.toggle('on'); };
+$('apPanel').onclick = ev2 => ev2.stopPropagation();
+addEventListener('click', () => $('apPanel').classList.remove('on'));
+$('apCancel').onclick = () => $('apPanel').classList.remove('on');
+$('apDice').onclick = () => { $('apSeed').value = Math.floor(Math.random() * 99999); };
+$('apRun').onclick = () => {
+  const scope = document.querySelector('input[name=apScope]:checked').value, mode = document.querySelector('input[name=apMode]:checked').value;
+  const res = autoPlace(scope === 'all' ? chainOrder() : [cur], mode, $('apSeed').value || '1');
+  $('apPanel').classList.remove('on'); bottomTab = 'story'; renderProblems();
+  toast(t('apDone', res.placed, res.floorsN, res.skipped.length) + (res.skipped.length ? '\n' + res.skipped.slice(0, 4).join('\n') : ''));
+};
+$('safeBtn').onclick = () => { showSafe = !showSafe; $('safeBtn').classList.toggle('on', showSafe); drawAll(); };
+
+// ---------------- place mode: opened from the event editor with ?floor=&place= ----------------
+function renderPlaceBar() {
+  const bar = $('placeBar'); if (!placeMode || !cur) { bar.classList.remove('on'); return; }
+  bar.classList.add('on'); const d = docOf(cur), id = placeMode.id;
+  let at = null; d.grid.forEach((r, y) => r.forEach((c, x) => { if (d.st.legend[c] === 'event:' + id) at = [x, y]; }));
+  $('pmText').textContent = at ? t('pmPlaced', id, at[0], at[1]) : t('pmText', id, cur);
+  $('pmSuggest').style.display = $('pmAuto').style.display = at ? 'none' : '';
+  const i = placeMode.floors.indexOf(cur), next = placeMode.floors[i + 1];
+  $('pmNext').textContent = next ? t('pmNext', next) : t('pmDone'); $('pmNext').style.display = at || next ? '' : 'none';
+}
+$('pmSuggest').onclick = () => { const c = pickCell(docOf(cur), safeCells(cur), mulberry(hashStr(placeMode.id + cur + Date.now()))); if (!c) return toast(t('pmNoCell'));
+  selCell = c; flashCells = [c]; renderInspector(); drawAll(); setTimeout(() => { flashCells = []; drawAll(); }, 1600); };
+$('pmAuto').onclick = () => { const c = pickCell(docOf(cur), safeCells(cur), mulberry(hashStr(placeMode.id + cur))); if (!c) return toast(t('pmNoCell'));
+  edit(t('hPaint', placeMode.id, 1), dd => putSem(dd, c[0], c[1], 'event:' + placeMode.id)); selCell = c; renderInspector(); drawAll(); };
+$('pmNext').onclick = () => { const i = placeMode.floors.indexOf(cur), next = placeMode.floors[i + 1]; if (next) { openFloor(next); setBrush('event:' + placeMode.id); } else { placeMode = null; renderPlaceBar(); drawAll(); } };
+$('pmClose').onclick = () => { placeMode = null; renderPlaceBar(); drawAll(); };
+
+function renderFloorSel() {
+  $('floorSel').innerHTML = FLOORS.map(f => `<option value="${f.id}"${f.id === cur ? ' selected' : ''}>${isDirty(f.id) ? '● ' : ''}${f.id} · ${esc(f.spec.act || '')}${f.spec.handAuthoredStage ? ' · ★' : ''}</option>`).join('');
+  const any = FLOORS.some(f => isDirty(f.id)); $('save').textContent = t('save') + (any ? ' •' : '');
+}
+function openFloor(id) { cur = id; selCell = null; flashCells = []; renderPlaceBar(); renderFloorSel(); renderPalette(); renderEventPalette(); renderInspector(); renderProblems(); drawAll();
+  try { history.replaceState(null, '', '#' + id); } catch (_) {} }
+$('floorSel').onchange = () => openFloor($('floorSel').value);
+const step = n => { const i = FLOORS.findIndex(f => f.id === cur); openFloor(FLOORS[(i + n + FLOORS.length) % FLOORS.length].id); };
+$('prevF').onclick = () => step(-1); $('nextF').onclick = () => step(1);
+
+// ---------------- project folder (File System Access API) ----------------
+async function fileIn(dir, path, create) { const parts = path.split('/'); let h = dir;
+  for (const p of parts.slice(0, -1)) h = await h.getDirectoryHandle(p, { create: !!create }); return h.getFileHandle(parts.at(-1), { create: !!create }); }
+async function readJson(dir, path) { const fh = await fileIn(dir, path); const raw = await (await fh.getFile()).text();
+  return { obj: JSON.parse(raw), eol: { crlf: raw.includes('\r\n'), finalNewline: raw.endsWith('\n') } }; }
+$('openDir').onclick = async () => {
+  if (!window.showDirectoryPicker) return toast(t('openUnsupported'));
+  try {
+    const dir = await window.showDirectoryPicker({ mode: 'readwrite' });
+    try { await fileIn(dir, 'assets/data/story/floors/F01.json'); } catch (_) { return toast(t('notProject')); }
+    const fresh = [];
+    for (const f of BUNDLE.floors) {   // same floor list as the bundle, re-read from disk
+      const spec = await readJson(dir, f.specPath), stage = await readJson(dir, f.stagePath);
+      fresh.push({ ...f, spec: spec.obj, specEol: spec.eol, stage: stage.obj, stageEol: stage.eol });
+    }
+    FLOORS = fresh; Object.keys(DOCS).forEach(k => delete DOCS[k]); dirHandle = dir;
+    $('src').textContent = t('srcLive'); $('src').classList.add('live');
+    openFloor(FLOORS.some(f => f.id === cur) ? cur : FLOORS[0].id); toast(t('loadedLive', fresh.length));
+  } catch (e) { if (e.name !== 'AbortError') toast(String(e)); }
+};
+
+// ---------------- save ----------------
+function changedFiles() {
+  const out = [];
+  FLOORS.forEach(f => { if (!DOCS[f.id]) return; const d = DOCS[f.id], st = stageText(d), sp = specText(d);
+    if (st !== d.origStage) out.push({ path: f.stagePath, text: st, before: d.origStage, id: f.id, kind: 'stage' });
+    if (sp !== d.origSpec) out.push({ path: f.specPath, text: sp, before: d.origSpec, id: f.id, kind: 'spec' }); });
+  return out;
+}
+function lineDiff(a, b) {   // a small LCS diff over lines, enough for a grid and a legend
+  const A = a.replace(/\r/g, '').split('\n'), B = b.replace(/\r/g, '').split('\n'), n = A.length, m = B.length;
+  const dp = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const out = []; let i = 0, j = 0;
+  while (i < n || j < m) { if (i < n && j < m && A[i] === B[j]) { out.push(['ctx', A[i]]); i++; j++; } else if (j < m && (i >= n || dp[i][j + 1] >= dp[i + 1][j])) out.push(['add', B[j++]]); else out.push(['del', A[i++]]); }
+  // keep only changes and two lines of context around them
+  const keep = out.map((x, k) => x[0] !== 'ctx' || out.slice(Math.max(0, k - 2), k + 3).some(y => y[0] !== 'ctx'));
+  const res = []; out.forEach((x, k) => { if (keep[k]) res.push(x); else if (res.length && res.at(-1)[1] !== '…') res.push(['ctx', '…']); });
+  return res;
+}
+function openSave() {
+  const files = changedFiles(); if (!files.length) return toast(t('nothingToSave'));
+  $('saveSub').textContent = t('saveSub', files.length);
+  $('diffs').innerHTML = files.map(f => `<div class="file"><div class="path">${esc(f.path)}</div><pre class="diff">${lineDiff(f.before, f.text).map(([c, l]) => `<span class="${c}">${c === 'add' ? '+ ' : c === 'del' ? '- ' : '  '}${esc(l)}</span>`).join('')}</pre></div>`).join('');
+  $('mWrite').disabled = !dirHandle; $('saveNote').textContent = dirHandle ? t('saveNoteLive') : t('saveNoteBundle');
+  $('modalBg').style.display = 'flex';
+}
+function markSaved(files) { files.forEach(f => { const d = DOCS[f.id]; if (f.kind === 'stage') d.origStage = f.text; else d.origSpec = f.text; }); renderFloorSel(); }
+$('save').onclick = openSave;
+$('mCancel').onclick = () => $('modalBg').style.display = 'none';
+$('mWrite').onclick = async () => { const files = changedFiles();
+  try { for (const f of files) { const fh = await fileIn(dirHandle, f.path, true), w = await fh.createWritable(); await w.write(f.text); await w.close(); }
+    markSaved(files); $('modalBg').style.display = 'none'; toast(t('savedN', files.length)); } catch (e) { toast(String(e)); } };
+$('mDownload').onclick = () => { const files = changedFiles();
+  files.forEach((f, i) => setTimeout(() => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([f.text], { type: 'application/json' }));
+    a.download = f.path.split('/').pop(); a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }, i * 250));
+  markSaved(files); $('modalBg').style.display = 'none'; toast(t('downloadedN', files.length)); };
+
+// ---------------- misc ----------------
+function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(el._h); el._h = setTimeout(() => el.classList.remove('show'), 3200); }
+$('undo').onclick = undo; $('redo').onclick = redo;
+$('gridBtn').onclick = () => { showGrid = !showGrid; $('gridBtn').classList.toggle('on', showGrid); drawAll(); };
+$('zoomIn').onclick = () => { zoom = Math.min(3, zoom + .25); drawAll(); }; $('zoomOut').onclick = () => { zoom = Math.max(.5, zoom - .25); drawAll(); };
+$('evSearch').oninput = renderEventPalette;
+addEventListener('keydown', ev => {
+  if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) && !ev.ctrlKey) return;
+  const k = ev.key.toLowerCase();
+  if (ev.ctrlKey && k === 'z') { ev.preventDefault(); undo(); } else if (ev.ctrlKey && k === 'y') { ev.preventDefault(); redo(); }
+  else if (ev.ctrlKey && k === 's') { ev.preventDefault(); openSave(); }
+  else if (ev.ctrlKey) return;
+  else if (k === 'b') setTool('paint'); else if (k === 'r') setTool('rect'); else if (k === 'e') setTool('erase'); else if (k === 'v') setTool('select');
+  else if (k === 'g') $('gridBtn').click(); else if (k === '+' || k === '=') $('zoomIn').click(); else if (k === '-') $('zoomOut').click();
+  else if (k === '[') step(-1); else if (k === ']') step(1);
+  else if (k === 'escape') { selCell = null; $('modalBg').style.display = 'none'; renderInspector(); drawAll(); }
+  else if ((k === 'delete' || k === 'backspace') && selCell) edit(t('hErase', 1), dd => dd.grid[selCell[1]][selCell[0]] = '.');
+});
+addEventListener('beforeunload', ev => { if (FLOORS.some(f => isDirty(f.id))) { ev.preventDefault(); ev.returnValue = t('unsavedLeave'); } });
+function applyStatic() {
+  document.documentElement.lang = LANG === 'zh_TW' ? 'zh-Hant' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  $('uiLang').value = LANG; if (!dirHandle) $('src').textContent = t('srcBundle', BUNDLE.snapshot);
+  if (!window.showDirectoryPicker) $('openDir').title = t('openUnsupported');
+}
+$('uiLang').onchange = () => { LANG = $('uiLang').value; try { localStorage.setItem(LANG_KEY, LANG); } catch (_) {}
+  applyStatic(); renderFloorSel(); renderPalette(); renderEventPalette(); renderInspector(); renderProblems(); setBrush(brush); };
+
+applyStatic(); setTool('paint'); $('gridBtn').classList.add('on');
+openFloor(FLOORS.some(f => f.id === location.hash.slice(1)) ? location.hash.slice(1) : FLOORS[0].id);
+setBrush('wall');
+(() => {   // ?floor=F02&place=ev_x&kind=whisper&floors=F02,F04 -- opened by the event editor's "+ Add floor…"
+  const u = new URLSearchParams(location.search), id = u.get('place'); if (!id) return;
+  const floors = (u.get('floors') || u.get('floor') || '').split(',').filter(f => FLOORS.some(x => x.id === f));
+  if (!evById[id]) { const e = { id, kind: u.get('kind') || '', pool: '(event editor)', text: id + '.text', pending: true }; BUNDLE.events.push(e); evById[id] = e; }
+  placeMode = { id, floors: floors.length ? floors : [cur] };
+  openFloor(placeMode.floors[0]); setTool('paint'); setBrush('event:' + id); renderPlaceBar(); drawAll();
+})();
+</script>
+</body>
+</html>

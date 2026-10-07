@@ -11,8 +11,8 @@
   .lang { border: 1px solid var(--line); border-radius: 4px; padding: 8px; margin-bottom: 8px; background: var(--panel); }
   .lang header { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
   .lang.todo { border-color: #6a5420; }
-  .preview { background: #0d0f12; border: 2px solid #6b5a3a; border-radius: 6px; padding: 14px 18px; font-size: 16px; color: #f3e6c8; min-height: 56px; font-family: "Microsoft JhengHei", "PingFang TC", serif; }
-  .preview small { display: block; color: #a89a7c; font-size: 11px; margin-bottom: 6px; }
+  .preview { white-space: pre-line; background: #0d0f12; border: 2px solid #6b5a3a; border-radius: 6px; padding: 14px 18px; font-size: 16px; color: #f3e6c8; min-height: 56px; font-family: "Microsoft JhengHei", "PingFang TC", serif; }
+  .preview small { white-space: normal; display: block; color: #a89a7c; font-size: 11px; margin-bottom: 6px; }
   .popover { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px; box-shadow: 0 6px 20px #000a; z-index: 5; width: 380px; }
   .popover .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; max-height: 260px; overflow: auto; }
   .popover label { font-size: 11px; white-space: nowrap; }
@@ -29,7 +29,7 @@
   <div class="grow"></div><button id="undo">Undo</button> <button class="primary" id="save">Save (Ctrl+S)</button></div>
 
 <div class="main">
-  <div class="dock" style="width:250px">
+  <div class="dock" style="width:280px">
     <h3>Events</h3>
     <div class="body"><button id="newBtn" style="width:100%;margin-bottom:6px">+ New event</button><input id="search" placeholder="Search ids…  (Ctrl+F)"><ul class="tree" id="tree"></ul></div>
   </div>
@@ -80,7 +80,7 @@ function renderTree() {
   DATA.pools.forEach(p => {
     const ev = events.filter(e => e.pool === p && e.id.toLowerCase().includes(q));
     if (!ev.length) return;
-    h += `<li class="pool">▾ ${p}</li>` + ev.map(e => `<li class="ev${e === cur ? ' sel' : ''}" data-id="${e.id}"><span class="dot" style="background:${kindColor(e.kind)}"></span>${e.id.replace(/^ev_/, '')}${floorsOf(e.id).length ? '' : ' <span class="warnTag">⚠</span>'}</li>`).join('');
+    h += `<li class="pool">▾ ${p}</li>` + ev.map(e => `<li class="ev${e === cur ? ' sel' : ''}" data-id="${e.id}" title="${e.id}"><span class="dot" style="background:${kindColor(e.kind)}"></span>${e.id}${floorsOf(e.id).length ? '' : ' <span class="warnTag">⚠</span>'}</li>`).join('');
   });
   $('tree').innerHTML = h;
   $('tree').querySelectorAll('li.ev').forEach(li => li.onclick = () => { cur = events.find(e => e.id === li.dataset.id); history.replaceState(null, '', '#' + cur.id); render(); });
