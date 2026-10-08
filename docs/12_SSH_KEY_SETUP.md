@@ -1,54 +1,58 @@
-# 12 — SSH 金鑰說明與「在另一台電腦上使用」
+# 12 — SSH keys, and using them on another computer
 
-> 這份文件回答兩件事：**(1) GitHub 的權限現在是怎麼運作的**、**(2) 換一台電腦要怎麼取得 push 權限**。
-> 實測數字取自 `/home/fatming/Desktop/TOMS`（`main`，`cf15f19`），指令與檔名保持英文，敘述為繁體中文。
-> 流程面的總覽在 [`11_NEW_MACHINE_SETUP.md`](11_NEW_MACHINE_SETUP.md)。
+> 中文版：[zh_TW/12_SSH_KEY_SETUP.md](zh_TW/12_SSH_KEY_SETUP.md)
+
+> This page answers two things: **(1) how GitHub permissions work now**, and **(2) how to get push
+> access on another computer**. The measured values come from `/home/fatming/Desktop/TOMS`
+> (`main`, `cf15f19`). The overview of the whole process is in
+> [`11_NEW_MACHINE_SETUP.md`](11_NEW_MACHINE_SETUP.md).
 
 ---
 
-## 1. 先講結論（給趕時間的人）
+## 1. The short answer (for people in a hurry)
 
 ```bash
-# 新電腦要 push，最建議的做法：在該機器產生一把新金鑰
-ssh-keygen -t ed25519 -C "your@email"          # 直接 Enter 三次即可（若要 passphrase 就自行輸入）
-cat ~/.ssh/id_ed25519.pub                       # 複製這一行，貼到 GitHub → Settings → SSH and GPG keys → New SSH key
-ssh -T git@github.com                           # 看到 "Hi <帳號>!" 就成功（注意：就算成功，退出碼仍可能是 1）
+# To push from a new computer, the recommended way: generate a new key on that machine
+ssh-keygen -t ed25519 -C "your@email"          # press Enter three times (or type a passphrase)
+cat ~/.ssh/id_ed25519.pub                       # copy this line into GitHub → Settings → SSH and GPG keys → New SSH key
+ssh -T git@github.com                           # "Hi <account>!" means success (note: the exit code can be 1 even then)
 git remote set-url origin git@github.com:WSLHermesAI/TOMS.git
 ```
 
-**但如果你只是要 clone**：這個 repo 是**公開的**，所以 `git clone` **完全不需要任何金鑰**，
-用 HTTPS 匿名網址即可（見 §2）。**只有 push 需要 SSH 金鑰。**
+**If you only want to clone:** this repo is **public**, so `git clone` needs **no key at all**;
+use the anonymous HTTPS URL (see §2). **Only pushing needs an SSH key.**
 
 ---
 
-## 2. 權限是怎麼運作的
+## 2. How permissions work
 
-GitHub 不再接受「帳號＋密碼」推送。現在只有兩條路：
+GitHub no longer accepts "account + password" for pushing. There are two ways now:
 
-| 方式 | 憑證放在哪 | 本機有沒有用 |
+| Method | Where the credential lives | Used on this machine |
 |---|---|---|
-| **SSH 金鑰** | 私鑰檔案 `~/.ssh/<key>`；公鑰存在 GitHub 帳號上 | ✅ **在用** |
-| **HTTPS + PAT**（Personal Access Token） | 由 credential helper 存放（Windows：Credential Manager） | ❌ 未使用（沒有 helper、沒有 `~/.git-credentials`） |
+| **SSH key** | the private key file `~/.ssh/<key>`; the public key on the GitHub account | ✅ **in use** |
+| **HTTPS + PAT** (Personal Access Token) | stored by a credential helper (Windows: Credential Manager) | ❌ not used (no helper, no `~/.git-credentials`) |
 
-原理一句話：**公鑰給 GitHub，私鑰只留在你的機器上**。推送時 `git` 會呼叫 `ssh`，
-`ssh` 用私鑰對 GitHub 發出挑戰簽章；GitHub 用你帳號上的那把公鑰驗證。
-所以**私鑰檔本身就是登入憑證**——外洩等於被盜用。
+In one sentence: **the public key goes to GitHub, the private key stays only on your machine**.
+When pushing, `git` calls `ssh`, which signs GitHub's challenge with the private key; GitHub checks
+it with the public key on your account. So **the private key file itself is the login
+credential**: leaking it means the account can be used by someone else.
 
-### 本機現況（實測）
+### This machine today (measured)
 
-| 項目 | 值 |
+| Item | Value |
 |---|---|
-| remote | `git@github.com:WSLHermesAI/TOMS.git`（SSH） |
-| 私鑰 | `~/.ssh/id_ed25519`，ED25519，權限 `600` |
-| 公鑰 | `~/.ssh/id_ed25519.pub`，權限 `644` |
-| 指紋 | `SHA256:0AhSQKxzlEc4C+1+uP8z8wmeWOmh3SKnVAjubwNbFvg` |
-| 對應帳號 | **WSLHermesAI**（`ssh -T git@github.com` 回 `Hi WSLHermesAI!`） |
-| `~/.ssh/config` | 無（使用預設 identity） |
-| credential helper | 未設定；`~/.git-credentials` 不存在 → **沒有儲存任何密碼或 PAT** |
-| repo 可見性 | **公開**（匿名 HTTPS 讀取測試通過 → clone 免認證） |
-| `gh` CLI | 未安裝 |
+| remote | `git@github.com:WSLHermesAI/TOMS.git` (SSH) |
+| private key | `~/.ssh/id_ed25519`, ED25519, mode `600` |
+| public key | `~/.ssh/id_ed25519.pub`, mode `644` |
+| fingerprint | `SHA256:0AhSQKxzlEc4C+1+uP8z8wmeWOmh3SKnVAjubwNbFvg` |
+| account | **WSLHermesAI** (`ssh -T git@github.com` answers `Hi WSLHermesAI!`) |
+| `~/.ssh/config` | none (the default identity is used) |
+| credential helper | not set; `~/.git-credentials` does not exist → **no password or PAT is stored** |
+| repo visibility | **public** (an anonymous HTTPS read works → cloning needs no authentication) |
+| `gh` CLI | not installed |
 
-查自己的指紋（可與 GitHub 網頁上顯示的比對）：
+To see your own fingerprint (compare it with the one GitHub shows):
 
 ```bash
 ssh-keygen -lf ~/.ssh/id_ed25519.pub
@@ -56,156 +60,162 @@ ssh-keygen -lf ~/.ssh/id_ed25519.pub
 
 ---
 
-## 3. 在另一台電腦上取得 push 權限：三種做法
+## 3. Getting push access on another computer: three ways
 
-| | 做法 | 難度 | 安全性 | 建議 |
+| | Way | Effort | Security | Advice |
 |---|---|---|---|---|
-| **A** | 在該機器**產生新金鑰**，公鑰加到 GitHub | 中 | 高（一台一鑰，可單獨撤銷） | ✅ **建議** |
-| **B** | **複製**本機的 `id_ed25519` 過去 | 低 | 低（同一身分存在兩處，外洩面變大） | ⏱ 臨時／可信任的私有機器 |
-| **C** | 改用 **HTTPS + PAT** | 中 | 中（token 可設期限與範圍） | 🔁 不想碰 SSH 時 |
+| **A** | **Generate a new key** on that machine and add the public key to GitHub | medium | high (one key per machine, revocable on its own) | ✅ **recommended** |
+| **B** | **Copy** this machine's `id_ed25519` over | low | low (the same identity in two places; more exposure) | ⏱ temporary / trusted private machines |
+| **C** | Switch to **HTTPS + PAT** | medium | medium (a token can have an expiry and a scope) | 🔁 when you would rather not use SSH |
 
-### A. 在該電腦產生新金鑰（建議）
+### A. Generate a new key on that computer (recommended)
 
 ```bash
-ssh-keygen -t ed25519 -C "your@email"        # 產生 ~/.ssh/id_ed25519(.pub)
-# 想用舊式 RSA：ssh-keygen -t rsa -b 4096 -C "your@email"
+ssh-keygen -t ed25519 -C "your@email"        # makes ~/.ssh/id_ed25519(.pub)
+# for old-style RSA: ssh-keygen -t rsa -b 4096 -C "your@email"
 ```
 
-1. 把 **公鑰全文**（`~/.ssh/id_ed25519.pub`，一整行）貼到
-   GitHub → **Settings → SSH and GPG keys → New SSH key**。
-   帳號對了才會生效：**WSLHermesAI**（有兩個帳號時最容易貼錯，見 §6）。
-2. 驗證（見 §5）：`ssh -T git@github.com` → 要看到 `Hi WSLHermesAI!`。
-3. 設定 remote（若 repo 是用 HTTPS clone 的）：
+1. Paste the **whole public key** (`~/.ssh/id_ed25519.pub`, one line) into
+   GitHub → **Settings → SSH and GPG keys → New SSH key**.
+   It only works on the right account: **WSLHermesAI** (with two accounts it is easy to paste it
+   into the wrong one; see §6).
+2. Check it (see §5): `ssh -T git@github.com` → you should see `Hi WSLHermesAI!`.
+3. Set the remote (if the repo was cloned over HTTPS):
 
 ```bash
 git remote set-url origin git@github.com:WSLHermesAI/TOMS.git
 ```
 
-> 只想 clone、不打算 push 的話，**這一步都不用做**：公開 repo 的 HTTPS clone 免認證。
+> If you only want to clone and never push, **none of this is needed**: HTTPS clones of a public
+> repo need no authentication.
 
-### B. 複製既有金鑰
+### B. Copy the existing key
 
 ```bash
-# 從本機複製（在「新電腦」上執行；用 USB / 密碼管理器 / scp 皆可，不要走公開聊天室）
+# Copy from this machine (run on the NEW computer; use USB / a password manager / scp, never a public chat)
 mkdir -p ~/.ssh && chmod 700 ~/.ssh
 cp id_ed25519 id_ed25519.pub ~/.ssh/
 chmod 600 ~/.ssh/id_ed25519
 chmod 644 ~/.ssh/id_ed25519.pub
 ```
 
-- **權限一定要修**：SSH 拒絕載入權限過寬的私鑰（Windows 見 §4）。
-- 這等於把同一把鑰匙放在兩台機器：任何一台被入侵都等於兩台；**不再需要時記得兩邊都清掉**，
-  或是屆時改用做法 A 並把舊鑰從 GitHub 刪除。
+- **Fix the permissions:** SSH refuses a private key whose permissions are too open (Windows: see §4).
+- This puts the same key on two machines: a break-in on either one exposes both. **Remove it from
+  both when it is no longer needed**, or switch to way A then and delete the old key from GitHub.
 
 ### C. HTTPS + PAT
 
 ```bash
 git remote set-url origin https://github.com/WSLHermesAI/TOMS.git
-git config --global credential.helper manager     # Windows（Git for Windows 內建）
-# Linux: git config --global credential.helper store   ← 會以明文存檔，較不安全
-git push            # 第一次會要帳號與 token，把 PAT 當密碼輸入
+git config --global credential.helper manager     # Windows (built into Git for Windows)
+# Linux: git config --global credential.helper store   ← stores it as plain text; less safe
+git push            # the first time asks for the account and the token; type the PAT as the password
 ```
 
-PAT 到 GitHub → Settings → Developer settings → Personal access tokens 產生，
-**只勾需要的權限**（對 repo 內容：`repo`）並設定有效期限。
+Make the PAT in GitHub → Settings → Developer settings → Personal access tokens. **Tick only the
+permissions you need** (for repo contents: `repo`) and set an expiry date.
 
 ---
 
-## 4. Windows 專屬注意事項
+## 4. Windows notes
 
-### 4.1 Windows 與 WSL 是**兩套** `~/.ssh`（本專案最容易踩的坑）
+### 4.1 Windows and WSL have **two separate** `~/.ssh` (the easiest trap in this project)
 
-| 環境 | 金鑰位置 | 誰在用 |
+| Environment | Key location | Used by |
 |---|---|---|
-| WSL2 (Linux) | `/home/<user>/.ssh/` | WSL 終端機裡的 `git` |
-| Windows | `C:\Users\<user>\.ssh\` | PowerShell / CMD / Git Bash / VS 裡的 `git` |
+| WSL2 (Linux) | `/home/<user>/.ssh/` | `git` in a WSL terminal |
+| Windows | `C:\Users\<user>\.ssh\` | `git` in PowerShell / CMD / Git Bash / VS |
 
-**兩者互不相通**：本機（WSL）用的 `id_ed25519` **不會**被 Windows 的 git 看到，
-反之亦然。所以在 Windows 上第一次 push 出現 `Permission denied (publickey)`，
-通常就只是「Windows 這邊還沒有金鑰」，不是金鑰壞了。
+**They do not share keys:** the `id_ed25519` this machine (WSL) uses is **not** seen by Windows'
+git, and the other way round. So `Permission denied (publickey)` on the first push from Windows
+usually just means "Windows has no key yet", not that the key is broken.
 
-處理方式（擇一）：
-- 在 Windows 那邊也做一次 §3.A；
-- 或把 WSL 的公鑰貼上 GitHub 後，在 Windows 用同一把私鑰（§3.B 複製到 `C:\Users\<user>\.ssh\`）；
-- 或直接從 WSL 做 push（本機現在就是這樣運作的）。
+Fix (pick one):
+- do §3.A once on the Windows side too;
+- or, after adding WSL's public key to GitHub, use the same private key on Windows (§3.B, copied to
+  `C:\Users\<user>\.ssh\`);
+- or push from WSL (which is how this machine works today).
 
-### 4.2 權限（Windows 版的 `chmod`）
+### 4.2 Permissions (Windows' `chmod`)
 
-Windows 的 OpenSSH 會檢查私鑰 ACL；出現 `UNPROTECTED PRIVATE KEY FILE` 時：
+Windows' OpenSSH checks the private key's ACL. When you see `UNPROTECTED PRIVATE KEY FILE`:
 
 ```powershell
 icacls "$env:USERPROFILE\.ssh\id_ed25519" /inheritance:r /grant:r "$env:USERNAME:R"
 ```
 
-### 4.3 ssh-agent（有 passphrase 時才需要）
+### 4.3 ssh-agent (only needed with a passphrase)
 
 ```powershell
-Get-Service ssh-agent                       # Windows 10/11 內建 OpenSSH Client
-Start-Service ssh-agent                     # 需管理員權限設定為自動啟動
+Get-Service ssh-agent                       # OpenSSH Client is built into Windows 10/11
+Start-Service ssh-agent                     # setting it to start automatically needs admin rights
 ssh-add "$env:USERPROFILE\.ssh\id_ed25519"
 ```
 
-裝 OpenSSH Client（若缺）：
+To install the OpenSSH Client (if missing):
 
 ```powershell
-Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0     # 需管理員
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0     # needs admin
 ```
 
-### 4.4 Git for Windows 用哪個 ssh
+### 4.4 Which ssh Git for Windows uses
 
 ```bash
-ssh -V                          # 確認 OpenSSH 版本
-git config --get core.sshCommand    # 若專案特別指定
-# 需要明確指定時：git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
+ssh -V                          # check the OpenSSH version
+git config --get core.sshCommand    # if the project sets one
+# to set it explicitly: git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
 ```
 
 ---
 
-## 5. 驗證與排錯
+## 5. Checking and troubleshooting
 
-> **最快：雙擊 `tools\check_git_ssh.cmd`**（`setup_new_pc.bat` 在加完金鑰後也會自動跑）。
-> 依 git 實際使用的順序檢查並提議修正：`GIT_SSH_COMMAND`／`GIT_SSH` 是否壞掉、`core.sshCommand`
-> （路徑含空白如 `C:/Program Files/...` 會壞；改用 `C:/Windows/System32/OpenSSH/ssh.exe`）、
-> **TortoiseGit 是否用 plink**（plink 不讀 `~/.ssh` 金鑰 → `No supported authentication methods available (server sent: publickey)`，
-> GitHub 上金鑰顯示 *Never used*）、金鑰指紋、登入帳號、remote 是否為 SSH、`git fetch` 與 `git push --dry-run`、`user.email`。
-> 修正只在按「是」後才套用；`-NoGui` 只檢查不修改。
+> **Quickest: double-click `tools\check_git_ssh.cmd`** (`setup_new_pc.bat` also runs it after adding
+> a key). It checks in the order git actually uses and offers fixes: whether `GIT_SSH_COMMAND` /
+> `GIT_SSH` is broken, `core.sshCommand` (a path with spaces such as `C:/Program Files/...` breaks;
+> use `C:/Windows/System32/OpenSSH/ssh.exe`), **whether TortoiseGit uses plink** (plink does not
+> read `~/.ssh` keys → `No supported authentication methods available (server sent: publickey)`, and
+> GitHub shows the key as *Never used*), the key fingerprint, the account logged in, whether the
+> remote is SSH, `git fetch` and `git push --dry-run`, and `user.email`. Fixes are applied only after
+> you press **Yes**; `-NoGui` only checks and changes nothing.
 
-### 5.1 正確的驗證方式（含一個會誤判的陷阱）
+### 5.1 The right check (and a trap that misleads)
 
 ```bash
 ssh -T git@github.com
-# 成功：「Hi WSLHermesAI! You've successfully authenticated, but GitHub does not provide shell access.」
+# success: "Hi WSLHermesAI! You've successfully authenticated, but GitHub does not provide shell access."
 ```
 
-⚠️ **GitHub 不提供 shell，所以連成功時 `ssh` 的退出碼也是 1**。
-請看**輸出文字**，不要看退出碼，否則會把成功誤判成失敗。
+⚠️ **GitHub provides no shell, so `ssh` exits with code 1 even on success.** Read the **output
+text**, not the exit code, or a success looks like a failure.
 
-想知道「到底用了哪一把金鑰」：
+To see which key was actually used:
 
 ```bash
 ssh -vT git@github.com 2>&1 | grep -iE "Offering public key|Server accepts key|Authenticated to"
 ```
 
-### 5.2 常見錯誤對照
+### 5.2 Common errors
 
-| 訊息 | 意思 | 處理 |
+| Message | Meaning | Fix |
 |---|---|---|
-| `Permission denied (publickey)` | GitHub 不認識這把金鑰 | 公鑰沒加到帳號／加到別的帳號（§6）／這台機器根本沒有金鑰（§4.1） |
-| `Host key verification failed` | `known_hosts` 沒有或不同 | `ssh-keyscan github.com >> ~/.ssh/known_hosts`（或互動確認一次） |
-| `UNPROTECTED PRIVATE KEY FILE` | 私鑰權限太寬 | Linux `chmod 600`；Windows 見 §4.2 |
-| `Could not open a connection to your authentication agent` | 沒啟動 agent | §4.3，或改用無 passphrase 的金鑰（安全性自行取捨） |
-| 一直問 passphrase | 每次都要輸入 | `ssh-add` 進 agent |
-| push 成功但 clone 失敗 | 兩者認證需求不同 | clone 公開 repo 用 HTTPS 即可；push 才需要金鑰 |
+| `Permission denied (publickey)` | GitHub does not know this key | the public key is not on the account / is on another account (§6) / this machine has no key at all (§4.1) |
+| `Host key verification failed` | `known_hosts` is missing it or differs | `ssh-keyscan github.com >> ~/.ssh/known_hosts` (or confirm once interactively) |
+| `UNPROTECTED PRIVATE KEY FILE` | the private key's permissions are too open | Linux `chmod 600`; Windows see §4.2 |
+| `Could not open a connection to your authentication agent` | the agent is not running | §4.3, or use a key without a passphrase (your security trade-off) |
+| asks for the passphrase every time | it must be typed each time | `ssh-add` it to the agent |
+| push works but clone fails | they need different authentication | clone a public repo over HTTPS; only pushing needs the key |
 
 ---
 
-## 6. 多帳號／多金鑰（`~/.ssh/config`）
+## 6. Several accounts / several keys (`~/.ssh/config`)
 
-本專案本機沒有 `~/.ssh/config`；但若同一台機器要對**不同 GitHub 帳號**推送
-（例如 `WSLHermesAI` 與 submodule 所在的 `fatmingwang`），用 Host 別名區分：
+This machine has no `~/.ssh/config`. If one machine must push to **different GitHub accounts**
+(for example `WSLHermesAI` and `fatmingwang`, where the submodule lives), tell them apart with
+Host aliases:
 
 ```
-# ~/.ssh/config   （權限 600）
+# ~/.ssh/config   (mode 600)
 Host github-wslhermes
     HostName github.com
     User git
@@ -217,7 +227,7 @@ Host github-fatmingwang
     IdentityFile ~/.ssh/id_ed25519_fatmingwang
 ```
 
-之後 remote 用別名：
+Then use the alias in the remote:
 
 ```bash
 git remote set-url origin git@github-wslhermes:WSLHermesAI/TOMS.git
@@ -225,33 +235,36 @@ git remote set-url origin git@github-wslhermes:WSLHermesAI/TOMS.git
 
 ---
 
-## 7. 安全守則
+## 7. Security rules
 
-1. **私鑰（沒有 `.pub` 的那個）永遠不外流**：不提交進版控、不貼給 AI／聊天室、不放共用磁碟。
-   只有 `.pub` 是設計來公開的。
-2. **建議加 passphrase**，並用 ssh-agent 記住；不加 passphrase 的話，那個檔案就是你的登入憑證
-   （本機目前就是這種狀態——`ssh` 在無互動模式下直接通過認證，請特別小心保管）。
-3. **一台機器一把金鑰**（做法 A）：洩漏時只撤銷那一把，不必動全部。
-4. **不再使用就撤銷**：GitHub → Settings → SSH keys → Delete；換機、離職、機器遺失都要做。
-5. 公鑰指紋可隨時比對：`ssh-keygen -lf ~/.ssh/id_ed25519.pub` 對照 GitHub 上顯示的 `SHA256:…`。
-6. CI／自動化請用 **Deploy key**（單一 repo、可設唯讀）或 GitHub Secrets，不要複製個人私鑰。
+1. **The private key (the file without `.pub`) never leaves the machine:** never commit it, paste it
+   to an AI or a chat, or put it on a shared drive. Only the `.pub` is meant to be public.
+2. **A passphrase is recommended**, remembered by ssh-agent. Without one, that file is your login
+   (this machine is in that state today: `ssh` authenticates without any prompt, so keep it safe).
+3. **One key per machine** (way A): if one leaks, revoke only that one.
+4. **Revoke keys you no longer use:** GitHub → Settings → SSH keys → Delete; do it when changing
+   machines, leaving, or losing a machine.
+5. You can always compare fingerprints: `ssh-keygen -lf ~/.ssh/id_ed25519.pub` against the
+   `SHA256:…` GitHub shows.
+6. For CI / automation use a **Deploy key** (one repo, can be read-only) or GitHub Secrets, never a
+   copy of a personal private key.
 
 ---
 
-## 8. 快速指令卡
+## 8. Quick reference
 
 ```bash
-# ---- 新機器：產生金鑰並提供給 GitHub ----
+# ---- new machine: make a key and give it to GitHub ----
 ssh-keygen -t ed25519 -C "your@email"
-cat ~/.ssh/id_ed25519.pub                     # 貼到 GitHub → Settings → SSH and GPG keys
+cat ~/.ssh/id_ed25519.pub                     # paste into GitHub → Settings → SSH and GPG keys
 
-# ---- 驗證（看文字，不看退出碼）----
-ssh -T git@github.com                         # 期望：Hi <帳號>!
+# ---- check (read the text, not the exit code) ----
+ssh -T git@github.com                         # expect: Hi <account>!
 
-# ---- clone（公開 repo，免認證）----
+# ---- clone (public repo, no authentication) ----
 git clone --recurse-submodules https://github.com/WSLHermesAI/TOMS.git
 
-# ---- 之後要 push，把 remote 換成 SSH ----
+# ---- to push later, switch the remote to SSH ----
 git remote set-url origin git@github.com:WSLHermesAI/TOMS.git
 git push
 ```

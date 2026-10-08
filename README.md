@@ -45,12 +45,13 @@ Details: [docs/06_BUILD_WEB.md](docs/06_BUILD_WEB.md).
 | [04_MIGRATION_PLAN.md](docs/04_MIGRATION_PLAN.md) | phases from the Vulkan project to the full Qt + bgfx engine |
 | [05_TROUBLESHOOTING.md](docs/05_TROUBLESHOOTING.md) | configure, build and runtime problems |
 | [06_BUILD_WEB.md](docs/06_BUILD_WEB.md) | the browser version: emsdk, `build_web.cmd`, `serve_web.cmd`, how it works, debugging |
-| [07_BUILD_ANDROID.md](docs/07_BUILD_ANDROID.md) | the Android build: `tools\build_android.cmd` / `run_android.cmd`, runs on the emulator (中文) |
+| [07_BUILD_ANDROID.md](docs/07_BUILD_ANDROID.md) | the Android build: `tools\build_android.cmd` / `run_android.cmd`, runs on the emulator |
 | [07_PUBLISH_GITHUB_PAGES.md](docs/07_PUBLISH_GITHUB_PAGES.md) | publishing the web version to GitHub Pages: setup, `publish_web.bat`, cache-safe file names, rollback |
 | [08_RMLUI.md](docs/08_RMLUI.md) | the game UI (RmlUi, HTML/CSS-like): where each screen lives, how it binds to the game, editing (F5/F8), the UI font, adding screens |
 | [09_TESTS.md](docs/09_TESTS.md) | the tests: `tools\test.cmd` / Test Explorer, unit + screenshot + web tests, updating reference images |
 | [10_THREADS.md](docs/10_THREADS.md) | the job system, and threads on the web: two web builds, cross-origin isolation, GitHub Pages via a service worker |
 | [progress_report/](docs/progress_report/PROGRESS_REPORT.md) | **status board**: next step, phase status, what is still open, dated log |
+| [zh_TW/](docs/zh_TW/) | 繁體中文版: every document above in Traditional Chinese, with the same file names |
 
 The long-term engine design (`docs/EngineBlueprint/`) was removed with the old project; read it
 from git history: `git show 979bcf3^:docs/EngineBlueprint/README.md`.
