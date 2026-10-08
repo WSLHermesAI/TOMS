@@ -136,6 +136,7 @@
 <body>
 <div class="bar">
   <span class="title" data-i18n="title"></span>
+  <button id="toEvent" class="primary" data-i18n="toEvent" title="Event editor"></button>
   <label><span data-i18n="floor"></span> <select id="floorSel"></select></label>
   <button id="prevF" title="[">◀</button><button id="nextF" title="]">▶</button>
   <span class="sep"></span>
@@ -208,7 +209,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const SPRITE_DIR = '../../../assets/media/sprites/';   // the game's own sprites; a coloured square stands in if they cannot load
+const SPRITE_DIR = '../../assets/media/sprites/';   // the game's own sprites; a coloured square stands in if they cannot load
 const TS = 32;                                          // the game's tile size (manifest "tile")
 
 // ---------------- strings ----------------
@@ -244,7 +245,7 @@ const I18N = {
     hResize: (w, h) => `Resize to ${w} × ${h}`, hConnect: (d, v) => `connect.${d} → ${v || '(none)'}`, hName: 'Rename floor',
     autoListed: id => `${id} was added to this floor's events list (it can roll it now).`,
     unsavedLeave: 'You have unsaved changes.',
-    lines: (n) => `${n} line(s)`,
+    lines: (n) => `${n} line(s)`, toEvent: '⇄ Event editor',
     blockedWall: (x, y) => `Can't place it here: wall at ${x}, ${y}.`, blockedObj: (what, x, y) => `Can't place it here: ${what} is at ${x}, ${y}. Erase or move it first.`,
     blockedEdge: "Can't place it here: it would stick out of the map.", blockedN: n => `${n} cell(s) skipped: a wall or another object is in the way.`,
     uiSizeTip: 'Interface size. Keys: Alt + = bigger, Alt + - smaller, Alt + 0 back to settings.js. Default in settings.js.', fromFile: p => `settings.js (${p}%)`,
@@ -299,7 +300,7 @@ const I18N = {
     hResize: (w, h) => `改大小為 ${w} × ${h}`, hConnect: (d, v) => `connect.${d} → ${v || '（無）'}`, hName: '重新命名樓層',
     autoListed: id => `已把 ${id} 加入此樓層的事件清單（現在它能抽到這個事件）。`,
     unsavedLeave: '有未儲存的變更。',
-    lines: (n) => `${n} 行`,
+    lines: (n) => `${n} 行`, toEvent: '⇄ 事件編輯器',
     blockedWall: (x, y) => `不能放在這裡：${x}, ${y} 是牆壁。`, blockedObj: (what, x, y) => `不能放在這裡：${x}, ${y} 已經有 ${what}。請先擦除或移走它。`,
     blockedEdge: '不能放在這裡：它會超出地圖。', blockedN: n => `略過 ${n} 格：有牆壁或其他物件擋住。`,
     uiSizeTip: '介面大小。按鍵：Alt + = 放大、Alt + - 縮小、Alt + 0 回到 settings.js。預設值寫在 settings.js。', fromFile: p => `settings.js（${p}%）`,
@@ -349,7 +350,7 @@ const BASIC = { wall: { en: 'Wall', zh_TW: '牆壁' }, floor: { en: 'Floor', zh_
 const COLORS = { yellow: { en: 'yellow', zh_TW: '黃' }, blue: { en: 'blue', zh_TW: '藍' }, red: { en: 'red', zh_TW: '紅' } };
 
 const evById = Object.fromEntries(BUNDLE.events.map(e => [e.id, e]));
-const kindColor = k => getComputedStyle(document.documentElement).getPropertyValue('--k-' + k).trim() || '#888';
+const kindColor = k => ((BUNDLE.kinds || {})[k] || {}).color || getComputedStyle(document.documentElement).getPropertyValue('--k-' + k).trim() || '#888';   // events/kinds.json first
 function spriteOf(sem) {
   if (sem === 'player_start') return 'player';
   if (sem === 'wall' || sem === 'floor' || sem === 'stairs_up' || sem === 'stairs_down') return sem;
@@ -1093,15 +1094,33 @@ $('uiLang').onchange = () => { LANG = $('uiLang').value; try { localStorage.setI
   applyStatic(); applyUiScale(); renderFloorSel(); renderPalette(); renderEventPalette(); renderInspector(); renderProblems(); setBrush(brush); };
 
 applyStatic(); applyUiScale(); setTool('paint'); $('gridBtn').classList.add('on');
-openFloor(FLOORS.some(f => f.id === location.hash.slice(1)) ? location.hash.slice(1) : FLOORS[0].id);
+{ const want = new URLSearchParams(location.search).get('floor') || location.hash.slice(1); openFloor(FLOORS.some(f => f.id === want) ? want : FLOORS[0].id); }
 setBrush('wall');
-(() => {   // ?floor=F02&place=ev_x&kind=whisper&floors=F02,F04 -- opened by the event editor's "+ Add floor…"
-  const u = new URLSearchParams(location.search), id = u.get('place'); if (!id) return;
-  const floors = (u.get('floors') || u.get('floor') || '').split(',').filter(f => FLOORS.some(x => x.id === f));
-  if (!evById[id]) { const e = { id, kind: u.get('kind') || '', pool: '(event editor)', text: id + '.text', pending: true }; BUNDLE.events.push(e); evById[id] = e; }
+// place mode: the event editor's "+ Add floor…" opens a floor here, ready to place that event
+function enterPlaceMode(id, kind, floorIds) {
+  if (!id) return;
+  const floors = (floorIds || []).filter(f => FLOORS.some(x => x.id === f));
+  if (!evById[id]) { const e = { id, kind: kind || '', pool: '(event editor)', text: id + '.text', pending: true }; BUNDLE.events.push(e); evById[id] = e; }
   placeMode = { id, floors: floors.length ? floors : [cur] };
   openFloor(placeMode.floors[0]); setTool('paint'); setBrush('event:' + id); renderPlaceBar(); drawAll();
-})();
+}
+(() => { const u = new URLSearchParams(location.search); if (u.get('place')) enterPlaceMode(u.get('place'), u.get('kind'), (u.get('floors') || u.get('floor') || '').split(',')); })();
+
+// ⇄ Event editor: inside index.html both editors stay loaded and this only switches; opened on its own it navigates
+const inShell = window.parent !== window;
+$('toEvent').onclick = () => {
+  const sem = selCell && cur && semAt(docOf(cur), ...selCell), evId = sem && sem.startsWith('event:') ? sem.slice(6) : null;
+  if (inShell) return window.parent.postMessage({ toms: 'switch', to: 'event', forward: evId ? { toms: 'select', id: evId } : null }, '*');
+  location.href = 'event_editor.html' + (evId ? '#' + encodeURIComponent(evId) : '');
+};
+addEventListener('message', ev => {
+  const m = ev.data || {};
+  if (m.toms === 'shown') { drawAll(); renderProblems(); }
+  if (m.toms === 'place') enterPlaceMode(m.id, m.kind, m.floors);
+  if (m.toms === 'floor' && FLOORS.some(f => f.id === m.floor)) { openFloor(m.floor);
+    if (m.event) { const d = docOf(m.floor); d.grid.forEach((r, y) => r.forEach((c, x) => { if (d.st.legend[c] === 'event:' + m.event) { selCell = [x, y]; flashCells = [[x, y]]; } }));
+      renderInspector(); drawAll(); setTimeout(() => { flashCells = []; drawAll(); }, 1600); } }
+});
 </script>
 </body>
 </html>

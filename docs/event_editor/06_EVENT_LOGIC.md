@@ -1,6 +1,6 @@
 # 06 — Event logic: triggers, conditions, actions, links
 
-**Status:** design, and the editor mockup ([mockups/04_tutorial.html](mockups/04_tutorial.html), part 5,
+**Status:** design, and the editor mockup ([tools/web_editors/event_editor.html](../../tools/web_editors/event_editor.html), part 5,
 and its **Logic graph** node editor). The game does not run this yet; section 6 lists the runtime work.
 
 An event is more than an id, a text key and the floors that roll it. It can:
@@ -136,10 +136,30 @@ stops being an orphan.
   - every kind: category.
   Counters and flags are not renamed here: chapter and dialogue files and the game code use their
   names. **Save…** shows the changes to `vars.json`, `counters.json` and `flags.json` with the rest.
+- **Kinds tab: the list of event kinds**, saved in `assets/data/events/kinds.json` (new; created the
+  first time a kind is edited, until then the seven kinds the pools use today):
+
+  ```json
+  { "relic": { "name": { "zh_TW": "遺物", "en": "Relic" }, "color": "#e0b44c", "desc": { "en": "…" } } }
+  ```
+
+  One row per kind: colour, id, names (zh_TW / en), description, and how many events use it (click the
+  number to filter the Events tree; click an event to open it). **+ Add kind** adds one (id: lowercase
+  letters, digits and `_`). Renaming an id renames it on every event of that kind. **Moving events to
+  another kind:** tick the events in a row (or **Select all**), then pick the kind in *Move N selected
+  to…*; only the ticked events move, in one undo step. ↗ on an event opens it; a long row shows 12 events
+  and *+N more*. A kind still in use cannot be deleted: once its last event is moved, **Delete** appears.
+  A kind that events use but the list lacks gets a ⚠ row with *Add to the list*, and its events can be
+  moved the same way. The inspector's kind drop-down, the kind
+  filter and the kind colours in both editors read this list (`make_data.py` and `make_bundle.py` copy it);
+  the drop-down also has *+ New kind…*, which opens this tab. The floors' `meta.eventKinds` are notes left
+  by the floor generator and are not changed. The game does not read `kind` yet: trap and cache effects
+  come from words in the event id (section 6, item 6).
 - **Checks:**
 
 | Check | Severity |
 |---|---|
+| An event's kind is not in `kinds.json` | ⚠ |
 | A condition, action or trigger names a variable, counter, flag, item or event that does not exist | ⛔ |
 | `next` links to an event no pool defines | ⛔ |
 | A `chain` event no event links to; a `talk` event whose NPC is placed on no floor | ⚠ never fires |

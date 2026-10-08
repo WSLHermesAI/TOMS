@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOMS Editors</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1c1e22; }
+  /* both editors stay loaded and laid out; the hidden one is only invisible, so switching is instant and keeps its state */
+  iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; visibility: hidden; }
+  iframe.on { visibility: visible; }
+</style>
+</head>
+<body>
+<iframe id="event" src="event_editor.html" title="Event editor"></iframe>
+<iframe id="stage" src="stage_editor.html" title="Stage editor"></iframe>
+<script>
+// TOMS web editors. The ⇄ button in either editor posts { toms: 'switch', to, forward } here; this page shows that
+// editor and passes `forward` on to it (open a floor, select an event, start placing an event).
+// postMessage, not direct calls, because pages opened from file:// cannot reach into each other.
+const frames = { event: document.getElementById('event'), stage: document.getElementById('stage') };
+const titles = { event: 'TOMS Event Editor', stage: 'TOMS Stage Editor' };
+function show(name) {
+  Object.entries(frames).forEach(([k, f]) => f.classList.toggle('on', k === name));
+  document.title = titles[name]; try { history.replaceState(null, '', '#' + name); } catch (_) {}
+  frames[name].focus(); frames[name].contentWindow.postMessage({ toms: 'shown' }, '*');
+}
+addEventListener('message', ev => {
+  const m = ev.data; if (!m || m.toms !== 'switch' || !frames[m.to]) return;
+  show(m.to); if (m.forward) frames[m.to].contentWindow.postMessage(m.forward, '*');
+});
+show(location.hash.slice(1) === 'stage' ? 'stage' : 'event');
+</script>
+</body>
+</html>

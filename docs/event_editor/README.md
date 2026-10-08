@@ -20,15 +20,15 @@ the game finds them.
 | [05_FLOOR_LINKS.md](05_FLOOR_LINKS.md) | Several stairs per floor, stairs locked until an event is finished: format, game rules, checks |
 | [06_EVENT_LOGIC.md](06_EVENT_LOGIC.md) | Event triggers (step, talk, variable change, link), conditions, actions, direct links, event variables, and the node-graph editor |
 | [04_TUTORIAL.md](04_TUTORIAL.md) | Step by step: create an event, read the relationship diagram, find problems, fix them, save |
-| [mockups/index.html](mockups/index.html) | The interactive tutorial and clickable mockups of the three main views |
+| [tools/web_editors/index.html](../../tools/web_editors/index.html) | The working event editor (with the tutorial) and the stage editor |
 
-## Mockups
+## The HTML editors
 
-Open [mockups/index.html](mockups/index.html) in a browser (double-click works; no server needed).
 They are static HTML with a little JavaScript, and they run on a copy of the real event data
-(`mockups/data_snapshot/`, refreshed by `python docs/event_editor/mockups/make_data.py`).
+(`tools/web_editors/data_snapshot/`, refreshed by `tools/web_editors/refresh_data.cmd`).
 
-Start with the **tutorial** (`04_tutorial.html`), 29 steps in a working mini-editor:
+**The editors live in [tools/web_editors/](../../tools/web_editors/index.html)** with the stage editor: open `index.html` (or run
+`serve.cmd`) and switch between them with the **⇄** button. The event editor includes the **tutorial**, 29 steps in a working mini-editor:
 
 1. **Create an event:** create it, name it, write its text, connect it to floors, watch the
    relationship diagram, and save.
@@ -45,16 +45,8 @@ Each step has *Show me*, **▶ Play demo** runs the whole thing by itself, and S
 change to each JSON file. The tutorial page is in English or 繁體中文 (🌐 selector in the top bar).
 [04_TUTORIAL.md](04_TUTORIAL.md) is the same walk-through as a document.
 
-The other mockups:
-
-1. **Flow map** (`01_flow_map.html`): pools → events → text keys, and floors → events. The filters
-   work, and clicking a node highlights what it connects to.
-2. **Event inspector** (`02_event_inspector.html`): editing one event's id, kind, pool, floors and
-   text in each language, and **+ New event**.
-3. **Problems** (`03_problems.html`): the validator's list, grouped by rule, with a jump to each one.
-
-The mockups show the intended look, not a promise of pixels: the real editor is Qt Widgets in the
-same dark theme as the anim and particle editors.
+The HTML editors show the intended look and behaviour, not a promise of pixels: the real editor is Qt
+Widgets in the same dark theme as the anim and particle editors.
 
 ## Next steps
 

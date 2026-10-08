@@ -24,7 +24,7 @@ one floor can host several characters' stories. The game does not read pool file
 | Field | Meaning |
 |---|---|
 | `eventId` | Unique across every pool. The convention is `ev_<place>_<name>`, for example `ev_village_well` |
-| `kind` | One of `relic`, `whisper`, `cache`, `trap`, `rescue`, `merchant_echo`, `memory_shard` |
+| `kind` | A kind from `assets/data/events/kinds.json` (today `relic`, `whisper`, `cache`, `trap`, `rescue`, `merchant_echo`, `memory_shard`); edited in the event editor's **Kinds** tab ([06](06_EVENT_LOGIC.md)) |
 | `text` | A key in `text.json`. The convention is `<eventId>.text` |
 
 The pools that exist today:

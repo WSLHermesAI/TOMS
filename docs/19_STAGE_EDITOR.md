@@ -1,6 +1,7 @@
 # 19 — Stage editor (HTML now, Qt + game engine next)
 
-**Status:** the HTML editor works: `tools/stage_editor/web/stage_editor.html`. Section 6 plans the
+**Status:** the HTML editor works: `tools/web_editors/stage_editor.html`, next to the event editor (open
+`tools/web_editors/index.html` and switch with the **⇄** button). Section 6 plans the
 Qt/C++ version, which will draw with the game's own renderer, so the editor shows exactly what the
 game shows.
 
@@ -18,9 +19,10 @@ start, and **event objects**. It reads and writes the same files the game loads:
 | Way | What works |
 |---|---|
 | Double-click `stage_editor.html` | Everything except writing to disk. It loads the copy in `stage_bundle.js`; **Save** downloads the changed files for you to copy into `assets/data` |
-| `tools\stage_editor\web\serve.cmd`, then **Open project folder…** and pick the TOMS folder (Chrome or Edge) | Reads the live files, and **Save** writes them in place |
+| `tools\web_editors\serve.cmd`, then **Open project folder…** and pick the TOMS folder (Chrome or Edge) | Reads the live files, and **Save** writes them in place |
 
-`python tools/stage_editor/web/make_bundle.py` refreshes the copy after the data changes.
+`tools/web_editors/refresh_data.cmd` refreshes both editors' copies after the data changes (it runs
+`make_data.py` and `make_bundle.py`).
 
 **Size.** Everything can be made bigger:
 
@@ -29,7 +31,7 @@ start, and **event objects**. It reads and writes the same files the game loads:
 | Interface (text, buttons, panels) | 🔍 list in the top bar, or **Alt + =** bigger, **Alt + -** smaller, **Alt + 0** back to the default. The choice is remembered by the browser |
 | Map zoom | **Mouse wheel over the map** zooms in and out around the cursor (the cell under the mouse stays put); also **+** / **−** next to the zoom % and the **+** / **-** keys |
 | Map pan | **Right-mouse drag** (a right click without moving is still the eyedropper), **middle-mouse drag**, or hold **Space** and drag; **Shift + wheel** scrolls sideways; the scrollbars. The view can pan past the map's edges |
-| Defaults | [`tools/stage_editor/web/settings.js`](../tools/stage_editor/web/settings.js): `uiScale` (1.25 = 125 %), `mapZoom` (2 = 64 px tiles), `language`. Edit, save, press F5 |
+| Defaults | [`tools/web_editors/settings.js`](../tools/web_editors/settings.js): `uiScale` (1.25 = 125 %), `mapZoom` (2 = 64 px tiles), `language`. Edit, save, press F5 |
 
 A size picked in the editor wins over `settings.js` until **Alt + 0** (or *settings.js* in the 🔍 list).
 The browser's own zoom (**Ctrl + =** / **Ctrl + -**) also works.

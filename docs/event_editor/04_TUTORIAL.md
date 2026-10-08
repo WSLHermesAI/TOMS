@@ -10,10 +10,14 @@ This walks through the planned editor in three parts, on a copy of the real TOMS
 | 4. Connect floors | 14–20 | Give F50 a second stair up to a new floor F96, lock it behind an event, save |
 | 5. Event logic | 21–29 | A variable, an event fired by talking once it reaches 2, a direct link, the node graph, save |
 
-To try it yourself, open [mockups/04_tutorial.html](mockups/04_tutorial.html). The page is in English or
+To try it yourself, open [tools/web_editors/index.html](../../tools/web_editors/index.html) (the event editor; ⇄ switches to the stage editor). The page is in English or
 繁體中文: pick one with the 🌐 selector in the top bar. The choice is remembered, and
-`04_tutorial.html?lang=zh_TW` or `?lang=en` opens it in that language. Every step has a
+`event_editor.html?lang=zh_TW` or `?lang=en` opens it in that language. Every step has a
 **Show me** button that does it for you. **Reset tutorial** starts again.
+
+The tutorial panel opens by itself only the first time. After that it stays hidden so the editor has
+the room; **📘 Tutorial** in the top bar opens or closes it, and **◀ Hide** in the panel closes it.
+`event_editor.html?tutorial=1` always opens it.
 
 **▶ Play demo** runs all remaining steps by itself, through the real controls: it types into the
 fields, ticks the floors and clicks the buttons and diagram nodes. While it plays:
@@ -26,7 +30,7 @@ fields, ticks the floors and clicks the buttons and diagram nodes. While it play
 - the speed box sets 0.5×, 1× or 2×. **■ Stop** (or Esc) pauses after the current action, and
   ▶ Play demo continues from that step.
 
-The data is a copy, made by [mockups/make_data.py](mockups/make_data.py) (see *The data copy* at
+The data is a copy, made by [tools/web_editors/make_data.py](../../tools/web_editors/make_data.py) (see *The data copy* at
 the end). Nothing is written to `assets/`.
 
 The editor window has these parts:
@@ -357,13 +361,13 @@ in every floor that lists it, in one step.
 
 ## The data copy
 
-The tutorial and the mockups use a copy of the event data, never `assets/` itself:
+The editors use a copy of the event data, never `assets/` itself:
 
 ```
-python docs/event_editor/mockups/make_data.py
+python tools/web_editors/make_data.py
 ```
 
 It copies `assets/data/events/pool_*.json`, the floor specs `assets/data/story/floors/F??.json` and
-the event strings from `text.json` into `mockups/data_snapshot/`, then rebuilds `mockups/data.js`
+the event strings from `text.json` into `tools/web_editors/data_snapshot/`, then rebuilds `tools/web_editors/data.js`
 from them. Run it again after the data changes, and the pages show the new state. The counts in this
 document are from the copy made on 2026-10-05.

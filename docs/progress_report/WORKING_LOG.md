@@ -174,3 +174,27 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - Same on D3D11 / Vulkan / OpenGL, and in the web build.
   - `smoke.title` reference updated.
   - **Web package built and tested; publishing waits for the owner's GitHub sign-in (W18).**
+
+- **2026-10-05** — **Event editor: design and tutorial** (`6f24ba6`, part 6).
+  - **Docs:** `docs/event_editor/` 01–04.
+  - **Tutorial:** an interactive tutorial on a copy of the real event data, with Play demo, a console
+    and a spotlight, in English and 繁體中文.
+  - **Found:** 92 undefined event ids on F22–F70; 4 orphan events.
+- **2026-10-07** — **Event logic and the HTML stage editor** (`f7c8b8e`, `cf2a771`).
+  - **Event editor:**
+    - multi-stair floors with event locks (doc 05);
+    - triggers / conditions / actions / `next` and `vars.json` (doc 06);
+    - a node-graph editor, a values map, variable categories.
+  - **Stage editor:**
+    - grid painting and event placing;
+    - live save;
+    - story check (exact key simulation) and safe auto-place;
+    - the overlap rule, wheel zoom, right-drag pan, UI size (doc 19).
+- **2026-10-08** — **Editors folder, kinds, cleanup** (not committed).
+  - **Folder:** both editors in `tools/web_editors/`, switched by **⇄** in `index.html`.
+  - **Tutorial:** shows only on the first visit, then opens from 📘 Tutorial.
+  - **Top menu:** the fake one is removed.
+  - **Kinds tab:** `assets/data/events/kinds.json` (add, rename, colour, names; move the ticked events
+    to another kind; delete when unused).
+  - **Mockups:** `docs/event_editor/mockups/` deleted.
+  - **Verified:** Play demo 29/29 in both languages.

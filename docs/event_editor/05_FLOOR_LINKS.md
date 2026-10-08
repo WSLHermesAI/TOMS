@@ -1,6 +1,6 @@
 # 05 — Floor links: several stairs per floor, locked by events
 
-**Status:** design and editor mockup ([mockups/04_tutorial.html](mockups/04_tutorial.html), part 4).
+**Status:** design and editor mockup ([tools/web_editors/event_editor.html](../../tools/web_editors/event_editor.html), part 4).
 The game does not read this format yet; section 5 lists the runtime work.
 
 ## 1. What changes

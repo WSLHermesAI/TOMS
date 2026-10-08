@@ -1,7 +1,7 @@
 # 03 — User guide
 
 Section 1 is how to work today, by hand. Section 2 is how the same jobs will go in the editor; the
-[mockups](mockups/index.html) show each screen, and [the tutorial](mockups/04_tutorial.html) lets you
+HTML event editor ([tools/web_editors/](../../tools/web_editors/index.html)) shows each screen, and its tutorial lets you
 do sections 2.2 to 2.5 step by step.
 
 ## 1. Today: editing the JSON by hand
@@ -41,7 +41,7 @@ Open `toms_editor` and choose the **Events** tab. It loads every pool, floor spe
 2. Click the event. The map highlights its pool, every floor that can roll it, and its text key.
    The inspector lists the floors as chips.
 
-*Mockup: [01_flow_map.html](mockups/01_flow_map.html). Click `ev_common_cache_wall`.*
+*In the HTML editor: the **Relationship diagram** tab. Click `ev_common_cache_wall`.*
 
 ### Add a new event
 
@@ -52,7 +52,7 @@ Open `toms_editor` and choose the **Events** tab. It loads every pool, floor spe
 5. Type the text for each language. Leave **todo** ticked for languages you have not written.
 6. Press **Ctrl+S**. The pool file, the floor files and `text.json` are saved together.
 
-*Mockup: [02_event_inspector.html](mockups/02_event_inspector.html).*
+*In the HTML editor: tutorial part 1.*
 
 ### Rename an event
 
@@ -65,7 +65,7 @@ undo step.
 2. Double-click a row to select it.
 3. Use the quick fix on the row, or edit by hand in the inspector.
 
-*Mockup: [03_problems.html](mockups/03_problems.html), which shows the real problems in today's data.*
+*In the HTML editor: the **Problems** tab, which shows the real problems in today's data.*
 
 ### Fill in chapters 4–10
 
