@@ -198,3 +198,7 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     to another kind; delete when unused).
   - **Mockups:** `docs/event_editor/mockups/` deleted.
   - **Verified:** Play demo 29/29 in both languages.
+  - **Event editor saves:** *Open project folder* + *Write to project* write the changed pools, floors,
+    strings, vars, kinds, flags and counters into `assets/data`, merged with what is on disk, with a backup
+    of each file in `Build/editor_backups/`; the stage editor backs up and merges too, and opening the
+    folder in one editor opens it in both. `serve.cmd` refreshes the data on every start; `data_snapshot/` removed.

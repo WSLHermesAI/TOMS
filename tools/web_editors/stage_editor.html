@@ -238,9 +238,11 @@ const I18N = {
     pBorder: 'The outer edge has open cells.', fixAddList: 'Add to list', fixShow: 'Show',
     hoverCell: (x, y, c, what) => `(${x}, ${y})  '${c}'  ${what}`,
     saveTitle: 'Save changes', saveSub: n => `· ${n} file(s) change`, nothingToSave: 'Nothing to save.', cancel: 'Cancel', download: 'Download files', writeDisk: 'Write to project',
-    saveNoteLive: 'Writes into the opened project folder.', saveNoteBundle: 'No project folder is open: Download saves each file; copy them into assets/data.',
+    saveNoteLive: 'Writes into the opened project folder. Each file is backed up to Build/editor_backups first.', saveNoteBundle: 'No project folder is open: Download saves each file; copy them into assets/data.',
     savedN: n => `Saved ${n} file(s) to the project folder.`, downloadedN: n => `Downloaded ${n} file(s).`,
-    loadedLive: n => `Loaded ${n} floors from the project folder.`, notProject: 'That folder has no assets/data/story/floors. Pick the TOMS folder.',
+    loadedLive: n => `Loaded ${n} floors from the project folder.`, savedBackupN: (n, s) => `Saved ${n} file(s) to the project folder. Backups: Build/editor_backups/${s}/`,
+    discardForLive: 'Opening the project folder reloads the floors from it. Discard the unsaved changes here?',
+    liveSkipped: 'The event editor opened the project folder; this editor has unsaved changes, so it keeps the copy. Use Open project folder to switch.', notProject: 'That folder has no assets/data/story/floors. Pick the TOMS folder.',
     hPaint: (what, n) => `Paint ${what} (${n} cell${n > 1 ? 's' : ''})`, hErase: n => `Erase ${n} cell(s)`, hMove: (what) => `Move ${what}`, hListAdd: id => `Add ${id} to the floor's events list`,
     hResize: (w, h) => `Resize to ${w} × ${h}`, hConnect: (d, v) => `connect.${d} → ${v || '(none)'}`, hName: 'Rename floor',
     autoListed: id => `${id} was added to this floor's events list (it can roll it now).`,
@@ -293,9 +295,11 @@ const I18N = {
     pBorder: '外圈有開放的格子。', fixAddList: '加入清單', fixShow: '顯示',
     hoverCell: (x, y, c, what) => `（${x}, ${y}）  '${c}'  ${what}`,
     saveTitle: '儲存變更', saveSub: n => `· 有 ${n} 個檔案變更`, nothingToSave: '沒有需要儲存的變更。', cancel: '取消', download: '下載檔案', writeDisk: '寫入專案',
-    saveNoteLive: '會寫入已開啟的專案資料夾。', saveNoteBundle: '尚未開啟專案資料夾：「下載檔案」會逐一下載，請複製到 assets/data。',
+    saveNoteLive: '會寫入已開啟的專案資料夾。每個檔案會先備份到 Build/editor_backups。', saveNoteBundle: '尚未開啟專案資料夾：「下載檔案」會逐一下載，請複製到 assets/data。',
     savedN: n => `已將 ${n} 個檔案存到專案資料夾。`, downloadedN: n => `已下載 ${n} 個檔案。`,
-    loadedLive: n => `已從專案資料夾載入 ${n} 個樓層。`, notProject: '這個資料夾沒有 assets/data/story/floors。請選 TOMS 資料夾。',
+    loadedLive: n => `已從專案資料夾載入 ${n} 個樓層。`, savedBackupN: (n, s) => `已將 ${n} 個檔案存到專案資料夾。備份：Build/editor_backups/${s}/`,
+    discardForLive: '開啟專案資料夾會從那裡重新載入樓層。要捨棄這裡未儲存的變更嗎？',
+    liveSkipped: '事件編輯器開啟了專案資料夾；這個編輯器有未儲存的變更，所以仍使用副本。用「開啟專案資料夾」切換。', notProject: '這個資料夾沒有 assets/data/story/floors。請選 TOMS 資料夾。',
     hPaint: (what, n) => `畫 ${what}（${n} 格）`, hErase: n => `擦除 ${n} 格`, hMove: (what) => `移動 ${what}`, hListAdd: id => `把 ${id} 加入樓層事件清單`,
     hResize: (w, h) => `改大小為 ${w} × ${h}`, hConnect: (d, v) => `connect.${d} → ${v || '（無）'}`, hName: '重新命名樓層',
     autoListed: id => `已把 ${id} 加入此樓層的事件清單（現在它能抽到這個事件）。`,
@@ -962,9 +966,13 @@ async function readJson(dir, path) { const fh = await fileIn(dir, path); const r
   return { obj: JSON.parse(raw), eol: { crlf: raw.includes('\r\n'), finalNewline: raw.endsWith('\n') } }; }
 $('openDir').onclick = async () => {
   if (!window.showDirectoryPicker) return toast(t('openUnsupported'));
+  try { await useDir(await window.showDirectoryPicker({ mode: 'readwrite' })); } catch (e) { if (e.name !== 'AbortError') toast(String(e)); }
+};
+// also called with the folder the event editor opened (index.html passes the handle across)
+async function useDir(dir, fromOther) {
   try {
-    const dir = await window.showDirectoryPicker({ mode: 'readwrite' });
-    try { await fileIn(dir, 'assets/data/story/floors/F01.json'); } catch (_) { return toast(t('notProject')); }
+    try { await fileIn(dir, 'assets/data/story/floors/F01.json'); } catch (_) { if (!fromOther) toast(t('notProject')); return; }
+    if (FLOORS.some(f => isDirty(f.id))) { if (fromOther) return toast(t('liveSkipped')); if (!confirm(t('discardForLive'))) return; }
     const fresh = [];
     for (const f of BUNDLE.floors) {   // same floor list as the bundle, re-read from disk
       const spec = await readJson(dir, f.specPath), stage = await readJson(dir, f.stagePath);
@@ -973,8 +981,9 @@ $('openDir').onclick = async () => {
     FLOORS = fresh; Object.keys(DOCS).forEach(k => delete DOCS[k]); dirHandle = dir;
     $('src').textContent = t('srcLive'); $('src').classList.add('live');
     openFloor(FLOORS.some(f => f.id === cur) ? cur : FLOORS[0].id); toast(t('loadedLive', fresh.length));
-  } catch (e) { if (e.name !== 'AbortError') toast(String(e)); }
-};
+    if (!fromOther && inShell) window.parent.postMessage({ toms: 'dir', handle: dir }, '*');   // the event editor opens it too
+  } catch (e) { toast(String(e)); }
+}
 
 // ---------------- save ----------------
 function changedFiles() {
@@ -1005,9 +1014,28 @@ function openSave() {
 function markSaved(files) { files.forEach(f => { const d = DOCS[f.id]; if (f.kind === 'stage') d.origStage = f.text; else d.origSpec = f.text; }); renderFloorSel(); }
 $('save').onclick = openSave;
 $('mCancel').onclick = () => $('modalBg').style.display = 'none';
-$('mWrite').onclick = async () => { const files = changedFiles();
-  try { for (const f of files) { const fh = await fileIn(dirHandle, f.path, true), w = await fh.createWritable(); await w.write(f.text); await w.close(); }
-    markSaved(files); $('modalBg').style.display = 'none'; toast(t('savedN', files.length)); } catch (e) { toast(String(e)); } };
+// Write: a floor spec on disk may have changed since it was read (the event editor saves floors' events lists too), so
+// this editor's change to the events list is applied to the file as it is now. Every file is backed up first.
+async function specOnDisk(f) {
+  const d = DOCS[f.id], now = await (await (await fileIn(dirHandle, f.path)).getFile()).text();
+  if (now === d.origSpec) return f;
+  const disk = JSON.parse(now), was = JSON.parse(d.origSpec).events || [], mine = d.spec.events || [], cur = disk.events || [];
+  const add = mine.filter(x => !was.includes(x)), del = was.filter(x => !mine.includes(x));
+  disk.events = [...cur.filter(x => !del.includes(x)), ...add.filter(x => !cur.includes(x))];
+  d.spec = disk; return { ...f, text: specText(d), before: now };
+}
+const stampNow = () => { const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`; };
+$('mWrite').onclick = async () => {
+  try {
+    const files = []; for (const f of changedFiles()) files.push(f.kind === 'spec' ? await specOnDisk(f) : f);
+    const stamp = stampNow();
+    for (const f of files) { let old = null; try { old = await (await (await fileIn(dirHandle, f.path)).getFile()).text(); } catch (_) {}
+      if (old != null) { const w = await (await fileIn(dirHandle, `Build/editor_backups/${stamp}/${f.path}`, true)).createWritable(); await w.write(old); await w.close(); } }
+    for (const f of files) { const fh = await fileIn(dirHandle, f.path, true), w = await fh.createWritable(); await w.write(f.text); await w.close(); }
+    markSaved(files); $('modalBg').style.display = 'none'; toast(t('savedBackupN', files.length, stamp));
+    if (inShell) window.parent.postMessage({ toms: 'filesChanged', paths: files.map(f => f.path) }, '*');
+  } catch (e) { toast(String(e)); } };
 $('mDownload').onclick = () => { const files = changedFiles();
   files.forEach((f, i) => setTimeout(() => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([f.text], { type: 'application/json' }));
     a.download = f.path.split('/').pop(); a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }, i * 250));
@@ -1116,6 +1144,7 @@ $('toEvent').onclick = () => {
 addEventListener('message', ev => {
   const m = ev.data || {};
   if (m.toms === 'shown') { drawAll(); renderProblems(); }
+  if (m.toms === 'dir' && m.handle && !dirHandle) useDir(m.handle, true);
   if (m.toms === 'place') enterPlaceMode(m.id, m.kind, m.floors);
   if (m.toms === 'floor' && FLOORS.some(f => f.id === m.floor)) { openFloor(m.floor);
     if (m.event) { const d = docOf(m.floor); d.grid.forEach((r, y) => r.forEach((c, x) => { if (d.st.legend[c] === 'event:' + m.event) { selCell = [x, y]; flashCells = [[x, y]]; } }));

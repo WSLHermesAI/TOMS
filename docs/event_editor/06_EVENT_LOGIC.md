@@ -120,8 +120,20 @@ stops being an orphan.
 - **Categories and the filter:** every event variable, counter and flag can have a `category`
   (`"category": "village/clues"`, saved in `vars.json`, `counters.json` or `flags.json`; `/` makes
   sub-categories). Without one, a value is grouped automatically: flags by the chapter in their `setBy`
-  (`Chapter ch_03`), counters as *Story counters*, the rest as *Uncategorized*. The **Variables** tab lists
-  values by category (collapsible headings; ✎ renames a category and its sub-categories; the category is
+  (`Chapter ch_03`), counters as *Story counters*, the rest as *Uncategorized*. The **Variables** tab has the
+  *add variable* row at the top (a new variable shows highlighted). With *All categories* it lists the
+  values as one flat list (event variables, counters, flags, by name); with a category picked it lists them
+  under category headings. Under the add row, a category box with **+ Create category** (an empty
+  category is kept in `vars.json` as `"_categories": [...]` until a value uses it) **✎ Rename category** and
+  **🗑 Delete category**. Rename asks for the new name in a dialog and moves every value of the category
+  and its sub-categories (a name that exists merges the two). Delete asks in a dialog, listing what the
+  category holds: **Delete the N event variables** (counters and flags are never deleted, since chapters,
+  dialogue and the game use them; they lose the category; events that used the deleted variables show
+  as problems) or **Make them uncategorized** (everything stays, only the category comes off, and each
+  value goes back to its automatic group). Automatic groups such as *Story counters* cannot be deleted.
+  Each is one undo step. **Several values at once:** tick the rows (the header box ticks every value
+  shown; Shift+click ticks a range), then type or pick a category in the bar that appears and press
+  **Apply**, or **Make uncategorized**. Counters and flags can be moved too; it is one undo step (collapsible headings; ✎ renames a category and its sub-categories; the category is
   editable on each row and when creating a variable). One filter is shared by the Variables tab and the
   Values map: text (name, category, description, HUD label, set by), a category (a parent includes its
   sub-categories) and the type chips. The Values map shows category headings, and the condition and
@@ -144,8 +156,8 @@ stops being an orphan.
   ```
 
   One row per kind: colour, id, names (zh_TW / en), description, and how many events use it (click the
-  number to filter the Events tree; click an event to open it). **+ Add kind** adds one (id: lowercase
-  letters, digits and `_`). Renaming an id renames it on every event of that kind. **Moving events to
+  number to filter the Events tree; click an event to open it). **+ Add kind** adds one (any name, Traditional Chinese
+  included; only `" ' < > & | \ /` and spaces at the ends are refused). Renaming an id renames it on every event of that kind. **Moving events to
   another kind:** tick the events in a row (or **Select all**), then pick the kind in *Move N selected
   to…*; only the ticked events move, in one undo step. ↗ on an event opens it; a long row shows 12 events
   and *+N more*. A kind still in use cannot be deleted: once its last event is moved, **Delete** appears.

@@ -19,10 +19,11 @@ start, and **event objects**. It reads and writes the same files the game loads:
 | Way | What works |
 |---|---|
 | Double-click `stage_editor.html` | Everything except writing to disk. It loads the copy in `stage_bundle.js`; **Save** downloads the changed files for you to copy into `assets/data` |
-| `tools\web_editors\serve.cmd`, then **Open project folder…** and pick the TOMS folder (Chrome or Edge) | Reads the live files, and **Save** writes them in place |
+| `tools\web_editors\serve.cmd`, then **Open project folder…** and pick the TOMS folder (Chrome or Edge) | Reads the live files, and **Save** writes them in place. Each file is backed up to `Build/editor_backups/<date-time>/` first. The event editor opens the same folder by itself (either editor can open it), and a floor's `events` list changed by both editors keeps both changes |
 
-`tools/web_editors/refresh_data.cmd` refreshes both editors' copies after the data changes (it runs
-`make_data.py` and `make_bundle.py`).
+`serve.cmd` first refreshes both editors' copies of the data (it runs `make_data.py` and
+`make_bundle.py`), so the editors always open on the current `assets/data`. Without the server, run
+`tools/web_editors/refresh_data.cmd` after the data changes.
 
 **Size.** Everything can be made bigger:
 

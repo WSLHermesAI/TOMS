@@ -25,7 +25,8 @@ the game finds them.
 ## The HTML editors
 
 They are static HTML with a little JavaScript, and they run on a copy of the real event data
-(`tools/web_editors/data_snapshot/`, refreshed by `tools/web_editors/refresh_data.cmd`).
+(`tools/web_editors/data.js`). `serve.cmd` refreshes it from `assets/data` every time it starts;
+without the server, run `refresh_data.cmd`.
 
 **The editors live in [tools/web_editors/](../../tools/web_editors/index.html)** with the stage editor: open `index.html` (or run
 `serve.cmd`) and switch between them with the **⇄** button. The event editor includes the **tutorial**, 29 steps in a working mini-editor:
@@ -47,6 +48,34 @@ change to each JSON file. The tutorial page is in English or 繁體中文 (🌐 
 
 The HTML editors show the intended look and behaviour, not a promise of pixels: the real editor is Qt
 Widgets in the same dark theme as the anim and particle editors.
+
+## Saving into assets/data
+
+Out of the box the editor works on the copy in `data.js`, and Save writes nothing (that is what the
+tutorial uses). To edit the real data:
+
+1. Start `tools\web_editors\serve.cmd` (Chrome or Edge).
+2. Click **📂 Open project folder…** and pick the **TOMS** folder itself (the one that holds `assets`),
+   and allow the browser to edit files. The banner turns green: *PROJECT FOLDER · editing assets/data*.
+   The stage editor opens the same folder by itself (and the other way round).
+3. Edit, then **Save** (Ctrl+S) → **Write to project**.
+
+What Save writes, only for the files that really change:
+
+| File | How |
+|---|---|
+| `assets/data/events/pool_*.json` (and new pools) | the pool's `events` list; other fields (`_comment`, `act`, `theme`) and unknown record fields are kept |
+| `assets/data/events/kinds.json`, `story/vars.json` | rewritten from the Kinds tab / the event variables |
+| `assets/data/story/floors/F??.json` | only `events`, `act` and `stairs`; everything else in the floor spec stays |
+| `assets/data/text.json` | only the changed strings |
+| `assets/data/story/flags.json`, `counters.json` | only the changed entries' lines, so the hand-aligned layout stays |
+
+- Each write starts from the file as it is on disk at that moment, and applies only this editor's
+  changes. If the stage editor saved the same floor in between, both changes end up in the file.
+- Before overwriting, every file is copied to `Build/editor_backups/<date-time>/` (the stage editor
+  does the same). `Build/` is not in git; `git diff` also shows exactly what changed.
+- The folder permission lasts while the tab is open; after a reload, open it again.
+- In project-folder mode the tutorial and Play demo are off, so they cannot write into the real data.
 
 ## Next steps
 

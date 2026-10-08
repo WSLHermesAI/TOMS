@@ -69,7 +69,7 @@ The id is checked as you type:
 
 | You type | You see |
 |---|---|
-| `Scarecrow` | *Use ev_ then lowercase letters, digits and _* |
+| `a<b` | *Any name works, Chinese too (e.g. ev_village_scarecrow or 稻草人), except empty, spaces at the ends, or " ' < > & \| \ /* |
 | `ev_village_well` | *ev_village_well already exists in pool_act01* |
 
 The kinds are `relic`, `whisper`, `cache`, `trap`, `rescue`, `merchant_echo` and `memory_shard`.
@@ -367,7 +367,9 @@ The editors use a copy of the event data, never `assets/` itself:
 python tools/web_editors/make_data.py
 ```
 
-It copies `assets/data/events/pool_*.json`, the floor specs `assets/data/story/floors/F??.json` and
-the event strings from `text.json` into `tools/web_editors/data_snapshot/`, then rebuilds `tools/web_editors/data.js`
-from them. Run it again after the data changes, and the pages show the new state. The counts in this
+It reads `assets/data/events/pool_*.json`, the floor specs `assets/data/story/floors/F??.json`, the event
+strings from `text.json`, and the variables, counters, flags and kinds, and writes them into
+`tools/web_editors/data.js`, the file the page loads. `tools\web_editors\serve.cmd` runs it every time it
+starts, so the editor always opens on the current data; without the server, run
+`tools\web_editors\refresh_data.cmd` after the data changes. The counts in this
 document are from the copy made on 2026-10-05.

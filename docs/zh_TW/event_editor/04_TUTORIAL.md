@@ -71,7 +71,7 @@ ID 會在你打字時檢查：
 
 | 你輸入 | 你會看到 |
 |---|---|
-| `Scarecrow` | *請用 ev_ 開頭，後接小寫字母、數字和 _* |
+| `a<b` | *任何名稱都可以，中文也行（例如 ev_village_scarecrow 或 稻草人），但不能是空的、頭尾不能有空白，也不能有 " ' < > & \| \ /* |
 | `ev_village_well` | *ev_village_well 已存在於 pool_act01* |
 
 類型有 `relic`、`whisper`、`cache`、`trap`、`rescue`、`merchant_echo` 和 `memory_shard`。
@@ -368,7 +368,8 @@ F50 → F96 是一條標著 🔒 `ev_common_relic_road` 的金色虛線箭頭；
 python tools/web_editors/make_data.py
 ```
 
-它會把 `assets/data/events/pool_*.json`、樓層設定 `assets/data/story/floors/F??.json` 和
-`text.json` 中的事件字串複製到 `tools/web_editors/data_snapshot/`，再用它們重建 `tools/web_editors/data.js`。
-資料改變後再執行一次，頁面就會顯示新的狀態。本文件中的數字來自
+它讀取 `assets/data/events/pool_*.json`、樓層設定 `assets/data/story/floors/F??.json`、`text.json` 中的
+事件字串，以及變數、計數器、旗標和類型，寫入頁面載入的 `tools/web_editors/data.js`。
+`tools\web_editors\serve.cmd` 每次啟動都會執行它，所以編輯器開啟時永遠是目前的資料；不用伺服器時，
+資料改變後請執行 `tools\web_editors\refresh_data.cmd`。本文件中的數字來自
 2026-10-05 製作的副本。

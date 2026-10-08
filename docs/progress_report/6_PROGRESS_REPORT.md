@@ -158,6 +158,26 @@ Kinds were hard-coded in the editor, and no data file defined them. The game doe
 
 - **Bottom tab row:** stays on one line in narrow windows instead of wrapping and shrinking the panel.
 - **Paths:** the data-copy paths in the tutorial doc were corrected.
+- **Fresh data on every start:** `serve.cmd` now runs `make_data.py` and `make_bundle.py` before it
+  starts the server. The unused `data_snapshot/` copy is gone; the editors read only `data.js` and
+  `stage_bundle.js`.
+
+**7. The event editor saves into assets/data** ([../event_editor/README.md](../event_editor/README.md))
+
+- **Open project folder…** in the event editor, as in the stage editor. Opening it in either editor
+  opens it in both (`index.html` passes the folder handle across).
+- **Write to project** writes only the files that change, each built from the file as it is on disk
+  at that moment: pools (other fields kept), floor specs (only `events`, `act`, `stairs`), only the
+  changed strings of `text.json`, `vars.json` / `kinds.json`, and only the changed lines of the
+  hand-aligned `flags.json` / `counters.json`.
+- **Both editors back up** every file to `Build/editor_backups/<date-time>/` before overwriting, and
+  the stage editor now also merges a floor's `events` list with what is on disk, so neither editor
+  undoes the other's save.
+- In project-folder mode the tutorial and Play demo are off.
+- **Tested** in headless Chrome on a copy of `assets/data` in the browser's private file system: no
+  edits → nothing written; six kinds of edit → exactly those six files, each changed only where
+  expected; both editors changing F06 → both changes kept; backups equal the files before the
+  write; saving again writes nothing.
 
 **Verified** (headless Chrome):
 
@@ -175,9 +195,7 @@ Kinds were hard-coded in the editor, and no data file defined them. The game doe
 
 **Still open:**
 
-- **The event editor cannot write files.** *Save…* shows the changes to copy by hand; only the stage
-  editor writes, through *Open project folder*. A real save for the event editor was offered, not
-  started.
+- ~~**The event editor cannot write files.**~~ Done later the same day: see section 7.
 - **Owner decisions** (see Open Questions Q6–Q10 in [PROGRESS_REPORT.md](PROGRESS_REPORT.md)).
 - **Then the Qt/C++ editors** on the game renderer ([../19_STAGE_EDITOR.md](../19_STAGE_EDITOR.md)
   section 6), once the event editor is confirmed.

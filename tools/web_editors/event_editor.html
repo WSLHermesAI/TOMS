@@ -273,13 +273,24 @@
   .langpick { display: inline-flex; gap: 4px; align-items: center; }
   .langpick select { padding: 0 4px; font-size: 12px; background: #2a2412; color: #ffd98a; border-color: #5a4a20; }
   @keyframes flash { 50% { box-shadow: 0 0 0 3px var(--ok); } }
+  .src { font-size: 12px; color: var(--muted); margin-left: 8px; white-space: nowrap; }
+  tr.newvar td { background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  table.vars .vchk { width: 22px; padding-right: 0; } tr.vsel td { background: #1d3150; }
+  tr.bulkbar td { background: #22324a; border-bottom: 1px solid var(--accent); position: sticky; top: 0; z-index: 2; }
+  tr.justadded td { background: #1f3a2c; animation: justadded 2s ease 1; }
+  @keyframes justadded { from { background: #2f6b4b; } }
+  .src.live { color: var(--ok); }
+  body.live .banner { background: #12301f; color: #9fe6bd; border-color: #1f5a37; }
+  body.live #tutBtn, body.live #reset, body.live #tutDock { display: none !important; }
+  .savenote { flex: 1; color: var(--muted); font-size: 12px; text-align: left; }
 </style>
 </head>
 <body>
-<div class="banner"><span data-i18n="banner"></span> (<span id="snap"></span>) · <span data-i18n="bannerNoWrite"></span><span class="spacer"></span>
+<div class="banner"><span id="bannerA" data-i18n="banner"></span> (<span id="snap"></span>) · <span id="bannerB" data-i18n="bannerNoWrite"></span><span class="spacer"></span>
   <label class="langpick" title="Language / 語言">🌐 <select id="uiLang"><option value="en">English</option><option value="zh_TW">繁體中文</option></select></label>
   <a href="#" id="reset" data-i18n="reset"></a></div>
 <div class="menubar"><b class="edtitle" data-i18n="edTitle"></b><span id="dirtyMark" class="dirty" title="unsaved changes"></span>
+  <button id="openDir" data-i18n="openDir" data-i18n-title="openDirTitle"></button><span id="src" class="src"></span>
   <div class="grow"></div><button id="tutBtn" data-i18n="tutBtn" data-i18n-title="tutBtnTitle"></button> <button id="toStage" class="primary" data-i18n="toStage" title="Stage editor"></button> <button id="undo" title="Ctrl+Z" data-i18n="undo"></button> <button class="primary" id="save" title="Ctrl+S" data-i18n="save"></button></div>
 
 <div class="main">
@@ -324,7 +335,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal">
   <header><b data-i18n="saveTitle"></b> <span class="muted" data-i18n="saveSub"></span></header>
   <div class="content" id="diffs"></div>
-  <footer><button id="mCancel" data-i18n="cancel"></button> <button class="primary" id="mWrite" data-i18n="writeFiles"></button></footer>
+  <footer><span id="saveNote" class="savenote"></span><button id="mCancel" data-i18n="cancel"></button> <button class="primary" id="mWrite" data-i18n="writeFiles"></button></footer>
 </div></div>
 
 <script src="data.js"></script>
@@ -363,7 +374,8 @@ const I18N = {
     histLoaded: 'Loaded assets/data',
     rule_missing_event: 'Missing event id', rule_missing_text: 'Missing text key', rule_orphan: 'Orphan event', rule_no_kind: 'No kind',
     rule_placeholder: 'Placeholder text', rule_untranslated: 'Untranslated',
-    hNew: (id, p) => `New event ${id} in ${p}`, idFormat: 'Use ev_ then lowercase letters, digits and _ (e.g. ev_village_scarecrow)', idDup: (id, p) => `${id} already exists in ${p}`,
+    hNew: (id, p) => `New event ${id} in ${p}`, idFormat: 'Any name works, Chinese too (e.g. ev_village_scarecrow or 稻草人), except empty, spaces at the ends, or " \' < > & | \\ /',
+    floorNameErr: 'A floor name is also its file name: any name works, Chinese too, except " \' < > & | \\ / : * ?', idDup: (id, p) => `${id} already exists in ${p}`,
     hRename: (a, b) => `Rename ${a} → ${b}`, hConnect: (id, fs) => `Connect ${id} to ${fs}`, hText: (id, l) => `Text ${id} [${l}]`, hTextAll: id => `Text ${id}`,
     hKind: (id, k) => `Kind of ${id} → ${k}`, hCreate: (id, p) => `Create ${id} in ${p}`, hCreateCh: (n, a) => `Create ${n} missing events for ${a}`,
     toastCh: (n, a, p) => `Created ${n} events for ${a}.\nCommon variants went to pool_common, the rest to ${p}.\nThey still need kinds and text: see the Problems tab.`,
@@ -514,11 +526,38 @@ const I18N = {
     vtCategory: 'Category', catPh: 'e.g. village/clues', allCats: 'All categories', filterPh: 'Find: name, category, description, label…',
     renameCat: 'Rename this category (and its sub-categories)', hCat: n => `Category of ${n}`, hCatRename: (a, b) => `Rename category ${a} → ${b}`,
     nOfM: (n, m) => `${n} of ${m} values`, noMatchVals: 'No value matches the filter.',
+    openDir: '📂 Open project folder…', openDirTitle: 'Pick the TOMS folder: the editor then reads assets/data itself, and Save writes into it',
+    srcCopy: 'copy (data.js)', srcLive: 'project folder (live)', notProject: 'That folder has no assets/data/story/floors. Pick the TOMS folder.',
+    openUnsupported: 'This browser cannot open folders. Use Chrome or Edge from http://localhost (serve.cmd).',
+    discardForLive: 'Opening the project folder reloads the data from it. Discard the unsaved changes here?',
+    liveSkipped: 'The stage editor opened the project folder; this editor has unsaved changes, so it keeps the copy. Use 📂 to switch.',
+    loadedLiveEv: (e, f) => `Loaded ${e} events and ${f} floors from the project folder.`,
+    bannerLive: 'PROJECT FOLDER · editing assets/data', bannerLiveB: 'Save writes the changed files; a backup of each goes to Build/editor_backups',
+    writeLiveN: n => `Write to project (${n} file${n > 1 ? 's' : ''})`, saveNoteLive: 'Writes into assets/data. Each file is backed up to Build/editor_backups first.',
+    saveNoteCopy: 'This is the data.js copy: nothing is written. Open the project folder (📂) to save into assets/data.',
+    hSavedLive: n => `Wrote ${n} file(s) to assets/data`, toastSavedLive: (n, s) => `Wrote ${n} file(s) to assets/data. Backups: Build/editor_backups/${s}/`,
+    nothingWritten: 'The files on disk already match: nothing written.', writeFailed: e => `Could not write: ${e}`,
+    selTip: 'Select (Shift+click: a range)', selAllTip: 'Select every value shown', selN: n => `${n} selected`, bulkMoveTo: 'Move to category',
+    bulkApply: 'Apply', selClear: 'Clear selection', selNone: 'Select some values first.',
+    hCatBulk: (n, c) => `Move ${n} value(s) to category ${c}`, hCatBulkOff: n => `Take the category off ${n} value(s)`,
+    catEditPh: 'category, e.g. village/clues', catCreate: '+ Create category', catDelete: '🗑 Delete category',
+    catHint: 'Type or pick a category. Create keeps an empty one in vars.json until a value uses it; Rename and Delete ask in a dialog.',
+    catRename: '✎ Rename category', catRenTitle: c => `Rename the category "${c}"`, catRenHint: 'Every variable, counter and flag in it (and in its sub-categories) moves to the new name. Use / for a sub-category, e.g. village/clues. A name that already exists merges the two.', catRenOk: 'Rename',
+    catDelTitle: c => `Delete the category "${c}"`, catDelEmpty: 'Nothing uses this category. Delete it?',
+    catDelHolds: (c, v, o) => `"${c}" and its sub-categories hold ${v} event variable(s)${o ? ` and ${o} counter(s) / flag(s)` : ''}:`,
+    catDelOptDelete: (v, o) => `<b>Delete the ${v} event variable(s)</b>.${o ? ' Counters and flags are kept (chapters, dialogue and the game use them) and become uncategorized.' : ''}`,
+    catDelUsed: n => `${n} event(s) use these variables; their conditions and actions will show as problems until you change them.`,
+    catDelOptUncat: '<b>Make them uncategorized</b>: keep everything, only take the category off (they go back to their automatic group).',
+    catDelBtnDelete: n => `Delete ${n} variable(s)`, catDelBtnUncat: 'Make uncategorized', hCatDelVars: (c, n) => `Delete category ${c} and ${n} variable(s)`,
+    catErrName: 'Type a name (any characters, Chinese too, except " < > & | \\).', catErrDup: c => `${c} already exists`, catErrPick: 'Type or pick a category to delete.',
+    catErrAuto: c => `${c} is an automatic group (from the data); it cannot be deleted.`, catErrNone: c => `There is no category ${c}.`,
+    catDelAsk: (c, n) => `Delete the category "${c}"? ${n} value(s) in it (and its sub-categories) go back to their automatic group.`,
+    catEmpty: 'empty', hCatNew: c => `New category ${c}`, hCatDel: c => `Delete category ${c}`,
     tKinds: 'Kinds', kIntro: 'Every event has a kind. This list is saved in assets/data/events/kinds.json; the kind drop-down, the filter and the colours in every view come from it.',
     kId: 'Kind id', kName: 'Name', kDesc: 'Description', kDescPh: 'what this kind of event does', kEvents: 'Events', kColor: 'Colour in the editors',
     kShowTree: 'Show these events in the Events tree', kMoveTo: n => n ? `Move ${n} selected to…` : 'Tick events to move them', kSelAll: n => `Select all (${n})`, kSelNone: 'Select none', kSelN: n => `${n} selected`,
     kOpenEv: 'Open this event', kMore: n => `+${n} more`, kLess: 'show less', kDelete: 'Delete', kUnknown: n => `used by ${n} event(s) but not in this list`,
-    kAddThis: 'Add to the list', kIdPh: 'new kind id, e.g. secret', kAdd: '+ Add kind', kErrId: 'Use lowercase letters, digits and _, starting with a letter', kErrDup: k => `${k} already exists`,
+    kAddThis: 'Add to the list', kIdPh: 'new kind id, e.g. secret', kAdd: '+ Add kind', kErrId: 'Any name works, Chinese too, except empty, spaces at the ends, or " \' < > & | \\ /', kErrDup: k => `${k} already exists`,
     kNote: 'Renaming a kind updates every event of that kind. The floors\' meta.eventKinds are notes left by the floor generator and are not changed. The game does not read kinds yet: trap and cache effects still come from words in the event id (06_EVENT_LOGIC.md).',
     kInfo: (k, e) => `${k} kinds · ${e} events`, kNewOpt: '+ New kind…', kindsComment: 'Event kinds: names and editor colours (edited in the event editor\'s Kinds tab).',
     hKindAdd: k => `New kind ${k}`, hKindRename: (a, b) => `Rename kind ${a} → ${b}`, hKindEdit: k => `Edit kind ${k}`, hKindDel: k => `Delete kind ${k}`, hKindMove: (n, a, b) => `Move ${n} event(s) from ${a} to ${b}`,
@@ -531,7 +570,7 @@ const I18N = {
     tipLinked: n => `linked to <b>${n}</b> other value(s)`, tipOpen: 'Click to open it in a tab.',
     vtName: 'Name', vtType: 'Type', vtDefault: 'Default', vtScope: 'Scope', vtDesc: 'Description', vtLabel: 'HUD label', vtDisplayAt: 'Show on HUD at', vtClamp: 'Clamp (min … max)',
     vtSetBy: 'Set by (story data)', vtFile: f => `Saved in ${f}`, vtWriters: 'Changed by', vtReaders: 'Read by', vtWatchers: 'Fires on change', vtLinked: 'Linked values (through an event)',
-    vtNone: '—', vtSave: 'Save…', vtClose: 'Close tab', vtDelete: 'Delete variable', vtRenameErr: 'Use lowercase letters, digits and _, starting with a letter, and a name not in use',
+    vtNone: '—', vtSave: 'Save…', vtClose: 'Close tab', vtDelete: 'Delete variable', vtRenameErr: 'Use a name not in use; any characters work, Chinese too, except " \' < > & | \\ / and spaces at the ends',
     vtNoRename: 'Counters and flags are named in chapter and dialogue files and in the game code, so they are renamed there, not here.',
     vtGone: 'This value no longer exists.', hValEdit: n => `Edit ${n}`, hVarRename: (a, b) => `Rename variable ${a} → ${b}`,
     pinFire: 'Fire', pinThen: 'Then', pinDone: 'done', pinValue: 'value', pinChanged: 'on change', pinTalk: 'on talk', pinSet: 'change',
@@ -552,7 +591,7 @@ const I18N = {
     wNpcNowhere: n => `talks to ${n}, who is not placed on any floor`, wNeverActive: (v, n) => `needs ${v} ≥ ${n}, but no event changes ${v}`,
     wCycle: path => path, wUnusedVar: 'no event reads or writes it', fVars: 'Open variables', fLogic: 'Open',
     vName: 'Name', vType: 'Type', vDefault: 'Default', vScope: 'Scope', vSetBy: 'Changed by', vReadBy: 'Read by', newVar: 'New variable', newVarPh: 'name, e.g. well_clues',
-    addVarBtn: 'Add variable', varErrName: 'Use lowercase letters, digits and _, starting with a letter', varErrDup: n => `${n} already exists`,
+    addVarBtn: 'Add variable', varErrName: 'Any name works, Chinese too, except empty, spaces at the ends, or " \' < > & | \\ /', varErrDup: n => `${n} already exists`,
     eventVars: 'Event variables (story/vars.json)', countersH: 'Counters (story/counters.json)', flagsH: n => `Flags (story/flags.json, ${n})`, delVar: 'Delete', noVars: 'No event variables yet.',
     logicEmpty: 'No event has logic yet. Give one a trigger, a condition, an action or a link in the inspector.',
     lgInfo: (e, v) => `${e} events · ${v} variables · white = fires an event · purple = event variable · teal = counter · red = flag · gold = event done`,
@@ -593,7 +632,7 @@ const I18N = {
     fCreate: 'Create event', fRemove: 'Remove from floors', fConnect: 'Add floor…', fDelete: 'Delete', fKind: 'Choose kind', fWrite: 'Write text', fMkText: 'Create text',
     fOpen: 'Open text',
     newFile: '  (new file)', nothingToSave: 'Nothing to save', filesChange: (n, w) => `${n} file(s) change.${w ? ` ${w} problem(s) remain; saving is still allowed.` : ''}`,
-    writeN: n => `Write ${n} file${n > 1 ? 's' : ''}`, hSaved: n => `Saved ${n} file(s)`, toastSaved: n => `Saved ${n} file(s). Backups are in the editor's backup folder.`,
+    writeN: n => `Write ${n} file${n > 1 ? 's' : ''}`, hSaved: n => `Saved ${n} file(s)`, toastSaved: n => `Saved ${n} file(s) in this copy (tutorial: nothing is written to disk).`,
     problemsTab: n => `Problems (${n})`, statusProbs: (e, w, d) => `⛔ ${e} errors · ⚠ ${w} warnings${d ? ' · unsaved changes' : ''}`,
   },
   zh_TW: {
@@ -606,7 +645,8 @@ const I18N = {
     histLoaded: '已載入 assets/data',
     rule_missing_event: '缺少的事件 ID', rule_missing_text: '缺少文字鍵', rule_orphan: '孤立事件', rule_no_kind: '未設類型',
     rule_placeholder: '佔位文字', rule_untranslated: '未翻譯',
-    hNew: (id, p) => `在 ${p} 新增事件 ${id}`, idFormat: '請用 ev_ 開頭，後接小寫字母、數字和 _（例如 ev_village_scarecrow）', idDup: (id, p) => `${id} 已存在於 ${p}`,
+    hNew: (id, p) => `在 ${p} 新增事件 ${id}`, idFormat: '任何名稱都可以，中文也行（例如 ev_village_scarecrow 或 稻草人），但不能是空的、頭尾不能有空白，也不能有 " \' < > & | \\ /',
+    floorNameErr: '樓層名稱也是檔名：任何名稱都可以，中文也行，但不能有 " \' < > & | \\ / : * ?', idDup: (id, p) => `${id} 已存在於 ${p}`,
     hRename: (a, b) => `重新命名 ${a} → ${b}`, hConnect: (id, fs) => `將 ${id} 連接到 ${fs}`, hText: (id, l) => `文字 ${id} [${l}]`, hTextAll: id => `文字 ${id}`,
     hKind: (id, k) => `${id} 的類型 → ${k}`, hCreate: (id, p) => `在 ${p} 建立 ${id}`, hCreateCh: (n, a) => `為 ${a} 建立 ${n} 個缺少的事件`,
     toastCh: (n, a, p) => `已為 ${a} 建立 ${n} 個事件。\n共用變體放進 pool_common，其餘放進 ${p}。\n它們還需要類型和文字：請看「問題」分頁。`,
@@ -757,11 +797,38 @@ const I18N = {
     vtCategory: '分類', catPh: '例如 village/clues', allCats: '所有分類', filterPh: '搜尋：名稱、分類、說明、標籤…',
     renameCat: '重新命名這個分類（含子分類）', hCat: n => `${n} 的分類`, hCatRename: (a, b) => `分類改名 ${a} → ${b}`,
     nOfM: (n, m) => `${m} 個數值中的 ${n} 個`, noMatchVals: '沒有符合篩選的數值。',
+    openDir: '📂 開啟專案資料夾…', openDirTitle: '選擇 TOMS 資料夾：編輯器會直接讀取 assets/data，儲存時寫回去',
+    srcCopy: '副本（data.js）', srcLive: '專案資料夾（即時）', notProject: '這個資料夾沒有 assets/data/story/floors。請選 TOMS 資料夾。',
+    openUnsupported: '這個瀏覽器無法開啟資料夾。請用 Chrome 或 Edge 從 http://localhost（serve.cmd）開啟。',
+    discardForLive: '開啟專案資料夾會從那裡重新載入資料。要捨棄這裡未儲存的變更嗎？',
+    liveSkipped: '關卡編輯器開啟了專案資料夾；這個編輯器有未儲存的變更，所以仍使用副本。用 📂 切換。',
+    loadedLiveEv: (e, f) => `已從專案資料夾載入 ${e} 個事件和 ${f} 層樓。`,
+    bannerLive: '專案資料夾 · 正在編輯 assets/data', bannerLiveB: '儲存會寫入變更的檔案；每個檔案的備份放在 Build/editor_backups',
+    writeLiveN: n => `寫入專案（${n} 個檔案）`, saveNoteLive: '會寫入 assets/data。每個檔案會先備份到 Build/editor_backups。',
+    saveNoteCopy: '這是 data.js 副本：不會寫入任何檔案。開啟專案資料夾（📂）才能存進 assets/data。',
+    hSavedLive: n => `已寫入 ${n} 個檔案到 assets/data`, toastSavedLive: (n, s) => `已寫入 ${n} 個檔案到 assets/data。備份：Build/editor_backups/${s}/`,
+    nothingWritten: '磁碟上的檔案已經一致：沒有寫入任何東西。', writeFailed: e => `無法寫入：${e}`,
+    selTip: '選取（Shift+點擊：選取一段範圍）', selAllTip: '選取所有顯示的數值', selN: n => `已選 ${n} 個`, bulkMoveTo: '移到分類',
+    bulkApply: '套用', selClear: '取消選取', selNone: '請先選取數值。',
+    hCatBulk: (n, c) => `把 ${n} 個數值移到分類 ${c}`, hCatBulkOff: n => `拿掉 ${n} 個數值的分類`,
+    catEditPh: '分類，例如 村莊/線索', catCreate: '+ 建立分類', catDelete: '🗑 刪除分類',
+    catHint: '輸入或選擇分類。建立的空分類會存在 vars.json，直到有數值使用它；改名和刪除會跳出對話框詢問。',
+    catRename: '✎ 分類改名', catRenTitle: c => `把分類「${c}」改名`, catRenHint: '其中（含子分類）的每個變數、計數器和旗標都會改用新名稱。用 / 建立子分類，例如 村莊/線索。改成已存在的名稱會把兩個分類合併。', catRenOk: '改名',
+    catDelTitle: c => `刪除分類「${c}」`, catDelEmpty: '沒有任何東西使用這個分類。要刪除嗎？',
+    catDelHolds: (c, v, o) => `「${c}」和它的子分類中有 ${v} 個事件變數${o ? `，以及 ${o} 個計數器 / 旗標` : ''}：`,
+    catDelOptDelete: (v, o) => `<b>刪除這 ${v} 個事件變數</b>。${o ? '計數器和旗標會保留（章節、對話和遊戲都會用到），並改為未分類。' : ''}`,
+    catDelUsed: n => `有 ${n} 個事件使用這些變數；在你修改之前，它們的條件和動作會顯示為問題。`,
+    catDelOptUncat: '<b>改為未分類</b>：全部保留，只拿掉分類（回到自動分組）。',
+    catDelBtnDelete: n => `刪除 ${n} 個變數`, catDelBtnUncat: '改為未分類', hCatDelVars: (c, n) => `刪除分類 ${c} 和 ${n} 個變數`,
+    catErrName: '請輸入名稱（任何字元都可以，中文也行，但不能有 " < > & | \\）。', catErrDup: c => `${c} 已存在`, catErrPick: '請輸入或選擇要刪除的分類。',
+    catErrAuto: c => `${c} 是自動分組（來自資料），無法刪除。`, catErrNone: c => `沒有分類 ${c}。`,
+    catDelAsk: (c, n) => `要刪除分類「${c}」嗎？其中（含子分類）的 ${n} 個數值會回到自動分組。`,
+    catEmpty: '空的', hCatNew: c => `新增分類 ${c}`, hCatDel: c => `刪除分類 ${c}`,
     tKinds: '類型', kIntro: '每個事件都有一個類型。這份清單存在 assets/data/events/kinds.json；類型下拉選單、篩選和各個畫面的顏色都來自它。',
     kId: '類型 ID', kName: '名稱', kDesc: '說明', kDescPh: '這類事件做什麼', kEvents: '事件', kColor: '在編輯器中的顏色',
     kShowTree: '在事件樹中顯示這些事件', kMoveTo: n => n ? `把選取的 ${n} 個移到…` : '勾選事件後即可移動', kSelAll: n => `全選（${n}）`, kSelNone: '全部取消', kSelN: n => `已選 ${n} 個`,
     kOpenEv: '開啟這個事件', kMore: n => `還有 ${n} 個`, kLess: '收起', kDelete: '刪除', kUnknown: n => `被 ${n} 個事件使用，但不在清單中`,
-    kAddThis: '加入清單', kIdPh: '新類型 ID，例如 secret', kAdd: '+ 新增類型', kErrId: '請用小寫字母、數字和 _，並以字母開頭', kErrDup: k => `${k} 已存在`,
+    kAddThis: '加入清單', kIdPh: '新類型 ID，例如 secret', kAdd: '+ 新增類型', kErrId: '任何名稱都可以，中文也行，但不能是空的、頭尾不能有空白，也不能有 " \' < > & | \\ /', kErrDup: k => `${k} 已存在`,
     kNote: '重新命名類型會更新所有該類型的事件。樓層的 meta.eventKinds 是樓層產生器留下的紀錄，不會被修改。遊戲目前還不讀取類型：陷阱和補給的效果仍來自事件 ID 中的字（06_EVENT_LOGIC.md）。',
     kInfo: (k, e) => `${k} 個類型 · ${e} 個事件`, kNewOpt: '+ 新增類型…', kindsComment: 'Event kinds: names and editor colours (edited in the event editor\'s Kinds tab).',
     hKindAdd: k => `新增類型 ${k}`, hKindRename: (a, b) => `類型改名 ${a} → ${b}`, hKindEdit: k => `編輯類型 ${k}`, hKindDel: k => `刪除類型 ${k}`, hKindMove: (n, a, b) => `把 ${n} 個事件從 ${a} 移到 ${b}`,
@@ -774,7 +841,7 @@ const I18N = {
     tipLinked: n => `與 <b>${n}</b> 個其他數值相連`, tipOpen: '點一下在分頁中開啟。',
     vtName: '名稱', vtType: '型別', vtDefault: '預設值', vtScope: '範圍', vtDesc: '說明', vtLabel: 'HUD 標籤', vtDisplayAt: '在 HUD 顯示的門檻', vtClamp: '範圍限制（最小 … 最大）',
     vtSetBy: '設定來源（故事資料）', vtFile: f => `存在 ${f}`, vtWriters: '由誰改變', vtReaders: '由誰讀取', vtWatchers: '改變時觸發', vtLinked: '相連的數值（透過事件）',
-    vtNone: '—', vtSave: '儲存…', vtClose: '關閉分頁', vtDelete: '刪除變數', vtRenameErr: '請用小寫字母、數字和 _，以字母開頭，且名稱未被使用',
+    vtNone: '—', vtSave: '儲存…', vtClose: '關閉分頁', vtDelete: '刪除變數', vtRenameErr: '請用未被使用的名稱；任何字元都可以，中文也行，但不能有 " \' < > & | \\ / 或頭尾空白',
     vtNoRename: '計數和旗標的名稱寫在章節、對話檔和遊戲程式中，所以要在那裡改名，不在這裡。',
     vtGone: '這個數值已不存在。', hValEdit: n => `編輯 ${n}`, hVarRename: (a, b) => `變數改名 ${a} → ${b}`,
     pinFire: '觸發', pinThen: '接著', pinDone: '完成', pinValue: '數值', pinChanged: '改變時', pinTalk: '交談時', pinSet: '改變',
@@ -795,7 +862,7 @@ const I18N = {
     wNpcNowhere: n => `與 ${n} 交談觸發，但 ${n} 沒有放在任何樓層`, wNeverActive: (v, n) => `需要 ${v} ≥ ${n}，但沒有事件會改變 ${v}`,
     wCycle: path => path, wUnusedVar: '沒有事件讀取或寫入它', fVars: '開啟變數', fLogic: '開啟',
     vName: '名稱', vType: '型別', vDefault: '預設值', vScope: '範圍', vSetBy: '由誰改變', vReadBy: '由誰讀取', newVar: '新增變數', newVarPh: '名稱，例如 well_clues',
-    addVarBtn: '新增變數', varErrName: '請用小寫字母、數字和 _，並以字母開頭', varErrDup: n => `${n} 已存在`,
+    addVarBtn: '新增變數', varErrName: '任何名稱都可以，中文也行，但不能是空的、頭尾不能有空白，也不能有 " \' < > & | \\ /', varErrDup: n => `${n} 已存在`,
     eventVars: '事件變數（story/vars.json）', countersH: '計數（story/counters.json）', flagsH: n => `旗標（story/flags.json，${n} 個）`, delVar: '刪除', noVars: '還沒有事件變數。',
     logicEmpty: '還沒有事件設定邏輯。在屬性面板中為事件加上觸發時機、條件、動作或連結。',
     lgInfo: (e, v) => `${e} 個事件 · ${v} 個變數 · 白色 = 觸發事件 · 紫色 = 事件變數 · 青色 = 計數 · 紅色 = 旗標 · 金色 = 事件完成`,
@@ -836,7 +903,7 @@ const I18N = {
     fCreate: '建立事件', fRemove: '從樓層移除', fConnect: '新增樓層…', fDelete: '刪除', fKind: '選擇類型', fWrite: '撰寫文字', fMkText: '建立文字',
     fOpen: '開啟文字',
     newFile: '  （新檔案）', nothingToSave: '沒有需要儲存的變更', filesChange: (n, w) => `有 ${n} 個檔案變更。${w ? `還有 ${w} 個問題；仍然可以儲存。` : ''}`,
-    writeN: n => `寫入 ${n} 個檔案`, hSaved: n => `已儲存 ${n} 個檔案`, toastSaved: n => `已儲存 ${n} 個檔案。備份在編輯器的備份資料夾中。`,
+    writeN: n => `寫入 ${n} 個檔案`, hSaved: n => `已儲存 ${n} 個檔案`, toastSaved: n => `已在副本中儲存 ${n} 個檔案（教學：不會寫入磁碟）。`,
     problemsTab: n => `問題（${n}）`, statusProbs: (e, w, d) => `⛔ ${e} 個錯誤 · ⚠ ${w} 個警告${d ? ' · 有未儲存的變更' : ''}`,
   },
 };
@@ -857,6 +924,7 @@ function applyStatic() {
   buildKindFilter();
   $('fKindF').value = filt.kind;
   $('uiLang').value = LANG;
+  if (typeof showSource === 'function') showSource();
 }
 function setLang(l) {
   LANG = l; try { localStorage.setItem(LANG_KEY, l); } catch (_) {}
@@ -889,7 +957,7 @@ const PREV = {}; DATA.floors.forEach(f => { if (f.next) PREV[f.next] = f.id; });
 const fresh = () => ({
   pools: [...DATA.pools],
   events: DATA.events.map(e => ({ id: e.id, kind: e.kind, pool: e.pool, text: e.text, ...logicFrom(e) })),
-  vars: JSON.parse(JSON.stringify(DATA.vars || {})),
+  vars: JSON.parse(JSON.stringify(DATA.vars || {})), cats: [...(DATA.varCats || [])],   // categories made with "Create category" (vars.json "_categories")
   counters: JSON.parse(JSON.stringify(DATA.counters || {})), flags: JSON.parse(JSON.stringify(DATA.flags || {})),
   kinds: JSON.parse(JSON.stringify(DATA.kinds && Object.keys(DATA.kinds).length ? DATA.kinds : DEFAULT_KINDS)),
   // a floor without a stairs list gets one from the nextFloor chain: up to its next, down to the floor whose next it is
@@ -926,7 +994,7 @@ function reachable() {
   return seen;
 }
 const modelEdges = () => new Set([...S.floors.flatMap(f => f.events.map(id => f.id + '>' + id)), ...S.events.flatMap(e => [e.pool + '>' + e.id, e.id + '>' + e.text])]);
-const strip = s => ({ pools: s.pools, events: s.events.map(({ isNew, tutorial, ...r }) => r), floors: s.floors.map(({ isNew, ...r }) => r), texts: s.texts, vars: s.vars, counters: s.counters, flags: s.flags, kinds: s.kinds });
+const strip = s => ({ pools: s.pools, events: s.events.map(({ isNew, tutorial, ...r }) => r), floors: s.floors.map(({ isNew, ...r }) => r), texts: s.texts, vars: s.vars, cats: s.cats, counters: s.counters, flags: s.flags, kinds: s.kinds });
 const dirty = () => JSON.stringify(strip(S)) !== JSON.stringify(strip(base));
 const textOf = e => S.texts[e.text] || {};
 const lineCount = s => String(s || '').split(/\r?\n/).length;   // a text box grows to fit its lines
@@ -1027,8 +1095,13 @@ function createEvent(pool) {
   });
   setTimeout(() => { const i = $('fId'); if (i) { i.focus(); i.select(); } }, 0);
 }
+// Names (event ids, event variables, kinds, floors) may use any characters, Traditional Chinese included. Only characters
+// that would break the editor's HTML (" ' < > &), its node graph (|) or a path (\ /) are refused; a floor name is also a
+// file name (F01.json, 第一層.json), so : * ? are refused there too. No leading or trailing spaces.
+const BAD_NAME = /["'<>&|\\\/\u0000-\u001f]/, BAD_FILE = /[:*?]/;
+const nameOk = (s, file) => !!s && s === s.trim() && !BAD_NAME.test(s) && !(file && BAD_FILE.test(s));
 function idError(id, self) {
-  if (!/^ev_[a-z0-9_]+$/.test(id)) return t('idFormat');
+  if (!nameOk(id)) return t('idFormat');
   if (S.events.some(e => e.id === id && e !== self)) return t('idDup', id, ev(id).pool);
   return '';
 }
@@ -1389,7 +1462,8 @@ function renderFloor(id) {
   $('fAct').onchange = () => editFloor(f, t('hFloorAct', f.id, $('fAct').value), () => f.act = $('fAct').value);
   document.querySelectorAll('.stairs tr.st').forEach(tr => { const st = f.stairs[+tr.dataset.i];
     tr.querySelector('.stDir').onchange = ev2 => editFloor(f, t('hStairDir', f.id, +tr.dataset.i), () => st.dir = ev2.target.value);
-    tr.querySelector('.stTo').onchange = ev2 => { const v = ev2.target.value.trim().toUpperCase(); if (v === st.to) return; editFloor(f, t('hStairTo', f.id, v), () => st.to = v); };
+    tr.querySelector('.stTo').onchange = ev2 => { const v = ev2.target.value.trim(); if (v === st.to) return;
+      if (v && !nameOk(v, true)) { ev2.target.value = st.to; return toast(t('floorNameErr')); } editFloor(f, t('hStairTo', f.id, v), () => st.to = v); };
     tr.querySelector('.stUnlock').onchange = ev2 => setUnlock(f.id, st.to, ev2.target.value);
     tr.querySelector('.stDel').onclick = () => editFloor(f, t('hDelStair', f.id, st.to), () => f.stairs.splice(+tr.dataset.i, 1));
   });
@@ -1645,41 +1719,85 @@ function renderDiagram() {
 }
 // ---------- variables: event variables (editable), counters and flags (read-only), with who changes and reads each ----------
 function addVariable(name, def, cat) {
-  if (!/^[a-z][a-z0-9_]*$/.test(name)) return t('varErrName');
+  if (!nameOk(name)) return t('varErrName');
   if (S.vars[name] || S.counters[name] || S.flags[name]) return t('varErrDup', name);
   edit(t('hVarAdd', name), () => { S.vars[name] = { type: 'int', default: parseInt(def, 10) || 0, scope: 'run' }; if (cat && cat.trim()) S.vars[name].category = cat.trim(); }); return '';
 }
 function renameCategory(old, nu) {
   nu = (nu || '').trim(); catRenaming = null; if (!nu || nu === old) return renderAll();
-  edit(t('hCatRename', old, nu), () => valueRefs().forEach(r => { const c = catOf(r); if (c === old || c.startsWith(old + '/')) recOf(r).category = nu + c.slice(old.length); }));
+  edit(t('hCatRename', old, nu), () => { valueRefs().forEach(r => { const c = catOf(r); if (c === old || c.startsWith(old + '/')) recOf(r).category = nu + c.slice(old.length); });
+    S.cats = [...new Set(S.cats.map(c => c === old || c.startsWith(old + '/') ? nu + c.slice(old.length) : c))].sort((a, b) => a.localeCompare(b)); });
   if (VF.cat === old) VF.cat = nu;
 }
 let catCollapsed = new Set(), catRenaming = null;
+let justAddedVar = null, varSel = new Set(), varSelLast = null;
+// give several values one category ('' = take it off, so each goes back to its automatic group); one undo step
+function setCategoryOf(refs, cat) {
+  const c = (cat || '').trim().replace(/\s*\/\s*/g, '/').replace(/^\/+|\/+$/g, '');
+  if (!refs.length) return t('selNone'); if (c && /["<>&|\\]/.test(c)) return t('catErrName');
+  edit(c ? t('hCatBulk', refs.length, c) : t('hCatBulkOff', refs.length), () => refs.forEach(r => { const rec = recOf(r); if (!rec) return; if (c) rec.category = c; else delete rec.category; }));
+  return '';
+}
 function renderVars() {
   const chipsOf = list => list.map(e => `<span class="chip link" data-goev="${e.id}">${e.id}</span>`).join(' ') || '<span class="muted">—</span>';
-  const refs = valueRefs().filter(valueMatches).sort(byCat), groups = {};
+  const TORD = { var: 0, counter: 1, flag: 2 }, flat = !VF.cat;
+  const all = new Set(valueRefs()); [...varSel].forEach(r => { if (!all.has(r)) varSel.delete(r); });   // all categories: one flat list, no category headings
+  const refs = valueRefs().filter(valueMatches).sort(flat ? (a, b) => TORD[refType(a)] - TORD[refType(b)] || refName(a).localeCompare(refName(b)) : byCat), groups = {};
   refs.forEach(r => (groups[catOf(r)] = groups[catOf(r)] || []).push(r));
-  const rowHtml = ref => { const k = refType(ref), n = refName(ref), r = recOf(ref);
+  if (!flat) S.cats.filter(c => (c === VF.cat || c.startsWith(VF.cat + '/')) && !groups[c]).forEach(c => groups[c] = []);
+  const rowHtml = (ref, isNew) => { const k = refType(ref), n = refName(ref), r = recOf(ref);
     const info = k === 'var' ? `<input type="number" class="vDef" data-v="${esc(n)}" value="${r.default || 0}" title="${t('vDefault')}"> <select class="vScope" data-v="${esc(n)}"><option${r.scope !== 'meta' ? ' selected' : ''}>run</option><option${r.scope === 'meta' ? ' selected' : ''}>meta</option></select>`
       : k === 'counter' ? `<span class="muted">${esc(L_(r.label))} · ${(r.clamp || []).join(' … ')}</span>` : `<span class="muted">${esc(r.scope || '')} · ${esc(r.setBy || '')}</span>`;
-    return `<tr><td><b class="vname" data-val="${esc(ref)}" style="cursor:pointer">${VICON[k]} ${esc(n)}</b></td><td class="muted" style="white-space:nowrap">${t(VTYPE[k])}</td>
+    return `<tr class="${isNew ? 'justadded' : ''}${varSel.has(ref) ? ' vsel' : ''}" data-ref="${esc(ref)}"><td class="vchk"><input type="checkbox" class="vPick"${varSel.has(ref) ? ' checked' : ''} title="${t('selTip')}"></td><td><b class="vname" data-val="${esc(ref)}" style="cursor:pointer">${VICON[k]} ${esc(n)}</b></td><td class="muted" style="white-space:nowrap">${t(VTYPE[k])}</td>
       <td><input class="vCat" list="catList" data-ref="${esc(ref)}" value="${esc(r.category || '')}" placeholder="${esc(catOf(ref))}" style="width:160px"></td>
       <td>${info}</td><td>${chipsOf(changers(ref))}</td><td>${chipsOf(readers(ref))}</td><td>${k === 'var' ? `<button class="vDel" data-v="${esc(n)}">${t('delVar')}</button>` : ''}</td></tr>`; };
-  const explicitCat = VF.cat && valueRefs().some(r => (recOf(r) || {}).category === VF.cat) ? VF.cat : '';
+  const explicitCat = VF.cat && (S.cats.includes(VF.cat) || valueRefs().some(r => (recOf(r) || {}).category === VF.cat)) ? VF.cat : '';
   $('pane').innerHTML = `<div class="vmap">${filterBar('vl', false)}<datalist id="catList">${allCats().map(c => `<option value="${esc(c)}">`).join('')}</datalist>
-    <div class="plist"><table class="vars"><thead><tr><th>${t('vName')}</th><th>${t('vType')}</th><th>${t('vtCategory')}</th><th></th><th>${t('vSetBy')}</th><th>${t('vReadBy')}</th><th></th></tr></thead><tbody>
-    ${Object.keys(groups).sort((a, b) => a.localeCompare(b)).map(c => { const list = groups[c], open = !catCollapsed.has(c) || VF.q;
-      return `<tr class="cathead" data-cat="${esc(c)}"><td colspan="7">${open ? '▾' : '▸'} 📁 <b>${esc(c)}</b> <span class="muted">(${list.length})${list.every(catAuto) ? ' · ' + t('catAuto') : ''}</span>
-        ${catRenaming === c ? `<input id="catNewName" value="${esc(c)}" style="width:200px"> <button id="catOk">OK</button>` : `<button class="catRen" data-cat="${esc(c)}" title="${t('renameCat')}">✎</button>`}</td></tr>`
-        + (open ? list.map(rowHtml).join('') : ''); }).join('') || `<tr><td colspan="7" class="muted">${t('noMatchVals')}</td></tr>`}
-    <tr><td colspan="7"><div class="lrow" style="margin-top:6px"><input id="newVarName" placeholder="${t('newVarPh')}" style="width:180px">
+    <div class="plist"><table class="vars"><thead><tr><th class="vchk"><input type="checkbox" id="vPickAll" title="${t('selAllTip')}"></th><th>${t('vName')}</th><th>${t('vType')}</th><th>${t('vtCategory')}</th><th></th><th>${t('vSetBy')}</th><th>${t('vReadBy')}</th><th></th></tr></thead><tbody>
+    <tr class="newvar"><td colspan="8"><div class="lrow"><input id="newVarName" placeholder="${t('newVarPh')}" style="width:180px">
       ${t('vtCategory')} <input id="newVarCat" list="catList" placeholder="${t('catPh')}" value="${esc(explicitCat)}" style="width:160px">
       ${t('vDefault')} <input id="newVarDef" type="number" value="0" style="width:64px">
-      <button class="primary" id="newVarAdd">${t('addVarBtn')}</button> <span class="err" id="newVarErr"></span></div></td></tr></tbody></table></div></div>`;
+      <button class="primary" id="newVarAdd">${t('addVarBtn')}</button> <span class="err" id="newVarErr"></span></div></td></tr>
+    <tr class="newvar"><td colspan="8"><div class="lrow">📁 <input id="catEdit" list="catList" placeholder="${t('catEditPh')}" value="${esc(VF.cat)}" style="width:220px">
+      <button id="catCreate">${t('catCreate')}</button> <button id="catRename">${t('catRename')}</button> <button id="catDelete">${t('catDelete')}</button> <span class="err" id="catErr"></span>
+      <span class="muted" style="font-size:11px">${t('catHint')}</span></div></td></tr>
+    ${varSel.size ? `<tr class="bulkbar"><td colspan="8"><div class="lrow"><b>${t('selN', varSel.size)}</b>
+      ${t('bulkMoveTo')} <input id="bulkCat" list="catList" placeholder="${t('catEditPh')}" value="${esc(VF.cat)}" style="width:200px">
+      <button class="primary" id="bulkApply">${t('bulkApply')}</button> <button id="bulkUncat">${t('catDelBtnUncat')}</button>
+      <button id="bulkClear">${t('selClear')}</button> <span class="err" id="bulkErr"></span></div></td></tr>` : ''}
+    ${flat ? (refs.map(r => rowHtml(r, r === justAddedVar)).join('') || `<tr><td colspan="8" class="muted">${t('noMatchVals')}</td></tr>`) : Object.keys(groups).sort((a, b) => a.localeCompare(b)).map(c => { const list = groups[c], open = !catCollapsed.has(c) || VF.q;
+      return `<tr class="cathead" data-cat="${esc(c)}"><td colspan="8">${open ? '▾' : '▸'} 📁 <b>${esc(c)}</b> <span class="muted">(${list.length})${list.length && list.every(catAuto) ? ' · ' + t('catAuto') : ''}${!list.length ? ' · ' + t('catEmpty') : ''}</span>
+        ${catRenaming === c ? `<input id="catNewName" value="${esc(c)}" style="width:200px"> <button id="catOk">OK</button>` : `<button class="catRen" data-cat="${esc(c)}" title="${t('renameCat')}">✎</button>`}</td></tr>`
+        + (open ? list.map(r => rowHtml(r, r === justAddedVar)).join('') : ''); }).join('') || `<tr><td colspan="8" class="muted">${t('noMatchVals')}</td></tr>`}
+    </tbody></table></div></div>`;
   $('vlCount').textContent = t('nOfM', refs.length, valueRefs().length); $('dinfo').textContent = '';
   bindFilterBar('vl', renderVars);
-  $('newVarAdd').onclick = () => { const err = addVariable($('newVarName').value.trim(), $('newVarDef').value, $('newVarCat').value); if (err) $('newVarErr').textContent = err; };
+  // multi-select: tick rows (Shift+click ticks the range from the last ticked row), then move them to a category at once
+  const shown = [...$('pane').querySelectorAll('tr[data-ref]')].map(tr => tr.dataset.ref);
+  $('pane').querySelectorAll('.vPick').forEach(c => c.onclick = ev2 => {
+    const ref = c.closest('tr').dataset.ref, on = c.checked;
+    if (ev2.shiftKey && varSelLast && shown.includes(varSelLast)) { const i = shown.indexOf(varSelLast), j = shown.indexOf(ref);
+      shown.slice(Math.min(i, j), Math.max(i, j) + 1).forEach(r => on ? varSel.add(r) : varSel.delete(r)); }
+    else on ? varSel.add(ref) : varSel.delete(ref);
+    varSelLast = ref; renderVars(); });
+  const pa = $('vPickAll'); pa.checked = shown.length > 0 && shown.every(r => varSel.has(r)); pa.indeterminate = !pa.checked && shown.some(r => varSel.has(r));
+  pa.onclick = () => { if (pa.checked) shown.forEach(r => varSel.add(r)); else shown.forEach(r => varSel.delete(r)); renderVars(); };
+  if ($('bulkApply')) {
+    const go = cat => { const err = setCategoryOf([...varSel], cat); if (err) $('bulkErr').textContent = err; };
+    $('bulkApply').onclick = () => go($('bulkCat').value);
+    $('bulkCat').onkeydown = ev2 => { if (ev2.key === 'Enter') $('bulkApply').click(); };
+    $('bulkUncat').onclick = () => go('');
+    $('bulkClear').onclick = () => { varSel.clear(); renderVars(); };
+  }
+  $('newVarAdd').onclick = () => { const name = $('newVarName').value.trim(), err = addVariable(name, $('newVarDef').value, $('newVarCat').value);
+    if (err) { $('newVarErr').textContent = err; return; }
+    justAddedVar = 'var:' + name; renderVars(); const row = $('pane').querySelector('tr.justadded'); if (row) row.scrollIntoView({ block: 'nearest' });
+    setTimeout(() => { justAddedVar = null; }, 0); $('newVarName').focus(); };
   $('newVarName').onkeydown = ev2 => { if (ev2.key === 'Enter') $('newVarAdd').click(); };
+  $('catCreate').onclick = () => { const err = createCategory($('catEdit').value); if (err) $('catErr').textContent = err; };
+  $('catDelete').onclick = async () => { const err = await deleteCategoryAsk($('catEdit').value); if (err && $('catErr')) $('catErr').textContent = err; };
+  $('catRename').onclick = async () => { const err = await renameCategoryAsk($('catEdit').value); if (err && $('catErr')) $('catErr').textContent = err; };
+  $('catEdit').onkeydown = ev2 => { if (ev2.key === 'Enter') $('catCreate').click(); };
   $('pane').querySelectorAll('.vDef').forEach(i => i.onchange = () => edit(t('hVarEdit', i.dataset.v), () => S.vars[i.dataset.v].default = parseInt(i.value, 10) || 0));
   $('pane').querySelectorAll('.vScope').forEach(i => i.onchange = () => edit(t('hVarEdit', i.dataset.v), () => S.vars[i.dataset.v].scope = i.value));
   $('pane').querySelectorAll('.vDel').forEach(b => b.onclick = () => edit(t('hVarDel', b.dataset.v), () => delete S.vars[b.dataset.v]));
@@ -1687,7 +1805,7 @@ function renderVars() {
     edit(t('hCat', refName(ref)), () => { const r = recOf(ref); if (v) r.category = v; else delete r.category; }); });
   $('pane').querySelectorAll('tr.cathead').forEach(tr => tr.onclick = ev2 => { if (ev2.target.closest('button, input')) return; const c = tr.dataset.cat;
     catCollapsed.has(c) ? catCollapsed.delete(c) : catCollapsed.add(c); renderVars(); });
-  $('pane').querySelectorAll('.catRen').forEach(b => b.onclick = () => { catRenaming = b.dataset.cat; renderVars(); const i = $('catNewName'); i.focus(); i.select(); });
+  $('pane').querySelectorAll('.catRen').forEach(b => b.onclick = ev2 => { ev2.stopPropagation(); renameCategoryAsk(b.dataset.cat); });
   if ($('catOk')) { $('catOk').onclick = () => renameCategory(catRenaming, $('catNewName').value);
     $('catNewName').onkeydown = ev2 => { if (ev2.key === 'Enter') $('catOk').click(); if (ev2.key === 'Escape') { catRenaming = null; renderVars(); } }; }
   $('pane').querySelectorAll('[data-goev]').forEach(c => c.onclick = () => selectSubject(c.dataset.goev));
@@ -1706,7 +1824,76 @@ function catOf(ref) {
   return k === 'counter' ? t('catStory') : t('catNone');
 }
 const catAuto = ref => !(recOf(ref) || {}).category;
-const allCats = () => [...new Set(valueRefs().map(catOf))].sort((a, b) => a.localeCompare(b));
+const allCats = () => [...new Set([...valueRefs().map(catOf), ...(S.cats || [])])].sort((a, b) => a.localeCompare(b));
+const catUsers = c => valueRefs().filter(r => { const x = catOf(r); return x === c || x.startsWith(c + '/'); });
+// Create category: an empty category stays in vars.json "_categories" until a value uses it
+function createCategory(name) {
+  const c = (name || '').trim().replace(/\s*\/\s*/g, '/').replace(/^\/+|\/+$/g, '');
+  if (!c || /["<>&|\\]/.test(c)) return t('catErrName');
+  if (allCats().includes(c)) return t('catErrDup', c);
+  edit(t('hCatNew', c), () => { S.cats.push(c); S.cats.sort((a, b) => a.localeCompare(b)); });
+  VF.cat = c; renderAll(); return '';
+}
+// Delete category. mode 'uncat': its values (and those of its sub-categories) lose the category; 'delete': its event
+// variables are deleted too. Counters and flags are never deleted here (chapters, dialogue and the game code use them):
+// they only lose the category, so they go back to their automatic group.
+function catMembers(c) {
+  const users = catUsers(c).filter(r => !catAuto(r)), created = S.cats.filter(x => x === c || x.startsWith(c + '/'));
+  return { users, created, vars: users.filter(r => refType(r) === 'var'), others: users.filter(r => refType(r) !== 'var') };
+}
+function deleteCategory(name, mode) {
+  const c = (name || '').trim(); if (!c) return t('catErrPick');
+  const m = catMembers(c);
+  if (!m.users.length && !m.created.length) return allCats().includes(c) ? t('catErrAuto', c) : t('catErrNone', c);
+  const del = mode === 'delete' ? m.vars : [];
+  edit(del.length ? t('hCatDelVars', c, del.length) : t('hCatDel', c), () => {
+    m.users.forEach(r => { if (del.includes(r)) delete S.vars[refName(r)]; else delete recOf(r).category; });
+    S.cats = S.cats.filter(x => !m.created.includes(x)); });
+  if (del.length) openVals = openVals.filter(r => !del.includes(r));
+  if (VF.cat === c || VF.cat.startsWith(c + '/')) VF.cat = ''; renderAll(); return '';
+}
+// a small dialog of the editor's own: resolves with the id of the button pressed (null = cancelled)
+function askDialog(title, bodyHtml, buttons) {
+  return new Promise(res => {
+    const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.style.display = 'flex'; bg.style.zIndex = 30;
+    bg.innerHTML = `<div class="modal" style="width:min(560px,94vw)"><header><b>${esc(title)}</b></header><div class="content">${bodyHtml}</div>
+      <footer>${buttons.map(b => `<button data-b="${b.id}"${b.primary ? ' class="primary"' : ''}${b.danger ? ' style="border-color:var(--bad);color:#ffb3b3"' : ''}>${esc(b.label)}</button>`).join(' ')}</footer></div>`;
+    const done = v => { bg.remove(); removeEventListener('keydown', key, true); res(v); };
+    const key = e => { if (e.key === 'Escape') { e.stopPropagation(); done(null); } if (e.key === 'Enter' && bg.querySelector('input') === document.activeElement) { e.preventDefault(); bg.querySelector('button.primary').click(); } };
+    bg.querySelectorAll('[data-b]').forEach(b => b.onclick = () => done(b.dataset.b === 'cancel' ? null : { button: b.dataset.b, value: (bg.querySelector('input') || {}).value }));
+    bg.onclick = e => { if (e.target === bg) done(null); };
+    addEventListener('keydown', key, true); document.body.appendChild(bg);
+    const inp = bg.querySelector('input'); (inp || bg.querySelector('button.primary') || bg.querySelector('button')).focus(); if (inp) inp.select();
+  });
+}
+async function deleteCategoryAsk(name) {
+  const c = (name || '').trim(); if (!c) return t('catErrPick');
+  const m = catMembers(c);
+  if (!m.users.length && !m.created.length) return allCats().includes(c) ? t('catErrAuto', c) : t('catErrNone', c);
+  if (!m.users.length) { const r = await askDialog(t('catDelTitle', c), `<p>${t('catDelEmpty')}</p>`, [{ id: 'cancel', label: t('cancel') }, { id: 'uncat', label: t('catDelete'), primary: true }]);
+    return r ? deleteCategory(c, 'uncat') : ''; }
+  const users = new Set(m.vars.flatMap(r => [...changers(r), ...readers(r)].map(e => e.id)));
+  const list = rs => rs.slice(0, 12).map(r => `<code>${VICON[refType(r)]} ${esc(refName(r))}</code>`).join(' ') + (rs.length > 12 ? ` <span class="muted">+${rs.length - 12}</span>` : '');
+  const body = `<p>${t('catDelHolds', c, m.vars.length, m.others.length)}</p>
+    ${m.vars.length ? `<p>${list(m.vars)}</p>` : ''}${m.others.length ? `<p class="muted">${list(m.others)}</p>` : ''}
+    <ul style="margin:8px 0 0;padding-left:18px">
+      ${m.vars.length ? `<li>${t('catDelOptDelete', m.vars.length, m.others.length)}${users.size ? ` <span style="color:var(--warn)">${t('catDelUsed', users.size)}</span>` : ''}</li>` : ''}
+      <li>${t('catDelOptUncat')}</li></ul>`;
+  const r = await askDialog(t('catDelTitle', c), body, [{ id: 'cancel', label: t('cancel') },
+    ...(m.vars.length ? [{ id: 'delete', label: t('catDelBtnDelete', m.vars.length), danger: true }] : []),
+    { id: 'uncat', label: t('catDelBtnUncat'), primary: true }]);
+  return r ? deleteCategory(c, r.button) : '';
+}
+async function renameCategoryAsk(name) {
+  const c = (name || '').trim(); if (!c) return t('catErrPick');
+  if (!allCats().includes(c)) return t('catErrNone', c);
+  const r = await askDialog(t('catRenTitle', c), `<p class="muted">${t('catRenHint')}</p><input value="${esc(c)}" style="width:100%">`,
+    [{ id: 'cancel', label: t('cancel') }, { id: 'ok', label: t('catRenOk'), primary: true }]);
+  if (!r) return '';
+  const nu = (r.value || '').trim().replace(/\s*\/\s*/g, '/').replace(/^\/+|\/+$/g, '');
+  if (!nu || /["<>&|\\]/.test(nu)) return t('catErrName');
+  renameCategory(c, nu); renderAll(); return '';
+}
 const VF = { q: '', cat: '', unused: false, types: new Set(['var', 'counter', 'flag']) };   // one filter for the Variables tab and the Values map
 function valueMatches(ref) {
   if (!VF.types.has(refType(ref))) return false;
@@ -1817,7 +2004,7 @@ function renderTabs() {
   $('tVmap').classList.toggle('on', tab === 'vmap'); $('tKinds').classList.toggle('on', tab === 'kinds');
 }
 function renameVar(old, nu) {
-  if (!/^[a-z][a-z0-9_]*$/.test(nu) || S.vars[nu] || S.counters[nu] || S.flags[nu]) return t('vtRenameErr');
+  if (!nameOk(nu) || S.vars[nu] || S.counters[nu] || S.flags[nu]) return t('vtRenameErr');
   edit(t('hVarRename', old, nu), () => {
     S.vars = Object.fromEntries(Object.entries(S.vars).map(([k, v]) => [k === old ? nu : k, v]));
     S.events.forEach(e => { e.actions.forEach(a => { if (a.var === old) a.var = nu; }); e.req.forEach(l => { if (l.var === old) l.var = nu; });
@@ -2258,9 +2445,10 @@ function diffFiles() {
     const a = isNewF ? [] : lines(base.kinds), b = lines(S.kinds), A = new Set(a);
     out.push({ path: 'assets/data/events/kinds.json' + (isNewF ? t('newFile') : ''), body: [...a.filter(l => !b.includes(l)).map(l => ['del', l]), ...b.map(l => [isNewF || !A.has(l) ? 'add' : 'ctx', l])] });
   }
-  if (JSON.stringify(base.vars) !== JSON.stringify(S.vars)) {
-    const isNewF = !Object.keys(DATA.vars || {}).length, lines = o => JSON.stringify({ _comment: [t('varsComment')], ...o }, null, 2).split('\n');
-    const a = isNewF ? [] : lines(base.vars), b = lines(S.vars), A = new Set(a);
+  if (JSON.stringify(base.vars) !== JSON.stringify(S.vars) || JSON.stringify(base.cats) !== JSON.stringify(S.cats)) {
+    const isNewF = !Object.keys(DATA.vars || {}).length && !(DATA.varCats || []).length;
+    const lines = (v, c) => JSON.stringify({ _comment: [t('varsComment')], ...(c.length ? { _categories: c } : {}), ...v }, null, 2).split('\n');
+    const a = isNewF ? [] : lines(base.vars, base.cats), b = lines(S.vars, S.cats), A = new Set(a);
     out.push({ path: 'assets/data/story/vars.json' + (isNewF ? t('newFile') : ''), body: [...a.filter(l => !b.includes(l)).map(l => ['del', l]), ...b.map(l => [isNewF || !A.has(l) ? 'add' : 'ctx', l])] });
   }
   if (body.length) out.push({ path: 'assets/data/text.json', body: [['ctx', '  "strings": {'], ['ctx', '    ...'], ...body, ['ctx', '  }']] });
@@ -2274,7 +2462,8 @@ function openSave(auto) {
   const warn = problems().filter(p => RULES[p.rule].sev !== 'info').length;
   $('diffs').innerHTML = `<p class="muted">${t('filesChange', files.length, warn)}</p>`
     + files.map(f => `<div class="file"><div class="path">${f.path}</div><pre class="diff">${f.body.map(([c, l]) => `<span class="${c}">${c === 'add' ? '+ ' : c === 'del' ? '- ' : '  '}${esc(l)}</span>`).join('')}</pre></div>`).join('');
-  $('mWrite').textContent = t('writeN', files.length);
+  $('mWrite').textContent = LIVE ? t('writeLiveN', files.length) : t('writeN', files.length);
+  $('saveNote').textContent = LIVE ? t('saveNoteLive') : t('saveNoteCopy');
   $('modalBg').style.display = 'flex';
   if (auto) setTimeout(() => $('mWrite').click(), 2200); else $('mWrite').classList.add('flash');
 }
@@ -2282,12 +2471,179 @@ $('save').onclick = () => openSave(false);
 $('mCancel').onclick = () => $('modalBg').style.display = 'none';
 $('mWrite').onclick = () => {
   if ($('modalBg').style.display !== 'flex') return;
+  if (LIVE) return writeLive();
   const n = diffFiles().length, step = currentStep();
   base = clone(S); flags.saves++; flags.lastSaveStep = step; $('modalBg').style.display = 'none'; $('mWrite').classList.remove('flash');
   S.events.forEach(e => delete e.isNew); S.floors.forEach(f => delete f.isNew);
   $('hist').insertAdjacentHTML('beforeend', `<li style="color:var(--ok)">${t('hSaved', n)}</li>`);
   toast(t('toastSaved', n)); renderAll();
 };
+// ---------- the project folder: read assets/data live, and Save writes into it ----------
+// Open project folder… (or the stage editor opening it: index.html passes the folder handle across) switches the editor
+// from the data.js copy to the files themselves. Save then writes each changed file back:
+//  - every write starts from the file as it is on disk NOW and applies only this editor's changes, so edits the stage
+//    editor saved in the meantime (a floor's events list) are kept;
+//  - pools, floor specs, text.json, vars.json, kinds.json are written as 2-space JSON, which is exactly their format;
+//    flags.json and counters.json are hand-aligned, so only the changed entries' lines are replaced;
+//  - before overwriting, each file is copied to Build/editor_backups/<date-time>/ (Build/ is not in git).
+let LIVE = null;   // { dir } while a project folder is open
+async function dirIn(dir, path, create) { let h = dir; for (const p of path.split('/').filter(Boolean)) h = await h.getDirectoryHandle(p, { create: !!create }); return h; }
+async function fileIn(dir, path, create) { const parts = path.split('/'), d = await dirIn(dir, parts.slice(0, -1).join('/'), create);
+  return d.getFileHandle(parts.at(-1), { create: !!create }); }
+async function readText(dir, path) { return (await (await fileIn(dir, path)).getFile()).text(); }
+async function tryText(dir, path) { try { return await readText(dir, path); } catch (e) { if (e.name === 'NotFoundError' || e.name === 'TypeMismatchError') return null; throw e; } }
+async function listNames(dir, path, re) { const d = await dirIn(dir, path), out = [];
+  for await (const [name, h] of d.entries()) if (h.kind === 'file' && re.test(name)) out.push(name); return out.sort(); }
+const noUnderscore = o => Object.fromEntries(Object.entries(o || {}).filter(([k]) => !k.startsWith('_')));
+
+// the same data make_data.py puts into data.js, read from the folder (NPC placement stays from data.js)
+async function readLiveData(dir) {
+  const A = 'assets/data/', pools = [], events = [], floors = [];
+  for (const name of await listNames(dir, A + 'events', /^pool_.*\.json$/)) {
+    const pid = name.slice(0, -5); pools.push(pid);
+    for (const e of JSON.parse(await readText(dir, A + 'events/' + name)).events || []) {
+      const rec = { id: e.eventId, kind: e.kind, pool: pid, text: e.text };
+      ['trigger', 'requires', 'actions', 'next', 'once'].forEach(k => { if (k in e) rec[k] = e[k]; });
+      events.push(rec);
+    }
+  }
+  for (const name of await listNames(dir, A + 'story/floors', /^(?!.*\.stage\.json$).+\.json$/)) {
+    const d = JSON.parse(await readText(dir, A + 'story/floors/' + name));
+    const rec = { id: d.id, act: d.act, role: d.role || 'normal', events: [...(d.events || [])], next: d.nextFloor || null };
+    if (Array.isArray(d.stairs)) rec.stairs = d.stairs;
+    floors.push(rec);
+  }
+  const strings = JSON.parse(await readText(dir, A + 'text.json')).strings || {}, known = new Set(events.map(e => e.id));
+  const wanted = new Set([...events.map(e => e.text), ...floors.flatMap(f => f.events.filter(i => !known.has(i)))]);
+  const texts = Object.fromEntries([...wanted].sort().filter(k => k in strings).map(k => [k, strings[k]]));
+  const opt = async p => { const s = await tryText(dir, A + p); return s ? noUnderscore(JSON.parse(s)) : {}; };
+  return { snapshot: 'live', pools, events, floors, texts, npcs: DATA.npcs,
+    flags: await opt('story/flags.json'), counters: await opt('story/counters.json'), vars: await opt('story/vars.json'), kinds: await opt('events/kinds.json'),
+    varCats: await (async () => { const s = await tryText(dir, A + 'story/vars.json'); return s ? JSON.parse(s)._categories || [] : []; })() };
+}
+async function useDir(dir, fromOther) {
+  try { await fileIn(dir, 'assets/data/story/floors/F01.json'); } catch (_) { if (!fromOther) toast(t('notProject')); return; }
+  if (dirty()) { if (fromOther) return toast(t('liveSkipped')); if (!confirm(t('discardForLive'))) return; }
+  const live = await readLiveData(dir);
+  Object.keys(DATA).forEach(k => { if (k in live) DATA[k] = live[k]; });
+  Object.keys(PREV).forEach(k => delete PREV[k]); DATA.floors.forEach(f => { if (f.next) PREV[f.next] = f.id; });
+  if (playing >= 0) stopReq = true;
+  LIVE = { dir }; document.body.classList.add('live'); setTutorial(false);
+  reset(); showSource(); toast(t('loadedLiveEv', live.events.length, live.floors.length));
+  if (!fromOther && inShell) window.parent.postMessage({ toms: 'dir', handle: dir }, '*');   // the stage editor opens it too
+}
+function showSource() {
+  if (!$('src')) return;
+  $('src').textContent = LIVE ? t('srcLive') : t('srcCopy'); $('src').classList.toggle('live', !!LIVE);
+  if (LIVE) { $('bannerA').textContent = t('bannerLive'); $('bannerB').textContent = t('bannerLiveB'); $('snap').textContent = 'assets/data'; }
+  $('play').disabled = !!LIVE;
+}
+$('openDir').onclick = async () => {
+  if (!window.showDirectoryPicker) return toast(t('openUnsupported'));
+  try { await useDir(await window.showDirectoryPicker({ mode: 'readwrite' })); } catch (e) { if (e.name !== 'AbortError') toast(String(e)); }
+};
+
+const asText = (obj, before) => { const s = JSON.stringify(obj, null, 2) + '\n'; return before && before.includes('\r\n') ? s.replace(/\n/g, '\r\n') : s; };
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const poolRec = e => { const o = { eventId: e.id, kind: e.kind, text: e.text };
+  if (e.trigger && e.trigger.on !== 'step') o.trigger = e.trigger; const rq = reqJson(e); if (rq) o.requires = rq;
+  if (e.actions && e.actions.length) o.actions = e.actions; if (e.next && e.next.length) o.next = e.next; return o; };
+const oneLine = v => Array.isArray(v) ? '[' + v.map(oneLine).join(', ') + ']'
+  : v && typeof v === 'object' ? (Object.keys(v).length ? '{ ' + Object.entries(v).map(([k, x]) => JSON.stringify(k) + ': ' + oneLine(x)).join(', ') + ' }' : '{}')
+  : JSON.stringify(v);
+// flags.json / counters.json: replace the changed entries' one-line records, add new ones before the closing brace
+function patchEntries(raw, obj, changes) {
+  const nl = raw.includes('\r\n') ? '\r\n' : '\n', lines = raw.split(/\r?\n/);
+  for (const [k, v] of changes) {
+    const re = new RegExp('^(\\s*)' + JSON.stringify(k).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*:\\s*\\{.*\\}(,?)\\s*$');
+    const i = lines.findIndex(l => re.test(l));
+    if (i >= 0) { const m = lines[i].match(re); lines[i] = `${m[1]}${JSON.stringify(k)}: ${oneLine(v)}${m[2]}`; continue; }
+    if (k in obj) return null;   // a multi-line record: let the caller rewrite the file
+    let j = lines.length - 1; while (j >= 0 && lines[j].trim() !== '}') j--;
+    let p = j - 1; while (p >= 0 && !lines[p].trim()) p--;
+    if (j < 0 || p < 0) return null;
+    if (!/[,{[]\s*$/.test(lines[p])) lines[p] += ',';
+    lines.splice(j, 0, `  ${JSON.stringify(k)}: ${oneLine(v)}`);
+  }
+  const out = lines.join(nl);
+  try { const want = { ...obj }; changes.forEach(([k, v]) => want[k] = v); return same(JSON.parse(out), want) ? out : null; } catch (_) { return null; }
+}
+// every file this Save changes, built from the file as it is on disk now
+async function liveWrites() {
+  const dir = LIVE.dir, A = 'assets/data/', out = [];
+  const put = (path, before, text) => { if (text !== before) out.push({ path, before, text }); };
+  const strip1 = e => poolRec(e);
+  for (const p of [...new Set([...base.pools, ...S.pools])].sort()) {
+    const bEv = base.events.filter(e => e.pool === p), sEv = S.events.filter(e => e.pool === p);
+    if (same(bEv.map(strip1), sEv.map(strip1)) && base.pools.includes(p)) continue;
+    const path = A + 'events/' + p + '.json', before = await tryText(dir, path), obj = before ? JSON.parse(before) : { events: [] };
+    const disk = obj.events || [], diskById = new Map(disk.map(r => [r.eventId, r])), mine = new Set([...bEv, ...sEv].map(e => e.id));
+    obj.events = [...sEv.map(e => { const r = { ...(diskById.get(e.id) || {}) }, o = poolRec(e);
+        ['trigger', 'requires', 'actions', 'next'].forEach(k => delete r[k]); return Object.assign(r, o); }),
+      ...disk.filter(r => !mine.has(r.eventId))];   // records someone else added since this editor read the pool
+    put(path, before, asText(obj, before));
+  }
+  for (const f of S.floors) {
+    const bf = base.floors.find(x => x.id === f.id);
+    const stairsChanged = !f.derived && (!bf || bf.derived || !same(bf.stairs, f.stairs));
+    if (bf && same(bf.events, f.events) && bf.act === f.act && !stairsChanged) continue;
+    const path = A + 'story/floors/' + f.id + '.json', before = await tryText(dir, path);
+    const obj = before ? JSON.parse(before) : { id: f.id, act: f.act, role: f.role, events: [] };
+    if (!bf || !before) obj.events = [...f.events];
+    else if (!same(bf.events, f.events)) {
+      const disk = obj.events || [], add = f.events.filter(x => !bf.events.includes(x)), del = bf.events.filter(x => !f.events.includes(x));
+      obj.events = same(disk, bf.events) ? [...f.events] : [...disk.filter(x => !del.includes(x)), ...add.filter(x => !disk.includes(x))];
+    }
+    if (!bf || bf.act !== f.act) obj.act = f.act;
+    if (stairsChanged) obj.stairs = clone(f.stairs);
+    put(path, before, asText(obj, before));
+  }
+  const tKeys = [...new Set([...Object.keys(base.texts), ...Object.keys(S.texts)])].filter(k => !same(base.texts[k], S.texts[k]));
+  if (tKeys.length) {
+    const path = A + 'text.json', before = await readText(dir, path), obj = JSON.parse(before);
+    tKeys.forEach(k => { if (S.texts[k]) obj.strings[k] = S.texts[k]; else delete obj.strings[k]; });
+    put(path, before, asText(obj, before));
+  }
+  for (const [key, file, comment] of [['vars', 'story/vars.json', 'varsComment'], ['kinds', 'events/kinds.json', 'kindsComment']]) {
+    const catsChanged = key === 'vars' && !same(base.cats, S.cats);
+    if (same(base[key], S[key]) && !catsChanged) continue;
+    const path = A + file, before = await tryText(dir, path), old = before ? JSON.parse(before) : {};
+    const head = Object.fromEntries(Object.entries(old).filter(([k]) => k.startsWith('_')));
+    const out = { ...(before ? head : { _comment: [t(comment)] }) };
+    if (key === 'vars') { if (S.cats.length) out._categories = S.cats; else delete out._categories; }
+    put(path, before, asText({ ...out, ...S[key] }, before));
+  }
+  for (const key of ['flags', 'counters']) {
+    const changes = Object.keys(S[key]).filter(k => !same(base[key][k], S[key][k])).map(k => [k, S[key][k]]);
+    if (!changes.length) continue;
+    const path = A + 'story/' + key + '.json', before = await readText(dir, path), obj = JSON.parse(before);
+    put(path, before, patchEntries(before, obj, changes) || asText(Object.assign(obj, Object.fromEntries(changes)), before));
+  }
+  return out;
+}
+const stampNow = () => { const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`; };
+async function backupAndWrite(dir, files) {   // shared idea with the stage editor: Build/editor_backups/<stamp>/<path>
+  const stamp = stampNow();
+  for (const f of files) if (f.before != null) { const w = await (await fileIn(dir, `Build/editor_backups/${stamp}/${f.path}`, true)).createWritable(); await w.write(f.before); await w.close(); }
+  for (const f of files) { const w = await (await fileIn(dir, f.path, true)).createWritable(); await w.write(f.text); await w.close(); }
+  return stamp;
+}
+async function writeLive() {
+  $('mWrite').disabled = true;
+  try {
+    const files = await liveWrites();
+    const stamp = files.length ? await backupAndWrite(LIVE.dir, files) : null;
+    base = clone(S); S.events.forEach(e => delete e.isNew); S.floors.forEach(f => delete f.isNew); base = clone(S);
+    $('modalBg').style.display = 'none'; $('mWrite').classList.remove('flash');
+    $('hist').insertAdjacentHTML('beforeend', `<li style="color:var(--ok)">${t('hSavedLive', files.length)}</li>`);
+    toast(files.length ? t('toastSavedLive', files.length, stamp) : t('nothingWritten')); renderAll();
+    window.__lastWrite = files.map(f => f.path);   // for tests
+    if (inShell && files.length) window.parent.postMessage({ toms: 'filesChanged', paths: files.map(f => f.path) }, '*');
+  } catch (e) { toast(t('writeFailed', String(e))); }
+  finally { $('mWrite').disabled = false; }
+}
+addEventListener('message', ev3 => { const m = ev3.data || {}; if (m.toms === 'dir' && m.handle && !LIVE) useDir(m.handle, true).catch(e => toast(String(e))); });
 addEventListener('keydown', e => {
   if (neKey(e)) { e.preventDefault(); return; }
   if (e.ctrlKey && e.key === 's') { e.preventDefault(); openSave(false); }
@@ -2310,13 +2666,12 @@ function buildKindFilter() {
   sel.innerHTML = `<option value="">${t('allKinds')}</option>` + [...kindsList(), ...used].map(k => `<option value="${esc(k)}">${esc(k)}${kindName(k) ? ' — ' + esc(kindName(k)) : ''}</option>`).join('');
   sel.value = [...sel.options].some(o => o.value === keep) ? keep : '';
 }
-const KIND_ID = /^[a-z][a-z0-9_]*$/;
 function addKind(id, zh, en, color) {
-  if (!KIND_ID.test(id)) return t('kErrId'); if (S.kinds[id]) return t('kErrDup', id);
+  if (!nameOk(id)) return t('kErrId'); if (S.kinds[id]) return t('kErrDup', id);
   edit(t('hKindAdd', id), () => S.kinds[id] = { name: { zh_TW: zh || id, en: en || id }, color: color || '#8b929c' }); return '';
 }
 function renameKind(old, nu) {
-  if (!KIND_ID.test(nu)) return t('kErrId'); if (S.kinds[nu]) return t('kErrDup', nu);
+  if (!nameOk(nu)) return t('kErrId'); if (S.kinds[nu]) return t('kErrDup', nu);
   edit(t('hKindRename', old, nu), () => { S.kinds = Object.fromEntries(Object.entries(S.kinds).map(([k, v]) => [k === old ? nu : k, v]));
     S.events.forEach(e => { if (e.kind === old) e.kind = nu; }); if (filt.kind === old) filt.kind = nu; });
   if (kindSel[old]) { kindSel[nu] = kindSel[old]; delete kindSel[old]; }

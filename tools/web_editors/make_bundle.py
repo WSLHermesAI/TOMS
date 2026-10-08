@@ -32,7 +32,7 @@ def rel(path):
 
 def main():
     floors = []
-    for spec_path in sorted(glob.glob(os.path.join(DATA, 'story', 'floors', 'F??.json'))):
+    for spec_path in sorted((p for p in glob.glob(os.path.join(DATA, 'story', 'floors', '*.json')) if not p.endswith('.stage.json'))):
         spec, spec_eol = load(spec_path)
         hand = spec.get('handAuthoredStage')
         stage_path = os.path.join(DATA, 'stages', hand) if hand else spec_path[:-5] + '.stage.json'

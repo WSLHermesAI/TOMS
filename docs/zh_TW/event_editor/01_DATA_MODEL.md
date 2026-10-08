@@ -24,7 +24,7 @@
 
 | 欄位 | 意義 |
 |---|---|
-| `eventId` | 在所有事件池中唯一。慣例是 `ev_<地點>_<名稱>`，例如 `ev_village_well` |
+| `eventId` | 在所有事件池中唯一。慣例是 `ev_<地點>_<名稱>`，例如 `ev_village_well`，但任何名稱都可以，包括繁體中文（編輯器只拒絕 `" ' < > & \| \ /`）。事件變數、類型和樓層名稱也一樣；樓層名稱也是它的檔名（`第一層.json`），所以那裡也不能有 `: * ?` |
 | `kind` | `assets/data/events/kinds.json` 中的一個類型（目前有 `relic`、`whisper`、`cache`、`trap`、`rescue`、`merchant_echo`、`memory_shard`）；在事件編輯器的 **類型** 分頁中編輯（[06](06_EVENT_LOGIC.md)） |
 | `text` | `text.json` 中的一個鍵。慣例是 `<eventId>.text` |
 

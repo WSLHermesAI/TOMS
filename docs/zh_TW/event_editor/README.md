@@ -26,7 +26,8 @@
 ## HTML 編輯器
 
 它們是靜態 HTML 加一點 JavaScript，使用真實事件資料的副本
-（`tools/web_editors/data_snapshot/`，用 `tools/web_editors/refresh_data.cmd` 更新）。
+（`tools/web_editors/data.js`）。`serve.cmd` 每次啟動都會從 `assets/data` 更新它；
+不用伺服器時，請執行 `refresh_data.cmd`。
 
 **編輯器放在 [tools/web_editors/](../../../tools/web_editors/index.html)**，和關卡編輯器在一起：開啟 `index.html`（或執行
 `serve.cmd`），用 **⇄** 按鈕在兩者之間切換。事件編輯器內含**教學**，在一個可操作的迷你編輯器中共 29 步：
@@ -46,6 +47,33 @@
 
 HTML 編輯器呈現的是預期的外觀和行為，不保證每個像素都一樣：真正的編輯器是 Qt
 Widgets，和動畫、粒子編輯器用同一套深色主題。
+
+## 存進 assets/data
+
+一開始編輯器使用 `data.js` 中的副本，儲存時不會寫入任何東西（教學就是用這個）。要編輯真正的資料：
+
+1. 啟動 `tools\web_editors\serve.cmd`（Chrome 或 Edge）。
+2. 點 **📂 開啟專案資料夾…**，選 **TOMS** 資料夾本身（裡面有 `assets` 的那個），並允許瀏覽器編輯
+   檔案。橫幅會變成綠色：*專案資料夾 · 正在編輯 assets/data*。關卡編輯器會自動開啟同一個資料夾
+   （反過來也一樣）。
+3. 編輯，然後 **儲存**（Ctrl+S）→ **寫入專案**。
+
+儲存只會寫入真正有變更的檔案：
+
+| 檔案 | 寫法 |
+|---|---|
+| `assets/data/events/pool_*.json`（以及新的事件池） | 事件池的 `events` 清單；其他欄位（`_comment`、`act`、`theme`）和紀錄中未知的欄位都會保留 |
+| `assets/data/events/kinds.json`、`story/vars.json` | 依類型分頁 / 事件變數重寫 |
+| `assets/data/story/floors/F??.json` | 只改 `events`、`act` 和 `stairs`；樓層設定的其他內容不變 |
+| `assets/data/text.json` | 只改有變更的字串 |
+| `assets/data/story/flags.json`、`counters.json` | 只改有變更的那幾行，所以手動對齊的排版會保留 |
+
+- 每次寫入都從當下磁碟上的檔案開始，只套用這個編輯器的變更。如果關卡編輯器在這之間
+  存了同一層樓，兩邊的變更都會留在檔案中。
+- 覆寫之前，每個檔案都會複製到 `Build/editor_backups/<日期-時間>/`（關卡編輯器也一樣）。
+  `Build/` 不在 git 中；`git diff` 也能精確看出改了什麼。
+- 資料夾權限在分頁開著時有效；重新載入後要再開一次。
+- 在專案資料夾模式下，教學和播放示範會關閉，所以它們不會寫進真正的資料。
 
 ## 下一步
 

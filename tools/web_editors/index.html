@@ -27,7 +27,11 @@ function show(name) {
   frames[name].focus(); frames[name].contentWindow.postMessage({ toms: 'shown' }, '*');
 }
 addEventListener('message', ev => {
-  const m = ev.data; if (!m || m.toms !== 'switch' || !frames[m.to]) return;
+  const m = ev.data;
+  // one editor opened the project folder (or saved files): pass it to the other one, so both work on assets/data
+  if (m && (m.toms === 'dir' || m.toms === 'filesChanged')) {
+    Object.values(frames).forEach(f => { if (f.contentWindow !== ev.source) f.contentWindow.postMessage(m, '*'); }); return; }
+  if (!m || m.toms !== 'switch' || !frames[m.to]) return;
   show(m.to); if (m.forward) frames[m.to].contentWindow.postMessage(m.forward, '*');
 });
 show(location.hash.slice(1) === 'stage' ? 'stage' : 'event');

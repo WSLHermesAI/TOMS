@@ -21,10 +21,11 @@ Qt/C++ 版本，它會用遊戲自己的渲染器繪製，所以編輯器顯示�
 | 方式 | 能用的功能 |
 |---|---|
 | 雙擊 `stage_editor.html` | 除了寫入磁碟之外都可以。它載入 `stage_bundle.js` 中的副本；**儲存** 會下載變更的檔案，讓你自己複製到 `assets/data` |
-| `tools\web_editors\serve.cmd`，然後 **開啟專案資料夾…** 並選 TOMS 資料夾（Chrome 或 Edge） | 讀取實際的檔案，**儲存** 會就地寫入 |
+| `tools\web_editors\serve.cmd`，然後 **開啟專案資料夾…** 並選 TOMS 資料夾（Chrome 或 Edge） | 讀取實際的檔案，**儲存** 會就地寫入。每個檔案會先備份到 `Build/editor_backups/<日期-時間>/`。事件編輯器會自動開啟同一個資料夾（兩個編輯器都可以開），兩個編輯器都改過的樓層 `events` 清單會保留兩邊的變更 |
 
-資料改變後，`tools/web_editors/refresh_data.cmd` 會更新兩個編輯器的副本（它執行
-`make_data.py` 和 `make_bundle.py`）。
+`serve.cmd` 會先更新兩個編輯器的資料副本（它執行 `make_data.py` 和 `make_bundle.py`），
+所以編輯器開啟時永遠是目前的 `assets/data`。不用伺服器時，資料改變後請執行
+`tools/web_editors/refresh_data.cmd`。
 
 **大小。** 所有東西都可以放大：
 
