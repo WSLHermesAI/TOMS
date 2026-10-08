@@ -131,6 +131,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("text", &UiDialogue::text);
         s.RegisterMember("choices", &UiDialogue::choices);
         s.RegisterMember("scale", &UiDialogue::scale);
+        s.RegisterMember("side", &UiDialogue::side);
     }
     if (auto s = c.RegisterStruct<UiInvItem>()) {
         s.RegisterMember("icon", &UiInvItem::icon);

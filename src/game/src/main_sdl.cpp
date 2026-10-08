@@ -24,6 +24,7 @@
 //   --fixed-dt=<ms>       every frame advances exactly this long, so a scripted run is identical
 //                         every time (screenshot smoke tests, tests/CMakeLists.txt)
 //   --anim=<file>#<clip>  play one clip of an .anim file over the screen (anim_clip.h; tests)
+//   --ui-scale=<x>        the small-screen UI scale (the web build uses 1.5 on phones), to test it on desktop
 //   --fx=<file>#<effect>  play one particle effect of a .particle file over the screen (particle_fx.h)
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
@@ -54,6 +55,7 @@
 #endif
 
 #include <algorithm>
+#include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -73,6 +75,7 @@ struct Args {
     std::string spritePath = "auto";
     int fxGpuThreshold = -1;
     std::string titleScene;            // --title-scene=<file|none>
+    float uiScale = 0.0f;              // --ui-scale=<x>: the phone UI scale on desktop (testing the web build's small-screen layout)
     int fixedDtMs = 0;       // > 0: deterministic frame time (tests)
     struct Press { Key key; int frame; };
     std::vector<Press> presses;
@@ -141,6 +144,7 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (s == "--fps") a.fps = true;
         else if (const char* v = value(s, "--fx-gpu-threshold=")) a.fxGpuThreshold = std::max(0, std::atoi(v));
         else if (const char* v = value(s, "--title-scene=")) a.titleScene = v;
+        else if (const char* v = value(s, "--ui-scale=")) a.uiScale = (float)std::atof(v);
     }
     return a;
 }
@@ -319,6 +323,7 @@ bool appInit(App& app) {
     opts.showFps = args.fps;
     opts.fxGpuThreshold = args.fxGpuThreshold;
     opts.titleScene = args.titleScene;
+    if (args.uiScale > 0.0f) opts.uiScale = args.uiScale;
 #ifdef __EMSCRIPTEN__
     opts.enableDebugUi = true;
     // Small screens (phones): grow the UI objects, keep the game resolution -- same thresholds and

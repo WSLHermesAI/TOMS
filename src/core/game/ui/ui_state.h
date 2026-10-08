@@ -95,6 +95,7 @@ struct UiDialogue {
     std::string text;
     std::vector<UiRow> choices;
     float scale = 1.0f;                // Game::setUiScale (phones)
+    float side = 40.0f;                // the box's left/right margin in design px, so that scaled it still fits the screen
 };
 
 struct UiInvItem {

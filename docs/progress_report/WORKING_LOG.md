@@ -234,4 +234,8 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - **Data and docs:** `serve.cmd` refreshes the data on every start (`data_snapshot/` removed);
     Traditional Chinese versions of every doc in `docs/zh_TW/`, English versions of the 5
     Chinese-only docs.
+- **2026-10-08** — **Fixed: the dialogue box ran off both screen edges on small web windows** (not committed). Below
+  900x560 css px the web build scales the UI x1.5, and the full-width dialogue box (scaled about its bottom centre) became
+  1.5 screens wide. It is now narrowed by the same factor first (`UiDialogue::side`), so it keeps its width on screen.
+  New desktop option `--ui-scale=<x>` to test the small-screen layout; `smoke.dialogue` unchanged.
 

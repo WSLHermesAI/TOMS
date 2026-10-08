@@ -8,7 +8,8 @@
      elsewhere on the box continues with the highlighted one. Data: dialogue.* (UiDialogue). -->
 <body data-model="game">
     <div class="fill focus"></div>
-    <div id="box" data-style-transform="'scale(' + dialogue.scale + ')'" data-event-click="act('dlg_advance')">
+    <div id="box" data-style-transform="'scale(' + dialogue.scale + ')'" data-style-left="dialogue.side + 'px'"
+         data-style-right="dialogue.side + 'px'" data-event-click="act('dlg_advance')">
         <div id="text">{{dialogue.text}}</div>
         <div data-for="c, i : dialogue.choices">
             <div class="choice" data-class-selected="c.selected"
