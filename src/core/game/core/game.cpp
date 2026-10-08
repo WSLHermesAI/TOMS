@@ -158,6 +158,10 @@ void Game::newGame(int slot) {
 
 
 void Game::update(int dtMs) {
+    idleClockMs_ += dtMs;   // the monsters' idle animations (drawIdleAnim)
+    for (MapFx& fx : mapFx_) fx.ms += dtMs;   // one-shot clips on the map (a door opening): gone once played
+    mapFx_.erase(std::remove_if(mapFx_.begin(), mapFx_.end(), [](const MapFx& fx) { return fx.ms / 1000.0f > fx.clip->duration(); }),
+                 mapFx_.end());
     if (previewPlayer_.clip()) {   // --anim preview: advances with the game clock, logs its events
         previewPlayer_.update(dtMs);
         for (const std::string& e : previewPlayer_.takeEvents()) std::fprintf(stderr, "[anim] event %s\n", e.c_str());
@@ -198,7 +202,9 @@ void Game::update(int dtMs) {
             }
             bar.legMs += (float)dtMs;
             float t = z.rampTime > 0.0f ? std::min(1.0f, bar.legMs / 1000.0f / z.rampTime) : 1.0f;
-            float speed = z.v0 + (z.vmax - z.v0) * (t * t * t);   // cubic ease-in, same curve as a manual charge
+            // cubic ease-in, same curve as a manual charge; data/battle.json scales its slow start and its top speed apart
+            const float v0 = z.v0 * barSlowScale_, vmax = std::max(v0, z.vmax * barFastScale_);
+            float speed = v0 + (vmax - v0) * (t * t * t);
             float span = 2.0f * z.redOuter;
             bar.pos += (float)bar.dir * speed * (dtMs / 1000.0f);
             if (bar.pos > span) { bar.pos = span; bar.dir = -1; bar.legMs = 0.0f; }

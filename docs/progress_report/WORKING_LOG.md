@@ -202,3 +202,26 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     strings, vars, kinds, flags and counters into `assets/data`, merged with what is on disk, with a backup
     of each file in `Build/editor_backups/`; the stage editor backs up and merges too, and opening the
     folder in one editor opens it in both. `serve.cmd` refreshes the data on every start; `data_snapshot/` removed.
+- **2026-10-08** — **Monster idle animations** (not committed).
+  - `assets/media/anim/monster_idle.anim` (anim_editor format): one looping `idle_<enemy id>` clip per enemy, sillier
+    with level (slime breathes … Vorkath laughs with dizzy stars); fx sprites for dust, glow, sparks, stars.
+  - The game draws every map monster with its clip (`Game::drawIdleAnim`), stretched over its footprint, each at its own
+    phase; static sprite as fallback. CTest `anim.check_monster_idle`; doc 15.
+  - Tests: 69/74; `smoke.stage*` (W16, the pad is missing from the screenshot; the slime now moves too) and
+    `web.page_coi` fail, as before this change.
+- **2026-10-08** — **Battle settings file** `assets/data/battle.json` (not committed): `bar_slow_speed_scale` (the bars'
+  slow start, 1), `bar_fast_speed_scale` (the top speed they ramp up to, 10) and `bar_cooldown_ms` (the wait after a tap,
+  1000; was 1500). Read at start-up; without the file the old values apply. `smoke.battle` depends on these values.
+- **2026-10-08** — **Fixed: keys and items on the generated floors were invisible, and keys could not be picked up**
+  (not committed). The floors write keys as `key:yellow`, which the game neither drew nor collected (it only knew
+  `item:key_yellow`), so every floor's door could become a dead end (reported on F03); and `entSprite()` drew every item
+  as floor. `parseStage` now loads `key:<colour>` as the item `key_<colour>`, and items draw with their own sprites.
+  `footprint_test` checks every key/item on all 71 stage files loads as something the game picks up (3427 checks).
+  References refreshed for menu/anim/fx (F01's items now visible); `smoke.stage*` (W16) and `smoke.battle` (battle.json)
+  still fail.
+- **2026-10-08** — **Doors open properly** (not committed). Walking into a door with its key used the key but left the door,
+  so each later step onto it cost another key. Now `Game::openDoor` uses the key once, plays `door_open_<colour>` from the new
+  `assets/media/anim/door_open.anim` (key turns, door sinks into the floor with a flash and sparkles), clears the tile and
+  records it as opened (`EntityStatus::Opened`, kept on revisits); the player stays put that turn. Doors and stairs no longer
+  get a floor-coloured square drawn over them. CTest `anim.check_door_open`; menu/anim/fx references refreshed.
+

@@ -95,6 +95,10 @@ inline std::string entSprite(const std::string& id) {
     if (id == "princess") return "npc_princess";
     if (id == "king") return "npc_king";
     if (id == "handmaiden") return "npc_handmaiden";
+    // items are named like their sprites (data/items.json); a key loads as the item key_<colour> (stage.h)
+    static const char* const kItems[] = {"coin", "gem_atk", "gem_def", "potion_red", "potion_blue", "exp_up", "scroll",
+                                         "key_yellow", "key_blue", "key_red"};
+    for (const char* it : kItems) if (id == it) return id;
     return "floor";
 }
 

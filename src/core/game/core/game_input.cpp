@@ -111,6 +111,19 @@ void Game::walkStep() {
     if (pl.x != nx || pl.y != ny || walkPath_.empty()) cancelWalk();
 }
 
+void Game::openDoor(int x, int y, char c) {
+    if (c == 'y') pl.key_yellow--;
+    if (c == 'b') pl.key_blue--;
+    if (c == 'r') pl.key_red--;
+    st.tiles[y][x] = '.';
+    for (auto& e : st.entities)   // the door's own map entry ("door:yellow" in the legend) no longer blocks or draws
+        if (!e.consumed && e.x == x && e.y == y && e.kind.rfind("door:", 0) == 0) e.consumed = true;
+    toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, x, y), toms::EntityStatus::Opened);
+    audio.play("confirm_click");
+    const std::string colour = c == 'y' ? "yellow" : c == 'b' ? "blue" : "red";
+    if (const toms::anim::Clip* clip = doorAnim_.find("door_open_" + colour)) mapFx_.push_back({clip, x, y, "door_" + colour, 0.0f});
+}
+
 void Game::movePlayer(int dx, int dy) {
     if (modalActive()) return;   // any modal overlay (combat/dialogue/inventory) blocks world input
     int nx = pl.x + dx, ny = pl.y + dy;
@@ -126,10 +139,9 @@ void Game::movePlayer(int dx, int dy) {
     if (auto doorIt = kDoorKeyItem.find(c); doorIt != kDoorKeyItem.end()) {
         nlohmann::json req = { {"type", "itemHeld"}, {"itemId", doorIt->second}, {"count", 1} };
         if (!toms::evaluate(req, GameConditionContext(pl, meta_, missionTrackers_, run_, equipped_))) return;
+        openDoor(nx, ny, c);   // uses the key; the door opens and vanishes; the player stays put this turn
+        return;
     }
-    if (c == 'y') pl.key_yellow--;
-    if (c == 'b') pl.key_blue--;
-    if (c == 'r') pl.key_red--;
     // S1: a multi-grid monster is NOT walked into. A 1x1 monster keeps the shipped behavior (the
     // player steps onto the tile and the fight happens there), but entering a 4-grid boss's cell
     // would put the player *inside* the boss -- so big footprints are pure bumps: fight from the

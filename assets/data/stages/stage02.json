@@ -24,6 +24,12 @@
     ]
   },
   "legend": {
+    "1": "monster:slime",
+    "2": "monster:bat",
+    "3": "monster:golem",
+    "4": "monster:skeleton",
+    "5": "monster:wraith",
+    "6": "monster:demon",
     "#": "wall",
     ".": "floor",
     "@": "player_start",
@@ -45,21 +51,19 @@
     "k": "npc:king",
     "p": "npc:princess",
     "m": "npc:handmaiden",
-    "1": "monster:slime",
-    "2": "monster:bat",
-    "3": "monster:golem",
-    "4": "monster:skeleton",
-    "5": "monster:wraith",
-    "6": "monster:demon",
-    "Z": "monster:demonlord_vorkath"
+    "Z": "monster:demonlord_vorkath",
+    "E": "event:ev_common_whisper_old_road",
+    "F": "event:ev_forest_charcoal_kiln",
+    "G": "event:ev_forest_snare",
+    "I": "event:ev_forest_trap_net"
   },
   "tiles": [
     "###################",
     "#..#..#.....#.....#",
-    "#..#.U#.....#....D#",
+    "#..#.U#...G.#....D#",
     "#..#..####..####..#",
     "#..#..............#",
-    "#..#....s.....1..1#",
+    "#F.#....s.....1..1#",
     "#..#######..#..#..#",
     "#..#........#..#..#",
     "#..#.a.....c#..#..#",
@@ -67,8 +71,8 @@
     "#..#...........#..#",
     "#..#....2.....2#..#",
     "#..#..#..#..#..#..#",
-    "#.....#..#........#",
-    "#.....#..#........#",
+    "#.E...#..#........#",
+    "#.....#..#......I.#",
     "###################"
   ],
   "story_note": {

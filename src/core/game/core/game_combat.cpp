@@ -152,14 +152,14 @@ void Game::battleTapAttack() {
     resolveAttackTap();
     if (!cs.active) return;   // the tap just won the fight -- nothing left to cool down
     cs.atkBar.cooling = true;
-    cs.atkBar.cooldownMs = CombatState::kBarCooldownMs;
+    cs.atkBar.cooldownMs = barCooldownMs_;
 }
 
 void Game::battleTapDefense() {
     if (!cs.active || cs.defBar.cooling) return;
     resolveDefenseTap();
     cs.defBar.cooling = true;
-    cs.defBar.cooldownMs = CombatState::kBarCooldownMs;
+    cs.defBar.cooldownMs = barCooldownMs_;
 }
 
 // Super Attack: a guaranteed, no-timing-required strong hit once the gauge is full (§4 of

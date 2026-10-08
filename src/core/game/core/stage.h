@@ -103,6 +103,10 @@ inline Stage parseStage(const std::string& path, const toms::Locale& locale) {
             // resolve id: e.g. "monster:slime" -> "slime", "npc:villager" -> "villager", "item:gem_atk" -> "gem_atk"
             auto pos = e.kind.find(':');
             e.id = (pos == std::string::npos) ? e.kind : e.kind.substr(pos+1);
+            // The generated floors and the stage editors write a key as "key:<colour>"; the game handles keys as the
+            // items key_<colour> (data/items.json: +1 key on contact). Without this a "key:yellow" tile was neither
+            // drawn nor picked up, so its door could never open.
+            if (e.kind.rfind("key:", 0) == 0) { e.id = "key_" + e.id; e.kind = "item:" + e.id; }
             if (encounterOverrides && encounterOverrides->contains(e.raw) && (*encounterOverrides)[e.raw].is_string())
                 e.encounterOverride = (*encounterOverrides)[e.raw].get<std::string>();
             if (footprints && footprints->contains(e.raw)) {

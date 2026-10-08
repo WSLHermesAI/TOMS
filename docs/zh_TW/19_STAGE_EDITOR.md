@@ -20,7 +20,7 @@ Qt/C++ 版本，它會用遊戲自己的渲染器繪製，所以編輯器顯示�
 
 | 方式 | 能用的功能 |
 |---|---|
-| 雙擊 `stage_editor.html` | 除了寫入磁碟之外都可以。它載入 `stage_bundle.js` 中的副本；**儲存** 會下載變更的檔案，讓你自己複製到 `assets/data` |
+| 雙擊 `stage_editor.html` | 除了寫入磁碟之外都可以。它載入 `stage_bundle.js` 中的副本；**儲存 → 下載檔案**：只有一個檔案變更時直接下載該檔案；多個檔案時下載成 **一個 zip**（`toms_stage_changes_<日期>_<時間>.zip`），保留每個檔案的 `assets/data/...` 路徑。在 TOMS 資料夾中解壓縮並取代原檔即可 |
 | `tools\web_editors\serve.cmd`，然後 **開啟專案資料夾…** 並選 TOMS 資料夾（Chrome 或 Edge） | 讀取實際的檔案，**儲存** 會就地寫入。每個檔案會先備份到 `Build/editor_backups/<日期-時間>/`。事件編輯器會自動開啟同一個資料夾（兩個編輯器都可以開），兩個編輯器都改過的樓層 `events` 清單會保留兩邊的變更 |
 
 `serve.cmd` 會先更新兩個編輯器的資料副本（它執行 `make_data.py` 和 `make_bundle.py`），

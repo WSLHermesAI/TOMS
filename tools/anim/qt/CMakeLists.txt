@@ -58,4 +58,12 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME anim.check_recipes
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/docs/examples/anim_recipes.anim")
     set_tests_properties(anim.check_recipes PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # the monsters' idle animations the game plays on the map (assets/media/anim/monster_idle.anim)
+    add_test(NAME anim.check_monster_idle
+             COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/monster_idle.anim")
+    set_tests_properties(anim.check_monster_idle PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # the door-opening clips (assets/media/anim/door_open.anim, Game::openDoor)
+    add_test(NAME anim.check_door_open
+             COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/door_open.anim")
+    set_tests_properties(anim.check_door_open PROPERTIES LABELS "unit;anim" TIMEOUT 30)
 endif()

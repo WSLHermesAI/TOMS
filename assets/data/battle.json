@@ -1,0 +1,14 @@
+{
+  "_comment": [
+    "Battle scene settings (Battle System v2: the Attack and Defense bars move on their own; tap one to act).",
+    "Each bar starts slow and speeds up to its top speed on a curve (the equipped gear sets both; with none:",
+    "starts at 15, top speed 200, reached after 1.8 s, on a bar 120 long). The two are scaled separately:",
+    "bar_slow_speed_scale: multiplies the slow start (1 = as the gear sets it; lower = even slower start).",
+    "bar_fast_speed_scale: multiplies the top speed it speeds up to (higher = faster after the slow start).",
+    "bar_cooldown_ms: after a tap, how long that bar waits (milliseconds) before it moves again.",
+    "Read when the game starts; without this file the game uses 1, 1 and 1500."
+  ],
+  "bar_slow_speed_scale": 0.5,
+  "bar_fast_speed_scale": 10,
+  "bar_cooldown_ms": 1000
+}

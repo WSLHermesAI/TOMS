@@ -171,6 +171,47 @@ version (the editor's preview); the tests check that both give the same poses fo
 **Try one:** `toms_game --anim=<file>#<clip>` plays a clip centred over whatever is on screen and
 logs its events (`[anim] event hit`). `tests/smoke/anim_preview.anim` is the screenshot test's clip.
 
+### Monster idle animations
+
+Every monster on the map plays a looping idle clip instead of standing still. The clips are in
+[`assets/media/anim/monster_idle.anim`](../assets/media/anim/monster_idle.anim), one per enemy, named
+`idle_<enemy id>` (the id in `assets/data/enemies.json`): open the file in `anim_editor` to change one, or
+add `idle_<id>` for a new enemy. The higher the enemy's level, the sillier its idle:
+
+| Clip | Idle |
+|---|---|
+| `idle_slime` | slow squash-and-stretch breathing |
+| `idle_bat` | a quick hover with wing-beat squeezes |
+| `idle_skeleton` | sways, shivers, and chatters its teeth |
+| `idle_golem` | heavy breaths, then a hop and a stomp that kicks up dust (fx `smoke`) |
+| `idle_wraith` | floats, flickers and leans inside a pulsing purple glow (fx `glow`) |
+| `idle_demon` | a little dance: two hops, turning to look the other way, sparks on each landing (fx `spark`) |
+| `idle_demonlord_vorkath` | a belly laugh of quick bounces going red, a smug lean back, dizzy stars circling his head (fx `star`), a red aura |
+
+How the game uses them (`Game::drawIdleAnim`, `game_scene_draw.cpp`):
+
+- **Authoring box:** a clip is made around the monster's 32x32 sprite with the sprite's pivot at the bottom
+  centre, at (0, 0); the sprite node sets `"pivot": [0.5, 1]`. Effects may reach outside the box a little.
+- **Placement:** the game puts (0, 0) on the bottom centre of the monster's rect and scales the clip so the
+  sprite fills that rect, exactly as the static sprite did. A 2x1 golem or a 2x2 Vorkath stretches the
+  whole clip the same way.
+- **Phase:** each monster runs at its own phase (from its tile), so a room of slimes does not breathe in step.
+- **Atlases:** `game:` sprites come from the loaded game atlas, so the art style still applies; `fx:` sprites
+  from `assets/media/atlas/fx.atlas`.
+- **Fallback:** no file, no `idle_<id>` clip, or the runtime sprite grid (no prebuilt atlas): the monster is
+  drawn as before.
+- **Checked by** CTest `anim.check_monster_idle` (`anim_editor --headless check`).
+
+### Doors opening
+
+[`assets/media/anim/door_open.anim`](../assets/media/anim/door_open.anim) has one clip per door colour,
+`door_open_yellow` / `_blue` / `_red` (0.55 s, played once): the key turns in the lock, the door jiggles,
+squashes and sinks into the floor in a flash of its colour, with a few sparkles. When the player walks into a
+door holding its key (`Game::openDoor`), the key is used, the clip plays on the door's tile, the tile becomes
+floor, and the door is remembered as opened (`EntityStatus::Opened`): it stays open when the floor is visited
+again and never costs another key. The player stays where they were on that turn. Placed like the idle clips
+(bottom centre of the tile, scaled to the door sprite's size). CTest `anim.check_door_open`.
+
 ## Editor
 
 `anim_editor` (tools/anim/qt, built with the Qt editors) opens and saves `.anim` files. Its preview

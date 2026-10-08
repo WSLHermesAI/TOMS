@@ -18,7 +18,7 @@ start, and **event objects**. It reads and writes the same files the game loads:
 
 | Way | What works |
 |---|---|
-| Double-click `stage_editor.html` | Everything except writing to disk. It loads the copy in `stage_bundle.js`; **Save** downloads the changed files for you to copy into `assets/data` |
+| Double-click `stage_editor.html` | Everything except writing to disk. It loads the copy in `stage_bundle.js`; **Save → Download files**: one changed file downloads as itself; several download as **one zip** (`toms_stage_changes_<date>_<time>.zip`) that keeps each file's `assets/data/...` path. Extract it in the TOMS folder and let it replace the files |
 | `tools\web_editors\serve.cmd`, then **Open project folder…** and pick the TOMS folder (Chrome or Edge) | Reads the live files, and **Save** writes them in place. Each file is backed up to `Build/editor_backups/<date-time>/` first. The event editor opens the same folder by itself (either editor can open it), and a floor's `events` list changed by both editors keeps both changes |
 
 `serve.cmd` first refreshes both editors' copies of the data (it runs `make_data.py` and

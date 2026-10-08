@@ -91,7 +91,7 @@ struct CombatState : public Trackable {
         bool cooling = false; // true while frozen after a tap, waiting to resume auto-moving
         int cooldownMs = 0;   // ms remaining in that cooldown
     };
-    static constexpr int kBarCooldownMs = 1500;
+    static constexpr int kBarCooldownMs = 1500;   // default for data/battle.json "bar_cooldown_ms"
 
     EnemyInst enemy;
     int playerHP, enemyHP;
@@ -601,6 +601,34 @@ private:
     // the game's own loaded atlas. Loaded ones are kept in `owned` / `textures`.
     void loadPreviewAtlases(const std::string& file, const std::vector<toms::anim::AtlasRef>& refs, toms::anim::AtlasSet& set,
                             std::vector<std::unique_ptr<toms::AtlasFile>>& owned, std::vector<uint16_t>& textures);
+    // Monster idle animations: assets/media/anim/monster_idle.anim (made in anim_editor), clip "idle_<enemy id>".
+    // Every monster on the map plays its clip in a loop instead of standing still, each at its own phase.
+    toms::anim::AnimFile idleAnim_;
+    toms::anim::AtlasSet idleSet_;
+    std::vector<std::unique_ptr<toms::AtlasFile>> idleAtlases_;
+    std::vector<uint16_t> idleTextures_;
+    std::vector<toms::anim::NodePose> idlePoses_;   // per-frame scratch
+    std::vector<Quad> idleQuads_;
+    double idleClockMs_ = 0;
+    void loadIdleAnims();
+    void loadDoorAnims();
+    // Draws the monster's idle clip into the rect; false = no clip (or nothing drawn): draw the static sprite.
+    bool drawIdleAnim(const std::string& enemyId, float x, float y, float w, float h, int tileX, int tileY);
+    // A clip at time t placed on a map rect: its (0, 0) on the rect's bottom centre, scaled so a sprite of
+    // spriteW x spriteH pixels fills the rect. False = nothing drawn.
+    bool drawClipInRect(const toms::anim::Clip& clip, float t, const toms::anim::AtlasSet& set, float x, float y, float w, float h,
+                        float spriteW, float spriteH);
+    // Doors opening: assets/media/anim/door_open.anim (made in anim_editor), clip "door_open_<colour>", played once on
+    // the door's tile while the tile is already floor (openDoor).
+    toms::anim::AnimFile doorAnim_;
+    toms::anim::AtlasSet doorSet_;
+    std::vector<std::unique_ptr<toms::AtlasFile>> doorAtlases_;
+    std::vector<uint16_t> doorTextures_;
+    struct MapFx { const toms::anim::Clip* clip; int x, y; std::string sprite; float ms; };
+    std::vector<MapFx> mapFx_;   // one-shot clips playing on the map (cleared when a floor loads)
+    // A door the player walks into with its key: the key is used, the door opens (its clip plays), the tile becomes
+    // floor and stays open on later visits (EntityStatus::Opened). The player stays where they were.
+    void openDoor(int x, int y, char c);
     toms::fx::ParticleFile previewFxFile_;    // playPreviewFx
     toms::fx::EffectInstance previewFx_;
     toms::anim::AtlasSet previewFxSet_;
@@ -626,6 +654,11 @@ private:
     std::vector<DialogueChoice> dlgChoices;
     // enemy templates
     std::map<std::string, nlohmann::json> enemyTpl;
+    // The battle scene's tuning, from data/battle.json (loadAssets). Without the file or a key, the defaults below.
+    // A bar starts slow (v0) and speeds up to its top speed (vmax) on a cubic curve (power_bar.h); the two are scaled apart.
+    float barSlowScale_ = 1.0f;                           // "bar_slow_speed_scale": multiplies the slow start (v0)
+    float barFastScale_ = 1.0f;                           // "bar_fast_speed_scale": multiplies the top speed (vmax)
+    int barCooldownMs_ = CombatState::kBarCooldownMs;     // "bar_cooldown_ms": the wait after a tap before a bar moves again
     // current stage id
     std::string curStage;
     std::string dataDir;
@@ -638,10 +671,8 @@ private:
     // real here) -- a defeated monster or collected item stays cleared when the floor is
     // reloaded (stairs, or Milestone 5's Stage Select hub), matching the owner's decision that
     // cleared floors don't repopulate. Keyed by entityStatusKey(stageId, x, y); in-memory only
-    // for now, same "persistence is later work" caveat as meta_ and missionTrackers_. Doors are
-    // deliberately NOT covered by this (a separate, pre-existing, still-open behavior: reusing
-    // an already-unlocked door tile currently consumes another key every time) -- out of scope
-    // for this fix, which is scoped to what the owner's decision was actually about.
+    // for now, same "persistence is later work" caveat as meta_ and missionTrackers_. An opened
+    // door is recorded too (EntityStatus::Opened, see openDoor): it stays open, and costs its key once.
     std::map<std::string, std::string> entityStatus_;
     // Milestone 6: equipment layer over the Power Bar/damage formulas (docs/design/MAIN_BATTLE_SCENE_DESIGN.md
     // §4). equipmentDefs_ is intentionally empty until Milestone 8 loads data/equipment.json --

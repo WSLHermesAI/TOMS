@@ -98,12 +98,15 @@
   .statusbar #hover { flex: 1; overflow: hidden; text-overflow: ellipsis; }
 
   .modal-bg { position: fixed; inset: 0; background: #000a; display: none; align-items: center; justify-content: center; z-index: 10; }
-  .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; width: min(920px, 94vw); max-height: 86vh; display: flex; flex-direction: column; }
+  .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; width: min(920px, 94%); max-height: 88%; display: flex; flex-direction: column; }
+  .modal header, .modal footer { flex: none; } .modal footer { flex-wrap: wrap; }
+  .filelist { margin: 6px 0 0; padding-left: 18px; font: 12px/1.6 Consolas, "Cascadia Mono", monospace; color: var(--muted); }
   .modal header, .modal footer { padding: 10px 14px; }
   .modal header { border-bottom: 1px solid var(--line); }
   .modal footer { border-top: 1px solid var(--line); display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
   .modal footer .grow { flex: 1; color: var(--muted); font-size: 12px; }
-  .modal .content { overflow: auto; padding: 10px 14px; }
+  .stchg { padding: 4px 8px 6px; font-size: 12px; } .chgdot { color: #e0b44c; }
+  .modal .content { overflow: auto; padding: 10px 14px; flex: 1 1 auto; min-height: 0; }
   .file { margin-bottom: 12px; }
   .file .path { font-weight: 600; margin-bottom: 4px; }
   pre.diff { margin: 0; background: #111317; border: 1px solid var(--line); border-radius: 4px; padding: 8px; font: 12px/1.45 Consolas, "Cascadia Mono", monospace; overflow: auto; max-height: 240px; }
@@ -238,8 +241,8 @@ const I18N = {
     pBorder: 'The outer edge has open cells.', fixAddList: 'Add to list', fixShow: 'Show',
     hoverCell: (x, y, c, what) => `(${x}, ${y})  '${c}'  ${what}`,
     saveTitle: 'Save changes', saveSub: n => `· ${n} file(s) change`, nothingToSave: 'Nothing to save.', cancel: 'Cancel', download: 'Download files', writeDisk: 'Write to project',
-    saveNoteLive: 'Writes into the opened project folder. Each file is backed up to Build/editor_backups first.', saveNoteBundle: 'No project folder is open: Download saves each file; copy them into assets/data.',
-    savedN: n => `Saved ${n} file(s) to the project folder.`, downloadedN: n => `Downloaded ${n} file(s).`,
+    saveNoteLive: 'Writes into the opened project folder. Each file is backed up to Build/editor_backups first.', saveNoteBundle: 'No project folder is open: Download saves one changed file as itself, or several as one zip that keeps their assets/data/... paths. Extract the zip in the TOMS folder (replace the files).',
+    savedN: n => `Saved ${n} file(s) to the project folder.`, downloadedN: n => `Downloaded ${n} file(s).`, manyFiles: n => `${n} files changed (too many to show each change). Download them as one zip, or write them into the project folder:`, downloadedZip: n => `Downloaded one zip with ${n} files. Extract it in the TOMS folder: the files go into assets/data.`,
     loadedLive: n => `Loaded ${n} floors from the project folder.`, savedBackupN: (n, s) => `Saved ${n} file(s) to the project folder. Backups: Build/editor_backups/${s}/`,
     discardForLive: 'Opening the project folder reloads the floors from it. Discard the unsaved changes here?',
     liveSkipped: 'The event editor opened the project folder; this editor has unsaved changes, so it keeps the copy. Use Open project folder to switch.', notProject: 'That folder has no assets/data/story/floors. Pick the TOMS folder.',
@@ -254,6 +257,8 @@ const I18N = {
     tSafe: '◇ Safe cells', tAuto: '🎲 Auto-place events…', apTitle: 'Place events automatically', apThis: 'This floor', apAll: 'All floors (one click)',
     apMissing: 'Only events in the list that are not placed yet', apReplace: 'Move every event to a new random cell', apSeed: 'Seed', apRun: 'Place',
     apNote: 'Events go only on cells the player reaches on the way up without opening optional doors, so a key can never be "spent" on an event. They are spread out, never next to stairs, doors or the start, and only events that fire on a tile are placed. The same seed gives the same result; everything stays editable and undoable.',
+    apSaveHint: n => `${n} floor(s) now have unsaved changes (● in the floor list and in Story); Save writes or downloads those.`,
+    stAllNote: n => `Story check of all ${n} floors.`, stChanged: n => `● ${n} floor(s) changed, not saved yet:`, stNoChange: 'No unsaved changes.', stChgTip: 'Changed, not saved yet',
     apDone: (n, f, s) => `Placed ${n} event(s) on ${f} floor(s).${s ? `\nSkipped ${s}: see Story.` : ''}`, hAuto: n => `Auto-place ${n} event(s)`,
     apSkipNoCell: (id, f) => `${f}: no safe free cell for ${id}`, apSkipUndef: n => `${n} listed id(s) that no pool defines were left out`,
     bChecks: n => `Checks (${n})`, bStory: n => `Story · all floors (${n})`,
@@ -295,8 +300,8 @@ const I18N = {
     pBorder: '外圈有開放的格子。', fixAddList: '加入清單', fixShow: '顯示',
     hoverCell: (x, y, c, what) => `（${x}, ${y}）  '${c}'  ${what}`,
     saveTitle: '儲存變更', saveSub: n => `· 有 ${n} 個檔案變更`, nothingToSave: '沒有需要儲存的變更。', cancel: '取消', download: '下載檔案', writeDisk: '寫入專案',
-    saveNoteLive: '會寫入已開啟的專案資料夾。每個檔案會先備份到 Build/editor_backups。', saveNoteBundle: '尚未開啟專案資料夾：「下載檔案」會逐一下載，請複製到 assets/data。',
-    savedN: n => `已將 ${n} 個檔案存到專案資料夾。`, downloadedN: n => `已下載 ${n} 個檔案。`,
+    saveNoteLive: '會寫入已開啟的專案資料夾。每個檔案會先備份到 Build/editor_backups。', saveNoteBundle: '尚未開啟專案資料夾：「下載檔案」只有一個檔案時直接下載，多個檔案時下載成一個 zip（保留 assets/data/... 路徑）。請在 TOMS 資料夾中解壓縮（取代原檔）。',
+    savedN: n => `已將 ${n} 個檔案存到專案資料夾。`, downloadedN: n => `已下載 ${n} 個檔案。`, manyFiles: n => `有 ${n} 個檔案變更（太多，不逐一顯示變更內容）。請下載成一個 zip，或寫入專案資料夾：`, downloadedZip: n => `已下載一個包含 ${n} 個檔案的 zip。請在 TOMS 資料夾中解壓縮：檔案會放進 assets/data。`,
     loadedLive: n => `已從專案資料夾載入 ${n} 個樓層。`, savedBackupN: (n, s) => `已將 ${n} 個檔案存到專案資料夾。備份：Build/editor_backups/${s}/`,
     discardForLive: '開啟專案資料夾會從那裡重新載入樓層。要捨棄這裡未儲存的變更嗎？',
     liveSkipped: '事件編輯器開啟了專案資料夾；這個編輯器有未儲存的變更，所以仍使用副本。用「開啟專案資料夾」切換。', notProject: '這個資料夾沒有 assets/data/story/floors。請選 TOMS 資料夾。',
@@ -311,6 +316,8 @@ const I18N = {
     tSafe: '◇ 安全格', tAuto: '🎲 自動放置事件…', apTitle: '自動放置事件', apThis: '這個樓層', apAll: '所有樓層（一鍵完成）',
     apMissing: '只放清單中還沒放置的事件', apReplace: '把每個事件移到新的隨機格子', apSeed: '種子', apRun: '放置',
     apNote: '事件只會放在玩家往上走、不必打開非必要的門就能到達的格子，所以鑰匙不會被「浪費」在事件上。事件會分散，不會緊貼樓梯、門或起點，而且只放「踩到格子觸發」的事件。相同種子會得到相同結果；放好後仍可編輯、可復原。',
+    apSaveHint: n => `現在有 ${n} 個樓層有未儲存的變更（樓層清單和「劇情」中的 ●）；儲存時會寫入或下載這些樓層。`,
+    stAllNote: n => `全部 ${n} 個樓層的劇情檢查。`, stChanged: n => `● ${n} 個樓層有變更、尚未儲存：`, stNoChange: '沒有未儲存的變更。', stChgTip: '已變更，尚未儲存',
     apDone: (n, f, s) => `已在 ${f} 個樓層放置 ${n} 個事件。${s ? `\n略過 ${s} 項：請看「劇情」。` : ''}`, hAuto: n => `自動放置 ${n} 個事件`,
     apSkipNoCell: (id, f) => `${f}：沒有安全的空格可放 ${id}`, apSkipUndef: n => `${n} 個沒有事件池定義的 ID 沒有放置`,
     bChecks: n => `檢查（${n}）`, bStory: n => `劇情 · 所有樓層（${n}）`,
@@ -904,10 +911,11 @@ function renderProblems() {
 // ---------------- floors ----------------
 const keyChips = k => KCOLS.filter(c => k[c]).map(c => `<span class="ky ${c}">${k[c]}</span>`).join('') || '<span class="muted">0</span>';
 function renderStory(rows, icon) {
-  $('probs').innerHTML = `<table class="story"><thead><tr><th>${t('stFloor')}</th><th>${t('stIn')}</th><th>${t('stFound')}</th><th>${t('stUp')}</th><th>${t('stOut')}</th><th>${t('stEv')}</th><th>${t('stIss')}</th></tr></thead><tbody>
+  const changed = FLOORS.filter(f => isDirty(f.id)).map(f => f.id);   // what Save will write or download
+  $('probs').innerHTML = `<div class="stchg">${t('stAllNote', rows.length)} ${changed.length ? `<b>${t('stChanged', changed.length)}</b> <span class="muted">${changed.slice(0, 24).join(' ')}${changed.length > 24 ? ' …' : ''}</span>` : `<span class="muted">${t('stNoChange')}</span>`}</div><table class="story"><thead><tr><th>${t('stFloor')}</th><th>${t('stIn')}</th><th>${t('stFound')}</th><th>${t('stUp')}</th><th>${t('stOut')}</th><th>${t('stEv')}</th><th>${t('stIss')}</th></tr></thead><tbody>
     ${rows.map(r => { const ex = r.ex, rt = ex.route, d = docOf(r.fid), placed = d.grid.flat().filter(c => (d.st.legend[c] || '').startsWith('event:')).length;
       const found = { yellow: 0, blue: 0, red: 0 }; ex.F.keyAt.forEach(c => found[c]++);
-      return `<tr class="r${r.fid === cur ? ' cur' : ''}" data-f="${r.fid}"><td><b>${r.fid}</b> <span class="muted">${esc(d.spec.act || '')}</span></td><td>${keyChips(r.keysIn)}</td><td>${keyChips(found)}</td>
+      return `<tr class="r${r.fid === cur ? ' cur' : ''}" data-f="${r.fid}"><td>${isDirty(r.fid) ? '<span class="chgdot" title="' + t('stChgTip') + '">●</span> ' : ''}<b>${r.fid}</b> <span class="muted">${esc(d.spec.act || '')}</span></td><td>${keyChips(r.keysIn)}</td><td>${keyChips(found)}</td>
         <td>${r.top ? `<span class="muted">${t('topFloor')}</span>` : rt ? keyChips(rt.opened) : '⛔'}</td><td>${ex.carry ? keyChips(ex.carry.left) : '—'}</td>
         <td>${placed}/${(d.spec.events || []).length}</td><td class="iss">${r.issues.map(p => `<span class="sev-${p.sev}">${icon[p.sev]}</span> ${esc(p.msg)}`).join('<br>')}</td></tr>`; }).join('')}</tbody></table>`;
   $('probs').querySelectorAll('tr.r').forEach(tr => tr.onclick = () => { openFloor(tr.dataset.f); const r = rows.find(x => x.fid === tr.dataset.f), c = r && r.issues.find(p => p.cell);
@@ -927,7 +935,7 @@ $('apRun').onclick = () => {
   const scope = document.querySelector('input[name=apScope]:checked').value, mode = document.querySelector('input[name=apMode]:checked').value;
   const res = autoPlace(scope === 'all' ? chainOrder() : [cur], mode, $('apSeed').value || '1');
   $('apPanel').classList.remove('on'); bottomTab = 'story'; renderProblems();
-  toast(t('apDone', res.placed, res.floorsN, res.skipped.length) + (res.skipped.length ? '\n' + res.skipped.slice(0, 4).join('\n') : ''));
+  toast(t('apDone', res.placed, res.floorsN, res.skipped.length) + (res.floorsN ? '\n' + t('apSaveHint', FLOORS.filter(f => isDirty(f.id)).length) : '') + (res.skipped.length ? '\n' + res.skipped.slice(0, 4).join('\n') : ''));
 };
 $('safeBtn').onclick = () => { showSafe = !showSafe; $('safeBtn').classList.toggle('on', showSafe); drawAll(); };
 
@@ -1007,7 +1015,8 @@ function lineDiff(a, b) {   // a small LCS diff over lines, enough for a grid an
 function openSave() {
   const files = changedFiles(); if (!files.length) return toast(t('nothingToSave'));
   $('saveSub').textContent = t('saveSub', files.length);
-  $('diffs').innerHTML = files.map(f => `<div class="file"><div class="path">${esc(f.path)}</div><pre class="diff">${lineDiff(f.before, f.text).map(([c, l]) => `<span class="${c}">${c === 'add' ? '+ ' : c === 'del' ? '- ' : '  '}${esc(l)}</span>`).join('')}</pre></div>`).join('');
+  // up to 3 files: show each file's changes; more: only which files, then Download / Write
+  $('diffs').innerHTML = files.length > 3 ? `<p>${t('manyFiles', files.length)}</p><ul class="filelist">${files.map(f => `<li>${esc(f.path)}</li>`).join('')}</ul>` : files.map(f => `<div class="file"><div class="path">${esc(f.path)}</div><pre class="diff">${lineDiff(f.before, f.text).map(([c, l]) => `<span class="${c}">${c === 'add' ? '+ ' : c === 'del' ? '- ' : '  '}${esc(l)}</span>`).join('')}</pre></div>`).join('');
   $('mWrite').disabled = !dirHandle; $('saveNote').textContent = dirHandle ? t('saveNoteLive') : t('saveNoteBundle');
   $('modalBg').style.display = 'flex';
 }
@@ -1036,10 +1045,39 @@ $('mWrite').onclick = async () => {
     markSaved(files); $('modalBg').style.display = 'none'; toast(t('savedBackupN', files.length, stamp));
     if (inShell) window.parent.postMessage({ toms: 'filesChanged', paths: files.map(f => f.path) }, '*');
   } catch (e) { toast(String(e)); } };
-$('mDownload').onclick = () => { const files = changedFiles();
-  files.forEach((f, i) => setTimeout(() => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([f.text], { type: 'application/json' }));
-    a.download = f.path.split('/').pop(); a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }, i * 250));
-  markSaved(files); $('modalBg').style.display = 'none'; toast(t('downloadedN', files.length)); };
+// Download (no project folder open): one changed file downloads as itself; several download as ONE zip that keeps each
+// file's path from the TOMS folder (assets/data/...), so extracting it in the TOMS folder puts every file in place.
+// The zip is written here (stored, no compression: the files are small JSON), so it works offline and from file://.
+const CRC_TABLE = (() => { const tb = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; tb[n] = c >>> 0; } return tb; })();
+function crc32(bytes) { let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) {   // files: [{ path, text }] -> Uint8Array
+  const enc = new TextEncoder(), d = new Date();
+  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  const parts = [], central = []; let offset = 0;
+  const head = (size, fill) => { const b = new Uint8Array(size), v = new DataView(b.buffer); fill(v); return b; };
+  for (const f of files) {
+    const name = enc.encode(f.path), data = enc.encode(f.text), crc = crc32(data);
+    const local = head(30, v => { v.setUint32(0, 0x04034b50, true); v.setUint16(4, 20, true); v.setUint16(6, 0x0800, true);   // UTF-8 names
+      v.setUint16(8, 0, true); v.setUint16(10, time, true); v.setUint16(12, date, true); v.setUint32(14, crc, true);
+      v.setUint32(18, data.length, true); v.setUint32(22, data.length, true); v.setUint16(26, name.length, true); v.setUint16(28, 0, true); });
+    central.push(head(46, v => { v.setUint32(0, 0x02014b50, true); v.setUint16(4, 20, true); v.setUint16(6, 20, true); v.setUint16(8, 0x0800, true);
+      v.setUint16(10, 0, true); v.setUint16(12, time, true); v.setUint16(14, date, true); v.setUint32(16, crc, true); v.setUint32(20, data.length, true);
+      v.setUint32(24, data.length, true); v.setUint16(28, name.length, true); v.setUint32(42, offset, true); }), name);
+    parts.push(local, name, data); offset += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((n, b) => n + b.length, 0);
+  const end = head(22, v => { v.setUint32(0, 0x06054b50, true); v.setUint16(8, files.length, true); v.setUint16(10, files.length, true);
+    v.setUint32(12, cdSize, true); v.setUint32(16, offset, true); });
+  const all = [...parts, ...central, end], out = new Uint8Array(all.reduce((n, b) => n + b.length, 0)); let p = 0;
+  all.forEach(b => { out.set(b, p); p += b.length; }); return out;
+}
+function downloadBlob(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+$('mDownload').onclick = () => { const files = changedFiles(); if (!files.length) return;
+  if (files.length === 1) downloadBlob(new Blob([files[0].text], { type: 'application/json' }), files[0].path.split('/').pop());
+  else { const d = new Date(), p2 = n => String(n).padStart(2, '0');
+    downloadBlob(new Blob([makeZip(files)], { type: 'application/zip' }), `toms_stage_changes_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}.zip`); }
+  markSaved(files); $('modalBg').style.display = 'none'; toast(files.length === 1 ? t('downloadedN', 1) : t('downloadedZip', files.length)); };
 
 // ---------------- misc ----------------
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(el._h); el._h = setTimeout(() => el.classList.remove('show'), 3200); }

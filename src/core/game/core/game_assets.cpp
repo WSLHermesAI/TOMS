@@ -152,6 +152,7 @@ bool Game::loadAssets(const std::string& assetDir) {
             toms::loadGameSettings(toms::defaultSaveDir() + "/settings.json").artStyle)))
         return false;
     // (Text is RmlUi's: see assets/media/fonts/NotoSansCJKtc-TOMS.otf and tools/make_ui_font.py.)
+    loadIdleAnims();
 
     // S1: character-level 佔格 table (docs/design/ART_AND_ABILITY_DESIGN.md F8). An absent file leaves
     // every entity at 1x1, i.e. exactly the pre-S1 behavior -- the table is purely additive.
@@ -165,6 +166,17 @@ bool Game::loadAssets(const std::string& assetDir) {
                 if (typeFootprints_[it.key()].fp.big()) ++n;
             }
             fprintf(stderr, "[assets] footprints.json: %d type(s) bigger than 1x1\n", n);
+        }
+    }
+    // the battle scene's tuning (data/battle.json): bar speed and the wait after a tap
+    {
+        nlohmann::json bj = readJsonFile(assetDir + "/../data/battle.json");
+        if (bj.is_object()) {
+            barSlowScale_ = std::max(0.0f, bj.value("bar_slow_speed_scale", 1.0f));
+            barFastScale_ = std::max(0.05f, bj.value("bar_fast_speed_scale", 1.0f));
+            barCooldownMs_ = std::max(0, bj.value("bar_cooldown_ms", (int)CombatState::kBarCooldownMs));
+            fprintf(stderr, "[assets] battle.json: bars start x%.2f, top speed x%.2f, %d ms after a tap\n", barSlowScale_,
+                    barFastScale_, barCooldownMs_);
         }
     }
     // load enemy templates
@@ -251,6 +263,7 @@ bool Game::loadAssets(const std::string& assetDir) {
 
 int Game::spriteLayer(const std::string& id) const {
     auto it = idToLayer.find(id);
+    if (it == idToLayer.end()) it = idToLayer.find("floor");   // a sprite the atlas lacks draws as floor, as before
     return it == idToLayer.end() ? 0 : it->second;
 }
 
@@ -268,6 +281,7 @@ void Game::spriteUV(int layer, float uv[4]) const {
 }
 
 void Game::loadStage(const std::string& id, StageArrival arrival) {
+    mapFx_.clear();   // a door opening on the floor being left
     cancelWalk();   // a click-to-move route belongs to the old floor
     curStage = id;
     // Resolve the stage JSON. Data ids in connect.up/down use "stage_02" (underscore)
@@ -354,6 +368,16 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     // otherwise a monster the player already beat or an item they already picked up would come
     // back the next time this floor loads, contradicting the "cleared floors stay cleared"
     // decision. Doors are intentionally not covered (see entityStatus_'s declaration in game.h).
+    // A door opened earlier stays open (openDoor): its tile is floor and its "door:" entry no longer blocks.
+    for (int y = 0; y < (int)st.tiles.size(); ++y)
+        for (int x = 0; x < (int)st.tiles[y].size(); ++x) {
+            const char c = st.tiles[y][x];
+            if ((c == 'y' || c == 'b' || c == 'r') &&
+                toms::getEntityStatus(entityStatus_, toms::entityStatusKey(st.id, x, y)) == toms::EntityStatus::Opened) {
+                st.tiles[y][x] = '.';
+                for (auto& e : st.entities) if (e.x == x && e.y == y && e.kind.rfind("door:", 0) == 0) e.consumed = true;
+            }
+        }
     for (auto& e : st.entities) {
         bool isMonster = e.kind.rfind("monster:", 0) == 0;
         bool isItem = e.kind.rfind("item:", 0) == 0;

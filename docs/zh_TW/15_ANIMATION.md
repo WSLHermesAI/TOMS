@@ -171,6 +171,43 @@ p.draw(ren, game.spriteAtlas(), toms::anim::placement(x, y, scale));   // one at
 **試試看：** `toms_game --anim=<file>#<clip>` 在畫面上的任何東西上方置中播放一個片段，並
 記錄它的事件（`[anim] event hit`）。`tests/smoke/anim_preview.anim` 是截圖測試用的片段。
 
+### 怪物的待機動畫
+
+地圖上的每隻怪物都會循環播放待機片段，而不是站著不動。片段放在
+[`assets/media/anim/monster_idle.anim`](../../assets/media/anim/monster_idle.anim)，每種敵人一個，名稱是
+`idle_<敵人 id>`（`assets/data/enemies.json` 中的 id）：用 `anim_editor` 開啟這個檔案就能修改，新的敵人則加一個
+`idle_<id>`。敵人等級越高，待機動作越好笑：
+
+| 片段 | 待機 |
+|---|---|
+| `idle_slime` | 慢慢擠壓伸展地呼吸 |
+| `idle_bat` | 快速盤旋，翅膀拍動時左右收縮 |
+| `idle_skeleton` | 搖擺、發抖、牙齒打顫 |
+| `idle_golem` | 沉重地呼吸，然後跳起再重重踩地，揚起塵土（fx `smoke`） |
+| `idle_wraith` | 在脈動的紫色光暈中漂浮、閃爍、傾斜（fx `glow`） |
+| `idle_demon` | 小小的舞步：跳兩下、轉頭看另一邊，每次落地都冒出火花（fx `spark`） |
+| `idle_demonlord_vorkath` | 一連串快速彈跳的捧腹大笑並漲紅、得意地往後仰、頭上繞著暈眩的星星（fx `star`）、紅色氣場 |
+
+遊戲如何使用它們（`Game::drawIdleAnim`，`game_scene_draw.cpp`）：
+
+- **製作框：** 片段圍繞怪物 32x32 的 sprite 製作，sprite 的軸心在底部中央 (0, 0)；sprite 節點設定
+  `"pivot": [0.5, 1]`。特效可以稍微超出框外。
+- **擺放：** 遊戲把 (0, 0) 放在怪物矩形的底部中央，並縮放片段，讓 sprite 剛好填滿那個矩形，和原本的靜態
+  sprite 一樣。2x1 的石巨人或 2x2 的沃卡司會以同樣方式拉伸整個片段。
+- **相位：** 每隻怪物依它所在的格子有自己的相位，所以一整房的史萊姆不會同步呼吸。
+- **Atlas：** `game:` sprite 來自載入的遊戲 atlas，所以美術風格仍然適用；`fx:` sprite 來自
+  `assets/media/atlas/fx.atlas`。
+- **後備：** 沒有檔案、沒有 `idle_<id>` 片段，或使用執行時的 sprite 格（沒有預先打包的 atlas）時，怪物照舊繪製。
+- **檢查：** CTest `anim.check_monster_idle`（`anim_editor --headless check`）。
+
+### 開門
+
+[`assets/media/anim/door_open.anim`](../../assets/media/anim/door_open.anim) 每種門的顏色一個片段：
+`door_open_yellow` / `_blue` / `_red`（0.55 秒，播放一次）：鑰匙在鎖中轉動，門晃一下、壓扁，然後在該顏色的閃光和
+幾顆火花中沉入地面。玩家持有鑰匙走向門時（`Game::openDoor`），會用掉一把鑰匙，片段在門的格子上播放，格子變成地板，
+並記錄為已開啟（`EntityStatus::Opened`）：再次來到這層樓時門仍是開的，也不會再花鑰匙。那一回合玩家停在原地。
+擺放方式和待機片段相同（格子底部中央，依門 sprite 的大小縮放）。CTest `anim.check_door_open`。
+
 ## 編輯器
 
 `anim_editor`（tools/anim/qt，和 Qt 編輯器一起建置）開啟和儲存 `.anim` 檔。它的預覽

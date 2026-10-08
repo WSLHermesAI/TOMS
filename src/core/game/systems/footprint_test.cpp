@@ -242,6 +242,7 @@ static void testShippedStages() {
         }
     }
     CHECK(typeTable.count("monster:demonlord_vorkath") == 1, "data/footprints.json carries the boss tier");
+    const nlohmann::json itemDefs = readJsonLocal("data/items.json");   // what the game can pick up (applyItem)
 
     Locale locale;   // stage names are plain strings in every shipped file; no table needed
     // The 11 hand-authored stages AND the 60 generated floors from S2 (tools/gen_floors.py), so the
@@ -264,6 +265,14 @@ static void testShippedStages() {
         const std::string sid = path;
         Stage st = parseStage(path, locale);
         if (st.width <= 0 || st.tiles.empty()) { CHECK(false, (std::string("stage parses: ") + sid).c_str()); continue; }
+        // Every key and item on a floor must be one the game draws and picks up: "key:yellow" (what the generator and
+        // the stage editors write) loads as the item key_yellow, and each item id is defined in data/items.json.
+        // (Before this check, every generated floor's key was invisible and could not be picked up.)
+        for (const auto& e : st.entities) {
+            CHECK(e.kind.rfind("key:", 0) != 0, (sid + ": a key still loads as " + e.kind).c_str());
+            if (e.kind.rfind("item:", 0) == 0)
+                CHECK(itemDefs.is_object() && itemDefs.contains(e.id), (sid + ": item '" + e.id + "' is not in data/items.json").c_str());
+        }
 
         // resolve footprints exactly like Game::loadStage()
         std::vector<DataEntity> ents;

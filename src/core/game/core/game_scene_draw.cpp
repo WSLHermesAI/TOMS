@@ -73,6 +73,13 @@ void Game::draw() {
             t.tint[0] = 1.0f; t.tint[1] = 0.85f; t.tint[2] = 0.3f; t.tint[3] = 0.35f;
             ren->drawSprite(t);
         }
+        // One-shot clips on the map (a door opening), on the tile's full rect like the door tile itself.
+        if (!spriteAtlas_.pages.empty())
+            for (const MapFx& fx : mapFx_) {
+                const toms::AtlasRegion* r = spriteAtlas_.find(fx.sprite);
+                drawClipInRect(*fx.clip, fx.ms / 1000.0f, doorSet_, ox + fx.x * ts, oy + fx.y * ts, ts, ts,
+                               r && r->origW > 0 ? (float)r->origW : 32.0f, r && r->origH > 0 ? (float)r->origH : 32.0f);
+            }
         // Entity/player sprites were inset by a fixed 8px into their 48px tile before
         // Milestone 9; now that ts varies per stage, the inset scales with it (same
         // ~1/6 ratio, so this renders identically to before at ts=48).
@@ -94,11 +101,16 @@ void Game::draw() {
             float x, y, w, h;      // pixel rect
             int   layer;
             bool  plate = false;   // S3.5 (d): an event marker -> solid story plate, not an atlas sprite
+            const std::string* monster = nullptr;   // enemy id: drawn with its idle animation when it has one
+            int   tileX = 0, tileY = 0;
         };
         std::vector<FloorSprite> floor;
         floor.reserve(st.entities.size() + 1);
         for (auto& e : st.entities) {
             if (e.consumed) continue;
+            // doors and stairs are map tiles (cellSprite draws them full size above); drawing their legend entry here too
+            // put a floor-coloured square over every door and stairs
+            if (e.kind.rfind("door:", 0) == 0 || e.kind == "stairs_up" || e.kind == "stairs_down" || e.kind == "player_start") continue;
             FloorSprite f;
             f.sortKey = footprintSortKey_T(e);
             f.tieX = e.x;
@@ -111,6 +123,7 @@ void Game::draw() {
             // the atlas has no "relic/whisper/cache" art yet (S8 owns that), and a plate reads as
             // "something to read here" without pretending to be a creature or an item.
             f.plate = e.kind.rfind("event:", 0) == 0;
+            if (e.kind.rfind("monster:", 0) == 0) { f.monster = &e.id; f.tileX = e.x; f.tileY = e.y; }
             floor.push_back(f);
         }
         {
@@ -136,7 +149,7 @@ void Game::draw() {
                 ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, gold));
                 float in = f.w * 0.22f;
                 ren->drawSprite(spriteQuad(f.x + in, f.y + in, f.w - 2*in, f.h - 2*in, f.layer + 1, inner));
-            } else {
+            } else if (!f.monster || !drawIdleAnim(*f.monster, f.x, f.y, f.w, f.h, f.tileX, f.tileY)) {
                 ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, white));
             }
         }
@@ -230,6 +243,68 @@ void Game::loadPreviewAtlases(const std::string& file, const std::vector<toms::a
         owned.push_back(std::move(atlas));
     }
     if (refs.empty()) set.add(spriteAtlas_);   // no atlas named: the game's own
+}
+
+// ---- monster idle animations ----
+// assets/media/anim/monster_idle.anim holds one looping clip per enemy, "idle_<enemy id>", made in anim_editor. A clip
+// is authored around the monster's sprite with its pivot at the bottom centre (0, 0); here it is placed on the bottom
+// centre of the monster's rect and scaled so the sprite fills that rect exactly as the static sprite did (a 2x1 golem
+// stretches the clip the same way). A missing file or clip, or the runtime sprite grid (no prebuilt atlas), keeps the
+// static sprite.
+void Game::loadDoorAnims() {   // assets/media/anim/door_open.anim: "door_open_<colour>" (openDoor)
+    const std::string file = dataDir + "/anim/door_open.anim";
+    std::string text, error;
+    doorAnim_ = toms::anim::AnimFile();
+    if (!toms::vfsReadAll(file, text)) return;   // none: doors simply vanish
+    if (!toms::anim::parseAnim(text, doorAnim_, &error)) {
+        std::fprintf(stderr, "[anim] %s: %s -- doors vanish without a clip\n", file.c_str(), error.c_str());
+        doorAnim_ = toms::anim::AnimFile();
+        return;
+    }
+    loadPreviewAtlases(file, doorAnim_.atlases, doorSet_, doorAtlases_, doorTextures_);
+}
+
+void Game::loadIdleAnims() {
+    const std::string file = dataDir + "/anim/monster_idle.anim";
+    std::string text, error;
+    idleAnim_ = toms::anim::AnimFile();
+    if (!toms::vfsReadAll(file, text)) return;   // none: monsters stand still, as before
+    if (!toms::anim::parseAnim(text, idleAnim_, &error)) {
+        std::fprintf(stderr, "[anim] %s: %s -- monsters stand still\n", file.c_str(), error.c_str());
+        idleAnim_ = toms::anim::AnimFile();
+        return;
+    }
+    loadPreviewAtlases(file, idleAnim_.atlases, idleSet_, idleAtlases_, idleTextures_);
+    loadDoorAnims();
+    std::fprintf(stderr, "[anim] monster idle animations: %zu clip(s)\n", idleAnim_.clips.size());
+}
+
+
+
+bool Game::drawIdleAnim(const std::string& enemyId, float x, float y, float w, float h, int tileX, int tileY) {
+    if (spriteAtlas_.pages.empty() || idleAnim_.clips.empty()) return false;
+    const toms::anim::Clip* clip = idleAnim_.find("idle_" + enemyId);
+    if (!clip) return false;
+    const toms::AtlasRegion* r = spriteAtlas_.find(entSprite(enemyId));
+    const float sw = r && r->origW > 0 ? (float)r->origW : 32.0f, sh = r && r->origH > 0 ? (float)r->origH : 32.0f;
+    const float len = clip->duration();
+    // each monster at its own phase, fixed by its tile, so a room of slimes does not breathe in step
+    const double phase = (double)(((unsigned)tileX * 73856093u ^ (unsigned)tileY * 19349663u) % 997u) / 997.0 * len;
+    const float t = len > 0 ? (float)std::fmod(idleClockMs_ / 1000.0 + phase, (double)len) : 0.0f;
+    return drawClipInRect(*clip, t, idleSet_, x, y, w, h, sw, sh);
+}
+
+bool Game::drawClipInRect(const toms::anim::Clip& clip, float t, const toms::anim::AtlasSet& set, float x, float y, float w, float h,
+                          float spriteW, float spriteH) {
+    toms::anim::evaluate(clip, t, idlePoses_);
+    toms::anim::Node place;
+    place.pos = {x + w * 0.5f, y + h};
+    place.scale = {w / spriteW, h / spriteH};
+    idleQuads_.clear();
+    toms::anim::appendQuads(idlePoses_, set, toms::anim::localTransform(place, 0), nullptr, idleQuads_);
+    if (idleQuads_.empty()) return false;
+    for (const Quad& q : idleQuads_) ren->drawSprite(q);
+    return true;
 }
 
 // The preview clip and/or effect, centred on the screen, over the world (before ren->end()).
