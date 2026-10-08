@@ -224,4 +224,14 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   `assets/media/anim/door_open.anim` (key turns, door sinks into the floor with a flash and sparkles), clears the tile and
   records it as opened (`EntityStatus::Opened`, kept on revisits); the player stays put that turn. Doors and stairs no longer
   get a floor-coloured square drawn over them. CTest `anim.check_door_open`; menu/anim/fx references refreshed.
+- **2026-10-08** — **Editors and docs, later the same day** (not committed; part 6 §7–11).
+  - **Event editor:** saves into `assets/data` (*Open project folder*, merged with disk, backups in
+    `Build/editor_backups/`); names in any characters (Chinese too).
+  - **Variables tab:** create / rename / delete categories (with a dialog), multi-select to change
+    category.
+  - **Stage editor:** many changed floors download as one zip; more than 3 files lists them only;
+    the Story panel marks the changed floors.
+  - **Data and docs:** `serve.cmd` refreshes the data on every start (`data_snapshot/` removed);
+    Traditional Chinese versions of every doc in `docs/zh_TW/`, English versions of the 5
+    Chinese-only docs.
 

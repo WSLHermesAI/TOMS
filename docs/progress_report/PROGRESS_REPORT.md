@@ -15,6 +15,20 @@
 
 ## ▶ Next Step
 
+**The game, 2026-10-08** ([6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) §12–15):
+- **Monsters animate on the map:** an idle per enemy, sillier with level
+  (`assets/media/anim/monster_idle.anim`, editable in anim_editor).
+- **Battle settings file** `assets/data/battle.json`: the bars' slow start, top speed and wait after
+  a tap.
+- **Fixed:**
+  - keys on the generated floors were invisible and could not be picked up, so doors could be dead ends;
+  - items were drawn as floor;
+  - doors now open once, with an animation, and stay open.
+
+**Owner, next (game):**
+- **Play a few floors** with the key and door fixes, and tune `battle.json`.
+- **Decide W16 and W23** below: then the 5 failing screenshot tests can be refreshed or fixed.
+
 **The event and stage editors work in HTML** (2026-10-05 → 10-08, [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md)):
 - **One folder:** [tools/web_editors/](../../tools/web_editors/index.html). Run `serve.cmd`, then switch
   editors with **⇄**.
@@ -22,14 +36,17 @@
   - events, floor links with locked stairs, event logic, a node graph, a values map;
   - event **kinds** (new `assets/data/events/kinds.json`);
   - a 29-step tutorial with Play demo.
-- **Stage editor:** paints the floors, places events, and has a story check and safe auto-place. It
-  saves the live files.
+- **Stage editor:** paints the floors, places events, and has a story check and safe auto-place.
+- **Saving:** both editors save straight into `assets/data` with *Open project folder*, with backups.
+  The stage editor can also download many floors as one zip.
+- **Names:** ids, variables, kinds and floors can be named in Traditional Chinese.
+- **Docs:** Traditional Chinese versions in [../zh_TW/](../zh_TW/).
 
 **Owner, next:**
 - **Confirm the event editor** by trying it on `http://localhost:8000/tools/web_editors/index.html#event`.
   Confirming starts the Qt/C++ version on the game renderer ([../19_STAGE_EDITOR.md](../19_STAGE_EDITOR.md) §6).
 - **Answer Q6–Q10** below (generated floors, stair locks, rebirth, the `@` start, event lists).
-- **Commit** the 10-08 work (the folder move, Kinds, the deleted mockups).
+- **Commit** the 10-08 work: the editors, the docs and the game changes above.
 
 **3D is in the engine** (2026-10-05, [5_PROGRESS_REPORT.md](5_PROGRESS_REPORT.md), [../18_GLTF.md](../18_GLTF.md)):
 - **glTF 2.0:** skins, morph targets, instancing, PBR, glTF cameras and lights, and shadow maps for
@@ -104,6 +121,7 @@ the Visual Studio IDE (W1).
 | T | Particles (`.particle` JSON, `particle_editor`, GPU simulation, CPU/GPU threshold), doc 17 | ◐ 2026-10-03 editor + runtime done; legacy import, multiply/screen blend, effects on `.anim` nodes open |
 | T | Editors preview with toms_game's `BgfxRenderer`; right-drag pans | ✅ 2026-10-03 on D3D11 |
 | T | Anim editor: per-node playback (once / hide / loop), solo, clip switching with discard prompt; editors: History dock + automatic backups | ✅ 2026-10-05 |
+| T | Monster idle animations on the map (`monster_idle.anim`), door-opening animation (`door_open.anim`) | ✅ 2026-10-08 desktop; web/Android not seen (W24) |
 | 5 | glTF 2.0 on bgfx (`gltf_model`, `GltfRenderer`, `gltf_viewer`): skins, morphs, instancing, PBR, cameras, lights, shadow maps; the title's 3D background | ◐ 2026-10-05 desktop D3D11/Vulkan/OpenGL + web verified; not on a phone; no IBL / cascades yet |
 | 5 | 3D on bgfx (glTF, ozz skinning, instancing, shadows, Effekseer) | ⬜ researched only |
 
@@ -133,6 +151,9 @@ the Visual Studio IDE (W1).
 | W19 | **3D title on phones** | built for Android and checked in headless Chrome only; shadows are off there, the model adds 3 MB | run the APK / the web page on a real phone; watch the frame rate on the title |
 | ~~W20~~ | ~~**Event editor cannot write files**~~ closed 2026-10-08: *Open project folder* + *Write to project*, with backups, merged with the stage editor's saves ([event_editor/README](../event_editor/README.md)) | *Save…* only shows the changes; the stage editor writes through *Open project folder* | give the event editor the same folder access, sharing files with the stage editor |
 | W21 | **Event editor features not in the game yet** | the game ignores triggers / conditions / actions / `next` / `vars.json` / stair locks / `kind`; the "event finished" flag is set only for whispers and rescues | runtime work in [06](../event_editor/06_EVENT_LOGIC.md) §6 and [05](../event_editor/05_FLOOR_LINKS.md) |
+| W23 | **`smoke.battle` depends on `battle.json`** | the screenshot follows the tuning values, so every change to `assets/data/battle.json` breaks it | give the test its own fixed values (independent of `battle.json`), or refresh it once the values are settled |
+| W24 | **Idle and door animations not seen on web / Android** | checked on desktop D3D11 only; the `.anim` files are in `assets/media`, so they are packaged | play a floor in the web build and on the Android emulator |
+| W25 | **Docs in two languages** | every `docs/*.md` (except `progress_report/`) has a copy in `docs/zh_TW/` that is not updated automatically | update the `zh_TW` copy with each English change; check links with the script used on 2026-10-08 |
 | W22 | **Event data gaps** | 92 event ids that F22–F70 list are not defined by any pool; 4 orphan events | write the chapter 4–10 pools (the editor's batch fix makes placeholders) |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
 
@@ -144,7 +165,7 @@ the Visual Studio IDE (W1).
 |---|---|---|
 | [1_PROGRESS_REPORT.md](1_PROGRESS_REPORT.md) | 2026-09-25 | Qt + bgfx decision; EngineBlueprint update; bgfx glTF / skinning / morph / instancing research; toms_next phase 1 built and verified; WSL web presets and the etcpak stop |
 | [3_PROGRESS_REPORT.md](3_PROGRESS_REPORT.md) | 2026-09-27 | the project moved to the repository root; old code/content restored and organised as `assets/` (content) + `src/` (code); desktop, editor and web rebuilt and verified from there |
-| [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) | 2026-10-05 evening – 2026-10-08 | HTML event editor (tutorial, floor links, event logic, node graph, values map, kinds) and stage editor (story check, auto-place, overlap rule); both in `tools/web_editors/`; old mockups deleted |
+| [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) | 2026-10-05 evening – 2026-10-08 | HTML event editor (tutorial, floor links, event logic, node graph, values map, kinds, saving into assets/data) and stage editor (story check, auto-place, overlap rule, zip download); both in `tools/web_editors/`; docs in Traditional Chinese (`docs/zh_TW/`); the game: monster idle animations, `battle.json`, the key fix, doors opening |
 | [5_PROGRESS_REPORT.md](5_PROGRESS_REPORT.md) | 2026-10-03 evening, 2026-10-05 | editor coordinate hints; anim editor per-node playback, solo, clip switching; History + auto backups; glTF 2.0 loader, renderer, viewer, shadows, cameras; the 3D title; web build ready to publish |
 | [4_PROGRESS_REPORT.md](4_PROGRESS_REPORT.md) | 2026-10-03 | atlas tool; `.anim` runtime + editor + recipes; `.particle` format, runtime, editor; GPU sprite paths and GPU particle simulation; the editors on the game renderer; merged test runner |
 | [2_PROGRESS_REPORT.md](2_PROGRESS_REPORT.md) | 2026-09-26 | web build done on Windows (host shaderc, `bimg_encode` excluded, one entry point for desktop + web, IDBFS saves); five bugs fixed; doc 06; `web_smoke_test.mjs` |
