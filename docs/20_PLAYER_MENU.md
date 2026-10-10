@@ -2,7 +2,7 @@
 
 > 中文版：[zh_TW/20_PLAYER_MENU.md](zh_TW/20_PLAYER_MENU.md)
 
-**Status:** **P1 built 2026-10-10** (§9); P2, P3 and upgrading gear (W26) are open. Q11–Q15 were answered by the owner on
+**Status:** **P1, P2 and P3 built 2026-10-10** (§9, §11, §12); upgrading gear (W26) is open. Q11–Q15 were answered by the owner on
 2026-10-10 (listed in [progress_report/PROGRESS_REPORT.md](progress_report/PROGRESS_REPORT.md)).
 
 The walking scene keeps **one button**, ≡. Everything else that is a button today (the backpack, the
@@ -329,7 +329,8 @@ today, and closing the store comes back to this tab.
 | Row | Was | Note |
 |---|---|---|
 | Store | the HUD coin button | greyed, with when it unlocks, until unlocked (the button's old `locked` state) |
-| Skills, Forge, Village, Save, Settings, Back to title | the ≡ list (`mainMenuOrder()`) | the same pages and order rules (a row the old menu hides stays hidden) |
+| Skills, Forge, Village, Settings, Back to title | the ≡ list (`mainMenuOrder()`) | the same pages and order rules (a row the old menu hides stays hidden) |
+| Save / Load | the ≡ list's Save (saved at once) | its own screen: choose the slot, and confirm every save and load (§10) |
 | Fullscreen | the web page's ⛶ button | web and desktop; hidden on Android (always full screen). Shows the current state |
 
 **Fullscreen from inside the game (web).** Browsers allow fullscreen only inside a click or key handler,
@@ -417,3 +418,70 @@ entries with Connected) and P3 (attribute gameplay) are not started; upgrading g
 - **Phones:** the menu scales with the whole 1024x768 screen, like every other screen; the list-then-detail phone layout of §2
   is not done.
 - **Test hook:** `toms_game --give=<id>,...,gold:<n>` hands the player items when the title closes (`smoke.player_*`).
+
+## 10. Save / Load (2026-10-10)
+
+The System tab's save row is **Save / Load** (存檔／讀檔). It used to save at once into the run's own slot;
+now it opens its own screen over the menu (`assets/media/ui/saveload.rml`):
+
+```
+┌ 存檔／讀檔 Save / Load ──────────────────────────────────── [ Back ] ┐
+│ ( Save ) ( Load )                                                   │
+│ ┌ Slot 1  [This run] ────────────────────────────────────────────┐ │
+│ │ 村莊外緣・井   LV 1   HP 120/120   0G                             │ │
+│ │ Saved 2026-10-10 17:58    Play time 00:12:40                    │ │
+│ └──────────────────────────────────────────────────────────────────┘ │
+│ ┌ Slot 2 ─ [Empty] ┐   ┌ Slot 3 ─ [Empty] ┐   (one card per slot)     │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+- **Save tab:** choosing a slot asks first. An empty slot: "Save to slot 2?" (Save preselected). A used slot:
+  "Overwrite slot 1? What is saved there now will be replaced." (**Cancel** preselected).
+- **Load tab:** empty slots are dimmed and cannot be chosen. A used slot: "Load slot 2? Progress not saved yet
+  will be lost." (**Cancel** preselected). Yes loads it and closes the menu.
+- **Which slot the run uses:** saving into a slot makes it the run's slot, as loading one does; autosave writes there
+  from then on. The card of the run's slot says **This run**.
+- **Keys:** ↑↓ a slot, Q / E / Tab / ←→ Save ↔ Load, Enter = choose / answer, Esc = close the question, then the
+  screen. Mouse: click a card, the answers, Back.
+- **Code:** `Game::openSaveLoad / saveLoadAsk / saveLoadAnswer / buildSaveLoadUi` (`game_player_menu.cpp`), `UiSaveLoad`
+  (`ui_state.h`). The slot files are the same as the title's Continue page (`save/slot<N>.json`; IndexedDB on the web).
+- **Tested** with scripted runs on desktop (save to an empty slot, overwrite, load, cancel) and in headless Chrome. No
+  reference-image test: every card shows the time it was saved, which differs on every run.
+
+## 11. P2 as built (2026-10-10)
+
+- **Story events in the Events tab** (● ): listed once started, ✓ once finished (newest first), with their title and
+  description; **Connected** lists the linked events by title (✓ when finished, **？？？** when not met yet). Chapters
+  list their story events the same way. How events are tracked and linked: [event_editor/06](event_editor/06_EVENT_LOGIC.md) §7.
+- **Toasts** (pick-ups, level-ups, event lines) wait while the menu is open, and "Event log updated" shows once however
+  many entries changed together.
+- **Data:** the 34 pool events got drafted titles and descriptions (zh_TW + en; other languages fall back to English).
+- **Editor:** Title / Description fields, the per-event and per-kind "in the event log" switches, the new warning.
+- **Tests:** `player_menu_test` checks the run state (order, no duplicates, save / load, older saves, a new run) and that
+  every pool event has its title and description and real `next` ids. Checked in the game by walking F01's three events
+  (ledger, wall, well); the editor in headless Chrome (fields, save preview, the warning, Kinds column, the 29-step demo).
+
+## 12. P3 as built: what the attributes do (2026-10-10)
+
+Each attribute's effects are in `assets/data/stats.json` (`effects`: `stat` and `per`). They count **points above the
+attribute's base** (5), so a new Lv 1 character plays exactly as before; they grow with level-ups (+1 a level, LUK 0),
+items and gear with attribute `stats`, and hand-placed points. The defaults, all tunable there (per 0 or an empty list
+turns one off):
+
+| Attribute | Effect a point | At Lv 10 (9 points above base) | Where it acts |
+|---|---|---|---|
+| **STR** 力量 | ATK +0.5 (total rounded down) | ATK +4 | every attack, the Super attack, the HUD and Status |
+| **DEX** 靈巧 | Attack bar hit zone +0.4 | green zone 15 → 18.6 (stays inside the blue zone) | the attack bar's timing |
+| **AGI** 敏捷 | the bars' wait after a tap −15 ms | 1000 → 865 ms (never below 200 ms) | both bars |
+| **VIT** 體質 | max HP +3 | max HP +27 | the HP cap (healing, respawn, bars) |
+| **INT** 智力 | skill (功法) bonuses +2 % | +18 % | what skills add to ATK / DEF |
+| **LUK** 幸運 | gold from battles +3 % | (LUK does not grow by level) | battle rewards |
+
+- **The stats an effect can name:** `atk`, `def`, `maxhp`, `hitZone`, `cooldownMs`, `skillPower`, `goldGain`
+  (`player_menu_test` fails on any other). An attribute can have several effects.
+- **Status tab:** selecting an attribute shows its description, **Each point: …** and **Now: …**; ATK / DEF and the
+  HUD's ATK / DEF line show the totals.
+- **Free points:** `levelUp.freePoints` (0 by default) gives that many points a level to place by hand: the Status tab
+  shows "Points to spend", a **+** on each attribute, and Enter adds a point to the selected one. Saved with the run.
+- **Test hook:** `--give=exp:<n>,points:<n>`.
+- **Balance:** these are starting values, not tuned in play; change `per` in `stats.json` to tune.

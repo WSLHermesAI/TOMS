@@ -1,0 +1,43 @@
+<rml>
+<head>
+    <title>Save / Load</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="saveload.rcss"/>
+</head>
+<!-- Save / Load: the player menu's System tab -> "Save / Load". A Save tab and a Load tab over the same
+     slot cards; choosing a slot opens a confirmation, and nothing is written or loaded before "yes".
+     Data: saveload.* (UiSaveLoad). Buttons: act('pm_sl_*', n) -> Game::playerMenuEvent.
+     data-for sits on a wrapper, its bindings on the element inside (see player.rml). -->
+<body data-model="game">
+    <div class="fill scrim"></div>
+    <div id="panel" class="panel">
+        <div id="title">{{saveload.title}}</div>
+        <div id="modes">
+            <div class="slot" data-for="m, i : saveload.modes"><div class="mode" data-class-active="m.active" data-event-click="act('pm_sl_mode', i)">{{m.label}}</div></div>
+        </div>
+        <div id="close" class="btn btn-plain" data-event-click="act('pm_sl_close')">{{saveload.close_label}}</div>
+
+        <div id="cards">
+            <div data-for="c, i : saveload.cards"><div class="card" data-class-selected="c.selected" data-class-empty="c.empty" data-class-off="!c.enabled"
+                 data-event-click="act('pm_sl_slot', i)" data-event-mouseover="act('pm_sl_hover', i)">
+                <div class="card-title">{{c.title}}<span class="card-tag" data-if="c.tag != ''">{{c.tag}}</span></div>
+                <div class="card-line1">{{c.line1}}</div>
+                <div class="card-line2">{{c.line2}}</div>
+            </div></div>
+        </div>
+        <div id="hint">{{saveload.hint}}</div>
+    </div>
+
+    <div data-if="saveload.confirm_open">
+        <div class="fill scrim"></div>
+        <div id="confirm" class="panel" data-class-with-body="saveload.confirm_body != ''">
+            <div id="question">{{saveload.confirm_question}}</div>
+            <div id="body" data-if="saveload.confirm_body != ''">{{saveload.confirm_body}}</div>
+            <div id="answers">
+                <div class="row answer" data-class-selected="saveload.confirm_yes" data-event-click="act('pm_sl_confirm', 1)">{{saveload.yes_label}}</div>
+                <div class="row answer" data-class-selected="!saveload.confirm_yes" data-event-click="act('pm_sl_confirm', 0)">{{saveload.no_label}}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

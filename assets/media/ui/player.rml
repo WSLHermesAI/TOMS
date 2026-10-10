@@ -35,11 +35,15 @@
                 <div data-for="l : player.more"><div class="line"><span class="l-label">{{l.label}}</span><span class="l-value">{{l.value}}</span></div></div>
             </div>
             <div id="st-right">
-                <div class="heading">{{player.attr_title}}</div>
+                <div class="heading">{{player.attr_title}}<span id="attr-points" data-if="player.attr_points != ''">{{player.attr_points}}</span></div>
                 <div id="attrs">
-                    <div data-for="a, i : player.attrs"><div class="row attr" data-class-selected="a.selected" data-event-click="act('pm_attr', i)">{{a.label}}<span class="attr-value">{{a.sub}}</span></div></div>
+                    <div data-for="a, i : player.attrs"><div class="row attr" data-class-selected="a.selected" data-event-click="act('pm_attr', i)">{{a.label}}<span class="attr-add btn" data-if="player.attr_can_add" data-event-click="act('pm_attr_add', i)">+</span><span class="attr-value">{{a.sub}}</span></div></div>
                 </div>
-                <div id="attr-desc">{{player.attr_desc}}</div>
+                <div id="attr-desc">{{player.attr_desc}}
+                    <div class="attr-eff" data-if="player.attr_per != ''">{{player.attr_per}}</div>
+                    <div class="attr-eff now" data-if="player.attr_now != ''">{{player.attr_now}}</div>
+                    <div class="attr-eff hint" data-if="player.attr_points_hint != ''">{{player.attr_points_hint}}</div>
+                </div>
             </div>
         </div>
 

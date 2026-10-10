@@ -102,6 +102,8 @@ void RunStoryState::reset(bool keepShards) {
     sideStories_.clear();
     flags_.clear();
     clearedFloors_.clear();
+    eventsStarted_.clear();
+    eventsFinished_.clear();
     deathsTotal_ = deathsNonBoss_ = 0;
     floor_ = "F01";
     skillPoints_ = 0;
@@ -125,6 +127,8 @@ void RunStoryState::writeInto(RunSaveData& r) const {
     r.flags = flags_;
     r.floor = floor_;
     r.clearedFloors = clearedFloors_;
+    r.eventsStarted = eventsStarted_;
+    r.eventsFinished = eventsFinished_;
     r.shards = shards_;
     r.deathsTotal = deathsTotal_;
     r.deathsNonBoss = deathsNonBoss_;
@@ -140,6 +144,9 @@ void RunStoryState::readFrom(const RunSaveData& r) {
     flags_ = r.flags;
     floor_ = r.floor.empty() ? "F01" : r.floor;
     clearedFloors_ = r.clearedFloors;
+    eventsStarted_ = r.eventsStarted;
+    eventsFinished_ = r.eventsFinished;
+    for (const std::string& id : eventsFinished_) markEventStarted(id);   // an older or hand-edited save
     shards_ = r.shards;
     deathsTotal_ = r.deathsTotal;
     deathsNonBoss_ = r.deathsNonBoss;
@@ -151,6 +158,24 @@ void RunStoryState::readFrom(const RunSaveData& r) {
     std::map<std::string, int> snapshot = counters_;
     counters_.clear();
     for (auto& [k, v] : snapshot) setCounter(k, v);
+}
+
+void RunStoryState::markEventStarted(const std::string& eventId) {
+    if (!eventId.empty() && !eventStarted(eventId)) eventsStarted_.push_back(eventId);
+}
+
+void RunStoryState::markEventFinished(const std::string& eventId) {
+    if (eventId.empty()) return;
+    markEventStarted(eventId);
+    if (!eventFinished(eventId)) eventsFinished_.push_back(eventId);
+}
+
+bool RunStoryState::eventStarted(const std::string& eventId) const {
+    return std::find(eventsStarted_.begin(), eventsStarted_.end(), eventId) != eventsStarted_.end();
+}
+
+bool RunStoryState::eventFinished(const std::string& eventId) const {
+    return std::find(eventsFinished_.begin(), eventsFinished_.end(), eventId) != eventsFinished_.end();
 }
 
 std::string RunStoryState::debugSummary() const {

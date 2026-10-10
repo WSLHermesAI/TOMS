@@ -9,6 +9,7 @@
 #include "object.h"      // Trackable base: Player/EnemyInst/CombatState/Game are tracked
 #include "render_iface.h"
 #include "game_state.h"  // toms::GameState — see Game::currentState()
+#include "save_slots.h"  // toms::SlotSummary -- the Save / Load screen's slot cards
 #include "save_system.h" // toms::MetaSaveData — see Game::meta_ (Milestone 3; disk persistence is Milestone 5's job)
 #include "mission_system.h" // toms::MissionDefinition/MissionTracker — see Game::missionDefs_/missionTrackers_
 #include "power_bar.h"
@@ -45,6 +46,7 @@ struct Player : public Trackable {
     // The attributes of data/stats.json (str, dex, agi, ...) by id: base + level-ups + items used.
     // Worn equipment adds on top (Game::attrValue). Nothing in battle reads them yet.
     std::map<std::string, int> attrs;
+    int attrPoints = 0;   // attribute points not placed yet (stats.json levelUp.freePoints a level)
     Player() : hp(100), maxhp(100), atk(10), def(5), gold(0), exp(0), lv(1) {}
     TOMS_OBJECT(Player)
 };
@@ -215,7 +217,7 @@ public:
     // actives it grants) that isn't purchasable/craftable through any content authored yet.
     // Silently does nothing for an unknown id, matching every other debug hook's fail-soft rule.
     bool debugEquip(const std::string& equipmentId);
-    // Test hook (toms_game --give=...): an item reaches the player as if picked up (receiveItem); "gold:<n>" adds gold.
+    // Test hook (toms_game --give=...): an item reaches the player as if picked up (receiveItem); "gold:<n>" adds gold, "exp:<n>" EXP (with its level-ups), "points:<n>" attribute points to place.
     void debugGive(const std::string& id);
     // Verification hook: runs the exact same
     // finishCombatLose() path a real battle loss would (noteDeath, the e_10/e_13 wipe-check,
@@ -258,6 +260,9 @@ public:
     // I: the Items tab (closes the menu when it is already on Items). The web harness calls it too.
     void toggleInventory();
     bool inventoryOpen() const { return inGameMenuOpen_ && menuTab_ == MenuTab::Items; }
+    // Save / Load: its own screen over the menu (System tab -> Save / Load). Every save and every load
+    // asks first. While it is open the player menu's keys drive it (playerMenuMove/Activate/Back/Tab).
+    bool saveLoadOpen() const { return saveLoadOpen_; }
     const std::vector<std::string>& inventory() const { return pl.inv; }
     // The player's attribute `id` (data/stats.json) with worn equipment included.
     int attrValue(const std::string& id) const;
@@ -495,12 +500,21 @@ public:
     // real number instead of just the base Player stat, which never itself changes for either layer.
     // M8: after at least one rebirth (cycleIndex > 1), a tier>=1 skill's own bonus applies at half
     // effect (STORY_BIBLE.md §8) -- see applySkillEffects's own comment for the root-node carve-out.
-    float skillEffectScale() const { return meta_.cycleIndex > 1 ? cyclesConfig_.skillEffectScale : 1.0f; }
+    // INT (data/stats.json "skillPower") adds to what skills give, on top of the rebirth halving.
+    float skillEffectScale() const { return (meta_.cycleIndex > 1 ? cyclesConfig_.skillEffectScale : 1.0f) * (1.0f + attrEffect("skillPower") / 100.0f); }
     // M8 verification hook: read-only, matching runState()'s own "expose the meta save's public
     // facts for tests/harness probes" rule.
     int metaCycleIndex() const { return meta_.cycleIndex; }
-    int effectiveAtk() const { int a=pl.atk,d=pl.def; toms::applyEquipmentStats(equipped_,equipmentDefs_,a,d); toms::applySkillEffects(skillDefs_, run_.skillsOwned(), a, d, skillEffectScale()); return a; }
-    int effectiveDef() const { int a=pl.atk,d=pl.def; toms::applyEquipmentStats(equipped_,equipmentDefs_,a,d); toms::applySkillEffects(skillDefs_, run_.skillsOwned(), a, d, skillEffectScale()); return d; }
+    // Base + equipment + skills + attributes (data/stats.json effects "atk" / "def", rounded down).
+    int effectiveAtk() const { int a=pl.atk,d=pl.def; toms::applyEquipmentStats(equipped_,equipmentDefs_,a,d); toms::applySkillEffects(skillDefs_, run_.skillsOwned(), a, d, skillEffectScale()); return a + (int)std::floor(attrEffect("atk")); }
+    int effectiveDef() const { int a=pl.atk,d=pl.def; toms::applyEquipmentStats(equipped_,equipmentDefs_,a,d); toms::applySkillEffects(skillDefs_, run_.skillsOwned(), a, d, skillEffectScale()); return d + (int)std::floor(attrEffect("def")); }
+    // P3 (docs/20_PLAYER_MENU.md section 12): what the attributes do. attrEffect(stat) sums, over every attribute,
+    // (its value - its base) * per for the effects naming `stat`; so a Lv 1 character with no bonuses gets 0.
+    float attrEffect(const std::string& stat) const;
+    int effectiveMaxHp() const { return std::max(1, pl.maxhp + (int)std::floor(attrEffect("maxhp"))); }   // VIT
+    toms::PowerBarParams attackBarParams() const;   // the worn weapon's bar, its hit zone widened by DEX
+    int barCooldownMs() const;                      // battle.json's wait after a tap, shortened by AGI
+    void spendAttrPoint(int index);                 // a hand-placed point (levelUp.freePoints)
     // S5: forging. forgeDefs() is read-only content; tryCraft() re-checks canCraft() itself (same
     // "never trust the caller" rule as tryUnlockSkill) -- it deducts gold/materials and equips the
     // result in one atomic step, so a UI bug can never spend materials without getting the item.
@@ -609,8 +623,14 @@ private:
     std::vector<ItemButton> itemButtons(const ItemCell& c) const;
     void runItemAction(const ItemCell& c, ItemAction a);
     void playerMenuEvent(const std::string& name, int arg);   // the pm_* buttons of player.rml
+    // Save / Load (game_player_menu.cpp): mode 0 save, 1 load.
+    void openSaveLoad(int mode);
+    void saveLoadAsk(int index);                 // a slot was chosen: open its confirmation
+    void saveLoadAnswer(bool yes);               // the confirmation's answer: save / load, or nothing
+    void buildSaveLoadUi(toms::UiSaveLoad& out) const;
     // The Events tab: chapters reached and missions accepted, in progress first.
-    struct LogEntry { int kind = 0; std::string id, title, desc; bool done = false; };   // kind 0 chapter, 1 mission
+    // kind 0 chapter, 1 mission, 2 event. connected: the names of linked events ("？？？" for one not met yet).
+    struct LogEntry { int kind = 0; std::string id, title, desc; bool done = false; std::vector<std::string> connected; };
     std::vector<LogEntry> eventLog(bool all) const;
     // store system
     void loadStore(const std::string& assetDir);   // parse data/store.json
@@ -687,7 +707,8 @@ private:
     // item definitions (id -> json from data/items.json, the all-item file)
     std::map<std::string, nlohmann::json> itemDefs;
     // data/stats.json: the attributes and the level-up numbers.
-    struct AttrDef { std::string id, shortName, nameKey, descKey; int base = 5, perLevel = 1; };
+    struct AttrDef { std::string id, shortName, nameKey, descKey; int base = 5, perLevel = 1;
+                     std::vector<std::pair<std::string, float>> effects; };   // (stat, per point above base)
     struct LevelUpRule { int expPerLevel = 30, atk = 2, def = 1, maxhp = 10, freePoints = 0; };
     std::vector<AttrDef> attrDefs_;
     LevelUpRule levelUp_;
@@ -705,9 +726,29 @@ private:
     bool dropConfirmOpen_ = false;
     bool dropConfirmYes_ = false;
     bool storeFromMenu_ = false;   // the store was opened from the System tab: closing it goes back there
+    bool saveLoadOpen_ = false;
+    int saveLoadMode_ = 0;         // 0 save, 1 load
+    int saveLoadSel_ = 0;          // the slot (0-based)
+    bool saveLoadConfirm_ = false, saveLoadConfirmYes_ = false;
+    std::vector<toms::SlotSummary> saveLoadSlots_;   // read from disk when the screen opens and after a save
     // "Something new inside" dots on ≡ and on a tab.
     bool newsStore_ = false, newsGear_ = false, newsEvents_ = false;
     size_t eventLogSeen_ = 0;      // the event log's last count (+1; 0 = take it without news), update()
+    // The event pools (data/events/pool_*.json), for the player's event log (docs/event_editor/06_EVENT_LOGIC.md
+    // section 7): titles, descriptions, links, and whether the event is listed (its kind's "inLog" in
+    // events/kinds.json, or its own). Floor events with no pool record still fire; they are just not listed.
+    struct EventDef {
+        std::string kind, titleKey, descKey;
+        std::vector<std::string> next;
+        nlohmann::json requires;              // null = none
+        bool inLog = true;
+    };
+    std::map<std::string, EventDef> eventDefs_;
+    std::map<std::string, std::vector<std::string>> chapterEvents_;   // chapter id -> its story events (beats)
+    void loadEventDefs(const std::string& assetDir);
+    // The ids an event is linked to: its `next`, the events whose `next` names it, and the events its
+    // `requires` waits for (runFlagSet "event_<id>" / eventDone).
+    std::vector<std::string> connectedEvents(const std::string& eventId) const;
     // data/story/counters.json's state words (insight, resolve, humanity), for the Status tab.
     std::map<std::string, nlohmann::json> counterLabels_;
     bool fullscreenAvailable_ = false, fullscreenOn_ = false, fullscreenRequest_ = false;

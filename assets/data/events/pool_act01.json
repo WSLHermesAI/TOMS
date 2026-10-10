@@ -11,42 +11,58 @@
     {
       "eventId": "ev_village_well",
       "kind": "whisper",
-      "text": "ev_village_well.text"
+      "text": "ev_village_well.text",
+      "title": "ev_village_well.title",
+      "desc": "ev_village_well.desc"
     },
     {
       "eventId": "ev_village_chimney",
       "kind": "relic",
-      "text": "ev_village_chimney.text"
+      "text": "ev_village_chimney.text",
+      "title": "ev_village_chimney.title",
+      "desc": "ev_village_chimney.desc"
     },
     {
       "eventId": "ev_village_grave_new",
       "kind": "rescue",
-      "text": "ev_village_grave_new.text"
+      "text": "ev_village_grave_new.text",
+      "title": "ev_village_grave_new.title",
+      "desc": "ev_village_grave_new.desc"
     },
     {
       "eventId": "ev_village_dog_bowl",
       "kind": "rescue",
-      "text": "ev_village_dog_bowl.text"
+      "text": "ev_village_dog_bowl.text",
+      "title": "ev_village_dog_bowl.title",
+      "desc": "ev_village_dog_bowl.desc"
     },
     {
       "eventId": "ev_village_ledger",
       "kind": "cache",
-      "text": "ev_village_ledger.text"
+      "text": "ev_village_ledger.text",
+      "title": "ev_village_ledger.title",
+      "desc": "ev_village_ledger.desc"
     },
     {
       "eventId": "ev_village_bell_rope",
       "kind": "trap",
-      "text": "ev_village_bell_rope.text"
+      "text": "ev_village_bell_rope.text",
+      "title": "ev_village_bell_rope.title",
+      "desc": "ev_village_bell_rope.desc"
     },
     {
       "eventId": "ev_village_chapel_dust",
       "kind": "whisper",
-      "text": "ev_village_chapel_dust.text"
+      "text": "ev_village_chapel_dust.text",
+      "title": "ev_village_chapel_dust.title",
+      "desc": "ev_village_chapel_dust.desc"
     },
     {
       "eventId": "ev_village_old_plough",
       "kind": "cache",
-      "text": "ev_village_old_plough.text"
+      "text": "ev_village_old_plough.text",
+      "title": "ev_village_old_plough.title",
+      "desc": "ev_village_old_plough.desc"
     }
   ]
 }

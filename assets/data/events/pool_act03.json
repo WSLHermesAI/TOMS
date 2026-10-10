@@ -11,42 +11,58 @@
     {
       "eventId": "ev_gate_soldier_plate",
       "kind": "relic",
-      "text": "ev_gate_soldier_plate.text"
+      "text": "ev_gate_soldier_plate.text",
+      "title": "ev_gate_soldier_plate.title",
+      "desc": "ev_gate_soldier_plate.desc"
     },
     {
       "eventId": "ev_gate_seal_rubbing",
       "kind": "whisper",
-      "text": "ev_gate_seal_rubbing.text"
+      "text": "ev_gate_seal_rubbing.text",
+      "title": "ev_gate_seal_rubbing.title",
+      "desc": "ev_gate_seal_rubbing.desc"
     },
     {
       "eventId": "ev_gate_forge_first",
       "kind": "cache",
-      "text": "ev_gate_forge_first.text"
+      "text": "ev_gate_forge_first.text",
+      "title": "ev_gate_forge_first.title",
+      "desc": "ev_gate_forge_first.desc"
     },
     {
       "eventId": "ev_gate_broken_ram",
       "kind": "trap",
-      "text": "ev_gate_broken_ram.text"
+      "text": "ev_gate_broken_ram.text",
+      "title": "ev_gate_broken_ram.title",
+      "desc": "ev_gate_broken_ram.desc"
     },
     {
       "eventId": "ev_gate_quartermaster_cache",
       "kind": "cache",
-      "text": "ev_gate_quartermaster_cache.text"
+      "text": "ev_gate_quartermaster_cache.text",
+      "title": "ev_gate_quartermaster_cache.title",
+      "desc": "ev_gate_quartermaster_cache.desc"
     },
     {
       "eventId": "ev_gate_deserters_kit",
       "kind": "rescue",
-      "text": "ev_gate_deserters_kit.text"
+      "text": "ev_gate_deserters_kit.text",
+      "title": "ev_gate_deserters_kit.title",
+      "desc": "ev_gate_deserters_kit.desc"
     },
     {
       "eventId": "ev_gate_old_banner",
       "kind": "relic",
-      "text": "ev_gate_old_banner.text"
+      "text": "ev_gate_old_banner.text",
+      "title": "ev_gate_old_banner.title",
+      "desc": "ev_gate_old_banner.desc"
     },
     {
       "eventId": "ev_gate_forge_slag",
       "kind": "cache",
-      "text": "ev_gate_forge_slag.text"
+      "text": "ev_gate_forge_slag.text",
+      "title": "ev_gate_forge_slag.title",
+      "desc": "ev_gate_forge_slag.desc"
     }
   ]
 }

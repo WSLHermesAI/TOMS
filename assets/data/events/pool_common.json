@@ -8,52 +8,72 @@
     {
       "eventId": "ev_common_relic_road",
       "kind": "relic",
-      "text": "ev_common_relic_road.text"
+      "text": "ev_common_relic_road.text",
+      "title": "ev_common_relic_road.title",
+      "desc": "ev_common_relic_road.desc"
     },
     {
       "eventId": "ev_common_whisper_old_road",
       "kind": "whisper",
-      "text": "ev_common_whisper_old_road.text"
+      "text": "ev_common_whisper_old_road.text",
+      "title": "ev_common_whisper_old_road.title",
+      "desc": "ev_common_whisper_old_road.desc"
     },
     {
       "eventId": "ev_common_cache_wall",
       "kind": "cache",
-      "text": "ev_common_cache_wall.text"
+      "text": "ev_common_cache_wall.text",
+      "title": "ev_common_cache_wall.title",
+      "desc": "ev_common_cache_wall.desc"
     },
     {
       "eventId": "ev_common_trap_rubble",
       "kind": "trap",
-      "text": "ev_common_trap_rubble.text"
+      "text": "ev_common_trap_rubble.text",
+      "title": "ev_common_trap_rubble.title",
+      "desc": "ev_common_trap_rubble.desc"
     },
     {
       "eventId": "ev_common_rescue_lost_soldier",
       "kind": "rescue",
-      "text": "ev_common_rescue_lost_soldier.text"
+      "text": "ev_common_rescue_lost_soldier.text",
+      "title": "ev_common_rescue_lost_soldier.title",
+      "desc": "ev_common_rescue_lost_soldier.desc"
     },
     {
       "eventId": "ev_common_merchant_echo_ash",
       "kind": "merchant_echo",
-      "text": "ev_common_merchant_echo_ash.text"
+      "text": "ev_common_merchant_echo_ash.text",
+      "title": "ev_common_merchant_echo_ash.title",
+      "desc": "ev_common_merchant_echo_ash.desc"
     },
     {
       "eventId": "ev_common_shard_wandering",
       "kind": "memory_shard",
-      "text": "ev_common_shard_wandering.text"
+      "text": "ev_common_shard_wandering.text",
+      "title": "ev_common_shard_wandering.title",
+      "desc": "ev_common_shard_wandering.desc"
     },
     {
       "eventId": "ev_common_relic_chipped_blade",
       "kind": "relic",
-      "text": "ev_common_relic_chipped_blade.text"
+      "text": "ev_common_relic_chipped_blade.text",
+      "title": "ev_common_relic_chipped_blade.title",
+      "desc": "ev_common_relic_chipped_blade.desc"
     },
     {
       "eventId": "ev_common_whisper_old_song",
       "kind": "whisper",
-      "text": "ev_common_whisper_old_song.text"
+      "text": "ev_common_whisper_old_song.text",
+      "title": "ev_common_whisper_old_song.title",
+      "desc": "ev_common_whisper_old_song.desc"
     },
     {
       "eventId": "ev_common_cache_rat_nest",
       "kind": "cache",
-      "text": "ev_common_cache_rat_nest.text"
+      "text": "ev_common_cache_rat_nest.text",
+      "title": "ev_common_cache_rat_nest.title",
+      "desc": "ev_common_cache_rat_nest.desc"
     }
   ]
 }

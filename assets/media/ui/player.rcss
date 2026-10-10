@@ -39,6 +39,13 @@ body { z-index: 45; }
 #attrs { max-height: 380px; overflow-y: auto; }
 .attr { height: 42px; line-height: 42px; margin-bottom: 6px; padding: 0 16px; font-size: 20px; color: #ffffff; }
 .attr-value { float: right; color: #fff6c2; }
+.attr-add { float: right; width: 30px; height: 30px; line-height: 30px; margin: 6px 0 0 12px; text-align: center;
+            font-size: 22px; color: #2e3140; background-color: #9ff0b4; border-radius: 15px; }
+.attr-add:hover { background-color: #b8f5c8; }
+#attr-points { margin-left: 16px; font-size: 16px; color: #9ff0b4; }
+.attr-eff { margin-top: 8px; font-size: 17px; color: #cfe7ff; }
+.attr-eff.now { color: #9ff0b4; }
+.attr-eff.hint { color: #ffd28f; font-size: 15px; }
 #attr-desc {
     position: absolute; left: 0; right: 0; bottom: 0; height: 150px; padding: 14px 16px;
     background-color: #4d5466; border-radius: 6px; font-size: 18px; color: #f1f6ff;

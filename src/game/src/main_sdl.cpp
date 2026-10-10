@@ -27,7 +27,7 @@
 //   --ui-scale=<x>        the small-screen UI scale (the web build uses 1.5 on phones), to test it on desktop
 //   --fx=<file>#<effect>  play one particle effect of a .particle file over the screen (particle_fx.h)
 //   --give=<id,...>       when the title first closes, hand the player these items (data/items.json ids;
-//                         gear is owned, not worn) and gold:<n> -- tests of the player menu (tests/CMakeLists.txt)
+//                         gear is owned, not worn), gold:<n>, exp:<n>, points:<n> -- tests of the player menu (tests/CMakeLists.txt)
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
 #include "../../core/engine/vfs.h"   // toms::vfsInit: APK entries need the AAssetManager

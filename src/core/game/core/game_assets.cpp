@@ -202,6 +202,7 @@ bool Game::loadAssets(const std::string& assetDir) {
             for (auto& [k, v] : cj.items())
                 if (!k.empty() && k[0] != '_' && v.is_object() && v.contains("label")) counterLabels_[k] = v["label"];
     }
+    loadEventDefs(assetDir);
     // data/store.json: which of those items the store sells, and how prices grow
     loadStore(assetDir);
     // data/stats.json: the player's attributes and the level-up numbers (docs/20_PLAYER_MENU.md section 3).
@@ -217,6 +218,9 @@ bool Game::loadAssets(const std::string& assetDir) {
                 d.descKey = a.value("desc", std::string());
                 d.base = a.value("base", 5);
                 d.perLevel = a.value("perLevel", 1);
+                if (a.contains("effects") && a["effects"].is_array())
+                    for (const auto& e : a["effects"])
+                        if (e.is_object() && e.contains("stat")) d.effects.push_back({e.value("stat", std::string()), e.value("per", 0.0f)});
                 attrDefs_.push_back(d);
             }
         if (sj.contains("levelUp") && sj["levelUp"].is_object()) {

@@ -373,7 +373,11 @@ const I18N = {
     saveTitle: 'Save changes', saveSub: '· a backup of each file is copied first, then these files are written', cancel: 'Cancel', writeFiles: 'Write files',
     histLoaded: 'Loaded assets/data',
     rule_missing_event: 'Missing event id', rule_missing_text: 'Missing text key', rule_orphan: 'Orphan event', rule_no_kind: 'No kind',
-    rule_placeholder: 'Placeholder text', rule_untranslated: 'Untranslated',
+    rule_placeholder: 'Placeholder text', rule_untranslated: 'Untranslated', rule_missing_title: 'No title / description',
+    lTitle: 'Title (the player\'s event log)', lDesc: 'Description (the player\'s event log)', lInLog: 'In the player\'s event log',
+    logKind: k => `as its kind (${k})`, logYes: 'yes', logNo: 'no', kLog: 'In log', kLogTitle: 'Events of this kind are listed in the player\'s event log',
+    hTitle: (id, l) => `Title ${id} [${l}]`, hDesc: (id, l) => `Description ${id} [${l}]`, hInLog: id => `Event log ${id}`, hKindLog: k => `Event log of kind ${k}`,
+    wNoTitle: k => `no ${k}`,
     hNew: (id, p) => `New event ${id} in ${p}`, idFormat: 'Any name works, Chinese too (e.g. ev_village_scarecrow or 稻草人), except empty, spaces at the ends, or " \' < > & | \\ /',
     floorNameErr: 'A floor name is also its file name: any name works, Chinese too, except " \' < > & | \\ / : * ?', idDup: (id, p) => `${id} already exists in ${p}`,
     hRename: (a, b) => `Rename ${a} → ${b}`, hConnect: (id, fs) => `Connect ${id} to ${fs}`, hText: (id, l) => `Text ${id} [${l}]`, hTextAll: id => `Text ${id}`,
@@ -644,7 +648,11 @@ const I18N = {
     saveTitle: '儲存變更', saveSub: '· 會先備份每個檔案，再寫入這些檔案', cancel: '取消', writeFiles: '寫入檔案',
     histLoaded: '已載入 assets/data',
     rule_missing_event: '缺少的事件 ID', rule_missing_text: '缺少文字鍵', rule_orphan: '孤立事件', rule_no_kind: '未設類型',
-    rule_placeholder: '佔位文字', rule_untranslated: '未翻譯',
+    rule_placeholder: '佔位文字', rule_untranslated: '未翻譯', rule_missing_title: '缺少標題／說明',
+    lTitle: '標題（玩家的事件紀錄）', lDesc: '說明（玩家的事件紀錄）', lInLog: '列入玩家的事件紀錄',
+    logKind: k => `跟隨種類（${k}）`, logYes: '是', logNo: '否', kLog: '進紀錄', kLogTitle: '這個種類的事件會列在玩家的事件紀錄中',
+    hTitle: (id, l) => `標題 ${id} [${l}]`, hDesc: (id, l) => `說明 ${id} [${l}]`, hInLog: id => `事件紀錄 ${id}`, hKindLog: k => `種類 ${k} 的事件紀錄`,
+    wNoTitle: k => `沒有${k}`,
     hNew: (id, p) => `在 ${p} 新增事件 ${id}`, idFormat: '任何名稱都可以，中文也行（例如 ev_village_scarecrow 或 稻草人），但不能是空的、頭尾不能有空白，也不能有 " \' < > & | \\ /',
     floorNameErr: '樓層名稱也是檔名：任何名稱都可以，中文也行，但不能有 " \' < > & | \\ / : * ?', idDup: (id, p) => `${id} 已存在於 ${p}`,
     hRename: (a, b) => `重新命名 ${a} → ${b}`, hConnect: (id, fs) => `將 ${id} 連接到 ${fs}`, hText: (id, l) => `文字 ${id} [${l}]`, hTextAll: id => `文字 ${id}`,
@@ -956,7 +964,8 @@ const readers = ref => S.events.filter(e => e.req.some(l => leafRef(l) === ref) 
 const PREV = {}; DATA.floors.forEach(f => { if (f.next) PREV[f.next] = f.id; });
 const fresh = () => ({
   pools: [...DATA.pools],
-  events: DATA.events.map(e => ({ id: e.id, kind: e.kind, pool: e.pool, text: e.text, ...logicFrom(e) })),
+  events: DATA.events.map(e => ({ id: e.id, kind: e.kind, pool: e.pool, text: e.text, title: e.title || e.id + '.title', desc: e.desc || e.id + '.desc',
+    ...('inLog' in e ? { inLog: e.inLog } : {}), ...logicFrom(e) })),
   vars: JSON.parse(JSON.stringify(DATA.vars || {})), cats: [...(DATA.varCats || [])],   // categories made with "Create category" (vars.json "_categories")
   counters: JSON.parse(JSON.stringify(DATA.counters || {})), flags: JSON.parse(JSON.stringify(DATA.flags || {})),
   kinds: JSON.parse(JSON.stringify(DATA.kinds && Object.keys(DATA.kinds).length ? DATA.kinds : DEFAULT_KINDS)),
@@ -1030,6 +1039,7 @@ const RULES = {
   logic_cycle:   { sev: 'warn',  icon: '⚠' },
   unused_var:    { sev: 'info',  icon: 'ⓘ' },
   untranslated:  { sev: 'info',  icon: 'ⓘ' },
+  missing_title: { sev: 'warn',  icon: '⚠' },
 };
 function problems() {
   const out = [], seen = new Set();
@@ -1041,6 +1051,8 @@ function problems() {
     if (!tx) out.push({ rule: 'missing_text', id: e.id, where: e.text });
     else if (isPlaceholder(e.text, tx)) out.push({ rule: 'placeholder', id: e.id, where: e.text });
     else if (!tx.en || tx.en === tx.zh_TW) out.push({ rule: 'untranslated', id: e.id, where: e.text });
+    const noTi = !(S.texts[e.title] || {}).zh_TW, noDe = !(S.texts[e.desc] || {}).zh_TW;   // the player's event log shows both
+    if (noTi || noDe) out.push({ rule: 'missing_title', id: e.id, where: t('wNoTitle', [noTi ? 'title' : '', noDe ? 'desc' : ''].filter(Boolean).join(' / ')) });
     if (!e.kind) out.push({ rule: 'no_kind', id: e.id, where: e.pool });
     else if (!S.kinds[e.kind]) out.push({ rule: 'unknown_kind', id: e.id, where: t('wUnknownKind', e.kind) });
   });
@@ -1089,9 +1101,9 @@ function createEvent(pool) {
   collapsed.delete(pool);
   let id; do { id = `ev_new_event_${newCounter++}`; } while (ev(id) || S.texts[id + '.text']);
   edit(t('hNew', id, pool), () => {
-    const e = { id, kind: '', pool, text: id + '.text', isNew: true, ...blankLogic() };
+    const e = { id, kind: '', pool, text: id + '.text', title: id + '.title', desc: id + '.desc', isNew: true, ...blankLogic() };
     if (!tutEv()) e.tutorial = true;
-    S.events.push(e); S.texts[e.text] = Object.fromEntries(LANGS.map(l => [l, ''])); selected = id;
+    S.events.push(e); [e.text, e.title, e.desc].forEach(k => S.texts[k] = Object.fromEntries(LANGS.map(l => [l, '']))); selected = id;
   });
   setTimeout(() => { const i = $('fId'); if (i) { i.focus(); i.select(); } }, 0);
 }
@@ -1113,6 +1125,8 @@ function renameEvent(e, nu) {
       o.req.forEach(l => { if (l.type === 'runFlagSet' && l.flag === 'event_' + old) l.flag = 'event_' + nu; }); });
     const tx = S.texts[e.text]; delete S.texts[e.text];
     e.id = nu; e.text = nu + '.text'; S.texts[e.text] = tx || {}; selected = nu;
+    ['title', 'desc'].forEach(f => { if (e[f] !== old + '.' + f) return;   // keys that follow the id move with it
+      const v = S.texts[e[f]]; delete S.texts[e[f]]; e[f] = nu + '.' + f; if (v) S.texts[e[f]] = v; });
   });
 }
 function addFloors(e, ids) { edit(t('hConnect', e.id, ids.join(', ')), () => ids.forEach(id => S.floors.find(f => f.id === id).events.push(e.id))); }
@@ -1125,7 +1139,8 @@ function makeRecord(id, act) {
   if (!S.pools.includes(pool)) S.pools.push(pool);
   const text = S.texts[id] ? id : id + '.text';
   if (!S.texts[text]) S.texts[text] = Object.fromEntries(LANGS.map(l => [l, '']));
-  S.events.push({ id, kind: guessKind(id), pool, text, isNew: true, ...blankLogic() });
+  ['title', 'desc'].forEach(f => { if (!S.texts[id + '.' + f]) S.texts[id + '.' + f] = Object.fromEntries(LANGS.map(l => [l, ''])); });
+  S.events.push({ id, kind: guessKind(id), pool, text, title: id + '.title', desc: id + '.desc', isNew: true, ...blankLogic() });
   return pool;
 }
 function createFromMissing(id) {
@@ -1572,6 +1587,9 @@ function renderForm() {
     </div>
     ${logicHtml(e)}
     <div class="field"><label>${t('lText')} ${ph ? `<span class="warnTag">${t('phWarn')}</span>` : ''}<span class="nlhint">${t('nlHint')}</span></label>${LANGS.map(l => `<div class="lang"><span>${l}</span><textarea rows="${lineCount(tx[l])}" data-lang="${l}" placeholder="${l === 'zh_TW' ? t('phPlayer') : t('phUntr')}">${esc(tx[l])}</textarea></div>`).join('')}</div>
+    <div class="field"><label>${t('lTitle')}</label>${LANGS.map(l => `<div class="lang"><span>${l}</span><input type="text" data-title="${l}" value="${esc((S.texts[e.title] || {})[l] || '')}"></div>`).join('')}</div>
+    <div class="field"><label>${t('lDesc')}</label>${LANGS.map(l => `<div class="lang"><span>${l}</span><textarea rows="${lineCount((S.texts[e.desc] || {})[l])}" data-desc="${l}">${esc((S.texts[e.desc] || {})[l] || '')}</textarea></div>`).join('')}</div>
+    <div class="field"><label>${t('lInLog')}</label><select id="fInLog"><option value=""${'inLog' in e ? '' : ' selected'}>${t('logKind', ((S.kinds[e.kind] || {}).inLog === false ? t('logNo') : t('logYes')))}</option><option value="1"${e.inLog === true ? ' selected' : ''}>${t('logYes')}</option><option value="0"${e.inLog === false ? ' selected' : ''}>${t('logNo')}</option></select></div>
     <div class="field"><label>${t('preview')}</label><div class="preview" id="pv"><small>${esc(e.kind || t('kindQ'))}</small>${esc(tx.zh_TW) || '<span class="muted">…</span>'}</div></div>
   </div>`;
 
@@ -1582,6 +1600,11 @@ function renderForm() {
   $('fKind').onchange = () => { if ($('fKind').value === '__new') { kindFocusNew = true; return setTab('kinds'); }
     edit(t('hKind', e.id, $('fKind').value), () => e.kind = $('fKind').value); };
   $('fPool').onchange = () => moveToPool(e, $('fPool').value);
+  const setKeyText = (f, lang, v, label) => edit(label, () => { const k = e[f] || (e[f] = e.id + '.' + f); const tx = S.texts[k] = S.texts[k] || {}; tx[lang] = v; });
+  document.querySelectorAll('[data-title]').forEach(i => i.onchange = () => setKeyText('title', i.dataset.title, i.value, t('hTitle', e.id, i.dataset.title)));
+  document.querySelectorAll('[data-desc]').forEach(ta => { ta.oninput = () => ta.rows = lineCount(ta.value);
+    ta.onchange = () => setKeyText('desc', ta.dataset.desc, ta.value, t('hDesc', e.id, ta.dataset.desc)); });
+  $('fInLog').onchange = () => edit(t('hInLog', e.id), () => { const v = $('fInLog').value; if (v === '') delete e.inLog; else e.inLog = v === '1'; });
   if ($('delEv')) $('delEv').onclick = () => deleteEvent(e);
   document.querySelectorAll('[data-map]').forEach(b => b.onclick = () => openStageEditor(e, [b.dataset.map]));
   document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => edit(t('hDisc', e.id, b.dataset.rm), () => {
@@ -2377,7 +2400,7 @@ function fixButtons(p, i) {
            missing_floor: b('mkfloor', t('fMkFloor')) + ' ' + b('floor', t('fOpenFloor')), bad_unlock: b('floor', t('fOpenFloor')), unreachable: b('floor', t('fOpenFloor')),
            unknown_ref: b('open', t('fLogic')), bad_next: b('open', t('fLogic')), never_fires: b('open', t('fLogic')), never_active: b('open', t('fLogic')),
            logic_cycle: b('open', t('fLogic')), unused_var: b('vars', t('fVars')), unknown_kind: b('open', t('fKind')) + ' ' + b('kinds', t('fKinds')),
-           untranslated: b('open', t('fOpen')) }[p.rule];
+           untranslated: b('open', t('fOpen')), missing_title: b('title', t('fOpen')) }[p.rule];
 }
 function runFix(p, k) {
   const e = ev(p.id);
@@ -2389,6 +2412,7 @@ function runFix(p, k) {
   else if (k === 'remove') removeFromFloors(p.id);
   else if (k === 'delete') deleteEvent(e);
   else if (k === 'mktext') edit(t('hMkText', e.text), () => S.texts[e.text] = Object.fromEntries(LANGS.map(l => [l, ''])));
+  else if (k === 'title') { selectSubject(p.id); const el = document.querySelector('[data-title="zh_TW"]'); if (el) { el.classList.add('flash'); el.focus(); } }
   else { selectSubject(p.id); if (k === 'connect') $('addFloor').click();
     const el = k === 'open' && (p.rule === 'no_kind' ? $('fKind') : document.querySelector('[data-lang="zh_TW"]'));
     if (el) { el.classList.add('flash'); el.focus(); } }
@@ -2397,11 +2421,7 @@ function runFix(p, k) {
 // ---------- save: show each file's change, then "write" ----------
 function diffFiles() {
   // a record without logic stays on one line, as in the files today; one with logic is written out in full
-  const out = [], line = r => { const o = { eventId: r.id, kind: r.kind, text: r.text };
-    if (r.trigger && r.trigger.on !== 'step') o.trigger = r.trigger; const rq = reqJson(r); if (rq) o.requires = rq;
-    if (r.actions && r.actions.length) o.actions = r.actions; if (r.next && r.next.length) o.next = r.next;
-    return Object.keys(o).length === 3 ? `    { "eventId": "${r.id}", "kind": "${r.kind}", "text": "${r.text}" },`
-      : JSON.stringify(o, null, 2).split('\n').map(l => '    ' + l).join('\n') + ','; };
+  const out = [], line = r => JSON.stringify(poolRec(r), null, 2).split('\n').map(l => '    ' + l).join('\n') + ',';
   const expand = (tag, rec) => rec.split('\n').map(l => [tag, l]);
   [...S.pools].sort().forEach(p => {
     const a = base.events.filter(e => e.pool === p).map(line), b = S.events.filter(e => e.pool === p).map(line);
@@ -2502,8 +2522,8 @@ async function readLiveData(dir) {
   for (const name of await listNames(dir, A + 'events', /^pool_.*\.json$/)) {
     const pid = name.slice(0, -5); pools.push(pid);
     for (const e of JSON.parse(await readText(dir, A + 'events/' + name)).events || []) {
-      const rec = { id: e.eventId, kind: e.kind, pool: pid, text: e.text };
-      ['trigger', 'requires', 'actions', 'next', 'once'].forEach(k => { if (k in e) rec[k] = e[k]; });
+      const rec = { id: e.eventId, kind: e.kind, pool: pid, text: e.text, title: e.title || e.eventId + '.title', desc: e.desc || e.eventId + '.desc' };
+      ['trigger', 'requires', 'actions', 'next', 'once', 'inLog'].forEach(k => { if (k in e) rec[k] = e[k]; });
       events.push(rec);
     }
   }
@@ -2514,7 +2534,7 @@ async function readLiveData(dir) {
     floors.push(rec);
   }
   const strings = JSON.parse(await readText(dir, A + 'text.json')).strings || {}, known = new Set(events.map(e => e.id));
-  const wanted = new Set([...events.map(e => e.text), ...floors.flatMap(f => f.events.filter(i => !known.has(i)))]);
+  const wanted = new Set([...events.flatMap(e => [e.text, e.title, e.desc]), ...floors.flatMap(f => f.events.filter(i => !known.has(i)))]);
   const texts = Object.fromEntries([...wanted].sort().filter(k => k in strings).map(k => [k, strings[k]]));
   const opt = async p => { const s = await tryText(dir, A + p); return s ? noUnderscore(JSON.parse(s)) : {}; };
   return { snapshot: 'live', pools, events, floors, texts, npcs: DATA.npcs,
@@ -2545,7 +2565,8 @@ $('openDir').onclick = async () => {
 
 const asText = (obj, before) => { const s = JSON.stringify(obj, null, 2) + '\n'; return before && before.includes('\r\n') ? s.replace(/\n/g, '\r\n') : s; };
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const poolRec = e => { const o = { eventId: e.id, kind: e.kind, text: e.text };
+const poolRec = e => { const o = { eventId: e.id, kind: e.kind, text: e.text, title: e.title || e.id + '.title', desc: e.desc || e.id + '.desc' };
+  if ('inLog' in e) o.inLog = e.inLog;
   if (e.trigger && e.trigger.on !== 'step') o.trigger = e.trigger; const rq = reqJson(e); if (rq) o.requires = rq;
   if (e.actions && e.actions.length) o.actions = e.actions; if (e.next && e.next.length) o.next = e.next; return o; };
 const oneLine = v => Array.isArray(v) ? '[' + v.map(oneLine).join(', ') + ']'
@@ -2579,7 +2600,7 @@ async function liveWrites() {
     const path = A + 'events/' + p + '.json', before = await tryText(dir, path), obj = before ? JSON.parse(before) : { events: [] };
     const disk = obj.events || [], diskById = new Map(disk.map(r => [r.eventId, r])), mine = new Set([...bEv, ...sEv].map(e => e.id));
     obj.events = [...sEv.map(e => { const r = { ...(diskById.get(e.id) || {}) }, o = poolRec(e);
-        ['trigger', 'requires', 'actions', 'next'].forEach(k => delete r[k]); return Object.assign(r, o); }),
+        ['trigger', 'requires', 'actions', 'next', 'inLog'].forEach(k => delete r[k]); return Object.assign(r, o); }),   /* the editor's fields win; a removed inLog goes */
       ...disk.filter(r => !mine.has(r.eventId))];   // records someone else added since this editor read the pool
     put(path, before, asText(obj, before));
   }
@@ -2690,25 +2711,27 @@ function renderKinds() {
       <select class="kMoveTo"${n ? '' : ' disabled'}><option value="">${t('kMoveTo', n)}</option>${kindsList().filter(x => x !== k).map(x => `<option value="${esc(x)}">${esc(x)}${kindName(x) ? ' — ' + esc(kindName(x)) : ''}</option>`).join('')}</select></div>`; };
   const scroll = $('pane').scrollTop;
   $('pane').innerHTML = `<div class="plist"><p class="muted" style="margin:2px 0 8px">${t('kIntro')}</p>
-    <table class="vars"><thead><tr><th></th><th>${t('kId')}</th><th>${t('kName')} · zh_TW</th><th>en</th><th>${t('kDesc')}</th><th>${t('kEvents')}</th><th></th></tr></thead><tbody>
+    <table class="vars"><thead><tr><th></th><th>${t('kId')}</th><th>${t('kName')} · zh_TW</th><th>en</th><th>${t('kDesc')}</th><th title="${t('kLogTitle')}">${t('kLog')}</th><th>${t('kEvents')}</th><th></th></tr></thead><tbody>
     ${kindsList().map(k => { const r = S.kinds[k], u = users(k);
       return `<tr data-k="${esc(k)}"><td><input type="color" class="kColor" value="${esc(r.color || '#8b929c')}" title="${t('kColor')}"></td>
         <td><input class="kId" value="${esc(k)}" style="width:130px"><div class="err kErr"></div></td>
         <td><input class="kZh" value="${esc(lang(r.name).zh_TW || '')}" style="width:110px"></td><td><input class="kEn" value="${esc(lang(r.name).en || '')}" style="width:120px"></td>
         <td><input class="kDesc" value="${esc(L_(r.desc))}" placeholder="${t('kDescPh')}" style="width:200px"></td>
+        <td style="text-align:center"><input type="checkbox" class="kLog" title="${t('kLogTitle')}"${r.inLog === false ? '' : ' checked'}></td>
         <td><b class="kCount" style="cursor:pointer" title="${t('kShowTree')}">${u.length}</b> ${evChips(k, u)}</td>
         <td>${u.length ? moveCell(k, u) : `<button class="kDel">${t('kDelete')}</button>`}</td></tr>`; }).join('')}
-    ${unknown.map(k => `<tr data-k="${esc(k)}"><td></td><td colspan="4"><span class="warnTag">⚠ ${esc(k)}</span> <span class="muted">${t('kUnknown', users(k).length)}</span>
+    ${unknown.map(k => `<tr data-k="${esc(k)}"><td></td><td colspan="5"><span class="warnTag">⚠ ${esc(k)}</span> <span class="muted">${t('kUnknown', users(k).length)}</span>
       <button class="kAddUnknown" data-k="${esc(k)}">${t('kAddThis')}</button></td>
       <td>${evChips(k, users(k))}</td><td>${moveCell(k, users(k))}</td></tr>`).join('')}
     <tr><td><input type="color" id="kNewColor" value="#8b929c"></td><td><input id="kNewId" placeholder="${t('kIdPh')}" style="width:130px"></td>
       <td><input id="kNewZh" placeholder="zh_TW" style="width:110px"></td><td><input id="kNewEn" placeholder="en" style="width:120px"></td>
-      <td colspan="3"><button class="primary" id="kAdd">${t('kAdd')}</button> <span class="err" id="kNewErr"></span></td></tr></tbody></table>
+      <td colspan="4"><button class="primary" id="kAdd">${t('kAdd')}</button> <span class="err" id="kNewErr"></span></td></tr></tbody></table>
     <p class="muted" style="font-size:11px;margin-top:8px">${t('kNote')}</p></div>`;
   $('dinfo').textContent = t('kInfo', kindsList().length, S.events.length);
   const row = el => el.closest('tr').dataset.k;
   const setRec = (k, fn, label) => edit(label || t('hKindEdit', k), () => fn(S.kinds[k]));
   $('pane').querySelectorAll('.kColor').forEach(i => i.onchange = () => setRec(row(i), r => r.color = i.value));
+  $('pane').querySelectorAll('.kLog').forEach(c => c.onchange = () => setRec(row(c), r => { if (c.checked) delete r.inLog; else r.inLog = false; }, t('hKindLog', row(c))));
   $('pane').querySelectorAll('.kZh, .kEn').forEach(i => i.onchange = () => { const k = row(i), tr = i.closest('tr');
     setRec(k, r => r.name = { ...(r.name || {}), zh_TW: tr.querySelector('.kZh').value.trim(), en: tr.querySelector('.kEn').value.trim() }); });
   $('pane').querySelectorAll('.kDesc').forEach(i => i.onchange = () => setRec(row(i), r => { const v = i.value.trim(); if (v) r.desc = { ...(r.desc || {}), [LANG]: v }; else delete r.desc; }));

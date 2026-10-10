@@ -195,20 +195,22 @@ MIT, needs Dear ImGui 1.72+ and C++14, and the engine already has an ImGui-on-bg
 (`src/engine/src/imgui_bgfx.h`). The graph model and the "what does this link mean" rules
 (`linkAction` in the mockup) carry over unchanged.
 
-## 6. Runtime work (not done)
+## 6. Runtime work (items 2 and 7 done 2026-10-10, the rest not yet)
 
 1. **Run state:** event variables (from `vars.json`, saved with the run like counters), and the set of
    finished events.
-2. **"Event finished" for every event.** Today `game_input.cpp` sets `event_<id>` only for whispers and
-   rescues; traps, caches, relics and shards set nothing. It should be set for all, since conditions
-   and the stair locks of [05_FLOOR_LINKS.md](05_FLOOR_LINKS.md) read it.
+2. ~~**"Event finished" for every event.**~~ **Done 2026-10-10:** every event that fires sets `event_<id>`
+   (conditions and the stair locks of [05_FLOOR_LINKS.md](05_FLOOR_LINKS.md) read it) and joins the run's
+   finished list.
 3. **Condition leaves** `varAtLeast` / `varEquals` in `condition.cpp` (plus the context method).
 4. **Actions** `addVar` / `setVar` / `setFlag` next to the existing dialogue actions.
 5. **Dispatcher:** fire on tile, on talk (after the dialogue closes), on variable change, and through
    `next`; check `requires` and `once`; guard against loops (an event fires at most once per chain).
 6. **Effects from data:** the hard-coded "trap = −8 HP, cache = +10 HP +12 gold" in `game_input.cpp`
    becomes actions on the records.
-7. **Event state for the player's log** (§7): started / finished per event, saved with the run.
+7. ~~**Event state for the player's log** (§7).~~ **Done 2026-10-10:** started / finished per event, in order,
+   saved with the run (`RunStoryState::markEventStarted / markEventFinished`, the run save's `eventsStarted`,
+   `eventsFinished`).
 
 ## 7. The player's event log
 
@@ -261,3 +263,16 @@ its story events (`beats` of kind `event`).
 
 The event form gets **Title** and **Description** fields next to Text, with a check for missing ones;
 the Kinds tab gets the **In log** switch.
+
+### As built (2026-10-10)
+
+- **The game reads** each pool record's `title`, `desc`, `next`, `requires` and `inLog`, and `inLog` per kind from
+  `events/kinds.json` (`Game::loadEventDefs`). An id that floors use but no pool defines still fires; it is not listed.
+- **Started**, today: a tile event whose `requires` does not hold yet (it stays on its tile and says its title), or an
+  event a finished event's `next` names. Talk triggers and "one leaf came true" wait for the dispatcher (§6 item 5).
+  A tile event without `requires` is started and finished in the same step.
+- **Connected**: `next` both ways, and `requires` leaves `runFlagSet "event_<id>"` / `eventDone` both ways; a chapter's
+  are its `beats` of kind `event`.
+- **Text**: the 34 pool events have drafted titles and descriptions (zh_TW + en) for the owner to edit.
+- **Editor**: Title and Description (six languages) on the event form, "In the player's event log" (as its kind / yes /
+  no), the Kinds tab's **In log** column, the problem rule **No title / description** (warning).

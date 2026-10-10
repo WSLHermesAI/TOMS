@@ -10,7 +10,7 @@ is the same on desktop and web.
 
 | Path | What it is |
 |---|---|
-| `assets/media/ui/*.rml` | one document per screen (`title`, `hud`, `pad`, `battle`, `dialogue`, `player` (the player menu), `store`, `dialogs`, `stage_select`, `ending`, `overlay`) |
+| `assets/media/ui/*.rml` | one document per screen (`title`, `hud`, `pad`, `battle`, `dialogue`, `player` (the player menu), `saveload` (its Save / Load screen), `store`, `dialogs`, `stage_select`, `ending`, `overlay`) |
 | `assets/media/ui/*.rcss` | their styles; `common.rcss` holds the shared ones (buttons, rows, panels, palette, scrollbars) |
 | `assets/media/fonts/NotoSansCJKtc-TOMS.otf` | desktop's default UI font: Noto Sans CJK TC cut down to the characters the game uses (about 790 KB). Not in the web build |
 | `tools/make_ui_font.py` | rebuilds that font; `--check` reports characters it lacks |

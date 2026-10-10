@@ -1,9 +1,19 @@
 {
   "_comment": [
-    "Player attributes (docs/20_PLAYER_MENU.md section 3). Add, remove or reorder attributes here: the Status tab,",
-    "the level-up and the save follow without code changes. Items and equipment raise them through their",
-    "\"stats\" in items.json ({ \"str\": 2 }). They change nothing in battle yet: that gameplay comes later.",
-    "levelUp: EXP needed for the next level = lv * expPerLevel; atk/def/maxhp are what each level gives."
+    "Player attributes (docs/20_PLAYER_MENU.md sections 3 and 12). Add, remove or reorder attributes here: the Status tab,",
+    "the level-up and the save follow without code changes. Items and equipment raise them through their \"stats\" in",
+    "items.json ({ \"str\": 2 }).",
+    "effects: what each point ABOVE \"base\" gives, so a fresh Lv 1 character plays exactly as before. \"per\" may be a",
+    "fraction (0.5 ATK a point: 2 points = +1 ATK; the total is rounded down) or negative. The stats an effect can name:",
+    "  atk, def        added to ATK / DEF",
+    "  maxhp           added to max HP",
+    "  hitZone         widens the Attack bar's green zone (greenHalf, in bar units; it stays inside the blue zone)",
+    "  cooldownMs      added to the bars' wait after a tap (battle.json bar_cooldown_ms; never below 200 ms)",
+    "  skillPower      percent added to what skills (功法) give",
+    "  goldGain        percent more gold from won battles",
+    "An empty effects list (or per 0) turns an attribute's gameplay off.",
+    "levelUp: EXP needed for the next level = lv * expPerLevel; atk/def/maxhp are what each level gives;",
+    "freePoints: attribute points the player places by hand on the Status tab each level (0 = none)."
   ],
   "attributes": [
     {
@@ -12,7 +22,13 @@
       "name": "stat.str.name",
       "desc": "stat.str.desc",
       "base": 5,
-      "perLevel": 1
+      "perLevel": 1,
+      "effects": [
+        {
+          "stat": "atk",
+          "per": 0.5
+        }
+      ]
     },
     {
       "id": "dex",
@@ -20,7 +36,13 @@
       "name": "stat.dex.name",
       "desc": "stat.dex.desc",
       "base": 5,
-      "perLevel": 1
+      "perLevel": 1,
+      "effects": [
+        {
+          "stat": "hitZone",
+          "per": 0.4
+        }
+      ]
     },
     {
       "id": "agi",
@@ -28,7 +50,13 @@
       "name": "stat.agi.name",
       "desc": "stat.agi.desc",
       "base": 5,
-      "perLevel": 1
+      "perLevel": 1,
+      "effects": [
+        {
+          "stat": "cooldownMs",
+          "per": -15
+        }
+      ]
     },
     {
       "id": "vit",
@@ -36,7 +64,13 @@
       "name": "stat.vit.name",
       "desc": "stat.vit.desc",
       "base": 5,
-      "perLevel": 1
+      "perLevel": 1,
+      "effects": [
+        {
+          "stat": "maxhp",
+          "per": 3
+        }
+      ]
     },
     {
       "id": "int",
@@ -44,7 +78,13 @@
       "name": "stat.int.name",
       "desc": "stat.int.desc",
       "base": 5,
-      "perLevel": 1
+      "perLevel": 1,
+      "effects": [
+        {
+          "stat": "skillPower",
+          "per": 2
+        }
+      ]
     },
     {
       "id": "luk",
@@ -52,7 +92,13 @@
       "name": "stat.luk.name",
       "desc": "stat.luk.desc",
       "base": 5,
-      "perLevel": 0
+      "perLevel": 0,
+      "effects": [
+        {
+          "stat": "goldGain",
+          "per": 3
+        }
+      ]
     }
   ],
   "levelUp": {

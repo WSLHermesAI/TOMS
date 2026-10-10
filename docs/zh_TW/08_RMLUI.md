@@ -12,7 +12,7 @@
 
 | 路徑 | 內容 |
 |---|---|
-| `assets/media/ui/*.rml` | 每個畫面一份文件（`title`、`hud`、`pad`、`battle`、`dialogue`、`player`（玩家選單）、`store`、`dialogs`、`stage_select`、`ending`、`overlay`） |
+| `assets/media/ui/*.rml` | 每個畫面一份文件（`title`、`hud`、`pad`、`battle`、`dialogue`、`player`（玩家選單）、`saveload`（它的存檔／讀檔畫面）、`store`、`dialogs`、`stage_select`、`ending`、`overlay`） |
 | `assets/media/ui/*.rcss` | 它們的樣式；`common.rcss` 放共用的樣式（按鈕、列、面板、色盤、捲軸） |
 | `assets/media/fonts/NotoSansCJKtc-TOMS.otf` | 桌機預設的 UI 字型：把 Noto Sans CJK TC 精簡到遊戲用到的字元（約 790 KB）。web 版沒有 |
 | `tools/make_ui_font.py` | 重建那個字型；`--check` 回報缺少的字元 |

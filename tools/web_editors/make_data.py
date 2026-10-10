@@ -28,7 +28,10 @@ def main():
         pid = os.path.basename(p)[:-5]
         pools.append(pid)
         for e in load(p)['events']:
-            rec = {'id': e['eventId'], 'kind': e['kind'], 'pool': pid, 'text': e['text']}
+            rec = {'id': e['eventId'], 'kind': e['kind'], 'pool': pid, 'text': e['text'],
+                   'title': e.get('title', e['eventId'] + '.title'), 'desc': e.get('desc', e['eventId'] + '.desc')}
+            if 'inLog' in e:
+                rec['inLog'] = e['inLog']
             for k in ('trigger', 'requires', 'actions', 'next', 'once'):   # event logic, docs/event_editor/06_EVENT_LOGIC.md
                 if k in e:
                     rec[k] = e[k]
@@ -46,7 +49,7 @@ def main():
     # text: the keys events point at, plus the placeholder keys of ids floors use but no pool defines
     strings = load(os.path.join(DATA, 'text.json'))['strings']
     known = {e['id'] for e in events}
-    wanted = {e['text'] for e in events} | {i for f in floors for i in f['events'] if i not in known}
+    wanted = {e[k] for e in events for k in ('text', 'title', 'desc')} | {i for f in floors for i in f['events'] if i not in known}
     texts = {k: strings[k] for k in sorted(wanted) if k in strings}
 
     # who can be talked to, and where: npc ids placed on each floor's grid (boss floors use stages/<handAuthoredStage>)

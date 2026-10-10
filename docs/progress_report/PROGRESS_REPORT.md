@@ -34,11 +34,17 @@
   (chapters and missions), System (Store, Skills, Forge, Village, Save, Settings, Fullscreen, Back to title).
 - **Data:** one all-item file `items.json` (`equipment.json` merged in), `stats.json` (attributes and
   level-up numbers), titles and descriptions for chapters and missions.
-- **Next phases:** P2 = events in the Events tab with their connected events (needs the event runtime of
-  [06](../event_editor/06_EVENT_LOGIC.md) §6–7); P3 = gameplay for the attributes; upgrading gear = W26.
+- **Save / Load:** the System tab opens a slot screen; every save and load asks for confirmation (§10).
+- **P2 done:** story events in the Events tab (title, description, connected events); the game now tracks every event
+  as started / finished; drafted titles and descriptions for the 34 pool events, editable in the event editor.
+- **P3 done:** the attributes act in battle and on HP / gold (STR, DEX, AGI, VIT, INT, LUK; numbers in `stats.json`,
+  §12); hand-placed points available through `levelUp.freePoints`.
+- **Next:** **play and tune `stats.json`** (the effect sizes are first guesses); upgrading gear = W26; the rest of the event
+  runtime ([06](../event_editor/06_EVENT_LOGIC.md) §6: variables, talk triggers, the dispatcher).
 
 **Owner, next (game):**
-- **Try the player menu** (≡ or Esc while walking): say what to change before P2.
+- **Try the player menu** (≡ or Esc while walking), and **read the drafted event titles / descriptions** in the event
+  editor (they are first drafts).
 - **Commit** the 10-08 and 10-10 work when you are happy with it.
 - **Play a few floors** with the key and door fixes, and tune `battle.json`.
 - **Decide W16 and W23** below: then the 5 failing screenshot tests can be refreshed or fixed.
@@ -135,7 +141,7 @@ the Visual Studio IDE (W1).
 | T | Particles (`.particle` JSON, `particle_editor`, GPU simulation, CPU/GPU threshold), doc 17 | ◐ 2026-10-03 editor + runtime done; legacy import, multiply/screen blend, effects on `.anim` nodes open |
 | T | Editors preview with toms_game's `BgfxRenderer`; right-drag pans | ✅ 2026-10-03 on D3D11 |
 | T | Anim editor: per-node playback (once / hide / loop), solo, clip switching with discard prompt; editors: History dock + automatic backups | ✅ 2026-10-05 |
-| G | Player menu: one ≡ button; Status / Equipment / Items / Events / System ([20](../20_PLAYER_MENU.md)) | ◐ 2026-10-10 P1 built and verified on desktop + web (headless); P2, P3 and upgrading gear (W26) open; not seen on a phone |
+| G | Player menu: one ≡ button; Status / Equipment / Items / Events / System ([20](../20_PLAYER_MENU.md)) | ◐ 2026-10-10 P1, P2, P3 built and verified on desktop + web (headless); upgrading gear (W26) open; not seen on a phone; attribute numbers not play-tuned |
 | T | Monster idle animations on the map (`monster_idle.anim`), door-opening animation (`door_open.anim`) | ✅ 2026-10-08 desktop; web/Android not seen (W24) |
 | 5 | glTF 2.0 on bgfx (`gltf_model`, `GltfRenderer`, `gltf_viewer`): skins, morphs, instancing, PBR, cameras, lights, shadow maps; the title's 3D background | ◐ 2026-10-05 desktop D3D11/Vulkan/OpenGL + web verified; not on a phone; no IBL / cascades yet |
 | 5 | 3D on bgfx (glTF, ozz skinning, instancing, shadows, Effekseer) | ⬜ researched only |

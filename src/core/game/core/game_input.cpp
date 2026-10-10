@@ -178,6 +178,19 @@ void Game::movePlayer(int dx, int dy) {
                 // derived from the event id's own vocabulary until the pools are loaded at runtime:
                 // shards feed the memory-shard state, traps cost HP, caches/relics give a little back.
                 std::string evId = e.id;
+                // An event whose `requires` does not hold yet only becomes "started": it stays on its tile, and
+                // the player's event log lists it as in progress (docs/event_editor/06_EVENT_LOGIC.md section 7).
+                auto def = eventDefs_.find(evId);
+                if (def != eventDefs_.end() && !def->second.requires.is_null() &&
+                    !toms::evaluate(def->second.requires, GameConditionContext(pl, meta_, missionTrackers_, run_, equipped_))) {
+                    if (!run_.eventStarted(evId)) {
+                        run_.markEventStarted(evId);
+                        const std::string title = locale_.tr(def->second.titleKey);
+                        notifications_.push_back({title == def->second.titleKey ? evId : title, 3000});
+                        markProgressDirty();
+                    }
+                    return;
+                }
                 std::string text = locale_.tr(evId + ".text");
                 if (text.empty() || text == evId + ".text") text = evId;   // missing -> the id, not blank
                 if (evId.find("shard") != std::string::npos) {
@@ -187,13 +200,19 @@ void Game::movePlayer(int dx, int dy) {
                     pl.hp = std::max(1, pl.hp - 8);
                     notifications_.push_back({text + "  [-8 HP]", 3800});
                 } else if (evId.find("cache") != std::string::npos || evId.find("relic") != std::string::npos) {
-                    pl.hp = std::min(pl.maxhp, pl.hp + 10);
+                    pl.hp = std::min(effectiveMaxHp(), pl.hp + 10);
                     pl.gold += 12;
                     notifications_.push_back({text + "  [+10 HP, +12 GOLD]", 3800});
                 } else {
-                    run_.setFlag("event_" + evId, true);        // whispers/rescues: remembered, no stat
-                    notifications_.push_back({text, 4200});
+                    notifications_.push_back({text, 4200});      // whispers/rescues: remembered, no stat
                 }
+                // Every event that fires is finished (06 section 6 item 2): the run flag the conditions and stair
+                // locks read, the event log's finished list, and its `next` events become started.
+                run_.setFlag("event_" + evId, true);
+                run_.markEventFinished(evId);
+                if (def != eventDefs_.end())
+                    for (const std::string& n : def->second.next) run_.markEventStarted(n);
+                markProgressDirty();
                 e.consumed = true;
                 st.tiles[e.y][e.x] = '.'; // clear from grid
                 toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, e.x, e.y), toms::EntityStatus::Collected);

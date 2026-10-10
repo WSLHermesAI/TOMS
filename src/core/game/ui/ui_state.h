@@ -128,6 +128,10 @@ struct UiPlayer {
     std::string level, hp_text, exp_text;
     float hp_pct = 0, exp_pct = 0;
     std::string combat_title, attr_title, attr_desc;
+    std::string attr_per, attr_now;    // the selected attribute's effect: per point / in total now ("" = none)
+    std::string attr_points;           // "Points to spend: 2" ("" = none to spend)
+    std::string attr_points_hint;
+    bool attr_can_add = false;         // the rows show a + button
     std::vector<UiLine> combat;        // ATK, DEF, Gold, Keys, Floor, Chapter
     std::vector<UiLine> more;          // Weapon, Armor, Skills, Memory shards, State of mind
     std::vector<UiRow> attrs;          // label "STR  力量", sub = the value
@@ -159,6 +163,25 @@ struct UiPlayer {
     std::vector<std::string> ev_connected;
     // System: its rows and pages are menu.* (UiMenu)
     std::string sys_hint;
+};
+
+// ---- Save / Load (saveload.rml), opened from the player menu's System tab ----
+struct UiSlot {
+    std::string title;                 // "Slot 1"
+    std::string line1, line2;          // floor, level, HP, gold / saved at, play time ("" when empty)
+    std::string tag;                   // "This run" on the run's own slot
+    bool empty = true, selected = false, enabled = true;   // enabled=false: an empty slot on the Load tab
+};
+
+struct UiSaveLoad {
+    bool visible = false;
+    std::string title, hint, close_label;
+    std::vector<UiTab> modes;          // Save / Load
+    std::vector<UiSlot> cards;         // one per save slot (not "slots": a Qt macro in the editor build)
+    // "Save to slot 2?" / "Overwrite slot 2?" / "Load slot 2?"
+    bool confirm_open = false;
+    std::string confirm_question, confirm_body, yes_label, no_label;
+    bool confirm_yes = false;
 };
 
 struct UiStoreTab { std::string label; bool active = false; };
@@ -220,6 +243,7 @@ struct UiState {
     UiBattle battle;
     UiDialogue dialogue;
     UiPlayer player;
+    UiSaveLoad saveload;
     UiStore store;
     UiMenu menu;
     UiStairs stairs;

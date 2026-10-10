@@ -94,6 +94,17 @@ public:
     bool floorCleared(const std::string& floorId) const;
     const std::vector<std::string>& clearedFloors() const { return clearedFloors_; }
 
+    // ---- events: the player's event log (docs/event_editor/06_EVENT_LOGIC.md section 7) --------
+    // Started = the player has met the event (reached its tile, or a finished event's `next` points at
+    // it); finished = it fired. Both keep the order they happened in (the log lists the newest first).
+    // Finishing also starts it, so "finished" is always a subset of "started".
+    void markEventStarted(const std::string& eventId);
+    void markEventFinished(const std::string& eventId);
+    bool eventStarted(const std::string& eventId) const;
+    bool eventFinished(const std::string& eventId) const;
+    const std::vector<std::string>& eventsStarted() const { return eventsStarted_; }
+    const std::vector<std::string>& eventsFinished() const { return eventsFinished_; }
+
     // ---- deaths (ending e_13) ------------------------------------------------------------------
     void noteDeath(bool boss);
     int deathsTotal() const { return deathsTotal_; }
@@ -127,6 +138,7 @@ private:
     int                                 superMax_ = kDefaultSuperMax;
     std::string                        floor_ = "F01";
     std::vector<std::string>           clearedFloors_;
+    std::vector<std::string>           eventsStarted_, eventsFinished_;
     int deathsTotal_ = 0, deathsNonBoss_ = 0;
     std::map<std::string, CounterDecl> decls_;
 };

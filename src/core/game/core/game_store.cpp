@@ -162,10 +162,7 @@ void Game::inGameMenuActivate() {
                 audio.play("confirm_click");
                 break;
             case MainMenuRow::Save:
-                saveCurrentRun();
-                toastMsg_ = locale_.tr("save.saved");
-                toastTimer_ = 1600;
-                audio.play("confirm_click");
+                openSaveLoad(0);   // Save / Load: the player picks the slot, and confirms
                 break;
             case MainMenuRow::Settings:
                 inGameMenuPage_ = InGameMenuPage::Settings;

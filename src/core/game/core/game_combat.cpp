@@ -26,7 +26,7 @@ void Game::startCombat(const EnemyInst& e) {
 void Game::finishCombatWin() {
     cs.active = false; cs.won = true;
     pl.hp = cs.playerHP;
-    pl.gold += cs.enemy.gold;
+    pl.gold += (int)std::lround(cs.enemy.gold * (1.0f + attrEffect("goldGain") / 100.0f));   // LUK
     gainExp(cs.enemy.exp);   // level-ups by data/stats.json
     // remove monster entity from stage
     for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) e.consumed=true;
@@ -56,7 +56,7 @@ void Game::finishCombatLose() {
         return;   // the run is over -- no respawn, no "you fell" pause
     }
     cs.resultPauseMs = 300;   // keep the "you fell" message on screen briefly (see CombatState)
-    pl.hp = pl.maxhp/2; // respawn at stage start
+    pl.hp = effectiveMaxHp()/2; // respawn at stage start
     loadStage(curStage); // reset monsters/items
     markProgressDirty();
 }
@@ -67,7 +67,7 @@ void Game::finishCombatLose() {
 // immediately -- there's no "the enemy still gets to retaliate this round" any more, since the
 // enemy's own clock is what decides when it attacks, independent of this tap.
 void Game::resolveAttackTap() {
-    toms::PowerBarParams bar = toms::effectiveAttackBar(equipped_, equipmentDefs_);
+    toms::PowerBarParams bar = attackBarParams();   // DEX widens its hit zone
     float pos = cs.atkBar.pos;
     // S7 (equipment actives): an armed "guaranteed_crit_next_attack" bypasses the real marker
     // position entirely -- it's a scripted perfect release, not a well-timed one, so it also
@@ -76,9 +76,7 @@ void Game::resolveAttackTap() {
     bool activeCrit = cs.nextAttackGuaranteedCrit;
     float power = activeCrit ? 100.0f : toms::powerFromPosition(bar, pos);
     float maxMult = toms::effectiveMaxMult(equipped_, equipmentDefs_);
-    int effAtk = pl.atk, effDef = pl.def;
-    toms::applyEquipmentStats(equipped_, equipmentDefs_, effAtk, effDef);
-    toms::applySkillEffects(skillDefs_, run_.skillsOwned(), effAtk, effDef, skillEffectScale());   // S4: stacks with equipment; M8: half power after a rebirth
+    const int effAtk = effectiveAtk();   // equipment, skills (half after a rebirth), STR
     int baseHit = std::max(1, effAtk - cs.enemy.def);
     int dmg = toms::computeAttackDamage(baseHit, power, maxMult);
     if (!activeCrit && toms::zoneFromPosition(bar, pos) == toms::PowerZone::Red && toms::talentZerosRedZoneAttacks(equipped_.talentId))
@@ -118,9 +116,7 @@ void Game::resolveDefenseTap() {
 // banked (if any) and apply the resulting damage to the player -- an un-shielded hit resolves at
 // power=0, i.e. full damage, identical to whiffing the old press-and-hold Defense Bar entirely.
 void Game::resolveEnemyClockFire() {
-    int effAtk = pl.atk, effDef = pl.def;
-    toms::applyEquipmentStats(equipped_, equipmentDefs_, effAtk, effDef);
-    toms::applySkillEffects(skillDefs_, run_.skillsOwned(), effAtk, effDef, skillEffectScale());   // S4: stacks with equipment; M8: half power after a rebirth
+    const int effDef = effectiveDef();   // equipment, skills (half after a rebirth), attributes
     int incoming = std::max(1, cs.enemy.atk - effDef);
     float floorMitigation = toms::talentDefenseMitigationFloor(equipped_.talentId);
     float power = cs.shieldBanked ? cs.shieldPower : 0.0f;
@@ -148,14 +144,14 @@ void Game::battleTapAttack() {
     resolveAttackTap();
     if (!cs.active) return;   // the tap just won the fight -- nothing left to cool down
     cs.atkBar.cooling = true;
-    cs.atkBar.cooldownMs = barCooldownMs_;
+    cs.atkBar.cooldownMs = barCooldownMs();   // AGI shortens it
 }
 
 void Game::battleTapDefense() {
     if (!cs.active || cs.defBar.cooling) return;
     resolveDefenseTap();
     cs.defBar.cooling = true;
-    cs.defBar.cooldownMs = barCooldownMs_;
+    cs.defBar.cooldownMs = barCooldownMs();
 }
 
 // Super Attack: a guaranteed, no-timing-required strong hit once the gauge is full (§4 of
@@ -165,10 +161,7 @@ void Game::battleTapDefense() {
 void Game::battleTapSuper() {
     if (!cs.active || cs.superCharge < run_.superMax()) return;
     float maxMult = toms::effectiveMaxMult(equipped_, equipmentDefs_);
-    int effAtk = pl.atk, effDef = pl.def;
-    toms::applyEquipmentStats(equipped_, equipmentDefs_, effAtk, effDef);
-    toms::applySkillEffects(skillDefs_, run_.skillsOwned(), effAtk, effDef, skillEffectScale());   // S4: stacks with equipment; M8: half power after a rebirth
-    int baseHit = std::max(1, effAtk - cs.enemy.def);
+    int baseHit = std::max(1, effectiveAtk() - cs.enemy.def);
     int dmg = toms::computeAttackDamage(baseHit, 100.0f, maxMult);
     cs.enemyHP -= dmg;
     cs.superCharge = 0;

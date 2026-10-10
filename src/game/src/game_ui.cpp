@@ -22,6 +22,7 @@ const DocSpec kDocs[] = {
     {"store.rml",        [](const toms::UiState& s) { return s.store.visible; }},
     {"stage_select.rml", [](const toms::UiState& s) { return s.stage_select.visible; }},
     {"player.rml",       [](const toms::UiState& s) { return s.player.visible; }},
+    {"saveload.rml",     [](const toms::UiState& s) { return s.saveload.visible; }},
     {"dialogs.rml",      [](const toms::UiState& s) { return s.stairs.visible || s.store.unlocked_dialog; }},
     {"title.rml",        [](const toms::UiState& s) { return s.title.visible; }},
     {"ending.rml",       [](const toms::UiState& s) { return s.ending.visible; }},
@@ -170,6 +171,11 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("combat_title", &UiPlayer::combat_title);
         s.RegisterMember("attr_title", &UiPlayer::attr_title);
         s.RegisterMember("attr_desc", &UiPlayer::attr_desc);
+        s.RegisterMember("attr_per", &UiPlayer::attr_per);
+        s.RegisterMember("attr_now", &UiPlayer::attr_now);
+        s.RegisterMember("attr_points", &UiPlayer::attr_points);
+        s.RegisterMember("attr_points_hint", &UiPlayer::attr_points_hint);
+        s.RegisterMember("attr_can_add", &UiPlayer::attr_can_add);
         s.RegisterMember("combat", &UiPlayer::combat);
         s.RegisterMember("more", &UiPlayer::more);
         s.RegisterMember("attrs", &UiPlayer::attrs);
@@ -206,6 +212,30 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("ev_connected_title", &UiPlayer::ev_connected_title);
         s.RegisterMember("ev_connected", &UiPlayer::ev_connected);
         s.RegisterMember("sys_hint", &UiPlayer::sys_hint);
+    }
+    if (auto s = c.RegisterStruct<UiSlot>()) {
+        s.RegisterMember("title", &UiSlot::title);
+        s.RegisterMember("line1", &UiSlot::line1);
+        s.RegisterMember("line2", &UiSlot::line2);
+        s.RegisterMember("tag", &UiSlot::tag);
+        s.RegisterMember("empty", &UiSlot::empty);
+        s.RegisterMember("selected", &UiSlot::selected);
+        s.RegisterMember("enabled", &UiSlot::enabled);
+    }
+    c.RegisterArray<std::vector<UiSlot>>();
+    if (auto s = c.RegisterStruct<UiSaveLoad>()) {
+        s.RegisterMember("visible", &UiSaveLoad::visible);
+        s.RegisterMember("title", &UiSaveLoad::title);
+        s.RegisterMember("hint", &UiSaveLoad::hint);
+        s.RegisterMember("close_label", &UiSaveLoad::close_label);
+        s.RegisterMember("modes", &UiSaveLoad::modes);
+        s.RegisterMember("cards", &UiSaveLoad::cards);
+        s.RegisterMember("confirm_open", &UiSaveLoad::confirm_open);
+        s.RegisterMember("confirm_question", &UiSaveLoad::confirm_question);
+        s.RegisterMember("confirm_body", &UiSaveLoad::confirm_body);
+        s.RegisterMember("yes_label", &UiSaveLoad::yes_label);
+        s.RegisterMember("no_label", &UiSaveLoad::no_label);
+        s.RegisterMember("confirm_yes", &UiSaveLoad::confirm_yes);
     }
     if (auto s = c.RegisterStruct<UiStoreTab>()) {
         s.RegisterMember("label", &UiStoreTab::label);
@@ -301,6 +331,7 @@ bool GameUi::init(Rml::Context* ctx, Game* game, const std::string& uiDir, std::
     c.Bind("battle", &state_.battle);
     c.Bind("dialogue", &state_.dialogue);
     c.Bind("player", &state_.player);
+    c.Bind("saveload", &state_.saveload);
     c.Bind("store", &state_.store);
     c.Bind("menu", &state_.menu);
     c.Bind("stairs", &state_.stairs);
@@ -388,6 +419,7 @@ void GameUi::sync() {
     take(state_.battle, next.battle);
     take(state_.dialogue, next.dialogue);
     take(state_.player, next.player);
+    take(state_.saveload, next.saveload);
     take(state_.menu, next.menu);
     take(state_.stairs, next.stairs);
     take(state_.stage_select, next.stage_select);

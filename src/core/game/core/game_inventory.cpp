@@ -60,7 +60,7 @@ std::string Game::itemDesc(const std::string& id) const {
 
 void Game::applyStats(const std::string& id, const nlohmann::json& eff) {
     auto num = [&](const char* k) { return eff.contains(k) && eff[k].is_number() ? eff[k].get<int>() : 0; };
-    if (eff.contains("hp"))    pl.hp    = std::min(pl.maxhp, pl.hp + num("hp"));
+    if (eff.contains("hp"))    pl.hp    = std::min(effectiveMaxHp(), pl.hp + num("hp"));
     if (eff.contains("maxhp")) { pl.maxhp += num("maxhp"); pl.hp += num("maxhp"); }
     pl.atk += num("atk");
     pl.def += num("def");
@@ -95,6 +95,8 @@ void Game::receiveItem(const std::string& id) {
 
 void Game::debugGive(const std::string& id) {
     if (id.rfind("gold:", 0) == 0) { pl.gold += std::atoi(id.c_str() + 5); return; }
+    if (id.rfind("exp:", 0) == 0) { gainExp(std::atoi(id.c_str() + 4)); return; }
+    if (id.rfind("points:", 0) == 0) { pl.attrPoints += std::max(0, std::atoi(id.c_str() + 7)); return; }
     receiveItem(id);
 }
 
@@ -108,6 +110,7 @@ void Game::gainExp(int exp) {
         pl.def += levelUp_.def;
         pl.maxhp += levelUp_.maxhp;
         for (const AttrDef& a : attrDefs_) pl.attrs[a.id] += a.perLevel;
+        pl.attrPoints += std::max(0, levelUp_.freePoints);
     }
     if (gained > 0) pushNotification(locale_.tr("battle.levelup") + std::to_string(pl.lv));
 }
@@ -115,6 +118,32 @@ void Game::gainExp(int exp) {
 void Game::resetAttrs() {
     pl.attrs.clear();
     for (const AttrDef& a : attrDefs_) pl.attrs[a.id] = a.base + a.perLevel * std::max(0, pl.lv - 1);
+}
+
+float Game::attrEffect(const std::string& stat) const {
+    float total = 0.0f;
+    for (const AttrDef& a : attrDefs_)
+        for (const auto& [s, per] : a.effects)
+            if (s == stat) total += (float)(attrValue(a.id) - a.base) * per;
+    return total;
+}
+
+toms::PowerBarParams Game::attackBarParams() const {
+    toms::PowerBarParams bar = toms::effectiveAttackBar(equipped_, equipmentDefs_);
+    bar.greenHalf = std::max(1.0f, std::min(bar.blueOuter - 1.0f, bar.greenHalf + attrEffect("hitZone")));   // DEX
+    return bar;
+}
+
+int Game::barCooldownMs() const {
+    return std::max(200, barCooldownMs_ + (int)std::lround(attrEffect("cooldownMs")));   // AGI (per is negative)
+}
+
+void Game::spendAttrPoint(int index) {
+    if (pl.attrPoints <= 0 || index < 0 || index >= (int)attrDefs_.size()) { audio.play("deny"); return; }
+    pl.attrs[attrDefs_[index].id] += 1;
+    pl.attrPoints--;
+    audio.play("confirm_click");
+    markProgressDirty();
 }
 
 int Game::attrValue(const std::string& id) const {

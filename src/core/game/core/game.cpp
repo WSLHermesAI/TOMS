@@ -185,7 +185,9 @@ void Game::update(int dtMs) {
         else if (sig + 1 != eventLogSeen_) {
             eventLogSeen_ = sig + 1;
             if (!(inGameMenuOpen_ && menuTab_ == MenuTab::Events)) newsEvents_ = true;
-            pushNotification(locale_.tr("events.updated"));
+            const std::string msg = locale_.tr("events.updated");   // once, however many entries changed together
+            if (std::none_of(notifications_.begin(), notifications_.end(), [&](const auto& n) { return n.first == msg; }))
+                pushNotification(msg);
         }
     }
     // Title phase: the run's clock only advances while actually playing, and a changed run is

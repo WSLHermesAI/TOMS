@@ -52,6 +52,7 @@ struct PlayerSaveData {
     std::map<std::string, int> attrs;            // data/stats.json's attributes by id
     std::vector<std::string> gear;               // owned weapons / armor / talents
     std::string weapon, armor, talent;           // what is worn ("" = nothing)
+    int attrPoints = 0;                          // attribute points not placed yet
 };
 
 // The current session/run in progress.
@@ -69,6 +70,7 @@ struct RunSaveData {
     std::map<std::string, bool>        flags;        // run-scoped flags declared in data/story/flags.json
     std::string                        floor = "F01";// the 70-floor tower's current floor id
     std::vector<std::string>           clearedFloors;// feeds the `stageCleared` condition
+    std::vector<std::string>           eventsStarted, eventsFinished;   // the event log (2026-10; optional)
     std::vector<std::string>           shards;       // memory shards -- SURVIVE rebirth (section 8)
     int deathsTotal = 0, deathsNonBoss = 0;          // feeds ending e_13
     // ---- S4, run scope (the 功法三系 skill tree, data/skills.json) ----

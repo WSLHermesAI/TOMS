@@ -64,6 +64,7 @@ nlohmann::json toJson(const RunSaveData& r) {
     p["attrs"] = r.player.attrs;
     p["gear"] = r.player.gear;
     p["weapon"] = r.player.weapon; p["armor"] = r.player.armor; p["talent"] = r.player.talent;
+    p["attrPoints"] = r.player.attrPoints;
     j["player"] = p;
     j["entityStatus"] = r.entityStatus;
     // S3 (schemaVersion 3): the run's story state -- see RunStoryState for what writes/reads it.
@@ -79,6 +80,8 @@ nlohmann::json toJson(const RunSaveData& r) {
     // S4: the skill tree's run-scoped progress -- see RunStoryState for what writes/reads it.
     j["skillPoints"] = r.skillPoints;
     j["skillsOwned"] = r.skillsOwned;
+    j["eventsStarted"] = r.eventsStarted;
+    j["eventsFinished"] = r.eventsFinished;
     j["superMax"] = r.superMax;
     return j;
 }
@@ -110,6 +113,7 @@ RunSaveData runFromJson(const nlohmann::json& j, bool* versionMismatch) {
         r.player.weapon = p.value("weapon", std::string());
         r.player.armor = p.value("armor", std::string());
         r.player.talent = p.value("talent", std::string());
+        r.player.attrPoints = p.value("attrPoints", 0);
     }
     if (j.contains("entityStatus") && j["entityStatus"].is_object())
         for (auto& [k, v] : j["entityStatus"].items())
@@ -133,6 +137,8 @@ RunSaveData runFromJson(const nlohmann::json& j, bool* versionMismatch) {
     // migration, same rule as every other S3/S4 field above.
     r.skillPoints = j.value("skillPoints", 0);
     r.skillsOwned = j.value("skillsOwned", std::vector<std::string>{});
+    r.eventsStarted = j.value("eventsStarted", std::vector<std::string>{});
+    r.eventsFinished = j.value("eventsFinished", std::vector<std::string>{});
     r.superMax = j.value("superMax", 5);
     return r;
 }

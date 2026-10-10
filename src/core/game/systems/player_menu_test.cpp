@@ -3,6 +3,8 @@
 // missions' titles, and their text in data/text.json. Run in assets/ (tests/CMakeLists.txt).
 #include "player_menu_rules.h"
 #include "equipment_system.h"
+#include "run_state.h"
+#include "save_system.h"
 #include "vfs.h"
 
 #include <json.hpp>
@@ -82,6 +84,15 @@ int main() {
             CHECK(!id.empty() && attrIds.insert(id).second, "attribute ids are present and unique ('%s')", id.c_str());
             CHECK(hasText(a.value("name", std::string())) && hasText(a.value("desc", std::string())),
                   "attribute '%s' has its name and description in text.json (zh_TW + en)", id.c_str());
+            // P3: what a point does -- only stats Game::attrEffect's callers read, each with its Status-tab label
+            static const std::set<std::string> kEffectStats = {"atk", "def", "maxhp", "hitZone", "cooldownMs", "skillPower", "goldGain"};
+            if (a.contains("effects"))
+                for (const auto& e : a["effects"]) {
+                    const std::string stat = e.value("stat", std::string());
+                    CHECK(kEffectStats.count(stat), "attribute '%s': effect stat '%s' is not one the game applies", id.c_str(), stat.c_str());
+                    CHECK(e.contains("per") && e["per"].is_number(), "attribute '%s': effect '%s' has a number 'per'", id.c_str(), stat.c_str());
+                    CHECK(hasText("stat.effect." + stat), "the Status tab has a label for effect '%s'", stat.c_str());
+                }
         }
     for (const char* need : {"str", "dex", "agi"})
         CHECK(attrIds.count(need), "the owner asked for %s (Q11)", need);
@@ -139,6 +150,51 @@ int main() {
     for (auto it = missions.begin(); it != missions.end(); ++it)
         CHECK(hasText(it.value().value("title", std::string())) && hasText(it.value().value("desc", std::string())),
               "mission %s has its title and description in text.json", it.key().c_str());
+
+    // ---- P2: the event log's run state (started / finished, in order, saved with the run) ----
+    {
+        RunStoryState run;
+        run.markEventStarted("ev_a");
+        run.markEventFinished("ev_b");                 // finishing also starts
+        run.markEventFinished("ev_a");
+        run.markEventStarted("ev_a");                  // twice: no duplicate
+        CHECK(run.eventStarted("ev_b") && run.eventFinished("ev_b"), "a finished event counts as started");
+        CHECK(run.eventsStarted().size() == 2 && run.eventsStarted()[0] == "ev_a", "started keeps the order and no duplicates");
+        CHECK(run.eventsFinished().size() == 2 && run.eventsFinished()[0] == "ev_b" && run.eventsFinished()[1] == "ev_a",
+              "finished keeps the order events fired in");
+        RunSaveData r;
+        run.writeInto(r);
+        RunStoryState loaded;
+        loaded.readFrom(runFromJson(toJson(r)));
+        CHECK(loaded.eventFinished("ev_a") && loaded.eventFinished("ev_b") && loaded.eventsFinished()[0] == "ev_b",
+              "the event log survives a save and load");
+        nlohmann::json old = toJson(r);
+        old.erase("eventsStarted");                    // a save made before the event log kept "started"
+        RunStoryState older;
+        older.readFrom(runFromJson(old));
+        CHECK(older.eventStarted("ev_a") && older.eventStarted("ev_b"), "finished events count as started in an older save");
+        loaded.reset();
+        CHECK(loaded.eventsStarted().empty() && loaded.eventsFinished().empty(), "a new run starts with an empty event log");
+    }
+    // ---- P2: every pool event has its title and description; links name real events ----
+    {
+        std::set<std::string> ids;
+        std::vector<nlohmann::json> all;
+        for (const char* pool : {"pool_act01", "pool_act02", "pool_act03", "pool_common"}) {
+            const nlohmann::json p = readJson(std::string("data/events/") + pool + ".json");
+            CHECK(p.contains("events") && p["events"].is_array(), "data/events/%s.json has events", pool);
+            if (p.contains("events")) for (const auto& e : p["events"]) { ids.insert(e.value("eventId", std::string())); all.push_back(e); }
+        }
+        for (const auto& e : all) {
+            const std::string id = e.value("eventId", std::string());
+            CHECK(hasText(e.value("title", id + ".title")) && hasText(e.value("desc", id + ".desc")),
+                  "event %s has its title and description in text.json (zh_TW + en)", id.c_str());
+            if (e.contains("next"))
+                for (const auto& n : e["next"])
+                    CHECK(n.is_string() && ids.count(n.get<std::string>()), "event %s: a next id is not an event", id.c_str());
+        }
+        CHECK(all.size() >= 34, "the four pools hold the events (%zu)", all.size());
+    }
 
     std::printf("player_menu_test: %d checks, %d failed\n", g_checks, g_failed);
     return g_failed == 0 ? 0 : 1;

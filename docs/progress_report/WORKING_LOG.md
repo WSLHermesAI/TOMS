@@ -264,3 +264,16 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   saves keep attributes and gear. Store button, item-line click and the web page's buttons removed. New
   `player_menu_test`, `smoke.player_*` (5), `--give=` test hook; UI font rebuilt. 39/39 unit, 57/62 smoke (W16, W23 as
   before); web checked in headless Chrome incl. Fullscreen. Docs: 20 §9, 06_BUILD_WEB, 08, 09, 13 (+ zh_TW).
+- **2026-10-10** — **Save / Load screen** (not committed): the System tab's Save row opens `saveload.rml` (Save and Load
+  tabs, one card per slot); every save and load asks first (Cancel preselected for overwrite and load); saving into a slot
+  makes it the run's slot. Checked on desktop and web; `smoke.player_system` reference refreshed; 57/62 tests (W16, W23 as
+  before). Docs: 20 §10 (+ zh_TW).
+- **2026-10-10** — **Player menu P2** (not committed): story events in the Events tab with title, description and
+  connected events (？？？ until met); run state tracks every event as started / finished (saved); every fired event sets
+  `event_<id>`; `requires` not met = started; `next` starts the linked events. Drafted titles / descriptions for the 34
+  pool events; event editor: Title / Description fields, in-log switches (event, kind), "No title / description" warning.
+  Toasts hidden while the menu is open. Tests: player_menu_test extended, 4 references refreshed; 57/62 (W16, W23).
+- **2026-10-10** — **Player menu P3** (not committed): attribute effects from `stats.json`, per point above base (STR ATK,
+  DEX hit zone, AGI bar wait, VIT max HP, INT skill power, LUK battle gold); Status tab shows per point / now; HUD shows
+  total ATK / DEF; optional hand-placed points (`levelUp.freePoints`, saved). `--give=exp:/points:` test hooks;
+  player_menu_test checks effect stats; `smoke.player_status` refreshed; 57/62 (W16, W23). Docs: 20 §12 (+ zh_TW).

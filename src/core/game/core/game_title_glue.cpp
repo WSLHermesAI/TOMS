@@ -28,6 +28,7 @@ toms::RunSaveData Game::runSaveFromState() const {
     r.player.key_yellow = pl.key_yellow; r.player.key_blue = pl.key_blue; r.player.key_red = pl.key_red;
     r.player.inv = pl.inv;
     r.player.attrs = pl.attrs;
+    r.player.attrPoints = pl.attrPoints;
     r.player.gear = gearOwned_;
     r.player.weapon = equipped_.weaponId; r.player.armor = equipped_.armorId; r.player.talent = equipped_.talentId;
     r.entityStatus = entityStatus_;
@@ -102,6 +103,7 @@ void Game::applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& 
     pl.inv = r.player.inv;
     resetAttrs();                                  // a save from before the attributes: base + levels
     for (const auto& [k, v] : r.player.attrs) pl.attrs[k] = v;
+    pl.attrPoints = std::max(0, r.player.attrPoints);
     gearOwned_.clear();
     for (const std::string& g : r.player.gear) if (equipmentDefs_.count(g)) gearOwned_.push_back(g);
     equipped_ = toms::EquippedSet{};

@@ -11,42 +11,58 @@
     {
       "eventId": "ev_forest_broken_arrow",
       "kind": "relic",
-      "text": "ev_forest_broken_arrow.text"
+      "text": "ev_forest_broken_arrow.text",
+      "title": "ev_forest_broken_arrow.title",
+      "desc": "ev_forest_broken_arrow.desc"
     },
     {
       "eventId": "ev_forest_snare",
       "kind": "trap",
-      "text": "ev_forest_snare.text"
+      "text": "ev_forest_snare.text",
+      "title": "ev_forest_snare.title",
+      "desc": "ev_forest_snare.desc"
     },
     {
       "eventId": "ev_forest_old_wizard_mark",
       "kind": "whisper",
-      "text": "ev_forest_old_wizard_mark.text"
+      "text": "ev_forest_old_wizard_mark.text",
+      "title": "ev_forest_old_wizard_mark.title",
+      "desc": "ev_forest_old_wizard_mark.desc"
     },
     {
       "eventId": "ev_forest_trap_net",
       "kind": "trap",
-      "text": "ev_forest_trap_net.text"
+      "text": "ev_forest_trap_net.text",
+      "title": "ev_forest_trap_net.title",
+      "desc": "ev_forest_trap_net.desc"
     },
     {
       "eventId": "ev_forest_hunter_cache",
       "kind": "cache",
-      "text": "ev_forest_hunter_cache.text"
+      "text": "ev_forest_hunter_cache.text",
+      "title": "ev_forest_hunter_cache.title",
+      "desc": "ev_forest_hunter_cache.desc"
     },
     {
       "eventId": "ev_forest_stone_marker",
       "kind": "relic",
-      "text": "ev_forest_stone_marker.text"
+      "text": "ev_forest_stone_marker.text",
+      "title": "ev_forest_stone_marker.title",
+      "desc": "ev_forest_stone_marker.desc"
     },
     {
       "eventId": "ev_forest_lost_child",
       "kind": "rescue",
-      "text": "ev_forest_lost_child.text"
+      "text": "ev_forest_lost_child.text",
+      "title": "ev_forest_lost_child.title",
+      "desc": "ev_forest_lost_child.desc"
     },
     {
       "eventId": "ev_forest_charcoal_kiln",
       "kind": "cache",
-      "text": "ev_forest_charcoal_kiln.text"
+      "text": "ev_forest_charcoal_kiln.text",
+      "title": "ev_forest_charcoal_kiln.title",
+      "desc": "ev_forest_charcoal_kiln.desc"
     }
   ]
 }

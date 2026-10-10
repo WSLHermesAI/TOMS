@@ -229,9 +229,9 @@ void Game::buildUiState(toms::UiState& u) const {
         h.visible = !inGameMenuOpen_;   // the player menu covers the screen
         h.title_line = L.tr("game.title") + " — " + st.name + " (" + std::to_string(st.index) + "/" +
                        std::to_string(totalStages) + ")";
-        h.hp_pct = pct((float)pl.hp, (float)pl.maxhp);
-        h.hp_text = "HP " + std::to_string(pl.hp) + "/" + std::to_string(pl.maxhp);
-        h.stats_line = "ATK " + std::to_string(pl.atk) + "   DEF " + std::to_string(pl.def) + "   LV " + std::to_string(pl.lv);
+        h.hp_pct = pct((float)pl.hp, (float)effectiveMaxHp());
+        h.hp_text = "HP " + std::to_string(pl.hp) + "/" + std::to_string(effectiveMaxHp());
+        h.stats_line = "ATK " + std::to_string(effectiveAtk()) + "   DEF " + std::to_string(effectiveDef()) + "   LV " + std::to_string(pl.lv);
         h.res_line = "GOLD " + std::to_string(pl.gold) + "   EXP " + std::to_string(pl.exp) + "   " + L.tr("hud.keys") +
                      " Y" + std::to_string(pl.key_yellow) + " B" + std::to_string(pl.key_blue) + " R" +
                      std::to_string(pl.key_red);
@@ -304,7 +304,7 @@ void Game::buildUiState(toms::UiState& u) const {
         b.title = L.tr("battle.title") + " " + cs.enemy.name;
         b.player_sprite = uiSprite("player");
         b.enemy_sprite = uiSprite(cs.enemy.boss ? "boss_demonlord" : entSprite(cs.enemy.id));
-        b.player_hp_pct = pct((float)cs.playerHP, (float)pl.maxhp);
+        b.player_hp_pct = pct((float)cs.playerHP, (float)effectiveMaxHp());
         b.enemy_hp_pct = pct((float)std::max(0, cs.enemyHP), (float)cs.enemy.hp);
         b.player_hp_text = L.tr("battle.you") + " HP " + std::to_string(cs.playerHP);
         b.enemy_hp_text = cs.enemy.name + " HP " + std::to_string(std::max(0, cs.enemyHP));
@@ -313,7 +313,7 @@ void Game::buildUiState(toms::UiState& u) const {
         if (cs.active) {
             b.clock_label = L.tr("battle.enemy_clock");
             b.clock_pct = pct((float)cs.enemyClockMs, (float)std::max(500, cs.enemy.atkIntervalMs));
-            b.attack = powerBar(toms::effectiveAttackBar(equipped_, equipmentDefs_), cs.atkBar, L.tr("battle.attack_prompt"),
+            b.attack = powerBar(attackBarParams(), cs.atkBar, L.tr("battle.attack_prompt"),
                                 L.tr(cs.atkBar.cooling ? "battle.btn_charging" : "battle.btn_hold_attack"));
             b.defense = powerBar(toms::effectiveDefenseBar(equipped_, equipmentDefs_), cs.defBar, L.tr("battle.defense_prompt"),
                                  L.tr(cs.defBar.cooling ? "battle.btn_charging" : "battle.btn_hold_defense"));
@@ -391,7 +391,10 @@ void Game::buildUiState(toms::UiState& u) const {
     // ---- always on top ----
     u.overlay.toast = toastTimer_ > 0 && !toastMsg_.empty();
     u.overlay.toast_text = toastMsg_;
-    for (const auto& n : notifications_) u.overlay.notifications.push_back(n.first);
+    // The pick-up / level-up / event lines wait while the player menu is open: they would cover its
+    // right side (they still time out).
+    if (!inGameMenuOpen_)
+        for (const auto& n : notifications_) u.overlay.notifications.push_back(n.first);
 }
 
 void Game::buildMenuUi(toms::UiMenu& m) const {
@@ -419,7 +422,7 @@ void Game::buildMenuUi(toms::UiMenu& m) const {
                     if (!storeUnlocked_) r.sub = L.tr("system.locked");
                     else if (newsStore_) r.sub = "•";
                     break;
-                case MainMenuRow::Save:        r.label = L.tr("ingame_menu.save"); break;
+                case MainMenuRow::Save:        r.label = L.tr("saveload.row"); break;
                 case MainMenuRow::Settings:    r.label = L.tr("menu.settings"); break;
                 case MainMenuRow::Skills:
                     r.label = L.tr("ingame_menu.skills");

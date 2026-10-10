@@ -26,7 +26,7 @@ one floor can host several characters' stories. The game does not read pool file
 | `eventId` | Unique across every pool. The convention is `ev_<place>_<name>`, for example `ev_village_well`, but any name works, Traditional Chinese included (the editor refuses only `" ' < > & \| \ /`). The same goes for event variables, kinds and floor names; a floor's name is also its file name (`第一層.json`), so `: * ?` are refused there too |
 | `kind` | A kind from `assets/data/events/kinds.json` (today `relic`, `whisper`, `cache`, `trap`, `rescue`, `merchant_echo`, `memory_shard`); edited in the event editor's **Kinds** tab ([06](06_EVENT_LOGIC.md)) |
 | `text` | A key in `text.json`. The convention is `<eventId>.text` |
-| `title`, `desc` | Text keys for the event's name and description in the player's event log (`<eventId>.title`, `<eventId>.desc`). Required for every event; see [06](06_EVENT_LOGIC.md) §7. Planned, not read by the game yet |
+| `title`, `desc` | Text keys for the event's name and description in the player's event log (`<eventId>.title`, `<eventId>.desc`). Required for every event; see [06](06_EVENT_LOGIC.md) §7. Read by the game since 2026-10-10 |
 | `inLog` | Optional. `false` keeps this event out of the event log; the default comes from its kind in `kinds.json` |
 
 The pools that exist today:

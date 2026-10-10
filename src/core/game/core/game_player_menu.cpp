@@ -25,13 +25,14 @@ void Game::openPlayerMenu(int tab) {
         dropConfirmOpen_ = false;
         audio.play("confirm_click");
     }
-    if (tab >= 0 && tab < kMenuTabs) menuTab_ = (MenuTab)tab;
+    if (tab >= 0 && tab < kMenuTabs) { menuTab_ = (MenuTab)tab; saveLoadOpen_ = saveLoadConfirm_ = false; }
     playerMenuTab(0);   // marks the tab's news as seen
 }
 
 void Game::closePlayerMenu() {
     if (!inGameMenuOpen_) return;
     inGameMenuOpen_ = false;
+    saveLoadOpen_ = saveLoadConfirm_ = false;
     inGameMenuPage_ = InGameMenuPage::Main;
     inGameLangConfirmOpen_ = false;
     dropConfirmOpen_ = false;
@@ -40,7 +41,7 @@ void Game::closePlayerMenu() {
 
 void Game::toggleInventory() {
     if (inGameMenuOpen_ && menuTab_ == MenuTab::Items) { closePlayerMenu(); return; }
-    if (inGameMenuOpen_) { menuTab_ = MenuTab::Items; playerMenuTab(0); return; }
+    if (inGameMenuOpen_) { menuTab_ = MenuTab::Items; saveLoadOpen_ = saveLoadConfirm_ = false; playerMenuTab(0); return; }
     if (modalActive()) return;
     cancelWalk();
     openPlayerMenu((int)MenuTab::Items);
@@ -48,6 +49,10 @@ void Game::toggleInventory() {
 
 void Game::playerMenuTab(int delta) {
     if (!inGameMenuOpen_) return;
+    if (saveLoadOpen_) {   // Q / E / Tab: Save <-> Load
+        if (delta != 0 && !saveLoadConfirm_) { saveLoadMode_ = 1 - saveLoadMode_; audio.play("confirm_click"); }
+        return;
+    }
     if (delta != 0) {
         menuTab_ = (MenuTab)((((int)menuTab_ + delta) % kMenuTabs + kMenuTabs) % kMenuTabs);
         dropConfirmOpen_ = false;
@@ -181,6 +186,44 @@ std::vector<Game::LogEntry> Game::eventLog(bool all) const {
         }
         std::reverse(done.begin(), done.end());   // the newest finished chapter first
     }
+    // Story events: listed once started (met), finished once fired; only those whose kind (or own record)
+    // is "inLog" and that have a pool record.
+    auto eventName = [&](const std::string& id) {
+        auto d = eventDefs_.find(id);
+        std::string t = d == eventDefs_.end() ? std::string() : text(d->second.titleKey);
+        return t.empty() ? id : t;
+    };
+    auto connectedNames = [&](const std::vector<std::string>& ids) {
+        std::vector<std::string> out;
+        for (const std::string& c : ids) {
+            if (!run_.eventStarted(c)) out.push_back(locale_.tr("events.unknown"));   // not met yet: no spoilers
+            else out.push_back(eventName(c) + (run_.eventFinished(c) ? "  ✓" : ""));
+        }
+        return out;
+    };
+    for (LogEntry& e : open) if (e.kind == 0) e.connected = connectedNames(chapterEvents_.count(e.id) ? chapterEvents_.at(e.id) : std::vector<std::string>{});
+    for (LogEntry& e : done) if (e.kind == 0) e.connected = connectedNames(chapterEvents_.count(e.id) ? chapterEvents_.at(e.id) : std::vector<std::string>{});
+    std::vector<LogEntry> eventsDone;
+    auto eventEntry = [&](const std::string& id, bool isDone) {
+        LogEntry e;
+        e.kind = 2;
+        e.id = id;
+        e.title = eventName(id);
+        e.desc = text(eventDefs_.at(id).descKey);
+        e.done = isDone;
+        e.connected = connectedNames(connectedEvents(id));
+        return e;
+    };
+    for (const std::string& id : run_.eventsStarted()) {
+        auto d = eventDefs_.find(id);
+        if (d == eventDefs_.end() || !d->second.inLog || run_.eventFinished(id)) continue;
+        open.push_back(eventEntry(id, false));
+    }
+    const auto& fin = run_.eventsFinished();
+    for (auto it = fin.rbegin(); it != fin.rend(); ++it) {   // the newest first
+        auto d = eventDefs_.find(*it);
+        if (d != eventDefs_.end() && d->second.inLog) eventsDone.push_back(eventEntry(*it, true));
+    }
     // Missions: listed once accepted; finished once the reward is claimed.
     for (const auto& [id, t] : missionTrackers_) {
         if (t.state != toms::MissionState::Active && t.state != toms::MissionState::Completed &&
@@ -194,14 +237,94 @@ std::vector<Game::LogEntry> Game::eventLog(bool all) const {
         e.done = t.state == toms::MissionState::Claimed;
         (e.done ? done : open).push_back(e);
     }
+    done.insert(done.end(), eventsDone.begin(), eventsDone.end());
     if (all) open.insert(open.end(), done.begin(), done.end());
     return open;
+}
+
+// The event ids a `requires` waits for: runFlagSet "event_<id>" (set when an event fires) or eventDone "<id>".
+static void eventsWaitedFor(const nlohmann::json& j, std::vector<std::string>& out) {
+    if (j.is_array()) { for (const auto& x : j) eventsWaitedFor(x, out); return; }
+    if (!j.is_object()) return;
+    for (const char* group : {"all", "any", "not"})
+        if (j.contains(group)) eventsWaitedFor(j[group], out);
+    const std::string flag = j.value("flag", std::string());
+    if (j.value("type", std::string()) == "runFlagSet" && flag.rfind("event_", 0) == 0) out.push_back(flag.substr(6));
+    if (j.contains("eventDone") && j["eventDone"].is_string()) out.push_back(j["eventDone"].get<std::string>());
+}
+
+std::vector<std::string> Game::connectedEvents(const std::string& eventId) const {
+    std::vector<std::string> out;
+    auto add = [&](const std::string& id) {
+        if (!id.empty() && id != eventId && eventDefs_.count(id) && std::find(out.begin(), out.end(), id) == out.end()) out.push_back(id);
+    };
+    auto self = eventDefs_.find(eventId);
+    if (self != eventDefs_.end()) {
+        for (const std::string& n : self->second.next) add(n);              // what it leads to
+        std::vector<std::string> waits;
+        eventsWaitedFor(self->second.requires, waits);                      // what it waits for
+        for (const std::string& w : waits) add(w);
+    }
+    for (const auto& [id, d] : eventDefs_) {                                // what leads here, or waits for it
+        if (std::find(d.next.begin(), d.next.end(), eventId) != d.next.end()) add(id);
+        std::vector<std::string> waits;
+        eventsWaitedFor(d.requires, waits);
+        if (std::find(waits.begin(), waits.end(), eventId) != waits.end()) add(id);
+    }
+    return out;
+}
+
+void Game::loadEventDefs(const std::string& assetDir) {
+    const std::string dir = assetDir + "/../data/events/";
+    // kinds.json (written by the event editor's Kinds tab): "inLog": false keeps a kind out of the log.
+    std::map<std::string, bool> kindInLog;
+    nlohmann::json kinds = readJsonFile(dir + "kinds.json");
+    if (kinds.is_object())
+        for (auto& [k, v] : kinds.items())
+            if (v.is_object() && v.contains("inLog")) kindInLog[k] = v.value("inLog", true);
+    for (const std::string& name : toms::vfsListDir(dir)) {
+        if (name.rfind("pool_", 0) != 0 || name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
+        nlohmann::json pool = readJsonFile(dir + name);
+        if (!pool.contains("events") || !pool["events"].is_array()) continue;
+        for (const auto& e : pool["events"]) {
+            const std::string id = e.value("eventId", std::string());
+            if (id.empty()) continue;
+            EventDef d;
+            d.kind = e.value("kind", std::string());
+            d.titleKey = e.value("title", id + ".title");
+            d.descKey = e.value("desc", id + ".desc");
+            if (e.contains("next") && e["next"].is_array())
+                for (const auto& n : e["next"]) if (n.is_string()) d.next.push_back(n.get<std::string>());
+            if (e.contains("requires")) d.requires = e["requires"];
+            auto k = kindInLog.find(d.kind);
+            d.inLog = e.value("inLog", k == kindInLog.end() ? true : k->second);
+            eventDefs_[id] = d;
+        }
+    }
+    // The chapters' story events (beats of kind "event"): a chapter's connected events in the log.
+    const std::string chDir = assetDir + "/../data/story/chapters/";
+    for (const std::string& name : toms::vfsListDir(chDir)) {
+        if (name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
+        nlohmann::json ch = readJsonFile(chDir + name);
+        const std::string id = ch.value("id", std::string());
+        if (id.empty() || !ch.contains("beats") || !ch["beats"].is_array()) continue;
+        for (const auto& b : ch["beats"])
+            if (b.value("kind", std::string()) == "event" && b.contains("eventId")) chapterEvents_[id].push_back(b.value("eventId", std::string()));
+    }
+    fprintf(stderr, "[assets] events: %zu in the pools, %zu chapters with story events\n", eventDefs_.size(), chapterEvents_.size());
 }
 
 // ---------- keyboard ----------
 
 void Game::playerMenuMove(int dx, int dy) {
     if (!inGameMenuOpen_) return;
+    if (saveLoadOpen_) {
+        if (saveLoadConfirm_) { if (dx != 0 || dy != 0) saveLoadConfirmYes_ = !saveLoadConfirmYes_; return; }
+        const int n = (int)saveLoadSlots_.size();
+        if (dy != 0 && n > 0) saveLoadSel_ = ((saveLoadSel_ + dy) % n + n) % n;
+        if (dx != 0) playerMenuTab(dx);
+        return;
+    }
     if (dropConfirmOpen_) { if (dx != 0 || dy != 0) dropConfirmYes_ = !dropConfirmYes_; return; }
     switch (menuTab_) {
         case MenuTab::Status: {
@@ -236,8 +359,12 @@ void Game::playerMenuMove(int dx, int dy) {
 
 void Game::playerMenuActivate() {
     if (!inGameMenuOpen_) return;
+    if (saveLoadOpen_) { if (saveLoadConfirm_) saveLoadAnswer(saveLoadConfirmYes_); else saveLoadAsk(saveLoadSel_); return; }
     if (dropConfirmOpen_) { playerMenuEvent("pm_confirm", dropConfirmYes_ ? 1 : 0); return; }
     switch (menuTab_) {
+        case MenuTab::Status:   // Enter places a free attribute point on the selected attribute
+            if (pl.attrPoints > 0 && attrSel_ >= 0) spendAttrPoint(attrSel_);
+            return;
         case MenuTab::Gear: {
             const auto cells = gearCells();
             if (cells.empty()) return;
@@ -265,6 +392,12 @@ void Game::playerMenuActivate() {
 
 void Game::playerMenuBack() {
     if (!inGameMenuOpen_) return;
+    if (saveLoadOpen_) {
+        if (saveLoadConfirm_) saveLoadConfirm_ = false;
+        else saveLoadOpen_ = false;
+        audio.play("close_ui");
+        return;
+    }
     if (dropConfirmOpen_) { dropConfirmOpen_ = false; audio.play("close_ui"); return; }
     if (menuTab_ == MenuTab::System) { inGameMenuBack(); return; }   // confirm -> page -> close
     closePlayerMenu();
@@ -275,6 +408,16 @@ void Game::playerMenuBack() {
 void Game::playerMenuEvent(const std::string& name, int arg) {
     if (!inGameMenuOpen_) return;
     if (name == "pm_close") { closePlayerMenu(); return; }
+    // ---- Save / Load ----
+    if (name == "pm_sl_close") { if (saveLoadOpen_) { saveLoadOpen_ = saveLoadConfirm_ = false; audio.play("close_ui"); } return; }
+    if (name == "pm_sl_confirm") { saveLoadAnswer(arg != 0); return; }
+    if (saveLoadOpen_) {   // the screen is modal over the menu
+        if (saveLoadConfirm_) return;
+        if (name == "pm_sl_mode" && (arg == 0 || arg == 1) && arg != saveLoadMode_) { saveLoadMode_ = arg; audio.play("confirm_click"); }
+        if (name == "pm_sl_slot") saveLoadAsk(arg);
+        if (name == "pm_sl_hover" && arg >= 0 && arg < (int)saveLoadSlots_.size()) saveLoadSel_ = arg;
+        return;
+    }
     if (name == "pm_confirm") {
         if (!dropConfirmOpen_) return;
         dropConfirmOpen_ = false;
@@ -297,6 +440,7 @@ void Game::playerMenuEvent(const std::string& name, int arg) {
         return;
     }
     if (name == "pm_attr") { if (arg >= 0 && arg < (int)attrDefs_.size()) attrSel_ = arg; return; }
+    if (name == "pm_attr_add") { if (arg >= 0 && arg < (int)attrDefs_.size()) { attrSel_ = arg; spendAttrPoint(arg); } return; }
     if (name == "pm_slot") { if ((arg == 0 || arg == 1) && arg != gearSlot_) { gearSlot_ = arg; gearSel_ = 0; } return; }
     if (name == "pm_filter") {
         if (menuTab_ == MenuTab::Items && arg >= 0 && arg < 4 && arg != itemFilter_) { itemFilter_ = arg; itemSel_ = 0; }
@@ -431,8 +575,9 @@ void Game::buildPlayerUi(toms::UiState& u) const {
         {
             const int need = pl.lv * std::max(1, levelUp_.expPerLevel);
             p.level = "Lv " + std::to_string(pl.lv);
-            p.hp_text = "HP " + std::to_string(pl.hp) + " / " + std::to_string(pl.maxhp);
-            p.hp_pct = pl.maxhp > 0 ? std::max(0.0f, std::min(100.0f, 100.0f * pl.hp / pl.maxhp)) : 0.0f;
+            const int maxHp = effectiveMaxHp();
+            p.hp_text = "HP " + std::to_string(pl.hp) + " / " + std::to_string(maxHp);
+            p.hp_pct = std::max(0.0f, std::min(100.0f, 100.0f * pl.hp / maxHp));
             p.exp_text = "EXP " + std::to_string(pl.exp) + " / " + std::to_string(need);
             p.exp_pct = std::max(0.0f, std::min(100.0f, 100.0f * pl.exp / need));
             p.combat_title = L.tr("status.combat");
@@ -470,8 +615,33 @@ void Game::buildPlayerUi(toms::UiState& u) const {
                 p.attrs.push_back(r);
             }
             p.attr_desc = (attrSel_ >= 0 && attrSel_ < (int)attrDefs_.size()) ? L.tr(attrDefs_[attrSel_].descKey) : L.tr("status.attr_hint");
+            if (attrSel_ >= 0 && attrSel_ < (int)attrDefs_.size()) {   // what it does: per point, and in total now
+                const AttrDef& a = attrDefs_[attrSel_];
+                auto fmt = [&](const std::string& stat, float v, bool total) {
+                    char b[32];
+                    const bool pct = stat == "skillPower" || stat == "goldGain";
+                    if (total && (stat == "atk" || stat == "def" || stat == "maxhp")) v = std::floor(v);
+                    if (std::fabs(v - std::round(v)) < 0.001f) std::snprintf(b, sizeof b, "%+d", (int)std::lround(v));
+                    else std::snprintf(b, sizeof b, "%+.1f", v);
+                    return std::string(b) + (pct ? "% " : " ") + L.tr("stat.effect." + stat);
+                };
+                std::string per, now;
+                for (const auto& [stat, k] : a.effects) {
+                    if (k == 0.0f) continue;
+                    per += (per.empty() ? "" : " · ") + fmt(stat, k, false);
+                    now += (now.empty() ? "" : " · ") + fmt(stat, (float)(attrValue(a.id) - a.base) * k, true);
+                }
+                p.attr_per = per.empty() ? L.tr("status.attr_none") : trParam(L.tr("status.attr_per"), "x", per);
+                p.attr_now = per.empty() ? "" : trParam(L.tr("status.attr_now"), "x", now);
+            }
+            if (pl.attrPoints > 0) {
+                p.attr_can_add = true;
+                p.attr_points = trParam(L.tr("status.points"), "n", std::to_string(pl.attrPoints));
+                p.attr_points_hint = L.tr("status.points_hint");
+            }
         }
         {
+            auto kindKey = [](int k) { return k == 0 ? "events.kind.chapter" : k == 1 ? "events.kind.mission" : "events.kind.event"; };
             const auto unfinished = eventLog(false), all = eventLog(true);
             p.ev_filters.push_back({L.tr("events.unfinished") + " (" + std::to_string(unfinished.size()) + ")", eventFilter_ == 0, false});
             p.ev_filters.push_back({L.tr("events.all") + " (" + std::to_string(all.size()) + ")", eventFilter_ == 1, false});
@@ -480,8 +650,8 @@ void Game::buildPlayerUi(toms::UiState& u) const {
             for (size_t i = 0; i < log.size(); i++) {
                 const LogEntry& e = log[i];
                 toms::UiRow r;
-                r.label = std::string(e.done ? "✓ " : (e.kind == 0 ? "★ " : "◆ ")) + e.title;
-                r.sub = e.done ? L.tr("events.done") : L.tr(e.kind == 0 ? "events.kind.chapter" : "events.kind.mission");
+                r.label = std::string(e.done ? "✓ " : (e.kind == 0 ? "★ " : e.kind == 1 ? "◆ " : "● ")) + e.title;
+                r.sub = e.done ? L.tr("events.done") : L.tr(kindKey(e.kind));
                 r.enabled = !e.done;
                 r.selected = (int)i == sel;
                 p.ev_rows.push_back(r);
@@ -491,14 +661,16 @@ void Game::buildPlayerUi(toms::UiState& u) const {
             if (!log.empty()) {
                 const LogEntry& e = log[sel];
                 p.ev_detail = true;
-                p.ev_kind = L.tr(e.kind == 0 ? "events.kind.chapter" : "events.kind.mission") + (e.done ? "  ·  " + L.tr("events.done") : "");
+                p.ev_kind = L.tr(kindKey(e.kind)) + (e.done ? "  ·  " + L.tr("events.done") : "");
                 p.ev_title = e.title;
                 p.ev_desc = e.desc;
-                p.ev_connected_title = L.tr("events.connected");   // shown only when ev_connected has entries (P2)
+                p.ev_connected_title = L.tr("events.connected");   // shown only when there are connected events
+                p.ev_connected = e.connected;
             }
         }
         buildMenuUi(u.menu);
         p.sys_hint = L.tr("system.select");
+        if (saveLoadOpen_) buildSaveLoadUi(u.saveload);
     }
     switch (menuTab_) {
         case MenuTab::Gear: {
@@ -551,5 +723,95 @@ void Game::buildPlayerUi(toms::UiState& u) const {
         }
         default:
             break;
+    }
+}
+
+// ---------- Save / Load (saveload.rml) ----------
+// Its own screen over the menu: a Save tab and a Load tab over the same slot cards. Choosing a slot only
+// opens a confirmation; nothing is written or loaded until the player says yes. Saving into a slot makes
+// it the run's slot (autosave writes there from then on), as loading one does.
+
+void Game::openSaveLoad(int mode) {
+    saveLoadOpen_ = true;
+    saveLoadMode_ = mode == 1 ? 1 : 0;
+    saveLoadConfirm_ = false;
+    saveLoadSlots_.clear();
+    const std::string dir = toms::defaultSaveDir();
+    for (int i = 1; i <= title_.slotCount(); i++) saveLoadSlots_.push_back(toms::summarizeSlot(dir, i));
+    saveLoadSel_ = std::max(0, std::min(activeSlot_ - 1, (int)saveLoadSlots_.size() - 1));
+    audio.play("confirm_click");
+}
+
+void Game::saveLoadAsk(int index) {
+    if (index < 0 || index >= (int)saveLoadSlots_.size()) return;
+    saveLoadSel_ = index;
+    const bool exists = saveLoadSlots_[index].exists;
+    if (saveLoadMode_ == 1 && !exists) { audio.play("deny"); return; }   // nothing to load
+    saveLoadConfirm_ = true;
+    // The safe answer is preselected wherever something is lost: overwriting a save, leaving the run.
+    saveLoadConfirmYes_ = saveLoadMode_ == 0 && !exists;
+    audio.play("confirm_click");
+}
+
+void Game::saveLoadAnswer(bool yes) {
+    if (!saveLoadConfirm_) return;
+    saveLoadConfirm_ = false;
+    if (!yes) { audio.play("close_ui"); return; }
+    const int slot = saveLoadSel_ + 1;
+    if (saveLoadMode_ == 0) {
+        activeSlot_ = slot;
+        saveCurrentRun();
+        saveLoadSlots_[saveLoadSel_] = toms::summarizeSlot(toms::defaultSaveDir(), slot);
+        toastMsg_ = trParam(locale_.tr("saveload.saved"), "slot", std::to_string(slot));
+        toastTimer_ = 1600;
+        audio.play("confirm_click");
+    } else if (!continueFromSlot(slot)) {   // loading closes the menu (applyLoadedRun)
+        audio.play("deny");
+    }
+}
+
+void Game::buildSaveLoadUi(toms::UiSaveLoad& v) const {
+    const toms::Locale& L = locale_;
+    v.visible = true;
+    v.title = L.tr("saveload.title");
+    v.hint = L.tr("saveload.hint");
+    v.close_label = L.tr("menu.back");
+    v.modes.push_back({L.tr("saveload.save"), saveLoadMode_ == 0, false});
+    v.modes.push_back({L.tr("saveload.load"), saveLoadMode_ == 1, false});
+    for (size_t i = 0; i < saveLoadSlots_.size(); i++) {
+        const toms::SlotSummary& s = saveLoadSlots_[i];
+        toms::UiSlot c;
+        c.title = L.tr("continue.slot") + " " + std::to_string(i + 1);
+        c.empty = !s.exists;
+        if (s.exists) {
+            const int sec = std::max(0, s.playTimeSec);
+            char t[32];
+            std::snprintf(t, sizeof t, "%02d:%02d:%02d", sec / 3600, (sec / 60) % 60, sec % 60);
+            c.line1 = (s.stageName.empty() ? s.stageId : s.stageName) + "   " + L.tr("hud.level") + " " + std::to_string(s.lv) +
+                      "   HP " + std::to_string(s.hp) + "/" + std::to_string(s.maxhp) + "   " + std::to_string(s.gold) + "G";
+            c.line2 = L.tr("continue.saved_at") + " " + s.savedAt + "    " + L.tr("continue.play_time") + " " + t;
+        } else {
+            c.line1 = saveLoadMode_ == 1 ? L.tr("saveload.load_empty") : "[" + L.tr("continue.empty") + "]";
+        }
+        if ((int)i + 1 == activeSlot_) c.tag = L.tr("saveload.current");
+        c.selected = (int)i == saveLoadSel_;
+        c.enabled = saveLoadMode_ == 0 || s.exists;
+        v.cards.push_back(c);
+    }
+    if (saveLoadConfirm_ && saveLoadSel_ < (int)saveLoadSlots_.size()) {
+        const std::string slot = std::to_string(saveLoadSel_ + 1);
+        const bool exists = saveLoadSlots_[saveLoadSel_].exists;
+        v.confirm_open = true;
+        if (saveLoadMode_ == 1) {
+            v.confirm_question = trParam(L.tr("saveload.load_confirm"), "slot", slot);
+            v.confirm_body = L.tr("saveload.load_body");
+            v.yes_label = L.tr("saveload.load");
+        } else {
+            v.confirm_question = trParam(L.tr(exists ? "saveload.overwrite_confirm" : "saveload.save_confirm"), "slot", slot);
+            v.confirm_body = exists ? L.tr("saveload.overwrite_body") : "";
+            v.yes_label = L.tr("saveload.save");
+        }
+        v.no_label = L.tr("saveload.cancel");
+        v.confirm_yes = saveLoadConfirmYes_;
     }
 }

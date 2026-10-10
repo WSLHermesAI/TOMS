@@ -6448,6 +6448,502 @@
       "ja": "項目を選んでください。",
       "ko": "항목을 선택하세요.",
       "es": "Elige una opción."
+    },
+    "saveload.row": {
+      "zh_TW": "存檔／讀檔",
+      "en": "Save / Load",
+      "zh_CN": "存档／读档",
+      "ja": "セーブ／ロード",
+      "ko": "저장／불러오기",
+      "es": "Guardar / Cargar"
+    },
+    "saveload.title": {
+      "zh_TW": "存檔／讀檔",
+      "en": "Save / Load",
+      "zh_CN": "存档／读档",
+      "ja": "セーブ／ロード",
+      "ko": "저장／불러오기",
+      "es": "Guardar / Cargar"
+    },
+    "saveload.save": {
+      "zh_TW": "儲存",
+      "en": "Save",
+      "zh_CN": "保存",
+      "ja": "セーブ",
+      "ko": "저장",
+      "es": "Guardar"
+    },
+    "saveload.load": {
+      "zh_TW": "讀取",
+      "en": "Load",
+      "zh_CN": "读取",
+      "ja": "ロード",
+      "ko": "불러오기",
+      "es": "Cargar"
+    },
+    "saveload.cancel": {
+      "zh_TW": "取消",
+      "en": "Cancel",
+      "zh_CN": "取消",
+      "ja": "キャンセル",
+      "ko": "취소",
+      "es": "Cancelar"
+    },
+    "saveload.current": {
+      "zh_TW": "目前這輪",
+      "en": "This run",
+      "zh_CN": "目前这轮",
+      "ja": "現在のプレイ",
+      "ko": "현재 진행",
+      "es": "Partida actual"
+    },
+    "saveload.save_confirm": {
+      "zh_TW": "儲存到存檔 {slot}？",
+      "en": "Save to slot {slot}?",
+      "zh_CN": "保存到存档 {slot}？",
+      "ja": "スロット {slot} にセーブしますか？",
+      "ko": "슬롯 {slot}에 저장할까요?",
+      "es": "¿Guardar en la ranura {slot}?"
+    },
+    "saveload.overwrite_confirm": {
+      "zh_TW": "覆蓋存檔 {slot}？",
+      "en": "Overwrite slot {slot}?",
+      "zh_CN": "覆盖存档 {slot}？",
+      "ja": "スロット {slot} に上書きしますか？",
+      "ko": "슬롯 {slot}에 덮어쓸까요?",
+      "es": "¿Sobrescribir la ranura {slot}?"
+    },
+    "saveload.overwrite_body": {
+      "zh_TW": "這個存檔原本的內容會被取代。",
+      "en": "What is saved there now will be replaced.",
+      "zh_CN": "这个存档原本的内容会被取代。",
+      "ja": "今のセーブデータは置き換えられます。",
+      "ko": "지금 저장된 내용은 바뀝니다.",
+      "es": "Lo guardado ahí se reemplazará."
+    },
+    "saveload.load_confirm": {
+      "zh_TW": "讀取存檔 {slot}？",
+      "en": "Load slot {slot}?",
+      "zh_CN": "读取存档 {slot}？",
+      "ja": "スロット {slot} をロードしますか？",
+      "ko": "슬롯 {slot}을(를) 불러올까요?",
+      "es": "¿Cargar la ranura {slot}?"
+    },
+    "saveload.load_body": {
+      "zh_TW": "目前尚未儲存的進度會遺失。",
+      "en": "Progress not saved yet will be lost.",
+      "zh_CN": "目前尚未保存的进度会遗失。",
+      "ja": "セーブしていない進行状況は失われます。",
+      "ko": "저장하지 않은 진행 상황은 사라집니다.",
+      "es": "Se perderá el progreso no guardado."
+    },
+    "saveload.saved": {
+      "zh_TW": "已儲存到存檔 {slot}",
+      "en": "Saved to slot {slot}",
+      "zh_CN": "已保存到存档 {slot}",
+      "ja": "スロット {slot} にセーブしました",
+      "ko": "슬롯 {slot}에 저장했습니다",
+      "es": "Guardado en la ranura {slot}"
+    },
+    "saveload.load_empty": {
+      "zh_TW": "這個存檔是空的。",
+      "en": "This slot is empty.",
+      "zh_CN": "这个存档是空的。",
+      "ja": "このスロットは空です。",
+      "ko": "이 슬롯은 비어 있습니다.",
+      "es": "Esta ranura está vacía."
+    },
+    "saveload.hint": {
+      "zh_TW": "↑↓ 選擇存檔 · Q / E 切換儲存／讀取 · Enter 確定 · Esc 返回",
+      "en": "↑↓ choose a slot · Q / E: Save / Load · Enter: OK · Esc: back",
+      "zh_CN": "↑↓ 选择存档 · Q / E 切换保存／读取 · Enter 确定 · Esc 返回",
+      "ja": "↑↓ スロット選択 · Q / E セーブ／ロード · Enter 決定 · Esc 戻る",
+      "ko": "↑↓ 슬롯 선택 · Q / E 저장／불러오기 · Enter 확인 · Esc 뒤로",
+      "es": "↑↓ elige ranura · Q / E: Guardar / Cargar · Enter: aceptar · Esc: volver"
+    },
+    "ev_village_well.title": {
+      "zh_TW": "井中倒影",
+      "en": "The Reflection in the Well"
+    },
+    "ev_village_well.desc": {
+      "zh_TW": "村邊的古井映出一個不是你的人影。井底似乎有人在等你。",
+      "en": "The old well at the village edge shows a figure that is not you. Someone seems to be waiting below."
+    },
+    "ev_village_chimney.title": {
+      "zh_TW": "灶煙裡的話",
+      "en": "Words in the Smoke"
+    },
+    "ev_village_chimney.desc": {
+      "zh_TW": "灶煙裡飄出一句你聽過的話，卻想不起是誰說的。",
+      "en": "A sentence you once heard drifts out of the chimney smoke, but you cannot recall who said it."
+    },
+    "ev_village_grave_new.title": {
+      "zh_TW": "新墳",
+      "en": "The New Grave"
+    },
+    "ev_village_grave_new.desc": {
+      "zh_TW": "新墳的土還是濕的，裡面有人敲了兩下。",
+      "en": "The earth on a new grave is still wet, and someone inside knocked twice."
+    },
+    "ev_village_dog_bowl.title": {
+      "zh_TW": "滿滿的狗碗",
+      "en": "The Full Bowl"
+    },
+    "ev_village_dog_bowl.desc": {
+      "zh_TW": "狗碗還是滿的，狗卻不見了。牠去了哪裡？",
+      "en": "The dog bowl is still full, but the dog is gone. Where did it go?"
+    },
+    "ev_village_ledger.title": {
+      "zh_TW": "村裡的帳冊",
+      "en": "The Village Ledger"
+    },
+    "ev_village_ledger.desc": {
+      "zh_TW": "帳冊上有一筆以你的名字付過的款，你不記得付過。",
+      "en": "The ledger shows a payment made in your name, one you do not remember making."
+    },
+    "ev_village_bell_rope.title": {
+      "zh_TW": "鈴繩",
+      "en": "The Bell Rope"
+    },
+    "ev_village_bell_rope.desc": {
+      "zh_TW": "你一拉鈴繩，遠處有人同時抬起了頭。",
+      "en": "When you pulled the bell rope, someone far away looked up at the same moment."
+    },
+    "ev_village_chapel_dust.title": {
+      "zh_TW": "禮拜堂的灰",
+      "en": "Dust in the Chapel"
+    },
+    "ev_village_chapel_dust.desc": {
+      "zh_TW": "禮拜堂的灰塵在光裡排成一個字。",
+      "en": "In the chapel, dust in the light settles into a single word."
+    },
+    "ev_village_old_plough.title": {
+      "zh_TW": "舊犁",
+      "en": "The Old Plough"
+    },
+    "ev_village_old_plough.desc": {
+      "zh_TW": "犁頭上纏著一段十年前的布。",
+      "en": "A strip of cloth from ten years ago is wound around the old plough."
+    },
+    "ev_forest_broken_arrow.title": {
+      "zh_TW": "斷箭",
+      "en": "The Broken Arrow"
+    },
+    "ev_forest_broken_arrow.desc": {
+      "zh_TW": "斷箭上刻著你前世的軍號。",
+      "en": "A broken arrow carries the regiment mark of your past life."
+    },
+    "ev_forest_snare.title": {
+      "zh_TW": "被動過的陷阱",
+      "en": "The Tampered Snare"
+    },
+    "ev_forest_snare.desc": {
+      "zh_TW": "林中的繩索被人動過手腳，手法你很熟悉。",
+      "en": "Someone has tampered with the snare in the forest, in a way you know well."
+    },
+    "ev_forest_old_wizard_mark.title": {
+      "zh_TW": "老師父的記號",
+      "en": "The Old Master's Mark"
+    },
+    "ev_forest_old_wizard_mark.desc": {
+      "zh_TW": "樹皮上有老師父的筆跡，日期是今天。",
+      "en": "Your old master's handwriting is on the bark, dated today."
+    },
+    "ev_forest_trap_net.title": {
+      "zh_TW": "網中的外袍",
+      "en": "The Robe in the Net"
+    },
+    "ev_forest_trap_net.desc": {
+      "zh_TW": "獵網上掛著一件很新的外袍。",
+      "en": "A fresh new robe hangs in the hunting net."
+    },
+    "ev_forest_hunter_cache.title": {
+      "zh_TW": "獵人的樹洞",
+      "en": "The Hunter's Hollow"
+    },
+    "ev_forest_hunter_cache.desc": {
+      "zh_TW": "獵人藏糧的樹洞裡多了一封信。",
+      "en": "A letter has appeared in the hunter's food hollow."
+    },
+    "ev_forest_stone_marker.title": {
+      "zh_TW": "界石",
+      "en": "The Boundary Stone"
+    },
+    "ev_forest_stone_marker.desc": {
+      "zh_TW": "界石上寫著「此地曾有人等你」。",
+      "en": "The boundary stone reads: \"Someone waited for you here.\""
+    },
+    "ev_forest_lost_child.title": {
+      "zh_TW": "霧中的孩子",
+      "en": "The Child in the Mist"
+    },
+    "ev_forest_lost_child.desc": {
+      "zh_TW": "霧裡的孩子說不出自己的名字，只說得出你的。",
+      "en": "The child in the mist cannot say their own name, only yours."
+    },
+    "ev_forest_charcoal_kiln.title": {
+      "zh_TW": "炭窯",
+      "en": "The Charcoal Kiln"
+    },
+    "ev_forest_charcoal_kiln.desc": {
+      "zh_TW": "炭窯還是溫的，窯口有兩雙腳印。",
+      "en": "The charcoal kiln is still warm, and there are two sets of footprints at its mouth."
+    },
+    "ev_gate_soldier_plate.title": {
+      "zh_TW": "胸甲上的字",
+      "en": "Words in the Breastplate"
+    },
+    "ev_gate_soldier_plate.desc": {
+      "zh_TW": "胸甲內側用刀尖刻著「別替我報仇」。",
+      "en": "Scratched inside the breastplate with a knife point: \"Do not avenge me.\""
+    },
+    "ev_gate_seal_rubbing.title": {
+      "zh_TW": "封印的拓本",
+      "en": "The Seal Rubbing"
+    },
+    "ev_gate_seal_rubbing.desc": {
+      "zh_TW": "封印的拓本上，刻痕比原物多了一道。",
+      "en": "The rubbing of the seal has one more notch than the seal itself."
+    },
+    "ev_gate_forge_first.title": {
+      "zh_TW": "第一爐火",
+      "en": "The First Forge Fire"
+    },
+    "ev_gate_forge_first.desc": {
+      "zh_TW": "第一爐火還有餘燼，鐵砧上留著你的手印。",
+      "en": "Embers remain from the first forge fire, and your handprint is on the anvil."
+    },
+    "ev_gate_broken_ram.title": {
+      "zh_TW": "斷裂的攻城槌",
+      "en": "The Broken Ram"
+    },
+    "ev_gate_broken_ram.desc": {
+      "zh_TW": "撞門的木槌斷了三次，第三次是從內側斷的。",
+      "en": "The battering ram broke three times; the third time it broke from the inside."
+    },
+    "ev_gate_quartermaster_cache.title": {
+      "zh_TW": "軍需箱",
+      "en": "The Quartermaster's Chest"
+    },
+    "ev_gate_quartermaster_cache.desc": {
+      "zh_TW": "軍需箱的封條蓋著你前世的印。",
+      "en": "The seal on the supply chest bears the stamp of your past life."
+    },
+    "ev_gate_deserters_kit.title": {
+      "zh_TW": "逃兵的背包",
+      "en": "The Deserter's Pack"
+    },
+    "ev_gate_deserters_kit.desc": {
+      "zh_TW": "逃兵的背包已經收好，卻沒有人帶走。",
+      "en": "A deserter's pack lies ready to go, but no one took it."
+    },
+    "ev_gate_old_banner.title": {
+      "zh_TW": "舊旗",
+      "en": "The Old Banner"
+    },
+    "ev_gate_old_banner.desc": {
+      "zh_TW": "舊旗上的紋章和你的劍柄一樣。",
+      "en": "The crest on the old banner matches the hilt of your sword."
+    },
+    "ev_gate_forge_slag.title": {
+      "zh_TW": "爐渣裡的劍胚",
+      "en": "A Blade in the Slag"
+    },
+    "ev_gate_forge_slag.desc": {
+      "zh_TW": "爐渣裡有一枚沒有成形的劍胚。",
+      "en": "An unformed sword blank lies in the slag."
+    },
+    "ev_common_relic_road.title": {
+      "zh_TW": "路邊的劍痕",
+      "en": "Sword Marks by the Road"
+    },
+    "ev_common_relic_road.desc": {
+      "zh_TW": "路邊的劍痕很深，是同一個人反覆練出來的。",
+      "en": "Deep sword marks by the road, made by one person practising over and over."
+    },
+    "ev_common_whisper_old_road.title": {
+      "zh_TW": "舊路上的耳語",
+      "en": "Whispers on the Old Road"
+    },
+    "ev_common_whisper_old_road.desc": {
+      "zh_TW": "有人低聲說：「那位大人……十年前來過這裡。」",
+      "en": "Someone whispers: \"That lord… came here ten years ago.\""
+    },
+    "ev_common_cache_wall.title": {
+      "zh_TW": "牆縫裡的補給",
+      "en": "Supplies in the Wall"
+    },
+    "ev_common_cache_wall.desc": {
+      "zh_TW": "牆後的縫裡塞著補給。",
+      "en": "Supplies are stuffed into a gap behind the wall."
+    },
+    "ev_common_trap_rubble.title": {
+      "zh_TW": "落石",
+      "en": "Falling Rubble"
+    },
+    "ev_common_trap_rubble.desc": {
+      "zh_TW": "落石是剛被推下來的，上面還有人站著。",
+      "en": "The rubble was just pushed down, and someone is still standing up there."
+    },
+    "ev_common_rescue_lost_soldier.title": {
+      "zh_TW": "壓在梁下的士兵",
+      "en": "The Soldier Under the Beam"
+    },
+    "ev_common_rescue_lost_soldier.desc": {
+      "zh_TW": "被壓在梁下的士兵還醒著，先問了你的名字。",
+      "en": "A soldier trapped under a beam is still awake, and asks your name first."
+    },
+    "ev_common_merchant_echo_ash.title": {
+      "zh_TW": "灰中的商人",
+      "en": "The Merchant in the Ash"
+    },
+    "ev_common_merchant_echo_ash.desc": {
+      "zh_TW": "灰中的商人殘影只收素材，不收金幣。",
+      "en": "The echo of a merchant in the ash takes materials, not gold."
+    },
+    "ev_common_shard_wandering.title": {
+      "zh_TW": "飄蕩的記憶碎片",
+      "en": "A Wandering Memory Shard"
+    },
+    "ev_common_shard_wandering.desc": {
+      "zh_TW": "一片記憶碎片在空中停了一瞬，被你收了起來。",
+      "en": "A memory shard hung in the air for a moment, and you caught it."
+    },
+    "ev_common_relic_chipped_blade.title": {
+      "zh_TW": "缺口的劍",
+      "en": "The Chipped Blade"
+    },
+    "ev_common_relic_chipped_blade.desc": {
+      "zh_TW": "這把劍的缺口，正好是你腰間那把劍缺的另一半。",
+      "en": "The chip in this blade is exactly the missing half of the sword at your side."
+    },
+    "ev_common_whisper_old_song.title": {
+      "zh_TW": "舊曲",
+      "en": "An Old Song"
+    },
+    "ev_common_whisper_old_song.desc": {
+      "zh_TW": "有人低聲哼著一首你沒學過、卻會唱的曲子。",
+      "en": "Someone hums a tune you never learned, yet you know how to sing it."
+    },
+    "ev_common_cache_rat_nest.title": {
+      "zh_TW": "鼠窩裡的金幣",
+      "en": "A Coin in the Rat Nest"
+    },
+    "ev_common_cache_rat_nest.desc": {
+      "zh_TW": "鼠窩裡混著一枚乾淨的金幣。",
+      "en": "A clean gold coin lies among the rat nest."
+    },
+    "events.kind.event": {
+      "zh_TW": "事件",
+      "en": "Event",
+      "zh_CN": "事件",
+      "ja": "イベント",
+      "ko": "이벤트",
+      "es": "Evento"
+    },
+    "events.unknown": {
+      "zh_TW": "？？？",
+      "en": "???",
+      "zh_CN": "？？？",
+      "ja": "？？？",
+      "ko": "???",
+      "es": "???"
+    },
+    "stat.effect.atk": {
+      "zh_TW": "攻擊力",
+      "en": "ATK",
+      "zh_CN": "攻击力",
+      "ja": "攻撃力",
+      "ko": "공격력",
+      "es": "ATQ"
+    },
+    "stat.effect.def": {
+      "zh_TW": "防禦力",
+      "en": "DEF",
+      "zh_CN": "防御力",
+      "ja": "防御力",
+      "ko": "방어력",
+      "es": "DEF"
+    },
+    "stat.effect.maxhp": {
+      "zh_TW": "最大 HP",
+      "en": "Max HP",
+      "zh_CN": "最大 HP",
+      "ja": "最大 HP",
+      "ko": "최대 HP",
+      "es": "PV máx."
+    },
+    "stat.effect.hitZone": {
+      "zh_TW": "攻擊判定帶",
+      "en": "Attack hit zone",
+      "zh_CN": "攻击判定带",
+      "ja": "攻撃の判定幅",
+      "ko": "공격 판정 범위",
+      "es": "Zona de golpe"
+    },
+    "stat.effect.cooldownMs": {
+      "zh_TW": "長條等待（毫秒）",
+      "en": "Bar wait (ms)",
+      "zh_CN": "长条等待（毫秒）",
+      "ja": "バーの待ち時間（ms）",
+      "ko": "바 대기 시간(ms)",
+      "es": "Espera de barra (ms)"
+    },
+    "stat.effect.skillPower": {
+      "zh_TW": "功法效果 %",
+      "en": "Skill power %",
+      "zh_CN": "功法效果 %",
+      "ja": "功法の効果 %",
+      "ko": "무공 효과 %",
+      "es": "Poder de técnicas %"
+    },
+    "stat.effect.goldGain": {
+      "zh_TW": "戰鬥金幣 %",
+      "en": "Battle gold %",
+      "zh_CN": "战斗金币 %",
+      "ja": "戦闘のゴールド %",
+      "ko": "전투 골드 %",
+      "es": "Oro de combate %"
+    },
+    "status.attr_per": {
+      "zh_TW": "每點：{x}",
+      "en": "Each point: {x}",
+      "zh_CN": "每点：{x}",
+      "ja": "1 ポイントごと：{x}",
+      "ko": "포인트당: {x}",
+      "es": "Por punto: {x}"
+    },
+    "status.attr_now": {
+      "zh_TW": "目前：{x}",
+      "en": "Now: {x}",
+      "zh_CN": "目前：{x}",
+      "ja": "現在：{x}",
+      "ko": "현재: {x}",
+      "es": "Ahora: {x}"
+    },
+    "status.attr_none": {
+      "zh_TW": "目前沒有效果。",
+      "en": "No effect yet.",
+      "zh_CN": "目前没有效果。",
+      "ja": "まだ効果はありません。",
+      "ko": "아직 효과가 없습니다.",
+      "es": "Aún sin efecto."
+    },
+    "status.points": {
+      "zh_TW": "可分配點數：{n}",
+      "en": "Points to spend: {n}",
+      "zh_CN": "可分配点数：{n}",
+      "ja": "割り振りポイント：{n}",
+      "ko": "분배 포인트: {n}",
+      "es": "Puntos por repartir: {n}"
+    },
+    "status.points_hint": {
+      "zh_TW": "選一個屬性按 Enter 或 ＋ 加一點。",
+      "en": "Pick an attribute and press Enter or + to add a point.",
+      "zh_CN": "选一个属性按 Enter 或 ＋ 加一点。",
+      "ja": "能力値を選んで Enter か ＋ で 1 ポイント。",
+      "ko": "능력치를 고르고 Enter 또는 +로 1포인트.",
+      "es": "Elige un atributo y pulsa Enter o + para sumar un punto."
     }
   }
 }

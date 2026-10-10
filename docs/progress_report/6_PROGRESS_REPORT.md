@@ -315,6 +315,37 @@ Kinds were hard-coded in the editor, and no data file defined them. The game doe
   Older saves load.
 - **The UI font** was rebuilt for the new characters (`tools/make_ui_font.py`, 2240 characters).
 
+**18. Save / Load with confirmations** ([../20_PLAYER_MENU.md](../20_PLAYER_MENU.md) §10)
+
+- The System tab's Save row opens a **Save / Load** screen: a Save and a Load tab over one card per slot (floor, level,
+  HP, gold, saved at, play time; the run's own slot is marked).
+- **Every save and every load asks** (Save / Load or Cancel); overwriting a used slot and loading preselect Cancel.
+  Saving into a slot makes it the run's slot; empty slots cannot be loaded.
+- Checked on desktop (save to an empty slot, overwrite, load, cancel) and in headless Chrome; `smoke.player_system`'s
+  reference refreshed for the renamed row.
+
+**19. P2: story events in the Events tab** ([../20_PLAYER_MENU.md](../20_PLAYER_MENU.md) §11)
+
+- The game tracks every event: **started** and **finished**, in order, saved with the run; every event that fires sets
+  `event_<id>` (before, only whispers and rescues did). An event whose `requires` does not hold yet stays on its tile as
+  "started"; a finished event's `next` events become started.
+- The Events tab lists story events with their title, description and **connected** events (？？？ until met); chapters
+  list their story events.
+- The 34 pool events got drafted titles and descriptions (zh_TW + en) to edit in the event editor, which now has Title /
+  Description fields, "in the event log" switches per event and per kind, and a "No title / description" warning.
+- Toasts wait while the menu is open.
+- Checked: F01's three events walked in the game; the editor in headless Chrome incl. the 29-step demo; 39/39 unit
+  (`player_menu_test` extended), screenshot references refreshed for the hidden toasts; 57/62 (W16, W23 as before).
+
+**20. P3: what the attributes do** ([../20_PLAYER_MENU.md](../20_PLAYER_MENU.md) §12)
+
+- `stats.json` gives each attribute effects per point above its base (so Lv 1 plays as before): STR ATK +0.5, DEX
+  attack hit zone +0.4, AGI bar wait −15 ms, VIT max HP +3, INT skill bonuses +2 %, LUK battle gold +3 %. All tunable.
+- The Status tab shows each attribute's effect per point and in total; the HUD's ATK / DEF are the totals now.
+- `levelUp.freePoints` (0 by default) turns on hand-placed points (+ buttons, Enter). Saved with the run.
+- Checked at Lv 10 (`--give=exp:1500,points:3`): ATK, max HP, the wider green zone in battle, points placed; tests 57/62
+  (W16, W23 as before), `smoke.player_status` reference refreshed.
+
 **Verified (P1):**
 
 - Desktop: every tab, the store round trip from the System tab, buying, equipping, the comparison, the
