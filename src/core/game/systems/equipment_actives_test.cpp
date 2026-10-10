@@ -14,7 +14,7 @@ static int g_failed = 0;
 
 int main() {
     const std::string activesPath = "data/actives.json";
-    const std::string equipPath   = "data/equipment.json";
+    const std::string equipPath   = "data/items.json";   // the all-item file: weapons, armor, talents included
 
     auto defs = loadActiveDefinitions(activesPath);
     auto byItem = loadEquipmentActives(equipPath);

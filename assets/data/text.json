@@ -5526,6 +5526,928 @@
       "ja": "你留在塔中，與她一同，在廢墟之上重新種下一個家。",
       "ko": "你留在塔中，與她一同，在廢墟之上重新種下一個家。",
       "es": "你留在塔中，與她一同，在廢墟之上重新種下一個家。"
+    },
+    "item.gem_atk.name": {
+      "zh_TW": "攻擊寶石",
+      "en": "Attack Gem",
+      "zh_CN": "攻击宝石",
+      "ja": "攻撃の宝石",
+      "ko": "공격 보석",
+      "es": "Gema de Ataque"
+    },
+    "item.gem_atk.desc": {
+      "zh_TW": "鑲嵌後永久提升攻擊力。",
+      "en": "Permanently increases Attack when socketed.",
+      "zh_CN": "镶嵌后永久提升攻击力。",
+      "ja": "装着すると攻撃力が永久に上昇する。",
+      "ko": "장착하면 공격력이 영구적으로 상승합니다.",
+      "es": "Aumenta permanentemente el Ataque al engastarla."
+    },
+    "item.gem_def.name": {
+      "zh_TW": "防禦寶石",
+      "en": "Defense Gem",
+      "zh_CN": "防御宝石",
+      "ja": "防御の宝石",
+      "ko": "방어 보석",
+      "es": "Gema de Defensa"
+    },
+    "item.gem_def.desc": {
+      "zh_TW": "鑲嵌後永久提升防禦力。",
+      "en": "Permanently increases Defense when socketed.",
+      "zh_CN": "镶嵌后永久提升防御力。",
+      "ja": "装着すると防御力が永久に上昇する。",
+      "ko": "장착하면 방어력이 영구적으로 상승합니다.",
+      "es": "Aumenta permanentemente la Defensa al engastarla."
+    },
+    "item.potion_red.name": {
+      "zh_TW": "紅血瓶",
+      "en": "Red Health Potion",
+      "zh_CN": "红血瓶",
+      "ja": "赤い回復薬",
+      "ko": "붉은 회복약",
+      "es": "Poción Roja"
+    },
+    "item.potion_red.desc": {
+      "zh_TW": "立即恢復 40 點生命。",
+      "en": "Instantly restores 40 HP.",
+      "zh_CN": "立即恢复 40 点生命。",
+      "ja": "即座にHPを40回復する。",
+      "ko": "즉시 HP 40을 회복합니다.",
+      "es": "Restaura 40 PV al instante."
+    },
+    "item.potion_blue.name": {
+      "zh_TW": "藍血瓶",
+      "en": "Blue Health Potion",
+      "zh_CN": "蓝血瓶",
+      "ja": "青い回復薬",
+      "ko": "푸른 회복약",
+      "es": "Poción Azul"
+    },
+    "item.potion_blue.desc": {
+      "zh_TW": "立即恢復 80 點生命。",
+      "en": "Instantly restores 80 HP.",
+      "zh_CN": "立即恢复 80 点生命。",
+      "ja": "即座にHPを80回復する。",
+      "ko": "즉시 HP 80을 회복합니다.",
+      "es": "Restaura 80 PV al instante."
+    },
+    "item.exp_up.name": {
+      "zh_TW": "經驗水晶",
+      "en": "Experience Crystal",
+      "zh_CN": "经验水晶",
+      "ja": "経験の結晶",
+      "ko": "경험의 결정",
+      "es": "Cristal de Experiencia"
+    },
+    "item.exp_up.desc": {
+      "zh_TW": "吸收後獲得大量經驗，足以讓你升級。",
+      "en": "Absorb it to gain a large amount of experience, enough to level up.",
+      "zh_CN": "吸收后获得大量经验，足以让你升级。",
+      "ja": "吸収すると大量の経験値を得られ、レベルアップできるほどだ。",
+      "ko": "흡수하면 레벨업할 만큼 막대한 경험치를 얻습니다.",
+      "es": "Absórbelo para obtener una gran cantidad de experiencia, suficiente para subir de nivel."
+    },
+    "item.scroll.name": {
+      "zh_TW": "傳送卷軸",
+      "en": "Scroll of Teleportation",
+      "zh_CN": "传送卷轴",
+      "ja": "転送の巻物",
+      "ko": "순간이동 두루마리",
+      "es": "Pergamino de Teletransporte"
+    },
+    "item.scroll.desc": {
+      "zh_TW": "展開後直接跳到目標樓層。",
+      "en": "Unroll it to jump directly to the target floor.",
+      "zh_CN": "展开后直接跳到目标楼层。",
+      "ja": "広げると目標階層へ直接ワープする。",
+      "ko": "펼치면 목표 층으로 곧장 이동합니다.",
+      "es": "Desenróllalo para saltar directamente al piso objetivo."
+    },
+    "item.coin.name": {
+      "zh_TW": "金幣",
+      "en": "Gold Coin",
+      "zh_CN": "金币",
+      "ja": "金貨",
+      "ko": "금화",
+      "es": "Moneda de Oro"
+    },
+    "item.coin.desc": {
+      "zh_TW": "一枚金幣。撿到時立刻加進金幣。",
+      "en": "A gold coin. Added to your gold when picked up.",
+      "zh_CN": "一枚金币。捡到时立刻加进金币。",
+      "ja": "金貨。拾うとすぐにゴールドに加わる。",
+      "ko": "금화. 주우면 바로 골드에 더해집니다.",
+      "es": "Una moneda de oro. Se suma a tu oro al recogerla."
+    },
+    "item.key_yellow.name": {
+      "zh_TW": "黃鑰匙",
+      "en": "Yellow Key",
+      "zh_CN": "黄钥匙",
+      "ja": "黄色の鍵",
+      "ko": "노란 열쇠",
+      "es": "Llave Amarilla"
+    },
+    "item.key_yellow.desc": {
+      "zh_TW": "打開一扇黃門。",
+      "en": "Opens one yellow door.",
+      "zh_CN": "打开一扇黄门。",
+      "ja": "黄色の扉を一つ開ける。",
+      "ko": "노란 문 하나를 엽니다.",
+      "es": "Abre una puerta amarilla."
+    },
+    "item.key_blue.name": {
+      "zh_TW": "藍鑰匙",
+      "en": "Blue Key",
+      "zh_CN": "蓝钥匙",
+      "ja": "青い鍵",
+      "ko": "파란 열쇠",
+      "es": "Llave Azul"
+    },
+    "item.key_blue.desc": {
+      "zh_TW": "打開一扇藍門。",
+      "en": "Opens one blue door.",
+      "zh_CN": "打开一扇蓝门。",
+      "ja": "青い扉を一つ開ける。",
+      "ko": "파란 문 하나를 엽니다.",
+      "es": "Abre una puerta azul."
+    },
+    "item.key_red.name": {
+      "zh_TW": "紅鑰匙",
+      "en": "Red Key",
+      "zh_CN": "红钥匙",
+      "ja": "赤い鍵",
+      "ko": "빨간 열쇠",
+      "es": "Llave Roja"
+    },
+    "item.key_red.desc": {
+      "zh_TW": "打開一扇紅門。",
+      "en": "Opens one red door.",
+      "zh_CN": "打开一扇红门。",
+      "ja": "赤い扉を一つ開ける。",
+      "ko": "빨간 문 하나를 엽니다.",
+      "es": "Abre una puerta roja."
+    },
+    "item.potion_str.name": {
+      "zh_TW": "力量藥水",
+      "en": "Strength Potion",
+      "zh_CN": "力量药水",
+      "ja": "力の薬",
+      "ko": "힘의 물약",
+      "es": "Poción de Fuerza"
+    },
+    "item.potion_str.desc": {
+      "zh_TW": "永久提升攻擊力。",
+      "en": "Permanently increases Attack.",
+      "zh_CN": "永久提升攻击力。",
+      "ja": "攻撃力が永久に上昇する。",
+      "ko": "공격력이 영구적으로 상승합니다.",
+      "es": "Aumenta permanentemente el Ataque."
+    },
+    "item.potion_def.name": {
+      "zh_TW": "防禦藥水",
+      "en": "Defense Potion",
+      "zh_CN": "防御药水",
+      "ja": "守りの薬",
+      "ko": "방어의 물약",
+      "es": "Poción de Defensa"
+    },
+    "item.potion_def.desc": {
+      "zh_TW": "永久提升防禦力。",
+      "en": "Permanently increases Defense.",
+      "zh_CN": "永久提升防御力。",
+      "ja": "防御力が永久に上昇する。",
+      "ko": "방어력이 영구적으로 상승합니다.",
+      "es": "Aumenta permanentemente la Defensa."
+    },
+    "item.wand.name": {
+      "zh_TW": "見習者法杖",
+      "en": "Apprentice's Wand",
+      "zh_CN": "见习者法杖",
+      "ja": "見習いの杖",
+      "ko": "견습자의 지팡이",
+      "es": "Vara del Aprendiz"
+    },
+    "item.wand.desc": {
+      "zh_TW": "均衡的入門武器，速度與威力都走中庸路線。",
+      "en": "A balanced starter weapon, moderate in both speed and power.",
+      "zh_CN": "均衡的入门武器，速度与威力都走中庸路线。",
+      "ja": "速度と威力のバランスが取れた入門用武器。",
+      "ko": "속도와 위력이 고르게 균형 잡힌 입문용 무기입니다.",
+      "es": "Un arma inicial equilibrada, con velocidad y poder moderados."
+    },
+    "item.twin_daggers.name": {
+      "zh_TW": "雙生短匕",
+      "en": "Twin Daggers",
+      "zh_CN": "双生短匕",
+      "ja": "双子の短剣",
+      "ko": "쌍둥이 단검",
+      "es": "Dagas Gemelas"
+    },
+    "item.twin_daggers.desc": {
+      "zh_TW": "犧牲少許攻擊力，換取極快的蓄力速度與短小精悍的判定帶。",
+      "en": "Sacrifices a bit of Attack for extremely fast charge speed and a compact, precise timing window.",
+      "zh_CN": "牺牲少许攻击力，换取极快的蓄力速度与短小精悍的判定带。",
+      "ja": "攻撃力を少し犠牲にする代わりに、非常に速いチャージ速度と小さく精密な判定帯を得る。",
+      "ko": "공격력을 약간 희생하는 대신 매우 빠른 차지 속도와 작고 정밀한 판정 구간을 얻습니다.",
+      "es": "Sacrifica algo de Ataque a cambio de una carga extremadamente rápida y una franja de acierto compacta y precisa."
+    },
+    "item.war_hammer.name": {
+      "zh_TW": "戰爭巨鎚",
+      "en": "War Hammer",
+      "zh_CN": "战争巨锤",
+      "ja": "戦争の大槌",
+      "ko": "전쟁의 대망치",
+      "es": "Martillo de Guerra"
+    },
+    "item.war_hammer.desc": {
+      "zh_TW": "沉重而強力，蓄力緩慢但判定帶寬廣，容錯率高。",
+      "en": "Heavy and powerful; charges slowly but has a wide timing window with a high margin for error.",
+      "zh_CN": "沉重而强力，蓄力缓慢但判定带宽广，容错率高。",
+      "ja": "重く強力だが、チャージは遅い。判定帯が広く、ミスへの許容度が高い。",
+      "ko": "무겁고 강력하지만 차지 속도가 느립니다. 판정 구간이 넓어 실수를 허용하는 폭이 큽니다.",
+      "es": "Pesado y poderoso; carga lentamente pero tiene una franja de acierto amplia y gran margen de error."
+    },
+    "item.cloth_robe.name": {
+      "zh_TW": "布衣長袍",
+      "en": "Cloth Robe",
+      "zh_CN": "布衣长袍",
+      "ja": "布のローブ",
+      "ko": "천 로브",
+      "es": "Túnica de Tela"
+    },
+    "item.cloth_robe.desc": {
+      "zh_TW": "均衡的入門防具，速度與韌性都走中庸路線。",
+      "en": "A balanced starter armor, moderate in both speed and resilience.",
+      "zh_CN": "均衡的入门防具，速度与韧性都走中庸路线。",
+      "ja": "速度と粘り強さのバランスが取れた入門用防具。",
+      "ko": "속도와 내구성이 고르게 균형 잡힌 입문용 방어구입니다.",
+      "es": "Una armadura inicial equilibrada, con velocidad y resistencia moderadas."
+    },
+    "item.guardian_plate.name": {
+      "zh_TW": "守護重甲",
+      "en": "Guardian Plate",
+      "zh_CN": "守护重甲",
+      "ja": "守護の重鎧",
+      "ko": "수호의 중갑",
+      "es": "Placa del Guardián"
+    },
+    "item.guardian_plate.desc": {
+      "zh_TW": "厚重的板甲，格擋蓄力較慢，但判定帶寬廣，適合穩紮穩打。",
+      "en": "Heavy plate armor; block charges slowly, but the timing window is wide, suited to a steady, cautious playstyle.",
+      "zh_CN": "厚重的板甲，格挡蓄力较慢，但判定带宽广，适合稳扎稳打。",
+      "ja": "重厚な板金鎧。ガードのチャージは遅いが判定帯が広く、堅実な立ち回りに向く。",
+      "ko": "두꺼운 판금 갑옷입니다. 방어 차지는 느리지만 판정 구간이 넓어 신중한 플레이에 적합합니다.",
+      "es": "Armadura de placas pesada; el bloqueo carga lento, pero su franja de acierto es amplia, ideal para un estilo cauteloso."
+    },
+    "item.swift_leather.name": {
+      "zh_TW": "疾風皮甲",
+      "en": "Swift Leather",
+      "zh_CN": "疾风皮甲",
+      "ja": "疾風の革鎧",
+      "ko": "질풍의 가죽 갑옷",
+      "es": "Cuero Veloz"
+    },
+    "item.swift_leather.desc": {
+      "zh_TW": "犧牲少許防禦力，換取極快的格擋蓄力速度。",
+      "en": "Sacrifices a bit of Defense for extremely fast block-charge speed.",
+      "zh_CN": "牺牲少许防御力，换取极快的格挡蓄力速度。",
+      "ja": "防御力を少し犠牲にする代わりに、非常に速いガードチャージ速度を得る。",
+      "ko": "방어력을 약간 희생하는 대신 매우 빠른 방어 차지 속도를 얻습니다.",
+      "es": "Sacrifica algo de Defensa a cambio de una carga de bloqueo extremadamente rápida."
+    },
+    "item.focus_talisman.name": {
+      "zh_TW": "專注護符",
+      "en": "Focus Talisman",
+      "zh_CN": "专注护符",
+      "ja": "集中のお守り",
+      "ko": "집중의 부적",
+      "es": "Talismán de Enfoque"
+    },
+    "item.focus_talisman.desc": {
+      "zh_TW": "延緩蓄力進入衝刺階段的時機，讓你有更充裕的時間瞄準目標區。",
+      "en": "Delays when the charge enters its dash phase, giving you more time to aim for the target zone.",
+      "zh_CN": "延缓蓄力进入冲刺阶段的时机，让你有更充裕的时间瞄准目标区。",
+      "ja": "チャージがダッシュ段階に入るタイミングを遅らせ、目標エリアを狙う時間に余裕を持たせる。",
+      "ko": "차지가 돌진 단계에 들어가는 시점을 늦춰 목표 구간을 노릴 여유를 줍니다.",
+      "es": "Retrasa el momento en que la carga entra en su fase de impulso, dándote más tiempo para apuntar a la zona objetivo."
+    },
+    "item.berserker_charm.name": {
+      "zh_TW": "狂戰士護身符",
+      "en": "Berserker Charm",
+      "zh_CN": "狂战士护身符",
+      "ja": "狂戦士のお守り",
+      "ko": "광전사의 부적",
+      "es": "Amuleto del Berserker"
+    },
+    "item.berserker_charm.desc": {
+      "zh_TW": "大幅提升攻擊上限，但落在紅色區域的攻擊將完全無效——高風險高回報。",
+      "en": "Greatly raises the Attack ceiling, but attacks landing in the red zone are completely negated — high risk, high reward.",
+      "zh_CN": "大幅提升攻击上限，但落在红色区域的攻击将完全无效——高风险高回报。",
+      "ja": "攻撃力の上限を大幅に引き上げるが、赤色ゾーンに入った攻撃は完全に無効となる——ハイリスク・ハイリターン。",
+      "ko": "공격력 상한을 크게 높이지만, 빨간 구간에 들어간 공격은 완전히 무효화됩니다 — 하이 리스크, 하이 리턴입니다.",
+      "es": "Aumenta enormemente el límite de Ataque, pero los ataques que caen en la zona roja quedan completamente anulados: alto riesgo, alta recompensa."
+    },
+    "item.guardian_ring.name": {
+      "zh_TW": "守護者之戒",
+      "en": "Ring of the Guardian",
+      "zh_CN": "守护者之戒",
+      "ja": "守護者の指輪",
+      "ko": "수호자의 반지",
+      "es": "Anillo del Guardián"
+    },
+    "item.guardian_ring.desc": {
+      "zh_TW": "為防禦減傷提供一道保底下限，即使蓄力失手也能保有基本防護。",
+      "en": "Provides a floor for damage reduction, ensuring basic protection even if the charge timing is missed.",
+      "zh_CN": "为防御减伤提供一道保底下限，即使蓄力失手也能保有基本防护。",
+      "ja": "防御による減傷に最低保証ラインを設け、チャージに失敗しても基本的な防御を保てるようにする。",
+      "ko": "방어 피해 감소에 최소 보장선을 두어, 차지에 실패해도 기본적인 방어를 유지할 수 있습니다.",
+      "es": "Establece un mínimo garantizado en la reducción de daño, asegurando protección básica incluso si fallas el momento de la carga."
+    },
+    "item.qingxiao_blade.name": {
+      "zh_TW": "青霄",
+      "en": "Qingxiao",
+      "zh_CN": "青霄",
+      "ja": "青霄",
+      "ko": "청소",
+      "es": "Qingxiao"
+    },
+    "item.qingxiao_blade.desc": {
+      "zh_TW": "前世佩劍，劍脊一線青光。ATK +14、會心 +8%。",
+      "en": "A blade from a past life. ATK +14, crit +8%."
+    },
+    "item.soul_echo_bell.name": {
+      "zh_TW": "魂返鐘",
+      "en": "Soul Echo Bell",
+      "zh_CN": "魂返钟",
+      "ja": "魂返りの鐘",
+      "ko": "혼반종",
+      "es": "Campana del Alma"
+    },
+    "item.soul_echo_bell.desc": {
+      "zh_TW": "掌心大的銅鐘，內側刻亡者之名。必殺充能 +15%。",
+      "en": "A palm-sized bell. Ultimate charge +15%."
+    },
+    "stat.str.name": {
+      "zh_TW": "力量",
+      "en": "Strength",
+      "zh_CN": "力量",
+      "ja": "筋力",
+      "ko": "힘",
+      "es": "Fuerza"
+    },
+    "stat.str.desc": {
+      "zh_TW": "身體的力氣。",
+      "en": "Raw physical strength.",
+      "zh_CN": "身体的力气。",
+      "ja": "体の力。",
+      "ko": "몸의 힘.",
+      "es": "Fuerza física."
+    },
+    "stat.dex.name": {
+      "zh_TW": "靈巧",
+      "en": "Dexterity",
+      "zh_CN": "灵巧",
+      "ja": "器用さ",
+      "ko": "손재주",
+      "es": "Destreza"
+    },
+    "stat.dex.desc": {
+      "zh_TW": "手上的準頭與技巧。",
+      "en": "Precision and skill of the hands.",
+      "zh_CN": "手上的准头与技巧。",
+      "ja": "手先の正確さと技。",
+      "ko": "손의 정확함과 기술.",
+      "es": "Precisión y habilidad de las manos."
+    },
+    "stat.agi.name": {
+      "zh_TW": "敏捷",
+      "en": "Agility",
+      "zh_CN": "敏捷",
+      "ja": "素早さ",
+      "ko": "민첩",
+      "es": "Agilidad"
+    },
+    "stat.agi.desc": {
+      "zh_TW": "身手的快慢。",
+      "en": "Speed and quickness of movement.",
+      "zh_CN": "身手的快慢。",
+      "ja": "身のこなしの速さ。",
+      "ko": "몸놀림의 빠르기.",
+      "es": "Velocidad y rapidez de movimiento."
+    },
+    "stat.vit.name": {
+      "zh_TW": "體質",
+      "en": "Vitality",
+      "zh_CN": "体质",
+      "ja": "体力",
+      "ko": "체력",
+      "es": "Vitalidad"
+    },
+    "stat.vit.desc": {
+      "zh_TW": "身體的強韌與耐力。",
+      "en": "Toughness and stamina.",
+      "zh_CN": "身体的强韧与耐力。",
+      "ja": "体の頑丈さと持久力。",
+      "ko": "몸의 강인함과 지구력.",
+      "es": "Resistencia y aguante."
+    },
+    "stat.int.name": {
+      "zh_TW": "智力",
+      "en": "Intelligence",
+      "zh_CN": "智力",
+      "ja": "知力",
+      "ko": "지력",
+      "es": "Inteligencia"
+    },
+    "stat.int.desc": {
+      "zh_TW": "對氣與術法的理解。",
+      "en": "Understanding of qi and sorcery.",
+      "zh_CN": "对气与术法的理解。",
+      "ja": "気と術への理解。",
+      "ko": "기와 술법에 대한 이해.",
+      "es": "Comprensión del qi y la hechicería."
+    },
+    "stat.luk.name": {
+      "zh_TW": "幸運",
+      "en": "Luck",
+      "zh_CN": "幸运",
+      "ja": "運",
+      "ko": "행운",
+      "es": "Suerte"
+    },
+    "stat.luk.desc": {
+      "zh_TW": "命運的眷顧。",
+      "en": "The favour of fate.",
+      "zh_CN": "命运的眷顾。",
+      "ja": "運命の加護。",
+      "ko": "운명의 가호.",
+      "es": "El favor del destino."
+    },
+    "story.ch01.desc": {
+      "zh_TW": "塔下的村子邊緣，古井醒了過來。長老指向塔頂，問你為何舉劍。",
+      "en": "At the village below the tower, the old well has woken. The elder points to the top of the tower and asks why you raise your blade.",
+      "zh_CN": "塔下的村子边缘，古井醒了过来。长老指向塔顶，问你为何举剑。"
+    },
+    "story.ch02.desc": {
+      "zh_TW": "林線之後，霧開始有了重量。老巫師教你引氣，林中的陷阱與斷箭藏著一段舊事。",
+      "en": "Past the tree line the mist grows heavy. The old sorcerer teaches you to draw qi; snares and a broken arrow in the forest hide an old story.",
+      "zh_CN": "林线之后，雾开始有了重量。老巫师教你引气，林中的陷阱与断箭藏着一段旧事。"
+    },
+    "story.ch03.desc": {
+      "zh_TW": "城門前的道兵，鎧甲裡只剩一縷氣。門環上的刻痕與封印的拓本，指向守門者的過去。",
+      "en": "Before the gate, the soldiers' armour holds only a wisp of qi. A notch on the door ring and a rubbing of the seal point to the gatewarden's past.",
+      "zh_CN": "城门前的道兵，铠甲里只剩一缕气。门环上的刻痕与封印的拓本，指向守门者的过去。"
+    },
+    "story.ch04.desc": {
+      "zh_TW": "書庫外庭的門楣只剩半個「卷」字。骸骨學者守著殘頁，等人讀完他沒寫完的東西。",
+      "en": "The library's lintel keeps only half a word: “…scroll”. A skeleton scholar guards a torn page, waiting for someone to finish what he never wrote.",
+      "zh_CN": "书库外庭的门楣只剩半个「卷」字。骸骨学者守着残页，等人读完他没写完的东西。"
+    },
+    "mission.m_golem_slayer.title": {
+      "zh_TW": "石巨人退治",
+      "en": "Golem Slayer",
+      "zh_CN": "石巨人退治"
+    },
+    "mission.m_golem_slayer.desc": {
+      "zh_TW": "導師要你擊敗一隻石巨人。",
+      "en": "Your teacher asks you to defeat a golem.",
+      "zh_CN": "导师要你击败一只石巨人。"
+    },
+    "mission.m_daily_slime_bounty.title": {
+      "zh_TW": "史萊姆懸賞（每日）",
+      "en": "Daily Slime Bounty",
+      "zh_CN": "史莱姆悬赏（每日）"
+    },
+    "mission.m_daily_slime_bounty.desc": {
+      "zh_TW": "擊敗三隻史萊姆。每天重置。",
+      "en": "Defeat three slimes. Resets every day.",
+      "zh_CN": "击败三只史莱姆。每天重置。"
+    },
+    "mission.m_wraith_purge.title": {
+      "zh_TW": "驅除怨靈",
+      "en": "Wraith Purge",
+      "zh_CN": "驱除怨灵"
+    },
+    "mission.m_wraith_purge.desc": {
+      "zh_TW": "村長請你驅除三隻怨靈。",
+      "en": "The village elder asks you to drive away three wraiths.",
+      "zh_CN": "村长请你驱除三只怨灵。"
+    },
+    "player.tab.status": {
+      "zh_TW": "狀態",
+      "en": "Status",
+      "zh_CN": "状态",
+      "ja": "ステータス",
+      "ko": "상태",
+      "es": "Estado"
+    },
+    "player.tab.gear": {
+      "zh_TW": "裝備",
+      "en": "Equipment",
+      "zh_CN": "装备",
+      "ja": "装備",
+      "ko": "장비",
+      "es": "Equipo"
+    },
+    "player.tab.items": {
+      "zh_TW": "道具",
+      "en": "Items",
+      "zh_CN": "道具",
+      "ja": "アイテム",
+      "ko": "아이템",
+      "es": "Objetos"
+    },
+    "player.tab.events": {
+      "zh_TW": "事件",
+      "en": "Events",
+      "zh_CN": "事件",
+      "ja": "イベント",
+      "ko": "이벤트",
+      "es": "Eventos"
+    },
+    "player.tab.system": {
+      "zh_TW": "系統",
+      "en": "System",
+      "zh_CN": "系统",
+      "ja": "システム",
+      "ko": "시스템",
+      "es": "Sistema"
+    },
+    "player.hint": {
+      "zh_TW": "Q / E 切換分頁 · Esc 關閉",
+      "en": "Q / E: switch tabs · Esc: close",
+      "zh_CN": "Q / E 切换分页 · Esc 关闭",
+      "ja": "Q / E：タブ切替 · Esc：閉じる",
+      "ko": "Q / E: 탭 전환 · Esc: 닫기",
+      "es": "Q / E: cambiar pestaña · Esc: cerrar"
+    },
+    "status.combat": {
+      "zh_TW": "戰鬥數值",
+      "en": "Combat",
+      "zh_CN": "战斗数值",
+      "ja": "戦闘",
+      "ko": "전투",
+      "es": "Combate"
+    },
+    "status.gold": {
+      "zh_TW": "金幣",
+      "en": "Gold",
+      "zh_CN": "金币",
+      "ja": "ゴールド",
+      "ko": "골드",
+      "es": "Oro"
+    },
+    "status.floor": {
+      "zh_TW": "樓層",
+      "en": "Floor",
+      "zh_CN": "楼层",
+      "ja": "階層",
+      "ko": "층",
+      "es": "Piso"
+    },
+    "status.chapter": {
+      "zh_TW": "章節",
+      "en": "Chapter",
+      "zh_CN": "章节",
+      "ja": "章",
+      "ko": "장",
+      "es": "Capítulo"
+    },
+    "status.weapon": {
+      "zh_TW": "武器",
+      "en": "Weapon",
+      "zh_CN": "武器",
+      "ja": "武器",
+      "ko": "무기",
+      "es": "Arma"
+    },
+    "status.armor": {
+      "zh_TW": "防具",
+      "en": "Armor",
+      "zh_CN": "防具",
+      "ja": "防具",
+      "ko": "방어구",
+      "es": "Armadura"
+    },
+    "status.shards": {
+      "zh_TW": "記憶碎片",
+      "en": "Memory shards",
+      "zh_CN": "记忆碎片",
+      "ja": "記憶の欠片",
+      "ko": "기억 조각",
+      "es": "Fragmentos de memoria"
+    },
+    "status.story": {
+      "zh_TW": "心境",
+      "en": "State of mind",
+      "zh_CN": "心境",
+      "ja": "心境",
+      "ko": "심경",
+      "es": "Ánimo"
+    },
+    "status.attributes": {
+      "zh_TW": "屬性",
+      "en": "Attributes",
+      "zh_CN": "属性",
+      "ja": "能力値",
+      "ko": "능력치",
+      "es": "Atributos"
+    },
+    "status.attr_hint": {
+      "zh_TW": "點選一個屬性查看說明。",
+      "en": "Select an attribute to read about it.",
+      "zh_CN": "点选一个属性查看说明。",
+      "ja": "能力値を選ぶと説明が表示されます。",
+      "ko": "능력치를 선택하면 설명이 표시됩니다.",
+      "es": "Elige un atributo para leer sobre él."
+    },
+    "gear.worn": {
+      "zh_TW": "穿戴中",
+      "en": "Worn",
+      "zh_CN": "穿戴中",
+      "ja": "装備中",
+      "ko": "착용 중",
+      "es": "Equipado"
+    },
+    "gear.none": {
+      "zh_TW": "（無）",
+      "en": "(none)",
+      "zh_CN": "（无）",
+      "ja": "（なし）",
+      "ko": "(없음)",
+      "es": "(nada)"
+    },
+    "gear.empty": {
+      "zh_TW": "你還沒有{slot}。可以在商店購買，或在鍛造中製作。",
+      "en": "You have no {slot} yet. Buy one at the store or forge one.",
+      "zh_CN": "你还没有{slot}。可以在商店购买，或在锻造中制作。",
+      "ja": "{slot}をまだ持っていません。ショップで買うか、鍛造で作りましょう。",
+      "ko": "아직 {slot}이(가) 없습니다. 상점에서 사거나 단조로 만드세요.",
+      "es": "Aún no tienes {slot}. Cómpralo en la tienda o forjalo."
+    },
+    "gear.select": {
+      "zh_TW": "選擇一件裝備。",
+      "en": "Select a piece of gear.",
+      "zh_CN": "选择一件装备。",
+      "ja": "装備を選んでください。",
+      "ko": "장비를 선택하세요.",
+      "es": "Elige una pieza de equipo."
+    },
+    "gear.now": {
+      "zh_TW": "目前",
+      "en": "Now",
+      "zh_CN": "目前",
+      "ja": "現在",
+      "ko": "현재",
+      "es": "Ahora"
+    },
+    "gear.with": {
+      "zh_TW": "換上後",
+      "en": "With this",
+      "zh_CN": "换上后",
+      "ja": "装備後",
+      "ko": "장착 시",
+      "es": "Con esto"
+    },
+    "gear.equip": {
+      "zh_TW": "裝備",
+      "en": "Equip",
+      "zh_CN": "装备",
+      "ja": "装備する",
+      "ko": "장착",
+      "es": "Equipar"
+    },
+    "gear.unequip": {
+      "zh_TW": "卸下",
+      "en": "Unequip",
+      "zh_CN": "卸下",
+      "ja": "外す",
+      "ko": "해제",
+      "es": "Quitar"
+    },
+    "gear.ramp": {
+      "zh_TW": "蓄力時間",
+      "en": "Charge time",
+      "zh_CN": "蓄力时间",
+      "ja": "チャージ時間",
+      "ko": "충전 시간",
+      "es": "Tiempo de carga"
+    },
+    "gear.zone": {
+      "zh_TW": "判定帶",
+      "en": "Hit zone",
+      "zh_CN": "判定带",
+      "ja": "判定幅",
+      "ko": "판정 범위",
+      "es": "Zona de golpe"
+    },
+    "gear.mult": {
+      "zh_TW": "最高倍率",
+      "en": "Top power",
+      "zh_CN": "最高倍率",
+      "ja": "最大倍率",
+      "ko": "최대 배율",
+      "es": "Poder máx."
+    },
+    "gear.skill": {
+      "zh_TW": "技能",
+      "en": "Skill",
+      "zh_CN": "技能",
+      "ja": "スキル",
+      "ko": "스킬",
+      "es": "Habilidad"
+    },
+    "items.all": {
+      "zh_TW": "全部",
+      "en": "All",
+      "zh_CN": "全部",
+      "ja": "すべて",
+      "ko": "전체",
+      "es": "Todo"
+    },
+    "items.use": {
+      "zh_TW": "消耗",
+      "en": "Use",
+      "zh_CN": "消耗",
+      "ja": "消耗品",
+      "ko": "소모품",
+      "es": "Usar"
+    },
+    "items.have": {
+      "zh_TW": "持有",
+      "en": "You have",
+      "zh_CN": "持有",
+      "ja": "所持数",
+      "ko": "보유",
+      "es": "Tienes"
+    },
+    "items.price_value": {
+      "zh_TW": "{n} 金幣",
+      "en": "{n} gold",
+      "zh_CN": "{n} 金币",
+      "ja": "{n} ゴールド",
+      "ko": "{n} 골드",
+      "es": "{n} de oro"
+    },
+    "items.not_sold": {
+      "zh_TW": "—（非賣品）",
+      "en": "— (not sold)",
+      "zh_CN": "—（非卖品）",
+      "ja": "—（非売品）",
+      "ko": "— (비매품)",
+      "es": "— (no se vende)"
+    },
+    "items.select": {
+      "zh_TW": "選擇一個道具。",
+      "en": "Select an item.",
+      "zh_CN": "选择一个道具。",
+      "ja": "アイテムを選んでください。",
+      "ko": "아이템을 선택하세요.",
+      "es": "Elige un objeto."
+    },
+    "items.important": {
+      "zh_TW": "重要道具無法丟棄。",
+      "en": "Important items can't be dropped.",
+      "zh_CN": "重要道具无法丢弃。",
+      "ja": "大事なアイテムは捨てられません。",
+      "ko": "중요한 아이템은 버릴 수 없습니다.",
+      "es": "Los objetos importantes no se pueden descartar."
+    },
+    "items.worn": {
+      "zh_TW": "穿戴中的裝備無法丟棄。",
+      "en": "Worn gear can't be dropped.",
+      "zh_CN": "穿戴中的装备无法丢弃。",
+      "ja": "装備中のものは捨てられません。",
+      "ko": "착용 중인 장비는 버릴 수 없습니다.",
+      "es": "El equipo puesto no se puede descartar."
+    },
+    "items.drop_confirm": {
+      "zh_TW": "丟棄 {name}？丟棄後無法找回。",
+      "en": "Drop {name}? It is gone for good.",
+      "zh_CN": "丢弃 {name}？丢弃后无法找回。",
+      "ja": "{name}を捨てますか？元に戻せません。",
+      "ko": "{name}을(를) 버릴까요? 되돌릴 수 없습니다.",
+      "es": "¿Descartar {name}? No se puede recuperar."
+    },
+    "events.unfinished": {
+      "zh_TW": "未完成",
+      "en": "Unfinished",
+      "zh_CN": "未完成",
+      "ja": "未完了",
+      "ko": "미완료",
+      "es": "Pendientes"
+    },
+    "events.all": {
+      "zh_TW": "全部",
+      "en": "All",
+      "zh_CN": "全部",
+      "ja": "すべて",
+      "ko": "전체",
+      "es": "Todo"
+    },
+    "events.kind.chapter": {
+      "zh_TW": "主線",
+      "en": "Main",
+      "zh_CN": "主线",
+      "ja": "メイン",
+      "ko": "메인",
+      "es": "Principal"
+    },
+    "events.kind.mission": {
+      "zh_TW": "任務",
+      "en": "Quest",
+      "zh_CN": "任务",
+      "ja": "クエスト",
+      "ko": "퀘스트",
+      "es": "Misión"
+    },
+    "events.done": {
+      "zh_TW": "完成",
+      "en": "done",
+      "zh_CN": "完成",
+      "ja": "完了",
+      "ko": "완료",
+      "es": "hecho"
+    },
+    "events.empty_unfinished": {
+      "zh_TW": "目前沒有進行中的事件。",
+      "en": "Nothing in progress right now.",
+      "zh_CN": "目前没有进行中的事件。",
+      "ja": "進行中のものはありません。",
+      "ko": "진행 중인 것이 없습니다.",
+      "es": "No hay nada en curso."
+    },
+    "events.empty_all": {
+      "zh_TW": "還沒有任何紀錄。",
+      "en": "Nothing recorded yet.",
+      "zh_CN": "还没有任何记录。",
+      "ja": "まだ記録はありません。",
+      "ko": "아직 기록이 없습니다.",
+      "es": "Aún no hay registros."
+    },
+    "events.select": {
+      "zh_TW": "選擇一項查看詳細。",
+      "en": "Select an entry to read about it.",
+      "zh_CN": "选择一项查看详细。",
+      "ja": "項目を選ぶと詳細が表示されます。",
+      "ko": "항목을 선택하면 자세히 볼 수 있습니다.",
+      "es": "Elige una entrada para leer sobre ella."
+    },
+    "events.connected": {
+      "zh_TW": "相關事件",
+      "en": "Connected",
+      "zh_CN": "相关事件",
+      "ja": "関連",
+      "ko": "관련",
+      "es": "Relacionado"
+    },
+    "events.updated": {
+      "zh_TW": "事件紀錄已更新",
+      "en": "Event log updated",
+      "zh_CN": "事件记录已更新",
+      "ja": "記録が更新されました",
+      "ko": "기록이 갱신되었습니다",
+      "es": "Registro actualizado"
+    },
+    "system.fullscreen": {
+      "zh_TW": "全螢幕",
+      "en": "Fullscreen",
+      "zh_CN": "全屏",
+      "ja": "フルスクリーン",
+      "ko": "전체 화면",
+      "es": "Pantalla completa"
+    },
+    "system.on": {
+      "zh_TW": "開",
+      "en": "On",
+      "zh_CN": "开",
+      "ja": "オン",
+      "ko": "켜짐",
+      "es": "Sí"
+    },
+    "system.off": {
+      "zh_TW": "關",
+      "en": "Off",
+      "zh_CN": "关",
+      "ja": "オフ",
+      "ko": "꺼짐",
+      "es": "No"
+    },
+    "system.locked": {
+      "zh_TW": "尚未解鎖",
+      "en": "Not unlocked yet",
+      "zh_CN": "尚未解锁",
+      "ja": "未解放",
+      "ko": "잠김",
+      "es": "Bloqueado"
+    },
+    "system.select": {
+      "zh_TW": "選擇一項。",
+      "en": "Choose an option.",
+      "zh_CN": "选择一项。",
+      "ja": "項目を選んでください。",
+      "ko": "항목을 선택하세요.",
+      "es": "Elige una opción."
     }
   }
 }

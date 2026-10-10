@@ -39,10 +39,15 @@ EquipmentDefinition equipmentFromJson(const nlohmann::json& j) {
     d.name = j.contains("name") ? j["name"] : nlohmann::json(d.id);
     d.sprite = j.value("sprite", std::string());
     d.desc = j.contains("desc") ? j["desc"] : nlohmann::json("");
-    d.slot = equipmentSlotFromString(j.value("slot", std::string("weapon")));
-    if (j.contains("stat") && j["stat"].is_object()) {
-        d.statAtk = j["stat"].value("atk", 0);
-        d.statDef = j["stat"].value("def", 0);
+    // data/items.json (the all-item file) names the slot in "type" and the bonuses in "stats"; the
+    // older equipment.json shape ("slot", "stat") still reads the same.
+    d.slot = equipmentSlotFromString(j.value("slot", j.value("type", std::string("weapon"))));
+    const char* statKey = j.contains("stats") ? "stats" : "stat";
+    if (j.contains(statKey) && j[statKey].is_object()) {
+        d.statAtk = j[statKey].value("atk", 0);
+        d.statDef = j[statKey].value("def", 0);
+        for (auto it = j[statKey].begin(); it != j[statKey].end(); ++it)
+            if (it.value().is_number() && it.key() != "atk" && it.key() != "def") d.stats[it.key()] = it.value().get<int>();
     }
     if (j.contains("bar") && j["bar"].is_object()) {
         auto& b = j["bar"];

@@ -42,6 +42,9 @@ struct Player : public Trackable {
     // inventory: list of item ids (a 9-grid, extendable UI). Keys/coins are NOT
     // stored here (they apply immediately); usable items (gems/potions/exp/scroll) are.
     std::vector<std::string> inv;
+    // The attributes of data/stats.json (str, dex, agi, ...) by id: base + level-ups + items used.
+    // Worn equipment adds on top (Game::attrValue). Nothing in battle reads them yet.
+    std::map<std::string, int> attrs;
     Player() : hp(100), maxhp(100), atk(10), def(5), gold(0), exp(0), lv(1) {}
     TOMS_OBJECT(Player)
 };
@@ -133,25 +136,14 @@ struct CombatState : public Trackable {
     TOMS_OBJECT(CombatState)
 };
 
-// A store item, parsed from data/store.json. cost = cost_base * cost_multiplier^purchases.
+// A store entry, parsed from data/store.json: which item of data/items.json it sells and how its
+// price grows. cost = the item's "price" * growth^purchases (growth 2 doubles it each time, 1 keeps it).
 struct StoreItemDef {
-    std::string id;
-    // Raw json (either a plain string or a {code: text} multi-language map) -- resolved via
-    // Locale::field() at display time so a language switch updates the store instantly instead
-    // of needing loadStore() to re-run.
-    nlohmann::json name;
-    std::string sprite;       // sprite id (into the atlas) for the icon
-    std::string icon_path;    // original asset path stored in json
-    nlohmann::json desc;
-    nlohmann::json effect;     // {hp:..} / {str:..} / {def:..}
-    nlohmann::json effect_text;
-    int cost_base = 2;
-    int cost_multiplier = 2;
-    int purchases = 0;         // how many times already bought (drives the doubling price)
-    // Milestone 8: non-empty for a weapon/armor/talent sold here instead of a consumable --
-    // an id into equipmentDefs_. buyStoreItem() branches on this instead of applying `effect`.
-    std::string equipmentId;
-    int liveCost() const { int c = cost_base; for (int i=1;i<=purchases;i++) c *= cost_multiplier; return c; }
+    std::string id;            // an id in data/items.json (a consumable, or a weapon/armor/talent)
+    int price = 2;             // the item's "price", copied when the store loads
+    int growth = 2;
+    int purchases = 0;         // how many times already bought (drives the price growth)
+    int liveCost() const { int c = price; for (int i = 0; i < purchases; i++) c *= growth; return c; }
 };
 
 // M9 (stair alignment): which tile a stage load should place the player on. Every floor's
@@ -223,6 +215,8 @@ public:
     // actives it grants) that isn't purchasable/craftable through any content authored yet.
     // Silently does nothing for an unknown id, matching every other debug hook's fail-soft rule.
     bool debugEquip(const std::string& equipmentId);
+    // Test hook (toms_game --give=...): an item reaches the player as if picked up (receiveItem); "gold:<n>" adds gold.
+    void debugGive(const std::string& id);
     // Verification hook: runs the exact same
     // finishCombatLose() path a real battle loss would (noteDeath, the e_10/e_13 wipe-check,
     // ending trigger) without needing to actually lose `deathsNonBoss` real fights first.
@@ -248,19 +242,35 @@ public:
     // S7 (equipment actives, first slice): the 4th battle action -- a no-op unless the currently
     // equipped gear grants one (equippedActives()) and it hasn't been spent this battle already.
     void battleTapActive();
-    // inventory UI (9-grid, extendable)
+    // ---- the player menu (docs/20_PLAYER_MENU.md): the walking scene's one button (≡, Esc) ----
+    // Five tabs: Status, Equipment, Items, Events, System. Everything that was a button of its own
+    // (the backpack, the store button, the old ≡ list, the web page's fullscreen button) is in here.
+    enum class MenuTab { Status, Gear, Items, Events, System };
+    static constexpr int kMenuTabs = 5;
+    bool playerMenuOpen() const { return inGameMenuOpen_; }
+    MenuTab playerMenuTab() const { return menuTab_; }
+    void openPlayerMenu(int tab = -1);     // -1: the last tab used
+    void closePlayerMenu();
+    void playerMenuTab(int delta);         // Q / E / Tab: the previous / next tab
+    void playerMenuMove(int dx, int dy);   // arrows: move the selection on the current tab
+    void playerMenuActivate();             // Enter: the selected entry's first action
+    void playerMenuBack();                 // Esc: confirm -> sub-page -> close
+    // I: the Items tab (closes the menu when it is already on Items). The web harness calls it too.
     void toggleInventory();
-    void invMoveSel(int dx, int dy);        // move the selection cursor
-    bool invUseSelected();                 // use the highlighted item (returns true if used)
-    void invDropSelected();                // discard the highlighted item
-    bool inventoryOpen() const { return invOpen; }
+    bool inventoryOpen() const { return inGameMenuOpen_ && menuTab_ == MenuTab::Items; }
     const std::vector<std::string>& inventory() const { return pl.inv; }
-    int invSelection() const { return invSel; }
+    // The player's attribute `id` (data/stats.json) with worn equipment included.
+    int attrValue(const std::string& id) const;
+    const std::vector<std::string>& gearOwned() const { return gearOwned_; }
+    // Fullscreen lives on the host (an SDL window, the browser page): the host reports whether it
+    // can and whether it is on, and takes the player's request from the System tab's row.
+    void setFullscreenState(bool available, bool on) { fullscreenAvailable_ = available; fullscreenOn_ = on; }
+    bool takeFullscreenRequest() { const bool r = fullscreenRequest_; fullscreenRequest_ = false; return r; }
     // Milestone 7 bugfix: cs.won (the post-victory "press any key to continue" pause) must count
     // as a modal overlay too, not just cs.active -- otherwise the world underneath (movement,
     // NPC interact, the store icon, Tab/B shortcuts) keeps responding to input while the victory
     // screen is still up. See docs/progress_report/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
-    bool modalActive() const { return cs.active || cs.won || inDialogue || invOpen || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_ || endingActive(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu/ending)
+    bool modalActive() const { return cs.active || cs.won || inDialogue || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_ || endingActive(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu/ending)
     bool combatWon() const { return cs.won; }
     bool combatActive() const { return cs.active; }
     // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
@@ -302,9 +312,10 @@ public:
     // instantly-visible, freely-reversible preference).
     int cameraModeIndex() const { return cam_.modeIndex(); }
     void setCameraModeIndex(int m);
-    // In-game menu (walking-phase HUD gear icon): Save / Settings (language) / Back to Title.
+    // The player menu's System tab (the old in-game menu): Store, Skills, Forge, Village, Save,
+    // Settings, Fullscreen, Back to title. inGameMenuOpen() is true while the player menu is open.
     bool inGameMenuOpen() const { return inGameMenuOpen_; }
-    void openInGameMenu();
+    void openInGameMenu();             // the player menu on its System tab
     void inGameMenuMove(int delta);    // Up/Down or Left/Right
     void inGameMenuActivate();         // Enter/Space
     void inGameMenuBack();             // Esc: dialog->list, Settings->Main, Main->closed
@@ -557,6 +568,26 @@ private:
     void finishCombatLose();
     std::string itemName(const std::string& id) const;
     std::string itemDesc(const std::string& id) const;
+    // data/items.json lookups. txt(): a text.json key (the all-item file's name/desc) or an inline
+    // {lang: text} object, in the current language.
+    std::string txt(const nlohmann::json& j) const;
+    const nlohmann::json* itemDef(const std::string& id) const;
+    std::string itemType(const std::string& id) const;        // consumable | key | weapon | armor | talent | story
+    bool itemImportant(const std::string& id) const;
+    int itemPrice(const std::string& id) const;                // -1 = none
+    const nlohmann::json& itemStats(const std::string& id) const;
+    bool isGearType(const std::string& type) const { return type == "weapon" || type == "armor" || type == "talent"; }
+    // A new item reaches the player (picked up, a reward, a gift): keys and autoUse items (coins) apply
+    // at once, weapons / armor / talents join the owned gear, everything else goes into the backpack.
+    void receiveItem(const std::string& id);
+    // Applies an item's stats (hp, atk, def, gold, exp, keys, attributes, warp) to the player.
+    void applyStats(const std::string& id, const nlohmann::json& stats);
+    // Adds a weapon / armor / talent to the owned gear; equip = also wear it.
+    void ownGear(const std::string& id, bool equip);
+    void equipGear(const std::string& id);
+    // EXP, with as many level-ups as it pays for (data/stats.json "levelUp").
+    void gainExp(int exp);
+    void resetAttrs();                     // base + perLevel for each level above 1
     std::string itemSprite(const std::string& id) const;         // the item's icon (uiSprite name)
     // A sprite id (or "<id>.png") as the .rml files name it: <img data-attr-sprite="..."/>.
     std::string uiSprite(std::string id) const;
@@ -567,7 +598,20 @@ private:
     // The prebuilt atlas (<dir>/atlas/game.atlas from tools/atlas) for the style, if there is one.
     bool loadPrebuiltSpriteAtlas(int style);
     std::string itemEffectSummary(const std::string& id) const;  // "HP +40 • DEF +1"
-    void buildMenuUi(toms::UiMenu& out) const;                   // the in-game menu part of buildUiState
+    void buildMenuUi(toms::UiMenu& out) const;                   // the System tab part of buildUiState
+    void buildPlayerUi(toms::UiState& u) const;                  // the player menu (game_player_menu.cpp)
+    // The Items tab's grid / the Equipment tab's grid, in display order.
+    struct ItemCell { enum Kind { Inv, Key, Gear } kind; std::string id; int count = 1; };
+    std::vector<ItemCell> itemCells() const;
+    std::vector<std::string> gearCells() const;                  // owned gear of the selected slot
+    enum class ItemAction { Use, Equip, Unequip, Drop };
+    struct ItemButton { ItemAction action; bool enabled; };
+    std::vector<ItemButton> itemButtons(const ItemCell& c) const;
+    void runItemAction(const ItemCell& c, ItemAction a);
+    void playerMenuEvent(const std::string& name, int arg);   // the pm_* buttons of player.rml
+    // The Events tab: chapters reached and missions accepted, in progress first.
+    struct LogEntry { int kind = 0; std::string id, title, desc; bool done = false; };   // kind 0 chapter, 1 mission
+    std::vector<LogEntry> eventLog(bool all) const;
     // store system
     void loadStore(const std::string& assetDir);   // parse data/store.json
     // Milestone 8: the store's items are split into tabs of <=3 cards each. Returns the indices
@@ -640,11 +684,33 @@ private:
     std::vector<toms::ArtStyle> artStyles_{toms::ArtStyle{}};
     int loadedArtStyle_ = 0;                  // the one whose sprites were loaded at startup
     int spriteAtlasRevision_ = 0;             // +1 per atlas load (uiSpritesheet changed)
-    // item definitions (id -> json from data/items.json)
+    // item definitions (id -> json from data/items.json, the all-item file)
     std::map<std::string, nlohmann::json> itemDefs;
-    // inventory UI state
-    bool invOpen = false;
-    int invSel = 0;            // selected slot index
+    // data/stats.json: the attributes and the level-up numbers.
+    struct AttrDef { std::string id, shortName, nameKey, descKey; int base = 5, perLevel = 1; };
+    struct LevelUpRule { int expPerLevel = 30, atk = 2, def = 1, maxhp = 10, freePoints = 0; };
+    std::vector<AttrDef> attrDefs_;
+    LevelUpRule levelUp_;
+    // The weapons / armor / talents the player owns (bought or forged), in the order they were got.
+    std::vector<std::string> gearOwned_;
+    // ---- the player menu's state (inGameMenuOpen_ = it is open) ----
+    MenuTab menuTab_ = MenuTab::Status;
+    int attrSel_ = -1;          // Status: the attribute whose description shows (-1 none)
+    int gearSlot_ = 0;          // Equipment: 0 weapon, 1 armor
+    int gearSel_ = 0;
+    int itemFilter_ = 0;        // Items: 0 all, 1 consumables, 2 gear, 3 keys
+    int itemSel_ = 0;
+    int eventFilter_ = 0;       // Events: 0 unfinished, 1 all
+    int eventSel_ = 0;
+    bool dropConfirmOpen_ = false;
+    bool dropConfirmYes_ = false;
+    bool storeFromMenu_ = false;   // the store was opened from the System tab: closing it goes back there
+    // "Something new inside" dots on ≡ and on a tab.
+    bool newsStore_ = false, newsGear_ = false, newsEvents_ = false;
+    size_t eventLogSeen_ = 0;      // the event log's last count (+1; 0 = take it without news), update()
+    // data/story/counters.json's state words (insight, resolve, humanity), for the Status tab.
+    std::map<std::string, nlohmann::json> counterLabels_;
+    bool fullscreenAvailable_ = false, fullscreenOn_ = false, fullscreenRequest_ = false;
     // dialogue state
     bool inDialogue = false;
     int dlgSel = 0;                     // currently highlighted dialogue choice (gamepad nav)
@@ -837,9 +903,10 @@ private:
     // always-present rows) -- so draw and every input handler below call this ONE function instead
     // of separately re-deriving "is Forge row 3 or row 4 this time," the same principle
     // skillMenuOrder()/forgeMenuOrder() already apply to their own sub-pages.
-    enum class MainMenuRow { Save, Settings, Skills, Village, Forge, BackToTitle };
+    enum class MainMenuRow { Store, Save, Settings, Skills, Village, Forge, Fullscreen, BackToTitle };
     std::vector<MainMenuRow> mainMenuOrder() const;
     void closeInGameMenu();                // closes the whole menu (any page/dialog)
+    int mainMenuRowIndex(MainMenuRow r) const;   // its row on the System tab (0 if absent)
     // Saves, tears down transient modal/run-in-progress state, and reopens the title (the
     // inverse of newGame()/applyLoadedRun() -- see their resets for what this mirrors).
     void returnToTitle();

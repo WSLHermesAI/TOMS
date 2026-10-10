@@ -12,7 +12,7 @@
 
 | 路徑 | 內容 |
 |---|---|
-| `assets/media/ui/*.rml` | 每個畫面一份文件（`title`、`hud`、`pad`、`battle`、`dialogue`、`inventory`、`store`、`menu`、`dialogs`、`stage_select`、`ending`、`overlay`） |
+| `assets/media/ui/*.rml` | 每個畫面一份文件（`title`、`hud`、`pad`、`battle`、`dialogue`、`player`（玩家選單）、`store`、`dialogs`、`stage_select`、`ending`、`overlay`） |
 | `assets/media/ui/*.rcss` | 它們的樣式；`common.rcss` 放共用的樣式（按鈕、列、面板、色盤、捲軸） |
 | `assets/media/fonts/NotoSansCJKtc-TOMS.otf` | 桌機預設的 UI 字型：把 Noto Sans CJK TC 精簡到遊戲用到的字元（約 790 KB）。web 版沒有 |
 | `tools/make_ui_font.py` | 重建那個字型；`--check` 回報缺少的字元 |
@@ -34,7 +34,7 @@ Game::buildUiState(UiState&)     every frame: what to show (all text already tra
         |  data model "game"     {{battle.log}}, data-for="r, i : menu.rows", data-if="store.visible", ...
         v
 assets/media/ui/*.rml            layout + style
-        |  act('name', arg)      data-event-click="act('inv_use')", "act('menu_row', i)"
+        |  act('name', arg)      data-event-click="act('pm_btn', i)", "act('menu_row', i)"
         v
 Game::uiEvent(name, arg)         calls the same Game functions the keyboard uses
 ```
@@ -119,6 +119,11 @@ Game::uiEvent(name, arg)         calls the same Game functions the keyboard uses
    把文件和它的可見性判斷加進 `kDocs`。
 3. 在 `Game::buildUiState()` 中填入它，在 `Game::uiEvent()`（`game_ui.cpp`）中處理它的按鈕。
 4. 撰寫 `assets/media/ui/xxx.rml` + `.rcss`：連結 `common.rcss`，設定 `data-model="game"` 和 `z-index`。
+
+玩家選單（`player.rml`：狀態／裝備／道具／事件／系統；取代了 `inventory.rml` 和 `menu.rml`）就是照這些步驟做的：見
+[20_PLAYER_MENU.md](20_PLAYER_MENU.md) §8–9。它遵守兩條規則：`data-for` 放在外層包裝元素上，綁定放在裡面的元素上
+（綁定直接放在 `data-for` 元素上時，清單剛變短可能會讀到超出範圍的項目，並記錄「Data array index out of bounds」）；
+以及文件中隱藏部分綁定的每個清單，每個畫面都要填好。中文和日文沒有空格，用 `word-break: break-word` 讓沒有空格的一行也能換行。
 
 ## 不支援的功能
 

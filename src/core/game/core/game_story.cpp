@@ -58,7 +58,7 @@ void Game::runDialogueAction(const nlohmann::json& action) {
     std::string type = action.value("type", std::string());
     if (type == "give") {
         std::string itemId = action.value("itemId", std::string());
-        if (!itemId.empty()) applyItem(itemId);
+        if (!itemId.empty()) receiveItem(itemId);
     } else if (type == "setStoryFlag") {
         std::string flag = action.value("flag", std::string());
         if (!flag.empty()) toms::setStoryFlag(meta_, flag);
@@ -240,14 +240,7 @@ bool Game::tryCraft(const std::string& recipeId) {
             else ++it;
         }
     }
-    auto eqIt = equipmentDefs_.find(def.resultEquipmentId);
-    if (eqIt != equipmentDefs_.end()) {
-        switch (eqIt->second.slot) {
-            case toms::EquipmentSlot::Weapon: equipped_.weaponId = def.resultEquipmentId; break;
-            case toms::EquipmentSlot::Armor:  equipped_.armorId  = def.resultEquipmentId; break;
-            case toms::EquipmentSlot::Talent: equipped_.talentId = def.resultEquipmentId; break;
-        }
-    }
+    ownGear(def.resultEquipmentId, true);   // forged gear is owned and worn at once
     markProgressDirty();
     audio.play("get_item");
     return true;
@@ -285,11 +278,20 @@ bool Game::activateHubLocation(const std::string& locationId) {
 // the moment a second conditional row existed) -- the one function draw and every input handler
 // below share, so they can never disagree about which row index opens which page.
 std::vector<Game::MainMenuRow> Game::mainMenuOrder() const {
-    std::vector<MainMenuRow> rows = { MainMenuRow::Save, MainMenuRow::Settings, MainMenuRow::Skills };
-    if (hubMenuUnlocked())   rows.push_back(MainMenuRow::Village);
+    std::vector<MainMenuRow> rows = { MainMenuRow::Store, MainMenuRow::Skills };
     if (forgeMenuUnlocked()) rows.push_back(MainMenuRow::Forge);
+    if (hubMenuUnlocked())   rows.push_back(MainMenuRow::Village);
+    rows.push_back(MainMenuRow::Save);
+    rows.push_back(MainMenuRow::Settings);
+    if (fullscreenAvailable_) rows.push_back(MainMenuRow::Fullscreen);   // not on Android: always full screen
     rows.push_back(MainMenuRow::BackToTitle);
     return rows;
+}
+
+int Game::mainMenuRowIndex(MainMenuRow r) const {
+    auto order = mainMenuOrder();
+    auto it = std::find(order.begin(), order.end(), r);
+    return it == order.end() ? 0 : (int)std::distance(order.begin(), it);
 }
 
 void Game::startMission(const std::string& id) {
@@ -308,21 +310,12 @@ void Game::claimMission(const std::string& id) {
     auto defIt = missionDefs_.find(id);
     if (defIt != missionDefs_.end()) {
         const toms::MissionDefinition& def = defIt->second;
-        pl.exp += def.rewardExp;
         pl.gold += def.rewardGold;
         // Mirrors movePlayer()'s item-pickup split: keys/coins apply immediately, everything
         // else (gems/potions/exp/scroll) goes into the inventory to be used later, not consumed
         // on the spot -- a reward potion should sit in the backpack like a picked-up one would.
-        if (!def.rewardItemId.empty()) {
-            bool immediate = (def.rewardItemId.rfind("key_",0)==0) || def.rewardItemId=="coin";
-            if (immediate) applyItem(def.rewardItemId);
-            else pl.inv.push_back(def.rewardItemId);
-        }
-        int need = pl.lv * 30;
-        while (pl.exp >= need) {
-            pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30;
-            pushNotification(locale_.tr("battle.levelup") + std::to_string(pl.lv));
-        }
+        if (!def.rewardItemId.empty()) receiveItem(def.rewardItemId);
+        gainExp(def.rewardExp);
     }
     trackerIt->second.state = toms::MissionState::Claimed;
     pushNotification(locale_.tr("mission.completed_prefix") + id);
@@ -417,8 +410,10 @@ bool Game::rebirth() {
     pl.gold = 0; pl.exp = 0; pl.lv = 1;
     pl.key_yellow = pl.key_blue = pl.key_red = 0;
     pl.inv.clear();
+    resetAttrs();
     equipped_ = toms::EquippedSet{};
-    equipped_.weaponId = "wand";
+    gearOwned_.clear();
+    ownGear("wand", true);
 
     activeEndingId_.clear();
     entityStatus_.clear();

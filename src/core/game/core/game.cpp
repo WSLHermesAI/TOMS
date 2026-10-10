@@ -67,17 +67,11 @@ void Game::setCameraModeIndex(int m) {
 
 
 std::vector<int> Game::storeTabIndices() const {
+    // The tab is the item's type (data/items.json): 0 consumables, 1 weapons, 2 armor, 3 talents.
     std::vector<int> out;
     for (int i = 0; i < (int)storeItems_.size(); i++) {
-        const StoreItemDef& d = storeItems_[i];
-        int tab;
-        if (d.equipmentId.empty()) {
-            tab = 0;   // potions / plain consumables
-        } else {
-            auto it = equipmentDefs_.find(d.equipmentId);
-            toms::EquipmentSlot slot = (it != equipmentDefs_.end()) ? it->second.slot : toms::EquipmentSlot::Weapon;
-            tab = (slot == toms::EquipmentSlot::Weapon) ? 1 : (slot == toms::EquipmentSlot::Armor) ? 2 : 3;
-        }
+        const std::string type = itemType(storeItems_[i].id);
+        const int tab = type == "weapon" ? 1 : type == "armor" ? 2 : type == "talent" ? 3 : 0;
         if (tab == storeTab_) out.push_back(i);
     }
     return out;
@@ -128,6 +122,11 @@ void Game::newGame(int slot) {
     pl = Player();
     pl.maxhp = kStartingHp; pl.hp = kStartingHp; pl.atk = kStartingAtk; pl.def = kStartingDef; pl.gold = 0; pl.exp = 0; pl.lv = 1;
     pl.inv = {"potion_red", "potion_blue", "exp_up"};
+    resetAttrs();
+    equipped_ = toms::EquippedSet{};
+    gearOwned_.clear();
+    newsStore_ = newsGear_ = newsEvents_ = false;
+    eventLogSeen_ = 0;
     pl.x = 1; pl.y = 1;
     entityStatus_.clear();
     run_.reset();   // S3: a new game is a fresh run -- choices/counters/side stories/floors/deaths
@@ -136,7 +135,8 @@ void Game::newGame(int slot) {
     notifications_.clear();
     cs = CombatState{};
     inDialogue = false; dlgChoices.clear(); dlgNode = "root";
-    invOpen = false; storeOpen = false; storeUnlockDlg = false;
+    if (inGameMenuOpen_) closePlayerMenu();
+    storeOpen = false; storeUnlockDlg = false; storeFromMenu_ = false;
     stageSelectOpen_ = false; stairsConfirmOpen_ = false;
     playTimeSec_ = 0;
     if (slot > 0) {
@@ -176,6 +176,18 @@ void Game::update(int dtMs) {
     // S3.5 (c): the act card fades out on its own; everything it shows is also on screen elsewhere
     // (the HUD carries the floor), so a player who ignores it loses nothing.
     if (chapterCardMs_ > 0.0f) chapterCardMs_ = std::max(0.0f, chapterCardMs_ - (float)dtMs);
+    // The player menu's Events tab: an entry that appears or finishes lights a dot on ≡ (and on the
+    // tab) and says so once. A load or a new game only takes the count (eventLogSeen_ = 0 there).
+    if (!title_.isOpen()) {
+        size_t sig = 0;
+        for (const LogEntry& e : eventLog(true)) sig += e.done ? 1000 : 1;
+        if (eventLogSeen_ == 0) eventLogSeen_ = sig + 1;
+        else if (sig + 1 != eventLogSeen_) {
+            eventLogSeen_ = sig + 1;
+            if (!(inGameMenuOpen_ && menuTab_ == MenuTab::Events)) newsEvents_ = true;
+            pushNotification(locale_.tr("events.updated"));
+        }
+    }
     // Title phase: the run's clock only advances while actually playing, and a changed run is
     // flushed to its slot on a throttle (see kAutosaveIntervalMs) rather than on every event --
     // one atomic write per few seconds instead of one per pickup.

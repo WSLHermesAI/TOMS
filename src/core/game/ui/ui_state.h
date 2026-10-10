@@ -52,10 +52,9 @@ struct UiHud {
     std::string title_line;            // "魔法塔 — <floor> (n/70)"
     float hp_pct = 0;                  // 0..100
     std::string hp_text, stats_line, res_line, footer;
-    bool icons = false;                // menu + store buttons (hidden while the in-game menu is up)
-    bool store_unlocked = false;
-    std::string store_label, menu_label;
-    std::string store_icon;            // the store button's coin: a sprite name (_atlas.rcss)
+    // The walking scene's one button, ≡: it opens the player menu (docs/20_PLAYER_MENU.md).
+    std::string menu_label;
+    bool menu_news = false;            // a dot on it: something new inside (store, gear, events, skill points)
     bool chapter_card = false;
     std::string chapter_title, chapter_sub;
     float chapter_alpha = 0;           // 0..1, fades out
@@ -98,19 +97,68 @@ struct UiDialogue {
     float side = 40.0f;                // the box's left/right margin in design px, so that scaled it still fits the screen
 };
 
-struct UiInvItem {
-    std::string icon, name, effect;    // icon: a sprite name (_atlas.rcss)
-    bool selected = false;
+// ---- the player menu (player.rml): Status / Equipment / Items / Events / System ----
+struct UiTab {                         // a tab, or a filter chip
+    std::string label;
+    bool active = false;
+    bool news = false;                 // a dot: something new on it
 };
 
-struct UiInventory {
+struct UiCell {                        // one cell of a 3-per-row grid (Items, Equipment)
+    std::string icon, name, badge;     // icon: a sprite name; badge: "x2" / ""
+    bool selected = false, worn = false, locked = false;   // locked: an important item (cannot be dropped)
+};
+
+struct UiLine {                        // "label  value" (and, comparing gear, "-> extra")
+    std::string label, value, extra;
+    int tone = 0;                      // the comparison: 1 better, -1 worse, 0 the same / not compared
+};
+
+struct UiButton {
+    std::string label;
+    bool enabled = true;
+};
+
+struct UiPlayer {
     bool visible = false;
-    std::string title, hint, empty_title, empty_hint, detail_title;
-    std::string use_label, drop_label, close_label, footer_hint, icon_label, stats_label;
-    bool empty = true;
-    std::vector<UiInvItem> items;
-    std::string d_icon, d_name, d_id, d_icon_file, d_desc;   // the selected item's detail pane
-    std::vector<std::string> d_pills;
+    int tab = 0;                       // 0 status, 1 equipment, 2 items, 3 events, 4 system
+    std::vector<UiTab> tabs;
+    std::string hint, close_label;
+    // Status
+    std::string level, hp_text, exp_text;
+    float hp_pct = 0, exp_pct = 0;
+    std::string combat_title, attr_title, attr_desc;
+    std::vector<UiLine> combat;        // ATK, DEF, Gold, Keys, Floor, Chapter
+    std::vector<UiLine> more;          // Weapon, Armor, Skills, Memory shards, State of mind
+    std::vector<UiRow> attrs;          // label "STR  力量", sub = the value
+    // Equipment and Items: filter chips, the grid, the selected entry
+    std::vector<UiTab> filters;
+    std::string worn_title;
+    std::vector<UiLine> worn;          // Equipment: what each slot wears (click = that slot)
+    std::vector<UiCell> cells;
+    std::string empty_text;            // the grid is empty
+    bool detail = false;               // an entry is selected
+    std::string select_hint;           // ... and when none is
+    std::string d_icon, d_name, d_desc, d_note;
+    std::vector<UiLine> d_lines;       // Effect, Price, You have
+    bool d_compare = false;            // gear: compared with what is worn now
+    std::string d_now_label, d_with_label;
+    std::vector<UiLine> d_compare_lines;
+    std::vector<UiButton> d_buttons;   // Use / Equip / Unequip / Drop
+    // "Drop <item>?"
+    bool confirm_open = false;
+    std::string confirm_question, yes_label, no_label;
+    bool confirm_yes = false;
+    // Events (its own lists: every tab's data is there every frame, so a hidden tab never reads a
+    // list that another tab emptied)
+    std::vector<UiTab> ev_filters;     // Unfinished (n) / All (n)
+    std::vector<UiRow> ev_rows;        // label: the mark and the title; sub: "done"; enabled=false: finished (greyed)
+    bool ev_detail = false;
+    std::string ev_empty, ev_hint;
+    std::string ev_kind, ev_title, ev_desc, ev_connected_title;
+    std::vector<std::string> ev_connected;
+    // System: its rows and pages are menu.* (UiMenu)
+    std::string sys_hint;
 };
 
 struct UiStoreTab { std::string label; bool active = false; };
@@ -130,11 +178,12 @@ struct UiStore {
     std::string unlocked_title, unlocked_body, unlocked_ok;
 };
 
-struct UiMenu {                        // in-game menu (Esc / the ≡ button)
+struct UiMenu {                        // the player menu's System tab (the old in-game menu)
     bool visible = false;
     int page = 0;                      // 0 main, 1 settings, 2 skills, 3 forge, 4 village
-    std::string header, subheader;
-    std::vector<UiRow> rows;
+    std::vector<UiRow> main_rows;      // the left list: Store, Skills, ... Back to title (always)
+    std::string header, subheader;     // the open page (page != 0), shown on the right
+    std::vector<UiRow> rows;           // its rows
     std::string close_label;           // main page: Close; sub-pages: Back
     bool confirm_open = false;         // "Switch to <language>?" / "Switch the art style to ...?"
     std::string confirm_question, confirm_body, yes_label, no_label;
@@ -170,7 +219,7 @@ struct UiState {
     UiHud hud;
     UiBattle battle;
     UiDialogue dialogue;
-    UiInventory inventory;
+    UiPlayer player;
     UiStore store;
     UiMenu menu;
     UiStairs stairs;

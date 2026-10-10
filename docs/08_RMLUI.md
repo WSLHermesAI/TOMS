@@ -10,7 +10,7 @@ is the same on desktop and web.
 
 | Path | What it is |
 |---|---|
-| `assets/media/ui/*.rml` | one document per screen (`title`, `hud`, `pad`, `battle`, `dialogue`, `inventory`, `store`, `menu`, `dialogs`, `stage_select`, `ending`, `overlay`) |
+| `assets/media/ui/*.rml` | one document per screen (`title`, `hud`, `pad`, `battle`, `dialogue`, `player` (the player menu), `store`, `dialogs`, `stage_select`, `ending`, `overlay`) |
 | `assets/media/ui/*.rcss` | their styles; `common.rcss` holds the shared ones (buttons, rows, panels, palette, scrollbars) |
 | `assets/media/fonts/NotoSansCJKtc-TOMS.otf` | desktop's default UI font: Noto Sans CJK TC cut down to the characters the game uses (about 790 KB). Not in the web build |
 | `tools/make_ui_font.py` | rebuilds that font; `--check` reports characters it lacks |
@@ -32,7 +32,7 @@ Game::buildUiState(UiState&)     every frame: what to show (all text already tra
         |  data model "game"     {{battle.log}}, data-for="r, i : menu.rows", data-if="store.visible", ...
         v
 assets/media/ui/*.rml            layout + style
-        |  act('name', arg)      data-event-click="act('inv_use')", "act('menu_row', i)"
+        |  act('name', arg)      data-event-click="act('pm_btn', i)", "act('menu_row', i)"
         v
 Game::uiEvent(name, arg)         calls the same Game functions the keyboard uses
 ```
@@ -116,6 +116,12 @@ correctly on desktop yet; RmlUi's HarfBuzz font engine would add that later. On 
    add the document to `kDocs` with its visibility test.
 3. Fill it in `Game::buildUiState()` and handle its buttons in `Game::uiEvent()` (`game_ui.cpp`).
 4. Write `assets/media/ui/xxx.rml` + `.rcss`: link `common.rcss`, set `data-model="game"` and a `z-index`.
+
+The player menu (`player.rml`: Status / Equipment / Items / Events / System; it replaced `inventory.rml` and `menu.rml`)
+was built this way: see [20_PLAYER_MENU.md](20_PLAYER_MENU.md) §8–9. Two rules it follows: put `data-for` on a wrapper
+element and the bindings on the element inside it (a binding on the `data-for` element itself can read past the end
+of a list that just shrank and log "Data array index out of bounds"); and fill every list a hidden part of a document
+binds, every frame. For Chinese and Japanese text, `word-break: break-word` lets a line without spaces wrap.
 
 ## Not supported
 

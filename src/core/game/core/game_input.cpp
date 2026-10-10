@@ -165,9 +165,7 @@ void Game::movePlayer(int dx, int dy) {
             } else if (e.kind.rfind("item:",0)==0) {
                 // Keys/coins apply immediately (not stored in the 9-grid UI).
                 // Usable items (gems/potions/exp/scroll) go into the inventory.
-                bool immediate = (e.id.rfind("key_",0)==0) || e.id=="coin";
-                if (immediate) applyItem(e.id);
-                else pl.inv.push_back(e.id);
+                receiveItem(e.id);
                 e.consumed = true;
                 st.tiles[e.y][e.x] = '.'; // clear from grid
                 // Milestone 7: persist the clear so it survives a reload of this floor (stairs
@@ -317,13 +315,8 @@ bool Game::debugStartNearestBattle() {
 }
 
 bool Game::debugEquip(const std::string& equipmentId) {
-    auto it = equipmentDefs_.find(equipmentId);
-    if (it == equipmentDefs_.end()) return false;
-    switch (it->second.slot) {
-        case toms::EquipmentSlot::Weapon: equipped_.weaponId = equipmentId; break;
-        case toms::EquipmentSlot::Armor:  equipped_.armorId  = equipmentId; break;
-        case toms::EquipmentSlot::Talent: equipped_.talentId = equipmentId; break;
-    }
+    if (equipmentDefs_.find(equipmentId) == equipmentDefs_.end()) return false;
+    ownGear(equipmentId, true);
     return true;
 }
 

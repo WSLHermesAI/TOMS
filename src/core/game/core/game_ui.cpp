@@ -57,7 +57,7 @@ std::string Game::uiSpritesheet() const {
 std::vector<std::string> Game::missingUiSprites() const {
     std::vector<std::string> names(SPRITE_ORDER, SPRITE_ORDER + N_SPRITES);
     for (const auto& kv : itemDefs) names.push_back(kv.second.value("sprite", std::string()));
-    for (const StoreItemDef& s : storeItems_) names.push_back(s.sprite);
+
     std::vector<std::string> missing;
     for (std::string n : names) {
         if (n.empty()) continue;
@@ -94,18 +94,21 @@ std::string Game::itemSprite(const std::string& id) const {
 }
 
 std::string Game::itemEffectSummary(const std::string& id) const {
-    auto it = itemDefs.find(id);
-    if (it == itemDefs.end() || !it->second.contains("effect")) return locale_.tr("inventory.no_effect");
-    const nlohmann::json& eff = it->second["effect"];
+    // "HP +40 • ATK +1 • STR +2": the item's stats (data/items.json), in a fixed order, then the
+    // attributes of data/stats.json by their short names.
+    const nlohmann::json& eff = itemStats(id);
     std::vector<std::string> parts;
-    auto add = [&](const char* key, const char* label) {
-        if (eff.contains(key)) {
+    auto add = [&](const std::string& key, const std::string& label) {
+        if (eff.contains(key) && eff[key].is_number()) {
             int v = eff[key].get<int>();
-            parts.push_back(std::string(label) + (v >= 0 ? " +" : " ") + std::to_string(v));
+            if (v == 0 && isGearType(itemType(id))) return;   // a worn piece's "atk: 0" says nothing
+            parts.push_back(label + (v >= 0 ? " +" : " ") + std::to_string(v));
         }
     };
-    add("str", "STR"); add("atk", "ATK"); add("def", "DEF"); add("hp", "HP"); add("mp", "MP");
-    add("exp", "EXP"); add("gold", "Gold");
+    add("hp", "HP"); add("maxhp", "Max HP"); add("atk", "ATK"); add("def", "DEF");
+    add("exp", "EXP"); add("gold", locale_.tr("status.gold"));
+    for (const char* k : {"key_yellow", "key_blue", "key_red"}) add(k, itemName(k));
+    for (const AttrDef& a : attrDefs_) add(a.id, a.shortName);
     if (eff.contains("warp")) parts.push_back("Warp");
     if (parts.empty()) parts.push_back(locale_.tr("inventory.no_effect"));
     std::string out;
@@ -218,13 +221,12 @@ void Game::buildUiState(toms::UiState& u) const {
     const bool showStore = storeModal();
     const bool showBattle = !showStore && (hideMask & 1) == 0 && (cs.active || cs.won || cs.resultPauseMs > 0);
     const bool showTalk = !showStore && !showBattle && (hideMask & 2) == 0 && inDialogue;
-    const bool showInv = !showStore && !showBattle && !showTalk && (hideMask & 4) == 0 && invOpen;
-    const bool showWalk = !showStore && !showBattle && !showTalk && !showInv;
+    const bool showWalk = !showStore && !showBattle && !showTalk;
 
     // ---- HUD (over the map) ----
     if (showWalk) {
         toms::UiHud& h = u.hud;
-        h.visible = true;
+        h.visible = !inGameMenuOpen_;   // the player menu covers the screen
         h.title_line = L.tr("game.title") + " — " + st.name + " (" + std::to_string(st.index) + "/" +
                        std::to_string(totalStages) + ")";
         h.hp_pct = pct((float)pl.hp, (float)pl.maxhp);
@@ -232,7 +234,7 @@ void Game::buildUiState(toms::UiState& u) const {
         h.stats_line = "ATK " + std::to_string(pl.atk) + "   DEF " + std::to_string(pl.def) + "   LV " + std::to_string(pl.lv);
         h.res_line = "GOLD " + std::to_string(pl.gold) + "   EXP " + std::to_string(pl.exp) + "   " + L.tr("hud.keys") +
                      " Y" + std::to_string(pl.key_yellow) + " B" + std::to_string(pl.key_blue) + " R" +
-                     std::to_string(pl.key_red) + "   " + L.tr("hud.items") + " x" + std::to_string(pl.inv.size()) + " (I)";
+                     std::to_string(pl.key_red);
         // The floor's story line: its intro, then its ambient lines as the player moves.
         h.footer = st.story_note;
         if (!storyIntroKey_.empty()) {
@@ -242,11 +244,8 @@ void Game::buildUiState(toms::UiState& u) const {
             std::string tr = L.tr(key);
             if (!tr.empty() && tr.rfind("story.", 0) != 0) h.footer = tr;
         }
-        h.icons = !inGameMenuOpen_;
-        h.store_unlocked = storeUnlocked_;
-        h.store_label = L.tr("store.icon_label");
-        h.store_icon = uiSprite("coin");
         h.menu_label = L.tr("ingame_menu.title");
+        h.menu_news = newsStore_ || newsGear_ || newsEvents_ || run_.skillPoints() > 0;
         if (chapterCardMs_ > 0.0f && !chapterCardTitle_.empty()) {
             h.chapter_card = true;
             h.chapter_title = chapterCardTitle_;
@@ -271,7 +270,7 @@ void Game::buildUiState(toms::UiState& u) const {
             u.stairs.yes_label = L.tr("menu.yes") + " (Enter)";
             u.stairs.no_label = L.tr("menu.no") + " (Esc)";
         }
-        if (inGameMenuOpen_) buildMenuUi(u.menu);
+        if (inGameMenuOpen_) buildPlayerUi(u);
         if (stageSelectOpen_) {
             toms::UiStageSelect& s = u.stage_select;
             s.visible = true;
@@ -350,44 +349,6 @@ void Game::buildUiState(toms::UiState& u) const {
             d.choices.push_back({dlgChoices[i].label, "", (int)i == dlgSel, true});
     }
 
-    // ---- inventory ----
-    if (showInv) {
-        toms::UiInventory& v = u.inventory;
-        v.visible = true;
-        v.title = L.tr("inventory.title");
-        v.hint = L.tr("inventory.hint");
-        v.empty_title = L.tr("inventory.empty_title");
-        v.empty_hint = L.tr("inventory.empty_hint");
-        v.detail_title = L.tr("inventory.detail_title");
-        v.use_label = L.tr("inventory.use");
-        v.drop_label = L.tr("inventory.drop");
-        v.close_label = L.tr("inventory.close");
-        v.footer_hint = L.tr("inventory.footer_hint");
-        v.icon_label = L.tr("inventory.icon_label");
-        v.stats_label = L.tr("inventory.stats_label");
-        v.empty = pl.inv.empty();
-        for (size_t i = 0; i < pl.inv.size(); i++)
-            v.items.push_back({itemSprite(pl.inv[i]), itemName(pl.inv[i]), itemEffectSummary(pl.inv[i]), (int)i == invSel});
-        if (!pl.inv.empty()) {
-            const std::string& id = pl.inv[std::max(0, std::min(invSel, (int)pl.inv.size() - 1))];
-            v.d_icon = itemSprite(id);
-            v.d_name = itemName(id);
-            v.d_id = "ID: " + id;
-            auto it = itemDefs.find(id);
-            v.d_icon_file = it == itemDefs.end() ? "" : it->second.value("sprite", std::string());
-            v.d_desc = itemDesc(id);
-            if (it != itemDefs.end() && it->second.contains("effect")) {
-                const nlohmann::json& eff = it->second["effect"];
-                static const char* keys[][2] = {{"str", "STR"}, {"atk", "ATK"}, {"def", "DEF"}, {"hp", "HP"},
-                                                {"mp", "MP"}, {"exp", "EXP"}, {"gold", "Gold"}};
-                for (auto& k : keys)
-                    if (eff.contains(k[0])) v.d_pills.push_back(std::string(k[1]) + " +" + std::to_string(eff[k[0]].get<int>()));
-                if (eff.contains("warp")) v.d_pills.push_back("Warp");
-            }
-            if (v.d_pills.empty()) v.d_pills.push_back(L.tr("inventory.no_effect"));
-        }
-    }
-
     // ---- store ----
     if (storeOpen) {
         toms::UiStore& s = u.store;
@@ -405,16 +366,17 @@ void Game::buildUiState(toms::UiState& u) const {
         const std::vector<int> idx = storeTabIndices();
         for (size_t i = 0; i < idx.size(); i++) {
             const StoreItemDef& d = storeItems_[idx[i]];
+            const bool gear = isGearType(itemType(d.id));
+            const bool owned = gear && std::find(gearOwned_.begin(), gearOwned_.end(), d.id) != gearOwned_.end();
             toms::UiStoreItem it;
-            it.icon = uiSprite(d.sprite);
-            it.name = L.field(d.name);
-            it.desc = L.field(d.desc);
-            it.effect = L.field(d.effect_text);
-            it.equipped = !d.equipmentId.empty() && (d.equipmentId == equipped_.weaponId ||
-                          d.equipmentId == equipped_.armorId || d.equipmentId == equipped_.talentId);
-            it.status = !d.equipmentId.empty() ? L.tr(it.equipped ? "store.equipped" : "store.tap_to_equip")
-                                               : L.tr("store.purchased_label") + " x" + std::to_string(d.purchases);
-            it.price = std::to_string(d.liveCost());
+            it.icon = itemSprite(d.id);
+            it.name = itemName(d.id);
+            it.desc = itemDesc(d.id);
+            it.effect = itemEffectSummary(d.id);
+            it.equipped = gear && (d.id == equipped_.weaponId || d.id == equipped_.armorId || d.id == equipped_.talentId);
+            it.status = gear ? L.tr(it.equipped ? "store.equipped" : "store.tap_to_equip")
+                             : L.tr("store.purchased_label") + " x" + std::to_string(d.purchases);
+            it.price = owned ? "-" : std::to_string(d.liveCost());
             it.selected = (int)i == storeSel_;
             s.items.push_back(it);
         }
@@ -439,24 +401,46 @@ void Game::buildMenuUi(toms::UiMenu& m) const {
     m.no_label = L.tr("menu.no");
     m.close_label = L.tr("menu.back");
     auto sel = [&](size_t i) { return (int)i == inGameMenuSel_; };
+    // The left list is always there; a page (Settings, Skills, Forge, Village) opens on the right,
+    // and while it is open the keyboard moves on its rows and the row that opened it stays lit.
+    {
+        auto order = mainMenuOrder();
+        int lit = inGameMenuSel_;
+        if (inGameMenuPage_ == InGameMenuPage::Settings) lit = mainMenuRowIndex(MainMenuRow::Settings);
+        if (inGameMenuPage_ == InGameMenuPage::Skills)   lit = mainMenuRowIndex(MainMenuRow::Skills);
+        if (inGameMenuPage_ == InGameMenuPage::Forge)    lit = mainMenuRowIndex(MainMenuRow::Forge);
+        if (inGameMenuPage_ == InGameMenuPage::Hub)      lit = mainMenuRowIndex(MainMenuRow::Village);
+        for (size_t i = 0; i < order.size(); i++) {
+            toms::UiRow r;
+            switch (order[i]) {
+                case MainMenuRow::Store:
+                    r.label = L.tr("store.icon_label");
+                    r.enabled = storeUnlocked_;
+                    if (!storeUnlocked_) r.sub = L.tr("system.locked");
+                    else if (newsStore_) r.sub = "•";
+                    break;
+                case MainMenuRow::Save:        r.label = L.tr("ingame_menu.save"); break;
+                case MainMenuRow::Settings:    r.label = L.tr("menu.settings"); break;
+                case MainMenuRow::Skills:
+                    r.label = L.tr("ingame_menu.skills");
+                    if (run_.skillPoints() > 0) r.sub = trParam(L.tr("skill.points_label"), "n", std::to_string(run_.skillPoints()));
+                    break;
+                case MainMenuRow::Village:     r.label = L.tr("ingame_menu.village"); break;
+                case MainMenuRow::Forge:       r.label = L.tr("ingame_menu.forge"); break;
+                case MainMenuRow::Fullscreen:
+                    r.label = L.tr("system.fullscreen");
+                    r.sub = L.tr(fullscreenOn_ ? "system.on" : "system.off");
+                    break;
+                case MainMenuRow::BackToTitle: r.label = L.tr("ingame_menu.back_to_title"); break;
+            }
+            r.selected = (int)i == lit;
+            m.main_rows.push_back(r);
+        }
+    }
     switch (inGameMenuPage_) {
         case InGameMenuPage::Main: {
             m.page = 0;
-            m.header = L.tr("ingame_menu.title");
             m.close_label = L.tr("inventory.close");
-            auto order = mainMenuOrder();
-            for (size_t i = 0; i < order.size(); i++) {
-                const char* key = "ingame_menu.save";
-                switch (order[i]) {
-                    case MainMenuRow::Save:        key = "ingame_menu.save"; break;
-                    case MainMenuRow::Settings:    key = "menu.settings"; break;
-                    case MainMenuRow::Skills:      key = "ingame_menu.skills"; break;
-                    case MainMenuRow::Village:     key = "ingame_menu.village"; break;
-                    case MainMenuRow::Forge:       key = "ingame_menu.forge"; break;
-                    case MainMenuRow::BackToTitle: key = "ingame_menu.back_to_title"; break;
-                }
-                m.rows.push_back({L.tr(key), "", sel(i), true});
-            }
             break;
         }
         case InGameMenuPage::Settings: {
@@ -547,9 +531,7 @@ void Game::uiEvent(const std::string& name, int arg) {
     if (name == "ending_title")   { if (endingActive()) dismissEndingScreen(); return; }
     if (name == "ending_dismiss") { if (endingActive() && !rebirthOffered()) dismissEndingScreen(); return; }
     // ---- HUD buttons ----
-    if (name == "hud_menu")      { if (!modalActive()) { cancelWalk(); openInGameMenu(); } return; }
-    if (name == "hud_store")     { if (!modalActive()) { cancelWalk(); openStore(); } return; }
-    if (name == "hud_inventory") { if (!modalActive()) { cancelWalk(); toggleInventory(); } return; }
+    if (name == "hud_menu")      { if (!modalActive()) { cancelWalk(); openPlayerMenu(); } return; }
     // ---- battle ----
     if (name == "battle_attack")   { battleTapAttack(); return; }
     if (name == "battle_defend")   { battleTapDefense(); return; }
@@ -560,11 +542,8 @@ void Game::uiEvent(const std::string& name, int arg) {
     if (name == "dlg_choose")  { if (inDialogue && arg >= 0 && arg < (int)dlgChoices.size()) { dlgSel = arg; chooseDialogue(arg); } return; }
     if (name == "dlg_hover")   { if (inDialogue && arg >= 0 && arg < (int)dlgChoices.size()) dlgSel = arg; return; }
     if (name == "dlg_advance") { if (inDialogue) chooseDialogue(dlgSel); return; }
-    // ---- inventory ----
-    if (name == "inv_select") { if (invOpen && arg >= 0 && arg < (int)pl.inv.size()) invSel = arg; return; }
-    if (name == "inv_use")    { invUseSelected(); return; }
-    if (name == "inv_drop")   { invDropSelected(); return; }
-    if (name == "inv_close")  { if (invOpen) toggleInventory(); return; }
+    // ---- the player menu (game_player_menu.cpp) ----
+    if (name.rfind("pm_", 0) == 0) { playerMenuEvent(name, arg); return; }
     // ---- store ----
     if (name == "store_tab") {
         if (storeOpen && arg >= 0 && arg < 4 && arg != storeTab_) { storeTab_ = arg; storeSel_ = 0; audio.play("confirm_click"); }
@@ -581,7 +560,7 @@ void Game::uiEvent(const std::string& name, int arg) {
     // ---- in-game menu ----
     if (name == "menu_row")     { if (inGameMenuOpen_ && !inGameLangConfirmOpen_) { inGameMenuSel_ = arg; inGameMenuActivate(); } return; }
     if (name == "menu_hover")   { if (inGameMenuOpen_ && !inGameLangConfirmOpen_) inGameMenuSel_ = arg; return; }
-    if (name == "menu_close")   { if (inGameMenuOpen_) { if (inGameMenuPage_ == InGameMenuPage::Main) closeInGameMenu(); else inGameMenuBack(); } return; }
+    if (name == "menu_close")   { if (inGameMenuOpen_) inGameMenuBack(); return; }
     if (name == "menu_confirm") { if (inGameLangConfirmOpen_) { inGameLangConfirmYes_ = arg != 0; inGameMenuActivate(); } return; }
     // ---- stairs ----
     if (name == "stairs") { if (stairsConfirmOpen_) { if (arg) confirmStageTransition(); else cancelStageTransition(); } return; }

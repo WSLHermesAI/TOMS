@@ -1,0 +1,65 @@
+{
+  "_comment": [
+    "Player attributes (docs/20_PLAYER_MENU.md section 3). Add, remove or reorder attributes here: the Status tab,",
+    "the level-up and the save follow without code changes. Items and equipment raise them through their",
+    "\"stats\" in items.json ({ \"str\": 2 }). They change nothing in battle yet: that gameplay comes later.",
+    "levelUp: EXP needed for the next level = lv * expPerLevel; atk/def/maxhp are what each level gives."
+  ],
+  "attributes": [
+    {
+      "id": "str",
+      "short": "STR",
+      "name": "stat.str.name",
+      "desc": "stat.str.desc",
+      "base": 5,
+      "perLevel": 1
+    },
+    {
+      "id": "dex",
+      "short": "DEX",
+      "name": "stat.dex.name",
+      "desc": "stat.dex.desc",
+      "base": 5,
+      "perLevel": 1
+    },
+    {
+      "id": "agi",
+      "short": "AGI",
+      "name": "stat.agi.name",
+      "desc": "stat.agi.desc",
+      "base": 5,
+      "perLevel": 1
+    },
+    {
+      "id": "vit",
+      "short": "VIT",
+      "name": "stat.vit.name",
+      "desc": "stat.vit.desc",
+      "base": 5,
+      "perLevel": 1
+    },
+    {
+      "id": "int",
+      "short": "INT",
+      "name": "stat.int.name",
+      "desc": "stat.int.desc",
+      "base": 5,
+      "perLevel": 1
+    },
+    {
+      "id": "luk",
+      "short": "LUK",
+      "name": "stat.luk.name",
+      "desc": "stat.luk.desc",
+      "base": 5,
+      "perLevel": 0
+    }
+  ],
+  "levelUp": {
+    "expPerLevel": 30,
+    "atk": 2,
+    "def": 1,
+    "maxhp": 10,
+    "freePoints": 0
+  }
+}

@@ -35,6 +35,7 @@ set(TOMS_UNIT_TESTS
     game/systems/equipment_actives_test game/systems/equipment_test    game/systems/floor_table_test
     game/systems/footprint_test     game/systems/forge_system_test     game/systems/hub_system_test
     game/systems/mission_test       game/systems/run_state_test        game/systems/skill_system_test
+    game/systems/player_menu_test
     game/systems/story_controller_test
     game/ui/title_screen_test)
 
@@ -125,9 +126,15 @@ endfunction()
 #                name        reference   backend tolerance  scene
 toms_smoke_test(title        title       d3d11   0.1  --frames=60)
 toms_smoke_test(stage        stage       d3d11   0.1  --frames=120 --keys=enter@30)
-toms_smoke_test(menu         menu        d3d11   0.1  --frames=110 --keys=enter@30,esc@80)
-toms_smoke_test(inventory    inventory   d3d11   0.1  --frames=110 --keys=enter@30,i@80)
-toms_smoke_test(dialogue     dialogue    d3d11   0.1  --frames=190 --keys=enter@30,esc@80,down@90,down@95,down@100,enter@110,enter@130)
+# The player menu (docs/20_PLAYER_MENU.md): one test per tab. --give hands the player items and gear
+# when the title closes, so the grids, the gear comparison and the scrolling have something to show.
+set(_pm_give "--give=potion_red,potion_red,gem_atk,gem_atk,scroll,exp_up,potion_blue,gem_def,key_yellow,key_blue,wand,twin_daggers,war_hammer,cloth_robe,guardian_plate,focus_talisman,gold:100")
+toms_smoke_test(player_status player_status d3d11 0.1 --frames=130 --keys=enter@30,esc@80,down@100 ${_pm_give})
+toms_smoke_test(player_gear   player_gear   d3d11 0.1 --frames=140 --keys=enter@30,esc@80,e@90,enter@100,right@110 ${_pm_give})
+toms_smoke_test(player_items  player_items  d3d11 0.1 --frames=140 --keys=enter@30,i@80,down@95,down@100,down@105,down@110 ${_pm_give})
+toms_smoke_test(player_events player_events d3d11 0.1 --frames=130 --keys=enter@30,esc@80,q@90,q@100)
+toms_smoke_test(player_system player_system d3d11 0.1 --frames=150 --keys=enter@30,esc@80,q@90,down@100,down@104,down@108,down@112,enter@118)
+toms_smoke_test(dialogue     dialogue    d3d11   0.1  --frames=190 --keys=enter@30,esc@80,q@85,down@90,down@95,enter@110,enter@130)
 toms_smoke_test(battle       battle      d3d11   0.1  --frames=420 --keys=enter@30,enter@380 --clicks=788:656@100)
 toms_smoke_test(store        store       d3d11   0.1  --stage=stage02 --frames=150 --keys=enter@30,enter@60,enter@90,b@120)
 # A node animation (tests/smoke/anim_preview.anim, anim_clip.h) over the map: nested transforms,

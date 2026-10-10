@@ -14,15 +14,13 @@
     <div id="hp-bar"><div id="hp-fill" data-style-width="hud.hp_pct + '%'"></div></div>
     <div id="hp-text">{{hud.hp_text}}</div>
     <div id="stats">{{hud.stats_line}}</div>
-    <div id="res" class="click" data-event-click="act('hud_inventory')">{{hud.res_line}}</div>
+    <div id="res">{{hud.res_line}}</div>
 
-    <div id="menu-btn" class="icon click" data-if="hud.icons" data-event-click="act('hud_menu')">
+    <!-- The walking scene's one button: the player menu (Status, Equipment, Items, Events, System). -->
+    <div id="menu-btn" class="icon click" data-event-click="act('hud_menu')">
         <div class="glyph">≡</div>
         <div class="icon-label">{{hud.menu_label}}</div>
-    </div>
-    <div id="store-btn" class="icon click" data-class-locked="!hud.store_unlocked" data-event-click="act('hud_store')">
-        <img class="coin" sprite="coin" data-attr-sprite="hud.store_icon"/>
-        <div class="icon-label">{{hud.store_label}}</div>
+        <div id="news" data-if="hud.menu_news"></div>
     </div>
 
     <div data-for="b : hud.banners">

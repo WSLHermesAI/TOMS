@@ -25,6 +25,7 @@ enum class Key : uint8_t {
     Enter, Space, Escape, Tab, F1, F2, F3,
     F5, F8,                                  // reload the UI files, RmlUi debugger
     F, G, H, I, B,
+    C, Q, E,                                 // the player menu: Status, previous / next tab
     Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9,
     Count
 };

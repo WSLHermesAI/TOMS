@@ -208,3 +208,56 @@ MIT, needs Dear ImGui 1.72+ and C++14, and the engine already has an ImGui-on-bg
    `next`; check `requires` and `once`; guard against loops (an event fires at most once per chain).
 6. **Effects from data:** the hard-coded "trap = −8 HP, cache = +10 HP +12 gold" in `game_input.cpp`
    becomes actions on the records.
+7. **Event state for the player's log** (§7): started / finished per event, saved with the run.
+
+## 7. The player's event log
+
+The player menu's **Events** tab ([20_PLAYER_MENU.md](../20_PLAYER_MENU.md) §6) lists what the player has
+started or finished, never what is still unmet, with a switch between **Unfinished** and **All**. The
+selected entry shows only its **title**, its **description** and the names of its **connected** events
+(the owner's rule, 2026-10-10).
+
+### Title and description
+
+Every event has both, as text keys ([01_DATA_MODEL.md](01_DATA_MODEL.md)):
+
+```json
+{ "eventId": "ev_elder_thanks", "kind": "rescue", "text": "ev_elder_thanks.text",
+  "title": "ev_elder_thanks.title", "desc": "ev_elder_thanks.desc" }
+```
+
+- `text` stays what it is: the line shown when the event fires.
+- `title` is the name in the log, `desc` the paragraph under it. Both are required: the problem list
+  reports an event without them, or with a key missing from `text.json`.
+
+### Which events are listed
+
+| State | When | Listed |
+|---|---|---|
+| **unknown** | none of the below | no |
+| **started** | the player has met it: its tile was reached, its NPC was talked to, or one of its `requires` leaves came true (e.g. the first of two clues) | **Unfinished** and **All** |
+| **finished** | it fired (the run's finished-event set, §6 items 1–2) | **All** only, marked ✓ |
+
+"Started" is stored in the run next to the finished set, so the log survives save and load.
+
+A kind can be kept out of the log, for small events that are over the moment they fire: `kinds.json`
+gets `"inLog": false` per kind (default `true`), and an event can override it with its own `"inLog"`.
+
+### Connected events
+
+Two events are connected when the event logic links them, in either direction:
+
+| Link | Example |
+|---|---|
+| this event's `next` names the other | the rescue leads to the elder's thanks |
+| this event's `requires` waits for the other (`eventDone`) | the thanks waits for the rescue |
+| the other's `next` or `requires` names this one | the same links, seen from the other side |
+
+The detail lists the connected events by title (✓ when finished). A connected event the player has not
+met yet shows as **？？？**, so the log does not spoil what is ahead. A chapter's connected events are
+its story events (`beats` of kind `event`).
+
+### Editor
+
+The event form gets **Title** and **Description** fields next to Text, with a check for missing ones;
+the Kinds tab gets the **In log** switch.

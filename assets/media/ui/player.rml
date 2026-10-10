@@ -1,0 +1,163 @@
+<rml>
+<head>
+    <title>Player menu</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="_atlas.rcss"/>
+    <link type="text/rcss" href="player.rcss"/>
+</head>
+<!-- The player menu (docs/20_PLAYER_MENU.md): the walking scene's one button (≡ / Esc) opens it.
+     Tabs: Status, Equipment, Items, Events, System. Equipment, Items, Events and System share one
+     layout: a list on the left (Items and Equipment: a grid of 3 per row), the selected entry on the
+     right. Data: player.* (UiPlayer); the System tab's rows and pages are menu.* (UiMenu).
+     Buttons: act('pm_*', n) -> Game::playerMenuEvent; the System tab's page rows use menu_row.
+     Every data-for sits on a wrapper with the bindings on the element inside: when a list shrinks,
+     RmlUi removes the extra rows first (bindings on the data-for element itself can be read before
+     that and log "Data array index out of bounds"). -->
+<body data-model="game">
+    <div class="fill scrim"></div>
+    <div id="panel" class="panel">
+        <div id="tabs">
+            <div class="slot" data-for="t, i : player.tabs"><div class="tab" data-class-active="t.active" data-event-click="act('pm_tab', i)">{{t.label}}<span class="dot" data-if="t.news"></span></div></div>
+            <div id="close" class="btn btn-plain" data-event-click="act('pm_close')">×</div>
+        </div>
+
+        <!-- ===== Status ===== -->
+        <div class="page" data-if="player.tab == 0">
+            <div id="st-left">
+                <div id="st-level">{{player.level}}</div>
+                <div class="bar"><div class="fill-hp" data-style-width="player.hp_pct + '%'"></div></div>
+                <div class="bar-text">{{player.hp_text}}</div>
+                <div class="bar"><div class="fill-exp" data-style-width="player.exp_pct + '%'"></div></div>
+                <div class="bar-text">{{player.exp_text}}</div>
+                <div class="heading">{{player.combat_title}}</div>
+                <div data-for="l : player.combat"><div class="line"><span class="l-label">{{l.label}}</span><span class="l-value">{{l.value}}</span></div></div>
+                <div class="gap"></div>
+                <div data-for="l : player.more"><div class="line"><span class="l-label">{{l.label}}</span><span class="l-value">{{l.value}}</span></div></div>
+            </div>
+            <div id="st-right">
+                <div class="heading">{{player.attr_title}}</div>
+                <div id="attrs">
+                    <div data-for="a, i : player.attrs"><div class="row attr" data-class-selected="a.selected" data-event-click="act('pm_attr', i)">{{a.label}}<span class="attr-value">{{a.sub}}</span></div></div>
+                </div>
+                <div id="attr-desc">{{player.attr_desc}}</div>
+            </div>
+        </div>
+
+        <!-- ===== Equipment / Items: filter chips + a 3-per-row grid | the selected entry ===== -->
+        <div class="page" data-if="player.tab == 1 || player.tab == 2">
+            <div class="left">
+                <div id="worn" data-if="player.tab == 1">
+                    <div class="heading">{{player.worn_title}}</div>
+                    <div data-for="w, i : player.worn"><div class="worn-line" data-class-current="w.tone > 0" data-event-click="act('pm_slot', i)"><span class="l-label">{{w.label}}</span><span class="l-value">{{w.value}}</span></div></div>
+                </div>
+                <div class="chips">
+                    <div class="slot" data-for="f, i : player.filters"><div class="chip" data-class-active="f.active" data-event-click="act('pm_filter', i)">{{f.label}}</div></div>
+                </div>
+                <div id="grid" data-class-short="player.tab == 1">
+                    <div class="slot" data-for="c, i : player.cells"><div class="cell" data-class-selected="c.selected" data-event-click="act('pm_cell', i)">
+                        <img class="cell-icon" data-attr-sprite="c.icon"/>
+                        <div class="cell-name">{{c.name}}</div>
+                        <div class="cell-badge" data-if="c.badge != ''">{{c.badge}}</div>
+                        <div class="cell-worn" data-if="c.worn">✓</div>
+                        <div class="cell-lock" data-if="c.locked"></div>
+                    </div></div>
+                    <div class="empty" data-if="player.cells.size == 0">{{player.empty_text}}</div>
+                </div>
+            </div>
+            <div class="right">
+                <div class="hint-center" data-if="!player.detail">{{player.select_hint}}</div>
+                <div data-if="player.detail">
+                    <img id="d-icon" data-attr-sprite="player.d_icon"/>
+                    <div id="d-name">{{player.d_name}}</div>
+                    <div id="d-desc">{{player.d_desc}}</div>
+                    <div data-for="l : player.d_lines"><div class="line"><span class="l-label">{{l.label}}</span><span class="l-value">{{l.value}}</span></div></div>
+                    <div id="compare" data-if="player.d_compare">
+                        <div class="cmp head"><span class="c-label"></span><span class="c-now">{{player.d_now_label}}</span><span class="c-with">{{player.d_with_label}}</span></div>
+                        <div data-for="l : player.d_compare_lines"><div class="cmp" data-class-better="l.tone > 0" data-class-worse="l.tone < 0"><span class="c-label">{{l.label}}</span><span class="c-now">{{l.value}}</span><span class="c-with">{{l.extra}}</span></div></div>
+                    </div>
+                    <div id="d-note" data-if="player.d_note != ''">{{player.d_note}}</div>
+                    <div id="d-buttons">
+                        <div class="slot" data-for="b, i : player.d_buttons"><div class="btn dbtn" data-class-off="!b.enabled" data-event-click="act('pm_btn', i)">{{b.label}}</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Events: Unfinished / All + the list | title, description, connected events ===== -->
+        <div class="page" data-if="player.tab == 3">
+            <div class="left">
+                <div class="chips">
+                    <div class="slot" data-for="f, i : player.ev_filters"><div class="chip" data-class-active="f.active" data-event-click="act('pm_filter', i)">{{f.label}}</div></div>
+                </div>
+                <div id="events">
+                    <div data-for="r, i : player.ev_rows"><div class="row evrow" data-class-selected="r.selected" data-class-done="!r.enabled" data-event-click="act('pm_event', i)">{{r.label}}<span class="ev-sub">{{r.sub}}</span></div></div>
+                    <div class="empty" data-if="player.ev_rows.size == 0">{{player.ev_empty}}</div>
+                </div>
+            </div>
+            <div class="right">
+                <div class="hint-center" data-if="!player.ev_detail">{{player.ev_hint}}</div>
+                <div data-if="player.ev_detail">
+                    <div id="ev-kind">{{player.ev_kind}}</div>
+                    <div id="ev-title">{{player.ev_title}}</div>
+                    <div id="ev-desc">{{player.ev_desc}}</div>
+                    <div data-if="player.ev_connected.size > 0">
+                        <div class="heading">{{player.ev_connected_title}}</div>
+                        <div data-for="c : player.ev_connected"><div class="ev-link">{{c}}</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== System: the old ≡ list | the page it opens ===== -->
+        <div class="page" data-if="player.tab == 4">
+            <div class="left">
+                <div id="sys-rows">
+                    <div data-for="r, i : menu.main_rows"><div class="row sysrow" data-class-selected="r.selected" data-class-disabled="!r.enabled"
+                         data-event-click="act('pm_sys', i)" data-event-mouseover="act('pm_sys_hover', i)">{{r.label}}<span class="rsub" data-if="r.sub != ''">{{r.sub}}</span></div></div>
+                </div>
+            </div>
+            <div class="right">
+                <div class="hint-center" data-if="menu.page == 0">{{player.sys_hint}}</div>
+                <div id="sys-page" data-if="menu.page != 0">
+                    <div id="sys-header">{{menu.header}}</div>
+                    <div id="sys-sub" data-if="menu.subheader != ''">{{menu.subheader}}</div>
+                    <div id="sys-list" data-class-compact="menu.rows.size > 7">
+                        <div data-for="r, i : menu.rows">
+                            <div class="section" data-if="r.section != ''">{{r.section}}</div>
+                            <div class="row" data-class-selected="r.selected" data-class-disabled="!r.enabled"
+                                 data-event-click="act('menu_row', i)" data-event-mouseover="act('menu_hover', i)">{{r.label}}<span class="rsub" data-if="r.sub != ''">{{r.sub}}</span></div>
+                        </div>
+                    </div>
+                    <div id="sys-back" class="btn btn-plain" data-event-click="act('menu_close')">{{menu.close_label}}</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="hint">{{player.hint}}</div>
+    </div>
+
+    <!-- "Drop <item>?" -->
+    <div data-if="player.confirm_open">
+        <div class="fill scrim"></div>
+        <div class="confirm panel">
+            <div class="question">{{player.confirm_question}}</div>
+            <div class="answers">
+                <div class="row answer" data-class-selected="player.confirm_yes" data-event-click="act('pm_confirm', 1)">{{player.yes_label}}</div>
+                <div class="row answer" data-class-selected="!player.confirm_yes" data-event-click="act('pm_confirm', 0)">{{player.no_label}}</div>
+            </div>
+        </div>
+    </div>
+    <!-- System: "Switch to <language>?" / "Switch the art style to ...?" -->
+    <div data-if="player.tab == 4 && menu.confirm_open">
+        <div class="fill scrim"></div>
+        <div class="confirm panel" data-class-with-body="menu.confirm_body != ''">
+            <div class="question">{{menu.confirm_question}}</div>
+            <div class="body" data-if="menu.confirm_body != ''">{{menu.confirm_body}}</div>
+            <div class="answers">
+                <div class="row answer" data-class-selected="menu.confirm_yes" data-event-click="act('menu_confirm', 1)">{{menu.yes_label}}</div>
+                <div class="row answer" data-class-selected="!menu.confirm_yes" data-event-click="act('menu_confirm', 0)">{{menu.no_label}}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

@@ -47,6 +47,11 @@ struct PlayerSaveData {
     int hp = 120, maxhp = 120, atk = 12, def = 4, gold = 0, exp = 0, lv = 1;
     int key_yellow = 0, key_blue = 0, key_red = 0;
     std::vector<std::string> inv;
+    // 2026-10 (the player menu, docs/20_PLAYER_MENU.md): optional, so an older save still loads --
+    // missing attributes are rebuilt from data/stats.json, missing gear is none.
+    std::map<std::string, int> attrs;            // data/stats.json's attributes by id
+    std::vector<std::string> gear;               // owned weapons / armor / talents
+    std::string weapon, armor, talent;           // what is worn ("" = nothing)
 };
 
 // The current session/run in progress.

@@ -3,7 +3,7 @@
 //
 // Data lives in:
 //   data/actives.json   -- the active definitions themselves (id, kind, multiplier, uses, cooldown)
-//   data/equipment.json -- each item's "actives": ["a_..."] list, i.e. which actives it grants
+//   data/items.json -- each weapon/armor/talent's "actives": ["a_..."] list, i.e. which actives it grants
 //
 // This file is pure logic + tests, exactly like skill_system/forge_system/hub_system: no Stage, no
 // Game, no Renderer. The battle code asks it two questions -- "what can be fired right now?" and
@@ -38,7 +38,7 @@ struct ActiveDefinition {
 // Reads data/actives.json. Unknown/missing file -> empty map (never throws).
 std::map<std::string, ActiveDefinition> loadActiveDefinitions(const std::string& path);
 
-// Reads the "actives" arrays out of data/equipment.json: item id -> active ids.
+// Reads the "actives" arrays out of data/items.json: item id -> active ids.
 std::map<std::string, std::vector<std::string>> loadEquipmentActives(const std::string& path);
 
 // The actives a currently-equipped set grants: weapon, then armor, then talent, each item's actives

@@ -4,6 +4,7 @@
   "bossFloor": "F07",
   "bossStage": "stage01",
   "title": "story.ch01.title",
+  "desc": "story.ch01.desc",
   "seal": "memory",
   "beats": [
     { "id": "b_village_wake",    "kind": "dialogue", "nodeId": "village_elder.intro",      "floor": "F01" },

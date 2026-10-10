@@ -238,4 +238,29 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   900x560 css px the web build scales the UI x1.5, and the full-width dialogue box (scaled about its bottom centre) became
   1.5 screens wide. It is now narrowed by the same factor first (`UiDialogue::side`), so it keeps its width on screen.
   New desktop option `--ui-scale=<x>` to test the small-screen layout; `smoke.dialogue` unchanged.
-
+- **2026-10-10** — **Planned the player menu** (docs only, not built): [../20_PLAYER_MENU.md](../20_PLAYER_MENU.md) (Status,
+  Items with list + detail + price, Events with next steps; phases P1–P3; tests), the event log rules in
+  [06_EVENT_LOGIC.md](../event_editor/06_EVENT_LOGIC.md) §7, the `log` field in 01, a pointer in 08; zh_TW versions.
+  Open questions Q11–Q14.
+- **2026-10-10** — **Player menu plan revised** per the owner: a fourth tab **Equipment** (change weapon / armor with a
+  stat and battle-bar comparison); Items as a scrollable 3-per-row grid with Use / Equip / Drop and an `important` flag
+  that blocks dropping; Events laid out like Items, listing only started and finished entries, with an Unfinished / All
+  switch and a detail panel. Q13 answered, Q15 added. Docs: 20, 06 §7, 08 (+ zh_TW).
+- **2026-10-10** — **Player menu: one button.** Per the owner, every button (HUD store, the clickable item line, the web
+  page's fullscreen and backpack buttons, the old ≡ list) moves into the player menu; a fifth tab **System** holds
+  them, and the walking screen keeps only ≡ with a news dot. Fullscreen from inside the game uses a press-then-release
+  hand-off to the page, since browsers only allow it in a gesture. Docs: 20, 08, 06_BUILD_WEB (+ zh_TW).
+- **2026-10-10** — **Player menu: the owner's answers written in.** Q11: attributes STR, DEX, AGI, VIT, INT, LUK from a
+  new settings file `stats.json` (with the level-up numbers moved out of code); they do nothing until later gameplay.
+  Q12: one all-item file `items.json` (id, type, stats, price, important, text keys; `equipment.json` merges in, the
+  store lists ids). Q14: every event, mission and chapter has a title and description; the Events tab shows only those
+  and the connected events' names (？？？ when unmet). Q15 explained, still open. Docs: 20, 06 §7, 01 (+ zh_TW).
+- **2026-10-10** — **Q15 answered:** the Equipment tab only changes worn gear for now; upgrading gear is parked as W26
+  (later). All player-menu questions are answered; P1 can start. Docs: 20 (+ zh_TW), progress report.
+- **2026-10-10** — **Player menu P1 built** (not committed). One ≡ button on the walking screen; five tabs (Status with
+  STR/DEX/AGI/VIT/INT/LUK, Equipment with a comparison, Items as a 3-per-row grid with Use/Equip/Drop and undroppable
+  important items, Events with chapters and missions, System with the old ≡ list + Store + Fullscreen). Data: the
+  all-item `items.json` (`equipment.json` merged), `store.json` by item id, new `stats.json`, chapter / mission titles;
+  saves keep attributes and gear. Store button, item-line click and the web page's buttons removed. New
+  `player_menu_test`, `smoke.player_*` (5), `--give=` test hook; UI font rebuilt. 39/39 unit, 57/62 smoke (W16, W23 as
+  before); web checked in headless Chrome incl. Fullscreen. Docs: 20 §9, 06_BUILD_WEB, 08, 09, 13 (+ zh_TW).

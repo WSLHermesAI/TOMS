@@ -27,6 +27,9 @@ struct EquipmentDefinition {
     nlohmann::json name, desc;
     EquipmentSlot slot = EquipmentSlot::Weapon;
     int statAtk = 0, statDef = 0;
+    // Every other bonus the piece gives while worn, by id -- the attributes of data/stats.json
+    // ("str", "dex", ...). Read for the player menu's Status tab; no battle rule uses them yet.
+    std::map<std::string, int> stats;
     PowerBarParams bar;              // baseline geometry by default (PowerBarParams{})
     float maxMult = 2.0f;            // attack power ceiling -- meaningful for weapons only
     // Talent id (talent slot only) -- a small string switched on by the talent*() functions

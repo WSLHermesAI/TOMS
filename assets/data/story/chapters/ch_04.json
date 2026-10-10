@@ -4,6 +4,7 @@
   "bossFloor": "F28",
   "bossStage": "stage04",
   "title": "story.ch04.title",
+  "desc": "story.ch04.desc",
   "seal": "jindan",
   "beats": [
     { "id": "b_library_entry",  "kind": "dialogue", "nodeId": "skeleton_scholar.root", "floor": "F26" },

@@ -7,27 +7,19 @@ using namespace toms::game_detail;
 
 // ---------- store system ----------
 void Game::loadStore(const std::string& assetDir) {
+    // What the store sells: ids into data/items.json, which holds every item's name, icon, stats and
+    // price (loadAssets reads items.json first). An entry naming no known item is skipped.
     nlohmann::json j = readJsonFile(assetDir + "/../data/store.json");
     if (j.is_null() || j.empty()) { return; }
     if (j.contains("store_title")) storeTitle_ = j["store_title"];
     if (j.contains("unlockstage")) storeUnlockStage_ = j["unlockstage"].get<int>();
     for (auto& it : j["items"]) {
         StoreItemDef d;
-        d.id = it.value("id", "");
-        d.name = it.contains("name") ? it["name"] : nlohmann::json(d.id);
-        d.sprite = it.value("sprite", "");
-        // strip a trailing ".png" if present so it matches the atlas sprite id
-        if (d.sprite.size() > 4 && d.sprite.substr(d.sprite.size()-4) == ".png")
-            d.sprite = d.sprite.substr(0, d.sprite.size()-4);
-        d.icon_path = it.value("icon_path", "");
-        d.desc = it.contains("desc") ? it["desc"] : nlohmann::json("");
-        if (it.contains("effect")) d.effect = it["effect"];
-        d.effect_text = it.contains("effect_text") ? it["effect_text"] : nlohmann::json("");
-        d.cost_base = it.value("cost_base", 2);
-        d.cost_multiplier = it.value("cost_multiplier", 2);
+        d.id = it.value("item", std::string());
+        if (!itemDef(d.id)) { fprintf(stderr, "[store] '%s' is not in data/items.json, skipped\n", d.id.c_str()); continue; }
+        d.price = std::max(0, itemPrice(d.id));
+        d.growth = std::max(1, it.value("growth", 2));
         d.purchases = 0;
-        // Milestone 8: an equipment-selling entry names its item instead of carrying an `effect`.
-        d.equipmentId = it.value("equipmentId", std::string());
         storeItems_.push_back(d);
     }
 }
@@ -35,6 +27,7 @@ void Game::loadStore(const std::string& assetDir) {
 void Game::openStore() {
     if (!storeUnlocked_) return;
     storeOpen = true;
+    newsStore_ = false;
     storeSel_ = 0;
     audio.play("confirm_click");
 }
@@ -42,6 +35,7 @@ void Game::openStore() {
 void Game::closeStore() {
     storeOpen = false;
     audio.play("close_ui");
+    if (storeFromMenu_) { storeFromMenu_ = false; openPlayerMenu((int)MenuTab::System); }   // back where it was opened
 }
 
 // Milestone 5: scans data/stages/ once for every stage's id/name/index, so the Stage Select hub
@@ -110,18 +104,11 @@ void Game::closeStageSelect() {
 // Menu/Settings flow, built directly as Game state to match every other in-game modal here.
 
 void Game::openInGameMenu() {
-    inGameMenuOpen_ = true;
-    inGameMenuPage_ = InGameMenuPage::Main;
-    inGameMenuSel_ = 0;
-    inGameLangConfirmOpen_ = false;
-    audio.play("confirm_click");
+    openPlayerMenu((int)MenuTab::System);
 }
 
 void Game::closeInGameMenu() {
-    inGameMenuOpen_ = false;
-    inGameMenuPage_ = InGameMenuPage::Main;
-    inGameLangConfirmOpen_ = false;
-    audio.play("close_ui");
+    closePlayerMenu();
 }
 
 void Game::inGameMenuMove(int delta) {
@@ -164,6 +151,16 @@ void Game::inGameMenuActivate() {
         auto order = mainMenuOrder();
         if (inGameMenuSel_ < 0 || inGameMenuSel_ >= (int)order.size()) return;
         switch (order[inGameMenuSel_]) {
+            case MainMenuRow::Store:
+                if (!storeUnlocked_) { audio.play("deny"); break; }
+                closePlayerMenu();
+                storeFromMenu_ = true;
+                openStore();
+                break;
+            case MainMenuRow::Fullscreen:
+                fullscreenRequest_ = true;   // the host switches (takeFullscreenRequest)
+                audio.play("confirm_click");
+                break;
             case MainMenuRow::Save:
                 saveCurrentRun();
                 toastMsg_ = locale_.tr("save.saved");
@@ -242,31 +239,19 @@ void Game::inGameMenuActivate() {
 void Game::inGameMenuBack() {
     if (!inGameMenuOpen_) return;
     if (inGameLangConfirmOpen_) { inGameLangConfirmOpen_ = false; audio.play("close_ui"); return; }
-    if (inGameMenuPage_ == InGameMenuPage::Settings) {
+    if (inGameMenuPage_ != InGameMenuPage::Main) {
+        // Back to the list, on the row that opened the page (found by name: Forge and Village are
+        // only there once unlocked, so the rows move).
+        MainMenuRow from = MainMenuRow::Settings;
+        if (inGameMenuPage_ == InGameMenuPage::Skills) from = MainMenuRow::Skills;
+        if (inGameMenuPage_ == InGameMenuPage::Forge)  from = MainMenuRow::Forge;
+        if (inGameMenuPage_ == InGameMenuPage::Hub)    from = MainMenuRow::Village;
+        inGameMenuSel_ = mainMenuRowIndex(from);
         inGameMenuPage_ = InGameMenuPage::Main;
-        inGameMenuSel_ = 1;   // land back on the "Settings" row
         audio.play("close_ui");
         return;
     }
-    if (inGameMenuPage_ == InGameMenuPage::Skills) {
-        inGameMenuPage_ = InGameMenuPage::Main;
-        inGameMenuSel_ = 2;   // land back on the "Skills" row
-        audio.play("close_ui");
-        return;
-    }
-    if (inGameMenuPage_ == InGameMenuPage::Forge || inGameMenuPage_ == InGameMenuPage::Hub) {
-        // S5/S6: land back on whichever row actually opened this page -- found by position in
-        // mainMenuOrder() rather than a hardcoded index, since Forge/Village's row shifts
-        // depending on which conditional rows are unlocked (see mainMenuOrder()'s declaration).
-        MainMenuRow wanted = (inGameMenuPage_ == InGameMenuPage::Forge) ? MainMenuRow::Forge : MainMenuRow::Village;
-        auto order = mainMenuOrder();
-        auto it = std::find(order.begin(), order.end(), wanted);
-        inGameMenuPage_ = InGameMenuPage::Main;
-        inGameMenuSel_ = (it != order.end()) ? (int)std::distance(order.begin(), it) : 0;
-        audio.play("close_ui");
-        return;
-    }
-    closeInGameMenu();
+    closePlayerMenu();
 }
 
 // Saves, tears down transient modal/run-in-progress state, and reopens the title -- the
@@ -277,9 +262,9 @@ void Game::returnToTitle() {
     saveCurrentRun();   // flush before leaving so nothing is lost
     cs = CombatState{};
     inDialogue = false; dlgChoices.clear(); dlgNode = "root";
-    invOpen = false; storeOpen = false; storeUnlockDlg = false;
+    storeOpen = false; storeUnlockDlg = false; storeFromMenu_ = false;
     stageSelectOpen_ = false; stairsConfirmOpen_ = false;
-    closeInGameMenu();
+    if (inGameMenuOpen_) closeInGameMenu();
     missionTrackers_.clear();
     notifications_.clear();
     title_.setRunInProgress(false);
@@ -318,6 +303,15 @@ void Game::storeKey(int key) {
 void Game::buyStoreItem(int idx) {
     if (idx < 0 || idx >= (int)storeItems_.size()) return;
     StoreItemDef& d = storeItems_[idx];
+    // Gear the player already owns is not bought twice: tapping it wears it.
+    if (isGearType(itemType(d.id)) && std::find(gearOwned_.begin(), gearOwned_.end(), d.id) != gearOwned_.end()) {
+        equipGear(d.id);
+        toastMsg_ = trParam(locale_.tr("store.toast_purchase_success"), "name", itemName(d.id));
+        toastTimer_ = 1200;
+        audio.play("confirm_click");
+        markProgressDirty();
+        return;
+    }
     int cost = d.liveCost();
     if (pl.gold < cost) {
         // not enough gold -> toast + shake (simple effect), no purchase
@@ -328,27 +322,12 @@ void Game::buyStoreItem(int idx) {
         return;
     }
     pl.gold -= cost;
-    // Milestone 8: an equipment entry replaces whatever was in that slot instead of applying a
-    // generic {hp/str/def} effect -- equipping is a swap, not a stacking buff, so re-buying the
-    // same item (or a different one in the same slot) is a harmless, idempotent re-equip.
-    if (!d.equipmentId.empty()) {
-        auto it = equipmentDefs_.find(d.equipmentId);
-        if (it != equipmentDefs_.end()) {
-            switch (it->second.slot) {
-                case toms::EquipmentSlot::Weapon: equipped_.weaponId = d.equipmentId; break;
-                case toms::EquipmentSlot::Armor:  equipped_.armorId  = d.equipmentId; break;
-                case toms::EquipmentSlot::Talent: equipped_.talentId = d.equipmentId; break;
-            }
-        }
-    } else {
-        // apply effect immediately (per spec: bought item is used right away)
-        const nlohmann::json& eff = d.effect;
-        if (eff.contains("hp"))  pl.hp   = std::min(pl.maxhp, pl.hp + (int)eff["hp"]);
-        if (eff.contains("str")) pl.atk  += (int)eff["str"];
-        if (eff.contains("def")) pl.def  += (int)eff["def"];
-    }
+    // A weapon / armor / talent joins the owned gear and is worn at once (the Equipment tab swaps it
+    // later); a consumable is used right away, as the store always did.
+    if (isGearType(itemType(d.id))) ownGear(d.id, true);
+    else applyStats(d.id, itemStats(d.id));
     d.purchases++;
-    toastMsg_ = trParam(locale_.tr("store.toast_purchase_success"), "name", locale_.field(d.name));
+    toastMsg_ = trParam(locale_.tr("store.toast_purchase_success"), "name", itemName(d.id));
     toastTimer_ = 1400;
     audio.play("get_item");
     markProgressDirty();   // a purchase changes gold/stats/equipment: autosave will flush it

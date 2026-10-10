@@ -47,6 +47,8 @@ private:
     bool model_ = false;
     std::string family_ = "toms";
     int spriteRevision_ = -1;   // Game::spriteAtlasRevision() the documents were loaded with
+    std::string playerSelKey_;  // the player menu's selection last frame (scroll a new one into view)
+    int scrollFrames_ = 0;      // frames left to bring it into view (it is laid out a frame later)
 };
 
 }  // namespace toms::next

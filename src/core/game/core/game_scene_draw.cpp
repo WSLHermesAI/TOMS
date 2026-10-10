@@ -41,8 +41,7 @@ void Game::draw() {
     // comment on this countdown.
     const bool showBattle = !showStore && (hideMask & 1) == 0 && (cs.active || cs.won || cs.resultPauseMs > 0);
     const bool showTalk   = !showStore && !showBattle && (hideMask & 2) == 0 && inDialogue;
-    const bool showInv    = !showStore && !showBattle && !showTalk && (hideMask & 4) == 0 && invOpen;
-    const bool showWalk   = !showStore && !showBattle && !showTalk && !showInv;
+    const bool showWalk   = !showStore && !showBattle && !showTalk;   // the player menu draws over the map
 
     // ---- walking scene: STAGE + CHARACTER ----
     if (showWalk) {

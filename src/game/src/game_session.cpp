@@ -218,6 +218,9 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
             else g.titleCancel();
         }
     }
+    // A screen opened by this frame's key (Enter on the System tab's Store row) does not also take
+    // that key: the store only reads keys when it was already open at the start of the frame.
+    const bool storeWasOpen = g.storeModal();
     if (!g.titleOpen()) {
         if (keyPressed(in, Key::F1)) showDebugOverlay = !showDebugOverlay;
         if (keyPressed(in, Key::F2)) showStylingSpike = !showStylingSpike;
@@ -226,13 +229,20 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
             else if (g.storeModal()) g.storeKey(27);
             else if (g.stairsConfirmOpen()) g.cancelStageTransition();
             else if (g.stageSelectOpen()) g.closeStageSelect();
-            else if (g.inventoryOpen()) g.toggleInventory();
-            else if (g.inGameMenuOpen()) g.inGameMenuBack();
-            else if (!g.modalActive()) g.openInGameMenu();
+            else if (g.playerMenuOpen()) g.playerMenuBack();
+            else if (!g.modalActive()) { g.cancelWalk(); g.openPlayerMenu(); }
         }
         if (keyPressed(in, Key::Tab)) {
-            if (g.stageSelectOpen()) g.closeStageSelect();
+            if (g.playerMenuOpen()) g.playerMenuTab(1);
+            else if (g.stageSelectOpen()) g.closeStageSelect();
             else if (!g.modalActive()) g.openStageSelect();
+        }
+        if (g.playerMenuOpen() && keyPressed(in, Key::Q)) g.playerMenuTab(-1);
+        if (g.playerMenuOpen() && keyPressed(in, Key::E)) g.playerMenuTab(1);
+        if (keyPressed(in, Key::C)) {   // the Status tab (closes the menu when it is already there)
+            using Tab = ::Game::MenuTab;
+            if (g.playerMenuOpen() && g.playerMenuTab() == Tab::Status) g.closePlayerMenu();
+            else if (g.playerMenuOpen() || !g.modalActive()) { g.cancelWalk(); g.openPlayerMenu((int)Tab::Status); }
         }
         {   // held movement repeats (level state, not edge)
             int ydir = 0;
@@ -250,7 +260,7 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         }
         if (enterPressed || spacePressed) {
             if (g.endingActive()) { if (!g.rebirth()) g.dismissEndingScreen(); }
-            else if (g.inGameMenuOpen()) g.inGameMenuActivate();
+            else if (g.playerMenuOpen()) g.playerMenuActivate();
             else if (g.stairsConfirmOpen()) g.confirmStageTransition();
             else if (g.combatWon()) g.dismissVictory();
             else if (g.combatActive()) g.battleTapAttack();
@@ -262,18 +272,13 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         if (keyPressed(in, Key::H) && g.combatActive()) g.battleTapActive();
         if (keyPressed(in, Key::I)) g.toggleInventory();
         if (keyPressed(in, Key::B) && !g.modalActive()) g.openStore();
-        if (g.inGameMenuOpen()) {
-            if (upPressed || leftPressed)    g.inGameMenuMove(-1);
-            if (downPressed || rightPressed) g.inGameMenuMove(1);
+        if (g.playerMenuOpen()) {
+            if (upPressed)    g.playerMenuMove(0, -1);
+            if (downPressed)  g.playerMenuMove(0,  1);
+            if (leftPressed)  g.playerMenuMove(-1, 0);
+            if (rightPressed) g.playerMenuMove( 1, 0);
         }
-        if (g.inventoryOpen()) {
-            if (upPressed)    g.invMoveSel(0, -1);
-            if (downPressed)  g.invMoveSel(0,  1);
-            if (leftPressed)  g.invMoveSel(-1, 0);
-            if (rightPressed) g.invMoveSel( 1, 0);
-            if (enterPressed) g.invUseSelected();
-        }
-        if (g.storeModal()) {
+        if (g.storeModal() && storeWasOpen) {
             for (int k = 0; k < 9; ++k)
                 if (keyPressed(in, (Key)((int)Key::Num1 + k))) g.storeKey((char)('1' + k));
             if (enterPressed) g.storeKey(13);

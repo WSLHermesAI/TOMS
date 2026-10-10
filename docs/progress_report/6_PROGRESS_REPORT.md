@@ -1,4 +1,4 @@
-# Progress Report — Log Part 6 (2026-10-05 evening to 2026-10-08)
+# Progress Report — Log Part 6 (2026-10-05 evening to 2026-10-10)
 
 > Chronological log entries, oldest first. The live **Next Step**, status table, waiting list and
 > open questions are in [PROGRESS_REPORT.md](PROGRESS_REPORT.md).
@@ -18,6 +18,7 @@ That Qt editor's goal: what the editor shows is how the game works.
 | 2026-10-07 | `f7c8b8e` | Floor links, event logic, node-graph editor, values map; the HTML stage editor with story check and auto-place |
 | 2026-10-07 | `cf2a771` | Stage editor: object overlap rule, UI size settings, wheel zoom, right-drag pan |
 | **2026-10-08** | not committed | Editors: one folder with a switch button; tutorial collapses; top menu removed; **Kinds** tab; old mockups deleted; the event editor **saves into assets/data**; free (Chinese) names; Variables tab categories and multi-select; stage editor saves many floors as one zip. Docs: Traditional Chinese versions in `docs/zh_TW/`. Game: **monster idle animations**; **battle settings file**; fixed **invisible keys**; **doors open** with an animation |
+| **2026-10-10** | not committed | The **player menu** (P1): one ≡ button, five tabs (Status, Equipment, Items, Events, System); the all-item `items.json`; `stats.json` with STR / DEX / AGI / VIT / INT / LUK |
 
 ---
 
@@ -283,7 +284,53 @@ Kinds were hard-coded in the editor, and no data file defined them. The game doe
 - **Checked** in the game on a test floor: `Y1` → the animation (player still, `Y0`) → floor → walking
   through the doorway and back took no more keys. CTest `anim.check_door_open`.
 
-**Verified:**
+### 2026-10-10 — the player menu, P1 (not committed)
+
+**16. One button, five tabs** ([../20_PLAYER_MENU.md](../20_PLAYER_MENU.md) §9)
+
+- **The walking screen keeps only ≡** (with a dot when something new is inside). The HUD's store button,
+  the clickable item line and the web page's fullscreen and backpack buttons are gone.
+- **≡ / Esc opens the player menu:**
+  - **Status:** level, HP and EXP bars, ATK / DEF with their bonus, gold, keys, floor, chapter, gear, skills,
+    memory shards, and the attributes STR, DEX, AGI, VIT, INT, LUK (click one for its description);
+  - **Equipment:** what is worn, the owned weapons or armor as a grid, and a comparison with what is worn
+    (ATK / DEF, charge time, hit zone, top power, attributes, skills) before **Equip**;
+  - **Items:** everything owned as a scrolling 3-per-row grid (copies stacked as x2), filters All / Use /
+    Gear / Keys; the right side shows the description, effect, price and **Use / Equip / Unequip / Drop**.
+    Keys and important items cannot be dropped; Drop asks first;
+  - **Events:** chapters and missions, Unfinished / All, title and description;
+  - **System:** Store, Skills, Forge, Village, Save, Settings, **Fullscreen**, Back to title (the old ≡ list;
+    a page opens on the right).
+- **Keys:** C Status, I Items, B store, Q / E / Tab tabs, arrows, Enter.
+
+**17. The data behind it**
+
+- **`assets/data/items.json` is the all-item file:** 23 items, each with type, sprite, name and description
+  keys, stats, price and `important`. `equipment.json` merged into it and is gone; `store.json` lists item
+  ids and how prices grow; item names moved into `text.json`.
+- **`assets/data/stats.json`** (new): the six attributes and the level-up numbers, moved out of the code
+  (the three copies of the level-up loop are one function now). The attributes change nothing in battle yet.
+- **Chapters 1–4 and the three missions** got a title and a description.
+- **Saves** now keep the attributes, the owned gear and the worn gear (worn gear was not saved before).
+  Older saves load.
+- **The UI font** was rebuilt for the new characters (`tools/make_ui_font.py`, 2240 characters).
+
+**Verified (P1):**
+
+- Desktop: every tab, the store round trip from the System tab, buying, equipping, the comparison, the
+  grid's scrolling with the keyboard, dropping with its confirmation, keys that cannot be dropped, no RmlUi
+  warnings.
+- Web (headless Chrome): the menu, no buttons on the page, Fullscreen from the System tab with real key
+  presses (`document.fullscreenElement` set, the row shows On).
+- Tests: 39 of 39 unit tests (new `player_menu_test`: the rules and the item / store / stats / title data);
+  screenshot tests 57 of 62 with the new `smoke.player_status / gear / items / events / system`; references
+  refreshed for anim, fx and store after checking that only the HUD and the store's item names changed.
+  Still failing as before: `smoke.stage` ×4 (W16) and `smoke.battle` (W23).
+
+**Not verified (P1):** a real phone (the menu is the 1024x768 screen scaled down; the list-then-detail phone
+layout is not built); Android; Fullscreen in Safari.
+
+**Verified (2026-10-05 to 10-08):**
 
 - **Play demo:** 29 of 29 steps, in English and 繁體中文.
 - **Kinds tab:**

@@ -4,6 +4,7 @@
   "bossFloor": "F21",
   "bossStage": "stage03",
   "title": "story.ch03.title",
+  "desc": "story.ch03.desc",
   "seal": "daoji",
   "beats": [
     { "id": "b_gate_plate",   "kind": "event",    "eventId": "ev_gate_soldier_plate", "floor": "F16" },

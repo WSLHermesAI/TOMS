@@ -4,6 +4,7 @@
   "bossFloor": "F14",
   "bossStage": "stage02",
   "title": "story.ch02.title",
+  "desc": "story.ch02.desc",
   "seal": "qi",
   "beats": [
     { "id": "b_teacher",      "kind": "dialogue", "nodeId": "sorcerer_teacher.qi", "floor": "F09",

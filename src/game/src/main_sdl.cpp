@@ -26,6 +26,8 @@
 //   --anim=<file>#<clip>  play one clip of an .anim file over the screen (anim_clip.h; tests)
 //   --ui-scale=<x>        the small-screen UI scale (the web build uses 1.5 on phones), to test it on desktop
 //   --fx=<file>#<effect>  play one particle effect of a .particle file over the screen (particle_fx.h)
+//   --give=<id,...>       when the title first closes, hand the player these items (data/items.json ids;
+//                         gear is owned, not worn) and gold:<n> -- tests of the player menu (tests/CMakeLists.txt)
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
 #include "../../core/engine/vfs.h"   // toms::vfsInit: APK entries need the AAssetManager
@@ -81,6 +83,7 @@ struct Args {
     std::vector<Press> presses;
     struct Click { float x, y; int frame; };
     std::vector<Click> clicks;
+    std::vector<std::string> give;     // --give=<id,...>
 };
 
 bool keyFromName(const std::string& n, Key& out) {
@@ -88,7 +91,8 @@ bool keyFromName(const std::string& n, Key& out) {
         {"up", Key::Up}, {"down", Key::Down}, {"left", Key::Left}, {"right", Key::Right},
         {"enter", Key::Enter}, {"space", Key::Space}, {"esc", Key::Escape}, {"tab", Key::Tab},
         {"f1", Key::F1}, {"f2", Key::F2}, {"f5", Key::F5}, {"f8", Key::F8},
-        {"i", Key::I}, {"b", Key::B}, {"1", Key::Num1}, {"2", Key::Num2}, {"3", Key::Num3},
+        {"i", Key::I}, {"b", Key::B}, {"c", Key::C}, {"q", Key::Q}, {"e", Key::E},
+        {"1", Key::Num1}, {"2", Key::Num2}, {"3", Key::Num3},
     };
     for (auto& e : table) if (n == e.name) { out = e.key; return true; }
     return false;
@@ -145,6 +149,14 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--fx-gpu-threshold=")) a.fxGpuThreshold = std::max(0, std::atoi(v));
         else if (const char* v = value(s, "--title-scene=")) a.titleScene = v;
         else if (const char* v = value(s, "--ui-scale=")) a.uiScale = (float)std::atof(v);
+        else if (const char* v = value(s, "--give=")) {
+            std::string list = v;
+            for (size_t pos = 0; pos <= list.size();) {
+                const size_t comma = std::min(list.find(',', pos), list.size());
+                if (comma > pos) a.give.push_back(list.substr(pos, comma - pos));
+                pos = comma + 1;
+            }
+        }
     }
     return a;
 }
@@ -201,6 +213,7 @@ void readKeyboard(InputState& in, const bool* pressed) {
     set(Key::F5, SDL_SCANCODE_F5); set(Key::F8, SDL_SCANCODE_F8);
     set(Key::F, SDL_SCANCODE_F); set(Key::G, SDL_SCANCODE_G); set(Key::H, SDL_SCANCODE_H);
     set(Key::I, SDL_SCANCODE_I); set(Key::B, SDL_SCANCODE_B);
+    set(Key::C, SDL_SCANCODE_C); set(Key::Q, SDL_SCANCODE_Q); set(Key::E, SDL_SCANCODE_E);
     const SDL_Scancode nums[9] = {SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3, SDL_SCANCODE_4, SDL_SCANCODE_5,
                                   SDL_SCANCODE_6, SDL_SCANCODE_7, SDL_SCANCODE_8, SDL_SCANCODE_9};
     for (int i = 0; i < 9; ++i) in.down[(size_t)Key::Num1 + i] = ks[nums[i]];
@@ -218,6 +231,7 @@ struct App {
     InputState in;
     uint64_t lastTicks = 0;
     int frameNo = 0;
+    bool gave = false;          // --give applied
     int backW = 0, backH = 0;   // size bgfx was last initialized/reset with
     bool pressedKeys[SDL_SCANCODE_COUNT] = {};   // went down during this frame's events (readKeyboard)
     bool pressedLeft = false;                    // the same for the left button / a touch
@@ -432,6 +446,28 @@ bool appFrame(App& app) {
         in.hasMouse = true;
     }
 
+    if (!app.gave && !args.give.empty() && app.session.game() && !app.session.game()->titleOpen()) {
+        for (const std::string& id : args.give) app.session.game()->debugGive(id);
+        app.gave = true;
+    }
+    // Fullscreen is the host's: the player menu's System tab shows the row and asks; this switches.
+    // Web: the page does it (shell.html's tomsToggleFullscreen), inside the click's user activation.
+    // Android: always full screen, so the row is hidden.
+    if (::Game* game = app.session.game()) {
+#if defined(__EMSCRIPTEN__)
+        const bool fsOn = EM_ASM_INT({ return document.fullscreenElement || document.webkitFullscreenElement ? 1 : 0; }) != 0;
+        game->setFullscreenState(true, fsOn);
+        if (game->takeFullscreenRequest()) EM_ASM({ if (window.tomsToggleFullscreen) window.tomsToggleFullscreen(); });
+#elif defined(__ANDROID__)
+        game->setFullscreenState(false, true);
+        game->takeFullscreenRequest();
+#else
+        const bool fsOn = (SDL_GetWindowFlags(app.window) & SDL_WINDOW_FULLSCREEN) != 0;
+        game->setFullscreenState(true, fsOn);
+        if (game->takeFullscreenRequest()) SDL_SetWindowFullscreen(app.window, !fsOn);
+#endif
+    }
+
     const uint64_t now = SDL_GetTicks();
     const int dtMs = args.fixedDtMs > 0 ? args.fixedDtMs : (int)(now - app.lastTicks);
     app.lastTicks = now;
@@ -472,7 +508,7 @@ extern "C" {
 EMSCRIPTEN_KEEPALIVE void jsRefreshSlots() {
     if (g_app && g_app->session.game()) g_app->session.game()->refreshSlots();
 }
-// The page's backpack button.
+// Opens (or closes) the player menu's Items tab -- for page tests; the page itself has no buttons.
 EMSCRIPTEN_KEEPALIVE void jsInventory() {
     if (g_app && g_app->session.game()) g_app->session.game()->toggleInventory();
 }

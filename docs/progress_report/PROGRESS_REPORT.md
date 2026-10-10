@@ -25,7 +25,21 @@
   - items were drawn as floor;
   - doors now open once, with an animation, and stay open.
 
+**The player menu, P1 built** (2026-10-10, [../20_PLAYER_MENU.md](../20_PLAYER_MENU.md) §9,
+[6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) §16–17):
+- **The walking screen keeps one button, ≡** (a dot when something is new). Store button, item line and the
+  web page's buttons are gone.
+- **Five tabs:** Status (with STR, DEX, AGI, VIT, INT, LUK), Equipment (change weapon / armor with a
+  comparison), Items (3-per-row grid; Use / Equip / Drop; important items can't be dropped), Events
+  (chapters and missions), System (Store, Skills, Forge, Village, Save, Settings, Fullscreen, Back to title).
+- **Data:** one all-item file `items.json` (`equipment.json` merged in), `stats.json` (attributes and
+  level-up numbers), titles and descriptions for chapters and missions.
+- **Next phases:** P2 = events in the Events tab with their connected events (needs the event runtime of
+  [06](../event_editor/06_EVENT_LOGIC.md) §6–7); P3 = gameplay for the attributes; upgrading gear = W26.
+
 **Owner, next (game):**
+- **Try the player menu** (≡ or Esc while walking): say what to change before P2.
+- **Commit** the 10-08 and 10-10 work when you are happy with it.
 - **Play a few floors** with the key and door fixes, and tune `battle.json`.
 - **Decide W16 and W23** below: then the 5 failing screenshot tests can be refreshed or fixed.
 
@@ -121,6 +135,7 @@ the Visual Studio IDE (W1).
 | T | Particles (`.particle` JSON, `particle_editor`, GPU simulation, CPU/GPU threshold), doc 17 | ◐ 2026-10-03 editor + runtime done; legacy import, multiply/screen blend, effects on `.anim` nodes open |
 | T | Editors preview with toms_game's `BgfxRenderer`; right-drag pans | ✅ 2026-10-03 on D3D11 |
 | T | Anim editor: per-node playback (once / hide / loop), solo, clip switching with discard prompt; editors: History dock + automatic backups | ✅ 2026-10-05 |
+| G | Player menu: one ≡ button; Status / Equipment / Items / Events / System ([20](../20_PLAYER_MENU.md)) | ◐ 2026-10-10 P1 built and verified on desktop + web (headless); P2, P3 and upgrading gear (W26) open; not seen on a phone |
 | T | Monster idle animations on the map (`monster_idle.anim`), door-opening animation (`door_open.anim`) | ✅ 2026-10-08 desktop; web/Android not seen (W24) |
 | 5 | glTF 2.0 on bgfx (`gltf_model`, `GltfRenderer`, `gltf_viewer`): skins, morphs, instancing, PBR, cameras, lights, shadow maps; the title's 3D background | ◐ 2026-10-05 desktop D3D11/Vulkan/OpenGL + web verified; not on a phone; no IBL / cascades yet |
 | 5 | 3D on bgfx (glTF, ozz skinning, instancing, shadows, Effekseer) | ⬜ researched only |
@@ -154,6 +169,8 @@ the Visual Studio IDE (W1).
 | W23 | **`smoke.battle` depends on `battle.json`** | the screenshot follows the tuning values, so every change to `assets/data/battle.json` breaks it | give the test its own fixed values (independent of `battle.json`), or refresh it once the values are settled |
 | W24 | **Idle and door animations not seen on web / Android** | checked on desktop D3D11 only; the `.anim` files are in `assets/media`, so they are packaged | play a floor in the web build and on the Android emulator |
 | W25 | **Docs in two languages** | every `docs/*.md` (except `progress_report/`) has a copy in `docs/zh_TW/` that is not updated automatically | update the `zh_TW` copy with each English change; check links with the script used on 2026-10-08 |
+| W27 | **The player menu on a phone** | P1 shows the menu as the 1024x768 screen scaled down, like every other screen; the list-then-detail phone layout of [20](../20_PLAYER_MENU.md) §2 is not built, and no phone has seen it | open it on a phone (web build); if too small, build the phone layout |
+| W26 | **Upgrading gear** (player menu, later) | the owner chose change-only for now (Q15, 2026-10-10); upgrading (+1, +2… for gold or materials) is a later feature | design the steps and costs, add them to `items.json`, add an Upgrade button to the Equipment tab ([20](../20_PLAYER_MENU.md) §4) |
 | W22 | **Event data gaps** | 92 event ids that F22–F70 list are not defined by any pool; 4 orphan events | write the chapter 4–10 pools (the editor's batch fix makes placeholders) |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
 
@@ -165,7 +182,7 @@ the Visual Studio IDE (W1).
 |---|---|---|
 | [1_PROGRESS_REPORT.md](1_PROGRESS_REPORT.md) | 2026-09-25 | Qt + bgfx decision; EngineBlueprint update; bgfx glTF / skinning / morph / instancing research; toms_next phase 1 built and verified; WSL web presets and the etcpak stop |
 | [3_PROGRESS_REPORT.md](3_PROGRESS_REPORT.md) | 2026-09-27 | the project moved to the repository root; old code/content restored and organised as `assets/` (content) + `src/` (code); desktop, editor and web rebuilt and verified from there |
-| [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) | 2026-10-05 evening – 2026-10-08 | HTML event editor (tutorial, floor links, event logic, node graph, values map, kinds, saving into assets/data) and stage editor (story check, auto-place, overlap rule, zip download); both in `tools/web_editors/`; docs in Traditional Chinese (`docs/zh_TW/`); the game: monster idle animations, `battle.json`, the key fix, doors opening |
+| [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) | 2026-10-05 evening – 2026-10-10 | HTML event editor (tutorial, floor links, event logic, node graph, values map, kinds, saving into assets/data) and stage editor (story check, auto-place, overlap rule, zip download); both in `tools/web_editors/`; docs in Traditional Chinese (`docs/zh_TW/`); the game: monster idle animations, `battle.json`, the key fix, doors opening; the player menu (P1) |
 | [5_PROGRESS_REPORT.md](5_PROGRESS_REPORT.md) | 2026-10-03 evening, 2026-10-05 | editor coordinate hints; anim editor per-node playback, solo, clip switching; History + auto backups; glTF 2.0 loader, renderer, viewer, shadows, cameras; the 3D title; web build ready to publish |
 | [4_PROGRESS_REPORT.md](4_PROGRESS_REPORT.md) | 2026-10-03 | atlas tool; `.anim` runtime + editor + recipes; `.particle` format, runtime, editor; GPU sprite paths and GPU particle simulation; the editors on the game renderer; merged test runner |
 | [2_PROGRESS_REPORT.md](2_PROGRESS_REPORT.md) | 2026-09-26 | web build done on Windows (host shaderc, `bimg_encode` excluded, one entry point for desktop + web, IDBFS saves); five bugs fixed; doc 06; `web_smoke_test.mjs` |
@@ -187,4 +204,9 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md).
 | Q8 | Do finished events reset on rebirth (`run` or `meta` scope)? Can a stair wait for several events or a flag? | reset on rebirth; one event per lock |
 | Q9 | The game ignores `@` (player start) in stage files (`parseStage`). Fix it (one line)? | not changed; arrival stays stairs-down → stairs-up |
 | Q10 | Event lists: keep each floor's explicit list? Are `_v2`…`_v5` ids variants of one event? Which languages are required before release? ([02](../event_editor/02_EDITOR_DESIGN.md) §6) | explicit lists; separate events; untranslated stays a warning |
+| Q11 | ~~Player menu: STR / DEX / AGI?~~ Answered 2026-10-10: extend the status like a common RPG (STR, DEX, AGI, VIT, INT, LUK in a settings file `stats.json`); the gameplay that uses them comes later ([20](../20_PLAYER_MENU.md) §3) | — |
+| Q12 | ~~Item prices and ids?~~ Answered 2026-10-10: one all-item file (`items.json`) with each item's id, type, stats, price and text keys; `equipment.json` merges in, the store lists ids only ([20](../20_PLAYER_MENU.md) §5) | — |
+| Q13 | ~~Items tab: owned items or every item?~~ Answered 2026-10-10: owned items only | — |
+| Q15 | ~~Equipment tab: change or upgrade?~~ Answered 2026-10-10: change only for now; upgrading is a later task (W26); no Talent slot ([20](../20_PLAYER_MENU.md) §4) | — |
+| Q14 | ~~Chapter goals?~~ Answered 2026-10-10: every event (and mission, chapter) has a title and a description; the Events tab shows only those, plus the names of connected events ([20](../20_PLAYER_MENU.md) §6, [06](../event_editor/06_EVENT_LOGIC.md) §7) | — |
 | Q5 | The bgfx web build now passes its check (2026-09-26). Replace the old `build_web.sh` output (`web/`, `web-gl/`) with it, and where is it published? | keep both until the owner has played the new one (W9) |

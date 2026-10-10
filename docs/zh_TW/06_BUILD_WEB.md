@@ -114,9 +114,10 @@ tools\serve_web.cmd dist         :: the package of build_web.bat, as a player ge
 | `toms_game.html?stats` | bgfx 畫面統計 |
 | `toms_game.html?keys=enter@60` | 在第 60 個畫面按 Enter（自動測試） |
 
-操作和桌機相同（方向鍵/WASD、Enter、I、B、Tab、F1、Esc）。觸控和滑鼠透過
-畫面上的方向盤操作；按住方向鍵會持續走。頁面還有
-全螢幕按鈕和背包按鈕。
+操作和桌機相同（方向鍵/WASD、Enter、Esc / ≡ 打開玩家選單、C、I、B、Q / E、Tab、F1）。觸控和滑鼠透過
+畫面上的方向盤操作；按住方向鍵會持續走。頁面本身沒有按鈕（2026-10-10 起）：全螢幕是玩家選單系統分頁中的一列，
+背包就是它的道具分頁（[20_PLAYER_MENU.md](20_PLAYER_MENU.md) §2、§7）。遊戲在點擊後的下一個畫面請網頁切換
+（`shell.html` 的 `tomsToggleFullscreen`），這時點擊的使用者啟用仍然有效；萬一瀏覽器還是拒絕，下一次點擊或按鍵就會完成。
 
 ## 4. Web 版如何運作
 
@@ -131,7 +132,7 @@ tools\serve_web.cmd dist         :: the package of build_web.bat, as a player ge
 | 渲染器物件 | 核心程式碼的 `new Renderer()` 在 web 上也建立 bgfx 渲染器（`compat/renderer.h`） | `src/game/compat/` |
 | 存檔 | IndexedDB 掛載在 `/save`（IDBFS）；核心存檔程式碼在每次寫入後同步；初始載入完成時重新讀取存檔欄 | `main_sdl.cpp`（`jsRefreshSlots`） |
 | 手機 | viewport < 900×560 css px：方向鍵 ×1.2、UI ×1.5（遊戲解析度不變）；直向時顯示「請旋轉裝置」 | `main_sdl.cpp`、`src/game/web/shell.html` |
-| JS hook | `jsRefreshSlots`、`jsInventory`、`jsFrameCount`、`jsTitleOpen`（可用 `Module.ccall` 呼叫） | `main_sdl.cpp` |
+| JS hook | `jsRefreshSlots`、`jsInventory`（玩家選單的道具分頁）、`jsFrameCount`、`jsTitleOpen`（可用 `Module.ccall` 呼叫） | `main_sdl.cpp` |
 
 為什麼建置要用主機的 `shaderc.exe`：否則 bgfx.cmake 會自己把 glslang、tint、
 spirv-cross 和 shaderc 編譯成 WebAssembly，再在 node 下執行。要編譯的東西大約是三

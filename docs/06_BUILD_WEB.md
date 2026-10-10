@@ -112,9 +112,11 @@ URL options (the web equivalent of the desktop command line):
 | `toms_game.html?stats` | bgfx on-screen stats |
 | `toms_game.html?keys=enter@60` | press Enter at frame 60 (automated tests) |
 
-Controls are the same as desktop (arrows/WASD, Enter, I, B, Tab, F1, Esc). Touch and mouse work
-through the on-screen pad; holding an arrow plate keeps walking. The page also has a
-fullscreen button and a 背包 (backpack) button.
+Controls are the same as desktop (arrows/WASD, Enter, Esc / ≡ for the player menu, C, I, B, Q / E, Tab, F1). Touch and
+mouse work through the on-screen pad; holding an arrow plate keeps walking. The page has no buttons of its own (since
+2026-10-10): Fullscreen is a row on the player menu's System tab, the backpack is its Items tab
+([20_PLAYER_MENU.md](20_PLAYER_MENU.md) §2, §7). The game asks the page (`tomsToggleFullscreen` in `shell.html`) a frame
+after the click, while the click's user activation still holds; if a browser refuses anyway, the next tap or key does it.
 
 ## 4. How the web build works
 
@@ -129,7 +131,7 @@ fullscreen button and a 背包 (backpack) button.
 | Renderer object | the core code's `new Renderer()` builds the bgfx renderer on web too (`compat/renderer.h`) | `src/game/compat/` |
 | Saves | IndexedDB mounted at `/save` (IDBFS); the core save code syncs after each write; slots re-read when the initial load finishes | `main_sdl.cpp` (`jsRefreshSlots`) |
 | Phones | viewport < 900×560 css px: pad plates ×1.2, UI ×1.5 (game resolution unchanged); portrait shows "rotate your device" | `main_sdl.cpp`, `src/game/web/shell.html` |
-| JS hooks | `jsRefreshSlots`, `jsInventory`, `jsFrameCount`, `jsTitleOpen` (callable with `Module.ccall`) | `main_sdl.cpp` |
+| JS hooks | `jsRefreshSlots`, `jsInventory` (the player menu's Items tab), `jsFrameCount`, `jsTitleOpen` (callable with `Module.ccall`) | `main_sdl.cpp` |
 
 Why the build uses a host `shaderc.exe`: otherwise bgfx.cmake compiles glslang, tint,
 spirv-cross and shaderc themselves to WebAssembly and runs them under node. That is roughly three

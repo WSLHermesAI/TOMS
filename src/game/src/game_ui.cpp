@@ -19,10 +19,9 @@ const DocSpec kDocs[] = {
     {"hud.rml",          [](const toms::UiState& s) { return s.hud.visible; }},
     {"battle.rml",       [](const toms::UiState& s) { return s.battle.visible; }},
     {"dialogue.rml",     [](const toms::UiState& s) { return s.dialogue.visible; }},
-    {"inventory.rml",    [](const toms::UiState& s) { return s.inventory.visible; }},
     {"store.rml",        [](const toms::UiState& s) { return s.store.visible; }},
     {"stage_select.rml", [](const toms::UiState& s) { return s.stage_select.visible; }},
-    {"menu.rml",         [](const toms::UiState& s) { return s.menu.visible; }},
+    {"player.rml",       [](const toms::UiState& s) { return s.player.visible; }},
     {"dialogs.rml",      [](const toms::UiState& s) { return s.stairs.visible || s.store.unlocked_dialog; }},
     {"title.rml",        [](const toms::UiState& s) { return s.title.visible; }},
     {"ending.rml",       [](const toms::UiState& s) { return s.ending.visible; }},
@@ -77,11 +76,8 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("stats_line", &UiHud::stats_line);
         s.RegisterMember("res_line", &UiHud::res_line);
         s.RegisterMember("footer", &UiHud::footer);
-        s.RegisterMember("icons", &UiHud::icons);
-        s.RegisterMember("store_unlocked", &UiHud::store_unlocked);
-        s.RegisterMember("store_label", &UiHud::store_label);
-        s.RegisterMember("store_icon", &UiHud::store_icon);
         s.RegisterMember("menu_label", &UiHud::menu_label);
+        s.RegisterMember("menu_news", &UiHud::menu_news);
         s.RegisterMember("chapter_card", &UiHud::chapter_card);
         s.RegisterMember("chapter_title", &UiHud::chapter_title);
         s.RegisterMember("chapter_sub", &UiHud::chapter_sub);
@@ -133,34 +129,83 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("scale", &UiDialogue::scale);
         s.RegisterMember("side", &UiDialogue::side);
     }
-    if (auto s = c.RegisterStruct<UiInvItem>()) {
-        s.RegisterMember("icon", &UiInvItem::icon);
-        s.RegisterMember("name", &UiInvItem::name);
-        s.RegisterMember("effect", &UiInvItem::effect);
-        s.RegisterMember("selected", &UiInvItem::selected);
+    if (auto s = c.RegisterStruct<UiTab>()) {
+        s.RegisterMember("label", &UiTab::label);
+        s.RegisterMember("active", &UiTab::active);
+        s.RegisterMember("news", &UiTab::news);
     }
-    c.RegisterArray<std::vector<UiInvItem>>();
-    if (auto s = c.RegisterStruct<UiInventory>()) {
-        s.RegisterMember("visible", &UiInventory::visible);
-        s.RegisterMember("title", &UiInventory::title);
-        s.RegisterMember("hint", &UiInventory::hint);
-        s.RegisterMember("empty_title", &UiInventory::empty_title);
-        s.RegisterMember("empty_hint", &UiInventory::empty_hint);
-        s.RegisterMember("detail_title", &UiInventory::detail_title);
-        s.RegisterMember("use_label", &UiInventory::use_label);
-        s.RegisterMember("drop_label", &UiInventory::drop_label);
-        s.RegisterMember("close_label", &UiInventory::close_label);
-        s.RegisterMember("footer_hint", &UiInventory::footer_hint);
-        s.RegisterMember("icon_label", &UiInventory::icon_label);
-        s.RegisterMember("stats_label", &UiInventory::stats_label);
-        s.RegisterMember("empty", &UiInventory::empty);
-        s.RegisterMember("items", &UiInventory::items);
-        s.RegisterMember("d_icon", &UiInventory::d_icon);
-        s.RegisterMember("d_name", &UiInventory::d_name);
-        s.RegisterMember("d_id", &UiInventory::d_id);
-        s.RegisterMember("d_icon_file", &UiInventory::d_icon_file);
-        s.RegisterMember("d_desc", &UiInventory::d_desc);
-        s.RegisterMember("d_pills", &UiInventory::d_pills);
+    c.RegisterArray<std::vector<UiTab>>();
+    if (auto s = c.RegisterStruct<UiCell>()) {
+        s.RegisterMember("icon", &UiCell::icon);
+        s.RegisterMember("name", &UiCell::name);
+        s.RegisterMember("badge", &UiCell::badge);
+        s.RegisterMember("selected", &UiCell::selected);
+        s.RegisterMember("worn", &UiCell::worn);
+        s.RegisterMember("locked", &UiCell::locked);
+    }
+    c.RegisterArray<std::vector<UiCell>>();
+    if (auto s = c.RegisterStruct<UiLine>()) {
+        s.RegisterMember("label", &UiLine::label);
+        s.RegisterMember("value", &UiLine::value);
+        s.RegisterMember("extra", &UiLine::extra);
+        s.RegisterMember("tone", &UiLine::tone);
+    }
+    c.RegisterArray<std::vector<UiLine>>();
+    if (auto s = c.RegisterStruct<UiButton>()) {
+        s.RegisterMember("label", &UiButton::label);
+        s.RegisterMember("enabled", &UiButton::enabled);
+    }
+    c.RegisterArray<std::vector<UiButton>>();
+    if (auto s = c.RegisterStruct<UiPlayer>()) {
+        s.RegisterMember("visible", &UiPlayer::visible);
+        s.RegisterMember("tab", &UiPlayer::tab);
+        s.RegisterMember("tabs", &UiPlayer::tabs);
+        s.RegisterMember("hint", &UiPlayer::hint);
+        s.RegisterMember("close_label", &UiPlayer::close_label);
+        s.RegisterMember("level", &UiPlayer::level);
+        s.RegisterMember("hp_text", &UiPlayer::hp_text);
+        s.RegisterMember("exp_text", &UiPlayer::exp_text);
+        s.RegisterMember("hp_pct", &UiPlayer::hp_pct);
+        s.RegisterMember("exp_pct", &UiPlayer::exp_pct);
+        s.RegisterMember("combat_title", &UiPlayer::combat_title);
+        s.RegisterMember("attr_title", &UiPlayer::attr_title);
+        s.RegisterMember("attr_desc", &UiPlayer::attr_desc);
+        s.RegisterMember("combat", &UiPlayer::combat);
+        s.RegisterMember("more", &UiPlayer::more);
+        s.RegisterMember("attrs", &UiPlayer::attrs);
+        s.RegisterMember("filters", &UiPlayer::filters);
+        s.RegisterMember("worn_title", &UiPlayer::worn_title);
+        s.RegisterMember("worn", &UiPlayer::worn);
+        s.RegisterMember("cells", &UiPlayer::cells);
+        s.RegisterMember("empty_text", &UiPlayer::empty_text);
+        s.RegisterMember("detail", &UiPlayer::detail);
+        s.RegisterMember("select_hint", &UiPlayer::select_hint);
+        s.RegisterMember("d_icon", &UiPlayer::d_icon);
+        s.RegisterMember("d_name", &UiPlayer::d_name);
+        s.RegisterMember("d_desc", &UiPlayer::d_desc);
+        s.RegisterMember("d_note", &UiPlayer::d_note);
+        s.RegisterMember("d_lines", &UiPlayer::d_lines);
+        s.RegisterMember("d_compare", &UiPlayer::d_compare);
+        s.RegisterMember("d_now_label", &UiPlayer::d_now_label);
+        s.RegisterMember("d_with_label", &UiPlayer::d_with_label);
+        s.RegisterMember("d_compare_lines", &UiPlayer::d_compare_lines);
+        s.RegisterMember("d_buttons", &UiPlayer::d_buttons);
+        s.RegisterMember("confirm_open", &UiPlayer::confirm_open);
+        s.RegisterMember("confirm_question", &UiPlayer::confirm_question);
+        s.RegisterMember("yes_label", &UiPlayer::yes_label);
+        s.RegisterMember("no_label", &UiPlayer::no_label);
+        s.RegisterMember("confirm_yes", &UiPlayer::confirm_yes);
+        s.RegisterMember("ev_filters", &UiPlayer::ev_filters);
+        s.RegisterMember("ev_rows", &UiPlayer::ev_rows);
+        s.RegisterMember("ev_detail", &UiPlayer::ev_detail);
+        s.RegisterMember("ev_empty", &UiPlayer::ev_empty);
+        s.RegisterMember("ev_hint", &UiPlayer::ev_hint);
+        s.RegisterMember("ev_kind", &UiPlayer::ev_kind);
+        s.RegisterMember("ev_title", &UiPlayer::ev_title);
+        s.RegisterMember("ev_desc", &UiPlayer::ev_desc);
+        s.RegisterMember("ev_connected_title", &UiPlayer::ev_connected_title);
+        s.RegisterMember("ev_connected", &UiPlayer::ev_connected);
+        s.RegisterMember("sys_hint", &UiPlayer::sys_hint);
     }
     if (auto s = c.RegisterStruct<UiStoreTab>()) {
         s.RegisterMember("label", &UiStoreTab::label);
@@ -198,6 +243,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
     if (auto s = c.RegisterStruct<UiMenu>()) {
         s.RegisterMember("visible", &UiMenu::visible);
         s.RegisterMember("page", &UiMenu::page);
+        s.RegisterMember("main_rows", &UiMenu::main_rows);
         s.RegisterMember("header", &UiMenu::header);
         s.RegisterMember("subheader", &UiMenu::subheader);
         s.RegisterMember("rows", &UiMenu::rows);
@@ -254,7 +300,7 @@ bool GameUi::init(Rml::Context* ctx, Game* game, const std::string& uiDir, std::
     c.Bind("hud", &state_.hud);
     c.Bind("battle", &state_.battle);
     c.Bind("dialogue", &state_.dialogue);
-    c.Bind("inventory", &state_.inventory);
+    c.Bind("player", &state_.player);
     c.Bind("store", &state_.store);
     c.Bind("menu", &state_.menu);
     c.Bind("stairs", &state_.stairs);
@@ -341,7 +387,7 @@ void GameUi::sync() {
     take(state_.hud, next.hud);
     take(state_.battle, next.battle);
     take(state_.dialogue, next.dialogue);
-    take(state_.inventory, next.inventory);
+    take(state_.player, next.player);
     take(state_.menu, next.menu);
     take(state_.stairs, next.stairs);
     take(state_.stage_select, next.stage_select);
@@ -352,10 +398,26 @@ void GameUi::sync() {
     // Everything is re-evaluated each frame: RmlUi only touches elements whose value changed, and
     // data-for keeps its existing elements, so this is cheap and never restarts a transition.
     if (Rml::DataModelHandle h = ctx_->GetDataModel("game").GetModelHandle()) h.DirtyAllVariables();
+    {   // which entry the player menu has selected: a change (keyboard or click) scrolls it into view
+        std::string key = std::to_string(state_.player.tab) + "|";
+        auto at = [&](const auto& v) { for (size_t i = 0; i < v.size(); i++) if (v[i].selected) return (int)i; return -1; };
+        key += std::to_string(at(state_.player.cells)) + "|" + std::to_string(at(state_.player.ev_rows)) + "|" +
+               std::to_string(at(state_.player.attrs)) + "|" + std::to_string(at(state_.menu.rows));
+        if (key != playerSelKey_) { playerSelKey_ = key; scrollFrames_ = 2; }
+    }
     for (size_t i = 0; i < docs_.size(); i++) {
         Doc& d = docs_[i];
         if (!d.doc) continue;
         const bool want = kDocs[i].visible(state_);
+        // The player menu's grids and lists scroll: an entry selected with the keyboard is scrolled
+        // into view. The selection is laid out by the next context update, so this looks one frame later.
+        if (want && d.shown && scrollFrames_ > 0 && d.file.size() >= 10 && d.file.compare(d.file.size() - 10, 10, "player.rml") == 0) {
+            --scrollFrames_;
+            for (Rml::Element* sel : {d.doc->QuerySelector(".cell.selected"), d.doc->QuerySelector(".evrow.selected"),
+                                      d.doc->QuerySelector(".attr.selected"), d.doc->QuerySelector("#sys-page .row.selected")})
+                if (sel) sel->ScrollIntoView(Rml::ScrollIntoViewOptions(Rml::ScrollAlignment::Nearest, Rml::ScrollAlignment::Nearest,
+                                                                       Rml::ScrollBehavior::Instant, Rml::ScrollParentage::Closest));
+        }
         if (want == d.shown) continue;
         if (want) d.doc->Show(Rml::ModalFlag::None, Rml::FocusFlag::None);
         else d.doc->Hide();

@@ -59,7 +59,10 @@ def main():
     pick = lambda d: {l: d.get(l) for l in ('zh_TW', 'en')} if isinstance(d, dict) else d
     enemies = {k: {'name': pick(v.get('name')), 'hp': v.get('hp'), 'atk': v.get('atk'), 'def': v.get('def')}
                for k, v in load(os.path.join(DATA, 'enemies.json'))[0].items() if not k.startswith('_')}
-    items = {k: {'name': pick(v.get('name')), 'effect': v.get('effect')}
+    # items.json is the all-item file: name/desc are text.json keys, the bonuses are "stats", and it also holds
+    # weapons / armor / talents ("type"), which the stage editor does not place on floors.
+    textOf = lambda n: pick(strings.get(n, n)) if isinstance(n, str) else pick(n)
+    items = {k: {'name': textOf(v.get('name')), 'effect': v.get('stats', v.get('effect')), 'type': v.get('type', 'consumable')}
              for k, v in load(os.path.join(DATA, 'items.json'))[0].items() if not k.startswith('_')}
     footprints = {k: v for k, v in load(os.path.join(DATA, 'footprints.json'))[0].items() if not k.startswith('_')}
     sprites = load(os.path.join(ROOT, 'assets', 'media', 'sprites', 'manifest.json'))[0]['sprites']

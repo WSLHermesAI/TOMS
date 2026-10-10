@@ -27,6 +27,9 @@ toms::RunSaveData Game::runSaveFromState() const {
     r.player.gold = pl.gold; r.player.exp = pl.exp; r.player.lv = pl.lv;
     r.player.key_yellow = pl.key_yellow; r.player.key_blue = pl.key_blue; r.player.key_red = pl.key_red;
     r.player.inv = pl.inv;
+    r.player.attrs = pl.attrs;
+    r.player.gear = gearOwned_;
+    r.player.weapon = equipped_.weaponId; r.player.armor = equipped_.armorId; r.player.talent = equipped_.talentId;
     r.entityStatus = entityStatus_;
     // S3: the run's story state travels with the run save (schemaVersion 3) -- choices, counters,
     // side-story states, run flags, shards, floor progress and deaths.
@@ -89,13 +92,23 @@ void Game::applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& 
     notifications_.clear();
     cs = CombatState{};
     inDialogue = false; dlgChoices.clear(); dlgNode = "root";
-    invOpen = false; storeOpen = false; storeUnlockDlg = false;
+    if (inGameMenuOpen_) closePlayerMenu();
+    storeOpen = false; storeUnlockDlg = false; storeFromMenu_ = false;
     stageSelectOpen_ = false; stairsConfirmOpen_ = false;
     pl.hp = r.player.hp; pl.maxhp = r.player.maxhp;
     pl.atk = r.player.atk; pl.def = r.player.def;
     pl.gold = r.player.gold; pl.exp = r.player.exp; pl.lv = r.player.lv;
     pl.key_yellow = r.player.key_yellow; pl.key_blue = r.player.key_blue; pl.key_red = r.player.key_red;
     pl.inv = r.player.inv;
+    resetAttrs();                                  // a save from before the attributes: base + levels
+    for (const auto& [k, v] : r.player.attrs) pl.attrs[k] = v;
+    gearOwned_.clear();
+    for (const std::string& g : r.player.gear) if (equipmentDefs_.count(g)) gearOwned_.push_back(g);
+    equipped_ = toms::EquippedSet{};
+    for (const std::string& g : {r.player.weapon, r.player.armor, r.player.talent})
+        if (!g.empty()) ownGear(g, true);          // worn gear is owned gear, even in a hand-edited save
+    newsGear_ = newsEvents_ = false;
+    eventLogSeen_ = 0;
     activeSlot_ = slot;
     playTimeSec_ = playSec;
     loadStage(r.currentStageId.empty() ? std::string("stage01") : r.currentStageId);

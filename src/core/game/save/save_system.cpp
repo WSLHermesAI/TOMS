@@ -61,6 +61,9 @@ nlohmann::json toJson(const RunSaveData& r) {
     p["gold"] = r.player.gold; p["exp"] = r.player.exp; p["lv"] = r.player.lv;
     p["key_yellow"] = r.player.key_yellow; p["key_blue"] = r.player.key_blue; p["key_red"] = r.player.key_red;
     p["inv"] = r.player.inv;
+    p["attrs"] = r.player.attrs;
+    p["gear"] = r.player.gear;
+    p["weapon"] = r.player.weapon; p["armor"] = r.player.armor; p["talent"] = r.player.talent;
     j["player"] = p;
     j["entityStatus"] = r.entityStatus;
     // S3 (schemaVersion 3): the run's story state -- see RunStoryState for what writes/reads it.
@@ -100,6 +103,13 @@ RunSaveData runFromJson(const nlohmann::json& j, bool* versionMismatch) {
         r.player.key_blue = p.value("key_blue", 0);
         r.player.key_red = p.value("key_red", 0);
         r.player.inv = p.value("inv", std::vector<std::string>{});
+        if (p.contains("attrs") && p["attrs"].is_object())
+            for (auto& [k, v] : p["attrs"].items())
+                if (v.is_number_integer()) r.player.attrs[k] = v.get<int>();
+        r.player.gear = p.value("gear", std::vector<std::string>{});
+        r.player.weapon = p.value("weapon", std::string());
+        r.player.armor = p.value("armor", std::string());
+        r.player.talent = p.value("talent", std::string());
     }
     if (j.contains("entityStatus") && j["entityStatus"].is_object())
         for (auto& [k, v] : j["entityStatus"].items())

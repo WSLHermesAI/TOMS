@@ -38,7 +38,7 @@ save/settings.json  "artStyle": "<id>"      the player's choice ("" = original)
   live in that packed texture; `styles/<id>/sprites/` is only the reference folder they are imported
   from. When the atlas exists the game uses it directly (each image keeps its own size); only without
   it does the game build the grid atlas described above at start-up.
-- The map, the battle screen, the inventory/store icons and the HUD store button all follow the style.
+- The map, the battle screen and the item / store icons (the player menu's grids, the store cards) all follow the style.
 - Because it is under `assets/media/`, the Windows package (`build_windows.bat`), the web build and
   Android all include it automatically.
 

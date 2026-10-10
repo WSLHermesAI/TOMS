@@ -763,7 +763,7 @@ function showHover() {
 // ---------------- palette ----------------
 let collapsedGroups = new Set();
 function paletteGroups() {
-  const items = Object.keys(BUNDLE.items).filter(k => !k.startsWith('key_'));
+  const items = Object.keys(BUNDLE.items).filter(k => !k.startsWith('key_') && (BUNDLE.items[k].type || 'consumable') === 'consumable');
   const npcs = [...new Set(['sorcerer', 'villager', 'king', 'princess', 'handmaiden', ...FLOORS.flatMap(f => Object.values(f.stage.legend).filter(v => v.startsWith('npc:')).map(v => v.slice(4)))])];
   return [
     ['gTerrain', ['wall', 'floor']], ['gStairs', ['stairs_up', 'stairs_down']], ['gPlayer', ['player_start']],

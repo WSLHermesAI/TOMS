@@ -26,12 +26,8 @@ void Game::startCombat(const EnemyInst& e) {
 void Game::finishCombatWin() {
     cs.active = false; cs.won = true;
     pl.hp = cs.playerHP;
-    pl.gold += cs.enemy.gold; pl.exp += cs.enemy.exp;
-    int need = pl.lv * 30;
-    while (pl.exp >= need) {
-        pl.exp -= need; pl.lv++; pl.atk += 2; pl.def += 1; pl.maxhp += 10; need = pl.lv*30;
-        pushNotification(locale_.tr("battle.levelup") + std::to_string(pl.lv));
-    }
+    pl.gold += cs.enemy.gold;
+    gainExp(cs.enemy.exp);   // level-ups by data/stats.json
     // remove monster entity from stage
     for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) e.consumed=true;
     st.tiles[cs.enemy.y][cs.enemy.x] = '.';

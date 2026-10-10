@@ -182,17 +182,51 @@ bool Game::loadAssets(const std::string& assetDir) {
     // load enemy templates
     nlohmann::json ej = readJsonFile(assetDir+"/../data/enemies.json");
     for (auto& [k,v] : ej.items()) enemyTpl[k] = v;
-    // load item definitions
+    // data/items.json: every item in the game, one record each ("_comment" and other "_" keys are notes).
+    // Its weapons, armor and talents are also the Equipment System's content (equipment_system.h).
     nlohmann::json ij = readJsonFile(assetDir+"/../data/items.json");
-    for (auto& [k,v] : ij.items()) itemDefs[k] = v;
-    // load store definitions (data/store.json) -> unlock stage + items + cost rule
-    loadStore(assetDir);
-    // Milestone 8: load the Equipment System's content (schema/logic built in Milestone 6 --
-    // equipment_system.h -- but equipmentDefs_ stayed empty, and nothing was ever purchasable,
-    // until this content-authoring pass wired it into the store below).
+    for (auto& [k,v] : ij.items()) {
+        if (k.empty() || k[0] == '_' || !v.is_object()) continue;
+        itemDefs[k] = v;
+        if (isGearType(v.value("type", std::string()))) {
+            toms::EquipmentDefinition d = toms::equipmentFromJson(v);
+            d.id = k;
+            equipmentDefs_[k] = d;
+        }
+    }
+    // data/story/counters.json: the story counters' state words, shown on the Status tab once a
+    // counter reaches its displayAt (the run state keeps the numbers).
     {
-        nlohmann::json eqj = readJsonFile(assetDir + "/../data/equipment.json");
-        for (auto& [k, v] : eqj.items()) equipmentDefs_[k] = toms::equipmentFromJson(v);
+        nlohmann::json cj = readJsonFile(assetDir + "/../data/story/counters.json");
+        if (cj.is_object())
+            for (auto& [k, v] : cj.items())
+                if (!k.empty() && k[0] != '_' && v.is_object() && v.contains("label")) counterLabels_[k] = v["label"];
+    }
+    // data/store.json: which of those items the store sells, and how prices grow
+    loadStore(assetDir);
+    // data/stats.json: the player's attributes and the level-up numbers (docs/20_PLAYER_MENU.md section 3).
+    {
+        nlohmann::json sj = readJsonFile(assetDir + "/../data/stats.json");
+        if (sj.contains("attributes") && sj["attributes"].is_array())
+            for (const auto& a : sj["attributes"]) {
+                AttrDef d;
+                d.id = a.value("id", std::string());
+                if (d.id.empty()) continue;
+                d.shortName = a.value("short", d.id);
+                d.nameKey = a.value("name", d.id);
+                d.descKey = a.value("desc", std::string());
+                d.base = a.value("base", 5);
+                d.perLevel = a.value("perLevel", 1);
+                attrDefs_.push_back(d);
+            }
+        if (sj.contains("levelUp") && sj["levelUp"].is_object()) {
+            const auto& l = sj["levelUp"];
+            levelUp_.expPerLevel = std::max(1, l.value("expPerLevel", levelUp_.expPerLevel));
+            levelUp_.atk = l.value("atk", levelUp_.atk);
+            levelUp_.def = l.value("def", levelUp_.def);
+            levelUp_.maxhp = l.value("maxhp", levelUp_.maxhp);
+            levelUp_.freePoints = l.value("freePoints", levelUp_.freePoints);
+        }
     }
     // Milestone 8: load the Mission System's content (schema/logic built in Milestone 4 --
     // mission_system.h -- but missionDefs_ stayed empty until this content-authoring pass).
@@ -218,6 +252,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     // init player
     pl.maxhp = kStartingHp; pl.hp = kStartingHp; pl.atk = kStartingAtk; pl.def = kStartingDef; pl.gold = 0; pl.exp = 0; pl.lv = 1;
     pl.inv = {"potion_red", "potion_blue", "exp_up"};
+    resetAttrs();
 
     // S3.5: the 70-floor tower (data/story/floors/*.json) as the run's progression source. Loaded
     // once here; empty when the data is absent, and every use is guarded, so such a checkout plays
@@ -455,6 +490,7 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     if (st.index >= storeUnlockStage_ && !storeUnlocked_) {
         storeUnlocked_ = true;
         storeUnlockDlg = true;
+        newsStore_ = true;   // a dot on ≡ until the store is opened
     }
 
     // M9 (stair alignment): arriving via a specific staircase lands exactly on the matching
