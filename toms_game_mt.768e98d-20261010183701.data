@@ -17993,7 +17993,8 @@ body { z-index: 30; }
      elsewhere on the box continues with the highlighted one. Data: dialogue.* (UiDialogue). -->
 <body data-model="game">
     <div class="fill focus"></div>
-    <div id="box" data-style-transform="'scale(' + dialogue.scale + ')'" data-event-click="act('dlg_advance')">
+    <div id="box" data-style-transform="'scale(' + dialogue.scale + ')'" data-style-left="dialogue.side + 'px'"
+         data-style-right="dialogue.side + 'px'" data-event-click="act('dlg_advance')">
         <div id="text">{{dialogue.text}}</div>
         <div data-for="c, i : dialogue.choices">
             <div class="choice" data-class-selected="c.selected"
@@ -18043,23 +18044,19 @@ body { z-index: 10; pointer-events: none; }     /* clicks go through to the map 
 #hp-fill { height: 100%; background-color: #f37b7b; }
 #hp-text { position: absolute; left: 226px; top: 40px; font-size: 21px; color: #ffffff; }
 #stats   { position: absolute; left: 16px; top: 64px; font-size: 21px; color: #ffffff; }
-#res     { position: absolute; left: 16px; top: 88px; font-size: 18px; color: #ffffff; border-radius: 4px; }
-#res:hover { background-color: #ffffff22; }
+#res     { position: absolute; left: 16px; top: 88px; font-size: 18px; color: #ffffff; }
 
-/* Menu (≡) and store buttons, top right. */
+/* The one button (≡), top right: big enough for a thumb. The dot = something new inside. */
 .icon {
-    position: absolute; top: 10px; width: 50px; height: 50px;
-    background-color: #6f809c; border-radius: 6px; text-align: center;
+    position: absolute; top: 10px; width: 58px; height: 58px;
+    background-color: #6f6f7b; border-radius: 8px; text-align: center;
 }
-.icon:hover { background-color: #8394b0; }
-#menu-btn  { right: 64px; background-color: #6f6f7b; }
-#menu-btn:hover { background-color: #85858f; }
-#store-btn { right: 8px; }
-#store-btn.locked { background-color: #61616880; }
-#store-btn.locked .coin, #store-btn.locked .icon-label { opacity: 0.4; }
-.glyph { font-size: 36px; line-height: 50px; color: #ffffff; }
-.coin  { width: 42px; height: 42px; margin-top: 4px; }
-.icon-label { position: absolute; left: -10px; right: -10px; top: 52px; font-size: 14px; color: #ffffff; }
+.icon:hover { background-color: #85858f; }
+#menu-btn { right: 10px; }
+.glyph { font-size: 40px; line-height: 58px; color: #ffffff; }
+.icon-label { position: absolute; left: -10px; right: -10px; top: 60px; font-size: 14px; color: #ffffff; }
+#news { position: absolute; right: -4px; top: -4px; width: 14px; height: 14px; border-radius: 7px;
+        background-color: #ff6b5e; border: 2px #fff6c2; }
 
 /* Name plate over a boss / roaming monster: centred on its x, sitting on its y. */
 .banner {
@@ -18094,15 +18091,13 @@ body { z-index: 10; pointer-events: none; }     /* clicks go through to the map 
     <div id="hp-bar"><div id="hp-fill" data-style-width="hud.hp_pct + '%'"></div></div>
     <div id="hp-text">{{hud.hp_text}}</div>
     <div id="stats">{{hud.stats_line}}</div>
-    <div id="res" class="click" data-event-click="act('hud_inventory')">{{hud.res_line}}</div>
+    <div id="res">{{hud.res_line}}</div>
 
-    <div id="menu-btn" class="icon click" data-if="hud.icons" data-event-click="act('hud_menu')">
+    <!-- The walking scene's one button: the player menu (Status, Equipment, Items, Events, System). -->
+    <div id="menu-btn" class="icon click" data-event-click="act('hud_menu')">
         <div class="glyph">≡</div>
         <div class="icon-label">{{hud.menu_label}}</div>
-    </div>
-    <div id="store-btn" class="icon click" data-class-locked="!hud.store_unlocked" data-event-click="act('hud_store')">
-        <img class="coin" sprite="coin" data-attr-sprite="hud.store_icon"/>
-        <div class="icon-label">{{hud.store_label}}</div>
+        <div id="news" data-if="hud.menu_news"></div>
     </div>
 
     <div data-for="b : hud.banners">
@@ -18116,171 +18111,6 @@ body { z-index: 10; pointer-events: none; }     /* clicks go through to the map 
     </div>
 
     <div id="footer">{{hud.footer}}</div>
-</body>
-</rml>
-/* inventory.rcss -- the backpack (inventory.rml). */
-body { z-index: 30; }
-
-#panel { position: absolute; left: 32px; top: 94px; width: 960px; height: 580px; background-color: #5a6175f5; }
-#bar   { height: 64px; background-color: #687288; padding: 6px 22px 0 22px; }
-#title { font-size: 30px; color: #fff6c2; }
-#hint  { font-size: 16px; color: #e9f1ff; }
-
-#empty { position: absolute; left: 22px; right: 22px; top: 86px; bottom: 22px; background-color: #515a6cf5; padding: 40px 18px; }
-#empty-title { font-size: 25px; color: #ffffff; }
-#empty-hint  { margin-top: 12px; font-size: 18px; color: #e9f1ff; }
-#empty-close { position: absolute; right: 18px; bottom: 18px; width: 90px; height: 34px; line-height: 34px; }
-
-/* Left: the item list (scrolls when long). */
-#list {
-    position: absolute; left: 22px; top: 86px; width: 527px; height: 472px;
-    padding: 10px; background-color: #515a6cf5; overflow-y: auto;
-}
-.item {
-    position: relative; height: 66px; margin-bottom: 10px; cursor: pointer;
-    background-color: #686f85fa; border: 2px #00000000;
-}
-.item:hover { background-color: #747c93; }
-.item.selected { background-color: #8088a4; border-color: #ffed7b; }
-.item-icon   { position: absolute; left: 10px; top: 8px; width: 46px; height: 46px; }
-.item-name   { position: absolute; left: 66px; top: 6px; font-size: 21px; color: #ffffff; }
-.item-effect { position: absolute; left: 66px; top: 36px; font-size: 15px; color: #d9ffe4; }
-.item-count  { position: absolute; right: 16px; top: 20px; font-size: 21px; color: #fff9ba; }
-
-/* Right: the selected item. */
-#detail {
-    position: absolute; left: 573px; top: 86px; width: 365px; height: 472px;
-    background-color: #555d75fa;
-}
-#d-title { position: absolute; left: 18px; top: 12px; font-size: 23px; color: #fff9c2; }
-#d-icon  { position: absolute; left: 18px; top: 54px; width: 76px; height: 76px; }
-#d-name  { position: absolute; left: 108px; top: 58px; right: 12px; font-size: 30px; color: #ffffff; }
-#d-id    { position: absolute; left: 108px; top: 96px; font-size: 16px; color: #d9e6f9; }
-#d-file  { position: absolute; left: 18px; top: 138px; font-size: 15px; color: #d9e6f9; }
-#d-desc  { position: absolute; left: 18px; right: 18px; top: 164px; font-size: 18px; color: #f1f6ff; }
-#d-stats { position: absolute; left: 18px; top: 240px; font-size: 15px; color: #d9e6f9; }
-#pills   { position: absolute; left: 18px; top: 264px; }
-.pill    { display: inline-block; margin: 0 8px 8px 0; padding: 4px 10px; font-size: 16px; color: #edfff1; background-color: #61856f; }
-#footer-hint { position: absolute; left: 18px; right: 18px; bottom: 58px; font-size: 15px; color: #d9e6f9; }
-#buttons { position: absolute; left: 18px; right: 18px; bottom: 14px; height: 34px; }
-#buttons .btn { display: inline-block; width: 88px; height: 34px; line-height: 34px; font-size: 17px; margin-right: 10px; }
-#buttons .drop { background-color: #ca8f8a; color: #ffffff; }
-#buttons .drop:hover { background-color: #d9a19c; }
-#buttons .close { position: absolute; right: 0; margin-right: 0; }
-<rml>
-<head>
-    <title>Inventory</title>
-    <link type="text/rcss" href="common.rcss"/>
-    <link type="text/rcss" href="_atlas.rcss"/>
-    <link type="text/rcss" href="inventory.rcss"/>
-</head>
-<!-- The backpack: item list on the left (click to select), the selected item's details and
-     Use / Drop / Close on the right. Data: inventory.* (UiInventory). -->
-<body data-model="game">
-    <div class="fill focus"></div>
-    <div id="panel">
-        <div id="bar">
-            <div id="title">{{inventory.title}}</div>
-            <div id="hint">{{inventory.hint}}</div>
-        </div>
-
-        <div id="empty" data-if="inventory.empty">
-            <div id="empty-title">{{inventory.empty_title}}</div>
-            <div id="empty-hint">{{inventory.empty_hint}}</div>
-            <div id="empty-close" class="btn btn-no" data-event-click="act('inv_close')">{{inventory.close_label}}</div>
-        </div>
-
-        <div data-if="!inventory.empty">
-            <div id="list">
-                <div data-for="it, i : inventory.items">
-                    <div class="item" data-class-selected="it.selected" data-event-click="act('inv_select', i)">
-                        <img class="item-icon" data-attr-sprite="it.icon"/>
-                        <div class="item-name">{{it.name}}</div>
-                        <div class="item-effect">{{it.effect}}</div>
-                        <div class="item-count">x1</div>
-                    </div>
-                </div>
-            </div>
-            <div id="detail">
-                <div id="d-title">{{inventory.detail_title}}</div>
-                <img id="d-icon" data-attr-sprite="inventory.d_icon"/>
-                <div id="d-name">{{inventory.d_name}}</div>
-                <div id="d-id">{{inventory.d_id}}</div>
-                <div id="d-file">{{inventory.icon_label}}: {{inventory.d_icon_file}}</div>
-                <div id="d-desc">{{inventory.d_desc}}</div>
-                <div id="d-stats">{{inventory.stats_label}}</div>
-                <div id="pills"><div class="pill" data-for="p : inventory.d_pills">{{p}}</div></div>
-                <div id="footer-hint">{{inventory.footer_hint}}</div>
-                <div id="buttons">
-                    <div class="btn btn-yes" data-event-click="act('inv_use')">{{inventory.use_label}}</div>
-                    <div class="btn drop" data-event-click="act('inv_drop')">{{inventory.drop_label}}</div>
-                    <div class="btn btn-plain close" data-event-click="act('inv_close')">{{inventory.close_label}}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</rml>
-/* menu.rcss -- the in-game menu (menu.rml). The panel grows with its rows, centred on screen. */
-body { z-index: 45; }
-
-#frame { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; }
-#panel { width: 460px; padding: 22px 30px 20px 30px; text-align: center; }
-#header    { font-size: 30px; color: #f9e9b1; }
-#subheader { margin-top: 6px; font-size: 18px; color: #cad0e1; }
-#rows { margin-top: 18px; max-height: 520px; overflow-y: auto; }
-.row  { height: 56px; line-height: 56px; margin-bottom: 10px; padding-left: 18px; font-size: 21px; color: #ffffff; text-align: left; }
-.section { margin: 6px 0 4px 4px; text-align: left; font-size: 17px; color: #f9e9b1; }   /* Settings' headings */
-.rsub { float: right; margin-right: 16px; font-size: 15px; color: #cad0e1; }   /* "applies after a restart" */
-/* Long pages (Settings with the art style rows, ...): shorter rows, so the whole list fits without
-   scrolling and the keyboard cursor never sits on a row scrolled out of view. */
-#panel.compact #rows .row { height: 38px; line-height: 38px; margin-bottom: 5px; font-size: 19px; }
-#close { display: block; width: 140px; height: 46px; line-height: 46px; margin: 10px auto 0 auto; padding: 0; text-align: center; }
-
-#confirm  { position: absolute; left: 232px; top: 279px; width: 560px; height: 210px; text-align: center; }
-#question { margin-top: 60px; font-size: 28px; color: #f9e9b1; }
-#confirm.with-body { top: 254px; height: 260px; }   /* a two-line question + the body line still clear the answers */
-#confirm.with-body #question { margin-top: 30px; }
-#body     { margin-top: 10px; font-size: 18px; color: #cad0e1; }
-#answers  { position: absolute; left: 0; right: 0; bottom: 26px; }
-.answer   { display: inline-block; width: 160px; height: 56px; line-height: 56px; margin: 0 20px; padding: 0; text-align: center; }
-<rml>
-<head>
-    <title>Menu</title>
-    <link type="text/rcss" href="common.rcss"/>
-    <link type="text/rcss" href="menu.rcss"/>
-</head>
-<!-- The in-game menu (Esc / the ≡ button): Save, Settings (languages + camera + art style), Skills,
-     Village, Forge, Back to title -- one page at a time, same rows as the keyboard cursor.
-     Dimmed rows are locked / unaffordable. Data: menu.* (UiMenu). -->
-<body data-model="game">
-    <div class="fill scrim"></div>
-    <div id="frame">
-        <div id="panel" class="panel" data-class-compact="menu.rows.size > 7">
-            <div id="header">{{menu.header}}</div>
-            <div id="subheader" data-if="menu.subheader != ''">{{menu.subheader}}</div>
-            <div id="rows">
-                <div data-for="r, i : menu.rows">
-                    <div class="section" data-if="r.section != ''">{{r.section}}</div>
-                    <div class="row" data-class-selected="r.selected" data-class-disabled="!r.enabled"
-                         data-event-click="act('menu_row', i)" data-event-mouseover="act('menu_hover', i)">{{r.label}}<span class="rsub" data-if="r.sub != ''">{{r.sub}}</span></div>
-                </div>
-            </div>
-            <div id="close" class="row" data-event-click="act('menu_close')">{{menu.close_label}}</div>
-        </div>
-    </div>
-
-    <div data-if="menu.confirm_open">
-        <div class="fill scrim"></div>
-        <div id="confirm" class="panel" data-class-with-body="menu.confirm_body != ''">
-            <div id="question">{{menu.confirm_question}}</div>
-            <div id="body" data-if="menu.confirm_body != ''">{{menu.confirm_body}}</div>
-            <div id="answers">
-                <div class="row answer" data-class-selected="menu.confirm_yes" data-event-click="act('menu_confirm', 1)">{{menu.yes_label}}</div>
-                <div class="row answer" data-class-selected="!menu.confirm_yes" data-event-click="act('menu_confirm', 0)">{{menu.no_label}}</div>
-            </div>
-        </div>
-    </div>
 </body>
 </rml>
 /* overlay.rcss -- toasts and notifications (overlay.rml). */
@@ -18310,6 +18140,392 @@ body { z-index: 90; pointer-events: none; }
         <div class="note" data-for="n : overlay.notifications">{{n}}</div>
     </div>
     <div id="toast-row" data-if="overlay.toast"><span id="toast">{{overlay.toast_text}}</span></div>
+</body>
+</rml>
+/* player.rcss -- the player menu (player.rml). Design space 1024x768, see common.rcss. */
+body { z-index: 45; }
+
+#panel { position: absolute; left: 16px; top: 12px; width: 992px; height: 744px; background-color: #5a6175f8; }
+/* Chinese and Japanese have no spaces to break lines at: break a too-long run where it overflows. */
+#panel, .confirm { word-break: break-word; }
+
+.slot { display: inline-block; vertical-align: top; }   /* a data-for wrapper laid out in a row */
+
+/* ---- tabs ---- */
+#tabs { position: absolute; left: 16px; right: 16px; top: 10px; height: 52px; }
+.tab {
+    display: inline-block; height: 48px; line-height: 48px; padding: 0 22px; margin-right: 8px;
+    font-size: 22px; color: #e9eef9; background-color: #6f7285; border-radius: 6px 6px 0 0; cursor: pointer;
+}
+.tab:hover { background-color: #7d8197; }
+.tab.active { background-color: #8594b0; color: #fff6c2; }
+.dot { display: inline-block; width: 10px; height: 10px; margin-left: 6px; border-radius: 5px; background-color: #ff6b5e; }
+#close { position: absolute; right: 0; top: 0; width: 48px; height: 48px; line-height: 48px; font-size: 28px; }
+
+.page { position: absolute; left: 16px; right: 16px; top: 68px; bottom: 34px; }
+#hint { position: absolute; left: 20px; bottom: 8px; font-size: 15px; color: #cad0e1; }
+.heading { margin: 10px 0 6px 0; font-size: 18px; color: #f9e9b1; }
+.line { height: 30px; line-height: 30px; font-size: 19px; color: #ffffff; }
+.l-label { display: inline-block; width: 120px; color: #cad0e1; }
+.l-value { color: #ffffff; }
+.gap { height: 10px; }
+.empty { padding: 30px 10px; font-size: 19px; color: #e9f1ff; }
+.hint-center { padding: 120px 20px 0 20px; text-align: center; font-size: 19px; color: #cad0e1; }
+
+/* ---- Status ---- */
+#st-left  { position: absolute; left: 8px; top: 0; width: 470px; bottom: 0; }
+#st-right { position: absolute; left: 500px; right: 8px; top: 0; bottom: 0; }
+#st-level { font-size: 34px; color: #fff6c2; margin-bottom: 8px; }
+.bar { width: 300px; height: 14px; margin-top: 8px; background-color: #3d4252; border-radius: 4px; }
+.fill-hp  { height: 100%; background-color: #f37b7b; border-radius: 4px; }
+.fill-exp { height: 100%; background-color: #8fc7f5; border-radius: 4px; }
+.bar-text { font-size: 17px; color: #e9eef9; }
+#attrs { max-height: 380px; overflow-y: auto; }
+.attr { height: 42px; line-height: 42px; margin-bottom: 6px; padding: 0 16px; font-size: 20px; color: #ffffff; }
+.attr-value { float: right; color: #fff6c2; }
+.attr-add { float: right; width: 30px; height: 30px; line-height: 30px; margin: 6px 0 0 12px; text-align: center;
+            font-size: 22px; color: #2e3140; background-color: #9ff0b4; border-radius: 15px; }
+.attr-add:hover { background-color: #b8f5c8; }
+#attr-points { margin-left: 16px; font-size: 16px; color: #9ff0b4; }
+.attr-eff { margin-top: 8px; font-size: 17px; color: #cfe7ff; }
+.attr-eff.now { color: #9ff0b4; }
+.attr-eff.hint { color: #ffd28f; font-size: 15px; }
+#attr-desc {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 150px; padding: 14px 16px;
+    background-color: #4d5466; border-radius: 6px; font-size: 18px; color: #f1f6ff;
+}
+
+/* ---- the split layout: list | detail ---- */
+.left  { position: absolute; left: 0; top: 0; width: 548px; bottom: 0; }
+.right {
+    position: absolute; left: 564px; right: 0; top: 0; bottom: 0; padding: 14px 16px;
+    background-color: #555d75; border-radius: 6px;
+}
+.chips { height: 44px; }
+.chip {
+    display: inline-block; height: 36px; line-height: 36px; padding: 0 16px; margin-right: 8px;
+    font-size: 18px; color: #e9eef9; background-color: #6f7285; border-radius: 18px; cursor: pointer;
+}
+.chip:hover { background-color: #7d8197; }
+.chip.active { background-color: #ead98f; color: #2e3140; }
+
+/* Equipment: what each slot wears (click = that slot) */
+#worn { height: 112px; }
+.worn-line { height: 34px; line-height: 34px; padding: 0 12px; margin-bottom: 4px; font-size: 19px; border-radius: 6px; cursor: pointer; background-color: #616678; }
+.worn-line.current { background-color: #73809e; }
+
+/* the 3-per-row grid (scrolls) */
+#grid { height: 586px; padding: 8px 0 8px 8px; background-color: #4d5466; border-radius: 6px; overflow-y: auto; }
+#grid.short { height: 470px; }
+.cell {
+    position: relative; display: inline-block; width: 164px; height: 128px; margin: 0 8px 8px 0;
+    background-color: #686f85; border: 2px #00000000; border-radius: 6px; text-align: center; cursor: pointer;
+}
+.cell:hover { background-color: #747c93; }
+.cell.selected { background-color: #8088a4; border-color: #ffed7b; }
+.cell-icon  { width: 60px; height: 60px; margin-top: 12px; }
+.cell-name  { position: absolute; left: 4px; right: 4px; bottom: 10px; font-size: 17px; color: #ffffff; white-space: nowrap; overflow: hidden; }
+.cell-badge { position: absolute; right: 8px; top: 6px; font-size: 18px; color: #fff9ba; }
+.cell-worn  { position: absolute; left: 8px; top: 4px; font-size: 20px; color: #9ff0b4; }
+.cell-lock  { position: absolute; left: 8px; bottom: 36px; width: 10px; height: 10px; border-radius: 2px; background-color: #ead98f; }
+
+/* the selected entry */
+#d-icon { width: 72px; height: 72px; float: left; margin-right: 14px; }
+#d-name { height: 72px; line-height: 72px; font-size: 26px; color: #ffffff; }
+#d-desc { clear: both; margin: 10px 0; font-size: 18px; color: #f1f6ff; }
+#compare { margin-top: 10px; padding: 8px 10px; background-color: #4d5466; border-radius: 6px; }
+.cmp { height: 28px; line-height: 28px; font-size: 17px; color: #ffffff; }
+.cmp.head { color: #cad0e1; font-size: 15px; }
+.c-label { display: inline-block; width: 120px; color: #cad0e1; }
+.c-now   { display: inline-block; width: 110px; }
+.c-with  { display: inline-block; width: 110px; }
+.cmp.better .c-with { color: #9ff0b4; }
+.cmp.worse .c-with  { color: #ff9c92; }
+#d-note { margin-top: 10px; font-size: 16px; color: #ffd28f; }
+#d-buttons { position: absolute; left: 16px; right: 16px; bottom: 14px; height: 44px; }
+.dbtn {
+    display: inline-block; min-width: 96px; height: 44px; line-height: 44px; padding: 0 12px; margin-right: 10px;
+    font-size: 19px; color: #ffffff; background-color: #7bba94;
+}
+.dbtn:hover { background-color: #8cccaa; }
+.dbtn.off { background-color: #7a7e92; color: #b4b8c6; }
+
+/* ---- Events ---- */
+#events { height: 586px; padding: 8px; background-color: #4d5466; border-radius: 6px; overflow-y: auto; }
+.evrow { height: 46px; line-height: 46px; margin-bottom: 6px; padding: 0 14px; font-size: 19px; color: #ffffff; white-space: nowrap; overflow: hidden; }
+.evrow.done { color: #a9adbd; }
+.ev-sub { float: right; font-size: 15px; color: #cad0e1; }
+#ev-kind  { font-size: 16px; color: #f9e9b1; }
+#ev-title { margin-top: 6px; font-size: 26px; color: #ffffff; }
+#ev-desc  { margin-top: 14px; font-size: 19px; color: #f1f6ff; }
+.ev-link  { font-size: 18px; color: #e9eef9; margin-left: 10px; }
+
+/* ---- System ---- */
+#sys-rows { height: 630px; overflow-y: auto; }
+.sysrow { height: 52px; line-height: 52px; margin-bottom: 8px; padding: 0 18px; font-size: 21px; color: #ffffff; }
+.rsub { float: right; font-size: 16px; color: #cad0e1; }
+#sys-header { font-size: 26px; color: #f9e9b1; }
+#sys-sub { margin-top: 4px; font-size: 17px; color: #cad0e1; }
+#sys-list { margin-top: 12px; height: 500px; overflow-y: auto; }
+#sys-list .row { height: 46px; line-height: 46px; margin-bottom: 8px; padding: 0 14px; font-size: 19px; color: #ffffff; }
+#sys-list.compact .row { height: 36px; line-height: 36px; margin-bottom: 4px; font-size: 18px; }
+.section { margin: 6px 0 4px 4px; font-size: 16px; color: #f9e9b1; }
+#sys-back { position: absolute; right: 16px; bottom: 14px; width: 120px; height: 42px; line-height: 42px; font-size: 18px; }
+
+/* ---- confirm dialogs ---- */
+.confirm  { position: absolute; left: 232px; top: 279px; width: 560px; height: 210px; text-align: center; }
+.confirm.with-body { top: 254px; height: 260px; }
+.question { margin-top: 50px; padding: 0 20px; font-size: 25px; color: #f9e9b1; }
+.confirm.with-body .question { margin-top: 30px; }
+.body     { margin-top: 10px; font-size: 18px; color: #cad0e1; }
+.answers  { position: absolute; left: 0; right: 0; bottom: 26px; }
+.answer   { display: inline-block; width: 160px; height: 52px; line-height: 52px; margin: 0 20px; text-align: center; font-size: 20px; color: #ffffff; }
+<rml>
+<head>
+    <title>Player menu</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="_atlas.rcss"/>
+    <link type="text/rcss" href="player.rcss"/>
+</head>
+<!-- The player menu (docs/20_PLAYER_MENU.md): the walking scene's one button (≡ / Esc) opens it.
+     Tabs: Status, Equipment, Items, Events, System. Equipment, Items, Events and System share one
+     layout: a list on the left (Items and Equipment: a grid of 3 per row), the selected entry on the
+     right. Data: player.* (UiPlayer); the System tab's rows and pages are menu.* (UiMenu).
+     Buttons: act('pm_*', n) -> Game::playerMenuEvent; the System tab's page rows use menu_row.
+     Every data-for sits on a wrapper with the bindings on the element inside: when a list shrinks,
+     RmlUi removes the extra rows first (bindings on the data-for element itself can be read before
+     that and log "Data array index out of bounds"). -->
+<body data-model="game">
+    <div class="fill scrim"></div>
+    <div id="panel" class="panel">
+        <div id="tabs">
+            <div class="slot" data-for="t, i : player.tabs"><div class="tab" data-class-active="t.active" data-event-click="act('pm_tab', i)">{{t.label}}<span class="dot" data-if="t.news"></span></div></div>
+            <div id="close" class="btn btn-plain" data-event-click="act('pm_close')">×</div>
+        </div>
+
+        <!-- ===== Status ===== -->
+        <div class="page" data-if="player.tab == 0">
+            <div id="st-left">
+                <div id="st-level">{{player.level}}</div>
+                <div class="bar"><div class="fill-hp" data-style-width="player.hp_pct + '%'"></div></div>
+                <div class="bar-text">{{player.hp_text}}</div>
+                <div class="bar"><div class="fill-exp" data-style-width="player.exp_pct + '%'"></div></div>
+                <div class="bar-text">{{player.exp_text}}</div>
+                <div class="heading">{{player.combat_title}}</div>
+                <div data-for="l : player.combat"><div class="line"><span class="l-label">{{l.label}}</span><span class="l-value">{{l.value}}</span></div></div>
+                <div class="gap"></div>
+                <div data-for="l : player.more"><div class="line"><span class="l-label">{{l.label}}</span><span class="l-value">{{l.value}}</span></div></div>
+            </div>
+            <div id="st-right">
+                <div class="heading">{{player.attr_title}}<span id="attr-points" data-if="player.attr_points != ''">{{player.attr_points}}</span></div>
+                <div id="attrs">
+                    <div data-for="a, i : player.attrs"><div class="row attr" data-class-selected="a.selected" data-event-click="act('pm_attr', i)">{{a.label}}<span class="attr-add btn" data-if="player.attr_can_add" data-event-click="act('pm_attr_add', i)">+</span><span class="attr-value">{{a.sub}}</span></div></div>
+                </div>
+                <div id="attr-desc">{{player.attr_desc}}
+                    <div class="attr-eff" data-if="player.attr_per != ''">{{player.attr_per}}</div>
+                    <div class="attr-eff now" data-if="player.attr_now != ''">{{player.attr_now}}</div>
+                    <div class="attr-eff hint" data-if="player.attr_points_hint != ''">{{player.attr_points_hint}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Equipment / Items: filter chips + a 3-per-row grid | the selected entry ===== -->
+        <div class="page" data-if="player.tab == 1 || player.tab == 2">
+            <div class="left">
+                <div id="worn" data-if="player.tab == 1">
+                    <div class="heading">{{player.worn_title}}</div>
+                    <div data-for="w, i : player.worn"><div class="worn-line" data-class-current="w.tone > 0" data-event-click="act('pm_slot', i)"><span class="l-label">{{w.label}}</span><span class="l-value">{{w.value}}</span></div></div>
+                </div>
+                <div class="chips">
+                    <div class="slot" data-for="f, i : player.filters"><div class="chip" data-class-active="f.active" data-event-click="act('pm_filter', i)">{{f.label}}</div></div>
+                </div>
+                <div id="grid" data-class-short="player.tab == 1">
+                    <div class="slot" data-for="c, i : player.cells"><div class="cell" data-class-selected="c.selected" data-event-click="act('pm_cell', i)">
+                        <img class="cell-icon" data-attr-sprite="c.icon"/>
+                        <div class="cell-name">{{c.name}}</div>
+                        <div class="cell-badge" data-if="c.badge != ''">{{c.badge}}</div>
+                        <div class="cell-worn" data-if="c.worn">✓</div>
+                        <div class="cell-lock" data-if="c.locked"></div>
+                    </div></div>
+                    <div class="empty" data-if="player.cells.size == 0">{{player.empty_text}}</div>
+                </div>
+            </div>
+            <div class="right">
+                <div class="hint-center" data-if="!player.detail">{{player.select_hint}}</div>
+                <div data-if="player.detail">
+                    <img id="d-icon" data-attr-sprite="player.d_icon"/>
+                    <div id="d-name">{{player.d_name}}</div>
+                    <div id="d-desc">{{player.d_desc}}</div>
+                    <div data-for="l : player.d_lines"><div class="line"><span class="l-label">{{l.label}}</span><span class="l-value">{{l.value}}</span></div></div>
+                    <div id="compare" data-if="player.d_compare">
+                        <div class="cmp head"><span class="c-label"></span><span class="c-now">{{player.d_now_label}}</span><span class="c-with">{{player.d_with_label}}</span></div>
+                        <div data-for="l : player.d_compare_lines"><div class="cmp" data-class-better="l.tone > 0" data-class-worse="l.tone < 0"><span class="c-label">{{l.label}}</span><span class="c-now">{{l.value}}</span><span class="c-with">{{l.extra}}</span></div></div>
+                    </div>
+                    <div id="d-note" data-if="player.d_note != ''">{{player.d_note}}</div>
+                    <div id="d-buttons">
+                        <div class="slot" data-for="b, i : player.d_buttons"><div class="btn dbtn" data-class-off="!b.enabled" data-event-click="act('pm_btn', i)">{{b.label}}</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Events: Unfinished / All + the list | title, description, connected events ===== -->
+        <div class="page" data-if="player.tab == 3">
+            <div class="left">
+                <div class="chips">
+                    <div class="slot" data-for="f, i : player.ev_filters"><div class="chip" data-class-active="f.active" data-event-click="act('pm_filter', i)">{{f.label}}</div></div>
+                </div>
+                <div id="events">
+                    <div data-for="r, i : player.ev_rows"><div class="row evrow" data-class-selected="r.selected" data-class-done="!r.enabled" data-event-click="act('pm_event', i)">{{r.label}}<span class="ev-sub">{{r.sub}}</span></div></div>
+                    <div class="empty" data-if="player.ev_rows.size == 0">{{player.ev_empty}}</div>
+                </div>
+            </div>
+            <div class="right">
+                <div class="hint-center" data-if="!player.ev_detail">{{player.ev_hint}}</div>
+                <div data-if="player.ev_detail">
+                    <div id="ev-kind">{{player.ev_kind}}</div>
+                    <div id="ev-title">{{player.ev_title}}</div>
+                    <div id="ev-desc">{{player.ev_desc}}</div>
+                    <div data-if="player.ev_connected.size > 0">
+                        <div class="heading">{{player.ev_connected_title}}</div>
+                        <div data-for="c : player.ev_connected"><div class="ev-link">{{c}}</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== System: the old ≡ list | the page it opens ===== -->
+        <div class="page" data-if="player.tab == 4">
+            <div class="left">
+                <div id="sys-rows">
+                    <div data-for="r, i : menu.main_rows"><div class="row sysrow" data-class-selected="r.selected" data-class-disabled="!r.enabled"
+                         data-event-click="act('pm_sys', i)" data-event-mouseover="act('pm_sys_hover', i)">{{r.label}}<span class="rsub" data-if="r.sub != ''">{{r.sub}}</span></div></div>
+                </div>
+            </div>
+            <div class="right">
+                <div class="hint-center" data-if="menu.page == 0">{{player.sys_hint}}</div>
+                <div id="sys-page" data-if="menu.page != 0">
+                    <div id="sys-header">{{menu.header}}</div>
+                    <div id="sys-sub" data-if="menu.subheader != ''">{{menu.subheader}}</div>
+                    <div id="sys-list" data-class-compact="menu.rows.size > 7">
+                        <div data-for="r, i : menu.rows">
+                            <div class="section" data-if="r.section != ''">{{r.section}}</div>
+                            <div class="row" data-class-selected="r.selected" data-class-disabled="!r.enabled"
+                                 data-event-click="act('menu_row', i)" data-event-mouseover="act('menu_hover', i)">{{r.label}}<span class="rsub" data-if="r.sub != ''">{{r.sub}}</span></div>
+                        </div>
+                    </div>
+                    <div id="sys-back" class="btn btn-plain" data-event-click="act('menu_close')">{{menu.close_label}}</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="hint">{{player.hint}}</div>
+    </div>
+
+    <!-- "Drop <item>?" -->
+    <div data-if="player.confirm_open">
+        <div class="fill scrim"></div>
+        <div class="confirm panel">
+            <div class="question">{{player.confirm_question}}</div>
+            <div class="answers">
+                <div class="row answer" data-class-selected="player.confirm_yes" data-event-click="act('pm_confirm', 1)">{{player.yes_label}}</div>
+                <div class="row answer" data-class-selected="!player.confirm_yes" data-event-click="act('pm_confirm', 0)">{{player.no_label}}</div>
+            </div>
+        </div>
+    </div>
+    <!-- System: "Switch to <language>?" / "Switch the art style to ...?" -->
+    <div data-if="player.tab == 4 && menu.confirm_open">
+        <div class="fill scrim"></div>
+        <div class="confirm panel" data-class-with-body="menu.confirm_body != ''">
+            <div class="question">{{menu.confirm_question}}</div>
+            <div class="body" data-if="menu.confirm_body != ''">{{menu.confirm_body}}</div>
+            <div class="answers">
+                <div class="row answer" data-class-selected="menu.confirm_yes" data-event-click="act('menu_confirm', 1)">{{menu.yes_label}}</div>
+                <div class="row answer" data-class-selected="!menu.confirm_yes" data-event-click="act('menu_confirm', 0)">{{menu.no_label}}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>
+/* saveload.rcss -- Save / Load (saveload.rml), over the player menu. Design space 1024x768. */
+body { z-index: 50; }
+
+#panel { position: absolute; left: 112px; top: 70px; width: 800px; height: 628px; word-break: break-word; }
+#title { position: absolute; left: 30px; top: 22px; font-size: 30px; color: #f9e9b1; }
+#modes { position: absolute; left: 30px; top: 76px; height: 44px; }
+.slot  { display: inline-block; vertical-align: top; }
+.mode {
+    display: inline-block; width: 150px; height: 44px; line-height: 44px; margin-right: 10px; text-align: center;
+    font-size: 21px; color: #e9eef9; background-color: #6f7285; border-radius: 22px; cursor: pointer;
+}
+.mode:hover { background-color: #7d8197; }
+.mode.active { background-color: #ead98f; color: #2e3140; }
+#close { position: absolute; right: 24px; top: 20px; width: 110px; height: 44px; line-height: 44px; font-size: 19px; }
+
+#cards { position: absolute; left: 30px; right: 30px; top: 140px; }
+.card {
+    height: 96px; margin-bottom: 14px; padding: 12px 20px; cursor: pointer;
+    background-color: #6f7285f5; border: 2px #00000000; border-radius: 8px;
+}
+.card:hover { background-color: #7d8197; }
+.card.selected { background-color: #8594b0; border-color: #ffed7b; }
+.card.off { background-color: #5f6273; }
+.card.off .card-title, .card.off .card-line1 { color: #a9adbd; }
+.card-title { font-size: 23px; color: #fff6c2; }
+.card-tag   { margin-left: 14px; padding: 2px 10px; font-size: 15px; color: #2e3140; background-color: #9ff0b4; border-radius: 10px; }
+.card-line1 { margin-top: 10px; font-size: 19px; color: #ffffff; }
+.card-line2 { margin-top: 6px; font-size: 16px; color: #cad0e1; }
+
+#hint { position: absolute; left: 30px; bottom: 16px; font-size: 15px; color: #cad0e1; }
+
+#confirm  { position: absolute; left: 232px; top: 279px; width: 560px; height: 210px; text-align: center; word-break: break-word; }
+#confirm.with-body { top: 254px; height: 260px; }
+#question { margin-top: 50px; padding: 0 20px; font-size: 26px; color: #f9e9b1; }
+#confirm.with-body #question { margin-top: 34px; }
+#body     { margin-top: 12px; padding: 0 20px; font-size: 18px; color: #cad0e1; }
+#answers  { position: absolute; left: 0; right: 0; bottom: 26px; }
+.answer   { display: inline-block; width: 160px; height: 52px; line-height: 52px; margin: 0 20px; text-align: center; font-size: 20px; color: #ffffff; }
+<rml>
+<head>
+    <title>Save / Load</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="saveload.rcss"/>
+</head>
+<!-- Save / Load: the player menu's System tab -> "Save / Load". A Save tab and a Load tab over the same
+     slot cards; choosing a slot opens a confirmation, and nothing is written or loaded before "yes".
+     Data: saveload.* (UiSaveLoad). Buttons: act('pm_sl_*', n) -> Game::playerMenuEvent.
+     data-for sits on a wrapper, its bindings on the element inside (see player.rml). -->
+<body data-model="game">
+    <div class="fill scrim"></div>
+    <div id="panel" class="panel">
+        <div id="title">{{saveload.title}}</div>
+        <div id="modes">
+            <div class="slot" data-for="m, i : saveload.modes"><div class="mode" data-class-active="m.active" data-event-click="act('pm_sl_mode', i)">{{m.label}}</div></div>
+        </div>
+        <div id="close" class="btn btn-plain" data-event-click="act('pm_sl_close')">{{saveload.close_label}}</div>
+
+        <div id="cards">
+            <div data-for="c, i : saveload.cards"><div class="card" data-class-selected="c.selected" data-class-empty="c.empty" data-class-off="!c.enabled"
+                 data-event-click="act('pm_sl_slot', i)" data-event-mouseover="act('pm_sl_hover', i)">
+                <div class="card-title">{{c.title}}<span class="card-tag" data-if="c.tag != ''">{{c.tag}}</span></div>
+                <div class="card-line1">{{c.line1}}</div>
+                <div class="card-line2">{{c.line2}}</div>
+            </div></div>
+        </div>
+        <div id="hint">{{saveload.hint}}</div>
+    </div>
+
+    <div data-if="saveload.confirm_open">
+        <div class="fill scrim"></div>
+        <div id="confirm" class="panel" data-class-with-body="saveload.confirm_body != ''">
+            <div id="question">{{saveload.confirm_question}}</div>
+            <div id="body" data-if="saveload.confirm_body != ''">{{saveload.confirm_body}}</div>
+            <div id="answers">
+                <div class="row answer" data-class-selected="saveload.confirm_yes" data-event-click="act('pm_sl_confirm', 1)">{{saveload.yes_label}}</div>
+                <div class="row answer" data-class-selected="!saveload.confirm_yes" data-event-click="act('pm_sl_confirm', 0)">{{saveload.no_label}}</div>
+            </div>
+        </div>
+    </div>
 </body>
 </rml>
 /* stage_select.rcss -- the floor list (stage_select.rml). */
@@ -19776,320 +19992,6 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "wand": {
-    "id": "wand",
-    "name": {
-      "zh_TW": "見習者法杖",
-      "en": "Apprentice's Wand",
-      "zh_CN": "见习者法杖",
-      "ja": "見習いの杖",
-      "ko": "견습자의 지팡이",
-      "es": "Vara del Aprendiz"
-    },
-    "sprite": "gem_atk.png",
-    "slot": "weapon",
-    "desc": {
-      "zh_TW": "均衡的入門武器，速度與威力都走中庸路線。",
-      "en": "A balanced starter weapon, moderate in both speed and power.",
-      "zh_CN": "均衡的入门武器，速度与威力都走中庸路线。",
-      "ja": "速度と威力のバランスが取れた入門用武器。",
-      "ko": "속도와 위력이 고르게 균형 잡힌 입문용 무기입니다.",
-      "es": "Un arma inicial equilibrada, con velocidad y poder moderados."
-    },
-    "stat": {
-      "atk": 0
-    },
-    "bar": {
-      "v0": 15,
-      "vmax": 200,
-      "rampTime": 1.8,
-      "greenHalf": 15,
-      "blueOuter": 35,
-      "redOuter": 60,
-      "maxMult": 2.0
-    },
-    "actives": []
-  },
-  "twin_daggers": {
-    "id": "twin_daggers",
-    "name": {
-      "zh_TW": "雙生短匕",
-      "en": "Twin Daggers",
-      "zh_CN": "双生短匕",
-      "ja": "双子の短剣",
-      "ko": "쌍둥이 단검",
-      "es": "Dagas Gemelas"
-    },
-    "sprite": "gem_atk.png",
-    "slot": "weapon",
-    "desc": {
-      "zh_TW": "犧牲少許攻擊力，換取極快的蓄力速度與短小精悍的判定帶。",
-      "en": "Sacrifices a bit of Attack for extremely fast charge speed and a compact, precise timing window.",
-      "zh_CN": "牺牲少许攻击力，换取极快的蓄力速度与短小精悍的判定带。",
-      "ja": "攻撃力を少し犠牲にする代わりに、非常に速いチャージ速度と小さく精密な判定帯を得る。",
-      "ko": "공격력을 약간 희생하는 대신 매우 빠른 차지 속도와 작고 정밀한 판정 구간을 얻습니다.",
-      "es": "Sacrifica algo de Ataque a cambio de una carga extremadamente rápida y una franja de acierto compacta y precisa."
-    },
-    "stat": {
-      "atk": -2
-    },
-    "bar": {
-      "v0": 20,
-      "vmax": 260,
-      "rampTime": 1.0,
-      "greenHalf": 8,
-      "blueOuter": 20,
-      "redOuter": 45,
-      "maxMult": 2.2
-    },
-    "actives": []
-  },
-  "war_hammer": {
-    "id": "war_hammer",
-    "name": {
-      "zh_TW": "戰爭巨鎚",
-      "en": "War Hammer",
-      "zh_CN": "战争巨锤",
-      "ja": "戦争の大槌",
-      "ko": "전쟁의 대망치",
-      "es": "Martillo de Guerra"
-    },
-    "sprite": "gem_atk.png",
-    "slot": "weapon",
-    "desc": {
-      "zh_TW": "沉重而強力，蓄力緩慢但判定帶寬廣，容錯率高。",
-      "en": "Heavy and powerful; charges slowly but has a wide timing window with a high margin for error.",
-      "zh_CN": "沉重而强力，蓄力缓慢但判定带宽广，容错率高。",
-      "ja": "重く強力だが、チャージは遅い。判定帯が広く、ミスへの許容度が高い。",
-      "ko": "무겁고 강력하지만 차지 속도가 느립니다. 판정 구간이 넓어 실수를 허용하는 폭이 큽니다.",
-      "es": "Pesado y poderoso; carga lentamente pero tiene una franja de acierto amplia y gran margen de error."
-    },
-    "stat": {
-      "atk": 8
-    },
-    "bar": {
-      "v0": 10,
-      "vmax": 140,
-      "rampTime": 2.6,
-      "greenHalf": 25,
-      "blueOuter": 40,
-      "redOuter": 75,
-      "maxMult": 2.6
-    },
-    "actives": []
-  },
-  "cloth_robe": {
-    "id": "cloth_robe",
-    "name": {
-      "zh_TW": "布衣長袍",
-      "en": "Cloth Robe",
-      "zh_CN": "布衣长袍",
-      "ja": "布のローブ",
-      "ko": "천 로브",
-      "es": "Túnica de Tela"
-    },
-    "sprite": "gem_def.png",
-    "slot": "armor",
-    "desc": {
-      "zh_TW": "均衡的入門防具，速度與韌性都走中庸路線。",
-      "en": "A balanced starter armor, moderate in both speed and resilience.",
-      "zh_CN": "均衡的入门防具，速度与韧性都走中庸路线。",
-      "ja": "速度と粘り強さのバランスが取れた入門用防具。",
-      "ko": "속도와 내구성이 고르게 균형 잡힌 입문용 방어구입니다.",
-      "es": "Una armadura inicial equilibrada, con velocidad y resistencia moderadas."
-    },
-    "stat": {
-      "def": 0
-    },
-    "bar": {
-      "v0": 18,
-      "vmax": 220,
-      "rampTime": 1.4,
-      "greenHalf": 15,
-      "blueOuter": 35,
-      "redOuter": 60
-    },
-    "actives": []
-  },
-  "guardian_plate": {
-    "id": "guardian_plate",
-    "name": {
-      "zh_TW": "守護重甲",
-      "en": "Guardian Plate",
-      "zh_CN": "守护重甲",
-      "ja": "守護の重鎧",
-      "ko": "수호의 중갑",
-      "es": "Placa del Guardián"
-    },
-    "sprite": "gem_def.png",
-    "slot": "armor",
-    "desc": {
-      "zh_TW": "厚重的板甲，格擋蓄力較慢，但判定帶寬廣，適合穩紮穩打。",
-      "en": "Heavy plate armor; block charges slowly, but the timing window is wide, suited to a steady, cautious playstyle.",
-      "zh_CN": "厚重的板甲，格挡蓄力较慢，但判定带宽广，适合稳扎稳打。",
-      "ja": "重厚な板金鎧。ガードのチャージは遅いが判定帯が広く、堅実な立ち回りに向く。",
-      "ko": "두꺼운 판금 갑옷입니다. 방어 차지는 느리지만 판정 구간이 넓어 신중한 플레이에 적합합니다.",
-      "es": "Armadura de placas pesada; el bloqueo carga lento, pero su franja de acierto es amplia, ideal para un estilo cauteloso."
-    },
-    "stat": {
-      "def": 5
-    },
-    "bar": {
-      "v0": 12,
-      "vmax": 150,
-      "rampTime": 2.2,
-      "greenHalf": 24,
-      "blueOuter": 38,
-      "redOuter": 68
-    },
-    "actives": []
-  },
-  "swift_leather": {
-    "id": "swift_leather",
-    "name": {
-      "zh_TW": "疾風皮甲",
-      "en": "Swift Leather",
-      "zh_CN": "疾风皮甲",
-      "ja": "疾風の革鎧",
-      "ko": "질풍의 가죽 갑옷",
-      "es": "Cuero Veloz"
-    },
-    "sprite": "gem_def.png",
-    "slot": "armor",
-    "desc": {
-      "zh_TW": "犧牲少許防禦力，換取極快的格擋蓄力速度。",
-      "en": "Sacrifices a bit of Defense for extremely fast block-charge speed.",
-      "zh_CN": "牺牲少许防御力，换取极快的格挡蓄力速度。",
-      "ja": "防御力を少し犠牲にする代わりに、非常に速いガードチャージ速度を得る。",
-      "ko": "방어력을 약간 희생하는 대신 매우 빠른 방어 차지 속도를 얻습니다.",
-      "es": "Sacrifica algo de Defensa a cambio de una carga de bloqueo extremadamente rápida."
-    },
-    "stat": {
-      "def": -2
-    },
-    "bar": {
-      "v0": 25,
-      "vmax": 280,
-      "rampTime": 0.9,
-      "greenHalf": 7,
-      "blueOuter": 18,
-      "redOuter": 42
-    },
-    "actives": []
-  },
-  "focus_talisman": {
-    "id": "focus_talisman",
-    "name": {
-      "zh_TW": "專注護符",
-      "en": "Focus Talisman",
-      "zh_CN": "专注护符",
-      "ja": "集中のお守り",
-      "ko": "집중의 부적",
-      "es": "Talismán de Enfoque"
-    },
-    "sprite": "exp_up.png",
-    "slot": "talent",
-    "desc": {
-      "zh_TW": "延緩蓄力進入衝刺階段的時機，讓你有更充裕的時間瞄準目標區。",
-      "en": "Delays when the charge enters its dash phase, giving you more time to aim for the target zone.",
-      "zh_CN": "延缓蓄力进入冲刺阶段的时机，让你有更充裕的时间瞄准目标区。",
-      "ja": "チャージがダッシュ段階に入るタイミングを遅らせ、目標エリアを狙う時間に余裕を持たせる。",
-      "ko": "차지가 돌진 단계에 들어가는 시점을 늦춰 목표 구간을 노릴 여유를 줍니다.",
-      "es": "Retrasa el momento en que la carga entra en su fase de impulso, dándote más tiempo para apuntar a la zona objetivo."
-    },
-    "talent": "focus",
-    "actives": []
-  },
-  "berserker_charm": {
-    "id": "berserker_charm",
-    "name": {
-      "zh_TW": "狂戰士護身符",
-      "en": "Berserker Charm",
-      "zh_CN": "狂战士护身符",
-      "ja": "狂戦士のお守り",
-      "ko": "광전사의 부적",
-      "es": "Amuleto del Berserker"
-    },
-    "sprite": "exp_up.png",
-    "slot": "talent",
-    "desc": {
-      "zh_TW": "大幅提升攻擊上限，但落在紅色區域的攻擊將完全無效——高風險高回報。",
-      "en": "Greatly raises the Attack ceiling, but attacks landing in the red zone are completely negated — high risk, high reward.",
-      "zh_CN": "大幅提升攻击上限，但落在红色区域的攻击将完全无效——高风险高回报。",
-      "ja": "攻撃力の上限を大幅に引き上げるが、赤色ゾーンに入った攻撃は完全に無効となる——ハイリスク・ハイリターン。",
-      "ko": "공격력 상한을 크게 높이지만, 빨간 구간에 들어간 공격은 완전히 무효화됩니다 — 하이 리스크, 하이 리턴입니다.",
-      "es": "Aumenta enormemente el límite de Ataque, pero los ataques que caen en la zona roja quedan completamente anulados: alto riesgo, alta recompensa."
-    },
-    "talent": "berserker",
-    "actives": []
-  },
-  "guardian_ring": {
-    "id": "guardian_ring",
-    "name": {
-      "zh_TW": "守護者之戒",
-      "en": "Ring of the Guardian",
-      "zh_CN": "守护者之戒",
-      "ja": "守護者の指輪",
-      "ko": "수호자의 반지",
-      "es": "Anillo del Guardián"
-    },
-    "sprite": "exp_up.png",
-    "slot": "talent",
-    "desc": {
-      "zh_TW": "為防禦減傷提供一道保底下限，即使蓄力失手也能保有基本防護。",
-      "en": "Provides a floor for damage reduction, ensuring basic protection even if the charge timing is missed.",
-      "zh_CN": "为防御减伤提供一道保底下限，即使蓄力失手也能保有基本防护。",
-      "ja": "防御による減傷に最低保証ラインを設け、チャージに失敗しても基本的な防御を保てるようにする。",
-      "ko": "방어 피해 감소에 최소 보장선을 두어, 차지에 실패해도 기본적인 방어를 유지할 수 있습니다.",
-      "es": "Establece un mínimo garantizado en la reducción de daño, asegurando protección básica incluso si fallas el momento de la carga."
-    },
-    "talent": "guardian",
-    "actives": []
-  },
-  "qingxiao_blade": {
-    "id": "qingxiao_blade",
-    "name": {
-      "zh_TW": "青霄",
-      "en": "Qingxiao",
-      "zh_CN": "青霄",
-      "ja": "青霄",
-      "ko": "청소",
-      "es": "Qingxiao"
-    },
-    "sprite": "gem_atk.png",
-    "slot": "weapon",
-    "desc": {
-      "zh_TW": "前世佩劍，劍脊一線青光。ATK +14、會心 +8%。",
-      "en": "A blade from a past life. ATK +14, crit +8%."
-    },
-    "statAtk": 14,
-    "critBonus": 0.08,
-    "actives": [
-      "a_qingxiao_edge"
-    ]
-  },
-  "soul_echo_bell": {
-    "id": "soul_echo_bell",
-    "name": {
-      "zh_TW": "魂返鐘",
-      "en": "Soul Echo Bell",
-      "zh_CN": "魂返钟",
-      "ja": "魂返りの鐘",
-      "ko": "혼반종",
-      "es": "Campana del Alma"
-    },
-    "sprite": "gem_def.png",
-    "slot": "talent",
-    "desc": {
-      "zh_TW": "掌心大的銅鐘，內側刻亡者之名。必殺充能 +15%。",
-      "en": "A palm-sized bell. Ultimate charge +15%."
-    },
-    "ultimateChargeBonus": 0.15,
-    "actives": [
-      "a_sanctuary_echo"
-    ]
-  }
-}{
   "_comment": [
     "S3 — act 1 (village) event pool (docs/SIDE_STORIES.md section 12.3).",
     "The three seeds are the documented ids; the rest are variants in the same",
@@ -20102,42 +20004,58 @@ body.scene { background-color: transparent; }
     {
       "eventId": "ev_village_well",
       "kind": "whisper",
-      "text": "ev_village_well.text"
+      "text": "ev_village_well.text",
+      "title": "ev_village_well.title",
+      "desc": "ev_village_well.desc"
     },
     {
       "eventId": "ev_village_chimney",
       "kind": "relic",
-      "text": "ev_village_chimney.text"
+      "text": "ev_village_chimney.text",
+      "title": "ev_village_chimney.title",
+      "desc": "ev_village_chimney.desc"
     },
     {
       "eventId": "ev_village_grave_new",
       "kind": "rescue",
-      "text": "ev_village_grave_new.text"
+      "text": "ev_village_grave_new.text",
+      "title": "ev_village_grave_new.title",
+      "desc": "ev_village_grave_new.desc"
     },
     {
       "eventId": "ev_village_dog_bowl",
       "kind": "rescue",
-      "text": "ev_village_dog_bowl.text"
+      "text": "ev_village_dog_bowl.text",
+      "title": "ev_village_dog_bowl.title",
+      "desc": "ev_village_dog_bowl.desc"
     },
     {
       "eventId": "ev_village_ledger",
       "kind": "cache",
-      "text": "ev_village_ledger.text"
+      "text": "ev_village_ledger.text",
+      "title": "ev_village_ledger.title",
+      "desc": "ev_village_ledger.desc"
     },
     {
       "eventId": "ev_village_bell_rope",
       "kind": "trap",
-      "text": "ev_village_bell_rope.text"
+      "text": "ev_village_bell_rope.text",
+      "title": "ev_village_bell_rope.title",
+      "desc": "ev_village_bell_rope.desc"
     },
     {
       "eventId": "ev_village_chapel_dust",
       "kind": "whisper",
-      "text": "ev_village_chapel_dust.text"
+      "text": "ev_village_chapel_dust.text",
+      "title": "ev_village_chapel_dust.title",
+      "desc": "ev_village_chapel_dust.desc"
     },
     {
       "eventId": "ev_village_old_plough",
       "kind": "cache",
-      "text": "ev_village_old_plough.text"
+      "text": "ev_village_old_plough.text",
+      "title": "ev_village_old_plough.title",
+      "desc": "ev_village_old_plough.desc"
     }
   ]
 }
@@ -20154,42 +20072,58 @@ body.scene { background-color: transparent; }
     {
       "eventId": "ev_forest_broken_arrow",
       "kind": "relic",
-      "text": "ev_forest_broken_arrow.text"
+      "text": "ev_forest_broken_arrow.text",
+      "title": "ev_forest_broken_arrow.title",
+      "desc": "ev_forest_broken_arrow.desc"
     },
     {
       "eventId": "ev_forest_snare",
       "kind": "trap",
-      "text": "ev_forest_snare.text"
+      "text": "ev_forest_snare.text",
+      "title": "ev_forest_snare.title",
+      "desc": "ev_forest_snare.desc"
     },
     {
       "eventId": "ev_forest_old_wizard_mark",
       "kind": "whisper",
-      "text": "ev_forest_old_wizard_mark.text"
+      "text": "ev_forest_old_wizard_mark.text",
+      "title": "ev_forest_old_wizard_mark.title",
+      "desc": "ev_forest_old_wizard_mark.desc"
     },
     {
       "eventId": "ev_forest_trap_net",
       "kind": "trap",
-      "text": "ev_forest_trap_net.text"
+      "text": "ev_forest_trap_net.text",
+      "title": "ev_forest_trap_net.title",
+      "desc": "ev_forest_trap_net.desc"
     },
     {
       "eventId": "ev_forest_hunter_cache",
       "kind": "cache",
-      "text": "ev_forest_hunter_cache.text"
+      "text": "ev_forest_hunter_cache.text",
+      "title": "ev_forest_hunter_cache.title",
+      "desc": "ev_forest_hunter_cache.desc"
     },
     {
       "eventId": "ev_forest_stone_marker",
       "kind": "relic",
-      "text": "ev_forest_stone_marker.text"
+      "text": "ev_forest_stone_marker.text",
+      "title": "ev_forest_stone_marker.title",
+      "desc": "ev_forest_stone_marker.desc"
     },
     {
       "eventId": "ev_forest_lost_child",
       "kind": "rescue",
-      "text": "ev_forest_lost_child.text"
+      "text": "ev_forest_lost_child.text",
+      "title": "ev_forest_lost_child.title",
+      "desc": "ev_forest_lost_child.desc"
     },
     {
       "eventId": "ev_forest_charcoal_kiln",
       "kind": "cache",
-      "text": "ev_forest_charcoal_kiln.text"
+      "text": "ev_forest_charcoal_kiln.text",
+      "title": "ev_forest_charcoal_kiln.title",
+      "desc": "ev_forest_charcoal_kiln.desc"
     }
   ]
 }
@@ -20206,42 +20140,58 @@ body.scene { background-color: transparent; }
     {
       "eventId": "ev_gate_soldier_plate",
       "kind": "relic",
-      "text": "ev_gate_soldier_plate.text"
+      "text": "ev_gate_soldier_plate.text",
+      "title": "ev_gate_soldier_plate.title",
+      "desc": "ev_gate_soldier_plate.desc"
     },
     {
       "eventId": "ev_gate_seal_rubbing",
       "kind": "whisper",
-      "text": "ev_gate_seal_rubbing.text"
+      "text": "ev_gate_seal_rubbing.text",
+      "title": "ev_gate_seal_rubbing.title",
+      "desc": "ev_gate_seal_rubbing.desc"
     },
     {
       "eventId": "ev_gate_forge_first",
       "kind": "cache",
-      "text": "ev_gate_forge_first.text"
+      "text": "ev_gate_forge_first.text",
+      "title": "ev_gate_forge_first.title",
+      "desc": "ev_gate_forge_first.desc"
     },
     {
       "eventId": "ev_gate_broken_ram",
       "kind": "trap",
-      "text": "ev_gate_broken_ram.text"
+      "text": "ev_gate_broken_ram.text",
+      "title": "ev_gate_broken_ram.title",
+      "desc": "ev_gate_broken_ram.desc"
     },
     {
       "eventId": "ev_gate_quartermaster_cache",
       "kind": "cache",
-      "text": "ev_gate_quartermaster_cache.text"
+      "text": "ev_gate_quartermaster_cache.text",
+      "title": "ev_gate_quartermaster_cache.title",
+      "desc": "ev_gate_quartermaster_cache.desc"
     },
     {
       "eventId": "ev_gate_deserters_kit",
       "kind": "rescue",
-      "text": "ev_gate_deserters_kit.text"
+      "text": "ev_gate_deserters_kit.text",
+      "title": "ev_gate_deserters_kit.title",
+      "desc": "ev_gate_deserters_kit.desc"
     },
     {
       "eventId": "ev_gate_old_banner",
       "kind": "relic",
-      "text": "ev_gate_old_banner.text"
+      "text": "ev_gate_old_banner.text",
+      "title": "ev_gate_old_banner.title",
+      "desc": "ev_gate_old_banner.desc"
     },
     {
       "eventId": "ev_gate_forge_slag",
       "kind": "cache",
-      "text": "ev_gate_forge_slag.text"
+      "text": "ev_gate_forge_slag.text",
+      "title": "ev_gate_forge_slag.title",
+      "desc": "ev_gate_forge_slag.desc"
     }
   ]
 }
@@ -20255,52 +20205,72 @@ body.scene { background-color: transparent; }
     {
       "eventId": "ev_common_relic_road",
       "kind": "relic",
-      "text": "ev_common_relic_road.text"
+      "text": "ev_common_relic_road.text",
+      "title": "ev_common_relic_road.title",
+      "desc": "ev_common_relic_road.desc"
     },
     {
       "eventId": "ev_common_whisper_old_road",
       "kind": "whisper",
-      "text": "ev_common_whisper_old_road.text"
+      "text": "ev_common_whisper_old_road.text",
+      "title": "ev_common_whisper_old_road.title",
+      "desc": "ev_common_whisper_old_road.desc"
     },
     {
       "eventId": "ev_common_cache_wall",
       "kind": "cache",
-      "text": "ev_common_cache_wall.text"
+      "text": "ev_common_cache_wall.text",
+      "title": "ev_common_cache_wall.title",
+      "desc": "ev_common_cache_wall.desc"
     },
     {
       "eventId": "ev_common_trap_rubble",
       "kind": "trap",
-      "text": "ev_common_trap_rubble.text"
+      "text": "ev_common_trap_rubble.text",
+      "title": "ev_common_trap_rubble.title",
+      "desc": "ev_common_trap_rubble.desc"
     },
     {
       "eventId": "ev_common_rescue_lost_soldier",
       "kind": "rescue",
-      "text": "ev_common_rescue_lost_soldier.text"
+      "text": "ev_common_rescue_lost_soldier.text",
+      "title": "ev_common_rescue_lost_soldier.title",
+      "desc": "ev_common_rescue_lost_soldier.desc"
     },
     {
       "eventId": "ev_common_merchant_echo_ash",
       "kind": "merchant_echo",
-      "text": "ev_common_merchant_echo_ash.text"
+      "text": "ev_common_merchant_echo_ash.text",
+      "title": "ev_common_merchant_echo_ash.title",
+      "desc": "ev_common_merchant_echo_ash.desc"
     },
     {
       "eventId": "ev_common_shard_wandering",
       "kind": "memory_shard",
-      "text": "ev_common_shard_wandering.text"
+      "text": "ev_common_shard_wandering.text",
+      "title": "ev_common_shard_wandering.title",
+      "desc": "ev_common_shard_wandering.desc"
     },
     {
       "eventId": "ev_common_relic_chipped_blade",
       "kind": "relic",
-      "text": "ev_common_relic_chipped_blade.text"
+      "text": "ev_common_relic_chipped_blade.text",
+      "title": "ev_common_relic_chipped_blade.title",
+      "desc": "ev_common_relic_chipped_blade.desc"
     },
     {
       "eventId": "ev_common_whisper_old_song",
       "kind": "whisper",
-      "text": "ev_common_whisper_old_song.text"
+      "text": "ev_common_whisper_old_song.text",
+      "title": "ev_common_whisper_old_song.title",
+      "desc": "ev_common_whisper_old_song.desc"
     },
     {
       "eventId": "ev_common_cache_rat_nest",
       "kind": "cache",
-      "text": "ev_common_cache_rat_nest.text"
+      "text": "ev_common_cache_rat_nest.text",
+      "title": "ev_common_cache_rat_nest.title",
+      "desc": "ev_common_cache_rat_nest.desc"
     }
   ]
 }
@@ -20379,91 +20349,374 @@ body.scene { background-color: transparent; }
   }
 }
 {
+  "_comment": [
+    "Every item in the game, one record each (docs/20_PLAYER_MENU.md section 5): map items, keys, consumables,",
+    "weapons, armor, talents. type: consumable | key | weapon | armor | talent | story. name/desc are text.json keys.",
+    "stats: what it gives (a consumable when used, gear while worn); any attribute id of stats.json works.",
+    "price: its value in gold, also what the store charges. important: true = it cannot be dropped.",
+    "autoUse: applied the moment it is picked up (coins; keys always are). Weapons/armor/talents also carry",
+    "bar (battle-bar settings), talent and actives (granted skills)."
+  ],
   "gem_atk": {
-    "name": { "zh_TW": "攻擊寶石", "en": "Attack Gem", "zh_CN": "攻击宝石", "ja": "攻撃の宝石", "ko": "공격 보석", "es": "Gema de Ataque" },
+    "type": "consumable",
     "sprite": "gem_atk.png",
-    "desc": { "zh_TW": "鑲嵌後永久提升攻擊力。", "en": "Permanently increases Attack when socketed.", "zh_CN": "镶嵌后永久提升攻击力。", "ja": "装着すると攻撃力が永久に上昇する。", "ko": "장착하면 공격력이 영구적으로 상승합니다.", "es": "Aumenta permanentemente el Ataque al engastarla." },
-    "effect": { "atk": 6 }
+    "name": "item.gem_atk.name",
+    "desc": "item.gem_atk.desc",
+    "stats": {
+      "atk": 6
+    },
+    "price": 30,
+    "important": false
   },
   "gem_def": {
-    "name": { "zh_TW": "防禦寶石", "en": "Defense Gem", "zh_CN": "防御宝石", "ja": "防御の宝石", "ko": "방어 보석", "es": "Gema de Defensa" },
+    "type": "consumable",
     "sprite": "gem_def.png",
-    "desc": { "zh_TW": "鑲嵌後永久提升防禦力。", "en": "Permanently increases Defense when socketed.", "zh_CN": "镶嵌后永久提升防御力。", "ja": "装着すると防御力が永久に上昇する。", "ko": "장착하면 방어력이 영구적으로 상승합니다.", "es": "Aumenta permanentemente la Defensa al engastarla." },
-    "effect": { "def": 5 }
+    "name": "item.gem_def.name",
+    "desc": "item.gem_def.desc",
+    "stats": {
+      "def": 5
+    },
+    "price": 30,
+    "important": false
   },
   "potion_red": {
-    "name": { "zh_TW": "紅血瓶", "en": "Red Health Potion", "zh_CN": "红血瓶", "ja": "赤い回復薬", "ko": "붉은 회복약", "es": "Poción Roja" },
+    "type": "consumable",
     "sprite": "potion_red.png",
-    "desc": { "zh_TW": "立即恢復 40 點生命。", "en": "Instantly restores 40 HP.", "zh_CN": "立即恢复 40 点生命。", "ja": "即座にHPを40回復する。", "ko": "즉시 HP 40을 회복합니다.", "es": "Restaura 40 PV al instante." },
-    "effect": { "hp": 40 }
+    "name": "item.potion_red.name",
+    "desc": "item.potion_red.desc",
+    "stats": {
+      "hp": 40
+    },
+    "price": 2,
+    "important": false
   },
   "potion_blue": {
-    "name": { "zh_TW": "藍血瓶", "en": "Blue Health Potion", "zh_CN": "蓝血瓶", "ja": "青い回復薬", "ko": "푸른 회복약", "es": "Poción Azul" },
+    "type": "consumable",
     "sprite": "potion_blue.png",
-    "desc": { "zh_TW": "立即恢復 80 點生命。", "en": "Instantly restores 80 HP.", "zh_CN": "立即恢复 80 点生命。", "ja": "即座にHPを80回復する。", "ko": "즉시 HP 80을 회복합니다.", "es": "Restaura 80 PV al instante." },
-    "effect": { "hp": 80 }
+    "name": "item.potion_blue.name",
+    "desc": "item.potion_blue.desc",
+    "stats": {
+      "hp": 80
+    },
+    "price": 6,
+    "important": false
   },
   "exp_up": {
-    "name": { "zh_TW": "經驗水晶", "en": "Experience Crystal", "zh_CN": "经验水晶", "ja": "経験の結晶", "ko": "경험의 결정", "es": "Cristal de Experiencia" },
+    "type": "consumable",
     "sprite": "exp_up.png",
-    "desc": { "zh_TW": "吸收後獲得大量經驗，足以讓你升級。", "en": "Absorb it to gain a large amount of experience, enough to level up.", "zh_CN": "吸收后获得大量经验，足以让你升级。", "ja": "吸収すると大量の経験値を得られ、レベルアップできるほどだ。", "ko": "흡수하면 레벨업할 만큼 막대한 경험치를 얻습니다.", "es": "Absórbelo para obtener una gran cantidad de experiencia, suficiente para subir de nivel." },
-    "effect": { "exp": 100 }
+    "name": "item.exp_up.name",
+    "desc": "item.exp_up.desc",
+    "stats": {
+      "exp": 100
+    },
+    "price": 40,
+    "important": false
   },
   "scroll": {
-    "name": { "zh_TW": "傳送卷軸", "en": "Scroll of Teleportation", "zh_CN": "传送卷轴", "ja": "転送の巻物", "ko": "순간이동 두루마리", "es": "Pergamino de Teletransporte" },
+    "type": "consumable",
     "sprite": "scroll.png",
-    "desc": { "zh_TW": "展開後直接跳到目標樓層。", "en": "Unroll it to jump directly to the target floor.", "zh_CN": "展开后直接跳到目标楼层。", "ja": "広げると目標階層へ直接ワープする。", "ko": "펼치면 목표 층으로 곧장 이동합니다.", "es": "Desenróllalo para saltar directamente al piso objetivo." },
-    "effect": { "warp": 1 },
+    "name": "item.scroll.name",
+    "desc": "item.scroll.desc",
+    "stats": {
+      "warp": 1
+    },
+    "price": 25,
+    "important": false,
     "warp_to": "stage03"
   },
   "coin": {
-    "name": { "zh_TW": "金幣", "en": "Gold Coin", "zh_CN": "金币", "ja": "金貨", "ko": "금화", "es": "Moneda de Oro" },
+    "type": "consumable",
     "sprite": "coin.png",
-    "effect": { "gold": 10 }
+    "name": "item.coin.name",
+    "desc": "item.coin.desc",
+    "stats": {
+      "gold": 10
+    },
+    "price": 10,
+    "important": false,
+    "autoUse": true
   },
   "key_yellow": {
-    "name": { "zh_TW": "黃鑰匙", "en": "Yellow Key", "zh_CN": "黄钥匙", "ja": "黄色の鍵", "ko": "노란 열쇠", "es": "Llave Amarilla" },
+    "type": "key",
     "sprite": "key_yellow.png",
-    "effect": { "key_yellow": 1 }
+    "name": "item.key_yellow.name",
+    "desc": "item.key_yellow.desc",
+    "stats": {
+      "key_yellow": 1
+    },
+    "price": 10,
+    "important": true
   },
   "key_blue": {
-    "name": { "zh_TW": "藍鑰匙", "en": "Blue Key", "zh_CN": "蓝钥匙", "ja": "青い鍵", "ko": "파란 열쇠", "es": "Llave Azul" },
+    "type": "key",
     "sprite": "key_blue.png",
-    "effect": { "key_blue": 1 }
+    "name": "item.key_blue.name",
+    "desc": "item.key_blue.desc",
+    "stats": {
+      "key_blue": 1
+    },
+    "price": 15,
+    "important": true
   },
   "key_red": {
-    "name": { "zh_TW": "紅鑰匙", "en": "Red Key", "zh_CN": "红钥匙", "ja": "赤い鍵", "ko": "빨간 열쇠", "es": "Llave Roja" },
+    "type": "key",
     "sprite": "key_red.png",
-    "effect": { "key_red": 1 }
+    "name": "item.key_red.name",
+    "desc": "item.key_red.desc",
+    "stats": {
+      "key_red": 1
+    },
+    "price": 25,
+    "important": true
+  },
+  "potion_str": {
+    "type": "consumable",
+    "sprite": "gem_atk.png",
+    "name": "item.potion_str.name",
+    "desc": "item.potion_str.desc",
+    "stats": {
+      "atk": 1
+    },
+    "price": 2,
+    "important": false
+  },
+  "potion_def": {
+    "type": "consumable",
+    "sprite": "gem_def.png",
+    "name": "item.potion_def.name",
+    "desc": "item.potion_def.desc",
+    "stats": {
+      "def": 1
+    },
+    "price": 2,
+    "important": false
+  },
+  "wand": {
+    "type": "weapon",
+    "sprite": "gem_atk.png",
+    "name": "item.wand.name",
+    "desc": "item.wand.desc",
+    "stats": {
+      "atk": 0
+    },
+    "price": 20,
+    "important": false,
+    "bar": {
+      "v0": 15,
+      "vmax": 200,
+      "rampTime": 1.8,
+      "greenHalf": 15,
+      "blueOuter": 35,
+      "redOuter": 60,
+      "maxMult": 2.0
+    }
+  },
+  "twin_daggers": {
+    "type": "weapon",
+    "sprite": "gem_atk.png",
+    "name": "item.twin_daggers.name",
+    "desc": "item.twin_daggers.desc",
+    "stats": {
+      "atk": -2
+    },
+    "price": 35,
+    "important": false,
+    "bar": {
+      "v0": 20,
+      "vmax": 260,
+      "rampTime": 1.0,
+      "greenHalf": 8,
+      "blueOuter": 20,
+      "redOuter": 45,
+      "maxMult": 2.2
+    }
+  },
+  "war_hammer": {
+    "type": "weapon",
+    "sprite": "gem_atk.png",
+    "name": "item.war_hammer.name",
+    "desc": "item.war_hammer.desc",
+    "stats": {
+      "atk": 8
+    },
+    "price": 60,
+    "important": false,
+    "bar": {
+      "v0": 10,
+      "vmax": 140,
+      "rampTime": 2.6,
+      "greenHalf": 25,
+      "blueOuter": 40,
+      "redOuter": 75,
+      "maxMult": 2.6
+    }
+  },
+  "cloth_robe": {
+    "type": "armor",
+    "sprite": "gem_def.png",
+    "name": "item.cloth_robe.name",
+    "desc": "item.cloth_robe.desc",
+    "stats": {
+      "def": 0
+    },
+    "price": 20,
+    "important": false,
+    "bar": {
+      "v0": 18,
+      "vmax": 220,
+      "rampTime": 1.4,
+      "greenHalf": 15,
+      "blueOuter": 35,
+      "redOuter": 60
+    }
+  },
+  "guardian_plate": {
+    "type": "armor",
+    "sprite": "gem_def.png",
+    "name": "item.guardian_plate.name",
+    "desc": "item.guardian_plate.desc",
+    "stats": {
+      "def": 5
+    },
+    "price": 55,
+    "important": false,
+    "bar": {
+      "v0": 12,
+      "vmax": 150,
+      "rampTime": 2.2,
+      "greenHalf": 24,
+      "blueOuter": 38,
+      "redOuter": 68
+    }
+  },
+  "swift_leather": {
+    "type": "armor",
+    "sprite": "gem_def.png",
+    "name": "item.swift_leather.name",
+    "desc": "item.swift_leather.desc",
+    "stats": {
+      "def": -2
+    },
+    "price": 35,
+    "important": false,
+    "bar": {
+      "v0": 25,
+      "vmax": 280,
+      "rampTime": 0.9,
+      "greenHalf": 7,
+      "blueOuter": 18,
+      "redOuter": 42
+    }
+  },
+  "focus_talisman": {
+    "type": "talent",
+    "sprite": "exp_up.png",
+    "name": "item.focus_talisman.name",
+    "desc": "item.focus_talisman.desc",
+    "stats": {},
+    "price": 50,
+    "important": false,
+    "talent": "focus"
+  },
+  "berserker_charm": {
+    "type": "talent",
+    "sprite": "exp_up.png",
+    "name": "item.berserker_charm.name",
+    "desc": "item.berserker_charm.desc",
+    "stats": {},
+    "price": 60,
+    "important": false,
+    "talent": "berserker"
+  },
+  "guardian_ring": {
+    "type": "talent",
+    "sprite": "exp_up.png",
+    "name": "item.guardian_ring.name",
+    "desc": "item.guardian_ring.desc",
+    "stats": {},
+    "price": 60,
+    "important": false,
+    "talent": "guardian"
+  },
+  "qingxiao_blade": {
+    "type": "weapon",
+    "sprite": "gem_atk.png",
+    "name": "item.qingxiao_blade.name",
+    "desc": "item.qingxiao_blade.desc",
+    "stats": {},
+    "price": 120,
+    "important": false,
+    "actives": [
+      "a_qingxiao_edge"
+    ]
+  },
+  "soul_echo_bell": {
+    "type": "talent",
+    "sprite": "gem_def.png",
+    "name": "item.soul_echo_bell.name",
+    "desc": "item.soul_echo_bell.desc",
+    "stats": {},
+    "price": 120,
+    "important": false,
+    "actives": [
+      "a_sanctuary_echo"
+    ]
   }
 }
 {
   "m_golem_slayer": {
     "missionId": "m_golem_slayer",
+    "title": "mission.m_golem_slayer.title",
+    "desc": "mission.m_golem_slayer.desc",
     "kind": "once",
     "giver": "sorcerer_teacher",
-    "prerequisites": { "type": "storyBeatAtLeast", "value": 2 },
-    "objective": { "type": "defeat", "targetId": "golem", "count": 1 },
+    "prerequisites": {
+      "type": "storyBeatAtLeast",
+      "value": 2
+    },
+    "objective": {
+      "type": "defeat",
+      "targetId": "golem",
+      "count": 1
+    },
     "rewardExp": 15,
     "rewardGold": 20,
     "rewardItemId": ""
   },
   "m_daily_slime_bounty": {
     "missionId": "m_daily_slime_bounty",
+    "title": "mission.m_daily_slime_bounty.title",
+    "desc": "mission.m_daily_slime_bounty.desc",
     "kind": "daily",
     "giver": "sorcerer_teacher",
-    "prerequisites": { "type": "storyFlagSet", "flag": "met_sorcerer" },
-    "objective": { "type": "defeat", "targetId": "slime", "count": 3 },
+    "prerequisites": {
+      "type": "storyFlagSet",
+      "flag": "met_sorcerer"
+    },
+    "objective": {
+      "type": "defeat",
+      "targetId": "slime",
+      "count": 3
+    },
     "rewardExp": 0,
     "rewardGold": 10,
     "rewardItemId": ""
   },
   "m_wraith_purge": {
     "missionId": "m_wraith_purge",
+    "title": "mission.m_wraith_purge.title",
+    "desc": "mission.m_wraith_purge.desc",
     "kind": "side",
     "giver": "villager_elder",
-    "prerequisites": { "type": "stageCleared", "stageId": "stage_05" },
-    "objective": { "type": "defeat", "targetId": "wraith", "count": 3 },
+    "prerequisites": {
+      "type": "stageCleared",
+      "stageId": "stage_05"
+    },
+    "objective": {
+      "type": "defeat",
+      "targetId": "wraith",
+      "count": 3
+    },
     "rewardExp": 20,
     "rewardGold": 25,
     "rewardItemId": "potion_red"
@@ -21610,138 +21863,179 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "store_title": { "zh_TW": "道具商店", "en": "Item Shop", "zh_CN": "道具商店", "ja": "アイテムショップ", "ko": "아이템 상점", "es": "Tienda de Objetos" },
+  "_comment": [
+    "Player attributes (docs/20_PLAYER_MENU.md sections 3 and 12). Add, remove or reorder attributes here: the Status tab,",
+    "the level-up and the save follow without code changes. Items and equipment raise them through their \"stats\" in",
+    "items.json ({ \"str\": 2 }).",
+    "effects: what each point ABOVE \"base\" gives, so a fresh Lv 1 character plays exactly as before. \"per\" may be a",
+    "fraction (0.5 ATK a point: 2 points = +1 ATK; the total is rounded down) or negative. The stats an effect can name:",
+    "  atk, def        added to ATK / DEF",
+    "  maxhp           added to max HP",
+    "  hitZone         widens the Attack bar's green zone (greenHalf, in bar units; it stays inside the blue zone)",
+    "  cooldownMs      added to the bars' wait after a tap (battle.json bar_cooldown_ms; never below 200 ms)",
+    "  skillPower      percent added to what skills (功法) give",
+    "  goldGain        percent more gold from won battles",
+    "An empty effects list (or per 0) turns an attribute's gameplay off.",
+    "levelUp: EXP needed for the next level = lv * expPerLevel; atk/def/maxhp are what each level gives;",
+    "freePoints: attribute points the player places by hand on the Status tab each level (0 = none)."
+  ],
+  "attributes": [
+    {
+      "id": "str",
+      "short": "STR",
+      "name": "stat.str.name",
+      "desc": "stat.str.desc",
+      "base": 5,
+      "perLevel": 1,
+      "effects": [
+        {
+          "stat": "atk",
+          "per": 0.5
+        }
+      ]
+    },
+    {
+      "id": "dex",
+      "short": "DEX",
+      "name": "stat.dex.name",
+      "desc": "stat.dex.desc",
+      "base": 5,
+      "perLevel": 1,
+      "effects": [
+        {
+          "stat": "hitZone",
+          "per": 0.4
+        }
+      ]
+    },
+    {
+      "id": "agi",
+      "short": "AGI",
+      "name": "stat.agi.name",
+      "desc": "stat.agi.desc",
+      "base": 5,
+      "perLevel": 1,
+      "effects": [
+        {
+          "stat": "cooldownMs",
+          "per": -15
+        }
+      ]
+    },
+    {
+      "id": "vit",
+      "short": "VIT",
+      "name": "stat.vit.name",
+      "desc": "stat.vit.desc",
+      "base": 5,
+      "perLevel": 1,
+      "effects": [
+        {
+          "stat": "maxhp",
+          "per": 3
+        }
+      ]
+    },
+    {
+      "id": "int",
+      "short": "INT",
+      "name": "stat.int.name",
+      "desc": "stat.int.desc",
+      "base": 5,
+      "perLevel": 1,
+      "effects": [
+        {
+          "stat": "skillPower",
+          "per": 2
+        }
+      ]
+    },
+    {
+      "id": "luk",
+      "short": "LUK",
+      "name": "stat.luk.name",
+      "desc": "stat.luk.desc",
+      "base": 5,
+      "perLevel": 0,
+      "effects": [
+        {
+          "stat": "goldGain",
+          "per": 3
+        }
+      ]
+    }
+  ],
+  "levelUp": {
+    "expPerLevel": 30,
+    "atk": 2,
+    "def": 1,
+    "maxhp": 10,
+    "freePoints": 0
+  }
+}
+{
+  "store_title": {
+    "zh_TW": "道具商店",
+    "en": "Item Shop",
+    "zh_CN": "道具商店",
+    "ja": "アイテムショップ",
+    "ko": "아이템 상점",
+    "es": "Tienda de Objetos"
+  },
   "currency": "gold",
   "unlockstage": 1,
   "layout": "card_grid",
   "cost_rule": {
-    "description": "Each item starts at cost_base and the price doubles after every purchase (cost_base * cost_multiplier^purchases). Sequence: 2, 4, 8, 16, 32, ...",
-    "cost_base": 2,
-    "cost_multiplier": 2
+    "description": "Prices come from data/items.json (\"price\"). \"growth\" multiplies an entry's price after every purchase: 2 doubles it (2, 4, 8, ...), 1 keeps it fixed."
   },
   "items": [
     {
-      "id": "potion_hp",
-      "name": { "zh_TW": "生命藥水", "en": "Health Potion", "zh_CN": "生命药水", "ja": "回復薬", "ko": "회복 물약", "es": "Poción de Vida" },
-      "sprite": "potion_red.png",
-      "icon_path": "assets/sprites/potion_red.png",
-      "desc": { "zh_TW": "立即恢復生命值。", "en": "Instantly restores HP.", "zh_CN": "立即恢复生命值。", "ja": "即座にHPを回復する。", "ko": "즉시 HP를 회복합니다.", "es": "Restaura los PV al instante." },
-      "effect": { "hp": 40 },
-      "effect_text": { "zh_TW": "恢復 HP +40", "en": "Restore HP +40", "zh_CN": "恢复 HP +40", "ja": "HP回復 +40", "ko": "HP 회복 +40", "es": "Restaura HP +40" },
-      "cost_base": 2,
-      "cost_multiplier": 2
+      "item": "potion_red",
+      "growth": 2
     },
     {
-      "id": "potion_str",
-      "name": { "zh_TW": "力量藥水", "en": "Strength Potion", "zh_CN": "力量药水", "ja": "力の薬", "ko": "힘의 물약", "es": "Poción de Fuerza" },
-      "sprite": "gem_atk.png",
-      "icon_path": "assets/sprites/gem_atk.png",
-      "desc": { "zh_TW": "永久提升攻擊力。", "en": "Permanently increases Attack.", "zh_CN": "永久提升攻击力。", "ja": "攻撃力が永久に上昇する。", "ko": "공격력이 영구적으로 상승합니다.", "es": "Aumenta permanentemente el Ataque." },
-      "effect": { "str": 1 },
-      "effect_text": { "zh_TW": "STR +1", "en": "STR +1", "zh_CN": "STR +1", "ja": "STR +1", "ko": "STR +1", "es": "STR +1" },
-      "cost_base": 2,
-      "cost_multiplier": 2
+      "item": "potion_str",
+      "growth": 2
     },
     {
-      "id": "potion_def",
-      "name": { "zh_TW": "防禦藥水", "en": "Defense Potion", "zh_CN": "防御药水", "ja": "守りの薬", "ko": "방어의 물약", "es": "Poción de Defensa" },
-      "sprite": "gem_def.png",
-      "icon_path": "assets/sprites/gem_def.png",
-      "desc": { "zh_TW": "永久提升防禦力。", "en": "Permanently increases Defense.", "zh_CN": "永久提升防御力。", "ja": "防御力が永久に上昇する。", "ko": "방어력이 영구적으로 상승합니다.", "es": "Aumenta permanentemente la Defensa." },
-      "effect": { "def": 1 },
-      "effect_text": { "zh_TW": "DEF +1", "en": "DEF +1", "zh_CN": "DEF +1", "ja": "DEF +1", "ko": "DEF +1", "es": "DEF +1" },
-      "cost_base": 2,
-      "cost_multiplier": 2
+      "item": "potion_def",
+      "growth": 2
     },
     {
-      "id": "eq_wand",
-      "name": { "zh_TW": "見習者法杖", "en": "Apprentice's Wand", "zh_CN": "见习者法杖", "ja": "見習いの杖", "ko": "견습자의 지팡이", "es": "Vara del Aprendiz" },
-      "sprite": "gem_atk.png",
-      "desc": { "zh_TW": "均衡的入門武器，速度與威力都走中庸路線。", "en": "A balanced starter weapon, moderate in both speed and power.", "zh_CN": "均衡的入门武器，速度与威力都走中庸路线。", "ja": "速度と威力のバランスが取れた入門用武器。", "ko": "속도와 위력이 고르게 균형 잡힌 입문용 무기입니다.", "es": "Un arma inicial equilibrada, con velocidad y poder moderados." },
-      "equipmentId": "wand",
-      "effect_text": { "zh_TW": "裝備：武器（均衡）", "en": "Equip: Weapon (Balanced)", "zh_CN": "装备：武器（均衡）", "ja": "装備：武器（バランス型）", "ko": "장착: 무기 (균형형)", "es": "Equipar: Arma (Equilibrada)" },
-      "cost_base": 20,
-      "cost_multiplier": 1
+      "item": "wand",
+      "growth": 1
     },
     {
-      "id": "eq_twin_daggers",
-      "name": { "zh_TW": "雙生短匕", "en": "Twin Daggers", "zh_CN": "双生短匕", "ja": "双子の短剣", "ko": "쌍둥이 단검", "es": "Dagas Gemelas" },
-      "sprite": "gem_atk.png",
-      "desc": { "zh_TW": "犧牲少許攻擊力，換取極快蓄力與精巧的判定帶。", "en": "Sacrifices a bit of Attack for extremely fast charging and a refined timing window.", "zh_CN": "牺牲少许攻击力，换取极快蓄力与精巧的判定带。", "ja": "攻撃力を少し犠牲にする代わりに、非常に速いチャージと精巧な判定帯を得る。", "ko": "공격력을 약간 희생하는 대신 매우 빠른 차지와 정교한 판정 구간을 얻습니다.", "es": "Sacrifica algo de Ataque a cambio de una carga extremadamente rápida y una franja de acierto refinada." },
-      "equipmentId": "twin_daggers",
-      "effect_text": { "zh_TW": "裝備：武器（速度型，ATK -2）", "en": "Equip: Weapon (Speed Type, ATK -2)", "zh_CN": "装备：武器（速度型，ATK -2）", "ja": "装備：武器（速度型、ATK -2）", "ko": "장착: 무기 (속도형, ATK -2)", "es": "Equipar: Arma (Tipo Velocidad, ATQ -2)" },
-      "cost_base": 35,
-      "cost_multiplier": 1
+      "item": "twin_daggers",
+      "growth": 1
     },
     {
-      "id": "eq_war_hammer",
-      "name": { "zh_TW": "戰爭巨鎚", "en": "War Hammer", "zh_CN": "战争巨锤", "ja": "戦争の大槌", "ko": "전쟁의 대망치", "es": "Martillo de Guerra" },
-      "sprite": "gem_atk.png",
-      "desc": { "zh_TW": "沉重而強力，蓄力較慢但判定帶寬廣。", "en": "Heavy and powerful; charges slower but has a wide timing window.", "zh_CN": "沉重而强力，蓄力较慢但判定带宽广。", "ja": "重く強力だが、チャージはやや遅く判定帯は広い。", "ko": "무겁고 강력하지만 차지가 다소 느리고 판정 구간은 넓습니다.", "es": "Pesado y poderoso; carga más lento pero tiene una franja de acierto amplia." },
-      "equipmentId": "war_hammer",
-      "effect_text": { "zh_TW": "裝備：武器（力量型，ATK +8）", "en": "Equip: Weapon (Power Type, ATK +8)", "zh_CN": "装备：武器（力量型，ATK +8）", "ja": "装備：武器（力型、ATK +8）", "ko": "장착: 무기 (힘형, ATK +8)", "es": "Equipar: Arma (Tipo Fuerza, ATQ +8)" },
-      "cost_base": 60,
-      "cost_multiplier": 1
+      "item": "war_hammer",
+      "growth": 1
     },
     {
-      "id": "eq_cloth_robe",
-      "name": { "zh_TW": "布衣長袍", "en": "Cloth Robe", "zh_CN": "布衣长袍", "ja": "布のローブ", "ko": "천 로브", "es": "Túnica de Tela" },
-      "sprite": "gem_def.png",
-      "desc": { "zh_TW": "均衡的入門防具，速度與韌性都走中庸路線。", "en": "A balanced starter armor, moderate in both speed and resilience.", "zh_CN": "均衡的入门防具，速度与韧性都走中庸路线。", "ja": "速度と粘り強さのバランスが取れた入門用防具。", "ko": "속도와 내구성이 고르게 균형 잡힌 입문용 방어구입니다.", "es": "Una armadura inicial equilibrada, con velocidad y resistencia moderadas." },
-      "equipmentId": "cloth_robe",
-      "effect_text": { "zh_TW": "裝備：防具（均衡）", "en": "Equip: Armor (Balanced)", "zh_CN": "装备：防具（均衡）", "ja": "装備：防具（バランス型）", "ko": "장착: 방어구 (균형형)", "es": "Equipar: Armadura (Equilibrada)" },
-      "cost_base": 20,
-      "cost_multiplier": 1
+      "item": "cloth_robe",
+      "growth": 1
     },
     {
-      "id": "eq_guardian_plate",
-      "name": { "zh_TW": "守護重甲", "en": "Guardian Plate", "zh_CN": "守护重甲", "ja": "守護の重鎧", "ko": "수호의 중갑", "es": "Placa del Guardián" },
-      "sprite": "gem_def.png",
-      "desc": { "zh_TW": "厚重板甲，格擋蓄力較慢但判定帶寬廣。", "en": "Heavy plate armor; block charges slower but has a wide timing window.", "zh_CN": "厚重板甲，格挡蓄力较慢但判定带宽广。", "ja": "重厚な板金鎧。ガードのチャージはやや遅いが判定帯は広い。", "ko": "두꺼운 판금 갑옷입니다. 방어 차지가 다소 느리지만 판정 구간은 넓습니다.", "es": "Armadura de placas pesada; el bloqueo carga más lento pero tiene una franja de acierto amplia." },
-      "equipmentId": "guardian_plate",
-      "effect_text": { "zh_TW": "裝備：防具（重甲型，DEF +5）", "en": "Equip: Armor (Heavy Type, DEF +5)", "zh_CN": "装备：防具（重甲型，DEF +5）", "ja": "装備：防具（重装型、DEF +5）", "ko": "장착: 방어구 (중갑형, DEF +5)", "es": "Equipar: Armadura (Tipo Pesada, DEF +5)" },
-      "cost_base": 55,
-      "cost_multiplier": 1
+      "item": "guardian_plate",
+      "growth": 1
     },
     {
-      "id": "eq_swift_leather",
-      "name": { "zh_TW": "疾風皮甲", "en": "Swift Leather", "zh_CN": "疾风皮甲", "ja": "疾風の革鎧", "ko": "질풍의 가죽 갑옷", "es": "Cuero Veloz" },
-      "sprite": "gem_def.png",
-      "desc": { "zh_TW": "犧牲少許防禦力，換取極快的格擋蓄力速度。", "en": "Sacrifices a bit of Defense for extremely fast block-charge speed.", "zh_CN": "牺牲少许防御力，换取极快的格挡蓄力速度。", "ja": "防御力を少し犠牲にする代わりに、非常に速いガードチャージ速度を得る。", "ko": "방어력을 약간 희생하는 대신 매우 빠른 방어 차지 속도를 얻습니다.", "es": "Sacrifica algo de Defensa a cambio de una carga de bloqueo extremadamente rápida." },
-      "equipmentId": "swift_leather",
-      "effect_text": { "zh_TW": "裝備：防具（速度型，DEF -2）", "en": "Equip: Armor (Speed Type, DEF -2)", "zh_CN": "装备：防具（速度型，DEF -2）", "ja": "装備：防具（速度型、DEF -2）", "ko": "장착: 방어구 (속도형, DEF -2)", "es": "Equipar: Armadura (Tipo Velocidad, DEF -2)" },
-      "cost_base": 35,
-      "cost_multiplier": 1
+      "item": "swift_leather",
+      "growth": 1
     },
     {
-      "id": "eq_focus_talisman",
-      "name": { "zh_TW": "專注護符", "en": "Focus Talisman", "zh_CN": "专注护符", "ja": "集中のお守り", "ko": "집중의 부적", "es": "Talismán de Enfoque" },
-      "sprite": "exp_up.png",
-      "desc": { "zh_TW": "延緩蓄力進入衝刺的時機，讓瞄準更從容。", "en": "Delays when the charge enters its dash phase, allowing for calmer aiming.", "zh_CN": "延缓蓄力进入冲刺的时机，让瞄准更从容。", "ja": "チャージがダッシュ段階に入るタイミングを遅らせ、より落ち着いて狙えるようにする。", "ko": "차지가 돌진 단계에 들어가는 시점을 늦춰 더 여유롭게 조준할 수 있게 합니다.", "es": "Retrasa el momento en que la carga entra en su fase de impulso, permitiendo apuntar con más calma." },
-      "equipmentId": "focus_talisman",
-      "effect_text": { "zh_TW": "天賦：專注", "en": "Talent: Focus", "zh_CN": "天赋：专注", "ja": "天賦：集中", "ko": "특성: 집중", "es": "Talento: Enfoque" },
-      "cost_base": 50,
-      "cost_multiplier": 1
+      "item": "focus_talisman",
+      "growth": 1
     },
     {
-      "id": "eq_berserker_charm",
-      "name": { "zh_TW": "狂戰士護身符", "en": "Berserker Charm", "zh_CN": "狂战士护身符", "ja": "狂戦士のお守り", "ko": "광전사의 부적", "es": "Amuleto del Berserker" },
-      "sprite": "exp_up.png",
-      "desc": { "zh_TW": "大幅提升攻擊上限，但紅色區域攻擊將完全無效。", "en": "Greatly raises the Attack ceiling, but attacks in the red zone are completely negated.", "zh_CN": "大幅提升攻击上限，但红色区域攻击将完全无效。", "ja": "攻撃力の上限を大幅に引き上げるが、赤色ゾーンの攻撃は完全に無効となる。", "ko": "공격력 상한을 크게 높이지만, 빨간 구간의 공격은 완전히 무효화됩니다.", "es": "Aumenta enormemente el límite de Ataque, pero los ataques en la zona roja quedan completamente anulados." },
-      "equipmentId": "berserker_charm",
-      "effect_text": { "zh_TW": "天賦：狂戰士", "en": "Talent: Berserker", "zh_CN": "天赋：狂战士", "ja": "天賦：狂戦士", "ko": "특성: 광전사", "es": "Talento: Berserker" },
-      "cost_base": 60,
-      "cost_multiplier": 1
+      "item": "berserker_charm",
+      "growth": 1
     },
     {
-      "id": "eq_guardian_ring",
-      "name": { "zh_TW": "守護者之戒", "en": "Ring of the Guardian", "zh_CN": "守护者之戒", "ja": "守護者の指輪", "ko": "수호자의 반지", "es": "Anillo del Guardián" },
-      "sprite": "exp_up.png",
-      "desc": { "zh_TW": "為防禦減傷提供保底下限，蓄力失手也有基本防護。", "en": "Provides a floor for damage reduction, giving basic protection even if the charge timing is missed.", "zh_CN": "为防御减伤提供保底下限，蓄力失手也有基本防护。", "ja": "防御による減傷に最低保証ラインを設け、チャージに失敗しても基本的な防御を得られる。", "ko": "방어 피해 감소에 최소 보장선을 두어, 차지에 실패해도 기본적인 방어를 얻을 수 있습니다.", "es": "Establece un mínimo garantizado en la reducción de daño, brindando protección básica incluso si fallas la carga." },
-      "equipmentId": "guardian_ring",
-      "effect_text": { "zh_TW": "天賦：守護", "en": "Talent: Guardian", "zh_CN": "天赋：守护", "ja": "天賦：守護", "ko": "특성: 수호", "es": "Talento: Guardián" },
-      "cost_base": 60,
-      "cost_multiplier": 1
+      "item": "guardian_ring",
+      "growth": 1
     }
   ]
 }
@@ -21815,6 +22109,7 @@ body.scene { background-color: transparent; }
   "bossFloor": "F07",
   "bossStage": "stage01",
   "title": "story.ch01.title",
+  "desc": "story.ch01.desc",
   "seal": "memory",
   "beats": [
     { "id": "b_village_wake",    "kind": "dialogue", "nodeId": "village_elder.intro",      "floor": "F01" },
@@ -21848,6 +22143,7 @@ body.scene { background-color: transparent; }
   "bossFloor": "F14",
   "bossStage": "stage02",
   "title": "story.ch02.title",
+  "desc": "story.ch02.desc",
   "seal": "qi",
   "beats": [
     { "id": "b_teacher",      "kind": "dialogue", "nodeId": "sorcerer_teacher.qi", "floor": "F09",
@@ -21871,6 +22167,7 @@ body.scene { background-color: transparent; }
   "bossFloor": "F21",
   "bossStage": "stage03",
   "title": "story.ch03.title",
+  "desc": "story.ch03.desc",
   "seal": "daoji",
   "beats": [
     { "id": "b_gate_plate",   "kind": "event",    "eventId": "ev_gate_soldier_plate", "floor": "F16" },
@@ -21906,6 +22203,7 @@ body.scene { background-color: transparent; }
   "bossFloor": "F28",
   "bossStage": "stage04",
   "title": "story.ch04.title",
+  "desc": "story.ch04.desc",
   "seal": "jindan",
   "beats": [
     { "id": "b_library_entry",  "kind": "dialogue", "nodeId": "skeleton_scholar.root", "floor": "F26" },
@@ -40244,6 +40542,1424 @@ body.scene { background-color: transparent; }
       "ja": "你留在塔中，與她一同，在廢墟之上重新種下一個家。",
       "ko": "你留在塔中，與她一同，在廢墟之上重新種下一個家。",
       "es": "你留在塔中，與她一同，在廢墟之上重新種下一個家。"
+    },
+    "item.gem_atk.name": {
+      "zh_TW": "攻擊寶石",
+      "en": "Attack Gem",
+      "zh_CN": "攻击宝石",
+      "ja": "攻撃の宝石",
+      "ko": "공격 보석",
+      "es": "Gema de Ataque"
+    },
+    "item.gem_atk.desc": {
+      "zh_TW": "鑲嵌後永久提升攻擊力。",
+      "en": "Permanently increases Attack when socketed.",
+      "zh_CN": "镶嵌后永久提升攻击力。",
+      "ja": "装着すると攻撃力が永久に上昇する。",
+      "ko": "장착하면 공격력이 영구적으로 상승합니다.",
+      "es": "Aumenta permanentemente el Ataque al engastarla."
+    },
+    "item.gem_def.name": {
+      "zh_TW": "防禦寶石",
+      "en": "Defense Gem",
+      "zh_CN": "防御宝石",
+      "ja": "防御の宝石",
+      "ko": "방어 보석",
+      "es": "Gema de Defensa"
+    },
+    "item.gem_def.desc": {
+      "zh_TW": "鑲嵌後永久提升防禦力。",
+      "en": "Permanently increases Defense when socketed.",
+      "zh_CN": "镶嵌后永久提升防御力。",
+      "ja": "装着すると防御力が永久に上昇する。",
+      "ko": "장착하면 방어력이 영구적으로 상승합니다.",
+      "es": "Aumenta permanentemente la Defensa al engastarla."
+    },
+    "item.potion_red.name": {
+      "zh_TW": "紅血瓶",
+      "en": "Red Health Potion",
+      "zh_CN": "红血瓶",
+      "ja": "赤い回復薬",
+      "ko": "붉은 회복약",
+      "es": "Poción Roja"
+    },
+    "item.potion_red.desc": {
+      "zh_TW": "立即恢復 40 點生命。",
+      "en": "Instantly restores 40 HP.",
+      "zh_CN": "立即恢复 40 点生命。",
+      "ja": "即座にHPを40回復する。",
+      "ko": "즉시 HP 40을 회복합니다.",
+      "es": "Restaura 40 PV al instante."
+    },
+    "item.potion_blue.name": {
+      "zh_TW": "藍血瓶",
+      "en": "Blue Health Potion",
+      "zh_CN": "蓝血瓶",
+      "ja": "青い回復薬",
+      "ko": "푸른 회복약",
+      "es": "Poción Azul"
+    },
+    "item.potion_blue.desc": {
+      "zh_TW": "立即恢復 80 點生命。",
+      "en": "Instantly restores 80 HP.",
+      "zh_CN": "立即恢复 80 点生命。",
+      "ja": "即座にHPを80回復する。",
+      "ko": "즉시 HP 80을 회복합니다.",
+      "es": "Restaura 80 PV al instante."
+    },
+    "item.exp_up.name": {
+      "zh_TW": "經驗水晶",
+      "en": "Experience Crystal",
+      "zh_CN": "经验水晶",
+      "ja": "経験の結晶",
+      "ko": "경험의 결정",
+      "es": "Cristal de Experiencia"
+    },
+    "item.exp_up.desc": {
+      "zh_TW": "吸收後獲得大量經驗，足以讓你升級。",
+      "en": "Absorb it to gain a large amount of experience, enough to level up.",
+      "zh_CN": "吸收后获得大量经验，足以让你升级。",
+      "ja": "吸収すると大量の経験値を得られ、レベルアップできるほどだ。",
+      "ko": "흡수하면 레벨업할 만큼 막대한 경험치를 얻습니다.",
+      "es": "Absórbelo para obtener una gran cantidad de experiencia, suficiente para subir de nivel."
+    },
+    "item.scroll.name": {
+      "zh_TW": "傳送卷軸",
+      "en": "Scroll of Teleportation",
+      "zh_CN": "传送卷轴",
+      "ja": "転送の巻物",
+      "ko": "순간이동 두루마리",
+      "es": "Pergamino de Teletransporte"
+    },
+    "item.scroll.desc": {
+      "zh_TW": "展開後直接跳到目標樓層。",
+      "en": "Unroll it to jump directly to the target floor.",
+      "zh_CN": "展开后直接跳到目标楼层。",
+      "ja": "広げると目標階層へ直接ワープする。",
+      "ko": "펼치면 목표 층으로 곧장 이동합니다.",
+      "es": "Desenróllalo para saltar directamente al piso objetivo."
+    },
+    "item.coin.name": {
+      "zh_TW": "金幣",
+      "en": "Gold Coin",
+      "zh_CN": "金币",
+      "ja": "金貨",
+      "ko": "금화",
+      "es": "Moneda de Oro"
+    },
+    "item.coin.desc": {
+      "zh_TW": "一枚金幣。撿到時立刻加進金幣。",
+      "en": "A gold coin. Added to your gold when picked up.",
+      "zh_CN": "一枚金币。捡到时立刻加进金币。",
+      "ja": "金貨。拾うとすぐにゴールドに加わる。",
+      "ko": "금화. 주우면 바로 골드에 더해집니다.",
+      "es": "Una moneda de oro. Se suma a tu oro al recogerla."
+    },
+    "item.key_yellow.name": {
+      "zh_TW": "黃鑰匙",
+      "en": "Yellow Key",
+      "zh_CN": "黄钥匙",
+      "ja": "黄色の鍵",
+      "ko": "노란 열쇠",
+      "es": "Llave Amarilla"
+    },
+    "item.key_yellow.desc": {
+      "zh_TW": "打開一扇黃門。",
+      "en": "Opens one yellow door.",
+      "zh_CN": "打开一扇黄门。",
+      "ja": "黄色の扉を一つ開ける。",
+      "ko": "노란 문 하나를 엽니다.",
+      "es": "Abre una puerta amarilla."
+    },
+    "item.key_blue.name": {
+      "zh_TW": "藍鑰匙",
+      "en": "Blue Key",
+      "zh_CN": "蓝钥匙",
+      "ja": "青い鍵",
+      "ko": "파란 열쇠",
+      "es": "Llave Azul"
+    },
+    "item.key_blue.desc": {
+      "zh_TW": "打開一扇藍門。",
+      "en": "Opens one blue door.",
+      "zh_CN": "打开一扇蓝门。",
+      "ja": "青い扉を一つ開ける。",
+      "ko": "파란 문 하나를 엽니다.",
+      "es": "Abre una puerta azul."
+    },
+    "item.key_red.name": {
+      "zh_TW": "紅鑰匙",
+      "en": "Red Key",
+      "zh_CN": "红钥匙",
+      "ja": "赤い鍵",
+      "ko": "빨간 열쇠",
+      "es": "Llave Roja"
+    },
+    "item.key_red.desc": {
+      "zh_TW": "打開一扇紅門。",
+      "en": "Opens one red door.",
+      "zh_CN": "打开一扇红门。",
+      "ja": "赤い扉を一つ開ける。",
+      "ko": "빨간 문 하나를 엽니다.",
+      "es": "Abre una puerta roja."
+    },
+    "item.potion_str.name": {
+      "zh_TW": "力量藥水",
+      "en": "Strength Potion",
+      "zh_CN": "力量药水",
+      "ja": "力の薬",
+      "ko": "힘의 물약",
+      "es": "Poción de Fuerza"
+    },
+    "item.potion_str.desc": {
+      "zh_TW": "永久提升攻擊力。",
+      "en": "Permanently increases Attack.",
+      "zh_CN": "永久提升攻击力。",
+      "ja": "攻撃力が永久に上昇する。",
+      "ko": "공격력이 영구적으로 상승합니다.",
+      "es": "Aumenta permanentemente el Ataque."
+    },
+    "item.potion_def.name": {
+      "zh_TW": "防禦藥水",
+      "en": "Defense Potion",
+      "zh_CN": "防御药水",
+      "ja": "守りの薬",
+      "ko": "방어의 물약",
+      "es": "Poción de Defensa"
+    },
+    "item.potion_def.desc": {
+      "zh_TW": "永久提升防禦力。",
+      "en": "Permanently increases Defense.",
+      "zh_CN": "永久提升防御力。",
+      "ja": "防御力が永久に上昇する。",
+      "ko": "방어력이 영구적으로 상승합니다.",
+      "es": "Aumenta permanentemente la Defensa."
+    },
+    "item.wand.name": {
+      "zh_TW": "見習者法杖",
+      "en": "Apprentice's Wand",
+      "zh_CN": "见习者法杖",
+      "ja": "見習いの杖",
+      "ko": "견습자의 지팡이",
+      "es": "Vara del Aprendiz"
+    },
+    "item.wand.desc": {
+      "zh_TW": "均衡的入門武器，速度與威力都走中庸路線。",
+      "en": "A balanced starter weapon, moderate in both speed and power.",
+      "zh_CN": "均衡的入门武器，速度与威力都走中庸路线。",
+      "ja": "速度と威力のバランスが取れた入門用武器。",
+      "ko": "속도와 위력이 고르게 균형 잡힌 입문용 무기입니다.",
+      "es": "Un arma inicial equilibrada, con velocidad y poder moderados."
+    },
+    "item.twin_daggers.name": {
+      "zh_TW": "雙生短匕",
+      "en": "Twin Daggers",
+      "zh_CN": "双生短匕",
+      "ja": "双子の短剣",
+      "ko": "쌍둥이 단검",
+      "es": "Dagas Gemelas"
+    },
+    "item.twin_daggers.desc": {
+      "zh_TW": "犧牲少許攻擊力，換取極快的蓄力速度與短小精悍的判定帶。",
+      "en": "Sacrifices a bit of Attack for extremely fast charge speed and a compact, precise timing window.",
+      "zh_CN": "牺牲少许攻击力，换取极快的蓄力速度与短小精悍的判定带。",
+      "ja": "攻撃力を少し犠牲にする代わりに、非常に速いチャージ速度と小さく精密な判定帯を得る。",
+      "ko": "공격력을 약간 희생하는 대신 매우 빠른 차지 속도와 작고 정밀한 판정 구간을 얻습니다.",
+      "es": "Sacrifica algo de Ataque a cambio de una carga extremadamente rápida y una franja de acierto compacta y precisa."
+    },
+    "item.war_hammer.name": {
+      "zh_TW": "戰爭巨鎚",
+      "en": "War Hammer",
+      "zh_CN": "战争巨锤",
+      "ja": "戦争の大槌",
+      "ko": "전쟁의 대망치",
+      "es": "Martillo de Guerra"
+    },
+    "item.war_hammer.desc": {
+      "zh_TW": "沉重而強力，蓄力緩慢但判定帶寬廣，容錯率高。",
+      "en": "Heavy and powerful; charges slowly but has a wide timing window with a high margin for error.",
+      "zh_CN": "沉重而强力，蓄力缓慢但判定带宽广，容错率高。",
+      "ja": "重く強力だが、チャージは遅い。判定帯が広く、ミスへの許容度が高い。",
+      "ko": "무겁고 강력하지만 차지 속도가 느립니다. 판정 구간이 넓어 실수를 허용하는 폭이 큽니다.",
+      "es": "Pesado y poderoso; carga lentamente pero tiene una franja de acierto amplia y gran margen de error."
+    },
+    "item.cloth_robe.name": {
+      "zh_TW": "布衣長袍",
+      "en": "Cloth Robe",
+      "zh_CN": "布衣长袍",
+      "ja": "布のローブ",
+      "ko": "천 로브",
+      "es": "Túnica de Tela"
+    },
+    "item.cloth_robe.desc": {
+      "zh_TW": "均衡的入門防具，速度與韌性都走中庸路線。",
+      "en": "A balanced starter armor, moderate in both speed and resilience.",
+      "zh_CN": "均衡的入门防具，速度与韧性都走中庸路线。",
+      "ja": "速度と粘り強さのバランスが取れた入門用防具。",
+      "ko": "속도와 내구성이 고르게 균형 잡힌 입문용 방어구입니다.",
+      "es": "Una armadura inicial equilibrada, con velocidad y resistencia moderadas."
+    },
+    "item.guardian_plate.name": {
+      "zh_TW": "守護重甲",
+      "en": "Guardian Plate",
+      "zh_CN": "守护重甲",
+      "ja": "守護の重鎧",
+      "ko": "수호의 중갑",
+      "es": "Placa del Guardián"
+    },
+    "item.guardian_plate.desc": {
+      "zh_TW": "厚重的板甲，格擋蓄力較慢，但判定帶寬廣，適合穩紮穩打。",
+      "en": "Heavy plate armor; block charges slowly, but the timing window is wide, suited to a steady, cautious playstyle.",
+      "zh_CN": "厚重的板甲，格挡蓄力较慢，但判定带宽广，适合稳扎稳打。",
+      "ja": "重厚な板金鎧。ガードのチャージは遅いが判定帯が広く、堅実な立ち回りに向く。",
+      "ko": "두꺼운 판금 갑옷입니다. 방어 차지는 느리지만 판정 구간이 넓어 신중한 플레이에 적합합니다.",
+      "es": "Armadura de placas pesada; el bloqueo carga lento, pero su franja de acierto es amplia, ideal para un estilo cauteloso."
+    },
+    "item.swift_leather.name": {
+      "zh_TW": "疾風皮甲",
+      "en": "Swift Leather",
+      "zh_CN": "疾风皮甲",
+      "ja": "疾風の革鎧",
+      "ko": "질풍의 가죽 갑옷",
+      "es": "Cuero Veloz"
+    },
+    "item.swift_leather.desc": {
+      "zh_TW": "犧牲少許防禦力，換取極快的格擋蓄力速度。",
+      "en": "Sacrifices a bit of Defense for extremely fast block-charge speed.",
+      "zh_CN": "牺牲少许防御力，换取极快的格挡蓄力速度。",
+      "ja": "防御力を少し犠牲にする代わりに、非常に速いガードチャージ速度を得る。",
+      "ko": "방어력을 약간 희생하는 대신 매우 빠른 방어 차지 속도를 얻습니다.",
+      "es": "Sacrifica algo de Defensa a cambio de una carga de bloqueo extremadamente rápida."
+    },
+    "item.focus_talisman.name": {
+      "zh_TW": "專注護符",
+      "en": "Focus Talisman",
+      "zh_CN": "专注护符",
+      "ja": "集中のお守り",
+      "ko": "집중의 부적",
+      "es": "Talismán de Enfoque"
+    },
+    "item.focus_talisman.desc": {
+      "zh_TW": "延緩蓄力進入衝刺階段的時機，讓你有更充裕的時間瞄準目標區。",
+      "en": "Delays when the charge enters its dash phase, giving you more time to aim for the target zone.",
+      "zh_CN": "延缓蓄力进入冲刺阶段的时机，让你有更充裕的时间瞄准目标区。",
+      "ja": "チャージがダッシュ段階に入るタイミングを遅らせ、目標エリアを狙う時間に余裕を持たせる。",
+      "ko": "차지가 돌진 단계에 들어가는 시점을 늦춰 목표 구간을 노릴 여유를 줍니다.",
+      "es": "Retrasa el momento en que la carga entra en su fase de impulso, dándote más tiempo para apuntar a la zona objetivo."
+    },
+    "item.berserker_charm.name": {
+      "zh_TW": "狂戰士護身符",
+      "en": "Berserker Charm",
+      "zh_CN": "狂战士护身符",
+      "ja": "狂戦士のお守り",
+      "ko": "광전사의 부적",
+      "es": "Amuleto del Berserker"
+    },
+    "item.berserker_charm.desc": {
+      "zh_TW": "大幅提升攻擊上限，但落在紅色區域的攻擊將完全無效——高風險高回報。",
+      "en": "Greatly raises the Attack ceiling, but attacks landing in the red zone are completely negated — high risk, high reward.",
+      "zh_CN": "大幅提升攻击上限，但落在红色区域的攻击将完全无效——高风险高回报。",
+      "ja": "攻撃力の上限を大幅に引き上げるが、赤色ゾーンに入った攻撃は完全に無効となる——ハイリスク・ハイリターン。",
+      "ko": "공격력 상한을 크게 높이지만, 빨간 구간에 들어간 공격은 완전히 무효화됩니다 — 하이 리스크, 하이 리턴입니다.",
+      "es": "Aumenta enormemente el límite de Ataque, pero los ataques que caen en la zona roja quedan completamente anulados: alto riesgo, alta recompensa."
+    },
+    "item.guardian_ring.name": {
+      "zh_TW": "守護者之戒",
+      "en": "Ring of the Guardian",
+      "zh_CN": "守护者之戒",
+      "ja": "守護者の指輪",
+      "ko": "수호자의 반지",
+      "es": "Anillo del Guardián"
+    },
+    "item.guardian_ring.desc": {
+      "zh_TW": "為防禦減傷提供一道保底下限，即使蓄力失手也能保有基本防護。",
+      "en": "Provides a floor for damage reduction, ensuring basic protection even if the charge timing is missed.",
+      "zh_CN": "为防御减伤提供一道保底下限，即使蓄力失手也能保有基本防护。",
+      "ja": "防御による減傷に最低保証ラインを設け、チャージに失敗しても基本的な防御を保てるようにする。",
+      "ko": "방어 피해 감소에 최소 보장선을 두어, 차지에 실패해도 기본적인 방어를 유지할 수 있습니다.",
+      "es": "Establece un mínimo garantizado en la reducción de daño, asegurando protección básica incluso si fallas el momento de la carga."
+    },
+    "item.qingxiao_blade.name": {
+      "zh_TW": "青霄",
+      "en": "Qingxiao",
+      "zh_CN": "青霄",
+      "ja": "青霄",
+      "ko": "청소",
+      "es": "Qingxiao"
+    },
+    "item.qingxiao_blade.desc": {
+      "zh_TW": "前世佩劍，劍脊一線青光。ATK +14、會心 +8%。",
+      "en": "A blade from a past life. ATK +14, crit +8%."
+    },
+    "item.soul_echo_bell.name": {
+      "zh_TW": "魂返鐘",
+      "en": "Soul Echo Bell",
+      "zh_CN": "魂返钟",
+      "ja": "魂返りの鐘",
+      "ko": "혼반종",
+      "es": "Campana del Alma"
+    },
+    "item.soul_echo_bell.desc": {
+      "zh_TW": "掌心大的銅鐘，內側刻亡者之名。必殺充能 +15%。",
+      "en": "A palm-sized bell. Ultimate charge +15%."
+    },
+    "stat.str.name": {
+      "zh_TW": "力量",
+      "en": "Strength",
+      "zh_CN": "力量",
+      "ja": "筋力",
+      "ko": "힘",
+      "es": "Fuerza"
+    },
+    "stat.str.desc": {
+      "zh_TW": "身體的力氣。",
+      "en": "Raw physical strength.",
+      "zh_CN": "身体的力气。",
+      "ja": "体の力。",
+      "ko": "몸의 힘.",
+      "es": "Fuerza física."
+    },
+    "stat.dex.name": {
+      "zh_TW": "靈巧",
+      "en": "Dexterity",
+      "zh_CN": "灵巧",
+      "ja": "器用さ",
+      "ko": "손재주",
+      "es": "Destreza"
+    },
+    "stat.dex.desc": {
+      "zh_TW": "手上的準頭與技巧。",
+      "en": "Precision and skill of the hands.",
+      "zh_CN": "手上的准头与技巧。",
+      "ja": "手先の正確さと技。",
+      "ko": "손의 정확함과 기술.",
+      "es": "Precisión y habilidad de las manos."
+    },
+    "stat.agi.name": {
+      "zh_TW": "敏捷",
+      "en": "Agility",
+      "zh_CN": "敏捷",
+      "ja": "素早さ",
+      "ko": "민첩",
+      "es": "Agilidad"
+    },
+    "stat.agi.desc": {
+      "zh_TW": "身手的快慢。",
+      "en": "Speed and quickness of movement.",
+      "zh_CN": "身手的快慢。",
+      "ja": "身のこなしの速さ。",
+      "ko": "몸놀림의 빠르기.",
+      "es": "Velocidad y rapidez de movimiento."
+    },
+    "stat.vit.name": {
+      "zh_TW": "體質",
+      "en": "Vitality",
+      "zh_CN": "体质",
+      "ja": "体力",
+      "ko": "체력",
+      "es": "Vitalidad"
+    },
+    "stat.vit.desc": {
+      "zh_TW": "身體的強韌與耐力。",
+      "en": "Toughness and stamina.",
+      "zh_CN": "身体的强韧与耐力。",
+      "ja": "体の頑丈さと持久力。",
+      "ko": "몸의 강인함과 지구력.",
+      "es": "Resistencia y aguante."
+    },
+    "stat.int.name": {
+      "zh_TW": "智力",
+      "en": "Intelligence",
+      "zh_CN": "智力",
+      "ja": "知力",
+      "ko": "지력",
+      "es": "Inteligencia"
+    },
+    "stat.int.desc": {
+      "zh_TW": "對氣與術法的理解。",
+      "en": "Understanding of qi and sorcery.",
+      "zh_CN": "对气与术法的理解。",
+      "ja": "気と術への理解。",
+      "ko": "기와 술법에 대한 이해.",
+      "es": "Comprensión del qi y la hechicería."
+    },
+    "stat.luk.name": {
+      "zh_TW": "幸運",
+      "en": "Luck",
+      "zh_CN": "幸运",
+      "ja": "運",
+      "ko": "행운",
+      "es": "Suerte"
+    },
+    "stat.luk.desc": {
+      "zh_TW": "命運的眷顧。",
+      "en": "The favour of fate.",
+      "zh_CN": "命运的眷顾。",
+      "ja": "運命の加護。",
+      "ko": "운명의 가호.",
+      "es": "El favor del destino."
+    },
+    "story.ch01.desc": {
+      "zh_TW": "塔下的村子邊緣，古井醒了過來。長老指向塔頂，問你為何舉劍。",
+      "en": "At the village below the tower, the old well has woken. The elder points to the top of the tower and asks why you raise your blade.",
+      "zh_CN": "塔下的村子边缘，古井醒了过来。长老指向塔顶，问你为何举剑。"
+    },
+    "story.ch02.desc": {
+      "zh_TW": "林線之後，霧開始有了重量。老巫師教你引氣，林中的陷阱與斷箭藏著一段舊事。",
+      "en": "Past the tree line the mist grows heavy. The old sorcerer teaches you to draw qi; snares and a broken arrow in the forest hide an old story.",
+      "zh_CN": "林线之后，雾开始有了重量。老巫师教你引气，林中的陷阱与断箭藏着一段旧事。"
+    },
+    "story.ch03.desc": {
+      "zh_TW": "城門前的道兵，鎧甲裡只剩一縷氣。門環上的刻痕與封印的拓本，指向守門者的過去。",
+      "en": "Before the gate, the soldiers' armour holds only a wisp of qi. A notch on the door ring and a rubbing of the seal point to the gatewarden's past.",
+      "zh_CN": "城门前的道兵，铠甲里只剩一缕气。门环上的刻痕与封印的拓本，指向守门者的过去。"
+    },
+    "story.ch04.desc": {
+      "zh_TW": "書庫外庭的門楣只剩半個「卷」字。骸骨學者守著殘頁，等人讀完他沒寫完的東西。",
+      "en": "The library's lintel keeps only half a word: “…scroll”. A skeleton scholar guards a torn page, waiting for someone to finish what he never wrote.",
+      "zh_CN": "书库外庭的门楣只剩半个「卷」字。骸骨学者守着残页，等人读完他没写完的东西。"
+    },
+    "mission.m_golem_slayer.title": {
+      "zh_TW": "石巨人退治",
+      "en": "Golem Slayer",
+      "zh_CN": "石巨人退治"
+    },
+    "mission.m_golem_slayer.desc": {
+      "zh_TW": "導師要你擊敗一隻石巨人。",
+      "en": "Your teacher asks you to defeat a golem.",
+      "zh_CN": "导师要你击败一只石巨人。"
+    },
+    "mission.m_daily_slime_bounty.title": {
+      "zh_TW": "史萊姆懸賞（每日）",
+      "en": "Daily Slime Bounty",
+      "zh_CN": "史莱姆悬赏（每日）"
+    },
+    "mission.m_daily_slime_bounty.desc": {
+      "zh_TW": "擊敗三隻史萊姆。每天重置。",
+      "en": "Defeat three slimes. Resets every day.",
+      "zh_CN": "击败三只史莱姆。每天重置。"
+    },
+    "mission.m_wraith_purge.title": {
+      "zh_TW": "驅除怨靈",
+      "en": "Wraith Purge",
+      "zh_CN": "驱除怨灵"
+    },
+    "mission.m_wraith_purge.desc": {
+      "zh_TW": "村長請你驅除三隻怨靈。",
+      "en": "The village elder asks you to drive away three wraiths.",
+      "zh_CN": "村长请你驱除三只怨灵。"
+    },
+    "player.tab.status": {
+      "zh_TW": "狀態",
+      "en": "Status",
+      "zh_CN": "状态",
+      "ja": "ステータス",
+      "ko": "상태",
+      "es": "Estado"
+    },
+    "player.tab.gear": {
+      "zh_TW": "裝備",
+      "en": "Equipment",
+      "zh_CN": "装备",
+      "ja": "装備",
+      "ko": "장비",
+      "es": "Equipo"
+    },
+    "player.tab.items": {
+      "zh_TW": "道具",
+      "en": "Items",
+      "zh_CN": "道具",
+      "ja": "アイテム",
+      "ko": "아이템",
+      "es": "Objetos"
+    },
+    "player.tab.events": {
+      "zh_TW": "事件",
+      "en": "Events",
+      "zh_CN": "事件",
+      "ja": "イベント",
+      "ko": "이벤트",
+      "es": "Eventos"
+    },
+    "player.tab.system": {
+      "zh_TW": "系統",
+      "en": "System",
+      "zh_CN": "系统",
+      "ja": "システム",
+      "ko": "시스템",
+      "es": "Sistema"
+    },
+    "player.hint": {
+      "zh_TW": "Q / E 切換分頁 · Esc 關閉",
+      "en": "Q / E: switch tabs · Esc: close",
+      "zh_CN": "Q / E 切换分页 · Esc 关闭",
+      "ja": "Q / E：タブ切替 · Esc：閉じる",
+      "ko": "Q / E: 탭 전환 · Esc: 닫기",
+      "es": "Q / E: cambiar pestaña · Esc: cerrar"
+    },
+    "status.combat": {
+      "zh_TW": "戰鬥數值",
+      "en": "Combat",
+      "zh_CN": "战斗数值",
+      "ja": "戦闘",
+      "ko": "전투",
+      "es": "Combate"
+    },
+    "status.gold": {
+      "zh_TW": "金幣",
+      "en": "Gold",
+      "zh_CN": "金币",
+      "ja": "ゴールド",
+      "ko": "골드",
+      "es": "Oro"
+    },
+    "status.floor": {
+      "zh_TW": "樓層",
+      "en": "Floor",
+      "zh_CN": "楼层",
+      "ja": "階層",
+      "ko": "층",
+      "es": "Piso"
+    },
+    "status.chapter": {
+      "zh_TW": "章節",
+      "en": "Chapter",
+      "zh_CN": "章节",
+      "ja": "章",
+      "ko": "장",
+      "es": "Capítulo"
+    },
+    "status.weapon": {
+      "zh_TW": "武器",
+      "en": "Weapon",
+      "zh_CN": "武器",
+      "ja": "武器",
+      "ko": "무기",
+      "es": "Arma"
+    },
+    "status.armor": {
+      "zh_TW": "防具",
+      "en": "Armor",
+      "zh_CN": "防具",
+      "ja": "防具",
+      "ko": "방어구",
+      "es": "Armadura"
+    },
+    "status.shards": {
+      "zh_TW": "記憶碎片",
+      "en": "Memory shards",
+      "zh_CN": "记忆碎片",
+      "ja": "記憶の欠片",
+      "ko": "기억 조각",
+      "es": "Fragmentos de memoria"
+    },
+    "status.story": {
+      "zh_TW": "心境",
+      "en": "State of mind",
+      "zh_CN": "心境",
+      "ja": "心境",
+      "ko": "심경",
+      "es": "Ánimo"
+    },
+    "status.attributes": {
+      "zh_TW": "屬性",
+      "en": "Attributes",
+      "zh_CN": "属性",
+      "ja": "能力値",
+      "ko": "능력치",
+      "es": "Atributos"
+    },
+    "status.attr_hint": {
+      "zh_TW": "點選一個屬性查看說明。",
+      "en": "Select an attribute to read about it.",
+      "zh_CN": "点选一个属性查看说明。",
+      "ja": "能力値を選ぶと説明が表示されます。",
+      "ko": "능력치를 선택하면 설명이 표시됩니다.",
+      "es": "Elige un atributo para leer sobre él."
+    },
+    "gear.worn": {
+      "zh_TW": "穿戴中",
+      "en": "Worn",
+      "zh_CN": "穿戴中",
+      "ja": "装備中",
+      "ko": "착용 중",
+      "es": "Equipado"
+    },
+    "gear.none": {
+      "zh_TW": "（無）",
+      "en": "(none)",
+      "zh_CN": "（无）",
+      "ja": "（なし）",
+      "ko": "(없음)",
+      "es": "(nada)"
+    },
+    "gear.empty": {
+      "zh_TW": "你還沒有{slot}。可以在商店購買，或在鍛造中製作。",
+      "en": "You have no {slot} yet. Buy one at the store or forge one.",
+      "zh_CN": "你还没有{slot}。可以在商店购买，或在锻造中制作。",
+      "ja": "{slot}をまだ持っていません。ショップで買うか、鍛造で作りましょう。",
+      "ko": "아직 {slot}이(가) 없습니다. 상점에서 사거나 단조로 만드세요.",
+      "es": "Aún no tienes {slot}. Cómpralo en la tienda o forjalo."
+    },
+    "gear.select": {
+      "zh_TW": "選擇一件裝備。",
+      "en": "Select a piece of gear.",
+      "zh_CN": "选择一件装备。",
+      "ja": "装備を選んでください。",
+      "ko": "장비를 선택하세요.",
+      "es": "Elige una pieza de equipo."
+    },
+    "gear.now": {
+      "zh_TW": "目前",
+      "en": "Now",
+      "zh_CN": "目前",
+      "ja": "現在",
+      "ko": "현재",
+      "es": "Ahora"
+    },
+    "gear.with": {
+      "zh_TW": "換上後",
+      "en": "With this",
+      "zh_CN": "换上后",
+      "ja": "装備後",
+      "ko": "장착 시",
+      "es": "Con esto"
+    },
+    "gear.equip": {
+      "zh_TW": "裝備",
+      "en": "Equip",
+      "zh_CN": "装备",
+      "ja": "装備する",
+      "ko": "장착",
+      "es": "Equipar"
+    },
+    "gear.unequip": {
+      "zh_TW": "卸下",
+      "en": "Unequip",
+      "zh_CN": "卸下",
+      "ja": "外す",
+      "ko": "해제",
+      "es": "Quitar"
+    },
+    "gear.ramp": {
+      "zh_TW": "蓄力時間",
+      "en": "Charge time",
+      "zh_CN": "蓄力时间",
+      "ja": "チャージ時間",
+      "ko": "충전 시간",
+      "es": "Tiempo de carga"
+    },
+    "gear.zone": {
+      "zh_TW": "判定帶",
+      "en": "Hit zone",
+      "zh_CN": "判定带",
+      "ja": "判定幅",
+      "ko": "판정 범위",
+      "es": "Zona de golpe"
+    },
+    "gear.mult": {
+      "zh_TW": "最高倍率",
+      "en": "Top power",
+      "zh_CN": "最高倍率",
+      "ja": "最大倍率",
+      "ko": "최대 배율",
+      "es": "Poder máx."
+    },
+    "gear.skill": {
+      "zh_TW": "技能",
+      "en": "Skill",
+      "zh_CN": "技能",
+      "ja": "スキル",
+      "ko": "스킬",
+      "es": "Habilidad"
+    },
+    "items.all": {
+      "zh_TW": "全部",
+      "en": "All",
+      "zh_CN": "全部",
+      "ja": "すべて",
+      "ko": "전체",
+      "es": "Todo"
+    },
+    "items.use": {
+      "zh_TW": "消耗",
+      "en": "Use",
+      "zh_CN": "消耗",
+      "ja": "消耗品",
+      "ko": "소모품",
+      "es": "Usar"
+    },
+    "items.have": {
+      "zh_TW": "持有",
+      "en": "You have",
+      "zh_CN": "持有",
+      "ja": "所持数",
+      "ko": "보유",
+      "es": "Tienes"
+    },
+    "items.price_value": {
+      "zh_TW": "{n} 金幣",
+      "en": "{n} gold",
+      "zh_CN": "{n} 金币",
+      "ja": "{n} ゴールド",
+      "ko": "{n} 골드",
+      "es": "{n} de oro"
+    },
+    "items.not_sold": {
+      "zh_TW": "—（非賣品）",
+      "en": "— (not sold)",
+      "zh_CN": "—（非卖品）",
+      "ja": "—（非売品）",
+      "ko": "— (비매품)",
+      "es": "— (no se vende)"
+    },
+    "items.select": {
+      "zh_TW": "選擇一個道具。",
+      "en": "Select an item.",
+      "zh_CN": "选择一个道具。",
+      "ja": "アイテムを選んでください。",
+      "ko": "아이템을 선택하세요.",
+      "es": "Elige un objeto."
+    },
+    "items.important": {
+      "zh_TW": "重要道具無法丟棄。",
+      "en": "Important items can't be dropped.",
+      "zh_CN": "重要道具无法丢弃。",
+      "ja": "大事なアイテムは捨てられません。",
+      "ko": "중요한 아이템은 버릴 수 없습니다.",
+      "es": "Los objetos importantes no se pueden descartar."
+    },
+    "items.worn": {
+      "zh_TW": "穿戴中的裝備無法丟棄。",
+      "en": "Worn gear can't be dropped.",
+      "zh_CN": "穿戴中的装备无法丢弃。",
+      "ja": "装備中のものは捨てられません。",
+      "ko": "착용 중인 장비는 버릴 수 없습니다.",
+      "es": "El equipo puesto no se puede descartar."
+    },
+    "items.drop_confirm": {
+      "zh_TW": "丟棄 {name}？丟棄後無法找回。",
+      "en": "Drop {name}? It is gone for good.",
+      "zh_CN": "丢弃 {name}？丢弃后无法找回。",
+      "ja": "{name}を捨てますか？元に戻せません。",
+      "ko": "{name}을(를) 버릴까요? 되돌릴 수 없습니다.",
+      "es": "¿Descartar {name}? No se puede recuperar."
+    },
+    "events.unfinished": {
+      "zh_TW": "未完成",
+      "en": "Unfinished",
+      "zh_CN": "未完成",
+      "ja": "未完了",
+      "ko": "미완료",
+      "es": "Pendientes"
+    },
+    "events.all": {
+      "zh_TW": "全部",
+      "en": "All",
+      "zh_CN": "全部",
+      "ja": "すべて",
+      "ko": "전체",
+      "es": "Todo"
+    },
+    "events.kind.chapter": {
+      "zh_TW": "主線",
+      "en": "Main",
+      "zh_CN": "主线",
+      "ja": "メイン",
+      "ko": "메인",
+      "es": "Principal"
+    },
+    "events.kind.mission": {
+      "zh_TW": "任務",
+      "en": "Quest",
+      "zh_CN": "任务",
+      "ja": "クエスト",
+      "ko": "퀘스트",
+      "es": "Misión"
+    },
+    "events.done": {
+      "zh_TW": "完成",
+      "en": "done",
+      "zh_CN": "完成",
+      "ja": "完了",
+      "ko": "완료",
+      "es": "hecho"
+    },
+    "events.empty_unfinished": {
+      "zh_TW": "目前沒有進行中的事件。",
+      "en": "Nothing in progress right now.",
+      "zh_CN": "目前没有进行中的事件。",
+      "ja": "進行中のものはありません。",
+      "ko": "진행 중인 것이 없습니다.",
+      "es": "No hay nada en curso."
+    },
+    "events.empty_all": {
+      "zh_TW": "還沒有任何紀錄。",
+      "en": "Nothing recorded yet.",
+      "zh_CN": "还没有任何记录。",
+      "ja": "まだ記録はありません。",
+      "ko": "아직 기록이 없습니다.",
+      "es": "Aún no hay registros."
+    },
+    "events.select": {
+      "zh_TW": "選擇一項查看詳細。",
+      "en": "Select an entry to read about it.",
+      "zh_CN": "选择一项查看详细。",
+      "ja": "項目を選ぶと詳細が表示されます。",
+      "ko": "항목을 선택하면 자세히 볼 수 있습니다.",
+      "es": "Elige una entrada para leer sobre ella."
+    },
+    "events.connected": {
+      "zh_TW": "相關事件",
+      "en": "Connected",
+      "zh_CN": "相关事件",
+      "ja": "関連",
+      "ko": "관련",
+      "es": "Relacionado"
+    },
+    "events.updated": {
+      "zh_TW": "事件紀錄已更新",
+      "en": "Event log updated",
+      "zh_CN": "事件记录已更新",
+      "ja": "記録が更新されました",
+      "ko": "기록이 갱신되었습니다",
+      "es": "Registro actualizado"
+    },
+    "system.fullscreen": {
+      "zh_TW": "全螢幕",
+      "en": "Fullscreen",
+      "zh_CN": "全屏",
+      "ja": "フルスクリーン",
+      "ko": "전체 화면",
+      "es": "Pantalla completa"
+    },
+    "system.on": {
+      "zh_TW": "開",
+      "en": "On",
+      "zh_CN": "开",
+      "ja": "オン",
+      "ko": "켜짐",
+      "es": "Sí"
+    },
+    "system.off": {
+      "zh_TW": "關",
+      "en": "Off",
+      "zh_CN": "关",
+      "ja": "オフ",
+      "ko": "꺼짐",
+      "es": "No"
+    },
+    "system.locked": {
+      "zh_TW": "尚未解鎖",
+      "en": "Not unlocked yet",
+      "zh_CN": "尚未解锁",
+      "ja": "未解放",
+      "ko": "잠김",
+      "es": "Bloqueado"
+    },
+    "system.select": {
+      "zh_TW": "選擇一項。",
+      "en": "Choose an option.",
+      "zh_CN": "选择一项。",
+      "ja": "項目を選んでください。",
+      "ko": "항목을 선택하세요.",
+      "es": "Elige una opción."
+    },
+    "saveload.row": {
+      "zh_TW": "存檔／讀檔",
+      "en": "Save / Load",
+      "zh_CN": "存档／读档",
+      "ja": "セーブ／ロード",
+      "ko": "저장／불러오기",
+      "es": "Guardar / Cargar"
+    },
+    "saveload.title": {
+      "zh_TW": "存檔／讀檔",
+      "en": "Save / Load",
+      "zh_CN": "存档／读档",
+      "ja": "セーブ／ロード",
+      "ko": "저장／불러오기",
+      "es": "Guardar / Cargar"
+    },
+    "saveload.save": {
+      "zh_TW": "儲存",
+      "en": "Save",
+      "zh_CN": "保存",
+      "ja": "セーブ",
+      "ko": "저장",
+      "es": "Guardar"
+    },
+    "saveload.load": {
+      "zh_TW": "讀取",
+      "en": "Load",
+      "zh_CN": "读取",
+      "ja": "ロード",
+      "ko": "불러오기",
+      "es": "Cargar"
+    },
+    "saveload.cancel": {
+      "zh_TW": "取消",
+      "en": "Cancel",
+      "zh_CN": "取消",
+      "ja": "キャンセル",
+      "ko": "취소",
+      "es": "Cancelar"
+    },
+    "saveload.current": {
+      "zh_TW": "目前這輪",
+      "en": "This run",
+      "zh_CN": "目前这轮",
+      "ja": "現在のプレイ",
+      "ko": "현재 진행",
+      "es": "Partida actual"
+    },
+    "saveload.save_confirm": {
+      "zh_TW": "儲存到存檔 {slot}？",
+      "en": "Save to slot {slot}?",
+      "zh_CN": "保存到存档 {slot}？",
+      "ja": "スロット {slot} にセーブしますか？",
+      "ko": "슬롯 {slot}에 저장할까요?",
+      "es": "¿Guardar en la ranura {slot}?"
+    },
+    "saveload.overwrite_confirm": {
+      "zh_TW": "覆蓋存檔 {slot}？",
+      "en": "Overwrite slot {slot}?",
+      "zh_CN": "覆盖存档 {slot}？",
+      "ja": "スロット {slot} に上書きしますか？",
+      "ko": "슬롯 {slot}에 덮어쓸까요?",
+      "es": "¿Sobrescribir la ranura {slot}?"
+    },
+    "saveload.overwrite_body": {
+      "zh_TW": "這個存檔原本的內容會被取代。",
+      "en": "What is saved there now will be replaced.",
+      "zh_CN": "这个存档原本的内容会被取代。",
+      "ja": "今のセーブデータは置き換えられます。",
+      "ko": "지금 저장된 내용은 바뀝니다.",
+      "es": "Lo guardado ahí se reemplazará."
+    },
+    "saveload.load_confirm": {
+      "zh_TW": "讀取存檔 {slot}？",
+      "en": "Load slot {slot}?",
+      "zh_CN": "读取存档 {slot}？",
+      "ja": "スロット {slot} をロードしますか？",
+      "ko": "슬롯 {slot}을(를) 불러올까요?",
+      "es": "¿Cargar la ranura {slot}?"
+    },
+    "saveload.load_body": {
+      "zh_TW": "目前尚未儲存的進度會遺失。",
+      "en": "Progress not saved yet will be lost.",
+      "zh_CN": "目前尚未保存的进度会遗失。",
+      "ja": "セーブしていない進行状況は失われます。",
+      "ko": "저장하지 않은 진행 상황은 사라집니다.",
+      "es": "Se perderá el progreso no guardado."
+    },
+    "saveload.saved": {
+      "zh_TW": "已儲存到存檔 {slot}",
+      "en": "Saved to slot {slot}",
+      "zh_CN": "已保存到存档 {slot}",
+      "ja": "スロット {slot} にセーブしました",
+      "ko": "슬롯 {slot}에 저장했습니다",
+      "es": "Guardado en la ranura {slot}"
+    },
+    "saveload.load_empty": {
+      "zh_TW": "這個存檔是空的。",
+      "en": "This slot is empty.",
+      "zh_CN": "这个存档是空的。",
+      "ja": "このスロットは空です。",
+      "ko": "이 슬롯은 비어 있습니다.",
+      "es": "Esta ranura está vacía."
+    },
+    "saveload.hint": {
+      "zh_TW": "↑↓ 選擇存檔 · Q / E 切換儲存／讀取 · Enter 確定 · Esc 返回",
+      "en": "↑↓ choose a slot · Q / E: Save / Load · Enter: OK · Esc: back",
+      "zh_CN": "↑↓ 选择存档 · Q / E 切换保存／读取 · Enter 确定 · Esc 返回",
+      "ja": "↑↓ スロット選択 · Q / E セーブ／ロード · Enter 決定 · Esc 戻る",
+      "ko": "↑↓ 슬롯 선택 · Q / E 저장／불러오기 · Enter 확인 · Esc 뒤로",
+      "es": "↑↓ elige ranura · Q / E: Guardar / Cargar · Enter: aceptar · Esc: volver"
+    },
+    "ev_village_well.title": {
+      "zh_TW": "井中倒影",
+      "en": "The Reflection in the Well"
+    },
+    "ev_village_well.desc": {
+      "zh_TW": "村邊的古井映出一個不是你的人影。井底似乎有人在等你。",
+      "en": "The old well at the village edge shows a figure that is not you. Someone seems to be waiting below."
+    },
+    "ev_village_chimney.title": {
+      "zh_TW": "灶煙裡的話",
+      "en": "Words in the Smoke"
+    },
+    "ev_village_chimney.desc": {
+      "zh_TW": "灶煙裡飄出一句你聽過的話，卻想不起是誰說的。",
+      "en": "A sentence you once heard drifts out of the chimney smoke, but you cannot recall who said it."
+    },
+    "ev_village_grave_new.title": {
+      "zh_TW": "新墳",
+      "en": "The New Grave"
+    },
+    "ev_village_grave_new.desc": {
+      "zh_TW": "新墳的土還是濕的，裡面有人敲了兩下。",
+      "en": "The earth on a new grave is still wet, and someone inside knocked twice."
+    },
+    "ev_village_dog_bowl.title": {
+      "zh_TW": "滿滿的狗碗",
+      "en": "The Full Bowl"
+    },
+    "ev_village_dog_bowl.desc": {
+      "zh_TW": "狗碗還是滿的，狗卻不見了。牠去了哪裡？",
+      "en": "The dog bowl is still full, but the dog is gone. Where did it go?"
+    },
+    "ev_village_ledger.title": {
+      "zh_TW": "村裡的帳冊",
+      "en": "The Village Ledger"
+    },
+    "ev_village_ledger.desc": {
+      "zh_TW": "帳冊上有一筆以你的名字付過的款，你不記得付過。",
+      "en": "The ledger shows a payment made in your name, one you do not remember making."
+    },
+    "ev_village_bell_rope.title": {
+      "zh_TW": "鈴繩",
+      "en": "The Bell Rope"
+    },
+    "ev_village_bell_rope.desc": {
+      "zh_TW": "你一拉鈴繩，遠處有人同時抬起了頭。",
+      "en": "When you pulled the bell rope, someone far away looked up at the same moment."
+    },
+    "ev_village_chapel_dust.title": {
+      "zh_TW": "禮拜堂的灰",
+      "en": "Dust in the Chapel"
+    },
+    "ev_village_chapel_dust.desc": {
+      "zh_TW": "禮拜堂的灰塵在光裡排成一個字。",
+      "en": "In the chapel, dust in the light settles into a single word."
+    },
+    "ev_village_old_plough.title": {
+      "zh_TW": "舊犁",
+      "en": "The Old Plough"
+    },
+    "ev_village_old_plough.desc": {
+      "zh_TW": "犁頭上纏著一段十年前的布。",
+      "en": "A strip of cloth from ten years ago is wound around the old plough."
+    },
+    "ev_forest_broken_arrow.title": {
+      "zh_TW": "斷箭",
+      "en": "The Broken Arrow"
+    },
+    "ev_forest_broken_arrow.desc": {
+      "zh_TW": "斷箭上刻著你前世的軍號。",
+      "en": "A broken arrow carries the regiment mark of your past life."
+    },
+    "ev_forest_snare.title": {
+      "zh_TW": "被動過的陷阱",
+      "en": "The Tampered Snare"
+    },
+    "ev_forest_snare.desc": {
+      "zh_TW": "林中的繩索被人動過手腳，手法你很熟悉。",
+      "en": "Someone has tampered with the snare in the forest, in a way you know well."
+    },
+    "ev_forest_old_wizard_mark.title": {
+      "zh_TW": "老師父的記號",
+      "en": "The Old Master's Mark"
+    },
+    "ev_forest_old_wizard_mark.desc": {
+      "zh_TW": "樹皮上有老師父的筆跡，日期是今天。",
+      "en": "Your old master's handwriting is on the bark, dated today."
+    },
+    "ev_forest_trap_net.title": {
+      "zh_TW": "網中的外袍",
+      "en": "The Robe in the Net"
+    },
+    "ev_forest_trap_net.desc": {
+      "zh_TW": "獵網上掛著一件很新的外袍。",
+      "en": "A fresh new robe hangs in the hunting net."
+    },
+    "ev_forest_hunter_cache.title": {
+      "zh_TW": "獵人的樹洞",
+      "en": "The Hunter's Hollow"
+    },
+    "ev_forest_hunter_cache.desc": {
+      "zh_TW": "獵人藏糧的樹洞裡多了一封信。",
+      "en": "A letter has appeared in the hunter's food hollow."
+    },
+    "ev_forest_stone_marker.title": {
+      "zh_TW": "界石",
+      "en": "The Boundary Stone"
+    },
+    "ev_forest_stone_marker.desc": {
+      "zh_TW": "界石上寫著「此地曾有人等你」。",
+      "en": "The boundary stone reads: \"Someone waited for you here.\""
+    },
+    "ev_forest_lost_child.title": {
+      "zh_TW": "霧中的孩子",
+      "en": "The Child in the Mist"
+    },
+    "ev_forest_lost_child.desc": {
+      "zh_TW": "霧裡的孩子說不出自己的名字，只說得出你的。",
+      "en": "The child in the mist cannot say their own name, only yours."
+    },
+    "ev_forest_charcoal_kiln.title": {
+      "zh_TW": "炭窯",
+      "en": "The Charcoal Kiln"
+    },
+    "ev_forest_charcoal_kiln.desc": {
+      "zh_TW": "炭窯還是溫的，窯口有兩雙腳印。",
+      "en": "The charcoal kiln is still warm, and there are two sets of footprints at its mouth."
+    },
+    "ev_gate_soldier_plate.title": {
+      "zh_TW": "胸甲上的字",
+      "en": "Words in the Breastplate"
+    },
+    "ev_gate_soldier_plate.desc": {
+      "zh_TW": "胸甲內側用刀尖刻著「別替我報仇」。",
+      "en": "Scratched inside the breastplate with a knife point: \"Do not avenge me.\""
+    },
+    "ev_gate_seal_rubbing.title": {
+      "zh_TW": "封印的拓本",
+      "en": "The Seal Rubbing"
+    },
+    "ev_gate_seal_rubbing.desc": {
+      "zh_TW": "封印的拓本上，刻痕比原物多了一道。",
+      "en": "The rubbing of the seal has one more notch than the seal itself."
+    },
+    "ev_gate_forge_first.title": {
+      "zh_TW": "第一爐火",
+      "en": "The First Forge Fire"
+    },
+    "ev_gate_forge_first.desc": {
+      "zh_TW": "第一爐火還有餘燼，鐵砧上留著你的手印。",
+      "en": "Embers remain from the first forge fire, and your handprint is on the anvil."
+    },
+    "ev_gate_broken_ram.title": {
+      "zh_TW": "斷裂的攻城槌",
+      "en": "The Broken Ram"
+    },
+    "ev_gate_broken_ram.desc": {
+      "zh_TW": "撞門的木槌斷了三次，第三次是從內側斷的。",
+      "en": "The battering ram broke three times; the third time it broke from the inside."
+    },
+    "ev_gate_quartermaster_cache.title": {
+      "zh_TW": "軍需箱",
+      "en": "The Quartermaster's Chest"
+    },
+    "ev_gate_quartermaster_cache.desc": {
+      "zh_TW": "軍需箱的封條蓋著你前世的印。",
+      "en": "The seal on the supply chest bears the stamp of your past life."
+    },
+    "ev_gate_deserters_kit.title": {
+      "zh_TW": "逃兵的背包",
+      "en": "The Deserter's Pack"
+    },
+    "ev_gate_deserters_kit.desc": {
+      "zh_TW": "逃兵的背包已經收好，卻沒有人帶走。",
+      "en": "A deserter's pack lies ready to go, but no one took it."
+    },
+    "ev_gate_old_banner.title": {
+      "zh_TW": "舊旗",
+      "en": "The Old Banner"
+    },
+    "ev_gate_old_banner.desc": {
+      "zh_TW": "舊旗上的紋章和你的劍柄一樣。",
+      "en": "The crest on the old banner matches the hilt of your sword."
+    },
+    "ev_gate_forge_slag.title": {
+      "zh_TW": "爐渣裡的劍胚",
+      "en": "A Blade in the Slag"
+    },
+    "ev_gate_forge_slag.desc": {
+      "zh_TW": "爐渣裡有一枚沒有成形的劍胚。",
+      "en": "An unformed sword blank lies in the slag."
+    },
+    "ev_common_relic_road.title": {
+      "zh_TW": "路邊的劍痕",
+      "en": "Sword Marks by the Road"
+    },
+    "ev_common_relic_road.desc": {
+      "zh_TW": "路邊的劍痕很深，是同一個人反覆練出來的。",
+      "en": "Deep sword marks by the road, made by one person practising over and over."
+    },
+    "ev_common_whisper_old_road.title": {
+      "zh_TW": "舊路上的耳語",
+      "en": "Whispers on the Old Road"
+    },
+    "ev_common_whisper_old_road.desc": {
+      "zh_TW": "有人低聲說：「那位大人……十年前來過這裡。」",
+      "en": "Someone whispers: \"That lord… came here ten years ago.\""
+    },
+    "ev_common_cache_wall.title": {
+      "zh_TW": "牆縫裡的補給",
+      "en": "Supplies in the Wall"
+    },
+    "ev_common_cache_wall.desc": {
+      "zh_TW": "牆後的縫裡塞著補給。",
+      "en": "Supplies are stuffed into a gap behind the wall."
+    },
+    "ev_common_trap_rubble.title": {
+      "zh_TW": "落石",
+      "en": "Falling Rubble"
+    },
+    "ev_common_trap_rubble.desc": {
+      "zh_TW": "落石是剛被推下來的，上面還有人站著。",
+      "en": "The rubble was just pushed down, and someone is still standing up there."
+    },
+    "ev_common_rescue_lost_soldier.title": {
+      "zh_TW": "壓在梁下的士兵",
+      "en": "The Soldier Under the Beam"
+    },
+    "ev_common_rescue_lost_soldier.desc": {
+      "zh_TW": "被壓在梁下的士兵還醒著，先問了你的名字。",
+      "en": "A soldier trapped under a beam is still awake, and asks your name first."
+    },
+    "ev_common_merchant_echo_ash.title": {
+      "zh_TW": "灰中的商人",
+      "en": "The Merchant in the Ash"
+    },
+    "ev_common_merchant_echo_ash.desc": {
+      "zh_TW": "灰中的商人殘影只收素材，不收金幣。",
+      "en": "The echo of a merchant in the ash takes materials, not gold."
+    },
+    "ev_common_shard_wandering.title": {
+      "zh_TW": "飄蕩的記憶碎片",
+      "en": "A Wandering Memory Shard"
+    },
+    "ev_common_shard_wandering.desc": {
+      "zh_TW": "一片記憶碎片在空中停了一瞬，被你收了起來。",
+      "en": "A memory shard hung in the air for a moment, and you caught it."
+    },
+    "ev_common_relic_chipped_blade.title": {
+      "zh_TW": "缺口的劍",
+      "en": "The Chipped Blade"
+    },
+    "ev_common_relic_chipped_blade.desc": {
+      "zh_TW": "這把劍的缺口，正好是你腰間那把劍缺的另一半。",
+      "en": "The chip in this blade is exactly the missing half of the sword at your side."
+    },
+    "ev_common_whisper_old_song.title": {
+      "zh_TW": "舊曲",
+      "en": "An Old Song"
+    },
+    "ev_common_whisper_old_song.desc": {
+      "zh_TW": "有人低聲哼著一首你沒學過、卻會唱的曲子。",
+      "en": "Someone hums a tune you never learned, yet you know how to sing it."
+    },
+    "ev_common_cache_rat_nest.title": {
+      "zh_TW": "鼠窩裡的金幣",
+      "en": "A Coin in the Rat Nest"
+    },
+    "ev_common_cache_rat_nest.desc": {
+      "zh_TW": "鼠窩裡混著一枚乾淨的金幣。",
+      "en": "A clean gold coin lies among the rat nest."
+    },
+    "events.kind.event": {
+      "zh_TW": "事件",
+      "en": "Event",
+      "zh_CN": "事件",
+      "ja": "イベント",
+      "ko": "이벤트",
+      "es": "Evento"
+    },
+    "events.unknown": {
+      "zh_TW": "？？？",
+      "en": "???",
+      "zh_CN": "？？？",
+      "ja": "？？？",
+      "ko": "???",
+      "es": "???"
+    },
+    "stat.effect.atk": {
+      "zh_TW": "攻擊力",
+      "en": "ATK",
+      "zh_CN": "攻击力",
+      "ja": "攻撃力",
+      "ko": "공격력",
+      "es": "ATQ"
+    },
+    "stat.effect.def": {
+      "zh_TW": "防禦力",
+      "en": "DEF",
+      "zh_CN": "防御力",
+      "ja": "防御力",
+      "ko": "방어력",
+      "es": "DEF"
+    },
+    "stat.effect.maxhp": {
+      "zh_TW": "最大 HP",
+      "en": "Max HP",
+      "zh_CN": "最大 HP",
+      "ja": "最大 HP",
+      "ko": "최대 HP",
+      "es": "PV máx."
+    },
+    "stat.effect.hitZone": {
+      "zh_TW": "攻擊判定帶",
+      "en": "Attack hit zone",
+      "zh_CN": "攻击判定带",
+      "ja": "攻撃の判定幅",
+      "ko": "공격 판정 범위",
+      "es": "Zona de golpe"
+    },
+    "stat.effect.cooldownMs": {
+      "zh_TW": "長條等待（毫秒）",
+      "en": "Bar wait (ms)",
+      "zh_CN": "长条等待（毫秒）",
+      "ja": "バーの待ち時間（ms）",
+      "ko": "바 대기 시간(ms)",
+      "es": "Espera de barra (ms)"
+    },
+    "stat.effect.skillPower": {
+      "zh_TW": "功法效果 %",
+      "en": "Skill power %",
+      "zh_CN": "功法效果 %",
+      "ja": "功法の効果 %",
+      "ko": "무공 효과 %",
+      "es": "Poder de técnicas %"
+    },
+    "stat.effect.goldGain": {
+      "zh_TW": "戰鬥金幣 %",
+      "en": "Battle gold %",
+      "zh_CN": "战斗金币 %",
+      "ja": "戦闘のゴールド %",
+      "ko": "전투 골드 %",
+      "es": "Oro de combate %"
+    },
+    "status.attr_per": {
+      "zh_TW": "每點：{x}",
+      "en": "Each point: {x}",
+      "zh_CN": "每点：{x}",
+      "ja": "1 ポイントごと：{x}",
+      "ko": "포인트당: {x}",
+      "es": "Por punto: {x}"
+    },
+    "status.attr_now": {
+      "zh_TW": "目前：{x}",
+      "en": "Now: {x}",
+      "zh_CN": "目前：{x}",
+      "ja": "現在：{x}",
+      "ko": "현재: {x}",
+      "es": "Ahora: {x}"
+    },
+    "status.attr_none": {
+      "zh_TW": "目前沒有效果。",
+      "en": "No effect yet.",
+      "zh_CN": "目前没有效果。",
+      "ja": "まだ効果はありません。",
+      "ko": "아직 효과가 없습니다.",
+      "es": "Aún sin efecto."
+    },
+    "status.points": {
+      "zh_TW": "可分配點數：{n}",
+      "en": "Points to spend: {n}",
+      "zh_CN": "可分配点数：{n}",
+      "ja": "割り振りポイント：{n}",
+      "ko": "분배 포인트: {n}",
+      "es": "Puntos por repartir: {n}"
+    },
+    "status.points_hint": {
+      "zh_TW": "選一個屬性按 Enter 或 ＋ 加一點。",
+      "en": "Pick an attribute and press Enter or + to add a point.",
+      "zh_CN": "选一个属性按 Enter 或 ＋ 加一点。",
+      "ja": "能力値を選んで Enter か ＋ で 1 ポイント。",
+      "ko": "능력치를 고르고 Enter 또는 +로 1포인트.",
+      "es": "Elige un atributo y pulsa Enter o + para sumar un punto."
     }
   }
 }
