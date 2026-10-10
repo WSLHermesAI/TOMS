@@ -15,6 +15,35 @@
 
 ## ▶ Next Step
 
+**The player menu is built: P1, P2, P3 and Save / Load** (2026-10-10, not committed;
+[../20_PLAYER_MENU.md](../20_PLAYER_MENU.md) §9–12, [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) §16–20):
+- **One button while walking, ≡** (or Esc), with a dot when something is new. The HUD's store button, its clickable item
+  line and the web page's fullscreen and 背包 buttons are gone.
+- **Five tabs:**
+  - **Status:** level, HP / EXP bars, ATK / DEF with bonuses, and the attributes STR, DEX, AGI, VIT, INT, LUK with what
+    each point does;
+  - **Equipment:** change weapon and armor, with a comparison;
+  - **Items:** owned items as a 3-per-row grid; Use / Equip / Drop; keys and important items cannot be dropped;
+  - **Events:** chapters, missions and story events, Unfinished / All, title, description, connected events;
+  - **System:** Store, Skills, Forge, Village, **Save / Load**, Settings, Fullscreen, Back to title.
+- **Save / Load:** a slot screen; every save and every load asks first (Cancel preselected for overwrite and load).
+- **The attributes act:** STR ATK, DEX attack hit zone, AGI bar wait, VIT max HP, INT skill power, LUK battle gold, per
+  point above 5, so Lv 1 plays as before. Optional hand-placed points (`levelUp.freePoints`).
+- **Data:** one all-item file `items.json` (`equipment.json` merged in), new `stats.json`, titles and descriptions for
+  chapters, missions and the 34 pool events; the game records every event as started / finished.
+- **Tests:** 39 / 39 unit (new `player_menu_test`), 57 / 62 screenshot (the 5 failing are W16, W23, as before), five new
+  `smoke.player_*` scenes; web build checked in headless Chrome (menu, Fullscreen, Save / Load).
+
+**Owner, next (game):**
+- **Try the player menu** (≡ or Esc while walking) and say what to change.
+- **Play a few floors** (the key and door fixes too) and **tune** `assets/data/battle.json` and `assets/data/stats.json`:
+  the attribute effect sizes are first guesses (W28).
+- **Read the drafted event titles and descriptions** in the event editor and rewrite what does not fit (W29).
+- **Commit** the 2026-10-08 and 2026-10-10 work.
+- **Decide W16 and W23** below: then the 5 failing screenshot tests can be refreshed or fixed.
+- Later: upgrading gear (W26), the phone layout of the menu (W27), the rest of the event runtime
+  ([../event_editor/06_EVENT_LOGIC.md](../event_editor/06_EVENT_LOGIC.md) §6: variables, talk triggers, the dispatcher).
+
 **The game, 2026-10-08** ([6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) §12–15):
 - **Monsters animate on the map:** an idle per enemy, sillier with level
   (`assets/media/anim/monster_idle.anim`, editable in anim_editor).
@@ -24,30 +53,6 @@
   - keys on the generated floors were invisible and could not be picked up, so doors could be dead ends;
   - items were drawn as floor;
   - doors now open once, with an animation, and stay open.
-
-**The player menu, P1 built** (2026-10-10, [../20_PLAYER_MENU.md](../20_PLAYER_MENU.md) §9,
-[6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) §16–17):
-- **The walking screen keeps one button, ≡** (a dot when something is new). Store button, item line and the
-  web page's buttons are gone.
-- **Five tabs:** Status (with STR, DEX, AGI, VIT, INT, LUK), Equipment (change weapon / armor with a
-  comparison), Items (3-per-row grid; Use / Equip / Drop; important items can't be dropped), Events
-  (chapters and missions), System (Store, Skills, Forge, Village, Save, Settings, Fullscreen, Back to title).
-- **Data:** one all-item file `items.json` (`equipment.json` merged in), `stats.json` (attributes and
-  level-up numbers), titles and descriptions for chapters and missions.
-- **Save / Load:** the System tab opens a slot screen; every save and load asks for confirmation (§10).
-- **P2 done:** story events in the Events tab (title, description, connected events); the game now tracks every event
-  as started / finished; drafted titles and descriptions for the 34 pool events, editable in the event editor.
-- **P3 done:** the attributes act in battle and on HP / gold (STR, DEX, AGI, VIT, INT, LUK; numbers in `stats.json`,
-  §12); hand-placed points available through `levelUp.freePoints`.
-- **Next:** **play and tune `stats.json`** (the effect sizes are first guesses); upgrading gear = W26; the rest of the event
-  runtime ([06](../event_editor/06_EVENT_LOGIC.md) §6: variables, talk triggers, the dispatcher).
-
-**Owner, next (game):**
-- **Try the player menu** (≡ or Esc while walking), and **read the drafted event titles / descriptions** in the event
-  editor (they are first drafts).
-- **Commit** the 10-08 and 10-10 work when you are happy with it.
-- **Play a few floors** with the key and door fixes, and tune `battle.json`.
-- **Decide W16 and W23** below: then the 5 failing screenshot tests can be refreshed or fixed.
 
 **The event and stage editors work in HTML** (2026-10-05 → 10-08, [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md)):
 - **One folder:** [tools/web_editors/](../../tools/web_editors/index.html). Run `serve.cmd`, then switch
@@ -66,7 +71,6 @@
 - **Confirm the event editor** by trying it on `http://localhost:8000/tools/web_editors/index.html#event`.
   Confirming starts the Qt/C++ version on the game renderer ([../19_STAGE_EDITOR.md](../19_STAGE_EDITOR.md) §6).
 - **Answer Q6–Q10** below (generated floors, stair locks, rebirth, the `@` start, event lists).
-- **Commit** the 10-08 work: the editors, the docs and the game changes above.
 
 **3D is in the engine** (2026-10-05, [5_PROGRESS_REPORT.md](5_PROGRESS_REPORT.md), [../18_GLTF.md](../18_GLTF.md)):
 - **glTF 2.0:** skins, morph targets, instancing, PBR, glTF cameras and lights, and shadow maps for
@@ -141,7 +145,7 @@ the Visual Studio IDE (W1).
 | T | Particles (`.particle` JSON, `particle_editor`, GPU simulation, CPU/GPU threshold), doc 17 | ◐ 2026-10-03 editor + runtime done; legacy import, multiply/screen blend, effects on `.anim` nodes open |
 | T | Editors preview with toms_game's `BgfxRenderer`; right-drag pans | ✅ 2026-10-03 on D3D11 |
 | T | Anim editor: per-node playback (once / hide / loop), solo, clip switching with discard prompt; editors: History dock + automatic backups | ✅ 2026-10-05 |
-| G | Player menu: one ≡ button; Status / Equipment / Items / Events / System ([20](../20_PLAYER_MENU.md)) | ◐ 2026-10-10 P1, P2, P3 built and verified on desktop + web (headless); upgrading gear (W26) open; not seen on a phone; attribute numbers not play-tuned |
+| G | Player menu: one ≡ button; Status / Equipment / Items / Events / System; Save / Load; attributes in battle ([20](../20_PLAYER_MENU.md)) | ◐ 2026-10-10 P1, P2, P3 and Save / Load built, verified on desktop + web (headless); open: W26 upgrading gear, W27 phone layout, W28 tuning, W29 event text review |
 | T | Monster idle animations on the map (`monster_idle.anim`), door-opening animation (`door_open.anim`) | ✅ 2026-10-08 desktop; web/Android not seen (W24) |
 | 5 | glTF 2.0 on bgfx (`gltf_model`, `GltfRenderer`, `gltf_viewer`): skins, morphs, instancing, PBR, cameras, lights, shadow maps; the title's 3D background | ◐ 2026-10-05 desktop D3D11/Vulkan/OpenGL + web verified; not on a phone; no IBL / cascades yet |
 | 5 | 3D on bgfx (glTF, ozz skinning, instancing, shadows, Effekseer) | ⬜ researched only |
@@ -176,6 +180,8 @@ the Visual Studio IDE (W1).
 | W24 | **Idle and door animations not seen on web / Android** | checked on desktop D3D11 only; the `.anim` files are in `assets/media`, so they are packaged | play a floor in the web build and on the Android emulator |
 | W25 | **Docs in two languages** | every `docs/*.md` (except `progress_report/`) has a copy in `docs/zh_TW/` that is not updated automatically | update the `zh_TW` copy with each English change; check links with the script used on 2026-10-08 |
 | W27 | **The player menu on a phone** | P1 shows the menu as the 1024x768 screen scaled down, like every other screen; the list-then-detail phone layout of [20](../20_PLAYER_MENU.md) §2 is not built, and no phone has seen it | open it on a phone (web build); if too small, build the phone layout |
+| W28 | **Attribute effects not play-tuned** | the sizes in `stats.json` (STR ATK +0.5, DEX hit zone +0.4, AGI −15 ms, VIT HP +3, INT skills +2 %, LUK gold +3 % a point) are first guesses, checked only with a scripted Lv 10 character | play several floors and adjust `per` in `assets/data/stats.json` ([20](../20_PLAYER_MENU.md) §12) |
+| W29 | **Drafted event titles and descriptions** | the 34 pool events got titles and descriptions written from their one line of text (zh_TW + en; other languages show English); no event has `next` / `requires` links yet, so only chapters show connected events | read and rewrite them in the event editor; link events (`next`, `requires`) where the story connects them |
 | W26 | **Upgrading gear** (player menu, later) | the owner chose change-only for now (Q15, 2026-10-10); upgrading (+1, +2… for gold or materials) is a later feature | design the steps and costs, add them to `items.json`, add an Upgrade button to the Equipment tab ([20](../20_PLAYER_MENU.md) §4) |
 | W22 | **Event data gaps** | 92 event ids that F22–F70 list are not defined by any pool; 4 orphan events | write the chapter 4–10 pools (the editor's batch fix makes placeholders) |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |

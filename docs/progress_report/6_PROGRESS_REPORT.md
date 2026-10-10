@@ -18,7 +18,7 @@ That Qt editor's goal: what the editor shows is how the game works.
 | 2026-10-07 | `f7c8b8e` | Floor links, event logic, node-graph editor, values map; the HTML stage editor with story check and auto-place |
 | 2026-10-07 | `cf2a771` | Stage editor: object overlap rule, UI size settings, wheel zoom, right-drag pan |
 | **2026-10-08** | not committed | Editors: one folder with a switch button; tutorial collapses; top menu removed; **Kinds** tab; old mockups deleted; the event editor **saves into assets/data**; free (Chinese) names; Variables tab categories and multi-select; stage editor saves many floors as one zip. Docs: Traditional Chinese versions in `docs/zh_TW/`. Game: **monster idle animations**; **battle settings file**; fixed **invisible keys**; **doors open** with an animation |
-| **2026-10-10** | not committed | The **player menu** (P1): one ≡ button, five tabs (Status, Equipment, Items, Events, System); the all-item `items.json`; `stats.json` with STR / DEX / AGI / VIT / INT / LUK |
+| **2026-10-10** | not committed | The **player menu**: one ≡ button, five tabs (Status, Equipment, Items, Events, System); the all-item `items.json`; `stats.json` with STR / DEX / AGI / VIT / INT / LUK; **Save / Load** with confirmations; **story events** in the Events tab (P2); **attribute effects** in battle (P3) |
 
 ---
 
@@ -284,7 +284,7 @@ Kinds were hard-coded in the editor, and no data file defined them. The game doe
 - **Checked** in the game on a test floor: `Y1` → the animation (player still, `Y0`) → floor → walking
   through the doorway and back took no more keys. CTest `anim.check_door_open`.
 
-### 2026-10-10 — the player menu, P1 (not committed)
+### 2026-10-10 — the player menu: P1, Save / Load, P2, P3 (not committed)
 
 **16. One button, five tabs** ([../20_PLAYER_MENU.md](../20_PLAYER_MENU.md) §9)
 
@@ -357,6 +357,12 @@ Kinds were hard-coded in the editor, and no data file defined them. The game doe
   screenshot tests 57 of 62 with the new `smoke.player_status / gear / items / events / system`; references
   refreshed for anim, fx and store after checking that only the HUD and the store's item names changed.
   Still failing as before: `smoke.stage` ×4 (W16) and `smoke.battle` (W23).
+
+**Not verified (P2, P3):**
+
+- An event whose `requires` is not met staying "started" on its tile, and `next` starting the linked events: the code
+  paths exist, but no event in the data has `requires` or `next` yet (only the run-state rules are unit-tested).
+- The attribute effects over a real play-through (checked with a scripted Lv 10 character only); balance (W28).
 
 **Not verified (P1):** a real phone (the menu is the 1024x768 screen scaled down; the list-then-detail phone
 layout is not built); Android; Fullscreen in Safari.
