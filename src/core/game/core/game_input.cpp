@@ -142,6 +142,11 @@ void Game::movePlayer(int dx, int dy) {
         openDoor(nx, ny, c);   // uses the key; the door opens and vanishes; the player stays put this turn
         return;
     }
+    // Q7: a locked stair is not stepped on: it says which event opens it.
+    if (const toms::StairLink* s = toms::stairAt(st.stairs, nx, ny); s && stairLocked(*s)) {
+        bumpLockedStairs(*s);
+        return;
+    }
     // S1: a multi-grid monster is NOT walked into. A 1x1 monster keeps the shipped behavior (the
     // player steps onto the tile and the fight happens there), but entering a 4-grid boss's cell
     // would put the player *inside* the boss -- so big footprints are pure bumps: fight from the
@@ -207,12 +212,9 @@ void Game::movePlayer(int dx, int dy) {
                     notifications_.push_back({text, 4200});      // whispers/rescues: remembered, no stat
                 }
                 // Every event that fires is finished (06 section 6 item 2): the run flag the conditions and stair
-                // locks read, the event log's finished list, and its `next` events become started.
-                run_.setFlag("event_" + evId, true);
-                run_.markEventFinished(evId);
-                if (def != eventDefs_.end())
-                    for (const std::string& n : def->second.next) run_.markEventStarted(n);
-                markProgressDirty();
+                // locks read, the event log's finished list, its `next` events become started, and the stairs it
+                // opens say so (Q7).
+                finishEvent(evId);
                 e.consumed = true;
                 st.tiles[e.y][e.x] = '.'; // clear from grid
                 toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, e.x, e.y), toms::EntityStatus::Collected);
@@ -227,14 +229,91 @@ void Game::movePlayer(int dx, int dy) {
                 else if (e.id=="handmaiden") dlgNpc="handmaiden";
                 else if (e.id=="skeleton_scholar") dlgNpc="skeleton_scholar";
                 startDialogue(dlgNpc);
-            } else if (c=='U' && !st.up.empty()) { requestStageTransition(st.up, true); return; }
-            else if (c=='D' && !st.down.empty()) { requestStageTransition(st.down, false); return; }
+            } else if (stepOntoStairs(nx, ny)) return;
         }
     }
     // stairs check (cell char)
     ++storyTurns_;                 // S3.5 (c): the footer line rotates with movement, not with time
-    if (c=='U' && !st.up.empty()) requestStageTransition(st.up, true);
-    else if (c=='D' && !st.down.empty()) requestStageTransition(st.down, false);
+    stepOntoStairs(nx, ny);
+}
+
+// Q7 (stair_links.h): the stair under (x, y) leads where its link says; a locked one is never reached here
+// (movePlayer stops at it).
+bool Game::stepOntoStairs(int x, int y) {
+    const toms::StairLink* s = toms::stairAt(st.stairs, x, y);
+    if (!s || s->to.empty() || stairLocked(*s)) return false;
+    requestStageTransition(s->to, s->up);
+    stairsConfirmGoEvent_ = toms::goStairsEventId(st.id, s->to);
+    return true;
+}
+
+void Game::bumpLockedStairs(const toms::StairLink& s) {
+    auto d = eventDefs_.find(s.unlockEvent);
+    std::string name = d == eventDefs_.end() ? std::string() : locale_.tr(d->second.titleKey);
+    if (name.empty() || (d != eventDefs_.end() && name == d->second.titleKey)) name = s.unlockEvent;
+    // Before the event is met, its name is a spoiler: the event log shows "???" for it too.
+    if (!run_.eventStarted(s.unlockEvent)) name = locale_.tr("events.unknown");
+    const std::string msg = toms::fillText(locale_.tr("stairs.locked"), {{"event", name}});
+    if (notifications_.empty() || notifications_.back().first != msg) notifications_.push_back({msg, 3200});
+    audio.play("confirm_click");
+}
+
+void Game::finishEvent(const std::string& evId) {
+    const bool already = run_.eventFinished(evId);
+    run_.setFlag("event_" + evId, true);
+    run_.markEventFinished(evId);
+    auto def = eventDefs_.find(evId);
+    if (def != eventDefs_.end())
+        for (const std::string& n : def->second.next) run_.markEventStarted(n);
+    // Q7: the stairs this event opens. A dialog names each one, and its "go to the stairs" event starts.
+    if (auto u = stairUnlocks_.find(evId); u != stairUnlocks_.end() && !already)
+        for (const StairUnlock& s : u->second) {
+            run_.markEventStarted(toms::goStairsEventId(s.floor, s.to));
+            const std::map<std::string, std::string> vars = {{"from", toms::floorLabel(s.floor)}, {"to", toms::floorLabel(s.to)}};
+            notices_.push_back({locale_.tr("stairs.unlocked.title"), toms::fillText(locale_.tr("stairs.unlocked.body"), vars)});
+        }
+    markProgressDirty();
+}
+
+void Game::dismissNotice() {
+    if (notices_.empty()) return;
+    notices_.erase(notices_.begin());
+    audio.play("confirm_click");
+}
+
+void Game::loadStairLocks() {
+    stairUnlocks_.clear();
+    for (auto it = eventDefs_.begin(); it != eventDefs_.end();)
+        it = it->second.stairsFrom.empty() ? std::next(it) : eventDefs_.erase(it);
+    for (const toms::FloorInfo& f : floors_.all())
+        for (const toms::StairLink& s : f.stairs) {
+            if (s.unlockEvent.empty()) continue;
+            stairUnlocks_[s.unlockEvent].push_back({f.id, s.to});
+            EventDef d;
+            d.kind = "stairs";
+            d.stairsFrom = f.id;
+            d.stairsTo = s.to;
+            eventDefs_[toms::goStairsEventId(f.id, s.to)] = d;
+        }
+}
+
+void Game::debugLockStairs(const std::string& floor, const std::string& eventId) {
+    toms::FloorInfo* f = floors_.edit(floor);
+    if (!f || eventId.empty()) return;
+    if (!f->hasStairs) {
+        f->stairs = toms::defaultStairLinks(f->nextFloor, floors_.prev(f->id));
+        f->hasStairs = true;
+    }
+    for (toms::StairLink& s : f->stairs)
+        if (s.up) { s.unlockEvent = eventId; break; }
+    loadStairLocks();
+    if (st.id == floor)   // the floor the player is on: its stairs take the lock now
+        for (toms::StairLink& s : st.stairs)
+            if (s.up) { s.unlockEvent = eventId; break; }
+}
+
+void Game::debugFinishEvent(const std::string& eventId) {
+    if (!eventId.empty()) finishEvent(eventId);
 }
 
 

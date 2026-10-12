@@ -275,7 +275,7 @@ public:
     // as a modal overlay too, not just cs.active -- otherwise the world underneath (movement,
     // NPC interact, the store icon, Tab/B shortcuts) keeps responding to input while the victory
     // screen is still up. See docs/progress_report/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
-    bool modalActive() const { return cs.active || cs.won || inDialogue || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_ || endingActive(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu/ending)
+    bool modalActive() const { return cs.active || cs.won || inDialogue || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_ || endingActive() || !notices_.empty(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu/ending)
     bool combatWon() const { return cs.won; }
     bool combatActive() const { return cs.active; }
     // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
@@ -309,6 +309,13 @@ public:
     // instead of transitioning immediately -- see movePlayer()'s call to
     // requestStageTransition() and confirmStageTransition()/cancelStageTransition().
     bool stairsConfirmOpen() const { return stairsConfirmOpen_; }
+    // Q7: an OK popup ("Stairs unlocked: the stairs on floor 3 ..."), queued; Enter / Esc / its button close it.
+    bool noticeOpen() const { return !notices_.empty(); }
+    void dismissNotice();
+    // Test hooks (toms_game --stair-lock=F01:ev_x, --events-done=ev_a,ev_b): lock a floor's first stair up behind
+    // an event; finish events as if the player had (the unlock dialog included).
+    void debugLockStairs(const std::string& floor, const std::string& eventId);
+    void debugFinishEvent(const std::string& eventId);
     bool stairsConfirmIsUp() const { return stairsConfirmIsUp_; }
     void confirmStageTransition();
     void cancelStageTransition();
@@ -380,6 +387,9 @@ public:
     // `toms_game --fx-gpu-threshold=N` overrides it for this run without saving it).
     int particleGpuThreshold() const { return fxGpuThresholdOverride_ >= 0 ? fxGpuThresholdOverride_ : settings_.particleGpuThreshold; }
     void overrideParticleGpuThreshold(int n) { fxGpuThresholdOverride_ = n; }
+    // Tests (toms_game --battle-tuning=default): the battle bars' built-in values instead of data/battle.json, so a
+    // screenshot of a fight does not change whenever the tuning does.
+    void useDefaultBattleTuning() { barSlowScale_ = 1.0f; barFastScale_ = 1.0f; barCooldownMs_ = CombatState::kBarCooldownMs; }
     // The UI's sprite sheet: RCSS made from spriteAtlas_, which GameUi serves to RmlUi as
     // "_atlas.rcss" -- so the UI draws from the same packed texture as the map. Empty without a
     // prebuilt atlas. The revision changes whenever another atlas is loaded (art style switch).
@@ -739,6 +749,7 @@ private:
     // events/kinds.json, or its own). Floor events with no pool record still fire; they are just not listed.
     struct EventDef {
         std::string kind, titleKey, descKey;
+        std::string stairsFrom, stairsTo;     // a "go to the stairs" event (Q7): its text is built from these
         std::vector<std::string> next;
         nlohmann::json requires;              // null = none
         bool inLog = true;
@@ -746,6 +757,19 @@ private:
     std::map<std::string, EventDef> eventDefs_;
     std::map<std::string, std::vector<std::string>> chapterEvents_;   // chapter id -> its story events (beats)
     void loadEventDefs(const std::string& assetDir);
+    // Q7: stairs locked by an event. stairUnlocks_: event id -> the stairs it opens (floor, target), from every
+    // floor spec's `stairs`; loadStairLocks also adds the "go to the stairs" events. finishEvent is every
+    // finished event (the run flag, the log, `next`, and the stairs it opens with their dialog).
+    struct StairUnlock { std::string floor, to; };
+    std::map<std::string, std::vector<StairUnlock>> stairUnlocks_;
+    void loadStairLocks();
+    void finishEvent(const std::string& evId);
+    bool stairLocked(const toms::StairLink& s) const { return !s.unlockEvent.empty() && !run_.eventFinished(s.unlockEvent); }
+    bool stepOntoStairs(int x, int y);       // the stair at (x, y), if open: ask to take it
+    void bumpLockedStairs(const toms::StairLink& s);
+    std::string stairsConfirmGoEvent_;       // the "go to the stairs" event taking the asked stair finishes
+    struct Notice { std::string title, body; };
+    std::vector<Notice> notices_;
     // The ids an event is linked to: its `next`, the events whose `next` names it, and the events its
     // `requires` waits for (runFlagSet "event_<id>" / eventDone).
     std::vector<std::string> connectedEvents(const std::string& eventId) const;

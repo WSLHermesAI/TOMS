@@ -58,6 +58,10 @@ FloorTable FloorTable::fromSpecs(const std::vector<nlohmann::json>& specs) {
             f.eventCount = (int)j["events"].size();
             for (const auto& ev : j["events"]) if (ev.is_string()) f.eventIds.push_back(ev.get<std::string>());
         }
+        if (j.contains("stairs") && j["stairs"].is_array()) {
+            f.stairs = stairLinksFromJson(j["stairs"]);
+            f.hasStairs = true;
+        }
         if (j.contains("story") && j["story"].is_object()) {
             const auto& st = j["story"];
             if (st.contains("intro") && st["intro"].is_string()) f.introKey = st["intro"].get<std::string>();
@@ -126,6 +130,11 @@ const FloorInfo& FloorTable::at(int seq) const {
 
 const FloorInfo* FloorTable::find(const std::string& id) const {
     for (const FloorInfo& f : floors_) if (f.id == id) return &f;
+    return nullptr;
+}
+
+FloorInfo* FloorTable::edit(const std::string& id) {
+    for (FloorInfo& f : floors_) if (f.id == id) return &f;
     return nullptr;
 }
 

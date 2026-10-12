@@ -34,6 +34,7 @@ const char* const kFallbackKeys[][3] = {
 
 Locale::Locale() {
     langs_ = { {"zh_TW", "繁體中文"}, {"en", "English"} };
+    idx_ = 1;   // English is the default language
     for (auto& row : kFallbackKeys) {
         strings_[row[0]]["zh_TW"] = row[1];
         strings_[row[0]]["en"]    = row[2];
@@ -55,7 +56,12 @@ bool Locale::loadFromJson(const nlohmann::json& j) {
             li.webFont = e.value("web_font", std::string());
             if (!li.code.empty()) langs.push_back(li);
         }
-        if (!langs.empty()) { langs_ = langs; idx_ = 0; }
+        if (!langs.empty()) {
+            langs_ = langs;
+            idx_ = 0;
+            for (size_t i = 0; i < langs_.size(); i++)   // English is the default language
+                if (langs_[i].code == "en") idx_ = (int)i;
+        }
     }
 
     if (j.contains("strings") && j["strings"].is_object()) {

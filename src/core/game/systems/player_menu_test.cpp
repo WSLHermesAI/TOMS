@@ -71,8 +71,14 @@ int main() {
     const nlohmann::json text = readJson("data/text.json");
     const nlohmann::json& strings = text.is_object() && text.contains("strings") ? text["strings"] : nlohmann::json();
     CHECK(strings.is_object(), "data/text.json has strings");
+    // English is the language every text must have (the owner, 2026-10-12: English only until translations are
+    // asked for; every other language falls back to it), and it must really be English, not a copy of the Chinese.
     auto hasText = [&](const std::string& key) {
-        return strings.is_object() && strings.contains(key) && strings[key].contains("zh_TW") && strings[key].contains("en");
+        if (!strings.is_object() || !strings.contains(key) || !strings[key].contains("en") || !strings[key]["en"].is_string())
+            return false;
+        for (unsigned char c : strings[key]["en"].get<std::string>())
+            if (c >= 0xE3 && c <= 0xE9) return false;   // the lead byte of a CJK character (U+3000..U+9FFF)
+        return true;
     };
 
     const nlohmann::json stats = readJson("data/stats.json");
@@ -83,7 +89,7 @@ int main() {
             const std::string id = a.value("id", std::string());
             CHECK(!id.empty() && attrIds.insert(id).second, "attribute ids are present and unique ('%s')", id.c_str());
             CHECK(hasText(a.value("name", std::string())) && hasText(a.value("desc", std::string())),
-                  "attribute '%s' has its name and description in text.json (zh_TW + en)", id.c_str());
+                  "attribute '%s' has its name and description in text.json (English)", id.c_str());
             // P3: what a point does -- only stats Game::attrEffect's callers read, each with its Status-tab label
             static const std::set<std::string> kEffectStats = {"atk", "def", "maxhp", "hitZone", "cooldownMs", "skillPower", "goldGain"};
             if (a.contains("effects"))
@@ -180,20 +186,32 @@ int main() {
     {
         std::set<std::string> ids;
         std::vector<nlohmann::json> all;
-        for (const char* pool : {"pool_act01", "pool_act02", "pool_act03", "pool_common"}) {
+        for (const char* pool : {"pool_act01", "pool_act02", "pool_act03", "pool_act04", "pool_act05", "pool_act06",
+                                 "pool_act07", "pool_act08", "pool_act09", "pool_act10", "pool_common"}) {
             const nlohmann::json p = readJson(std::string("data/events/") + pool + ".json");
             CHECK(p.contains("events") && p["events"].is_array(), "data/events/%s.json has events", pool);
             if (p.contains("events")) for (const auto& e : p["events"]) { ids.insert(e.value("eventId", std::string())); all.push_back(e); }
         }
         for (const auto& e : all) {
             const std::string id = e.value("eventId", std::string());
-            CHECK(hasText(e.value("title", id + ".title")) && hasText(e.value("desc", id + ".desc")),
-                  "event %s has its title and description in text.json (zh_TW + en)", id.c_str());
+            CHECK(hasText(e.value("title", id + ".title")) && hasText(e.value("desc", id + ".desc")) &&
+                      hasText(e.value("text", id + ".text")),
+                  "event %s has its title, description and text in English in text.json", id.c_str());
             if (e.contains("next"))
                 for (const auto& n : e["next"])
                     CHECK(n.is_string() && ids.count(n.get<std::string>()), "event %s: a next id is not an event", id.c_str());
         }
-        CHECK(all.size() >= 34, "the four pools hold the events (%zu)", all.size());
+        CHECK(all.size() >= 126, "the eleven pools hold the events (%zu)", all.size());
+        // Q10 (a): every event a floor lists is a real event (the _v2.._v5 variants included; W22)
+        for (int f = 1; f <= 70; f++) {
+            char name[48];
+            std::snprintf(name, sizeof name, "data/story/floors/F%02d.json", f);
+            const nlohmann::json spec = readJson(name);
+            if (spec.contains("events"))
+                for (const auto& e : spec["events"])
+                    CHECK(e.is_string() && ids.count(e.get<std::string>()), "F%02d lists event %s, which no pool defines", f,
+                          e.is_string() ? e.get<std::string>().c_str() : "?");
+        }
     }
 
     std::printf("player_menu_test: %d checks, %d failed\n", g_checks, g_failed);

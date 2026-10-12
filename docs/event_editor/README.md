@@ -51,8 +51,9 @@ Widgets in the same dark theme as the anim and particle editors.
 
 ## Saving into assets/data
 
-Out of the box the editor works on the copy in `data.js`, and Save writes nothing (that is what the
-tutorial uses). To edit the real data:
+Out of the box the editor works on a copy, and Save writes nothing (that is what the tutorial uses). Since
+2026-10-12 that copy is `tutorial_data.js`, the data of 2026-10-10 frozen for the tutorial and its Play demo
+(their steps fix event ids that are real events now); `data.js` is still the current data. To edit the real data:
 
 1. Start `tools\web_editors\serve.cmd` (Chrome or Edge).
 2. Click **📂 Open project folder…** and pick the **TOMS** folder itself (the one that holds `assets`),

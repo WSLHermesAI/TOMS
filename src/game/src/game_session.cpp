@@ -90,6 +90,7 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     if (const char* sn = std::getenv("TOMS_SPLIT_NODE")) renderer_->setNodeFilter((uint8_t)std::atoi(sn));
     showHud = opts.showFps;
     if (opts.fxGpuThreshold >= 0) game_->overrideParticleGpuThreshold(opts.fxGpuThreshold);
+    if (opts.defaultBattleTuning) game_->useDefaultBattleTuning();
     if (opts.titleScene != "none") {   // the 3D scene behind the title; without it the title is plain
         const std::string path = opts.titleScene.empty() ? assetDir_ + "/models/VirtualCity.glb" : opts.titleScene;
         if (!opts.titleScene.empty() || toms::vfsExists(path)) {
@@ -226,6 +227,7 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         if (keyPressed(in, Key::F2)) showStylingSpike = !showStylingSpike;
         if (escPressed) {
             if (g.endingActive()) g.dismissEndingScreen();
+            else if (g.noticeOpen()) g.dismissNotice();
             else if (g.storeModal()) g.storeKey(27);
             else if (g.stairsConfirmOpen()) g.cancelStageTransition();
             else if (g.stageSelectOpen()) g.closeStageSelect();
@@ -260,6 +262,7 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         }
         if (enterPressed || spacePressed) {
             if (g.endingActive()) { if (!g.rebirth()) g.dismissEndingScreen(); }
+            else if (g.noticeOpen()) g.dismissNotice();
             else if (g.playerMenuOpen()) g.playerMenuActivate();
             else if (g.stairsConfirmOpen()) g.confirmStageTransition();
             else if (g.combatWon()) g.dismissVictory();

@@ -15,12 +15,20 @@
 // a directional light 1 (orthographic, fitted to the bounds), a spot light 1 (its cone), a point
 // light 6 (one 90-degree face each). At most kMaxShadowTiles tiles; the tiles shrink as more lights
 // cast. Sampled with 3x3 hardware PCF, with a normal offset and a small depth bias against acne.
+//
+// Crowds (gltf_anim_texture.h): a skin's animations baked into one texture (uploadAnimTexture, shared by every
+// crowd of that model), and drawCrowd() draws every instance in one instanced draw per primitive -- each with
+// its own clip, time, and a second clip to blend or cross-fade to. No posing on the CPU per instance.
 #pragma once
+#include "gltf_anim_texture.h"
 #include "gltf_model.h"
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <vector>
+
+namespace bgfx { struct ProgramHandle; }
 
 namespace toms::next {
 
@@ -67,10 +75,14 @@ public:
     };
     struct Stats {
         int drawCalls = 0, instances = 0, skinnedDraws = 0, morphUploads = 0, shadowTiles = 0, shadowDraws = 0;
+        int crowdInstances = 0;              // drawn through drawCrowd (also counted in instances)
     };
 
     // Per-model GPU resources (buffers, textures). Made by upload(); free with the renderer alive.
     struct GpuModel;
+    // A baked animation texture on the GPU (RGBA32F). Made by uploadAnimTexture(); share it between every crowd
+    // of the same model; free with the renderer alive.
+    struct AnimTextureGpu;
 
     GltfRenderer();
     ~GltfRenderer();
@@ -80,6 +92,9 @@ public:
     bool shadowsSupported() const;           // depth textures with compare (every desktop backend)
 
     std::shared_ptr<GpuModel> upload(const gltf::Model& model);
+    // Null (and a log line) when this backend cannot sample RGBA32F textures or the texture is too big.
+    std::shared_ptr<AnimTextureGpu> uploadAnimTexture(std::shared_ptr<const gltf::AnimTexture> anim);
+    bool crowdsSupported() const;           // the crowd program exists and RGBA32F textures can be sampled
 
     // Perspective matrix for this backend (depth 0..1 on D3D/Vulkan, -1..1 on OpenGL).
     static glm::mat4 projection(float fovYDegrees, float aspect, float zNear, float zFar);
@@ -87,10 +102,19 @@ public:
     void begin(uint16_t viewId, const Frame& frame, uint32_t width, uint32_t height, uint32_t clearRgba = 0x3a3d42ff);
     // castShadows = false: drawn and shadowed, but not drawn into the shadow maps (e.g. a floor).
     void draw(GpuModel& gpu, const gltf::Pose& pose, const glm::mat4& placement = glm::mat4(1.0f), bool castShadows = true);
+    // Every instance of the model's meshes skinned by the texture's skin, animated from the texture: one
+    // instanced draw per primitive (plus its shadow casts). Primitives of other skins / unskinned ones are not
+    // drawn (draw those with a Pose). The crowd's texture must be the one `anim` was uploaded from.
+    void drawCrowd(GpuModel& gpu, const AnimTextureGpu& anim, const gltf::Crowd& crowd, bool castShadows = true);
+    void drawCrowd(GpuModel& gpu, const AnimTextureGpu& anim, const std::vector<gltf::CrowdGpuInstance>& instances,
+                   bool castShadows = true);
     void lines(const std::vector<LinePoint>& points, bool depthTest = true);   // pairs of points
     const Stats& stats() const { return stats_; }
 
 private:
+    void submitPrimitive(GpuModel& gpu, const gltf::Primitive& p, const gltf::Material& mat, const std::function<void()>& geometry,
+                         bgfx::ProgramHandle colourProg, bgfx::ProgramHandle shadowProg, const glm::mat4& sortBase, bool mirrored,
+                         bool castShadows, bool skinned);
     struct Impl;
     std::unique_ptr<Impl> impl_;
     Stats stats_;

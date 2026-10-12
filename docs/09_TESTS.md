@@ -1,12 +1,39 @@
 # 09 — Tests (CTest)
 
-One command runs every check: the game logic, the screens and the web build.
+By default, `tools\test.cmd` runs only the tests that the current changes can break. `all` runs every check: the game
+logic, the screens and the web build.
 
 ```bat
 tools\build.cmd windows-release          :: build first: the tests are programs in the build folder
-tools\test.cmd                           :: everything, windows-release (about 45 seconds)
-tools\test.cmd windows-debug -L unit     :: only the unit tests of another preset (under a second)
+tools\test.cmd                           :: only the tests for the uncommitted changes (the project rule, CLAUDE.md)
+tools\test.cmd all                       :: everything, windows-release, web included (about 45 seconds)
+tools\test.cmd --since main              :: the tests for what changed since a commit or branch
+tools\test.cmd --list                    :: print which tests would run, and why; run nothing
+tools\test.cmd windows-debug -L unit     :: a ctest filter runs as given (only the unit tests of another preset)
 ```
+
+**How the selection works** (`tools/test_select.py`). It reads the changed files (`git diff HEAD` plus untracked
+files). **Every area has its own tests, and an area that did not change is not tested.** A glTF change runs no game
+test, and a game change runs no glTF test:
+
+| Area | Its files | Its tests |
+|---|---|---|
+| Game | `src/core/game`, `src/game`, `assets/` (data, UI, fonts, sprites) | the game's unit tests (`src/core/game/**_test`) and the game screenshots on D3D11, narrowed by the file name: `player` / `saveload` → the menu scenes, `battle` / `combat` → battle, `store`, `dialog`, `title`, `stair` / `floor` / `stage` → the map scenes; any other name → all game scenes |
+| glTF | glTF code, `gltf_viewer`, the mesh shaders, `tests/gltf/` | `unit.gltf_*` and the glTF screenshots |
+| Particles | `particle_fx`, the particle editor, fx files and shaders | the particle checks, its unit test, `smoke.fx*` |
+| Node animations | `anim_clip`, the anim editor, `.anim` files | the anim checks, its unit test, `smoke.anim` (`.anim` files also the game scenes) |
+| Atlases | the atlas tool, atlas files | the atlas checks (atlas files also the game scenes) |
+| Engine core | the rest of `src/core/engine` (conditions, nodes, events, …) | the engine's unit tests, and the game area |
+| Renderer | `src/engine`: the shared files (`bgfx_*`, embedded shaders) | every screenshot on every backend |
+| | `src/engine`: sprite, UI and ImGui files and shaders | the game screenshots on every backend |
+| Web | `web/`, the web test | the web tests |
+| Tests | a `*_test.cpp`; a `tests/golden/x.png`; a changed line of `tests/CMakeLists.txt` | exactly those tests (for a variable such as `_pm_give`, the tests that use it) |
+| Global | the root `CMakeLists.txt`, presets, `cmake/`, `external/` | every desktop test |
+| Nothing | docs, `*.md`, the HTML editors, `android/`, the test runner | none |
+
+A file that no rule knows runs nothing, and is listed as **NOT MAPPED**: add a rule for it in `RULES`. The backend
+variants (`stage_d3d12/vulkan/opengl`, `fx_cpu/compute/gpu`) run only when the renderer, their reference image or
+the global setup changed. Without Python, `test.cmd` runs every test.
 
 Visual Studio lists the same tests in **Test → Test Explorer** (from the CMake presets): run or debug one with a
 click. Underneath is `ctest`, CMake's test runner (Visual Studio ships it; `tools\test.cmd` finds it), so
@@ -37,19 +64,24 @@ helper a test defines for itself goes in an anonymous namespace. Two tests each 
 
 | Label | Tests | What they check | Needs |
 |---|---|---|---|
-| `unit` | 36 | the game's own `*_test.cpp` programs next to the code in `src/core` (saves, title flow, conditions, battle bars, camera, equipment, skills, forge, hub, endings, cycles, floors, footprints, missions, node animations, particle effects, glTF models, …), including checks on the shipped `assets/data` | nothing |
+| `unit` | 39 | the game's own `*_test.cpp` programs next to the code in `src/core` (saves, title flow, conditions, battle bars, camera, equipment, skills, forge, hub, endings, cycles, floors, footprints, missions, node animations, particle effects, glTF models, …), including checks on the shipped `assets/data` | nothing |
 | `atlas` | 3 | `atlas.core`: the atlas tool's packer, child sprites, every export format read back, and old `.pi` files rebuilt pixel for pixel; `atlas_sprites_test`: every sprite name the code, data and UI use is in the game's atlases; `atlas.assets_up_to_date`: `assets/media/atlas/game.atlasproj` opens from its packed atlas alone and its other files are current ([14](14_ATLAS_TOOL.md)); `atlas.fx_up_to_date`: the same for the particle sprites `fx.atlasproj` ([17](17_PARTICLES.md)) | nothing (all three are also in `unit`; `atlas_sprites_test` only there) |
 | `particle` | 1 | `particle.check_recipes`: `particle_editor --headless check` on `docs/examples/fx_recipes.particle` (it parses, every sprite is in its atlases, curves / pools / bursts are sane; [17](17_PARTICLES.md)) | the Qt editor build (also in `unit`) |
 | `anim` | 2 | `anim.check_preview` / `anim.check_recipes`: `anim_editor --headless check` on `tests/smoke/anim_preview.anim` and on the recipe examples `docs/examples/anim_recipes.anim` (they parse, every sprite is in the game atlas, no overlapping keys; [15](15_ANIMATION.md), [16](16_ANIMATION_RECIPES.md)) | the Qt editor build (also in `unit`) |
-| `smoke` | 18 | the real `toms_game` plays a scripted scene; its screenshot must match the reference image in `tests/golden/` (including `smoke.anim` and `smoke.fx`: an `.anim` clip and a particle effect over the map; `smoke.fx_cpu` / `fx_compute`: the same through the sprite batch's other paths, and `smoke.fx_gpu`: with every emitter simulated on the GPU -- all against the same image) | a GPU; each test opens a window for about 2 s |
-| `smoke` + `gltf` | 17 | `gltf_viewer` renders a test model of `tests/gltf/` at a frozen time; the screenshot must match `tests/golden/gltf_*.png`: skinning (linear, cubic spline), morph targets (linear, step), `EXT_mesh_gpu_instancing`, PBR materials, the normals view, shadows (directional, point, spot, all); skin, PBR and shadows also on Vulkan and OpenGL ([18](18_GLTF.md)). `ctest -L gltf` runs only these | a GPU; about 1 s each |
+| `smoke` | 20 | the real `toms_game` plays a scripted scene; its screenshot must match the reference image in `tests/golden/` (including `smoke.anim` and `smoke.fx`: an `.anim` clip and a particle effect over the map; `smoke.fx_cpu` / `fx_compute`: the same through the sprite batch's other paths, and `smoke.fx_gpu`: with every emitter simulated on the GPU -- all against the same image) | a GPU; each test opens a window for about 2 s |
+| `smoke` + `gltf` | 21 | `gltf_viewer` renders a test model of `tests/gltf/` at a frozen time; the screenshot must match `tests/golden/gltf_*.png`: skinning (linear, cubic spline), morph targets (linear, step), `EXT_mesh_gpu_instancing`, PBR materials, the normals view, shadows (directional, point, spot, all); skin, PBR and shadows also on Vulkan and OpenGL ([18](18_GLTF.md)). `crowds (instanced skinning, [18](18_GLTF.md) §6) on D3D11, Vulkan and OpenGL, one of them against the `gltf_skin` image. `ctest -L gltf` runs only these | a GPU; about 1 s each |
 | `web` | 5 | `tools/web_smoke_test.mjs` in headless Chrome: title → new game → save → reload → the save is still there, no page errors. Against the single-threaded build, the threaded build (served with the isolation headers), and the packaged page twice: on a server without the headers (it must become threaded through its service worker) and with `?nothreads` ([10](10_THREADS.md)), and once more on the **real GPU** (`web.page_gpu`, `--gpu`: ANGLE on Direct3D 11, stricter about shaders than the SwiftShader software GPU the others use). Every WebGL shader that fails to compile or link is logged and fails the test | the web builds / package (`build_web.bat`), Node 22+, Chrome or Edge; a missing one is **skipped**, not failed |
 
 The smoke scenes are title, map (HUD + pad), the player menu's five tabs (`player_status`, `player_gear`, `player_items`,
 `player_events`, `player_system`; [20](20_PLAYER_MENU.md)), dialogue, battle (after one attack), store, and a node animation
 over the map (`--anim`, [15](15_ANIMATION.md)). The player-menu scenes start with `--give=<item ids>,gold:<n>`: the
 player gets those items and gear when the title closes, so the grids, the gear comparison and the scrolling have
-something to show. `unit.player_menu_test` checks the menu's rules and the item, store, stats and title data.
+something to show. `unit.player_menu_test` checks the menu's rules and the item, store, stats and title data, and that every
+event a floor lists has a pool record with English text. Two scenes show locked stairs ([05](event_editor/05_FLOOR_LINKS.md)
+section 3.2): `stairs_locked` walks to F01's stair, locked by `--stair-lock=F01:ev_village_well` (the padlock and the
+hint), and `stairs_unlock` finishes the event with `--events-done=` (the "Stairs unlocked" dialog).
+`unit.stair_links_test` checks the stair list itself, and `unit.floor_index_test` that `assets/data/events/floor_index.json`
+still matches the floors (when it fails: `python tools/make_event_index.py`).
 They run on Direct3D 11, and the map scene also runs on Direct3D 12, Vulkan and OpenGL. The scene list is in
 `tests/CMakeLists.txt`, one line per test.
 

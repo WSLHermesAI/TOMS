@@ -105,7 +105,7 @@ Every edit is one `QUndoCommand` and shows in the History dock. Edits that touch
 
 - Should a floor's event list stay explicit, or should floors only name their pools and leave the
   roll to the generator? Today it is explicit, and the editor follows the data.
-- Do `_v2` … `_v5` ids mean variants of one event (same kind, different text)? If so, the
-  inspector could group them under one event.
+- ~~Do `_v2` … `_v5` ids mean variants of one event?~~ Answered 2026-10-12 (Q10 a): each is a separate event
+  with its own record and text ([01](01_DATA_MODEL.md)), so the inspector does not group them.
 - Which languages are required before release? That decides whether *untranslated* is a warning or
   an error.

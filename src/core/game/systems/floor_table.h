@@ -16,6 +16,7 @@
 #include <vector>
 
 #include <json.hpp>   // vendored single header (external/json), the repo-wide include form
+#include "stair_links.h"   // StairLink: a floor's stairs list (Q7)
 
 namespace toms {
 
@@ -37,6 +38,10 @@ struct FloorInfo {
     std::string introKey;                        // e.g. "story.f07.intro"
     std::vector<std::string> ambientKeys;        // "story.f07.ambient.1|2" -- rotated as the player moves
     std::vector<std::string> eventIds;           // the floor's event slots, in spec order
+    // The spec's `stairs` list (stair_links.h; docs/event_editor/05_FLOOR_LINKS.md). hasStairs false: the floor
+    // keeps the chain (up to nextFloor, down to the floor before it).
+    std::vector<StairLink> stairs;
+    bool hasStairs = false;
 
     bool isBoss() const { return role == "boss-stage"; }
 };
@@ -56,6 +61,7 @@ public:
     // fallback, because every caller here is a draw or input path that must not abort mid-frame.
     const FloorInfo& at(int seq) const;
     const FloorInfo* find(const std::string& id) const;
+    FloorInfo* edit(const std::string& id);        // test hooks (toms_game --stair-lock=...)
 
     // Progression. next() is the spec's own `nextFloor` ("" at the top); prev() is derived from the
     // chain, so a spec can never disagree with the floor the player actually came from.

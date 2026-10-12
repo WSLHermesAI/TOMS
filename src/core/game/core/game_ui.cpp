@@ -381,6 +381,12 @@ void Game::buildUiState(toms::UiState& u) const {
             s.items.push_back(it);
         }
     }
+    if (!notices_.empty()) {
+        u.notice.visible = true;
+        u.notice.title = notices_.front().title;
+        u.notice.body = notices_.front().body;
+        u.notice.ok = L.tr("notice.ok");
+    }
     if (storeUnlockDlg) {
         u.store.unlocked_dialog = true;
         u.store.unlocked_title = L.tr("store.unlocked_title");
@@ -565,6 +571,7 @@ void Game::uiEvent(const std::string& name, int arg) {
     if (name == "menu_hover")   { if (inGameMenuOpen_ && !inGameLangConfirmOpen_) inGameMenuSel_ = arg; return; }
     if (name == "menu_close")   { if (inGameMenuOpen_) inGameMenuBack(); return; }
     if (name == "menu_confirm") { if (inGameLangConfirmOpen_) { inGameLangConfirmYes_ = arg != 0; inGameMenuActivate(); } return; }
+    if (name == "notice_ok") { dismissNotice(); return; }
     // ---- stairs ----
     if (name == "stairs") { if (stairsConfirmOpen_) { if (arg) confirmStageTransition(); else cancelStageTransition(); } return; }
     // ---- stage select ----

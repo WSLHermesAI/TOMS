@@ -41,7 +41,7 @@ bgfx_compile_shaders(TYPE FRAGMENT
 # varyings (varying_mesh.def.sc); mesh_common.sh (GPU skinning) is included from this folder.
 bgfx_compile_shaders(TYPE VERTEX
     SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_mesh.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_mesh_inst.sc
-                 ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_line.sc
+                 ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_mesh_animtex.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_line.sc
     VARYING_DEF  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying_mesh.def.sc
     OUTPUT_DIR   ${TOMS_SHADER_OUT}
     OUT_FILES_VAR TOMS_MESH_VS_FILES
@@ -102,7 +102,7 @@ add_library(toms_bgfx STATIC
     src/gltf_renderer.h   src/gltf_renderer.cpp
     ${TOMS_VS_FILES} ${TOMS_FS_FILES} ${TOMS_CS_FILES} ${TOMS_MESH_VS_FILES} ${TOMS_MESH_FS_FILES}
     shaders/varying.def.sc shaders/varying_mesh.def.sc shaders/mesh_common.sh
-    shaders/vs_mesh.sc shaders/vs_mesh_inst.sc shaders/fs_mesh.sc shaders/vs_line.sc shaders/fs_line.sc shaders/fs_shadow.sc
+    shaders/vs_mesh.sc shaders/vs_mesh_inst.sc shaders/vs_mesh_animtex.sc shaders/fs_mesh.sc shaders/vs_line.sc shaders/fs_line.sc shaders/fs_shadow.sc
     shaders/cs_sprite.sc shaders/vs_sprite_cs.sc shaders/cs_fx_spawn.sc shaders/cs_fx_update.sc
     shaders/vs_sprite.sc shaders/fs_sprite.sc shaders/vs_sprite_inst.sc
     shaders/vs_imgui.sc  shaders/fs_imgui.sc
@@ -136,5 +136,5 @@ target_link_libraries(toms_bgfx PUBLIC RmlUi::RmlUi)
 source_group("shaders" FILES shaders/varying.def.sc shaders/vs_sprite.sc shaders/fs_sprite.sc shaders/vs_sprite_inst.sc
                              shaders/cs_sprite.sc shaders/vs_sprite_cs.sc shaders/cs_fx_spawn.sc shaders/cs_fx_update.sc
                              shaders/vs_imgui.sc shaders/fs_imgui.sc shaders/vs_rml.sc shaders/fs_rml.sc
-                             shaders/varying_mesh.def.sc shaders/mesh_common.sh shaders/vs_mesh.sc shaders/vs_mesh_inst.sc
+                             shaders/varying_mesh.def.sc shaders/mesh_common.sh shaders/vs_mesh.sc shaders/vs_mesh_inst.sc shaders/vs_mesh_animtex.sc
                              shaders/fs_mesh.sc shaders/vs_line.sc shaders/fs_line.sc)

@@ -104,3 +104,13 @@ floor ──can roll──▶ event
 
 所以編輯器的第一個真正工作，是用樓層已經使用的 ID 建立 `pool_act04` … `pool_act10`，
 並撰寫它們的文字。
+
+**2026-10-12 完成（負責人對 Q10 的答覆「a」）：** 這 92 個 ID 現在都是獨立的事件，各有事件池紀錄，以及自己的英文標題、
+說明與文字：`pool_act04` … `pool_act10`（第 4–10 章的種子 ID 與它們的變體），另外 `pool_common` 多了 28 筆
+`ev_common_*_v2` … `_v5`。`_v2` … `_v5` 不再是同一個事件的複本，每個講的內容都不同。事件池現在共有 126 個事件，
+沒有任何樓層列出未定義的 ID（`unit.player_menu_test` 會檢查）。目前只有英文；其他語言在要求翻譯之前會改用英文。
+
+**每層的事件索引**（`assets/data/events/floor_index.json`，Q10）：一個產生出來的檔案，列出每層列出或放置的事件
+（id、類型、英文標題、事件池、格子）、該章在此層的劇情節點，以及樓梯鎖，並把每個事件對應回它所在的樓層。
+由 `python tools/make_event_index.py` 寫出，`tools/gen_floors.py` 寫完樓層後也會執行它。索引與樓層不符時，
+`unit.floor_index_test` 會失敗。

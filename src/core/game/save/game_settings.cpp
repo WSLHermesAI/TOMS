@@ -20,8 +20,9 @@ GameSettings gameSettingsFromJson(const nlohmann::json& j) {
     GameSettings s;
     if (!j.is_object()) return s;
     s.schemaVersion = j.value("schemaVersion", kGameSettingsSchemaVersion);
-    std::string lang = j.value("language", std::string("zh_TW"));
+    std::string lang = j.value("language", std::string("en"));
     if (!lang.empty()) s.language = lang;
+    if (s.schemaVersion < 2) s.language = "en";   // saved while Chinese was the default: English now (v2)
     int slots = j.value("slotCount", 3);
     if (slots < 1) slots = 1;
     if (slots > 8) slots = 8;      // the Continue page lays out at most 8 rows

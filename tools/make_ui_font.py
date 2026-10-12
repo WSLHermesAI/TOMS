@@ -32,7 +32,7 @@ SOURCE = ROOT / "Build" / "font-cache" / "NotoSansCJKtc-Regular.otf"
 OUTPUT = ROOT / "assets" / "media" / "fonts" / "NotoSansCJKtc-TOMS.otf"
 
 # Written by C++ code rather than data files (HUD separators, arrows, check marks).
-EXTRA = "▶◀▲▼←→↑↓•·—–…「」『』（）：，。！？、；《》〈〉×✓★☆♥"
+EXTRA = "▶◀▲▼←→↑↓•·—–…「」『』（）：，。！？、；《》〈〉×✓★☆♥●◆"
 
 
 def json_strings(value, out):

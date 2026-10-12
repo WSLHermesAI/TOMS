@@ -130,15 +130,32 @@ the changes before writing. ◇ **Safe cells** shows the same cells at any time.
   Generated floors have no `@`.
 - **Files are written as the game's tools write them:** 2-space JSON, the same key order, and the file's
   own line endings (the boss stages use CRLF). Opening a floor and saving with no edits writes nothing.
-- **Generated grids:** `F??.stage.json` is produced by the floor generator. Running it again would
-  replace hand edits; a floor that is edited by hand should become hand-authored, or the generator
-  should keep its edits. This needs a decision.
+- **Generated grids and hand edits (Q6, built 2026-10-12):** `F??.stage.json` and the floor specs are
+  produced by the floor generator, `tools/gen_floors.py` (then its stairs pass, `tools/gen_stairs.py`;
+  both restored from history, with the maze helpers in `tools/maze_lib.py`). The generator no longer
+  writes over a person's work silently. It builds the floors in a staging copy, and
+  `tools/floor_guard.py` compares that with the real files. `tools/floor_gen_manifest.json` holds the
+  hash of every file as the generator last wrote it. A file that no longer matches (saved from this
+  editor, or edited by hand) and that the run would change is a hand edit, and a dialog names the
+  floors: *"Floors 4, 5, 6, 55 were changed by hand. The generator will place its own data there."*
+  - **Yes** replaces them.
+  - **No** keeps them and skips those floors. Their stairs may then not line up with the floor next to
+    them.
+  - **Cancel** writes nothing.
+
+  Without a display, the question is asked on the console; with no console it means Cancel.
+  `--yes`, `--keep-edits` and `--dry-run` answer it up front. Files are compared as JSON, and a
+  replaced file keeps its own line endings.
+
+  On 2026-10-12, a dry run named F22–F28 (chapter 4's enemy mix changed after the generator ran) and
+  the boss stages of F07, F14, F21, F35, F49, F56, F63 and F70. The other 50 floors match the
+  generator's output exactly and are recorded in the manifest.
 
 ## 4. Found while building it
 
-- **`@` is ignored by the game.** `parseStage` skips `@` cells (`stage.h`, `c == '@'` → `continue`),
-  so the `@` branch in `game_assets.cpp`'s arrival code never finds one. A new game on F01 starts on
-  F01's stairs, not on its `@`. The fix is one line; not changed here.
+- ~~**`@` is ignored by the game.**~~ Fixed 2026-10-12 (with the locked stairs, Q7): `parseStage` keeps the `@`
+  cell as `Stage::startX` / `startY`, and a fresh load (a new game, a debug jump) starts there. A new game on F01
+  now starts on its `@`, not on its stairs.
 - Across all 70 floors the checks report 324 placed events that no pool defines (the chapters 4–10 ids
   in [event_editor/01_DATA_MODEL.md](event_editor/01_DATA_MODEL.md)), 75 listed events that are not
   placed, and one floor with a stairs-down tile but no `connect.down`.

@@ -1,0 +1,67 @@
+{
+  "_comment": [
+    "Act 8 (sanctum) event pool. Created 2026-10-12 from the ids the floors already place (Q10 a):",
+    "the generator's seed ids and their _v2.._v5 variants, each now its own event with its own text.",
+    "English only for now; other languages fall back to English until translations are asked for."
+  ],
+  "act": "ch_08",
+  "theme": "sanctum",
+  "events": [
+    {
+      "eventId": "ev_sanctum_seventh_bell",
+      "kind": "relic",
+      "text": "ev_sanctum_seventh_bell.text",
+      "title": "ev_sanctum_seventh_bell.title",
+      "desc": "ev_sanctum_seventh_bell.desc"
+    },
+    {
+      "eventId": "ev_sanctum_seventh_bell_v3",
+      "kind": "relic",
+      "text": "ev_sanctum_seventh_bell_v3.text",
+      "title": "ev_sanctum_seventh_bell_v3.title",
+      "desc": "ev_sanctum_seventh_bell_v3.desc"
+    },
+    {
+      "eventId": "ev_sanctum_seventh_bell_v4",
+      "kind": "relic",
+      "text": "ev_sanctum_seventh_bell_v4.text",
+      "title": "ev_sanctum_seventh_bell_v4.title",
+      "desc": "ev_sanctum_seventh_bell_v4.desc"
+    },
+    {
+      "eventId": "ev_sanctum_warden_oath_v2",
+      "kind": "whisper",
+      "text": "ev_sanctum_warden_oath_v2.text",
+      "title": "ev_sanctum_warden_oath_v2.title",
+      "desc": "ev_sanctum_warden_oath_v2.desc"
+    },
+    {
+      "eventId": "ev_sanctum_warden_oath_v3",
+      "kind": "whisper",
+      "text": "ev_sanctum_warden_oath_v3.text",
+      "title": "ev_sanctum_warden_oath_v3.title",
+      "desc": "ev_sanctum_warden_oath_v3.desc"
+    },
+    {
+      "eventId": "ev_sanctum_warden_oath_v4",
+      "kind": "whisper",
+      "text": "ev_sanctum_warden_oath_v4.text",
+      "title": "ev_sanctum_warden_oath_v4.title",
+      "desc": "ev_sanctum_warden_oath_v4.desc"
+    },
+    {
+      "eventId": "ev_sanctum_crack_prayer_v2",
+      "kind": "whisper",
+      "text": "ev_sanctum_crack_prayer_v2.text",
+      "title": "ev_sanctum_crack_prayer_v2.title",
+      "desc": "ev_sanctum_crack_prayer_v2.desc"
+    },
+    {
+      "eventId": "ev_sanctum_crack_prayer_v4",
+      "kind": "whisper",
+      "text": "ev_sanctum_crack_prayer_v4.text",
+      "title": "ev_sanctum_crack_prayer_v4.title",
+      "desc": "ev_sanctum_crack_prayer_v4.desc"
+    }
+  ]
+}

@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <functional>
 
 namespace toms::next {
 namespace {
@@ -145,8 +146,20 @@ struct GltfRenderer::GpuModel {
     }
 };
 
+struct GltfRenderer::AnimTextureGpu {
+    std::shared_ptr<const gltf::AnimTexture> data;
+    bgfx::TextureHandle tex = BGFX_INVALID_HANDLE;
+    ~AnimTextureGpu() {
+        if (bgfx::isValid(tex)) bgfx::destroy(tex);
+    }
+};
+
 struct GltfRenderer::Impl {
     bgfx::ProgramHandle mesh = BGFX_INVALID_HANDLE, meshInst = BGFX_INVALID_HANDLE, line = BGFX_INVALID_HANDLE;
+    bgfx::ProgramHandle meshAnimTex = BGFX_INVALID_HANDLE, shadowAnimTex = BGFX_INVALID_HANDLE;   // crowds
+    bgfx::UniformHandle sAnimTex = BGFX_INVALID_HANDLE;
+    bool crowdCaps = false;
+    std::vector<gltf::CrowdGpuInstance> crowdScratch;
     bgfx::ProgramHandle shadow = BGFX_INVALID_HANDLE, shadowInst = BGFX_INVALID_HANDLE;
     bgfx::VertexLayout layout, lineLay;
     bgfx::UniformHandle sBase, sMR, sNormal, sOcc, sEmissive, sShadow;
@@ -215,6 +228,8 @@ bool GltfRenderer::init() {
     r.line = createEmbeddedProgram(ShaderProgram::Line);
     r.shadow = createEmbeddedProgram(ShaderProgram::MeshShadow);
     r.shadowInst = createEmbeddedProgram(ShaderProgram::MeshShadowInstanced);
+    r.meshAnimTex = createEmbeddedProgram(ShaderProgram::MeshAnimTex);
+    r.shadowAnimTex = createEmbeddedProgram(ShaderProgram::MeshShadowAnimTex);
     if (!bgfx::isValid(r.mesh) || !bgfx::isValid(r.line)) {
         std::fprintf(stderr, "[gltf] no mesh shaders for this backend\n");
         return false;
@@ -227,6 +242,7 @@ bool GltfRenderer::init() {
     r.sOcc = bgfx::createUniform("s_occlusion", bgfx::UniformType::Sampler);
     r.sEmissive = bgfx::createUniform("s_emissive", bgfx::UniformType::Sampler);
     r.sShadow = bgfx::createUniform("s_shadowMap", bgfx::UniformType::Sampler);
+    r.sAnimTex = bgfx::createUniform("s_animTex", bgfx::UniformType::Sampler);
     r.uBaseColor = bgfx::createUniform("u_baseColor", bgfx::UniformType::Vec4);
     r.uPbr = bgfx::createUniform("u_pbr", bgfx::UniformType::Vec4);
     r.uEmissiveCutoff = bgfx::createUniform("u_emissiveCutoff", bgfx::UniformType::Vec4);
@@ -259,6 +275,9 @@ bool GltfRenderer::init() {
                    (caps->formats[bgfx::TextureFormat::D16] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0 &&
                    (caps->formats[bgfx::TextureFormat::D16] & BGFX_CAPS_FORMAT_TEXTURE_2D) != 0;
     if (!r.shadowCaps) std::fprintf(stderr, "[gltf] no shadow maps on this backend\n");
+    // Crowds read their joints from an RGBA32F texture in the vertex shader (texelFetch: no filtering needed).
+    r.crowdCaps = bgfx::isValid(r.meshAnimTex) && (caps->formats[bgfx::TextureFormat::RGBA32F] & BGFX_CAPS_FORMAT_TEXTURE_2D) != 0;
+    if (!r.crowdCaps) std::fprintf(stderr, "[gltf] no crowd (animation texture) support on this backend\n");
     // A 1x1 depth texture so the sampler always has something of the right kind bound.
     r.dummyShadow = bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::D16, BGFX_TEXTURE_RT | BGFX_SAMPLER_COMPARE_LEQUAL);
     for (int i = 0; i < kMaxShadowTiles; i++) {
@@ -273,12 +292,12 @@ void GltfRenderer::shutdown() {
     Impl& r = *impl_;
     if (!r.ready) return;
     r.releaseAtlas();
-    for (bgfx::ProgramHandle p : {r.mesh, r.meshInst, r.line, r.shadow, r.shadowInst})
+    for (bgfx::ProgramHandle p : {r.mesh, r.meshInst, r.line, r.shadow, r.shadowInst, r.meshAnimTex, r.shadowAnimTex})
         if (bgfx::isValid(p)) bgfx::destroy(p);
     for (bgfx::UniformHandle u : {r.sBase, r.sMR, r.sNormal, r.sOcc, r.sEmissive, r.sShadow, r.uBaseColor, r.uPbr, r.uEmissiveCutoff,
                                   r.uTexSet, r.uTexSet2, r.uUvTransform, r.uUvRotation, r.uCamPos, r.uSky, r.uGround, r.uJoints,
                                   r.uMeshFlags, r.uMatParams, r.uLightPos, r.uLightDirs, r.uLightColors, r.uLightSpot, r.uLightCount,
-                                  r.uShadowMtx, r.uShadowRect})
+                                  r.uShadowMtx, r.uShadowRect, r.sAnimTex})
         bgfx::destroy(u);
     bgfx::destroy(r.white);
     bgfx::destroy(r.flatNormal);
@@ -318,6 +337,25 @@ std::shared_ptr<GltfRenderer::GpuModel> GltfRenderer::upload(const gltf::Model& 
             g.indexCount = (uint32_t)p.indices.size();
             gpu->meshes[m].push_back(std::move(g));
         }
+    return gpu;
+}
+
+bool GltfRenderer::crowdsSupported() const { return impl_->ready && impl_->crowdCaps; }
+
+std::shared_ptr<GltfRenderer::AnimTextureGpu> GltfRenderer::uploadAnimTexture(std::shared_ptr<const gltf::AnimTexture> anim) {
+    Impl& r = *impl_;
+    if (!r.ready || !r.crowdCaps || !anim || anim->rows <= 0 || anim->width <= 0) return nullptr;
+    const uint32_t maxSize = bgfx::getCaps()->limits.maxTextureSize;
+    if ((uint32_t)anim->width > maxSize || (uint32_t)anim->rows > maxSize) {
+        std::fprintf(stderr, "[gltf] animation texture %dx%d is larger than this GPU allows (%u): bake at a lower fps\n", anim->width,
+                     anim->rows, maxSize);
+        return nullptr;
+    }
+    auto gpu = std::make_shared<AnimTextureGpu>();
+    gpu->data = anim;
+    gpu->tex = bgfx::createTexture2D((uint16_t)anim->width, (uint16_t)anim->rows, false, 1, bgfx::TextureFormat::RGBA32F,
+                                     BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP, bgfx::copy(anim->texels.data(), (uint32_t)anim->bytes()));
+    if (!bgfx::isValid(gpu->tex)) return nullptr;
     return gpu;
 }
 
@@ -529,83 +567,149 @@ void GltfRenderer::draw(GpuModel& gpu, const gltf::Pose& pose, const glm::mat4& 
                 else bgfx::setVertexBuffer(0, g.vb);
                 bgfx::setIndexBuffer(g.ib, 0, g.indexCount);
             };
-            const bool glass = mat.transmission > 0.0f;
-            const bool blend = glass || mat.alphaMode == gltf::AlphaMode::Blend;
+            submitPrimitive(gpu, p, mat, geometry, instanced ? r.meshInst : r.mesh, instanced ? r.shadowInst : r.shadow, base, mirrored,
+                            castShadows, skinned);
+        }
+    }
+}
 
-            // Shadow casters: opaque and masked triangles, into every tile.
-            if (castShadows && r.tiles > 0 && !blend && p.topology == gltf::Topology::Triangles) {
-                const bgfx::ProgramHandle sp = instanced ? r.shadowInst : r.shadow;
-                for (int k = 0; k < r.tiles; k++) {
-                    geometry();
-                    bgfx::setState(BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS);   // both faces: thin parts cast too
-                    bgfx::submit(uint16_t(r.base + k), sp);
-                    stats_.shadowDraws++;
-                }
-            }
+// One primitive's shadow casts (into every tile) and its colour draw: the material, the lights and the state.
+// `geometry` binds what the draws share (vertex / index buffers, the transform or the instance data, joints).
+void GltfRenderer::submitPrimitive(GpuModel& gpu, const gltf::Primitive& p, const gltf::Material& mat, const std::function<void()>& geometry,
+                                   bgfx::ProgramHandle colourProg, bgfx::ProgramHandle shadowProg, const glm::mat4& sortBase,
+                                   bool mirrored, bool castShadows, bool skinned) {
+    Impl& r = *impl_;
+    const Frame& f = r.frame;
+    const bool glass = mat.transmission > 0.0f;
+    const bool blend = glass || mat.alphaMode == gltf::AlphaMode::Blend;
 
+    // Shadow casters: opaque and masked triangles, into every tile.
+    if (castShadows && r.tiles > 0 && !blend && p.topology == gltf::Topology::Triangles) {
+        const bgfx::ProgramHandle sp = shadowProg;
+        for (int k = 0; k < r.tiles; k++) {
             geometry();
-            if (skinned) stats_.skinnedDraws++;
+            bgfx::setState(BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS);   // both faces: thin parts cast too
+            bgfx::submit(uint16_t(r.base + k), sp);
+            stats_.shadowDraws++;
+        }
+    }
 
-            // Material.
-            auto slot = [&](const gltf::TextureRef& ref, uint8_t stage, bgfx::UniformHandle sampler, bgfx::TextureHandle fallback) {
-                bgfx::TextureHandle t = ref.valid() && ref.texture < (int)gpu.textures.size() ? gpu.textures[(size_t)ref.texture]
-                                                                                             : bgfx::TextureHandle BGFX_INVALID_HANDLE;
-                const bool use = bgfx::isValid(t);
-                bgfx::setTexture(stage, sampler, use ? t : fallback);
-                return use ? float(ref.uvSet + 1) : 0.0f;
+    geometry();
+    if (skinned) stats_.skinnedDraws++;
+
+    // Material.
+    auto slot = [&](const gltf::TextureRef& ref, uint8_t stage, bgfx::UniformHandle sampler, bgfx::TextureHandle fallback) {
+        bgfx::TextureHandle t = ref.valid() && ref.texture < (int)gpu.textures.size() ? gpu.textures[(size_t)ref.texture]
+                                                                                     : bgfx::TextureHandle BGFX_INVALID_HANDLE;
+        const bool use = bgfx::isValid(t);
+        bgfx::setTexture(stage, sampler, use ? t : fallback);
+        return use ? float(ref.uvSet + 1) : 0.0f;
+    };
+    const glm::vec4 texSet(slot(mat.baseColorTex, 0, r.sBase, r.white), slot(mat.metalRoughTex, 1, r.sMR, r.white),
+                           slot(mat.normalTex, 2, r.sNormal, r.flatNormal), slot(mat.occlusionTex, 3, r.sOcc, r.white));
+    const glm::vec4 texSet2(slot(mat.emissiveTex, 4, r.sEmissive, r.white), mat.unlit ? 1.0f : 0.0f,
+                            p.tangent.empty() ? 0.0f : 1.0f, float(f.debug));
+    bgfx::setTexture(5, r.sShadow, r.tiles > 0 ? r.atlas : r.dummyShadow);
+    const gltf::TextureRef& xf = mat.baseColorTex.valid() ? mat.baseColorTex : mat.normalTex;
+    const glm::vec4 uvT(xf.offset, xf.scale), uvR(xf.rotation, 0, 0, 0);
+    const glm::vec4 pbr(mat.metallic, mat.roughness, mat.normalScale, mat.occlusionStrength);
+    const glm::vec4 emc(mat.emissive, mat.alphaMode == gltf::AlphaMode::Mask ? mat.alphaCutoff : -1.0f);
+    bgfx::setUniform(r.uBaseColor, &mat.baseColor);
+    bgfx::setUniform(r.uPbr, &pbr);
+    bgfx::setUniform(r.uEmissiveCutoff, &emc);
+    bgfx::setUniform(r.uTexSet, &texSet);
+    bgfx::setUniform(r.uTexSet2, &texSet2);
+    bgfx::setUniform(r.uUvTransform, &uvT);
+    bgfx::setUniform(r.uUvRotation, &uvR);
+    const glm::vec4 matParams(mat.doubleSided ? 1.0f : 0.0f, mat.transmission, 0.0f, 0.0f);
+    bgfx::setUniform(r.uMatParams, &matParams);
+    const glm::vec4 cam(f.eye, f.exposure);
+    const glm::vec4 sky(f.sky, f.srgbOut ? 1.0f : 0.0f), ground(f.ground, f.tonemap ? 1.0f : 0.0f);
+    bgfx::setUniform(r.uCamPos, &cam);
+    bgfx::setUniform(r.uSky, &sky);
+    bgfx::setUniform(r.uGround, &ground);
+    bgfx::setUniform(r.uLightPos, r.lightPos, kMaxLights);
+    bgfx::setUniform(r.uLightDirs, r.lightDirs, kMaxLights);
+    bgfx::setUniform(r.uLightColors, r.lightColors, kMaxLights);
+    bgfx::setUniform(r.uLightSpot, r.lightSpot, kMaxLights);
+    bgfx::setUniform(r.uLightCount, &r.lightCount);
+    bgfx::setUniform(r.uShadowMtx, r.shadowMtx, kMaxShadowTiles);
+    bgfx::setUniform(r.uShadowRect, r.shadowRect, kMaxShadowTiles);
+
+    // State. glTF front faces are counter-clockwise: cull the clockwise ones (the other way
+    // round under a mirroring transform).
+    uint64_t state = BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_MSAA;
+    if (!mat.doubleSided) state |= mirrored ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW;
+    if (p.topology == gltf::Topology::Lines) state |= BGFX_STATE_PT_LINES;
+    else if (p.topology == gltf::Topology::Points) state |= BGFX_STATE_PT_POINTS;
+    // Glass (transmission): premultiplied, so its reflections stay bright over what is behind.
+    if (glass) state |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+    else if (blend) state |= BGFX_STATE_BLEND_ALPHA;
+    else state |= BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z;
+    bgfx::setState(state);
+
+    const bgfx::ProgramHandle prog = colourProg;
+    if (blend) {   // the second view sorts these far to near
+        const glm::vec3 cc = glm::vec3(sortBase * glm::vec4((p.boundsMin + p.boundsMax) * 0.5f, 1.0f));
+        const float dist = glm::length(cc - f.eye);
+        bgfx::submit(uint16_t(r.view + 1), prog, (uint32_t)std::min(dist * 1000.0f, 4.0e9f));
+    } else {
+        bgfx::submit(r.view, prog);
+    }
+    stats_.drawCalls++;
+}
+
+void GltfRenderer::drawCrowd(GpuModel& gpu, const AnimTextureGpu& anim, const gltf::Crowd& crowd, bool castShadows) {
+    crowd.gpuInstances(impl_->crowdScratch);
+    drawCrowd(gpu, anim, impl_->crowdScratch, castShadows);
+}
+
+void GltfRenderer::drawCrowd(GpuModel& gpu, const AnimTextureGpu& anim, const std::vector<gltf::CrowdGpuInstance>& instances,
+                             bool castShadows) {
+    Impl& r = *impl_;
+    if (!r.ready || !r.crowdCaps || !gpu.model || !anim.data || !bgfx::isValid(anim.tex) || instances.empty()) return;
+    const gltf::Model& model = *gpu.model;
+    const int skin = anim.data->skin;
+    if (model.scenes.empty() || skin < 0) return;
+    static const gltf::Material kDefault = [] {
+        gltf::Material m;
+        m.metallic = 0.0f;
+        m.roughness = 0.6f;
+        return m;
+    }();
+    const uint32_t count = (uint32_t)instances.size();
+    // Blended primitives sort by the first instance (one draw holds them all).
+    glm::mat4 sortBase(1.0f);
+    for (int c = 0; c < 4; c++)
+        for (int k = 0; k < 3; k++) sortBase[c][k] = instances[0].rows[k][c];
+    const gltf::Scene& scene = model.scenes[(size_t)std::clamp(model.scene, 0, (int)model.scenes.size() - 1)];
+    std::vector<int> stack(scene.roots.rbegin(), scene.roots.rend());
+    while (!stack.empty()) {
+        const int ni = stack.back();
+        stack.pop_back();
+        const gltf::Node& node = model.nodes[(size_t)ni];
+        for (auto it = node.children.rbegin(); it != node.children.rend(); ++it) stack.push_back(*it);
+        if (node.mesh < 0 || node.mesh >= (int)gpu.meshes.size() || node.skin != skin) continue;
+        const gltf::Mesh& mesh = model.meshes[(size_t)node.mesh];
+        for (size_t pi = 0; pi < mesh.primitives.size() && pi < gpu.meshes[(size_t)node.mesh].size(); pi++) {
+            const gltf::Primitive& p = mesh.primitives[pi];
+            if (!p.skinned()) continue;
+            GpuModel::Prim& g = gpu.meshes[(size_t)node.mesh][pi];
+            const gltf::Material& mat = p.material >= 0 && p.material < (int)model.materials.size() ? model.materials[(size_t)p.material] : kDefault;
+            if (bgfx::getAvailInstanceDataBuffer(count, sizeof(gltf::CrowdGpuInstance)) < count) continue;
+            bgfx::InstanceDataBuffer idb;
+            bgfx::allocInstanceDataBuffer(&idb, count, sizeof(gltf::CrowdGpuInstance));
+            std::memcpy(idb.data, instances.data(), count * sizeof(gltf::CrowdGpuInstance));
+            auto geometry = [&] {
+                bgfx::setInstanceDataBuffer(&idb);
+                bgfx::setTexture(6, r.sAnimTex, anim.tex);
+                if (bgfx::isValid(g.dvb)) bgfx::setVertexBuffer(0, g.dvb);
+                else bgfx::setVertexBuffer(0, g.vb);
+                bgfx::setIndexBuffer(g.ib, 0, g.indexCount);
             };
-            const glm::vec4 texSet(slot(mat.baseColorTex, 0, r.sBase, r.white), slot(mat.metalRoughTex, 1, r.sMR, r.white),
-                                   slot(mat.normalTex, 2, r.sNormal, r.flatNormal), slot(mat.occlusionTex, 3, r.sOcc, r.white));
-            const glm::vec4 texSet2(slot(mat.emissiveTex, 4, r.sEmissive, r.white), mat.unlit ? 1.0f : 0.0f,
-                                    p.tangent.empty() ? 0.0f : 1.0f, float(f.debug));
-            bgfx::setTexture(5, r.sShadow, r.tiles > 0 ? r.atlas : r.dummyShadow);
-            const gltf::TextureRef& xf = mat.baseColorTex.valid() ? mat.baseColorTex : mat.normalTex;
-            const glm::vec4 uvT(xf.offset, xf.scale), uvR(xf.rotation, 0, 0, 0);
-            const glm::vec4 pbr(mat.metallic, mat.roughness, mat.normalScale, mat.occlusionStrength);
-            const glm::vec4 emc(mat.emissive, mat.alphaMode == gltf::AlphaMode::Mask ? mat.alphaCutoff : -1.0f);
-            bgfx::setUniform(r.uBaseColor, &mat.baseColor);
-            bgfx::setUniform(r.uPbr, &pbr);
-            bgfx::setUniform(r.uEmissiveCutoff, &emc);
-            bgfx::setUniform(r.uTexSet, &texSet);
-            bgfx::setUniform(r.uTexSet2, &texSet2);
-            bgfx::setUniform(r.uUvTransform, &uvT);
-            bgfx::setUniform(r.uUvRotation, &uvR);
-            const glm::vec4 matParams(mat.doubleSided ? 1.0f : 0.0f, mat.transmission, 0.0f, 0.0f);
-            bgfx::setUniform(r.uMatParams, &matParams);
-            const glm::vec4 cam(f.eye, f.exposure);
-            const glm::vec4 sky(f.sky, f.srgbOut ? 1.0f : 0.0f), ground(f.ground, f.tonemap ? 1.0f : 0.0f);
-            bgfx::setUniform(r.uCamPos, &cam);
-            bgfx::setUniform(r.uSky, &sky);
-            bgfx::setUniform(r.uGround, &ground);
-            bgfx::setUniform(r.uLightPos, r.lightPos, kMaxLights);
-            bgfx::setUniform(r.uLightDirs, r.lightDirs, kMaxLights);
-            bgfx::setUniform(r.uLightColors, r.lightColors, kMaxLights);
-            bgfx::setUniform(r.uLightSpot, r.lightSpot, kMaxLights);
-            bgfx::setUniform(r.uLightCount, &r.lightCount);
-            bgfx::setUniform(r.uShadowMtx, r.shadowMtx, kMaxShadowTiles);
-            bgfx::setUniform(r.uShadowRect, r.shadowRect, kMaxShadowTiles);
-
-            // State. glTF front faces are counter-clockwise: cull the clockwise ones (the other way
-            // round under a mirroring transform).
-            uint64_t state = BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_MSAA;
-            if (!mat.doubleSided) state |= mirrored ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW;
-            if (p.topology == gltf::Topology::Lines) state |= BGFX_STATE_PT_LINES;
-            else if (p.topology == gltf::Topology::Points) state |= BGFX_STATE_PT_POINTS;
-            // Glass (transmission): premultiplied, so its reflections stay bright over what is behind.
-            if (glass) state |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA);
-            else if (blend) state |= BGFX_STATE_BLEND_ALPHA;
-            else state |= BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z;
-            bgfx::setState(state);
-
-            const bgfx::ProgramHandle prog = instanced ? r.meshInst : r.mesh;
-            if (blend) {   // the second view sorts these far to near
-                const glm::vec3 cc = glm::vec3(base * glm::vec4((p.boundsMin + p.boundsMax) * 0.5f, 1.0f));
-                const float dist = glm::length(cc - f.eye);
-                bgfx::submit(uint16_t(r.view + 1), prog, (uint32_t)std::min(dist * 1000.0f, 4.0e9f));
-            } else {
-                bgfx::submit(r.view, prog);
-            }
-            stats_.drawCalls++;
+            submitPrimitive(gpu, p, mat, geometry, r.meshAnimTex, r.shadowAnimTex, sortBase, false, castShadows, true);
+            stats_.instances += (int)count;
+            stats_.crowdInstances += (int)count;
         }
     }
 }

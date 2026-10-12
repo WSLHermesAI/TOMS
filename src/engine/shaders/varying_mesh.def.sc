@@ -15,8 +15,10 @@ vec4 a_color0    : COLOR0;
 vec4 a_indices   : BLENDINDICES;
 vec4 a_weight    : BLENDWEIGHT;
 
-// Instanced draws (vs_mesh_inst.sc): the instance's model matrix, one column each.
+// Instanced draws (vs_mesh_inst.sc): the instance's model matrix, one column each. Crowds
+// (vs_mesh_animtex.sc): i_data0..2 the placement's rows, i_data3 / i_data4 the two clips' frames.
 vec4 i_data0     : TEXCOORD31;
 vec4 i_data1     : TEXCOORD30;
 vec4 i_data2     : TEXCOORD29;
 vec4 i_data3     : TEXCOORD28;
+vec4 i_data4     : TEXCOORD27;

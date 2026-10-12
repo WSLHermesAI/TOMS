@@ -104,3 +104,15 @@ Run against the repo on 2026-10-05:
 
 So the editor's first real job is to create `pool_act04` … `pool_act10` from the ids the floors
 already use, and to write their text.
+
+**Done 2026-10-12 (the owner's Q10 answer "a"):** every one of the 92 ids is now its own event, with a pool record
+and its own English title, description and text: `pool_act04` … `pool_act10` (the chapter 4–10 seed ids and their
+variants) and 28 more `ev_common_*_v2` … `_v5` records in `pool_common`. The `_v2` … `_v5` ids are no longer copies
+of one event: each tells something different. The pools now hold 126 events, and no floor names an undefined id
+(`unit.player_menu_test` checks it). English only for now: other languages fall back to English until translations
+are asked for.
+
+**The per-floor event index** (`assets/data/events/floor_index.json`, Q10): one generated file lists, for each
+floor, the events it lists or places (id, kind, English title, pool, tiles), its chapter beats and its stair locks,
+and maps every event back to its floors. `python tools/make_event_index.py` writes it, and `tools/gen_floors.py`
+runs it after writing floors. `unit.floor_index_test` fails when it no longer matches the floors.

@@ -1,4 +1,4 @@
-# Progress Report — Log Part 6 (2026-10-05 evening to 2026-10-10)
+# Progress Report — Log Part 6 (2026-10-05 evening to 2026-10-12)
 
 > Chronological log entries, oldest first. The live **Next Step**, status table, waiting list and
 > open questions are in [PROGRESS_REPORT.md](PROGRESS_REPORT.md).
@@ -19,6 +19,8 @@ That Qt editor's goal: what the editor shows is how the game works.
 | 2026-10-07 | `cf2a771` | Stage editor: object overlap rule, UI size settings, wheel zoom, right-drag pan |
 | **2026-10-08** | not committed | Editors: one folder with a switch button; tutorial collapses; top menu removed; **Kinds** tab; old mockups deleted; the event editor **saves into assets/data**; free (Chinese) names; Variables tab categories and multi-select; stage editor saves many floors as one zip. Docs: Traditional Chinese versions in `docs/zh_TW/`. Game: **monster idle animations**; **battle settings file**; fixed **invisible keys**; **doors open** with an animation |
 | **2026-10-10** | not committed | The **player menu**: one ≡ button, five tabs (Status, Equipment, Items, Events, System); the all-item `items.json`; `stats.json` with STR / DEX / AGI / VIT / INT / LUK; **Save / Load** with confirmations; **story events** in the Events tab (P2); **attribute effects** in battle (P3) |
+| **2026-10-12** | not committed | **Q6** generator guard, **Q10** 92 new events + the per-floor index, **English** default, **Q7** locked stairs, **Q9** image-map design (§22) |
+| **2026-10-12** | not committed | **Crowds**: instanced skinning from a shared animation texture, two-clip blends and cross-fades (`gltf_anim_texture`, `drawCrowd`, `vs_mesh_animtex.sc`, `gltf_viewer --crowd`) |
 
 ---
 
@@ -366,6 +368,99 @@ Kinds were hard-coded in the editor, and no data file defined them. The game doe
 
 **Not verified (P1):** a real phone (the menu is the 1024x768 screen scaled down; the list-then-detail phone
 layout is not built); Android; Fullscreen in Safari.
+
+### 2026-10-12 — crowds: instanced skinning from an animation texture (not committed)
+
+**21. Crowds** ([../18_GLTF.md](../18_GLTF.md) §6)
+
+- **Asked:** use the old engine's `cAnimTexture` idea (FM79979 `AnimationTexture.cpp`) for instance skinning, as a new
+  object whose texture every copy shares, with blending between two clips; built with joint rotation + translation
+  (quaternions) so blends do not shrink limbs.
+- **Core** (`src/core/engine/gltf_anim_texture.h/.cpp`, no GPU): `bakeAnimTexture` (every clip of a skin, stacked rows,
+  2 RGBA32F texels per joint), `framePair` / `sampleJoint` (the shader's maths on the CPU), `save` / `loadAnimTexture`
+  (`.animtex` with a model hash: stale files are refused), `gltf::Crowd` (add, play, crossFade, setBlend, update, the
+  80-byte instance records).
+- **Renderer:** `uploadAnimTexture`, `drawCrowd` (one instanced draw per primitive, shadows too), `crowdsSupported`;
+  `draw()`'s material / shadow / submit code moved into one `submitPrimitive` both paths share. Shader
+  `vs_mesh_animtex.sc` (instance data `i_data0..4`, texture stage 6).
+- **Viewer:** `--crowd=<n>`, `--crowd-fps=`; panel: copies, texture size, bake time, cross-fade all, blend slider.
+- **Checked:**
+  - one copy is pixel-identical to the same clip drawn with a `Pose`, on a frame and between frames;
+  - 25 Foxes agree on D3D11, D3D12, Vulkan and OpenGL;
+  - the bake takes 0.6 ms (Fox: 24 joints, 3 clips, 122 KB);
+  - unit 40 / 40, glTF screenshots 21 / 21; the rest as before (W16, W23);
+  - web: builds, 4 / 5 web tests (`web.page_coi` fails on threading, W30).
+- **Not done:** no crowd on the web or Android yet (W31); not used by the game.
+
+### 2026-10-12 (later) — the owner's answers: Q6, Q10, English, locked stairs, the index, image maps (not committed)
+
+**22. Six pieces from one message**
+
+- **Asked:**
+  1. Q6: when the generator would change human-made floors, a dialog lists them;
+  2. Q10 (a): the `_v2`…`_v5` ids become real events;
+  3. English as the default language;
+  4. "build next": the locked stairs (Q7), the per-floor event index (Q10) and the image-map design (Q9).
+- **Q6:**
+  - `tools/gen_floors.py`, `tools/gen_stairs.py` and the maze helpers (`tools/maze_lib.py`) restored from git (removed
+    in `979bcf3`), with paths moved to `assets/data`.
+  - They now write into a staging copy. `tools/floor_guard.py` compares it with the real files (as JSON) and with
+    `tools/floor_gen_manifest.json` (the generator's last output).
+  - Changed floors a person edited are listed in a Tk dialog; without a display, the console asks; with no console
+    either, the answer is Cancel. `--yes` / `--keep-edits` / `--dry-run` answer up front.
+  - A replaced file keeps its line endings.
+  - Baseline recorded: 50 floors match the generator. F22–F28 differ (chapter 4's enemy mix changed after the
+    generator ran), and so do eight boss stages.
+- **Q10 (a):** 92 events written:
+  - the seed ids of chapters 4–10 and their variants, in new `pool_act04`…`pool_act10`;
+  - 28 `ev_common_*_v2…_v5` in `pool_common`.
+
+  Each has its own English title, description and text, following the 20 Chinese lines that existed. The event
+  editor's bundles are regenerated (126 events).
+- **English:**
+  - `GameSettings::language` and `Locale` default to `en`. Settings schema 2: a version-1 file (saved while Chinese was
+    the default) moves to English.
+  - The 197 `en` strings that held Chinese now hold English:
+    - the 34 older events' text;
+    - F22–F28's ambient lines;
+    - placeholder intros and ambients for F29–F70, still marked `_todo`.
+  - `unit.player_menu_test` now requires real English, not a CJK copy, for every item, attribute, chapter, mission
+    and event.
+  - Every text screenshot refreshed.
+- **Q7, locked stairs:**
+  - `systems/stair_links.h`: the list, tiles, arrival, the go-to-stairs id.
+  - `FloorInfo::stairs`, `Stage::stairs`. `Game::finishEvent` is now the one path for a finished event.
+  - `stepOntoStairs` / `bumpLockedStairs`, the padlock in `game_scene_draw.cpp`.
+  - `notices_` and `dialogs.rml` `notice.*`: a queued OK popup.
+  - The `stairs_<floor>_<to>` events in the event log; the unlock line in the event's description.
+  - Arrival on the stair that leads back.
+  - Hooks `--stair-lock=` and `--events-done=`.
+- **The `@` start:** `parseStage` skipped `@`, so a new game started on F01's stair. `Stage::startX/Y` fixes it.
+  `smoke.battle` now walks right into the bat (keys), because its old click hit the slime near the stair start.
+- **Q10, the index:**
+  - `tools/make_event_index.py` writes `assets/data/events/floor_index.json` (70 floors, 122 events), with `--check`.
+  - `unit.floor_index_test` compares it with every spec and grid.
+  - The guard rebuilds it after writing floors.
+- **Q9:** [../21_IMAGE_STAGES.md](../21_IMAGE_STAGES.md) (+ zh):
+  - PNG, `id = R×65536 + G×256 + B`, the append-only `tile_ids.json` with ranges per category;
+  - stairs as `stairs:<n>`; metadata stays in JSON;
+  - a phase-1 parser that builds today's `Stage`;
+  - converter and editor work; three questions.
+- **Event editor:**
+  - Its tutorial and Play demo fix the 92 missing ids, so its copy mode now loads `tutorial_data.js`, the data of
+    2026-10-10 frozen from git. Opening the project folder still loads the real data.
+  - Play demo: 29 / 29, no page errors.
+- **UI font:** ● and ◆ (event and mission rows) were not in the subset; added to `make_ui_font.py`'s `EXTRA`, font
+  regenerated.
+- **Checked:**
+  - build OK;
+  - desktop tests 83 / 83 (unit 42, smoke and glTF all);
+  - padlock, hint, unlock dialog, the go-to-stairs event, and its finish on taking the stairs, all seen in screenshots.
+- **Not done:**
+  - no floor has a lock (W34);
+  - the generator places no extra stair tiles;
+  - the web build was not rebuilt (W30 unchanged);
+  - the 92 texts are a first draft (W32).
 
 **Verified (2026-10-05 to 10-08):**
 

@@ -2,6 +2,10 @@
 
 This walks through the planned editor in three parts, on a copy of the real TOMS event data:
 
+> **The tutorial's data is frozen at 2026-10-10** (`tools/web_editors/tutorial_data.js`). Since 2026-10-12 the
+> 92 missing ids it fixes are real events in `assets/data` (Q10 a), so the editor's tutorial copy keeps the older
+> snapshot, and every step below still finds what it describes. Opening the project folder shows today's data.
+
 | Part | Steps | What you do |
 |---|---|---|
 | 1. Create an event | 1–6 | Add `ev_village_scarecrow`, connect it to F02 and F04, read the diagram, save |

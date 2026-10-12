@@ -63,6 +63,24 @@ void Game::draw() {
             int layer = spriteLayer(cellSprite(c));
             ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, themeTint));
         }
+        // Q7: a locked stair stays visible, dimmed, with a padlock on it until its event is finished.
+        for (const toms::StairLink& s : st.stairs) {
+            if (!stairLocked(s) || s.x < startX || s.x >= endX || s.y < startY || s.y >= endY) continue;
+            auto solid = [&](float x, float y, float w, float h, float r, float g, float b, float a) {
+                Quad q; q.rect[0] = x; q.rect[1] = y; q.rect[2] = w; q.rect[3] = h;
+                q.uv[0] = 0; q.uv[1] = 0; q.uv[2] = 1; q.uv[3] = 1; q.solid = true;
+                q.tint[0] = r; q.tint[1] = g; q.tint[2] = b; q.tint[3] = a;
+                ren->drawSprite(q);
+            };
+            const float x0 = ox + s.x * ts, y0 = oy + s.y * ts, u = ts / 16.0f;
+            solid(x0, y0, ts, ts, 0.0f, 0.0f, 0.0f, 0.45f);                                   // dimmed stair
+            solid(x0 + 5 * u, y0 + 3 * u, 1.5f * u, 5 * u, 0.20f, 0.16f, 0.08f, 1.0f);       // shackle, left
+            solid(x0 + 9.5f * u, y0 + 3 * u, 1.5f * u, 5 * u, 0.20f, 0.16f, 0.08f, 1.0f);    // shackle, right
+            solid(x0 + 5 * u, y0 + 2.5f * u, 6 * u, 1.5f * u, 0.20f, 0.16f, 0.08f, 1.0f);    // shackle, top
+            solid(x0 + 3.5f * u, y0 + 7 * u, 9 * u, 7 * u, 0.20f, 0.16f, 0.08f, 1.0f);       // body outline
+            solid(x0 + 4.5f * u, y0 + 8 * u, 7 * u, 5 * u, 0.98f, 0.80f, 0.30f, 1.0f);       // body
+            solid(x0 + 7.5f * u, y0 + 9 * u, 1 * u, 2.5f * u, 0.20f, 0.16f, 0.08f, 1.0f);    // keyhole
+        }
         // Click-to-move destination: a soft gold plate on the target tile while walking there.
         if (walking() && walkTargetX_ >= 0) {
             const float m = ts * 0.12f;

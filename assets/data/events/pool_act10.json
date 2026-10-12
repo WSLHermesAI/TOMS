@@ -1,0 +1,88 @@
+{
+  "_comment": [
+    "Act 10 (peak) event pool. Created 2026-10-12 from the ids the floors already place (Q10 a):",
+    "the generator's seed ids and their _v2.._v5 variants, each now its own event with its own text.",
+    "English only for now; other languages fall back to English until translations are asked for."
+  ],
+  "act": "ch_10",
+  "theme": "peak",
+  "events": [
+    {
+      "eventId": "ev_peak_bone_field",
+      "kind": "relic",
+      "text": "ev_peak_bone_field.text",
+      "title": "ev_peak_bone_field.title",
+      "desc": "ev_peak_bone_field.desc"
+    },
+    {
+      "eventId": "ev_peak_bone_field_v2",
+      "kind": "relic",
+      "text": "ev_peak_bone_field_v2.text",
+      "title": "ev_peak_bone_field_v2.title",
+      "desc": "ev_peak_bone_field_v2.desc"
+    },
+    {
+      "eventId": "ev_peak_bone_field_v3",
+      "kind": "relic",
+      "text": "ev_peak_bone_field_v3.text",
+      "title": "ev_peak_bone_field_v3.title",
+      "desc": "ev_peak_bone_field_v3.desc"
+    },
+    {
+      "eventId": "ev_peak_bone_field_v4",
+      "kind": "relic",
+      "text": "ev_peak_bone_field_v4.text",
+      "title": "ev_peak_bone_field_v4.title",
+      "desc": "ev_peak_bone_field_v4.desc"
+    },
+    {
+      "eventId": "ev_peak_star_crack",
+      "kind": "whisper",
+      "text": "ev_peak_star_crack.text",
+      "title": "ev_peak_star_crack.title",
+      "desc": "ev_peak_star_crack.desc"
+    },
+    {
+      "eventId": "ev_peak_star_crack_v3",
+      "kind": "whisper",
+      "text": "ev_peak_star_crack_v3.text",
+      "title": "ev_peak_star_crack_v3.title",
+      "desc": "ev_peak_star_crack_v3.desc"
+    },
+    {
+      "eventId": "ev_peak_star_crack_v4",
+      "kind": "whisper",
+      "text": "ev_peak_star_crack_v4.text",
+      "title": "ev_peak_star_crack_v4.title",
+      "desc": "ev_peak_star_crack_v4.desc"
+    },
+    {
+      "eventId": "ev_peak_wushang_memory",
+      "kind": "relic",
+      "text": "ev_peak_wushang_memory.text",
+      "title": "ev_peak_wushang_memory.title",
+      "desc": "ev_peak_wushang_memory.desc"
+    },
+    {
+      "eventId": "ev_peak_wushang_memory_v2",
+      "kind": "relic",
+      "text": "ev_peak_wushang_memory_v2.text",
+      "title": "ev_peak_wushang_memory_v2.title",
+      "desc": "ev_peak_wushang_memory_v2.desc"
+    },
+    {
+      "eventId": "ev_peak_wushang_memory_v3",
+      "kind": "relic",
+      "text": "ev_peak_wushang_memory_v3.text",
+      "title": "ev_peak_wushang_memory_v3.title",
+      "desc": "ev_peak_wushang_memory_v3.desc"
+    },
+    {
+      "eventId": "ev_peak_wushang_memory_v4",
+      "kind": "relic",
+      "text": "ev_peak_wushang_memory_v4.text",
+      "title": "ev_peak_wushang_memory_v4.title",
+      "desc": "ev_peak_wushang_memory_v4.desc"
+    }
+  ]
+}

@@ -218,6 +218,12 @@ struct UiStairs {
     std::string question, yes_label, no_label;
 };
 
+// Q7: an OK popup ("Stairs unlocked" ...), dialogs.rml.
+struct UiNotice {
+    bool visible = false;
+    std::string title, body, ok;
+};
+
 struct UiStageSelect {
     bool visible = false;
     std::string title, hint, close_label;
@@ -247,6 +253,7 @@ struct UiState {
     UiStore store;
     UiMenu menu;
     UiStairs stairs;
+    UiNotice notice;
     UiStageSelect stage_select;
     UiEnding ending;
     UiOverlay overlay;

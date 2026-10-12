@@ -190,6 +190,9 @@ std::vector<Game::LogEntry> Game::eventLog(bool all) const {
     // is "inLog" and that have a pool record.
     auto eventName = [&](const std::string& id) {
         auto d = eventDefs_.find(id);
+        if (d != eventDefs_.end() && !d->second.stairsFrom.empty())   // Q7: "Go to the stairs on floor 3"
+            return toms::fillText(locale_.tr("stairs.go.title"), {{"from", toms::floorLabel(d->second.stairsFrom)},
+                                                                  {"to", toms::floorLabel(d->second.stairsTo)}});
         std::string t = d == eventDefs_.end() ? std::string() : text(d->second.titleKey);
         return t.empty() ? id : t;
     };
@@ -209,7 +212,17 @@ std::vector<Game::LogEntry> Game::eventLog(bool all) const {
         e.kind = 2;
         e.id = id;
         e.title = eventName(id);
-        e.desc = text(eventDefs_.at(id).descKey);
+        const EventDef& def = eventDefs_.at(id);
+        if (!def.stairsFrom.empty())
+            e.desc = toms::fillText(locale_.tr("stairs.go.desc"), {{"from", toms::floorLabel(def.stairsFrom)},
+                                                                   {"to", toms::floorLabel(def.stairsTo)}});
+        else
+            e.desc = text(def.descKey);
+        // Q7: an event that opens stairs says so in its description.
+        if (auto u = stairUnlocks_.find(id); u != stairUnlocks_.end())
+            for (const StairUnlock& s : u->second)
+                e.desc += (e.desc.empty() ? "" : " ") +
+                          toms::fillText(locale_.tr("stairs.unlocks"), {{"from", toms::floorLabel(s.floor)}, {"to", toms::floorLabel(s.to)}});
         e.done = isDone;
         e.connected = connectedNames(connectedEvents(id));
         return e;
@@ -265,6 +278,12 @@ std::vector<std::string> Game::connectedEvents(const std::string& eventId) const
         eventsWaitedFor(self->second.requires, waits);                      // what it waits for
         for (const std::string& w : waits) add(w);
     }
+    for (const auto& [ev, list] : stairUnlocks_)                            // Q7: the stairs an event opens
+        for (const StairUnlock& s : list) {
+            const std::string go = toms::goStairsEventId(s.floor, s.to);
+            if (ev == eventId) add(go);
+            if (go == eventId) add(ev);
+        }
     for (const auto& [id, d] : eventDefs_) {                                // what leads here, or waits for it
         if (std::find(d.next.begin(), d.next.end(), eventId) != d.next.end()) add(id);
         std::vector<std::string> waits;

@@ -1,0 +1,81 @@
+{
+  "_comment": [
+    "Act 9 (antechamber) event pool. Created 2026-10-12 from the ids the floors already place (Q10 a):",
+    "the generator's seed ids and their _v2.._v5 variants, each now its own event with its own text.",
+    "English only for now; other languages fall back to English until translations are asked for."
+  ],
+  "act": "ch_09",
+  "theme": "antechamber",
+  "events": [
+    {
+      "eventId": "ev_antechamber_mirror_self",
+      "kind": "relic",
+      "text": "ev_antechamber_mirror_self.text",
+      "title": "ev_antechamber_mirror_self.title",
+      "desc": "ev_antechamber_mirror_self.desc"
+    },
+    {
+      "eventId": "ev_antechamber_mirror_self_v2",
+      "kind": "relic",
+      "text": "ev_antechamber_mirror_self_v2.text",
+      "title": "ev_antechamber_mirror_self_v2.title",
+      "desc": "ev_antechamber_mirror_self_v2.desc"
+    },
+    {
+      "eventId": "ev_antechamber_mirror_self_v3",
+      "kind": "relic",
+      "text": "ev_antechamber_mirror_self_v3.text",
+      "title": "ev_antechamber_mirror_self_v3.title",
+      "desc": "ev_antechamber_mirror_self_v3.desc"
+    },
+    {
+      "eventId": "ev_antechamber_mirror_self_v4",
+      "kind": "relic",
+      "text": "ev_antechamber_mirror_self_v4.text",
+      "title": "ev_antechamber_mirror_self_v4.title",
+      "desc": "ev_antechamber_mirror_self_v4.desc"
+    },
+    {
+      "eventId": "ev_antechamber_old_sword_rack",
+      "kind": "cache",
+      "text": "ev_antechamber_old_sword_rack.text",
+      "title": "ev_antechamber_old_sword_rack.title",
+      "desc": "ev_antechamber_old_sword_rack.desc"
+    },
+    {
+      "eventId": "ev_antechamber_old_sword_rack_v2",
+      "kind": "cache",
+      "text": "ev_antechamber_old_sword_rack_v2.text",
+      "title": "ev_antechamber_old_sword_rack_v2.title",
+      "desc": "ev_antechamber_old_sword_rack_v2.desc"
+    },
+    {
+      "eventId": "ev_antechamber_old_sword_rack_v3",
+      "kind": "cache",
+      "text": "ev_antechamber_old_sword_rack_v3.text",
+      "title": "ev_antechamber_old_sword_rack_v3.title",
+      "desc": "ev_antechamber_old_sword_rack_v3.desc"
+    },
+    {
+      "eventId": "ev_antechamber_liora_voice",
+      "kind": "whisper",
+      "text": "ev_antechamber_liora_voice.text",
+      "title": "ev_antechamber_liora_voice.title",
+      "desc": "ev_antechamber_liora_voice.desc"
+    },
+    {
+      "eventId": "ev_antechamber_liora_voice_v2",
+      "kind": "whisper",
+      "text": "ev_antechamber_liora_voice_v2.text",
+      "title": "ev_antechamber_liora_voice_v2.title",
+      "desc": "ev_antechamber_liora_voice_v2.desc"
+    },
+    {
+      "eventId": "ev_antechamber_liora_voice_v3",
+      "kind": "whisper",
+      "text": "ev_antechamber_liora_voice_v3.text",
+      "title": "ev_antechamber_liora_voice_v3.title",
+      "desc": "ev_antechamber_liora_voice_v3.desc"
+    }
+  ]
+}

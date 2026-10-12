@@ -4,8 +4,8 @@
     <link type="text/rcss" href="common.rcss"/>
     <link type="text/rcss" href="dialogs.rcss"/>
 </head>
-<!-- Small yes/no and OK popups: "go up/down the stairs?" (stairs.*) and "the store is open!"
-     (store.unlocked_*). -->
+<!-- Small yes/no and OK popups: "go up/down the stairs?" (stairs.*), "the store is open!"
+     (store.unlocked_*), and the OK notices such as "Stairs unlocked" (notice.*). -->
 <body data-model="game">
     <div data-if="stairs.visible">
         <div class="fill" id="stairs-dim"></div>
@@ -24,6 +24,15 @@
             <div class="question">{{store.unlocked_title}}</div>
             <div class="body">{{store.unlocked_body}}</div>
             <div id="unlock-ok" class="btn btn-yes" data-event-click="act('store_unlocked_ok')">{{store.unlocked_ok}}</div>
+        </div>
+    </div>
+
+    <div data-if="notice.visible">
+        <div class="fill" id="notice-dim"></div>
+        <div id="notice" class="box">
+            <div class="question">{{notice.title}}</div>
+            <div class="body">{{notice.body}}</div>
+            <div id="notice-ok" class="btn btn-yes" data-event-click="act('notice_ok')">{{notice.ok}}</div>
         </div>
     </div>
 </body>

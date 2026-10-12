@@ -69,7 +69,10 @@ undo step.
 
 ### Fill in chapters 4–10
 
-Floors F22–F70 already name 92 event ids that have no pool. In the Problems dock, select the
+*Done in the data on 2026-10-12 (Q10 a): the 92 ids are real events now. The steps below still work for new ids,
+and the tutorial practises them on its frozen copy of the older data.*
+
+Floors F22–F70 named 92 event ids that had no pool. In the Problems dock, select the
 *Missing event id* rows for one chapter and choose **Create events in pool…**, then pick (or
 create) `pool_act04`. The editor makes one record per id and links each one to its placeholder text.
 Then set each event's kind and write its text.

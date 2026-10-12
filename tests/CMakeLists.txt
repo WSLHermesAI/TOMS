@@ -24,6 +24,7 @@
 set(_core "${TOMS_CORE_SRC}")
 set(TOMS_UNIT_TESTS
     engine/anim_clip_test           engine/particle_fx_test        engine/gltf_model_test
+    engine/gltf_anim_texture_test
     engine/condition_eval_test      engine/encounter_resolve_test  engine/entity_status_test
     engine/job_system_test
     engine/event_bus_test           engine/log_test                engine/node_test
@@ -35,7 +36,7 @@ set(TOMS_UNIT_TESTS
     game/systems/equipment_actives_test game/systems/equipment_test    game/systems/floor_table_test
     game/systems/footprint_test     game/systems/forge_system_test     game/systems/hub_system_test
     game/systems/mission_test       game/systems/run_state_test        game/systems/skill_system_test
-    game/systems/player_menu_test
+    game/systems/player_menu_test   game/systems/stair_links_test  game/systems/floor_index_test
     game/systems/story_controller_test
     game/ui/title_screen_test)
 
@@ -134,8 +135,15 @@ toms_smoke_test(player_gear   player_gear   d3d11 0.1 --frames=140 --keys=enter@
 toms_smoke_test(player_items  player_items  d3d11 0.1 --frames=140 --keys=enter@30,i@80,down@95,down@100,down@105,down@110 ${_pm_give})
 toms_smoke_test(player_events player_events d3d11 0.1 --frames=130 --keys=enter@30,esc@80,q@90,q@100)
 toms_smoke_test(player_system player_system d3d11 0.1 --frames=150 --keys=enter@30,esc@80,q@90,down@100,down@104,down@108,down@112,enter@118)
+# Locked stairs (Q7, stair_links.h): --stair-lock locks F01's stair up behind ev_village_well. stairs_locked walks
+# the player to it (the padlock, and the hint on bumping it); stairs_unlock finishes the event (the dialog).
+toms_smoke_test(stairs_locked stairs_locked d3d11 0.1 --frames=270 --keys=enter@30,up@60,right@66,right@72,right@78,right@84,right@90,up@96,up@102,up@108,up@114,up@120,up@126,right@132,right@138,right@144,right@150,right@156,right@162,up@168,up@174,up@180,up@186,up@192,up@198,left@204,left@210,left@216,down@222,down@228,down@234,down@240,right@246 --stair-lock=F01:ev_village_well)
+toms_smoke_test(stairs_unlock stairs_unlock d3d11 0.1 --frames=120 --keys=enter@30 --stair-lock=F01:ev_village_well --events-done=ev_village_well)
 toms_smoke_test(dialogue     dialogue    d3d11   0.1  --frames=190 --keys=enter@30,esc@80,q@85,down@90,down@95,enter@110,enter@130)
-toms_smoke_test(battle       battle      d3d11   0.1  --frames=420 --keys=enter@30,enter@380 --clicks=788:656@100)
+# --battle-tuning=default: the bars move by the built-in values, not data/battle.json, so tuning the game never
+# breaks this picture (W23). The player starts on F01's '@' and walks right into the bat (keys, not a click: bats
+# roam, so a click-to-walk route ends beside it).
+toms_smoke_test(battle       battle      d3d11   0.1  --frames=420 --keys=enter@30,right@100,right@106,right@112,right@118,right@124,right@130,right@136,right@142,enter@380 --battle-tuning=default)
 toms_smoke_test(store        store       d3d11   0.1  --stage=stage02 --frames=150 --keys=enter@30,enter@60,enter@90,b@120)
 # A node animation (tests/smoke/anim_preview.anim, anim_clip.h) over the map: nested transforms,
 # rotation, easing, draw order and additive blending through the real sprite batch.
@@ -195,6 +203,13 @@ toms_gltf_test(gltf_shadow_dir      gltf_shadow_dir     skin_tube      d3d11    
 toms_gltf_test(gltf_shadow_point    gltf_shadow_point   instancing     d3d11    0.1  --light=point --pitch=40 --zoom=1.6)
 toms_gltf_test(gltf_shadow_spot     gltf_shadow_spot    skin_tube      d3d11    0.1  --light=spot --anim=bend --time=0.5 --pitch=30 --zoom=1.4)
 toms_gltf_test(gltf_shadow_all      gltf_shadow_all     instancing     d3d11    0.1  --light=all --pitch=40 --zoom=1.6)
+# Crowds (instanced skinning from a baked animation texture, gltf_anim_texture.h): one copy must look exactly
+# like the same clip drawn with a Pose (the gltf_skin reference); nine copies with their own clips, times and
+# held blends, on three backends.
+toms_gltf_test(gltf_crowd_one       gltf_skin           skin_tube      d3d11    0.1  --anim=bend --time=0.5 --crowd=1)
+toms_gltf_test(gltf_crowd           gltf_crowd          skin_tube      d3d11    0.1  --time=0.6 --crowd=9 --pitch=30)
+toms_gltf_test(gltf_crowd_vulkan    gltf_crowd          skin_tube      vulkan   0.5  --time=0.6 --crowd=9 --pitch=30)
+toms_gltf_test(gltf_crowd_opengl    gltf_crowd          skin_tube      opengl   0.5  --time=0.6 --crowd=9 --pitch=30)
 # The same shaders on the other backends (SPIR-V, GLSL), compared with the Direct3D 11 images.
 toms_gltf_test(gltf_skin_vulkan     gltf_skin           skin_tube      vulkan   0.5  --anim=bend --time=0.5)
 toms_gltf_test(gltf_pbr_vulkan      gltf_pbr            pbr_materials  vulkan   0.5  --yaw=15 --pitch=8)

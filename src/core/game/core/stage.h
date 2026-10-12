@@ -9,6 +9,7 @@
 #include "object.h"   // Stage derives Trackable so stage loads are leak-checked
 #include "localization.h"   // toms::Locale::field() -- resolves name/story_note if multi-language
 #include "footprint.h"      // toms::Footprint -- S1: 1/2/4-grid entities (doc section 1.7)
+#include "stair_links.h"    // toms::StairLink -- the floor's stairs, some locked by an event (Q7)
 
 struct Entity {
     int x, y;
@@ -39,7 +40,9 @@ struct Stage : public Trackable {
     std::vector<std::string> tiles;        // rows of chars
     std::map<std::string,std::string> legend;
     std::vector<Entity> entities;
-    std::string up, down;                  // connected stage ids
+    std::string up, down;                  // connected stage ids (the first stair up / down)
+    std::vector<toms::StairLink> stairs;   // every stair with its tile and lock (game_assets.cpp builds it)
+    int startX = -1, startY = -1;          // the '@' tile (player_start), -1 when the grid has none
     std::string story_note;
 
     char at(int x, int y) const {
@@ -96,7 +99,8 @@ inline Stage parseStage(const std::string& path, const toms::Locale& locale) {
     for (int y = 0; y < (int)s.tiles.size(); y++) {
         for (int x = 0; x < (int)s.tiles[y].size(); x++) {
             char c = s.tiles[y][x];
-            if (c == '#' || c == '.' || c == '@') continue;
+            if (c == '@') { s.startX = x; s.startY = y; continue; }   // where a new game / a fresh load starts
+            if (c == '#' || c == '.') continue;
             auto it = s.legend.find(std::string(1, c));
             if (it == s.legend.end()) continue;
             Entity e; e.x = x; e.y = y; e.raw = std::string(1,c); e.kind = it->second;

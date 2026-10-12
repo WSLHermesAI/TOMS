@@ -15,6 +15,46 @@
 
 ## ▶ Next Step
 
+**The owner's answers built: Q6, Q10 (a), English, locked stairs, the event index, the image-map design**
+(2026-10-12, not committed; [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) §22):
+- **Q6, the generator no longer overwrites your floors silently.** `tools/gen_floors.py` (with `gen_stairs.py`, restored
+  from history) builds in a staging copy; `tools/floor_guard.py` compares with the real files and pops up *"Floors 22, 23,
+  … were changed by hand. The generator will place its own data there."* — Yes / No (keep them) / Cancel. Today a dry
+  run names F22–F28 and eight boss stages; the other 50 floors match the generator ([../19_STAGE_EDITOR.md](../19_STAGE_EDITOR.md) §3).
+- **Q10 (a), every `_v2`…`_v5` id is its own event:** 92 new events (the chapter 4–10 pools `pool_act04`…`pool_act10`,
+  28 more in `pool_common`) with their own English title, description and text. No floor names an undefined id any
+  more (W22 closed).
+- **English is the default language.** Settings v2 moves an old saved Chinese setting to English; every text still goes
+  through its key. The 197 "English" strings that were Chinese copies are English now. All screenshots refreshed.
+- **Q7, locked stairs** ([../event_editor/05_FLOOR_LINKS.md](../event_editor/05_FLOOR_LINKS.md) §3.2, §5):
+  - the game reads a floor's `stairs` list;
+  - a locked stair is drawn with a padlock and says which event opens it;
+  - finishing the event pops up *"Stairs unlocked — The stairs on floor 3 that lead to floor 4 are now open."*;
+  - a **"Go to the stairs on floor 3"** event starts, and finishes when the player takes those stairs;
+  - the unlocking event's description names the stairs.
+
+  No shipped floor has a lock yet: the tests lock F01 with `--stair-lock=`.
+- **Q10, the per-floor event index:** `assets/data/events/floor_index.json` (`tools/make_event_index.py`). For each
+  floor it lists the events (kind, title, tiles), the beats and the stair locks, plus event → floors.
+- **Q9, the design for stage maps as images** (one integer id per pixel, a shared id table): [../21_IMAGE_STAGES.md](../21_IMAGE_STAGES.md),
+  with three questions for the owner (§6).
+- **Fixed on the way:** a new game now starts on F01's `@`, not on its stair. The ● / ◆ row icons of the event log were
+  missing from the UI font.
+- **Tests:** desktop 83 / 83 (unit 42 / 42 with the new `stair_links_test` and `floor_index_test`; smoke + glTF all
+  pass, 2 new: `stairs_locked`, `stairs_unlock`). The event editor's Play demo passes 29 / 29 on its frozen tutorial data.
+
+**Crowds: instanced skinning from an animation texture** (2026-10-12, not committed; [../18_GLTF.md](../18_GLTF.md) §6,
+[6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) §21):
+- Many copies of an animated glTF model in one draw call per primitive; each copy has its own clip and time, and can
+  **cross-fade or hold a blend of two clips**. The animation is baked once into a texture all copies share, as joint
+  rotation (quaternion) + translation, so blends keep limb lengths. No CPU posing per copy.
+- `gltf::AnimTexture` / `gltf::Crowd` (bake, save / load with a stale check, play / crossFade / setBlend),
+  `GltfRenderer::uploadAnimTexture` / `drawCrowd`, shader `vs_mesh_animtex.sc`, viewer `gltf_viewer --crowd=<n>`.
+- Checked: one copy is pixel-identical to the normal `Pose` path; D3D11 / D3D12 / Vulkan / OpenGL agree; the web build
+  compiles it. Tests: unit 40 / 40 (new `gltf_anim_texture_test`), glTF screenshots 21 / 21 (4 new).
+- Replaces the idea of the old engine's `cAnimTexture` (its problems are listed in 18 §6). Not used by the game yet
+  (the game is 2D; the title scene has no characters).
+
 **The player menu is built: P1, P2, P3 and Save / Load** (2026-10-10, not committed;
 [../20_PLAYER_MENU.md](../20_PLAYER_MENU.md) §9–12, [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) §16–20):
 - **One button while walking, ≡** (or Esc), with a dot when something is new. The HUD's store button, its clickable item
@@ -40,7 +80,7 @@
   the attribute effect sizes are first guesses (W28).
 - **Read the drafted event titles and descriptions** in the event editor and rewrite what does not fit (W29).
 - **Commit** the 2026-10-08 and 2026-10-10 work.
-- **Decide W16 and W23** below: then the 5 failing screenshot tests can be refreshed or fixed.
+- **W16 and W23 are closed** (2026-10-12): every desktop test passes (79 / 79).
 - Later: upgrading gear (W26), the phone layout of the menu (W27), the rest of the event runtime
   ([../event_editor/06_EVENT_LOGIC.md](../event_editor/06_EVENT_LOGIC.md) §6: variables, talk triggers, the dispatcher).
 
@@ -145,9 +185,11 @@ the Visual Studio IDE (W1).
 | T | Particles (`.particle` JSON, `particle_editor`, GPU simulation, CPU/GPU threshold), doc 17 | ◐ 2026-10-03 editor + runtime done; legacy import, multiply/screen blend, effects on `.anim` nodes open |
 | T | Editors preview with toms_game's `BgfxRenderer`; right-drag pans | ✅ 2026-10-03 on D3D11 |
 | T | Anim editor: per-node playback (once / hide / loop), solo, clip switching with discard prompt; editors: History dock + automatic backups | ✅ 2026-10-05 |
+| G | Locked stairs (Q7), the generator's hand-edit guard (Q6), the per-floor event index, English default | ✅ 2026-10-12 desktop; no floor has a lock yet (W34) |
 | G | Player menu: one ≡ button; Status / Equipment / Items / Events / System; Save / Load; attributes in battle ([20](../20_PLAYER_MENU.md)) | ◐ 2026-10-10 P1, P2, P3 and Save / Load built, verified on desktop + web (headless); open: W26 upgrading gear, W27 phone layout, W28 tuning, W29 event text review |
 | T | Monster idle animations on the map (`monster_idle.anim`), door-opening animation (`door_open.anim`) | ✅ 2026-10-08 desktop; web/Android not seen (W24) |
 | 5 | glTF 2.0 on bgfx (`gltf_model`, `GltfRenderer`, `gltf_viewer`): skins, morphs, instancing, PBR, cameras, lights, shadow maps; the title's 3D background | ◐ 2026-10-05 desktop D3D11/Vulkan/OpenGL + web verified; not on a phone; no IBL / cascades yet |
+| 5 | Crowds: instanced skinning from a baked animation texture, two-clip blends ([18](../18_GLTF.md) §6) | ✅ 2026-10-12 desktop D3D11/D3D12/Vulkan/OpenGL; web compiles it (not drawn there yet); not used by the game |
 | 5 | 3D on bgfx (glTF, ozz skinning, instancing, shadows, Effekseer) | ⬜ researched only |
 
 ---
@@ -170,20 +212,26 @@ the Visual Studio IDE (W1).
 | ~~W14~~ | ~~CJK font `wqy-zenhei.ttc` lost~~ | closed 2026-09-27: the UI is RmlUi with a committed font (`NotoSansCJKtc-TOMS.otf`); no font download any more | — |
 | W12 | **Headless tests miss display-scale bugs** | the black-canvas bug (2026-09-26) only showed in a visible window at DPR 2.4 | extend `web_smoke_test.mjs` with a visible-window / `--force-device-scale-factor=2.4` run and a canvas-size check |
 | W15 | **Two docs numbered 07** | `07_BUILD_ANDROID.md` and `07_PUBLISH_GITHUB_PAGES.md` | renumber one (links in README / docs point at both) |
-| W16 | **`smoke.stage*` fail** (4 of 50 CTest) | already failing before 2026-10-03; not investigated | run `tools	est.cmd`, compare the diff images, refresh the references or fix the cause |
+| ~~W16~~ | ~~`smoke.stage*` fail~~ | closed 2026-10-12: the reference still showed the on-screen pad, removed on purpose (commit `3df014b`, click-to-go replaced it), and items that used to be invisible; reference refreshed, all 4 backends pass | — |
 | W17 | **GPU particles off D3D11** | measured and tested on D3D11 only; the web (GLES 3.0) has no compute and uses the CPU | run `toms_game --fx=docs/examples/fx_recipes.particle#… --fps` on D3D12/Vulkan/OpenGL and an Android phone |
 | W18 | **Web build not published yet** | the push to `gh-pages` needs the owner's GitHub sign-in (Git Credential Manager), which a non-interactive session cannot do | run `publish_web.bat nobuild`, sign in once, answer **y**; check https://wslhermesai.github.io/TOMS/ after 1–2 min |
 | W19 | **3D title on phones** | built for Android and checked in headless Chrome only; shadows are off there, the model adds 3 MB | run the APK / the web page on a real phone; watch the frame rate on the title |
 | ~~W20~~ | ~~**Event editor cannot write files**~~ closed 2026-10-08: *Open project folder* + *Write to project*, with backups, merged with the stage editor's saves ([event_editor/README](../event_editor/README.md)) | *Save…* only shows the changes; the stage editor writes through *Open project folder* | give the event editor the same folder access, sharing files with the stage editor |
 | W21 | **Event editor features not in the game yet** | the game ignores triggers / conditions / actions / `next` / `vars.json` / stair locks / `kind`; the "event finished" flag is set only for whispers and rescues | runtime work in [06](../event_editor/06_EVENT_LOGIC.md) §6 and [05](../event_editor/05_FLOOR_LINKS.md) |
-| W23 | **`smoke.battle` depends on `battle.json`** | the screenshot follows the tuning values, so every change to `assets/data/battle.json` breaks it | give the test its own fixed values (independent of `battle.json`), or refresh it once the values are settled |
+| ~~W23~~ | ~~`smoke.battle` depends on `battle.json`~~ | closed 2026-10-12: the test runs with `--battle-tuning=default` (the built-in bar values), so tuning `battle.json` no longer breaks it; reference refreshed | — |
 | W24 | **Idle and door animations not seen on web / Android** | checked on desktop D3D11 only; the `.anim` files are in `assets/media`, so they are packaged | play a floor in the web build and on the Android emulator |
 | W25 | **Docs in two languages** | every `docs/*.md` (except `progress_report/`) has a copy in `docs/zh_TW/` that is not updated automatically | update the `zh_TW` copy with each English change; check links with the script used on 2026-10-08 |
 | W27 | **The player menu on a phone** | P1 shows the menu as the 1024x768 screen scaled down, like every other screen; the list-then-detail phone layout of [20](../20_PLAYER_MENU.md) §2 is not built, and no phone has seen it | open it on a phone (web build); if too small, build the phone layout |
 | W28 | **Attribute effects not play-tuned** | the sizes in `stats.json` (STR ATK +0.5, DEX hit zone +0.4, AGI −15 ms, VIT HP +3, INT skills +2 %, LUK gold +3 % a point) are first guesses, checked only with a scripted Lv 10 character | play several floors and adjust `per` in `assets/data/stats.json` ([20](../20_PLAYER_MENU.md) §12) |
 | W29 | **Drafted event titles and descriptions** | the 34 pool events got titles and descriptions written from their one line of text (zh_TW + en; other languages show English); no event has `next` / `requires` links yet, so only chapters show connected events | read and rewrite them in the event editor; link events (`next`, `requires`) where the story connects them |
+| W30 | **`web.page_coi` fails** | the packaged page (`Build/dist/TOMS-web`, built 2026-10-10) does not become threaded through its service worker in headless Chrome (`isolated=false, workers=0`); the other 4 web tests pass. Not investigated; unrelated to the 2026-10-12 renderer change (it tests a package made before it) | rebuild the package (`build_web.bat`), re-run `ctest -L web`; if it still fails, check the service worker registration on a served copy |
+| W31 | **Crowds not seen on the web or a phone** | the shader compiles for WebGL2 and every desktop backend draws it the same, but no web or Android page draws a crowd yet | add a crowd to the web title scene or a test page and check RGBA32F vertex fetch there |
 | W26 | **Upgrading gear** (player menu, later) | the owner chose change-only for now (Q15, 2026-10-10); upgrading (+1, +2… for gold or materials) is a later feature | design the steps and costs, add them to `items.json`, add an Upgrade button to the Equipment tab ([20](../20_PLAYER_MENU.md) §4) |
-| W22 | **Event data gaps** | 92 event ids that F22–F70 list are not defined by any pool; 4 orphan events | write the chapter 4–10 pools (the editor's batch fix makes placeholders) |
+| ~~W22~~ | ~~**Event data gaps**~~ | closed 2026-10-12 (Q10 a): the 92 ids are real events with their own English text (`pool_act04`…`pool_act10`, `pool_common`); 4 orphan events remain (defined, placed nowhere) | — |
+| W32 | **The 92 new events' text is a first draft** | written in English from each id's theme (and the Chinese line where one existed); effects still come from the id's words (trap, cache, relic, shard) | read them in the event editor (project folder) and rewrite what does not fit; add `next` / `requires` where the story links them |
+| W33 | **The generator re-rolls every floor's events** | with the new pools, a run of `tools/gen_floors.py` would change 138 files (F22–F28 and eight boss stages count as hand-edited and are asked about; the rest would be replaced) | run it only on purpose; `--dry-run` first; keep `--keep-edits` for hand-made floors |
+| W34 | **Locks are not in any floor yet** | the runtime is built and tested on F01 with `--stair-lock=`; no floor spec has a `stairs` list with `unlock`, and the generator does not place extra stair tiles ([05](../event_editor/05_FLOOR_LINKS.md) §5) | choose the floors and events (event editor, floor inspector), place the stair tiles (stage editor), or teach the generator |
+| W35 | **Docs in two languages, new ones** | `21_IMAGE_STAGES.md` has its `zh_TW` copy; the event-editor UI's own Chinese strings were kept | as W25 |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
 
 ---
@@ -194,12 +242,12 @@ the Visual Studio IDE (W1).
 |---|---|---|
 | [1_PROGRESS_REPORT.md](1_PROGRESS_REPORT.md) | 2026-09-25 | Qt + bgfx decision; EngineBlueprint update; bgfx glTF / skinning / morph / instancing research; toms_next phase 1 built and verified; WSL web presets and the etcpak stop |
 | [3_PROGRESS_REPORT.md](3_PROGRESS_REPORT.md) | 2026-09-27 | the project moved to the repository root; old code/content restored and organised as `assets/` (content) + `src/` (code); desktop, editor and web rebuilt and verified from there |
-| [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) | 2026-10-05 evening – 2026-10-10 | HTML event editor (tutorial, floor links, event logic, node graph, values map, kinds, saving into assets/data) and stage editor (story check, auto-place, overlap rule, zip download); both in `tools/web_editors/`; docs in Traditional Chinese (`docs/zh_TW/`); the game: monster idle animations, `battle.json`, the key fix, doors opening; the player menu (P1) |
+| [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) | 2026-10-05 evening – 2026-10-12 | HTML event editor (tutorial, floor links, event logic, node graph, values map, kinds, saving into assets/data) and stage editor (story check, auto-place, overlap rule, zip download); both in `tools/web_editors/`; docs in Traditional Chinese (`docs/zh_TW/`); the game: monster idle animations, `battle.json`, the key fix, doors opening; the player menu (P1–P3, Save / Load); crowds (instanced skinning) |
 | [5_PROGRESS_REPORT.md](5_PROGRESS_REPORT.md) | 2026-10-03 evening, 2026-10-05 | editor coordinate hints; anim editor per-node playback, solo, clip switching; History + auto backups; glTF 2.0 loader, renderer, viewer, shadows, cameras; the 3D title; web build ready to publish |
 | [4_PROGRESS_REPORT.md](4_PROGRESS_REPORT.md) | 2026-10-03 | atlas tool; `.anim` runtime + editor + recipes; `.particle` format, runtime, editor; GPU sprite paths and GPU particle simulation; the editors on the game renderer; merged test runner |
 | [2_PROGRESS_REPORT.md](2_PROGRESS_REPORT.md) | 2026-09-26 | web build done on Windows (host shaderc, `bimg_encode` excluded, one entry point for desktop + web, IDBFS saves); five bugs fixed; doc 06; `web_smoke_test.mjs` |
 
-Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md).
+Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily report: [DAILY_2026-10-12.md](DAILY_2026-10-12.md).
 
 ---
 
@@ -211,11 +259,11 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md).
 | Q2 | ~~Keep the folder name `toms_next`?~~ Answered 2026-09-27: no folder, the project is the root | — |
 | Q3 | Is browser **WebGPU** definitely not needed? (bgfx only does WebGL2 in the browser) | WebGL2 only, as decided 2026-09-25 |
 | Q4 | ~~Game UI library for phase 3?~~ Answered 2026-09-27: RmlUi, every screen, desktop and web ([08](../08_RMLUI.md)) | — |
-| Q6 | A generated floor (`F??.stage.json`) edited in the stage editor: should it become hand-authored, or should the generator keep hand edits? ([19](../19_STAGE_EDITOR.md) §3) | do not re-run the generator on edited floors |
-| Q7 | Locked stairs: invisible until unlocked, or visible but closed with a hint? ([05](../event_editor/05_FLOOR_LINKS.md) §6) | invisible |
-| Q8 | Do finished events reset on rebirth (`run` or `meta` scope)? Can a stair wait for several events or a flag? | reset on rebirth; one event per lock |
-| Q9 | The game ignores `@` (player start) in stage files (`parseStage`). Fix it (one line)? | not changed; arrival stays stairs-down → stairs-up |
-| Q10 | Event lists: keep each floor's explicit list? Are `_v2`…`_v5` ids variants of one event? Which languages are required before release? ([02](../event_editor/02_EDITOR_DESIGN.md) §6) | explicit lists; separate events; untranslated stays a warning |
+| Q6 | ~~A generated floor edited by hand~~ Answered and built 2026-10-12: when a run of the generator would change floors a person edited, **a dialog lists them** ("Floors 4, 5, 6, 55 ... will be placed by the generator") with Yes / No (keep them) / Cancel (`tools/floor_guard.py`, [19](../19_STAGE_EDITOR.md) §3) | — |
+| Q7 | ~~Locked stairs: invisible or visible?~~ Answered 2026-10-12: **visible, with a lock icon**. When the unlocking event finishes, a **dialog says which floor's stairs are now open**, and the event's description says it too; a **follow-up event "go to F<n>'s stairs"** is started so the player is led there (and finished on reaching them). **Built 2026-10-12** ([05](../event_editor/05_FLOOR_LINKS.md) §3.2, §5); no shipped floor has a lock yet (W34) | — |
+| Q8 | Do finished events reset on rebirth (`run` or `meta` scope)? Can a stair wait for several events or a flag? *2026-10-12: the owner will decide later* | reset on rebirth; one event per lock |
+| Q9 | ~~The `@` player start~~ Replaced 2026-10-12 by the owner's proposal: **stage maps as a 2D image** instead of characters -- each pixel an integer id (tile, monster, item, event, start, stairs ...), so there are far more ids than characters; a parser reads the pixels into the stage. **Design written 2026-10-12: [21_IMAGE_STAGES.md](../21_IMAGE_STAGES.md)**; three questions there (§6): packed RGB ids or a palette PNG; one id per event; convert all floors at once | keep the character maps until the owner confirms the design |
+| Q10 | ~~Event lists, `_v2`.. ids, languages~~ Answered 2026-10-12: a **per-floor event index** (metadata built from the floor files, for quick search of what happens on a floor); `_v2`..`_v5` explained (variant ids the floor generator made so a floor never repeats an id; most have no pool record, W22) -- owner's call (2026-10-12): **(a) each becomes a real event**, built; **languages: English only for now**, every text still through its key and the language setting, translations when the owner asks -- English is the default since 2026-10-12. **The per-floor index is built** (`assets/data/events/floor_index.json`) | — |
 | Q11 | ~~Player menu: STR / DEX / AGI?~~ Answered 2026-10-10: extend the status like a common RPG (STR, DEX, AGI, VIT, INT, LUK in a settings file `stats.json`); the gameplay that uses them comes later ([20](../20_PLAYER_MENU.md) §3) | — |
 | Q12 | ~~Item prices and ids?~~ Answered 2026-10-10: one all-item file (`items.json`) with each item's id, type, stats, price and text keys; `equipment.json` merges in, the store lists ids only ([20](../20_PLAYER_MENU.md) §5) | — |
 | Q13 | ~~Items tab: owned items or every item?~~ Answered 2026-10-10: owned items only | — |

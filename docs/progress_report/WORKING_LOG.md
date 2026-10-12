@@ -277,3 +277,33 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   DEX hit zone, AGI bar wait, VIT max HP, INT skill power, LUK battle gold); Status tab shows per point / now; HUD shows
   total ATK / DEF; optional hand-placed points (`levelUp.freePoints`, saved). `--give=exp:/points:` test hooks;
   player_menu_test checks effect stats; `smoke.player_status` refreshed; 57/62 (W16, W23). Docs: 20 §12 (+ zh_TW).
+- **2026-10-12** — **Crowds: instanced skinning** (not committed). A skin's clips baked into one RGBA32F texture
+  (rotation quaternion + translation/scale per joint, one row per frame) shared by every copy; `gltf::Crowd` gives each
+  copy its own clip and time, cross-fades and held two-clip blends; `GltfRenderer::drawCrowd` draws them all in one
+  instanced draw per primitive (`vs_mesh_animtex.sc`, shadows included); `.animtex` save / load with a stale check;
+  `gltf_viewer --crowd=<n>`. One copy = the `Pose` path pixel for pixel; 4 desktop backends agree. New
+  `gltf_anim_texture_test` (35 checks), 4 new glTF screenshot tests. Web builds; `web.page_coi` fails (W30, older package).
+  Docs: 18 §6, 09 (+ zh_TW).
+- **2026-10-12** — **W16 and W23 closed; Q7, Q9, Q10 answered.** `smoke.stage` (4 backends): the reference still had the
+  on-screen pad (removed on purpose in `3df014b`) -- refreshed. `smoke.battle`: new option `--battle-tuning=default`
+  (built-in bar values), so `battle.json` no longer breaks it -- refreshed. Desktop tests 79 / 79. Owner's answers: Q7
+  locked stairs visible with a lock icon, an unlock dialog naming the floor, and a "go to the stairs" follow-up event;
+  Q8 later; Q9 becomes a proposal: stage maps as images (one integer id per pixel); Q10 a per-floor event index, English
+  only for now (text still through keys). Q6 explained, waiting.
+- **2026-10-12** — **Q6, Q10 (a), English, Q7, the event index, Q9 design.**
+  - Generator restored with a hand-edit guard: dialog, `--yes` / `--keep-edits` / `--dry-run`, manifest.
+  - 92 new events (pools act04–act10 + common variants), so W22 is closed.
+  - English is the default (settings v2), and 197 Chinese "English" strings were translated.
+  - Locked stairs (`stair_links.h`):
+    - padlock, hint, unlock dialog;
+    - a "Go to the stairs on floor N" event, plus the arrival rule.
+  - The `@` start is fixed.
+  - `floor_index.json` and its test; [21_IMAGE_STAGES.md](../21_IMAGE_STAGES.md).
+  - The event-editor tutorial is on frozen data. ● / ◆ were added to the font.
+  - Desktop 83 / 83.
+- **2026-10-12** — **Changed-only testing (project rule).** `tools\test.cmd` now runs only the tests the uncommitted
+  changes can break (`tools/test_select.py`: file → test rules, `--since`, `--list`); `tools\test.cmd all` runs every
+  test. The rule is in `CLAUDE.md` (must follow); docs 09 (+ zh_TW). Checked: 83 of 88 tests selected for today's diff, all pass.
+- **2026-10-12** — **Testing by area.** `test_select.py` rewritten: game / glTF / particles / anims / atlas / engine core /
+  renderer / web each run only their own tests (a game change runs no glTF test and the reverse); `tests/CMakeLists.txt`
+  runs only the tests on its changed lines; unmapped files run nothing and are listed. Docs 09 (+ zh), CLAUDE.md.

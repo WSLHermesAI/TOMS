@@ -2,15 +2,41 @@
 
 > 英文原文：[09_TESTS.md](../09_TESTS.md)
 
-一個指令就能執行所有檢查：遊戲邏輯、畫面和 web 版。
+`tools\test.cmd` 預設只執行目前的變更可能影響到的測試；加上 `all` 才執行所有檢查：遊戲邏輯、畫面和 web 版。
 
 ```bat
 tools\build.cmd windows-release          :: build first: the tests are programs in the build folder
-tools\test.cmd                           :: everything, windows-release (about 45 seconds)
-tools\test.cmd windows-debug -L unit     :: only the unit tests of another preset (under a second)
+tools\test.cmd                           :: only the tests for the uncommitted changes (the project rule, CLAUDE.md)
+tools\test.cmd all                       :: everything, windows-release, web included (about 45 seconds)
+tools\test.cmd --since main              :: the tests for what changed since a commit or branch
+tools\test.cmd --list                    :: print which tests would run, and why; run nothing
+tools\test.cmd windows-debug -L unit     :: a ctest filter runs as given (only the unit tests of another preset)
 ```
 
-（先建置：測試是建置資料夾中的程式。`tools\test.cmd` 執行全部，約 45 秒；`-L unit` 只跑單元測試，不到一秒。）
+（先建置：測試是建置資料夾中的程式。`tools\test.cmd` 只跑變更相關的測試；`all` 執行全部，約 45 秒；
+`--since <commit>` 以某個 commit 或分支為比較基準；`--list` 只列出會跑哪些測試與原因；`-L unit` 等 ctest 篩選照原樣執行。）
+
+**選擇方式**（`tools/test_select.py`）：讀取變更的檔案（`git diff HEAD` 加上未追蹤的檔案）。**每個區域有自己的測試，
+沒有變更的區域就不測。** 改 glTF 不會跑任何遊戲測試，改遊戲也不會跑 glTF 測試：
+
+| 區域 | 它的檔案 | 它的測試 |
+|---|---|---|
+| 遊戲 | `src/core/game`、`src/game`、`assets/`（資料、UI、字型、sprite） | 遊戲的單元測試（`src/core/game/**_test`），以及 D3D11 上的遊戲截圖，依檔名縮小範圍：`player` / `saveload` → 選單場景、`battle` / `combat` → 戰鬥、`store`、`dialog`、`title`、`stair` / `floor` / `stage` → 地圖場景；其他檔名 → 全部遊戲場景 |
+| glTF | glTF 程式、`gltf_viewer`、mesh shader、`tests/gltf/` | `unit.gltf_*` 與 glTF 截圖 |
+| 粒子 | `particle_fx`、粒子編輯器、fx 檔與 shader | 粒子檢查、它的單元測試、`smoke.fx*` |
+| 節點動畫 | `anim_clip`、動畫編輯器、`.anim` 檔 | 動畫檢查、它的單元測試、`smoke.anim`（`.anim` 檔另加遊戲場景） |
+| Atlas | atlas 工具、atlas 檔 | atlas 檢查（atlas 檔另加遊戲場景） |
+| 引擎核心 | `src/core/engine` 的其他部分（條件、節點、事件 …） | 引擎的單元測試，再加上遊戲區域 |
+| 繪圖器 | `src/engine` 的共用檔（`bgfx_*`、內嵌 shader） | 所有截圖，所有後端 |
+| | `src/engine` 的 sprite、UI、ImGui 檔案與 shader | 遊戲截圖，所有後端 |
+| Web | `web/`、web 測試 | web 測試 |
+| 測試 | 某個 `*_test.cpp`；某張 `tests/golden/x.png`；`tests/CMakeLists.txt` 中改動的那幾行 | 正好就是那些測試（改到 `_pm_give` 這類變數時，是用到它的測試） |
+| 全域 | 根目錄的 `CMakeLists.txt`、preset、`cmake/`、`external/` | 所有桌面測試 |
+| 不測 | 文件、`*.md`、HTML 編輯器、`android/`、測試執行器本身 | 不執行 |
+
+沒有任何規則認得的檔案不會執行測試，並列為 **NOT MAPPED**：請在 `RULES` 中為它補一條規則。各後端版本
+（`stage_d3d12/vulkan/opengl`、`fx_cpu/compute/gpu`）只在繪圖器、它們的參考圖或全域設定改變時才執行。
+沒有 Python 時，`test.cmd` 會執行全部測試。
 
 Visual Studio 在 **測試 → 測試總管** 中列出同樣的測試（來自 CMake preset）：點一下就能執行或除錯其中一個。
 底層是 `ctest`，CMake 的測試執行器（Visual Studio 有附；`tools\test.cmd` 會找到它），所以
@@ -43,18 +69,22 @@ toms_game 的渲染器上，在那裡繪製和編輯，並存下 bgfx 截圖以�
 
 | 標籤 | 數量 | 檢查什麼 | 需要 |
 |---|---|---|---|
-| `unit` | 36 | 遊戲自己放在 `src/core` 程式碼旁邊的 `*_test.cpp` 程式（存檔、標題流程、條件、戰鬥條、鏡頭、裝備、技能、鍛造、據點、結局、輪迴、樓層、佔地、任務、節點動畫、粒子效果、glTF 模型、…），包括對發行的 `assets/data` 的檢查 | 不需要 |
+| `unit` | 39 | 遊戲自己放在 `src/core` 程式碼旁邊的 `*_test.cpp` 程式（存檔、標題流程、條件、戰鬥條、鏡頭、裝備、技能、鍛造、據點、結局、輪迴、樓層、佔地、任務、節點動畫、粒子效果、glTF 模型、…），包括對發行的 `assets/data` 的檢查 | 不需要 |
 | `atlas` | 3 | `atlas.core`：atlas 工具的打包器、子 sprite、每種匯出格式讀回、舊的 `.pi` 檔逐像素重建；`atlas_sprites_test`：程式碼、資料和 UI 用到的每個 sprite 名稱都在遊戲的 atlas 中；`atlas.assets_up_to_date`：`assets/media/atlas/game.atlasproj` 只靠它打包好的 atlas 就能開啟，且其他檔案都是最新的（[14](14_ATLAS_TOOL.md)）；`atlas.fx_up_to_date`：粒子 sprite 的 `fx.atlasproj` 同上（[17](17_PARTICLES.md)） | 不需要（三個也都在 `unit` 中；`atlas_sprites_test` 只在那裡） |
 | `particle` | 1 | `particle.check_recipes`：對 `docs/examples/fx_recipes.particle` 執行 `particle_editor --headless check`（能解析、每個 sprite 都在它的 atlas 中、曲線 / 池 / 爆發都合理；[17](17_PARTICLES.md)） | Qt 編輯器建置（也在 `unit` 中） |
 | `anim` | 2 | `anim.check_preview` / `anim.check_recipes`：對 `tests/smoke/anim_preview.anim` 和範例 `docs/examples/anim_recipes.anim` 執行 `anim_editor --headless check`（能解析、每個 sprite 都在遊戲 atlas 中、沒有重疊的 key；[15](15_ANIMATION.md)、[16](16_ANIMATION_RECIPES.md)） | Qt 編輯器建置（也在 `unit` 中） |
-| `smoke` | 18 | 真正的 `toms_game` 播放一段腳本化的場景；它的截圖必須和 `tests/golden/` 中的參考圖相符（包括 `smoke.anim` 和 `smoke.fx`：地圖上的 `.anim` 片段和粒子效果；`smoke.fx_cpu` / `fx_compute`：同樣的東西走 sprite 批次的其他路徑，`smoke.fx_gpu`：所有發射器都在 GPU 上模擬——全部對同一張圖比對） | GPU；每個測試開一個視窗約 2 秒 |
-| `smoke` + `gltf` | 17 | `gltf_viewer` 在固定時間繪製 `tests/gltf/` 中的測試模型；截圖必須和 `tests/golden/gltf_*.png` 相符：蒙皮（線性、cubic spline）、morph target（線性、step）、`EXT_mesh_gpu_instancing`、PBR 材質、法線檢視、陰影（平行光、點光、聚光、全部）；蒙皮、PBR 和陰影也在 Vulkan 和 OpenGL 上測（[18](18_GLTF.md)）。`ctest -L gltf` 只執行這些 | GPU；每個約 1 秒 |
+| `smoke` | 20 | 真正的 `toms_game` 播放一段腳本化的場景；它的截圖必須和 `tests/golden/` 中的參考圖相符（包括 `smoke.anim` 和 `smoke.fx`：地圖上的 `.anim` 片段和粒子效果；`smoke.fx_cpu` / `fx_compute`：同樣的東西走 sprite 批次的其他路徑，`smoke.fx_gpu`：所有發射器都在 GPU 上模擬——全部對同一張圖比對） | GPU；每個測試開一個視窗約 2 秒 |
+| `smoke` + `gltf` | 21 | `gltf_viewer` 在固定時間繪製 `tests/gltf/` 中的測試模型；截圖必須和 `tests/golden/gltf_*.png` 相符：蒙皮（線性、cubic spline）、morph target（線性、step）、`EXT_mesh_gpu_instancing`、PBR 材質、法線檢視、陰影（平行光、點光、聚光、全部）；蒙皮、PBR 和陰影也在 Vulkan 和 OpenGL 上測（[18](18_GLTF.md)）。`ctest -L gltf` 只執行這些 | GPU；每個約 1 秒 |
 | `web` | 5 | 在無頭 Chrome 中執行 `tools/web_smoke_test.mjs`：標題 → 新遊戲 → 存檔 → 重新載入 → 存檔還在，沒有頁面錯誤。對單執行緒版、多執行緒版（用隔離標頭提供），以及打包好的頁面兩次：在沒有標頭的伺服器上（它必須透過 service worker 變成多執行緒）和加上 `?nothreads`（[10](10_THREADS.md)），再在**真正的 GPU** 上跑一次（`web.page_gpu`，`--gpu`：Direct3D 11 上的 ANGLE，對 shader 比其他測試用的 SwiftShader 軟體 GPU 更嚴格）。任何編譯或連結失敗的 WebGL shader 都會被記錄，並讓測試失敗 | web 版 / 套件（`build_web.bat`）、Node 22+、Chrome 或 Edge；缺少的話會**略過**，而不是失敗 |
 
 Smoke 場景有標題、地圖（HUD + 方向盤）、玩家選單的五個分頁（`player_status`、`player_gear`、`player_items`、
 `player_events`、`player_system`；[20](20_PLAYER_MENU.md)）、對話、戰鬥（攻擊一次之後）、商店，以及地圖上的節點動畫
 （`--anim`，[15](15_ANIMATION.md)）。玩家選單的場景以 `--give=<道具 id>,gold:<n>` 開始：標題關閉時玩家就拿到這些道具和裝備，
-讓格子、裝備比較和捲動有東西可顯示。`unit.player_menu_test` 檢查選單的規則，以及道具、商店、屬性和標題資料。
+讓格子、裝備比較和捲動有東西可顯示。`unit.player_menu_test` 檢查選單的規則，以及道具、商店、屬性和標題資料，
+並確認每層列出的每個事件都有事件池紀錄與英文文字。兩個場景顯示上鎖的樓梯（[05](event_editor/05_FLOOR_LINKS.md) 第 3.2 節）：
+`stairs_locked` 走到被 `--stair-lock=F01:ev_village_well` 鎖住的 F01 樓梯（鎖頭與提示），`stairs_unlock` 以 `--events-done=`
+完成該事件（「Stairs unlocked」對話框）。`unit.stair_links_test` 檢查樓梯清單本身，`unit.floor_index_test` 檢查
+`assets/data/events/floor_index.json` 仍與樓層相符（失敗時執行 `python tools/make_event_index.py`）。
 它們在 Direct3D 11 上執行，地圖場景也在 Direct3D 12、Vulkan 和 OpenGL 上執行。場景清單在
 `tests/CMakeLists.txt`，每個測試一行。
 

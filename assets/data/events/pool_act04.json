@@ -1,0 +1,67 @@
+{
+  "_comment": [
+    "Act 4 (library) event pool. Created 2026-10-12 from the ids the floors already place (Q10 a):",
+    "the generator's seed ids and their _v2.._v5 variants, each now its own event with its own text.",
+    "English only for now; other languages fall back to English until translations are asked for."
+  ],
+  "act": "ch_04",
+  "theme": "library",
+  "events": [
+    {
+      "eventId": "ev_library_torn_page",
+      "kind": "relic",
+      "text": "ev_library_torn_page.text",
+      "title": "ev_library_torn_page.title",
+      "desc": "ev_library_torn_page.desc"
+    },
+    {
+      "eventId": "ev_library_torn_page_v2",
+      "kind": "relic",
+      "text": "ev_library_torn_page_v2.text",
+      "title": "ev_library_torn_page_v2.title",
+      "desc": "ev_library_torn_page_v2.desc"
+    },
+    {
+      "eventId": "ev_library_torn_page_v4",
+      "kind": "relic",
+      "text": "ev_library_torn_page_v4.text",
+      "title": "ev_library_torn_page_v4.title",
+      "desc": "ev_library_torn_page_v4.desc"
+    },
+    {
+      "eventId": "ev_library_scholar_whisper",
+      "kind": "whisper",
+      "text": "ev_library_scholar_whisper.text",
+      "title": "ev_library_scholar_whisper.title",
+      "desc": "ev_library_scholar_whisper.desc"
+    },
+    {
+      "eventId": "ev_library_scholar_whisper_v2",
+      "kind": "whisper",
+      "text": "ev_library_scholar_whisper_v2.text",
+      "title": "ev_library_scholar_whisper_v2.title",
+      "desc": "ev_library_scholar_whisper_v2.desc"
+    },
+    {
+      "eventId": "ev_library_scholar_whisper_v4",
+      "kind": "whisper",
+      "text": "ev_library_scholar_whisper_v4.text",
+      "title": "ev_library_scholar_whisper_v4.title",
+      "desc": "ev_library_scholar_whisper_v4.desc"
+    },
+    {
+      "eventId": "ev_library_shelf_collapse",
+      "kind": "trap",
+      "text": "ev_library_shelf_collapse.text",
+      "title": "ev_library_shelf_collapse.title",
+      "desc": "ev_library_shelf_collapse.desc"
+    },
+    {
+      "eventId": "ev_library_shelf_collapse_v3",
+      "kind": "trap",
+      "text": "ev_library_shelf_collapse_v3.text",
+      "title": "ev_library_shelf_collapse_v3.title",
+      "desc": "ev_library_shelf_collapse_v3.desc"
+    }
+  ]
+}

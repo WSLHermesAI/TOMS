@@ -1,0 +1,81 @@
+{
+  "_comment": [
+    "Act 6 (cavern) event pool. Created 2026-10-12 from the ids the floors already place (Q10 a):",
+    "the generator's seed ids and their _v2.._v5 variants, each now its own event with its own text.",
+    "English only for now; other languages fall back to English until translations are asked for."
+  ],
+  "act": "ch_06",
+  "theme": "cavern",
+  "events": [
+    {
+      "eventId": "ev_cavern_twin_crystal",
+      "kind": "relic",
+      "text": "ev_cavern_twin_crystal.text",
+      "title": "ev_cavern_twin_crystal.title",
+      "desc": "ev_cavern_twin_crystal.desc"
+    },
+    {
+      "eventId": "ev_cavern_twin_crystal_v3",
+      "kind": "relic",
+      "text": "ev_cavern_twin_crystal_v3.text",
+      "title": "ev_cavern_twin_crystal_v3.title",
+      "desc": "ev_cavern_twin_crystal_v3.desc"
+    },
+    {
+      "eventId": "ev_cavern_twin_crystal_v4",
+      "kind": "relic",
+      "text": "ev_cavern_twin_crystal_v4.text",
+      "title": "ev_cavern_twin_crystal_v4.title",
+      "desc": "ev_cavern_twin_crystal_v4.desc"
+    },
+    {
+      "eventId": "ev_cavern_echo_wall",
+      "kind": "whisper",
+      "text": "ev_cavern_echo_wall.text",
+      "title": "ev_cavern_echo_wall.title",
+      "desc": "ev_cavern_echo_wall.desc"
+    },
+    {
+      "eventId": "ev_cavern_echo_wall_v2",
+      "kind": "whisper",
+      "text": "ev_cavern_echo_wall_v2.text",
+      "title": "ev_cavern_echo_wall_v2.title",
+      "desc": "ev_cavern_echo_wall_v2.desc"
+    },
+    {
+      "eventId": "ev_cavern_echo_wall_v4",
+      "kind": "whisper",
+      "text": "ev_cavern_echo_wall_v4.text",
+      "title": "ev_cavern_echo_wall_v4.title",
+      "desc": "ev_cavern_echo_wall_v4.desc"
+    },
+    {
+      "eventId": "ev_cavern_miner_cache",
+      "kind": "cache",
+      "text": "ev_cavern_miner_cache.text",
+      "title": "ev_cavern_miner_cache.title",
+      "desc": "ev_cavern_miner_cache.desc"
+    },
+    {
+      "eventId": "ev_cavern_miner_cache_v2",
+      "kind": "cache",
+      "text": "ev_cavern_miner_cache_v2.text",
+      "title": "ev_cavern_miner_cache_v2.title",
+      "desc": "ev_cavern_miner_cache_v2.desc"
+    },
+    {
+      "eventId": "ev_cavern_miner_cache_v3",
+      "kind": "cache",
+      "text": "ev_cavern_miner_cache_v3.text",
+      "title": "ev_cavern_miner_cache_v3.title",
+      "desc": "ev_cavern_miner_cache_v3.desc"
+    },
+    {
+      "eventId": "ev_cavern_miner_cache_v4",
+      "kind": "cache",
+      "text": "ev_cavern_miner_cache_v4.text",
+      "title": "ev_cavern_miner_cache_v4.title",
+      "desc": "ev_cavern_miner_cache_v4.desc"
+    }
+  ]
+}

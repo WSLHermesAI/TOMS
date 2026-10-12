@@ -1,0 +1,67 @@
+{
+  "_comment": [
+    "Act 7 (barracks) event pool. Created 2026-10-12 from the ids the floors already place (Q10 a):",
+    "the generator's seed ids and their _v2.._v5 variants, each now its own event with its own text.",
+    "English only for now; other languages fall back to English until translations are asked for."
+  ],
+  "act": "ch_07",
+  "theme": "barracks",
+  "events": [
+    {
+      "eventId": "ev_barracks_night_fire_v2",
+      "kind": "rescue",
+      "text": "ev_barracks_night_fire_v2.text",
+      "title": "ev_barracks_night_fire_v2.title",
+      "desc": "ev_barracks_night_fire_v2.desc"
+    },
+    {
+      "eventId": "ev_barracks_night_fire_v4",
+      "kind": "rescue",
+      "text": "ev_barracks_night_fire_v4.text",
+      "title": "ev_barracks_night_fire_v4.title",
+      "desc": "ev_barracks_night_fire_v4.desc"
+    },
+    {
+      "eventId": "ev_barracks_forge_t3",
+      "kind": "cache",
+      "text": "ev_barracks_forge_t3.text",
+      "title": "ev_barracks_forge_t3.title",
+      "desc": "ev_barracks_forge_t3.desc"
+    },
+    {
+      "eventId": "ev_barracks_forge_t3_v3",
+      "kind": "cache",
+      "text": "ev_barracks_forge_t3_v3.text",
+      "title": "ev_barracks_forge_t3_v3.title",
+      "desc": "ev_barracks_forge_t3_v3.desc"
+    },
+    {
+      "eventId": "ev_barracks_forge_t3_v4",
+      "kind": "cache",
+      "text": "ev_barracks_forge_t3_v4.text",
+      "title": "ev_barracks_forge_t3_v4.title",
+      "desc": "ev_barracks_forge_t3_v4.desc"
+    },
+    {
+      "eventId": "ev_barracks_deserter",
+      "kind": "merchant_echo",
+      "text": "ev_barracks_deserter.text",
+      "title": "ev_barracks_deserter.title",
+      "desc": "ev_barracks_deserter.desc"
+    },
+    {
+      "eventId": "ev_barracks_deserter_v2",
+      "kind": "merchant_echo",
+      "text": "ev_barracks_deserter_v2.text",
+      "title": "ev_barracks_deserter_v2.title",
+      "desc": "ev_barracks_deserter_v2.desc"
+    },
+    {
+      "eventId": "ev_barracks_deserter_v4",
+      "kind": "merchant_echo",
+      "text": "ev_barracks_deserter_v4.text",
+      "title": "ev_barracks_deserter_v4.title",
+      "desc": "ev_barracks_deserter_v4.desc"
+    }
+  ]
+}

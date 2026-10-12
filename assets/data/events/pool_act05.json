@@ -1,0 +1,74 @@
+{
+  "_comment": [
+    "Act 5 (crypt) event pool. Created 2026-10-12 from the ids the floors already place (Q10 a):",
+    "the generator's seed ids and their _v2.._v5 variants, each now its own event with its own text.",
+    "English only for now; other languages fall back to English until translations are asked for."
+  ],
+  "act": "ch_05",
+  "theme": "crypt",
+  "events": [
+    {
+      "eventId": "ev_crypt_ten_year_candle",
+      "kind": "relic",
+      "text": "ev_crypt_ten_year_candle.text",
+      "title": "ev_crypt_ten_year_candle.title",
+      "desc": "ev_crypt_ten_year_candle.desc"
+    },
+    {
+      "eventId": "ev_crypt_ten_year_candle_v4",
+      "kind": "relic",
+      "text": "ev_crypt_ten_year_candle_v4.text",
+      "title": "ev_crypt_ten_year_candle_v4.title",
+      "desc": "ev_crypt_ten_year_candle_v4.desc"
+    },
+    {
+      "eventId": "ev_crypt_nameless_brick",
+      "kind": "whisper",
+      "text": "ev_crypt_nameless_brick.text",
+      "title": "ev_crypt_nameless_brick.title",
+      "desc": "ev_crypt_nameless_brick.desc"
+    },
+    {
+      "eventId": "ev_crypt_nameless_brick_v2",
+      "kind": "whisper",
+      "text": "ev_crypt_nameless_brick_v2.text",
+      "title": "ev_crypt_nameless_brick_v2.title",
+      "desc": "ev_crypt_nameless_brick_v2.desc"
+    },
+    {
+      "eventId": "ev_crypt_nameless_brick_v4",
+      "kind": "whisper",
+      "text": "ev_crypt_nameless_brick_v4.text",
+      "title": "ev_crypt_nameless_brick_v4.title",
+      "desc": "ev_crypt_nameless_brick_v4.desc"
+    },
+    {
+      "eventId": "ev_crypt_choir_echo",
+      "kind": "whisper",
+      "text": "ev_crypt_choir_echo.text",
+      "title": "ev_crypt_choir_echo.title",
+      "desc": "ev_crypt_choir_echo.desc"
+    },
+    {
+      "eventId": "ev_crypt_choir_echo_v2",
+      "kind": "whisper",
+      "text": "ev_crypt_choir_echo_v2.text",
+      "title": "ev_crypt_choir_echo_v2.title",
+      "desc": "ev_crypt_choir_echo_v2.desc"
+    },
+    {
+      "eventId": "ev_crypt_choir_echo_v3",
+      "kind": "whisper",
+      "text": "ev_crypt_choir_echo_v3.text",
+      "title": "ev_crypt_choir_echo_v3.title",
+      "desc": "ev_crypt_choir_echo_v3.desc"
+    },
+    {
+      "eventId": "ev_crypt_choir_echo_v4",
+      "kind": "whisper",
+      "text": "ev_crypt_choir_echo_v4.text",
+      "title": "ev_crypt_choir_echo_v4.title",
+      "desc": "ev_crypt_choir_echo_v4.desc"
+    }
+  ]
+}

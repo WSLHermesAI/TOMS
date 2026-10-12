@@ -81,6 +81,7 @@ std::vector<int> Game::storeTabIndices() const {
 // Milestone 9: opens the Yes/No confirm instead of transitioning immediately -- see
 // stairsConfirmOpen_'s declaration in game.h for why.
 void Game::requestStageTransition(const std::string& target, bool isUp) {
+    stairsConfirmGoEvent_.clear();
     stairsConfirmOpen_ = true;
     stairsConfirmIsUp_ = isUp;
     stairsConfirmTarget_ = target;
@@ -93,6 +94,10 @@ void Game::confirmStageTransition() {
     bool isUp = stairsConfirmIsUp_;
     stairsConfirmOpen_ = false;
     stairsConfirmTarget_.clear();
+    // Q7: taking stairs a finished event opened finishes their "go to the stairs" event.
+    const std::string go = stairsConfirmGoEvent_;
+    stairsConfirmGoEvent_.clear();
+    if (!go.empty() && run_.eventStarted(go) && !run_.eventFinished(go)) finishEvent(go);
     // M9 (stair alignment): climbing up lands on the new floor's OWN stairs_down (the matching
     // physical stairwell coming from below); going down lands on its stairs_up (arriving from
     // above) -- see docs/story/STAIR_ALIGNMENT.md.

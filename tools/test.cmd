@@ -1,14 +1,20 @@
 @echo off
-rem test.cmd [preset] [ctest options] -- run the tests (docs/09_TESTS.md) from a plain command prompt.
-rem   test.cmd                        all tests of windows-release (build it first: tools\build.cmd)
-rem   test.cmd ci-windows -L unit     only the unit tests of ci-windows
-rem Uses the ctest that ships with Visual Studio. Exit code: 0 when every test passed.
+rem test.cmd [preset] [all | --since REF | --list] [ctest options] -- run the tests (docs/09_TESTS.md).
+rem   test.cmd                        only the tests the uncommitted changes can break (tools\test_select.py)
+rem   test.cmd all                    every test of windows-release, web included
+rem   test.cmd --since main           the tests for what changed since a commit or branch
+rem   test.cmd --list                 print which tests would run and why; run nothing
+rem   test.cmd ci-windows -L unit     a ctest filter (-L -LE -R -E -I) runs as given, without the selection
+rem Build first (tools\build.cmd). Uses the ctest that ships with Visual Studio. Exit code: 0 when every test passed.
 setlocal EnableExtensions
 rem (the root first: shift below also shifts %0)
 set "ROOT=%~dp0.."
-set "PRESET=%~1"
-if "%PRESET%"=="" set "PRESET=windows-release"
-if not "%~1"=="" shift
+set "PRESET=windows-release"
+set "A1=%~1"
+if not "%A1%"=="" if not "%A1%"=="all" if not "%A1%"=="changed" if not "%A1:~0,1%"=="-" (
+  set "PRESET=%A1%"
+  shift
+)
 
 set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 if not exist "%VSWHERE%" goto :novs
@@ -31,7 +37,13 @@ if not exist "Build\%PRESET%\CTestTestfile.cmake" (
   echo [toms] Build\%PRESET% has no tests yet: run tools\build.cmd %PRESET% first.
   exit /b 1
 )
-"%CTEST%" --preset "%PRESET%" -j 4%ARGS%
+where python >nul 2>nul
+if errorlevel 1 (
+  echo [toms] Python was not found, so the changed-only selection cannot run: running every test.
+  "%CTEST%" --preset "%PRESET%" -j 4%ARGS%
+  exit /b %ERRORLEVEL%
+)
+python "%ROOT%\tools\test_select.py" --ctest "%CTEST%" --preset "%PRESET%"%ARGS%
 exit /b %ERRORLEVEL%
 
 :novs

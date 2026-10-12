@@ -16,6 +16,10 @@
 //     --shadow-bias=<x>                     scales the shadow offsets (acne vs. detached shadows)
 //     --camera=<index|name>                 look through one of the file's cameras (C cycles them)
 //     --look=<yaw>,<pitch>                  ... turned by that much in its own frame (degrees; as a left drag)
+//     --crowd=<n>                           crowd mode: n copies of a skinned model, each with its own clip and time,
+//                                           drawn by GltfRenderer::drawCrowd from one baked animation texture
+//                                           (gltf_anim_texture.h); every third holds a 50 % blend of two clips
+//     --crowd-fps=<fps>                     the bake's frames per second (default 30)
 //
 // Mouse: left drag orbits, right / middle drag pans, wheel zooms. Keys: Space play/pause, F frame,
 // G grid, K skeleton, B bounds, W wireframe, R auto-rotate, H panel, 1..9 solo an animation, Esc quit;
@@ -57,6 +61,8 @@ struct Args {
     float shadowBias = 1.0f;
     std::string camera;
     float lookYaw = 0.0f, lookPitch = 0.0f;
+    int crowd = 0;
+    float crowdFps = 30.0f;
 };
 
 const char* value(const std::string& s, const char* key) {
@@ -85,6 +91,8 @@ Args parseArgs(int argc, char** argv) {
         else if (const char* v = value(s, "--shadow-bias=")) a.shadowBias = (float)std::atof(v);
         else if (const char* v = value(s, "--camera=")) a.camera = v;
         else if (const char* v = value(s, "--look=")) std::sscanf(v, "%f,%f", &a.lookYaw, &a.lookPitch);
+        else if (const char* v = value(s, "--crowd=")) a.crowd = std::max(0, std::atoi(v));
+        else if (const char* v = value(s, "--crowd-fps=")) a.crowdFps = (float)std::atof(v);
         else if (!s.empty() && s[0] != '-') a.file = s;
     }
     return a;
@@ -164,6 +172,53 @@ struct Viewer {
         lookYaw = lookPitch = 0.0f;
         lookZoom = 1.0f;
     }
+    // Crowd mode (--crowd=N): N copies of the model's first skin, animated from one baked texture.
+    int crowdCount = 0;                   // 0 = off
+    std::shared_ptr<gltf::AnimTexture> animTex;
+    std::shared_ptr<GltfRenderer::AnimTextureGpu> animGpu;
+    gltf::Crowd crowd;
+    float crowdBlend = 0.5f;              // the panel's held-blend weight
+    double bakeMs = 0.0;
+    std::string crowdError;
+    glm::vec3 modelMin{-1.0f}, modelMax{1.0f};   // one copy's bounds (the crowd's spacing)
+
+    // Bakes the first skinned node's skin and lays N copies out on a square grid. Deterministic: copy i plays
+    // clip i % clips from time i x 0.37 s; every third holds a blend of two clips.
+    void buildCrowd(int n) {
+        crowdCount = n;
+        crowd.clear();
+        crowdError.clear();
+        if (n <= 0 || !model) return;
+        int skin = -1;
+        for (const gltf::Node& nd : model->nodes)
+            if (nd.skin >= 0 && nd.mesh >= 0) { skin = nd.skin; break; }
+        if (skin < 0) { crowdError = "crowd mode needs a skinned model"; return; }
+        if (!renderer.crowdsSupported()) { crowdError = "this backend cannot draw crowds (no RGBA32F textures)"; return; }
+        if (!animTex || animTex->skin != skin) {
+            const uint64_t t0 = SDL_GetTicksNS();
+            auto baked = std::make_shared<gltf::AnimTexture>();
+            std::string err;
+            if (!gltf::bakeAnimTexture(*model, skin, args.crowdFps, *baked, &err)) { crowdError = err; return; }
+            bakeMs = double(SDL_GetTicksNS() - t0) * 1e-6;
+            animTex = baked;
+            animGpu = renderer.uploadAnimTexture(animTex);
+            if (!animGpu) { crowdError = "the animation texture could not be uploaded"; return; }
+            std::fprintf(stderr, "[gltf] crowd: baked %d joints x %d frames (%zu clips) in %.1f ms, %.1f KB\n", animTex->joints,
+                         animTex->rows, animTex->clips.size(), bakeMs, animTex->bytes() / 1024.0);
+        }
+        crowd.setTexture(animTex);
+        const int clips = (int)animTex->clips.size();
+        const int side = (int)std::ceil(std::sqrt((double)n));
+        const glm::vec3 size = modelMax - modelMin;
+        const float spacing = std::max({size.x, size.z, size.y * 0.5f, 1e-3f}) * 1.3f;
+        for (int i = 0; i < n; i++) {
+            const float x = ((i % side) - (side - 1) * 0.5f) * spacing, z = ((i / side) - (side - 1) * 0.5f) * spacing;
+            const int c = crowd.add(glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, z)), i % clips, i * 0.37f);
+            if (clips > 1 && i % 3 == 2) crowd.setBlend(c, i % clips, (i + 1) % clips, 0.5f);
+        }
+        frameScene();
+    }
+
     // Arrow keys: the camera moves moveSpeed x the model's radius per second (+ / - change it).
     float moveSpeed = 1.0f;
     static constexpr float kMoveStep = 1.5f, kMoveMin = 1.0f / 64.0f, kMoveMax = 64.0f;
@@ -185,6 +240,9 @@ struct Viewer {
             return false;
         }
         gpu.reset();   // the old model's buffers go first
+        animGpu.reset();
+        animTex.reset();
+        crowd.clear();
         model = std::move(m);
         path = file;
         error.clear();
@@ -221,6 +279,7 @@ struct Viewer {
         const std::string title = "TOMS glTF Viewer - " + file;
         SDL_SetWindowTitle(window, title.c_str());
         frameScene();
+        if (crowdCount > 0 || args.crowd > 0) buildCrowd(crowdCount > 0 ? crowdCount : args.crowd);
         return true;
     }
 
@@ -244,6 +303,15 @@ struct Viewer {
         time = keep;
         posed();
         if (!any) mn = glm::vec3(-1.0f), mx = glm::vec3(1.0f);
+        modelMin = mn;
+        modelMax = mx;
+        if (crowdCount > 0 && crowd.size() > 0) {   // the whole grid
+            for (int i = 0; i < crowd.size(); i++) {
+                const glm::vec3 o(crowd[i].placement[3]);
+                mn = glm::min(mn, modelMin + o);
+                mx = glm::max(mx, modelMax + o);
+            }
+        }
         sceneMin = mn;
         sceneMax = mx;
         target = (mn + mx) * 0.5f;
@@ -816,11 +884,30 @@ struct Viewer {
             ImGui::Checkbox("ACES tone mapping", &frame.tonemap);
         }
 
+        if (ImGui::CollapsingHeader("Crowd (instanced skinning)")) {
+            int n = crowdCount;
+            if (ImGui::SliderInt("copies", &n, 0, 400)) buildCrowd(n);
+            ImGui::TextDisabled("0 = off: the single model with its Pose");
+            if (!crowdError.empty()) ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "%s", crowdError.c_str());
+            if (crowdCount > 0 && animTex) {
+                ImGui::Text("texture %dx%d RGBA32F, %.1f KB", animTex->width, animTex->rows, animTex->bytes() / 1024.0);
+                ImGui::Text("%d joints, %zu clips at %.0f fps, baked in %.1f ms", animTex->joints, animTex->clips.size(), animTex->fps, bakeMs);
+                if (animTex->maxScaleError > 0.01f) ImGui::TextColored(ImVec4(1, 0.8f, 0.3f, 1), "non-uniform joint scale averaged (%.0f %%)",
+                                                                        animTex->maxScaleError * 100.0f);
+                if (ImGui::Button("cross-fade all to the next clip (0.5 s)"))
+                    for (int i = 0; i < crowd.size(); i++) crowd.crossFade(i, (crowd[i].a.clip + 1) % (int)animTex->clips.size(), 0.5f);
+                if (animTex->clips.size() > 1 && ImGui::SliderFloat("blend clip 0 / 1", &crowdBlend, 0.0f, 1.0f))
+                    for (int i = 0; i < crowd.size(); i++) crowd.setBlend(i, 0, 1, crowdBlend);
+                if (ImGui::Button("each its own clip again")) buildCrowd(crowdCount);
+            }
+        }
+
         if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen)) {
             const GltfRenderer::Stats& s = renderer.stats();
             ImGui::Text("%.1f fps   %s", fps, next::bgfxHostRendererName().c_str());
             ImGui::Text("%d draw calls, %d instances", s.drawCalls, s.instances);
             ImGui::Text("%d skinned draws, %d morph uploads", s.skinnedDraws, s.morphUploads);
+            if (s.crowdInstances > 0) ImGui::Text("%d crowd instances (no CPU posing)", s.crowdInstances);
             ImGui::Text("%d shadow tiles, %d shadow draws", s.shadowTiles, s.shadowDraws);
         }
         ImGui::End();
@@ -854,7 +941,10 @@ struct Viewer {
         }
 
         if (args.time >= 0.0f) time = args.time;
-        else if (!paused) time += double(dt) * speed;
+        else if (!paused) {
+            time += double(dt) * speed;
+            crowd.update(dt * speed);
+        }
         if (autoRotate) yaw += dt * 20.0f;
         moveWithKeys(dt);
 
@@ -910,7 +1000,12 @@ struct Viewer {
             frame.proj = glm::translate(glm::mat4(1.0f), glm::vec3(-panel / float(fbW), 0.0f, 0.0f)) * frame.proj;
         }
         renderer.begin(0, frame, (uint32_t)fbW, (uint32_t)fbH, rgbaHex(background));   // views 0 .. kViews - 1
-        if (model && gpu) renderer.draw(*gpu, pose);
+        if (model && gpu && crowdCount > 0 && animGpu && crowd.size() > 0) {
+            if (args.time >= 0.0f && frameNo == 0) crowd.update(args.time);   // --time: freeze the crowd there too
+            renderer.drawCrowd(*gpu, *animGpu, crowd);
+        } else if (model && gpu) {
+            renderer.draw(*gpu, pose);
+        }
         if (groundOn && model && groundGpu) {   // a floor under the model: receives shadows, casts none
             const glm::vec3 c = (sceneMin + sceneMax) * 0.5f;
             const glm::mat4 place = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(c.x, sceneMin.y - radius * 0.002f, c.z)),
@@ -1001,6 +1096,7 @@ int main(int argc, char** argv) {
             quit = true;
     }
     v.gpu.reset();
+    v.animGpu.reset();   // the crowd's texture: before bgfx goes
     v.groundGpu.reset();
     v.renderer.shutdown();
     v.gui.shutdown();

@@ -3,7 +3,8 @@
 > 英文原文：[05_FLOOR_LINKS.md](../../event_editor/05_FLOOR_LINKS.md)
 
 **現況：** 設計，以及編輯器的 mockup（[tools/web_editors/event_editor.html](../../../tools/web_editors/event_editor.html)，第四部分）。
-遊戲還不會讀這個格式；第 5 節列出執行期的工作。
+**遊戲自 2026-10-12 起會讀取這個格式**（第 5 節），並採用負責人對 Q7 的答覆：上鎖的樓梯看得見，上面有鎖頭（第 3.2 節）。
+產生器還不會放置額外的樓梯。
 
 ## 1. 改變了什麼
 
@@ -56,9 +57,15 @@
 1. **事件完成** 指玩家在本局完成了那個事件：也就是今天它的格子被清除的那一刻
    （`game_input.cpp` 的 `event:` 分支）。這一局會保存一組已完成的事件 ID，
    和這局的其他資料一起存檔，開新遊戲時重置。
-2. **是隱藏，不只是關閉。** 上鎖的樓梯在事件完成前畫成地板；完成後
-   樓梯才出現，最好附上一個簡短提示（「出現了一座樓梯」）。如果事件完成時玩家已經在這層樓，
-   樓梯會直接出現，不必離開樓層。
+2. **看得見，有鎖頭（負責人對 Q7 的答覆，2026-10-12；最初的設計是隱藏）。**
+   - 上鎖的樓梯畫得較暗，上面有鎖頭。走進去不會上下樓，而是出現一行提示：
+     *These stairs are locked. Finish "…" to open them.* 玩家還沒遇過那個事件時，名稱顯示為「???」，與事件紀錄相同。
+   - 事件完成時跳出對話框，指出是哪座樓梯：*Stairs unlocked — The stairs on floor 3 that lead to floor 4 are
+     now open.* 玩家若在那層，鎖頭立刻消失。
+   - 解鎖事件在事件紀錄裡的說明，結尾會加上 *Finishing it opens the stairs on floor 3 to floor 4.*
+   - 同時開始一個後續事件 **「Go to the stairs on floor 3」**，說明為 *The stairs on floor 3 that lead to floor 4
+     are open. Go there and take them.*，玩家走過那座樓梯時完成。它的 id 是 `stairs_<樓層>_<目的地>`，
+     由遊戲依樓層規格產生，不需要事件池紀錄。
 3. **抵達。** 從 A 經樓梯到 B，會落在 B 上通往 A 的那座樓梯。如果 B
    沒有這樣的樓梯（單向連結），玩家會落在 B 第一座方向相反的樓梯，或落在
    `player_start`。
@@ -88,21 +95,32 @@
   **+ 新增樓梯**、*從哪裡到達*，以及它能抽到的事件。
 - **儲存** 會把 `stairs` 清單寫進每個編輯過的樓層，新樓層則寫成新檔案。
 
-## 5. 執行期的工作（尚未完成）
+## 5. 執行期的工作（2026-10-12 完成，產生器除外）
 
-| 位置 | 變更 |
-|---|---|
-| `stage.h` | 把 `up` / `down` 換成 `{ dir, to, unlockEvent, x, y }` 的清單 |
-| `game_assets.cpp` | 從 `stairs` 建立這份清單，沒有時從 `nextFloor` 建立 |
-| 關卡產生器 | 每座樓梯放一格；一定放置每個樓梯在等待的事件 |
-| `game_input.cpp` | 使用玩家腳下的樓梯，而不是單一的 `U`/`D`；略過隱藏的樓梯；記錄已完成的事件 |
-| 本局狀態 + 存檔 | 保存已完成的事件 ID 集合 |
-| `game_scene_draw.cpp` | 把上鎖的樓梯畫成地板；事件完成時顯示它（並跳出提示） |
-| 抵達 | 落在通往回去的那座樓梯上（第 3.3 節） |
+| 位置 | 變更 | 狀態 |
+|---|---|---|
+| `systems/stair_links.h`（新） | `StairLink { up, to, unlockEvent, x, y }`；讀取規格的清單；替每座樓梯找格子（先找 `stairs_up:<to>` 圖例，再依閱讀順序分配一般的 `U` / `D`）；`arrivalStair`；`goStairsEventId` | 完成；`unit.stair_links_test` |
+| `floor_table` | 由規格讀出 `FloorInfo::stairs` / `hasStairs` | 完成 |
+| `stage.h` / `game_assets.cpp` | `Stage::stairs` 來自 `stairs`，沒有時來自樓層鏈；`up` / `down` 保留為各方向的第一座樓梯 | 完成 |
+| `game_input.cpp` | 使用玩家腳下的樓梯（`stepOntoStairs`）；上鎖的樓梯擋住玩家並顯示提示（`bumpLockedStairs`）。每個完成的事件都經過 `Game::finishEvent`（旗標、紀錄、`next`、它打開的樓梯） | 完成 |
+| 本局狀態 + 存檔 | 已完成的事件 ID（事件紀錄的清單，隨本局存檔） | 完成（P2） |
+| `game_scene_draw.cpp` | 上鎖樓梯上的鎖頭 | 完成 |
+| 對話框 | `dialogs.rml` 的 `notice.*`：排隊顯示的確定對話框（Enter / Esc / 按鈕） | 完成 |
+| 事件紀錄 | 「前往樓梯」事件；解鎖事件說明中的解鎖句；兩者互為相關事件 | 完成 |
+| 抵達 | 落在通往回去的那座樓梯上（第 3.3 節） | 完成 |
+| 關卡產生器 | 每座樓梯放一格；一定放置每個樓梯在等待的事件 | **尚未**（`tools/gen_floors.py` 只放一個 `U` 和一個 `D`） |
+
+測試用參數：`toms_game --stair-lock=F01:ev_village_well` 讓 F01 的第一座上樓樓梯等待該事件，
+`--events-done=ev_village_well` 則像玩家一樣完成它。冒煙測試 `stairs_locked`（鎖頭與提示）和
+`stairs_unlock`（對話框）使用它們。
+
+實作時發現：`parseStage` 略過了 `@`（玩家起點）格，所以新遊戲是從 F01 的樓梯開始，而不是起點
+（[19](../19_STAGE_EDITOR.md) 第 4 節）。現在 `Stage::startX` / `startY` 會記住它，重新載入時從那裡開始。
 
 ## 6. 待決問題
 
-- 上鎖的樓梯應該**看不見**，還是**看得見但關著**（附提示）？本設計是把它隱藏。
-- 已完成的事件在**轉生**時要重置嗎？（`flags.json` 的旗標有 `run` 和 `meta` 兩種範圍。）
+- ~~上鎖的樓梯應該看不見，還是看得見但關著？~~ 已答覆（Q7）：看得見，有鎖頭（第 3.2 節）。
+- 已完成的事件在**轉生**時要重置嗎？（`flags.json` 的旗標有 `run` 和 `meta` 兩種範圍。）*負責人之後再決定（Q8）；
+  目前它們屬於本局，所以新的一局開始時每座樓梯都會重新上鎖。*
 - 一座樓梯可以等待**多個**事件（全部完成），或也允許用旗標嗎？格式
   有預留空間：`unlock` 是物件，所以之後可以加上 `{ "eventsDone": [...] }` 或 `{ "flag": ... }`。

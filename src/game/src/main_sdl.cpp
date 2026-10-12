@@ -25,9 +25,12 @@
 //                         every time (screenshot smoke tests, tests/CMakeLists.txt)
 //   --anim=<file>#<clip>  play one clip of an .anim file over the screen (anim_clip.h; tests)
 //   --ui-scale=<x>        the small-screen UI scale (the web build uses 1.5 on phones), to test it on desktop
+//   --battle-tuning=default  the battle bars' built-in values instead of data/battle.json (tests: smoke.battle)
 //   --fx=<file>#<effect>  play one particle effect of a .particle file over the screen (particle_fx.h)
 //   --give=<id,...>       when the title first closes, hand the player these items (data/items.json ids;
 //                         gear is owned, not worn), gold:<n>, exp:<n>, points:<n> -- tests of the player menu (tests/CMakeLists.txt)
+//   --stair-lock=<floor>:<event>  lock that floor's first stair up until the event is finished (locked stairs, Q7)
+//   --events-done=<id,...>        when the title first closes, finish these events as the player would (tests)
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
 #include "../../core/engine/vfs.h"   // toms::vfsInit: APK entries need the AAssetManager
@@ -76,6 +79,7 @@ struct Args {
     bool vsync = true, stats = false, fps = false;
     std::string spritePath = "auto";
     int fxGpuThreshold = -1;
+    bool defaultBattleTuning = false;  // --battle-tuning=default
     std::string titleScene;            // --title-scene=<file|none>
     float uiScale = 0.0f;              // --ui-scale=<x>: the phone UI scale on desktop (testing the web build's small-screen layout)
     int fixedDtMs = 0;       // > 0: deterministic frame time (tests)
@@ -84,6 +88,8 @@ struct Args {
     struct Click { float x, y; int frame; };
     std::vector<Click> clicks;
     std::vector<std::string> give;     // --give=<id,...>
+    std::string stairLock;             // --stair-lock=<floor>:<event>
+    std::vector<std::string> eventsDone;   // --events-done=<id,...>
 };
 
 bool keyFromName(const std::string& n, Key& out) {
@@ -149,6 +155,16 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--fx-gpu-threshold=")) a.fxGpuThreshold = std::max(0, std::atoi(v));
         else if (const char* v = value(s, "--title-scene=")) a.titleScene = v;
         else if (const char* v = value(s, "--ui-scale=")) a.uiScale = (float)std::atof(v);
+        else if (const char* v = value(s, "--battle-tuning=")) a.defaultBattleTuning = std::string(v) == "default";
+        else if (const char* v = value(s, "--stair-lock=")) a.stairLock = v;
+        else if (const char* v = value(s, "--events-done=")) {
+            std::string list = v;
+            for (size_t pos = 0; pos <= list.size();) {
+                const size_t comma = std::min(list.find(',', pos), list.size());
+                if (comma > pos) a.eventsDone.push_back(list.substr(pos, comma - pos));
+                pos = comma + 1;
+            }
+        }
         else if (const char* v = value(s, "--give=")) {
             std::string list = v;
             for (size_t pos = 0; pos <= list.size();) {
@@ -336,6 +352,7 @@ bool appInit(App& app) {
     opts.spritePath = args.spritePath;
     opts.showFps = args.fps;
     opts.fxGpuThreshold = args.fxGpuThreshold;
+    opts.defaultBattleTuning = args.defaultBattleTuning;
     opts.titleScene = args.titleScene;
     if (args.uiScale > 0.0f) opts.uiScale = args.uiScale;
 #ifdef __EMSCRIPTEN__
@@ -446,8 +463,13 @@ bool appFrame(App& app) {
         in.hasMouse = true;
     }
 
-    if (!app.gave && !args.give.empty() && app.session.game() && !app.session.game()->titleOpen()) {
-        for (const std::string& id : args.give) app.session.game()->debugGive(id);
+    if (!app.gave && (!args.give.empty() || !args.stairLock.empty() || !args.eventsDone.empty()) && app.session.game() &&
+        !app.session.game()->titleOpen()) {
+        ::Game* g = app.session.game();
+        for (const std::string& id : args.give) g->debugGive(id);
+        if (const size_t colon = args.stairLock.find(':'); colon != std::string::npos)
+            g->debugLockStairs(args.stairLock.substr(0, colon), args.stairLock.substr(colon + 1));
+        for (const std::string& id : args.eventsDone) g->debugFinishEvent(id);
         app.gave = true;
     }
     // Fullscreen is the host's: the player menu's System tab shows the row and asks; this switches.

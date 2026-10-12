@@ -20,8 +20,9 @@ int main() {
     {
         Locale loc;
         CHECK(loc.languageCount() == 2, "Locale starts with 2 built-in languages");
-        CHECK(loc.languageCode() == "zh_TW", "Locale defaults to zh_TW");
-        CHECK(loc.tr("menu.new_game") == "新遊戲", "built-in fallback: menu.new_game in zh_TW");
+        CHECK(loc.languageCode() == "en", "Locale defaults to English");
+        CHECK(loc.tr("menu.new_game") == "New Game", "built-in fallback: menu.new_game in English");
+        CHECK(loc.setLanguage("zh_TW") && loc.tr("menu.new_game") == "新遊戲", "built-in fallback: menu.new_game in zh_TW");
 
         // Load the real shipped table when it is reachable from the test's CWD.
         const char* candidates[] = { "data/text.json", "../data/text.json", "../../data/text.json" };
@@ -30,6 +31,7 @@ int main() {
         CHECK(loaded, "data/text.json loads from one of the candidate paths");
         if (loaded) {
             CHECK(loc.stringCount() > 20, "loaded table defines the expected number of keys");
+            CHECK(loc.languageCode() == "en", "loading the table keeps English as the default");
             CHECK(loc.has("settings.language"), "loaded table has settings.language");
             CHECK(loc.setLanguage("en"), "setLanguage(\"en\") succeeds");
             CHECK(loc.tr("menu.new_game") == "New Game", "menu.new_game switches to English");
@@ -68,7 +70,13 @@ int main() {
         bool found = true;
         GameSettings missing = loadGameSettings(path, &found);
         CHECK(!found, "a missing settings file reports found=false");
-        CHECK(missing.language == "zh_TW", "a missing settings file falls back to defaults");
+        CHECK(missing.language == "en", "a missing settings file falls back to defaults (English)");
+        nlohmann::json v1;
+        v1["schemaVersion"] = 1;
+        v1["language"] = "zh_TW";
+        CHECK(gameSettingsFromJson(v1).language == "en", "a version-1 settings file (Chinese default) moves to English");
+        v1["schemaVersion"] = 2;
+        CHECK(gameSettingsFromJson(v1).language == "zh_TW", "a version-2 file keeps the language the player chose");
 
         CHECK(saveGameSettings(path, s), "saveGameSettings writes the file");
         bool found2 = false;

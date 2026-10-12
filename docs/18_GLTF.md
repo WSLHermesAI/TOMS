@@ -56,6 +56,7 @@ BoxAnimated and InterpolationTest (`fetch_samples.py` downloads them).
 | Loading and posing | `src/core/engine/gltf_model.h/.cpp` (`toms_core`, C++17, no GPU) | `loadModel()` → `gltf::Model` (plain CPU data, through [cgltf](https://github.com/jkuhlmann/cgltf)); `gltf::Pose`: animations, world matrices, joint matrices, morph weights, bounds |
 | Drawing | `src/engine/src/gltf_renderer.h/.cpp` (`toms_bgfx`) | `GltfRenderer`: uploads a `Model`, draws a `Pose` |
 | Shaders | `src/engine/shaders/vs_mesh.sc`, `vs_mesh_inst.sc`, `fs_mesh.sc`, `mesh_common.sh`, `vs_line.sc`, `fs_line.sc`, `varying_mesh.def.sc` | compiled for every backend and embedded (`ShaderProgram::Mesh`, `MeshInstanced`, `Line`) |
+| Crowds | `src/core/engine/gltf_anim_texture.h/.cpp`, `vs_mesh_animtex.sc`, `GltfRenderer::drawCrowd` | instanced skinning from a baked animation texture (§6) |
 | Viewer | `tools/gltf_viewer/main.cpp` | SDL3 + ImGui panel |
 | Test models | `tests/gltf/*.gltf`, made by `tools/gltf_viewer/make_test_models.py` | self-contained (embedded buffers and textures) |
 
@@ -222,4 +223,104 @@ default (`src/game/src/title_scene.*`, owned by `GameSession`).
   - **Running them:** `ctest --preset windows-release -L gltf`.
   - **After an intended change:** `TOMS_UPDATE_GOLDEN=1 ctest ... -L gltf`, then look at the
     images.
+- **Crowds:** unit test `gltf_anim_texture_test` (35 checks); `smoke.gltf_crowd_one` (one copy = the `gltf_skin`
+  reference), `smoke.gltf_crowd` (nine copies with their own clips, times and blends) on D3D11, Vulkan and OpenGL.
 - **Changing a test model:** edit `make_test_models.py`, run it, then update the references.
+
+## 6. Crowds: instanced skinning from an animation texture
+
+Many copies of one animated model (monsters, soldiers, villagers) in **one draw call per primitive**, each copy
+with its own clip and time, and able to **blend or cross-fade between two clips**. The animation is baked once
+into a texture that every copy of the model shares, so the CPU does no posing per copy.
+
+| | `Pose` + `draw()` | Crowd: `drawCrowd()` |
+|---|---|---|
+| CPU per copy per frame | sample every channel, world and joint matrices | one 80-byte record (where, which clips, what time) |
+| Upload per copy per frame | up to 128 joint matrices (8 KB) | 80 bytes |
+| Draw calls | one per primitive per copy | one per primitive for all copies |
+| Animation | exact, any number of blended animations, morph targets | baked at `fps` (default 30), frames nlerped; one clip, or two blended |
+| Use for | the hero, bosses, faces | everyone else |
+
+**Code**
+
+| Part | File |
+|---|---|
+| Baking, the clip table, save / load, the per-copy animation state (`Crowd`) | `src/core/engine/gltf_anim_texture.h/.cpp` (CPU, no GPU; unit-tested) |
+| Upload, the instanced draw | `GltfRenderer::uploadAnimTexture`, `drawCrowd`, `crowdsSupported` |
+| The vertex shader | `src/engine/shaders/vs_mesh_animtex.sc` (+ `fs_mesh.sc`, `fs_shadow.sc`: `ShaderProgram::MeshAnimTex`, `MeshShadowAnimTex`) |
+| Viewer | `gltf_viewer --crowd=<n>` and the panel's *Crowd* section |
+
+```cpp
+// once per model
+auto anim = std::make_shared<gltf::AnimTexture>();
+gltf::bakeAnimTexture(model, /*skin*/ 0, /*fps*/ 30.0f, *anim);       // ~1 ms for a 24-joint model with 3 clips
+auto animGpu = renderer.uploadAnimTexture(anim);                     // shared by every crowd of this model
+
+gltf::Crowd crowd(anim);
+int i = crowd.add(placement, anim->clipIndex("Walk"));
+crowd.crossFade(i, anim->clipIndex("Run"), 0.4f);                     // 0.4 s fade, then Run alone
+crowd.setBlend(j, walk, run, 0.3f);                                   // hold 70 % walk + 30 % run
+crowd.play(k, anim->clipIndex("Survey"), /*loop*/ false);
+
+// every frame
+crowd.update(dt);
+renderer.drawCrowd(*gpu, *animGpu, crowd);                            // between begin() and the frame's end
+```
+
+**The texture.** RGBA32F; **one row per baked frame**, every clip's frames stacked; **2 texels per joint**:
+
+| Texel | Holds |
+|---|---|
+| `2j` | the joint's rotation, a quaternion (x, y, z, w) |
+| `2j + 1` | its translation (x, y, z) and uniform scale (w) |
+
+of `world(joint) × inverseBind`, exactly what `Pose::jointMatrices` gives. Frame `f` of a clip is the pose at
+`min(f / fps, duration)`, so a clip has `ceil(duration × fps) + 1` rows and its last row is its end pose. Size:
+joints × 2 × rows × 16 bytes, e.g. the Fox (24 joints, 3 clips, 163 rows) is 122 KB; 128 joints and 10 s of
+clips at 30 fps is about 1.2 MB. The GPU limits the rows (WebGL2 guarantees 2048–4096: about 1–2 minutes of clips
+at 30 fps); a texture over the limit is refused with a message (bake at a lower fps).
+
+**Why rotation + translation, not matrices.** Two clips are blended per joint: the rotations with nlerp (signs
+aligned so they take the short way), translation and scale linearly. A straight average of two joint matrices
+shrinks or flattens a limb when the poses differ a lot (an arm forward against back); quaternions do not. It
+also needs 2 texels per joint instead of 3. Limits of the format:
+- **Non-uniform joint scale** is averaged: `AnimTexture::maxScaleError` reports how much (0 for ordinary rigs).
+- **Mirrored joints** (negative scale) cannot be stored: `mirroredJoints` says so.
+
+**Per copy** (bgfx instance data, 80 bytes, `CrowdGpuInstance`):
+
+| | Holds |
+|---|---|
+| `i_data0..2` | the placement's first three rows (the fourth is 0, 0, 0, 1) |
+| `i_data3` | clip A: row of the frame, row of the next frame, how far between them |
+| `i_data4` | clip B: the same, and in `w` the weight of B (0: B is not read at all) |
+
+The frame rows and blends are worked out on the CPU (`gltf::framePair`: looping wraps, a one-shot holds its last
+frame), so the shader does no timing.
+
+**The shader.** For each of the vertex's four joints (a joint with weight 0 is skipped) it reads clip A's two frames
+(4 texels), and clip B's two (4 more) only while blending; nlerps; builds the joint matrix; then linear blend
+skinning and the same lighting as every other mesh. Shadows use the same vertex shader, so they move too.
+
+**Not drawn by a crowd:** primitives of other skins or unskinned ones (draw those with a `Pose`); morph targets
+(not baked). One skin per texture: a model with several skins needs one texture per skin.
+
+**Save / load** (`saveAnimTexture` / `loadAnimTexture`, `.animtex`). The file holds a magic and version, the
+joint and row counts, fps, the clip table and the raw floats. It also holds `modelHash()` of the skin (joint
+names, inverse bind matrices) and the animations (names, durations, channel counts): loading it against a model
+that changed since the bake fails with *stale*. Baking takes milliseconds, so baking at load is fine too.
+
+**Compared with the old engine's `cAnimTexture`** (FM79979 `AnimationTexture.cpp`): same idea (bake, per-instance
+frames, blend two frames in the shader), and these differences:
+- clips share one texture, and one draw can mix clips and times;
+- two clips can be blended;
+- instance data instead of uniform arrays, so there is no instance limit;
+- frame 0 is t = 0 (the old bake started one step late);
+- the file says what it was baked from, so a stale cache is caught.
+
+**Checked:**
+- one crowd copy draws pixel-identical to the same clip through `Pose` (`smoke.gltf_crowd_one` uses the
+  `gltf_skin` reference);
+- the Fox crowd matches between D3D11, D3D12, Vulkan and OpenGL;
+- `gltf_anim_texture_test` compares the bake with `Pose::jointMatrices` (exact at frame times, within 0.01
+  between them) and checks the blends, the crowd state and save / load.

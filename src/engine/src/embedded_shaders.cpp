@@ -34,6 +34,9 @@
 #include "dxbc/vs_mesh_inst.sc.bin.h"
 #endif
 #if defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/vs_mesh_animtex.sc.bin.h"
+#endif
+#if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/fs_mesh.sc.bin.h"
 #endif
 #if defined(TOMS_SHADER_HAS_DXBC)
@@ -47,6 +50,7 @@
 #endif
 #include "glsl/vs_mesh.sc.bin.h"
 #include "glsl/vs_mesh_inst.sc.bin.h"
+#include "glsl/vs_mesh_animtex.sc.bin.h"
 #include "glsl/fs_mesh.sc.bin.h"
 #include "glsl/vs_line.sc.bin.h"
 #include "glsl/fs_line.sc.bin.h"
@@ -62,6 +66,7 @@
 #ifndef __EMSCRIPTEN__
 #include "spirv/vs_mesh.sc.bin.h"
 #include "spirv/vs_mesh_inst.sc.bin.h"
+#include "spirv/vs_mesh_animtex.sc.bin.h"
 #include "spirv/fs_mesh.sc.bin.h"
 #include "spirv/vs_line.sc.bin.h"
 #include "spirv/fs_line.sc.bin.h"
@@ -76,6 +81,7 @@
 #endif
 #include "essl/vs_mesh.sc.bin.h"
 #include "essl/vs_mesh_inst.sc.bin.h"
+#include "essl/vs_mesh_animtex.sc.bin.h"
 #include "essl/fs_mesh.sc.bin.h"
 #include "essl/vs_line.sc.bin.h"
 #include "essl/fs_line.sc.bin.h"
@@ -131,6 +137,8 @@ struct ProgramBlobs { Blob vs, fs; };
     case ShaderProgram::Line:   out = { TOMS_BLOB(vs_line_##ext),   TOMS_BLOB(fs_line_##ext) };   break;\
     case ShaderProgram::MeshShadow: out = { TOMS_BLOB(vs_mesh_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
     case ShaderProgram::MeshShadowInstanced: out = { TOMS_BLOB(vs_mesh_inst_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
+    case ShaderProgram::MeshAnimTex: out = { TOMS_BLOB(vs_mesh_animtex_##ext), TOMS_BLOB(fs_mesh_##ext) }; break;\
+    case ShaderProgram::MeshShadowAnimTex: out = { TOMS_BLOB(vs_mesh_animtex_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
     default: return false;                                                                         \
     }                                                                                               \
     return true

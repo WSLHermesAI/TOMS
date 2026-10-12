@@ -339,6 +339,7 @@
 </div></div>
 
 <script src="data.js"></script>
+<script src="tutorial_data.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -360,12 +361,16 @@ const kindColor = k => { try { const r = S && S.kinds && S.kinds[k]; if (r && r.
   return getComputedStyle(document.documentElement).getPropertyValue('--k-' + k).trim() || '#777'; };
 const actOfPool = p => /^pool_act(\d+)$/.test(p) ? 'ch_' + p.slice(8) : null;   // pool_common -> null (any chapter)
 const poolForAct = a => 'pool_act' + a.slice(3);
+// The tutorial and its Play demo were written for the data of 2026-10-10, when floors F22-F70 named 92 event ids
+// that no pool defined (the steps fix them). Those ids are real events since 2026-10-12 (Q10 a), so the copy the
+// tutorial works on is that frozen snapshot (tutorial_data.js). Opening the project folder loads the real data.
+if (typeof TUTORIAL_DATA !== 'undefined') Object.keys(TUTORIAL_DATA).forEach(k => { DATA[k] = TUTORIAL_DATA[k]; });
 const ACTS = [...new Set(DATA.floors.map(f => f.act))];
 $('snap').textContent = 'assets/data, ' + (DATA.snapshot || 'snapshot');
 // ---------- languages: every string the tutorial shows. Ids, file names and kind values stay as in the data ----------
 const I18N = {
   en: {
-    banner: 'TUTORIAL · on a copy of the current TOMS event data', bannerNoWrite: 'nothing is written to disk', reset: 'Reset tutorial',
+    banner: 'TUTORIAL · on a frozen copy of the TOMS event data (2026-10-10)', bannerNoWrite: 'nothing is written to disk', reset: 'Reset tutorial',
     mFile: 'File', mEdit: 'Edit', mView: 'View', tabStage: 'Stage', tabAnim: 'Anim', tabParticles: 'Particles', tabEvents: 'Events',
     undo: 'Undo', save: 'Save', tutorial: 'Tutorial', play: '▶ Play demo', stop: '■ Stop', speedTitle: 'Demo speed',
     eventsDock: 'Events', newEvent: '+ New event', tDiagram: 'Relationship diagram', mFocus: 'Focus: selected', mFull: 'Full map', chapTitle: 'Chapters shown in the full map',
@@ -531,14 +536,14 @@ const I18N = {
     renameCat: 'Rename this category (and its sub-categories)', hCat: n => `Category of ${n}`, hCatRename: (a, b) => `Rename category ${a} → ${b}`,
     nOfM: (n, m) => `${n} of ${m} values`, noMatchVals: 'No value matches the filter.',
     openDir: '📂 Open project folder…', openDirTitle: 'Pick the TOMS folder: the editor then reads assets/data itself, and Save writes into it',
-    srcCopy: 'copy (data.js)', srcLive: 'project folder (live)', notProject: 'That folder has no assets/data/story/floors. Pick the TOMS folder.',
+    srcCopy: 'tutorial copy (tutorial_data.js)', srcLive: 'project folder (live)', notProject: 'That folder has no assets/data/story/floors. Pick the TOMS folder.',
     openUnsupported: 'This browser cannot open folders. Use Chrome or Edge from http://localhost (serve.cmd).',
     discardForLive: 'Opening the project folder reloads the data from it. Discard the unsaved changes here?',
     liveSkipped: 'The stage editor opened the project folder; this editor has unsaved changes, so it keeps the copy. Use 📂 to switch.',
     loadedLiveEv: (e, f) => `Loaded ${e} events and ${f} floors from the project folder.`,
     bannerLive: 'PROJECT FOLDER · editing assets/data', bannerLiveB: 'Save writes the changed files; a backup of each goes to Build/editor_backups',
     writeLiveN: n => `Write to project (${n} file${n > 1 ? 's' : ''})`, saveNoteLive: 'Writes into assets/data. Each file is backed up to Build/editor_backups first.',
-    saveNoteCopy: 'This is the data.js copy: nothing is written. Open the project folder (📂) to save into assets/data.',
+    saveNoteCopy: 'This is the tutorial copy (tutorial_data.js): nothing is written. Open the project folder (📂) to save into assets/data.',
     hSavedLive: n => `Wrote ${n} file(s) to assets/data`, toastSavedLive: (n, s) => `Wrote ${n} file(s) to assets/data. Backups: Build/editor_backups/${s}/`,
     nothingWritten: 'The files on disk already match: nothing written.', writeFailed: e => `Could not write: ${e}`,
     selTip: 'Select (Shift+click: a range)', selAllTip: 'Select every value shown', selN: n => `${n} selected`, bulkMoveTo: 'Move to category',
@@ -640,7 +645,7 @@ const I18N = {
     problemsTab: n => `Problems (${n})`, statusProbs: (e, w, d) => `⛔ ${e} errors · ⚠ ${w} warnings${d ? ' · unsaved changes' : ''}`,
   },
   zh_TW: {
-    banner: '教學 · 使用目前 TOMS 事件資料的副本', bannerNoWrite: '不會寫入任何檔案', reset: '重設教學',
+    banner: '教學 · 使用 TOMS 事件資料的凍結副本（2026-10-10）', bannerNoWrite: '不會寫入任何檔案', reset: '重設教學',
     mFile: '檔案', mEdit: '編輯', mView: '檢視', tabStage: '關卡', tabAnim: '動畫', tabParticles: '粒子', tabEvents: '事件',
     undo: '復原', save: '儲存', tutorial: '教學', play: '▶ 播放示範', stop: '■ 停止', speedTitle: '示範速度',
     eventsDock: '事件', newEvent: '+ 新增事件', tDiagram: '關係圖', mFocus: '聚焦：選取項', mFull: '全圖', chapTitle: '全圖中顯示的章節',
@@ -806,14 +811,14 @@ const I18N = {
     renameCat: '重新命名這個分類（含子分類）', hCat: n => `${n} 的分類`, hCatRename: (a, b) => `分類改名 ${a} → ${b}`,
     nOfM: (n, m) => `${m} 個數值中的 ${n} 個`, noMatchVals: '沒有符合篩選的數值。',
     openDir: '📂 開啟專案資料夾…', openDirTitle: '選擇 TOMS 資料夾：編輯器會直接讀取 assets/data，儲存時寫回去',
-    srcCopy: '副本（data.js）', srcLive: '專案資料夾（即時）', notProject: '這個資料夾沒有 assets/data/story/floors。請選 TOMS 資料夾。',
+    srcCopy: '教學副本（tutorial_data.js）', srcLive: '專案資料夾（即時）', notProject: '這個資料夾沒有 assets/data/story/floors。請選 TOMS 資料夾。',
     openUnsupported: '這個瀏覽器無法開啟資料夾。請用 Chrome 或 Edge 從 http://localhost（serve.cmd）開啟。',
     discardForLive: '開啟專案資料夾會從那裡重新載入資料。要捨棄這裡未儲存的變更嗎？',
     liveSkipped: '關卡編輯器開啟了專案資料夾；這個編輯器有未儲存的變更，所以仍使用副本。用 📂 切換。',
     loadedLiveEv: (e, f) => `已從專案資料夾載入 ${e} 個事件和 ${f} 層樓。`,
     bannerLive: '專案資料夾 · 正在編輯 assets/data', bannerLiveB: '儲存會寫入變更的檔案；每個檔案的備份放在 Build/editor_backups',
     writeLiveN: n => `寫入專案（${n} 個檔案）`, saveNoteLive: '會寫入 assets/data。每個檔案會先備份到 Build/editor_backups。',
-    saveNoteCopy: '這是 data.js 副本：不會寫入任何檔案。開啟專案資料夾（📂）才能存進 assets/data。',
+    saveNoteCopy: '這是教學副本（tutorial_data.js）：不會寫入任何檔案。開啟專案資料夾（📂）才能存進 assets/data。',
     hSavedLive: n => `已寫入 ${n} 個檔案到 assets/data`, toastSavedLive: (n, s) => `已寫入 ${n} 個檔案到 assets/data。備份：Build/editor_backups/${s}/`,
     nothingWritten: '磁碟上的檔案已經一致：沒有寫入任何東西。', writeFailed: e => `無法寫入：${e}`,
     selTip: '選取（Shift+點擊：選取一段範圍）', selAllTip: '選取所有顯示的數值', selN: n => `已選 ${n} 個`, bulkMoveTo: '移到分類',

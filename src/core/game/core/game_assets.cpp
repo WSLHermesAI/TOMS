@@ -262,6 +262,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     // once here; empty when the data is absent, and every use is guarded, so such a checkout plays
     // the eleven hand-authored stages exactly as before.
     floors_ = toms::FloorTable::loadFromDirectory(dataDir + "/../data/story/floors");
+    loadStairLocks();   // Q7: the stairs the floors lock behind events (needs the event pools, loaded above)
     if (floors_.empty()) {
         fprintf(stderr, "[assets] floor table: absent -- playing the hand-authored stages only\n");
     } else {
@@ -320,6 +321,7 @@ void Game::spriteUV(int layer, float uv[4]) const {
 }
 
 void Game::loadStage(const std::string& id, StageArrival arrival) {
+    const std::string fromStage = st.id;   // the floor being left: arriving by stairs lands on the stair back to it
     mapFx_.clear();   // a door opening on the floor being left
     cancelWalk();   // a click-to-move route belongs to the old floor
     curStage = id;
@@ -402,6 +404,23 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
         themeActIndex_ = 1;
         chapterCardMs_ = 0.0f;
     }
+    // Q7 / 05_FLOOR_LINKS: every stair as a list with its tile and lock. A floor's own `stairs` list wins over the
+    // chain; st.up / st.down stay the first stair up / down.
+    if (floor && floor->hasStairs) {
+        st.stairs = floor->stairs;
+        st.up.clear();
+        st.down.clear();
+        for (const toms::StairLink& s : st.stairs) {
+            std::string& first = s.up ? st.up : st.down;
+            if (first.empty()) first = s.to;
+        }
+    } else {
+        st.stairs = toms::defaultStairLinks(st.up, st.down);
+    }
+    toms::placeStairLinks(st.stairs, st.tiles, st.legend);
+    for (auto& e : st.entities)   // a "stairs_up:F96" tile is a plain stair tile now
+        for (const char* k : {"stairs_up", "stairs_down"})
+            if (e.kind.rfind(std::string(k) + ":", 0) == 0) e.kind = k;
     // Milestone 7: parseStage() rebuilds every entity fresh from JSON on every call (stairs,
     // Stage Select, etc.), so re-apply any previously-persisted Defeated/Collected status here --
     // otherwise a monster the player already beat or an item they already picked up would come
@@ -507,14 +526,15 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     const char* wantKind = (arrival == StageArrival::FromBelow) ? "stairs_down"
                          : (arrival == StageArrival::FromAbove) ? "stairs_up" : nullptr;
     bool placed = false;
-    if (wantKind) {
+    if (arrival != StageArrival::Fresh) {   // the stair that leads back to the floor just left (05 section 3.3)
+        const int i = toms::arrivalStair(st.stairs, fromStage, arrival == StageArrival::FromBelow);
+        if (i >= 0) { pl.x = st.stairs[i].x; pl.y = st.stairs[i].y; placed = true; }
+    }
+    if (!placed && wantKind) {
         for (auto& e : st.entities)
             if (e.kind == wantKind) { pl.x = e.x; pl.y = e.y; placed = true; break; }
     }
-    if (!placed) {
-        for (auto& e : st.entities)
-            if (e.raw == "@") { pl.x = e.x; pl.y = e.y; placed = true; break; }
-    }
+    if (!placed && st.startX >= 0) { pl.x = st.startX; pl.y = st.startY; placed = true; }   // '@' (parseStage)
     if (!placed) {
         for (auto& e : st.entities)
             if (e.kind == "stairs_down" || e.kind == "stairs_up") { pl.x = e.x; pl.y = e.y; break; }

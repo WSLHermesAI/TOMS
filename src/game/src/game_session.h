@@ -46,6 +46,7 @@ struct SessionOptions {
     std::string spritePath = "auto";   // auto | compute | instancing | cpu (--sprite-path, bgfx_renderer.h)
     bool showFps = false;              // the F3 HUD from the start (--fps)
     int fxGpuThreshold = -1;           // --fx-gpu-threshold (-1: GameSettings::particleGpuThreshold)
+    bool defaultBattleTuning = false;  // --battle-tuning=default: ignore data/battle.json (tests)
     std::string previewFx;             // "<file>#<effect>": play this particle effect over the screen (--fx)
     bool        enableDebugUi = true;  // ImGui windows (F1 / F2 / Tab stage select / toasts)
     // Mobile: grow the UI objects, keep the 1024x768 game resolution (Game::setUiScale,

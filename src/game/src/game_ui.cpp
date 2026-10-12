@@ -23,7 +23,7 @@ const DocSpec kDocs[] = {
     {"stage_select.rml", [](const toms::UiState& s) { return s.stage_select.visible; }},
     {"player.rml",       [](const toms::UiState& s) { return s.player.visible; }},
     {"saveload.rml",     [](const toms::UiState& s) { return s.saveload.visible; }},
-    {"dialogs.rml",      [](const toms::UiState& s) { return s.stairs.visible || s.store.unlocked_dialog; }},
+    {"dialogs.rml",      [](const toms::UiState& s) { return s.stairs.visible || s.store.unlocked_dialog || s.notice.visible; }},
     {"title.rml",        [](const toms::UiState& s) { return s.title.visible; }},
     {"ending.rml",       [](const toms::UiState& s) { return s.ending.visible; }},
     {"overlay.rml",      [](const toms::UiState&)   { return true; }},
@@ -285,6 +285,12 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("no_label", &UiMenu::no_label);
         s.RegisterMember("confirm_yes", &UiMenu::confirm_yes);
     }
+    if (auto s = c.RegisterStruct<UiNotice>()) {
+        s.RegisterMember("visible", &UiNotice::visible);
+        s.RegisterMember("title", &UiNotice::title);
+        s.RegisterMember("body", &UiNotice::body);
+        s.RegisterMember("ok", &UiNotice::ok);
+    }
     if (auto s = c.RegisterStruct<UiStairs>()) {
         s.RegisterMember("visible", &UiStairs::visible);
         s.RegisterMember("question", &UiStairs::question);
@@ -335,6 +341,7 @@ bool GameUi::init(Rml::Context* ctx, Game* game, const std::string& uiDir, std::
     c.Bind("store", &state_.store);
     c.Bind("menu", &state_.menu);
     c.Bind("stairs", &state_.stairs);
+    c.Bind("notice", &state_.notice);
     c.Bind("stage_select", &state_.stage_select);
     c.Bind("ending", &state_.ending);
     c.Bind("overlay", &state_.overlay);
@@ -422,6 +429,7 @@ void GameUi::sync() {
     take(state_.saveload, next.saveload);
     take(state_.menu, next.menu);
     take(state_.stairs, next.stairs);
+    take(state_.notice, next.notice);
     take(state_.stage_select, next.stage_select);
     take(state_.ending, next.ending);
     if (next.store.visible || next.store.unlocked_dialog) state_.store = std::move(next.store);

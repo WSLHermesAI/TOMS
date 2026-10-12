@@ -227,3 +227,94 @@ renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
   - **刻意變更之後：** `TOMS_UPDATE_GOLDEN=1 ctest ... -L gltf`，然後看過那些
     圖片。
 - **修改測試模型：** 編輯 `make_test_models.py`，執行它，然後更新參考圖。
+
+## 6. 群體：用動畫貼圖做 instanced skinning
+
+同一個動畫模型的很多份（怪物、士兵、村民）**每個 primitive 只畫一次**，每一份都有自己的動作片段和時間，還能**在兩個片段之間
+混合或交叉淡入淡出**。動畫只烘焙一次，存進一張模型所有副本共用的貼圖，CPU 不用為每一份計算姿勢。
+
+| | `Pose` + `draw()` | 群體：`drawCrowd()` |
+|---|---|---|
+| 每份每幀的 CPU 工作 | 取樣每個 channel、世界矩陣和關節矩陣 | 一筆 80 位元組的紀錄（位置、哪些片段、時間） |
+| 每份每幀上傳 | 最多 128 個關節矩陣（8 KB） | 80 位元組 |
+| Draw call | 每份每個 primitive 一次 | 所有副本每個 primitive 一次 |
+| 動畫 | 精確，任意多個動畫混合，morph target | 以 `fps`（預設 30）烘焙，幀之間 nlerp；一個片段，或兩個混合 |
+| 適合 | 主角、首領、臉部 | 其他所有角色 |
+
+**程式碼**
+
+| 部分 | 檔案 |
+|---|---|
+| 烘焙、片段表、存檔／讀檔、每份的動畫狀態（`Crowd`） | `src/core/engine/gltf_anim_texture.h/.cpp`（只用 CPU；有單元測試） |
+| 上傳、instanced 繪製 | `GltfRenderer::uploadAnimTexture`、`drawCrowd`、`crowdsSupported` |
+| 頂點著色器 | `src/engine/shaders/vs_mesh_animtex.sc`（+ `fs_mesh.sc`、`fs_shadow.sc`：`ShaderProgram::MeshAnimTex`、`MeshShadowAnimTex`） |
+| 檢視器 | `gltf_viewer --crowd=<n>` 和面板的 *Crowd* 區 |
+
+```cpp
+// 每個模型一次
+auto anim = std::make_shared<gltf::AnimTexture>();
+gltf::bakeAnimTexture(model, /*skin*/ 0, /*fps*/ 30.0f, *anim);       // 24 個關節、3 個片段約 1 毫秒
+auto animGpu = renderer.uploadAnimTexture(anim);                     // 這個模型的所有群體共用
+
+gltf::Crowd crowd(anim);
+int i = crowd.add(placement, anim->clipIndex("Walk"));
+crowd.crossFade(i, anim->clipIndex("Run"), 0.4f);                     // 0.4 秒淡入淡出，之後只播 Run
+crowd.setBlend(j, walk, run, 0.3f);                                   // 維持 70% 走 + 30% 跑
+crowd.play(k, anim->clipIndex("Survey"), /*loop*/ false);
+
+// 每幀
+crowd.update(dt);
+renderer.drawCrowd(*gpu, *animGpu, crowd);                            // 在 begin() 和這一幀結束之間
+```
+
+**貼圖。** RGBA32F；**每個烘焙的幀一列**，所有片段的幀依序疊放；**每個關節 2 個 texel**：
+
+| Texel | 內容 |
+|---|---|
+| `2j` | 關節的旋轉，四元數（x, y, z, w） |
+| `2j + 1` | 平移（x, y, z）和等比縮放（w） |
+
+內容是 `world(joint) × inverseBind`，和 `Pose::jointMatrices` 給的完全相同。片段的第 `f` 幀是 `min(f / fps, duration)`
+時的姿勢，所以片段有 `ceil(duration × fps) + 1` 列，最後一列是結束姿勢。大小：關節 × 2 × 列 × 16 位元組，例如 Fox（24 個關節、
+3 個片段、163 列）是 122 KB；128 個關節、30 fps 共 10 秒的片段約 1.2 MB。列數受 GPU 限制（WebGL2 保證 2048–4096：30 fps
+約 1–2 分鐘的片段）；超過限制的貼圖會被拒絕並顯示訊息（降低 fps 再烘焙）。
+
+**為什麼存旋轉 + 平移，而不是矩陣。** 兩個片段在每個關節上混合：旋轉用 nlerp（對齊正負號，走短的那一邊），平移和縮放線性混合。
+兩個關節矩陣直接平均時，姿勢差很多（手臂向前對向後）會讓肢體縮短或變扁；四元數不會。每個關節也只要 2 個 texel 而不是 3 個。
+這個格式的限制：
+- **非等比的關節縮放** 會被平均：`AnimTexture::maxScaleError` 回報差多少（一般骨架為 0）。
+- **鏡像關節**（負縮放）無法儲存：`mirroredJoints` 會標示。
+
+**每一份**（bgfx instance data，80 位元組，`CrowdGpuInstance`）：
+
+| | 內容 |
+|---|---|
+| `i_data0..2` | 擺放矩陣的前三列（第四列是 0, 0, 0, 1） |
+| `i_data3` | 片段 A：這一幀的列、下一幀的列、兩者之間的比例 |
+| `i_data4` | 片段 B：同上，`w` 是 B 的權重（0：完全不讀 B） |
+
+幀的列和比例在 CPU 上算好（`gltf::framePair`：循環的會繞回，只播一次的停在最後一幀），著色器不處理時間。
+
+**著色器。** 對頂點的四個關節（權重 0 的跳過）讀片段 A 的兩幀（4 個 texel），只有在混合時才讀片段 B 的兩幀（再 4 個）；
+nlerp；組出關節矩陣；接著線性混合蒙皮，光照和其他網格相同。陰影使用同一個頂點著色器，所以也會動。
+
+**群體不畫的東西：** 其他 skin 的或沒有蒙皮的 primitive（用 `Pose` 畫）；morph target（不烘焙）。一張貼圖一個 skin：
+有多個 skin 的模型每個 skin 要一張貼圖。
+
+**存檔／讀檔**（`saveAnimTexture` / `loadAnimTexture`，`.animtex`）。檔案存有 magic 和版本、關節和列數、fps、片段表和原始的
+浮點數。也存有 `modelHash()`，涵蓋 skin（關節名稱、inverse bind 矩陣）和動畫（名稱、長度、channel 數）：用烘焙後已改變的
+模型讀取會以 *stale* 失敗。烘焙只要幾毫秒，所以載入時直接烘焙也可以。
+
+**和舊引擎的 `cAnimTexture`（FM79979 `AnimationTexture.cpp`）比較：** 概念相同（烘焙、每個 instance 的幀、在著色器中混合
+兩幀），差別如下：
+- 所有片段共用一張貼圖，一次繪製可以混用不同片段和時間；
+- 可以混合兩個片段；
+- 用 instance data 而不是 uniform 陣列，所以沒有 instance 數量上限；
+- 第 0 幀就是 t = 0（舊的烘焙晚了一步）；
+- 檔案記錄它是從什麼烘焙的，所以能發現過期的快取。
+
+**驗證：**
+- 群體中的一份和用 `Pose` 畫同一片段的結果逐像素相同（`smoke.gltf_crowd_one` 使用 `gltf_skin` 的參考圖）；
+- Fox 群體在 D3D11、D3D12、Vulkan 和 OpenGL 之間一致；
+- `gltf_anim_texture_test` 把烘焙結果和 `Pose::jointMatrices` 比對（在幀的時間點完全相同，幀之間差距在 0.01 以內），並檢查混合、
+  群體狀態和存檔／讀檔。

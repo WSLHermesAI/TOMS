@@ -16,3 +16,8 @@ body { z-index: 50; }
 #unlock { left: 302px; top: 294px; width: 420px; height: 180px; }
 #unlock .question { color: #fff3ba; }
 #unlock-ok { position: absolute; right: 24px; bottom: 20px; width: 120px; }
+
+#notice-dim { background-color: #00000080; }
+#notice { left: 282px; top: 284px; width: 460px; height: 200px; }
+#notice .question { color: #fff3ba; }
+#notice-ok { position: absolute; right: 24px; bottom: 20px; width: 140px; }
