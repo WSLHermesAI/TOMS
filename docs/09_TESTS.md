@@ -81,7 +81,7 @@ event a floor lists has a pool record with English text. Two scenes show locked 
 section 3.2): `stairs_locked` walks to F01's stair, locked by `--stair-lock=F01:ev_village_well` (the padlock and the
 hint), and `stairs_unlock` finishes the event with `--events-done=` (the "Stairs unlocked" dialog).
 `unit.stair_links_test` checks the stair list itself, and `unit.floor_index_test` that `assets/data/events/floor_index.json`
-still matches the floors (when it fails: `python tools/make_event_index.py`).
+still matches the floors (when it fails: open the project folder in the stage or event editor, which rebuilds it).
 They run on Direct3D 11, and the map scene also runs on Direct3D 12, Vulkan and OpenGL. The scene list is in
 `tests/CMakeLists.txt`, one line per test.
 

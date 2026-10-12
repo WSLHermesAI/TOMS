@@ -130,26 +130,14 @@ the changes before writing. ◇ **Safe cells** shows the same cells at any time.
   Generated floors have no `@`.
 - **Files are written as the game's tools write them:** 2-space JSON, the same key order, and the file's
   own line endings (the boss stages use CRLF). Opening a floor and saving with no edits writes nothing.
-- **Generated grids and hand edits (Q6, built 2026-10-12):** `F??.stage.json` and the floor specs are
-  produced by the floor generator, `tools/gen_floors.py` (then its stairs pass, `tools/gen_stairs.py`;
-  both restored from history, with the maze helpers in `tools/maze_lib.py`). The generator no longer
-  writes over a person's work silently. It builds the floors in a staging copy, and
-  `tools/floor_guard.py` compares that with the real files. `tools/floor_gen_manifest.json` holds the
-  hash of every file as the generator last wrote it. A file that no longer matches (saved from this
-  editor, or edited by hand) and that the run would change is a hand edit, and a dialog names the
-  floors: *"Floors 4, 5, 6, 55 were changed by hand. The generator will place its own data there."*
-  - **Yes** replaces them.
-  - **No** keeps them and skips those floors. Their stairs may then not line up with the floor next to
-    them.
-  - **Cancel** writes nothing.
-
-  Without a display, the question is asked on the console; with no console it means Cancel.
-  `--yes`, `--keep-edits` and `--dry-run` answer it up front. Files are compared as JSON, and a
-  replaced file keeps its own line endings.
-
-  On 2026-10-12, a dry run named F22–F28 (chapter 4's enemy mix changed after the generator ran) and
-  the boss stages of F07, F14, F21, F35, F49, F56, F63 and F70. The other 50 floors match the
-  generator's output exactly and are recorded in the manifest.
+- **Floors are edited by hand now (2026-10-12).** The 70 `F??.stage.json` grids and their specs were first produced
+  by a floor generator. For the owner's Q6 answer it was restored, with a dialog listing hand-edited floors before it
+  replaced them. **Then the owner chose to edit floors only in this editor, so the generator was removed again**
+  (`tools/gen_floors.py`, `gen_stairs.py`, `maze_lib.py`, `floor_guard.py`; they stay in git history). Nothing
+  rewrites the floors behind your back any more. To build many floors automatically later, restore them from git.
+- **The event index follows every save.** When this editor opens the project folder, and after each Save into it, it
+  rebuilds `assets/data/events/floor_index.json` (`tools/web_editors/floor_index.js`; the event editor does the same).
+  The index is written only when it changed.
 
 ## 4. Found while building it
 

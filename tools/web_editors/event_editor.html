@@ -340,6 +340,7 @@
 
 <script src="data.js"></script>
 <script src="tutorial_data.js"></script>
+<script src="floor_index.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -544,7 +545,7 @@ const I18N = {
     bannerLive: 'PROJECT FOLDER · editing assets/data', bannerLiveB: 'Save writes the changed files; a backup of each goes to Build/editor_backups',
     writeLiveN: n => `Write to project (${n} file${n > 1 ? 's' : ''})`, saveNoteLive: 'Writes into assets/data. Each file is backed up to Build/editor_backups first.',
     saveNoteCopy: 'This is the tutorial copy (tutorial_data.js): nothing is written. Open the project folder (📂) to save into assets/data.',
-    hSavedLive: n => `Wrote ${n} file(s) to assets/data`, toastSavedLive: (n, s) => `Wrote ${n} file(s) to assets/data. Backups: Build/editor_backups/${s}/`,
+    indexUpdated: 'Event index updated (assets/data/events/floor_index.json).', hSavedLive: n => `Wrote ${n} file(s) to assets/data`, toastSavedLive: (n, s) => `Wrote ${n} file(s) to assets/data. Backups: Build/editor_backups/${s}/`,
     nothingWritten: 'The files on disk already match: nothing written.', writeFailed: e => `Could not write: ${e}`,
     selTip: 'Select (Shift+click: a range)', selAllTip: 'Select every value shown', selN: n => `${n} selected`, bulkMoveTo: 'Move to category',
     bulkApply: 'Apply', selClear: 'Clear selection', selNone: 'Select some values first.',
@@ -819,7 +820,7 @@ const I18N = {
     bannerLive: '專案資料夾 · 正在編輯 assets/data', bannerLiveB: '儲存會寫入變更的檔案；每個檔案的備份放在 Build/editor_backups',
     writeLiveN: n => `寫入專案（${n} 個檔案）`, saveNoteLive: '會寫入 assets/data。每個檔案會先備份到 Build/editor_backups。',
     saveNoteCopy: '這是教學副本（tutorial_data.js）：不會寫入任何檔案。開啟專案資料夾（📂）才能存進 assets/data。',
-    hSavedLive: n => `已寫入 ${n} 個檔案到 assets/data`, toastSavedLive: (n, s) => `已寫入 ${n} 個檔案到 assets/data。備份：Build/editor_backups/${s}/`,
+    indexUpdated: '已更新事件索引（assets/data/events/floor_index.json）。', hSavedLive: n => `已寫入 ${n} 個檔案到 assets/data`, toastSavedLive: (n, s) => `已寫入 ${n} 個檔案到 assets/data。備份：Build/editor_backups/${s}/`,
     nothingWritten: '磁碟上的檔案已經一致：沒有寫入任何東西。', writeFailed: e => `無法寫入：${e}`,
     selTip: '選取（Shift+點擊：選取一段範圍）', selAllTip: '選取所有顯示的數值', selN: n => `已選 ${n} 個`, bulkMoveTo: '移到分類',
     bulkApply: '套用', selClear: '取消選取', selNone: '請先選取數值。',
@@ -2555,6 +2556,7 @@ async function useDir(dir, fromOther) {
   if (playing >= 0) stopReq = true;
   LIVE = { dir }; document.body.classList.add('live'); setTutorial(false);
   reset(); showSource(); toast(t('loadedLiveEv', live.events.length, live.floors.length));
+  syncFloorIndex(dir).then(w => { if (w) toast(t('indexUpdated')); }).catch(e => toast(String(e)));   // the per-floor event index (floor_index.js)
   if (!fromOther && inShell) window.parent.postMessage({ toms: 'dir', handle: dir }, '*');   // the stage editor opens it too
 }
 function showSource() {
@@ -2664,6 +2666,7 @@ async function writeLive() {
     $('modalBg').style.display = 'none'; $('mWrite').classList.remove('flash');
     $('hist').insertAdjacentHTML('beforeend', `<li style="color:var(--ok)">${t('hSavedLive', files.length)}</li>`);
     toast(files.length ? t('toastSavedLive', files.length, stamp) : t('nothingWritten')); renderAll();
+    if (files.length && await syncFloorIndex(LIVE.dir)) setTimeout(() => toast(t('indexUpdated')), 2500);   // floor_index.js
     window.__lastWrite = files.map(f => f.path);   // for tests
     if (inShell && files.length) window.parent.postMessage({ toms: 'filesChanged', paths: files.map(f => f.path) }, '*');
   } catch (e) { toast(t('writeFailed', String(e))); }

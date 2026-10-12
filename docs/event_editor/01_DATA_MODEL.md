@@ -114,5 +114,6 @@ are asked for.
 
 **The per-floor event index** (`assets/data/events/floor_index.json`, Q10): one generated file lists, for each
 floor, the events it lists or places (id, kind, English title, pool, tiles), its chapter beats and its stair locks,
-and maps every event back to its floors. `python tools/make_event_index.py` writes it, and `tools/gen_floors.py`
-runs it after writing floors. `unit.floor_index_test` fails when it no longer matches the floors.
+and maps every event back to its floors. The HTML editors write it (`tools/web_editors/floor_index.js`): when the
+stage or event editor opens the project folder, and after every Save into it. `unit.floor_index_test` fails when it
+no longer matches the floors (after a hand edit of the JSON: open the folder in an editor).

@@ -307,3 +307,7 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
 - **2026-10-12** — **Testing by area.** `test_select.py` rewritten: game / glTF / particles / anims / atlas / engine core /
   renderer / web each run only their own tests (a game change runs no glTF test and the reverse); `tests/CMakeLists.txt`
   runs only the tests on its changed lines; unmapped files run nothing and are listed. Docs 09 (+ zh), CLAUDE.md.
+- **2026-10-12** — **Generator removed; the index moved into the editors.** The owner edits floors only in the web stage
+  editor, so `gen_floors.py`, `gen_stairs.py`, `maze_lib.py`, `floor_guard.py`, the manifest and `make_event_index.py`
+  are deleted (git history keeps them). `tools/web_editors/floor_index.js` builds the same index (byte-identical output,
+  checked with Node) and both editors write it on opening the project folder and after each Save. W33 closed.

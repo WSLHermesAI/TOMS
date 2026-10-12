@@ -84,7 +84,7 @@ Smoke 場景有標題、地圖（HUD + 方向盤）、玩家選單的五個分�
 並確認每層列出的每個事件都有事件池紀錄與英文文字。兩個場景顯示上鎖的樓梯（[05](event_editor/05_FLOOR_LINKS.md) 第 3.2 節）：
 `stairs_locked` 走到被 `--stair-lock=F01:ev_village_well` 鎖住的 F01 樓梯（鎖頭與提示），`stairs_unlock` 以 `--events-done=`
 完成該事件（「Stairs unlocked」對話框）。`unit.stair_links_test` 檢查樓梯清單本身，`unit.floor_index_test` 檢查
-`assets/data/events/floor_index.json` 仍與樓層相符（失敗時執行 `python tools/make_event_index.py`）。
+`assets/data/events/floor_index.json` 仍與樓層相符（失敗時：用關卡或事件編輯器開啟專案資料夾，它會重建索引）。
 它們在 Direct3D 11 上執行，地圖場景也在 Direct3D 12、Vulkan 和 OpenGL 上執行。場景清單在
 `tests/CMakeLists.txt`，每個測試一行。
 

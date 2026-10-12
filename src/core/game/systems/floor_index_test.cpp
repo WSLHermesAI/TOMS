@@ -1,7 +1,8 @@
-// Tests that data/events/floor_index.json (tools/make_event_index.py; the owner's Q10 answer) still matches the
+// Tests that data/events/floor_index.json (written by the HTML editors, tools/web_editors/floor_index.js; the owner's
+// Q10 answer) still matches the
 // floors: every event a spec lists and every event tile its grid places is in the floor's entry, at the same tiles,
 // and the reverse map names the floor. Run in assets/ (tests/CMakeLists.txt). When it fails after editing floors,
-// pools or chapters: python tools/make_event_index.py
+// pools or chapters by hand: open the project folder in the stage or event editor (it rebuilds the index)
 #include "floor_table.h"
 #include "vfs.h"
 
@@ -29,7 +30,7 @@ static nlohmann::json readJson(const std::string& path) {
 int main() {
     const nlohmann::json index = readJson("data/events/floor_index.json");
     CHECK(index.is_object() && index.contains("floors") && index.contains("events"),
-          "data/events/floor_index.json exists (python tools/make_event_index.py)");
+          "data/events/floor_index.json exists (open the project folder in an HTML editor to rebuild it)");
     if (!index.is_object() || !index.contains("floors")) { std::printf("floor_index_test: %d checks, %d failed\n", g_checks, g_failed); return 1; }
     const nlohmann::json& floors = index["floors"];
     const nlohmann::json& byEvent = index["events"];

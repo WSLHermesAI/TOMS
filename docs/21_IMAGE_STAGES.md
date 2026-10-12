@@ -112,8 +112,7 @@ The `tiles` and `legend` keys are replaced by one key:
 |---|---|
 | `tools/stage_image.py` (new) | Converts both ways: `F01.stage.json` (tiles + legend) ↔ `F01.png` + the id table. It adds missing ids to the table, and checks that a round trip gives the same cells |
 | Stage editor ([19](19_STAGE_EDITOR.md)) | Reads and writes the PNG (the browser's canvas `getImageData` / `toBlob`). The palette shows names from the id table, never raw numbers |
-| Floor generator (`tools/gen_floors.py`) | Writes PNGs. The hand-edit check (Q6, `tools/floor_guard.py`) compares pixels as it compares JSON today |
-| Event index (`tools/make_event_index.py`) | Reads event pixels, so the per-floor index stays correct |
+| Event index (`tools/web_editors/floor_index.js`) | Reads event pixels, so the per-floor index stays correct |
 | Viewer | A debug colouring for people: each category gets a readable colour, with the id in a tooltip, because the stored colours are ids, not art |
 
 ## 5. Plan
@@ -121,7 +120,7 @@ The `tiles` and `legend` keys are replaced by one key:
 | Phase | Work | Done when |
 |---|---|---|
 | 1 | The id table; `stage_image.py`; the PNG path in `parseStage`; a unit test that loads every floor from both its JSON and its PNG and compares the `Stage` cell by cell | All 70 floors load identically from either format |
-| 2 | The stage editor, the generator, the event index and the event editor read and write PNGs | One floor edited end to end in the PNG format |
+| 2 | The stage editor, the event index and the event editor read and write PNGs | One floor edited end to end in the PNG format |
 | 3 | Switch the shipped floors to PNG, and drop `tiles` / `legend` from the files. Later, integer cells in `Stage` | The character grids are gone |
 
 ## 6. Open questions for the owner

@@ -58,7 +58,6 @@ GLTF = any_of(named('unit.gltf_*'), is_gltf)
 PARTICLES = named('unit.particle_fx_test', 'particle.*', 'smoke.fx*')
 ANIMS = named('unit.anim_clip_test', 'anim.*', 'smoke.anim')
 ATLAS = named('atlas.*', 'unit.atlas_sprites_test')
-FLOOR_DATA = named('unit.floor_index_test', 'unit.floor_table_test', 'unit.stair_links_test', 'unit.player_menu_test')
 
 # The game's screenshots narrowed by the changed file's name; a game file matching none runs every game screenshot.
 GAME_SMOKE_BY_NAME = [
@@ -78,6 +77,7 @@ RULES = [
     (['docs/examples/anim_*'], named('anim.check_recipes'), 'anim recipes'),
     (['tests/smoke/anim_preview.anim'], named('anim.check_preview'), 'the anim preview'),
     (['tools/test_select.py', 'tools/test.cmd'], None, 'the test runner itself'),
+    (['tools/web_editors/floor_index.js'], named('unit.floor_index_test'), 'the event index the HTML editors write'),
     # nothing
     (['docs/*', '*.md', 'tools/web_editors/*', 'android/*', '.claude/*', '.gitignore', '.gitattributes', 'AIGamestyle*',
       'tools/make_ui_font.py'],
@@ -109,9 +109,6 @@ RULES = [
       'src/engine/shaders/varying.def.sc', 'src/engine/shaders/*.sh'],
      any_of(is_smoke, named('unit.gltf_*')), 'the shared renderer: every screenshot, every backend'),
     (['src/engine/*'], is_game_smoke, 'the 2D / UI renderer: the game screenshots, every backend'),
-    # floor and event data tools
-    (['tools/gen_floors.py', 'tools/gen_stairs.py', 'tools/maze_lib.py', 'tools/floor_guard.py',
-      'tools/make_event_index.py', 'tools/floor_gen_manifest.json'], FLOOR_DATA, 'floor / event data tools'),
     # engine core, then the game
     (['src/core/engine/*'], 'ENGINE', 'engine core: the engine unit tests + the game'),
     (['src/core/game/*', 'src/game/*', 'assets/*', 'src/core/CMakeLists.txt'], 'GAME',

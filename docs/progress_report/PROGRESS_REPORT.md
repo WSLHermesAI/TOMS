@@ -17,10 +17,9 @@
 
 **The owner's answers built: Q6, Q10 (a), English, locked stairs, the event index, the image-map design**
 (2026-10-12, not committed; [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) §22):
-- **Q6, the generator no longer overwrites your floors silently.** `tools/gen_floors.py` (with `gen_stairs.py`, restored
-  from history) builds in a staging copy; `tools/floor_guard.py` compares with the real files and pops up *"Floors 22, 23,
-  … were changed by hand. The generator will place its own data there."* — Yes / No (keep them) / Cancel. Today a dry
-  run names F22–F28 and eight boss stages; the other 50 floors match the generator ([../19_STAGE_EDITOR.md](../19_STAGE_EDITOR.md) §3).
+- **Q6, then the generator removed.** First built: the floor generator, restored, asked before replacing hand-edited
+  floors. Then the owner chose to edit floors only in the web stage editor, so the generator and its guard were removed
+  again (they stay in git history). Nothing rewrites the floors any more ([../19_STAGE_EDITOR.md](../19_STAGE_EDITOR.md) §3).
 - **Q10 (a), every `_v2`…`_v5` id is its own event:** 92 new events (the chapter 4–10 pools `pool_act04`…`pool_act10`,
   28 more in `pool_common`) with their own English title, description and text. No floor names an undefined id any
   more (W22 closed).
@@ -34,8 +33,9 @@
   - the unlocking event's description names the stairs.
 
   No shipped floor has a lock yet: the tests lock F01 with `--stair-lock=`.
-- **Q10, the per-floor event index:** `assets/data/events/floor_index.json` (`tools/make_event_index.py`). For each
-  floor it lists the events (kind, title, tiles), the beats and the stair locks, plus event → floors.
+- **Q10, the per-floor event index:** `assets/data/events/floor_index.json`. For each floor it lists the events (kind,
+  title, tiles), the beats and the stair locks, plus event → floors. The HTML editors rebuild it when they open the
+  project folder and after every Save (`tools/web_editors/floor_index.js`); no Python step.
 - **Q9, the design for stage maps as images** (one integer id per pixel, a shared id table): [../21_IMAGE_STAGES.md](../21_IMAGE_STAGES.md),
   with three questions for the owner (§6).
 - **Fixed on the way:** a new game now starts on F01's `@`, not on its stair. The ● / ◆ row icons of the event log were
@@ -229,7 +229,7 @@ the Visual Studio IDE (W1).
 | W26 | **Upgrading gear** (player menu, later) | the owner chose change-only for now (Q15, 2026-10-10); upgrading (+1, +2… for gold or materials) is a later feature | design the steps and costs, add them to `items.json`, add an Upgrade button to the Equipment tab ([20](../20_PLAYER_MENU.md) §4) |
 | ~~W22~~ | ~~**Event data gaps**~~ | closed 2026-10-12 (Q10 a): the 92 ids are real events with their own English text (`pool_act04`…`pool_act10`, `pool_common`); 4 orphan events remain (defined, placed nowhere) | — |
 | W32 | **The 92 new events' text is a first draft** | written in English from each id's theme (and the Chinese line where one existed); effects still come from the id's words (trap, cache, relic, shard) | read them in the event editor (project folder) and rewrite what does not fit; add `next` / `requires` where the story links them |
-| W33 | **The generator re-rolls every floor's events** | with the new pools, a run of `tools/gen_floors.py` would change 138 files (F22–F28 and eight boss stages count as hand-edited and are asked about; the rest would be replaced) | run it only on purpose; `--dry-run` first; keep `--keep-edits` for hand-made floors |
+| ~~W33~~ | ~~The generator re-rolls every floor's events~~ | closed 2026-10-12: the generator was removed; floors are edited by hand in the stage editor | — |
 | W34 | **Locks are not in any floor yet** | the runtime is built and tested on F01 with `--stair-lock=`; no floor spec has a `stairs` list with `unlock`, and the generator does not place extra stair tiles ([05](../event_editor/05_FLOOR_LINKS.md) §5) | choose the floors and events (event editor, floor inspector), place the stair tiles (stage editor), or teach the generator |
 | W35 | **Docs in two languages, new ones** | `21_IMAGE_STAGES.md` has its `zh_TW` copy; the event-editor UI's own Chinese strings were kept | as W25 |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
@@ -259,7 +259,7 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily report: [DAILY_2026
 | Q2 | ~~Keep the folder name `toms_next`?~~ Answered 2026-09-27: no folder, the project is the root | — |
 | Q3 | Is browser **WebGPU** definitely not needed? (bgfx only does WebGL2 in the browser) | WebGL2 only, as decided 2026-09-25 |
 | Q4 | ~~Game UI library for phase 3?~~ Answered 2026-09-27: RmlUi, every screen, desktop and web ([08](../08_RMLUI.md)) | — |
-| Q6 | ~~A generated floor edited by hand~~ Answered and built 2026-10-12: when a run of the generator would change floors a person edited, **a dialog lists them** ("Floors 4, 5, 6, 55 ... will be placed by the generator") with Yes / No (keep them) / Cancel (`tools/floor_guard.py`, [19](../19_STAGE_EDITOR.md) §3) | — |
+| Q6 | ~~A generated floor edited by hand~~ Answered 2026-10-12: first a dialog before the generator replaced hand-edited floors; then the owner chose to **edit floors only in the stage editor**, and the generator was removed ([19](../19_STAGE_EDITOR.md) §3) | — |
 | Q7 | ~~Locked stairs: invisible or visible?~~ Answered 2026-10-12: **visible, with a lock icon**. When the unlocking event finishes, a **dialog says which floor's stairs are now open**, and the event's description says it too; a **follow-up event "go to F<n>'s stairs"** is started so the player is led there (and finished on reaching them). **Built 2026-10-12** ([05](../event_editor/05_FLOOR_LINKS.md) §3.2, §5); no shipped floor has a lock yet (W34) | — |
 | Q8 | Do finished events reset on rebirth (`run` or `meta` scope)? Can a stair wait for several events or a flag? *2026-10-12: the owner will decide later* | reset on rebirth; one event per lock |
 | Q9 | ~~The `@` player start~~ Replaced 2026-10-12 by the owner's proposal: **stage maps as a 2D image** instead of characters -- each pixel an integer id (tile, monster, item, event, start, stairs ...), so there are far more ids than characters; a parser reads the pixels into the stage. **Design written 2026-10-12: [21_IMAGE_STAGES.md](../21_IMAGE_STAGES.md)**; three questions there (§6): packed RGB ids or a palette PNG; one id per event; convert all floors at once | keep the character maps until the owner confirms the design |

@@ -112,5 +112,5 @@ floor ──can roll──▶ event
 
 **每層的事件索引**（`assets/data/events/floor_index.json`，Q10）：一個產生出來的檔案，列出每層列出或放置的事件
 （id、類型、英文標題、事件池、格子）、該章在此層的劇情節點，以及樓梯鎖，並把每個事件對應回它所在的樓層。
-由 `python tools/make_event_index.py` 寫出，`tools/gen_floors.py` 寫完樓層後也會執行它。索引與樓層不符時，
-`unit.floor_index_test` 會失敗。
+由 HTML 編輯器寫出（`tools/web_editors/floor_index.js`）：關卡或事件編輯器開啟專案資料夾時，以及每次存進資料夾後。
+索引與樓層不符時，`unit.floor_index_test` 會失敗（手動改過 JSON 後：用編輯器開啟資料夾即可）。

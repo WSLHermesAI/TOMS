@@ -2,7 +2,7 @@
 
 **Status:** design and editor mockup ([tools/web_editors/event_editor.html](../../tools/web_editors/event_editor.html), part 4).
 **The game reads it since 2026-10-12** (section 5), with the owner's Q7 answer: a locked stair is visible, with a
-padlock (section 3.2). The generator does not place extra stairs yet.
+padlock (section 3.2). The stage editor cannot place extra stair tiles yet.
 
 ## 1. What changes
 
@@ -97,7 +97,7 @@ In the mockup:
   done*, ✕), **+ Add stair**, *Reached from*, and the events it can roll.
 - **Save** writes the `stairs` list into each edited floor, and new floors as new files.
 
-## 5. Runtime work (built 2026-10-12, except the generator)
+## 5. Runtime work (built 2026-10-12, except placing extra stair tiles)
 
 | Where | Change | State |
 |---|---|---|
@@ -110,7 +110,7 @@ In the mockup:
 | Dialog | `dialogs.rml` `notice.*`: a queued OK popup (Enter / Esc / its button) | done |
 | Event log | The "go to the stairs" event; the unlock line in the unlocking event's description; both are connected events of each other | done |
 | Arrival | Land on the stair that leads back (section 3.3) | done |
-| Stage generator | Place one tile per stair; always place every event a stair waits for | **not yet** (`tools/gen_floors.py` places one `U` and one `D`) |
+| Stage editor | Place one tile per stair (`stairs_up:<to>` legend entries); warn when a floor has no tile for a stair, or a stair waits for an event no reachable floor places | **not yet** (it places one `U` and one `D`; the floor generator was removed, floors are edited by hand) |
 
 Test hooks: `toms_game --stair-lock=F01:ev_village_well` locks F01's first stair up behind that event, and
 `--events-done=ev_village_well` finishes it as the player would. The smoke tests `stairs_locked` (the padlock and

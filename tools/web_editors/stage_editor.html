@@ -208,6 +208,7 @@
 
 <script src="settings.js"></script>
 <script src="stage_bundle.js"></script>
+<script src="floor_index.js"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -243,7 +244,7 @@ const I18N = {
     saveTitle: 'Save changes', saveSub: n => `· ${n} file(s) change`, nothingToSave: 'Nothing to save.', cancel: 'Cancel', download: 'Download files', writeDisk: 'Write to project',
     saveNoteLive: 'Writes into the opened project folder. Each file is backed up to Build/editor_backups first.', saveNoteBundle: 'No project folder is open: Download saves one changed file as itself, or several as one zip that keeps their assets/data/... paths. Extract the zip in the TOMS folder (replace the files).',
     savedN: n => `Saved ${n} file(s) to the project folder.`, downloadedN: n => `Downloaded ${n} file(s).`, manyFiles: n => `${n} files changed (too many to show each change). Download them as one zip, or write them into the project folder:`, downloadedZip: n => `Downloaded one zip with ${n} files. Extract it in the TOMS folder: the files go into assets/data.`,
-    loadedLive: n => `Loaded ${n} floors from the project folder.`, savedBackupN: (n, s) => `Saved ${n} file(s) to the project folder. Backups: Build/editor_backups/${s}/`,
+    loadedLive: n => `Loaded ${n} floors from the project folder.`, indexUpdated: 'Event index updated (assets/data/events/floor_index.json).', savedBackupN: (n, s) => `Saved ${n} file(s) to the project folder. Backups: Build/editor_backups/${s}/`,
     discardForLive: 'Opening the project folder reloads the floors from it. Discard the unsaved changes here?',
     liveSkipped: 'The event editor opened the project folder; this editor has unsaved changes, so it keeps the copy. Use Open project folder to switch.', notProject: 'That folder has no assets/data/story/floors. Pick the TOMS folder.',
     hPaint: (what, n) => `Paint ${what} (${n} cell${n > 1 ? 's' : ''})`, hErase: n => `Erase ${n} cell(s)`, hMove: (what) => `Move ${what}`, hListAdd: id => `Add ${id} to the floor's events list`,
@@ -302,7 +303,7 @@ const I18N = {
     saveTitle: '儲存變更', saveSub: n => `· 有 ${n} 個檔案變更`, nothingToSave: '沒有需要儲存的變更。', cancel: '取消', download: '下載檔案', writeDisk: '寫入專案',
     saveNoteLive: '會寫入已開啟的專案資料夾。每個檔案會先備份到 Build/editor_backups。', saveNoteBundle: '尚未開啟專案資料夾：「下載檔案」只有一個檔案時直接下載，多個檔案時下載成一個 zip（保留 assets/data/... 路徑）。請在 TOMS 資料夾中解壓縮（取代原檔）。',
     savedN: n => `已將 ${n} 個檔案存到專案資料夾。`, downloadedN: n => `已下載 ${n} 個檔案。`, manyFiles: n => `有 ${n} 個檔案變更（太多，不逐一顯示變更內容）。請下載成一個 zip，或寫入專案資料夾：`, downloadedZip: n => `已下載一個包含 ${n} 個檔案的 zip。請在 TOMS 資料夾中解壓縮：檔案會放進 assets/data。`,
-    loadedLive: n => `已從專案資料夾載入 ${n} 個樓層。`, savedBackupN: (n, s) => `已將 ${n} 個檔案存到專案資料夾。備份：Build/editor_backups/${s}/`,
+    loadedLive: n => `已從專案資料夾載入 ${n} 個樓層。`, indexUpdated: '已更新事件索引（assets/data/events/floor_index.json）。', savedBackupN: (n, s) => `已將 ${n} 個檔案存到專案資料夾。備份：Build/editor_backups/${s}/`,
     discardForLive: '開啟專案資料夾會從那裡重新載入樓層。要捨棄這裡未儲存的變更嗎？',
     liveSkipped: '事件編輯器開啟了專案資料夾；這個編輯器有未儲存的變更，所以仍使用副本。用「開啟專案資料夾」切換。', notProject: '這個資料夾沒有 assets/data/story/floors。請選 TOMS 資料夾。',
     hPaint: (what, n) => `畫 ${what}（${n} 格）`, hErase: n => `擦除 ${n} 格`, hMove: (what) => `移動 ${what}`, hListAdd: id => `把 ${id} 加入樓層事件清單`,
@@ -989,6 +990,7 @@ async function useDir(dir, fromOther) {
     FLOORS = fresh; Object.keys(DOCS).forEach(k => delete DOCS[k]); dirHandle = dir;
     $('src').textContent = t('srcLive'); $('src').classList.add('live');
     openFloor(FLOORS.some(f => f.id === cur) ? cur : FLOORS[0].id); toast(t('loadedLive', fresh.length));
+    syncFloorIndex(dir).then(w => { if (w) toast(t('indexUpdated')); }).catch(e => toast(String(e)));   // the per-floor event index (floor_index.js)
     if (!fromOther && inShell) window.parent.postMessage({ toms: 'dir', handle: dir }, '*');   // the event editor opens it too
   } catch (e) { toast(String(e)); }
 }
@@ -1043,6 +1045,7 @@ $('mWrite').onclick = async () => {
       if (old != null) { const w = await (await fileIn(dirHandle, `Build/editor_backups/${stamp}/${f.path}`, true)).createWritable(); await w.write(old); await w.close(); } }
     for (const f of files) { const fh = await fileIn(dirHandle, f.path, true), w = await fh.createWritable(); await w.write(f.text); await w.close(); }
     markSaved(files); $('modalBg').style.display = 'none'; toast(t('savedBackupN', files.length, stamp));
+    if (files.length && await syncFloorIndex(dirHandle)) setTimeout(() => toast(t('indexUpdated')), 2500);   // floor_index.js
     if (inShell) window.parent.postMessage({ toms: 'filesChanged', paths: files.map(f => f.path) }, '*');
   } catch (e) { toast(String(e)); } };
 // Download (no project folder open): one changed file downloads as itself; several download as ONE zip that keeps each

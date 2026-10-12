@@ -98,8 +98,7 @@ id = R × 65536 + G × 256 + B        （0 … 16 777 215）
 |---|---|
 | `tools/stage_image.py`（新） | 雙向轉換：`F01.stage.json`（tiles + legend）↔ `F01.png` + id 表。會把缺少的 id 加入表中，並確認來回轉換後每格都相同 |
 | 關卡編輯器（[19](19_STAGE_EDITOR.md)） | 讀寫 PNG（瀏覽器 canvas 的 `getImageData` / `toBlob`）。調色盤顯示 id 表裡的名稱，不顯示原始數字 |
-| 樓層產生器（`tools/gen_floors.py`） | 寫出 PNG。手動編輯檢查（Q6，`tools/floor_guard.py`）改為比對像素，就像現在比對 JSON |
-| 事件索引（`tools/make_event_index.py`） | 讀取事件像素，讓每層的索引保持正確 |
+| 事件索引（`tools/web_editors/floor_index.js`） | 讀取事件像素，讓每層的索引保持正確 |
 | 檢視器 | 給人看的除錯配色：每個類別一種易讀的顏色，滑鼠停留時顯示 id，因為存檔裡的顏色是 id，不是美術 |
 
 ## 5. 計畫
@@ -107,7 +106,7 @@ id = R × 65536 + G × 256 + B        （0 … 16 777 215）
 | 階段 | 工作 | 完成條件 |
 |---|---|---|
 | 1 | id 表；`stage_image.py`；`parseStage` 的 PNG 路徑；單元測試：每層分別從 JSON 與 PNG 載入，逐格比對 `Stage` | 70 層從兩種格式載入結果完全相同 |
-| 2 | 關卡編輯器、產生器、事件索引與事件編輯器都能讀寫 PNG | 有一層完整用 PNG 格式編輯過 |
+| 2 | 關卡編輯器、事件索引與事件編輯器都能讀寫 PNG | 有一層完整用 PNG 格式編輯過 |
 | 3 | 正式樓層改用 PNG，檔案移除 `tiles` / `legend`。之後讓 `Stage` 使用整數格 | 字元地圖完全消失 |
 
 ## 6. 待負責人決定
