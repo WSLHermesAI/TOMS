@@ -18,6 +18,7 @@ change, skip the glTF tests; if the game did not change, skip all game tests"):
   particles       particle_fx, the particle editor, fx files, fx shaders particle checks, unit test, smoke.fx*
   node anims      anim_clip / anim_player, the anim editor, .anim files  anim checks, unit test, smoke.anim
   atlases         the atlas tool, atlas files                            atlas checks (+ game screenshots for sprites)
+  picture fonts   tools/font, tests/font, bitmap_font.*                  font.tool, font.editor_selftest
   engine core     the rest of src/core/engine (conditions, nodes, ...)   the engine's unit tests + the game area
   renderer        src/engine: shared files                               every screenshot, every backend
                   src/engine: sprite / UI / ImGui files and shaders      the game screenshots, every backend
@@ -58,6 +59,7 @@ GLTF = any_of(named('unit.gltf_*'), is_gltf)
 PARTICLES = named('unit.particle_fx_test', 'particle.*', 'smoke.fx*')
 ANIMS = named('unit.anim_clip_test', 'anim.*', 'smoke.anim')
 ATLAS = named('atlas.*', 'unit.atlas_sprites_test')
+FONTS = named('font.*')
 
 # The game's screenshots narrowed by the changed file's name; a game file matching none runs every game screenshot.
 GAME_SMOKE_BY_NAME = [
@@ -77,6 +79,10 @@ RULES = [
     (['docs/examples/anim_*'], named('anim.check_recipes'), 'anim recipes'),
     (['tests/smoke/anim_preview.anim'], named('anim.check_preview', 'anim.editor_selftest'), 'the anim preview'),
     (['tests/mpdi/*'], named('anim.mpdi_convert'), 'the .mpdi converter fixtures'),
+    # picture fonts: toms_core builds the runtime, but no game screen draws with it yet, so the font tool's
+    # tests (which test the runtime too); add the game's screenshots here once a screen uses FontText
+    (['tools/font/*', 'tests/font/*', 'src/core/engine/bitmap_font*'], FONTS,
+     'picture fonts: the font tool tests'),
     (['tools/test_select.py', 'tools/test.cmd'], None, 'the test runner itself'),
     (['tools/web_editors/floor_index.js'], named('unit.floor_index_test'), 'the event index the HTML editors write'),
     # nothing
@@ -104,7 +110,8 @@ RULES = [
     (['assets/media/anim/*'], any_of(ANIMS, is_game_smoke_d3d11), '.anim files: anim checks + game screenshots'),
     (['tools/atlas/*', 'src/core/engine/atlas*'], ATLAS, 'the atlas tool: atlas checks'),
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),
-    (['tools/studio_common/*'], named('atlas.core', 'anim.*', 'particle.*', 'studio.*'), 'the Qt editors: their checks'),
+    (['src/editor/*'], None, 'toms_editor (Qt + the game viewport): no automated test; the desktop build compiles it'),
+    (['tools/studio_common/*'], named('atlas.core', 'anim.*', 'particle.*', 'font.*', 'studio.*'), 'the Qt editors: their checks'),
     # the renderer
     (['src/engine/src/bgfx_*', 'src/engine/src/embedded_shaders*', 'src/engine/src/shared_*', 'src/engine/CMakeLists.txt',
       'src/engine/shaders/varying.def.sc', 'src/engine/shaders/*.sh'],

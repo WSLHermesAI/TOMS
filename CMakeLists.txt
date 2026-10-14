@@ -56,6 +56,13 @@ function(toms_target_defaults target)
     endif()
 endfunction()
 
+# CTest: unit tests, screenshot smoke tests, the web smoke test (tests/CMakeLists.txt, docs/09_TESTS.md).
+# Declared before any subdirectory: src/editor brings in tools/studio_common, whose tests need it.
+option(TOMS_BUILD_TESTS "Build the tests (CTest / Visual Studio Test Explorer)" ON)
+if(TOMS_BUILD_TESTS AND NOT WEB AND NOT ANDROID)
+    enable_testing()
+endif()
+
 add_subdirectory(src/engine)   # toms_bgfx: BgfxRenderer (IRenderer), ImGui renderer, bgfx host, shaders
 add_subdirectory(src/game)     # toms_core (src/core on bgfx), toms_game_host, toms_game
 
@@ -63,10 +70,7 @@ if(TOMS_BUILD_EDITOR AND TOMS_HAVE_QT)
     add_subdirectory(src/editor)
 endif()
 
-# CTest: unit tests, screenshot smoke tests, the web smoke test (tests/CMakeLists.txt, docs/09_TESTS.md).
-option(TOMS_BUILD_TESTS "Build the tests (CTest / Visual Studio Test Explorer)" ON)
 if(TOMS_BUILD_TESTS AND NOT WEB AND NOT ANDROID)
-    enable_testing()
     add_subdirectory(tests)
 endif()
 
@@ -89,6 +93,9 @@ if(NOT WEB AND NOT ANDROID)
     # 3D models (docs/18_GLTF.md): gltf_viewer, glTF 2.0 on the engine's renderer (skins, morph
     # targets, EXT_mesh_gpu_instancing, PBR), checked by the smoke.gltf_* tests.
     add_subdirectory(tools/gltf_viewer)
+    # Picture fonts (docs/22_FONT_TOOL.md): fontpack and, with Qt, font_editor -- .fnt + .png from
+    # one picture per character; the runtime is src/core/engine/bitmap_font.cpp.
+    add_subdirectory(tools/font)
     if(TOMS_BUILD_TESTS)
         # The project opens from its packed atlas alone, and its other files (plist, rcss, the
         # art styles' atlases) match what it builds.

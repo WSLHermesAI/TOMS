@@ -8,6 +8,7 @@
 #include "CanvasPanel.h"
 #include "Console.h"
 #include "Icons.h"
+#include "Language.h"
 #include "MainWindow.h"
 #include "ReferencesDialog.h"
 #include "Theme.h"
@@ -22,6 +23,7 @@
 #include <QApplication>
 #include <QDir>
 #include <QDockWidget>
+#include <QMenuBar>
 #include <QDateTime>
 #include <QThread>
 #include <QElapsedTimer>
@@ -261,11 +263,35 @@ int runSelfTest(MainWindow& w, const QString& project, const QString& outDir)
         std::printf("selftest: references dialog lists %d image(s) to import\n", int(dlg.chosen().size()));
     }
 
+    // English / 中文 on the real window: menus, docks and toolbar change in place, and back.
+    // TOMS_LANGUAGE set: the switch is not saved (the user's own choice stays).
+    qputenv("TOMS_LANGUAGE", "en");
+    auto menuTitle = [&](int i) {
+        const QList<QAction*> acts = w.menuBar()->actions();
+        return i < acts.size() ? acts[i]->text() : QString();
+    };
+    auto dockTitle = [&](const char* name) {
+        for (QDockWidget* d : w.findChildren<QDockWidget*>())
+            if (d->windowTitle() == QString::fromUtf8(name)) return true;
+        return false;
+    };
+    Language::set(Language::Lang::Chinese);
+    QCoreApplication::processEvents();
+    const bool okZh = menuTitle(0) == QStringLiteral("檔案(&F)") && menuTitle(1) == QStringLiteral("編輯(&E)") &&
+                      dockTitle("精靈圖") && dockTitle("屬性");
+    w.grab().save(QDir(outDir).filePath(QStringLiteral("chinese.png")));
+    Language::set(Language::Lang::English);
+    QCoreApplication::processEvents();
+    const bool okEn = menuTitle(0) == QStringLiteral("&File") && dockTitle("Sprites") && dockTitle("Properties");
+    std::printf("selftest: language 中文 %s, back to English %s\n", okZh ? "ok" : "FAILED", okEn ? "ok" : "FAILED");
+    if (!okZh) std::printf("selftest: menus after the switch: '%s' '%s'\n", menuTitle(0).toUtf8().constData(),
+                           menuTitle(1).toUtf8().constData());
+
     std::printf("selftest: edit/undo %s\n", okEdits ? "ok" : "FAILED");
     std::printf("selftest: export copy (+plist) %s\n", okExport ? "ok" : "FAILED");
     std::printf("selftest: %zu sprite(s), %zu page(s), %d error(s), %d warning(s), build %lld ms\n", snap->result.regions.size(),
                 snap->result.pages.size(), snap->result.errorCount(), snap->result.warningCount(), (long long)snap->elapsedMs);
-    return okMain && okEdit && okLight && okEdits && okImages && okExport && okSave && okBackup ? 0 : 1;
+    return okMain && okEdit && okLight && okEdits && okImages && okExport && okSave && okBackup && okZh && okEn ? 0 : 1;
 }
 
 }  // namespace
@@ -359,6 +385,7 @@ int main(int argc, char** argv)
     QApplication::setApplicationDisplayName(QStringLiteral("Atlas Editor"));
     QApplication::setWindowIcon(Icons::icon(Icons::Id::Grid));
     Theme::apply(Theme::Mode::Dark);
+    Language::init();   // English / 中文 (tools/studio_common/Language.h), before any window
 
     MainWindow w;
     // QApplication has removed its own options (-platform ...) from arguments().

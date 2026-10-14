@@ -21,6 +21,7 @@
 #include "BezierDialog.h"
 #include "Console.h"
 #include "Icons.h"
+#include "Language.h"
 #include "Theme.h"
 #include "anim_check.h"
 #include "anim_player.h"
@@ -971,6 +972,7 @@ int main(int argc, char** argv)
     QApplication::setApplicationDisplayName(QStringLiteral("Anim Editor"));
     QApplication::setWindowIcon(Icons::icon(Icons::Id::Rotate));
     Theme::apply(Theme::Mode::Dark);
+    Language::init();   // English / 中文 (tools/studio_common/Language.h), before any window
 
     const QStringList qargs = QCoreApplication::arguments().mid(1);
     if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest")) {

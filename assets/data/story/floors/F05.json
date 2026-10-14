@@ -35,7 +35,8 @@
   "events": [
     "ev_village_chapel_dust",
     "ev_common_cache_wall",
-    "ev_common_merchant_echo_ash"
+    "ev_common_merchant_echo_ash",
+    "ev_bell_ringer_key"
   ],
   "sideStoryHooks": [
     {

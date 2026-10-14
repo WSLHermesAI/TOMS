@@ -1,5 +1,6 @@
 // main.cpp -- toms_editor: Qt6 editor with an embedded bgfx viewport. Desktop only, never shipped.
 #include "editor_window.h"
+#include "Language.h"
 #include "object.h"
 
 #include <QApplication>
@@ -11,6 +12,7 @@ int main(int argc, char** argv) {
         QApplication app(argc, argv);
         QApplication::setApplicationName(QStringLiteral("TOMS Editor"));
         QApplication::setOrganizationName(QStringLiteral("TOMS"));
+        Language::init();   // English / 中文 (tools/studio_common/Language.h), before any window
         EditorWindow w;
         // Smoke test (same switches as toms_game): --frames=<n> --screenshot=<png>
         int frames = 0;

@@ -752,8 +752,15 @@ private:
         std::string stairsFrom, stairsTo;     // a "go to the stairs" event (Q7): its text is built from these
         std::vector<std::string> next;
         nlohmann::json requires;              // null = none
+        nlohmann::json actions;               // null = none: give / addCounter / setFlag (runEventActions)
         bool inLog = true;
     };
+    // An event's `actions` when it fires (docs/event_editor/06_EVENT_LOGIC.md section 1): give an item, add to a
+    // story counter, set a run flag.
+    void runEventActions(const nlohmann::json& actions);
+    // A gate ("gate:<item id>" in a floor's legend): opens only for that item, which it takes; else says what
+    // it needs. Opened gates stay open (entity status Opened).
+    void bumpGate(Entity& gate);
     std::map<std::string, EventDef> eventDefs_;
     std::map<std::string, std::vector<std::string>> chapterEvents_;   // chapter id -> its story events (beats)
     void loadEventDefs(const std::string& assetDir);

@@ -955,7 +955,9 @@ function logicFrom(e) {
   return { trigger: e.trigger || { on: 'step' }, req: JSON.parse(JSON.stringify(req)), reqRaw, actions: JSON.parse(JSON.stringify(e.actions || [])), next: [...(e.next || [])] };
 }
 const blankLogic = () => ({ trigger: { on: 'step' }, req: [], reqRaw: null, actions: [], next: [] });
-const ITEMS = ['gem_atk', 'gem_def', 'potion_red', 'potion_blue', 'coin', 'scroll', 'exp_up'];
+// the item ids an event's "give" may name: data/items.json (make_data.py / the project folder); the old list if absent
+const ITEMS_FALLBACK = ['gem_atk', 'gem_def', 'potion_red', 'potion_blue', 'coin', 'scroll', 'exp_up'];
+const itemList = () => (Array.isArray(DATA.items) && DATA.items.length ? DATA.items : ITEMS_FALLBACK);
 const hasLogic = e => e.trigger.on !== 'step' || e.req.length || e.reqRaw || e.actions.length || e.next.length;
 const reqJson = e => e.reqRaw || (e.req.length === 1 ? e.req[0] : e.req.length ? { all: e.req } : null);
 // what a condition row or an action touches, as "var:x" / "counter:x" / "flag:x" / "event:x"
@@ -963,7 +965,7 @@ const leafRef = l => l.type === 'varAtLeast' || l.type === 'varEquals' ? 'var:' 
   : l.type === 'runFlagSet' ? (String(l.flag).startsWith('event_') ? 'event:' + l.flag.slice(6) : 'flag:' + l.flag) : null;
 const actRef = a => a.type === 'addVar' || a.type === 'setVar' ? 'var:' + a.var : a.type === 'addCounter' ? 'counter:' + a.counter : a.type === 'setFlag' ? 'flag:' + a.flag : a.type === 'give' ? 'item:' + a.itemId : null;
 const refExists = r => { const [k, n] = [r.slice(0, r.indexOf(':')), r.slice(r.indexOf(':') + 1)];
-  return k === 'var' ? !!S.vars[n] : k === 'counter' ? !!S.counters[n] : k === 'flag' ? !!S.flags[n] : k === 'event' ? !!ev(n) : k === 'item' ? ITEMS.includes(n) : true; };
+  return k === 'var' ? !!S.vars[n] : k === 'counter' ? !!S.counters[n] : k === 'flag' ? !!S.flags[n] : k === 'event' ? !!ev(n) : k === 'item' ? itemList().includes(n) : true; };
 const setByEvent = (ref, e) => ref.startsWith('flag:') && (S.flags[ref.slice(5)] || {}).setBy === e.id;   // flags.json "setBy": "ev_…"
 const changers = ref => S.events.filter(e => e.actions.some(a => actRef(a) === ref) || setByEvent(ref, e));
 const readers = ref => S.events.filter(e => e.req.some(l => leafRef(l) === ref) || (e.trigger.on === 'varChanged' && 'var:' + e.trigger.var === ref));
@@ -1511,7 +1513,7 @@ function rowToLeaf(subj, op, val) {
   return { type: 'runFlagSet', flag: 'event_' + n };
 }
 function actionTargets(type, cur) {
-  const list = type === 'addVar' || type === 'setVar' ? Object.keys(S.vars) : type === 'addCounter' ? Object.keys(S.counters) : type === 'setFlag' ? Object.keys(S.flags) : ITEMS;
+  const list = type === 'addVar' || type === 'setVar' ? Object.keys(S.vars) : type === 'addCounter' ? Object.keys(S.counters) : type === 'setFlag' ? Object.keys(S.flags) : itemList();
   return list.map(v => `<option${v === cur ? ' selected' : ''}>${esc(v)}</option>`).join('') + (cur && !list.includes(cur) ? `<option selected>${esc(cur)}</option>` : '');
 }
 const actTarget = a => a.var ?? a.counter ?? a.flag ?? a.itemId ?? '';
@@ -1562,7 +1564,7 @@ function bindLogic(e) {
     e.req.push(v ? { type: 'varAtLeast', var: v, value: 1 } : { type: 'counterAtLeast', counter: Object.keys(S.counters)[0], min: 1 }); });
   document.querySelectorAll('.actRow').forEach(row => { const i = +row.dataset.i;
     row.querySelector('.actType').onchange = () => { const ty = row.querySelector('.actType').value;
-      L(t('hAct', e.id), () => e.actions[i] = makeAction(ty, (ty === 'addVar' || ty === 'setVar' ? Object.keys(S.vars) : ty === 'addCounter' ? Object.keys(S.counters) : ty === 'setFlag' ? Object.keys(S.flags) : ITEMS)[0] || '', actValue(e.actions[i]) || 1)); };
+      L(t('hAct', e.id), () => e.actions[i] = makeAction(ty, (ty === 'addVar' || ty === 'setVar' ? Object.keys(S.vars) : ty === 'addCounter' ? Object.keys(S.counters) : ty === 'setFlag' ? Object.keys(S.flags) : itemList())[0] || '', actValue(e.actions[i]) || 1)); };
     const upd = () => L(t('hAct', e.id), () => e.actions[i] = makeAction(e.actions[i].type, row.querySelector('.actTarget').value, row.querySelector('.actVal') ? row.querySelector('.actVal').value : 1));
     row.querySelector('.actTarget').onchange = upd; if (row.querySelector('.actVal')) row.querySelector('.actVal').onchange = upd;
     row.querySelector('.actDel').onclick = () => L(t('hAct', e.id), () => e.actions.splice(i, 1)); });
@@ -2545,6 +2547,7 @@ async function readLiveData(dir) {
   const opt = async p => { const s = await tryText(dir, A + p); return s ? noUnderscore(JSON.parse(s)) : {}; };
   return { snapshot: 'live', pools, events, floors, texts, npcs: DATA.npcs,
     flags: await opt('story/flags.json'), counters: await opt('story/counters.json'), vars: await opt('story/vars.json'), kinds: await opt('events/kinds.json'),
+    items: Object.keys(await opt('items.json')).sort(),
     varCats: await (async () => { const s = await tryText(dir, A + 'story/vars.json'); return s ? JSON.parse(s)._categories || [] : []; })() };
 }
 async function useDir(dir, fromOther) {

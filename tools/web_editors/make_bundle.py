@@ -62,7 +62,9 @@ def main():
     # items.json is the all-item file: name/desc are text.json keys, the bonuses are "stats", and it also holds
     # weapons / armor / talents ("type"), which the stage editor does not place on floors.
     textOf = lambda n: pick(strings.get(n, n)) if isinstance(n, str) else pick(n)
-    items = {k: {'name': textOf(v.get('name')), 'effect': v.get('stats', v.get('effect')), 'type': v.get('type', 'consumable')}
+    # 'tint': a story item that opens a gate ("gate:<item id>") colours the gate's door sprite
+    items = {k: {'name': textOf(v.get('name')), 'effect': v.get('stats', v.get('effect')), 'type': v.get('type', 'consumable'),
+                 **({'tint': v['tint']} if 'tint' in v else {})}
              for k, v in load(os.path.join(DATA, 'items.json'))[0].items() if not k.startswith('_')}
     footprints = {k: v for k, v in load(os.path.join(DATA, 'footprints.json'))[0].items() if not k.startswith('_')}
     sprites = load(os.path.join(ROOT, 'assets', 'media', 'sprites', 'manifest.json'))[0]['sprites']

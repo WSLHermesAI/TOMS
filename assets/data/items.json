@@ -311,5 +311,20 @@
     "actives": [
       "a_sanctuary_echo"
     ]
+  },
+  "key_bellward": {
+    "type": "story",
+    "sprite": "key_red.png",
+    "tint": [
+      0.62,
+      0.3,
+      0.92
+    ],
+    "name": "item.key_bellward.name",
+    "desc": "item.key_bellward.desc",
+    "stats": {},
+    "price": 0,
+    "important": true,
+    "opens": "gate:key_bellward"
   }
 }

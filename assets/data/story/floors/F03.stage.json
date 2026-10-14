@@ -23,11 +23,13 @@
     "F": "event:ev_common_cache_wall",
     "G": "event:ev_common_cache_rat_nest",
     "Y": "key:yellow",
-    "y": "door:yellow"
+    "y": "door:yellow",
+    "K": "event:ev_bell_rings",
+    "J": "event:ev_bell_cracked"
   },
   "tiles": [
     "####################",
-    "#..#..#........#..##",
+    "#..#..#.J.K....#..##",
     "#.h#..#........#..##",
     "#..#..#######..#..##",
     "#..#........y.....##",

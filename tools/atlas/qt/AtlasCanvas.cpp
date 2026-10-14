@@ -139,6 +139,8 @@ QString AtlasCanvas::tooltipFor(const QString& name) const
         if (qs(a.aliasOf) == name) aliases << qs(a.name).toHtmlEscaped();
     if (!aliases.isEmpty()) t += QStringLiteral("<br>") + tr("same pixels as: %1").arg(aliases.join(QStringLiteral(", ")));
     if (m_pinned.contains(name)) t += QStringLiteral("<br>") + tr("pinned");
+    if (const int ex = m_doc->project().settings.extrude; ex > 0 && (!r->child || r->baked))
+        t += QStringLiteral("<br>") + tr("extrude %1 px around the frame (dimmed: copies of the edge pixels)").arg(ex);
     return t;
 }
 
@@ -182,6 +184,33 @@ void AtlasCanvas::paintContent(QPainter& p)
     const QSet<QString> selected(m_doc->selection().begin(), m_doc->selection().end());
     const QPointF delta(m_moveDelta);
     p.setRenderHint(QPainter::Antialiasing, false);
+
+    // Extrude: the build copies each sprite's edge pixels this far outward on the page. They are not part
+    // of the sprite (its frame is the outline), so they are dimmed and hatched: otherwise the sprite seems
+    // to stick out of its frame by that much.
+    if (const int ex = m_doc->project().settings.extrude; ex > 0) {
+        QColor dim = tc.canvasBackground;
+        dim.setAlpha(170);
+        QColor hatch = tc.label;
+        hatch.setAlpha(70);
+        for (const atlas::Region& r : snap->result.regions) {
+            if (r.page != m_page || !r.aliasOf.empty() || (r.child && !r.baked)) continue;   // own pixels only
+            const QRectF f = frameRect(r);
+            const QRectF g = f.adjusted(-ex, -ex, ex, ex);
+            const QRectF ring[4] = {
+                {g.left(), g.top(), g.width(), double(ex)},                          // above
+                {g.left(), f.bottom(), g.width(), double(ex)},                       // below
+                {g.left(), f.top(), double(ex), f.height()},                         // left
+                {f.right(), f.top(), double(ex), f.height()},                        // right
+            };
+            for (const QRectF& part : ring) {
+                const QRectF w = toWidget(part);
+                p.fillRect(w, dim);
+                if (zoom() >= 4) p.fillRect(w, QBrush(hatch, Qt::BDiagPattern));
+            }
+        }
+    }
+
     for (const atlas::Region& r : snap->result.regions) {
         if (!isVisible(r)) continue;
         const QString name = qs(r.name);

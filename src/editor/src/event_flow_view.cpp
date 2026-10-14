@@ -41,13 +41,13 @@ EventFlowView::EventFlowView(QString projectRoot, QWidget* parent)
     kindFilter_ = new QComboBox(this);
     floorFrom_  = new QSpinBox(this);  floorFrom_->setRange(0, 70);
     floorTo_    = new QSpinBox(this);  floorTo_->setRange(0, 70);  floorTo_->setValue(70);
-    problemsOnly_ = new QCheckBox(tr("只看有問題的"), this);
+    problemsOnly_ = new QCheckBox(tr("Only with problems"), this);
     summary_    = new QLabel(this);
 
     auto* bar = new QHBoxLayout;
-    bar->addWidget(new QLabel(tr("章節:"), this));  bar->addWidget(poolFilter_);
-    bar->addWidget(new QLabel(tr("類型:"), this));  bar->addWidget(kindFilter_);
-    bar->addWidget(new QLabel(tr("樓層:"), this));  bar->addWidget(floorFrom_);
+    bar->addWidget(new QLabel(tr("Chapter:"), this));  bar->addWidget(poolFilter_);
+    bar->addWidget(new QLabel(tr("Type:"), this));  bar->addWidget(kindFilter_);
+    bar->addWidget(new QLabel(tr("Floor:"), this));  bar->addWidget(floorFrom_);
     bar->addWidget(new QLabel(tr("-"), this));      bar->addWidget(floorTo_);
     bar->addWidget(problemsOnly_);
     bar->addStretch(1);
@@ -72,8 +72,8 @@ void EventFlowView::reload() {
     // Build the filter choices from what is actually there, keeping the current selection if it survives.
     const QString keepPool = poolFilter_->currentText(), keepKind = kindFilter_->currentText();
     poolFilter_->blockSignals(true); kindFilter_->blockSignals(true);
-    poolFilter_->clear(); poolFilter_->addItem(tr("(全部)"));
-    kindFilter_->clear(); kindFilter_->addItem(tr("(全部)"));
+    poolFilter_->clear(); poolFilter_->addItem(tr("(all)"));
+    kindFilter_->clear(); kindFilter_->addItem(tr("(all)"));
     std::set<QString> kinds;
     for (const auto& n : graph_.nodes) {
         if (n.kind == NodeKind::Pool)  poolFilter_->addItem(QString::fromStdString(n.id));
@@ -121,7 +121,7 @@ void EventFlowView::buildScene() {
     }
     for (const auto& e : graph_.edges) addEdge(e);
 
-    summary_->setText(tr("節點 %1 · 連線 %2 · 問題 %3")
+    summary_->setText(tr("Nodes %1 · links %2 · problems %3")
                           .arg(visible).arg((int)graph_.edges.size()).arg((int)graph_.problems.size()));
     view_->setSceneRect(scene_->itemsBoundingRect().adjusted(-40, -40, 40, 40));
 }
@@ -178,8 +178,8 @@ void EventFlowView::addEdge(const GraphEdge& e) {
 
 bool EventFlowView::passesFilters(const GraphNode& n) const {
     if (n.kind == NodeKind::Event) {
-        const QString want = kindFilter_->currentText();
-        if (want != tr("(全部)") && QString::fromStdString(n.label) != want) return false;
+        const QString want = kindFilter_->currentText();   // item 0 is "(all)", in either language
+        if (kindFilter_->currentIndex() > 0 && QString::fromStdString(n.label) != want) return false;
     }
     if (n.kind == NodeKind::Floor) {
         if (n.floorSeq && (n.floorSeq < floorFrom_->value() || n.floorSeq > floorTo_->value())) return false;

@@ -15,6 +15,20 @@
 
 ## ▶ Next Step
 
+**Font tool, editor languages, the bell event chain with key gates, glTF lights / cameras / Unicode paths**
+(2026-10-14, later; not committed; [DAILY_2026-10-14.md](DAILY_2026-10-14.md) rows 12–20, [WORKING_LOG.md](WORKING_LOG.md)):
+- Font tool (`fontpack`, `font_editor`; [../22_FONT_TOOL.md](../22_FONT_TOOL.md)): picture fonts from one picture per
+  character; `FontText` in `toms_core` for the game (no screen uses it yet).
+- Every Qt editor switches English / 中文 from its menu bar ([../24_EDITOR_LANGUAGE.md](../24_EDITOR_LANGUAGE.md)).
+- "The Silent Bell": six chapter-1 events across F02–F06, a key gate (`gate:<item>`) and its room on F04, event
+  `actions` in the game, finished event tiles no longer come back ([../event_editor/07_KEY_GATES.md](../event_editor/07_KEY_GATES.md)).
+- glTF viewer: the file's lights light the scene (ambient 0.1), camera buttons, Unicode file names.
+- Atlas: extrude ring dimmed in the page view; extrude defaults to 1.
+- Changed-only run: 96 of 101 tests, all pass. **First:** `tools\test.cmd all` (with the web build) and commit,
+  including the untracked reference images (now also `bell_gate`, `gltf_lights`, `gltf_camera_side`).
+- **Owner decisions:** keep finished events gone from their floor (caches no longer pay out on every visit)? The bell
+  chain's choices (key used up, F06 as the top, an event in the room, the reward, draft text).
+
 **Editors: MPDI import, plist import, x, y, z anim data, the edit freeze fixed** (2026-10-14, not committed;
 [DAILY_2026-10-14.md](DAILY_2026-10-14.md), [WORKING_LOG.md](WORKING_LOG.md)):
 - Atlas tool: imports Cocos / TexturePacker `.plist`. Anim editor: Convert → MPDI Folder to .anim, covering the old

@@ -35,7 +35,8 @@
   "events": [
     "ev_common_whisper_old_song",
     "ev_common_cache_rat_nest",
-    "ev_village_old_plough"
+    "ev_village_old_plough",
+    "ev_bell_rope"
   ],
   "sideStoryHooks": [],
   "story": {

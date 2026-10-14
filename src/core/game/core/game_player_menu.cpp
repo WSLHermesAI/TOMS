@@ -98,7 +98,8 @@ std::vector<Game::ItemButton> Game::itemButtons(const ItemCell& c) const {
     std::vector<ItemButton> out;
     const bool important = itemImportant(c.id) || c.kind == ItemCell::Key;
     if (c.kind == ItemCell::Inv) {
-        out.push_back({ItemAction::Use, true});
+        // a story item (a gate's key) has nothing to use: using it would only lose it
+        out.push_back({ItemAction::Use, itemType(c.id) != "story"});
         out.push_back({ItemAction::Drop, toms::canDrop(important, false)});
     } else if (c.kind == ItemCell::Key) {
         out.push_back({ItemAction::Drop, false});
@@ -315,6 +316,7 @@ void Game::loadEventDefs(const std::string& assetDir) {
             if (e.contains("next") && e["next"].is_array())
                 for (const auto& n : e["next"]) if (n.is_string()) d.next.push_back(n.get<std::string>());
             if (e.contains("requires")) d.requires = e["requires"];
+            if (e.contains("actions") && e["actions"].is_array()) d.actions = e["actions"];
             auto k = kindInLog.find(d.kind);
             d.inLog = e.value("inLog", k == kindInLog.end() ? true : k->second);
             eventDefs_[id] = d;

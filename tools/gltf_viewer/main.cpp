@@ -60,6 +60,11 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <shellapi.h>   // CommandLineToArgvW (utf8Args)
+#endif
+
 using namespace toms;
 using toms::next::GltfRenderer;
 
@@ -87,10 +92,10 @@ const char* value(const std::string& s, const char* key) {
     return s.compare(0, n, key) == 0 ? s.c_str() + n : nullptr;
 }
 
-Args parseArgs(int argc, char** argv) {
+Args parseArgs(const std::vector<std::string>& argv) {
     Args a;
-    for (int i = 1; i < argc; i++) {
-        const std::string s = argv[i];
+    for (size_t i = 1; i < argv.size(); i++) {
+        const std::string& s = argv[i];
         if (const char* v = value(s, "--renderer=")) a.renderer = v;
         else if (const char* v = value(s, "--anim=")) a.anim = v;
         else if (const char* v = value(s, "--time=")) a.time = (float)std::atof(v);
@@ -168,6 +173,10 @@ struct Viewer {
     std::vector<RigLight> rig;
     std::string rigKind = "default";
     bool useFileLights = true;            // the model's KHR_lights_punctual, when it has some
+    // The hemisphere ambient (sky / ground) the renderer adds to every light: with the file's own lights only a
+    // little of it, so they light the scene (not the viewer's default look); with the rig, the usual amount.
+    float ambientFile = 0.1f, ambientRig = 0.7f;
+    bool fileLightsOn() const { return useFileLights && model && !model->lights.empty(); }
     // The floor that catches the shadows (a built-in quad model).
     bool groundOn = true;
     gltf::Model groundModel;
@@ -1237,6 +1246,26 @@ struct Viewer {
                         if (ImGui::Selectable(cameraLabel(i, cams[i]).c_str(), activeCamera == (int)i)) selectCamera((int)i);
                     ImGui::EndCombo();
                 }
+                // One button per view: the free camera and each of the file's cameras (the one in use lit), and
+                // previous / next through them.
+                const int n = (int)cams.size();
+                if (ImGui::ArrowButton("##camprev", ImGuiDir_Left)) selectCamera(activeCamera <= -1 ? n - 1 : activeCamera - 1);
+                ImGui::SameLine();
+                if (ImGui::ArrowButton("##camnext", ImGuiDir_Right)) cycleCamera();
+                const float right = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+                for (int i = -1; i < n; i++) {
+                    const gltf::Camera* c = i >= 0 ? &model->cameras[(size_t)cams[(size_t)i].camera] : nullptr;
+                    const std::string label = i < 0 ? std::string("free")
+                                            : std::to_string(i + 1) + " " + (c->name.empty() ? "camera" : c->name);
+                    const float w = ImGui::CalcTextSize(label.c_str()).x + ImGui::GetStyle().FramePadding.x * 2;
+                    if (ImGui::GetItemRectMax().x + ImGui::GetStyle().ItemSpacing.x + w < right) ImGui::SameLine();
+                    const bool on = activeCamera == i;
+                    if (on) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+                    if (ImGui::Button((label + "##cam" + std::to_string(i)).c_str())) selectCamera(i);
+                    if (on) ImGui::PopStyleColor();
+                    if (c && ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%s", c->perspective ? "perspective" : "orthographic");
+                }
                 ImGui::TextWrapped("%zu in the file. C cycles. On a camera: left drag looks around, the wheel zooms "
                                    "(it keeps riding the animation); right drag or the arrows go free from there.", cams.size());
                 if (activeCamera >= 0 && activeCamera < (int)cams.size()) {
@@ -1387,7 +1416,11 @@ struct Viewer {
             }
             ImGui::Separator();
             ImGui::SliderFloat("exposure", &frame.exposure, 0.1f, 4.0f);
-            ImGui::SliderFloat("ambient", &frame.ambient, 0.0f, 3.0f);
+            ImGui::SliderFloat(fileLightsOn() ? "ambient (file lights)" : "ambient", fileLightsOn() ? &ambientFile : &ambientRig,
+                               0.0f, 3.0f);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("The sky / ground fill added to every light. With the file's lights it starts low (%.1f), so\n"
+                                  "they light the scene; with the viewer's rig it starts at %.1f.", 0.1f, 0.7f);
             ImGui::ColorEdit3("sky", &frame.sky.x, ImGuiColorEditFlags_NoInputs);
             ImGui::SameLine();
             ImGui::ColorEdit3("ground", &frame.ground.x, ImGuiColorEditFlags_NoInputs);
@@ -1502,6 +1535,7 @@ struct Viewer {
             simulate(dt);
         }
         frame.lights = frameLights();
+        frame.ambient = fileLightsOn() ? ambientFile : ambientRig;
         // Shadows cover the model and the floor around it (where its shadow falls).
         frame.boundsMin = glm::vec3(sceneMin.x - radius, sceneMin.y, sceneMin.z - radius);
         frame.boundsMax = glm::vec3(sceneMax.x + radius, sceneMax.y, sceneMax.z + radius);
@@ -1587,9 +1621,30 @@ struct Viewer {
 
 }  // namespace
 
+// The command line as UTF-8. On Windows argv is in the ANSI code page, so a file like "Unicode❤♻Test.glb" came in
+// as "Unicode??Test.glb" and could not be found: read the wide command line instead.
+std::vector<std::string> utf8Args(int argc, char** argv) {
+    std::vector<std::string> out;
+#ifdef _WIN32
+    int n = 0;
+    if (LPWSTR* w = CommandLineToArgvW(GetCommandLineW(), &n)) {
+        for (int i = 0; i < n; i++) {
+            const int len = WideCharToMultiByte(CP_UTF8, 0, w[i], -1, nullptr, 0, nullptr, nullptr);
+            std::string a(len > 0 ? (size_t)len - 1 : 0, char(0));
+            if (len > 1) WideCharToMultiByte(CP_UTF8, 0, w[i], -1, &a[0], len, nullptr, nullptr);
+            out.push_back(a);
+        }
+        LocalFree(w);
+        return out;
+    }
+#endif
+    for (int i = 0; i < argc; i++) out.push_back(argv[i]);
+    return out;
+}
+
 int main(int argc, char** argv) {
     Viewer v;
-    v.args = parseArgs(argc, argv);
+    v.args = parseArgs(utf8Args(argc, argv));
     v.showUi = v.args.ui;
     v.yaw = v.args.yaw;
     v.pitch = v.args.pitch;

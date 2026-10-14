@@ -168,7 +168,8 @@ default (`src/game/src/title_scene.*`, owned by `GameSession`).
   morph targets, instances), and every extension, green when drawn and orange when ignored, plus
   warnings.
 - **Camera** (when the file has cameras): *free (orbit)* or one of the file's cameras, by name
-  (unnamed ones take their node's or a parent's name). An animated camera node moves the view.
+  (unnamed ones take their node's or a parent's name), from the drop-down or a row of buttons (**free**, **1 front**,
+  **2 top**, …; the one in use is lit) with **◀ / ▶** to step through them. An animated camera node moves the view.
   Perspective cameras keep their field of view and near / far; orthographic ones their height.
   **Riding a camera:** left drag looks around (yaw about the camera's up, pitch about its right, in
   the camera's own frame) and the wheel zooms its lens; the camera keeps following its node's
@@ -182,7 +183,9 @@ default (`src/game/src/title_scene.*`, owned by `GameSession`).
 - **Lights and shadows:**
   - shadows on / off, a *ground* (a floor under the model that catches the shadows), the atlas
     size, the shadow bias;
-  - the file's own lights (`KHR_lights_punctual`), when it has some;
+  - the file's own lights (`KHR_lights_punctual`), when it has some: the rig is off and the ambient drops to 0.1
+    (its slider reads *ambient (file lights)*), so the file's lights light the scene, not the viewer's default look;
+    unticking *the file's lights* goes back to the rig and its ambient (0.7);
   - otherwise a rig: *default* (key + fill), *point*, *spot*, *all*, or your own. Each light has
     a type, colour, intensity, cast shadows, then direction (yaw / pitch), or position, range and
     cones. Up to 4; `+ directional` / `+ point` / `+ spot` add one;

@@ -215,7 +215,7 @@ Spine 執行環境能否載入擴充過的 `.atlas`。這些鍵遵循兩種解�
 | `powerOfTwo`、`square`、`fixedSize` | 頁面大小規則。沒有這些時，頁面會縮小到剛好放得下（二分搜尋） |
 | `padding` | sprite 之間的空白像素（真的是在它們之間：舊編輯器的間隔少了一個） |
 | `border` | 沿著頁面邊緣的空白像素 |
-| `extrude` | 在每個 sprite 周圍重複邊緣像素，讓濾波/縮放永遠不會取樣到鄰居 |
+| `extrude` | 在每個 sprite 周圍重複邊緣像素，讓濾波/縮放永遠不會取樣到鄰居；預設 1，可設 0–16（sprite 被大幅縮小繪製時調高） |
 | `trim`、`alphaThreshold` | 裁掉透明邊緣；原始大小和偏移保留在輸出中 |
 | `dedupe` | 相同的圖片（裁切後）共用同一個位置 |
 | `heuristic` | MaxRects 規則：`auto`（依序試 bssf、blsf、baf、bl、cp，取第一個放得下的），或 `shelf`（一列一列排，像舊編輯器） |

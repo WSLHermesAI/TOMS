@@ -35,7 +35,8 @@
   "events": [
     "ev_village_chimney",
     "ev_common_cache_rat_nest",
-    "ev_common_relic_road"
+    "ev_common_relic_road",
+    "ev_bell_ringer_room"
   ],
   "sideStoryHooks": [],
   "story": {

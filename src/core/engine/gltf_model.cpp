@@ -9,7 +9,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 
@@ -81,11 +83,34 @@ std::vector<uint8_t> decodeBase64(const char* s, size_t len) {
     return out;
 }
 
+// Paths are UTF-8 (the viewer's command line, drag-and-drop, the open dialog). A plain std::ifstream(string) on
+// Windows reads them in the ANSI code page, so a name like "Unicode❤♻Test.glb" was not found: open through
+// std::filesystem's UTF-8 path instead (a wide path on Windows, the same bytes elsewhere).
 bool readFile(const std::string& path, std::vector<uint8_t>& out) {
-    std::ifstream f(path, std::ios::binary);
+    std::ifstream f(std::filesystem::u8path(path), std::ios::binary);
     if (!f) return false;
     out.assign(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
     return true;
+}
+
+// cgltf's own file reads (the .gltf / .glb, external .bin buffers) through readFile, for the same reason.
+cgltf_result cgltfRead(const cgltf_memory_options*, const cgltf_file_options*, const char* path, cgltf_size* size, void** data) {
+    std::vector<uint8_t> bytes;
+    if (!path || !readFile(path, bytes)) return cgltf_result_file_not_found;
+    void* p = std::malloc(bytes.empty() ? 1 : bytes.size());
+    if (!p) return cgltf_result_out_of_memory;
+    if (!bytes.empty()) std::memcpy(p, bytes.data(), bytes.size());
+    *size = bytes.size();
+    *data = p;
+    return cgltf_result_success;
+}
+void cgltfRelease(const cgltf_memory_options*, const cgltf_file_options*, void* data) { std::free(data); }
+
+cgltf_options cgltfOptions() {
+    cgltf_options opt{};
+    opt.file.read = cgltfRead;
+    opt.file.release = cgltfRelease;
+    return opt;
 }
 
 std::string dirOf(const std::string& path) {
@@ -787,7 +812,7 @@ size_t Model::instanceCount() const {
 }
 
 bool loadModel(const std::string& path, Model& out, std::string* error) {
-    cgltf_options opt{};
+    cgltf_options opt = cgltfOptions();
     cgltf_data* d = nullptr;
     const cgltf_result r = cgltf_parse_file(&opt, path.c_str(), &d);
     if (r == cgltf_result_file_not_found || r == cgltf_result_io_error) {
@@ -798,7 +823,7 @@ bool loadModel(const std::string& path, Model& out, std::string* error) {
 }
 
 bool loadModelFromMemory(const void* data, size_t size, const std::string& baseDir, Model& out, std::string* error) {
-    cgltf_options opt{};
+    cgltf_options opt = cgltfOptions();
     cgltf_data* d = nullptr;
     const cgltf_result r = cgltf_parse(&opt, data, size, &d);
     return finish(r, d, opt, baseDir + "/model.gltf", baseDir, out, error);

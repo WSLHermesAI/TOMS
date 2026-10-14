@@ -47,7 +47,7 @@ struct Settings {
     bool fixedSize = false;
     int padding = 2;            // pixels between sprites
     int border = 0;             // pixels along the page edges
-    int extrude = 0;            // edge pixels repeated around each sprite (stops filtering seams)
+    int extrude = 1;            // edge pixels repeated around each sprite (stops filtering seams); 0..16
     bool trim = true;           // cut away transparent edges (the original size and offset are kept)
     int alphaThreshold = 0;     // alpha <= this counts as transparent when trimming
     bool dedupe = true;         // identical images share one place in the atlas

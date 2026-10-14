@@ -26,6 +26,9 @@ tools\test.cmd windows-debug -L unit     :: a ctest filter runs as given (only t
 | 粒子 | `particle_fx`、粒子編輯器、fx 檔與 shader | 粒子檢查、它的單元測試、`smoke.fx*` |
 | 節點動畫 | `anim_clip`、動畫編輯器、`.anim` 檔 | 動畫檢查、它的單元測試、`smoke.anim`（`.anim` 檔另加遊戲場景） |
 | Atlas | atlas 工具、atlas 檔 | atlas 檢查（atlas 檔另加遊戲場景） |
+| 圖片字型 | `tools/font`、`tests/font`、`src/core/engine/bitmap_font*` | `font.tool`、`font.editor_selftest` |
+| Qt 編輯器共用程式 | `tools/studio_common`（含 `i18n/` 中文字典） | atlas / anim / particle / font 編輯器的檢查與 `studio.*` |
+| toms_editor | `src/editor` | 沒有自動測試；桌面建置會編譯它 |
 | 引擎核心 | `src/core/engine` 的其他部分（條件、節點、事件 …） | 引擎的單元測試，再加上遊戲區域 |
 | 繪圖器 | `src/engine` 的共用檔（`bgfx_*`、內嵌 shader） | 所有截圖，所有後端 |
 | | `src/engine` 的 sprite、UI、ImGui 檔案與 shader | 遊戲截圖，所有後端 |
@@ -69,12 +72,14 @@ toms_game 的渲染器上，在那裡繪製和編輯，並存下 bgfx 截圖以�
 
 | 標籤 | 數量 | 檢查什麼 | 需要 |
 |---|---|---|---|
-| `unit` | 40 | 遊戲自己放在 `src/core` 程式碼旁邊的 `*_test.cpp` 程式（存檔、標題流程、條件、戰鬥條、鏡頭、裝備、技能、鍛造、據點、結局、輪迴、樓層、佔地、任務、節點動畫、粒子效果、glTF 模型、…），包括對發行的 `assets/data` 的檢查 | 不需要 |
+| `unit` | 41 | 遊戲自己放在 `src/core` 程式碼旁邊的 `*_test.cpp` 程式（存檔、標題流程、條件、戰鬥條、鏡頭、裝備、技能、鍛造、據點、結局、輪迴、樓層、佔地、任務、節點動畫、粒子效果、glTF 模型、…），包括對發行的 `assets/data` 的檢查 | 不需要 |
 | `atlas` | 3 | `atlas.core`：atlas 工具的打包器、子 sprite、每種匯出格式讀回、舊的 `.pi` 檔逐像素重建；`atlas_sprites_test`：程式碼、資料和 UI 用到的每個 sprite 名稱都在遊戲的 atlas 中；`atlas.assets_up_to_date`：`assets/media/atlas/game.atlasproj` 只靠它打包好的 atlas 就能開啟，且其他檔案都是最新的（[14](14_ATLAS_TOOL.md)）；`atlas.fx_up_to_date`：粒子 sprite 的 `fx.atlasproj` 同上（[17](17_PARTICLES.md)） | 不需要（三個也都在 `unit` 中；`atlas_sprites_test` 只在那裡） |
 | `particle` | 1 | `particle.check_recipes`：對 `docs/examples/fx_recipes.particle` 執行 `particle_editor --headless check`（能解析、每個 sprite 都在它的 atlas 中、曲線 / 池 / 爆發都合理；[17](17_PARTICLES.md)） | Qt 編輯器建置（也在 `unit` 中） |
 | `anim` | 6 | `anim.check_*`（4 個）：對 `tests/smoke/anim_preview.anim`、範例 `docs/examples/anim_recipes.anim` 以及遊戲的 `monster_idle` / `door_open` 執行 `anim_editor --headless check`（能解析、每個 sprite 都在遊戲 atlas 中、沒有重疊的 key；[15](15_ANIMATION.md)、[16](16_ANIMATION_RECIPES.md)）；`anim.mpdi_convert`：`tests/mpdi/` 中的舊 `.mpdi` → `.anim`；`anim.editor_selftest`：編輯器在 offscreen 下執行（`-platform offscreen`，不開視窗）——選取、Properties 與 key 清單編輯、viewport 拖曳、復原、儲存 | Qt 編輯器建置（也在 `unit` 中） |
-| `smoke` | 20 | 真正的 `toms_game` 播放一段腳本化的場景；它的截圖必須和 `tests/golden/` 中的參考圖相符（包括 `smoke.anim` 和 `smoke.fx`：地圖上的 `.anim` 片段和粒子效果；`smoke.fx_cpu` / `fx_compute`：同樣的東西走 sprite 批次的其他路徑，`smoke.fx_gpu`：所有發射器都在 GPU 上模擬——全部對同一張圖比對） | GPU；每個測試開一個視窗約 2 秒 |
-| `smoke` + `gltf` | 22 | `gltf_viewer` 在固定時間繪製 `tests/gltf/` 中的測試模型；截圖必須和 `tests/golden/gltf_*.png` 相符：蒙皮（線性、cubic spline）、morph target（線性、step）、`EXT_mesh_gpu_instancing`、PBR 材質、法線檢視、陰影（平行光、點光、聚光、全部）；蒙皮、PBR 和陰影也在 Vulkan 和 OpenGL 上測（[18](18_GLTF.md)）。物理（Jolt 上的 KHR_physics_rigid_bodies，[18](18_GLTF.md) §7）2.5 秒時的畫面。`ctest -L gltf` 只執行這些 | GPU；每個約 1 秒 |
+| `font` | 2 | `font.tool`：圖片字型執行期（`.fnt` 解析、排版）與字型工具：`tests/font/connect_score_pictures`（單張圖片）必須逐位元組重建舊專案的 `connect_score.fnt`，用它繪製的測試文字必須與 `tests/font/preview.png` 相符；`font.editor_selftest`：`font_editor` 在 offscreen 下執行（[22](22_FONT_TOOL.md)） | 不需要（兩者也在 `unit` 中；selftest 需要 Qt 建置） |
+| `studio` | 3 | `studio.canvas_coordinates`：編輯器畫布基底（座標顯示）；`studio.language`：編輯器的 English / 中文 切換，在 offscreen 的小視窗上檢查（[24](24_EDITOR_LANGUAGE.md)）；`studio.i18n_complete`：Qt 編輯器每個 `tr()` 文字在 `tools/studio_common/i18n/zh_TW` 中都有中文 | Qt 建置；`i18n_complete` 需要 Python（也在 `unit` 中） |
+| `smoke` | 21 | 真正的 `toms_game` 播放一段腳本化的場景；它的截圖必須和 `tests/golden/` 中的參考圖相符（包括 `smoke.anim` 和 `smoke.fx`：地圖上的 `.anim` 片段和粒子效果；`smoke.fx_cpu` / `fx_compute`：同樣的東西走 sprite 批次的其他路徑，`smoke.fx_gpu`：所有發射器都在 GPU 上模擬——全部對同一張圖比對） | GPU；每個測試開一個視窗約 2 秒 |
+| `smoke` + `gltf` | 24 | `gltf_viewer` 在固定時間繪製 `tests/gltf/` 中的測試模型；截圖必須和 `tests/golden/gltf_*.png` 相符：蒙皮（線性、cubic spline）、morph target（線性、step）、`EXT_mesh_gpu_instancing`、PBR 材質、法線檢視、陰影（平行光、點光、聚光、全部）；蒙皮、PBR 和陰影也在 Vulkan 和 OpenGL 上測（[18](18_GLTF.md)）。物理（Jolt 上的 KHR_physics_rigid_bodies，[18](18_GLTF.md) §7）2.5 秒時的畫面；檔案自己的燈光（KHR_lights_punctual）透過它的鏡頭：`gltf_lights`（透視）與 `gltf_camera_side`（正交）。`ctest -L gltf` 只執行這些 | GPU；每個約 1 秒 |
 | `web` | 5 | 在無頭 Chrome 中執行 `tools/web_smoke_test.mjs`：標題 → 新遊戲 → 存檔 → 重新載入 → 存檔還在，沒有頁面錯誤。對單執行緒版、多執行緒版（用隔離標頭提供），以及打包好的頁面兩次：在沒有標頭的伺服器上（它必須透過 service worker 變成多執行緒）和加上 `?nothreads`（[10](10_THREADS.md)），再在**真正的 GPU** 上跑一次（`web.page_gpu`，`--gpu`：Direct3D 11 上的 ANGLE，對 shader 比其他測試用的 SwiftShader 軟體 GPU 更嚴格）。任何編譯或連結失敗的 WebGL shader 都會被記錄，並讓測試失敗 | web 版 / 套件（`build_web.bat`）、Node 22+、Chrome 或 Edge；缺少的話會**略過**，而不是失敗 |
 
 Smoke 場景有標題、地圖（HUD + 方向盤）、玩家選單的五個分頁（`player_status`、`player_gear`、`player_items`、
@@ -83,7 +88,7 @@ Smoke 場景有標題、地圖（HUD + 方向盤）、玩家選單的五個分�
 讓格子、裝備比較和捲動有東西可顯示。`unit.player_menu_test` 檢查選單的規則，以及道具、商店、屬性和標題資料，
 並確認每層列出的每個事件都有事件池紀錄與英文文字。兩個場景顯示上鎖的樓梯（[05](event_editor/05_FLOOR_LINKS.md) 第 3.2 節）：
 `stairs_locked` 走到被 `--stair-lock=F01:ev_village_well` 鎖住的 F01 樓梯（鎖頭與提示），`stairs_unlock` 以 `--events-done=`
-完成該事件（「Stairs unlocked」對話框）。`unit.stair_links_test` 檢查樓梯清單本身，`unit.floor_index_test` 檢查
+完成該事件（「Stairs unlocked」對話框）。`bell_gate` 以 `--goto=F04` 帶著鐘紋鑰匙在 F04 開始新遊戲，打開專屬鑰匙門並觸發門後房間的事件（[event_editor/07](event_editor/07_KEY_GATES.md)）；`unit.event_chain_test` 檢查資料中的事件動作、門與鐘的事件鏈。`unit.stair_links_test` 檢查樓梯清單本身，`unit.floor_index_test` 檢查
 `assets/data/events/floor_index.json` 仍與樓層相符（失敗時：用關卡或事件編輯器開啟專案資料夾，它會重建索引）。
 它們在 Direct3D 11 上執行，地圖場景也在 Direct3D 12、Vulkan 和 OpenGL 上執行。場景清單在
 `tests/CMakeLists.txt`，每個測試一行。

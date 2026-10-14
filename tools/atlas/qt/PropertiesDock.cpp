@@ -248,7 +248,10 @@ QWidget* PropertiesDock::buildAtlasGroup()
     m_extrude = plainSpin(0, 16, group);
     m_padding->setToolTip(tr("Empty pixels between sprites"));
     m_border->setToolTip(tr("Empty pixels along the page edges"));
-    m_extrude->setToolTip(tr("Edge pixels repeated around each sprite (stops filtering seams)"));
+    m_extrude->setToolTip(tr("Edge pixels copied outward around each sprite, so scaling or filtering never picks "
+                            "up a neighbour or the gap (default 1). Raise it when sprites are drawn much smaller "
+                            "(mipmaps, strong zoom-out); 0 only if every sprite is always drawn at a whole-number "
+                            "scale."));
     form->addRow(tr("Padding"), m_padding);
     form->addRow(tr("Border"), m_border);
     form->addRow(tr("Extrude"), m_extrude);

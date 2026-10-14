@@ -19,6 +19,7 @@ the game finds them.
 | [03_USER_GUIDE.md](03_USER_GUIDE.md) | How to do common jobs: by hand today, and in the editor once it ships |
 | [05_FLOOR_LINKS.md](05_FLOOR_LINKS.md) | Several stairs per floor, stairs locked until an event is finished: format, game rules, checks |
 | [06_EVENT_LOGIC.md](06_EVENT_LOGIC.md) | Event triggers (step, talk, variable change, link), conditions, actions, direct links, event variables, and the node-graph editor |
+| [07_KEY_GATES.md](07_KEY_GATES.md) | Key gates (a gate only one story item opens), event actions that give it, and the bell chain: a six-event chain across F02–F06 |
 | [04_TUTORIAL.md](04_TUTORIAL.md) | Step by step: create an event, read the relationship diagram, find problems, fix them, save |
 | [tools/web_editors/index.html](../../tools/web_editors/index.html) | The working event editor (with the tutorial) and the stage editor |
 

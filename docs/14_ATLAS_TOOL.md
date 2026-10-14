@@ -211,7 +211,7 @@ them there.
 | `powerOfTwo`, `square`, `fixedSize` | page size rules. Without them the page shrinks to fit (binary search) |
 | `padding` | empty pixels between sprites (really between them: the old editor's gap was one short) |
 | `border` | empty pixels along the page edges |
-| `extrude` | edge pixels repeated around each sprite, so filtering/scaling never samples a neighbour |
+| `extrude` | edge pixels repeated around each sprite, so filtering/scaling never samples a neighbour; default 1, 0–16 (raise it for sprites drawn much smaller) |
 | `trim`, `alphaThreshold` | cut transparent edges; the original size and offset are kept in the output |
 | `dedupe` | identical images (after trimming) share one place |
 | `heuristic` | MaxRects rule: `auto` (try bssf, blsf, baf, bl, cp and keep the first that fits), or `shelf` (rows, like the old editor) |

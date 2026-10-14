@@ -37,7 +37,7 @@ set(TOMS_UNIT_TESTS
     game/systems/footprint_test     game/systems/forge_system_test     game/systems/hub_system_test
     game/systems/mission_test       game/systems/run_state_test        game/systems/skill_system_test
     game/systems/player_menu_test   game/systems/stair_links_test  game/systems/floor_index_test
-    game/systems/story_controller_test
+    game/systems/story_controller_test   game/systems/event_chain_test
     game/ui/title_screen_test)
 
 get_filename_component(_data_parent "${TOMS_DATA_DIR}" DIRECTORY)
@@ -139,6 +139,9 @@ toms_smoke_test(player_system player_system d3d11 0.1 --frames=150 --keys=enter@
 # the player to it (the padlock, and the hint on bumping it); stairs_unlock finishes the event (the dialog).
 toms_smoke_test(stairs_locked stairs_locked d3d11 0.1 --frames=270 --keys=enter@30,up@60,right@66,right@72,right@78,right@84,right@90,up@96,up@102,up@108,up@114,up@120,up@126,right@132,right@138,right@144,right@150,right@156,right@162,up@168,up@174,up@180,up@186,up@192,up@198,left@204,left@210,left@216,down@222,down@228,down@234,down@240,right@246 --stair-lock=F01:ev_village_well)
 toms_smoke_test(stairs_unlock stairs_unlock d3d11 0.1 --frames=120 --keys=enter@30 --stair-lock=F01:ev_village_well --events-done=ev_village_well)
+# A key gate (docs/event_editor/07_KEY_GATES.md): on F04 with the bell-carved key, the player walks to the bell gate,
+# opens it (the key goes), walks into the bell-ringer's room and fires ev_bell_ringer_room (its chain is done up to it).
+toms_smoke_test(bell_gate bell_gate d3d11 0.1 --frames=300 --keys=enter@30,down@60,down@66,down@72,down@78,down@84,down@90,down@96,down@102,right@108,right@114,right@120,right@126,right@132,right@138,up@144,up@150,right@156,right@162,down@168,right@174,down@180,right@186,right@192,right@198,up@204,up@210,right@216,right@222,down@228,down@234,down@240,right@246,down@252 --goto=F04 --give=key_bellward --events-done=ev_bell_cracked,ev_bell_ringer_key)
 toms_smoke_test(dialogue     dialogue    d3d11   0.1  --frames=190 --keys=enter@30,esc@80,q@85,down@90,down@95,enter@110,enter@130)
 # --battle-tuning=default: the bars move by the built-in values, not data/battle.json, so tuning the game never
 # breaks this picture (W23). The player starts on F01's '@' and walks right into the bat (keys, not a click: bats
@@ -203,6 +206,10 @@ toms_gltf_test(gltf_shadow_dir      gltf_shadow_dir     skin_tube      d3d11    
 toms_gltf_test(gltf_shadow_point    gltf_shadow_point   instancing     d3d11    0.1  --light=point --pitch=40 --zoom=1.6)
 toms_gltf_test(gltf_shadow_spot     gltf_shadow_spot    skin_tube      d3d11    0.1  --light=spot --anim=bend --time=0.5 --pitch=30 --zoom=1.4)
 toms_gltf_test(gltf_shadow_all      gltf_shadow_all     instancing     d3d11    0.1  --light=all --pitch=40 --zoom=1.6)
+# The file's own lights (KHR_lights_punctual: a red point, a blue spot, a warm sun, with little ambient) seen through
+# its cameras: "front" (perspective) and "side" (orthographic); tools/gltf_viewer/make_test_models.py lights_cameras.
+toms_gltf_test(gltf_lights          gltf_lights         lights_cameras d3d11    0.1  --camera=front)
+toms_gltf_test(gltf_camera_side     gltf_camera_side    lights_cameras d3d11    0.1  --camera=side)
 # Crowds (instanced skinning from a baked animation texture, gltf_anim_texture.h): one copy must look exactly
 # like the same clip drawn with a Pose (the gltf_skin reference); nine copies with their own clips, times and
 # held blends, on three backends.

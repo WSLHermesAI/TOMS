@@ -19,3 +19,12 @@
   (RULES), so the next change to that file selects its area's tests.
 - **When a new test is added,** make sure a rule in `tools/test_select.py` selects it for the files it covers.
 - **Report what was run:** say "changed-only: N of M tests" or "all tests", with the result, never just "tests pass".
+
+### Documents: local files only, nothing online
+
+- **Never upload project data or documents to an online service for viewing or sharing** (Claude Docs, published
+  Artifacts, pastebins, gists, or anything else that gives a URL). The owner, 2026-10-14: "do not upload any data
+  online for open preview".
+- **A document goes into the repo as a local Markdown file:** English in `docs/NN_NAME.md`, Traditional Chinese in
+  `docs/zh_TW/NN_NAME.md` (starting with `> 英文原文：[NN_NAME.md](../NN_NAME.md)`).
+- Publish online only when the owner explicitly asks for that specific document.

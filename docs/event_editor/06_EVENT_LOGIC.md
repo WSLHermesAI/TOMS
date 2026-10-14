@@ -195,7 +195,7 @@ MIT, needs Dear ImGui 1.72+ and C++14, and the engine already has an ImGui-on-bg
 (`src/engine/src/imgui_bgfx.h`). The graph model and the "what does this link mean" rules
 (`linkAction` in the mockup) carry over unchanged.
 
-## 6. Runtime work (items 2 and 7 done 2026-10-10, the rest not yet)
+## 6. Runtime work (items 2 and 7 done 2026-10-10, item 4 partly 2026-10-14, the rest not yet)
 
 1. **Run state:** event variables (from `vars.json`, saved with the run like counters), and the set of
    finished events.
@@ -203,7 +203,8 @@ MIT, needs Dear ImGui 1.72+ and C++14, and the engine already has an ImGui-on-bg
    (conditions and the stair locks of [05_FLOOR_LINKS.md](05_FLOOR_LINKS.md) read it) and joins the run's
    finished list.
 3. **Condition leaves** `varAtLeast` / `varEquals` in `condition.cpp` (plus the context method).
-4. **Actions** `addVar` / `setVar` / `setFlag` next to the existing dialogue actions.
+4. **Actions:** **done 2026-10-14** for `give`, `addCounter` and `setFlag` (run once when the event fires; key gates,
+   [07_KEY_GATES.md](07_KEY_GATES.md)); `addVar` / `setVar` wait for event variables (item 1).
 5. **Dispatcher:** fire on tile, on talk (after the dialogue closes), on variable change, and through
    `next`; check `requires` and `once`; guard against loops (an event fires at most once per chain).
 6. **Effects from data:** the hard-coded "trap = −8 HP, cache = +10 HP +12 gold" in `game_input.cpp`

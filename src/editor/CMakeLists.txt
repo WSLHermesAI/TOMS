@@ -21,7 +21,11 @@ toms_target_defaults(toms_editor)
 set_source_files_properties(src/main.cpp src/editor_window.cpp src/bgfx_viewport.cpp
     PROPERTIES COMPILE_DEFINITIONS QT_NO_EMIT)
 target_include_directories(toms_editor PRIVATE src ${STAGE_EDITOR_DIR} ${TOMS_THIRD_PARTY_DIR}/json)
-target_link_libraries(toms_editor PRIVATE Qt6::Widgets toms_game_host)
+# studio_common: the editors' shared Qt code -- here the English / 中文 switch (Language.h).
+if(NOT TARGET studio_common)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/tools/studio_common" "${CMAKE_BINARY_DIR}/tools/studio_common")
+endif()
+target_link_libraries(toms_editor PRIVATE Qt6::Widgets toms_game_host studio_common)
 set_target_properties(toms_editor PROPERTIES
     FOLDER "toms"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")

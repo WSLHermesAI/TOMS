@@ -35,7 +35,8 @@
   "events": [
     "ev_village_chapel_dust",
     "ev_village_ledger",
-    "ev_village_well"
+    "ev_village_well",
+    "ev_bell_clapper"
   ],
   "sideStoryHooks": [],
   "story": {

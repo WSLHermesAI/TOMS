@@ -11,6 +11,7 @@
 #include "EffectsDock.h"
 #include "FxSpritesDock.h"
 #include "Icons.h"
+#include "Language.h"
 #include "InspectorDock.h"
 #include "ParticleDocument.h"
 #include "ParticleEditor.h"
@@ -479,6 +480,7 @@ int main(int argc, char** argv)
     QApplication::setApplicationDisplayName(QStringLiteral("Particle Editor"));
     QApplication::setWindowIcon(Icons::icon(Icons::Id::Play));
     Theme::apply(Theme::Mode::Dark);
+    Language::init();   // English / 中文 (tools/studio_common/Language.h), before any window
 
     const QStringList qargs = QCoreApplication::arguments().mid(1);
     if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest")) {

@@ -118,6 +118,7 @@ void Game::draw() {
             float x, y, w, h;      // pixel rect
             int   layer;
             bool  plate = false;   // S3.5 (d): an event marker -> solid story plate, not an atlas sprite
+            float wash[4] = {0, 0, 0, 0};   // a gate: its key's colour washed over the door (alpha 0 = none)
             const std::string* monster = nullptr;   // enemy id: drawn with its idle animation when it has one
             int   tileX = 0, tileY = 0;
         };
@@ -136,6 +137,15 @@ void Game::draw() {
             f.x = ox + e.x*ts + inset;
             f.y = oy + e.y*ts + inset;
             f.layer = spriteLayer(entSprite(e.id));
+            if (e.kind.rfind("gate:", 0) == 0) {
+                // a gate is drawn as a full-tile door with its key item's "tint" (data/items.json) washed over it, so
+                // it reads as no colour of key door (yellow / blue / red)
+                f.x = ox + e.x * ts; f.y = oy + e.y * ts; f.w = ts; f.h = ts;
+                f.layer = spriteLayer("door_yellow");
+                f.wash[0] = 0.6f; f.wash[1] = 0.3f; f.wash[2] = 0.9f; f.wash[3] = 0.6f;
+                if (const nlohmann::json* d = itemDef(e.id); d && d->contains("tint") && (*d)["tint"].is_array())
+                    for (int i = 0; i < 3 && i < (int)(*d)["tint"].size(); i++) f.wash[i] = (*d)["tint"][i].get<float>();
+            }
             // S3.5 (d): an event marker is drawn as a solid story plate rather than an atlas sprite --
             // the atlas has no "relic/whisper/cache" art yet (S8 owns that), and a plate reads as
             // "something to read here" without pretending to be a creature or an item.
@@ -168,6 +178,11 @@ void Game::draw() {
                 ren->drawSprite(spriteQuad(f.x + in, f.y + in, f.w - 2*in, f.h - 2*in, f.layer + 1, inner));
             } else if (!f.monster || !drawIdleAnim(*f.monster, f.x, f.y, f.w, f.h, f.tileX, f.tileY)) {
                 ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, white));
+                if (f.wash[3] > 0) {
+                    Quad q = spriteQuad(f.x, f.y, f.w, f.h, f.layer, f.wash);
+                    q.solid = true;
+                    ren->drawSprite(q);
+                }
             }
         }
         drawStylingSpikeBackdrop();

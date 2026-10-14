@@ -14,6 +14,8 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <string>
 
 #include "gltf_model.h"
@@ -219,12 +221,41 @@ void testErrors() {
 
 }  // namespace
 
+// Paths are UTF-8: a .gltf whose own name and whose external .bin have non-ASCII names (glTF-Sample-Models'
+// "Unicode❤♻Test"). On Windows a plain std::ifstream / fopen read them in the ANSI code page and found nothing.
+static void testUnicodePaths() {
+    namespace fs = std::filesystem;
+    const fs::path dir = fs::temp_directory_path() / fs::u8path("toms_gltf_❤♻");
+    std::error_code ec;
+    fs::create_directories(dir, ec);
+    // one triangle: 3 positions in an external buffer named "tri❤♻.bin"
+    const float pos[9] = {0, 0, 0, 1, 0, 0, 0, 1, 0};
+    {
+        std::ofstream bin(dir / fs::u8path("tri❤♻.bin"), std::ios::binary);
+        bin.write((const char*)pos, sizeof pos);
+    }
+    const char* json = R"({"asset":{"version":"2.0"},"buffers":[{"uri":"tri❤♻.bin","byteLength":36}],
+        "bufferViews":[{"buffer":0,"byteLength":36}],
+        "accessors":[{"bufferView":0,"componentType":5126,"count":3,"type":"VEC3","min":[0,0,0],"max":[1,1,0]}],
+        "meshes":[{"primitives":[{"attributes":{"POSITION":0}}]}],"nodes":[{"mesh":0}],"scenes":[{"nodes":[0]}],"scene":0})";
+    {
+        std::ofstream f(dir / fs::u8path("Unicode❤♻Test.gltf"), std::ios::binary);
+        f << json;
+    }
+    const std::string path = (dir / fs::u8path("Unicode❤♻Test.gltf")).u8string();
+    Model m;
+    std::string error;
+    CHECK(loadModel(path, m, &error) && m.vertexCount() == 3, "a .gltf with a non-ASCII name and .bin loads (%s)", error.c_str());
+    fs::remove_all(dir, ec);
+}
+
 int main() {
     testSkin();
     testMorph();
     testInstancing();
     testMaterials();
     testErrors();
+    testUnicodePaths();
     std::printf("gltf_model_test: %d check(s), %d failed\n", g_checks, g_fails);
     return g_fails ? 1 : 0;
 }

@@ -31,6 +31,7 @@
 //                         gear is owned, not worn), gold:<n>, exp:<n>, points:<n> -- tests of the player menu (tests/CMakeLists.txt)
 //   --stair-lock=<floor>:<event>  lock that floor's first stair up until the event is finished (locked stairs, Q7)
 //   --events-done=<id,...>        when the title first closes, finish these events as the player would (tests)
+//   --goto=<floor>                when the title first closes, go to that floor (e.g. F04; tests)
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
 #include "../../core/engine/vfs.h"   // toms::vfsInit: APK entries need the AAssetManager
@@ -90,6 +91,7 @@ struct Args {
     std::vector<std::string> give;     // --give=<id,...>
     std::string stairLock;             // --stair-lock=<floor>:<event>
     std::vector<std::string> eventsDone;   // --events-done=<id,...>
+    std::string gotoFloor;             // --goto=<floor>: after the title closes, go to that floor (tests)
 };
 
 bool keyFromName(const std::string& n, Key& out) {
@@ -157,6 +159,7 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--ui-scale=")) a.uiScale = (float)std::atof(v);
         else if (const char* v = value(s, "--battle-tuning=")) a.defaultBattleTuning = std::string(v) == "default";
         else if (const char* v = value(s, "--stair-lock=")) a.stairLock = v;
+        else if (const char* v = value(s, "--goto=")) a.gotoFloor = v;
         else if (const char* v = value(s, "--events-done=")) {
             std::string list = v;
             for (size_t pos = 0; pos <= list.size();) {
@@ -463,13 +466,15 @@ bool appFrame(App& app) {
         in.hasMouse = true;
     }
 
-    if (!app.gave && (!args.give.empty() || !args.stairLock.empty() || !args.eventsDone.empty()) && app.session.game() &&
+    if (!app.gave && (!args.give.empty() || !args.stairLock.empty() || !args.eventsDone.empty() || !args.gotoFloor.empty()) &&
+        app.session.game() &&
         !app.session.game()->titleOpen()) {
         ::Game* g = app.session.game();
         for (const std::string& id : args.give) g->debugGive(id);
         if (const size_t colon = args.stairLock.find(':'); colon != std::string::npos)
             g->debugLockStairs(args.stairLock.substr(0, colon), args.stairLock.substr(colon + 1));
         for (const std::string& id : args.eventsDone) g->debugFinishEvent(id);
+        if (!args.gotoFloor.empty()) g->loadStage(args.gotoFloor);
         app.gave = true;
     }
     // Fullscreen is the host's: the player menu's System tab shows the row and asks; this switches.

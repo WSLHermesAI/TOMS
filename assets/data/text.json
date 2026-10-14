@@ -7724,6 +7724,98 @@
     },
     "notice.ok": {
       "en": "OK (Enter)"
+    },
+    "ev_bell_cracked.title": {
+      "zh_TW": "裂開的鐘",
+      "en": "The Cracked Bell"
+    },
+    "ev_bell_cracked.desc": {
+      "zh_TW": "舊鐘樓下躺著一口裂開的銅鐘。鐘身刻著：「鑰匙在第五層的老敲鐘人身上。」",
+      "en": "A cracked bronze bell lies under the old belfry. Carved on it: \"The key is with the old bell-ringer on the fifth floor.\""
+    },
+    "ev_bell_cracked.text": {
+      "zh_TW": "銅鐘裂了一道縫，再也敲不響。鐘身刻著一行字：去第五層找敲鐘人。",
+      "en": "The bronze bell is cracked and will not ring. A line is carved on it: find the bell-ringer on the fifth floor."
+    },
+    "ev_bell_ringer_key.title": {
+      "zh_TW": "敲鐘人的鑰匙",
+      "en": "The Bell-ringer's Key"
+    },
+    "ev_bell_ringer_key.desc": {
+      "zh_TW": "老敲鐘人在第五層等了很久。他把一把刻著鐘紋的鑰匙交給你：「我的小屋在第四層，門只認這把鑰匙。」",
+      "en": "The old bell-ringer has waited on the fifth floor a long time. He hands you a key carved with a bell: \"My room is on the fourth floor. Its gate opens for this key alone.\""
+    },
+    "ev_bell_ringer_key.text": {
+      "zh_TW": "敲鐘人把鐘紋鑰匙放進你手裡：「第四層，我的小屋。」",
+      "en": "The bell-ringer presses the bell-carved key into your hand: \"The fourth floor. My room.\""
+    },
+    "ev_bell_ringer_room.title": {
+      "zh_TW": "敲鐘人的小屋",
+      "en": "The Bell-ringer's Room"
+    },
+    "ev_bell_ringer_room.desc": {
+      "zh_TW": "鐘紋門後的小屋裡有一本敲鐘人的手記：鐘繩斷在高處的第六層，鐘舌掉到低處的第二層。",
+      "en": "Behind the bell gate lies the bell-ringer's journal: the rope snapped on the sixth floor above, the clapper fell to the second floor below."
+    },
+    "ev_bell_ringer_room.text": {
+      "zh_TW": "手記寫著：「鐘繩在第六層，鐘舌在第二層。兩樣都找回來，鐘才會再響。」",
+      "en": "The journal reads: \"The rope is on the sixth floor, the clapper on the second. Bring both back and the bell will ring again.\""
+    },
+    "ev_bell_rope.title": {
+      "zh_TW": "磨斷的鐘繩",
+      "en": "The Frayed Bell Rope"
+    },
+    "ev_bell_rope.desc": {
+      "zh_TW": "在第六層的高處找到磨斷的鐘繩，還能接得上。",
+      "en": "High on the sixth floor you find the frayed bell rope. It can still be spliced."
+    },
+    "ev_bell_rope.text": {
+      "zh_TW": "你把鐘繩捲好帶走。",
+      "en": "You coil the rope and take it with you."
+    },
+    "ev_bell_clapper.title": {
+      "zh_TW": "失落的鐘舌",
+      "en": "The Lost Clapper"
+    },
+    "ev_bell_clapper.desc": {
+      "zh_TW": "鐘舌一路掉到第二層，卡在石縫裡。",
+      "en": "The clapper fell all the way to the second floor and wedged in a crack in the stone."
+    },
+    "ev_bell_clapper.text": {
+      "zh_TW": "你從石縫裡撬出沉重的鐘舌。",
+      "en": "You pry the heavy clapper out of the crack."
+    },
+    "ev_bell_rings.title": {
+      "zh_TW": "鐘聲再響",
+      "en": "The Bell Rings Again"
+    },
+    "ev_bell_rings.desc": {
+      "zh_TW": "回到第三層，接上鐘繩、裝回鐘舌。裂開的鐘再次響起，整座塔都聽見了。",
+      "en": "Back on the third floor you splice the rope and fit the clapper. The cracked bell rings once more, and the whole tower hears it."
+    },
+    "ev_bell_rings.text": {
+      "zh_TW": "鐘聲響徹高塔。敲鐘人的心願完成了。",
+      "en": "The bell rings through the tower. The bell-ringer's wish is fulfilled."
+    },
+    "item.key_bellward.name": {
+      "zh_TW": "鐘紋鑰匙",
+      "en": "Bell-carved Key"
+    },
+    "item.key_bellward.desc": {
+      "zh_TW": "刻著鐘紋的舊鑰匙。只能打開第四層敲鐘人小屋的鐘紋門。",
+      "en": "An old key carved with a bell. It opens only the bell gate of the bell-ringer's room on the fourth floor."
+    },
+    "gate.locked": {
+      "zh_TW": "這道門刻著紋樣，只有「{item}」能打開。",
+      "en": "This gate is carved with a pattern. Only the {item} opens it."
+    },
+    "gate.opened": {
+      "zh_TW": "{item}轉動，門開了。",
+      "en": "The {item} turns. The gate opens."
+    },
+    "event.gotItem": {
+      "zh_TW": "獲得：{item}",
+      "en": "Received: {item}"
     }
   }
 }

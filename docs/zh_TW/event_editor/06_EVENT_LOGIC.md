@@ -200,7 +200,8 @@ MIT 授權，需要 Dear ImGui 1.72+ 和 C++14，而引擎已經有 ImGui-on-bgf
    陷阱、補給、遺物和碎片什麼也沒設定。應該全部都設定，因為條件
    和 [05_FLOOR_LINKS.md](05_FLOOR_LINKS.md) 的樓梯鎖都會讀它。
 3. `condition.cpp` 中的**條件葉節點** `varAtLeast` / `varEquals`（加上 context 方法）。
-4. **動作** `addVar` / `setVar` / `setFlag`，放在現有的對話動作旁邊。
+4. **動作：** `give`、`addCounter`、`setFlag` **已於 2026-10-14 完成**（事件觸發時執行一次；專屬鑰匙門見
+   [07_KEY_GATES.md](07_KEY_GATES.md)）；`addVar` / `setVar` 要等事件變數（第 1 項）。
 5. **分派器：** 在格子上、交談時（對話關閉之後）、變數改變時，以及透過
    `next` 觸發；檢查 `requires` 和 `once`；防止迴圈（每條鏈中一個事件最多觸發一次）。
 6. **效果來自資料：** `game_input.cpp` 中寫死的「陷阱 = −8 HP，補給 = +10 HP +12 金幣」

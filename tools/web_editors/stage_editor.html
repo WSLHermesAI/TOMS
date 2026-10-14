@@ -223,7 +223,7 @@ const I18N = {
     srcBundle: d => `bundle copy (${d})`, srcLive: 'project folder (live)', openUnsupported: 'This browser cannot open folders. Use Chrome or Edge from http://localhost; Save will download the files instead.',
     palette: 'Palette', eventsH: 'Events', evSearch: 'Find event: id, kind or text', inspector: 'Inspector',
     tPaint: '🖌 Paint', tRect: '▭ Rectangle', tErase: '⌫ Erase', tSelect: '↖ Select / move', tGrid: '# Grid', brush: 'Brush:',
-    gTerrain: 'Terrain', gStairs: 'Stairs', gDoors: 'Doors', gKeys: 'Keys', gPlayer: 'Player', gMonsters: 'Monsters', gNpcs: 'NPCs', gItems: 'Items',
+    gTerrain: 'Terrain', gStairs: 'Stairs', gDoors: 'Doors', gKeys: 'Keys', gGates: 'Gates (one key)', gGateKeys: 'Gate keys', gateOpens: 'Opens with', gateNoKey: 'no such item', gPlayer: 'Player', gMonsters: 'Monsters', gNpcs: 'NPCs', gItems: 'Items',
     evThisFloor: 'This floor can roll', evAll: 'All events', placedN: n => n ? `✓ ${n}` : '', notDefined: 'not defined in any pool',
     floorPanel: 'Floor', name: 'Name', size: 'Size (w × h)', resize: 'Apply size', connectUp: 'Stairs up to', connectDown: 'Stairs down to',
     rollList: n => `Events this floor can roll (${n})`, rollHint: 'Green = placed on the grid. Click one to paint it.',
@@ -282,7 +282,7 @@ const I18N = {
     srcBundle: d => `資料副本（${d}）`, srcLive: '專案資料夾（即時）', openUnsupported: '這個瀏覽器無法開啟資料夾。請用 Chrome 或 Edge 從 http://localhost 開啟；儲存會改為下載檔案。',
     palette: '物件', eventsH: '事件', evSearch: '搜尋事件：ID、類型或文字', inspector: '屬性',
     tPaint: '🖌 畫筆', tRect: '▭ 矩形', tErase: '⌫ 擦除', tSelect: '↖ 選取／移動', tGrid: '# 格線', brush: '畫筆：',
-    gTerrain: '地形', gStairs: '樓梯', gDoors: '門', gKeys: '鑰匙', gPlayer: '玩家', gMonsters: '怪物', gNpcs: 'NPC', gItems: '道具',
+    gTerrain: '地形', gStairs: '樓梯', gDoors: '門', gKeys: '鑰匙', gGates: '專屬鑰匙門', gGateKeys: '專屬鑰匙', gateOpens: '開門鑰匙', gateNoKey: '沒有這個道具', gPlayer: '玩家', gMonsters: '怪物', gNpcs: 'NPC', gItems: '道具',
     evThisFloor: '此樓層可抽到', evAll: '所有事件', placedN: n => n ? `✓ ${n}` : '', notDefined: '沒有任何事件池定義它',
     floorPanel: '樓層', name: '名稱', size: '大小（寬 × 高）', resize: '套用大小', connectUp: '往上樓梯通往', connectDown: '往下樓梯通往',
     rollList: n => `此樓層可抽到的事件（${n}）`, rollHint: '綠色 = 已放在地圖上。點一下即可用它作畫。',
@@ -368,6 +368,7 @@ function spriteOf(sem) {
   if (sem === 'wall' || sem === 'floor' || sem === 'stairs_up' || sem === 'stairs_down') return sem;
   const [cat, id] = sem.split(':');
   if (cat === 'door' || cat === 'key') return cat + '_' + id;
+  if (cat === 'gate') return 'door_yellow';   // the game draws a gate as a door with its key's colour washed over it
   if (cat === 'monster') return id === 'demonlord_vorkath' ? 'boss_demonlord' : id;
   if (cat === 'npc') return BUNDLE.sprites.includes('npc_' + id) ? 'npc_' + id : 'skeleton';
   if (cat === 'item') return id;
@@ -381,6 +382,7 @@ function nameOf(sem) {
   if (cat === 'npc') return L(NPC_NAMES[id]) || id;
   if (cat === 'door') return (LANG === 'zh_TW' ? L(COLORS[id]) + '門' : L(COLORS[id]) + ' door');
   if (cat === 'key') return (LANG === 'zh_TW' ? L(COLORS[id]) + '鑰匙' : L(COLORS[id]) + ' key');
+  if (cat === 'gate') { const k = L(BUNDLE.items[id] && BUNDLE.items[id].name) || id; return LANG === 'zh_TW' ? '專屬鑰匙門（' + k + '）' : 'Gate (' + k + ')'; }
   if (cat === 'event') return id;
   return sem;
 }
@@ -428,7 +430,7 @@ function setStatus(msg, bad) { const el = $('status'); el.textContent = msg || '
 // ---------------- sprites ----------------
 const IMG = {};
 BUNDLE.sprites.forEach(n => { const im = new Image(); im.onload = () => { IMG[n] = im; drawAll(); renderPalette(); if (typeof drawBrushIcon === 'function') drawBrushIcon(); }; im.src = SPRITE_DIR + n + '.png'; });
-const FALLBACK = { wall: '#5b5b66', floor: '#2b2b33', stairs: '#e0a83a', door: '#c98b2b', key: '#d8c84a', player: '#3aa0ff', npc: '#46c46a', monster: '#e0473a', item: '#b46bff' };
+const FALLBACK = { wall: '#5b5b66', floor: '#2b2b33', stairs: '#e0a83a', door: '#c98b2b', key: '#d8c84a', gate: '#a070e0', player: '#3aa0ff', npc: '#46c46a', monster: '#e0473a', item: '#b46bff' };
 function drawSem(g, sem, x, y, w, h) {
   if (!sem) return;
   if (sem.startsWith('event:')) {   // the game's story plate: gold with a slate inset (game_scene_draw.cpp)
@@ -437,7 +439,14 @@ function drawSem(g, sem, x, y, w, h) {
     return;
   }
   const sp = spriteOf(sem), im = sp && IMG[sp];
-  if (im) { g.drawImage(im, x, y, w, h); return; }
+  if (im) {
+    g.drawImage(im, x, y, w, h);
+    if (sem.startsWith('gate:')) {   // like the game: the key's colour at 60% over the door (game_scene_draw.cpp)
+      const it = BUNDLE.items[sem.slice(5)], c = (it && it.tint) || [0.6, 0.3, 0.9];
+      g.fillStyle = `rgba(${c.slice(0, 3).map(v => Math.round(v * 255)).join(',')},0.6)`; g.fillRect(x, y, w, h);
+    }
+    return;
+  }
   const cat = sem.includes(':') ? sem.split(':')[0] : sem.startsWith('stairs') ? 'stairs' : sem === 'player_start' ? 'player' : sem;
   g.fillStyle = FALLBACK[cat] || '#888'; g.fillRect(x + 2, y + 2, w - 4, h - 4);
   g.fillStyle = '#fff'; g.font = `${Math.floor(h * 0.42)}px Consolas`; g.textAlign = 'center'; g.textBaseline = 'middle';
@@ -765,10 +774,13 @@ function showHover() {
 let collapsedGroups = new Set();
 function paletteGroups() {
   const items = Object.keys(BUNDLE.items).filter(k => !k.startsWith('key_') && (BUNDLE.items[k].type || 'consumable') === 'consumable');
+  // story items open gates: a gate ("gate:<item id>") takes only its own item, and the item can be put on the map too
+  const storyItems = Object.keys(BUNDLE.items).filter(k => BUNDLE.items[k].type === 'story');
   const npcs = [...new Set(['sorcerer', 'villager', 'king', 'princess', 'handmaiden', ...FLOORS.flatMap(f => Object.values(f.stage.legend).filter(v => v.startsWith('npc:')).map(v => v.slice(4)))])];
   return [
     ['gTerrain', ['wall', 'floor']], ['gStairs', ['stairs_up', 'stairs_down']], ['gPlayer', ['player_start']],
     ['gDoors', ['door:yellow', 'door:blue', 'door:red']], ['gKeys', ['key:yellow', 'key:blue', 'key:red']],
+    ['gGates', storyItems.map(k => 'gate:' + k)], ['gGateKeys', storyItems.map(k => 'item:' + k)],
     ['gMonsters', Object.keys(BUNDLE.enemies).map(k => 'monster:' + k)], ['gNpcs', npcs.map(k => 'npc:' + k)], ['gItems', items.map(k => 'item:' + k)],
   ];
 }
@@ -815,6 +827,8 @@ function renderInspector() {
   let body = `<div class="field"><label>${t('cell', x, y)}</label><div class="kv"><span>${t('kindLbl')}</span><span>${sem ? esc(nameOf(sem)) : '⛔ ?'}</span><span>${t('charLbl')}</span><span><code>${esc(c)}</code> → <code>${esc(sem || '?')}</code></span></div></div>`;
   if (sem && sem.startsWith('monster:')) { const m = BUNDLE.enemies[sem.slice(8)] || {}, fp = footprintOf(d.st, c, sem);
     body += `<div class="field"><div class="kv"><span>${t('hp')}</span><span>${m.hp ?? '?'}</span><span>${t('atk')}</span><span>${m.atk ?? '?'}</span><span>${t('def')}</span><span>${m.def ?? '?'}</span><span>${t('footprint')}</span><span>${fp.w} × ${fp.h}</span></div></div>`; }
+  if (sem && sem.startsWith('gate:')) { const it = BUNDLE.items[sem.slice(5)];
+    body += `<div class="field"><div class="kv"><span>${t('gateOpens')}</span><span>${it ? esc(L(it.name) || sem.slice(5)) + ' <code>' + esc(sem.slice(5)) + '</code>' : '⛔ ' + esc(sem.slice(5)) + ' · ' + t('gateNoKey')}</span></div></div>`; }
   if (sem && sem.startsWith('item:')) { const it = BUNDLE.items[sem.slice(5)] || {}; body += `<div class="field"><div class="kv"><span>${t('effect')}</span><span>${esc(JSON.stringify(it.effect || {}))}</span></div></div>`; }
   if (sem && sem.startsWith('event:')) { const id = sem.slice(6), e = evById[id], tx = e && BUNDLE.texts[e.text];
     if (e && e.pending) body += `<p class="muted" style="font-size:12px">${t('pendingEvent')}</p>`;

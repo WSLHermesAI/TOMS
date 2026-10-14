@@ -63,6 +63,109 @@
       "text": "ev_village_old_plough.text",
       "title": "ev_village_old_plough.title",
       "desc": "ev_village_old_plough.desc"
+    },
+    {
+      "eventId": "ev_bell_cracked",
+      "kind": "whisper",
+      "text": "ev_bell_cracked.text",
+      "title": "ev_bell_cracked.title",
+      "desc": "ev_bell_cracked.desc",
+      "next": [
+        "ev_bell_ringer_key"
+      ]
+    },
+    {
+      "eventId": "ev_bell_ringer_key",
+      "kind": "relic",
+      "text": "ev_bell_ringer_key.text",
+      "title": "ev_bell_ringer_key.title",
+      "desc": "ev_bell_ringer_key.desc",
+      "requires": {
+        "type": "runFlagSet",
+        "flag": "event_ev_bell_cracked"
+      },
+      "actions": [
+        {
+          "type": "give",
+          "itemId": "key_bellward"
+        }
+      ],
+      "next": [
+        "ev_bell_ringer_room"
+      ]
+    },
+    {
+      "eventId": "ev_bell_ringer_room",
+      "kind": "whisper",
+      "text": "ev_bell_ringer_room.text",
+      "title": "ev_bell_ringer_room.title",
+      "desc": "ev_bell_ringer_room.desc",
+      "requires": {
+        "type": "runFlagSet",
+        "flag": "event_ev_bell_ringer_key"
+      },
+      "next": [
+        "ev_bell_rope",
+        "ev_bell_clapper"
+      ]
+    },
+    {
+      "eventId": "ev_bell_rope",
+      "kind": "relic",
+      "text": "ev_bell_rope.text",
+      "title": "ev_bell_rope.title",
+      "desc": "ev_bell_rope.desc",
+      "requires": {
+        "type": "runFlagSet",
+        "flag": "event_ev_bell_ringer_room"
+      },
+      "next": [
+        "ev_bell_rings"
+      ]
+    },
+    {
+      "eventId": "ev_bell_clapper",
+      "kind": "relic",
+      "text": "ev_bell_clapper.text",
+      "title": "ev_bell_clapper.title",
+      "desc": "ev_bell_clapper.desc",
+      "requires": {
+        "type": "runFlagSet",
+        "flag": "event_ev_bell_ringer_room"
+      },
+      "next": [
+        "ev_bell_rings"
+      ]
+    },
+    {
+      "eventId": "ev_bell_rings",
+      "kind": "rescue",
+      "text": "ev_bell_rings.text",
+      "title": "ev_bell_rings.title",
+      "desc": "ev_bell_rings.desc",
+      "requires": {
+        "all": [
+          {
+            "type": "runFlagSet",
+            "flag": "event_ev_bell_rope"
+          },
+          {
+            "type": "runFlagSet",
+            "flag": "event_ev_bell_clapper"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "addCounter",
+          "counter": "insight",
+          "delta": 1
+        },
+        {
+          "type": "give",
+          "itemId": "gem_atk"
+        }
+      ]
     }
   ]
 }

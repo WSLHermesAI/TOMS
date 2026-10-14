@@ -142,6 +142,9 @@ void Game::movePlayer(int dx, int dy) {
         openDoor(nx, ny, c);   // uses the key; the door opens and vanishes; the player stays put this turn
         return;
     }
+    // A gate opens only for its own key item (bumpGate); the player stays put this turn either way.
+    for (auto& e : st.entities)
+        if (!e.consumed && e.x == nx && e.y == ny && e.kind.rfind("gate:", 0) == 0) { bumpGate(e); return; }
     // Q7: a locked stair is not stepped on: it says which event opens it.
     if (const toms::StairLink* s = toms::stairAt(st.stairs, nx, ny); s && stairLocked(*s)) {
         bumpLockedStairs(*s);
@@ -211,6 +214,8 @@ void Game::movePlayer(int dx, int dy) {
                 } else {
                     notifications_.push_back({text, 4200});      // whispers/rescues: remembered, no stat
                 }
+                // The record's own `actions` (give an item, counters, flags), once per run.
+                if (def != eventDefs_.end() && !run_.eventFinished(evId)) runEventActions(def->second.actions);
                 // Every event that fires is finished (06 section 6 item 2): the run flag the conditions and stair
                 // locks read, the event log's finished list, its `next` events become started, and the stairs it
                 // opens say so (Q7).
@@ -272,6 +277,48 @@ void Game::finishEvent(const std::string& evId) {
             const std::map<std::string, std::string> vars = {{"from", toms::floorLabel(s.floor)}, {"to", toms::floorLabel(s.to)}};
             notices_.push_back({locale_.tr("stairs.unlocked.title"), toms::fillText(locale_.tr("stairs.unlocked.body"), vars)});
         }
+    markProgressDirty();
+}
+
+void Game::runEventActions(const nlohmann::json& actions) {
+    if (!actions.is_array()) return;
+    for (const auto& a : actions) {
+        if (!a.is_object()) continue;
+        const std::string type = a.value("type", std::string());
+        if (type == "give") {
+            const std::string itemId = a.value("itemId", std::string());
+            if (itemId.empty()) continue;
+            receiveItem(itemId);
+            notifications_.push_back({toms::fillText(locale_.tr("event.gotItem"), {{"item", itemName(itemId)}}), 3800});
+        } else if (type == "addCounter") {
+            const std::string name = a.value("counter", std::string());
+            const int delta = a.value("delta", 0);
+            if (!name.empty() && delta != 0) run_.addCounter(name, delta);
+        } else if (type == "setFlag") {
+            const std::string flag = a.value("flag", std::string());
+            if (!flag.empty()) run_.setFlag(flag, true);
+        }
+    }
+    markProgressDirty();
+}
+
+void Game::bumpGate(Entity& gate) {
+    const std::string& keyId = gate.id;
+    auto it = std::find(pl.inv.begin(), pl.inv.end(), keyId);
+    const std::map<std::string, std::string> vars = {{"item", itemName(keyId)}};
+    if (it == pl.inv.end()) {
+        const std::string msg = toms::fillText(locale_.tr("gate.locked"), vars);
+        if (notifications_.empty() || notifications_.back().first != msg) notifications_.push_back({msg, 3200});
+        audio.play("confirm_click");
+        return;
+    }
+    pl.inv.erase(it);   // the key goes into the lock
+    gate.consumed = true;
+    st.tiles[gate.y][gate.x] = '.';
+    toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, gate.x, gate.y), toms::EntityStatus::Opened);
+    notifications_.push_back({toms::fillText(locale_.tr("gate.opened"), vars), 3200});
+    audio.play("confirm_click");
+    if (const toms::anim::Clip* clip = doorAnim_.find("door_open_yellow")) mapFx_.push_back({clip, gate.x, gate.y, "door_yellow", 0.0f});
     markProgressDirty();
 }
 

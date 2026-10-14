@@ -20,6 +20,7 @@
 | [03_USER_GUIDE.md](03_USER_GUIDE.md) | 常見工作怎麼做：今天手動做，以及編輯器推出後怎麼做 |
 | [05_FLOOR_LINKS.md](05_FLOOR_LINKS.md) | 一層樓有多個樓梯、樓梯要等某個事件完成才開放：格式、遊戲規則、檢查 |
 | [06_EVENT_LOGIC.md](06_EVENT_LOGIC.md) | 事件觸發方式（踩到、交談、變數改變、連結）、條件、動作、直接連結、事件變數，以及節點圖編輯器 |
+| [07_KEY_GATES.md](07_KEY_GATES.md) | 專屬鑰匙門（只有一個劇情道具能開的門）、給予該道具的事件動作，以及鐘的事件鏈：跨越 F02–F06 的六個事件 |
 | [04_TUTORIAL.md](04_TUTORIAL.md) | 一步一步：建立事件、看懂關係圖、找出問題、修好、儲存 |
 | [tools/web_editors/index.html](../../../tools/web_editors/index.html) | 可實際操作的事件編輯器（含教學）和關卡編輯器 |
 

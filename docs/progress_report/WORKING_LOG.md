@@ -380,3 +380,45 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     - `mpdi_convert` 24 checks (Angles).
     - New ctest `anim.editor_selftest` (offscreen, 122 checks, 0.8 s). Its "24 failures" earlier came from
       giving it the wrong file; its fixture is `tests/smoke/anim_preview.anim`.
+- **2026-10-14** — **Font tool** (`tools/font`, docs 22 / 23, not committed):
+  - `fontpack` and `font_editor`: picture fonts (BMFont text `.fnt` + one `.png` page) from one picture per
+    character. The editor adds pictures and takes each one's character (a name such as `dot` or `U+00D7` works too),
+    shows a test text drawn by the game's own layout, and the combined picture with the selected glyph highlighted.
+  - Page layouts: one row (the old convert2fnt-web layout; rebuilds `connect_score.fnt` byte for byte), tight and
+    tight power of 2 (`atlas::packPages`). Space width defaults to the `1` picture (else 5), line height to the
+    tallest picture; both can be set.
+  - Runtime: `BitmapFont` / `FontText` in `src/core/engine/bitmap_font.*`, now in `toms_core`.
+  - Tests: `font.tool`, `font.editor_selftest`; fixtures in `tests/font` (the old 10085 fonts moved there).
+- **2026-10-14** — **Editors in English / 中文** (`tools/studio_common/Language.*`, docs 24):
+  - A corner button in every Qt editor's menu bar; the window re-translates in place; QSettings TOMS/studio keeps the
+    choice. 1,097 `tr()` texts in `i18n/zh_TW/*.json`, built in as a Qt resource; `i18n_check.py` lists missing ones.
+  - Selftests, headless and screenshot runs start in English; `TOMS_LANGUAGE` forces a language without saving it.
+  - The toggle was first invisible (a child added to a shown window stays hidden): fixed, and the test checks it.
+  - `toms_editor` now builds `studio_common` before testing was enabled, which dropped the studio tests: the root
+    CMakeLists enables testing first.
+  - Tests: `studio.language`, `studio.i18n_complete`; the atlas selftest switches the real window and back.
+- **2026-10-14** — **Atlas editor:** the page view dims each sprite's extruded ring (the copies outside the frame);
+  new projects default to extrude 1 (0–16).
+- **2026-10-14** — **Docs are local files only** (the owner): never upload project data online; English in `docs/`,
+  Traditional Chinese in `docs/zh_TW/` (rule in `CLAUDE.md`). The two documents published earlier were deleted.
+- **2026-10-14** — **Event chain "The Silent Bell" and key gates** (docs event_editor/07, not committed):
+  - Six events in `pool_act01` across F03 → F05 → F04 → F06 + F02 → F03, linked by `requires` (event done) and
+    `next`; the last one needs two. F05 gives `key_bellward` (a `story` item); F04's bell-ringer's room is behind a
+    `gate:key_bellward`.
+  - Runtime: gates (open only for their item, which they take; stay open; drawn as a door washed in the item's
+    `tint`), event `actions` (give / addCounter / setFlag), finished event tiles stay gone after a reload, story
+    items cannot be used up.
+  - Editors: Gates / Gate keys in the stage editor; the event editor reads the item list from `items.json`;
+    `tools/web_editors/sync_floor_index.mjs` rebuilds `floor_index.json` with Node; `toms_game --goto=<floor>`.
+  - Played in the game (scripted): the key given on F05, the gate refusing and then opening on F04, the room's event.
+  - Tests: `unit.event_chain_test` (36 checks: actions, gates, the chain, F04's room reached only through the gate),
+    `smoke.bell_gate`.
+- **2026-10-14** — **glTF viewer: lights, cameras, Unicode paths:**
+  - With the file's `KHR_lights_punctual` the hemisphere ambient drops 0.7 → 0.1, so the file's lights light the
+    scene. Camera buttons (free, each file camera, ◀ / ▶) next to the drop-down.
+  - `tests/gltf/lights_cameras.gltf` (point, spot, sun; front / top perspective, side orthographic); tests
+    `smoke.gltf_lights`, `smoke.gltf_camera_side`.
+  - `Unicode❤♻Test` failed to open: argv was ANSI and the loader opened files with `std::ifstream(string)` and
+    cgltf's `fopen`. Now the command line is read wide and every read (incl. cgltf's buffers) goes through
+    `std::filesystem::u8path`. `gltf_model_test` checks a non-ASCII `.gltf` + `.bin`.
+  - Changed-only run: 96 of 101 tests, all pass. Full suite and web not run.

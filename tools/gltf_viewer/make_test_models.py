@@ -17,6 +17,9 @@ the tests own every byte (no licence questions) and each one checks one feature:
                       platform moving at 0.5 m/s; a trigger zone the box falls through; a pendulum (a joint with
                       locked linear axes); an animated (kinematic) sweeper
 
+  lights_cameras.gltf KHR_lights_punctual (a red point, a blue spot, a warm sun) and three cameras (front and top
+                      perspective, side orthographic) over white shapes: the viewer lights it with the file's lights
+
   python tools/gltf_viewer/make_test_models.py            writes tests/gltf/*.gltf
 """
 import base64
@@ -511,9 +514,64 @@ def physics_scene():
     b.write('physics_scene.gltf')
 
 
+# ---- lights_cameras -----------------------------------------------------------------------------
+def lights_cameras():
+    """KHR_lights_punctual and cameras: white shapes on a grey floor, lit only by the file's own lights."""
+    b = Builder()
+    meshes, materials, nodes = [], [], []
+
+    def add_mesh(name, geo, material):
+        pos, nrm, uv, idx = geo
+        attrs = {'POSITION': b.floats(pos, 'VEC3', minmax=True), 'NORMAL': b.floats(nrm, 'VEC3'), 'TEXCOORD_0': b.floats(uv, 'VEC2')}
+        meshes.append({'name': name, 'primitives': [{'attributes': attrs, 'indices': b.indices(idx), 'material': material}]})
+        return len(meshes) - 1
+
+    materials.append({'name': 'floor', 'pbrMetallicRoughness': {'baseColorFactor': [0.7, 0.7, 0.7, 1], 'metallicFactor': 0, 'roughnessFactor': 0.9}})
+    materials.append({'name': 'white', 'pbrMetallicRoughness': {'baseColorFactor': [0.95, 0.95, 0.95, 1], 'metallicFactor': 0, 'roughnessFactor': 0.5}})
+    fpos, fnrm, fuv, fidx = cube(1.0)
+    floor = ([(p[0] * 8, p[1] * 0.1 - 0.05, p[2] * 8) for p in fpos], fnrm, fuv, fidx)
+    nodes.append({'name': 'floor', 'mesh': add_mesh('floor', floor, 0)})
+    sph = sphere(r=0.5)
+    for i, x in enumerate((-1.5, 0.0, 1.5)):
+        nodes.append({'name': 'sphere_%d' % i, 'mesh': add_mesh('sphere_%d' % i, sph, 1), 'translation': [x, 0.5, 0]})
+    nodes.append({'name': 'box', 'mesh': add_mesh('box', cube(0.8), 1), 'translation': [0, 0.4, -1.6],
+                  'rotation': list(quat_axis((0, 1, 0), 30))})
+
+    # Lights: a red point light on the left, a blue spot light above the right sphere aiming down (-Z turned to -Y),
+    # a weak warm sun from the front left. Each shines down its node's -Z.
+    b.doc['extensions'] = {'KHR_lights_punctual': {'lights': [
+        {'name': 'red_point', 'type': 'point', 'color': [1.0, 0.15, 0.1], 'intensity': 12, 'range': 8},
+        {'name': 'blue_spot', 'type': 'spot', 'color': [0.2, 0.45, 1.0], 'intensity': 40, 'range': 10,
+         'spot': {'innerConeAngle': 0.25, 'outerConeAngle': 0.6}},
+        {'name': 'warm_sun', 'type': 'directional', 'color': [1.0, 0.85, 0.6], 'intensity': 0.6}]}}
+    light_nodes = [
+        {'name': 'red_point', 'translation': [-2.4, 1.4, 0.8], 'extensions': {'KHR_lights_punctual': {'light': 0}}},
+        {'name': 'blue_spot', 'translation': [1.5, 3.0, 0], 'rotation': list(quat_axis((1, 0, 0), -90)),
+         'extensions': {'KHR_lights_punctual': {'light': 1}}},
+        {'name': 'warm_sun', 'rotation': [-0.27, -0.27, -0.08, 0.92], 'extensions': {'KHR_lights_punctual': {'light': 2}}},
+    ]
+    # Cameras: front (perspective, a little above, looking at the origin), top (straight down), side (orthographic,
+    # from +X). Each looks down its node's -Z.
+    b.doc['cameras'] = [
+        {'name': 'front', 'type': 'perspective', 'perspective': {'yfov': 0.8, 'znear': 0.1, 'zfar': 100}},
+        {'name': 'top', 'type': 'perspective', 'perspective': {'yfov': 0.9, 'znear': 0.1, 'zfar': 100}},
+        {'name': 'side', 'type': 'orthographic', 'orthographic': {'xmag': 3.6, 'ymag': 2.2, 'znear': 0.1, 'zfar': 100}},
+    ]
+    cam_nodes = [
+        {'name': 'cam_front', 'camera': 0, 'translation': [0, 2.2, 6.5], 'rotation': list(quat_axis((1, 0, 0), -18))},
+        {'name': 'cam_top', 'camera': 1, 'translation': [0, 7.5, 0], 'rotation': list(quat_axis((1, 0, 0), -90))},
+        {'name': 'cam_side', 'camera': 2, 'translation': [6.0, 1.0, 0], 'rotation': list(quat_axis((0, 1, 0), 90))},
+    ]
+    nodes += light_nodes + cam_nodes
+    b.doc.update({'extensionsUsed': ['KHR_lights_punctual'], 'scene': 0, 'scenes': [{'nodes': list(range(len(nodes)))}],
+                  'nodes': nodes, 'meshes': meshes, 'materials': materials})
+    b.write('lights_cameras.gltf')
+
+
 if __name__ == '__main__':
     skin_tube()
     morph_cube()
     instancing()
     pbr_materials()
     physics_scene()
+    lights_cameras()

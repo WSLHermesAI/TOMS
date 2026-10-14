@@ -438,9 +438,13 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
         }
     for (auto& e : st.entities) {
         bool isMonster = e.kind.rfind("monster:", 0) == 0;
-        bool isItem = e.kind.rfind("item:", 0) == 0;
-        if (!isMonster && !isItem) continue;
-        toms::EntityStatus want = isMonster ? toms::EntityStatus::Defeated : toms::EntityStatus::Collected;
+        // an event fired on this tile does not come back (it would fire, and give its items, again); the same
+        // event id may sit on other floors, so this goes by the tile, like items
+        bool isItem = e.kind.rfind("item:", 0) == 0 || e.kind.rfind("event:", 0) == 0;
+        const bool isGate = e.kind.rfind("gate:", 0) == 0;   // a gate opened with its key stays open
+        if (!isMonster && !isItem && !isGate) continue;
+        toms::EntityStatus want = isMonster ? toms::EntityStatus::Defeated : isGate ? toms::EntityStatus::Opened
+                                                                                     : toms::EntityStatus::Collected;
         toms::EntityStatus have = toms::getEntityStatus(entityStatus_, toms::entityStatusKey(st.id, e.x, e.y));
         if (have == want) {
             e.consumed = true;

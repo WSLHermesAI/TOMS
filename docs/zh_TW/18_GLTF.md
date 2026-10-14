@@ -171,7 +171,8 @@ renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
   morph target、instance），以及每個擴充，有繪製的為綠色、被忽略的為橘色，再加上
   警告。
 - **Camera**（檔案有鏡頭時）：*free (orbit)* 或檔案的某個鏡頭，依名稱
-  （沒有名稱的取它的節點或父節點的名稱）。有動畫的鏡頭節點會移動視角。
+  （沒有名稱的取它的節點或父節點的名稱），可從下拉選單或一排按鈕選擇（**free**、**1 front**、**2 top**…；使用中的會亮起），
+  並用 **◀ / ▶** 逐一切換。有動畫的鏡頭節點會移動視角。
   透視鏡頭保留它的視野和 near / far；正交鏡頭保留它的高度。
   **跟著鏡頭走：** 左鍵拖曳環顧（在鏡頭自己的座標系中，繞鏡頭的上方向偏擺、繞右方向俯仰），
   滾輪縮放它的鏡頭；鏡頭持續跟著它節點的動畫。
@@ -185,7 +186,8 @@ renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
 - **Lights and shadows：**
   - 陰影開 / 關、*ground*（模型下方承接陰影的地板）、atlas
     大小、陰影偏移；
-  - 檔案自己的燈光（`KHR_lights_punctual`），如果有的話；
+  - 檔案自己的燈光（`KHR_lights_punctual`），如果有的話：此時預設燈組關閉，環境光降到 0.1（滑桿顯示 *ambient (file lights)*），
+    讓場景由檔案的燈光照亮，而不是檢視器的預設照明；取消勾選 *the file's lights* 會回到燈組與它的環境光（0.7）；
   - 否則是一組燈光：*default*（主光 + 補光）、*point*、*spot*、*all*，或你自己的。每盞燈有
     類型、顏色、強度、是否投射陰影，然後是方向（偏擺 / 俯仰），或位置、範圍和
     錐角。最多 4 盞；`+ directional` / `+ point` / `+ spot` 新增一盞；

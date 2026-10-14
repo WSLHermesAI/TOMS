@@ -95,6 +95,19 @@
        2
       ]
      ]
+    },
+    {
+     "id": "ev_bell_clapper",
+     "kind": "relic",
+     "title": "The Lost Clapper",
+     "pool": "pool_act01",
+     "listed": true,
+     "tiles": [
+      [
+       16,
+       10
+      ]
+     ]
     }
    ],
    "beats": []
@@ -139,6 +152,32 @@
       [
        17,
        5
+      ]
+     ]
+    },
+    {
+     "id": "ev_bell_cracked",
+     "kind": "whisper",
+     "title": "The Cracked Bell",
+     "pool": "pool_act01",
+     "listed": true,
+     "tiles": [
+      [
+       8,
+       1
+      ]
+     ]
+    },
+    {
+     "id": "ev_bell_rings",
+     "kind": "rescue",
+     "title": "The Bell Rings Again",
+     "pool": "pool_act01",
+     "listed": true,
+     "tiles": [
+      [
+       10,
+       1
       ]
      ]
     }
@@ -193,6 +232,19 @@
        11
       ]
      ]
+    },
+    {
+     "id": "ev_bell_ringer_room",
+     "kind": "whisper",
+     "title": "The Bell-ringer's Room",
+     "pool": "pool_act01",
+     "listed": true,
+     "tiles": [
+      [
+       17,
+       14
+      ]
+     ]
     }
    ],
    "beats": [
@@ -245,6 +297,19 @@
        2
       ]
      ]
+    },
+    {
+     "id": "ev_bell_ringer_key",
+     "kind": "relic",
+     "title": "The Bell-ringer's Key",
+     "pool": "pool_act01",
+     "listed": true,
+     "tiles": [
+      [
+       3,
+       13
+      ]
+     ]
     }
    ],
    "beats": []
@@ -289,6 +354,19 @@
       [
        2,
        14
+      ]
+     ]
+    },
+    {
+     "id": "ev_bell_rope",
+     "kind": "relic",
+     "title": "The Frayed Bell Rope",
+     "pool": "pool_act01",
+     "listed": true,
+     "tiles": [
+      [
+       19,
+       13
       ]
      ]
     }
@@ -7217,6 +7295,24 @@
   ],
   "ev_barracks_night_fire_v4": [
    "F43"
+  ],
+  "ev_bell_clapper": [
+   "F02"
+  ],
+  "ev_bell_cracked": [
+   "F03"
+  ],
+  "ev_bell_ringer_key": [
+   "F05"
+  ],
+  "ev_bell_ringer_room": [
+   "F04"
+  ],
+  "ev_bell_rings": [
+   "F03"
+  ],
+  "ev_bell_rope": [
+   "F06"
   ],
   "ev_cavern_echo_wall": [
    "F38",
