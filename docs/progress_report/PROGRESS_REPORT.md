@@ -15,6 +15,17 @@
 
 ## ▶ Next Step
 
+**glTF physics: KHR_physics_rigid_bodies on Jolt** (2026-10-12, not committed; [../18_GLTF.md](../18_GLTF.md) §7):
+- `Model::physics` reads `KHR_implicit_shapes` + `KHR_physics_rigid_bodies`: shapes, materials, filters, joints, and
+  motion / collider / trigger / joint on nodes. `gltf::PhysicsWorld` (Jolt Physics 5.6, MIT, deterministic)
+  simulates them and writes the bodies back into the `Pose`. Compounds, kinematic and animated bodies, triggers with
+  events, combine rules, filters and joints (limits, drives) are all supported; the approximations are listed in §7.2.
+- `gltf_viewer`: simulates on open, with a Physics panel and collider boxes. The extension author's 7 sample files
+  load and simulate.
+- Tests: `unit.gltf_physics_test` (35 checks), `smoke.gltf_physics`. Changed-only run: 85 of 90 tests, all pass.
+- `falling_cube.glb` (old engine) is not a physics file: it is 50 baked soft-body frames as separate meshes.
+- Not yet: the game, web and Android builds (W36); no TOMS content uses physics.
+
 **The owner's answers built: Q6, Q10 (a), English, locked stairs, the event index, the image-map design**
 (2026-10-12, not committed; [6_PROGRESS_REPORT.md](6_PROGRESS_REPORT.md) §22):
 - **Q6, then the generator removed.** First built: the floor generator, restored, asked before replacing hand-edited
@@ -232,6 +243,7 @@ the Visual Studio IDE (W1).
 | ~~W33~~ | ~~The generator re-rolls every floor's events~~ | closed 2026-10-12: the generator was removed; floors are edited by hand in the stage editor | — |
 | W34 | **Locks are not in any floor yet** | the runtime is built and tested on F01 with `--stair-lock=`; no floor spec has a `stairs` list with `unlock`, and the generator does not place extra stair tiles ([05](../event_editor/05_FLOOR_LINKS.md) §5) | choose the floors and events (event editor, floor inspector), place the stair tiles (stage editor), or teach the generator |
 | W35 | **Docs in two languages, new ones** | `21_IMAGE_STAGES.md` has its `zh_TW` copy; the event-editor UI's own Chinese strings were kept | as W25 |
+| W36 | **Physics only on desktop tools** | `toms_physics` (Jolt) links into `gltf_viewer` and the tests; the game, the web and Android builds do not build it | when the game needs physics: link `toms_physics` into the game, build Jolt for wasm (WASM SIMD) and Android, check size and speed |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
 
 ---

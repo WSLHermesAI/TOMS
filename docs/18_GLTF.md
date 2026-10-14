@@ -24,7 +24,7 @@ In Visual Studio: the launch targets *gltf_viewer (skinned test model)* and *glt
 | Animation | translation, rotation, scale, morph weights; `LINEAR` (rotation: slerp), `STEP`, `CUBICSPLINE`; several animations at once |
 | Scenes | node hierarchy (TRS or matrix), the default scene, mirrored nodes (negative scale) |
 | Files | `.glb`, `.gltf` + `.bin`, data URIs, external PNG / JPEG / BMP / TGA images |
-| Extensions | `EXT_mesh_gpu_instancing`, `KHR_materials_unlit`, `KHR_texture_transform`, `KHR_materials_emissive_strength`, `KHR_mesh_quantization`, `KHR_materials_pbrSpecularGlossiness` (as base colour + roughness), `KHR_materials_transmission` + `KHR_materials_volume` (glass, approximated: see-through with its reflections, no refraction of what is behind) |
+| Extensions | `EXT_mesh_gpu_instancing`, `KHR_materials_unlit`, `KHR_texture_transform`, `KHR_materials_emissive_strength`, `KHR_mesh_quantization`, `KHR_materials_pbrSpecularGlossiness` (as base colour + roughness), `KHR_materials_transmission` + `KHR_materials_volume` (glass, approximated: see-through with its reflections, no refraction of what is behind), `KHR_physics_rigid_bodies` + `KHR_implicit_shapes` (simulated on Jolt: §7) |
 
 **Not yet supported:**
 - **No shadows on OpenGL ES / WebGL** (the web build, Android's GLES path).
@@ -200,6 +200,31 @@ default (`src/game/src/title_scene.*`, owned by `GameSession`).
 - `--camera=<index|name>` (one of the file's cameras) and `--look=<yaw>,<pitch>` (turned in its own frame, degrees), `--light=default|point|spot|all|file`, `--shadows=0|1`, `--ground=0|1`, `--shadow-bias=<x>`;
 - `--renderer=d3d11|d3d12|vulkan|opengl`.
 
+### Editing nodes (2026-10-14)
+
+- **Scene tree** (under Model): the nodes of the scene as a tree, tagged `[mesh]`, `[skinned mesh]`, `[camera]`,
+  `[light]`, and with physics `[body]`, `[kinematic]`, `[collider]`, `[trigger]`, `[joint]`. An edited node shows `*`.
+  Click a node to select it.
+- **Click a mesh in the view** to select its node. The pick tests each mesh's bounds, instances included. Clicking
+  the same spot again selects the next node behind, for example a mesh inside a see-through volume. An orange box
+  outlines the selection.
+- **Node inspector:** translation, rotation (degrees) and scale of the node's local transform, plus a uniform
+  scale. Buttons: **reset node** (Delete), **reset all edits**, **look at it**, **deselect**, and **parent** to go
+  up the tree.
+- **Handles in the view:** drag them with the left mouse button. Dragging elsewhere still orbits.
+
+  | Tool | Key | Handles | Space |
+  |---|---|---|---|
+  | Move | T | an arrow per axis; the centre square moves in the view plane | world axes |
+  | Rotate | E | a ring per axis | world axes |
+  | Scale | S | a box per axis; the centre square scales evenly | the node's own axes |
+
+- **Edits replace the node's animation** (they are applied after it). With physics on, the simulation restarts from
+  the edited scene when a drag or field edit ends, so a moved body falls from its new place. Opening another file
+  drops the edits. They are not saved to the file.
+- Test options: `--select=<node>`, `--tool=move|rotate|scale`, `--pick=<x>,<y>`, and `--drag=<x0>,<y0>,<x1>,<y1>`
+  (pixels from the selected node's origin on screen).
+
 ## 5. Tests
 
 - **Unit test `gltf_model_test`:** 47 checks on the test models.
@@ -324,3 +349,113 @@ frames, blend two frames in the shader), and these differences:
 - the Fox crowd matches between D3D11, D3D12, Vulkan and OpenGL;
 - `gltf_anim_texture_test` compares the bake with `Pose::jointMatrices` (exact at frame times, within 0.01
   between them) and checks the blends, the crowd state and save / load.
+
+## 7. Physics: KHR_physics_rigid_bodies on Jolt
+
+**Status:** built 2026-10-12. The loader, `gltf_viewer` and the tests use it. The game does not link it yet, and
+the web and Android builds don't build it (W36).
+
+### 7.1 What it is
+
+Two Khronos extensions, still drafts, describe rigid-body physics in a glTF file
+([spec and samples](https://github.com/eoineoineoin/glTF_Physics)):
+
+- **`KHR_implicit_shapes`** lists shapes on the document: `sphere`, `box` (full extents), `capsule`, `cylinder`
+  (`radiusTop` / `radiusBottom`, so a cone is a cylinder with one radius 0) and `plane`.
+- **`KHR_physics_rigid_bodies`** puts physics on nodes:
+  - `motion` makes the node a rigid body: mass, centre of mass, inertia, starting velocities, gravity factor and
+    `isKinematic`;
+  - `collider` is solid geometry: an implicit shape, or a mesh used as triangles or as its convex hull;
+  - `trigger` is a volume that reports what enters and leaves it;
+  - `joint` constrains the node's body to another node's body.
+
+  The document level holds physics materials (friction, restitution, combine modes), collision filters
+  ("systems") and joint definitions (limits and drives per axis).
+
+`falling_cube.glb` from the old engine's media is **not** one of these files. It has no extension at all: it is
+a soft-body simulation baked by Blender, 50 separate meshes, one per frame, all visible at once. Playing it needs
+a mesh-sequence player, not physics.
+
+### 7.2 Code
+
+| Part | Where | What |
+|---|---|---|
+| Data | `gltf_model.h` (`Model::physics`) | `PhysicsShape`, `PhysicsMaterial`, `PhysicsFilter`, `PhysicsJoint` (limits, drives), `NodePhysics` (motion, collider, trigger, joint), read by `gltf_model.cpp` from cgltf's raw extension JSON. Defaults come from the extensions' schemas. Bad indices are dropped with a warning |
+| Simulation | `gltf_physics.h/.cpp` (`gltf::PhysicsWorld`) | `build(model, pose)`, `step(dt, pose)` (fixed 1/60 s steps), `simulateTo(t, pose)`, `writePose(pose)`, `takeEvents()` (trigger enter / leave), `inside()`, `isSleeping()`, `stats()`, `warnings()`, `debugBoxes()` |
+| Library | `toms_physics` (`src/game/CMakeLists.txt`) | Links Jolt privately, so `gltf_physics.h` shows no Jolt type |
+| Engine | [Jolt Physics](https://github.com/jrouwe/JoltPhysics) v5.6.0, MIT (`cmake/TomsDependencies.cmake`) | Fetched like the other libraries. Cross-platform deterministic; SSE4.2 only (runs on any x64); single-threaded job system, so a run gives the same numbers every time |
+
+How the file's data becomes Jolt objects:
+
+- **A node with `motion` is one body.** Its own collider and the colliders of descendants without their own
+  `motion` form a compound. Each collider's node scale is baked into its shape's size.
+- **`isKinematic`, or a mass of 0, gives a kinematic body:** it moves at its own velocity and nothing pushes it.
+- **A node an animation moves** (a channel on it or an ancestor) is kinematic and follows the animation. The file
+  says animation wins over simulation.
+- **A collider with no `motion` above it is static.**
+- **A trigger is a sensor.** Inside a moving body it follows that body. A part of a compound trigger reports the
+  compound's node.
+- **Friction and restitution** use the KHR combine rule (average, then minimum, then maximum, then multiply).
+  With no mode given, Jolt's own rules apply (square root of the product for friction, the larger restitution).
+- **Collision filters:** two colliders collide when each one's `collideWithSystems` / `notCollideWithSystems`
+  lets the other's `collisionSystems` through. A collider without a filter collides with everything.
+- **A joint is a six-degrees-of-freedom constraint between the two nodes' frames.**
+  - A limit of `min = max = 0` locks the axis; other limits bound it.
+  - A linear `stiffness` makes the limit soft.
+  - Drives become motors: position motors (stiffness / damping springs) or velocity motors, with `maxForce` as
+    the force or torque limit.
+  - `enableCollision: false` stops the two bodies colliding.
+- **Writing back:** after the steps, every dynamic and kinematic body (not the animated ones) is written into the
+  `Pose` as its node's local transform, parents first, keeping the node's scale.
+
+Approximations (Jolt has no direct equivalent):
+
+- **Friction:** one friction value per body (`dynamicFriction`).
+- **Compound bodies:** the first collider's material and filter apply to the whole body.
+- **Multi-axis limits:** a limit on 2 or 3 linear axes is a box, not a circle or sphere.
+- **Angular limits:** they are hard; Jolt has no spring limit on rotation.
+- **Dynamic triangle meshes:** they become their convex hull, and a warning says so.
+- **Infinite inertia:** an inertia component of 0 ("infinite") becomes a very large value.
+- **Penetration:** resting contacts may sink up to Jolt's penetration slop of 2 cm. A 1 m box rests at 0.48–0.50.
+
+### 7.3 In the viewer
+
+A file with these extensions simulates as soon as it opens (`--physics=0` turns it off). The **Physics** panel
+has:
+
+- the simulated time and the bodies (dynamic and awake, kinematic, static, triggers, joints);
+- **paused** / **step** / **restart**;
+- a gravity slider;
+- **collider boxes**: grey static, blue kinematic, green dynamic (dark when asleep), yellow triggers;
+- any build warnings;
+- the last trigger events.
+
+With `--time=<t>` the scene is simulated once up to `t`, for screenshots.
+
+Checked on the extension author's samples as well (not committed: they carry no licence). ShapeTypes, JointTypes,
+Triggers, MotionProperties, Filtering, Materials_Restitution and Materials_Friction all load, build and simulate.
+The only warning is ShapeTypes' dynamic triangle mesh, which becomes its hull.
+
+### 7.4 Tests
+
+- **`tests/gltf/physics_scene.gltf`** (`tools/gltf_viewer/make_test_models.py`):
+  - a static ground;
+  - a falling box, a bouncy sphere, a lying capsule, a cone, a two-box compound and a convex-hull octahedron;
+  - a "ghost" box whose filter skips the ground;
+  - a kinematic platform at 0.5 m/s;
+  - a trigger zone the box falls through;
+  - a pendulum (ball joint);
+  - an animated sweeper.
+- **`unit.gltf_physics_test`** (35 checks):
+  - reading;
+  - resting height and sleep;
+  - the bounce;
+  - every shape lands, and the compound's parts keep their places;
+  - the ghost falls through;
+  - the platform moves exactly 1 m in 2 s;
+  - trigger enter / leave;
+  - the pendulum keeps its length;
+  - the sweeper follows its animation;
+  - `simulateTo` equals single steps bit for bit;
+  - a model without physics refuses to build.
+- **`smoke.gltf_physics`:** the scene at 2.5 s on D3D11.

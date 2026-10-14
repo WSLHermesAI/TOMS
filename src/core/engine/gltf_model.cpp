@@ -3,6 +3,7 @@
 #include "gltf_model.h"
 
 #include <cgltf.h>
+#include <json.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>   // the implementation is in stb_image_impl.cpp
 
@@ -24,7 +25,8 @@ bool contains(const std::vector<std::string>& v, const std::string& s) { return 
 // The extensions we draw. Anything else the file uses is "ignored" (still loads), unless required.
 const char* const kSupported[] = {"KHR_materials_unlit", "KHR_texture_transform", "KHR_materials_emissive_strength",
                                   "KHR_mesh_quantization", "EXT_mesh_gpu_instancing", "KHR_materials_pbrSpecularGlossiness",
-                                  "KHR_materials_transmission", "KHR_materials_volume", "KHR_lights_punctual"};
+                                  "KHR_materials_transmission", "KHR_materials_volume", "KHR_lights_punctual",
+                                  "KHR_implicit_shapes", "KHR_physics_rigid_bodies"};
 bool supported(const std::string& e) {
     for (const char* s : kSupported)
         if (e == s) return true;
@@ -210,6 +212,189 @@ void readAttribute(const cgltf_attribute& a, Primitive& p) {
         break;
     default: break;
     }
+}
+
+// ---- physics: KHR_implicit_shapes + KHR_physics_rigid_bodies (cgltf keeps them as raw JSON) ------------
+
+nlohmann::json extensionJson(const cgltf_extension* ext, size_t count, const char* name) {
+    for (size_t i = 0; i < count; i++)
+        if (ext[i].name && std::strcmp(ext[i].name, name) == 0 && ext[i].data)
+            return nlohmann::json::parse(ext[i].data, nullptr, false);
+    return nlohmann::json();
+}
+
+glm::vec3 vec3Of(const nlohmann::json& j, const char* key, glm::vec3 def) {
+    if (!j.contains(key) || !j[key].is_array() || j[key].size() < 3) return def;
+    return {j[key][0].get<float>(), j[key][1].get<float>(), j[key][2].get<float>()};
+}
+
+PhysicsCombine combineOf(const nlohmann::json& j, const char* key) {
+    const std::string v = j.value(key, std::string());
+    return v == "average" ? PhysicsCombine::Average : v == "minimum" ? PhysicsCombine::Minimum
+         : v == "maximum" ? PhysicsCombine::Maximum : v == "multiply" ? PhysicsCombine::Multiply : PhysicsCombine::Unset;
+}
+
+std::vector<std::string> stringsOf(const nlohmann::json& j, const char* key) {
+    std::vector<std::string> out;
+    if (j.contains(key) && j[key].is_array())
+        for (const auto& v : j[key]) if (v.is_string()) out.push_back(v.get<std::string>());
+    return out;
+}
+
+std::vector<int> intsOf(const nlohmann::json& j, const char* key) {
+    std::vector<int> out;
+    if (j.contains(key) && j[key].is_array())
+        for (const auto& v : j[key]) if (v.is_number_integer()) out.push_back(v.get<int>());
+    return out;
+}
+
+PhysicsGeometry geometryOf(const nlohmann::json& j) {
+    PhysicsGeometry g;
+    if (!j.is_object()) return g;
+    g.shape = j.value("shape", -1);
+    g.mesh = j.value("mesh", -1);
+    g.convexHull = j.value("convexHull", false);
+    return g;
+}
+
+// Reads the two extensions into m.physics. Indices are checked here, so the simulation can trust them.
+void readPhysics(const cgltf_data* d, Model& m) {
+    const nlohmann::json shapes = extensionJson(d->data_extensions, d->data_extensions_count, "KHR_implicit_shapes");
+    const nlohmann::json doc = extensionJson(d->data_extensions, d->data_extensions_count, "KHR_physics_rigid_bodies");
+    Physics& ph = m.physics;
+    if (shapes.is_object() && shapes.contains("shapes") && shapes["shapes"].is_array())
+        for (const auto& j : shapes["shapes"]) {
+            PhysicsShape s;
+            const std::string type = j.value("type", std::string());
+            const nlohmann::json body = j.contains(type) ? j[type] : nlohmann::json::object();
+            if (type == "sphere") { s.type = PhysicsShape::Type::Sphere; s.radius = body.value("radius", 0.5f); }
+            else if (type == "box") { s.type = PhysicsShape::Type::Box; s.size = vec3Of(body, "size", glm::vec3(1.0f)); }
+            else if (type == "capsule" || type == "cylinder") {
+                s.type = type == "capsule" ? PhysicsShape::Type::Capsule : PhysicsShape::Type::Cylinder;
+                s.height = body.value("height", 0.5f);
+                s.radiusTop = body.value("radiusTop", 0.25f);
+                s.radiusBottom = body.value("radiusBottom", 0.25f);
+            } else if (type == "plane") {
+                s.type = PhysicsShape::Type::Plane;
+                s.sizeX = body.value("sizeX", 0.0f);
+                s.sizeZ = body.value("sizeZ", 0.0f);
+                s.doubleSided = body.value("doubleSided", false);
+            } else {
+                m.warnings.push_back("physics: unknown implicit shape type '" + type + "' (read as a 1 m box)");
+            }
+            ph.shapes.push_back(s);
+        }
+    if (doc.is_object()) {
+        if (doc.contains("physicsMaterials") && doc["physicsMaterials"].is_array())
+            for (const auto& j : doc["physicsMaterials"]) {
+                PhysicsMaterial pm;
+                pm.staticFriction = j.value("staticFriction", 0.6f);
+                pm.dynamicFriction = j.value("dynamicFriction", 0.6f);
+                pm.restitution = j.value("restitution", 0.0f);
+                pm.frictionCombine = combineOf(j, "frictionCombine");
+                pm.restitutionCombine = combineOf(j, "restitutionCombine");
+                ph.materials.push_back(pm);
+            }
+        if (doc.contains("collisionFilters") && doc["collisionFilters"].is_array())
+            for (const auto& j : doc["collisionFilters"]) {
+                PhysicsFilter f;
+                f.systems = stringsOf(j, "collisionSystems");
+                f.collideWith = stringsOf(j, "collideWithSystems");
+                f.notCollideWith = stringsOf(j, "notCollideWithSystems");
+                ph.filters.push_back(f);
+            }
+        if (doc.contains("physicsJoints") && doc["physicsJoints"].is_array())
+            for (const auto& j : doc["physicsJoints"]) {
+                PhysicsJoint pj;
+                if (j.contains("limits") && j["limits"].is_array())
+                    for (const auto& l : j["limits"]) {
+                        PhysicsJointLimit o;
+                        o.linearAxes = intsOf(l, "linearAxes");
+                        o.angularAxes = intsOf(l, "angularAxes");
+                        o.hasMin = l.contains("min");
+                        o.hasMax = l.contains("max");
+                        o.min = l.value("min", 0.0f);
+                        o.max = l.value("max", 0.0f);
+                        o.stiffness = l.contains("stiffness") ? l.value("stiffness", 0.0f) : -1.0f;
+                        o.damping = l.value("damping", 0.0f);
+                        pj.limits.push_back(o);
+                    }
+                if (j.contains("drives") && j["drives"].is_array())
+                    for (const auto& dr : j["drives"]) {
+                        PhysicsJointDrive o;
+                        o.angular = dr.value("type", std::string()) == "angular";
+                        o.acceleration = dr.value("mode", std::string()) == "acceleration";
+                        o.axis = std::clamp(dr.value("axis", 0), 0, 2);
+                        o.maxForce = dr.contains("maxForce") ? dr.value("maxForce", 0.0f) : -1.0f;
+                        o.hasPositionTarget = dr.contains("positionTarget");
+                        o.hasVelocityTarget = dr.contains("velocityTarget");
+                        o.positionTarget = dr.value("positionTarget", 0.0f);
+                        o.velocityTarget = dr.value("velocityTarget", 0.0f);
+                        o.stiffness = dr.value("stiffness", 0.0f);
+                        o.damping = dr.value("damping", 0.0f);
+                        pj.drives.push_back(o);
+                    }
+                ph.joints.push_back(pj);
+            }
+    }
+    bool anyNode = false;
+    std::vector<NodePhysics> nodes(d->nodes_count);
+    auto checkGeometry = [&](PhysicsGeometry& g, const std::string& where) {
+        if (g.shape >= (int)ph.shapes.size()) { m.warnings.push_back(where + ": shape " + std::to_string(g.shape) + " does not exist"); g.shape = -1; }
+        if (g.mesh >= (int)m.meshes.size()) { m.warnings.push_back(where + ": mesh " + std::to_string(g.mesh) + " does not exist"); g.mesh = -1; }
+    };
+    for (size_t i = 0; i < d->nodes_count; i++) {
+        const nlohmann::json j = extensionJson(d->nodes[i].extensions, d->nodes[i].extensions_count, "KHR_physics_rigid_bodies");
+        if (!j.is_object()) continue;
+        anyNode = true;
+        NodePhysics& n = nodes[i];
+        const std::string where = "physics, node '" + m.nodes[i].name + "'";
+        if (j.contains("motion") && j["motion"].is_object()) {
+            const auto& mo = j["motion"];
+            n.hasMotion = true;
+            n.kinematic = mo.value("isKinematic", false);
+            n.mass = mo.contains("mass") ? mo.value("mass", 1.0f) : -1.0f;
+            n.hasCenterOfMass = mo.contains("centerOfMass");
+            n.centerOfMass = vec3Of(mo, "centerOfMass", glm::vec3(0.0f));
+            n.hasInertia = mo.contains("inertiaDiagonal");
+            n.inertiaDiagonal = vec3Of(mo, "inertiaDiagonal", glm::vec3(0.0f));
+            if (mo.contains("inertiaOrientation") && mo["inertiaOrientation"].is_array() && mo["inertiaOrientation"].size() == 4) {
+                const auto& q = mo["inertiaOrientation"];
+                n.inertiaOrientation = glm::normalize(glm::quat(q[3].get<float>(), q[0].get<float>(), q[1].get<float>(), q[2].get<float>()));
+            }
+            n.linearVelocity = vec3Of(mo, "linearVelocity", glm::vec3(0.0f));
+            n.angularVelocity = vec3Of(mo, "angularVelocity", glm::vec3(0.0f));
+            n.gravityFactor = mo.value("gravityFactor", 1.0f);
+        }
+        if (j.contains("collider") && j["collider"].is_object()) {
+            const auto& c = j["collider"];
+            n.collider = geometryOf(c.value("geometry", nlohmann::json::object()));
+            checkGeometry(n.collider, where);
+            n.hasCollider = n.collider.valid();
+            n.material = c.value("physicsMaterial", -1);
+            n.filter = c.value("collisionFilter", -1);
+            if (n.material >= (int)ph.materials.size()) n.material = -1;
+            if (n.filter >= (int)ph.filters.size()) n.filter = -1;
+        }
+        if (j.contains("trigger") && j["trigger"].is_object()) {
+            const auto& t = j["trigger"];
+            n.trigger = geometryOf(t.value("geometry", nlohmann::json::object()));
+            checkGeometry(n.trigger, where);
+            for (int k : intsOf(t, "nodes")) if (k >= 0 && k < (int)d->nodes_count) n.triggerNodes.push_back(k);
+            n.hasTrigger = n.trigger.valid() || !n.triggerNodes.empty();
+            n.triggerFilter = t.value("collisionFilter", -1);
+            if (n.triggerFilter >= (int)ph.filters.size()) n.triggerFilter = -1;
+        }
+        if (j.contains("joint") && j["joint"].is_object()) {
+            const auto& jo = j["joint"];
+            n.connectedNode = jo.value("connectedNode", -1);
+            n.joint = jo.value("joint", -1);
+            n.enableCollision = jo.value("enableCollision", false);
+            n.hasJoint = n.connectedNode >= 0 && n.connectedNode < (int)d->nodes_count && n.joint >= 0 && n.joint < (int)ph.joints.size();
+            if (!n.hasJoint) m.warnings.push_back(where + ": a joint with a bad connectedNode or joint index (ignored)");
+        }
+    }
+    if (anyNode) ph.nodes = std::move(nodes);
 }
 
 bool convert(const cgltf_data* d, const std::string& baseDir, Model& m, std::string* error) {
@@ -492,6 +677,7 @@ bool convert(const cgltf_data* d, const std::string& baseDir, Model& m, std::str
         m.scenes.push_back(sc);
     }
     m.scene = d->scene ? indexOf(d->scene, d->scenes) : 0;
+    readPhysics(d, m);   // KHR_physics_rigid_bodies + KHR_implicit_shapes (after the meshes and nodes)
     return true;
 }
 

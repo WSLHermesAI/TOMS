@@ -24,7 +24,7 @@
 set(_core "${TOMS_CORE_SRC}")
 set(TOMS_UNIT_TESTS
     engine/anim_clip_test           engine/particle_fx_test        engine/gltf_model_test
-    engine/gltf_anim_texture_test
+    engine/gltf_anim_texture_test   engine/gltf_physics_test
     engine/condition_eval_test      engine/encounter_resolve_test  engine/entity_status_test
     engine/job_system_test
     engine/event_bus_test           engine/log_test                engine/node_test
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 ]=] @ONLY)
 add_executable(toms_tests "${_driver}" ${_sources})
 toms_target_defaults(toms_tests)
-target_link_libraries(toms_tests PRIVATE toms_core)
+target_link_libraries(toms_tests PRIVATE toms_core toms_physics)
 set_target_properties(toms_tests PROPERTIES FOLDER "tests" RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
                       VS_DEBUGGER_WORKING_DIRECTORY "${_data_parent}")
 
@@ -211,6 +211,9 @@ toms_gltf_test(gltf_crowd           gltf_crowd          skin_tube      d3d11    
 toms_gltf_test(gltf_crowd_vulkan    gltf_crowd          skin_tube      vulkan   0.5  --time=0.6 --crowd=9 --pitch=30)
 toms_gltf_test(gltf_crowd_opengl    gltf_crowd          skin_tube      opengl   0.5  --time=0.6 --crowd=9 --pitch=30)
 # The same shaders on the other backends (SPIR-V, GLSL), compared with the Direct3D 11 images.
+# Physics (KHR_physics_rigid_bodies on Jolt, gltf_physics.h): the test scene simulated up to 2.5 s -- shapes landed, the
+# ghost fallen through, the platform moved, the pendulum swinging. Deterministic, so one picture.
+toms_gltf_test(gltf_physics         gltf_physics        physics_scene  d3d11    0.1  --time=2.5 --pitch=25)
 toms_gltf_test(gltf_skin_vulkan     gltf_skin           skin_tube      vulkan   0.5  --anim=bend --time=0.5)
 toms_gltf_test(gltf_pbr_vulkan      gltf_pbr            pbr_materials  vulkan   0.5  --yaw=15 --pitch=8)
 toms_gltf_test(gltf_skin_opengl     gltf_skin           skin_tube      opengl   0.5  --anim=bend --time=0.5)

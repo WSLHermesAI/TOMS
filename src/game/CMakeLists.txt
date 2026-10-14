@@ -42,6 +42,13 @@ set_target_properties(toms_core PROPERTIES FOLDER "toms")
 # cgltf (gltf_model.cpp): one header, fetched by cmake/TomsDependencies.cmake.
 target_include_directories(toms_core PRIVATE ${cgltf_SOURCE_DIR})
 
+# ---- toms_physics: glTF physics (KHR_physics_rigid_bodies) on Jolt Physics, docs/18_GLTF.md §7 ----
+# Its own library so only what simulates links Jolt (gltf_viewer, the tests); the game does not, yet.
+add_library(toms_physics STATIC ${L_ENGINE}/gltf_physics.cpp ${L_ENGINE}/gltf_physics.h)
+toms_target_defaults(toms_physics)
+target_link_libraries(toms_physics PUBLIC toms_core PRIVATE Jolt)
+set_target_properties(toms_physics PROPERTIES FOLDER "toms")
+
 # ---- toms_game_host: GameSession, shared by the SDL game and the Qt editor ----
 add_library(toms_game_host STATIC src/game_session.h src/game_session.cpp src/game_ui.h src/game_ui.cpp
             src/title_scene.h src/title_scene.cpp)

@@ -102,6 +102,33 @@ toms_declare_dep(cgltf https://github.com/jkuhlmann/cgltf.git v1.15 SOURCE_SUBDI
 FetchContent_MakeAvailable(bgfx SDL3 imgui glm cgltf)
 toms_deps_fetched(bgfx SDL3 imgui glm cgltf)
 
+# ---- Jolt Physics (MIT): rigid-body simulation for glTF files with KHR_physics_rigid_bodies
+# (src/core/engine/gltf_physics.*, docs/18_GLTF.md §7). Only the targets that link toms_physics build it (the
+# game does not, yet): EXCLUDE_FROM_ALL. Cross-platform determinism on, so a simulation gives the same result on
+# every machine and in the tests; the plain SSE4.2 instruction set, so it runs on any x64 CPU.
+set(TARGET_UNIT_TESTS                  OFF CACHE BOOL "" FORCE)
+set(TARGET_HELLO_WORLD                 OFF CACHE BOOL "" FORCE)
+set(TARGET_PERFORMANCE_TEST            OFF CACHE BOOL "" FORCE)
+set(TARGET_SAMPLES                     OFF CACHE BOOL "" FORCE)
+set(TARGET_VIEWER                      OFF CACHE BOOL "" FORCE)
+set(ENABLE_INSTALL                     OFF CACHE BOOL "" FORCE)
+set(USE_STATIC_MSVC_RUNTIME_LIBRARY    OFF CACHE BOOL "" FORCE)   # the rest of TOMS uses the DLL runtime (/MD)
+set(INTERPROCEDURAL_OPTIMIZATION       OFF CACHE BOOL "" FORCE)
+set(CROSS_PLATFORM_DETERMINISTIC       ON  CACHE BOOL "" FORCE)
+set(DEBUG_RENDERER_IN_DEBUG_AND_RELEASE OFF CACHE BOOL "" FORCE)
+set(PROFILER_IN_DEBUG_AND_RELEASE      OFF CACHE BOOL "" FORCE)
+set(FLOATING_POINT_EXCEPTIONS_ENABLED  OFF CACHE BOOL "" FORCE)
+set(ENABLE_OBJECT_STREAM               OFF CACHE BOOL "" FORCE)
+foreach(_jolt_isa USE_AVX USE_AVX2 USE_AVX512 USE_LZCNT USE_TZCNT USE_F16C USE_FMADD)
+    set(${_jolt_isa} OFF CACHE BOOL "" FORCE)
+endforeach()
+toms_declare_dep(JoltPhysics https://github.com/jrouwe/JoltPhysics.git v5.6.0 SOURCE_SUBDIR Build EXCLUDE_FROM_ALL)
+FetchContent_MakeAvailable(JoltPhysics)
+toms_deps_fetched(JoltPhysics)
+if(TARGET Jolt)
+    set_target_properties(Jolt PROPERTIES FOLDER "third_party/jolt")
+endif()
+
 # bgfx fix (Android): an app that comes back from the background gets a NEW surface (ANativeWindow).
 # bgfx::reset() passes it on (SwapChain::nwh), but GlContext::resize() rebuilt the EGL surface on the
 # window it was created with, so every frame after a resume failed with EGL_BAD_SURFACE. Take the new

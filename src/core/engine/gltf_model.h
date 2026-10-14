@@ -11,7 +11,8 @@
 // Extensions: KHR_materials_unlit, KHR_texture_transform, KHR_materials_emissive_strength,
 // KHR_mesh_quantization, EXT_mesh_gpu_instancing (per-instance translation / rotation / scale),
 // KHR_materials_transmission + KHR_materials_volume (approximated: see Material::transmission),
-// KHR_lights_punctual (directional / point / spot lights placed by nodes: Pose::lights()).
+// KHR_lights_punctual (directional / point / spot lights placed by nodes: Pose::lights()),
+// KHR_physics_rigid_bodies + KHR_implicit_shapes (read into Model::physics; gltf_physics.h simulates them).
 // Other extensions are listed in Model::ignoredExtensions (the model still loads); a file that
 // REQUIRES one we cannot read (Draco, meshopt, KTX2 / basisu) is refused with a clear error.
 #pragma once
@@ -178,6 +179,104 @@ struct Scene {
     std::vector<int> roots;
 };
 
+// ---- Physics: KHR_implicit_shapes + KHR_physics_rigid_bodies (Khronos drafts; docs/18_GLTF.md §7) ----
+// Data only, as the file says it (defaults from the extensions' schemas). The simulation is gltf_physics.h.
+
+// KHR_implicit_shapes: a shape centred on its node's origin; capsules and cylinders run along +Y.
+struct PhysicsShape {
+    enum class Type { Sphere, Box, Capsule, Cylinder, Plane };
+    Type type = Type::Box;
+    float radius = 0.5f;                       // sphere
+    glm::vec3 size{1.0f};                      // box: full extents
+    float height = 0.5f;                       // capsule: between the two sphere centres; cylinder: full height
+    float radiusTop = 0.25f, radiusBottom = 0.25f;   // capsule / cylinder (a cone has one radius 0)
+    float sizeX = 0.0f, sizeZ = 0.0f;          // plane: 0 = infinite on that axis; the normal is +Y
+    bool doubleSided = false;                  // plane
+};
+
+enum class PhysicsCombine { Unset, Average, Minimum, Maximum, Multiply };
+
+struct PhysicsMaterial {
+    float staticFriction = 0.6f, dynamicFriction = 0.6f, restitution = 0.0f;
+    PhysicsCombine frictionCombine = PhysicsCombine::Unset, restitutionCombine = PhysicsCombine::Unset;
+};
+
+// Two bodies collide when each one's filter lets the other's systems through. A collider with no filter collides
+// with everything.
+struct PhysicsFilter {
+    std::vector<std::string> systems;          // collisionSystems: what this collider is
+    std::vector<std::string> collideWith;      // collideWithSystems: only these (when not empty)
+    std::vector<std::string> notCollideWith;   // notCollideWithSystems: everything but these
+};
+
+struct PhysicsJointLimit {
+    std::vector<int> linearAxes, angularAxes;  // 0 = X, 1 = Y, 2 = Z of the joint frames
+    bool hasMin = false, hasMax = false;
+    float min = 0.0f, max = 0.0f;              // metres or radians; no min / max = free on that side
+    float stiffness = -1.0f;                   // < 0: a hard limit; else a spring beyond the limit
+    float damping = 0.0f;
+};
+
+struct PhysicsJointDrive {
+    bool angular = false;                      // type "angular" (else "linear")
+    bool acceleration = false;                 // mode "acceleration" (else "force")
+    int axis = 0;
+    float maxForce = -1.0f;                    // < 0: unlimited
+    bool hasPositionTarget = false, hasVelocityTarget = false;
+    float positionTarget = 0.0f, velocityTarget = 0.0f;
+    float stiffness = 0.0f, damping = 0.0f;
+};
+
+struct PhysicsJoint {
+    std::vector<PhysicsJointLimit> limits;
+    std::vector<PhysicsJointDrive> drives;
+};
+
+// A collider's or trigger's geometry: an implicit shape, or a mesh of the file (as triangles, or its convex hull).
+struct PhysicsGeometry {
+    int shape = -1;                            // into Physics::shapes
+    int mesh = -1;                             // into Model::meshes
+    bool convexHull = false;
+    bool valid() const { return shape >= 0 || mesh >= 0; }
+};
+
+// What one node says (KHR_physics_rigid_bodies on the node).
+struct NodePhysics {
+    // motion: the node (and its descendants without their own motion) is one rigid body
+    bool hasMotion = false;
+    bool kinematic = false;
+    float mass = -1.0f;                        // kg; < 0: from the colliders' volume (density 1000); 0 = infinite
+    bool hasCenterOfMass = false;
+    glm::vec3 centerOfMass{0.0f};              // node space
+    bool hasInertia = false;
+    glm::vec3 inertiaDiagonal{0.0f};           // kg m^2; a 0 component = no rotation about that axis
+    glm::quat inertiaOrientation{1.0f, 0.0f, 0.0f, 0.0f};
+    glm::vec3 linearVelocity{0.0f}, angularVelocity{0.0f};   // node space, at the start
+    float gravityFactor = 1.0f;
+    // collider: solid geometry (on a node without motion in its ancestry: a static collider)
+    bool hasCollider = false;
+    PhysicsGeometry collider;
+    int material = -1, filter = -1;
+    // trigger: reports what enters and leaves it, no physical response
+    bool hasTrigger = false;
+    PhysicsGeometry trigger;
+    std::vector<int> triggerNodes;             // a compound trigger: descendant nodes with their own trigger
+    int triggerFilter = -1;
+    // joint: constrains this node's body to connectedNode's body; both nodes are the joint's frames
+    bool hasJoint = false;
+    int connectedNode = -1, joint = -1;
+    bool enableCollision = false;
+};
+
+struct Physics {
+    std::vector<PhysicsShape> shapes;          // KHR_implicit_shapes
+    std::vector<PhysicsMaterial> materials;
+    std::vector<PhysicsFilter> filters;
+    std::vector<PhysicsJoint> joints;
+    std::vector<NodePhysics> nodes;            // one per Model::nodes entry when the file uses physics, else empty
+    bool any() const { return !nodes.empty(); }
+};
+
 struct Model {
     std::string path;
     std::string generator;
@@ -192,6 +291,7 @@ struct Model {
     std::vector<Animation> animations;
     std::vector<Scene> scenes;
     int scene = 0;                       // the default scene
+    Physics physics;                     // KHR_physics_rigid_bodies + KHR_implicit_shapes (gltf_physics.h simulates it)
     std::vector<std::string> extensionsUsed;
     std::vector<std::string> ignoredExtensions;   // used by the file, not rendered (the model still loads)
     std::vector<std::string> warnings;            // e.g. a skin with more than kMaxJoints joints, an image that did not decode
@@ -236,6 +336,11 @@ public:
     glm::vec3 translation(int n) const { return t_[(size_t)n]; }
     glm::quat rotation(int n) const { return r_[(size_t)n]; }
     glm::vec3 scale(int n) const { return s_[(size_t)n]; }
+    // Sets a node's local transform (physics writes its bodies back this way); call updateWorld() after.
+    void setLocal(int n, const glm::vec3& t, const glm::quat& r, const glm::vec3& s) {
+        if (n < 0 || n >= (int)t_.size()) return;
+        t_[(size_t)n] = t; r_[(size_t)n] = r; s_[(size_t)n] = s;
+    }
 
     // The file's lights (KHR_lights_punctual) where their nodes are now (call after updateWorld()).
     std::vector<PlacedLight> lights() const;

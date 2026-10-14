@@ -311,3 +311,17 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   editor, so `gen_floors.py`, `gen_stairs.py`, `maze_lib.py`, `floor_guard.py`, the manifest and `make_event_index.py`
   are deleted (git history keeps them). `tools/web_editors/floor_index.js` builds the same index (byte-identical output,
   checked with Node) and both editors write it on opening the project folder and after each Save. W33 closed.
+- **2026-10-12** — **glTF physics (KHR_physics_rigid_bodies) on Jolt.**
+  - Jolt Physics v5.6.0 via FetchContent, built deterministic, SSE4.2 only.
+  - `Model::physics` reader; `gltf::PhysicsWorld` in the new `toms_physics` library.
+  - Viewer: Physics panel and collider boxes.
+  - Test scene in `make_test_models.py`; `gltf_physics_test` (35 checks); `smoke.gltf_physics`.
+  - Docs: 18 §7 and 09 (+ zh). Changed-only run: 85 of 90 tests, all pass.
+  - The author's 7 samples load and simulate.
+- **2026-10-14** — **gltf_viewer: node tree and editing.**
+  - Scene tree with tags; click-to-pick in the view (a second click picks the node behind).
+  - Node inspector: translation, rotation, scale, uniform scale, reset.
+  - Handles in the view: move (T), rotate (E), scale (S).
+  - Edits apply after the animations and restart the physics.
+  - Test options `--select`, `--tool`, `--pick`, `--drag`; checked by pick and drag runs.
+  - Docs: 18 §4 (+ zh). Changed-only run: 85 of 90 tests, all pass.

@@ -20,14 +20,26 @@
 //                                           drawn by GltfRenderer::drawCrowd from one baked animation texture
 //                                           (gltf_anim_texture.h); every third holds a 50 % blend of two clips
 //     --crowd-fps=<fps>                     the bake's frames per second (default 30)
+//     --physics=0|1                         simulate KHR_physics_rigid_bodies (default 1 when the file has it;
+//                                           gltf_physics.h, Jolt). With --time, the scene is simulated up to that time
+//     --select=<index|name>                 select a node (the Scene tree, the Node inspector, the view handles)
+//     --tool=move|rotate|scale              the handles shown for the selection (T / E / S)
+//     --pick=<x>,<y>                        click-pick at that pixel of the window after the first frame (tests)
+//     --drag=<x0>,<y0>,<x1>,<y1>            then press on a handle at x0,y0, drag to x1,y1, release; pixels from the
+//                                           selected node's origin on screen (tests)
 //
 // Mouse: left drag orbits, right / middle drag pans, wheel zooms. Keys: Space play/pause, F frame,
 // G grid, K skeleton, B bounds, W wireframe, R auto-rotate, H panel, 1..9 solo an animation, Esc quit;
 // arrow keys move the camera (left / right / up / down on the screen, while held), + / - change that speed,
 // C cycles through the file's cameras (and back to the free orbit camera). On a file camera, left drag
 // looks around and the wheel zooms -- still riding the camera's animation (double-click: look ahead again).
+// Editing nodes: the Scene tree lists the nodes; click one there, or click a mesh in the view, to select it. The
+// Node inspector edits its translation, rotation (degrees) and scale; in the view, drag the handles: T move (axis
+// arrows, the centre square moves in the view plane), E rotate (the rings), S scale (axis boxes; the centre square
+// scales evenly). Delete resets the selected node. Edits replace the node's animation and restart the physics.
 #include "bgfx_host.h"
 #include "gltf_model.h"
+#include "gltf_physics.h"
 #include "gltf_renderer.h"
 #include "imgui_bgfx.h"
 
@@ -37,6 +49,7 @@
 #include <imgui.h>
 
 #include <algorithm>
+#include <cfloat>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -63,6 +76,10 @@ struct Args {
     float lookYaw = 0.0f, lookPitch = 0.0f;
     int crowd = 0;
     float crowdFps = 30.0f;
+    bool physics = true;
+    std::string select, tool;
+    float pickX = -1.0f, pickY = -1.0f;
+    glm::vec4 drag{-1.0f};
 };
 
 const char* value(const std::string& s, const char* key) {
@@ -93,6 +110,11 @@ Args parseArgs(int argc, char** argv) {
         else if (const char* v = value(s, "--look=")) std::sscanf(v, "%f,%f", &a.lookYaw, &a.lookPitch);
         else if (const char* v = value(s, "--crowd=")) a.crowd = std::max(0, std::atoi(v));
         else if (const char* v = value(s, "--crowd-fps=")) a.crowdFps = (float)std::atof(v);
+        else if (const char* v = value(s, "--physics=")) a.physics = std::atoi(v) != 0;
+        else if (const char* v = value(s, "--select=")) a.select = v;
+        else if (const char* v = value(s, "--tool=")) a.tool = v;
+        else if (const char* v = value(s, "--pick=")) std::sscanf(v, "%f,%f", &a.pickX, &a.pickY);
+        else if (const char* v = value(s, "--drag=")) std::sscanf(v, "%f,%f,%f,%f", &a.drag.x, &a.drag.y, &a.drag.z, &a.drag.w);
         else if (!s.empty() && s[0] != '-') a.file = s;
     }
     return a;
@@ -219,6 +241,404 @@ struct Viewer {
         frameScene();
     }
 
+    // ---- node editing: the selected node, its edits (applied after the animations), the view handles ----
+    struct NodeEdit {
+        glm::vec3 t{0.0f}, s{1.0f};
+        glm::quat r{1.0f, 0.0f, 0.0f, 0.0f};
+        glm::vec3 euler{0.0f};             // degrees, what the inspector shows (kept, so it does not flip)
+    };
+    std::map<int, NodeEdit> edits;
+    int selected = -1;
+    bool revealSelected = false;          // open the tree down to the selection (after a pick in the view)
+    enum class Tool { Move, Rotate, Scale };
+    Tool tool = Tool::Move;
+    int hoverHandle = -1;                 // 0..2 an axis, 3 the centre, -1 none
+    int dragHandle = -1;
+    glm::vec2 dragFrom{0.0f}, pressAt{0.0f};
+    bool pressPending = false;            // a left press that is a click (pick) unless the mouse moves
+    NodeEdit dragStart;
+    glm::vec3 dragOrigin{0.0f}, dragAxis{0.0f};
+    glm::vec2 dragScreen0{0.0f}, dragScreen1{0.0f};
+    float dragLength = 1.0f;
+
+    NodeEdit& editOf(int n) {
+        auto it = edits.find(n);
+        if (it != edits.end()) return it->second;
+        NodeEdit e;
+        e.t = pose.translation(n);
+        e.r = pose.rotation(n);
+        e.s = pose.scale(n);
+        e.euler = glm::degrees(glm::eulerAngles(e.r));
+        return edits[n] = e;
+    }
+    void editChanged(int n) {   // a body that moved: the simulation starts again from the edited scene
+        if (physicsOn && model && model->physics.any()) buildPhysics();
+        (void)n;
+    }
+    static glm::quat rotationOf(const glm::mat4& m) {
+        glm::vec3 c0(m[0]), c1(m[1]), c2(m[2]);
+        const float l0 = glm::length(c0), l1 = glm::length(c1), l2 = glm::length(c2);
+        return glm::normalize(glm::quat_cast(glm::mat3(c0 / std::max(l0, 1e-8f), c1 / std::max(l1, 1e-8f), c2 / std::max(l2, 1e-8f))));
+    }
+    glm::mat4 parentWorld(int n) const {
+        const int p = model->nodes[(size_t)n].parent;
+        return p >= 0 ? pose.world(p) : glm::mat4(1.0f);
+    }
+
+    // World <-> backbuffer pixels (x right, y down), with the frame the last tick drew.
+    bool toScreen(const glm::vec3& p, glm::vec2& out) const {
+        const glm::vec4 c = frame.proj * frame.view * glm::vec4(p, 1.0f);
+        if (c.w <= 1e-6f) return false;
+        out = {(c.x / c.w * 0.5f + 0.5f) * float(fbW), (0.5f - c.y / c.w * 0.5f) * float(fbH)};
+        return true;
+    }
+    void rayAt(const glm::vec2& px, glm::vec3& origin, glm::vec3& dir) const {
+        const glm::mat4 inv = glm::inverse(frame.proj * frame.view);
+        const float x = px.x / float(std::max(fbW, 1)) * 2.0f - 1.0f, y = 1.0f - px.y / float(std::max(fbH, 1)) * 2.0f;
+        const float zNear = bgfx::getCaps()->homogeneousDepth ? -1.0f : 0.0f;
+        const glm::vec4 a = inv * glm::vec4(x, y, zNear, 1.0f), b = inv * glm::vec4(x, y, 0.5f, 1.0f);
+        origin = glm::vec3(a) / a.w;
+        dir = glm::normalize(glm::vec3(b) / b.w - origin);
+    }
+
+    // The node whose mesh a pixel hits first (its mesh bounds, instances included), else -1. Clicking again where the
+    // selected node is hit picks the next node behind it (a see-through volume over a mesh, a parent's bounds).
+    int pickNode(const glm::vec2& px) const {
+        if (!model) return -1;
+        glm::vec3 o, d;
+        rayAt(px, o, d);
+        std::vector<std::pair<float, int>> hits;
+        for (size_t n = 0; n < model->nodes.size(); n++) {
+            const gltf::Node& node = model->nodes[n];
+            if (node.mesh < 0) continue;
+            glm::vec3 mn(FLT_MAX), mx(-FLT_MAX);
+            for (const gltf::Primitive& p : model->meshes[(size_t)node.mesh].primitives) {
+                mn = glm::min(mn, p.boundsMin);
+                mx = glm::max(mx, p.boundsMax);
+            }
+            if (mn.x > mx.x) continue;
+            const glm::mat4 world = node.skin >= 0 ? glm::mat4(1.0f) : pose.world((int)n);   // skinned: model space
+            std::vector<glm::mat4> placements;
+            if (node.instances.empty()) placements.push_back(world);
+            else for (const glm::mat4& i : node.instances) placements.push_back(world * i);
+            for (const glm::mat4& m : placements) {
+                const glm::mat4 inv = glm::inverse(m);
+                const glm::vec3 lo = glm::vec3(inv * glm::vec4(o, 1.0f)), ld = glm::vec3(inv * glm::vec4(d, 0.0f));
+                float t0 = 0.0f, t1 = FLT_MAX;
+                bool hit = true;
+                for (int k = 0; k < 3 && hit; k++) {
+                    if (std::fabs(ld[k]) < 1e-12f) { hit = lo[k] >= mn[k] && lo[k] <= mx[k]; continue; }
+                    float a = (mn[k] - lo[k]) / ld[k], b = (mx[k] - lo[k]) / ld[k];
+                    if (a > b) std::swap(a, b);
+                    t0 = std::max(t0, a);
+                    t1 = std::min(t1, b);
+                    hit = t0 <= t1;
+                }
+                if (hit) { hits.push_back({t0, (int)n}); break; }
+            }
+        }
+        if (hits.empty()) return -1;
+        std::sort(hits.begin(), hits.end());
+        for (size_t i = 0; i + 1 < hits.size(); i++)
+            if (hits[i].second == selected) return hits[i + 1].second;
+        return hits[0].second;
+    }
+
+    // The handles of the selected node: where they are on screen. Move and rotate work in world axes, scale in the
+    // node's own axes.
+    glm::vec3 handleAxis(int k) const {
+        if (tool != Tool::Scale) return glm::vec3(k == 0, k == 1, k == 2);
+        const glm::mat4& w = pose.world(selected);
+        const glm::vec3 a(w[k]);
+        return glm::length(a) > 1e-8f ? glm::normalize(a) : glm::vec3(k == 0, k == 1, k == 2);
+    }
+    float handleLength(const glm::vec3& origin) const { return 0.16f * std::max(glm::length(frame.eye - origin), 1e-3f); }
+    std::vector<glm::vec3> ring(const glm::vec3& origin, const glm::vec3& axis, float r) const {
+        const glm::vec3 u = glm::normalize(glm::cross(axis, std::fabs(axis.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0)));
+        const glm::vec3 v = glm::cross(axis, u);
+        std::vector<glm::vec3> pts;
+        for (int i = 0; i <= 48; i++) {
+            const float a = 6.2831853f * i / 48.0f;
+            pts.push_back(origin + (u * std::cos(a) + v * std::sin(a)) * r);
+        }
+        return pts;
+    }
+    static float segmentDistance(const glm::vec2& p, const glm::vec2& a, const glm::vec2& b) {
+        const glm::vec2 ab = b - a;
+        const float t = glm::dot(ab, ab) > 0.0f ? std::clamp(glm::dot(p - a, ab) / glm::dot(ab, ab), 0.0f, 1.0f) : 0.0f;
+        return glm::length(p - (a + ab * t));
+    }
+    int handleAt(const glm::vec2& px) const {
+        if (selected < 0 || !model) return -1;
+        const glm::vec3 origin(pose.world(selected)[3]);
+        const float L = handleLength(origin), tol = 8.0f * pixelScale();
+        glm::vec2 c;
+        if (!toScreen(origin, c)) return -1;
+        int best = -1;
+        float bestD = tol;
+        if (tool != Tool::Rotate && glm::length(px - c) < 10.0f * pixelScale()) return 3;
+        for (int k = 0; k < 3; k++) {
+            const glm::vec3 axis = handleAxis(k);
+            float d = FLT_MAX;
+            if (tool == Tool::Rotate) {
+                const std::vector<glm::vec3> pts = ring(origin, axis, L);
+                for (size_t i = 0; i + 1 < pts.size(); i++) {
+                    glm::vec2 a, b;
+                    if (toScreen(pts[i], a) && toScreen(pts[i + 1], b)) d = std::min(d, segmentDistance(px, a, b));
+                }
+            } else {
+                glm::vec2 e;
+                if (toScreen(origin + axis * L, e)) d = segmentDistance(px, c, e);
+            }
+            if (d < bestD) { bestD = d; best = k; }
+        }
+        return best;
+    }
+    void startHandleDrag(int h, const glm::vec2& px) {
+        dragHandle = h;
+        dragFrom = px;
+        dragStart = editOf(selected);
+        dragOrigin = glm::vec3(pose.world(selected)[3]);
+        dragLength = handleLength(dragOrigin);
+        dragAxis = h < 3 ? handleAxis(h) : glm::vec3(0.0f);
+        toScreen(dragOrigin, dragScreen0);
+        if (h < 3) toScreen(dragOrigin + dragAxis * dragLength, dragScreen1);
+        else {   // the centre: world units per pixel from the camera's right axis
+            const glm::mat4& v = frame.view;
+            toScreen(dragOrigin + glm::vec3(v[0][0], v[1][0], v[2][0]) * dragLength, dragScreen1);
+        }
+    }
+    void dragHandleTo(const glm::vec2& px) {
+        if (dragHandle < 0 || selected < 0) return;
+        NodeEdit& e = editOf(selected);
+        const glm::vec2 m = px - dragFrom;
+        const glm::vec2 dir = dragScreen1 - dragScreen0;
+        const float len = std::max(glm::length(dir), 1.0f);
+        const glm::mat4 pw = parentWorld(selected);
+        if (tool == Tool::Move) {
+            glm::vec3 worldDelta;
+            if (dragHandle < 3) worldDelta = dragAxis * (glm::dot(m, dir / len) / len * dragLength);
+            else {
+                const glm::mat4& v = frame.view;
+                const glm::vec3 right(v[0][0], v[1][0], v[2][0]), up(v[0][1], v[1][1], v[2][1]);
+                worldDelta = (right * m.x - up * m.y) * (dragLength / len);
+            }
+            e.t = dragStart.t + glm::inverse(glm::mat3(pw)) * worldDelta;
+        } else if (tool == Tool::Rotate && dragHandle < 3) {
+            const glm::vec2 a0 = dragFrom - dragScreen0, a1 = px - dragScreen0;
+            float angle = std::atan2(a1.y, a1.x) - std::atan2(a0.y, a0.x);
+            if (glm::dot(dragAxis, frame.eye - dragOrigin) > 0.0f) angle = -angle;   // the axis looks at us
+            const glm::quat pr = rotationOf(pw);
+            const glm::quat world = glm::angleAxis(angle, dragAxis) * (pr * dragStart.r);
+            e.r = glm::normalize(glm::inverse(pr) * world);
+            e.euler = glm::degrees(glm::eulerAngles(e.r));
+        } else if (tool == Tool::Scale) {
+            if (dragHandle < 3) {
+                const float f = std::max(0.01f, 1.0f + glm::dot(m, dir / len) / len);
+                e.s = dragStart.s;
+                e.s[dragHandle] *= f;
+            } else {
+                e.s = dragStart.s * std::max(0.01f, 1.0f + (m.x - m.y) * 0.005f);
+            }
+        }
+    }
+    void drawHandles(std::vector<GltfRenderer::LinePoint>& out) {
+        if (selected < 0 || !model || selected >= (int)model->nodes.size()) return;
+        auto line = [&](const glm::vec3& a, const glm::vec3& b, uint32_t c) { out.push_back({a, c}); out.push_back({b, c}); };
+        const glm::vec3 origin(pose.world(selected)[3]);
+        const float L = handleLength(origin);
+        const int active = dragHandle >= 0 ? dragHandle : hoverHandle;
+        const uint32_t cols[3] = {abgr(1.0f, 0.3f, 0.3f), abgr(0.35f, 1.0f, 0.35f), abgr(0.35f, 0.55f, 1.0f)};
+        const uint32_t hot = abgr(1.0f, 0.9f, 0.2f);
+        const glm::mat4& v = frame.view;
+        const glm::vec3 right(v[0][0], v[1][0], v[2][0]), up(v[0][1], v[1][1], v[2][1]);
+        for (int k = 0; k < 3; k++) {
+            const glm::vec3 axis = handleAxis(k);
+            const uint32_t c = active == k ? hot : cols[k];
+            if (tool == Tool::Rotate) {
+                const std::vector<glm::vec3> pts = ring(origin, axis, L);
+                for (size_t i = 0; i + 1 < pts.size(); i++) line(pts[i], pts[i + 1], c);
+                continue;
+            }
+            const glm::vec3 tip = origin + axis * L;
+            line(origin, tip, c);
+            const float h = L * 0.07f;
+            if (tool == Tool::Move) {   // an arrow head
+                const glm::vec3 side = glm::normalize(glm::cross(axis, std::fabs(axis.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0)));
+                const glm::vec3 side2 = glm::cross(axis, side);
+                for (const glm::vec3& sd : {side, -side, side2, -side2}) line(tip, tip - axis * h * 2.0f + sd * h, c);
+            } else {                    // a small box
+                for (const glm::vec3& a : {right, up}) {
+                    const glm::vec3 b = a == right ? up : right;
+                    line(tip + (a - b) * h, tip + (a + b) * h, c);
+                    line(tip - (a + b) * h, tip + (-a + b) * h, c);
+                }
+            }
+        }
+        if (tool != Tool::Rotate) {   // the centre square
+            const uint32_t c = active == 3 ? hot : abgr(0.9f, 0.9f, 0.9f);
+            const float h = L * 0.06f;
+            const glm::vec3 p[4] = {origin + (-right - up) * h, origin + (right - up) * h, origin + (right + up) * h, origin + (-right + up) * h};
+            for (int i = 0; i < 4; i++) line(p[i], p[(i + 1) % 4], c);
+        }
+    }
+
+    // ---- the Scene tree and the Node inspector ----
+    void treeNode(int n) {
+        const gltf::Node& node = model->nodes[(size_t)n];
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+        if (node.children.empty()) flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        if (n == selected) flags |= ImGuiTreeNodeFlags_Selected;
+        if (revealSelected && selected >= 0) {   // open every ancestor of the selection
+            for (int a = model->nodes[(size_t)selected].parent; a >= 0; a = model->nodes[(size_t)a].parent)
+                if (a == n) ImGui::SetNextItemOpen(true);
+        }
+        std::string label = node.name.empty() ? "node " + std::to_string(n) : node.name;
+        if (node.mesh >= 0) label += node.skin >= 0 ? "  [skinned mesh]" : "  [mesh]";
+        if (node.camera >= 0) label += "  [camera]";
+        if (node.light >= 0) label += "  [light]";
+        if (model->physics.any()) {
+            const gltf::NodePhysics& p = model->physics.nodes[(size_t)n];
+            if (p.hasMotion) label += p.kinematic ? "  [kinematic]" : "  [body]";
+            else if (p.hasCollider) label += "  [collider]";
+            if (p.hasTrigger) label += "  [trigger]";
+            if (p.hasJoint) label += "  [joint]";
+        }
+        if (edits.count(n)) label += "  *";
+        ImGui::PushID(n);
+        const bool open = ImGui::TreeNodeEx("##node", flags, "%s", label.c_str());
+        if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) selected = n;
+        if (n == selected && revealSelected) ImGui::SetScrollHereY(0.5f);
+        if (open && !node.children.empty()) {
+            for (int c : node.children) treeNode(c);
+            ImGui::TreePop();
+        }
+        ImGui::PopID();
+    }
+
+    void sceneTreePanel() {
+        if (ImGui::CollapsingHeader("Scene tree", ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::TextDisabled("click to select (or click a mesh in the view)");
+            const float h = std::min(260.0f * uiScale, ImGui::GetContentRegionAvail().y * 0.5f);
+            if (ImGui::BeginChild("tree", ImVec2(0, std::max(h, 80.0f * uiScale)), true)) {
+                const std::vector<int>& roots = model->scenes.empty() ? std::vector<int>() : model->scenes[(size_t)std::max(model->scene, 0)].roots;
+                for (int r : roots) treeNode(r);
+            }
+            ImGui::EndChild();
+            revealSelected = false;
+        }
+        if (selected < 0 || selected >= (int)model->nodes.size()) return;
+        if (!ImGui::CollapsingHeader("Node", ImGuiTreeNodeFlags_DefaultOpen)) return;
+        const gltf::Node& node = model->nodes[(size_t)selected];
+        ImGui::Text("%s  (#%d)", node.name.empty() ? "(no name)" : node.name.c_str(), selected);
+        if (node.parent >= 0) {
+            ImGui::SameLine();
+            const std::string& pn = model->nodes[(size_t)node.parent].name;
+            if (ImGui::SmallButton(("parent: " + (pn.empty() ? std::to_string(node.parent) : pn)).c_str())) { selected = node.parent; revealSelected = true; }
+        }
+        int t = (int)tool;
+        ImGui::RadioButton("move (T)", &t, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("rotate (E)", &t, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("scale (S)", &t, 2);
+        tool = (Tool)t;
+        // The fields show the node's local transform now (animated), and edit a copy that replaces it.
+        NodeEdit shown;
+        const auto it = edits.find(selected);
+        if (it != edits.end()) shown = it->second;
+        else {
+            shown.t = pose.translation(selected);
+            shown.r = pose.rotation(selected);
+            shown.s = pose.scale(selected);
+            shown.euler = glm::degrees(glm::eulerAngles(shown.r));
+        }
+        const float speed = std::max(radius * 0.005f, 1e-4f);
+        bool changed = false, done = false;
+        if (ImGui::DragFloat3("translation", &shown.t.x, speed, 0, 0, "%.3f")) { editOf(selected).t = shown.t; changed = true; }
+        done |= ImGui::IsItemDeactivatedAfterEdit();
+        if (ImGui::DragFloat3("rotation (deg)", &shown.euler.x, 0.5f, 0, 0, "%.1f")) {
+            NodeEdit& e = editOf(selected);
+            e.euler = shown.euler;
+            e.r = glm::quat(glm::radians(shown.euler));
+            changed = true;
+        }
+        done |= ImGui::IsItemDeactivatedAfterEdit();
+        if (ImGui::DragFloat3("scale", &shown.s.x, 0.005f, 0.0f, 0.0f, "%.3f")) { editOf(selected).s = shown.s; changed = true; }
+        done |= ImGui::IsItemDeactivatedAfterEdit();
+        float uniform = 1.0f;
+        if (ImGui::DragFloat("uniform scale", &uniform, 0.005f, 0.01f, 100.0f, "x %.3f")) {
+            NodeEdit& e = editOf(selected);
+            e.s *= std::max(uniform, 0.01f);
+            changed = true;
+        }
+        done |= ImGui::IsItemDeactivatedAfterEdit();
+        const glm::vec3 wp(pose.world(selected)[3]);
+        ImGui::TextDisabled("world position %.3f, %.3f, %.3f", wp.x, wp.y, wp.z);
+        if (edits.count(selected)) {
+            if (ImGui::Button("reset node (Delete)")) { edits.erase(selected); done = true; }
+            ImGui::SameLine();
+        }
+        if (!edits.empty() && ImGui::Button(("reset all edits (" + std::to_string(edits.size()) + ")").c_str())) {
+            edits.clear();
+            done = true;
+        }
+        if (ImGui::Button("look at it")) target = wp;
+        ImGui::SameLine();
+        if (ImGui::Button("deselect")) selected = -1;
+        if (changed) posed();
+        if (done) editChanged(selected);
+    }
+
+    // Physics (KHR_physics_rigid_bodies, gltf_physics.h): the bodies move the pose's nodes after the animations.
+    gltf::PhysicsWorld physics;
+    bool physicsOn = false, physicsPaused = false, physicsBoxes = true, physicsFrozenDone = false;
+    std::vector<std::string> physicsLog;   // the last trigger events
+
+    void buildPhysics() {
+        physics.clear();
+        physicsFrozenDone = false;
+        physicsLog.clear();
+        if (!model || !model->physics.any() || !physicsOn) return;
+        const double keep = time;
+        time = 0.0;
+        posed();   // the bodies start where the file (and the animations at time 0) put them
+        std::string err;
+        if (!physics.build(*model, pose, &err)) {
+            std::fprintf(stderr, "[gltf] physics: %s\n", err.c_str());
+            return;
+        }
+        time = keep;
+        const gltf::PhysicsWorld::Stats st = physics.stats();
+        std::fprintf(stderr, "[gltf] physics: %d dynamic, %d kinematic, %d static, %d triggers, %d joints\n", st.dynamic,
+                     st.kinematic, st.statics, st.triggers, st.joints);
+        for (const std::string& w : physics.warnings()) std::fprintf(stderr, "[gltf]   physics warning: %s\n", w.c_str());
+    }
+
+    // After posed(): advance the simulation (or, with --time, simulate up to that time once) and put the bodies back
+    // into the pose the animations just reset.
+    void simulate(float dt) {
+        if (!physics.built()) return;
+        if (args.time >= 0.0f) {
+            if (!physicsFrozenDone) {
+                physics.simulateTo(args.time, pose);
+                physicsFrozenDone = true;
+            }
+        } else if (!physicsPaused) {
+            physics.step(dt * speed, pose);
+        }
+        physics.writePose(pose);
+        for (const gltf::TriggerEvent& e : physics.takeEvents()) {
+            auto name = [&](int n) { return n >= 0 && n < (int)model->nodes.size() && !model->nodes[(size_t)n].name.empty()
+                                                ? model->nodes[(size_t)n].name : std::to_string(n); };
+            char line[160];
+            std::snprintf(line, sizeof line, "%6.2f s  %s %s %s", physics.time(), name(e.other).c_str(), e.enter ? "entered" : "left",
+                          name(e.trigger).c_str());
+            physicsLog.push_back(line);
+            if (physicsLog.size() > 8) physicsLog.erase(physicsLog.begin());
+        }
+    }
+
     // Arrow keys: the camera moves moveSpeed x the model's radius per second (+ / - change it).
     float moveSpeed = 1.0f;
     static constexpr float kMoveStep = 1.5f, kMoveMin = 1.0f / 64.0f, kMoveMax = 64.0f;
@@ -240,6 +660,10 @@ struct Viewer {
             return false;
         }
         gpu.reset();   // the old model's buffers go first
+        physics.clear();   // it points at the old model
+        edits.clear();
+        selected = -1;
+        dragHandle = hoverHandle = -1;
         animGpu.reset();
         animTex.reset();
         crowd.clear();
@@ -280,6 +704,13 @@ struct Viewer {
         SDL_SetWindowTitle(window, title.c_str());
         frameScene();
         if (crowdCount > 0 || args.crowd > 0) buildCrowd(crowdCount > 0 ? crowdCount : args.crowd);
+        physicsOn = args.physics && model->physics.any();
+        buildPhysics();
+        if (!args.select.empty())
+            for (size_t i = 0; i < model->nodes.size(); i++)
+                if (model->nodes[i].name == args.select || std::to_string(i) == args.select) { selected = (int)i; revealSelected = true; break; }
+        if (args.tool == "rotate") tool = Tool::Rotate;
+        else if (args.tool == "scale") tool = Tool::Scale;
         return true;
     }
 
@@ -329,6 +760,7 @@ struct Viewer {
             pose.apply((int)i, d > 0 ? (float)std::fmod(time, (double)d) : 0.0f);
         }
         for (const auto& [key, w] : manualWeights) pose.setWeight(key.first, (size_t)key.second, w);
+        for (const auto& [n, e] : edits) pose.setLocal(n, e.t, e.r, e.s);   // node edits replace the animation
         pose.updateWorld();
     }
 
@@ -457,14 +889,41 @@ struct Viewer {
                 dragLook = true;
                 break;
             }
-            if (e.button.button == SDL_BUTTON_LEFT) dragOrbit = true;
-            else dragPan = true;
+            if (e.button.button == SDL_BUTTON_LEFT) {
+                const glm::vec2 px(e.button.x * pixelScale(), e.button.y * pixelScale());
+                const int h = handleAt(px);
+                if (h >= 0) {   // a handle of the selected node: drag it
+                    startHandleDrag(h, px);
+                    break;
+                }
+                dragOrbit = true;
+                pressPending = true;   // a click (no movement) picks a node
+                pressAt = px;
+            } else {
+                dragPan = true;
+            }
             toFreeCamera();
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
+            if (e.button.button == SDL_BUTTON_LEFT && dragHandle >= 0) {
+                dragHandle = -1;
+                editChanged(selected);
+            } else if (e.button.button == SDL_BUTTON_LEFT && pressPending) {
+                selected = pickNode(pressAt);
+                revealSelected = selected >= 0;
+            }
+            pressPending = false;
             dragOrbit = dragPan = dragLook = false;
             break;
-        case SDL_EVENT_MOUSE_MOTION:
+        case SDL_EVENT_MOUSE_MOTION: {
+            const glm::vec2 px(e.motion.x * pixelScale(), e.motion.y * pixelScale());
+            if (dragHandle >= 0) {
+                dragHandleTo(px);
+                posed();
+                break;
+            }
+            if (pressPending && glm::length(px - pressAt) > 4.0f * pixelScale()) pressPending = false;
+            if (!dragOrbit && !dragPan && !dragLook && !uiMouse) hoverHandle = handleAt(px);
             if (dragLook) {   // drag right: look right; drag up: look up
                 lookYaw -= e.motion.xrel * 0.25f;
                 lookPitch = std::clamp(lookPitch - e.motion.yrel * 0.25f, -89.0f, 89.0f);
@@ -478,6 +937,7 @@ struct Viewer {
                 target += (-e.motion.xrel * right + e.motion.yrel * up) * k;
             }
             break;
+        }
         case SDL_EVENT_MOUSE_WHEEL:
             if (uiMouse) break;
             if (activeCamera >= 0) {   // zoom the camera's lens, still on it
@@ -502,6 +962,13 @@ struct Viewer {
             case SDLK_W: wireframe = !wireframe; break;
             case SDLK_R: autoRotate = !autoRotate; break;
             case SDLK_H: showUi = !showUi; break;
+            case SDLK_T: tool = Tool::Move; break;
+            case SDLK_E: tool = Tool::Rotate; break;
+            case SDLK_S: tool = Tool::Scale; break;
+            case SDLK_DELETE:
+            case SDLK_BACKSPACE:
+                if (selected >= 0 && edits.erase(selected)) { posed(); editChanged(selected); }
+                break;
             case SDLK_EQUALS:   // the + key (Shift not needed)
             case SDLK_PLUS:
             case SDLK_KP_PLUS: moveSpeed = std::min(moveSpeed * kMoveStep, kMoveMax); break;
@@ -624,6 +1091,26 @@ struct Viewer {
                         line(p0, p1, abgr(1, 0.85f, 0.2f));
                     }
         }
+        // Physics: a box around every body's collider (grey static, blue kinematic, green dynamic -- dark when asleep --,
+        // yellow trigger).
+        if (showUi && physicsBoxes && physics.built()) {
+            std::vector<gltf::PhysicsDebugBox> boxes;
+            physics.debugBoxes(boxes);
+            for (const gltf::PhysicsDebugBox& b : boxes) {
+                using K = gltf::PhysicsDebugBox::Kind;
+                const uint32_t col = b.kind == K::Static ? abgr(0.7f, 0.7f, 0.7f, 0.8f)
+                                   : b.kind == K::Kinematic ? abgr(0.35f, 0.6f, 1.0f)
+                                   : b.kind == K::Trigger ? abgr(1.0f, 0.85f, 0.2f)
+                                   : b.sleeping ? abgr(0.2f, 0.5f, 0.25f) : abgr(0.35f, 1.0f, 0.4f);
+                glm::vec3 c[8];
+                for (int k = 0; k < 8; k++)
+                    c[k] = glm::vec3(b.world * glm::vec4((k & 1 ? 1.0f : -1.0f) * b.halfExtents.x, (k & 2 ? 1.0f : -1.0f) * b.halfExtents.y,
+                                                         (k & 4 ? 1.0f : -1.0f) * b.halfExtents.z, 1.0f));
+                for (int k = 0; k < 8; k++)
+                    for (int bit : {1, 2, 4})
+                        if (!(k & bit)) line(c[k], c[k | bit], col);
+            }
+        }
         // The lights: a directional light's arrow, a point light's star, a spot light's cone.
         if (showUi)
             for (const GltfRenderer::Light& l : frame.lights) {
@@ -655,6 +1142,27 @@ struct Viewer {
                 }
             }
         renderer.lines(pts, true);
+        if (selected >= 0 && model) {   // the selection: its mesh bounds, then the handles over everything
+            std::vector<GltfRenderer::LinePoint> over;
+            const gltf::Node& node = model->nodes[(size_t)selected];
+            if (node.mesh >= 0 && node.skin < 0) {
+                glm::vec3 mn(FLT_MAX), mx(-FLT_MAX);
+                for (const gltf::Primitive& p : model->meshes[(size_t)node.mesh].primitives) {
+                    mn = glm::min(mn, p.boundsMin);
+                    mx = glm::max(mx, p.boundsMax);
+                }
+                const glm::mat4& w = pose.world(selected);
+                glm::vec3 c[8];
+                for (int k = 0; k < 8; k++)
+                    c[k] = glm::vec3(w * glm::vec4(k & 1 ? mx.x : mn.x, k & 2 ? mx.y : mn.y, k & 4 ? mx.z : mn.z, 1.0f));
+                const uint32_t col = abgr(1.0f, 0.6f, 0.1f, 0.9f);
+                for (int k = 0; k < 8; k++)
+                    for (int bit : {1, 2, 4})
+                        if (!(k & bit)) { over.push_back({c[k], col}); over.push_back({c[k | bit], col}); }
+            }
+            drawHandles(over);
+            if (!over.empty()) renderer.lines(over, false);
+        }
         if (skeleton && model) {   // over the model: joints to their parent joints
             std::vector<GltfRenderer::LinePoint> bones;
             for (const gltf::Skin& s : model->skins)
@@ -746,6 +1254,8 @@ struct Viewer {
                 }
             }
         }
+
+        sceneTreePanel();
 
         if (!model->animations.empty() && ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) {
             if (ImGui::Button(paused ? "Play" : "Pause")) paused = !paused;
@@ -884,6 +1394,29 @@ struct Viewer {
             ImGui::Checkbox("ACES tone mapping", &frame.tonemap);
         }
 
+        if (model->physics.any() && ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
+            if (ImGui::Checkbox("simulate (KHR_physics_rigid_bodies)", &physicsOn)) buildPhysics();
+            if (physics.built()) {
+                const gltf::PhysicsWorld::Stats st = physics.stats();
+                ImGui::Text("%.2f s simulated (%d steps of 1/60 s)", physics.time(), physics.steps());
+                ImGui::Text("%d dynamic (%d awake), %d kinematic, %d static", st.dynamic, st.awake, st.kinematic, st.statics);
+                ImGui::Text("%d triggers, %d joints", st.triggers, st.joints);
+                ImGui::Checkbox("paused", &physicsPaused);
+                ImGui::SameLine();
+                if (ImGui::Button("step") && physicsPaused) physics.step(gltf::PhysicsWorld::kStep, pose);
+                ImGui::SameLine();
+                if (ImGui::Button("restart")) buildPhysics();
+                glm::vec3 g = physics.gravity();
+                if (ImGui::SliderFloat("gravity Y", &g.y, -20.0f, 5.0f, "%.2f m/s2")) physics.setGravity(g);
+                ImGui::Checkbox("collider boxes", &physicsBoxes);
+                for (const std::string& w : physics.warnings()) ImGui::TextColored(ImVec4(1, 0.8f, 0.3f, 1), "%s", w.c_str());
+                if (!physicsLog.empty()) {
+                    ImGui::TextDisabled("triggers:");
+                    for (const std::string& l : physicsLog) ImGui::TextUnformatted(l.c_str());
+                }
+            }
+        }
+
         if (ImGui::CollapsingHeader("Crowd (instanced skinning)")) {
             int n = crowdCount;
             if (ImGui::SliderInt("copies", &n, 0, 400)) buildCrowd(n);
@@ -964,7 +1497,10 @@ struct Viewer {
         if (showUi) panel();
 
         // The scene.
-        if (model) posed();
+        if (model) {
+            posed();
+            simulate(dt);
+        }
         frame.lights = frameLights();
         // Shadows cover the model and the floor around it (where its shadow falls).
         frame.boundsMin = glm::vec3(sceneMin.x - radius, sceneMin.y, sceneMin.z - radius);
@@ -1016,6 +1552,28 @@ struct Viewer {
         bgfx::setDebug(wireframe ? BGFX_DEBUG_WIREFRAME : BGFX_DEBUG_NONE);
         gui.render(GltfRenderer::kViews + 4);
 
+        if (frameNo == 1 && args.pickX >= 0.0f) {   // --pick: as a click there, once the frame's matrices exist
+            selected = pickNode(glm::vec2(args.pickX, args.pickY));
+            revealSelected = selected >= 0;
+            std::fprintf(stderr, "[gltf] pick %.0f,%.0f: node %d (%s)\n", args.pickX, args.pickY, selected,
+                         selected >= 0 ? model->nodes[(size_t)selected].name.c_str() : "nothing");
+        }
+        if (frameNo == 2 && args.drag != glm::vec4(-1.0f) && selected >= 0) {   // --drag: as a press, a move and a release
+            glm::vec2 o(0.0f);
+            toScreen(glm::vec3(pose.world(selected)[3]), o);
+            const glm::vec2 p0 = o + glm::vec2(args.drag.x, args.drag.y), p1 = o + glm::vec2(args.drag.z, args.drag.w);
+            const int h = handleAt(p0);
+            if (h >= 0) {
+                startHandleDrag(h, p0);
+                dragHandleTo(p1);
+                dragHandle = -1;
+                posed();
+                editChanged(selected);
+            }
+            const NodeEdit e = edits.count(selected) ? edits[selected] : NodeEdit();
+            std::fprintf(stderr, "[gltf] drag handle %d: t %.3f %.3f %.3f  euler %.1f %.1f %.1f  s %.3f %.3f %.3f\n", h, e.t.x, e.t.y,
+                         e.t.z, e.euler.x, e.euler.y, e.euler.z, e.s.x, e.s.y, e.s.z);
+        }
         if (args.frames > 0 && frameNo == args.frames && !args.screenshot.empty()) {
             shotsBefore = next::bgfxHostScreenshotsWritten();
             bgfx::requestScreenShot(BGFX_INVALID_HANDLE, args.screenshot.c_str());

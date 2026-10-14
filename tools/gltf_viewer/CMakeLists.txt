@@ -3,7 +3,7 @@
 # Desktop only. The test models it is checked with live in tests/gltf/ (make_test_models.py).
 add_executable(gltf_viewer main.cpp make_test_models.py fetch_samples.py)
 toms_target_defaults(gltf_viewer)
-target_link_libraries(gltf_viewer PRIVATE toms_core toms_bgfx bgfx bx ${TOMS_SDL3_TARGET})
+target_link_libraries(gltf_viewer PRIVATE toms_core toms_physics toms_bgfx bgfx bx ${TOMS_SDL3_TARGET})
 # bx (bgfx's headers) needs C++20; only this tool and toms_bgfx see them.
 set_target_properties(gltf_viewer PROPERTIES FOLDER "tools" CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON
                       VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")

@@ -27,7 +27,7 @@ Build\windows-release\bin\gltf_viewer.exe Build\gltf_samples\Fox.glb
 | 動畫 | translation、rotation、scale、morph 權重；`LINEAR`（旋轉：slerp）、`STEP`、`CUBICSPLINE`；可同時播放多個動畫 |
 | 場景 | 節點階層（TRS 或矩陣）、預設場景、鏡像的節點（負縮放） |
 | 檔案 | `.glb`、`.gltf` + `.bin`、data URI、外部的 PNG / JPEG / BMP / TGA 圖片 |
-| 擴充 | `EXT_mesh_gpu_instancing`、`KHR_materials_unlit`、`KHR_texture_transform`、`KHR_materials_emissive_strength`、`KHR_mesh_quantization`、`KHR_materials_pbrSpecularGlossiness`（當作 base colour + roughness）、`KHR_materials_transmission` + `KHR_materials_volume`（玻璃，近似：可以看穿並有反射，但後方的東西不會折射） |
+| 擴充 | `EXT_mesh_gpu_instancing`、`KHR_materials_unlit`、`KHR_texture_transform`、`KHR_materials_emissive_strength`、`KHR_mesh_quantization`、`KHR_materials_pbrSpecularGlossiness`（當作 base colour + roughness）、`KHR_materials_transmission` + `KHR_materials_volume`（玻璃，近似：可以看穿並有反射，但後方的東西不會折射）、`KHR_physics_rigid_bodies` + `KHR_implicit_shapes`（在 Jolt 上模擬：§7） |
 
 **尚未支援：**
 - **OpenGL ES / WebGL 上沒有陰影**（web 版、Android 的 GLES 路徑）。
@@ -203,6 +203,27 @@ renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
 - `--camera=<index|name>`（檔案的某個鏡頭）和 `--look=<yaw>,<pitch>`（在它自己的座標系中轉動，單位度）、`--light=default|point|spot|all|file`、`--shadows=0|1`、`--ground=0|1`、`--shadow-bias=<x>`；
 - `--renderer=d3d11|d3d12|vulkan|opengl`。
 
+### 編輯節點（2026-10-14）
+
+- **Scene tree**（在 Model 之下）：以樹狀列出場景的節點，並標示 `[mesh]`、`[skinned mesh]`、`[camera]`、`[light]`；
+  有物理時另有 `[body]`、`[kinematic]`、`[collider]`、`[trigger]`、`[joint]`。編輯過的節點顯示 `*`。點一下節點即選取它。
+- **在畫面中點一個 mesh** 就會選取它的節點。點選以每個 mesh 的包圍盒判斷（包含 instance）。
+  在同一處再點一次，會選取後方的下一個節點，例如半透明體積裡的 mesh。選取的節點以橘色方框標示。
+- **Node 檢視面板：** 節點區域變換的平移、旋轉（度）與縮放，另有等比縮放。按鈕：**reset node**（Delete）、
+  **reset all edits**、**look at it**、**deselect**，以及往上一層的 **parent**。
+- **畫面中的控制柄：** 用滑鼠左鍵拖曳；拖曳其他地方仍是旋轉鏡頭。
+
+  | 工具 | 按鍵 | 控制柄 | 座標軸 |
+  |---|---|---|---|
+  | 移動 | T | 每軸一個箭頭；中央方塊在畫面平面上移動 | 世界座標軸 |
+  | 旋轉 | E | 每軸一個圓環 | 世界座標軸 |
+  | 縮放 | S | 每軸一個小方塊；中央方塊等比縮放 | 節點自己的座標軸 |
+
+- **編輯會取代節點的動畫**（在動畫之後套用）。開啟物理時，每次拖曳或欄位編輯結束，模擬會從編輯後的場景重新開始，
+  所以移動過的剛體會從新位置落下。開啟其他檔案會捨棄編輯；編輯不會存回檔案。
+- 測試用參數：`--select=<節點>`、`--tool=move|rotate|scale`、`--pick=<x>,<y>`、`--drag=<x0>,<y0>,<x1>,<y1>`
+  （以選取節點在畫面上的原點為基準的像素）。
+
 ## 5. 測試
 
 - **單元測試 `gltf_model_test`：** 對測試模型做 47 項檢查。
@@ -318,3 +339,99 @@ nlerp；組出關節矩陣；接著線性混合蒙皮，光照和其他網格相
 - Fox 群體在 D3D11、D3D12、Vulkan 和 OpenGL 之間一致；
 - `gltf_anim_texture_test` 把烘焙結果和 `Pose::jointMatrices` 比對（在幀的時間點完全相同，幀之間差距在 0.01 以內），並檢查混合、
   群體狀態和存檔／讀檔。
+
+## 7. 物理：在 Jolt 上實作 KHR_physics_rigid_bodies
+
+**狀態：** 2026-10-12 完成。載入器、`gltf_viewer` 與測試都會使用它。遊戲本身還沒有連結它，web 與 Android 版也還不建置它（W36）。
+
+### 7.1 是什麼
+
+兩個仍屬草案的 Khronos 擴充，描述 glTF 檔中的剛體物理（[規格與範例](https://github.com/eoineoineoin/glTF_Physics)）：
+
+- **`KHR_implicit_shapes`** 在文件層列出形狀：`sphere`、`box`（完整邊長）、`capsule`、`cylinder`
+  （`radiusTop` / `radiusBottom`，所以圓錐就是一端半徑為 0 的圓柱）、`plane`。
+- **`KHR_physics_rigid_bodies`** 把物理放在節點上：
+  - `motion` 讓節點成為剛體：質量、質心、慣性、初速、重力倍率、`isKinematic`；
+  - `collider` 是實心幾何：隱式形狀，或一個 mesh（以三角形或其凸包使用）；
+  - `trigger` 是觸發區，回報什麼進入、什麼離開；
+  - `joint` 把這個節點的剛體約束到另一個節點的剛體。
+
+  文件層另有物理材質（摩擦、彈性、組合方式）、碰撞過濾（「systems」）與關節定義（每軸的限制與驅動）。
+
+舊引擎素材中的 `falling_cube.glb` **不是**這種檔案。它完全沒有使用擴充：它是 Blender 烘焙好的軟體模擬，
+50 個獨立的 mesh，一個 mesh 一格畫面，而且同時顯示。要播放它需要 mesh 序列播放器，而不是物理。
+
+### 7.2 程式碼
+
+| 部分 | 位置 | 內容 |
+|---|---|---|
+| 資料 | `gltf_model.h`（`Model::physics`） | `PhysicsShape`、`PhysicsMaterial`、`PhysicsFilter`、`PhysicsJoint`（限制、驅動）、`NodePhysics`（motion、collider、trigger、joint），由 `gltf_model.cpp` 從 cgltf 保留的擴充 JSON 讀取。預設值取自擴充的 schema；錯誤的索引會被捨棄並發出警告 |
+| 模擬 | `gltf_physics.h/.cpp`（`gltf::PhysicsWorld`） | `build(model, pose)`、`step(dt, pose)`（固定 1/60 秒一步）、`simulateTo(t, pose)`、`writePose(pose)`、`takeEvents()`（觸發區進入 / 離開）、`inside()`、`isSleeping()`、`stats()`、`warnings()`、`debugBoxes()` |
+| 函式庫 | `toms_physics`（`src/game/CMakeLists.txt`） | 以 private 方式連結 Jolt，所以 `gltf_physics.h` 不會露出任何 Jolt 型別 |
+| 引擎 | [Jolt Physics](https://github.com/jrouwe/JoltPhysics) v5.6.0，MIT（`cmake/TomsDependencies.cmake`） | 與其他函式庫一樣下載。跨平台決定性；只用 SSE4.2（任何 x64 都能跑）；單執行緒工作系統，所以每次執行結果都相同 |
+
+檔案資料如何變成 Jolt 物件：
+
+- **有 `motion` 的節點是一個剛體。** 它自己的 collider，加上沒有自己 `motion` 的子孫節點的 collider，組成複合形狀。每個 collider 的節點縮放會直接算進形狀尺寸。
+- **`isKinematic` 或質量 0 會成為運動學剛體：** 以自身速度移動，不會被推動。
+- **被動畫移動的節點**（它或祖先有動畫通道）是運動學剛體並跟隨動畫。規格說動畫優先於模擬。
+- **上方沒有 `motion` 的 collider 是靜態的。**
+- **trigger 是感測器。** 在移動的剛體內時會跟著它；複合觸發區的一部分會回報複合節點。
+- **摩擦與彈性**採用 KHR 的組合規則（average → minimum → maximum → multiply）。沒有指定時使用 Jolt 自己的規則（摩擦取乘積平方根、彈性取較大者）。
+- **碰撞過濾：** 兩個 collider 只有在彼此的 `collideWithSystems` / `notCollideWithSystems` 都允許對方的 `collisionSystems` 時才會碰撞。沒有過濾的 collider 與一切碰撞。
+- **關節是兩個節點座標系之間的六自由度約束。**
+  - `min = max = 0` 的限制會鎖住該軸，其他限制則給出範圍。
+  - 線性 `stiffness` 讓限制變軟。
+  - 驅動會變成馬達：位置馬達（剛性 / 阻尼彈簧）或速度馬達，`maxForce` 是力或力矩的上限。
+  - `enableCollision: false` 讓兩個剛體不互相碰撞。
+- **寫回：** 模擬步進後，每個動態與運動學剛體（被動畫驅動的除外）都會寫回 `Pose`，成為其節點的區域變換；先父後子，並保留節點的縮放。
+
+近似處理（Jolt 沒有直接對應的功能）：
+
+- **摩擦：** 每個剛體只有一個摩擦值（`dynamicFriction`）。
+- **複合剛體：** 整個剛體使用第一個 collider 的材質與過濾。
+- **多軸限制：** 限制 2 或 3 個線性軸時是方盒，而不是圓或球。
+- **旋轉限制：** 都是硬限制；Jolt 的旋轉限制沒有彈簧。
+- **動態三角形 mesh：** 改用它的凸包，並發出警告。
+- **無限大慣性：** 慣性分量為 0（「無限大」）時改用非常大的值。
+- **穿透：** 靜止的接觸最多可以陷入 2 公分（Jolt 的 penetration slop）；1 公尺的方塊會停在 0.48–0.50。
+
+### 7.3 在檢視器中
+
+有這些擴充的檔案一開啟就開始模擬（`--physics=0` 可關閉）。**Physics** 面板有：
+
+- 已模擬的時間與剛體數（動態與醒著的、運動學、靜態、觸發區、關節）；
+- **paused** / **step** / **restart**；
+- 重力滑桿；
+- **collider boxes**：灰色靜態、藍色運動學、綠色動態（睡著時較暗）、黃色觸發區；
+- 建置時的警告；
+- 最近的觸發事件。
+
+加上 `--time=<t>` 時，場景只會模擬一次到 `t`，供截圖使用。
+
+也用擴充作者的範例檢查過（沒有提交：它們沒有授權條款）。ShapeTypes、JointTypes、Triggers、MotionProperties、Filtering、
+Materials_Restitution、Materials_Friction 都能載入、建置與模擬；唯一的警告是 ShapeTypes 中的動態三角形 mesh 改用凸包。
+
+### 7.4 測試
+
+- **`tests/gltf/physics_scene.gltf`**（`tools/gltf_viewer/make_test_models.py`）：
+  - 靜態地面；
+  - 落下的方塊、會彈的球、躺著的膠囊、圓錐、兩個方塊組成的複合體、凸包八面體；
+  - 過濾設定會略過地面的「ghost」方塊；
+  - 以 0.5 m/s 移動的運動學平台；
+  - 方塊會穿過的觸發區；
+  - 單擺（球關節）；
+  - 有動畫的掃桿。
+- **`unit.gltf_physics_test`**（35 項檢查）：
+  - 讀取；
+  - 靜止高度與睡眠；
+  - 反彈；
+  - 每種形狀都能落地，複合體的各部分保持相對位置；
+  - ghost 穿過地面；
+  - 平台 2 秒正好移動 1 公尺；
+  - 觸發區的進入 / 離開；
+  - 單擺長度不變；
+  - 掃桿跟隨動畫；
+  - `simulateTo` 與逐步模擬逐位元相同；
+  - 沒有物理的模型拒絕建置。
+- **`smoke.gltf_physics`：** D3D11 上 2.5 秒時的場景。

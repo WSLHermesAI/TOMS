@@ -11,6 +11,11 @@ the tests own every byte (no licence questions) and each one checks one feature:
   pbr_materials.gltf  a 5x5 grid of spheres (metallic down, roughness across), an emissive sphere, a
                       textured cube (embedded PNG, KHR_texture_transform), alpha mask and blend quads,
                       an unlit quad (KHR_materials_unlit)
+  physics_scene.gltf  KHR_physics_rigid_bodies + KHR_implicit_shapes: a static ground; falling box, bouncy
+                      sphere (restitution 0.8), lying capsule, cone (tapered cylinder), a two-box compound, a
+                      convex-hull octahedron; a box whose collision filter skips the ground; a kinematic
+                      platform moving at 0.5 m/s; a trigger zone the box falls through; a pendulum (a joint with
+                      locked linear axes); an animated (kinematic) sweeper
 
   python tools/gltf_viewer/make_test_models.py            writes tests/gltf/*.gltf
 """
@@ -326,8 +331,189 @@ def pbr_materials():
     b.write('pbr_materials.gltf')
 
 
+# ---- physics_scene ------------------------------------------------------------------------------
+def box_mesh(sx, sy, sz):
+    pos, nrm, uv, idx = cube(1.0)
+    return [(p[0] * sx, p[1] * sy, p[2] * sz) for p in pos], nrm, idx
+
+
+def cylinder_mesh(h, r_top, r_bottom, segs=24):
+    pos, nrm, idx = [], [], []
+    for i in range(segs):
+        a0, a1 = 2 * math.pi * i / segs, 2 * math.pi * (i + 1) / segs
+        quad = [(r_bottom * math.cos(a0), -h / 2, r_bottom * math.sin(a0)), (r_bottom * math.cos(a1), -h / 2, r_bottom * math.sin(a1)),
+                (r_top * math.cos(a1), h / 2, r_top * math.sin(a1)), (r_top * math.cos(a0), h / 2, r_top * math.sin(a0))]
+        base = len(pos)
+        slope = (r_bottom - r_top) / h
+        for q in quad:
+            ang = math.atan2(q[2], q[0])
+            n = (math.cos(ang), slope, math.sin(ang))
+            l = math.sqrt(sum(c * c for c in n))
+            pos.append(q)
+            nrm.append(tuple(c / l for c in n))
+        idx += [base, base + 2, base + 1, base, base + 3, base + 2]
+        for y, r, ny in ((h / 2, r_top, 1.0), (-h / 2, r_bottom, -1.0)):   # caps
+            if r <= 0:
+                continue
+            base = len(pos)
+            pos += [(0, y, 0), (r * math.cos(a0), y, r * math.sin(a0)), (r * math.cos(a1), y, r * math.sin(a1))]
+            nrm += [(0, ny, 0)] * 3
+            idx += [base, base + 2, base + 1] if ny > 0 else [base, base + 1, base + 2]
+    return pos, nrm, idx
+
+
+def capsule_mesh(h, r, rings=8, segs=24):
+    pos, nrm, idx = [], [], []
+    rows = []
+    for half, sign in ((h / 2, 1), (-h / 2, -1)):
+        for i in range(rings + 1):
+            t = (math.pi / 2) * i / rings
+            ring = []
+            for j in range(segs + 1):
+                a = 2 * math.pi * j / segs
+                n = (math.cos(t) * math.cos(a), sign * math.sin(t), math.cos(t) * math.sin(a))
+                pos.append((r * n[0], half + r * n[1], r * n[2]))
+                nrm.append(n)
+                ring.append(len(pos) - 1)
+            rows.append((sign, i, ring))
+    top = [ring for sign, i, ring in rows if sign > 0][::-1]       # from the pole down to the equator
+    bottom = [ring for sign, i, ring in rows if sign < 0]          # from the equator down to the pole
+    order = top + bottom
+    for k in range(len(order) - 1):
+        a, b = order[k], order[k + 1]
+        for j in range(segs):
+            idx += [a[j], a[j + 1], b[j + 1], a[j], b[j + 1], b[j]]
+    return pos, nrm, idx
+
+
+def octahedron(r):
+    v = [(r, 0, 0), (-r, 0, 0), (0, r, 0), (0, -r, 0), (0, 0, r), (0, 0, -r)]
+    faces = [(0, 2, 4), (4, 2, 1), (1, 2, 5), (5, 2, 0), (4, 3, 0), (1, 3, 4), (5, 3, 1), (0, 3, 5)]
+    pos, nrm, idx = [], [], []
+    for f in faces:
+        a, b, c = (v[i] for i in f)
+        n = [sum(x) / 3 for x in zip(a, b, c)]
+        l = math.sqrt(sum(x * x for x in n))
+        for q in (a, b, c):
+            pos.append(q)
+            nrm.append(tuple(x / l for x in n))
+        idx += [len(pos) - 3, len(pos) - 1, len(pos) - 2]
+    return pos, nrm, idx
+
+
+def physics_scene():
+    b = Builder()
+    meshes, materials, nodes, shapes = [], [], [], []
+
+    def material(name, rgba, rough=0.6, metal=0.0, blend=False):
+        m = {'name': name, 'pbrMetallicRoughness': {'baseColorFactor': rgba, 'metallicFactor': metal, 'roughnessFactor': rough}}
+        if blend:
+            m['alphaMode'] = 'BLEND'
+            m['doubleSided'] = True
+        materials.append(m)
+        return len(materials) - 1
+
+    def mesh(name, geo, mat):
+        pos, nrm, idx = geo
+        meshes.append({'name': name, 'primitives': [{'attributes': {'POSITION': b.floats(pos, 'VEC3', minmax=True),
+                                                                   'NORMAL': b.floats(nrm, 'VEC3')},
+                                                    'indices': b.indices(idx), 'material': mat}]})
+        return len(meshes) - 1
+
+    def shape(kind, **props):
+        shapes.append({'type': kind, kind: props})
+        return len(shapes) - 1
+
+    def node(name, **kw):
+        n = {'name': name}
+        n.update({k: v for k, v in kw.items() if k != 'physics'})
+        if 'physics' in kw:
+            n['extensions'] = {'KHR_physics_rigid_bodies': kw['physics']}
+        nodes.append(n)
+        return len(nodes) - 1
+
+    def collider(shape_index, mat=0, filt=None):
+        c = {'geometry': {'shape': shape_index}, 'physicsMaterial': mat}
+        if filt is not None:
+            c['collisionFilter'] = filt
+        return c
+
+    grey = material('ground', [0.55, 0.57, 0.6, 1.0], rough=0.9)
+    orange = material('orange', [1.0, 0.5, 0.15, 1.0])
+    blue = material('blue', [0.2, 0.45, 1.0, 1.0], rough=0.3)
+    green = material('green', [0.25, 0.8, 0.35, 1.0])
+    yellow = material('yellow', [1.0, 0.85, 0.2, 1.0])
+    teal = material('teal', [0.1, 0.75, 0.75, 1.0])
+    red = material('red', [0.9, 0.2, 0.2, 1.0])
+    purple = material('purple', [0.6, 0.3, 0.9, 1.0])
+    zone = material('trigger_zone', [1.0, 0.9, 0.2, 0.25], blend=True)
+    steel = material('steel', [0.75, 0.75, 0.8, 1.0], rough=0.35, metal=0.8)
+
+    # physics materials: 0 rough (no bounce), 1 bouncy (restitution 0.8, the maximum wins)
+    phys_materials = [{'staticFriction': 0.8, 'dynamicFriction': 0.8, 'restitution': 0.0},
+                      {'staticFriction': 0.5, 'dynamicFriction': 0.5, 'restitution': 0.8, 'restitutionCombine': 'maximum'}]
+    # filters: 0 the world, 1 a ghost that passes through the world
+    filters = [{'collisionSystems': ['world']},
+               {'collisionSystems': ['ghost'], 'notCollideWithSystems': ['world']}]
+    # joint 0: a ball joint (the three linear axes locked, rotation free)
+    joints = [{'limits': [{'linearAxes': [0, 1, 2], 'min': 0, 'max': 0}]}]
+
+    roots = []
+    roots.append(node('ground', mesh=mesh('ground', box_mesh(12, 0.4, 6), grey), translation=[0, -0.2, 0],
+                      physics={'collider': collider(shape('box', size=[12, 0.4, 6]), 0, 0)}))
+    roots.append(node('box_drop', mesh=mesh('box', box_mesh(1, 1, 1), orange), translation=[-4, 3, 0],
+                      physics={'motion': {'mass': 2}, 'collider': collider(shape('box', size=[1, 1, 1]))}))
+    roots.append(node('ball_bouncy', mesh=mesh('ball', (lambda g: (g[0], g[1], g[3]))(sphere(16, 24, 0.5)), blue), translation=[-2, 4, 0],
+                      physics={'motion': {'mass': 1}, 'collider': collider(shape('sphere', radius=0.5), 1)}))
+    roots.append(node('capsule', mesh=mesh('capsule', capsule_mesh(1.0, 0.3), green), translation=[0, 3, 0],
+                      rotation=list(quat_axis((0, 0, 1), 90)),
+                      physics={'motion': {'mass': 1}, 'collider': collider(shape('capsule', height=1.0, radiusTop=0.3, radiusBottom=0.3))}))
+    roots.append(node('cone', mesh=mesh('cone', cylinder_mesh(1.0, 0.0, 0.5), yellow), translation=[1.6, 3, 0],
+                      physics={'motion': {'mass': 1}, 'collider': collider(shape('cylinder', height=1.0, radiusTop=0.0, radiusBottom=0.5))}))
+    part = shape('box', size=[0.5, 1.5, 0.5])
+    part_mesh = mesh('compound_part', box_mesh(0.5, 1.5, 0.5), teal)
+    a = node('compound_a', mesh=part_mesh, translation=[-0.5, 0, 0], physics={'collider': collider(part)})
+    c = node('compound_b', mesh=part_mesh, translation=[0.25, 0.5, 0], rotation=list(quat_axis((0, 0, 1), 90)),
+             physics={'collider': collider(part)})
+    roots.append(node('compound', translation=[3.5, 3.5, 0], children=[a, c], physics={'motion': {'mass': 2}}))
+    hull_mesh = mesh('octahedron', octahedron(0.6), purple)
+    roots.append(node('convex', mesh=hull_mesh, translation=[5, 3, 0],
+                      physics={'motion': {'mass': 1}, 'collider': {'geometry': {'mesh': hull_mesh, 'convexHull': True}, 'physicsMaterial': 0}}))
+    roots.append(node('ghost', mesh=mesh('ghost_box', box_mesh(0.8, 0.8, 0.8), red), translation=[-4, 3, 2],
+                      physics={'motion': {'mass': 1}, 'collider': collider(shape('box', size=[0.8, 0.8, 0.8]), 0, 1)}))
+    roots.append(node('platform', mesh=mesh('platform', box_mesh(1.5, 0.2, 1.5), steel), translation=[-5, 1, -2],
+                      physics={'motion': {'isKinematic': True, 'linearVelocity': [0.5, 0, 0]},
+                               'collider': collider(shape('box', size=[1.5, 0.2, 1.5]))}))
+    roots.append(node('trigger_zone', mesh=mesh('zone', box_mesh(2, 1, 2), zone), translation=[-4, 1.5, 0],
+                      physics={'trigger': {'geometry': {'shape': shape('box', size=[2, 1, 2])}}}))
+    pivot_a = node('anchor_pivot', physics={'joint': {'connectedNode': len(nodes) + 2, 'joint': 0}})
+    roots.append(node('anchor', mesh=mesh('anchor', box_mesh(0.3, 0.3, 0.3), steel), translation=[2.5, 4, -2], children=[pivot_a],
+                      physics={'collider': collider(shape('box', size=[0.3, 0.3, 0.3]))}))
+    pivot_b = node('bob_pivot', translation=[-1.2, 0, 0])
+    assert pivot_b == pivot_a + 2
+    roots.append(node('bob', mesh=mesh('bob', box_mesh(0.4, 0.4, 0.4), orange), translation=[3.7, 4, -2], children=[pivot_b],
+                      physics={'motion': {'mass': 1}, 'collider': collider(shape('box', size=[0.4, 0.4, 0.4]))}))
+    roots.append(node('sweeper', mesh=mesh('sweeper', box_mesh(2, 0.2, 0.2), red), translation=[0, 0.3, 2],
+                      physics={'collider': collider(shape('box', size=[2, 0.2, 0.2]))}))
+    sweeper = roots[-1]
+    t_in = b.anim_input([0.0, 2.0, 4.0])
+    r_out = b.floats([quat_axis((0, 1, 0), 0), quat_axis((0, 1, 0), 180), quat_axis((0, 1, 0), 359.9)], 'VEC4', target=None)
+
+    b.doc.update({
+        'extensionsUsed': ['KHR_implicit_shapes', 'KHR_physics_rigid_bodies'],
+        'extensions': {'KHR_implicit_shapes': {'shapes': shapes},
+                       'KHR_physics_rigid_bodies': {'physicsMaterials': phys_materials, 'collisionFilters': filters,
+                                                    'physicsJoints': joints}},
+        'scene': 0, 'scenes': [{'nodes': roots}],
+        'nodes': nodes, 'meshes': meshes, 'materials': materials,
+        'animations': [{'name': 'sweep', 'samplers': [{'input': t_in, 'output': r_out}],
+                        'channels': [{'sampler': 0, 'target': {'node': sweeper, 'path': 'rotation'}}]}]})
+    b.write('physics_scene.gltf')
+
+
 if __name__ == '__main__':
     skin_tube()
     morph_cube()
     instancing()
     pbr_materials()
+    physics_scene()
