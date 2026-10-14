@@ -9,7 +9,8 @@
 //   rcss           RmlUi @spritesheet, one block per page
 // Page images are always written as PNG.
 //
-// Import: .pi (FM79979), .atlas (both dialects), TexturePacker .json (hash or array).
+// Import: .pi (FM79979), .atlas (both dialects), TexturePacker .json (hash or array), Cocos / TexturePacker
+// .plist (formats 0-3: rotated frames are turned back upright, trims and aliases kept, our x_ fields read).
 #pragma once
 #include "atlas_build.h"
 
@@ -47,6 +48,7 @@ bool importAtlasFile(const std::string& path, BuildResult& out, std::string* err
 bool importPi(const std::string& path, BuildResult& out, std::string* err = nullptr);
 bool importLibgdx(const std::string& path, BuildResult& out, std::string* err = nullptr);
 bool importTpJson(const std::string& path, BuildResult& out, std::string* err = nullptr);
+bool importPlist(const std::string& path, BuildResult& out, std::string* err = nullptr);
 
 // Turns an imported atlas into a project: every image region is cut out at its original size
 // (trimmed pixels put back at their offset); child regions become child sprites. With an empty

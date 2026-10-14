@@ -132,19 +132,27 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
     auto* pf = new QFormLayout(m_playBox);
     m_playLabel = new QLabel(m_playBox);
     m_playLabel->setForegroundRole(QPalette::PlaceholderText);
-    m_posX = dspin(-99999, 99999, 2, 1, m_playBox);
-    m_posY = dspin(-99999, 99999, 2, 1, m_playBox);
-    m_rot = dspin(-99999, 99999, 2, 5, m_playBox);
-    m_scaleX = dspin(-999, 999, 3, 0.05, m_playBox);
-    m_scaleY = dspin(-999, 999, 3, 0.05, m_playBox);
+    for (int i = 0; i < 3; i++) {
+        m_pos[i] = dspin(-99999, 99999, 2, 1, m_playBox);
+        m_rot[i] = dspin(-99999, 99999, 2, 5, m_playBox);
+        m_scale[i] = dspin(-999, 999, 3, 0.05, m_playBox);
+    }
+    m_pos[2]->setToolTip(tr("z: depth (into the screen). The 2D view does not move with it; a 3D camera would"));
+    m_rot[0]->setToolTip(tr("x: tilt about the horizontal axis (the 2D view foreshortens the sprite)"));
+    m_rot[1]->setToolTip(tr("y: tilt about the vertical axis (the 2D view foreshortens the sprite)"));
+    m_rot[2]->setToolTip(tr("z: turn in the screen plane, clockwise (the viewport's rotate handle)"));
+    m_scale[2]->setToolTip(tr("z: depth scale (shows with x / y tilts and a 3D camera)"));
     for (int i = 0; i < 4; i++) m_color[i] = dspin(0, 1, 3, 0.05, m_playBox);
     m_spriteHere = new QLabel(m_playBox);
     m_spriteHere->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     m_visibleHere = new QCheckBox(m_playBox);
     pf->addRow(m_playLabel);
-    pf->addRow(tr("Pos"), row(m_playBox, {{QStringLiteral("x"), m_posX}, {QStringLiteral("y"), m_posY}}, makeKeyButton(Channel::Pos, m_playBox)));
-    pf->addRow(tr("Rot"), row(m_playBox, {{QString(), m_rot}}, makeKeyButton(Channel::Rot, m_playBox)));
-    pf->addRow(tr("Scale"), row(m_playBox, {{QStringLiteral("x"), m_scaleX}, {QStringLiteral("y"), m_scaleY}}, makeKeyButton(Channel::Scale, m_playBox)));
+    auto xyz = [](QDoubleSpinBox* const s[3]) -> QList<QPair<QString, QWidget*>> {
+        return {{QStringLiteral("x"), s[0]}, {QStringLiteral("y"), s[1]}, {QStringLiteral("z"), s[2]}};
+    };
+    pf->addRow(tr("Pos"), row(m_playBox, xyz(m_pos), makeKeyButton(Channel::Pos, m_playBox)));
+    pf->addRow(tr("Rot"), row(m_playBox, xyz(m_rot), makeKeyButton(Channel::Rot, m_playBox)));
+    pf->addRow(tr("Scale"), row(m_playBox, xyz(m_scale), makeKeyButton(Channel::Scale, m_playBox)));
     pf->addRow(tr("Colour"), row(m_playBox, {{QString(), m_color[0]}, {QString(), m_color[1]}, {QString(), m_color[2]}},
                                  makeKeyButton(Channel::Color, m_playBox)));
     pf->addRow(tr("Alpha"), row(m_playBox, {{QString(), m_color[3]}}));
@@ -237,9 +245,11 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
             n.stayAtLastFrame = i != 1;
         });
     });
-    for (QDoubleSpinBox* s : {m_posX, m_posY}) connect(s, &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Pos); });
-    connect(m_rot, &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Rot); });
-    for (QDoubleSpinBox* s : {m_scaleX, m_scaleY}) connect(s, &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Scale); });
+    for (int i = 0; i < 3; i++) {
+        connect(m_pos[i], &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Pos); });
+        connect(m_rot[i], &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Rot); });
+        connect(m_scale[i], &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Scale); });
+    }
     for (QDoubleSpinBox* s : m_color) connect(s, &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Color); });
     connect(m_visibleHere, &QCheckBox::toggled, this, [this] { commitChannel(Channel::Visible); });
 
@@ -282,9 +292,9 @@ void AnimPropertiesDock::commitChannel(Channel c)
     if (m_updating || !m_doc->selectedNode()) return;
     Value v;
     switch (c) {
-    case Channel::Pos: v.v = {float(m_posX->value()), float(m_posY->value()), 0, 0}; break;
-    case Channel::Rot: v.v.x = float(m_rot->value()); break;
-    case Channel::Scale: v.v = {float(m_scaleX->value()), float(m_scaleY->value()), 0, 0}; break;
+    case Channel::Pos: v.v = {float(m_pos[0]->value()), float(m_pos[1]->value()), float(m_pos[2]->value()), 0}; break;
+    case Channel::Rot: v.v = {float(m_rot[0]->value()), float(m_rot[1]->value()), float(m_rot[2]->value()), 0}; break;
+    case Channel::Scale: v.v = {float(m_scale[0]->value()), float(m_scale[1]->value()), float(m_scale[2]->value()), 0}; break;
     case Channel::Color:
         v.v = {float(m_color[0]->value()), float(m_color[1]->value()), float(m_color[2]->value()), float(m_color[3]->value())};
         break;
@@ -337,18 +347,18 @@ void AnimPropertiesDock::refreshPlayhead()
     m_easeBox->setEnabled(n != nullptr);
     m_playLabel->setText(tr("t = %1 s   auto-key %2").arg(t, 0, 'f', 3).arg(m_doc->autoKey() ? tr("ON (edits write keys)") : tr("off (edits change rest values)")));
     if (n) {
-        const glm::vec2 p = toms::anim::positionAt(*n, t), s = toms::anim::scaleAt(*n, t);
+        const glm::vec3 p = toms::anim::positionAt(*n, t), r = toms::anim::rotationAt(*n, t), s = toms::anim::scaleAt(*n, t);
         const glm::vec4 c = toms::anim::colorAt(*n, t);
-        for (QDoubleSpinBox* w : {m_posX, m_posY, m_rot, m_scaleX, m_scaleY, m_color[0], m_color[1], m_color[2], m_color[3]})
-            w->blockSignals(true);
-        m_posX->setValue(p.x);
-        m_posY->setValue(p.y);
-        m_rot->setValue(toms::anim::rotationAt(*n, t));
-        m_scaleX->setValue(s.x);
-        m_scaleY->setValue(s.y);
-        for (int i = 0; i < 4; i++) m_color[i]->setValue(c[i]);
-        for (QDoubleSpinBox* w : {m_posX, m_posY, m_rot, m_scaleX, m_scaleY, m_color[0], m_color[1], m_color[2], m_color[3]})
-            w->blockSignals(false);
+        for (int i = 0; i < 3; i++) {
+            const QSignalBlocker bp(m_pos[i]), br(m_rot[i]), bs(m_scale[i]);
+            m_pos[i]->setValue(p[i]);
+            m_rot[i]->setValue(r[i]);
+            m_scale[i]->setValue(s[i]);
+        }
+        for (int i = 0; i < 4; i++) {
+            const QSignalBlocker b(m_color[i]);
+            m_color[i]->setValue(c[i]);
+        }
         const std::string sp = toms::anim::spriteAt(*n, t);
         m_spriteHere->setText(m_doc->spriteDisplay(sp));
         m_spriteHere->setToolTip(sp.empty() ? QString() : tr("Stored as \"%1\"").arg(qs(sp)));

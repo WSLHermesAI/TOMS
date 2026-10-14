@@ -75,7 +75,8 @@ RULES = [
     # files other rules would take for the wrong area
     (['docs/examples/fx_*'], named('particle.check_recipes'), 'particle recipes'),
     (['docs/examples/anim_*'], named('anim.check_recipes'), 'anim recipes'),
-    (['tests/smoke/anim_preview.anim'], named('anim.check_preview'), 'the anim preview'),
+    (['tests/smoke/anim_preview.anim'], named('anim.check_preview', 'anim.editor_selftest'), 'the anim preview'),
+    (['tests/mpdi/*'], named('anim.mpdi_convert'), 'the .mpdi converter fixtures'),
     (['tools/test_select.py', 'tools/test.cmd'], None, 'the test runner itself'),
     (['tools/web_editors/floor_index.js'], named('unit.floor_index_test'), 'the event index the HTML editors write'),
     # nothing
@@ -103,7 +104,7 @@ RULES = [
     (['assets/media/anim/*'], any_of(ANIMS, is_game_smoke_d3d11), '.anim files: anim checks + game screenshots'),
     (['tools/atlas/*', 'src/core/engine/atlas*'], ATLAS, 'the atlas tool: atlas checks'),
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),
-    (['tools/studio_common/*'], named('atlas.core', 'anim.*', 'particle.*'), 'the Qt editors: their checks'),
+    (['tools/studio_common/*'], named('atlas.core', 'anim.*', 'particle.*', 'studio.*'), 'the Qt editors: their checks'),
     # the renderer
     (['src/engine/src/bgfx_*', 'src/engine/src/embedded_shaders*', 'src/engine/src/shared_*', 'src/engine/CMakeLists.txt',
       'src/engine/shaders/varying.def.sc', 'src/engine/shaders/*.sh'],

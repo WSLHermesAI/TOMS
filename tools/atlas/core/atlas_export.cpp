@@ -558,13 +558,178 @@ bool importTpJson(const std::string& path, BuildResult& out, std::string* err) {
     return true;
 }
 
+// ---- Cocos / TexturePacker .plist (formats 0, 1, 2, 3) -------------------------------------------
+// A plist dict is <key> followed by its value element. Frame names usually end in ".png" (Cocos looks sprites up
+// by file name); that ending is dropped so a sprite is not called "hero.png" (and its image "hero.png.png").
+// Rotated frames are stored turned 90 degrees clockwise: they are turned back onto an extra page (the project
+// import cuts every sprite out of the pages, so it never sees the rotation).
+
+namespace {
+
+using DictItems = std::vector<std::pair<std::string, const XmlNode*>>;
+
+DictItems dictItems(const XmlNode* dict) {
+    DictItems out;
+    if (!dict) return out;
+    for (size_t i = 0; i + 1 < dict->children.size(); i++)
+        if (dict->children[i]->name == "key") {
+            out.push_back({dict->children[i]->text, dict->children[i + 1].get()});
+            i++;
+        }
+    return out;
+}
+
+const XmlNode* dictGet(const DictItems& d, const std::string& key) {
+    for (const auto& kv : d) if (kv.first == key) return kv.second;
+    return nullptr;
+}
+
+std::string plistText(const XmlNode* v) { return v ? v->text : std::string(); }
+bool plistBool(const XmlNode* v) { return v && v->name == "true"; }
+double plistNumber(const XmlNode* v, double def = 0.0) { return v && !v->text.empty() ? strtod(v->text.c_str(), nullptr) : def; }
+
+std::string dropImageExt(const std::string& name) {
+    std::string lower = name;
+    for (char& c : lower) c = (char)tolower((unsigned char)c);
+    for (const char* ext : {".png", ".jpg", ".jpeg", ".webp", ".tga", ".bmp"}) {
+        const size_t n = strlen(ext);
+        if (lower.size() > n && lower.compare(lower.size() - n, n, ext) == 0) return name.substr(0, name.size() - n);
+    }
+    return name;
+}
+
+}  // namespace
+
+bool importPlist(const std::string& path, BuildResult& out, std::string* err) {
+    out = BuildResult();
+    std::string text;
+    if (!readText(path, text, err)) return false;
+    std::string perr;
+    std::unique_ptr<XmlNode> root = parseXml(text, &perr);
+    if (!root || root->name != "plist" || root->children.empty() || root->children[0]->name != "dict") {
+        if (err) *err = path + ": not a plist" + (perr.empty() ? std::string() : " (" + perr + ")");
+        return false;
+    }
+    const DictItems top = dictItems(root->children[0].get());
+    const XmlNode* framesNode = dictGet(top, "frames");
+    if (!framesNode || framesNode->name != "dict") {
+        if (err) *err = path + ": no \"frames\" dictionary (not a sprite sheet plist)";
+        return false;
+    }
+    const DictItems meta = dictItems(dictGet(top, "metadata"));
+    const int format = (int)plistNumber(dictGet(meta, "format"), 0);
+    std::string texture = plistText(dictGet(meta, "realTextureFileName"));
+    if (texture.empty()) texture = plistText(dictGet(meta, "textureFileName"));
+    if (texture.empty()) texture = fileStem(path) + ".png";   // old files without metadata: the PNG next to it
+    Page pg;
+    if (!loadPage(parentDir(path), texture, pg, err)) return false;
+    out.pages.push_back(std::move(pg));
+    out.name = fileStem(path);
+
+    struct Rotated { size_t region; IRect stored; };
+    std::vector<Rotated> rotated;
+    for (const auto& [rawName, value] : dictItems(framesNode)) {
+        if (!value || value->name != "dict") continue;
+        const DictItems f = dictItems(value);
+        Region r;
+        r.name = dropImageExt(rawName);
+        bool rot = false;
+        int w = 0, h = 0;
+        double cx = 0, cy = 0;   // the trimmed centre's offset from the original centre, y up
+        if (format == 0) {
+            r.frame = {ri(plistNumber(dictGet(f, "x"))), ri(plistNumber(dictGet(f, "y"))), ri(plistNumber(dictGet(f, "width"))),
+                       ri(plistNumber(dictGet(f, "height")))};
+            w = r.frame.w; h = r.frame.h;
+            cx = plistNumber(dictGet(f, "offsetX"));
+            cy = plistNumber(dictGet(f, "offsetY"));
+            r.origW = ri(plistNumber(dictGet(f, "originalWidth"), w));
+            r.origH = ri(plistNumber(dictGet(f, "originalHeight"), h));
+        } else {
+            const bool v3 = dictGet(f, "textureRect") != nullptr;
+            const std::vector<double> rect = numbers(plistText(dictGet(f, v3 ? "textureRect" : "frame")));
+            if (rect.size() < 4) { out.diagnostics.push_back({Diagnostic::Warning, r.name, "no frame rectangle; skipped"}); continue; }
+            rot = plistBool(dictGet(f, v3 ? "textureRotated" : "rotated"));
+            w = ri(rect[2]); h = ri(rect[3]);   // the upright size; stored as h x w when rotated
+            r.frame = {ri(rect[0]), ri(rect[1]), w, h};
+            const std::vector<double> off = numbers(plistText(dictGet(f, v3 ? "spriteOffset" : "offset")));
+            if (off.size() >= 2) { cx = off[0]; cy = off[1]; }
+            const std::vector<double> src = numbers(plistText(dictGet(f, v3 ? "spriteSourceSize" : "sourceSize")));
+            r.origW = src.size() >= 2 ? ri(src[0]) : w;
+            r.origH = src.size() >= 2 ? ri(src[1]) : h;
+        }
+        // Offsets: Cocos stores the trimmed centre relative to the original centre with y up; format 2's
+        // sourceColorRect has the top-left corner directly.
+        r.offsetX = ri(cx + r.origW / 2.0 - w / 2.0);
+        r.offsetY = ri(-cy + r.origH / 2.0 - h / 2.0);
+        const std::vector<double> colorRect = numbers(plistText(dictGet(f, "sourceColorRect")));
+        if (colorRect.size() >= 2) { r.offsetX = ri(colorRect[0]); r.offsetY = ri(colorRect[1]); }
+        if (const XmlNode* a = dictGet(f, "anchor")) {   // ours (and Cocos Creator's): x right, y up
+            const std::vector<double> p = numbers(a->text);
+            if (p.size() >= 2) { r.pivot[0] = (float)p[0]; r.pivot[1] = (float)(1.0 - p[1]); }
+        }
+        if (const XmlNode* s = dictGet(f, "x_split")) {
+            const std::vector<double> v = numbers(s->text);
+            if (v.size() >= 4) { r.hasSplit = true; for (int k = 0; k < 4; k++) r.split[k] = ri(v[k]); }
+        }
+        if (const XmlNode* p = dictGet(f, "x_parent")) {
+            const std::vector<double> l = numbers(plistText(dictGet(f, "x_local")));
+            if (l.size() >= 4) {
+                r.child = true;
+                r.parent = dropImageExt(p->text);
+                r.local = {ri(l[0]), ri(l[1]), ri(l[2]), ri(l[3])};
+            }
+        }
+        if (const XmlNode* t = dictGet(f, "x_tags"))
+            for (const auto& c : t->children) if (c->name == "string") r.tags.push_back(c->text);
+        if (rot) rotated.push_back({out.regions.size(), IRect{r.frame.x, r.frame.y, h, w}});
+        out.regions.push_back(r);
+        if (const XmlNode* aliases = dictGet(f, "aliases"))   // other names for the same pixels
+            for (const auto& c : aliases->children)
+                if (c->name == "string" && !c->text.empty()) {
+                    Region a = out.regions.back();
+                    a.name = dropImageExt(c->text);
+                    a.aliasOf = r.name;
+                    if (rot) rotated.push_back({out.regions.size(), IRect{r.frame.x, r.frame.y, h, w}});
+                    out.regions.push_back(a);
+                }
+    }
+    // Rotated frames, turned back upright onto one extra page (a column of them).
+    if (!rotated.empty()) {
+        int pw = 0, ph = 0;
+        for (const Rotated& rt : rotated) { pw = std::max(pw, rt.stored.h); ph += rt.stored.w + 1; }
+        Page up;
+        up.file = out.name + "_unrotated.png";
+        up.image = Image(pw, ph);
+        const Image& src = out.pages[0].image;
+        int y = 0;
+        for (const Rotated& rt : rotated) {
+            Region& r = out.regions[rt.region];
+            const int W = rt.stored.h, H = rt.stored.w;   // upright size
+            for (int oy = 0; oy < H; oy++)
+                for (int ox = 0; ox < W; ox++) {
+                    // stored clockwise: upright (ox, oy) is at stored (H - 1 - oy, ox)
+                    const int sx = rt.stored.x + (H - 1 - oy), sy = rt.stored.y + ox;
+                    if (sx < 0 || sy < 0 || sx >= src.w || sy >= src.h) continue;
+                    memcpy(up.image.at(ox, y + oy), src.at(sx, sy), 4);
+                }
+            r.page = 1;
+            r.frame = {0, y, W, H};
+            y += H + 1;
+        }
+        out.pages.push_back(std::move(up));
+    }
+    std::sort(out.regions.begin(), out.regions.end(), [](const Region& a, const Region& b) { return a.name < b.name; });
+    return true;
+}
+
 bool importAtlasFile(const std::string& path, BuildResult& out, std::string* err) {
     std::string ext = u8str(u8path(path).extension());
     for (char& c : ext) c = (char)tolower((unsigned char)c);
     if (ext == ".pi") return importPi(path, out, err);
     if (ext == ".atlas" || ext == ".txt") return importLibgdx(path, out, err);
     if (ext == ".json") return importTpJson(path, out, err);
-    if (err) *err = "unknown atlas type '" + ext + "' (expected .pi, .atlas or .json)";
+    if (ext == ".plist") return importPlist(path, out, err);
+    if (err) *err = "unknown atlas type '" + ext + "' (expected .pi, .atlas, .json or .plist)";
     return false;
 }
 

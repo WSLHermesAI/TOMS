@@ -244,10 +244,8 @@ private:
     QUndoStack* m_undo;
     float m_time = 0;
     toms::anim::Clip m_clipBase;     // see clipModified()
-    std::string m_clipBaseJson;
     int m_clipBaseIndex = -1;
     void markClipBase();
-    static std::string clipJson(const toms::anim::Clip& c);
     float m_preview = -1;   // see previewTime()
     std::optional<NodePath> m_solo;
     bool m_autoKey = true;

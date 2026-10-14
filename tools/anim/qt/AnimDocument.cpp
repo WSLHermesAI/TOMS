@@ -27,8 +27,10 @@ std::string u8(const QString& s) { return s.toStdString(); }
 
 bool sameState(const AnimState& a, const AnimState& b)
 {
+    // The data itself, not its JSON: dumping a large file for every edit (and every merge of a drag or
+    // a held spin-box arrow) made editing stall.
     return a.atlasesAbs == b.atlasesAbs && a.atlasIds == b.atlasIds && a.clip == b.clip && a.node == b.node &&
-           toms::anim::animToJson(a.file) == toms::anim::animToJson(b.file);
+           a.file == b.file;
 }
 
 // The interpolated channels a node animates already (has keys on). Key rows only ever add to
@@ -661,25 +663,17 @@ const Clip* AnimDocument::clip() const
     return &m_state.file.clips[size_t(m_state.clip)];
 }
 
-std::string AnimDocument::clipJson(const Clip& c)
-{
-    AnimFile f;
-    f.clips.push_back(c);
-    return toms::anim::animToJson(f);
-}
-
 void AnimDocument::markClipBase()
 {
     const Clip* c = clip();
     m_clipBaseIndex = c ? m_state.clip : -1;
     m_clipBase = c ? *c : Clip();
-    m_clipBaseJson = c ? clipJson(*c) : std::string();
 }
 
 bool AnimDocument::clipModified() const
 {
     const Clip* c = clip();
-    return c && m_clipBaseIndex == m_state.clip && clipJson(*c) != m_clipBaseJson;
+    return c && m_clipBaseIndex == m_state.clip && *c != m_clipBase;
 }
 
 bool AnimDocument::discardClipChanges()
@@ -798,8 +792,7 @@ bool AnimDocument::edit(const QString& text, const std::function<bool(AnimState&
     fixSelection(after);
     after.file.atlases = storedAtlases(after, m_filePath);
     if (sameState(after, m_state)) return false;
-    if (after.atlasesAbs == m_state.atlasesAbs && after.atlasIds == m_state.atlasIds &&
-        toms::anim::animToJson(after.file) == toms::anim::animToJson(m_state.file)) {
+    if (after.atlasesAbs == m_state.atlasesAbs && after.atlasIds == m_state.atlasIds && after.file == m_state.file) {
         // Only the current clip / node moved: not an edit.
         if (after.clip != m_state.clip) setClipIndex(after.clip);
         selectNode(after.node);
@@ -1097,7 +1090,7 @@ bool AnimDocument::addSpriteNode(const NodePath& parent, const QString& sprite, 
     Node n;
     n.name = u8(qs(toms::anim::parseSpriteRef(u8(sprite)).name).section(QLatin1Char('/'), -1));
     n.sprite = u8(sprite);
-    n.pos = pos;
+    n.pos = glm::vec3(pos, 0.0f);
     return addNode(parent, n, tr("Add sprite node"));
 }
 

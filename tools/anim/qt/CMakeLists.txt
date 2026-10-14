@@ -46,11 +46,24 @@ if(WIN32)
     else()
         message(WARNING "[anim] windeployqt not found: copy the Qt DLLs next to anim_editor.exe or add <Qt>/bin to PATH")
     endif()
+    # windeployqt copies only the windows platform plugin; --selftest runs with -platform offscreen.
+    if(TARGET Qt6::QOffscreenIntegrationPlugin)
+        add_custom_command(TARGET anim_editor POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:anim_editor>/platforms"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:Qt6::QOffscreenIntegrationPlugin>"
+                    "$<TARGET_FILE_DIR:anim_editor>/platforms/")
+    endif()
 endif()
 
 # `anim_editor --headless check` on the smoke test's clip: it parses and every sprite is in the
 # game atlas (no window; runs with the unit tests).
 if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
+    # The editor itself, offscreen (no window): its UI paths -- selection, Properties and key list edits,
+    # viewport drags, undo, save -- on a scratch copy of the smoke test's clip (Main.cpp runSelfTest).
+    add_test(NAME anim.editor_selftest
+             COMMAND anim_editor -platform offscreen --selftest "${CMAKE_SOURCE_DIR}/tests/smoke/anim_preview.anim"
+                     "${CMAKE_BINARY_DIR}/anim_selftest")
+    set_tests_properties(anim.editor_selftest PROPERTIES LABELS "unit;anim" TIMEOUT 120)
     add_test(NAME anim.check_preview
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/tests/smoke/anim_preview.anim")
     set_tests_properties(anim.check_preview PROPERTIES LABELS "unit;anim" TIMEOUT 30)

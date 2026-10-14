@@ -29,7 +29,8 @@ public:
     // with the x values along the bottom edge and the y values along the left edge. The step follows
     // the zoom (1, 2, 5 x 10^n content pixels, at least kCoordinateSpacing screen pixels apart): every
     // 500 pixels zoomed out, every 10 or every pixel zoomed in. One switch for every canvas of the
-    // editor (View > Show Coordinates, remembered in the editor's settings).
+    // editor (View > Show Coordinates, remembered in the editor's settings). With it on, the cursor's position is
+    // shown too: its x / y next to it, and marked on the two edges among the values.
     static constexpr double kCoordinateSpacing = 90;   // screen pixels between two hints, at least
     static double coordinateStep(double zoom);          // content pixels between two hints
     static bool coordinatesShown();
@@ -86,6 +87,8 @@ private:
 
     double m_zoom = 1.0;
     QPointF m_offset{20, 20};
+    QPointF m_cursor;                // the mouse over the canvas (widget pixels), for the coordinate readout
+    bool m_cursorIn = false;
     bool m_fitPending = true;
     bool m_spaceDown = false;
     bool m_panning = false;

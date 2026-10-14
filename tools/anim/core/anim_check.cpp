@@ -1,5 +1,6 @@
 // anim_check.cpp -- see anim_check.h.
 #include "anim_check.h"
+#include "mpdi_convert.h"
 
 #include "anim_keys.h"
 
@@ -122,10 +123,11 @@ void checkNode(const Node& n, int clip, const Clip& c, std::vector<int>& path, c
             }
         }
     }
-    bool bad = !finite4(glm::vec4(n.pos, n.scale)) || !std::isfinite(n.rot) || !finite4(n.color);
-    for (const auto& k : n.posKeys) bad = bad || !std::isfinite(k.v.x) || !std::isfinite(k.v.y);
-    for (const auto& k : n.scaleKeys) bad = bad || !std::isfinite(k.v.x) || !std::isfinite(k.v.y);
-    for (const auto& k : n.rotKeys) bad = bad || !std::isfinite(k.v);
+    auto finite3 = [&](const glm::vec3& v) { return finite4(glm::vec4(v, 0.0f)); };
+    bool bad = !finite3(n.pos) || !finite3(n.rot) || !finite3(n.scale) || !finite4(n.color);
+    for (const auto& k : n.posKeys) bad = bad || !finite3(k.v);
+    for (const auto& k : n.scaleKeys) bad = bad || !finite3(k.v);
+    for (const auto& k : n.rotKeys) bad = bad || !finite3(k.v);
     for (const auto& k : n.colorKeys) bad = bad || !finite4(k.v);
     if (bad) add(out, Problem::Error, clip, path, where, "a value is not a finite number");
     if (n.hasPivot && (n.pivot.x < -1 || n.pivot.x > 2 || n.pivot.y < -1 || n.pivot.y > 2))
@@ -203,6 +205,19 @@ bool isAbsoluteAtlasPath(const std::string& p) {
 }
 
 int headlessMain(const std::vector<std::string>& args) {
+    if (args.size() >= 2 && args[0] == "convert-mpdi") {   // the old engine's .mpdi (+ .pi) -> .anim (+ atlas)
+        std::string out;
+        for (size_t i = 2; i < args.size(); i++) {
+            if (args[i] == "--out" && i + 1 < args.size()) out = args[++i];
+            else { std::fprintf(stderr, "unknown argument: %s\n", args[i].c_str()); return 3; }
+        }
+        const MpdiConvertReport r = convertMpdiFolder(args[1], out);
+        for (const std::string& w : r.warnings) std::fprintf(stderr, "warning: %s\n", w.c_str());
+        for (const std::string& e : r.errors) std::fprintf(stderr, "error: %s\n", e.c_str());
+        std::printf("convert-mpdi: %d .mpdi found, %d .anim written (%d clips, %d nodes), %d .pi converted; %zu warning(s), %zu error(s)\n",
+                    r.mpdiFiles, r.animFiles, r.clips, r.nodes, r.piFiles, r.warnings.size(), r.errors.size());
+        return r.errors.empty() && r.mpdiFiles > 0 ? 0 : 2;
+    }
     if (args.size() < 2 || args[0] != "check") {
         std::fputs("usage: anim_editor --headless check <file.anim> [--atlas [<id>=]<file.atlas>]...\n"
                    "  parses the file, checks sprite references against its atlases and the keys; exit 0 = no errors, 2 = errors\n"

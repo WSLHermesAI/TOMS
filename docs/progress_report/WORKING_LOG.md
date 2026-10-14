@@ -325,3 +325,58 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - Edits apply after the animations and restart the physics.
   - Test options `--select`, `--tool`, `--pick`, `--drag`; checked by pick and drag runs.
   - Docs: 18 §4 (+ zh). Changed-only run: 85 of 90 tests, all pass.
+- **2026-10-14** — **Atlas tool: import `.plist`.**
+  - `atlas::importPlist` (Cocos / TexturePacker formats 0–3) reads:
+    - rotated frames, turned back upright;
+    - `sourceColorRect` / offset trims;
+    - aliases;
+    - frame names, with `.png` dropped;
+    - our `x_` fields.
+  - Wired into `importAtlasFile`, so the Qt editor, the web editor (wasm rebuilt) and `atlaspack import` all take it.
+  - Tests: our own `.plist` round trip, plus a hand-made Cocos format-2 sheet (rotated, trimmed, aliased).
+    `atlas_core_test`: 25725 checks, all pass.
+  - Real TexturePacker sheets (13 and 19 sprites) import correctly; a particle plist is refused with a clear message.
+  - Changed-only run: 15 of 90 tests, all pass.
+- **2026-10-14** — **Anim editor: Convert → MPDI Folder to .anim.**
+  - `tools/anim/core/mpdi_convert.*`: `.mpdi` (all formats: old lists, the `<Version>` header, 1.0–1.3) → `.anim`.
+    Each `.pi` → `.atlasproj` + `.atlas` + `.png` + `.plist`, once.
+  - It follows the engine's own rules: centre vs top-left positions, Chaikin LOD, trimmed scale, mirroring, start
+    gates, additive blending, anchors and rotation offsets, hint events.
+  - Also `anim_editor --headless convert-mpdi`.
+  - Old engine data: 47 of 48 converted (312 clips, 3,220 paths, 76 atlases); 44 pass `--headless check`, the other
+    3 have images missing in their old `.pi`.
+  - New test `anim.mpdi_convert` (23 checks) on hand-made files in `tests/mpdi/`. Changed-only run: 22 of 91 tests,
+    all pass.
+  - Found: `anim_editor --selftest` crashes at start-up here with or without this change (an existing problem).
+- **2026-10-14** — **Anim and atlas editors: the mouse position on the canvas.**
+  - `CanvasView` (studio_common): with View > Show Coordinates on, "x, y" next to the cursor, guide lines through
+    it and its x / y tagged on the bottom and left edges. The top strip is kept free of y values (the clip label
+    overlapped them).
+  - Double-clicking a clip plays it (Clips dock).
+  - New test `studio.canvas_coordinates` (offscreen, 6 checks). Its target copies Qt's `qoffscreen.dll` into
+    `bin/platforms` (windeployqt copies only `qwindows`).
+  - That missing plugin was why `anim_editor --selftest` crashed (0xC0000409).
+  - Changed-only run: 24 of 92 tests, all pass.
+- **2026-10-14** — **Anim editor: View > Show Grid removed** (the 16 px grid, its G shortcut and saved setting); View > Show Coordinates covers it. The origin cross stays. Changed-only run: 24 of 92 tests, all pass.
+- **2026-10-14** — **Anim: position, rotation and scale are x, y, z; editing no longer stalls.**
+  - **Runtime** (`anim_clip.*`): `Node::pos` / `rot` / `scale` and their keys are `vec3`, and `NodePose::world`
+    is a 4×4 matrix, ready for a 3D camera.
+    - Rotation order is Rx · Ry · Rz (z first), the old engine's `cMatrix44::RotationMatrix`.
+    - The game and editor draw through `flatten()` (orthographic): z does not move a sprite, an x / y tilt
+      foreshortens it. Z-only clips draw exactly as before (the screenshots match).
+  - **Files:** version 2 writes `[x, y, z]`. Version 1 (`[x, y]`, a single rot number = z) still loads; a
+    newer version is refused.
+  - **Editor:**
+    - Properties shows Pos / Rot / Scale as x, y, z.
+    - Key list cells read and write "x, y, z" (one rot number = z, one scale number = uniform).
+    - The rotate handle turns z.
+  - **MPDI:** `Angles` x / y are now converted (they were dropped with a warning).
+  - **The freeze:** every edit serialized the whole file to JSON about six times to compare undo states. It was
+    not specific to rotation: on a 1.3 MB converted file each spin-box step took ~200 ms, so a held arrow
+    queued up. The comparison is now `operator==` on the data: ~25 ms per step on that file.
+  - **Tests:**
+    - `anim_clip_test` gains `testXyz` (165 checks): the rotation order against the old engine's matrix,
+      tilts, z depth, version 1 reading, ==.
+    - `mpdi_convert` 24 checks (Angles).
+    - New ctest `anim.editor_selftest` (offscreen, 122 checks, 0.8 s). Its "24 failures" earlier came from
+      giving it the wrong file; its fixture is `tests/smoke/anim_preview.anim`.

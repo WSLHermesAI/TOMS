@@ -125,7 +125,7 @@ void MainWindow::createActions()
     m_saveAct = makeAction(this, tr("&Save"), QKeySequence::Save, Id::Save);
     m_saveAsAct = makeAction(this, tr("Save &As…"), QKeySequence::SaveAs);
     m_importAct = makeAction(this, tr("&Import Atlas…"), QKeySequence(tr("Ctrl+I")), Id::Import);
-    m_importAct->setToolTip(tr("Import a .pi / .atlas / TexturePacker .json atlas as a new project"));
+    m_importAct->setToolTip(tr("Import a .pi / .atlas / TexturePacker .json / Cocos .plist atlas as a new project"));
     m_saveAct->setToolTip(tr("Save the project and its packed atlas (the images live there) (Ctrl+S)"));
     m_addFolderAct = makeAction(this, tr("Add &Reference Folder…"), QKeySequence(), Id::Folder);
     m_addFolderAct->setToolTip(tr("A folder to import new or changed art from (Sprite > Import From References)"));
@@ -528,7 +528,7 @@ void MainWindow::onImportAtlas()
 {
     if (!maybeSave()) return;
     const QString atlasFile = QFileDialog::getOpenFileName(this, tr("Import Atlas"), lastDir(),
-                                                           tr("Atlas files (*.pi *.atlas *.json);;All files (*)"));
+                                                           tr("Atlas files (*.pi *.atlas *.json *.plist);;All files (*)"));
     if (atlasFile.isEmpty()) return;
     const QFileInfo fi(atlasFile);
     QString projPath = QFileDialog::getSaveFileName(this, tr("New Project for the Imported Atlas"),

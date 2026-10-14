@@ -23,6 +23,23 @@ if(WIN32)
     target_link_libraries(studio_common PRIVATE shell32)   # CommandLineToArgvW
 endif()
 
+# The canvas base offscreen (QT_QPA_PLATFORM=offscreen): the coordinate readout follows a simulated mouse.
+add_executable(canvas_view_test tests/canvas_view_test.cpp)
+set_target_properties(canvas_view_test PROPERTIES FOLDER "tools/studio")
+target_link_libraries(canvas_view_test PRIVATE studio_common)
+# windeployqt copies only the windows platform plugin; the offscreen tests need qoffscreen next to the exe too.
+if(WIN32 AND TARGET Qt6::QOffscreenIntegrationPlugin)
+    add_custom_command(TARGET canvas_view_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:canvas_view_test>/platforms"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:Qt6::QOffscreenIntegrationPlugin>"
+                "$<TARGET_FILE_DIR:canvas_view_test>/platforms/")
+endif()
+if(TOMS_BUILD_TESTS)
+    add_test(NAME studio.canvas_coordinates COMMAND canvas_view_test)
+    set_tests_properties(studio.canvas_coordinates PROPERTIES LABELS "unit" TIMEOUT 60
+                         ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
 # studio_bgfx: GameCanvasView -- an editor canvas drawn by the game's own renderer (toms_bgfx's
 # BgfxRenderer), so the atlas, anim and particle editors preview exactly what toms_game draws.
 if(TARGET toms_bgfx AND NOT TARGET studio_bgfx)

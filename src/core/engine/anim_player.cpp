@@ -7,11 +7,7 @@
 namespace toms::anim {
 
 glm::mat3 placement(float x, float y, float scale, float rotationDegrees) {
-    Node n;
-    n.pos = {x, y};
-    n.scale = {scale, scale};
-    n.rot = rotationDegrees;
-    return localTransform(n, 0);
+    return flatten(compose({x, y, 0}, {0, 0, rotationDegrees}, {scale, scale, 1}));
 }
 
 const toms::AtlasRegion* AtlasSet::find(const std::string& ref, uint16_t* texture, int* entry) const {
@@ -51,7 +47,7 @@ bool makeQuad(const NodePose& p, const AtlasSet& atlases, const glm::mat3& place
     const glm::vec2 pivot = p.node->hasPivot ? p.node->pivot : glm::vec2(r->pivot[0], r->pivot[1]);
     const float x0 = r->offX - pivot.x * r->origW, y0 = r->offY - pivot.y * r->origH;
     const float x1 = x0 + r->w, y1 = y0 + r->h;
-    const glm::mat3 m = place * p.world;
+    const glm::mat3 m = place * flatten(p.world);   // the orthographic screen camera
     const glm::vec3 c[4] = {m * glm::vec3(x0, y0, 1), m * glm::vec3(x1, y0, 1), m * glm::vec3(x1, y1, 1),
                             m * glm::vec3(x0, y1, 1)};
     q = Quad();

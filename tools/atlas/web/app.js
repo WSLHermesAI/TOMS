@@ -581,8 +581,8 @@ async function addImages(items) {
 }
 
 async function importAtlas(items) {
-  const atlas = items.find((i) => ['pi', 'atlas', 'json', 'txt'].includes(ext(i.rel)));
-  if (!atlas) { toast('Pick the atlas file (.pi, .atlas or .json) together with its PNG page(s)', 'error'); return; }
+  const atlas = items.find((i) => ['pi', 'atlas', 'json', 'txt', 'plist'].includes(ext(i.rel)));
+  if (!atlas) { toast('Pick the atlas file (.pi, .atlas, .json or .plist) together with its PNG page(s)', 'error'); return; }
   if (app.dirty && !(await confirmDialog('Import atlas', 'Discard the unsaved changes?', 'Discard'))) return;
   const ws = app.ws;
   ws.reset();

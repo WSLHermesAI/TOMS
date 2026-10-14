@@ -39,7 +39,6 @@ public:
     void setTool(Tool t);
     void setSnap(bool on) { m_snap = on; }
     bool snap() const { return m_snap; }
-    void setShowGrid(bool on);
 
     // What the viewport draws at time t of the current clip, in clip space, in draw order (one
     // appendQuads() call per pose, so every quad knows its node). Public for the selftest.
@@ -92,7 +91,6 @@ private:
     AnimDocument* m_doc;
     Tool m_tool = Tool::Move;
     bool m_snap = false;
-    bool m_grid = true;
     QRectF m_stage{-128, -128, 256, 256};
     std::vector<toms::anim::NodePose> m_poses;
     std::vector<DrawItem> m_items;

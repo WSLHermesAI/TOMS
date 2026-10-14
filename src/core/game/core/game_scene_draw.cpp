@@ -314,11 +314,10 @@ bool Game::drawIdleAnim(const std::string& enemyId, float x, float y, float w, f
 bool Game::drawClipInRect(const toms::anim::Clip& clip, float t, const toms::anim::AtlasSet& set, float x, float y, float w, float h,
                           float spriteW, float spriteH) {
     toms::anim::evaluate(clip, t, idlePoses_);
-    toms::anim::Node place;
-    place.pos = {x + w * 0.5f, y + h};
-    place.scale = {w / spriteW, h / spriteH};
+    const glm::mat3 place =
+        toms::anim::flatten(toms::anim::compose({x + w * 0.5f, y + h, 0}, glm::vec3(0), {w / spriteW, h / spriteH, 1}));
     idleQuads_.clear();
-    toms::anim::appendQuads(idlePoses_, set, toms::anim::localTransform(place, 0), nullptr, idleQuads_);
+    toms::anim::appendQuads(idlePoses_, set, place, nullptr, idleQuads_);
     if (idleQuads_.empty()) return false;
     for (const Quad& q : idleQuads_) ren->drawSprite(q);
     return true;

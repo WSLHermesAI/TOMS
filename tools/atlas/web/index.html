@@ -19,7 +19,7 @@
     <button id="saveBtn" title="Download one .zip: the .atlasproj, its packed atlas (.atlas + PNG pages, which hold the images), the .plist and the other formats, and every variant's atlas (Ctrl+S)">Save</button>
   </div>
   <div class="group">
-    <button id="importBtn" title="Import an atlas: pick the .pi / .atlas / .json together with its PNG page(s)">Import atlas...</button>
+    <button id="importBtn" title="Import an atlas: pick the .pi / .atlas / .json / .plist together with its PNG page(s)">Import atlas...</button>
     <button id="refsBtn" title="Import new or changed art from the reference folders">Import from references...</button>
     <button id="extractBtn" title="Download every image as a separate PNG (.zip)">Extract images...</button>
     <button id="exportBtn" class="primary" title="Download the output formats (always with the .plist) of the base art or the picked variant, without the project (Ctrl+E)">Export files</button>
@@ -33,7 +33,7 @@
   <button id="themeBtn" title="Theme: dark / light / follow the system">Dark</button>
   <input id="openInput" type="file" accept=".atlasproj,.atlas,.png,.zip" multiple hidden>
   <input id="openFolderInput" type="file" webkitdirectory multiple hidden>
-  <input id="importInput" type="file" accept=".pi,.atlas,.json,.txt,.png" multiple hidden>
+  <input id="importInput" type="file" accept=".pi,.atlas,.json,.txt,.plist,.png" multiple hidden>
   <input id="filesInput" type="file" accept="image/png" multiple hidden>
   <input id="folderInput" type="file" webkitdirectory multiple hidden>
 </header>
@@ -76,7 +76,7 @@
       <div id="tip" hidden></div>
       <div id="emptyHint">
         <p><b>Drop PNG files or folders here</b></p>
-        <p>or <b>Open...</b> a project (.atlasproj + its packed .atlas and PNG, its folder, or a saved .zip), or <b>Import atlas...</b> (.pi / .atlas / .json + PNG)</p>
+        <p>or <b>Open...</b> a project (.atlasproj + its packed .atlas and PNG, its folder, or a saved .zip), or <b>Import atlas...</b> (.pi / .atlas / .json / .plist + PNG)</p>
         <p class="small">Double-click a sprite to edit it: draw child sprites, pivot, 9-slice. Wheel zooms, middle drag or Space+drag pans.</p>
       </div>
     </div>

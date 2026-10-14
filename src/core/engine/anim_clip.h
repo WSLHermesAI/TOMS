@@ -1,11 +1,11 @@
 // anim_clip.h -- node animations on the packed sprite atlas: data, .anim files, evaluation.
 //
 // An .anim file (JSON) holds clips. A clip is a tree of nodes; each node has a rest transform
-// (position, rotation, scale), a colour, optionally a sprite from the atlas, and one key track per
+// (position, rotation, scale -- each x, y, z), a colour, optionally a sprite from the atlas, and one key track per
 // channel. A node's world transform is its parent's world transform times its own, so moving a
 // group moves everything in it; a node without a sprite is just a group.
 //
-//   channels   pos (x,y px)  rot (degrees, clockwise on screen)  scale (x,y; negative = mirrored)
+//   channels   pos (x,y,z px)  rot (x,y,z degrees)  scale (x,y,z; negative = mirrored)
 //              color (r,g,b,a 0..1)  -- interpolated, one easing per key for the segment it starts
 //              sprite ("atlas:name", see SpriteRef)  visible  event  -- stepped (holds until the next key)
 //
@@ -20,9 +20,17 @@
 // inside it loops in the group's time. Event keys follow the clip's timeline only (they do not repeat
 // with a looping node).
 //
-// Coordinates are screen pixels, y down. Rotation is in degrees and NOT wrapped: 0 -> 720 spins
-// twice. A channel without keys keeps the node's rest value; before its first key it holds the
-// first key's value, after its last key the last.
+// Coordinates are screen pixels, y down, z into the screen. Rotation is Euler angles in degrees,
+// NOT wrapped (0 -> 720 spins twice): z turns in the screen plane (clockwise on screen), x and y
+// tilt the node out of it; applied z first, then y, then x (R = Rx * Ry * Rz, the FM79979 engine's
+// cMatrix44::RotationMatrix, so MPDI angles carry over as they are). The
+// world transform is 3D (NodePose::world) so a 3D camera can show depth; today the sprites are drawn
+// with the orthographic screen camera (flatten()): z does not move them, x / y tilts foreshorten
+// them. A channel without keys keeps the node's rest value; before its first key it holds the first
+// key's value, after its last key the last.
+//
+// Files: version 2 stores pos / rot / scale as [x, y, z]. Version 1 files ([x, y] and a single rot
+// number, the z rotation) still load; they are saved as version 2.
 //
 // Draw order: depth first. A node draws its children with order < 0 (sorted by order, then by
 // position in the list), then its own sprite, then the children with order >= 0. Colour multiplies
@@ -46,6 +54,9 @@ struct Ease {
     float bezier[4] = {0, 0, 1, 1};
     static constexpr int kBezier = 1000;
 
+    bool operator==(const Ease& o) const;
+    bool operator!=(const Ease& o) const { return !(*this == o); }
+
     bool isLinear() const { return kind == 1; }
     bool isStepped() const { return kind == 2; }
     float apply(float progress) const;  // 0..1 -> eased 0..1 (may overshoot for back/elastic)
@@ -58,6 +69,9 @@ template <class T> struct Key {
     float t = 0;
     T v{};
     Ease ease;                         // interpolated channels only
+
+    bool operator==(const Key& o) const { return t == o.t && v == o.v && ease == o.ease; }
+    bool operator!=(const Key& o) const { return !(*this == o); }
 };
 
 enum class Blend { Normal, Add };
@@ -65,9 +79,9 @@ enum class Blend { Normal, Add };
 struct Node {
     std::string name;
     std::string sprite;                // rest sprite ("atlas:name" or "name"); "" = a group node
-    glm::vec2 pos{0, 0};
-    float rot = 0;
-    glm::vec2 scale{1, 1};
+    glm::vec3 pos{0, 0, 0};
+    glm::vec3 rot{0, 0, 0};            // Euler degrees (see the top); z = the screen-plane turn
+    glm::vec3 scale{1, 1, 1};
     glm::vec4 color{1, 1, 1, 1};
     bool visible = true;
     bool hasPivot = false;             // false: the sprite's pivot from the atlas (x_pivot, default centre)
@@ -78,8 +92,7 @@ struct Node {
     bool loop = false;                 // after its key range: play it again (see the top)
     bool stayAtLastFrame = true;       // after its key range (not looping): false = hide the subtree
 
-    std::vector<Key<glm::vec2>> posKeys, scaleKeys;
-    std::vector<Key<float>> rotKeys;
+    std::vector<Key<glm::vec3>> posKeys, rotKeys, scaleKeys;
     std::vector<Key<glm::vec4>> colorKeys;
     std::vector<Key<std::string>> spriteKeys, eventKeys;
     std::vector<Key<bool>> visibleKeys;
@@ -90,6 +103,10 @@ struct Node {
     float firstKeyTime() const;        // over this node's tracks and its subtree (0 without keys)
     bool hasKeys() const;              // any key in this node's tracks or its subtree
     bool timed() const { return loop || !stayAtLastFrame; }   // plays its range its own way
+
+    // Every field, keys and children included (what the editor's undo compares; exact floats).
+    bool operator==(const Node& o) const;
+    bool operator!=(const Node& o) const { return !(*this == o); }
 };
 
 struct Clip {
@@ -100,6 +117,12 @@ struct Clip {
     Node root;
 
     float duration() const;            // length, or the last key time when length is 0
+
+    bool operator==(const Clip& o) const {
+        return name == o.name && length == o.length && playCount == o.playCount && stayAtLastFrame == o.stayAtLastFrame &&
+               root == o.root;
+    }
+    bool operator!=(const Clip& o) const { return !(*this == o); }
 };
 
 // One atlas a file draws from. `path` is relative to the .anim. `id` names it in sprite
@@ -122,8 +145,10 @@ struct SpriteRef {
 SpriteRef parseSpriteRef(const std::string& ref);
 std::string spriteRef(const std::string& atlasId, const std::string& name);   // "id:name", or "name" when id is ""
 
+constexpr int kAnimVersion = 2;       // pos / rot / scale as [x, y, z]
+
 struct AnimFile {
-    int version = 1;
+    int version = kAnimVersion;        // as read; saving always writes kAnimVersion
     // The .atlas files its sprites come from (anim_player.h AtlasSet), in lookup order. JSON:
     // "atlases": ["path", {"id": "...", "path": "..."}, ...] -- a plain path's id is its file name
     // without ".atlas"; an older file's single "atlas": "path" reads as a one-entry list.
@@ -131,6 +156,9 @@ struct AnimFile {
     std::vector<Clip> clips;
 
     const Clip* find(const std::string& name) const;
+
+    bool operator==(const AnimFile& o) const { return atlases == o.atlases && clips == o.clips; }   // not the version
+    bool operator!=(const AnimFile& o) const { return !(*this == o); }
 };
 
 bool parseAnim(const std::string& json, AnimFile& out, std::string* err = nullptr);
@@ -142,7 +170,7 @@ std::string animToJson(const AnimFile& f);
 struct NodePose {
     const Node* node = nullptr;
     int depth = 0;
-    glm::mat3 world{1.0f};             // node space -> clip space (pixels, y down)
+    glm::mat4 world{1.0f};             // node space -> clip space (pixels, y down, z into the screen)
     glm::vec4 color{1, 1, 1, 1};       // with the parents' colour when inherited
     std::string sprite;                // "" = nothing to draw
     bool visible = true;               // false: hidden (itself or a parent)
@@ -155,8 +183,12 @@ float nodeTime(const Node& n, float t, float first, float last, bool* ended = nu
 // Any node in the clip loops (the clip keeps moving after its timeline ends).
 bool hasLoopingNodes(const Clip& c);
 
-// The local transform of a node at time t: T(pos) * R(rot) * S(scale).
-glm::mat3 localTransform(const Node& n, float t);
+// The local transform of a node at time t: T(pos) * R(rot) * S(scale), R = Rx * Ry * Rz.
+glm::mat4 localTransform(const Node& n, float t);
+glm::mat4 compose(const glm::vec3& pos, const glm::vec3& rotDegrees, const glm::vec3& scale);
+// A 3D transform seen by the orthographic screen camera (looking down +z): the 2D affine map of the
+// xy plane (z = 0) onto the screen. What the sprites are drawn with today.
+glm::mat3 flatten(const glm::mat4& m);
 // Every node of the clip at time t (clip time, 0..duration), in draw order (see the top). Hidden
 // nodes are included with visible = false so an editor can still show them.
 void evaluate(const Clip& c, float t, std::vector<NodePose>& out);
@@ -187,15 +219,14 @@ private:
         bool animated = false;
         int cursor[kTracks];           // last key at or before the time, -1 = before the first
         int held[kTracks];             // the key whose value the track holds now, -1 = between keys
-        glm::vec2 pos{0}, scale{1};
-        float rot = 0;
+        glm::vec3 pos{0}, rot{0}, scale{1};
         glm::vec4 color{1};            // own, unclamped (before the parents' colour)
         bool visible = true;           // own
         bool timed = false;            // loop or !stayAtLastFrame: its time is remapped
         float first = 0, last = 0;     // its subtree's key range (timed nodes)
         float time = 0;                // the time its tracks saw in the last seek
         bool ended = false;            // stayAtLastFrame=false and past its range: hidden
-        glm::mat3 local{1.0f};
+        glm::mat4 local{1.0f};
         bool worldChanged = false, colorChanged = false, visibleChanged = false;   // in this seek
     };
     int addItems(const Node& n, int parent, int depth);
@@ -214,9 +245,9 @@ private:
 void eventsBetween(const Clip& c, float t0, float t1, std::vector<std::string>& out);
 
 // Channel values at time t (rest value when the track is empty).
-glm::vec2 positionAt(const Node& n, float t);
-float rotationAt(const Node& n, float t);
-glm::vec2 scaleAt(const Node& n, float t);
+glm::vec3 positionAt(const Node& n, float t);
+glm::vec3 rotationAt(const Node& n, float t);
+glm::vec3 scaleAt(const Node& n, float t);
 glm::vec4 colorAt(const Node& n, float t);
 std::string spriteAt(const Node& n, float t);
 bool visibleAt(const Node& n, float t);

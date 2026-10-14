@@ -20,6 +20,8 @@
   淡淡的格線，x 值沿著下邊緣，y 值沿著左邊緣。間距
   跟著縮放（1、2、5 × 10ⁿ 內容像素，至少相隔 90 螢幕像素）：縮小時每 500，
   放大時每 10 或每 1。數值是遊戲的座標（y 往下增加）。
+  滑鼠在畫布上時也會顯示它的位置：游標旁的「x, y」、穿過游標的淡色輔助線，以及底邊與左邊數值間的醒目標籤
+  （放大 8 倍以上時顯示到 0.1 像素）。測試：`studio.canvas_coordinates`（offscreen）。
 - **復原 / 重做和備份**（三個編輯器都有）：
   - **復原 / 重做：** 編輯 > 復原 / 重做（Ctrl+Z / Ctrl+Y，或工具列箭頭）逐步走過
     每次編輯。
@@ -255,7 +257,7 @@ atlaspack refs    <project> [--variant ID] [--import new|changed|all]
 atlaspack extract <project> --out DIR [--variant ID] [--children]
 atlaspack embed   <folder-project> [--save-as NEW.atlasproj] [--keep-output]
 atlaspack build   <project> [--variant ID | --all-variants] [--out DIR] [--format LIST] [--strict] [--check]
-atlaspack import  <file.pi|.atlas|.json> --project OUT.atlasproj [--images DIR] [--format LIST]
+atlaspack import  <file.pi|.atlas|.json|.plist> --project OUT.atlasproj [--images DIR] [--format LIST]
 atlaspack pack    <folder>... --out DIR [--name NAME] [--format LIST] [options] [--save-project FILE]
 atlaspack info    <file.pi|.atlas|.json>
 atlaspack formats
@@ -269,7 +271,7 @@ atlaspack formats
 | `extract` | 把每個 sprite（加 `--children` 時包括每個子 sprite）再寫成單獨的 PNG |
 | `embed` | 資料夾專案 → 內嵌專案；它的資料夾變成參考資料夾 |
 | `build` | 重新建置並寫出輸出檔；`--check` 只比對 |
-| `import` | 從現有的 `.pi` / `.atlas` / TexturePacker `.json` 建立內嵌專案 |
+| `import` | 從現有的 `.pi` / `.atlas` / TexturePacker `.json` / Cocos 或 TexturePacker `.plist` 建立內嵌專案。`.plist`（格式 0–3）：旋轉的 frame 會轉回正向，保留裁切與別名，去掉 frame 名稱結尾的 `.png`，並讀取我們的 `x_` 欄位。編輯器的 **匯入 Atlas** 接受相同的檔案 |
 | `pack` | 資料夾直接變成 atlas 檔（資料夾專案，給腳本用） |
 
 選項：`--max WxH --pot --square --padding N --border N --extrude N --no-trim
@@ -282,6 +284,7 @@ atlaspack formats
 
 ```bat
 atlaspack import old\UI.pi --project ui\ui.atlasproj     :: ui.atlasproj + ui.atlas + ui.png + ui.pi
+atlaspack import cocos\ui.plist --project ui\ui.atlasproj :: Cocos / TexturePacker 的 sprite sheet（它指定的 PNG 必須放在旁邊）
 ```
 
 每個 unit 以原始大小切出來，裁切掉的像素放回它的偏移位置。

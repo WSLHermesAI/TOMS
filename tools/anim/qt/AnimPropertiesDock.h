@@ -28,7 +28,7 @@ public:
 
     // The key indicator button of a channel (selftest / tests).
     QToolButton* keyButton(animed::Channel c) const { return m_key[int(c)]; }
-    QDoubleSpinBox* posXSpin() const { return m_posX; }
+    QDoubleSpinBox* posXSpin() const { return m_pos[0]; }
     QComboBox* spriteCombo() const { return m_sprite; }   // the rest sprite picker
     AnimAtlasesPanel* atlasesPanel() const { return m_atlases; }
 
@@ -53,7 +53,7 @@ private:
     QCheckBox *m_inheritColor, *m_restVisible;
     QComboBox* m_playback;   // once + stay / once + hide / loop
     QLabel* m_playLabel;
-    QDoubleSpinBox *m_posX, *m_posY, *m_rot, *m_scaleX, *m_scaleY, *m_color[4];
+    QDoubleSpinBox *m_pos[3], *m_rot[3], *m_scale[3], *m_color[4];   // x, y, z
     QLabel* m_spriteHere;
     QCheckBox* m_visibleHere;
     QToolButton* m_key[animed::kChannelCount] = {};

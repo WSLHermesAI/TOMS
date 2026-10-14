@@ -30,13 +30,9 @@ template <class NodeT, class F> auto visit(NodeT& n, Channel c, F&& f) {
 }
 
 template <class T> struct Conv;
-template <> struct Conv<glm::vec2> {
-    static glm::vec2 from(const Value& v) { return {v.v.x, v.v.y}; }
-    static Value to(const glm::vec2& x) { Value v; v.v = {x.x, x.y, 0, 0}; return v; }
-};
-template <> struct Conv<float> {
-    static float from(const Value& v) { return v.v.x; }
-    static Value to(float x) { Value v; v.v.x = x; return v; }
+template <> struct Conv<glm::vec3> {
+    static glm::vec3 from(const Value& v) { return {v.v.x, v.v.y, v.v.z}; }
+    static Value to(const glm::vec3& x) { Value v; v.v = {x.x, x.y, x.z, 0}; return v; }
 };
 template <> struct Conv<glm::vec4> {
     static glm::vec4 from(const Value& v) { return v.v; }
@@ -152,9 +148,9 @@ bool keyAt(const Node& n, Channel c, float t, Value& out) {
 
 Value restValue(const Node& n, Channel c) {
     switch (c) {
-    case Channel::Pos: return Conv<glm::vec2>::to(n.pos);
-    case Channel::Rot: return Conv<float>::to(n.rot);
-    case Channel::Scale: return Conv<glm::vec2>::to(n.scale);
+    case Channel::Pos: return Conv<glm::vec3>::to(n.pos);
+    case Channel::Rot: return Conv<glm::vec3>::to(n.rot);
+    case Channel::Scale: return Conv<glm::vec3>::to(n.scale);
     case Channel::Color: return Conv<glm::vec4>::to(n.color);
     case Channel::Sprite: return Conv<std::string>::to(n.sprite);
     case Channel::Visible: return Conv<bool>::to(n.visible);
@@ -166,9 +162,9 @@ Value restValue(const Node& n, Channel c) {
 Value valueAt(const Node& n, Channel c, float t) {
     using namespace toms::anim;
     switch (c) {
-    case Channel::Pos: return Conv<glm::vec2>::to(positionAt(n, t));
-    case Channel::Rot: return Conv<float>::to(rotationAt(n, t));
-    case Channel::Scale: return Conv<glm::vec2>::to(scaleAt(n, t));
+    case Channel::Pos: return Conv<glm::vec3>::to(positionAt(n, t));
+    case Channel::Rot: return Conv<glm::vec3>::to(rotationAt(n, t));
+    case Channel::Scale: return Conv<glm::vec3>::to(scaleAt(n, t));
     case Channel::Color: {
         // Unclamped would be the raw track; the runtime clamps, and so does what the user sees.
         return Conv<glm::vec4>::to(colorAt(n, t));
@@ -245,9 +241,9 @@ bool removeKey(Node& n, Channel c, float t) {
 
 void setRest(Node& n, Channel c, const Value& v) {
     switch (c) {
-    case Channel::Pos: n.pos = Conv<glm::vec2>::from(v); break;
-    case Channel::Rot: n.rot = v.v.x; break;
-    case Channel::Scale: n.scale = Conv<glm::vec2>::from(v); break;
+    case Channel::Pos: n.pos = Conv<glm::vec3>::from(v); break;
+    case Channel::Rot: n.rot = Conv<glm::vec3>::from(v); break;
+    case Channel::Scale: n.scale = Conv<glm::vec3>::from(v); break;
     case Channel::Color: n.color = v.v; break;
     case Channel::Sprite: n.sprite = v.s; break;
     case Channel::Visible: n.visible = v.b; break;
@@ -312,8 +308,8 @@ void scaleKeyTimes(Node& n, float factor, bool recursive) {
 std::string formatValue(Channel c, const Value& v) {
     switch (c) {
     case Channel::Pos:
-    case Channel::Scale: return num(v.v.x) + ", " + num(v.v.y);
-    case Channel::Rot: return num(v.v.x);
+    case Channel::Rot:
+    case Channel::Scale: return num(v.v.x) + ", " + num(v.v.y) + ", " + num(v.v.z);
     case Channel::Color: return num(v.v.x) + ", " + num(v.v.y) + ", " + num(v.v.z) + ", " + num(v.v.w);
     case Channel::Sprite: return v.s.empty() ? std::string("(none)") : v.s;
     case Channel::Visible: return v.b ? "true" : "false";
@@ -332,13 +328,18 @@ bool parseValue(Channel c, const std::string& text, Value& out, std::string* err
     };
     switch (c) {
     case Channel::Pos:
+        if (!parseNumbers(t, f) || (f.size() != 2 && f.size() != 3)) return fail("expected x, y[, z]");
+        out.v = {f[0], f[1], f.size() == 3 ? f[2] : 0.0f, 0};
+        return true;
     case Channel::Scale:
-        if (!parseNumbers(t, f) || (f.size() != 1 && f.size() != 2)) return fail("expected two numbers: x, y");
-        out.v = {f[0], f.size() == 2 ? f[1] : f[0], 0, 0};   // one number = both (uniform scale)
+        if (!parseNumbers(t, f) || f.empty() || f.size() > 3) return fail("expected x, y[, z] (one number = uniform)");
+        if (f.size() == 1) out.v = {f[0], f[0], f[0], 0};   // uniform
+        else out.v = {f[0], f[1], f.size() == 3 ? f[2] : 1.0f, 0};
         return true;
     case Channel::Rot:
-        if (!parseNumbers(t, f) || f.size() != 1) return fail("expected one number (degrees)");
-        out.v.x = f[0];
+        if (!parseNumbers(t, f) || (f.size() != 1 && f.size() != 3)) return fail("expected x, y, z degrees (one number = z)");
+        if (f.size() == 1) out.v = {0, 0, f[0], 0};   // the screen-plane turn
+        else out.v = {f[0], f[1], f[2], 0};
         return true;
     case Channel::Color:
         if (!parseNumbers(t, f) || (f.size() != 3 && f.size() != 4)) return fail("expected r, g, b[, a] (0..1)");

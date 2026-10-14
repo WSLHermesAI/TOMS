@@ -13,6 +13,7 @@
 #include "AnimTransport.h"
 #include "AnimViewport.h"
 #include "Icons.h"
+#include "mpdi_convert.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -33,6 +34,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QStatusBar>
 #include <QTableWidget>
 #include <QToolBar>
@@ -185,10 +187,6 @@ void AnimEditor::createActions()
     m_snapAct->setCheckable(true);
     m_snapAct->setToolTip(tr("Snap moves to whole pixels, rotation to degrees, scale to 0.05"));
     connect(m_snapAct, &QAction::toggled, m_viewport, &AnimViewport::setSnap);
-    m_gridAct = makeAction(this, tr("Show &Grid"), QKeySequence(tr("G")));
-    m_gridAct->setCheckable(true);
-    m_gridAct->setChecked(true);
-    connect(m_gridAct, &QAction::toggled, m_viewport, &AnimViewport::setShowGrid);
     m_insertKeyAct = makeAction(this, tr("&Insert Key at Playhead"), QKeySequence(Qt::Key_K), int(Id::KeyOn));
     m_qualifyAct = makeAction(this, tr("&Qualify Sprite References"));
     m_qualifyAct->setToolTip(tr("Every bare sprite name in the file (every clip) -> id:name with the atlas the lookup picks now"));
@@ -213,6 +211,8 @@ void AnimEditor::createActions()
                                     "anim_editor --headless check <file.anim> [--atlas [<id>=]<file.atlas>]...\n"
                                     "    parse, check sprite names against the atlases and the keys; exit 0 = ok, 2 = errors\n"
                                     "    (--atlas, repeatable, replaces the file's atlas list; id = the file name unless given)\n"
+                                    "anim_editor --headless convert-mpdi <folder> [--out <dir>]\n"
+                                    "    every .mpdi under the folder -> .anim, their .pi -> atlases (Convert menu)\n"
                                     "anim_editor --selftest <file.anim> <outdir>\n"
                                     "    automated check (run with -platform offscreen)"));
     });
@@ -226,6 +226,10 @@ void AnimEditor::createActions()
 void AnimEditor::createDocks()
 {
     m_clips = new AnimClipsDock(m_doc, m_host);
+    connect(m_clips, &AnimClipsDock::clipActivated, this, [this] {   // double-click: play the clip from its start
+        m_transport->stop();
+        m_transport->play();
+    });
     m_nodes = new AnimNodesDock(m_doc, m_host);
     m_sprites = new AnimSpritesDock(m_doc, m_host);
     m_props = new AnimPropertiesDock(m_doc, m_host);
@@ -358,16 +362,24 @@ void AnimEditor::createMenus()
     m_viewMenu->addAction(m_frameAct);
     m_viewMenu->addAction(m_zoomInAct);
     m_viewMenu->addAction(m_zoomOutAct);
-    m_viewMenu->addAction(m_gridAct);
     CanvasView::addCoordinatesAction(m_viewMenu);
     m_viewMenu->addSeparator();
     for (QDockWidget* d : docks()) m_viewMenu->addAction(d->toggleViewAction());
     m_viewMenu->addSeparator();
 
+    QMenu* convert = new QMenu(tr("&Convert"), m_host);
+    {
+        QAction* a = convert->addAction(tr("&MPDI Folder to .anim…"));
+        a->setToolTip(tr("Convert every .mpdi under a folder (the old engine's animations) to .anim, and the .pi sprite "
+                         "sheets they use to atlases (.atlasproj + .atlas + .png)"));
+        a->setStatusTip(a->toolTip());
+        connect(a, &QAction::triggered, this, &AnimEditor::convertMpdiFolder);
+    }
+
     QMenu* help = new QMenu(tr("&Help"), m_host);
     help->addAction(m_helpCliAct);
     help->addAction(m_aboutAct);
-    m_menus = {file, edit, node, key, play, m_viewMenu, help};
+    m_menus = {file, edit, node, key, play, m_viewMenu, convert, help};
 }
 
 void AnimEditor::createToolBars()
@@ -433,7 +445,6 @@ void AnimEditor::readSettings()
     m_doc->setAutoKey(s.value(QStringLiteral("autoKey"), true).toBool());
     m_autoKeyAct->setChecked(m_doc->autoKey());
     m_snapAct->setChecked(s.value(QStringLiteral("snap"), false).toBool());
-    m_gridAct->setChecked(s.value(QStringLiteral("grid"), true).toBool());
     m_transport->loopAction()->setChecked(s.value(QStringLiteral("loopPreview"), false).toBool());
 }
 
@@ -442,7 +453,6 @@ void AnimEditor::writeSettings() const
     QSettings s = settings();
     s.setValue(QStringLiteral("autoKey"), m_doc->autoKey());
     s.setValue(QStringLiteral("snap"), m_snapAct->isChecked());
-    s.setValue(QStringLiteral("grid"), m_gridAct->isChecked());
     s.setValue(QStringLiteral("loopPreview"), m_transport->loopAction()->isChecked());
 }
 
@@ -735,3 +745,52 @@ void AnimEditor::updateActions()
     m_qualifyAct->setEnabled(m_doc->bareSpriteReferenceCount() > 0);
     for (QAction* a : {m_dupAct, m_deleteAct, m_upAct, m_downAct}) a->setEnabled(child);
 }
+
+void AnimEditor::convertMpdiFolder()
+{
+    const QString folder = QFileDialog::getExistingDirectory(m_host, tr("Convert MPDI: the folder with the .mpdi and .pi files"),
+                                                             settings().value(QStringLiteral("convert/mpdiFolder")).toString());
+    if (folder.isEmpty()) return;
+    settings().setValue(QStringLiteral("convert/mpdiFolder"), folder);
+    // Where the results go: next to the old files, or a folder of their own (subfolders kept).
+    QMessageBox where(QMessageBox::Question, tr("Convert MPDI"),
+                      tr("Write the .anim files and the converted atlases next to the .mpdi files, or into another folder?"),
+                      QMessageBox::NoButton, m_host);
+    QPushButton* nextTo = where.addButton(tr("Next to Them"), QMessageBox::AcceptRole);
+    QPushButton* other = where.addButton(tr("Another Folder…"), QMessageBox::ActionRole);
+    where.addButton(QMessageBox::Cancel);
+    where.exec();
+    QString out;
+    if (where.clickedButton() == other) {
+        out = QFileDialog::getExistingDirectory(m_host, tr("Convert MPDI: the output folder"),
+                                                settings().value(QStringLiteral("convert/mpdiOut"), folder).toString());
+        if (out.isEmpty()) return;
+        settings().setValue(QStringLiteral("convert/mpdiOut"), out);
+    } else if (where.clickedButton() != nextTo) {
+        return;
+    }
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    const animed::MpdiConvertReport r = animed::convertMpdiFolder(folder.toStdString(), out.toStdString());
+    QApplication::restoreOverrideCursor();
+
+    QString summary = tr("%1 .mpdi found: %2 .anim written (%3 clips, %4 nodes), %5 .pi converted to atlases.")
+                          .arg(r.mpdiFiles).arg(r.animFiles).arg(r.clips).arg(r.nodes).arg(r.piFiles);
+    if (!r.errors.empty()) summary += tr("\n%1 file(s) could not be converted.").arg(r.errors.size());
+    if (!r.warnings.empty()) summary += tr("\n%1 warning(s): what was approximated or left out.").arg(r.warnings.size());
+    QStringList details;
+    for (const std::string& e : r.errors) details << QStringLiteral("error: ") + QString::fromStdString(e);
+    for (const std::string& w : r.warnings) details << QStringLiteral("warning: ") + QString::fromStdString(w);
+    details << QString();
+    for (const std::string& f : r.written) details << QString::fromStdString(f);
+    QMessageBox box(r.errors.empty() ? QMessageBox::Information : QMessageBox::Warning, tr("Convert MPDI"), summary,
+                    QMessageBox::Ok, m_host);
+    box.setDetailedText(details.join(QLatin1Char('\n')));
+    QString firstAnim;
+    for (const std::string& f : r.written)
+        if (QFileInfo(QString::fromStdString(f)).suffix() == QLatin1String("anim")) { firstAnim = QString::fromStdString(f); break; }
+    QPushButton* open = firstAnim.isEmpty() ? nullptr : box.addButton(tr("Open the First .anim"), QMessageBox::ActionRole);
+    box.exec();
+    if (open && box.clickedButton() == open && maybeSave()) openFile(firstAnim, false);
+    m_host->statusBar()->showMessage(summary.section(QLatin1Char('\n'), 0, 0), 10000);
+}
+

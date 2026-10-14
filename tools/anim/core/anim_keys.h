@@ -1,8 +1,8 @@
 // anim_keys.h -- channel-generic key editing on toms::anim nodes, for the anim editor (no Qt).
 //
 // The runtime (src/core/engine/anim_clip.h) stores one typed key vector per channel. The editor
-// works on "channels" and "key times" generically: Value carries any channel's value (pos/scale
-// in xy, rot in x, color in xyzw, sprite/event in s, visible in b). Key times are compared with
+// works on "channels" and "key times" generically: Value carries any channel's value (pos / rot /
+// scale in xyz, color in xyzw, sprite/event in s, visible in b). Key times are compared with
 // kTimeEps, so 0.3 typed into a spin box finds the key at 0.3f.
 #pragma once
 #include "anim_clip.h"

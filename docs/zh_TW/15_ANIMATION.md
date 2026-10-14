@@ -22,6 +22,8 @@
   淡淡的格線，x 值沿著下邊緣，y 值沿著左邊緣。間距
   跟著縮放（1、2、5 × 10ⁿ 內容像素，至少相隔 90 螢幕像素）：縮小時每 500，
   放大時每 10 或每 1。數值是遊戲的座標（y 往下增加）。
+  滑鼠在畫布上時也會顯示它的位置：游標旁的「x, y」、穿過游標的淡色輔助線，以及底邊與左邊數值間的醒目標籤
+  （放大 8 倍以上時顯示到 0.1 像素）。測試：`studio.canvas_coordinates`（offscreen）。
 - **復原 / 重做和備份**（三個編輯器都有）：
   - **復原 / 重做：** 編輯 > 復原 / 重做（Ctrl+Z / Ctrl+Y，或工具列箭頭）逐步走過
     每次編輯。
@@ -64,7 +66,7 @@
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "atlases": ["../media/atlas/game.atlas", "fx/slash.atlas",
               {"id": "dark16", "path": "../styles/dark16/atlas/game.atlas"}],
   "clips": [{
@@ -72,8 +74,9 @@
     "root": {
       "name": "slime", "sprite": "game:slime",
       "tracks": {
-        "pos":    [{"t": 0, "v": [0, 0], "ease": "quadraticOut"}, {"t": 0.3, "v": [24, -8]}, {"t": 0.6, "v": [0, 0]}],
-        "scale":  [{"t": 0.3, "v": [1.2, 0.8], "ease": "backOut"}, {"t": 0.6, "v": [1, 1]}],
+        "pos":    [{"t": 0, "v": [0, 0, 0], "ease": "quadraticOut"}, {"t": 0.3, "v": [24, -8, 0]}, {"t": 0.6, "v": [0, 0, 0]}],
+        "rot":    [{"t": 0, "v": [0, 0, 0]}, {"t": 0.3, "v": [0, 0, -10]}, {"t": 0.6, "v": [0, 0, 0]}],
+        "scale":  [{"t": 0.3, "v": [1.2, 0.8, 1], "ease": "backOut"}, {"t": 0.6, "v": [1, 1, 1]}],
         "sprite": [{"t": 0, "v": "game:slime"}, {"t": 0.3, "v": "dark16:slime_bite"}],
         "event":  [{"t": 0.3, "v": "hit"}]
       },
@@ -125,16 +128,25 @@
   - **循環的群組會循環它整個子樹**，子節點自己的設定在群組的時間內套用。
   - **事件 key** 只在片段的時間軸上觸發；不會隨著循環節點重複。
   - **範例：** [examples/anim_child_timing.anim](../examples/anim_child_timing.anim) 中的 `popup` 片段。
-- **軌：** `pos` `scale`（x, y）、`rot`（角度，順時針，不會折返：0 → 720 是兩圈）、
-  `color`（r, g, b, a 0..1）會內插；`sprite` `visible` `event` 是階梯式。沒有 key 的通道
+- **軌：** `pos` `rot` `scale`（皆為 **x, y, z**）、`color`（r, g, b, a 0..1）會內插；`sprite` `visible` `event` 是階梯式。沒有 key 的通道
   維持靜止值。第一個 key 之前維持那個 key，最後一個之後維持最後一個。
 - key 上的 **`ease`** 決定從那個 key 開始的區段形狀：`linear`（預設）、`stepped`（維持），或
   `quadratic` `cubic` `quartic` `quintic` `sinusoidal` `exponential` `circular` `bounce`
   `elastic` `back` 任一種 + `In` / `Out` / `InOut`（https://easings.net），或像 CSS `cubic-bezier()` 一樣的
   三次貝茲曲線 `[x1, y1, x2, y2]`。`back`、`elastic` 和 `bounce` 會超出範圍；顏色會被限制在範圍內。
 
-**空間和順序：** 像素，y 往下。節點的世界變換 = 父節點的 × 平移 · 旋轉 ·
-縮放；負的縮放會鏡像。繪製順序是深度優先：先畫 `order < 0` 的子節點（依 order，
+**x, y, z：** 位置、旋轉、縮放都有三個值，雖然遊戲目前以 2D 繪製，資料已可用於 3D 攝影機。
+- **位置：** 像素，y 往下，**z 往螢幕內**。
+- **旋轉：** 度，不會折返（0 → 720 是兩圈）。**z** 在螢幕平面上轉動節點（順時針）；**x** 和 **y**
+  讓它傾出平面。順序是先 z、再 y、再 x（R = Rx · Ry · Rz），與舊引擎的 `cMatrix44::RotationMatrix`
+  相同，所以 MPDI 的角度可直接沿用。
+- **縮放：** x, y, z；x 或 y 為負會鏡像。
+- **目前的繪製：** 世界變換是 3D 的（`NodePose::world`，4×4 矩陣）。遊戲和編輯器用沿 z 看的正交攝影機
+  繪製（`flatten()`）：z 不會移動 sprite，x / y 傾斜會讓它縮短（60° 時顯示為一半）。
+- **舊檔案：** 版本 1 的檔案存 `[x, y]` 和單一的 `rot` 數字。仍可讀取（z = 0、縮放 z = 1、該數字為 z
+  旋轉），儲存時寫成版本 2。
+
+**空間和順序：** 節點的世界變換 = 父節點的 × 平移 · 旋轉 · 縮放。繪製順序是深度優先：先畫 `order < 0` 的子節點（依 order，
 再依清單位置），然後是節點自己的 sprite，再來是 `order >= 0` 的子節點。顏色沿著樹
 往下相乘，除非 `inheritColor` 為 false；隱藏的節點會隱藏它的子樹。
 
@@ -278,8 +290,8 @@ Atlas 路徑永遠以相對路徑存放：
 | **Clips** | **雙擊**（或 Enter）開啟片段，以粗體顯示；如果開啟的片段在開啟或儲存後有變更，會詢問 *Discard all changes to “A” and open “B”?*（是 = 捨棄，算一個復原步驟；否 = 留下）；F2 或工具列可重新命名；新增 / 複製 / 重新命名 / 刪除作用在反白的片段上；長度（0 = 到最後一個 key）、播放次數（-1 = 循環）、停在最後一格 |
 | **Nodes** | 節點樹，附每個節點的靜止 sprite（`name (id)`）：**Playback** 欄（↻：點一列的圖示可切換 播放一次並停留 ▶ / 播放一次後隱藏 ■ / 循環 ↻）；**Solo** 欄（◎：點一列的目標，在片段照常播放時只畫那個節點和它的子節點：父節點仍會移動它們，但父節點自己的 sprite 隱藏；再點一次，或開啟另一個片段，就會結束；只影響預覽，不會儲存；狀態列顯示 `SOLO: name`）；新增子節點 / 兄弟節點 / sprite 節點、複製、刪除、重新命名（F2）、拖放以改變父節點或順序（清單順序 = 相同 `order` 之間的繪製順序）、眼睛 = 靜止的 `visible`、`order` 欄 |
 | **Sprites** | 每個 atlas 一個分頁（標題是它的 id 和 sprite 數，依查找順序），每個列出那個 atlas 的 sprite 和縮圖；篩選套用到每個分頁（標題會顯示符合的數量）；每一列是某個 atlas 的那一份，挑選它就會存下那個 atlas（`id:name`）；出現在多個 atlas 中的名稱有一個小標記（「also in X; each copy is usable」）；篩選比對 `id:name`；把 sprite 拖到 viewport（在選取節點底下、放開的位置建立節點）或節點上；雙擊 = 選取節點的 sprite（開啟自動 key 時在播放頭建立 sprite key） |
-| **Viewport** | 播放頭位置的片段；點擊選取最上面的節點；**移動（W）** / **旋轉（E）** / **縮放（R）** gizmo。開啟 **自動 key（N，預設開啟）** 時，拖曳會在播放頭寫入 key，關閉時寫入靜止值（剛好在播放頭的 key 兩種情況都會更新）。Ctrl = 移動時對齊像素，Shift = 15° 一格 / 保持比例；滑鼠中鍵平移，滾輪縮放 |
-| **Properties** | 片段設定；**Atlases** 清單（如上）；節點的靜止設定（名稱、sprite、軸心、order、混色、繼承顏色、可見、**Playback**：播放一次並停留 / 播放一次後隱藏 / 循環）；播放頭位置的值，每個通道有一個 key 按鈕（◆ 這裡有 key：點擊移除；◇ 有動畫：點擊把顯示的值設為 key；虛線：沒有軌）；播放頭所在或之前那個 key 的緩動（任何 Tweeny 緩動，或附曲線編輯器的 Bezier…） |
+| **Viewport** | 播放頭位置的片段；點擊選取最上面的節點；**移動（W）** / **旋轉（E）**（rot z）/ **縮放（R）** gizmo。開啟 **自動 key（N，預設開啟）** 時，拖曳會在播放頭寫入 key，關閉時寫入靜止值（剛好在播放頭的 key 兩種情況都會更新）。Ctrl = 移動時對齊像素，Shift = 15° 一格 / 保持比例；滑鼠中鍵平移，滾輪縮放 |
+| **Properties** | 片段設定；**Atlases** 清單（如上）；節點的靜止設定（名稱、sprite、軸心、order、混色、繼承顏色、可見、**Playback**：播放一次並停留 / 播放一次後隱藏 / 循環）；播放頭位置的值（Pos、Rot、Scale 皆為 x, y, z；x / y 旋轉在這裡輸入），每個通道有一個 key 按鈕（◆ 這裡有 key：點擊移除；◇ 有動畫：點擊把顯示的值設為 key；虛線：沒有軌）；播放頭所在或之前那個 key 的緩動（任何 Tweeny 緩動，或附曲線編輯器的 Bezier…） |
 | **Keys** | MPDI 風格的 key 清單（見下方） |
 | **Events** | 選取節點的事件 key：在播放頭新增、移除、編輯時間 / 名稱 |
 | **Timeline** | 第 4 階段多軌時間軸的預留位置；可接收拖放的 sprite（見下方） |
@@ -328,3 +340,61 @@ Pos、Rot、Scale、Color、Sprite（`name (id)`，無法解析時為紅色）�
 有未儲存的變更。編輯器的 `AnimEditor` 物件為宿主視窗建立文件、viewport、面板、選單和
 工具列，這正是第 2 階段的 studio 應用程式會以外掛方式載入的東西；主題、
 圖示和畫布基底來自 `tools/studio_common`，和 atlas 編輯器共用。
+
+## 轉換 MPDI（舊引擎的動畫）
+
+編輯器的 **Convert → MPDI Folder to .anim…** 會轉換資料夾（含子資料夾）中的每個 `.mpdi`。它們使用的 `.pi` sprite sheet
+也會轉成 atlas（`.atlasproj` + `.atlas` + `.png` + `.plist`），每個只轉一次。結果可以放在舊檔案旁邊，或放到另一個資料夾
+（保留相同的子資料夾）。完成後的報告會列出寫出的檔案、哪些地方是近似處理，以及無法轉換的檔案。**Open the First .anim**
+會開啟其中一個結果。命令列：
+
+```bat
+anim_editor --headless convert-mpdi <資料夾> [--out <輸出資料夾>]
+```
+
+程式在 `tools/anim/core/mpdi_convert.*`，選單與命令列共用；`.pi` 讀取器沿用 atlas 工具的。規則依照舊引擎的讀取與繪製程式
+（`MPDIDataParse.cpp`、`SubMPDI.cpp`、`Curve.cpp`）：
+
+| MPDI | .anim |
+|---|---|
+| 檔案、`ImageName`（它的 `.pi`） | 一個 `.anim`；每個 `.pi` 一個 atlas，id = `.pi` 的名稱 |
+| `MultiPathDynamicImage` | 一個 clip：`TotalPlayTime` → length、`PlayCount` → playCount（-1 = 無限）、`StayAtLastFrame` → stayAtLastFrame |
+| 一條路徑（`CueToStartCurvesWithTime`） | 一個節點，key 的時間 = `StartTime` + 各點時間 |
+| 點的位置 | 圖片中心：1.1 以後存的是未裁切圖片的左上角（再加原始尺寸的一半）；1.0 以前存的是中心。線性 |
+| `LOD` 2 / 3 | 引擎的平滑（Chaikin 切角，LOD − 1 次）烘焙成更多位置 key |
+| `Size` / `Scale`、`Mirror` | 縮放 = 尺寸 ÷ sprite 裁切後的尺寸；鏡像 = x 為負 |
+| `Angle`（z）/ `Angles`（x, y, z） | 旋轉 x, y, z，度（與引擎相同的旋轉順序） |
+| `Color` | 顏色（最舊格式的 0..255 → 0..1） |
+| `PIName` + `ImageName` | sprite key `"pi:image"`，階梯式 |
+| `BehaviorUpdate` | 尺寸、旋轉、顏色在點之間線性；沒有時為階梯式 |
+| `Loop` | 節點循環；有 `StartTime` 時由一個 gate 群組在那之前隱藏它 |
+| `StartTime` > 0 | 在那之前隱藏 |
+| 加法混合 | 目的端 `GL_ONE` 或 `GL_DST_ALPHA` → `blend: add` |
+| `RotationPosOffset`、非置中的 `AnchorType` | 一個旋轉的群組，圖片以偏移放在裡面，位置與引擎繪製的相同 |
+| `HintPoint` | event key（聲音提示為 `sound:<名稱>`） |
+
+**讀取的格式：**
+- 最舊的檔案：沒有版本，有 `CurvePoint` / `CurveTime` 清單，點的資料為 `w,h,angle,r,g,b,a,image,mirror`；
+- 在 `<MPDIList>` 之前有 `<Version>` 元素的 1.0 檔案；
+- 1.1、1.2、1.3 版。
+
+**不轉換，並以警告回報：**
+- 非單位矩陣的 `CameraView`；
+- `ViewPort` 裁切；
+- 一般與加法以外的混合模式。
+
+**用舊引擎自己的資料檢查過**（`MagicTower/MagicSrc/FM79979`）：找到 48 個 `.mpdi`，轉換了 47 個（312 個 clip、3,220 條路徑），
+76 個 `.pi` 轉成 atlas，約 10 秒。
+- 唯一失敗的是舊編輯器建置資料夾中、沒有指定 sprite sheet 的測試檔。
+- 47 個結果中有 44 個通過 `--headless check`；其餘 3 個引用的圖片在舊資料的 `.pi` 裡本來就不存在，轉換時已回報。
+
+**測試：** `anim.mpdi_convert`（`tools/anim/tests/mpdi_convert_test.cpp`，24 項檢查）轉換 `tests/mpdi/` 中手寫的檔案，
+並以依引擎規則算出的數值核對 key。涵蓋：
+- 最舊格式與 `<Version>` 標頭；
+- 左上角與置中的位置；
+- 裁切後的縮放與鏡像；
+- Chaikin LOD；
+- 有循環時的開始 gate；
+- 加法混合與聲音提示；
+- `CenterDown` 與 `RotationPosOffset`；
+- `Angles` x, y, z。

@@ -18,6 +18,9 @@ canvases with toms_game's own `BgfxRenderer` (`GameCanvasView` in `tools/studio_
   faint lines with the x values along the bottom edge and the y values along the left edge. The
   step follows the zoom (1, 2, 5 × 10ⁿ content pixels, at least 90 screen pixels apart): every 500
   zoomed out, every 10 or every 1 zoomed in. Values are the game's coordinates (y grows downwards).
+  With the mouse over the canvas, its position is shown too: "x, y" next to the cursor, faint guide
+  lines through it, and its x and y as highlighted tags on the bottom and left edges among the values
+  (tenths of a pixel when zoomed in 8× or more). Test: `studio.canvas_coordinates` (offscreen).
 - **Undo / redo and backups** (all three editors):
   - **Undo / redo:** Edit > Undo / Redo (Ctrl+Z / Ctrl+Y, or the toolbar arrows) step through
     every edit.
@@ -252,7 +255,7 @@ atlaspack refs    <project> [--variant ID] [--import new|changed|all]
 atlaspack extract <project> --out DIR [--variant ID] [--children]
 atlaspack embed   <folder-project> [--save-as NEW.atlasproj] [--keep-output]
 atlaspack build   <project> [--variant ID | --all-variants] [--out DIR] [--format LIST] [--strict] [--check]
-atlaspack import  <file.pi|.atlas|.json> --project OUT.atlasproj [--images DIR] [--format LIST]
+atlaspack import  <file.pi|.atlas|.json|.plist> --project OUT.atlasproj [--images DIR] [--format LIST]
 atlaspack pack    <folder>... --out DIR [--name NAME] [--format LIST] [options] [--save-project FILE]
 atlaspack info    <file.pi|.atlas|.json>
 atlaspack formats
@@ -266,7 +269,7 @@ atlaspack formats
 | `extract` | every sprite (and with `--children` every child) as a separate PNG again |
 | `embed` | a folder project → embedded; its folders become references |
 | `build` | rebuilds and writes the output files; `--check` only compares |
-| `import` | an embedded project from an existing `.pi` / `.atlas` / TexturePacker `.json` |
+| `import` | an embedded project from an existing `.pi` / `.atlas` / TexturePacker `.json` / Cocos or TexturePacker `.plist`. For a `.plist` (formats 0–3): rotated frames are turned back upright, trims and aliases are kept, a trailing `.png` is dropped from frame names, and our `x_` fields are read. The editors' **Import Atlas** takes the same files |
 | `pack` | folders straight to atlas files (a folder project, for scripts) |
 
 Options: `--max WxH --pot --square --padding N --border N --extrude N --no-trim
@@ -279,6 +282,7 @@ line. Messages are `file: error: sprite: text`, one per line. Paths and names ma
 
 ```bat
 atlaspack import old\UI.pi --project ui\ui.atlasproj     :: ui.atlasproj + ui.atlas + ui.png + ui.pi
+atlaspack import cocos\ui.plist --project ui\ui.atlasproj :: a Cocos / TexturePacker sprite sheet (the PNG it names must be next to it)
 ```
 
 Each unit is cut out at its original size, with its trimmed pixels put back at their offset.

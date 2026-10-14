@@ -472,7 +472,7 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
                 "insert key at 0.25: keys slime's animated channels only (no new tracks)");
     const int row = rowOf(keys, 0.25f);
     ok &= check(row >= 0 && keys->commitCell(row, AnimKeyListDock::ColPos, QStringLiteral("5, -20")) &&
-                    toms::anim::positionAt(*doc->selectedNode(), 0.25f) == glm::vec2(5, -20),
+                    toms::anim::positionAt(*doc->selectedNode(), 0.25f) == glm::vec3(5, -20, 0),
                 "edit a key list cell (pos = 5, -20)");
     ed->propertiesDock()->posXSpin()->setValue(7.0);   // a Properties edit with auto-key
     processEvents();

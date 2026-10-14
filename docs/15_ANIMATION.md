@@ -20,6 +20,9 @@ canvases with toms_game's own `BgfxRenderer` (`GameCanvasView` in `tools/studio_
   faint lines with the x values along the bottom edge and the y values along the left edge. The
   step follows the zoom (1, 2, 5 × 10ⁿ content pixels, at least 90 screen pixels apart): every 500
   zoomed out, every 10 or every 1 zoomed in. Values are the game's coordinates (y grows downwards).
+  With the mouse over the canvas, its position is shown too: "x, y" next to the cursor, faint guide
+  lines through it, and its x and y as highlighted tags on the bottom and left edges among the values
+  (tenths of a pixel when zoomed in 8× or more). Test: `studio.canvas_coordinates` (offscreen).
 - **Undo / redo and backups** (all three editors):
   - **Undo / redo:** Edit > Undo / Redo (Ctrl+Z / Ctrl+Y, or the toolbar arrows) step through
     every edit.
@@ -63,7 +66,7 @@ see [16_ANIMATION_RECIPES.md](16_ANIMATION_RECIPES.md).
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "atlases": ["../media/atlas/game.atlas", "fx/slash.atlas",
               {"id": "dark16", "path": "../styles/dark16/atlas/game.atlas"}],
   "clips": [{
@@ -71,8 +74,9 @@ see [16_ANIMATION_RECIPES.md](16_ANIMATION_RECIPES.md).
     "root": {
       "name": "slime", "sprite": "game:slime",
       "tracks": {
-        "pos":    [{"t": 0, "v": [0, 0], "ease": "quadraticOut"}, {"t": 0.3, "v": [24, -8]}, {"t": 0.6, "v": [0, 0]}],
-        "scale":  [{"t": 0.3, "v": [1.2, 0.8], "ease": "backOut"}, {"t": 0.6, "v": [1, 1]}],
+        "pos":    [{"t": 0, "v": [0, 0, 0], "ease": "quadraticOut"}, {"t": 0.3, "v": [24, -8, 0]}, {"t": 0.6, "v": [0, 0, 0]}],
+        "rot":    [{"t": 0, "v": [0, 0, 0]}, {"t": 0.3, "v": [0, 0, -10]}, {"t": 0.6, "v": [0, 0, 0]}],
+        "scale":  [{"t": 0.3, "v": [1.2, 0.8, 1], "ease": "backOut"}, {"t": 0.6, "v": [1, 1, 1]}],
         "sprite": [{"t": 0, "v": "game:slime"}, {"t": 0.3, "v": "dark16:slime_bite"}],
         "event":  [{"t": 0.3, "v": "hit"}]
       },
@@ -125,16 +129,28 @@ see [16_ANIMATION_RECIPES.md](16_ANIMATION_RECIPES.md).
     group's time.
   - **Event keys** fire on the clip's timeline only; they do not repeat with a looping node.
   - **Example:** the `popup` clip in [examples/anim_child_timing.anim](examples/anim_child_timing.anim).
-- **Tracks:** `pos` `scale` (x, y), `rot` (degrees, clockwise, not wrapped: 0 → 720 is two turns),
-  `color` (r, g, b, a 0..1) are interpolated; `sprite` `visible` `event` step. A channel without
+- **Tracks:** `pos` `rot` `scale` as **x, y, z**, `color` (r, g, b, a 0..1) are interpolated; `sprite` `visible` `event` step. A channel without
   keys keeps the rest value. Before the first key it holds that key, after the last the last.
 - **`ease`** on a key shapes the segment that key starts: `linear` (default), `stepped` (hold), or
   any of `quadratic` `cubic` `quartic` `quintic` `sinusoidal` `exponential` `circular` `bounce`
   `elastic` `back` + `In` / `Out` / `InOut` (https://easings.net), or a cubic Bézier
   `[x1, y1, x2, y2]` like CSS `cubic-bezier()`. `back`, `elastic` and `bounce` overshoot; colours are clamped.
 
-**Space and order:** pixels, y down. A node's world transform = parent's × translate · rotate ·
-scale; a negative scale mirrors. Draw order is depth first: children with `order < 0` (by order,
+**x, y, z:** position, rotation and scale each have three values, so the data is ready for a 3D
+camera even though the game draws in 2D today.
+- **Position:** pixels, y down, **z into the screen**.
+- **Rotation:** degrees, not wrapped (0 → 720 is two turns). **z** turns the node in the screen
+  plane (clockwise); **x** and **y** tilt it out of the plane. The order is z first, then y, then x
+  (R = Rx · Ry · Rz), the same as the old engine's `cMatrix44::RotationMatrix`, so MPDI angles carry
+  over unchanged.
+- **Scale:** x, y, z; a negative x or y mirrors.
+- **Drawing today:** the world transform is 3D (`NodePose::world`, a 4×4 matrix). The game and the
+  editor draw it with an orthographic camera looking down z (`flatten()`): z does not move a sprite,
+  and an x / y tilt foreshortens it (60° shows it at half size).
+- **Older files:** version 1 files store `[x, y]` and a single `rot` number. They still load (z = 0,
+  scale z = 1, the number is the z rotation) and are saved as version 2.
+
+**Space and order:** a node's world transform = parent's × translate · rotate · scale. Draw order is depth first: children with `order < 0` (by order,
 then list position), the node's own sprite, then children with `order >= 0`. Colour multiplies
 down the tree unless `inheritColor` is false; a hidden node hides its subtree.
 
@@ -279,8 +295,8 @@ Atlas paths are always stored relative:
 | **Clips** | **double-click** (or Enter) opens a clip, shown in bold; when the open clip has changes since it was opened or saved, it asks *Discard all changes to “A” and open “B”?* (Yes discards, as one undo step; No stays); F2 or the toolbar renames; add / duplicate / rename / delete act on the highlighted clip; length (0 = up to the last key), plays (-1 = loop), stay at last frame |
 | **Nodes** | the node tree with each node's rest sprite (`name (id)`): a **Playback** column (↻: click a row's icon for once and stay ▶ / once then hide ■ / loop ↻); a **Solo** column (◎: click a row's target to draw only that node and its children while the clip plays as usual: the parents still move them, their own sprites are hidden; click again, or open another clip, to end; preview only, not saved; the status line shows `SOLO: name`); add child / sibling / sprite node, duplicate, delete, rename (F2), drag & drop to reparent or reorder (list order = draw order among equal `order`), eye = rest `visible`, `order` column |
 | **Sprites** | one tab per atlas (titled with its id and sprite count, in lookup order), each listing that atlas's sprites with thumbnails; the filter applies to every tab (the titles then show how many match); each row is one atlas's copy and picking it stores that atlas (`id:name`); a name in more than one atlas has a small badge ("also in X; each copy is usable"); the filter matches `id:name`; drag a sprite into the viewport (a node under the selected node, at the drop point) or onto a node; double-click = the selected node's sprite (a sprite key at the playhead with auto-key) |
-| **Viewport** | the clip at the playhead; click selects the topmost node; **Move (W)** / **Rotate (E)** / **Scale (R)** gizmo. With **Auto-key (N, on by default)** a drag writes a key at the playhead, without it the rest value (a key exactly at the playhead is updated either way). Ctrl = pixel snap while moving, Shift = 15° steps / keep proportions; middle mouse pans, wheel zooms |
-| **Properties** | clip settings; the **Atlases** list (above); the node's rest settings (name, sprite, pivot, order, blend, inherit colour, visible, **Playback**: once and stay / once then hide / loop); the values at the playhead, each channel with a key button (◆ key here: click removes; ◇ animated: click keys the shown value; dotted: no track); the ease of the key at / before the playhead (any Tweeny ease, or Bezier… with a curve editor) |
+| **Viewport** | the clip at the playhead; click selects the topmost node; **Move (W)** / **Rotate (E)** (rot z) / **Scale (R)** gizmo. With **Auto-key (N, on by default)** a drag writes a key at the playhead, without it the rest value (a key exactly at the playhead is updated either way). Ctrl = pixel snap while moving, Shift = 15° steps / keep proportions; middle mouse pans, wheel zooms |
+| **Properties** | clip settings; the **Atlases** list (above); the node's rest settings (name, sprite, pivot, order, blend, inherit colour, visible, **Playback**: once and stay / once then hide / loop); the values at the playhead (Pos, Rot and Scale as x, y, z; type x / y rotations here), each channel with a key button (◆ key here: click removes; ◇ animated: click keys the shown value; dotted: no track); the ease of the key at / before the playhead (any Tweeny ease, or Bezier… with a curve editor) |
 | **Keys** | the MPDI-style key list (below) |
 | **Events** | the selected node's event keys: add at the playhead, remove, edit time / name |
 | **Timeline** | placeholder for the phase 4 multi-track timeline; takes dropped sprites (below) |
@@ -330,3 +346,64 @@ Every edit is one undo step (drags and spin box edits fold into one); `*` in the
 unsaved changes. The editor's `AnimEditor` object creates the document, viewport, docks, menus and
 toolbars for a host window, which is what the phase 2 studio app will load as a plugin; the theme,
 icons and canvas base come from `tools/studio_common`, shared with the atlas editor.
+
+## Converting MPDI (the old engine's animations)
+
+**Convert → MPDI Folder to .anim…** in the editor converts every `.mpdi` under a folder, subfolders included. It
+also converts the `.pi` sprite sheets they draw from into atlases (`.atlasproj` + `.atlas` + `.png` + `.plist`),
+each one once. The results go next to the old files, or into another folder with the same subfolders. A report
+lists the files written, what was approximated, and what could not be converted. **Open the First .anim** opens one
+of the results. From the command line:
+
+```bat
+anim_editor --headless convert-mpdi <folder> [--out <dir>]
+```
+
+The code is `tools/anim/core/mpdi_convert.*`, shared by the menu and the command line; the `.pi` reader is the
+atlas tool's. The rules follow the old engine's reader and renderer (`MPDIDataParse.cpp`, `SubMPDI.cpp`,
+`Curve.cpp`):
+
+| MPDI | .anim |
+|---|---|
+| the file, `ImageName` (its `.pi` files) | one `.anim`; one atlas per `.pi`, id = the `.pi`'s name |
+| `MultiPathDynamicImage` | a clip: `TotalPlayTime` → length, `PlayCount` → playCount (-1 = forever), `StayAtLastFrame` → stayAtLastFrame |
+| a path (`CueToStartCurvesWithTime`) | a node, keys at `StartTime` + each point's time |
+| point position | the image centre: 1.1 and later store the top-left of the untrimmed image (+ half its original size); 1.0 and older store the centre. Linear |
+| `LOD` 2 / 3 | the engine's smoothing (Chaikin corner cutting, LOD − 1 passes) baked into more position keys |
+| `Size` / `Scale`, `Mirror` | scale = size ÷ the sprite's trimmed size; mirrored = negative x |
+| `Angle` (z) / `Angles` (x, y, z) | rotation x, y, z, degrees (the same rotation order as the engine) |
+| `Color` | colour (the oldest format's 0..255 → 0..1) |
+| `PIName` + `ImageName` | sprite keys `"pi:image"`, stepped |
+| `BehaviorUpdate` | size, rotation and colour linear between points; without it, stepped |
+| `Loop` | the node loops; with a `StartTime`, a gate group keeps it hidden until then |
+| `StartTime` > 0 | hidden until then |
+| additive blending | destination `GL_ONE` or `GL_DST_ALPHA` → `blend: add` |
+| `RotationPosOffset`, a non-centred `AnchorType` | a turning group with the image offset inside it, placed as the engine draws it |
+| `HintPoint` | an event key (`sound:<name>` for sound hints) |
+
+**Formats read:**
+- the oldest files: no version, with `CurvePoint` / `CurveTime` lists and points as `w,h,angle,r,g,b,a,image,mirror`;
+- 1.0 files that start with a `<Version>` element before `<MPDIList>`;
+- versions 1.1, 1.2 and 1.3.
+
+**Not converted, and reported as warnings:**
+- a non-identity `CameraView`;
+- `ViewPort` clipping;
+- blend modes other than normal and additive.
+
+**Checked on the old engine's own data** (`MagicTower/MagicSrc/FM79979`): 48 `.mpdi` found, 47 converted (312
+clips, 3,220 paths), 76 `.pi` turned into atlases, in about 10 s.
+- The one failure is a test file in an old editor build folder that names no sprite sheet.
+- `--headless check` passes on 44 of the 47 results. The other 3 refer to images that are missing from their `.pi`
+  files in the old data too, and the conversion reports them.
+
+**Test:** `anim.mpdi_convert` (`tools/anim/tests/mpdi_convert_test.cpp`, 24 checks) converts the hand-made files
+in `tests/mpdi/` and checks the keys against values worked out from the engine's rules. They cover:
+- the oldest format and the `<Version>` header;
+- top-left versus centred positions;
+- trimmed scale and mirroring;
+- Chaikin LOD;
+- the start gate with a loop;
+- additive blending and a sound hint;
+- `CenterDown` and `RotationPosOffset`;
+- `Angles` x, y, z.

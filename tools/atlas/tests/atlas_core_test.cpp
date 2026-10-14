@@ -15,6 +15,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <array>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -365,6 +366,17 @@ static void testFormats() {
     CHECK(importPi(out + "/game.pi", in, &err));
     sameRegions(b, in, "pi");
     CHECK(in.animations.size() == 1 && in.animations[0].frames[1].sprite == "coin_copy");
+    // Our own .plist back in: frames, trims, children, and the x_ fields (pivot, split, tags).
+    CHECK_MSG(importPlist(out + "/game.plist", in, &err), err);
+    sameRegions(b, in, "plist");
+    for (const Region& r : b.regions) {
+        const Region* o = in.find(r.name);
+        if (!o) continue;
+        CHECK_MSG(std::abs(o->pivot[0] - r.pivot[0]) < 1e-5f && std::abs(o->pivot[1] - r.pivot[1]) < 1e-5f, "plist pivot " + r.name);
+        CHECK_MSG(o->hasSplit == r.hasSplit && o->tags == r.tags, "plist split/tags " + r.name);
+    }
+    BuildResult byExt;
+    CHECK(importAtlasFile(out + "/game.plist", byExt, &err) && byExt.regions.size() == b.regions.size());
 
     // plist: the frames dict has every sprite, textureRect matches.
     auto plist = parseXml(readAll(out + "/game.plist"), &err);
@@ -407,6 +419,57 @@ static void testFormats() {
     const auto t0 = fs::last_write_time(out + "/game.atlas");
     CHECK(writeFiles(out, files, &err));
     CHECK(fs::last_write_time(out + "/game.atlas") == t0);
+}
+
+// ---- a Cocos / TexturePacker .plist written by another tool (format 2): rotated, trimmed, aliased ----------
+
+static void testPlistCocos() {
+    const std::string d = tempDir("plist_cocos");
+    // An 8x4 page. "arrow" is 3x2 upright, stored turned clockwise as 2x3 at (0,0); "dot" is a 2x2 trim of a 6x6.
+    Image page(8, 4);
+    auto colour = [](int x, int y) { return std::array<uint8_t, 4>{uint8_t(40 + x * 50), uint8_t(60 + y * 90), 7, 255}; };
+    const int W = 3, H = 2;
+    for (int sy = 0; sy < W; sy++)
+        for (int sx = 0; sx < H; sx++) {   // stored (sx, sy) holds upright (sy, H - 1 - sx)
+            const auto c = colour(sy, H - 1 - sx);
+            memcpy(page.at(sx, sy), c.data(), 4);
+        }
+    for (int y = 0; y < 2; y++)
+        for (int x = 0; x < 2; x++) { uint8_t* p = page.at(4 + x, y); p[0] = 200; p[1] = 10; p[2] = 10; p[3] = 255; }
+    std::string err;
+    CHECK(savePng(d + "/sheet.png", page, &err));
+    std::ofstream(u8path(d + "/sheet.plist"), std::ios::binary) <<
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\"><dict>\n"
+        "<key>frames</key><dict>\n"
+        "  <key>arrow.png</key><dict><key>frame</key><string>{{0,0},{3,2}}</string><key>offset</key><string>{0,0}</string>"
+        "<key>rotated</key><true/><key>sourceColorRect</key><string>{{0,0},{3,2}}</string><key>sourceSize</key><string>{3,2}</string></dict>\n"
+        "  <key>dot.png</key><dict><key>aliases</key><array><string>dot_again.png</string></array>"
+        "<key>frame</key><string>{{4,0},{2,2}}</string><key>offset</key><string>{1,-1}</string>"
+        "<key>rotated</key><false/><key>sourceColorRect</key><string>{{3,3},{2,2}}</string><key>sourceSize</key><string>{6,6}</string></dict>\n"
+        "</dict>\n<key>metadata</key><dict><key>format</key><integer>2</integer>"
+        "<key>textureFileName</key><string>sheet.png</string><key>size</key><string>{8,4}</string></dict>\n"
+        "</dict></plist>\n";
+    BuildResult in;
+    CHECK_MSG(importAtlasFile(d + "/sheet.plist", in, &err), err);
+    CHECK(in.regions.size() == 3 && in.find("arrow") && in.find("dot") && in.find("dot_again"));
+    if (const Region* a = in.find("arrow")) {
+        const Image up = renderRegion(in, *a);
+        bool same = up.w == W && up.h == H;
+        for (int y = 0; same && y < H; y++)
+            for (int x = 0; same && x < W; x++) same = memcmp(up.at(x, y), colour(x, y).data(), 4) == 0;
+        CHECK_MSG(same, "the rotated frame comes back upright");
+    }
+    if (const Region* o = in.find("dot")) {
+        CHECK(o->origW == 6 && o->origH == 6 && o->offsetX == 3 && o->offsetY == 3);   // sourceColorRect
+        const Region* a = in.find("dot_again");
+        CHECK(a && a->aliasOf == "dot" && sameImage(renderRegion(in, *o), renderRegion(in, *a)));
+        const Image full = renderRegion(in, *o);
+        CHECK(full.w == 6 && full.h == 6 && full.at(3, 3)[0] == 200 && full.at(0, 0)[3] == 0);   // trim put back
+    }
+    // ... and on into a project, like the editors' Import Atlas.
+    Project p;
+    CHECK_MSG(importToProject(in, d + "/sheet.atlasproj", "", p, &err), err);
+    CHECK(p.images.count("arrow") && p.images.count("dot") && p.images.at("arrow")->w == W);
 }
 
 // ---- embedded projects (images inside the packed atlas) ----------------------------------------
@@ -579,6 +642,7 @@ int main() {
     run("packer", testPacker);
     run("build", testBuild);
     run("formats", testFormats);
+    run("plist from Cocos", testPlistCocos);
     run("embedded", testEmbedded);
     run("golden .pi", testGolden);
     std::printf("%d check(s), %d failed\n", g_checks, g_failed);

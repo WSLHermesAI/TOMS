@@ -103,10 +103,13 @@ AnimClipsDock::AnimClipsDock(AnimDocument* doc, QWidget* parent)
 
     connect(doc, &AnimDocument::fileChanged, this, &AnimClipsDock::rebuild);
     connect(doc, &AnimDocument::clipChanged, this, &AnimClipsDock::rebuild);
-    connect(m_list, &QListWidget::itemActivated, this, [this](QListWidgetItem* it) { openClip(m_list->row(it)); });
+    connect(m_list, &QListWidget::itemActivated, this, [this](QListWidgetItem* it) {
+        const int row = m_list->row(it);
+        if (openClip(row)) emit clipActivated(row);
+    });
     connect(m_list, &QListWidget::itemClicked, this, [this](QListWidgetItem* it) {
         if (m_list->row(it) != m_doc->clipIndex())
-            emit m_doc->message(tr("Double-click “%1” to open it (the viewport shows the bold clip).").arg(it->text()));
+            emit m_doc->message(tr("Double-click “%1” to open and play it (the viewport shows the bold clip).").arg(it->text()));
     });
     connect(m_list, &QListWidget::itemChanged, this, [this](QListWidgetItem* it) {
         if (m_updating) return;

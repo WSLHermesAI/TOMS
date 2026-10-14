@@ -43,7 +43,7 @@ const char* kUsage =
     "                    turn a folder project into an embedded one (the folders become references)\n"
     "  atlaspack build   <project> [--variant ID | --all-variants] [--out DIR] [--format LIST] [--strict] [--check]\n"
     "                    --check: write nothing; exit 1 if the files on disk differ from a fresh build\n"
-    "  atlaspack import  <file.pi|.atlas|.json> --project OUT.atlasproj [--images DIR] [--format LIST]\n"
+    "  atlaspack import  <file.pi|.atlas|.json|.plist> --project OUT.atlasproj [--images DIR] [--format LIST]\n"
     "                    an embedded project from an existing atlas (--images: a folder project instead)\n"
     "  atlaspack pack    <folder>... --out DIR [--name NAME] [--format LIST] [options] [--save-project FILE]\n"
     "                    pack folders straight to files (a folder project)\n"

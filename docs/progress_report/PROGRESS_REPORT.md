@@ -15,7 +15,21 @@
 
 ## ▶ Next Step
 
-**glTF physics: KHR_physics_rigid_bodies on Jolt** (2026-10-12, not committed; [../18_GLTF.md](../18_GLTF.md) §7):
+**Editors: MPDI import, plist import, x, y, z anim data, the edit freeze fixed** (2026-10-14, not committed;
+[DAILY_2026-10-14.md](DAILY_2026-10-14.md), [WORKING_LOG.md](WORKING_LOG.md)):
+- Atlas tool: imports Cocos / TexturePacker `.plist`. Anim editor: Convert → MPDI Folder to .anim, covering the old
+  engine's `.mpdi` and `.pi` (47 of 48 old files convert).
+- Anim data: position, rotation and scale are x, y, z (file version 2; version 1 still loads). The rotation order is
+  the old engine's (Rx · Ry · Rz). Drawing is still 2D through an orthographic flatten.
+- The anim editor's stall on large files is fixed: undo compared JSON dumps of the whole file on every edit.
+- Mouse position readout on the editor canvases; double-click plays a clip; Show Grid removed.
+- New ctests: `anim.mpdi_convert`, `anim.editor_selftest` (now offscreen, with Qt's offscreen plugin copied),
+  `studio.canvas_coordinates`. Changed-only run: 44 of 93 tests, all pass.
+- **First:** commit the 9 untracked reference images in `tests/golden/`. Their tests are already committed, so a fresh
+  clone fails them.
+- **Next import:** `.prt` / `.prtg` particles (a Convert menu in the particle editor).
+
+**glTF physics: KHR_physics_rigid_bodies on Jolt** (2026-10-12, committed 2026-10-14 in `83b1461`; [../18_GLTF.md](../18_GLTF.md) §7):
 - `Model::physics` reads `KHR_implicit_shapes` + `KHR_physics_rigid_bodies`: shapes, materials, filters, joints, and
   motion / collider / trigger / joint on nodes. `gltf::PhysicsWorld` (Jolt Physics 5.6, MIT, deterministic)
   simulates them and writes the bodies back into the `Pose`. Compounds, kinematic and animated bodies, triggers with

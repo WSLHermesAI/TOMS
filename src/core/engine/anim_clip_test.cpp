@@ -8,6 +8,9 @@
 //   playback   per node: once + stay, once + hide, loop (its subtree's key range, also after the end)
 //   player     play count, looping, stay-at-last-frame, events (time 0, loop wrap, exactly once)
 //   quads      corners from pivot + trim offsets + world transform, uv, tint, additive, missing sprites
+//   xyz        pos / rot / scale x, y, z: rotation order Rx * Ry * Rz (the FM79979 engine's), z depth
+//              kept in the 3D world, the 2D view's orthographic flatten; version 1 files ([x, y], one
+//              rot number) read as z = 0 / scale z = 1 / the z rotation and save as version 2; ==
 //   json       round trip and errors
 //
 // Run: ./anim_clip_test
@@ -39,6 +42,8 @@ namespace {
 bool near(float a, float b, float eps = 1e-4f) { return std::fabs(a - b) <= eps; }
 bool near2(const glm::vec2& a, float x, float y, float eps = 1e-4f) { return near(a.x, x, eps) && near(a.y, y, eps); }
 glm::vec2 apply(const glm::mat3& m, float x, float y) { const glm::vec3 v = m * glm::vec3(x, y, 1); return {v.x, v.y}; }
+// A 3D world as the screen shows it (x, y of the point in the node's plane).
+glm::vec2 apply(const glm::mat4& m, float x, float y) { return apply(flatten(m), x, y); }
 
 Ease ease(const char* name) { Ease e; parseEase(name, e); return e; }
 
@@ -67,9 +72,9 @@ void testEasing() {
 
 void testTracks() {
     Node n;
-    n.pos = {7, 7};
+    n.pos = {7, 7, 0};
     CHECK(near2(positionAt(n, 3), 7, 7), "no keys: rest value");
-    n.posKeys = {{0.0f, {0, 0}, {}}, {1.0f, {10, 20}, {}}, {2.0f, {10, 0}, ease("stepped")}, {3.0f, {0, 0}, {}}};
+    n.posKeys = {{0.0f, {0, 0, 0}, {}}, {1.0f, {10, 20, 0}, {}}, {2.0f, {10, 0, 0}, ease("stepped")}, {3.0f, {0, 0, 0}, {}}};
     CHECK(near2(positionAt(n, -1), 0, 0), "before the first key");
     CHECK(near2(positionAt(n, 0.5f), 5, 10), "linear midpoint");
     CHECK(near2(positionAt(n, 1.5f), 10, 10), "second segment");
@@ -78,8 +83,8 @@ void testTracks() {
     CHECK(near2(positionAt(n, 9.0f), 0, 0), "after the last key");
     n.posKeys[0].ease = ease("quadraticIn");
     CHECK(near2(positionAt(n, 0.5f), 2.5f, 5), "the key's ease shapes its segment");
-    n.rotKeys = {{0.0f, 0.0f, {}}, {1.0f, 720.0f, {}}};
-    CHECK(near(rotationAt(n, 0.5f), 360.0f), "rotation is not wrapped");
+    n.rotKeys = {{0.0f, {0, 0, 0.0f}, {}}, {1.0f, {0, 0, 720.0f}, {}}};
+    CHECK(near(rotationAt(n, 0.5f).z, 360.0f), "rotation is not wrapped");
     n.spriteKeys = {{0.0f, "a", {}}, {0.25f, "b", {}}};
     CHECK(spriteAt(n, 0.1f) == "a" && spriteAt(n, 0.25f) == "b" && spriteAt(n, 5) == "b", "sprite steps");
     n.colorKeys = {{0.0f, {1, 1, 1, 1}, ease("backIn")}, {1.0f, {1, 1, 1, 0}, {}}};
@@ -93,11 +98,11 @@ Clip treeClip() {
     Clip c;
     c.name = "tree";
     c.root.name = "root";
-    c.root.pos = {100, 0};
-    c.root.rot = 90;
+    c.root.pos = {100, 0, 0};
+    c.root.rot = {0, 0, 90};
     c.root.color = {1, 0.5f, 1, 1};
-    Node body; body.name = "body"; body.sprite = "s"; body.pos = {10, 0};
-    Node hat; hat.name = "hat"; hat.sprite = "s"; hat.pos = {0, -5};
+    Node body; body.name = "body"; body.sprite = "s"; body.pos = {10, 0, 0};
+    Node hat; hat.name = "hat"; hat.sprite = "s"; hat.pos = {0, -5, 0};
     body.children.push_back(hat);
     Node fx; fx.name = "fx"; fx.order = 2; fx.inheritColor = false; fx.blend = Blend::Add; fx.sprite = "s";
     Node shadow; shadow.name = "shadow"; shadow.order = -1; shadow.sprite = "s";
@@ -122,7 +127,7 @@ void testTree() {
     evaluate(c, 0, poses);
     CHECK(!poses[2].visible && !poses[3].visible && poses[4].visible, "a hidden node hides its subtree only");
     // Scale and mirror.
-    Node m; m.scale = {-2, 1};
+    Node m; m.scale = {-2, 1, 1};
     CHECK(near2(apply(localTransform(m, 0), 3, 4), -6, 4), "negative scale mirrors");
 }
 
@@ -131,8 +136,8 @@ bool samePoses(const std::vector<NodePose>& a, const std::vector<NodePose>& b, f
     for (size_t i = 0; i < a.size(); i++) {
         bool same = a[i].node == b[i].node && a[i].depth == b[i].depth && a[i].visible == b[i].visible &&
                     a[i].sprite == b[i].sprite;
-        for (int c = 0; c < 3; c++)
-            for (int r = 0; r < 3; r++) same &= near(a[i].world[c][r], b[i].world[c][r], 1e-4f);
+        for (int c = 0; c < 4; c++)
+            for (int r = 0; r < 4; r++) same &= near(a[i].world[c][r], b[i].world[c][r], 1e-4f);
         for (int k = 0; k < 4; k++) same &= near(a[i].color[k], b[i].color[k], 1e-6f);
         if (!same) {
             fprintf(stderr, "  pose %zu (%s) differs at t=%f\n", i, a[i].node ? a[i].node->name.c_str() : "?", t);
@@ -146,14 +151,14 @@ void testPoseCache() {
     // Each node animates only what it needs: the root turns, body only switches sprites, fx only
     // fades (with a stepped key) and blinks, shadow only scales, hat has no keys at all.
     Clip c = treeClip();
-    c.root.rotKeys = {{0.0f, 0.0f, ease("quadraticInOut")}, {1.0f, 360.0f, {}}};
+    c.root.rotKeys = {{0.0f, {0, 0, 0.0f}, ease("quadraticInOut")}, {1.0f, {0, 0, 360.0f}, {}}};
     Node& fx = c.root.children[0];
     Node& body = c.root.children[1];
     Node& shadow = c.root.children[2];
     body.spriteKeys = {{0.0f, "s", {}}, {0.3f, "p", {}}, {0.6f, "s", {}}};
     fx.colorKeys = {{0.2f, {1, 1, 1, 0}, {}}, {0.5f, {1, 1, 1, 1}, ease("stepped")}, {0.8f, {1, 0, 0, 1.5f}, {}}};
     fx.visibleKeys = {{0.0f, true, {}}, {0.4f, false, {}}, {0.45f, true, {}}};
-    shadow.scaleKeys = {{0.1f, {1, 1}, ease("backOut")}, {0.9f, {2, 0.5f}, {}}};
+    shadow.scaleKeys = {{0.1f, {1, 1, 1}, ease("backOut")}, {0.9f, {2, 0.5f, 1}, {}}};
 
     PoseCache cache;
     cache.bind(&c);
@@ -180,14 +185,14 @@ void testPoseCache() {
     Node a; a.name = "a"; a.sprite = "s"; a.spriteKeys = {{0.0f, "s", {}}, {0.5f, "p", {}}};
     Node b; b.name = "b"; b.sprite = "s";
     Node kid; kid.name = "kid"; kid.sprite = "s";
-    Node mover; mover.name = "mover"; mover.posKeys = {{0.0f, {0, 0}, {}}, {1.0f, {10, 0}, {}}};
+    Node mover; mover.name = "mover"; mover.posKeys = {{0.0f, {0, 0, 0}, {}}, {1.0f, {10, 0, 0}, {}}};
     mover.children.push_back(kid);
     s.root.children = {a, b, mover};
     cache.bind(&s);
     cache.seek(0);
     CHECK(cache.changedCount() == 5, "first seek: every pose (%d)", cache.changedCount());
     const NodePose& pa = cache.poses()[1];
-    const glm::mat3 aWorld = pa.world;
+    const glm::mat4 aWorld = pa.world;
     cache.seek(0.25f);
     CHECK(cache.changedCount() == 2 && cache.changed(3) && cache.changed(4),
           "mid-way: only mover and its child (%d)", cache.changedCount());
@@ -209,12 +214,12 @@ void testChildOutlivesParent() {
     Clip c;
     c.name = "c";
     c.root.name = "root";
-    c.root.posKeys = {{0.0f, {0, 0}, {}}, {0.5f, {100, 0}, {}}};   // the parent stops at 0.5
+    c.root.posKeys = {{0.0f, {0, 0, 0}, {}}, {0.5f, {100, 0, 0}, {}}};   // the parent stops at 0.5
     Node kid;
     kid.name = "kid";
     kid.sprite = "s";
-    kid.posKeys = {{0.3f, {0, 0}, {}}, {1.5f, {0, 120}, {}}};        // the child runs 0.3 .. 1.5
-    kid.rotKeys = {{1.0f, 0.0f, {}}, {2.0f, 90.0f, {}}};            // and turns 1.0 .. 2.0
+    kid.posKeys = {{0.3f, {0, 0, 0}, {}}, {1.5f, {0, 120, 0}, {}}};        // the child runs 0.3 .. 1.5
+    kid.rotKeys = {{1.0f, {0, 0, 0.0f}, {}}, {2.0f, {0, 0, 90.0f}, {}}};            // and turns 1.0 .. 2.0
     c.root.children.push_back(kid);
     CHECK(near(c.duration(), 2.0f), "duration = the child's last key: %f", c.duration());
 
@@ -251,15 +256,15 @@ void testNodePlayback() {
     c.name = "popup";
     c.root.name = "root";
     Node pop; pop.name = "pop"; pop.sprite = "s";                      // once, stays
-    pop.scaleKeys = {{0.0f, {0, 0}, {}}, {0.3f, {1, 1}, {}}};
+    pop.scaleKeys = {{0.0f, {0, 0, 1}, {}}, {0.3f, {1, 1, 1}, {}}};
     Node flash; flash.name = "flash"; flash.sprite = "s"; flash.stayAtLastFrame = false;   // once, then hides
     flash.colorKeys = {{0.0f, {1, 1, 1, 1}, {}}, {0.2f, {1, 1, 1, 0.5f}, {}}};
     Node spark; spark.name = "spark"; spark.sprite = "s"; spark.loop = true;              // loops 0.5..1.0
-    spark.posKeys = {{0.5f, {0, 0}, {}}, {1.0f, {10, 0}, {}}};
+    spark.posKeys = {{0.5f, {0, 0, 0}, {}}, {1.0f, {10, 0, 0}, {}}};
     Node orbit; orbit.name = "orbit"; orbit.loop = true;                                 // a looping group
-    orbit.rotKeys = {{0.0f, 0.0f, {}}, {1.0f, 360.0f, {}}};
+    orbit.rotKeys = {{0.0f, {0, 0, 0.0f}, {}}, {1.0f, {0, 0, 360.0f}, {}}};
     Node dot; dot.name = "dot"; dot.sprite = "s";                                        // runs in orbit's time
-    dot.posKeys = {{0.0f, {20, 0}, {}}, {0.5f, {40, 0}, {}}};
+    dot.posKeys = {{0.0f, {20, 0, 0}, {}}, {0.5f, {40, 0, 0}, {}}};
     orbit.children.push_back(dot);
     c.root.children = {pop, flash, spark, orbit};
     CHECK(near(c.duration(), 1.0f) && hasLoopingNodes(c), "duration 1.0, has looping nodes");
@@ -330,7 +335,7 @@ void testNodePlayback() {
 void testPlayer() {
     Clip c;
     c.name = "c";
-    c.root.posKeys = {{0.0f, {0, 0}, {}}, {1.0f, {10, 0}, {}}};
+    c.root.posKeys = {{0.0f, {0, 0, 0}, {}}, {1.0f, {10, 0, 0}, {}}};
     c.root.eventKeys = {{0.0f, "start", {}}, {0.5f, "hit", {}}, {1.0f, "end", {}}};
     c.playCount = 2;
     AnimPlayer p;
@@ -379,7 +384,7 @@ void testQuads() {
                            "p\n  bounds: 50, 50, 10, 10\n  x_pivot: 0, 0\n", atlas, &err), "atlas: %s", err.c_str());
     Clip c;
     c.root.sprite = "s";
-    c.root.pos = {100, 100};
+    c.root.pos = {100, 100, 0};
     std::vector<NodePose> poses;
     evaluate(c, 0, poses);
     std::vector<Quad> q;
@@ -390,7 +395,7 @@ void testQuads() {
               near(q[0].corners[5], 104), "corners from pivot and trim offset");
     CHECK(q.size() == 1 && near(q[0].uv[0], 0.10f) && near(q[0].uv[3], 0.28f), "uv from the atlas");
     // Rotated 90 degrees and placed at (10,10) scaled x2 by the placement.
-    c.root.rot = 90;
+    c.root.rot = {0, 0, 90};
     c.root.blend = Blend::Add;
     c.root.color = {1, 1, 1, 0.5f};
     evaluate(c, 0, poses);
@@ -455,8 +460,8 @@ void testQuads() {
 
     // The player keeps each quad until its pose changes: frame by frame it draws what
     // appendQuads(evaluate()) would, also when the placement or tint changes.
-    Node still; still.name = "still"; still.sprite = "game:s"; still.pos = {30, 0};
-    Node spin; spin.name = "spin"; spin.sprite = "s"; spin.rotKeys = {{0.0f, 0.0f, {}}, {1.0f, 90.0f, {}}};
+    Node still; still.name = "still"; still.sprite = "game:s"; still.pos = {30, 0, 0};
+    Node spin; spin.name = "spin"; spin.sprite = "s"; spin.rotKeys = {{0.0f, {0, 0, 0.0f}, {}}, {1.0f, {0, 0, 90.0f}, {}}};
     c.root.children = {still, spin};
     c.root.colorKeys = {{0.2f, {1, 1, 1, 1}, {}}, {0.4f, {1, 1, 1, 0}, {}}, {0.7f, {1, 1, 1, 1}, {}}};
     c.length = 1.0f;
@@ -491,9 +496,9 @@ void testJson() {
     Clip c = treeClip();
     c.playCount = -1;
     c.length = 2;
-    c.root.children[1].posKeys = {{0.0f, {1, 2}, ease("backOut")}, {0.5f, {3, 4}, {}}};
+    c.root.children[1].posKeys = {{0.0f, {1, 2, 0}, ease("backOut")}, {0.5f, {3, 4, 0}, {}}};
     Ease bz; bz.kind = Ease::kBezier; bz.bezier[0] = 0.1f; bz.bezier[3] = 0.9f;
-    c.root.children[1].rotKeys = {{0.0f, 0.0f, bz}, {1.0f, 90.0f, {}}};
+    c.root.children[1].rotKeys = {{0.0f, {0, 0, 0.0f}, bz}, {1.0f, {0, 0, 90.0f}, {}}};
     c.root.children[1].spriteKeys = {{0.0f, "s", {}}, {0.2f, "t", {}}};
     c.root.children[1].eventKeys = {{0.2f, "hit", {}}};
     c.root.children[1].visibleKeys = {{0.0f, true, {}}, {0.9f, false, {}}};
@@ -527,6 +532,56 @@ void testJson() {
     CHECK(!parseAnim("{not json", sorted, &err), "invalid JSON");
 }
 
+void testXyz() {
+    // x tilt 60 degrees: the node's y axis leans into the screen, so it shows at half its height.
+    CHECK(near2(apply(compose({0, 0, 0}, {60, 0, 0}, {1, 1, 1}), 0, 10), 0, 5), "x tilt foreshortens y");
+    CHECK(near2(apply(compose({0, 0, 0}, {0, 60, 0}, {1, 1, 1}), 10, 0), 5, 0), "y tilt foreshortens x");
+    // The order: z, then y, then x (Rx * Ry * Rz). With x = y = 90 the node's x axis ends up on screen y;
+    // Unity's order (Ry * Rx * Rz) would send it into the screen.
+    const glm::mat4 xy = compose({0, 0, 0}, {90, 90, 0}, {1, 1, 1});
+    CHECK(near2(apply(xy, 10, 0), 0, 10, 1e-4f), "rotation order Rx * Ry * Rz: (%f, %f)", apply(xy, 10, 0).x, apply(xy, 10, 0).y);
+    // The FM79979 engine's cMatrix44::RotationMatrix(30, 45, 10), its first row: the image of x.
+    const float cx = std::cos(glm::radians(30.0f)), sx = std::sin(glm::radians(30.0f)), cy = std::cos(glm::radians(45.0f)),
+                sy = std::sin(glm::radians(45.0f)), cz = std::cos(glm::radians(10.0f)), sz = std::sin(glm::radians(10.0f));
+    const glm::mat4 e = compose({0, 0, 0}, {30, 45, 10}, {1, 1, 1});
+    CHECK(near(e[0][0], cy * cz) && near(e[0][1], cx * sz + sx * sy * cz) && near(e[0][2], sx * sz - cx * sy * cz) &&
+              near(e[2][0], sy) && near(e[2][1], -sx * cy) && near(e[2][2], cx * cy),
+          "same matrix as the old engine's RotationMatrix");
+    // z: depth in the world, no move on the 2D screen.
+    Node deep;
+    deep.pos = {5, 6, 50};
+    deep.posKeys = {{0.0f, {5, 6, 50}, {}}, {1.0f, {5, 6, 150}, {}}};
+    const glm::mat4 w = localTransform(deep, 0.5f);
+    CHECK(near(w[3].z, 100.0f) && near2(apply(w, 0, 0), 5, 6), "pos z interpolates in the world, the screen ignores it");
+    // Version 1 files.
+    AnimFile v1;
+    std::string err;
+    CHECK(parseAnim(R"({"version":1,"clips":[{"name":"x","root":{"name":"r","pos":[1,2],"rot":30,"scale":[2,3],)"
+                    R"("tracks":{"pos":[{"t":0,"v":[5,6]}],"rot":[{"t":0,"v":45}],"scale":[{"t":0,"v":[1,2]}]}}}]})",
+                    v1, &err),
+          "version 1 parses: %s", err.c_str());
+    const Node& r = v1.clips.empty() ? deep : v1.clips[0].root;
+    CHECK(v1.version == 1 && r.pos == glm::vec3(1, 2, 0) && r.rot == glm::vec3(0, 0, 30) && r.scale == glm::vec3(2, 3, 1),
+          "version 1 rest: z = 0, rot = the z turn, scale z = 1");
+    CHECK(r.posKeys.size() == 1 && r.posKeys[0].v == glm::vec3(5, 6, 0) && r.rotKeys.size() == 1 &&
+              r.rotKeys[0].v == glm::vec3(0, 0, 45) && r.scaleKeys.size() == 1 && r.scaleKeys[0].v == glm::vec3(1, 2, 1),
+          "version 1 keys likewise");
+    const std::string v2 = animToJson(v1);
+    AnimFile back;
+    CHECK(v2.find("\"version\": 2") != std::string::npos && parseAnim(v2, back, &err) && back == v1 && back.version == 2,
+          "saved as version 2, reads back the same");
+    CHECK(!parseAnim(R"({"version":3,"clips":[]})", back, &err) && err.find("newer") != std::string::npos,
+          "a newer version is refused: %s", err.c_str());
+    // == (the editor's undo compares with it)
+    AnimFile changed = v1;
+    CHECK(changed == v1, "a copy is equal");
+    changed.clips[0].root.rotKeys[0].v.x = 1;
+    CHECK(changed != v1, "a key's rot x differs");
+    changed = v1;
+    changed.clips[0].root.rotKeys[0].ease.kind = Ease::kBezier;
+    CHECK(changed != v1, "an ease differs");
+}
+
 }  // namespace
 
 int main() {
@@ -539,6 +594,7 @@ int main() {
     testNodePlayback();
     testQuads();
     testJson();
+    testXyz();
     std::printf("anim_clip_test: %d check(s), %d failed\n", g_checks, g_fails);
     return g_fails ? 1 : 0;
 }

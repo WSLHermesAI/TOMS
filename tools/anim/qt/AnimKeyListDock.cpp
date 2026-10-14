@@ -534,11 +534,17 @@ void AnimKeyListDock::rampDialog()
     if (dlg.exec() != QDialog::Accepted) return;
     const int i = channel->currentIndex();
     const Channel c = i == 4 ? Channel::Color : kInterpolated[i];
-    const Channel parseAs = i == 4 ? Channel::Rot : c;   // alpha: one number
     Value a, b;
-    std::string err;
-    if (!parseValue(parseAs, from->text().toStdString(), a, &err) || !parseValue(parseAs, to->text().toStdString(), b, &err))
-        return warn(tr("Ramp: %1").arg(qs(err)));
+    if (i == 4) {   // alpha: one number, in x
+        bool okA = false, okB = false;
+        a.v.x = from->text().trimmed().toFloat(&okA);
+        b.v.x = to->text().trimmed().toFloat(&okB);
+        if (!okA || !okB) return warn(tr("Ramp: expected one number (alpha 0..1)"));
+    } else {
+        std::string err;
+        if (!parseValue(c, from->text().toStdString(), a, &err) || !parseValue(c, to->text().toStdString(), b, &err))
+            return warn(tr("Ramp: %1").arg(qs(err)));
+    }
     m_doc->ramp(times, c, a, b, i == 4);
 }
 

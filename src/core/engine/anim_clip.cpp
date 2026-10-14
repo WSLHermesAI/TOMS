@@ -74,6 +74,11 @@ const std::vector<std::string>& easeNames() {
     return names;
 }
 
+bool Ease::operator==(const Ease& o) const {
+    if (kind != o.kind) return false;
+    return kind != kBezier || std::equal(bezier, bezier + 4, o.bezier);
+}
+
 float Ease::apply(float p) const {
     p = std::min(1.0f, std::max(0.0f, p));
     if (kind == kBezier) return bezierEase(bezier, p);
@@ -138,9 +143,9 @@ void firstKey(const Node& n, float& m, bool& any) {
 
 }  // namespace
 
-glm::vec2 positionAt(const Node& n, float t) { return sample(n.posKeys, t, n.pos); }
-float rotationAt(const Node& n, float t) { return sample(n.rotKeys, t, n.rot); }
-glm::vec2 scaleAt(const Node& n, float t) { return sample(n.scaleKeys, t, n.scale); }
+glm::vec3 positionAt(const Node& n, float t) { return sample(n.posKeys, t, n.pos); }
+glm::vec3 rotationAt(const Node& n, float t) { return sample(n.rotKeys, t, n.rot); }
+glm::vec3 scaleAt(const Node& n, float t) { return sample(n.scaleKeys, t, n.scale); }
 glm::vec4 colorAt(const Node& n, float t) { return glm::clamp(sample(n.colorKeys, t, n.color), 0.0f, 1.0f); }
 std::string spriteAt(const Node& n, float t) { return sampleStep(n.spriteKeys, t, n.sprite); }
 bool visibleAt(const Node& n, float t) { return sampleStep(n.visibleKeys, t, n.visible); }
@@ -164,6 +169,14 @@ bool Node::hasKeys() const {
     bool any = false;
     firstKey(*this, m, any);
     return any;
+}
+
+bool Node::operator==(const Node& o) const {
+    return name == o.name && sprite == o.sprite && pos == o.pos && rot == o.rot && scale == o.scale && color == o.color &&
+           visible == o.visible && hasPivot == o.hasPivot && pivot == o.pivot && order == o.order && blend == o.blend &&
+           inheritColor == o.inheritColor && loop == o.loop && stayAtLastFrame == o.stayAtLastFrame &&
+           posKeys == o.posKeys && rotKeys == o.rotKeys && scaleKeys == o.scaleKeys && colorKeys == o.colorKeys &&
+           spriteKeys == o.spriteKeys && eventKeys == o.eventKeys && visibleKeys == o.visibleKeys && children == o.children;
 }
 
 float Clip::duration() const { return length > 0 ? length : root.lastKeyTime(); }
@@ -216,26 +229,43 @@ const Clip* AnimFile::find(const std::string& n) const {
 
 // ---- evaluation --------------------------------------------------------------------------------
 
-namespace {
-
-glm::mat3 compose(const glm::vec2& p, float rotDegrees, const glm::vec2& s) {
-    const float r = glm::radians(rotDegrees);
-    const float c = std::cos(r), sn = std::sin(r);
-    // Column-major: T * R * S. With y down, a positive angle turns clockwise on screen.
-    glm::mat3 m(1.0f);
-    m[0] = glm::vec3(c * s.x, sn * s.x, 0);
-    m[1] = glm::vec3(-sn * s.y, c * s.y, 0);
-    m[2] = glm::vec3(p.x, p.y, 1);
+glm::mat4 compose(const glm::vec3& p, const glm::vec3& rotDegrees, const glm::vec3& s) {
+    // Column-major: T * Rx * Ry * Rz * S (z applied first). With y down, a positive z angle turns
+    // clockwise on screen.
+    glm::mat3 r(1.0f);
+    if (rotDegrees.z != 0) {
+        const float a = glm::radians(rotDegrees.z), c = std::cos(a), sn = std::sin(a);
+        r = glm::mat3(c, sn, 0, -sn, c, 0, 0, 0, 1);
+    }
+    if (rotDegrees.y != 0) {
+        const float a = glm::radians(rotDegrees.y), c = std::cos(a), sn = std::sin(a);
+        r = glm::mat3(c, 0, -sn, 0, 1, 0, sn, 0, c) * r;
+    }
+    if (rotDegrees.x != 0) {
+        const float a = glm::radians(rotDegrees.x), c = std::cos(a), sn = std::sin(a);
+        r = glm::mat3(1, 0, 0, 0, c, sn, 0, -sn, c) * r;
+    }
+    glm::mat4 m(1.0f);
+    m[0] = glm::vec4(r[0] * s.x, 0);
+    m[1] = glm::vec4(r[1] * s.y, 0);
+    m[2] = glm::vec4(r[2] * s.z, 0);
+    m[3] = glm::vec4(p, 1);
     return m;
 }
 
-}  // namespace
+glm::mat3 flatten(const glm::mat4& m) {
+    glm::mat3 f(1.0f);
+    f[0] = glm::vec3(m[0].x, m[0].y, 0);
+    f[1] = glm::vec3(m[1].x, m[1].y, 0);
+    f[2] = glm::vec3(m[3].x, m[3].y, 1);
+    return f;
+}
 
-glm::mat3 localTransform(const Node& n, float t) { return compose(positionAt(n, t), rotationAt(n, t), scaleAt(n, t)); }
+glm::mat4 localTransform(const Node& n, float t) { return compose(positionAt(n, t), rotationAt(n, t), scaleAt(n, t)); }
 
 namespace {
 
-void walk(const Node& n, float t, const glm::mat3& parentWorld, const glm::vec4& parentColor, bool parentVisible,
+void walk(const Node& n, float t, const glm::mat4& parentWorld, const glm::vec4& parentColor, bool parentVisible,
           int depth, std::vector<NodePose>& out) {
     bool ended = false;
     if (n.timed()) t = nodeTime(n, t, n.firstKeyTime(), n.lastKeyTime(), &ended);
@@ -267,7 +297,7 @@ void collectEvents(const Node& n, float t0, float t1, std::vector<std::pair<floa
 
 void evaluate(const Clip& c, float t, std::vector<NodePose>& out) {
     out.clear();
-    walk(c.root, t, glm::mat3(1.0f), glm::vec4(1.0f), true, 0, out);
+    walk(c.root, t, glm::mat4(1.0f), glm::vec4(1.0f), true, 0, out);
 }
 
 // ---- PoseCache ---------------------------------------------------------------------------------
@@ -407,7 +437,7 @@ void PoseCache::seek(float t) {
         const NodePose* pp = parent ? &poses_[parent->pose] : nullptr;
         if (local) it.local = compose(it.pos, it.rot, it.scale);
         it.worldChanged = local || (parent && parent->worldChanged);
-        if (it.worldChanged) p.world = (pp ? pp->world : glm::mat3(1.0f)) * it.local;
+        if (it.worldChanged) p.world = (pp ? pp->world : glm::mat4(1.0f)) * it.local;
         it.colorChanged = colour || (parent && parent->colorChanged && it.node->inheritColor);
         if (it.colorChanged) {
             const glm::vec4 own = glm::clamp(it.color, 0.0f, 1.0f);
@@ -433,6 +463,7 @@ void eventsBetween(const Clip& c, float t0, float t1, std::vector<std::string>& 
 namespace {
 
 json vec(const glm::vec2& v) { return json::array({v.x, v.y}); }
+json vec(const glm::vec3& v) { return json::array({v.x, v.y, v.z}); }
 json vec(const glm::vec4& v) { return json::array({v.x, v.y, v.z, v.w}); }
 json easeToJson(const Ease& e) {
     if (e.kind == Ease::kBezier) return json::array({e.bezier[0], e.bezier[1], e.bezier[2], e.bezier[3]});
@@ -453,9 +484,9 @@ json nodeToJson(const Node& n) {
     json j;
     j["name"] = n.name;
     if (!n.sprite.empty()) j["sprite"] = n.sprite;
-    if (n.pos != glm::vec2(0)) j["pos"] = vec(n.pos);
-    if (n.rot != 0) j["rot"] = n.rot;
-    if (n.scale != glm::vec2(1)) j["scale"] = vec(n.scale);
+    if (n.pos != glm::vec3(0)) j["pos"] = vec(n.pos);
+    if (n.rot != glm::vec3(0)) j["rot"] = vec(n.rot);
+    if (n.scale != glm::vec3(1)) j["scale"] = vec(n.scale);
     if (n.color != glm::vec4(1)) j["color"] = vec(n.color);
     if (!n.visible) j["visible"] = false;
     if (n.hasPivot) j["pivot"] = vec(n.pivot);
@@ -465,14 +496,13 @@ json nodeToJson(const Node& n) {
     if (n.loop) j["loop"] = true;
     if (!n.stayAtLastFrame) j["stayAtLastFrame"] = false;
     json tr = json::object();
-    auto v2 = [](const glm::vec2& v) { return vec(v); };
+    auto v3 = [](const glm::vec3& v) { return vec(v); };
     auto v4 = [](const glm::vec4& v) { return vec(v); };
-    auto f = [](float v) { return json(v); };
     auto s = [](const std::string& v) { return json(v); };
     auto b = [](bool v) { return json(v); };
-    if (!n.posKeys.empty()) tr["pos"] = keysToJson(n.posKeys, v2, true);
-    if (!n.rotKeys.empty()) tr["rot"] = keysToJson(n.rotKeys, f, true);
-    if (!n.scaleKeys.empty()) tr["scale"] = keysToJson(n.scaleKeys, v2, true);
+    if (!n.posKeys.empty()) tr["pos"] = keysToJson(n.posKeys, v3, true);
+    if (!n.rotKeys.empty()) tr["rot"] = keysToJson(n.rotKeys, v3, true);
+    if (!n.scaleKeys.empty()) tr["scale"] = keysToJson(n.scaleKeys, v3, true);
     if (!n.colorKeys.empty()) tr["color"] = keysToJson(n.colorKeys, v4, true);
     if (!n.spriteKeys.empty()) tr["sprite"] = keysToJson(n.spriteKeys, s, false);
     if (!n.visibleKeys.empty()) tr["visible"] = keysToJson(n.visibleKeys, b, false);
@@ -486,6 +516,14 @@ json nodeToJson(const Node& n) {
 }
 
 glm::vec2 toVec2(const json& j) { return {j.at(0).get<float>(), j.at(1).get<float>()}; }
+// [x, y, z]; a version 1 [x, y] gets z = `z`.
+glm::vec3 toVec3(const json& j, float z) {
+    return {j.at(0).get<float>(), j.at(1).get<float>(), j.size() > 2 ? j.at(2).get<float>() : z};
+}
+glm::vec3 toPos(const json& j) { return toVec3(j, 0.0f); }
+glm::vec3 toScale(const json& j) { return toVec3(j, 1.0f); }
+// [x, y, z] degrees; a version 1 number is the z (screen-plane) rotation.
+glm::vec3 toRot(const json& j) { return j.is_number() ? glm::vec3(0, 0, j.get<float>()) : toVec3(j, 0.0f); }
 glm::vec4 toVec4(const json& j) { return {j.at(0).get<float>(), j.at(1).get<float>(), j.at(2).get<float>(), j.at(3).get<float>()}; }
 
 void easeFromJson(const json& j, Ease& e, const std::string& where) {
@@ -516,9 +554,9 @@ void nodeFromJson(const json& j, Node& n, const std::string& where) {
     n.name = j.value("name", std::string());
     const std::string here = where + "/" + n.name;
     n.sprite = j.value("sprite", std::string());
-    if (j.contains("pos")) n.pos = toVec2(j["pos"]);
-    n.rot = j.value("rot", 0.0f);
-    if (j.contains("scale")) n.scale = toVec2(j["scale"]);
+    if (j.contains("pos")) n.pos = toPos(j["pos"]);
+    if (j.contains("rot")) n.rot = toRot(j["rot"]);
+    if (j.contains("scale")) n.scale = toScale(j["scale"]);
     if (j.contains("color")) n.color = toVec4(j["color"]);
     n.visible = j.value("visible", true);
     if (j.contains("pivot")) { n.hasPivot = true; n.pivot = toVec2(j["pivot"]); }
@@ -531,9 +569,9 @@ void nodeFromJson(const json& j, Node& n, const std::string& where) {
     n.stayAtLastFrame = j.value("stayAtLastFrame", true);
     if (j.contains("tracks")) {
         const json& tr = j["tracks"];
-        keysFromJson(tr, "pos", n.posKeys, toVec2, here);
-        keysFromJson(tr, "rot", n.rotKeys, [](const json& v) { return v.get<float>(); }, here);
-        keysFromJson(tr, "scale", n.scaleKeys, toVec2, here);
+        keysFromJson(tr, "pos", n.posKeys, toPos, here);
+        keysFromJson(tr, "rot", n.rotKeys, toRot, here);
+        keysFromJson(tr, "scale", n.scaleKeys, toScale, here);
         keysFromJson(tr, "color", n.colorKeys, toVec4, here);
         keysFromJson(tr, "sprite", n.spriteKeys, [](const json& v) { return v.get<std::string>(); }, here);
         keysFromJson(tr, "visible", n.visibleKeys, [](const json& v) { return v.get<bool>(); }, here);
@@ -552,6 +590,9 @@ bool parseAnim(const std::string& text, AnimFile& out, std::string* err) {
         const json j = json::parse(text);
         AnimFile f;
         f.version = j.value("version", 1);
+        if (f.version > kAnimVersion)
+            throw std::runtime_error("version " + std::to_string(f.version) + " is newer than this build reads (" +
+                                     std::to_string(kAnimVersion) + ")");
         if (j.contains("atlases")) {
             for (const json& a : j["atlases"]) {
                 AtlasRef r;
@@ -585,7 +626,7 @@ bool parseAnim(const std::string& text, AnimFile& out, std::string* err) {
 
 std::string animToJson(const AnimFile& f) {
     json j;
-    j["version"] = f.version;
+    j["version"] = kAnimVersion;
     if (!f.atlases.empty()) {
         json a = json::array();
         for (const AtlasRef& r : f.atlases) {   // the short form when the id is the default one

@@ -22,6 +22,10 @@ public:
     // asks first whether to discard them; `discard` answers instead (tests). False = stayed.
     bool openClip(int row, int discard = -1);
 
+signals:
+    // A clip was opened from the list (double-click / Enter): the editor plays it from the start.
+    void clipActivated(int row);
+
 private:
     void rebuild();
     void refreshProps();

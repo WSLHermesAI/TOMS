@@ -43,6 +43,8 @@ double distToSegment(const QPointF& p, const QPointF& a, const QPointF& b)
 }
 
 QTransform toQt(const glm::mat3& m) { return QTransform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1]); }
+// A node's 3D world as the editor's orthographic screen camera shows it (what the game draws).
+QTransform toQt(const glm::mat4& m) { return toQt(toms::anim::flatten(m)); }
 
 QPolygonF corners(const Quad& q)
 {
@@ -95,12 +97,6 @@ void AnimViewport::setTool(Tool t)
     m_tool = t;
     update();
     emit toolChanged(t);
-}
-
-void AnimViewport::setShowGrid(bool on)
-{
-    m_grid = on;
-    update();
 }
 
 QSize AnimViewport::contentSize() const { return m_stage.size().toSize(); }
@@ -202,17 +198,6 @@ void AnimViewport::paintGameScene(const GameScene& s)
                 atlases.emplace_back(m_doc->atlasId(i).toStdString(), m_doc->atlasAt(i).path.toStdString(), &m_doc->atlasAt(i).atlas);
         m_tex.setAtlases(atlases);
     }
-    if (m_grid && zoom() * 16 >= 6) {
-        const QPointF a = toContent(QPointF(0, 0)), b = toContent(QPointF(width(), height()));
-        for (double x = std::floor(a.x() / 16) * 16; x <= b.x(); x += 16) {
-            const double wx = std::round(toWidget(QPointF(x, 0)).x()) + 0.5;
-            s.line(QPointF(wx, 0), QPointF(wx, height()), 1, tc.grid);
-        }
-        for (double y = std::floor(a.y() / 16) * 16; y <= b.y(); y += 16) {
-            const double wy = std::round(toWidget(QPointF(0, y)).y()) + 0.5;
-            s.line(QPointF(0, wy), QPointF(width(), wy), 1, tc.grid);
-        }
-    }
     const QPointF o = toWidget(QPointF(0, 0));   // origin cross: where the game places the clip
     s.line(QPointF(std::round(o.x()) + 0.5, 0), QPointF(std::round(o.x()) + 0.5, height()), 1, tc.gridAxis);
     s.line(QPointF(0, std::round(o.y()) + 0.5), QPointF(width(), std::round(o.y()) + 0.5), 1, tc.gridAxis);
@@ -234,20 +219,8 @@ void AnimViewport::paintContent(QPainter& p)
     rebuild();
     const Theme::Colors& tc = Theme::colors();
     const QTransform view = viewTransform();
-    const bool over = overGameScene();   // the game renderer drew the grid, origin and sprites
+    const bool over = overGameScene();   // the game renderer drew the origin and sprites
 
-    if (!over && m_grid && zoom() * 16 >= 6) {
-        const QPointF a = toContent(QPointF(0, 0)), b = toContent(QPointF(width(), height()));
-        p.setPen(QPen(tc.grid, 1));
-        for (double x = std::floor(a.x() / 16) * 16; x <= b.x(); x += 16) {
-            const double wx = std::round(toWidget(QPointF(x, 0)).x()) + 0.5;
-            p.drawLine(QPointF(wx, 0), QPointF(wx, height()));
-        }
-        for (double y = std::floor(a.y() / 16) * 16; y <= b.y(); y += 16) {
-            const double wy = std::round(toWidget(QPointF(0, y)).y()) + 0.5;
-            p.drawLine(QPointF(0, wy), QPointF(width(), wy));
-        }
-    }
     if (!over) {   // origin cross: where the game places the clip
         const QPointF o = toWidget(QPointF(0, 0));
         p.setPen(QPen(tc.gridAxis, 1));
@@ -317,13 +290,14 @@ AnimViewport::Gizmo AnimViewport::gizmo() const
         if (parentNode && pose.node == parentNode) parent = &pose;
     }
     if (!me) return g;
-    const glm::mat3 pw = parent ? parent->world : glm::mat3(1.0f);
+    const glm::mat3 pw = parent ? toms::anim::flatten(parent->world) : glm::mat3(1.0f);
+    const glm::mat3 mw = toms::anim::flatten(me->world);
     g.valid = true;
-    g.origin = toWidget(QPointF(me->world[2][0], me->world[2][1]));
+    g.origin = toWidget(QPointF(mw[2][0], mw[2][1]));
     g.parentX = unit(QPointF(pw[0][0], pw[0][1]));
     g.parentY = unit(QPointF(pw[1][0], pw[1][1]));
-    g.nodeX = unit(QPointF(me->world[0][0], me->world[0][1]));
-    g.nodeY = unit(QPointF(me->world[1][0], me->world[1][1]));
+    g.nodeX = unit(QPointF(mw[0][0], mw[0][1]));
+    g.nodeY = unit(QPointF(mw[1][0], mw[1][1]));
     g.parentDet = double(pw[0][0]) * pw[1][1] - double(pw[1][0]) * pw[0][1];
     g.parentToContent = toQt(pw);
     return g;
@@ -529,7 +503,7 @@ void AnimViewport::applyDrag(const QPointF& w, Qt::KeyboardModifiers mods)
         if (mods & Qt::ShiftModifier) delta = std::round(delta / 15) * 15;
         else if (m_snap) delta = std::round(delta);
         Value v = m_startRot;
-        v.v.x += float(delta);
+        v.v.z += float(delta);   // the screen-plane turn (rot z); x / y tilts are typed in Properties
         m_doc->setChannel(Channel::Rot, v, key);
         update();
         break;
@@ -542,6 +516,7 @@ void AnimViewport::applyDrag(const QPointF& w, Qt::KeyboardModifiers mods)
             const double f = std::exp(((w.x() - m_dragStart.x()) - (w.y() - m_dragStart.y())) / 150.0);
             v.v.x *= float(f);
             v.v.y *= float(f);
+            v.v.z *= float(f);   // uniform: all three
         } else {
             const QPointF u = m_drag == Drag::ScaleX ? g.nodeX : g.nodeY;
             double p0 = dot(m_dragStart - g.origin, u);

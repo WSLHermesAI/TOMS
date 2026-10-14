@@ -97,8 +97,43 @@ void CanvasView::paintCoordinates(QPainter& p)
         p.setPen(QPen(line, 1));
         p.drawLine(QPointF(0, wy), QPointF(width(), wy));
         if (wy > height() - fm.height() - 4) continue;   // the corner belongs to the x values
+        if (wy < fm.height() + 30) continue;                // the top strip: the canvases' own labels (clip, time)
         p.setPen(text);
         p.drawText(QPointF(4, wy - 3), coordinateText(y, step));
+    }
+
+    // The cursor: its position next to it, and on the two edges (a highlighted mark among the values).
+    if (m_cursorIn && rect().contains(m_cursor.toPoint())) {
+        const QPointF c = toContent(m_cursor);
+        const int decimals = m_zoom >= 8 ? 1 : 0;   // zoomed in far: tenths of a content pixel
+        const QString xs = QString::number(c.x(), 'f', decimals), ys = QString::number(c.y(), 'f', decimals);
+        const QColor mark = tc.selection;
+        // the guide lines through the cursor, faint
+        QColor guide = mark;
+        guide.setAlpha(90);
+        p.setPen(QPen(guide, 1, Qt::DashLine));
+        const double cx = std::round(m_cursor.x()) + 0.5, cy = std::round(m_cursor.y()) + 0.5;
+        p.drawLine(QPointF(cx, 0), QPointF(cx, height()));
+        p.drawLine(QPointF(0, cy), QPointF(width(), cy));
+        // x on the bottom edge, y on the left edge
+        auto edgeTag = [&](const QRectF& r, const QString& t) {
+            p.setPen(Qt::NoPen);
+            p.setBrush(mark);
+            p.drawRoundedRect(r, 2, 2);
+            p.setPen(Qt::white);
+            p.drawText(r, Qt::AlignCenter, t);
+        };
+        const double tw = fm.horizontalAdvance(xs) + 8, th = fm.height() + 2;
+        edgeTag(QRectF(std::clamp(cx - tw / 2, 0.0, width() - tw), height() - th, tw, th), xs);
+        const double yw = fm.horizontalAdvance(ys) + 8;
+        edgeTag(QRectF(0, std::clamp(cy - th / 2, 0.0, height() - th), yw, th), ys);
+        // next to the cursor (kept inside the canvas)
+        const QString both = xs + QStringLiteral(", ") + ys;
+        const QSizeF box(fm.horizontalAdvance(both) + 10, fm.height() + 4);
+        QPointF at = m_cursor + QPointF(14, 14);
+        if (at.x() + box.width() > width()) at.setX(m_cursor.x() - 14 - box.width());
+        if (at.y() + box.height() > height() - th) at.setY(m_cursor.y() - 14 - box.height());
+        drawLabel(p, at, both);
     }
     p.restore();
 }
@@ -248,6 +283,14 @@ bool CanvasView::panRelease(QMouseEvent* e)
 
 bool CanvasView::event(QEvent* e)
 {
+    if (e->type() == QEvent::MouseMove || e->type() == QEvent::Leave) {   // the cursor readout (paintCoordinates)
+        const bool in = e->type() == QEvent::MouseMove;
+        if (in) m_cursor = static_cast<QMouseEvent*>(e)->position();
+        if (in != m_cursorIn || in) {
+            m_cursorIn = in;
+            if (coordinatesShown()) update();
+        }
+    }
     if (e->type() == QEvent::ContextMenu && m_eatContextMenu) {
         m_eatContextMenu = false;
         e->accept();

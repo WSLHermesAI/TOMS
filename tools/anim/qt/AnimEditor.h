@@ -54,6 +54,8 @@ public:
 
     bool openFile(const QString& path, bool askForAtlas = true);
     bool maybeSave();
+    // Convert > MPDI Folder: the old engine's .mpdi (and their .pi) under a folder -> .anim (+ atlases).
+    void convertMpdiFolder();
     bool save();
     bool saveAs(const QString& startDir = QString());   // the dialog opens in startDir when given
     bool saveTo(const QString& path);
@@ -106,7 +108,7 @@ private:
     QAction *m_newAct, *m_openAct, *m_saveAct, *m_saveAsAct, *m_addAtlasAct, *m_reloadAtlasAct, *m_quitAct;
     QAction *m_undoAct, *m_redoAct;
     QAction *m_addChildAct, *m_addSiblingAct, *m_addSpriteAct, *m_dupAct, *m_deleteAct, *m_renameAct, *m_upAct, *m_downAct;
-    QAction *m_moveAct, *m_rotateAct, *m_scaleAct, *m_autoKeyAct, *m_snapAct, *m_gridAct;
+    QAction *m_moveAct, *m_rotateAct, *m_scaleAct, *m_autoKeyAct, *m_snapAct;
     QAction *m_insertKeyAct, *m_qualifyAct, *m_fitAct, *m_zoomInAct, *m_zoomOutAct, *m_frameAct;
     QAction *m_helpCliAct, *m_aboutAct;
 };
