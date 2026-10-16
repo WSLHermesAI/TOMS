@@ -422,3 +422,34 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     cgltf's `fopen`. Now the command line is read wide and every read (incl. cgltf's buffers) goes through
     `std::filesystem::u8path`. `gltf_model_test` checks a non-ASCII `.gltf` + `.bin`.
   - Changed-only run: 96 of 101 tests, all pass. Full suite and web not run.
+- **2026-10-16** — **Editor release folder** (committed `090736d`, without its `.gitattributes` LFS rule):
+  - `Editor/`: 6 editors + `atlaspack` + `fontpack` with Qt, dxcompiler and the VC145 runtime (33 files, 101.6 MB,
+    Git LFS), launchers, README (en, zh_TW), `AI_GUIDE.md` (formats, templates, check commands tried with the packaged
+    tools), `BUILD_INFO.md`. `tools/package_editors.py`: build, copy, `--check`.
+  - The particle editor finds `assets/media/atlas/fx.atlas` relative to `Editor/bin`.
+  - All tests: 101 of 101, desktop and web.
+- **2026-10-16** — **NPCs and their events** ([../event_editor/08_NPC_DIALOGUE.md](../event_editor/08_NPC_DIALOGUE.md)):
+  - Design and 11 owner decisions, then built: `talk_system.h` (NPC files, chat rotation, topics, menu rule,
+    conditional start), `story_actions.h` (one action list; `checkActions` for data checks), conditions
+    `varAtLeast` / `varEquals` / `talkCountAtLeast` / `onStage`, run state `vars` / `npcTalk` / `eventCounts`.
+  - `Game::talkTo` replaces the NPC → dialogue table in `game_input.cpp`; dialogue choices take `actions`,
+    `finish`, `fire`, `id`; the dialogue box shows the speaker's name.
+  - Repeatable events (`once: false`, `maxTimes`), `varChanged` events, a title notice for events with no tile / NPC,
+    an NPC file's `sprite`.
+  - The village elder on F02: seven talk events, 12 dialogues, `story/vars.json`.
+  - Tests: `unit.talk_system_test` (154), `smoke.talk_menu`, `smoke.talk_chain`, `smoke.talk_trusted`,
+    `smoke.talk_repeat`; `event_chain_test` uses `checkActions`.
+- **2026-10-16** — **Web editors for NPCs and dialogues:**
+  - Event editor: talk fields (Dialogue, After finishing, Talked to on, Menu order), Repeat; NPCs tab with a talk
+    preview (the game's rules); Dialogues tab (node cards); one condition-row editor for events, chat lines, choices and
+    start rows (ten kinds, all / any, not, JSON fallback; the tutorial's condition step still works); new fields kept
+    by both save paths; NPC and dialogue files saved.
+  - Stage editor: an NPC's panel (topics, "only on F07", a jump to the NPCs tab); events / NPCs reloaded live; the
+    story check counts dialogue actions.
+  - Checked headless in Chrome; no automated tests.
+- **2026-10-16** — **Fonts:**
+  - `NotoSansCJKtc-TOMS.otf` rebuilt (30 missing characters); test `data.ui_font_covers_text`
+    (`make_ui_font.py --check`, 77 = no fontTools).
+  - `rml_ui.cpp` loads a system CJK font as the last fallback face (Windows `msjh.ttc` …, Android
+    `NotoSansCJK-Regular.ttc` face 3; `TOMS_SYSTEM_FONT`). Proved on Windows with the old subset; the Android APK builds.
+  - Changed-only run: 69 of 107 tests, all pass. Full suite and web build not run after the NPC work.

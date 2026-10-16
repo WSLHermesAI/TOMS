@@ -203,6 +203,7 @@ bool Game::loadAssets(const std::string& assetDir) {
                 if (!k.empty() && k[0] != '_' && v.is_object() && v.contains("label")) counterLabels_[k] = v["label"];
     }
     loadEventDefs(assetDir);
+    loadNpcs(assetDir);   // NPC files and event variables (docs/event_editor/08_NPC_DIALOGUE.md)
     // data/store.json: which of those items the store sells, and how prices grow
     loadStore(assetDir);
     // data/stats.json: the player's attributes and the level-up numbers (docs/20_PLAYER_MENU.md section 3).

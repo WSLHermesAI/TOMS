@@ -1,4 +1,5 @@
-/* Shared look for the event editor mockups: the dark Qt theme of toms_editor. */
+/* Shared look for the event editor mockups: the dark Qt theme of toms_editor.
+   Font sizes are multiplied by --fs: the event editor's text size (🔍); 1 when nothing sets it. */
 :root {
   --bg: #1c1e22;        /* QGraphicsView background in event_flow_view.cpp */
   --panel: #25282d;
@@ -25,7 +26,7 @@
 html, body { margin: 0; height: 100%; }
 body {
   background: var(--bg); color: var(--text);
-  font: 13px/1.4 "Segoe UI", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  font: calc(13px * var(--fs, 1))/1.4 "Segoe UI", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
   display: flex; flex-direction: column;
 }
 a { color: var(--accent); }
@@ -39,7 +40,7 @@ button.primary { background: #2d5d9a; border-color: #3b74bd; }
 textarea { width: 100%; resize: vertical; }
 
 .banner {
-  background: #3a2f14; color: #ffd98a; padding: 4px 12px; font-size: 12px;
+  background: #3a2f14; color: #ffd98a; padding: 4px 12px; font-size: calc(12px * var(--fs, 1));
   border-bottom: 1px solid #5a4a20; display: flex; gap: 12px; align-items: center;
 }
 .banner a { color: #ffd98a; }
@@ -63,7 +64,7 @@ textarea { width: 100%; resize: vertical; }
 .main { flex: 1; display: flex; min-height: 0; }
 .dock { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
 .dock.right { border-right: none; border-left: 1px solid var(--line); }
-.dock h3 { margin: 0; padding: 6px 10px; font-size: 12px; font-weight: 600; color: var(--muted); background: var(--panel-2); border-bottom: 1px solid var(--line); text-transform: uppercase; letter-spacing: .04em; }
+.dock h3 { margin: 0; padding: 6px 10px; font-size: calc(12px * var(--fs, 1)); font-weight: 600; color: var(--muted); background: var(--panel-2); border-bottom: 1px solid var(--line); text-transform: uppercase; letter-spacing: .04em; }
 .dock .body { overflow: auto; padding: 8px 10px; flex: 1; }
 .center { flex: 1; overflow: auto; position: relative; min-width: 0; }
 
@@ -76,22 +77,22 @@ textarea { width: 100%; resize: vertical; }
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
 
 .field { margin-bottom: 10px; }
-.field > label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 3px; }
+.field > label { display: block; color: var(--muted); font-size: calc(12px * var(--fs, 1)); margin-bottom: 3px; }
 .field input[type=text], .field select { width: 100%; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; }
-.chip { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; font-size: 12px; }
+.chip { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; font-size: calc(12px * var(--fs, 1)); }
 .chip button { background: none; border: none; padding: 0 0 0 4px; color: var(--muted); }
-.kind { border-radius: 3px; padding: 0 6px; font-size: 11px; color: #111; font-weight: 600; }
-.warnTag { color: var(--warn); font-size: 12px; }
+.kind { border-radius: 3px; padding: 0 6px; font-size: calc(11px * var(--fs, 1)); color: #111; font-weight: 600; }
+.warnTag { color: var(--warn); font-size: calc(12px * var(--fs, 1)); }
 .muted { color: var(--muted); }
 
-.statusbar { background: var(--panel); border-top: 1px solid var(--line); padding: 3px 10px; color: var(--muted); font-size: 12px; display: flex; gap: 16px; }
+.statusbar { background: var(--panel); border-top: 1px solid var(--line); padding: 3px 10px; color: var(--muted); font-size: calc(12px * var(--fs, 1)); display: flex; gap: 16px; }
 
 .toast { position: fixed; right: 16px; bottom: 36px; background: #2d5d9a; color: #fff; padding: 8px 14px; border-radius: 4px; box-shadow: 0 4px 14px #0008; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 420px; white-space: pre-line; }
 .toast.show { opacity: 1; }
 
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-th { color: var(--muted); font-weight: 600; font-size: 12px; position: sticky; top: 0; background: var(--panel); }
+th { color: var(--muted); font-weight: 600; font-size: calc(12px * var(--fs, 1)); position: sticky; top: 0; background: var(--panel); }
 tr.row:hover { background: var(--panel-2); cursor: pointer; }
 tr.row.sel { background: #2d4a70; }

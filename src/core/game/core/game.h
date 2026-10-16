@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <random>
 #include <json.hpp>
 #include "object.h"      // Trackable base: Player/EnemyInst/CombatState/Game are tracked
 #include "render_iface.h"
@@ -24,6 +25,7 @@
 #include "entity_status.h"   // toms::EntityStatus/entityStatusKey — see Game::entityStatus_
 #include "roamer.h"          // toms::Roamer — S1: floor wanderers that chase the player
 #include "run_state.h"       // toms::RunStoryState — S3: choices/counters/side stories/flags/shards
+#include "talk_system.h"     // toms::talk -- NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md)
 #include "floor_table.h"     // toms::FloorTable — S3.5: the 70-floor tower as ordered data
 #include "stage.h"
 #include "ui_state.h"       // toms::UiState -- what the UI shows (see buildUiState)
@@ -70,6 +72,12 @@ struct DialogueNode : public Trackable {
 struct DialogueChoice {
     std::string label, next;
     nlohmann::json action;   // null if the choice has no action (the common case today)
+    // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md section 6.2): story actions (story_actions.h),
+    // whether picking it finishes the dialogue's event, the events it wakes, and its id for `choiceMade`.
+    nlohmann::json actions;
+    bool finish = false;
+    std::vector<std::string> fire;
+    std::string id;
 };
 
 // Battle System v2 (docs/design/BATTLE_SYSTEM_V2_PROPOSALS.md): replaces the old strictly-alternating
@@ -205,7 +213,10 @@ public:
         if (n <= 0) return;
         dlgSel = ((dlgSel + delta) % n + n) % n;
     }
-    void startDialogue(const std::string& npc);   // open an NPC dialogue (public for tests)
+    void startDialogue(const std::string& npc);   // open a dialogue file by id (public for tests)
+    // Talk to an NPC (docs/event_editor/08_NPC_DIALOGUE.md): a chat line, one topic, or the topic menu.
+    void talkTo(const std::string& npcId);
+    std::string dialogueSpeaker() const { return dlgSpeaker_; }
     void enterNode(const std::string& node);      // jump to a dialogue node (public for tests)
     void startCombat(const EnemyInst& e);
     // Verification hooks (debugStartNearestBattle .. debugWarpPlayer): the old web entry exposed
@@ -752,12 +763,14 @@ private:
         std::string stairsFrom, stairsTo;     // a "go to the stairs" event (Q7): its text is built from these
         std::vector<std::string> next;
         nlohmann::json requires;              // null = none
-        nlohmann::json actions;               // null = none: give / addCounter / setFlag (runEventActions)
+        nlohmann::json actions;               // null = none: story actions (story_actions.h), run once
+        std::string trigger = "step";         // "step" / "talk" / "chain" / "varChanged" (06 section 1)
+        std::string triggerVar;               // "varChanged": the variable
+        bool once = true;                     // false: repeatable, until maxTimes (0 = no limit); next wakes once
+        int maxTimes = 0;
+        std::string textKey;                  // "text"
         bool inLog = true;
     };
-    // An event's `actions` when it fires (docs/event_editor/06_EVENT_LOGIC.md section 1): give an item, add to a
-    // story counter, set a run flag.
-    void runEventActions(const nlohmann::json& actions);
     // A gate ("gate:<item id>" in a floor's legend): opens only for that item, which it takes; else says what
     // it needs. Opened gates stay open (entity status Opened).
     void bumpGate(Entity& gate);
@@ -770,7 +783,7 @@ private:
     struct StairUnlock { std::string floor, to; };
     std::map<std::string, std::vector<StairUnlock>> stairUnlocks_;
     void loadStairLocks();
-    void finishEvent(const std::string& evId);
+    void finishEvent(const std::string& evId, int depth = 0);
     bool stairLocked(const toms::StairLink& s) const { return !s.unlockEvent.empty() && !run_.eventFinished(s.unlockEvent); }
     bool stepOntoStairs(int x, int y);       // the stair at (x, y), if open: ask to take it
     void bumpLockedStairs(const toms::StairLink& s);
@@ -790,6 +803,43 @@ private:
     std::string dlgNode = "root";
     nlohmann::json dlgData;
     std::vector<DialogueChoice> dlgChoices;
+    // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md, talk_system.h): the NPC files, the events bound
+    // to each NPC (in menu order), and what the open dialogue is for: a plain dialogue, an NPC's chat line, an
+    // event's topic, a finished event's after-dialogue, or the topic menu.
+    enum class DlgMode { Plain, Chat, Topic, After, Menu };
+    DlgMode dlgMode_ = DlgMode::Plain;
+    std::string dlgEvent_;              // Topic / After: the event
+    std::string dlgSpeaker_;            // the name on the dialogue box (empty: none)
+    std::string dlgTalkNpc_;            // the NPC being talked to (the menu's "Just chat")
+    bool dlgFinishOnClose_ = false;     // Topic: the file's "finishOnClose"
+    std::map<std::string, toms::talk::NpcDef> npcDefs_;
+    std::map<std::string, std::vector<toms::talk::Topic>> npcTopics_;
+    std::mt19937 talkRng_{20261016u};   // "random" chat lines (fixed seed: scripted test runs repeat)
+    void loadNpcs(const std::string& assetDir);
+    bool holds(const nlohmann::json& condition) const;   // a `requires` against the run, with the current stage
+    const toms::talk::NpcDef& npcDef(const std::string& npcId);
+    nlohmann::json readDialogue(const std::string& id) const;
+    bool openDialogue(const nlohmann::json& data, DlgMode mode);   // from its start node; false = nothing to show
+    void playChatLine(const std::string& npcId, int line);
+    void openTopic(const std::string& eventId, bool finished);
+    void openTopicMenu(const std::string& npcId, const std::vector<toms::talk::MenuEntry>& menu);
+    void endDialogue();                 // closes it (Topic + finishOnClose: finishes the event)
+    void finishTalkEvent(const std::string& eventId);
+    // Wakes an event (an event's `next`, a choice's `fire`, the fireEvent action): it is started; a "chain" event
+    // whose `requires` holds runs at once (its actions, then finished, which wakes its own `next`).
+    void wakeEvent(const std::string& eventId, int depth = 0);
+    // Every story action in the game goes through here (story_actions.h): events, chat lines, dialogue choices.
+    void runStoryActions(const nlohmann::json& actions);
+    // One run of an event (docs/event_editor/08_NPC_DIALOGUE.md section 11.1): its record's actions, counted; the first
+    // time it is also finished (flag, log, `next`, stairs). A finished one-off does nothing (false); a repeatable one
+    // ("once": false) runs again until "maxTimes".
+    bool completeEvent(const std::string& eventId, int depth = 0);
+    bool canRepeat(const std::string& eventId) const;
+    // An event variable changed: the "varChanged" events on it whose `requires` holds run (with their title as a notice).
+    void varChanged(const std::string& var);
+    int varChangeDepth_ = 0;            // a variable changed by a varChanged event's own actions: at most 16 deep
+    void noticeEventTitle(const std::string& eventId);   // an event with no tile and no NPC ran: its title as a notice
+    std::string npcSprite(const std::string& npcId) const;   // its NPC file's "sprite", else npc_<id>, else the old table
     // enemy templates
     std::map<std::string, nlohmann::json> enemyTpl;
     // The battle scene's tuning, from data/battle.json (loadAssets). Without the file or a key, the defaults below.

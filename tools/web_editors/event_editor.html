@@ -9,24 +9,25 @@
   .menubar .edtitle { padding: 3px 9px; color: var(--text); }
   .menubar #dirtyMark { padding: 3px 0; }
   .steps { width: 340px; }
-  .steps.collapsed { display: none; }
+  .steps.collapsed, .steps.collapsed + .split { display: none; }
+  #pane svg, #ne { --fs: 1; }   /* drawn views: their text stays at the designed size (svgOpen scales the picture; the node graph has its own zoom) */
   .steps h3 { display: flex; align-items: center; gap: 6px; }
   .steps h3 .grow { flex: 1; }
-  .steps h3 button { padding: 0 7px; font-size: 11px; text-transform: none; letter-spacing: 0; }
+  .steps h3 button { padding: 0 7px; font-size: calc(11px * var(--fs, 1)); text-transform: none; letter-spacing: 0; }
   #tutBtn.on { background: #2d5d9a; border-color: #3b74bd; }
   .steps .body { padding-top: 6px; }
-  .part { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; margin: 10px 0 5px; text-transform: uppercase; }
+  .part { color: var(--muted); font-size: calc(11px * var(--fs, 1)); font-weight: 700; letter-spacing: .06em; margin: 10px 0 5px; text-transform: uppercase; }
   .step { border: 1px solid var(--line); border-radius: 5px; padding: 7px 10px; margin-bottom: 6px; background: var(--panel-2); opacity: .5; }
   .step.cur { opacity: 1; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
   .step.done { opacity: .8; border-color: #2f6b4b; }
   .step.playing { animation: pulse 1s ease infinite alternate; }
   @keyframes pulse { to { box-shadow: 0 0 0 3px var(--accent) inset; } }
-  .step h4 { margin: 0; font-size: 13px; display: flex; gap: 8px; align-items: center; }
-  .step .num { width: 20px; height: 20px; border-radius: 50%; background: var(--line); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex: none; }
+  .step h4 { margin: 0; font-size: calc(13px * var(--fs, 1)); display: flex; gap: 8px; align-items: center; }
+  .step .num { width: 20px; height: 20px; border-radius: 50%; background: var(--line); display: inline-flex; align-items: center; justify-content: center; font-size: calc(11px * var(--fs, 1)); flex: none; }
   .step.cur .num { background: var(--accent); color: #fff; }
   .step.done .num { background: var(--ok); color: #111; }
   .step p { margin: 6px 0 2px; }
-  .step .why { color: var(--muted); font-size: 12px; }
+  .step .why { color: var(--muted); font-size: calc(12px * var(--fs, 1)); }
   .step .actions { margin-top: 6px; }
   .step code, .modal code, .insp code { background: #111317; padding: 0 4px; border-radius: 3px; }
   .playbar { display: flex; gap: 6px; margin-bottom: 4px; }
@@ -37,37 +38,37 @@
   .top { flex: 1 1 52%; display: flex; min-height: 0; border-bottom: 1px solid var(--line); }
   .bottom { flex: 1 1 48%; display: flex; flex-direction: column; min-height: 0; }
   .tree li.pool { display: flex; justify-content: space-between; align-items: center; }
-  .tree li.pool button { padding: 0 6px; font-size: 11px; }
+  .tree li.pool button { padding: 0 6px; font-size: calc(11px * var(--fs, 1)); }
   .tree li.ghost { padding-left: 16px; color: #ff9b9b; }
   .filt { margin-bottom: 6px; }
   .filt input[type=search] { width: 100%; }
-  .filtrow { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; }
-  .filtrow select { flex: 1; min-width: 0; font-size: 12px; }
+  .filtrow { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: calc(12px * var(--fs, 1)); }
+  .filtrow select { flex: 1; min-width: 0; font-size: calc(12px * var(--fs, 1)); }
   .filtrow label { white-space: nowrap; color: var(--muted); }
-  .fcount { color: var(--muted); font-size: 11px; margin-top: 3px; min-height: 14px; }
-  .fcount button { padding: 0 5px; font-size: 11px; margin-left: 4px; }
+  .fcount { color: var(--muted); font-size: calc(11px * var(--fs, 1)); margin-top: 3px; min-height: 14px; }
+  .fcount button { padding: 0 5px; font-size: calc(11px * var(--fs, 1)); margin-left: 4px; }
   .treebar { display: flex; gap: 4px; margin-top: 3px; }
-  .treebar button { flex: 1; padding: 0 4px; font-size: 11px; color: var(--muted); }
+  .treebar button { flex: 1; padding: 0 4px; font-size: calc(11px * var(--fs, 1)); color: var(--muted); }
   .tree li.grp { cursor: pointer; user-select: none; }
   .tree li.grp:hover { background: var(--panel-2); }
-  .tree .cnt { color: var(--muted); font-weight: normal; font-size: 11px; }
+  .tree .cnt { color: var(--muted); font-weight: normal; font-size: calc(11px * var(--fs, 1)); }
   .tree mark { background: #ffd24c; color: #1b1b1b; border-radius: 2px; padding: 0 1px; }
-  .tree .hit { display: block; color: var(--muted); font-size: 11px; padding-left: 14px; overflow: hidden; text-overflow: ellipsis; }
-  .tree .new { color: var(--ok); font-size: 10px; font-weight: 700; margin-left: 4px; }
+  .tree .hit { display: block; color: var(--muted); font-size: calc(11px * var(--fs, 1)); padding-left: 14px; overflow: hidden; text-overflow: ellipsis; }
+  .tree .new { color: var(--ok); font-size: calc(10px * var(--fs, 1)); font-weight: 700; margin-left: 4px; }
   .insp { padding: 12px 18px; max-width: 780px; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .err { color: var(--bad); font-size: 12px; margin-top: 2px; }
+  .err { color: var(--bad); font-size: calc(12px * var(--fs, 1)); margin-top: 2px; }
   .lang { display: grid; grid-template-columns: 54px 1fr; gap: 6px; align-items: start; margin-bottom: 4px; }
   .lang span { color: var(--muted); padding-top: 4px; }
-  .preview { background: #0d0f12; border: 2px solid #6b5a3a; border-radius: 6px; padding: 10px 14px; color: #f3e6c8; font-size: 15px; min-height: 44px; }
-  .preview small { display: block; color: #a89a7c; font-size: 11px; white-space: normal; }
+  .preview { background: #0d0f12; border: 2px solid #6b5a3a; border-radius: 6px; padding: 10px 14px; color: #f3e6c8; font-size: calc(15px * var(--fs, 1)); min-height: 44px; }
+  .preview small { display: block; color: #a89a7c; font-size: calc(11px * var(--fs, 1)); white-space: normal; }
   .preview { white-space: pre-line; }   /* Enter in a text box = a new line (\n), shown as one here */
   .lang textarea { overflow: hidden; }
-  .nlhint { color: var(--muted); font-size: 11px; font-weight: normal; margin-left: 6px; }
+  .nlhint { color: var(--muted); font-size: calc(11px * var(--fs, 1)); font-weight: normal; margin-left: 6px; }
   .banner-bad { border: 1px solid #6b2a2a; background: #3a1b1b; border-radius: 5px; padding: 10px 12px; margin-bottom: 10px; }
   .banner-warn { border: 1px solid #6a5420; background: #3a2f14; border-radius: 5px; padding: 8px 12px; margin-bottom: 10px; color: #ffd98a; }
   .popover { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px; box-shadow: 0 6px 20px #000a; z-index: 5; width: 470px; }
-  .popover .act { margin: 6px 0 2px; color: var(--muted); font-size: 11px; }
+  .popover .act { margin: 6px 0 2px; color: var(--muted); font-size: calc(11px * var(--fs, 1)); }
   .popover .grid { display: flex; flex-wrap: wrap; gap: 2px 10px; }
   .popover .scroll { max-height: 230px; overflow: auto; }
   .empty { padding: 26px; color: var(--muted); }
@@ -79,7 +80,7 @@
   .dhead .grow { flex: 1; }
   #pane { flex: 1; overflow: auto; position: relative; }
   .node rect { stroke-width: 1.5; }
-  .node text { font-size: 12px; fill: #fff; pointer-events: none; }
+  .node text { font-size: calc(12px * var(--fs, 1)); fill: #fff; pointer-events: none; }
   .node { cursor: pointer; }
   .node.faded { opacity: .33; }
   .node.hl rect.box { stroke: #fff; stroke-width: 2.5; }
@@ -90,18 +91,18 @@
   .edge.miss { stroke: var(--bad); stroke-dasharray: 5 3; }
   .edge.fresh { stroke: var(--ok); stroke-width: 2.5; stroke-dasharray: 600; stroke-dashoffset: 600; animation: grow 1.1s ease forwards; }
   @keyframes grow { to { stroke-dashoffset: 0; } }
-  .colhead { fill: var(--muted); font-size: 11px; letter-spacing: .05em; }
-  .note { fill: var(--bad); font-size: 12px; }
+  .colhead { fill: var(--muted); font-size: calc(11px * var(--fs, 1)); letter-spacing: .05em; }
+  .note { fill: var(--bad); font-size: calc(12px * var(--fs, 1)); }
 
   .plist { padding: 8px 12px; }
   .batch { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; align-items: center; }
   .batch .chap { border: 1px solid var(--line); background: var(--panel); border-radius: 4px; padding: 3px 8px; }
   .rulechips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-  .rulechip { border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 1px 10px; cursor: pointer; font-size: 12px; }
+  .rulechip { border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 1px 10px; cursor: pointer; font-size: calc(12px * var(--fs, 1)); }
   .rulechip.on { border-color: var(--accent); background: #24395a; }
   .sev-error { color: var(--bad); } .sev-warn { color: var(--warn); } .sev-info { color: var(--muted); }
   td.fix { text-align: right; white-space: nowrap; }
-  td.where { color: var(--muted); font-size: 12px; }
+  td.where { color: var(--muted); font-size: calc(12px * var(--fs, 1)); }
 
   .modal-bg { position: fixed; inset: 0; background: #000a; display: none; align-items: center; justify-content: center; z-index: 10; }
   .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; width: min(920px, 94vw); max-height: 86vh; display: flex; flex-direction: column; }
@@ -110,7 +111,7 @@
   .modal .content { overflow: auto; padding: 10px 14px; }
   .file { margin-bottom: 14px; }
   .file .path { font-weight: 600; margin-bottom: 4px; }
-  pre.diff { margin: 0; background: #111317; border: 1px solid var(--line); border-radius: 4px; padding: 8px; font: 12px/1.5 Consolas, "Cascadia Mono", monospace; overflow: auto; max-height: 260px; }
+  pre.diff { margin: 0; background: #111317; border: 1px solid var(--line); border-radius: 4px; padding: 8px; font: calc(12px * var(--fs, 1))/1.5 Consolas, "Cascadia Mono", monospace; overflow: auto; max-height: 260px; }
   pre.diff .add { color: #7ee2a8; background: #173323; display: block; }
   pre.diff .del { color: #ff9b9b; background: #3a1b1b; display: block; }
   pre.diff .ctx { color: #8b929c; display: block; }
@@ -118,7 +119,7 @@
 
   /* floor map + floor inspector */
   .fnode rect { stroke-width: 1.5; }
-  .fnode text { font-size: 12px; fill: #fff; pointer-events: none; }
+  .fnode text { font-size: calc(12px * var(--fs, 1)); fill: #fff; pointer-events: none; }
   .fnode { cursor: pointer; }
   .fnode.faded { opacity: .35; }
   .fnode.hl rect { stroke: #fff; stroke-width: 2.5; }
@@ -129,13 +130,13 @@
   .stair.lock { stroke: #e0b44c; stroke-dasharray: 6 4; stroke-width: 2; }
   .stair.miss { stroke: var(--bad); stroke-dasharray: 5 3; }
   .stair.fresh { stroke: var(--ok); stroke-width: 2.5; }
-  .locklbl { font-size: 11px; fill: #e0b44c; }
-  .rowlbl { fill: var(--muted); font-size: 11px; }
+  .locklbl { font-size: calc(11px * var(--fs, 1)); fill: #e0b44c; }
+  .rowlbl { fill: var(--muted); font-size: calc(11px * var(--fs, 1)); }
   table.stairs { width: auto; margin-bottom: 6px; }
   table.stairs td { border: none; padding: 2px 6px 2px 0; }
   table.stairs input.stTo { width: 80px; }
   table.stairs select.stUnlock { max-width: 300px; }
-  tr.sterr td { color: var(--bad); font-size: 12px; padding-bottom: 6px; }
+  tr.sterr td { color: var(--bad); font-size: calc(12px * var(--fs, 1)); padding-bottom: 6px; }
   .chip.link { cursor: pointer; }
   .chip.kpick { cursor: pointer; gap: 4px; display: inline-flex; align-items: center; margin: 1px 0; }
   .chip.kpick input { margin: 0; } .chip.kpick.on { border-color: var(--accent); background: rgba(90,150,255,.16); }
@@ -147,18 +148,19 @@
 
   /* event logic */
   .logic { border: 1px solid var(--line); border-radius: 5px; padding: 8px 10px; margin-bottom: 10px; background: #202328; }
-  .logic h4 { margin: 0 0 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .logic h4 { margin: 0 0 6px; font-size: calc(12px * var(--fs, 1)); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
   .lrow { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; flex-wrap: wrap; }
-  .lrow select, .lrow input { font-size: 12px; }
+  .lrow select, .lrow input { font-size: calc(12px * var(--fs, 1)); }
   .lrow input[type=number] { width: 64px; }
-  .lrow .lbl { color: var(--muted); font-size: 12px; min-width: 120px; }
+  .lrow .lbl { color: var(--muted); font-size: calc(12px * var(--fs, 1)); min-width: 120px; }
   .lrow button.del { padding: 0 6px; }
-  .rawjson { font: 11px Consolas, monospace; background: #111317; border: 1px solid var(--line); border-radius: 3px; padding: 4px; white-space: pre-wrap; }
-  table.vars td, table.vars th { font-size: 12px; }
+  input.json { font: calc(11px * var(--fs, 1)) Consolas, monospace; } input.json.bad { border-color: var(--bad); }
+  .rawjson { font: calc(11px * var(--fs, 1)) Consolas, monospace; background: #111317; border: 1px solid var(--line); border-radius: 3px; padding: 4px; white-space: pre-wrap; }
+  table.vars td, table.vars th { font-size: calc(12px * var(--fs, 1)); }
   table.vars input[type=number] { width: 64px; }
-  .vsec { margin: 10px 0 4px; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .vsec { margin: 10px 0 4px; color: var(--muted); font-size: calc(11px * var(--fs, 1)); font-weight: 700; text-transform: uppercase; }
   .lnode { cursor: pointer; }
-  .lnode text { font-size: 12px; fill: #fff; pointer-events: none; }
+  .lnode text { font-size: calc(12px * var(--fs, 1)); fill: #fff; pointer-events: none; }
   .lnode.faded { opacity: .3; }
   .lnode.hl rect { stroke: #fff; stroke-width: 2.5; }
   .ledge { fill: none; stroke-width: 1.6; }
@@ -168,7 +170,7 @@
   .ledge.reads { stroke: #a98bff; stroke-dasharray: 5 4; }
   .ledge.talk { stroke: #ff9f43; }
   .ledge.watch { stroke: #a98bff; stroke-dasharray: 2 3; }
-  .elbl { font-size: 11px; fill: #c7ccd4; }
+  .elbl { font-size: calc(11px * var(--fs, 1)); fill: #c7ccd4; }
 
   /* node graph, after thedmd/imgui-node-editor's blueprint style: headers, pins, bezier links, flow */
   .ne { position: absolute; inset: 0; overflow: hidden; background-color: #1a1c20; user-select: none; cursor: default;
@@ -184,13 +186,13 @@
   @keyframes neflow { to { stroke-dashoffset: -17; } }
   .nl.temp { stroke-dasharray: 6 4; opacity: .9; }
   .nlh { fill: none; stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: pointer; }
-  .nn { position: absolute; min-width: 190px; background: rgba(30,32,38,.95); border: 1px solid #4a505a; border-radius: 9px; box-shadow: 0 4px 14px #000a; font-size: 12px; }
+  .nn { position: absolute; min-width: 190px; background: rgba(30,32,38,.95); border: 1px solid #4a505a; border-radius: 9px; box-shadow: 0 4px 14px #000a; font-size: calc(12px * var(--fs, 1)); }
   .nn.sel { border-color: #ffd24c; box-shadow: 0 0 0 2px #ffd24c66, 0 4px 14px #000a; }
   .nn.missing { border-color: var(--bad); }
   .nh { padding: 4px 10px 5px; border-radius: 8px 8px 0 0; color: #fff; cursor: move; display: flex; flex-direction: column;
     background: linear-gradient(90deg, color-mix(in srgb, var(--hc) 80%, transparent) 0%, color-mix(in srgb, var(--hc) 25%, transparent) 100%); }
   .nt { font-weight: 700; text-shadow: 0 1px 2px #000; }
-  .ns { font-size: 10.5px; opacity: .85; }
+  .ns { font-size: calc(10.5px * var(--fs, 1)); opacity: .85; }
   .nb { display: flex; justify-content: space-between; gap: 18px; padding: 6px 0 7px; }
   .nins, .nouts { display: flex; flex-direction: column; gap: 3px; }
   .pin { display: flex; align-items: center; gap: 6px; padding: 1px 9px; cursor: crosshair; white-space: nowrap; color: #d7dbe0; }
@@ -203,42 +205,42 @@
   .pin.ghost { opacity: .55; font-style: italic; }
   .pin.ok .pd { box-shadow: 0 0 0 4px #4cd18a88; } .pin.ok { color: #7ee2a8; }
   .pin.no { opacity: .22; }
-  .ne-hint { position: absolute; left: 8px; bottom: 6px; color: var(--muted); font-size: 11px; pointer-events: none; background: #000a; padding: 2px 7px; border-radius: 3px; }
+  .ne-hint { position: absolute; left: 8px; bottom: 6px; color: var(--muted); font-size: calc(11px * var(--fs, 1)); pointer-events: none; background: #000a; padding: 2px 7px; border-radius: 3px; }
   .ne-empty { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); color: var(--muted); pointer-events: none; text-align: center; max-width: 420px; }
   .ne-box { position: absolute; border: 1px solid #4c9eff; background: #4c9eff22; pointer-events: none; }
   .ne-menu { position: absolute; z-index: 6; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 18px #000b; width: 270px; max-height: 330px; display: flex; flex-direction: column; }
   .ne-menu input { margin: 6px; }
   .ne-menu .ml { overflow: auto; padding-bottom: 4px; }
-  .ne-menu .mg { color: var(--muted); font-size: 10.5px; padding: 5px 9px 2px; text-transform: uppercase; }
+  .ne-menu .mg { color: var(--muted); font-size: calc(10.5px * var(--fs, 1)); padding: 5px 9px 2px; text-transform: uppercase; }
   .ne-menu .mi { padding: 3px 12px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ne-menu .mi:hover { background: #2d4a70; }
   /* values map + value tabs */
   .vmap { position: relative; }
   .vtool { display: flex; gap: 8px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; flex-wrap: wrap; }
   .vtool input[type=search] { width: 220px; }
-  .vtool .vchip { border: 1px solid var(--line); border-radius: 12px; padding: 1px 9px; cursor: pointer; font-size: 12px; background: var(--panel-2); }
+  .vtool .vchip { border: 1px solid var(--line); border-radius: 12px; padding: 1px 9px; cursor: pointer; font-size: calc(12px * var(--fs, 1)); background: var(--panel-2); }
   .vtool .vchip.on { border-color: var(--accent); background: #24395a; }
   .vnode { cursor: pointer; }
-  .vnode text { font-size: 12px; fill: #fff; pointer-events: none; }
-  .vnode .badge { font-size: 10.5px; fill: #c7ccd4; }
+  .vnode text { font-size: calc(12px * var(--fs, 1)); fill: #fff; pointer-events: none; }
+  .vnode .badge { font-size: calc(10.5px * var(--fs, 1)); fill: #c7ccd4; }
   .vnode.faded, .vedge.faded { opacity: .15; }
   .vnode.hl rect { stroke: #fff; stroke-width: 2.4; }
   .vedge { fill: none; stroke-width: 1.6; }
   .vedge.w { stroke: #4c9eff; } .vedge.r { stroke: #a98bff; stroke-dasharray: 5 4; } .vedge.c { stroke: #a98bff; stroke-dasharray: 2 3; }
-  .vcol { fill: var(--muted); font-size: 11px; letter-spacing: .05em; }
-  .vcat { fill: #e0b44c; font-size: 11px; font-weight: 700; }
+  .vcol { fill: var(--muted); font-size: calc(11px * var(--fs, 1)); letter-spacing: .05em; }
+  .vcat { fill: #e0b44c; font-size: calc(11px * var(--fs, 1)); font-weight: 700; }
   tr.cathead td { background: #2a2620; color: #e8d9b0; cursor: pointer; padding-top: 5px; padding-bottom: 5px; }
-  tr.cathead button { padding: 0 6px; font-size: 11px; margin-left: 6px; }
-  input.vCat { font-size: 12px; }
+  tr.cathead button { padding: 0 6px; font-size: calc(11px * var(--fs, 1)); margin-left: 6px; }
+  input.vCat { font-size: calc(12px * var(--fs, 1)); }
   #vtip { position: fixed; z-index: 60; pointer-events: none; display: none; background: #0f1114f2; border: 1px solid #4a505a; border-radius: 5px; padding: 7px 10px;
-    font-size: 12px; max-width: 360px; box-shadow: 0 6px 18px #000b; color: var(--text); }
+    font-size: calc(12px * var(--fs, 1)); max-width: 360px; box-shadow: 0 6px 18px #000b; color: var(--text); }
   #vtip b { color: #fff; } #vtip .row { margin-top: 3px; } #vtip .muted { color: var(--muted); }
   .vtab { display: inline-flex; gap: 6px; align-items: center; }
   .vtab .x { opacity: .6; padding: 0 2px; border-radius: 3px; } .vtab .x:hover { opacity: 1; background: #ffffff22; }
   .vt { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 14px; padding: 10px 14px; }
-  .vt h2 { margin: 0 0 8px; font-size: 16px; }
-  .vt .sec { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 10px 0 4px; }
-  .vt .crow { display: flex; gap: 6px; align-items: center; margin: 2px 0; font-size: 12px; }
+  .vt h2 { margin: 0 0 8px; font-size: calc(16px * var(--fs, 1)); }
+  .vt .sec { color: var(--muted); font-size: calc(11px * var(--fs, 1)); font-weight: 700; text-transform: uppercase; margin: 10px 0 4px; }
+  .vt .crow { display: flex; gap: 6px; align-items: center; margin: 2px 0; font-size: calc(12px * var(--fs, 1)); }
   .vt .crow .how { color: var(--muted); }
   .vt .mini { border: 1px solid var(--line); border-radius: 5px; background: #1a1c20; overflow: auto; margin-top: 6px; }
   .vt .actions2 { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
@@ -251,14 +253,14 @@
   #spot.go { animation: spotgo .45s ease 2; }
   @keyframes spotgo { 50% { box-shadow: 0 0 0 10px #ffd24c99, 0 0 0 9999px #00000070; } }
   #spotLabel { position: fixed; z-index: 41; pointer-events: none; display: none; background: #ffd24c; color: #1b1b1b; font-weight: 700;
-    font-size: 12px; padding: 3px 9px; border-radius: 4px; white-space: nowrap; transition: top .35s ease, left .35s ease; }
+    font-size: calc(12px * var(--fs, 1)); padding: 3px 9px; border-radius: 4px; white-space: nowrap; transition: top .35s ease, left .35s ease; }
   #console { position: fixed; z-index: 50; right: 14px; bottom: 30px; width: 480px; background: #0f1114f2; border: 1px solid #4a505a;
-    border-radius: 6px; box-shadow: 0 8px 28px #000c; display: none; flex-direction: column; font: 12px/1.5 Consolas, "Cascadia Mono", monospace; }
+    border-radius: 6px; box-shadow: 0 8px 28px #000c; display: none; flex-direction: column; font: calc(12px * var(--fs, 1))/1.5 Consolas, "Cascadia Mono", monospace; }
   #console header { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-bottom: 1px solid #333840; font-family: inherit; color: #d7dbe0; }
   #console header .grow { flex: 1; }
-  #console header button { padding: 0 7px; font-size: 11px; }
+  #console header button { padding: 0 7px; font-size: calc(11px * var(--fs, 1)); }
   #conNext { padding: 8px 10px; border-bottom: 1px solid #333840; color: #ffd24c; min-height: 40px; }
-  #conNext .lbl { color: #8b929c; display: block; font-size: 11px; }
+  #conNext .lbl { color: #8b929c; display: block; font-size: calc(11px * var(--fs, 1)); }
   #conNext .bar { height: 3px; background: #333840; margin-top: 6px; border-radius: 2px; overflow: hidden; }
   #conNext .bar i { display: block; height: 100%; width: 0; background: #ffd24c; }
   #conLog { max-height: 170px; overflow: auto; padding: 6px 10px; }
@@ -271,9 +273,9 @@
   .cl.warn { color: #ff9f43; }
   .cl .where { color: #a98bff; }
   .langpick { display: inline-flex; gap: 4px; align-items: center; }
-  .langpick select { padding: 0 4px; font-size: 12px; background: #2a2412; color: #ffd98a; border-color: #5a4a20; }
+  .langpick select { padding: 0 4px; font-size: calc(12px * var(--fs, 1)); background: #2a2412; color: #ffd98a; border-color: #5a4a20; }
   @keyframes flash { 50% { box-shadow: 0 0 0 3px var(--ok); } }
-  .src { font-size: 12px; color: var(--muted); margin-left: 8px; white-space: nowrap; }
+  .src { font-size: calc(12px * var(--fs, 1)); color: var(--muted); margin-left: 8px; white-space: nowrap; }
   tr.newvar td { background: var(--panel-2); border-bottom: 1px solid var(--line); }
   table.vars .vchk { width: 22px; padding-right: 0; } tr.vsel td { background: #1d3150; }
   tr.bulkbar td { background: #22324a; border-bottom: 1px solid var(--accent); position: sticky; top: 0; z-index: 2; }
@@ -282,11 +284,12 @@
   .src.live { color: var(--ok); }
   body.live .banner { background: #12301f; color: #9fe6bd; border-color: #1f5a37; }
   body.live #tutBtn, body.live #reset, body.live #tutDock { display: none !important; }
-  .savenote { flex: 1; color: var(--muted); font-size: 12px; text-align: left; }
+  .savenote { flex: 1; color: var(--muted); font-size: calc(12px * var(--fs, 1)); text-align: left; }
 </style>
 </head>
 <body>
 <div class="banner"><span id="bannerA" data-i18n="banner"></span> (<span id="snap"></span>) · <span id="bannerB" data-i18n="bannerNoWrite"></span><span class="spacer"></span>
+  <label class="langpick" id="uiSizeLbl">🔍 <select id="uiSize"></select></label>
   <label class="langpick" title="Language / 語言">🌐 <select id="uiLang"><option value="en">English</option><option value="zh_TW">繁體中文</option></select></label>
   <a href="#" id="reset" data-i18n="reset"></a></div>
 <div class="menubar"><b class="edtitle" data-i18n="edTitle"></b><span id="dirtyMark" class="dirty" title="unsaved changes"></span>
@@ -314,7 +317,7 @@
     </div>
     <div class="bottom">
       <div class="dhead">
-        <span class="seg tabs2"><button id="tDiagram" class="on" data-i18n="tDiagram"></button><button id="tProblems"></button><button id="tFloors" data-i18n="tFloors"></button><button id="tVars" data-i18n="tVars"></button><button id="tLogic" data-i18n="tLogic"></button><button id="tVmap" data-i18n="tVmap"></button><button id="tKinds" data-i18n="tKinds"></button></span><span class="seg" id="vtabs"></span>
+        <span class="seg tabs2"><button id="tDiagram" class="on" data-i18n="tDiagram"></button><button id="tProblems"></button><button id="tFloors" data-i18n="tFloors"></button><button id="tVars" data-i18n="tVars"></button><button id="tLogic" data-i18n="tLogic"></button><button id="tVmap" data-i18n="tVmap"></button><button id="tKinds" data-i18n="tKinds"></button><button id="tNpcs" data-i18n="tNpcs"></button><button id="tDlg" data-i18n="tDlg"></button></span><span class="seg" id="vtabs"></span>
         <span id="diagCtl"><span class="seg"><button id="mFocus" class="on" data-i18n="mFocus"></button><button id="mFull" data-i18n="mFull"></button></span>
           <select id="chapSel" data-i18n-title="chapTitle"></select></span>
         <span class="grow"></span><span class="muted" id="dinfo"></span><button id="neMaxBtn" style="display:none"></button></div>
@@ -338,6 +341,8 @@
   <footer><span id="saveNote" class="savenote"></span><button id="mCancel" data-i18n="cancel"></button> <button class="primary" id="mWrite" data-i18n="writeFiles"></button></footer>
 </div></div>
 
+<script src="splitter.js"></script>
+<script src="settings.js"></script>
 <script src="data.js"></script>
 <script src="tutorial_data.js"></script>
 <script src="floor_index.js"></script>
@@ -590,9 +595,39 @@ const I18N = {
     mEvents: 'Events', mVars: 'Event variables', mCounters: 'Counters', mFlags: 'Flags', mNpcs: 'NPCs', mSearch: 'Search nodes…', mFit: 'Fit view (F)',
     maxBtn: '⛶ Maximize', restoreBtn: '🗗 Restore', hUnlink: 'Remove link',
     lLogic: 'Logic', lTrigger: 'Fires when', trgStep: 'the player steps on its tile', trgTalk: 'the player talks to', trgVar: 'this variable changes', trgChain: 'another event links to it (next)',
-    lReq: 'Active only when (all must be true)', addReq: '+ Add condition', opSet: 'is set', opDone: 'is done', reqNone: 'Always active.',
+    lReq: 'Active only when', addReq: '+ Add condition', opSet: 'is set', opDone: 'is done', reqNone: 'Always active.',
     grpVars: 'Event variables', grpCounters: 'Counters', grpFlags: 'Flags', grpEvents: 'Events done',
-    lActs: 'Then do', addAct: '+ Add action', actNone: 'Nothing else.', aAddVar: 'add to variable', aSetVar: 'set variable', aAddCounter: 'add to counter', aSetFlag: 'set flag', aGive: 'give item',
+    lActs: 'Then do', addAct: '+ Add action', actNone: 'Nothing else.', aAddVar: 'add to variable', aSetVar: 'set variable', aAddCounter: 'add to counter', aSetFlag: 'set flag', aGive: 'give item', aTake: 'take item', aAddStat: 'add to status',
+    lDialogue: 'Dialogue', dlgNone: '(none: the event text as one page)', lAfter: 'After finishing', afterHide: '(hide the topic)',
+    lTopicOrder: 'Menu order', orderAuto: 'auto', rule_missing_dialogue: 'Missing dialogue file',
+    tNpcs: 'NPCs', tDlg: 'Dialogues', textSizeTip: 'Text size. Keys: Alt + = bigger, Alt + - smaller, Alt + 0 back to settings.js.', textFromFile: p => `settings.js (${p}%)`, lTalkFloor: 'Talked to on', talkFloorAny: n => `any floor it stands on (${n})`, talkFloorEvery: 'every floor',
+    talkFloorCond: 'set by its conditions (any of / JSON)', pvFloor: 'Talk on floor', grpTalks: 'Talks with (count)', grpStats: 'Status', grpFloors: 'Floor cleared', grpItems: 'Item held', grpStage: 'Current stage',
+    grpChoices: 'Choice made in', opNotSet: 'is not set', opNotDone: 'is not done', opCleared: 'is cleared', opNotCleared: 'is not cleared',
+    opOnStage: 'is the current stage', opNotOnStage: 'is not the current stage', opChose: 'chose', condAll: 'all of these', condAny: 'any of these',
+    condAlways: 'Always.', condJsonT: 'Edit as JSON (for nested all / any / not)', condRows: 'back to rows', stLast: 'Otherwise (no condition).', rule_bad_dialogue: 'Dialogue: missing node', wDlgStart: n => `start node ${n} does not exist`, wDlgNext: (n, x) => `${n}: next ${x} does not exist`,
+    lRepeat: 'Repeat', repeatable: 'repeatable (runs again after finishing)', maxTimes: 'at most', maxTimesHint: 'times (0 = no limit); its "Then fire" links wake only the first time',
+    jsonBad: 'Not valid JSON: the field was not changed.', idBad: 'Use letters, digits, _ and - only.', idDup: n => `${n} already exists.`,
+    npcNewPh: 'new NPC id', npcNewBtn: '+ NPC', npcNone: 'No NPCs yet.', npcNowherePlaced: 'not placed on any floor (place it in the stage editor)',
+    npcNoFile: n => `${n} has no NPC file: the game plays dialogue/${n}.json as its only chat line.`, npcCreate: 'Create its NPC file',
+    npcFile: n => `NPC file · npcs/${n}.json`, npcName: 'Name', npcGreeting: 'Greeting (menu)', npcSprite: 'Map sprite', npcWhere: 'Placed on',
+    npcMenu: 'Topic menu', menuAuto: 'auto: only when more than one topic', menuAlways: 'always', npcChat: 'Chat lines (when no topic is offered)',
+    npcOrder: 'Order', order_loop: 'loop: in order, then back to the first', order_stay: 'stay: in order, then repeat the last', order_random: 'random (never twice in a row)',
+    openDlg: 'open ↗', lnWhen: 'Only when', lnWhenPh: 'JSON condition, e.g. {"type": "talkCountAtLeast", "npc": "villager", "value": 8} (empty = always)',
+    lnActs: 'When it plays (repeats every time: no rewards)', lnAdd: '+ Chat line', npcTopics: n => `Topics (${n}) in menu order`, tEvent: 'Event',
+    needsWake: 'waits to be woken', npcNoTopics: 'No talk events yet: set an event\'s "Fires when" to "the player talks to" this NPC.',
+    pvTitle: 'Talk preview', pvIntro: 'A pretend run with the game\'s rules: tick finished events, set values, press Talk.', pvDone: 'Finished events',
+    pvValues: 'Values', pvCleared: 'Floors cleared', pvTalkBtn: '💬 Talk', pvReset: 'Reset', pvState: (c, i) => `talks so far: ${c} · chat index: ${i}`,
+    pvTalkN: n => `Talk ${n}`, pvDirect: 'plays at once:', pvMenu: 'menu:', pvJustChat: 'Just chat', pvLeave: 'Leave', pvFinish: 'finish',
+    pvFinishT: 'Pretend the player finished it (its next events wake, its variables change)', pvNothing: '(nothing to say: no chat line is available)', pvNoFile: n => `(dialogue/${n}.json is missing)`,
+    hNpc: n => `NPC ${n}`, hNpcNew: n => `New NPC ${n}`, hTopicOrder: n => `Topic order of ${n}`, hDlg: n => `Dialogue ${n}`, hDlgNew: n => `New dialogue ${n}`,
+    roleTopic: 'topic', roleAfter: 'after finishing', roleChat: 'chat line',
+    dlgFile: 'Dialogue', dlgNewPh: 'new dialogue id', dlgNewBtn: '+ Dialogue', dlgUsedBy: 'Used by', dlgUnused: 'not used yet',
+    dlgStart: 'Starts at', dlgCondStart: 'the first row whose condition holds:', dlgCondT: 'by condition', dlgFoc: 'finish the event however it closes',
+    stLastPh: 'JSON condition (leave the last row empty)', stAdd: '+ start row', dlgClose: '(close the dialogue)',
+    ndRename: 'Rename the node', ndStart: 'start', ndDelete: 'Delete node', ndLast: 'A dialogue needs one node.', ndDelQ: n => `Delete node ${n}?`,
+    ndChoices: 'Choices (what the player can answer)', langsKept: n => `${n} other language(s) kept as they are`,
+    chNext: 'Then', chFinish: 'finishes the event', chIdT: 'Remembered as choiceMade {event, id}, for later conditions', chFire: 'Wakes',
+    chAdd: '+ Choice', oldAction: 'Older single action (kept):', ndNewPh: 'new node id', ndNewBtn: '+ Node',
     lNext: 'Then fire (direct link)', nextPick: '+ link an event…', lFiredBy: 'Fired by', rawReq: 'A condition the editor cannot show as rows (kept as written):',
     npcAt: (n, fl) => `${n} (${fl})`, npcNowhere: n => `${n} (not placed)`, lbTalk: 'talk', lbThen: 'then', lbChange: 'on change', lbDone: 'done',
     rule_unknown_ref: 'Unknown reference', rule_bad_next: 'Link to missing event', rule_never_fires: 'Never fires', rule_never_active: 'Never active',
@@ -865,9 +900,39 @@ const I18N = {
     mEvents: '事件', mVars: '事件變數', mCounters: '計數', mFlags: '旗標', mNpcs: 'NPC', mSearch: '搜尋節點…', mFit: '全部顯示（F）',
     maxBtn: '⛶ 最大化', restoreBtn: '🗗 還原', hUnlink: '移除連線',
     lLogic: '邏輯', lTrigger: '觸發時機', trgStep: '玩家踩到它的格子', trgTalk: '玩家與此人交談', trgVar: '這個變數改變時', trgChain: '由其他事件連結觸發（next）',
-    lReq: '只在以下條件全部成立時啟用', addReq: '+ 新增條件', opSet: '已設定', opDone: '已完成', reqNone: '一直啟用。',
+    lReq: '只在以下條件成立時啟用', addReq: '+ 新增條件', opSet: '已設定', opDone: '已完成', reqNone: '一直啟用。',
     grpVars: '事件變數', grpCounters: '計數', grpFlags: '旗標', grpEvents: '已完成的事件',
-    lActs: '然後執行', addAct: '+ 新增動作', actNone: '沒有其他動作。', aAddVar: '變數加上', aSetVar: '變數設為', aAddCounter: '計數加上', aSetFlag: '設定旗標', aGive: '給予道具',
+    lActs: '然後執行', addAct: '+ 新增動作', actNone: '沒有其他動作。', aAddVar: '變數加上', aSetVar: '變數設為', aAddCounter: '計數加上', aSetFlag: '設定旗標', aGive: '給予道具', aTake: '拿走道具', aAddStat: '狀態加上',
+    lDialogue: '對話', dlgNone: '（無：以事件文字顯示一頁）', lAfter: '完成之後', afterHide: '（隱藏話題）',
+    lTopicOrder: '選單順序', orderAuto: '自動', rule_missing_dialogue: '缺少對話檔',
+    tNpcs: 'NPC', tDlg: '對話', textSizeTip: '文字大小。按鍵：Alt + = 放大、Alt + - 縮小、Alt + 0 回到 settings.js。', textFromFile: p => `settings.js（${p}%）`, lTalkFloor: '在哪一層交談', talkFloorAny: n => `它所在的任何一層（${n}）`, talkFloorEvery: '每一層',
+    talkFloorCond: '由條件決定（任一成立 / JSON）', pvFloor: '在哪一層交談', grpTalks: '交談次數', grpStats: '狀態', grpFloors: '已通過的樓層', grpItems: '持有的道具', grpStage: '目前所在',
+    grpChoices: '做過的選擇', opNotSet: '未設定', opNotDone: '未完成', opCleared: '已通過', opNotCleared: '未通過',
+    opOnStage: '是目前所在的關卡', opNotOnStage: '不是目前所在的關卡', opChose: '選了', condAll: '以下全部成立', condAny: '以下任一成立',
+    condAlways: '一律。', condJsonT: '以 JSON 編輯（巢狀的 all / any / not）', condRows: '回到條件列', stLast: '其他情況（不帶條件）。', rule_bad_dialogue: '對話：缺少節點', wDlgStart: n => `起點節點 ${n} 不存在`, wDlgNext: (n, x) => `${n}：下一個節點 ${x} 不存在`,
+    lRepeat: '重複', repeatable: '可重複（完成後還能再次進行）', maxTimes: '最多', maxTimesHint: '次（0 = 不限）；「接著觸發」只在第一次喚醒',
+    jsonBad: '不是有效的 JSON：此欄未變更。', idBad: '只能使用英文字母、數字、_ 與 -。', idDup: n => `${n} 已經存在。`,
+    npcNewPh: '新的 NPC id', npcNewBtn: '+ NPC', npcNone: '還沒有 NPC。', npcNowherePlaced: '沒有放在任何樓層（請在關卡編輯器中放置）',
+    npcNoFile: n => `${n} 沒有 NPC 檔：遊戲會把 dialogue/${n}.json 當作唯一的閒聊台詞。`, npcCreate: '建立 NPC 檔',
+    npcFile: n => `NPC 檔 · npcs/${n}.json`, npcName: '名字', npcGreeting: '招呼語（選單）', npcSprite: '地圖精靈圖', npcWhere: '放置於',
+    npcMenu: '話題選單', menuAuto: '自動：話題超過一個時', menuAlways: '一律顯示', npcChat: '閒聊台詞（沒有話題時）',
+    npcOrder: '順序', order_loop: 'loop：依序，最後回到第一段', order_stay: 'stay：依序，之後重複最後一段', order_random: '隨機（不連續重複）',
+    openDlg: '開啟 ↗', lnWhen: '只在…時', lnWhenPh: 'JSON 條件，例如 {"type": "talkCountAtLeast", "npc": "villager", "value": 8}（空白 = 一律）',
+    lnActs: '播放時執行（每次都會執行：不要給獎勵）', lnAdd: '+ 閒聊台詞', npcTopics: n => `話題（${n}），依選單順序`, tEvent: '事件',
+    needsWake: '等待被喚醒', npcNoTopics: '還沒有交談事件：把事件的「觸發時機」設為「玩家與此人交談」。',
+    pvTitle: '交談預覽', pvIntro: '以遊戲規則模擬一次遊玩：勾選已完成的事件、設定數值，然後按交談。', pvDone: '已完成的事件',
+    pvValues: '數值', pvCleared: '已通過的樓層', pvTalkBtn: '💬 交談', pvReset: '重設', pvState: (c, i) => `已交談 ${c} 次 · 閒聊索引 ${i}`,
+    pvTalkN: n => `第 ${n} 次`, pvDirect: '直接播放：', pvMenu: '選單：', pvJustChat: '隨便聊聊', pvLeave: '離開', pvFinish: '完成',
+    pvFinishT: '假設玩家完成了它（喚醒它的下一個事件、改變它的變數）', pvNothing: '（沒有話說：沒有可用的閒聊台詞）', pvNoFile: n => `（缺少 dialogue/${n}.json）`,
+    hNpc: n => `NPC ${n}`, hNpcNew: n => `新增 NPC ${n}`, hTopicOrder: n => `${n} 的話題順序`, hDlg: n => `對話 ${n}`, hDlgNew: n => `新增對話 ${n}`,
+    roleTopic: '話題', roleAfter: '完成之後', roleChat: '閒聊台詞',
+    dlgFile: '對話', dlgNewPh: '新的對話 id', dlgNewBtn: '+ 對話', dlgUsedBy: '使用者', dlgUnused: '尚未使用',
+    dlgStart: '起點', dlgCondStart: '第一個條件成立的列：', dlgCondT: '依條件', dlgFoc: '不論如何關閉都完成事件',
+    stLastPh: 'JSON 條件（最後一列留空）', stAdd: '+ 起點列', dlgClose: '（關閉對話）',
+    ndRename: '重新命名節點', ndStart: '起點', ndDelete: '刪除節點', ndLast: '對話至少要有一個節點。', ndDelQ: n => `刪除節點 ${n}？`,
+    ndChoices: '選項（玩家可以回答的）', langsKept: n => `其他 ${n} 種語言保持原樣`,
+    chNext: '接著', chFinish: '完成事件', chIdT: '記錄為 choiceMade {事件, id}，供之後的條件使用', chFire: '喚醒',
+    chAdd: '+ 選項', oldAction: '舊的單一動作（保留）：', ndNewPh: '新的節點 id', ndNewBtn: '+ 節點',
     lNext: '接著觸發（直接連結）', nextPick: '+ 連結一個事件…', lFiredBy: '由誰觸發', rawReq: '編輯器無法逐行顯示的條件（照原樣保留）：',
     npcAt: (n, fl) => `${n}（${fl}）`, npcNowhere: n => `${n}（未放置）`, lbTalk: '交談', lbThen: '接著', lbChange: '改變時', lbDone: '完成',
     rule_unknown_ref: '未知的參照', rule_bad_next: '連到不存在的事件', rule_never_fires: '永遠不會觸發', rule_never_active: '永遠不會啟用',
@@ -952,9 +1017,12 @@ function setLang(l) {
 function logicFrom(e) {
   const rq = e.requires; let req = [], reqRaw = null;
   if (rq && rq.type) req = [rq]; else if (rq && Array.isArray(rq.all) && rq.all.every(x => x && x.type)) req = rq.all; else if (rq) reqRaw = rq;
-  return { trigger: e.trigger || { on: 'step' }, req: JSON.parse(JSON.stringify(req)), reqRaw, actions: JSON.parse(JSON.stringify(e.actions || [])), next: [...(e.next || [])] };
+  return { trigger: e.trigger || { on: 'step' }, req: JSON.parse(JSON.stringify(req)), reqRaw, actions: JSON.parse(JSON.stringify(e.actions || [])), next: [...(e.next || [])],
+    // NPC topics (docs/event_editor/08_NPC_DIALOGUE.md): the dialogue a talk event plays, the one after it is finished, its menu order
+    dialogue: e.dialogue || '', afterDialogue: e.afterDialogue || '', topicOrder: Number.isInteger(e.topicOrder) ? e.topicOrder : null,
+    once: e.once !== false, maxTimes: Number.isInteger(e.maxTimes) ? e.maxTimes : 0 };   // repeatable: "once": false, up to maxTimes (0 = no limit)
 }
-const blankLogic = () => ({ trigger: { on: 'step' }, req: [], reqRaw: null, actions: [], next: [] });
+const blankLogic = () => ({ trigger: { on: 'step' }, req: [], reqRaw: null, actions: [], next: [], dialogue: '', afterDialogue: '', topicOrder: null, once: true, maxTimes: 0 });
 // the item ids an event's "give" may name: data/items.json (make_data.py / the project folder); the old list if absent
 const ITEMS_FALLBACK = ['gem_atk', 'gem_def', 'potion_red', 'potion_blue', 'coin', 'scroll', 'exp_up'];
 const itemList = () => (Array.isArray(DATA.items) && DATA.items.length ? DATA.items : ITEMS_FALLBACK);
@@ -967,7 +1035,11 @@ const actRef = a => a.type === 'addVar' || a.type === 'setVar' ? 'var:' + a.var 
 const refExists = r => { const [k, n] = [r.slice(0, r.indexOf(':')), r.slice(r.indexOf(':') + 1)];
   return k === 'var' ? !!S.vars[n] : k === 'counter' ? !!S.counters[n] : k === 'flag' ? !!S.flags[n] : k === 'event' ? !!ev(n) : k === 'item' ? itemList().includes(n) : true; };
 const setByEvent = (ref, e) => ref.startsWith('flag:') && (S.flags[ref.slice(5)] || {}).setBy === e.id;   // flags.json "setBy": "ev_…"
-const changers = ref => S.events.filter(e => e.actions.some(a => actRef(a) === ref) || setByEvent(ref, e));
+// A talk event also changes what its dialogue's choices change (DATA.dialogueActions: every action in a dialogue file).
+const dialogueActs = id => { const d = S.dialogues && S.dialogues[id]; if (!d) return (DATA.dialogueActions || {})[id] || [];
+  return Object.values(d.nodes || {}).flatMap(n => (n && n.choices) || []).flatMap(c => Array.isArray(c.actions) ? c.actions : c.actions ? [c.actions] : []); };
+const dialogueChanges = (e, ref) => e.trigger.on === 'talk' && !!e.dialogue && dialogueActs(e.dialogue).some(a => actRef(a) === ref);
+const changers = ref => S.events.filter(e => e.actions.some(a => actRef(a) === ref) || setByEvent(ref, e) || dialogueChanges(e, ref));
 const readers = ref => S.events.filter(e => e.req.some(l => leafRef(l) === ref) || (e.trigger.on === 'varChanged' && 'var:' + e.trigger.var === ref));
 const PREV = {}; DATA.floors.forEach(f => { if (f.next) PREV[f.next] = f.id; });
 const fresh = () => ({
@@ -982,6 +1054,7 @@ const fresh = () => ({
     derived: !f.stairs, stairs: f.stairs ? JSON.parse(JSON.stringify(f.stairs))
       : [...(f.next ? [{ dir: 'up', to: f.next }] : []), ...(PREV[f.id] ? [{ dir: 'down', to: PREV[f.id] }] : [])] })),
   texts: JSON.parse(JSON.stringify(DATA.texts)),
+  npcs: JSON.parse(JSON.stringify(DATA.npcFiles || {})), dialogues: JSON.parse(JSON.stringify(DATA.dialogueFiles || {})),   // 08_NPC_DIALOGUE.md
 });
 let freshStairs = new Set();
 let S, base, selected, undoStack, flags, mode, tab, chapView, hlNode, freshEdges = new Set(), newCounter, doneSet, showInfo;
@@ -1011,7 +1084,7 @@ function reachable() {
   return seen;
 }
 const modelEdges = () => new Set([...S.floors.flatMap(f => f.events.map(id => f.id + '>' + id)), ...S.events.flatMap(e => [e.pool + '>' + e.id, e.id + '>' + e.text])]);
-const strip = s => ({ pools: s.pools, events: s.events.map(({ isNew, tutorial, ...r }) => r), floors: s.floors.map(({ isNew, ...r }) => r), texts: s.texts, vars: s.vars, cats: s.cats, counters: s.counters, flags: s.flags, kinds: s.kinds });
+const strip = s => ({ pools: s.pools, events: s.events.map(({ isNew, tutorial, ...r }) => r), floors: s.floors.map(({ isNew, ...r }) => r), texts: s.texts, vars: s.vars, cats: s.cats, counters: s.counters, flags: s.flags, kinds: s.kinds, npcs: s.npcs, dialogues: s.dialogues });
 const dirty = () => JSON.stringify(strip(S)) !== JSON.stringify(strip(base));
 const textOf = e => S.texts[e.text] || {};
 const lineCount = s => String(s || '').split(/\r?\n/).length;   // a text box grows to fit its lines
@@ -1048,6 +1121,8 @@ const RULES = {
   unused_var:    { sev: 'info',  icon: 'ⓘ' },
   untranslated:  { sev: 'info',  icon: 'ⓘ' },
   missing_title: { sev: 'warn',  icon: '⚠' },
+  missing_dialogue: { sev: 'error', icon: '⛔' },
+  bad_dialogue: { sev: 'error', icon: '⛔' },
 };
 function problems() {
   const out = [], seen = new Set();
@@ -1056,6 +1131,8 @@ function problems() {
   S.events.forEach(e => {
     const tx = S.texts[e.text], fl = floorsOf(e.id), act = actOfPool(e.pool);
     if (!fl.length && e.trigger.on === 'step') out.push({ rule: 'orphan', id: e.id, where: e.pool });   // a talk / variable / linked event needs no tile
+    if (e.trigger.on === 'talk' && dialogueList().length)   // 08_NPC_DIALOGUE.md: a topic's dialogue file must exist
+      [e.dialogue, e.afterDialogue].filter(d => d && !dialogueList().includes(d)).forEach(d => out.push({ rule: 'missing_dialogue', id: e.id, where: 'dialogue/' + d + '.json' }));
     if (!tx) out.push({ rule: 'missing_text', id: e.id, where: e.text });
     else if (isPlaceholder(e.text, tx)) out.push({ rule: 'placeholder', id: e.id, where: e.text });
     else if (!tx.en || tx.en === tx.zh_TW) out.push({ rule: 'untranslated', id: e.id, where: e.text });
@@ -1090,6 +1167,7 @@ function problems() {
   }));
   const reach = reachable();
   S.floors.forEach(f => { if (!reach.has(f.id)) out.push({ rule: 'unreachable', id: f.id, where: t('unreachWhere') }); });
+  if (S.dialogues) out.push(...dialogueProblems());   // 08_NPC_DIALOGUE.md
   return out;
 }
 
@@ -1439,7 +1517,7 @@ function renderTree() {
     if (filtering() && !evs.length) return '';
     return `<li class="pool grp" data-grp="${p}"><span>${open ? '▾' : '▸'} ${p} <span class="cnt">${evs.length}</span>${base.pools.includes(p) ? '' : ` <span class="new">${t('new')}</span>`}</span><button data-new="${p}" title="${t('newIn', p)}">+</button></li>` +
       (open ? evs : []).map(e => { const hit = hits.get(e.id);
-        return `<li class="ev${e.id === selected ? ' sel' : ''}" data-id="${esc(e.id)}" title="${esc(e.id)}"><span class="dot" style="background:${kindColor(e.kind)}"></span>${mark(e.id, q)}${e.isNew ? `<span class="new">${t('new')}</span>` : ''}${floorsOf(e.id).length ? '' : ' <span class="warnTag">⚠</span>'}${hit ? `<span class="hit">${t('inText')}: ${mark(hit, q)}</span>` : ''}</li>`; }).join(''); }).join('')
+        return `<li class="ev${e.id === selected ? ' sel' : ''}" data-id="${esc(e.id)}" title="${esc(e.id)}"><span class="dot" style="background:${kindColor(e.kind)}"></span>${mark(e.id, q)}${e.isNew ? `<span class="new">${t('new')}</span>` : ''}${floorsOf(e.id).length || e.trigger.on !== 'step' ? '' : ' <span class="warnTag">⚠</span>'}${hit ? `<span class="hit">${t('inText')}: ${mark(hit, q)}</span>` : ''}</li>`; }).join(''); }).join('')
     + (missing.length ? `<li class="pool grp" data-grp="${MISSING}" style="color:#ff9b9b"><span>${openMissing ? '▾' : '▸'} ⛔ ${t('noPool', missing.length)}</span></li>` +
       (openMissing ? missing.map(p => `<li class="ghost${p.id === selected ? ' sel' : ''}" data-id="${p.id}" title="${p.id}">${mark(p.id, q)}</li>`).join('') : '') : '');
   $('tree').innerHTML = html || `<li class="muted" style="cursor:default">${t('noMatch')}</li>`;
@@ -1462,7 +1540,7 @@ function renderFloor(id) {
     + `<optgroup label="${t('onThisFloor')}">${here.map(e => `<option${e === cur ? ' selected' : ''}>${e}</option>`).join('')}</optgroup>`
     + `<optgroup label="${t('otherEvents')}">${defined.filter(e => !here.includes(e)).map(e => `<option${e === cur ? ' selected' : ''}>${e}</option>`).join('')}</optgroup>`;
   $('form').innerHTML = `<div class="insp">
-    <h2 style="margin:0 0 10px;font-weight:600">${f.id} <span class="muted" style="font-size:13px">${f.act} · ${f.role}</span>${f.isNew ? ` <span class="new">${t('newFloorTag')}</span>` : ''}</h2>
+    <h2 style="margin:0 0 10px;font-weight:600">${f.id} <span class="muted" style="font-size: calc(13px * var(--fs, 1))">${f.act} · ${f.role}</span>${f.isNew ? ` <span class="new">${t('newFloorTag')}</span>` : ''}</h2>
     ${reach.has(id) ? '' : `<div class="banner-warn">${t('unreachBanner')}</div>`}
     <div class="row2">
       <div class="field"><label>${t('lChapter')}</label><select id="fAct">${[...new Set(S.floors.map(x => x.act))].sort().map(a => `<option${a === f.act ? ' selected' : ''}>${a}</option>`).join('')}</select></div>
@@ -1495,33 +1573,146 @@ function renderFloor(id) {
   document.querySelectorAll('.chip[data-floor]').forEach(c => c.onclick = () => selectFloor(c.dataset.floor));
   document.querySelectorAll('.chip[data-ev]').forEach(c => c.onclick = () => selectSubject(c.dataset.ev, { toDiagram: true }));
 }
-function subjectOptions(cur) {
-  const o = (v, label) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(label)}</option>`;
-  const vg = {}; Object.keys(S.vars).forEach(v => (vg[catOf('var:' + v)] = vg[catOf('var:' + v)] || []).push(v));
-  return Object.keys(vg).sort((a, b) => a.localeCompare(b)).map(c => `<optgroup label="${t('grpVars')} · ${esc(c)}">${vg[c].map(v => o('var:' + v, v)).join('')}</optgroup>`).join('')
-    + `<optgroup label="${t('grpCounters')}">${Object.keys(S.counters).map(v => o('counter:' + v, v)).join('')}</optgroup>`
-    + `<optgroup label="${t('grpFlags')}">${Object.keys(S.flags).map(v => o('flag:' + v, v)).join('')}</optgroup>`
-    + `<optgroup label="${t('grpEvents')}">${S.events.map(x => o('event:' + x.id, x.id)).join('')}</optgroup>`
-    + (cur && !refExists(cur) ? o(cur, '⛔ ' + cur) : '');
-}
-const leafToRow = l => { const r = leafRef(l); return { subj: r, op: l.type === 'varEquals' ? '=' : r && (r.startsWith('flag:') || r.startsWith('event:')) ? 'set' : '>=', val: l.value ?? l.min ?? 0 }; };
+// ---------- condition rows: one editor for every `requires` (events, NPC chat lines, dialogue choices, start rows) ----------
+// A row is one leaf of condition.cpp: subject (var:x, counter:x, flag:x, event:x, talks:npc, stat:s, floor:F05, item:id,
+// stage:id, choice:eventId) + an operator + a value. Several rows join with "all" or "any"; "not" is the "is not …"
+// operator. Anything the rows cannot show (nested logic) stays as JSON, and { } switches any editor to JSON.
+const kindOf = s => s ? s.slice(0, s.indexOf(':')) : '';
+const nameOf = s => s ? s.slice(s.indexOf(':') + 1) : '';
+const OPS = { var: [['>=', '≥'], ['=', '=']], counter: [['>=', '≥']], talks: [['>=', '≥']], stat: [['>=', '≥']], item: [['>=', '≥']],
+  flag: [['set', 'opSet'], ['not', 'opNotSet']], event: [['set', 'opDone'], ['not', 'opNotDone']],
+  floor: [['set', 'opCleared'], ['not', 'opNotCleared']], stage: [['set', 'opOnStage'], ['not', 'opNotOnStage']], choice: [['=', 'opChose']] };
+const opsFor = k => OPS[k] || [['>=', '≥']];
+const varNum = v => v === true ? 1 : v === false ? 0 : (+v || 0);
+const leafToRow = l => {
+  if (l && l.not && !Array.isArray(l.not) && typeof l.not === 'object') { const r = leafToRow(l.not);
+    return r.subj && opsFor(kindOf(r.subj)).some(o => o[0] === 'not') ? { ...r, op: 'not' } : { subj: null }; }
+  switch (l && l.type) {
+    case 'varAtLeast': return { subj: 'var:' + l.var, op: '>=', val: varNum(l.value) };
+    case 'varEquals': return { subj: 'var:' + l.var, op: '=', val: varNum(l.value) };
+    case 'counterAtLeast': return { subj: 'counter:' + l.counter, op: '>=', val: l.min ?? 0 };
+    case 'runFlagSet': return String(l.flag).startsWith('event_') ? { subj: 'event:' + l.flag.slice(6), op: 'set' } : { subj: 'flag:' + l.flag, op: 'set' };
+    case 'talkCountAtLeast': return { subj: 'talks:' + l.npc, op: '>=', val: l.value ?? 0 };
+    case 'statAtLeast': return { subj: 'stat:' + l.stat, op: '>=', val: l.value ?? 0 };
+    case 'stageCleared': return { subj: 'floor:' + l.stageId, op: 'set' };
+    case 'itemHeld': return { subj: 'item:' + l.itemId, op: '>=', val: l.count ?? 1 };
+    case 'onStage': return { subj: 'stage:' + l.stageId, op: 'set' };
+    case 'choiceMade': return { subj: 'choice:' + l.choiceId, op: '=', val: l.optionId ?? '' };
+  }
+  return { subj: null };
+};
 function rowToLeaf(subj, op, val) {
-  const [k, n] = [subj.slice(0, subj.indexOf(':')), subj.slice(subj.indexOf(':') + 1)], v = parseInt(val, 10) || 0;
-  if (k === 'var') return op === '=' ? { type: 'varEquals', var: n, value: v } : { type: 'varAtLeast', var: n, value: v };
-  if (k === 'counter') return { type: 'counterAtLeast', counter: n, min: v };
-  if (k === 'flag') return { type: 'runFlagSet', flag: n };
-  return { type: 'runFlagSet', flag: 'event_' + n };
+  const k = kindOf(subj), n = nameOf(subj), v = parseInt(val, 10) || 0;
+  const leaf = k === 'var' ? (op === '=' ? { type: 'varEquals', var: n, value: v } : { type: 'varAtLeast', var: n, value: v })
+    : k === 'counter' ? { type: 'counterAtLeast', counter: n, min: v } : k === 'flag' ? { type: 'runFlagSet', flag: n }
+    : k === 'event' ? { type: 'runFlagSet', flag: 'event_' + n } : k === 'talks' ? { type: 'talkCountAtLeast', npc: n, value: v }
+    : k === 'stat' ? { type: 'statAtLeast', stat: n, value: v } : k === 'floor' ? { type: 'stageCleared', stageId: n }
+    : k === 'item' ? { type: 'itemHeld', itemId: n, count: Math.max(1, v) } : k === 'stage' ? { type: 'onStage', stageId: n }
+    : { type: 'choiceMade', choiceId: n, optionId: String(val ?? '') };
+  return op === 'not' ? { not: leaf } : leaf;
 }
+function subjectOptions(cur) {
+  const o = (v, label) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(label)}</option>`, grp = (label, list) => list.length ? `<optgroup label="${esc(label)}">${list.join('')}</optgroup>` : '';
+  const vg = {}; Object.keys(S.vars).forEach(v => (vg[catOf('var:' + v)] = vg[catOf('var:' + v)] || []).push(v));
+  const floors = S.floors.map(f => f.id), talkers = S.events.filter(x => x.trigger.on === 'talk' && x.dialogue);
+  const all = [...Object.keys(vg).sort((a, b) => a.localeCompare(b)).map(c => grp(t('grpVars') + ' · ' + c, vg[c].map(v => o('var:' + v, v)))),
+    grp(t('grpCounters'), Object.keys(S.counters).map(v => o('counter:' + v, v))), grp(t('grpFlags'), Object.keys(S.flags).map(v => o('flag:' + v, v))),
+    grp(t('grpEvents'), S.events.map(x => o('event:' + x.id, x.id))),
+    grp(t('grpTalks'), (typeof npcIds === 'function' ? npcIds() : []).map(n => o('talks:' + n, n))), grp(t('grpStats'), statList().map(s => o('stat:' + s, s))),
+    grp(t('grpFloors'), floors.map(f => o('floor:' + f, f))), grp(t('grpItems'), itemList().map(i => o('item:' + i, i))),
+    grp(t('grpStage'), floors.map(f => o('stage:' + f, f))), grp(t('grpChoices'), talkers.map(x => o('choice:' + x.id, x.id)))];
+  const known = all.join('');
+  return known + (cur && !known.includes(`value="${esc(cur)}"`) ? o(cur, '⛔ ' + cur) : '');
+}
+// the ids of the choices in an event's dialogue, for "choice made" rows
+const choiceIdsOf = evId => { const e = ev(evId), d = e && S.dialogues ? S.dialogues[e.dialogue] : null;
+  return d ? [...new Set(Object.values(d.nodes || {}).flatMap(n => (n.choices || []).map(c => c.id).filter(Boolean)))] : []; };
+function condToRows(c) {
+  if (!c) return { mode: 'all', rows: [] };
+  const rowable = x => x && leafToRow(x).subj;
+  if (rowable(c)) return { mode: 'all', rows: [c] };
+  for (const m of ['all', 'any']) if (Array.isArray(c[m]) && c[m].every(rowable)) return { mode: m, rows: c[m] };
+  return { mode: 'all', rows: [], raw: c };
+}
+const rowsToCond = (mode, rows) => !rows.length ? null : rows.length === 1 ? rows[0] : { [mode]: rows };
+function condRowHtml(l, i, key) {
+  const r = leafToRow(l), k = kindOf(r.subj), ops = opsFor(k), dl = 'dl-' + String(key).replace(/[^A-Za-z0-9_-]/g, '_') + '-' + i;
+  const needsVal = r.op !== 'set' && r.op !== 'not';
+  return `<div class="lrow reqRow" data-i="${i}"><select class="reqSubj">${subjectOptions(r.subj)}</select>
+    <select class="reqOp">${ops.map(([v, lb]) => `<option value="${v}"${v === r.op ? ' selected' : ''}>${lb.startsWith('op') ? t(lb) : lb}</option>`).join('')}</select>
+    ${!needsVal ? '' : k === 'choice' ? `<input class="reqVal" list="${dl}" value="${esc(r.val)}" style="width:110px"><datalist id="${dl}">${choiceIdsOf(nameOf(r.subj)).map(c => `<option value="${esc(c)}">`).join('')}</datalist>`
+      : `<input type="number" class="reqVal" value="${esc(r.val)}">`}<button class="del reqDel">✕</button></div>`;
+}
+const condJson = new Set();   // editors the user switched to JSON
+function condHtml(c, key, opts = {}) {
+  const { mode, rows, raw } = condToRows(c);
+  if (raw || condJson.has(key)) return `<div class="condEd" data-ck="${esc(key)}" data-json="1">${raw ? `<div class="muted" style="font-size: calc(12px * var(--fs, 1))">${t('rawReq')}</div>` : ''}
+    <input class="condJson json" value="${esc(c == null ? '' : JSON.stringify(c))}" style="width:440px" placeholder="${esc(t('lnWhenPh'))}">${raw ? '' : ` <button class="link condRows">${t('condRows')}</button>`}</div>`;
+  return `<div class="condEd" data-ck="${esc(key)}"${opts.id ? ` id="${opts.id}"` : ''}>${rows.map((l, i) => condRowHtml(l, i, key)).join('') || `<div class="muted" style="font-size: calc(12px * var(--fs, 1));margin-bottom:4px">${t(opts.none || 'condAlways')}</div>`}
+    <div class="lrow">${rows.length > 1 ? `<select class="condMode"><option value="all"${mode === 'all' ? ' selected' : ''}>${t('condAll')}</option><option value="any"${mode === 'any' ? ' selected' : ''}>${t('condAny')}</option></select>` : ''}
+      <button class="condAdd"${opts.addId ? ` id="${opts.addId}"` : ''}>${t('addReq')}</button><button class="link condToJson" title="${t('condJsonT')}">{ }</button></div></div>`;
+}
+// get(): the condition now; set(c): store it (called inside edit, after its snapshot)
+function bindCond(key, get, set, label) {
+  const box = [...document.querySelectorAll('.condEd')].find(b => b.dataset.ck === key); if (!box) return;
+  if (box.dataset.json) {
+    const inp = box.querySelector('.condJson'); inp.onchange = () => { const r = parseJsonField(inp); if (r.ok) edit(label, () => set(r.v)); };
+    const back = box.querySelector('.condRows'); if (back) back.onclick = () => { condJson.delete(key); renderAll(); };
+    return;
+  }
+  const cur = () => condToRows(get()), modeNow = () => box.querySelector('.condMode') ? box.querySelector('.condMode').value : cur().mode;
+  const write = rows => edit(label, () => set(rowsToCond(modeNow(), rows)));
+  box.querySelectorAll('.reqRow').forEach(row => { const i = +row.dataset.i;
+    const upd = () => { const subj = row.querySelector('.reqSubj').value, ops = opsFor(kindOf(subj)).map(o => o[0]); let op = row.querySelector('.reqOp').value;
+      if (!ops.includes(op)) op = ops[0];
+      const vEl = row.querySelector('.reqVal'), val = vEl ? vEl.value : kindOf(subj) === 'item' ? 1 : 0;
+      const rows = cur().rows.slice(); rows[i] = rowToLeaf(subj, op, val); write(rows); };
+    ['.reqSubj', '.reqOp', '.reqVal'].forEach(s => { const x = row.querySelector(s); if (x) x.onchange = upd; });
+    row.querySelector('.reqDel').onclick = () => { const rows = cur().rows.slice(); rows.splice(i, 1); write(rows); }; });
+  box.querySelector('.condAdd').onclick = () => { const v = Object.keys(S.vars)[0];
+    write([...cur().rows, v ? { type: 'varAtLeast', var: v, value: 1 } : { type: 'counterAtLeast', counter: Object.keys(S.counters)[0], min: 1 }]); };
+  const m = box.querySelector('.condMode'); if (m) m.onchange = () => edit(label, () => set(rowsToCond(m.value, cur().rows)));
+  box.querySelector('.condToJson').onclick = () => { condJson.add(key); renderAll(); };
+}
+// an event's `requires` back into its form fields (req rows when they are an "all" of leaves, else raw)
+function setEventReq(e, c) { const p = logicFrom({ requires: c }); e.req = p.req; e.reqRaw = p.reqRaw; }
+const statList = () => (Array.isArray(DATA.stats) && DATA.stats.length ? DATA.stats : ['hp', 'maxhp', 'atk', 'def', 'gold', 'exp', 'lv']);
 function actionTargets(type, cur) {
-  const list = type === 'addVar' || type === 'setVar' ? Object.keys(S.vars) : type === 'addCounter' ? Object.keys(S.counters) : type === 'setFlag' ? Object.keys(S.flags) : itemList();
+  const list = type === 'addVar' || type === 'setVar' ? Object.keys(S.vars) : type === 'addCounter' ? Object.keys(S.counters) : type === 'setFlag' ? Object.keys(S.flags)
+    : type === 'addStat' ? statList() : itemList();
   return list.map(v => `<option${v === cur ? ' selected' : ''}>${esc(v)}</option>`).join('') + (cur && !list.includes(cur) ? `<option selected>${esc(cur)}</option>` : '');
 }
-const actTarget = a => a.var ?? a.counter ?? a.flag ?? a.itemId ?? '';
+const actTarget = a => a.var ?? a.counter ?? a.flag ?? a.stat ?? a.itemId ?? '';
 const actValue = a => a.delta ?? a.value ?? '';
 function makeAction(type, target, val) {
   const v = parseInt(val, 10); const n = isNaN(v) ? 1 : v;
   return type === 'addVar' ? { type, var: target, delta: n } : type === 'setVar' ? { type, var: target, value: n } : type === 'addCounter' ? { type, counter: target, delta: n }
-    : type === 'setFlag' ? { type, flag: target } : { type: 'give', itemId: target };
+    : type === 'setFlag' ? { type, flag: target } : type === 'addStat' ? { type, stat: target, delta: n } : type === 'take' ? { type, itemId: target } : { type: 'give', itemId: target };
+}
+// A talk event (docs/event_editor/08_NPC_DIALOGUE.md): the dialogue its topic plays (none: its text as one page), what
+// its topic does once finished (hidden, or an after-dialogue), and its place in the NPC's topic menu.
+const dialogueList = () => (typeof S !== 'undefined' && S && S.dialogues ? Object.keys(S.dialogues).sort() : Array.isArray(DATA.dialogues) ? DATA.dialogues : []);
+const dlgOptions = (cur, none) => `<option value="">${esc(none)}</option>` + [...new Set([...dialogueList(), cur].filter(Boolean))]
+  .map(d => `<option value="${esc(d)}"${d === cur ? ' selected' : ''}>${esc(d)}${dialogueList().includes(d) ? '' : ' ⛔'}</option>`).join('');
+// "Talked to on": an NPC stands on several floors and its topics show on all of them; one floor = an onStage condition.
+const npcFloors = npc => (DATA.npcs || {})[npc] || [];
+const talkFloorOf = e => { const { mode, rows, raw } = condToRows(reqJson(e)); if (raw || (mode === 'any' && rows.length > 1)) return undefined;
+  const l = rows.find(r => r.type === 'onStage'); return l ? l.stageId : ''; };
+function talkFloorHtml(e) {
+  const cur = talkFloorOf(e), fl = npcFloors(e.trigger.npc);
+  if (cur === undefined) return `<div class="lrow"><span class="lbl">${t('lTalkFloor')}</span><span class="muted">${t('talkFloorCond')}</span></div>`;
+  return `<div class="lrow"><span class="lbl">${t('lTalkFloor')}</span><select id="talkFloor"><option value="">${t('talkFloorAny', fl.length)}</option>
+    ${[...new Set([...fl, cur].filter(Boolean))].map(f => `<option value="${esc(f)}"${f === cur ? ' selected' : ''}>${esc(f)}${fl.includes(f) ? '' : ' ⚠'}</option>`).join('')}</select></div>`;
+}
+function setTalkFloor(e, floor) {
+  const { mode, rows } = condToRows(reqJson(e)), keep = rows.filter(r => r.type !== 'onStage');
+  setEventReq(e, rowsToCond(mode, floor ? [...keep, { type: 'onStage', stageId: floor }] : keep));
+}
+function talkRowsHtml(e) {
+  return `<div class="lrow"><span class="lbl">${t('lDialogue')}</span><select id="talkDlg">${dlgOptions(e.dialogue, t('dlgNone'))}</select></div>
+    <div class="lrow"><span class="lbl">${t('lAfter')}</span><select id="talkAfter">${dlgOptions(e.afterDialogue, t('afterHide'))}</select></div>
+    ${talkFloorHtml(e)}
+    <div class="lrow"><span class="lbl">${t('lTopicOrder')}</span><input type="number" id="talkOrder" style="width:70px" value="${e.topicOrder ?? ''}" placeholder="${esc(t('orderAuto'))}"></div>`;
 }
 function logicHtml(e) {
   const tr = e.trigger, npcs = DATA.npcs || {};
@@ -1531,17 +1722,15 @@ function logicHtml(e) {
     ...(tr.on === 'talk' ? [`<span class="chip">💬 ${esc(tr.npc)}</span>`] : []), ...(tr.on === 'varChanged' ? [`<span class="chip">◆ ${esc(tr.var)}</span>`] : [])];
   return `<div class="logic"><h4>${t('lLogic')}</h4>
     <div class="lrow"><span class="lbl">${t('lTrigger')}</span><select id="trgOn">${[['step', 'trgStep'], ['talk', 'trgTalk'], ['varChanged', 'trgVar'], ['chain', 'trgChain']].map(([v, k]) => `<option value="${v}"${v === tr.on ? ' selected' : ''}>${t(k)}</option>`).join('')}</select>${trigArg}</div>
+    ${tr.on === 'talk' ? talkRowsHtml(e) : ''}
+    <div class="lrow"><span class="lbl">${t('lRepeat')}</span><label><input type="checkbox" id="evRepeat"${e.once === false ? ' checked' : ''}> ${t('repeatable')}</label>
+      ${e.once === false ? `<span class="muted">${t('maxTimes')}</span><input type="number" id="evMax" min="0" value="${e.maxTimes || 0}"><span class="muted">${t('maxTimesHint')}</span>` : ''}</div>
     <div class="lrow"><span class="lbl">${t('lReq')}</span></div>
-    <div id="reqList">${e.reqRaw ? `<div class="muted" style="font-size:12px">${t('rawReq')}</div><div class="rawjson">${esc(JSON.stringify(e.reqRaw, null, 1))}</div>`
-      : e.req.map((l, i) => { const r = leafToRow(l), boolSubj = r.subj && (r.subj.startsWith('flag:') || r.subj.startsWith('event:'));
-        return `<div class="lrow reqRow" data-i="${i}"><select class="reqSubj">${subjectOptions(r.subj)}</select>
-          <select class="reqOp">${boolSubj ? `<option value="set">${t(r.subj.startsWith('event:') ? 'opDone' : 'opSet')}</option>` : `<option value=">="${r.op === '>=' ? ' selected' : ''}>≥</option>${r.subj && r.subj.startsWith('var:') ? `<option value="="${r.op === '=' ? ' selected' : ''}>=</option>` : ''}`}</select>
-          ${boolSubj ? '' : `<input type="number" class="reqVal" value="${esc(r.val)}">`}<button class="del reqDel">✕</button></div>`; }).join('') || `<div class="muted" style="font-size:12px;margin-bottom:4px">${t('reqNone')}</div>`}</div>
-    ${e.reqRaw ? '' : `<button id="addReq">${t('addReq')}</button>`}
+    <div id="reqList">${condHtml(reqJson(e), 'ev', { addId: 'addReq', none: 'reqNone' })}</div>
     <div class="lrow" style="margin-top:8px"><span class="lbl">${t('lActs')}</span></div>
-    <div id="actList">${e.actions.map((a, i) => `<div class="lrow actRow" data-i="${i}"><select class="actType">${[['addVar', 'aAddVar'], ['setVar', 'aSetVar'], ['addCounter', 'aAddCounter'], ['setFlag', 'aSetFlag'], ['give', 'aGive']]
+    <div id="actList">${e.actions.map((a, i) => `<div class="lrow actRow" data-i="${i}"><select class="actType">${[['addVar', 'aAddVar'], ['setVar', 'aSetVar'], ['addCounter', 'aAddCounter'], ['setFlag', 'aSetFlag'], ['give', 'aGive'], ['take', 'aTake'], ['addStat', 'aAddStat']]
         .map(([v, k]) => `<option value="${v}"${v === a.type ? ' selected' : ''}>${t(k)}</option>`).join('')}</select><select class="actTarget">${actionTargets(a.type, actTarget(a))}</select>
-        ${['addVar', 'setVar', 'addCounter'].includes(a.type) ? `<input type="number" class="actVal" value="${esc(actValue(a))}">` : ''}<button class="del actDel">✕</button></div>`).join('') || `<div class="muted" style="font-size:12px;margin-bottom:4px">${t('actNone')}</div>`}</div>
+        ${['addVar', 'setVar', 'addCounter', 'addStat'].includes(a.type) ? `<input type="number" class="actVal" value="${esc(actValue(a))}">` : ''}<button class="del actDel">✕</button></div>`).join('') || `<div class="muted" style="font-size: calc(12px * var(--fs, 1));margin-bottom:4px">${t('actNone')}</div>`}</div>
     <button id="addAct">${t('addAct')}</button>
     <div class="lrow" style="margin-top:8px"><span class="lbl">${t('lNext')}</span></div>
     <div class="chips" id="nextList">${e.next.map(n => `<span class="chip link${ev(n) ? '' : ' bad'}" data-goev="${esc(n)}">${esc(n)} <button class="del nextDel" data-n="${esc(n)}">✕</button></span>`).join('')}
@@ -1553,18 +1742,17 @@ function bindLogic(e) {
   const L = (label, fn) => edit(label, fn);
   $('trgOn').onchange = () => { const on = $('trgOn').value; L(t('hTrigger', e.id), () => {
     e.trigger = on === 'talk' ? { on, npc: Object.keys(DATA.npcs || {})[0] || '' } : on === 'varChanged' ? { on, var: Object.keys(S.vars)[0] || '' } : { on }; }); };
+  $('evRepeat').onchange = () => L(t('hTrigger', e.id), () => { e.once = !$('evRepeat').checked; if (e.once) e.maxTimes = 0; });
+  if ($('evMax')) $('evMax').onchange = () => L(t('hTrigger', e.id), () => e.maxTimes = Math.max(0, parseInt($('evMax').value, 10) || 0));
+  if ($('talkFloor')) $('talkFloor').onchange = () => { const v = $('talkFloor').value; L(t('hTrigger', e.id), () => setTalkFloor(e, v)); };
+  if ($('talkDlg')) $('talkDlg').onchange = () => { const v = $('talkDlg').value; L(t('hTrigger', e.id), () => e.dialogue = v); };
+  if ($('talkAfter')) $('talkAfter').onchange = () => { const v = $('talkAfter').value; L(t('hTrigger', e.id), () => e.afterDialogue = v); };
+  if ($('talkOrder')) $('talkOrder').onchange = () => { const v = parseInt($('talkOrder').value, 10); L(t('hTrigger', e.id), () => e.topicOrder = isNaN(v) ? null : v); };
   if ($('trgArg')) $('trgArg').onchange = () => { const v = $('trgArg').value; L(t('hTrigger', e.id), () => { if (e.trigger.on === 'talk') e.trigger.npc = v; else e.trigger.var = v; }); };
-  document.querySelectorAll('.reqRow').forEach(row => { const i = +row.dataset.i, upd = () => {
-      const subj = row.querySelector('.reqSubj').value, opEl = row.querySelector('.reqOp'), valEl = row.querySelector('.reqVal');
-      const bool = subj.startsWith('flag:') || subj.startsWith('event:'), op = bool ? 'set' : (opEl.value === 'set' ? '>=' : opEl.value);
-      L(t('hReq', e.id), () => e.req[i] = rowToLeaf(subj, op, valEl ? valEl.value : 1)); };
-    row.querySelector('.reqSubj').onchange = upd; row.querySelector('.reqOp').onchange = upd; if (row.querySelector('.reqVal')) row.querySelector('.reqVal').onchange = upd;
-    row.querySelector('.reqDel').onclick = () => L(t('hReq', e.id), () => e.req.splice(i, 1)); });
-  if ($('addReq')) $('addReq').onclick = () => L(t('hReq', e.id), () => { const v = Object.keys(S.vars)[0];
-    e.req.push(v ? { type: 'varAtLeast', var: v, value: 1 } : { type: 'counterAtLeast', counter: Object.keys(S.counters)[0], min: 1 }); });
+  bindCond('ev', () => reqJson(e), c => setEventReq(e, c), t('hReq', e.id));
   document.querySelectorAll('.actRow').forEach(row => { const i = +row.dataset.i;
     row.querySelector('.actType').onchange = () => { const ty = row.querySelector('.actType').value;
-      L(t('hAct', e.id), () => e.actions[i] = makeAction(ty, (ty === 'addVar' || ty === 'setVar' ? Object.keys(S.vars) : ty === 'addCounter' ? Object.keys(S.counters) : ty === 'setFlag' ? Object.keys(S.flags) : itemList())[0] || '', actValue(e.actions[i]) || 1)); };
+      L(t('hAct', e.id), () => e.actions[i] = makeAction(ty, (ty === 'addVar' || ty === 'setVar' ? Object.keys(S.vars) : ty === 'addCounter' ? Object.keys(S.counters) : ty === 'setFlag' ? Object.keys(S.flags) : ty === 'addStat' ? statList() : itemList())[0] || '', actValue(e.actions[i]) || 1)); };
     const upd = () => L(t('hAct', e.id), () => e.actions[i] = makeAction(e.actions[i].type, row.querySelector('.actTarget').value, row.querySelector('.actVal') ? row.querySelector('.actVal').value : 1));
     row.querySelector('.actTarget').onchange = upd; if (row.querySelector('.actVal')) row.querySelector('.actVal').onchange = upd;
     row.querySelector('.actDel').onclick = () => L(t('hAct', e.id), () => e.actions.splice(i, 1)); });
@@ -1651,6 +1839,7 @@ function switchToStage() {
 }
 addEventListener('message', ev2 => { const m = ev2.data || {};
   if (m.toms === 'select' && ev(m.id)) selectSubject(m.id);
+  if (m.toms === 'npc' && m.id) { npcSel = m.id; setTab('npcs'); }   // the stage editor's NPC panel
   if (m.toms === 'shown') renderAll(); });
 function renderMissing(id) {
   const fl = floorsOf(id), act = fl[0].act, pool = id.startsWith('ev_common_') ? 'pool_common' : poolForAct(act), tx = S.texts[id];
@@ -1673,13 +1862,17 @@ function renderMissing(id) {
 function setTab(name) { tab = name; if (name === 'problems') flags.problemsTab = true; if (name === 'floors') flags.floorTab = true;
   if (name === 'vars') flags.varsTab = true; if (name === 'logic') flags.logicTab = true; renderAll(); }
 function setMode(m) { mode = m; if (m === 'full') flags.full = true; hlNode = null; renderAll(); }
-$('tDiagram').onclick = () => setTab('diagram'); $('tProblems').onclick = () => setTab('problems'); $('tFloors').onclick = () => setTab('floors'); $('tVars').onclick = () => setTab('vars'); $('tLogic').onclick = () => setTab('logic'); $('tVmap').onclick = () => setTab('vmap'); $('tKinds').onclick = () => setTab('kinds');
+$('tDiagram').onclick = () => setTab('diagram'); $('tProblems').onclick = () => setTab('problems'); $('tFloors').onclick = () => setTab('floors'); $('tVars').onclick = () => setTab('vars'); $('tLogic').onclick = () => setTab('logic'); $('tVmap').onclick = () => setTab('vmap'); $('tKinds').onclick = () => setTab('kinds'); $('tNpcs').onclick = () => setTab('npcs'); $('tDlg').onclick = () => setTab('dlg');
 $('mFocus').onclick = () => setMode('focus'); $('mFull').onclick = () => setMode('full');
 const buildChapSel = () => $('chapSel').innerHTML = `<option value="ch_01-03">${t('chapEarly')}</option>` + ACTS.map(a => `<option value="${a}">${a} · ${DATA.floors.filter(f => f.act === a).map(f => f.id).filter((x, i, l) => i === 0 || i === l.length - 1).join('–')}</option>`).join('');
 $('chapSel').onchange = () => { chapView = $('chapSel').value; hlNode = null; renderAll(); };
 const actsInView = () => chapView === 'ch_01-03' ? ['ch_01', 'ch_02', 'ch_03'] : [chapView];
 
 const COL = { floor: 14, pool: 100, event: 262, text: 538 }, W = { floor: 64, pool: 132, event: 250, text: 250 }, H = 24, GAP = 8;
+// The drawn views (diagram, floor map, values map) lay text out at fixed coordinates: they keep their designed text size
+// and the whole picture is scaled with the text size instead (viewBox), so nothing overlaps.
+const fsNow = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 1;
+const svgOpen = (w, h) => `<svg width="${Math.round(w * fsNow())}" height="${Math.round(h * fsNow())}" viewBox="0 0 ${w} ${h}"`;
 function renderDiagram() {
   const sub = selected, subEv = sub && ev(sub), subMiss = sub && isMissing(sub);
   let events = [], ghosts = [], floors, note = '';
@@ -1727,7 +1920,7 @@ function renderDiagram() {
   if (subEv && near.has(sub)) near.add('#' + subEv.text);
   if (subMiss) near.add('#' + sub);
   const pos = Object.fromEntries(nodes.map(n => [n.id, n]));
-  let s = `<svg width="${COL.text + W.text + 20}" height="${Math.max(...nodes.map(n => n.y)) + 50}">`;
+  let s = svgOpen(COL.text + W.text + 20, Math.max(...nodes.map(n => n.y)) + 50) + '>';
   [[t('colFloors'), COL.floor], [t('colPools'), COL.pool], [t('colEvents'), COL.event], [t('colText'), COL.text]].forEach(([h, x]) => s += `<text class="colhead" x="${x}" y="20">${h}</text>`);
   if (note) s += `<text class="note" x="${COL.floor}" y="${rowY(0) + 16}">${note}</text>`;
   edges.forEach(e => {
@@ -1791,7 +1984,7 @@ function renderVars() {
       <button class="primary" id="newVarAdd">${t('addVarBtn')}</button> <span class="err" id="newVarErr"></span></div></td></tr>
     <tr class="newvar"><td colspan="8"><div class="lrow">📁 <input id="catEdit" list="catList" placeholder="${t('catEditPh')}" value="${esc(VF.cat)}" style="width:220px">
       <button id="catCreate">${t('catCreate')}</button> <button id="catRename">${t('catRename')}</button> <button id="catDelete">${t('catDelete')}</button> <span class="err" id="catErr"></span>
-      <span class="muted" style="font-size:11px">${t('catHint')}</span></div></td></tr>
+      <span class="muted" style="font-size: calc(11px * var(--fs, 1))">${t('catHint')}</span></div></td></tr>
     ${varSel.size ? `<tr class="bulkbar"><td colspan="8"><div class="lrow"><b>${t('selN', varSel.size)}</b>
       ${t('bulkMoveTo')} <input id="bulkCat" list="catList" placeholder="${t('catEditPh')}" value="${esc(VF.cat)}" style="width:200px">
       <button class="primary" id="bulkApply">${t('bulkApply')}</button> <button id="bulkUncat">${t('catDelBtnUncat')}</button>
@@ -2011,7 +2204,7 @@ function renderValueMap() {
   const refs = valueRefs().filter(r => valueMatches(r) && (VF.unused || changers(r).length || readers(r).length)).sort(byCat);
   const g = valueGraphSvg(refs, vmHover, { cats: true });
   $('pane').innerHTML = `<div class="vmap">${filterBar('vm', true)}
-    ${refs.length ? `<svg width="${g.w}" height="${g.h}">${g.svg}</svg>` : `<div class="empty">${VF.q || VF.cat ? t('noMatchVals') : t('vmEmpty')}</div>`}</div>`;
+    ${refs.length ? `${svgOpen(g.w, g.h)}>${g.svg}</svg>` : `<div class="empty">${VF.q || VF.cat ? t('noMatchVals') : t('vmEmpty')}</div>`}</div>`;
   $('vmCount').textContent = t('nOfM', refs.length, valueRefs().length);
   $('dinfo').textContent = t('vmInfo', refs.length, g.n);
   bindFilterBar('vm', renderValueMap);
@@ -2033,6 +2226,7 @@ function renderTabs() {
   $('vtabs').innerHTML = openVals.map(r => `<button class="vtab${tab === 'val:' + r ? ' on' : ''}" data-ref="${esc(r)}" title="${esc(r)}">${VICON[refType(r)]} ${esc(refName(r))}<span class="x" data-close="${esc(r)}" title="${t('vtClose')}">✕</span></button>`).join('');
   $('vtabs').querySelectorAll('.vtab').forEach(b => b.onclick = ev2 => { if (ev2.target.dataset.close) { ev2.stopPropagation(); closeValueTab(ev2.target.dataset.close); } else setTab('val:' + b.dataset.ref); });
   $('tVmap').classList.toggle('on', tab === 'vmap'); $('tKinds').classList.toggle('on', tab === 'kinds');
+  $('tNpcs').classList.toggle('on', tab === 'npcs'); $('tDlg').classList.toggle('on', tab === 'dlg');
 }
 function renameVar(old, nu) {
   if (!nameOk(nu) || S.vars[nu] || S.counters[nu] || S.flags[nu]) return t('vtRenameErr');
@@ -2051,7 +2245,7 @@ function renderValueTab(ref) {
   const chips = list => list.length ? list.join('') : `<span class="muted">${t('vtNone')}</span>`;
   const evRow = (e, how) => `<div class="crow"><span class="chip link" data-goev="${esc(e.id)}">${esc(e.id)}</span><span class="how">${esc(how)}</span></div>`;
   const loc = o => o && typeof o === 'object' ? o : {};
-  let form = `<div class="field"><label>${t('vtName')}</label>${k === 'var' ? `<input type="text" id="vfName" value="${esc(n)}"><div class="err" id="vfErr"></div>` : `<b>${esc(n)}</b><div class="muted" style="font-size:11px">${t('vtNoRename')}</div>`}</div>`;
+  let form = `<div class="field"><label>${t('vtName')}</label>${k === 'var' ? `<input type="text" id="vfName" value="${esc(n)}"><div class="err" id="vfErr"></div>` : `<b>${esc(n)}</b><div class="muted" style="font-size: calc(11px * var(--fs, 1))">${t('vtNoRename')}</div>`}</div>`;
   form += `<div class="field"><label>${t('vtCategory')}</label><input type="text" id="vfCat" list="catList2" value="${esc(rec.category || '')}" placeholder="${esc(catOf(ref))}">
     <datalist id="catList2">${allCats().map(c => `<option value="${esc(c)}">`).join('')}</datalist></div>`;
   if (k === 'var') form += `<div class="row2"><div class="field"><label>${t('vtType')}</label><select id="vfType"><option${(rec.type || 'int') === 'int' ? ' selected' : ''}>int</option><option${rec.type === 'bool' ? ' selected' : ''}>bool</option></select></div>
@@ -2065,14 +2259,14 @@ function renderValueTab(ref) {
       <div class="field"><label>${t('vtClamp')}</label><div style="display:flex;gap:4px"><input type="number" id="vfMin" value="${(rec.clamp || [])[0] ?? ''}" style="width:70px"> … <input type="number" id="vfMax" value="${(rec.clamp || [])[1] ?? ''}" style="width:70px"></div></div></div>`;
   if (k === 'flag') form += `<div class="field"><label>${t('vtScope')}</label><select id="vfScope"><option${rec.scope !== 'meta' ? ' selected' : ''}>run</option><option${rec.scope === 'meta' ? ' selected' : ''}>meta</option></select></div>
       <div class="field"><label>${t('vtSetBy')}</label><input type="text" id="vfSetBy" value="${esc(rec.setBy || '')}"></div>`;
-  form += `<div class="muted" style="font-size:11px">${t('vtFile', file)}</div><div class="actions2"><button class="primary" id="vfSave">${t('vtSave')}</button>${k === 'var' ? `<button id="vfDel">${t('vtDelete')}</button>` : ''}<button id="vfClose">${t('vtClose')}</button></div>`;
+  form += `<div class="muted" style="font-size: calc(11px * var(--fs, 1))">${t('vtFile', file)}</div><div class="actions2"><button class="primary" id="vfSave">${t('vtSave')}</button>${k === 'var' ? `<button id="vfDel">${t('vtDelete')}</button>` : ''}<button id="vfClose">${t('vtClose')}</button></div>`;
   const mini = valueGraphSvg([ref], ref);
-  $('pane').innerHTML = `<div class="vt"><div><h2>${VICON[k]} ${esc(n)} <span class="muted" style="font-size:12px;font-weight:normal">${t(VTYPE[k])}</span></h2>${form}</div>
+  $('pane').innerHTML = `<div class="vt"><div><h2>${VICON[k]} ${esc(n)} <span class="muted" style="font-size: calc(12px * var(--fs, 1));font-weight:normal">${t(VTYPE[k])}</span></h2>${form}</div>
     <div><div class="sec">${t('vtWriters')} (${changers(ref).length})</div>${chips(changers(ref).map(e => evRow(e, howWrite(e, ref))))}
       <div class="sec">${t('vtReaders')} (${readersOnly(ref).length})</div>${chips(readersOnly(ref).map(e => evRow(e, howRead(e, ref))))}
       ${k === 'var' ? `<div class="sec">${t('vtWatchers')} (${watchers(ref).length})</div>${chips(watchers(ref).map(e => evRow(e, t('lbChange'))))}` : ''}
       <div class="sec">${t('vtLinked')} (${linkedValues(ref).length})</div><div class="chips">${chips(linkedValues(ref).map(r => `<span class="chip link" data-val="${esc(r)}">${VICON[refType(r)]} ${esc(refName(r))}</span>`))}</div>
-      <div class="mini"><svg width="${mini.w}" height="${mini.h}">${mini.svg}</svg></div></div></div>`;
+      <div class="mini">${svgOpen(mini.w, mini.h)}>${mini.svg}</svg></div></div></div>`;
   $('dinfo').textContent = `${t(VTYPE[k])} · ✎ ${changers(ref).length} · 👁 ${readersOnly(ref).length + watchers(ref).length} · ⇄ ${linkedValues(ref).length}`;
   const upd = fn => edit(t('hValEdit', n), fn), num = v => v === '' ? undefined : parseInt(v, 10);
   if (k === 'var') {
@@ -2363,7 +2557,7 @@ function renderFloorMap() {
   Object.keys(ghosts).forEach(id => { const p = pos[id];
     svg += `<g class="fnode" data-id="${id}"><rect x="${p.x}" y="${p.y}" width="${FW}" height="${FH}" rx="4" fill="#4a2222" stroke="var(--bad)" stroke-dasharray="5 3"/><text x="${p.x + 6}" y="${p.y + 16}">⛔ ${id}</text></g>`; });
   const W = Math.max(...Object.values(pos).map(p => p.x)) + FW + 40, H = Y0 + acts.length * (FH + GY) + 10;
-  $('pane').innerHTML = `<svg width="${W}" height="${H}"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b929c"/></marker></defs>${edges}${svg}${labels}</svg>`;
+  $('pane').innerHTML = `${svgOpen(W, H)}><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b929c"/></marker></defs>${edges}${svg}${labels}</svg>`;
   freshStairs = new Set();
   const nStairs = S.floors.reduce((n, f) => n + f.stairs.length, 0), nLocked = S.floors.reduce((n, f) => n + f.stairs.filter(st => st.unlock).length, 0);
   $('dinfo').textContent = t('fmInfo', S.floors.length, nStairs, nLocked);
@@ -2397,7 +2591,7 @@ function renderProblems() {
   $('dinfo').textContent = t('pInfo', all.filter(p => RULES[p.rule].sev === 'error').length, all.filter(p => RULES[p.rule].sev === 'warn').length);
   $('pane').querySelectorAll('[data-rule]').forEach(c => c.onclick = () => { ruleOff.has(c.dataset.rule) ? ruleOff.delete(c.dataset.rule) : ruleOff.add(c.dataset.rule); renderAll(); });
   $('pane').querySelectorAll('[data-act]').forEach(b => b.onclick = () => createChapter(b.dataset.act));
-  $('pane').querySelectorAll('tr.row').forEach(tr => tr.onclick = ev => { if (ev.target.tagName === 'BUTTON') return; const p = shown[tr.dataset.i]; if (p.rule === 'unused_var') setTab('vars'); else selectSubject(p.id, { toDiagram: true }); });
+  $('pane').querySelectorAll('tr.row').forEach(tr => tr.onclick = ev => { if (ev.target.tagName === 'BUTTON') return; const p = shown[tr.dataset.i]; if (p.rule === 'unused_var') setTab('vars'); else if (p.rule === 'bad_dialogue') { dlgSel = p.id; setTab('dlg'); } else selectSubject(p.id, { toDiagram: true }); });
   $('pane').querySelectorAll('[data-fix]').forEach(b => b.onclick = () => runFix(shown[b.dataset.i], b.dataset.fix));
 }
 function fixButtons(p, i) {
@@ -2480,6 +2674,10 @@ function diffFiles() {
     out.push({ path: 'assets/data/story/vars.json' + (isNewF ? t('newFile') : ''), body: [...a.filter(l => !b.includes(l)).map(l => ['del', l]), ...b.map(l => [isNewF || !A.has(l) ? 'add' : 'ctx', l])] });
   }
   if (body.length) out.push({ path: 'assets/data/text.json', body: [['ctx', '  "strings": {'], ['ctx', '    ...'], ...body, ['ctx', '  }']] });
+  for (const [key, folder] of [['npcs', 'npcs'], ['dialogues', 'dialogue']])
+    Object.keys(S[key]).forEach(id => { if (JSON.stringify(base[key][id]) === JSON.stringify(S[key][id])) return;
+      const isNewF = !base[key][id], a = isNewF ? [] : JSON.stringify(base[key][id], null, 2).split('\n'), b = JSON.stringify(S[key][id], null, 2).split('\n'), A2 = new Set(a);
+      out.push({ path: `assets/data/${folder}/${id}.json` + (isNewF ? t('newFile') : ''), body: [...a.filter(l => !b.includes(l)).map(l => ['del', l]), ...b.map(l => [A2.has(l) ? 'ctx' : 'add', l])] }); });
   // the last item before a closing bracket has no comma, as in the real file
   out.forEach(f => f.body.forEach((x, i) => { const next = f.body[i + 1]; if (next && /^\s*[\]}],?$/.test(next[1]) && x[0] !== 'del') x[1] = x[1].replace(/,$/, ''); }));
   return out;
@@ -2531,7 +2729,7 @@ async function readLiveData(dir) {
     const pid = name.slice(0, -5); pools.push(pid);
     for (const e of JSON.parse(await readText(dir, A + 'events/' + name)).events || []) {
       const rec = { id: e.eventId, kind: e.kind, pool: pid, text: e.text, title: e.title || e.eventId + '.title', desc: e.desc || e.eventId + '.desc' };
-      ['trigger', 'requires', 'actions', 'next', 'once', 'inLog'].forEach(k => { if (k in e) rec[k] = e[k]; });
+      ['trigger', 'requires', 'actions', 'next', 'once', 'inLog', 'dialogue', 'afterDialogue', 'topicOrder', 'maxTimes'].forEach(k => { if (k in e) rec[k] = e[k]; });
       events.push(rec);
     }
   }
@@ -2543,11 +2741,26 @@ async function readLiveData(dir) {
   }
   const strings = JSON.parse(await readText(dir, A + 'text.json')).strings || {}, known = new Set(events.map(e => e.id));
   const wanted = new Set([...events.flatMap(e => [e.text, e.title, e.desc]), ...floors.flatMap(f => f.events.filter(i => !known.has(i)))]);
+  const npcFiles = {};   // the NPC files; their name / greeting keys are texts too (08_NPC_DIALOGUE.md)
+  for (const n of await listNames(dir, A + 'npcs', /\.json$/).catch(() => [])) npcFiles[n.slice(0, -5)] = JSON.parse(await readText(dir, A + 'npcs/' + n));
+  Object.values(npcFiles).forEach(n => ['name', 'greeting'].forEach(k => { if (n[k]) wanted.add(n[k]); }));
   const texts = Object.fromEntries([...wanted].sort().filter(k => k in strings).map(k => [k, strings[k]]));
   const opt = async p => { const s = await tryText(dir, A + p); return s ? noUnderscore(JSON.parse(s)) : {}; };
   return { snapshot: 'live', pools, events, floors, texts, npcs: DATA.npcs,
     flags: await opt('story/flags.json'), counters: await opt('story/counters.json'), vars: await opt('story/vars.json'), kinds: await opt('events/kinds.json'),
     items: Object.keys(await opt('items.json')).sort(),
+    dialogues: (await listNames(dir, A + 'dialogue', /\.json$/)).map(n => n.slice(0, -5)).sort(), stats: DATA.stats,
+    npcFiles, sprites: DATA.sprites,
+    dialogueFiles: await (async () => { const out = {};
+      for (const n of await listNames(dir, A + 'dialogue', /\.json$/)) out[n.slice(0, -5)] = JSON.parse(await readText(dir, A + 'dialogue/' + n));
+      return out; })(),
+    dialogueActions: await (async () => { const out = {};
+      for (const n of await listNames(dir, A + 'dialogue', /\.json$/)) {
+        const acts = Object.values(JSON.parse(await readText(dir, A + 'dialogue/' + n)).nodes || {})
+          .flatMap(node => (node && node.choices) || []).flatMap(c => Array.isArray(c.actions) ? c.actions : c.actions ? [c.actions] : []);
+        if (acts.length) out[n.slice(0, -5)] = acts;
+      }
+      return out; })(),
     varCats: await (async () => { const s = await tryText(dir, A + 'story/vars.json'); return s ? JSON.parse(s)._categories || [] : []; })() };
 }
 async function useDir(dir, fromOther) {
@@ -2578,7 +2791,10 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const poolRec = e => { const o = { eventId: e.id, kind: e.kind, text: e.text, title: e.title || e.id + '.title', desc: e.desc || e.id + '.desc' };
   if ('inLog' in e) o.inLog = e.inLog;
   if (e.trigger && e.trigger.on !== 'step') o.trigger = e.trigger; const rq = reqJson(e); if (rq) o.requires = rq;
-  if (e.actions && e.actions.length) o.actions = e.actions; if (e.next && e.next.length) o.next = e.next; return o; };
+  if (e.actions && e.actions.length) o.actions = e.actions; if (e.next && e.next.length) o.next = e.next;
+  if (e.once === false) { o.once = false; if (e.maxTimes > 0) o.maxTimes = e.maxTimes; }
+  if (e.trigger && e.trigger.on === 'talk') { if (e.dialogue) o.dialogue = e.dialogue; if (e.afterDialogue) o.afterDialogue = e.afterDialogue; if (Number.isInteger(e.topicOrder)) o.topicOrder = e.topicOrder; }
+  return o; };
 const oneLine = v => Array.isArray(v) ? '[' + v.map(oneLine).join(', ') + ']'
   : v && typeof v === 'object' ? (Object.keys(v).length ? '{ ' + Object.entries(v).map(([k, x]) => JSON.stringify(k) + ': ' + oneLine(x)).join(', ') + ' }' : '{}')
   : JSON.stringify(v);
@@ -2610,7 +2826,7 @@ async function liveWrites() {
     const path = A + 'events/' + p + '.json', before = await tryText(dir, path), obj = before ? JSON.parse(before) : { events: [] };
     const disk = obj.events || [], diskById = new Map(disk.map(r => [r.eventId, r])), mine = new Set([...bEv, ...sEv].map(e => e.id));
     obj.events = [...sEv.map(e => { const r = { ...(diskById.get(e.id) || {}) }, o = poolRec(e);
-        ['trigger', 'requires', 'actions', 'next', 'inLog'].forEach(k => delete r[k]); return Object.assign(r, o); }),   /* the editor's fields win; a removed inLog goes */
+        ['trigger', 'requires', 'actions', 'next', 'inLog', 'dialogue', 'afterDialogue', 'topicOrder', 'once', 'maxTimes'].forEach(k => delete r[k]); return Object.assign(r, o); }),   /* the editor's fields win; a removed inLog goes */
       ...disk.filter(r => !mine.has(r.eventId))];   // records someone else added since this editor read the pool
     put(path, before, asText(obj, before));
   }
@@ -2644,6 +2860,12 @@ async function liveWrites() {
     if (key === 'vars') { if (S.cats.length) out._categories = S.cats; else delete out._categories; }
     put(path, before, asText({ ...out, ...S[key] }, before));
   }
+  for (const [key, folder] of [['npcs', 'npcs'], ['dialogues', 'dialogue']])   // 08_NPC_DIALOGUE.md: whole files, 2-space JSON
+    for (const id of Object.keys(S[key])) {
+      if (same(base[key][id], S[key][id])) continue;
+      const path = A + folder + '/' + id + '.json', before = await tryText(dir, path);
+      put(path, before, asText(S[key][id], before));
+    }
   for (const key of ['flags', 'counters']) {
     const changes = Object.keys(S[key]).filter(k => !same(base[key][k], S[key][k])).map(k => [k, S[key][k]]);
     if (!changes.length) continue;
@@ -2737,7 +2959,7 @@ function renderKinds() {
     <tr><td><input type="color" id="kNewColor" value="#8b929c"></td><td><input id="kNewId" placeholder="${t('kIdPh')}" style="width:130px"></td>
       <td><input id="kNewZh" placeholder="zh_TW" style="width:110px"></td><td><input id="kNewEn" placeholder="en" style="width:120px"></td>
       <td colspan="4"><button class="primary" id="kAdd">${t('kAdd')}</button> <span class="err" id="kNewErr"></span></td></tr></tbody></table>
-    <p class="muted" style="font-size:11px;margin-top:8px">${t('kNote')}</p></div>`;
+    <p class="muted" style="font-size: calc(11px * var(--fs, 1));margin-top:8px">${t('kNote')}</p></div>`;
   $('dinfo').textContent = t('kInfo', kindsList().length, S.events.length);
   const row = el => el.closest('tr').dataset.k;
   const setRec = (k, fn, label) => edit(label || t('hKindEdit', k), () => fn(S.kinds[k]));
@@ -2764,6 +2986,317 @@ function renderKinds() {
   $('kNewId').onkeydown = ev2 => { if (ev2.key === 'Enter') $('kAdd').click(); };
   if (kindFocusNew) { kindFocusNew = false; $('kNewId').focus(); }
 }
+// ---------- NPCs and dialogues (docs/event_editor/08_NPC_DIALOGUE.md) ----------
+// NPCs tab: an NPC file (name, greeting, sprite, chat lines and their order, the menu rule), its topics in menu order,
+// and a talk preview that follows the game's rules (talk_system.cpp). Dialogues tab: a dialogue file's nodes as cards.
+let npcSel = null, dlgSel = null, PV = null;
+const ID_OK = s => /^[A-Za-z0-9_-]+$/.test(s);
+const npcIds = () => [...new Set([...Object.keys(S.npcs), ...Object.keys(DATA.npcs || {}),
+  ...S.events.filter(e => e.trigger.on === 'talk' && e.trigger.npc).map(e => e.trigger.npc)])].sort();
+// the NPC's talk events in menu order: topicOrder first (lower first), then pool order
+function topicsOf(npc) {
+  const list = S.events.map((e, i) => ({ e, i })).filter(x => x.e.trigger.on === 'talk' && x.e.trigger.npc === npc);
+  const pools = [...S.pools].sort();
+  return list.sort((a, b) => (a.e.topicOrder ?? 1e9) - (b.e.topicOrder ?? 1e9) || pools.indexOf(a.e.pool) - pools.indexOf(b.e.pool) || a.i - b.i).map(x => x.e);
+}
+const woken = id => S.events.some(o => o.next.includes(id));
+const txt = k => S.texts[k] || {};
+function setTxt(key, lang, v) { const o = { ...(S.texts[key] || {}) }; o[lang] = v; S.texts[key] = o; }
+const field = v => v && typeof v === 'object' ? v : { en: v || '' };   // a dialogue text / label as a language object
+const jsonVal = v => v == null ? '' : JSON.stringify(v);
+// a JSON field (conditions, unusual actions): empty = none; invalid JSON is refused with a red border
+function parseJsonField(el) {
+  const s = el.value.trim(); if (!s) { el.classList.remove('bad'); return { ok: true, v: null }; }
+  try { const v = JSON.parse(s); el.classList.remove('bad'); return { ok: true, v }; } catch (_) { el.classList.add('bad'); toast(t('jsonBad')); return { ok: false }; }
+}
+// action rows for any list of actions (chat lines, dialogue choices); actions the rows do not know stay as JSON chips
+const ACT_KINDS = [['addVar', 'aAddVar'], ['setVar', 'aSetVar'], ['addCounter', 'aAddCounter'], ['setFlag', 'aSetFlag'], ['give', 'aGive'], ['take', 'aTake'], ['addStat', 'aAddStat']];
+function actsHtml(list, key) {
+  return (list || []).map((a, i) => ACT_KINDS.some(([v]) => v === a.type)
+    ? `<div class="lrow gact" data-k="${key}" data-i="${i}"><select class="gType">${ACT_KINDS.map(([v, k]) => `<option value="${v}"${v === a.type ? ' selected' : ''}>${t(k)}</option>`).join('')}</select>
+       <select class="gTarget">${actionTargets(a.type, actTarget(a))}</select>${['addVar', 'setVar', 'addCounter', 'addStat'].includes(a.type) ? `<input type="number" class="gVal" value="${esc(actValue(a) === true ? 1 : actValue(a) === false ? 0 : actValue(a))}">` : ''}<button class="del gDel">✕</button></div>`
+    : `<div class="lrow gact" data-k="${key}" data-i="${i}"><span class="chip" title="${esc(JSON.stringify(a))}">${esc(a.type || '?')} ${esc(JSON.stringify(a).slice(0, 60))}</span><button class="del gDel">✕</button></div>`).join('')
+    + `<button class="gAdd" data-k="${key}">${t('addAct')}</button>`;
+}
+// getList(key, create) returns the live array inside S (called inside edit(), after its snapshot)
+function bindActs(getList) {
+  $('pane').querySelectorAll('.gact').forEach(row => { const k = row.dataset.k, i = +row.dataset.i;
+    const upd = () => { const ty = row.querySelector('.gType').value, tg = row.querySelector('.gTarget'), vl = row.querySelector('.gVal');
+      edit(t('hAct', k), () => { const l = getList(k, true), old = l[i];
+        l[i] = ty !== old.type ? makeAction(ty, (ty === 'addVar' || ty === 'setVar' ? Object.keys(S.vars) : ty === 'addCounter' ? Object.keys(S.counters) : ty === 'setFlag' ? Object.keys(S.flags) : ty === 'addStat' ? statList() : itemList())[0] || '', actValue(old) || 1)
+          : makeAction(ty, tg.value, vl ? vl.value : 1); }); };
+    if (row.querySelector('.gType')) { row.querySelector('.gType').onchange = upd; row.querySelector('.gTarget').onchange = upd; if (row.querySelector('.gVal')) row.querySelector('.gVal').onchange = upd; }
+    row.querySelector('.gDel').onclick = () => edit(t('hAct', k), () => getList(k, true).splice(i, 1)); });
+  $('pane').querySelectorAll('.gAdd').forEach(b => b.onclick = () => edit(t('hAct', b.dataset.k), () => getList(b.dataset.k, true).push(makeAction('addVar', Object.keys(S.vars)[0] || '', 1))));
+}
+const goEv = () => $('pane').querySelectorAll('[data-goev]').forEach(c => c.onclick = () => { if (ev(c.dataset.goev)) selectSubject(c.dataset.goev); });
+const goDlg = () => $('pane').querySelectorAll('[data-godlg]').forEach(c => c.onclick = () => { dlgSel = c.dataset.godlg; setTab('dlg'); });
+
+// ---- the talk preview: the game's rules (talk_system.cpp, condition.cpp) on a pretend run ----
+function pvFresh() {
+  return { finished: new Set(), started: new Set(), vars: Object.fromEntries(Object.entries(S.vars).map(([k, v]) => [k, v.default === true ? 1 : +v.default || 0])),
+    counters: {}, cleared: new Set(), stats: { hp: 100, atk: 10, def: 5, gold: 0, lv: 1 }, counts: {}, talks: {}, log: [] };
+}
+function pvEval(c) {
+  if (!c) return true; const P = PV;
+  if (Array.isArray(c.all)) return c.all.every(pvEval); if (Array.isArray(c.any)) return c.any.some(pvEval); if (c.not) return !pvEval(c.not);
+  const n = v => v === true ? 1 : v === false ? 0 : +v || 0;
+  switch (c.type) {
+    case 'runFlagSet': return String(c.flag || '').startsWith('event_') ? P.finished.has(c.flag.slice(6)) : false;
+    case 'varAtLeast': return (P.vars[c.var] || 0) >= n(c.value);
+    case 'varEquals': return (P.vars[c.var] || 0) === n(c.value);
+    case 'counterAtLeast': return (P.counters[c.counter] || 0) >= n(c.min);
+    case 'talkCountAtLeast': return ((P.talks[c.npc] || {}).count || 0) >= n(c.value);
+    case 'stageCleared': return P.cleared.has(c.stageId);
+    case 'statAtLeast': return (P.stats[c.stat] || 0) >= n(c.value);
+    case 'always': return true;
+    case 'onStage': return P.stage === c.stageId;
+    default: return false;   // as the game: an unknown leaf (or one the preview cannot know, e.g. itemHeld) fails
+  }
+}
+const pvCount = id => Math.max(PV.counts[id] || 0, PV.finished.has(id) ? 1 : 0);
+function pvMenu(npc) {
+  const open = [], done = [];
+  topicsOf(npc).forEach(e => { const left = e.once === false && (!e.maxTimes || pvCount(e.id) < e.maxTimes);
+    if (PV.finished.has(e.id) && !left) { if (e.afterDialogue) done.push({ id: e.id, finished: true }); }
+    else if ((!woken(e.id) || PV.started.has(e.id) || PV.finished.has(e.id)) && pvEval(reqJson(e))) open.push({ id: e.id, finished: false }); });
+  return [...open, ...done];
+}
+function pvChat(f) {   // nextChatLine
+  const st = PV.talks[f.npcId] = PV.talks[f.npcId] || { index: 0, count: 0, last: -1 };
+  const lines = (f.chat && f.chat.lines || []).map(l => typeof l === 'string' ? { dialogue: l } : l);
+  const avail = lines.map((l, i) => i).filter(i => pvEval(lines[i].requires)); if (!avail.length) return -1;
+  const order = (f.chat && f.chat.order) || 'loop', n = avail.length;
+  if (n === 1) { if (order === 'loop') st.index++; return avail[0]; }
+  if (order === 'random') { let p = Math.floor(Math.random() * n); if (avail[p] === st.last) p = (p + 1) % n; st.last = avail[p]; return avail[p]; }
+  const at = order === 'stay' ? Math.min(st.index, n - 1) : st.index; const line = avail[at % n];
+  if (order === 'loop' || st.index < n - 1) st.index++;
+  return line;
+}
+function firstText(dlgId) {   // what the dialogue opens with: its start node's text
+  const d = S.dialogues[dlgId]; if (!d) return t('pvNoFile', dlgId);
+  const start = Array.isArray(d.start) ? ((d.start.find(s => pvEval(s.requires)) || {}).node) : d.start;
+  const node = (d.nodes || {})[start]; return node ? L_(node.text) : '?';
+}
+function pvTalk(npc) {
+  const f = S.npcs[npc] || { npcId: npc, chat: { lines: [{ dialogue: npc }] } }, st = PV.talks[npc] = PV.talks[npc] || { index: 0, count: 0, last: -1 };
+  const menu = pvMenu(npc), open = menu.filter(m => !m.finished).length, n = st.count + 1;
+  let entry;
+  if (!menu.length) { const l = pvChat(f), line = l >= 0 ? f.chat.lines[l] : null, id = line ? (typeof line === 'string' ? line : line.dialogue) : '';
+    entry = { n, kind: 'chat', text: id ? `💬 ${id}: ${firstText(id)}` : t('pvNothing') }; }
+  else if (menu.length === 1 && open === 1 && !(f.topics && f.topics.menu === 'always')) entry = { n, kind: 'topic', menu };
+  else entry = { n, kind: 'menu', menu };
+  st.count++; PV.log.unshift(entry);
+}
+function pvFinish(id) {   // the topic was played and a finishing choice picked: completeEvent + wakeEvent
+  const e = ev(id); if (!e) return;
+  const again = PV.finished.has(id); PV.counts[id] = pvCount(id) + 1; PV.finished.add(id); PV.started.add(id);
+  if (!again) e.next.forEach(x => PV.started.add(x));
+  e.actions.forEach(a => { if (a.type === 'setVar') PV.vars[a.var] = +a.value || 0; if (a.type === 'addVar') PV.vars[a.var] = (PV.vars[a.var] || 0) + (+a.delta || 0);
+    if (a.type === 'addCounter') PV.counters[a.counter] = (PV.counters[a.counter] || 0) + (+a.delta || 0); });
+}
+function previewHtml(npc) {
+  if (!PV || PV.npc !== npc) { PV = pvFresh(); PV.npc = npc; PV.stage = npcFloors(npc)[0] || ''; }
+  const topics = topicsOf(npc), name = id => { const e = ev(id); return e ? (L_(txt(e.title)) || id) : id; };
+  const refs = new Set(); topics.forEach(e => { e.req.forEach(l => { if (l.type === 'runFlagSet' && String(l.flag).startsWith('event_')) refs.add(l.flag.slice(6)); }); refs.add(e.id); });
+  const usedVars = Object.keys(S.vars).filter(v => topics.some(e => JSON.stringify(reqJson(e) || {}).includes('"' + v + '"')) || JSON.stringify(S.npcs[npc] || {}).includes('"' + v + '"'));
+  const usedCounters = Object.keys(S.counters).filter(c => topics.some(e => JSON.stringify(reqJson(e) || {}).includes('"' + c + '"')));
+  const item = (m, i) => `<span class="chip${m.finished ? '' : ' link'}">${m.finished ? '✓ ' : ''}${esc(name(m.id))}${m.finished ? '' : ` <button class="link pvDone" data-id="${esc(m.id)}" title="${t('pvFinishT')}">${t('pvFinish')}</button>`}</span>`;
+  return `<div class="logic"><h4>${t('pvTitle')}</h4><p class="muted" style="margin:0 0 6px;font-size: calc(12px * var(--fs, 1))">${t('pvIntro')}</p>
+    <div class="lrow"><span class="lbl">${t('pvDone')}</span><span class="chips">${[...refs].map(id => `<label class="chip kpick${PV.finished.has(id) ? ' on' : ''}"><input type="checkbox" class="pvEv" data-id="${esc(id)}"${PV.finished.has(id) ? ' checked' : ''}>${esc(id)}</label>`).join('')}</span></div>
+    ${usedVars.length || usedCounters.length ? `<div class="lrow"><span class="lbl">${t('pvValues')}</span>${usedVars.map(v => `<span class="muted">${esc(v)}</span><input type="number" class="pvVar" data-v="${esc(v)}" value="${PV.vars[v] || 0}">`).join('')}
+      ${usedCounters.map(c => `<span class="muted">${esc(c)}</span><input type="number" class="pvCnt" data-c="${esc(c)}" value="${PV.counters[c] || 0}">`).join('')}</div>` : ''}
+    <div class="lrow"><span class="lbl">${t('pvFloor')}</span><select id="pvFloor">${[...new Set([...npcFloors(npc), PV.stage].filter(Boolean))].map(f => `<option${f === PV.stage ? ' selected' : ''}>${esc(f)}</option>`).join('')}</select></div>
+    <div class="lrow"><span class="lbl">${t('pvCleared')}</span><input id="pvCleared" style="width:200px" placeholder="F05, F10" value="${esc([...PV.cleared].join(', '))}"></div>
+    <div class="lrow"><button id="pvTalk" class="primary">${t('pvTalkBtn')}</button><button id="pvReset">${t('pvReset')}</button>
+      <span class="muted">${t('pvState', (PV.talks[npc] || {}).count || 0, (PV.talks[npc] || {}).index || 0)}</span></div>
+    <div>${PV.log.map((x, i) => `<div class="lrow" style="${i ? 'opacity:.55' : ''}"><span class="lbl">${t('pvTalkN', x.n)}</span>
+      ${x.kind === 'chat' ? esc(x.text) : x.kind === 'topic' ? `${t('pvDirect')} ${item(x.menu[0])}` : `${t('pvMenu')} ${x.menu.map(item).join(' ')} <span class="chip">${t('pvJustChat')}</span> <span class="chip">${t('pvLeave')}</span>`}</div>`).join('')}</div></div>`;
+}
+function bindPreview(npc) {
+  $('pvTalk').onclick = () => { pvTalk(npc); renderNpcs(); };
+  $('pvReset').onclick = () => { PV = null; renderNpcs(); };
+  if ($('pvFloor')) $('pvFloor').onchange = () => { PV.stage = $('pvFloor').value; renderNpcs(); };
+  $('pvCleared').onchange = () => { PV.cleared = new Set($('pvCleared').value.split(/[\s,]+/).filter(Boolean)); };
+  $('pane').querySelectorAll('.pvEv').forEach(c => c.onchange = () => { const id = c.dataset.id;
+    if (c.checked) { PV.finished.add(id); PV.started.add(id); (ev(id) ? ev(id).next : []).forEach(x => PV.started.add(x)); } else PV.finished.delete(id); renderNpcs(); });
+  $('pane').querySelectorAll('.pvVar').forEach(i => i.onchange = () => { PV.vars[i.dataset.v] = parseInt(i.value, 10) || 0; });
+  $('pane').querySelectorAll('.pvCnt').forEach(i => i.onchange = () => { PV.counters[i.dataset.c] = parseInt(i.value, 10) || 0; });
+  $('pane').querySelectorAll('.pvDone').forEach(b => b.onclick = () => { pvFinish(b.dataset.id); renderNpcs(); });
+}
+
+// ---- the NPCs tab ----
+function renderNpcs() {
+  const ids = npcIds(); if (!npcSel || !ids.includes(npcSel)) npcSel = ids[0] || null;
+  const scroll = $('pane').scrollTop, id = npcSel, f = id ? S.npcs[id] : null, places = (DATA.npcs || {})[id] || [];
+  const list = `<div class="chips" style="margin-bottom:8px">${ids.map(n => `<span class="chip link npcPick${n === id ? ' on' : ''}" data-n="${esc(n)}" style="${n === id ? 'border-color:var(--accent)' : ''}">${esc(n)}${S.npcs[n] ? '' : ' ⚠'}</span>`).join('')}
+    <input id="npcNew" placeholder="${t('npcNewPh')}" style="width:140px"><button id="npcNewBtn">${t('npcNewBtn')}</button></div>`;
+  if (!id) { $('pane').innerHTML = `<div class="plist">${list}<p class="muted">${t('npcNone')}</p></div>`; bindNpcList(); return; }
+  const where = places.length ? places.join(', ') : `<span class="warnTag">⚠ ${t('npcNowherePlaced')}</span>`;
+  let body;
+  if (!f) body = `<p>${t('npcNoFile', id)}</p><button id="npcCreate" class="primary">${t('npcCreate')}</button>`;
+  else {
+    const lines = (f.chat && f.chat.lines || []).map(l => typeof l === 'string' ? { dialogue: l } : l), order = (f.chat && f.chat.order) || 'loop';
+    const dOpts = cur => [...new Set([...Object.keys(S.dialogues).sort(), cur].filter(Boolean))].map(d => `<option${d === cur ? ' selected' : ''}>${esc(d)}</option>`).join('');
+    const topics = topicsOf(id);
+    body = `<div class="logic"><h4>${t('npcFile', id)}</h4>
+      <div class="lrow"><span class="lbl">${t('npcName')}</span><input class="npcTx" data-k="name" data-l="zh_TW" value="${esc(txt(f.name).zh_TW || '')}" placeholder="zh_TW"><input class="npcTx" data-k="name" data-l="en" value="${esc(txt(f.name).en || '')}" placeholder="en"></div>
+      <div class="lrow"><span class="lbl">${t('npcGreeting')}</span><input class="npcTx" data-k="greeting" data-l="zh_TW" style="width:260px" value="${esc(txt(f.greeting).zh_TW || '')}" placeholder="zh_TW"><input class="npcTx" data-k="greeting" data-l="en" style="width:260px" value="${esc(txt(f.greeting).en || '')}" placeholder="en"></div>
+      <div class="lrow"><span class="lbl">${t('npcSprite')}</span><input id="npcSprite" list="spriteList" value="${esc(f.sprite || '')}" placeholder="npc_${esc(id)}"><datalist id="spriteList">${(DATA.sprites || []).map(s => `<option value="${esc(s)}">`).join('')}</datalist></div>
+      <div class="lrow"><span class="lbl">${t('npcWhere')}</span>${where}</div>
+      <div class="lrow"><span class="lbl">${t('npcMenu')}</span><select id="npcMenu"><option value="auto"${(f.topics || {}).menu === 'always' ? '' : ' selected'}>${t('menuAuto')}</option><option value="always"${(f.topics || {}).menu === 'always' ? ' selected' : ''}>${t('menuAlways')}</option></select></div></div>
+      <div class="logic"><h4>${t('npcChat')}</h4>
+      <div class="lrow"><span class="lbl">${t('npcOrder')}</span><select id="npcOrder">${['loop', 'stay', 'random'].map(o => `<option value="${o}"${o === order ? ' selected' : ''}>${t('order_' + o)}</option>`).join('')}</select></div>
+      ${lines.map((l, i) => `<div class="lrow" style="align-items:flex-start;border-top:1px solid var(--line);padding-top:4px"><span class="lbl">${i + 1}</span>
+        <div><div class="lrow"><select class="lnDlg" data-i="${i}">${dOpts(l.dialogue)}</select><button class="link" data-godlg="${esc(l.dialogue)}">${t('openDlg')}</button>
+          <button class="lnUp" data-i="${i}">▲</button><button class="lnDown" data-i="${i}">▼</button><button class="del lnDel" data-i="${i}">✕</button></div>
+          <div class="lrow" style="align-items:flex-start"><span class="muted">${t('lnWhen')}</span>${condHtml(l.requires, 'line' + i)}</div>
+          <div class="muted" style="font-size: calc(12px * var(--fs, 1))">${t('lnActs')}</div>${actsHtml(l.actions, 'line' + i)}
+          <div class="muted" style="font-size: calc(12px * var(--fs, 1));margin-top:2px">“${esc(firstText(l.dialogue).slice(0, 80))}”</div></div></div>`).join('')}
+      <button id="lnAdd">${t('lnAdd')}</button></div>
+      <div class="logic"><h4>${t('npcTopics', topics.length)}</h4>
+      ${topics.length ? `<table class="vars"><thead><tr><th>#</th><th>${t('tEvent')}</th><th>${t('lTalkFloor')}</th><th>${t('lReq')}</th><th>${t('lAfter')}</th><th>${t('lRepeat')}</th><th></th></tr></thead><tbody>
+        ${topics.map((e, i) => `<tr><td>${i + 1}</td><td><span class="chip link" data-goev="${esc(e.id)}">${esc(e.id)}</span><div class="muted" style="font-size: calc(11px * var(--fs, 1))">${esc(L_(txt(e.title)))}</div></td><td>${talkFloorOf(e) ? esc(talkFloorOf(e)) : talkFloorOf(e) === '' ? `<span class="muted">${t('talkFloorEvery')}</span>` : '?'}</td>
+          <td class="muted" style="font-size: calc(11px * var(--fs, 1))">${esc(e.reqRaw ? JSON.stringify(e.reqRaw) : e.req.map(l => JSON.stringify(l)).join(' & ') || '—')}${woken(e.id) ? ' · ' + t('needsWake') : ''}</td>
+          <td>${e.afterDialogue ? `<span class="chip link" data-godlg="${esc(e.afterDialogue)}">${esc(e.afterDialogue)}</span>` : `<span class="muted">${t('afterHide')}</span>`}</td>
+          <td>${e.once === false ? (e.maxTimes ? '× ' + e.maxTimes : '∞') : '—'}</td>
+          <td><button class="tpUp" data-i="${i}"${i ? '' : ' disabled'}>▲</button><button class="tpDown" data-i="${i}"${i < topics.length - 1 ? '' : ' disabled'}>▼</button></td></tr>`).join('')}</tbody></table>`
+        : `<p class="muted">${t('npcNoTopics')}</p>`}</div>
+      ${previewHtml(id)}`;
+  }
+  $('pane').innerHTML = `<div class="plist">${list}${body}</div>`; $('pane').scrollTop = scroll;
+  bindNpcList(); goEv(); goDlg();
+  if (!f) { $('npcCreate').onclick = () => createNpc(id); return; }
+  const F = () => S.npcs[id], linesOf = () => { const c = F().chat = F().chat || { lines: [] }; c.lines = c.lines.map(l => typeof l === 'string' ? { dialogue: l } : l); return c.lines; };
+  $('pane').querySelectorAll('.npcTx').forEach(inp => inp.onchange = () => edit(t('hNpc', id), () => {
+    const k = inp.dataset.k; if (!F()[k]) F()[k] = `npc.${id}.${k}`; setTxt(F()[k], inp.dataset.l, inp.value); }));
+  $('npcSprite').onchange = () => edit(t('hNpc', id), () => { const v = $('npcSprite').value.trim(); if (v) F().sprite = v; else delete F().sprite; });
+  $('npcMenu').onchange = () => edit(t('hNpc', id), () => { F().topics = { ...(F().topics || {}), menu: $('npcMenu').value }; });
+  $('npcOrder').onchange = () => edit(t('hNpc', id), () => { linesOf(); F().chat.order = $('npcOrder').value; });
+  $('pane').querySelectorAll('.lnDlg').forEach(s => s.onchange = () => edit(t('hNpc', id), () => linesOf()[+s.dataset.i].dialogue = s.value));
+  (F().chat && F().chat.lines || []).forEach((_, i) => bindCond('line' + i, () => (linesOf()[i] || {}).requires || null,
+    c => { const l = linesOf()[i]; if (c) l.requires = c; else delete l.requires; }, t('hNpc', id)));
+  const move = (i, d) => edit(t('hNpc', id), () => { const l = linesOf(); if (i + d < 0 || i + d >= l.length) return; [l[i], l[i + d]] = [l[i + d], l[i]]; });
+  $('pane').querySelectorAll('.lnUp').forEach(b => b.onclick = () => move(+b.dataset.i, -1));
+  $('pane').querySelectorAll('.lnDown').forEach(b => b.onclick = () => move(+b.dataset.i, 1));
+  $('pane').querySelectorAll('.lnDel').forEach(b => b.onclick = () => edit(t('hNpc', id), () => linesOf().splice(+b.dataset.i, 1)));
+  $('lnAdd').onclick = () => edit(t('hNpc', id), () => linesOf().push({ dialogue: Object.keys(S.dialogues).sort()[0] || id }));
+  bindActs((k, create) => { const l = linesOf()[+k.slice(4)]; if (!l.actions) l.actions = []; return l.actions; });
+  // topics: ▲ / ▼ renumber every topic of this NPC 1..n (topicOrder)
+  const reorder = (i, d) => edit(t('hTopicOrder', id), () => { const tp = topicsOf(id); [tp[i], tp[i + d]] = [tp[i + d], tp[i]]; tp.forEach((e, k) => e.topicOrder = k + 1); });
+  $('pane').querySelectorAll('.tpUp').forEach(b => b.onclick = () => reorder(+b.dataset.i, -1));
+  $('pane').querySelectorAll('.tpDown').forEach(b => b.onclick = () => reorder(+b.dataset.i, 1));
+  bindPreview(id);
+}
+function bindNpcList() {
+  $('pane').querySelectorAll('.npcPick').forEach(c => c.onclick = () => { npcSel = c.dataset.n; renderNpcs(); });
+  $('npcNewBtn').onclick = () => { const n = $('npcNew').value.trim();
+    if (!ID_OK(n)) return toast(t('idBad')); if (S.npcs[n]) return toast(t('idDup', n)); createNpc(n); };
+}
+function createNpc(id) {
+  edit(t('hNpcNew', id), () => {
+    S.npcs[id] = { npcId: id, name: `npc.${id}.name`, chat: { lines: [{ dialogue: S.dialogues[id] ? id : (Object.keys(S.dialogues).sort()[0] || id) }], order: 'loop' }, topics: { menu: 'auto' } };
+    if (!S.texts[`npc.${id}.name`]) S.texts[`npc.${id}.name`] = { zh_TW: id, en: id };
+  });
+  npcSel = id; renderNpcs();
+}
+
+// ---- the Dialogues tab: a dialogue file's nodes as cards ----
+function dlgUsers(id) {
+  return [...S.events.filter(e => e.dialogue === id).map(e => ({ ev: e.id, role: t('roleTopic') })), ...S.events.filter(e => e.afterDialogue === id).map(e => ({ ev: e.id, role: t('roleAfter') })),
+    ...Object.values(S.npcs).filter(n => ((n.chat || {}).lines || []).some(l => (typeof l === 'string' ? l : l.dialogue) === id)).map(n => ({ npc: n.npcId, role: t('roleChat') }))];
+}
+function renderDialogues() {
+  const ids = Object.keys(S.dialogues).sort(); if (!dlgSel || !S.dialogues[dlgSel]) dlgSel = ids[0] || null;
+  const scroll = $('pane').scrollTop, d = dlgSel ? S.dialogues[dlgSel] : null;
+  const head = `<div class="lrow" style="margin-bottom:8px"><span class="lbl">${t('dlgFile')}</span><select id="dlgPick">${ids.map(i => `<option${i === dlgSel ? ' selected' : ''}>${esc(i)}</option>`).join('')}</select>
+    <input id="dlgNew" placeholder="${t('dlgNewPh')}" style="width:160px"><button id="dlgNewBtn">${t('dlgNewBtn')}</button></div>`;
+  if (!d) { $('pane').innerHTML = `<div class="plist">${head}</div>`; bindDlgHead(); return; }
+  const nodes = d.nodes || {}, nids = Object.keys(nodes), users = dlgUsers(dlgSel), condStart = Array.isArray(d.start);
+  const nodeOpts = (cur, close) => (close ? `<option value=""${cur ? '' : ' selected'}>${t('dlgClose')}</option>` : '') + [...new Set([...nids, cur].filter(Boolean))]
+    .map(n => `<option value="${esc(n)}"${n === cur ? ' selected' : ''}>${esc(n)}${nodes[n] ? '' : ' ⛔'}</option>`).join('');
+  const langs = o => Object.keys(field(o)).filter(l => l !== 'zh_TW' && l !== 'en').length;
+  const card = nid => { const n = nodes[nid] || {}, tx = field(n.text), ch = n.choices || [];
+    return `<div class="logic" data-node="${esc(nid)}"><div class="lrow"><b>${esc(nid)}</b><input class="ndRename" value="${esc(nid)}" style="width:120px" title="${t('ndRename')}">
+        ${(condStart ? d.start.some(s => s.node === nid) : d.start === nid) ? `<span class="chip">${t('ndStart')}</span>` : ''}<button class="del ndDel" style="margin-left:auto">${t('ndDelete')}</button></div>
+      <div class="lrow"><span class="lbl">zh_TW</span><textarea class="ndText" data-l="zh_TW" rows="2" style="flex:1">${esc(tx.zh_TW || '')}</textarea></div>
+      <div class="lrow"><span class="lbl">en</span><textarea class="ndText" data-l="en" rows="2" style="flex:1">${esc(tx.en || '')}</textarea></div>
+      ${langs(n.text) ? `<div class="muted" style="font-size: calc(11px * var(--fs, 1))">${t('langsKept', langs(n.text))}</div>` : ''}
+      <div class="muted" style="font-size: calc(12px * var(--fs, 1));margin-top:4px">${t('ndChoices')}</div>
+      ${ch.map((c, i) => { const lb = field(c.label);
+        return `<div class="chc" data-i="${i}" style="border-left:3px solid var(--line);padding-left:8px;margin:6px 0">
+          <div class="lrow"><span class="lbl">${i + 1}</span><input class="chLabel" data-l="zh_TW" value="${esc(lb.zh_TW || '')}" placeholder="zh_TW" style="width:220px"><input class="chLabel" data-l="en" value="${esc(lb.en || '')}" placeholder="en" style="width:220px">
+            <button class="chUp">▲</button><button class="chDown">▼</button><button class="del chDel">✕</button></div>
+          <div class="lrow"><span class="lbl">${t('chNext')}</span><select class="chNext">${nodeOpts(typeof c.next === 'string' ? c.next : '', true)}</select>
+            <label><input type="checkbox" class="chFinish"${c.finish ? ' checked' : ''}> ${t('chFinish')}</label>
+            <span class="muted">id</span><input class="chId" value="${esc(c.id || '')}" style="width:80px" title="${t('chIdT')}"></div>
+          <div class="lrow" style="align-items:flex-start"><span class="lbl">${t('lnWhen')}</span>${condHtml(c.requires, 'ch:' + nid + '|' + i)}</div>
+          <div class="lrow" style="align-items:flex-start"><span class="lbl">${t('lActs')}</span><div>${actsHtml(Array.isArray(c.actions) ? c.actions : c.actions ? [c.actions] : [], nid + '|' + i)}
+            ${c.action ? `<div class="muted" style="font-size: calc(11px * var(--fs, 1))">${t('oldAction')} <span class="chip">${esc(JSON.stringify(c.action).slice(0, 80))}</span></div>` : ''}</div></div>
+          <div class="lrow"><span class="lbl">${t('chFire')}</span><span class="chips">${(c.fire || []).map(x => `<span class="chip link${ev(x) ? '' : ' bad'}" data-goev="${esc(x)}">${esc(x)} <button class="del chFireDel" data-x="${esc(x)}">✕</button></span>`).join('')}
+            <select class="chFireAdd"><option value="">${t('nextPick')}</option>${S.events.map(x => `<option>${x.id}</option>`).join('')}</select></span></div></div>`; }).join('')}
+      <button class="chAdd">${t('chAdd')}</button></div>`; };
+  $('pane').innerHTML = `<div class="plist">${head}
+    <div class="logic"><h4>${esc(dlgSel)}.json</h4>
+      <div class="lrow"><span class="lbl">${t('dlgUsedBy')}</span><span class="chips">${users.map(u => u.ev ? `<span class="chip link" data-goev="${esc(u.ev)}">${esc(u.ev)} · ${u.role}</span>` : `<span class="chip">${esc(u.npc)} · ${u.role}</span>`).join('') || `<span class="muted">${t('dlgUnused')}</span>`}</span></div>
+      <div class="lrow"><span class="lbl">${t('dlgStart')}</span>${condStart ? `<span class="muted">${t('dlgCondStart')}</span>` : `<select id="dlgStart">${nodeOpts(d.start, false)}</select>`}
+        <label><input type="checkbox" id="dlgCond"${condStart ? ' checked' : ''}> ${t('dlgCondT')}</label>
+        <label><input type="checkbox" id="dlgFoc"${d.finishOnClose ? ' checked' : ''}> ${t('dlgFoc')}</label></div>
+      ${condStart ? d.start.map((s, i) => `<div class="lrow"><span class="lbl">${i + 1}</span><select class="stNode" data-i="${i}">${nodeOpts(s.node, false)}</select>
+        <button class="del stDel" data-i="${i}">✕</button></div><div style="margin-left:130px">${condHtml(s.requires, 'st' + i, { none: 'stLast' })}</div>`).join('') + `<button id="stAdd">${t('stAdd')}</button>` : ''}
+    </div>
+    ${nids.map(card).join('')}
+    <div class="lrow"><input id="ndNew" placeholder="${t('ndNewPh')}" style="width:140px"><button id="ndNewBtn">${t('ndNewBtn')}</button></div></div>`;
+  $('pane').scrollTop = scroll;
+  bindDlgHead(); goEv();
+  const id = dlgSel, D = () => S.dialogues[id], N = nid => D().nodes[nid];
+  const E = fn => edit(t('hDlg', id), fn);
+  if ($('dlgStart')) $('dlgStart').onchange = () => E(() => D().start = $('dlgStart').value);
+  $('dlgCond').onchange = () => E(() => { D().start = $('dlgCond').checked ? [{ node: Array.isArray(D().start) ? nids[0] : D().start }] : (Array.isArray(D().start) ? (D().start.at(-1) || {}).node || nids[0] : D().start); });
+  $('dlgFoc').onchange = () => E(() => { if ($('dlgFoc').checked) D().finishOnClose = true; else delete D().finishOnClose; });
+  $('pane').querySelectorAll('.stNode').forEach(s => s.onchange = () => E(() => D().start[+s.dataset.i].node = s.value));
+  if (condStart) d.start.forEach((_, i) => bindCond('st' + i, () => (D().start[i] || {}).requires || null, c => { const st = D().start[i]; if (c) st.requires = c; else delete st.requires; }, t('hDlg', id)));
+  $('pane').querySelectorAll('.stDel').forEach(b => b.onclick = () => E(() => { D().start.splice(+b.dataset.i, 1); if (!D().start.length) D().start = nids[0]; }));
+  if ($('stAdd')) $('stAdd').onclick = () => E(() => D().start.push({ node: nids[0] }));
+  $('ndNewBtn').onclick = () => { const n = $('ndNew').value.trim(); if (!ID_OK(n)) return toast(t('idBad')); if (N(n)) return toast(t('idDup', n));
+    E(() => D().nodes[n] = { text: { zh_TW: '', en: '' }, choices: [{ label: { zh_TW: '……', en: '...' }, next: null }] }); };
+  $('pane').querySelectorAll('[data-node]').forEach(cardEl => { const nid = cardEl.dataset.node, q = s => cardEl.querySelectorAll(s);
+    cardEl.querySelector('.ndRename').onchange = ev2 => { const nu = ev2.target.value.trim(); if (nu === nid) return; if (!ID_OK(nu)) return toast(t('idBad')); if (N(nu)) return toast(t('idDup', nu));
+      E(() => { D().nodes = Object.fromEntries(Object.entries(D().nodes).map(([k, v]) => [k === nid ? nu : k, v]));
+        Object.values(D().nodes).forEach(n => (n.choices || []).forEach(c => { if (c.next === nid) c.next = nu; }));
+        if (D().start === nid) D().start = nu; if (Array.isArray(D().start)) D().start.forEach(s => { if (s.node === nid) s.node = nu; }); }); };
+    cardEl.querySelector('.ndDel').onclick = () => { if (Object.keys(D().nodes).length < 2) return toast(t('ndLast')); if (!confirm(t('ndDelQ', nid))) return; E(() => delete D().nodes[nid]); };
+    q('.ndText').forEach(ta => ta.onchange = () => E(() => { const n = N(nid); n.text = { ...field(n.text), [ta.dataset.l]: ta.value }; }));
+    q('.chc').forEach(row => { const i = +row.dataset.i, C = () => N(nid).choices[i], r1 = s => row.querySelector(s);
+      row.querySelectorAll('.chLabel').forEach(inp => inp.onchange = () => E(() => { C().label = { ...field(C().label), [inp.dataset.l]: inp.value }; }));
+      r1('.chNext').onchange = () => E(() => C().next = r1('.chNext').value || null);
+      r1('.chFinish').onchange = () => E(() => { if (r1('.chFinish').checked) C().finish = true; else delete C().finish; });
+      r1('.chId').onchange = () => E(() => { const v = r1('.chId').value.trim(); if (v) C().id = v; else delete C().id; });
+      bindCond('ch:' + nid + '|' + i, () => C().requires || null, c => { if (c) C().requires = c; else delete C().requires; }, t('hDlg', id));
+      r1('.chFireAdd').onchange = () => { const v = r1('.chFireAdd').value; if (v) E(() => { C().fire = [...new Set([...(C().fire || []), v])]; }); };
+      row.querySelectorAll('.chFireDel').forEach(b => b.onclick = ev2 => { ev2.stopPropagation(); E(() => { C().fire = (C().fire || []).filter(x => x !== b.dataset.x); if (!C().fire.length) delete C().fire; }); });
+      const mv = d2 => E(() => { const l = N(nid).choices; if (i + d2 < 0 || i + d2 >= l.length) return; [l[i], l[i + d2]] = [l[i + d2], l[i]]; });
+      r1('.chUp').onclick = () => mv(-1); r1('.chDown').onclick = () => mv(1);
+      r1('.chDel').onclick = () => E(() => N(nid).choices.splice(i, 1)); });
+    cardEl.querySelector('.chAdd').onclick = () => E(() => { const n = N(nid); n.choices = n.choices || []; n.choices.push({ label: { zh_TW: '', en: '' }, next: null }); });
+  });
+  bindActs((k) => { const [nid, i] = k.split('|'), c = N(nid).choices[+i];
+    if (!Array.isArray(c.actions)) c.actions = c.actions ? [c.actions] : []; return c.actions; });
+}
+function bindDlgHead() {
+  $('dlgPick').onchange = () => { dlgSel = $('dlgPick').value; renderDialogues(); };
+  $('dlgNewBtn').onclick = () => { const n = $('dlgNew').value.trim(); if (!ID_OK(n)) return toast(t('idBad')); if (S.dialogues[n]) return toast(t('idDup', n));
+    edit(t('hDlgNew', n), () => S.dialogues[n] = { start: 'root', nodes: { root: { text: { zh_TW: '', en: '' }, choices: [{ label: { zh_TW: '……', en: '...' }, next: null }] } } });
+    dlgSel = n; renderDialogues(); };
+}
+// checks for the Problems tab: a dialogue's start / next naming a node it lacks
+function dialogueProblems() {
+  const out = [];
+  Object.entries(S.dialogues).forEach(([id, d]) => { const nodes = d.nodes || {}, starts = Array.isArray(d.start) ? d.start.map(s => s.node) : [d.start];
+    starts.forEach(s => { if (!nodes[s]) out.push({ rule: 'bad_dialogue', id, where: t('wDlgStart', s) }); });
+    Object.entries(nodes).forEach(([nid, n]) => (n.choices || []).forEach(c => { if (typeof c.next === 'string' && c.next && !nodes[c.next]) out.push({ rule: 'bad_dialogue', id, where: t('wDlgNext', nid, c.next) }); })); });
+  return out;
+}
 function renderAll() {
   if (typeof S !== 'undefined' && S) buildKindFilter();
   renderTree(); renderForm();
@@ -2776,7 +3309,7 @@ function renderAll() {
   if (tab !== 'logic') document.body.classList.remove('neMax');
   hideTip(); renderTabs();
   if (tab === 'diagram') renderDiagram(); else if (tab === 'floors') renderFloorMap(); else if (tab === 'vars') renderVars(); else if (tab === 'logic') renderLogic();
-  else if (tab === 'vmap') renderValueMap(); else if (tab === 'kinds') renderKinds(); else if (tab.startsWith('val:')) renderValueTab(tab.slice(4)); else renderProblems();
+  else if (tab === 'vmap') renderValueMap(); else if (tab === 'kinds') renderKinds(); else if (tab === 'npcs') renderNpcs(); else if (tab === 'dlg') renderDialogues(); else if (tab.startsWith('val:')) renderValueTab(tab.slice(4)); else renderProblems();
   renderSteps();
   const d = dirty(); $('dirtyMark').textContent = d ? ' •' : '';
   $('probs').textContent = t('statusProbs', errs, warns, d);
@@ -2800,7 +3333,44 @@ $('reset').onclick = e => { e.preventDefault(); reset(); };
 $('uiLang').onchange = () => setLang($('uiLang').value);
 applyStatic(); buildChapSel();
 reset();
-{ const h = decodeURIComponent(location.hash.slice(1)); if (h && ev(h)) selectSubject(h); }   // event_editor.html#ev_x opens that event
+{ const h = decodeURIComponent(location.hash.slice(1)); if (h && ev(h)) selectSubject(h);   // event_editor.html#ev_x opens that event
+  else if (h.startsWith('npc=')) { npcSel = h.slice(4); setTab('npcs'); } }                       // #npc=villager: its NPCs tab
+
+// Resizable panels (splitter.js): drag the edges between the tutorial, the event tree, the event form, the tabs below and
+// the history. Sizes are kept per browser; a double-click on an edge resets it.
+addSplitter({ key: 'ev-tutorial', target: $('tutDock'), axis: 'x', min: 220, max: 700, onChange: f => f && renderAll() });
+addSplitter({ key: 'ev-tree', target: document.querySelector('.top > .dock'), axis: 'x', min: 160, max: 700, onChange: f => f && renderAll() });
+addSplitter({ key: 'ev-top', target: document.querySelector('.work > .top'), axis: 'y', min: 120,
+  max: () => document.querySelector('.work').clientHeight - 120, onChange: f => f && renderAll() });
+addSplitter({ key: 'ev-history', target: document.querySelector('.main > .dock.right'), axis: 'x', after: true, min: 120, max: 600 });
+
+// Text size (🔍, or Alt + = / Alt + - / Alt + 0): every font size is multiplied by --fs, so text grows without zooming
+// the page (the diagram, the node graph and the tutorial's pointer keep working in page pixels). The choice is kept by
+// the browser; the default is settings.js "eventTextScale".
+const TEXT_KEY = 'toms-event-editor-text', TEXT_STEPS = [.9, 1, 1.1, 1.2, 1.35, 1.5, 1.75, 2];
+const textFromFile = Math.max(.75, Math.min(2.5, +((typeof EDITOR_SETTINGS !== 'undefined' && EDITOR_SETTINGS.eventTextScale) || 1)));
+let textScale = (() => { try { const v = parseFloat(localStorage.getItem(TEXT_KEY)); if (v >= .75 && v <= 2.5) return v; } catch (_) {} return textFromFile; })();
+function applyTextScale(rerender) {
+  document.documentElement.style.setProperty('--fs', String(textScale));
+  let fromFile = true; try { fromFile = !localStorage.getItem(TEXT_KEY); } catch (_) {}
+  $('uiSize').innerHTML = `<option value="">${t('textFromFile', Math.round(textFromFile * 100))}</option>` + TEXT_STEPS.map(v => `<option value="${v}">${Math.round(v * 100)}%</option>`).join('');
+  $('uiSize').value = fromFile ? '' : String(textScale); $('uiSizeLbl').title = t('textSizeTip');
+  if (rerender && typeof S !== 'undefined' && S) renderAll();   // the diagram and the node graph measure their text
+}
+function setTextScale(v) {
+  if (v == null) { try { localStorage.removeItem(TEXT_KEY); } catch (_) {} textScale = textFromFile; }
+  else { textScale = v; try { localStorage.setItem(TEXT_KEY, String(v)); } catch (_) {} }
+  applyTextScale(true);
+}
+$('uiSize').onchange = () => setTextScale($('uiSize').value ? parseFloat($('uiSize').value) : null);
+addEventListener('keydown', ev => {
+  if (!ev.altKey || ev.ctrlKey || !['=', '+', '-', '0'].includes(ev.key)) return;
+  ev.preventDefault();
+  if (ev.key === '0') return setTextScale(null);
+  const next = ev.key === '-' ? [...TEXT_STEPS].reverse().find(v => v < textScale - 1e-6) : TEXT_STEPS.find(v => v > textScale + 1e-6);
+  if (next) setTextScale(next);
+});
+applyTextScale(true);
 </script>
 </body>
 </html>

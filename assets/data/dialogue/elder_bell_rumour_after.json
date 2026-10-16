@@ -1,0 +1,21 @@
+{
+  "npcId": "villager",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "現在每天傍晚，我都會等那口鐘響。",
+        "en": "Every evening now, I listen for that bell."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

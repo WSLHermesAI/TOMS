@@ -7816,6 +7816,114 @@
     "event.gotItem": {
       "zh_TW": "獲得：{item}",
       "en": "Received: {item}"
+    },
+    "npc.villager.name": {
+      "zh_TW": "村長",
+      "en": "Village Elder"
+    },
+    "npc.villager.greeting": {
+      "zh_TW": "啊，又是你。今天想聊什麼？",
+      "en": "Ah, it's you again. What's on your mind?"
+    },
+    "talk.ok": {
+      "zh_TW": "確定",
+      "en": "OK"
+    },
+    "talk.just_chat": {
+      "zh_TW": "隨便聊聊",
+      "en": "Just chat"
+    },
+    "talk.leave": {
+      "zh_TW": "離開",
+      "en": "Leave"
+    },
+    "event.gaveItem": {
+      "zh_TW": "交出：{item}",
+      "en": "Handed over: {item}"
+    },
+    "ev_elder_north_road.title": {
+      "zh_TW": "北邊的路",
+      "en": "The Road North"
+    },
+    "ev_elder_north_road.desc": {
+      "zh_TW": "村長請你清掉北邊路上的蝙蝠，讓孩子們能去打水。",
+      "en": "The elder asked you to clear the bats from the north road so the children can fetch water."
+    },
+    "ev_elder_north_road.text": {
+      "zh_TW": "北邊的路上蝙蝠築了巢。",
+      "en": "Bats nest on the north road."
+    },
+    "ev_elder_well_night.title": {
+      "zh_TW": "夜裡的井",
+      "en": "The Well at Night"
+    },
+    "ev_elder_well_night.desc": {
+      "zh_TW": "老井每到夜裡就傳出哭聲。村長不知道下面是什麼。",
+      "en": "Something cries in the old well at night. The elder does not know what is down there."
+    },
+    "ev_elder_well_night.text": {
+      "zh_TW": "老井裡有東西在哭。",
+      "en": "Something cries in the old well."
+    },
+    "ev_elder_ledger.title": {
+      "zh_TW": "失蹤的帳本",
+      "en": "The Missing Ledger"
+    },
+    "ev_elder_ledger.desc": {
+      "zh_TW": "村長的帳本多年前掉進了井裡。",
+      "en": "The elder's ledger fell into the well years ago."
+    },
+    "ev_elder_ledger.text": {
+      "zh_TW": "村長問起他的帳本。",
+      "en": "The elder asks about his ledger."
+    },
+    "ev_elder_bell_rumour.title": {
+      "zh_TW": "不會響的鐘",
+      "en": "A Bell With No Sound"
+    },
+    "ev_elder_bell_rumour.desc": {
+      "zh_TW": "村裡都在傳：塔裡那口裂開的鐘，昨晚響了。",
+      "en": "The village whispers that the cracked tower bell rang last night."
+    },
+    "ev_elder_bell_rumour.text": {
+      "zh_TW": "村長聽見了鐘聲。",
+      "en": "The elder heard the bell."
+    },
+    "ev_elder_last_wish.title": {
+      "zh_TW": "村長最後的心願",
+      "en": "The Elder's Last Wish"
+    },
+    "ev_elder_last_wish.desc": {
+      "zh_TW": "村長想把他的舊墜子交給你。",
+      "en": "The elder wants you to have his old pendant."
+    },
+    "ev_elder_last_wish.text": {
+      "zh_TW": "村長把墜子交給你。",
+      "en": "The elder gives you his pendant."
+    },
+    "ev_elder_potion.title": {
+      "zh_TW": "向村長買藥",
+      "en": "Buy a Potion"
+    },
+    "ev_elder_potion.desc": {
+      "zh_TW": "村長願意用二十金幣賣你一瓶藥，最多三瓶。",
+      "en": "The elder sells you a potion for twenty gold, three at most."
+    },
+    "ev_elder_potion.text": {
+      "zh_TW": "村長賣你一瓶藥。",
+      "en": "The elder sells you a potion."
+    },
+    "ev_elder_trusted.title": {
+      "zh_TW": "村長信任你了",
+      "en": "The Elder Trusts You"
+    },
+    "ev_elder_trusted.desc": {
+      "zh_TW": "你為村子做的事，讓村長真正信任你。",
+      "en": "What you did for the village earned the elder's trust."
+    },
+    "ev_elder_trusted.text": {
+      "zh_TW": "村長信任你了。",
+      "en": "The elder trusts you."
     }
   }
 }

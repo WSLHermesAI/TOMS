@@ -1,0 +1,42 @@
+{
+  "npcId": "villager",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "我還留著幾瓶藥。一瓶二十金幣，要嗎？",
+        "en": "I still have a few potions. Twenty gold each. Want one?"
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "買一瓶（20 金幣）",
+            "en": "Buy one (20 gold)"
+          },
+          "id": "buy",
+          "requires": {
+            "type": "statAtLeast",
+            "stat": "gold",
+            "value": 20
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": -20
+            }
+          ],
+          "finish": true,
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "下次吧。",
+            "en": "Maybe later."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

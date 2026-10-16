@@ -1,0 +1,48 @@
+{
+  "npcId": "villager",
+  "start": [
+    {
+      "node": "pay",
+      "requires": {
+        "type": "choiceMade",
+        "choiceId": "ev_elder_well_night",
+        "optionId": "pay"
+      }
+    },
+    {
+      "node": "thanks"
+    }
+  ],
+  "nodes": {
+    "pay": {
+      "text": {
+        "zh_TW": "爬一小段井就賺了不少，是吧？",
+        "en": "Paid well for a little climb, weren't you?"
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    },
+    "thanks": {
+      "text": {
+        "zh_TW": "井裡安靜了。我這麼多年來第一次睡得好。",
+        "en": "The well is quiet at night now. I sleep for the first time in years."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

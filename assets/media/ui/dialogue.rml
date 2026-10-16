@@ -10,7 +10,8 @@
     <div class="fill focus"></div>
     <div id="box" data-style-transform="'scale(' + dialogue.scale + ')'" data-style-left="dialogue.side + 'px'"
          data-style-right="dialogue.side + 'px'" data-event-click="act('dlg_advance')">
-        <div id="text">{{dialogue.text}}</div>
+        <div id="speaker" data-if="dialogue.speaker != ''">{{dialogue.speaker}}</div>
+        <div id="text" data-if="dialogue.text != ''">{{dialogue.text}}</div>
         <div data-for="c, i : dialogue.choices">
             <div class="choice" data-class-selected="c.selected"
                  data-event-click="act('dlg_choose', i)" data-event-mouseover="act('dlg_hover', i)">

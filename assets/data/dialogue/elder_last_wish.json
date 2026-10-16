@@ -1,0 +1,38 @@
+{
+  "npcId": "villager",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "你為這個村子做的，比領主還多。最後一件事：收下我這條舊墜子吧。",
+        "en": "You've done more for this village than its lord ever did. One last thing: take my old pendant."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "我會帶著它。",
+            "en": "I'll carry it."
+          },
+          "id": "accept",
+          "finish": true,
+          "next": "farewell"
+        }
+      ]
+    },
+    "farewell": {
+      "text": {
+        "zh_TW": "願它守護你，比守護我時更好。",
+        "en": "May it guard you better than it guarded me."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

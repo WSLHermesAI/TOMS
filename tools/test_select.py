@@ -84,10 +84,12 @@ RULES = [
     (['tools/font/*', 'tests/font/*', 'src/core/engine/bitmap_font*'], FONTS,
      'picture fonts: the font tool tests'),
     (['tools/test_select.py', 'tools/test.cmd'], None, 'the test runner itself'),
+    # the editor release: copies of what the build made, launchers and docs (run `tools\test.cmd all` before a release)
+    (['Editor/*', 'tools/package_editors.*'], None, 'the packaged editors (Editor/): no test'),
     (['tools/web_editors/floor_index.js'], named('unit.floor_index_test'), 'the event index the HTML editors write'),
+    (['tools/make_ui_font.py', 'assets/media/fonts/*'], named('data.ui_font_covers_text'), 'the UI font subset: it covers the text'),
     # nothing
-    (['docs/*', '*.md', 'tools/web_editors/*', 'android/*', '.claude/*', '.gitignore', '.gitattributes', 'AIGamestyle*',
-      'tools/make_ui_font.py'],
+    (['docs/*', '*.md', 'tools/web_editors/*', 'android/*', '.claude/*', '.gitignore', '.gitattributes', 'AIGamestyle*'],
      None, 'docs / HTML editors / Android: no test'),
     # global
     (['CMakeLists.txt', 'CMakePresets.json', 'cmake/*', 'external/*', 'tools/build.cmd'], DESKTOP,
@@ -193,6 +195,8 @@ def select(files, tests, since):
 
     def game(f, why):
         take(GAME_UNIT, why)
+        if f.startswith(('assets/data/', 'assets/media/ui/', 'assets/media/styles/')):   # text: the UI font must have it
+            take(named('data.ui_font_covers_text'), why)
         base = os.path.basename(f).lower()
         narrowed = [p for rx, p in GAME_SMOKE_BY_NAME if rx.search(base)]
         take(any_of(*narrowed) if narrowed else is_game_smoke_d3d11, why)

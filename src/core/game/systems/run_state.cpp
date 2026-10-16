@@ -104,6 +104,9 @@ void RunStoryState::reset(bool keepShards) {
     clearedFloors_.clear();
     eventsStarted_.clear();
     eventsFinished_.clear();
+    vars_.clear();
+    npcTalk_.clear();
+    eventCounts_.clear();
     deathsTotal_ = deathsNonBoss_ = 0;
     floor_ = "F01";
     skillPoints_ = 0;
@@ -129,6 +132,10 @@ void RunStoryState::writeInto(RunSaveData& r) const {
     r.clearedFloors = clearedFloors_;
     r.eventsStarted = eventsStarted_;
     r.eventsFinished = eventsFinished_;
+    r.vars = vars_;
+    r.eventCounts = eventCounts_;
+    r.npcTalk.clear();
+    for (const auto& [npc, t] : npcTalk_) r.npcTalk[npc] = {t.index, t.count, t.lastRandom};
     r.shards = shards_;
     r.deathsTotal = deathsTotal_;
     r.deathsNonBoss = deathsNonBoss_;
@@ -147,6 +154,16 @@ void RunStoryState::readFrom(const RunSaveData& r) {
     eventsStarted_ = r.eventsStarted;
     eventsFinished_ = r.eventsFinished;
     for (const std::string& id : eventsFinished_) markEventStarted(id);   // an older or hand-edited save
+    vars_.clear();
+    for (const auto& [k, v] : r.vars) setVar(k, v);                       // clamped like the counters below
+    eventCounts_ = r.eventCounts;
+    npcTalk_.clear();
+    for (const auto& [npc, t] : r.npcTalk) {
+        NpcTalkState& s = npcTalk_[npc];
+        if (t.size() > 0) s.index = std::max(0, t[0]);
+        if (t.size() > 1) s.count = std::max(0, t[1]);
+        if (t.size() > 2) s.lastRandom = t[2];
+    }
     shards_ = r.shards;
     deathsTotal_ = r.deathsTotal;
     deathsNonBoss_ = r.deathsNonBoss;
@@ -176,6 +193,29 @@ bool RunStoryState::eventStarted(const std::string& eventId) const {
 
 bool RunStoryState::eventFinished(const std::string& eventId) const {
     return std::find(eventsFinished_.begin(), eventsFinished_.end(), eventId) != eventsFinished_.end();
+}
+
+int RunStoryState::var(const std::string& name) const {
+    if (auto it = vars_.find(name); it != vars_.end()) return it->second;
+    auto d = varDecls_.find(name);
+    return d == varDecls_.end() ? 0 : d->second.def;
+}
+
+void RunStoryState::setVar(const std::string& name, int value) {
+    if (name.empty()) return;
+    if (auto d = varDecls_.find(name); d != varDecls_.end()) value = std::clamp(value, d->second.lo, d->second.hi);
+    vars_[name] = value;
+}
+
+int RunStoryState::eventCount(const std::string& eventId) const {
+    auto it = eventCounts_.find(eventId);
+    const int n = it == eventCounts_.end() ? 0 : it->second;
+    return eventFinished(eventId) ? std::max(n, 1) : n;
+}
+
+NpcTalkState RunStoryState::npcTalk(const std::string& npc) const {
+    auto it = npcTalk_.find(npc);
+    return it == npcTalk_.end() ? NpcTalkState{} : it->second;
 }
 
 std::string RunStoryState::debugSummary() const {

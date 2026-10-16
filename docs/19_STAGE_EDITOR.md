@@ -32,6 +32,7 @@ start, and **event objects**. It reads and writes the same files the game loads:
 | Interface (text, buttons, panels) | 🔍 list in the top bar, or **Alt + =** bigger, **Alt + -** smaller, **Alt + 0** back to the default. The choice is remembered by the browser |
 | Map zoom | **Mouse wheel over the map** zooms in and out around the cursor (the cell under the mouse stays put); also **+** / **−** next to the zoom % and the **+** / **-** keys |
 | Map pan | **Right-mouse drag** (a right click without moving is still the eyedropper), **middle-mouse drag**, or hold **Space** and drag; **Shift + wheel** scrolls sideways; the scrollbars. The view can pan past the map's edges |
+| Panels | Drag the edge between two panels: the palette / events column, the inspector, the checks below the map, and the line between the palette and the events list. The sizes are kept by the browser; a **double-click** on an edge resets it (`tools/web_editors/splitter.js`) |
 | Defaults | [`tools/web_editors/settings.js`](../tools/web_editors/settings.js): `uiScale` (1.25 = 125 %), `mapZoom` (2 = 64 px tiles), `language`. Edit, save, press F5 |
 
 A size picked in the editor wins over `settings.js` until **Alt + 0** (or *settings.js* in the 🔍 list).
@@ -59,6 +60,11 @@ The browser's own zoom (**Ctrl + =** / **Ctrl + -**) also works.
 - **Inspector:** the selected cell: its object and legend char, a monster's HP / ATK / DEF and size,
   an item's effect, or an event's kind, pool, text (zh_TW and en) and the floors that can roll it, with
   *Replace with*. Below: the floor's name, `connect.up` / `connect.down`, size, and its events list.
+- **An NPC's panel** (click an NPC on the map; [event_editor/08](event_editor/08_NPC_DIALOGUE.md)): its name, how many chat
+  lines it has (⚠ when it has no NPC file), and its topics in the game's menu order, each marked *on every floor it
+  stands on*, *only on this floor* or *only on F07* (faded when not here), with *has conditions*, ✓ *after-dialogue*
+  and ↻ (repeatable). ↗ opens a topic in the event editor; **Edit in the event editor →** opens the NPC's NPCs tab.
+  With the project folder open, the panel follows what the event editor saves.
 - **Checks** (bottom), click one to show its cells:
 
 | Check | Severity |

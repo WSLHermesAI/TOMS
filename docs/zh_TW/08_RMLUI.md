@@ -72,7 +72,8 @@ Game::uiEvent(name, arg)         calls the same Game functions the keyboard uses
 - **RmlUi 沒有預設樣式表。** `common.rcss` 讓 `div`/`p` 成為 block；其他元素都需要設定 `display`。
 - **新文字（桌機）：** 加入任何地方都還沒用過的字元之後（新的對話台詞、`.rml` 中的新符號），
   執行 `python tools/make_ui_font.py`，需要 Python 3 和 fontTools。`--check` 列出
-  缺少的字元。在桌機上，RmlUi 對缺少的字元什麼也不畫。Web 版不受影響（見字型）。
+  缺少的字元，在重新執行之前測試 `data.ui_font_covers_text` 會失敗。內建字型仍缺少的字元，會以系統後備字型繪製（見字型），
+  樣式會是該字型的樣式；沒有系統後備字型時則顯示為空白方框。Web 版不受影響（見字型）。
 
 ## 字型
 
@@ -101,7 +102,23 @@ Game::uiEvent(name, arg)         calls the same Game functions the keyboard uses
 所以中文和日文會有各自的字形。因為不同裝置的字型不同，固定大小的框請留一點空間。
 
 **桌機：字型檔（FreeType）。** 預設是 `assets/media/fonts/NotoSansCJKtc-TOMS.otf`。它也是其他字型缺少某個字元時的
-**後備字型**。某個語言可以指定自己的字型：
+**後備字型**。
+
+**系統後備字型（Windows、Android；2026-10-16）。** 在內建字型之後，`rml_ui.cpp` 會從系統載入一個中日韓字型作為最後的後備字型，
+讓內建字型子集缺少的字元能夠畫出來，而不是顯示為方框。RmlUi 依載入順序嘗試後備字型，所以內建字型永遠優先，截圖不會改變。
+
+| 平台 | 第一個存在的 |
+|---|---|
+| Windows | `%WINDIR%\Fonts\msjh.ttc`（微軟正黑體）、`msyh.ttc`、`mingliu.ttc`、`simsun.ttc` |
+| Android | `/system/fonts/NotoSansCJK-Regular.ttc` 第 3 個字型（繁體中文）、`NotoSansCJKtc-Regular.otf`、`DroidSansFallbackFull.ttf`、`DroidSansFallback.ttf` |
+| Linux | `/usr/share/fonts` 下的 `NotoSansCJK-Regular.ttc` 第 3 個字型 |
+
+- 字型檔會讀進記憶體（10–25 MB），且不隨遊戲發佈：它來自玩家自己的系統。記錄會寫出使用的是哪一個（`[rmlui] system fallback font: …`），
+  或是沒有找到。
+- `TOMS_SYSTEM_FONT=<路徑>[#第幾個字型]` 可指定其他檔案；`TOMS_SYSTEM_FONT=none` 關閉此功能。
+- 它是保險，不是替代品：請保持內建子集完整（`tools/make_ui_font.py`），因為來自系統字型的字元會是該字型的樣式。
+
+某個語言可以指定自己的字型：
 
 ```json
 { "code": "ja", "name": "日本語", "font": "fonts/NotoSansJP-Regular.otf" }
@@ -138,3 +155,5 @@ Render interface 能繪製方框、邊框、圓角、圖片、文字、變形、
 - 2026-09-27：先以商店作為測試用 RmlUi 重寫，接著所有畫面都移到 RmlUi。手繪的 UI 程式碼、
   遊戲自己的字型 atlas（`font.cpp`、`stb_truetype`、web 上的瀏覽器 canvas 字型）以及舊的字型下載
   （文泉驛正黑、Windows 的 `msjh.ttc` 後備）都已移除。
+- 2026-10-16：系統中日韓字型再次成為最後的後備字型（Windows、Android），排在內建字型之後，用於子集缺少的字元；
+  `data.ui_font_covers_text` 檢查子集涵蓋遊戲的所有文字。

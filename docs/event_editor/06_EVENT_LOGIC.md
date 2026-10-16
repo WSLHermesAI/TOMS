@@ -195,18 +195,23 @@ MIT, needs Dear ImGui 1.72+ and C++14, and the engine already has an ImGui-on-bg
 (`src/engine/src/imgui_bgfx.h`). The graph model and the "what does this link mean" rules
 (`linkAction` in the mockup) carry over unchanged.
 
-## 6. Runtime work (items 2 and 7 done 2026-10-10, item 4 partly 2026-10-14, the rest not yet)
+## 6. Runtime work (items 2 and 7 done 2026-10-10; items 1, 3, 4 and 5 done 2026-10-16 with [08_NPC_DIALOGUE.md](08_NPC_DIALOGUE.md); 6 not yet)
 
-1. **Run state:** event variables (from `vars.json`, saved with the run like counters), and the set of
-   finished events.
+1. ~~**Run state:**~~ **Done 2026-10-16:** event variables (`story/vars.json`, defaults and ranges), saved with the
+   run ([08](08_NPC_DIALOGUE.md) section 8).
 2. ~~**"Event finished" for every event.**~~ **Done 2026-10-10:** every event that fires sets `event_<id>`
    (conditions and the stair locks of [05_FLOOR_LINKS.md](05_FLOOR_LINKS.md) read it) and joins the run's
    finished list.
-3. **Condition leaves** `varAtLeast` / `varEquals` in `condition.cpp` (plus the context method).
+3. ~~**Condition leaves**~~ **Done 2026-10-16:** `varAtLeast` / `varEquals` in `condition.cpp`, plus `talkCountAtLeast` and
+   `onStage`.
 4. **Actions:** **done 2026-10-14** for `give`, `addCounter` and `setFlag` (run once when the event fires; key gates,
-   [07_KEY_GATES.md](07_KEY_GATES.md)); `addVar` / `setVar` wait for event variables (item 1).
+   [07_KEY_GATES.md](07_KEY_GATES.md)); **2026-10-16:** every action of [08](08_NPC_DIALOGUE.md) section 7 (`addVar`,
+   `setVar`, `addStat`, `take`, `fireEvent`, …), through one runner (`story_actions.h`).
 5. **Dispatcher:** fire on tile, on talk (after the dialogue closes), on variable change, and through
    `next`; check `requires` and `once`; guard against loops (an event fires at most once per chain).
+   **2026-10-16:** talk (NPC topics), `next` / `fire` waking events, and `chain` events running when woken are done
+   ([08](08_NPC_DIALOGUE.md) sections 5, 11.1; loops stop at depth 32), and so are `varChanged` (16 deep) and
+   `once: false` with `maxTimes` ([08](08_NPC_DIALOGUE.md) section 6.5).
 6. **Effects from data:** the hard-coded "trap = −8 HP, cache = +10 HP +12 gold" in `game_input.cpp`
    becomes actions on the records.
 7. ~~**Event state for the player's log** (§7).~~ **Done 2026-10-10:** started / finished per event, in order,

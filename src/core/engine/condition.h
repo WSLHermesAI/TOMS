@@ -57,7 +57,20 @@ public:
     // instead and had no leaf able to read them back at all until a dialogue choice (ss_04) needed
     // to gate on one. Defaulted like the S3/M7 leaves above.
     virtual bool runFlagSet(const std::string& /*flag*/) const { return false; }
+    // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md): event variables (story/vars.json; a bool is
+    // 0 / 1), how many times the player has talked to an NPC this run, and the stage the player is on.
+    // Defaulted like the leaves above.
+    virtual int varValue(const std::string& /*var*/) const { return 0; }
+    virtual int talkCount(const std::string& /*npc*/) const { return 0; }
+    virtual std::string currentStage() const { return ""; }
 };
+
+// A JSON value as an event variable's number: true / false are 1 / 0 (story/vars.json "bool" variables).
+inline int varNumber(const nlohmann::json& v) {
+    if (v.is_boolean()) return v.get<bool>() ? 1 : 0;
+    if (v.is_number()) return v.get<int>();
+    return 0;
+}
 
 // Recursively evaluates `expr` against `ctx`. A null/non-object `expr` is vacuously true (no
 // requirement). An unrecognized leaf `type`, or a malformed combinator (a missing or

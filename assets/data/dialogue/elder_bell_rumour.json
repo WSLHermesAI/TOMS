@@ -1,0 +1,66 @@
+{
+  "npcId": "villager",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "昨晚塔裡的鐘響了！大家都說那口鐘裂了，不可能響的。",
+        "en": "The tower bell rang last night! Everyone says it's cracked and can't ring."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "是我敲的。",
+            "en": "I rang it."
+          },
+          "id": "told",
+          "finish": true,
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "def",
+              "delta": 1
+            },
+            {
+              "type": "addVar",
+              "var": "elder_trust",
+              "delta": 1
+            }
+          ],
+          "next": "awe"
+        },
+        {
+          "label": {
+            "zh_TW": "（什麼都不說）",
+            "en": "(Say nothing.)"
+          },
+          "id": "quiet",
+          "finish": true,
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "resolve",
+              "delta": 1
+            }
+          ],
+          "next": null
+        }
+      ]
+    },
+    "awe": {
+      "text": {
+        "zh_TW": "是你？那麼老故事都是真的……",
+        "en": "You?! Then the old stories are true..."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

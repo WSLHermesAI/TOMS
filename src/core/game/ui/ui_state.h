@@ -91,6 +91,7 @@ struct UiBattle {
 
 struct UiDialogue {
     bool visible = false;
+    std::string speaker;               // the NPC's name (its NPC file); empty: no name line
     std::string text;
     std::vector<UiRow> choices;
     float scale = 1.0f;                // Game::setUiScale (phones)

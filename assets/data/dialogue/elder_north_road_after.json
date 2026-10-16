@@ -1,0 +1,21 @@
+{
+  "npcId": "villager",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "你走過之後，北邊的路安靜多了。你比那些守衛勇敢得多。",
+        "en": "The north road is quiet since you passed. You're braver than the guards ever were."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

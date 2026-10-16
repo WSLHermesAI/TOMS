@@ -1,0 +1,10 @@
+{
+  "npcId": "sorcerer",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "sorcerer_teacher"
+      }
+    ]
+  }
+}

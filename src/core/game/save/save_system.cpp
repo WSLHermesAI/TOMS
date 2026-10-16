@@ -82,6 +82,9 @@ nlohmann::json toJson(const RunSaveData& r) {
     j["skillsOwned"] = r.skillsOwned;
     j["eventsStarted"] = r.eventsStarted;
     j["eventsFinished"] = r.eventsFinished;
+    if (!r.vars.empty()) j["vars"] = r.vars;
+    if (!r.npcTalk.empty()) j["npcTalk"] = r.npcTalk;
+    if (!r.eventCounts.empty()) j["eventCounts"] = r.eventCounts;
     j["superMax"] = r.superMax;
     return j;
 }
@@ -139,6 +142,13 @@ RunSaveData runFromJson(const nlohmann::json& j, bool* versionMismatch) {
     r.skillsOwned = j.value("skillsOwned", std::vector<std::string>{});
     r.eventsStarted = j.value("eventsStarted", std::vector<std::string>{});
     r.eventsFinished = j.value("eventsFinished", std::vector<std::string>{});
+    if (j.contains("vars") && j["vars"].is_object())
+        for (auto& [k, v] : j["vars"].items()) if (v.is_number_integer()) r.vars[k] = v.get<int>();
+    if (j.contains("eventCounts") && j["eventCounts"].is_object())
+        for (auto& [k, v] : j["eventCounts"].items()) if (v.is_number_integer()) r.eventCounts[k] = v.get<int>();
+    if (j.contains("npcTalk") && j["npcTalk"].is_object())
+        for (auto& [k, v] : j["npcTalk"].items())
+            if (v.is_array()) { std::vector<int>& t = r.npcTalk[k]; for (auto& n : v) if (n.is_number_integer()) t.push_back(n.get<int>()); }
     r.superMax = j.value("superMax", 5);
     return r;
 }

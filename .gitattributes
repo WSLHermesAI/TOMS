@@ -5,3 +5,5 @@
 *.sh  text eol=lf
 # setup_new_pc.bat is downloaded on its own (GitHub "raw") onto new PCs: store it byte-for-byte so it stays CRLF.
 setup_new_pc.bat -text
+# Editor/bin: the released editors and their DLLs (tools/package_editors.py) are stored in Git LFS.
+Editor/bin/** filter=lfs diff=lfs merge=lfs -text

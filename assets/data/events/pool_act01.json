@@ -166,6 +166,152 @@
           "itemId": "gem_atk"
         }
       ]
+    },
+    {
+      "eventId": "ev_elder_north_road",
+      "kind": "cache",
+      "text": "ev_elder_north_road.text",
+      "title": "ev_elder_north_road.title",
+      "desc": "ev_elder_north_road.desc",
+      "trigger": {
+        "on": "talk",
+        "npc": "villager"
+      },
+      "dialogue": "elder_north_road",
+      "afterDialogue": "elder_north_road_after"
+    },
+    {
+      "eventId": "ev_elder_well_night",
+      "kind": "whisper",
+      "text": "ev_elder_well_night.text",
+      "title": "ev_elder_well_night.title",
+      "desc": "ev_elder_well_night.desc",
+      "trigger": {
+        "on": "talk",
+        "npc": "villager"
+      },
+      "dialogue": "elder_well_night",
+      "afterDialogue": "elder_well_night_after",
+      "next": [
+        "ev_elder_ledger"
+      ]
+    },
+    {
+      "eventId": "ev_elder_ledger",
+      "kind": "rescue",
+      "text": "ev_elder_ledger.text",
+      "title": "ev_elder_ledger.title",
+      "desc": "ev_elder_ledger.desc",
+      "trigger": {
+        "on": "talk",
+        "npc": "villager"
+      },
+      "requires": {
+        "type": "runFlagSet",
+        "flag": "event_ev_elder_well_night"
+      },
+      "dialogue": "elder_ledger"
+    },
+    {
+      "eventId": "ev_elder_bell_rumour",
+      "kind": "whisper",
+      "text": "ev_elder_bell_rumour.text",
+      "title": "ev_elder_bell_rumour.title",
+      "desc": "ev_elder_bell_rumour.desc",
+      "trigger": {
+        "on": "talk",
+        "npc": "villager"
+      },
+      "requires": {
+        "type": "counterAtLeast",
+        "counter": "insight",
+        "min": 1
+      },
+      "dialogue": "elder_bell_rumour",
+      "afterDialogue": "elder_bell_rumour_after"
+    },
+    {
+      "eventId": "ev_elder_last_wish",
+      "kind": "rescue",
+      "text": "ev_elder_last_wish.text",
+      "title": "ev_elder_last_wish.title",
+      "desc": "ev_elder_last_wish.desc",
+      "trigger": {
+        "on": "talk",
+        "npc": "villager"
+      },
+      "requires": {
+        "all": [
+          {
+            "type": "varAtLeast",
+            "var": "elder_trust",
+            "value": 3
+          },
+          {
+            "type": "stageCleared",
+            "stageId": "F05"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "give",
+          "itemId": "gem_atk"
+        },
+        {
+          "type": "addStat",
+          "stat": "maxhp",
+          "delta": 20
+        }
+      ],
+      "dialogue": "elder_last_wish"
+    },
+    {
+      "eventId": "ev_elder_potion",
+      "kind": "merchant_echo",
+      "text": "ev_elder_potion.text",
+      "title": "ev_elder_potion.title",
+      "desc": "ev_elder_potion.desc",
+      "trigger": {
+        "on": "talk",
+        "npc": "villager"
+      },
+      "requires": {
+        "type": "runFlagSet",
+        "flag": "event_ev_elder_last_wish"
+      },
+      "actions": [
+        {
+          "type": "give",
+          "itemId": "potion_red"
+        }
+      ],
+      "once": false,
+      "maxTimes": 3,
+      "dialogue": "elder_potion"
+    },
+    {
+      "eventId": "ev_elder_trusted",
+      "kind": "whisper",
+      "text": "ev_elder_trusted.text",
+      "title": "ev_elder_trusted.title",
+      "desc": "ev_elder_trusted.desc",
+      "trigger": {
+        "on": "varChanged",
+        "var": "elder_trust"
+      },
+      "requires": {
+        "type": "varAtLeast",
+        "var": "elder_trust",
+        "value": 3
+      },
+      "actions": [
+        {
+          "type": "addCounter",
+          "counter": "humanity",
+          "delta": 1
+        }
+      ]
     }
   ]
 }

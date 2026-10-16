@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <map>
@@ -256,8 +257,76 @@ struct RmlUi::Impl {
     CanvasFontEngine canvasFont;         // web: the browser draws the text (rml_canvas_font.h)
 #else
     std::set<std::string> loadedFamilies;   // desktop: language fonts already registered
+    std::vector<Rml::byte> systemFont;      // the system fallback font's bytes: RmlUi reads them until Rml::Shutdown
 #endif
 };
+
+#ifndef __EMSCRIPTEN__
+namespace {
+// A system CJK font as the LAST fallback face, after the bundled one: a character the bundled subset lacks
+// (new text, and tools/make_ui_font.py not run again) is drawn from it instead of as an empty box. RmlUi tries the
+// fallback faces in the order they were loaded, so the bundled font always wins and screenshots do not change.
+// Only one file is loaded (they are 10-25 MB, read into memory). TOMS_SYSTEM_FONT=<path>[#face] picks another file,
+// TOMS_SYSTEM_FONT=none turns it off. Never shipped: it is read from the player's own system.
+struct SystemFontFile { std::string path; int face; };
+
+std::vector<SystemFontFile> systemFontCandidates() {
+    std::vector<SystemFontFile> out;
+    if (const char* env = std::getenv("TOMS_SYSTEM_FONT"); env && *env) {
+        std::string s = env;
+        if (s == "none") return out;
+        int face = 0;
+        if (const size_t hash = s.rfind('#'); hash != std::string::npos) { face = std::atoi(s.c_str() + hash + 1); s.resize(hash); }
+        out.push_back({s, face});
+        return out;
+    }
+#if defined(_WIN32)
+    const char* win = std::getenv("WINDIR");
+    const std::string fonts = std::string(win && *win ? win : "C:\\Windows") + "\\Fonts\\";
+    // Microsoft JhengHei (Traditional Chinese, Windows 7+), then YaHei (Simplified), MingLiU, SimSun
+    for (const char* f : {"msjh.ttc", "msyh.ttc", "mingliu.ttc", "simsun.ttc"}) out.push_back({fonts + f, 0});
+#elif defined(__ANDROID__)
+    // Android 7+: Noto Sans CJK, one collection; face 3 is Traditional Chinese (0 JP, 1 KR, 2 SC, 3 TC, 4 HK).
+    out.push_back({"/system/fonts/NotoSansCJK-Regular.ttc", 3});
+    out.push_back({"/system/fonts/NotoSansCJKtc-Regular.otf", 0});
+    out.push_back({"/system/fonts/DroidSansFallbackFull.ttf", 0});   // older Android
+    out.push_back({"/system/fonts/DroidSansFallback.ttf", 0});
+#else
+    out.push_back({"/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 3});
+    out.push_back({"/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc", 3});
+#endif
+    return out;
+}
+
+// Loads the first candidate that exists and that RmlUi accepts. Returns false (and keeps nothing) when none does.
+bool loadSystemFallbackFont(std::vector<Rml::byte>& keep) {
+    for (const SystemFontFile& f : systemFontCandidates()) {
+        std::FILE* fp = std::fopen(f.path.c_str(), "rb");   // an absolute system path: not through the APK file interface
+        if (!fp) continue;
+        std::vector<Rml::byte> bytes;
+        std::fseek(fp, 0, SEEK_END);
+        const long size = std::ftell(fp);
+        std::fseek(fp, 0, SEEK_SET);
+        if (size > 0) {
+            bytes.resize((size_t)size);
+            if (std::fread(bytes.data(), 1, bytes.size(), fp) != bytes.size()) bytes.clear();
+        }
+        std::fclose(fp);
+        if (bytes.empty()) continue;
+        keep = std::move(bytes);
+        if (Rml::LoadFontFace(Rml::Span<const Rml::byte>(keep.data(), keep.size()), "toms-system", Rml::Style::FontStyle::Normal,
+                              Rml::Style::FontWeight::Auto, true, f.face)) {
+            std::fprintf(stderr, "[rmlui] system fallback font: %s (face %d, %.1f MB)\n", f.path.c_str(), f.face, keep.size() / 1048576.0);
+            return true;
+        }
+        std::fprintf(stderr, "[rmlui] system font could not be loaded: %s\n", f.path.c_str());
+        keep.clear();
+    }
+    std::fprintf(stderr, "[rmlui] no system fallback font (characters the bundled font lacks show as boxes)\n");
+    return false;
+}
+}  // namespace
+#endif
 
 RmlUi::RmlUi() = default;
 RmlUi::~RmlUi() { shutdown(); }
@@ -285,6 +354,7 @@ bool RmlUi::init(int designW, int designH, const std::string& defaultFont, std::
         return false;
     }
     std::fprintf(stderr, "[rmlui] font family 'toms' (and fallback): %s\n", defaultFont.c_str());
+    loadSystemFallbackFont(impl_->systemFont);   // after the bundled face: only for characters it lacks
 #endif
     impl_->context = Rml::CreateContext("game", Rml::Vector2i(designW, designH));
     if (!impl_->context) { error = "RmlUi: CreateContext failed"; shutdown(); return false; }

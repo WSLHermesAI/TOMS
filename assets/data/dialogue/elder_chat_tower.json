@@ -1,0 +1,21 @@
+{
+  "npcId": "villager",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "你已經過了第五層？那你一定見過敲鐘人的那扇門了。",
+        "en": "You've been past the fifth floor? Then you've seen the bell-ringer's door."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

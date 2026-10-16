@@ -37,7 +37,7 @@ set(TOMS_UNIT_TESTS
     game/systems/footprint_test     game/systems/forge_system_test     game/systems/hub_system_test
     game/systems/mission_test       game/systems/run_state_test        game/systems/skill_system_test
     game/systems/player_menu_test   game/systems/stair_links_test  game/systems/floor_index_test
-    game/systems/story_controller_test   game/systems/event_chain_test
+    game/systems/story_controller_test   game/systems/event_chain_test   game/systems/talk_system_test
     game/ui/title_screen_test)
 
 get_filename_component(_data_parent "${TOMS_DATA_DIR}" DIRECTORY)
@@ -94,6 +94,14 @@ target_link_libraries(toms_tests PRIVATE toms_core toms_physics)
 set_target_properties(toms_tests PROPERTIES FOLDER "tests" RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
                       VS_DEBUGGER_WORKING_DIRECTORY "${_data_parent}")
 
+# The game's UI font (a subset of Noto Sans CJK TC) holds every character the game's text uses: new text with a
+# character not in it would show an empty box (tools/make_ui_font.py; fix: run it without --check).
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+    add_test(NAME data.ui_font_covers_text COMMAND Python3::Interpreter "${CMAKE_SOURCE_DIR}/tools/make_ui_font.py" --check)
+    set_tests_properties(data.ui_font_covers_text PROPERTIES LABELS unit TIMEOUT 60 SKIP_RETURN_CODE 77)
+endif()
+
 # ---- screenshot smoke tests -------------------------------------------------------------------
 # The real game, a scripted scene (keys/clicks at given frames), a screenshot, compared with
 # tests/golden/<name>.png. --fixed-dt makes every run identical (animations, battle bars, timers);
@@ -143,6 +151,17 @@ toms_smoke_test(stairs_unlock stairs_unlock d3d11 0.1 --frames=120 --keys=enter@
 # opens it (the key goes), walks into the bell-ringer's room and fires ev_bell_ringer_room (its chain is done up to it).
 toms_smoke_test(bell_gate bell_gate d3d11 0.1 --frames=300 --keys=enter@30,down@60,down@66,down@72,down@78,down@84,down@90,down@96,down@102,right@108,right@114,right@120,right@126,right@132,right@138,up@144,up@150,right@156,right@162,down@168,right@174,down@180,right@186,right@192,right@198,up@204,up@210,right@216,right@222,down@228,down@234,down@240,right@246,down@252 --goto=F04 --give=key_bellward --events-done=ev_bell_cracked,ev_bell_ringer_key)
 toms_smoke_test(dialogue     dialogue    d3d11   0.1  --frames=190 --keys=enter@30,esc@80,q@85,down@90,down@95,enter@110,enter@130)
+# NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md): on F02 the player steps onto the village elder. talk_menu: his
+# two open topics, the menu with his name and greeting. talk_chain: "The Well at Night", "I'll climb down" (ATK +2), then
+# Enter on his tile again: the well is done (listed for its after-dialogue) and it woke "The Missing Ledger".
+toms_smoke_test(talk_menu    talk_menu   d3d11   0.1  --frames=110 --keys=enter@30,up@60,left@66,left@72 --goto=F02)
+toms_smoke_test(talk_chain   talk_chain  d3d11   0.1  --frames=175 --keys=enter@30,up@60,left@66,left@72,down@90,enter@96,enter@115,enter@130,enter@150 --goto=F02)
+# talk_trusted: the road, the well and the ledger bring elder_trust to 3, and the "varChanged" event ev_elder_trusted fires
+# (its title as a notice). talk_repeat: with the story done and 100 gold, the repeatable potion trade ("once": false,
+# maxTimes 3) is bought three times; the fourth talk no longer lists it.
+toms_smoke_test(talk_trusted talk_trusted d3d11  0.1  --frames=262 --keys=enter@30,up@60,left@66,left@72,enter@90,enter@105,enter@120,enter@135,enter@150,enter@165,enter@180,enter@195,enter@210,enter@225,enter@240 --goto=F02)
+toms_smoke_test(talk_repeat  talk_repeat d3d11   0.1  --frames=232 --keys=enter@30,up@60,left@66,left@72,enter@90,enter@105,enter@120,enter@135,enter@150,enter@165,enter@180,enter@195,enter@210 --goto=F02 --give=gold:100
+                --events-done=ev_elder_north_road,ev_elder_well_night,ev_elder_ledger,ev_elder_bell_rumour,ev_elder_last_wish)
 # --battle-tuning=default: the bars move by the built-in values, not data/battle.json, so tuning the game never
 # breaks this picture (W23). The player starts on F01's '@' and walks right into the bat (keys, not a click: bats
 # roam, so a click-to-walk route ends beside it).

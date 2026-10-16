@@ -1,0 +1,154 @@
+{
+  "npcId": "villager",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "每到夜裡，老井裡就有東西在哭。沒有人敢下去。",
+        "en": "Something cries in the old well at night. No one dares go down."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "它怕光。我帶火把下去。",
+            "en": "It fears light. I'll take a torch."
+          },
+          "id": "secret",
+          "finish": true,
+          "requires": {
+            "type": "varEquals",
+            "var": "well_secret",
+            "value": true
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "str",
+              "delta": 2
+            },
+            {
+              "type": "setVar",
+              "var": "well_helped",
+              "value": true
+            },
+            {
+              "type": "addVar",
+              "var": "elder_trust",
+              "delta": 2
+            }
+          ],
+          "next": "secret_done"
+        },
+        {
+          "label": {
+            "zh_TW": "我下去看看。",
+            "en": "I'll climb down."
+          },
+          "id": "help",
+          "finish": true,
+          "requires": {
+            "type": "statAtLeast",
+            "stat": "hp",
+            "value": 50
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "atk",
+              "delta": 2
+            },
+            {
+              "type": "setVar",
+              "var": "well_helped",
+              "value": true
+            },
+            {
+              "type": "addVar",
+              "var": "elder_trust",
+              "delta": 1
+            }
+          ],
+          "next": "help_done"
+        },
+        {
+          "label": {
+            "zh_TW": "先付錢。",
+            "en": "Pay me first."
+          },
+          "id": "pay",
+          "finish": true,
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": 30
+            },
+            {
+              "type": "addCounter",
+              "counter": "humanity",
+              "delta": -1
+            },
+            {
+              "type": "setVar",
+              "var": "well_helped",
+              "value": false
+            }
+          ],
+          "next": "pay_done"
+        },
+        {
+          "label": {
+            "zh_TW": "現在不行。",
+            "en": "Not now."
+          },
+          "next": null
+        }
+      ]
+    },
+    "secret_done": {
+      "text": {
+        "zh_TW": "火光一亮，一隻受傷的小狐狸縮到角落。你把牠抱了上來，手臂比以前更有力了。",
+        "en": "The torchlight finds a hurt fox cub in the corner. You carry it up, and your arms feel stronger."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    },
+    "help_done": {
+      "text": {
+        "zh_TW": "你渾身濕透地爬上來，手裡握著一把生鏽的短劍。",
+        "en": "You climb out soaked, holding a rusty short blade."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    },
+    "pay_done": {
+      "text": {
+        "zh_TW": "他顫抖著數好錢幣。「拿去。快下去吧。」",
+        "en": "He counts the coins with shaking hands. \"Here. Now go.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

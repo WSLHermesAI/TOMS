@@ -68,7 +68,9 @@ warning; the debugger shows which.
 - **RmlUi has no default stylesheet.** `common.rcss` makes `div`/`p` block; anything else needs a `display`.
 - **New text (desktop):** after adding characters that are not yet used anywhere (a new dialogue line, a new symbol
   in an `.rml`), run `python tools/make_ui_font.py`, which needs Python 3 with fontTools. `--check` lists what is
-  missing. On desktop RmlUi draws nothing for a missing character. The web build is not affected (see Fonts).
+  missing, and the test `data.ui_font_covers_text` fails until it is run. A character the bundled font still lacks is
+  drawn from the system fallback font (see Fonts), in that font's style; without one, it is an empty box. The web build
+  is not affected (see Fonts).
 
 ## Fonts
 
@@ -98,7 +100,25 @@ so Chinese and Japanese get their own glyph shapes. Because fonts differ between
 boxes.
 
 **Desktop: font files (FreeType).** The default is `assets/media/fonts/NotoSansCJKtc-TOMS.otf`. It also serves as the
-**fallback** for any character another font lacks. A language can name its own font:
+**fallback** for any character another font lacks.
+
+**System fallback (Windows, Android; 2026-10-16).** After the bundled font, `rml_ui.cpp` loads one CJK font from the
+system as the last fallback face, so a character the bundled subset lacks is drawn instead of shown as a box. RmlUi tries
+the fallback faces in load order, so the bundled font always wins and the screenshots do not change.
+
+| Platform | First that exists |
+|---|---|
+| Windows | `%WINDIR%\Fonts\msjh.ttc` (Microsoft JhengHei), `msyh.ttc`, `mingliu.ttc`, `simsun.ttc` |
+| Android | `/system/fonts/NotoSansCJK-Regular.ttc` face 3 (Traditional Chinese), `NotoSansCJKtc-Regular.otf`, `DroidSansFallbackFull.ttf`, `DroidSansFallback.ttf` |
+| Linux | `NotoSansCJK-Regular.ttc` face 3 under `/usr/share/fonts` |
+
+- The file is read into memory (10-25 MB) and never shipped: it comes from the player's own system. The log says
+  which one (`[rmlui] system fallback font: …`) or that there is none.
+- `TOMS_SYSTEM_FONT=<path>[#face]` picks another file; `TOMS_SYSTEM_FONT=none` turns it off.
+- It is a safety net, not a replacement: keep the bundled subset complete (`tools/make_ui_font.py`), because a character
+  from the system font has that font's look.
+
+A language can name its own font:
 
 ```json
 { "code": "ja", "name": "日本語", "font": "fonts/NotoSansJP-Regular.otf" }
@@ -136,3 +156,5 @@ like) are not implemented. The geometry gradients `horizontal-gradient`/`vertica
 - 2026-09-27: the store was rewritten in RmlUi as a test, then every screen moved to RmlUi. The hand-drawn UI code, the
   game's own font atlas (`font.cpp`, `stb_truetype`, the browser-canvas font on web) and the old font downloads
   (WenQuanYi Zen Hei, the Windows `msjh.ttc` fallback) were removed.
+- 2026-10-16: a system CJK font is the last fallback face again (Windows, Android), behind the bundled font, for
+  characters the subset lacks; `data.ui_font_covers_text` checks that the subset covers the game's text.

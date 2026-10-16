@@ -136,7 +136,7 @@ void Game::draw() {
             f.h = e.fp.h * ts - 2.0f * inset;
             f.x = ox + e.x*ts + inset;
             f.y = oy + e.y*ts + inset;
-            f.layer = spriteLayer(entSprite(e.id));
+            f.layer = spriteLayer(e.kind.rfind("npc:", 0) == 0 ? npcSprite(e.id) : entSprite(e.id));   // NPC files may name one
             if (e.kind.rfind("gate:", 0) == 0) {
                 // a gate is drawn as a full-tile door with its key item's "tint" (data/items.json) washed over it, so
                 // it reads as no colour of key door (yellow / blue / red)

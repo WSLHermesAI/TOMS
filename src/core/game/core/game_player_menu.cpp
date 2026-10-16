@@ -302,10 +302,14 @@ void Game::loadEventDefs(const std::string& assetDir) {
     if (kinds.is_object())
         for (auto& [k, v] : kinds.items())
             if (v.is_object() && v.contains("inLog")) kindInLog[k] = v.value("inLog", true);
-    for (const std::string& name : toms::vfsListDir(dir)) {
+    std::vector<std::string> poolNames = toms::vfsListDir(dir);
+    std::sort(poolNames.begin(), poolNames.end());   // pool order = file-name order (the NPC topic menu's order)
+    std::vector<nlohmann::json> poolEvents;
+    for (const std::string& name : poolNames) {
         if (name.rfind("pool_", 0) != 0 || name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
         nlohmann::json pool = readJsonFile(dir + name);
         if (!pool.contains("events") || !pool["events"].is_array()) continue;
+        poolEvents.push_back(pool["events"]);
         for (const auto& e : pool["events"]) {
             const std::string id = e.value("eventId", std::string());
             if (id.empty()) continue;
@@ -317,11 +321,20 @@ void Game::loadEventDefs(const std::string& assetDir) {
                 for (const auto& n : e["next"]) if (n.is_string()) d.next.push_back(n.get<std::string>());
             if (e.contains("requires")) d.requires = e["requires"];
             if (e.contains("actions") && e["actions"].is_array()) d.actions = e["actions"];
+            if (e.contains("trigger") && e["trigger"].is_object()) {
+                d.trigger = e["trigger"].value("on", std::string("step"));
+                d.triggerVar = e["trigger"].value("var", std::string());
+            }
+            d.once = e.value("once", true);
+            d.maxTimes = std::max(0, e.value("maxTimes", 0));
+            d.textKey = e.value("text", id + ".text");
             auto k = kindInLog.find(d.kind);
             d.inLog = e.value("inLog", k == kindInLog.end() ? true : k->second);
             eventDefs_[id] = d;
         }
     }
+    // The events bound to NPCs (trigger "talk"), in menu order (docs/event_editor/08_NPC_DIALOGUE.md).
+    npcTopics_ = toms::talk::collectTopics(poolEvents);
     // The chapters' story events (beats of kind "event"): a chapter's connected events in the log.
     const std::string chDir = assetDir + "/../data/story/chapters/";
     for (const std::string& name : toms::vfsListDir(chDir)) {

@@ -1,0 +1,10 @@
+{
+  "npcId": "king",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "king_lieutenant"
+      }
+    ]
+  }
+}

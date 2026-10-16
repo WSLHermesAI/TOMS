@@ -87,6 +87,10 @@ section 3.2): `stairs_locked` walks to F01's stair, locked by `--stair-lock=F01:
 hint), and `stairs_unlock` finishes the event with `--events-done=` (the "Stairs unlocked" dialog). `bell_gate` starts a new
 game on F04 (`--goto=F04`) with the bell-carved key, opens the key gate and fires the event in the room behind it
 ([event_editor/07](event_editor/07_KEY_GATES.md)); `unit.event_chain_test` checks event actions, gates and the bell chain in the data.
+NPCs and their events ([event_editor/08](event_editor/08_NPC_DIALOGUE.md)): `talk_menu` steps onto the village elder on F02
+(his topic menu), `talk_chain` plays *The Well at Night* and talks again (the ledger woken, the well listed as done), and
+`talk_trusted` shows a `varChanged` event's notice, `talk_repeat` buys the repeatable potion three times, and
+`unit.talk_system_test` checks the talk logic, saves and every NPC file, dialogue and action in the data.
 `unit.stair_links_test` checks the stair list itself, and `unit.floor_index_test` that `assets/data/events/floor_index.json`
 still matches the floors (when it fails: open the project folder in the stage or event editor, which rebuilds it).
 They run on Direct3D 11, and the map scene also runs on Direct3D 12, Vulkan and OpenGL. The scene list is in

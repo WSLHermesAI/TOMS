@@ -125,6 +125,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
     }
     if (auto s = c.RegisterStruct<UiDialogue>()) {
         s.RegisterMember("visible", &UiDialogue::visible);
+        s.RegisterMember("speaker", &UiDialogue::speaker);
         s.RegisterMember("text", &UiDialogue::text);
         s.RegisterMember("choices", &UiDialogue::choices);
         s.RegisterMember("scale", &UiDialogue::scale);

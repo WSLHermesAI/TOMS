@@ -1,0 +1,23 @@
+{
+  "npcId": "princess",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "princess_victory",
+        "requires": {
+          "type": "onStage",
+          "stageId": "stage_11"
+        }
+      },
+      {
+        "dialogue": "princess_liora",
+        "requires": {
+          "not": {
+            "type": "onStage",
+            "stageId": "stage_11"
+          }
+        }
+      }
+    ]
+  }
+}

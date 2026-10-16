@@ -23,6 +23,7 @@ add_library(toms_core STATIC
     ${L_GAME}/systems/equipment_actives.cpp ${L_GAME}/systems/ending_system.cpp
     ${L_GAME}/systems/cycle_system.cpp ${L_GAME}/systems/camera.cpp ${L_GAME}/systems/roamer.cpp
     ${L_GAME}/systems/run_state.cpp ${L_GAME}/systems/floor_table.cpp
+    ${L_GAME}/systems/story_actions.cpp ${L_GAME}/systems/talk_system.cpp   # NPCs and their events (docs/event_editor/08)
     compat/renderer.h)
 toms_target_defaults(toms_core)
 # compat/renderer.h: `Renderer` = the bgfx renderer (see the header).

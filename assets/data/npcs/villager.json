@@ -1,0 +1,41 @@
+{
+  "npcId": "villager",
+  "name": "npc.villager.name",
+  "greeting": "npc.villager.greeting",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "villager_elder"
+      },
+      {
+        "dialogue": "elder_chat_weather"
+      },
+      {
+        "dialogue": "elder_chat_tower",
+        "requires": {
+          "type": "stageCleared",
+          "stageId": "F05"
+        }
+      },
+      {
+        "dialogue": "elder_secret_well",
+        "requires": {
+          "type": "talkCountAtLeast",
+          "npc": "villager",
+          "value": 8
+        },
+        "actions": [
+          {
+            "type": "setVar",
+            "var": "well_secret",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  }
+}

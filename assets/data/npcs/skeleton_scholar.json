@@ -1,0 +1,10 @@
+{
+  "npcId": "skeleton_scholar",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "skeleton_scholar"
+      }
+    ]
+  }
+}

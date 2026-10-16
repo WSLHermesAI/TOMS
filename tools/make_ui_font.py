@@ -16,6 +16,7 @@ would otherwise show as an empty box):
 
     python tools/make_ui_font.py          # rebuild the subset
     python tools/make_ui_font.py --check  # only report characters the current subset lacks
+                                          # (the CTest data.ui_font_covers_text; exit 77 = no fontTools)
 
 Needs Python 3 with fontTools (pip install fonttools). The full source font is downloaded once
 into Build/font-cache/ (not committed). License: SIL Open Font License 1.1 (assets/media/fonts/OFL.txt).
@@ -75,7 +76,8 @@ def main():
     try:
         from fontTools import subset  # noqa: F401
     except ImportError:
-        sys.exit("[make_ui_font] fontTools is missing: pip install fonttools")
+        print("[make_ui_font] fontTools is missing: pip install fonttools")
+        sys.exit(77 if "--check" in sys.argv else 1)   # 77: CTest's "skipped" (data.ui_font_covers_text)
     cps = wanted_codepoints()
 
     if "--check" in sys.argv:

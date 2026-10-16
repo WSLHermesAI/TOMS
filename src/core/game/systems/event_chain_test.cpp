@@ -1,6 +1,6 @@
 // event_chain_test -- event logic in the data (docs/event_editor/06_EVENT_LOGIC.md) and key gates.
 //
-//   * every event `action` names a real item / counter, every `requires` that waits for an event
+//   * every event `action` is a valid story action (story_actions.h) naming a real item / counter, every `requires` that waits for an event
 //     (runFlagSet "event_<id>") names a real event;
 //   * every gate ("gate:<item id>" in a floor's legend) names a story item that some event gives or some
 //     floor places, so it can be opened;
@@ -8,6 +8,7 @@
 //     ev_bell_ringer_room (F04, behind the gate) -> ev_bell_rope (F06) + ev_bell_clapper (F02) ->
 //     ev_bell_rings (F03, needs both). On F04 the room is reached only through its gate.
 // Run in assets/ (tests/CMakeLists.txt).
+#include "story_actions.h"
 #include "vfs.h"
 
 #include <json.hpp>
@@ -106,18 +107,13 @@ int main() {
     for (const auto& [id, e] : events) {
         if (e.contains("actions")) {
             CHECK(e["actions"].is_array(), "%s: actions is a list", id.c_str());
-            for (const auto& a : e["actions"]) {
-                const std::string type = a.value("type", std::string());
-                if (type == "give") {
-                    const std::string item = a.value("itemId", std::string());
-                    CHECK(items.contains(item), "%s gives %s, which data/items.json lacks", id.c_str(), item.c_str());
-                    given.insert(item);
-                } else if (type == "addCounter") {
-                    CHECK(counters.contains(a.value("counter", std::string())), "%s adds to an unknown counter", id.c_str());
-                } else {
-                    CHECK(type == "setFlag", "%s: unknown action '%s' (give / addCounter / setFlag)", id.c_str(), type.c_str());
-                }
-            }
+            // the one action vocabulary (story_actions.h; docs/event_editor/08_NPC_DIALOGUE.md section 7)
+            toms::story::Catalog cat;
+            for (auto& [k, v] : items.items()) if (!k.empty() && k[0] != '_') cat.items.insert(k);
+            for (auto& [k, v] : counters.items()) if (!k.empty() && k[0] != '_') cat.counters.insert(k);
+            for (const std::string& p : toms::story::checkActions(e["actions"], cat, id)) CHECK(false, "%s", p.c_str());
+            for (const auto& a : e["actions"])
+                if (a.value("type", std::string()) == "give") given.insert(a.value("itemId", std::string()));
         }
         std::vector<std::string> waits;
         if (e.contains("requires")) waitsFor(e["requires"], waits);

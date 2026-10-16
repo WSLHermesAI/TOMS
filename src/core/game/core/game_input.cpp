@@ -214,26 +214,20 @@ void Game::movePlayer(int dx, int dy) {
                 } else {
                     notifications_.push_back({text, 4200});      // whispers/rescues: remembered, no stat
                 }
-                // The record's own `actions` (give an item, counters, flags), once per run.
-                if (def != eventDefs_.end() && !run_.eventFinished(evId)) runEventActions(def->second.actions);
-                // Every event that fires is finished (06 section 6 item 2): the run flag the conditions and stair
-                // locks read, the event log's finished list, its `next` events become started, and the stairs it
-                // opens say so (Q7).
-                finishEvent(evId);
+                // The record's `actions`, then finished the first time (06 section 6 item 2): the run flag the
+                // conditions and stair locks read, the event log, its `next` events woken, and the stairs it opens say
+                // so (Q7).
+                completeEvent(evId);
+                // A repeatable event ("once": false) stays on its tile until its last run (08 section 11.1).
+                if (canRepeat(evId)) return;
                 e.consumed = true;
                 st.tiles[e.y][e.x] = '.'; // clear from grid
                 toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, e.x, e.y), toms::EntityStatus::Collected);
                 return;
             } else if (e.kind.rfind("npc:",0)==0) {
-                // start dialogue
-                dlgNpc = "enemy_"+e.id; // fallback; real npc ids below
-                if (e.id=="villager") dlgNpc="villager_elder";
-                else if (e.id=="sorcerer") dlgNpc="sorcerer_teacher";
-                else if (e.id=="king") dlgNpc="king_lieutenant";
-                else if (e.id=="princess") dlgNpc=(curStage=="stage_11")?"princess_victory":"princess_liora";
-                else if (e.id=="handmaiden") dlgNpc="handmaiden";
-                else if (e.id=="skeleton_scholar") dlgNpc="skeleton_scholar";
-                startDialogue(dlgNpc);
+                // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md): its NPC file (data/npcs/<id>.json)
+                // decides between a chat line, a topic and the topic menu.
+                talkTo(e.id);
             } else if (stepOntoStairs(nx, ny)) return;
         }
     }
@@ -263,13 +257,13 @@ void Game::bumpLockedStairs(const toms::StairLink& s) {
     audio.play("confirm_click");
 }
 
-void Game::finishEvent(const std::string& evId) {
+void Game::finishEvent(const std::string& evId, int depth) {
     const bool already = run_.eventFinished(evId);
     run_.setFlag("event_" + evId, true);
     run_.markEventFinished(evId);
     auto def = eventDefs_.find(evId);
-    if (def != eventDefs_.end())
-        for (const std::string& n : def->second.next) run_.markEventStarted(n);
+    if (def != eventDefs_.end() && !already)
+        for (const std::string& n : def->second.next) wakeEvent(n, depth);   // started; a "chain" event runs now
     // Q7: the stairs this event opens. A dialog names each one, and its "go to the stairs" event starts.
     if (auto u = stairUnlocks_.find(evId); u != stairUnlocks_.end() && !already)
         for (const StairUnlock& s : u->second) {
@@ -277,28 +271,6 @@ void Game::finishEvent(const std::string& evId) {
             const std::map<std::string, std::string> vars = {{"from", toms::floorLabel(s.floor)}, {"to", toms::floorLabel(s.to)}};
             notices_.push_back({locale_.tr("stairs.unlocked.title"), toms::fillText(locale_.tr("stairs.unlocked.body"), vars)});
         }
-    markProgressDirty();
-}
-
-void Game::runEventActions(const nlohmann::json& actions) {
-    if (!actions.is_array()) return;
-    for (const auto& a : actions) {
-        if (!a.is_object()) continue;
-        const std::string type = a.value("type", std::string());
-        if (type == "give") {
-            const std::string itemId = a.value("itemId", std::string());
-            if (itemId.empty()) continue;
-            receiveItem(itemId);
-            notifications_.push_back({toms::fillText(locale_.tr("event.gotItem"), {{"item", itemName(itemId)}}), 3800});
-        } else if (type == "addCounter") {
-            const std::string name = a.value("counter", std::string());
-            const int delta = a.value("delta", 0);
-            if (!name.empty() && delta != 0) run_.addCounter(name, delta);
-        } else if (type == "setFlag") {
-            const std::string flag = a.value("flag", std::string());
-            if (!flag.empty()) run_.setFlag(flag, true);
-        }
-    }
     markProgressDirty();
 }
 
@@ -371,15 +343,7 @@ void Game::interact() {
         if (e.consumed) continue;
         if (e.kind.rfind("npc:",0)!=0) continue;
         if (entityCovers(e, pl.x, pl.y)) {
-            std::string npc;
-            if (e.id=="villager") npc="villager_elder";
-            else if (e.id=="sorcerer") npc="sorcerer_teacher";
-            else if (e.id=="king") npc="king_lieutenant";
-            else if (e.id=="princess") npc=(curStage=="stage_11")?"princess_victory":"princess_liora";
-            else if (e.id=="handmaiden") npc="handmaiden";
-            else if (e.id=="skeleton_scholar") npc="skeleton_scholar";
-            else continue;
-            startDialogue(npc);
+            talkTo(e.id);
             return;
         }
     }

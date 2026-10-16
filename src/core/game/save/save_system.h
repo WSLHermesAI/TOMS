@@ -71,6 +71,11 @@ struct RunSaveData {
     std::string                        floor = "F01";// the 70-floor tower's current floor id
     std::vector<std::string>           clearedFloors;// feeds the `stageCleared` condition
     std::vector<std::string>           eventsStarted, eventsFinished;   // the event log (2026-10; optional)
+    // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md section 8; optional): the event variables set this
+    // run (story/vars.json; the rest are at their default), and per NPC [talk index, talk count, last random line].
+    std::map<std::string, int>              vars;
+    std::map<std::string, std::vector<int>> npcTalk;
+    std::map<std::string, int>              eventCounts;   // how many times each repeatable event ran
     std::vector<std::string>           shards;       // memory shards -- SURVIVE rebirth (section 8)
     int deathsTotal = 0, deathsNonBoss = 0;          // feeds ending e_13
     // ---- S4, run scope (the 功法三系 skill tree, data/skills.json) ----

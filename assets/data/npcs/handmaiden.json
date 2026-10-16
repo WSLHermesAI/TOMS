@@ -1,0 +1,10 @@
+{
+  "npcId": "handmaiden",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "handmaiden"
+      }
+    ]
+  }
+}

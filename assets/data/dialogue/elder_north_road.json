@@ -1,0 +1,56 @@
+{
+  "npcId": "villager",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "北邊的路上蝙蝠築了巢，孩子們不敢去打水。你能幫忙清掉牠們嗎？",
+        "en": "Bats nest on the north road, and the children won't go for water. Will you clear them out?"
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "交給我。",
+            "en": "I'll clear it."
+          },
+          "id": "accept",
+          "finish": true,
+          "actions": [
+            {
+              "type": "give",
+              "itemId": "potion_red"
+            },
+            {
+              "type": "addVar",
+              "var": "elder_trust",
+              "delta": 1
+            }
+          ],
+          "next": "thanks"
+        },
+        {
+          "label": {
+            "zh_TW": "現在不行。",
+            "en": "Not now."
+          },
+          "next": null
+        }
+      ]
+    },
+    "thanks": {
+      "text": {
+        "zh_TW": "願你平安。這瓶藥帶著路上用。",
+        "en": "Bless you. Take this potion for the road."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "謝謝。",
+            "en": "Thank you."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

@@ -13,6 +13,9 @@ toms.log
 # runtime saves when the game runs from the repo root (under out/ they are already ignored).
 # Root-anchored: src/core/game/save/ is source code.
 /save/
+# the same when an editor runs from the release folder (Editor/, tools/package_editors.py)
+/Editor/save/
+/Editor/bin/save/
 
 # local Claude Code settings (machine-specific)
 .claude/

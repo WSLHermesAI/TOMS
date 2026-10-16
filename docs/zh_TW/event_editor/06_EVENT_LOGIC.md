@@ -192,18 +192,22 @@ MIT 授權，需要 Dear ImGui 1.72+ 和 C++14，而引擎已經有 ImGui-on-bgf
 （`src/engine/src/imgui_bgfx.h`）。圖的模型和「這條連線代表什麼」的規則
 （mockup 中的 `linkAction`）可以原封不動沿用。
 
-## 6. 執行期的工作（第 2、7 項已於 2026-10-10 完成，其餘尚未）
+## 6. 執行期的工作（第 2、7 項已於 2026-10-10 完成；第 1、3、4、5 項已於 2026-10-16 隨 [08_NPC_DIALOGUE.md](08_NPC_DIALOGUE.md) 完成；第 6 項尚未）
 
-1. **本局狀態：** 事件變數（來自 `vars.json`，像計數器一樣隨本局存檔），以及已完成事件的
-   集合。
+1. ~~**本局狀態：**~~ **已於 2026-10-16 完成：** 事件變數（`story/vars.json`，有預設值與範圍），隨本局存檔
+   （[08](08_NPC_DIALOGUE.md) 第 8 節）。
 2. **每個事件都要有「事件完成」。** 今天 `game_input.cpp` 只為低語和救援設定 `event_<id>`；
    陷阱、補給、遺物和碎片什麼也沒設定。應該全部都設定，因為條件
    和 [05_FLOOR_LINKS.md](05_FLOOR_LINKS.md) 的樓梯鎖都會讀它。
-3. `condition.cpp` 中的**條件葉節點** `varAtLeast` / `varEquals`（加上 context 方法）。
+3. ~~**條件葉節點**~~ **已於 2026-10-16 完成：** `condition.cpp` 中的 `varAtLeast` / `varEquals`，另加 `talkCountAtLeast` 與 `onStage`。
 4. **動作：** `give`、`addCounter`、`setFlag` **已於 2026-10-14 完成**（事件觸發時執行一次；專屬鑰匙門見
-   [07_KEY_GATES.md](07_KEY_GATES.md)）；`addVar` / `setVar` 要等事件變數（第 1 項）。
+   [07_KEY_GATES.md](07_KEY_GATES.md)）；**2026-10-16：** [08](08_NPC_DIALOGUE.md) 第 7 節的所有動作（`addVar`、`setVar`、`addStat`、
+   `take`、`fireEvent`…）都透過同一個執行器（`story_actions.h`）。
 5. **分派器：** 在格子上、交談時（對話關閉之後）、變數改變時，以及透過
    `next` 觸發；檢查 `requires` 和 `once`；防止迴圈（每條鏈中一個事件最多觸發一次）。
+   **2026-10-16：** 交談（NPC 話題）、`next` / `fire` 喚醒事件，以及 `chain` 事件被喚醒時執行，已完成
+   （[08](08_NPC_DIALOGUE.md) 第 5、11.1 節；迴圈最多 32 層），`varChanged`（最多 16 層）與帶 `maxTimes` 的 `once: false`
+   也已完成（[08](08_NPC_DIALOGUE.md) 第 6.5 節）。
 6. **效果來自資料：** `game_input.cpp` 中寫死的「陷阱 = −8 HP，補給 = +10 HP +12 金幣」
    改成紀錄上的動作。
 7. **給玩家事件紀錄用的事件狀態**（§7）：每個事件的已開始／已完成，隨這輪遊戲存檔。

@@ -28,6 +28,22 @@ namespace toms {
 // Declaration of one accumulator, from data/story/counters.json: `displayAt` is the threshold at
 // which the HUD shows the state *word* (never the number), and `clamp` bounds it so the rebirth
 // maths in section 8 can never produce a negative or absurd value.
+// An event variable from story/vars.json (docs/event_editor/08_NPC_DIALOGUE.md section 8): its value before anything
+// sets it, and its range ("bool" variables are 0..1).
+struct VarDecl {
+    int def = 0;
+    int lo = -1000000;
+    int hi = 1000000;
+};
+
+// One NPC's talk state this run (section 4): which chat line plays next, how many times the player has talked to
+// it, and the last line a "random" rotation played (-1 = none).
+struct NpcTalkState {
+    int index = 0;
+    int count = 0;
+    int lastRandom = -1;
+};
+
 struct CounterDecl {
     int lo = -20;
     int hi = 20;
@@ -105,6 +121,20 @@ public:
     const std::vector<std::string>& eventsStarted() const { return eventsStarted_; }
     const std::vector<std::string>& eventsFinished() const { return eventsFinished_; }
 
+    // ---- event variables and NPC talk state (docs/event_editor/08_NPC_DIALOGUE.md section 8) ---
+    // A variable never set reads its declared default (0 when undeclared); setting clamps to the declared range.
+    int var(const std::string& name) const;
+    void setVar(const std::string& name, int value);
+    void addVar(const std::string& name, int delta) { setVar(name, var(name) + delta); }
+    void setVarDecls(const std::map<std::string, VarDecl>& decls) { varDecls_ = decls; }
+    const std::map<std::string, VarDecl>& varDecls() const { return varDecls_; }
+    const std::map<std::string, int>& vars() const { return vars_; }
+    NpcTalkState& npcTalk(const std::string& npc) { return npcTalk_[npc]; }
+    // How many times each event ran (repeatable events, "maxTimes"). A finished event counts at least once.
+    int eventCount(const std::string& eventId) const;
+    void countEvent(const std::string& eventId) { ++eventCounts_[eventId]; }
+    NpcTalkState npcTalk(const std::string& npc) const;
+
     // ---- deaths (ending e_13) ------------------------------------------------------------------
     void noteDeath(bool boss);
     int deathsTotal() const { return deathsTotal_; }
@@ -139,6 +169,10 @@ private:
     std::string                        floor_ = "F01";
     std::vector<std::string>           clearedFloors_;
     std::vector<std::string>           eventsStarted_, eventsFinished_;
+    std::map<std::string, int>         vars_;
+    std::map<std::string, VarDecl>     varDecls_;
+    std::map<std::string, NpcTalkState> npcTalk_;
+    std::map<std::string, int>         eventCounts_;
     int deathsTotal_ = 0, deathsNonBoss_ = 0;
     std::map<std::string, CounterDecl> decls_;
 };

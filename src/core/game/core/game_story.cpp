@@ -1,37 +1,87 @@
 // game_story.cpp — narrative systems glue: dialogue nodes/choices/actions, missions,
 // notifications and the game-state query. Split out of game.cpp 2026-09-13.
 #include "game_internal.h"
+#include "stair_links.h"   // toms::fillText
+#include "story_actions.h"
+#include "talk_system.h"
+
+#include <functional>
 
 using namespace toms::game_detail;
 
 void Game::startDialogue(const std::string& npc) {
-    dlgData = readJsonFile(dataDir + "/../data/dialogue/" + npc + ".json");
-    if (dlgData.is_null() || dlgData.empty()) { inDialogue=false; return; }
-    if (!dlgData.contains("start") || !dlgData["start"].is_string()) { inDialogue = false; return; }
-    inDialogue = true; dlgNode = dlgData["start"];
+    dlgNpc = npc;
+    dlgSpeaker_.clear();
+    dlgTalkNpc_.clear();
+    openDialogue(readDialogue(npc), DlgMode::Plain);
+}
+
+nlohmann::json Game::readDialogue(const std::string& id) const {
+    if (id.empty()) return nlohmann::json();
+    return readJsonFile(dataDir + "/../data/dialogue/" + id + ".json");
+}
+
+bool Game::holds(const nlohmann::json& condition) const {
+    return toms::evaluate(condition, GameConditionContext(pl, meta_, missionTrackers_, run_, equipped_, &curStage));
+}
+
+// The game's answers to talk_system's questions.
+namespace {
+class GameTalkQuery : public toms::talk::TalkQuery {
+public:
+    GameTalkQuery(std::function<bool(const nlohmann::json&)> holds, const toms::RunStoryState& run, std::mt19937& rng)
+        : holds_(std::move(holds)), run_(run), rng_(rng) {}
+    bool holds(const nlohmann::json& c) const override { return holds_(c); }
+    bool eventStarted(const std::string& id) const override { return run_.eventStarted(id); }
+    bool eventFinished(const std::string& id) const override { return run_.eventFinished(id); }
+    int eventCount(const std::string& id) const override { return run_.eventCount(id); }
+    int random(int n) override { return n <= 1 ? 0 : std::uniform_int_distribution<int>(0, n - 1)(rng_); }
+private:
+    std::function<bool(const nlohmann::json&)> holds_;
+    const toms::RunStoryState& run_;
+    std::mt19937& rng_;
+};
+}  // namespace
+
+bool Game::openDialogue(const nlohmann::json& data, DlgMode mode) {
+    dlgChoices.clear();
+    dlgData = data;
+    dlgMode_ = mode;
+    if (mode != DlgMode::Topic && mode != DlgMode::After) dlgEvent_.clear();
+    dlgFinishOnClose_ = mode == DlgMode::Topic && data.is_object() && data.value("finishOnClose", false);
+    GameTalkQuery q([this](const nlohmann::json& c) { return holds(c); }, run_, talkRng_);
+    const std::string start = toms::talk::startNode(data, q);
+    if (start.empty()) { inDialogue = false; return false; }
+    inDialogue = true;
+    dlgNode = start;
     dlgSel = 0;
     enterNode(dlgNode);
-    audio.play("dialogue_popup");
+    if (inDialogue) audio.play("dialogue_popup");
+    return inDialogue;
 }
 
 void Game::enterNode(const std::string& node) {
     dlgChoices.clear();
     if (!dlgData.contains("nodes") || !dlgData["nodes"].contains(node)) {
-        inDialogue = false; return;   // missing node -> close safely (no nlohmann throw / abort)
+        endDialogue(); return;   // missing node -> close safely (no nlohmann throw / abort)
     }
     const auto& n = dlgData["nodes"][node];
     if (!n.is_object() || !n.contains("choices")) return;
     for (auto& c : n["choices"]) {
         if (!c.is_object()) continue;
         // Milestone 3: a choice's optional `requires` gates whether it appears at all, evaluated
-        // via the shared Condition Evaluator (condition.h). No shipped dialogue file sets this
-        // yet, so `contains("requires")` is false for all of them today -- purely additive.
-        if (c.contains("requires") && !toms::evaluate(c["requires"], GameConditionContext(pl, meta_, missionTrackers_, run_, equipped_)))
-            continue;
-        std::string label = c.contains("label") ? locale_.field(c["label"]) : "";
-        std::string next  = c.contains("next")  && !c["next"].is_null()  ? (std::string)c["next"]  : "";
-        nlohmann::json action = c.contains("action") ? c["action"] : nlohmann::json();
-        dlgChoices.push_back({label, next, action});
+        // via the shared Condition Evaluator (condition.h).
+        if (c.contains("requires") && !holds(c["requires"])) continue;
+        DialogueChoice ch;
+        ch.label = c.contains("label") ? locale_.field(c["label"]) : "";
+        ch.next  = c.contains("next") && c["next"].is_string() ? c["next"].get<std::string>() : "";
+        if (c.contains("action")) ch.action = c["action"];
+        if (c.contains("actions")) ch.actions = c["actions"];
+        ch.finish = c.value("finish", false);
+        if (c.contains("fire") && c["fire"].is_array())
+            for (const auto& f : c["fire"]) if (f.is_string()) ch.fire.push_back(f.get<std::string>());
+        ch.id = c.value("id", std::string());
+        dlgChoices.push_back(ch);
     }
     dlgSel = 0;
 }
@@ -43,10 +93,287 @@ void Game::chooseDialogue(int idx) {
     audio.play("confirm_click");
     auto ch = dlgChoices[idx];   // copy: runDialogueAction (e.g. enterBattle) may resize dlgChoices
     toms::globalEventBus().publish(toms::ChoiceMade{dlgNpc, ch.label});
-    if (!ch.action.is_null()) runDialogueAction(ch.action);
+    if (dlgMode_ == DlgMode::Menu) {   // the topic menu: the action says which line (openTopicMenu)
+        const std::string pick = ch.action.value("menu", std::string());
+        const std::string npc = dlgTalkNpc_;
+        if (pick == "topic") openTopic(ch.action.value("eventId", std::string()), ch.action.value("finished", false));
+        else if (pick == "chat") {
+            GameTalkQuery q([this](const nlohmann::json& c) { return holds(c); }, run_, talkRng_);
+            const int line = toms::talk::nextChatLine(npcDef(npc), run_.npcTalk(npc), q);
+            if (line >= 0) playChatLine(npc, line); else endDialogue();
+        } else endDialogue();
+        return;
+    }
+    const std::string eventId = dlgEvent_;
+    const bool topic = dlgMode_ == DlgMode::Topic;
+    // A topic's choices are remembered per event (choiceMade {eventId, id}), so later dialogues and events can ask
+    // which way the player went.
+    if (topic && !ch.id.empty()) run_.makeChoice(eventId, ch.id, true);
+    if (!ch.action.is_null()) runStoryActions(ch.action);
+    if (!ch.actions.is_null()) runStoryActions(ch.actions);
+    if (topic) {   // an after-dialogue's `finish` / `fire` are ignored: the event is already finished
+        for (const std::string& f : ch.fire) wakeEvent(f);
+        if (ch.finish) finishTalkEvent(eventId);
+    }
     if (!inDialogue) return;    // an action (e.g. enterBattle) may have already ended the dialogue
-    if (ch.next.empty()) { inDialogue = false; return; }
+    if (ch.next.empty()) { endDialogue(); return; }
     dlgNode = ch.next; enterNode(dlgNode);
+}
+
+void Game::endDialogue() {
+    if (inDialogue && dlgMode_ == DlgMode::Topic && dlgFinishOnClose_ && !dlgEvent_.empty()) finishTalkEvent(dlgEvent_);
+    inDialogue = false;
+    dlgChoices.clear();
+    dlgMode_ = DlgMode::Plain;
+    dlgFinishOnClose_ = false;
+}
+
+// ---------- NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md) ----------
+
+void Game::loadNpcs(const std::string& assetDir) {
+    npcDefs_.clear();
+    const std::string dir = assetDir + "/../data/npcs/";
+    for (const std::string& name : toms::vfsListDir(dir)) {
+        if (name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
+        toms::talk::NpcDef d;
+        std::string err;
+        if (toms::talk::parseNpc(readJsonFile(dir + name), d, &err)) npcDefs_[d.id] = d;
+        else fprintf(stderr, "[assets] npcs/%s: %s\n", name.c_str(), err.c_str());
+    }
+    // Event variables (story/vars.json, the event editor's Variables tab): defaults and ranges.
+    std::map<std::string, toms::VarDecl> decls;
+    nlohmann::json vj = readJsonFile(assetDir + "/../data/story/vars.json");
+    if (vj.is_object())
+        for (auto& [k, v] : vj.items()) {
+            if (k.empty() || k[0] == '_' || !v.is_object()) continue;
+            toms::VarDecl d;
+            d.def = toms::varNumber(v.value("default", nlohmann::json(0)));
+            if (v.value("type", std::string()) == "bool") { d.lo = 0; d.hi = 1; }
+            if (v.contains("min") && v["min"].is_number_integer()) d.lo = v["min"].get<int>();
+            if (v.contains("max") && v["max"].is_number_integer()) d.hi = v["max"].get<int>();
+            decls[k] = d;
+        }
+    run_.setVarDecls(decls);
+    fprintf(stderr, "[assets] npcs: %zu files, %zu with topics; %zu event variables\n", npcDefs_.size(), npcTopics_.size(), decls.size());
+}
+
+const toms::talk::NpcDef& Game::npcDef(const std::string& npcId) {
+    auto it = npcDefs_.find(npcId);
+    if (it == npcDefs_.end()) it = npcDefs_.emplace(npcId, toms::talk::defaultNpc(npcId, npcId)).first;   // no NPC file
+    return it->second;
+}
+
+void Game::talkTo(const std::string& npcId) {
+    if (npcId.empty() || modalActive()) return;
+    const toms::talk::NpcDef& npc = npcDef(npcId);
+    static const std::vector<toms::talk::Topic> kNone;
+    auto t = npcTopics_.find(npcId);
+    GameTalkQuery q([this](const nlohmann::json& c) { return holds(c); }, run_, talkRng_);
+    const toms::talk::TalkPlan plan = toms::talk::planTalk(npc, t == npcTopics_.end() ? kNone : t->second, run_.npcTalk(npcId), q);
+    markProgressDirty();   // the talk index and count are saved with the run
+    dlgTalkNpc_ = npcId;
+    switch (plan.kind) {
+        case toms::talk::TalkKind::Chat:  playChatLine(npcId, plan.chatLine); break;
+        case toms::talk::TalkKind::Topic: openTopic(plan.topic.eventId, plan.topic.finished); break;
+        case toms::talk::TalkKind::Menu:  openTopicMenu(npcId, plan.menu); break;
+        case toms::talk::TalkKind::Nothing: break;
+    }
+}
+
+void Game::playChatLine(const std::string& npcId, int line) {
+    const toms::talk::NpcDef& npc = npcDef(npcId);
+    if (line < 0 || line >= (int)npc.lines.size()) { endDialogue(); return; }
+    const toms::talk::ChatLine& l = npc.lines[line];
+    dlgNpc = l.dialogue;
+    dlgSpeaker_ = npc.nameKey.empty() ? std::string() : locale_.tr(npc.nameKey);
+    if (!l.actions.is_null()) runStoryActions(l.actions);
+    openDialogue(readDialogue(l.dialogue), DlgMode::Chat);
+}
+
+void Game::openTopic(const std::string& eventId, bool finished) {
+    auto def = eventDefs_.find(eventId);
+    if (eventId.empty() || def == eventDefs_.end()) { endDialogue(); return; }
+    const toms::talk::NpcDef& npc = npcDef(dlgTalkNpc_);
+    dlgSpeaker_ = npc.nameKey.empty() ? std::string() : locale_.tr(npc.nameKey);
+    dlgEvent_ = eventId;
+    std::string file;
+    for (const auto& [n, list] : npcTopics_)
+        for (const toms::talk::Topic& t : list)
+            if (t.eventId == eventId) file = finished ? t.afterDialogue : t.dialogue;
+    if (!finished) {
+        run_.markEventStarted(eventId);   // the event log lists it as in progress until it finishes
+        markProgressDirty();
+    }
+    nlohmann::json data = readDialogue(file);
+    if (file.empty() || !data.is_object()) {
+        // No dialogue file: the event's text as one page; OK finishes it (an after-view just closes).
+        std::string text = locale_.tr(def->second.textKey);
+        if (text == def->second.textKey) text = eventId;
+        nlohmann::json ok = {{"label", locale_.tr("talk.ok")}, {"next", nullptr}};
+        if (!finished) ok["finish"] = true;
+        data = {{"start", "root"}, {"nodes", {{"root", {{"text", text}, {"choices", nlohmann::json::array({ok})}}}}}};
+    }
+    dlgNpc = file.empty() ? eventId : file;
+    if (!openDialogue(data, finished ? DlgMode::After : DlgMode::Topic)) endDialogue();
+}
+
+void Game::openTopicMenu(const std::string& npcId, const std::vector<toms::talk::MenuEntry>& menu) {
+    const toms::talk::NpcDef& npc = npcDef(npcId);
+    dlgSpeaker_ = npc.nameKey.empty() ? std::string() : locale_.tr(npc.nameKey);
+    nlohmann::json choices = nlohmann::json::array();
+    for (const toms::talk::MenuEntry& m : menu) {
+        auto d = eventDefs_.find(m.eventId);
+        std::string title = d == eventDefs_.end() ? m.eventId : locale_.tr(d->second.titleKey);
+        if (d != eventDefs_.end() && title == d->second.titleKey) title = m.eventId;
+        const std::string mark = m.finished ? std::string("\xE2\x9C\x93 ") : std::string();   // a check mark: done
+        choices.push_back({{"label", mark + title}, {"next", nullptr},
+                           {"action", {{"menu", "topic"}, {"eventId", m.eventId}, {"finished", m.finished}}}});
+    }
+    choices.push_back({{"label", locale_.tr("talk.just_chat")}, {"next", nullptr}, {"action", {{"menu", "chat"}}}});
+    choices.push_back({{"label", locale_.tr("talk.leave")}, {"next", nullptr}, {"action", {{"menu", "leave"}}}});
+    const std::string greeting = npc.greetingKey.empty() ? std::string() : locale_.tr(npc.greetingKey);
+    nlohmann::json data = {{"start", "menu"}, {"nodes", {{"menu", {{"text", greeting}, {"choices", choices}}}}}};
+    dlgNpc = npcId;
+    openDialogue(data, DlgMode::Menu);
+}
+
+void Game::finishTalkEvent(const std::string& eventId) {
+    if (!eventId.empty()) completeEvent(eventId);
+}
+
+bool Game::canRepeat(const std::string& eventId) const {
+    auto def = eventDefs_.find(eventId);
+    if (def == eventDefs_.end() || def->second.once) return false;
+    return def->second.maxTimes <= 0 || run_.eventCount(eventId) < def->second.maxTimes;
+}
+
+bool Game::completeEvent(const std::string& eventId, int depth) {
+    if (eventId.empty()) return false;
+    const bool again = run_.eventFinished(eventId);
+    if (again && !canRepeat(eventId)) return false;
+    if (auto def = eventDefs_.find(eventId); def != eventDefs_.end()) runStoryActions(def->second.actions);
+    run_.countEvent(eventId);
+    if (!again) finishEvent(eventId, depth);   // the first run: flag, log, `next`, stairs
+    else markProgressDirty();                  // a repeat: its actions only
+    return true;
+}
+
+void Game::noticeEventTitle(const std::string& eventId) {
+    auto def = eventDefs_.find(eventId);
+    std::string title = def == eventDefs_.end() ? eventId : locale_.tr(def->second.titleKey);
+    if (def != eventDefs_.end() && title == def->second.titleKey) title = eventId;
+    notifications_.push_back({title, 3600});
+}
+
+void Game::wakeEvent(const std::string& eventId, int depth) {
+    if (eventId.empty() || (run_.eventFinished(eventId) && !canRepeat(eventId))) return;
+    run_.markEventStarted(eventId);
+    auto def = eventDefs_.find(eventId);
+    if (def == eventDefs_.end() || def->second.trigger != "chain" || depth > 32) return;   // 32: a loop in the data
+    if (!holds(def->second.requires)) return;
+    noticeEventTitle(eventId);   // no tile, no NPC: the player sees its title (decision, 2026-10-16)
+    completeEvent(eventId, depth + 1);
+}
+
+void Game::varChanged(const std::string& var) {
+    if (var.empty() || varChangeDepth_ >= 16) return;   // 16: events that keep changing each other's variables
+    ++varChangeDepth_;
+    std::vector<std::string> fire;
+    for (const auto& [id, d] : eventDefs_)
+        if (d.trigger == "varChanged" && d.triggerVar == var) fire.push_back(id);
+    for (const std::string& id : fire) {
+        if (run_.eventFinished(id) && !canRepeat(id)) continue;
+        if (!holds(eventDefs_[id].requires)) continue;
+        noticeEventTitle(id);
+        completeEvent(id);
+    }
+    --varChangeDepth_;
+}
+
+std::string Game::npcSprite(const std::string& npcId) const {
+    auto it = npcDefs_.find(npcId);
+    if (it != npcDefs_.end() && !it->second.sprite.empty() && spriteAtlas_.find(it->second.sprite)) return it->second.sprite;
+    if (spriteAtlas_.find("npc_" + npcId)) return "npc_" + npcId;
+    return entSprite(npcId);
+}
+
+void Game::runStoryActions(const nlohmann::json& actions) {
+    if (actions.is_null()) return;
+    // A local class has the member function's access: Game's own state is changed directly.
+    struct Effects : toms::story::StoryEffects {
+        Game& g;
+        explicit Effects(Game& game) : g(game) {}
+        int* stat(const std::string& s) {
+            Player& p = g.pl;
+            if (s == "hp") return &p.hp;
+            if (s == "maxhp") return &p.maxhp;
+            if (s == "atk") return &p.atk;
+            if (s == "def") return &p.def;
+            if (s == "gold") return &p.gold;
+            if (s == "lv") return &p.lv;
+            for (const AttrDef& a : g.attrDefs_) if (a.id == s) return &p.attrs[a.id];   // str, dex, ... (stats.json)
+            return nullptr;
+        }
+        void note(const std::string& s, int delta) {
+            std::string name = s;
+            for (const AttrDef& a : g.attrDefs_) if (a.id == s && !a.shortName.empty()) name = a.shortName;
+            if (name == s) { std::string up; for (char c : s) up += (char)std::toupper((unsigned char)c); name = up; }
+            g.notifications_.push_back({name + (delta >= 0 ? " +" : " ") + std::to_string(delta), 3200});
+        }
+        bool addStat(const std::string& s, int delta) override {
+            if (s == "exp") { if (delta > 0) g.gainExp(delta); else g.pl.exp = std::max(0, g.pl.exp + delta); note(s, delta); return true; }
+            int* v = stat(s);
+            if (!v) return false;
+            *v = std::max(0, *v + delta);
+            if (s == "hp") *v = std::max(1, std::min(*v, g.effectiveMaxHp()));
+            note(s, delta);
+            return true;
+        }
+        bool setStat(const std::string& s, int value) override {
+            if (s == "exp") { g.pl.exp = std::max(0, value); return true; }
+            int* v = stat(s);
+            if (!v) return false;
+            *v = std::max(0, value);
+            if (s == "hp") *v = std::max(1, std::min(*v, g.effectiveMaxHp()));
+            return true;
+        }
+        bool give(const std::string& item, int count) override {
+            if (item.empty()) return false;
+            for (int i = 0; i < count; ++i) g.receiveItem(item);
+            std::string name = g.itemName(item);
+            if (count > 1) name += " x" + std::to_string(count);
+            g.notifications_.push_back({toms::fillText(g.locale_.tr("event.gotItem"), {{"item", name}}), 3800});
+            return true;
+        }
+        bool take(const std::string& item, int count) override {
+            Player& p = g.pl;
+            int* key = item == "key_yellow" ? &p.key_yellow : item == "key_blue" ? &p.key_blue : item == "key_red" ? &p.key_red : nullptr;
+            if (key) { if (*key < count) return false; *key -= count; return true; }
+            if ((int)std::count(p.inv.begin(), p.inv.end(), item) < count) return false;
+            for (int i = 0; i < count; ++i) p.inv.erase(std::find(p.inv.begin(), p.inv.end(), item));
+            g.notifications_.push_back({toms::fillText(g.locale_.tr("event.gaveItem"), {{"item", g.itemName(item)}}), 3200});
+            return true;
+        }
+        void setVar(const std::string& v, int value) override {
+            const int before = g.run_.var(v);
+            g.run_.setVar(v, value);
+            if (g.run_.var(v) != before) g.varChanged(v);
+        }
+        void addVar(const std::string& v, int delta) override {
+            const int before = g.run_.var(v);
+            g.run_.addVar(v, delta);
+            if (g.run_.var(v) != before) g.varChanged(v);
+        }
+        void setFlag(const std::string& f) override { if (!f.empty()) g.run_.setFlag(f, true); }
+        void setStoryFlag(const std::string& f) override { if (!f.empty()) toms::setStoryFlag(g.meta_, f); }
+        void addCounter(const std::string& c, int delta) override { if (!c.empty() && delta != 0) g.run_.addCounter(c, delta); }
+        void fireEvent(const std::string& id) override { g.wakeEvent(id); }
+        void message(const std::string& key) override { g.notifications_.push_back({g.locale_.tr(key), 3800}); }
+        bool other(const nlohmann::json& a) override { g.runDialogueAction(a); return true; }
+    } fx(*this);
+    const toms::story::RunReport rep = toms::story::runActions(actions, fx);
+    for (const std::string& p : rep.problems) fprintf(stderr, "[story] action failed: %s\n", p.c_str());
+    markProgressDirty();
 }
 
 // Milestone 4: executes a dialogue choice's optional `action` verb. Kept as a small, explicit

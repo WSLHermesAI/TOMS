@@ -118,7 +118,8 @@ keeps a server running in its window (close the window, or press Ctrl+C, to stop
 - **Stage editor:** paint walls, doors, keys, monsters, items, events and gates on each floor. The checks at the
   bottom catch unreachable objects, missing keys and broken stairs.
 - **Event editor:** events, their text in every language, and how they link (*Active only when*, *Then fire*,
-  *Then do → give*).
+  *Then do → give*). The **NPCs** tab edits NPCs (name, greeting, chat lines, topic order) and has a **talk preview**;
+  the **Dialogues** tab edits dialogues as cards ([docs/event_editor/08](../docs/event_editor/08_NPC_DIALOGUE.md)).
 
 ## 3. When something goes wrong
 

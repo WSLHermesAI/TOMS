@@ -47,6 +47,11 @@ bool evaluate(const nlohmann::json& expr, const ConditionContext& ctx) {
     if (type == "always") return true;
     if (type == "memoryShards") return ctx.memoryShardCount() >= expr.value("min", 0);
     if (type == "deathsNonBoss") return ctx.deathsNonBoss() >= expr.value("min", 0);
+    // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md section 8).
+    if (type == "varAtLeast") return ctx.varValue(expr.value("var", std::string())) >= varNumber(expr.value("value", nlohmann::json(0)));
+    if (type == "varEquals")  return ctx.varValue(expr.value("var", std::string())) == varNumber(expr.value("value", nlohmann::json(0)));
+    if (type == "talkCountAtLeast") return ctx.talkCount(expr.value("npc", std::string())) >= expr.value("value", 0);
+    if (type == "onStage")    return ctx.currentStage() == expr.value("stageId", std::string());
 
     return false;   // unknown leaf type -> fail closed
 }

@@ -1,0 +1,25 @@
+{
+  "elder_trust": {
+    "type": "int",
+    "default": 0,
+    "scope": "run",
+    "min": 0,
+    "max": 5,
+    "category": "elder"
+  },
+  "well_helped": {
+    "type": "bool",
+    "default": false,
+    "scope": "run",
+    "category": "elder"
+  },
+  "well_secret": {
+    "type": "bool",
+    "default": false,
+    "scope": "run",
+    "category": "elder"
+  },
+  "_categories": [
+    "elder"
+  ]
+}

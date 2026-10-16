@@ -88,7 +88,7 @@ Smoke 場景有標題、地圖（HUD + 方向盤）、玩家選單的五個分�
 讓格子、裝備比較和捲動有東西可顯示。`unit.player_menu_test` 檢查選單的規則，以及道具、商店、屬性和標題資料，
 並確認每層列出的每個事件都有事件池紀錄與英文文字。兩個場景顯示上鎖的樓梯（[05](event_editor/05_FLOOR_LINKS.md) 第 3.2 節）：
 `stairs_locked` 走到被 `--stair-lock=F01:ev_village_well` 鎖住的 F01 樓梯（鎖頭與提示），`stairs_unlock` 以 `--events-done=`
-完成該事件（「Stairs unlocked」對話框）。`bell_gate` 以 `--goto=F04` 帶著鐘紋鑰匙在 F04 開始新遊戲，打開專屬鑰匙門並觸發門後房間的事件（[event_editor/07](event_editor/07_KEY_GATES.md)）；`unit.event_chain_test` 檢查資料中的事件動作、門與鐘的事件鏈。`unit.stair_links_test` 檢查樓梯清單本身，`unit.floor_index_test` 檢查
+完成該事件（「Stairs unlocked」對話框）。`bell_gate` 以 `--goto=F04` 帶著鐘紋鑰匙在 F04 開始新遊戲，打開專屬鑰匙門並觸發門後房間的事件（[event_editor/07](event_editor/07_KEY_GATES.md)）；`unit.event_chain_test` 檢查資料中的事件動作、門與鐘的事件鏈。NPC 與綁定的事件（[event_editor/08](event_editor/08_NPC_DIALOGUE.md)）：`talk_menu` 在 F02 走到村長上（他的話題選單），`talk_chain` 進行《夜裡的井》後再次交談（帳本被喚醒，井列為已完成），`talk_trusted` 顯示 `varChanged` 事件的通知，`talk_repeat` 買三次可重複的藥，`unit.talk_system_test` 檢查交談邏輯、存檔，以及資料中的每個 NPC 檔、對話與動作。`unit.stair_links_test` 檢查樓梯清單本身，`unit.floor_index_test` 檢查
 `assets/data/events/floor_index.json` 仍與樓層相符（失敗時：用關卡或事件編輯器開啟專案資料夾，它會重建索引）。
 它們在 Direct3D 11 上執行，地圖場景也在 Direct3D 12、Vulkan 和 OpenGL 上執行。場景清單在
 `tests/CMakeLists.txt`，每個測試一行。

@@ -20,6 +20,7 @@ the game finds them.
 | [05_FLOOR_LINKS.md](05_FLOOR_LINKS.md) | Several stairs per floor, stairs locked until an event is finished: format, game rules, checks |
 | [06_EVENT_LOGIC.md](06_EVENT_LOGIC.md) | Event triggers (step, talk, variable change, link), conditions, actions, direct links, event variables, and the node-graph editor |
 | [07_KEY_GATES.md](07_KEY_GATES.md) | Key gates (a gate only one story item opens), event actions that give it, and the bell chain: a six-event chain across F02–F06 |
+| [08_NPC_DIALOGUE.md](08_NPC_DIALOGUE.md) | NPCs and their events (built 2026-10-16): chat lines rotating with a talk index, a topic menu when several events are active, choices with results (stats, variables, items, events), what a finished topic does, and how the same pieces connect bigger stories |
 | [04_TUTORIAL.md](04_TUTORIAL.md) | Step by step: create an event, read the relationship diagram, find problems, fix them, save |
 | [tools/web_editors/index.html](../../tools/web_editors/index.html) | The working event editor (with the tutorial) and the stage editor |
 
@@ -28,6 +29,15 @@ the game finds them.
 They are static HTML with a little JavaScript, and they run on a copy of the real event data
 (`tools/web_editors/data.js`). `serve.cmd` refreshes it from `assets/data` every time it starts;
 without the server, run `refresh_data.cmd`.
+
+**Panel sizes:** drag the edge between two panels to resize them: the tutorial, the event tree, the event form and the
+tabs below it, the history (and in the stage editor its columns and the checks). The browser remembers the sizes; a
+double-click on an edge resets it.
+
+**Text size:** the event editor's **🔍** list (top right), or **Alt + =** bigger, **Alt + -** smaller, **Alt + 0** back to
+the default in `tools/web_editors/settings.js` (`eventTextScale`, 120 %). Every text grows; the diagram, the floor map
+and the values map are enlarged as a whole picture, and the logic graph keeps its own mouse-wheel zoom. The browser
+remembers the choice. (The stage editor's 🔍 sets the size of its whole interface, `uiScale`.)
 
 **The editors live in [tools/web_editors/](../../tools/web_editors/index.html)** with the stage editor: open `index.html` (or run
 `serve.cmd`) and switch between them with the **⇄** button. The event editor includes the **tutorial**, 29 steps in a working mini-editor:

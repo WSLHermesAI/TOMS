@@ -38,8 +38,9 @@ public:
     // those ids no matter what the player actually has equipped.
     GameConditionContext(const Player& p, const toms::MetaSaveData& meta,
                           const std::map<std::string, toms::MissionTracker>& missions,
-                          const toms::RunStoryState& run, const toms::EquippedSet& equipped)
-        : p_(p), meta_(meta), missions_(missions), run_(run), eq_(equipped) {}
+                          const toms::RunStoryState& run, const toms::EquippedSet& equipped,
+                          const std::string* stage = nullptr)
+        : p_(p), meta_(meta), missions_(missions), run_(run), eq_(equipped), stage_(stage) {}
     bool storyFlagSet(const std::string& flag) const override { return toms::hasStoryFlag(meta_, flag); }
     bool runFlagSet(const std::string& flag) const override { return run_.flag(flag); }
     int  storyBeat() const override { return meta_.currentBeat; }
@@ -59,6 +60,8 @@ public:
         if (stat == "lv")   return p_.lv;
         if (stat == "gold") return p_.gold;
         if (stat == "exp")  return p_.exp;
+        if (stat == "maxhp") return p_.maxhp;
+        if (auto a = p_.attrs.find(stat); a != p_.attrs.end()) return a->second;   // str, dex, ... (data/stats.json)
         return 0;
     }
     // Milestone 4: real lookups against Game's live mission trackers (closes the stub these two
@@ -98,12 +101,16 @@ public:
     int memoryShardCount() const override { return run_.shardCount(); }
     // M7: e_13's condition ("非首領戰死亡累積 ≥12").
     int deathsNonBoss() const override { return run_.deathsNonBoss(); }
+    int varValue(const std::string& var) const override { return run_.var(var); }
+    int talkCount(const std::string& npc) const override { return run_.npcTalk(npc).count; }
+    std::string currentStage() const override { return stage_ ? *stage_ : std::string(); }
 private:
     const Player& p_;
     const toms::MetaSaveData& meta_;
     const std::map<std::string, toms::MissionTracker>& missions_;
     const toms::RunStoryState& run_;
     const toms::EquippedSet& eq_;
+    const std::string* stage_;
 };
 
 } // namespace game_detail

@@ -206,6 +206,7 @@
   <footer><span class="grow" id="saveNote"></span><button id="mCancel" data-i18n="cancel"></button><button id="mDownload" data-i18n="download"></button><button id="mWrite" class="primary" data-i18n="writeDisk"></button></footer>
 </div></div>
 
+<script src="splitter.js"></script>
 <script src="settings.js"></script>
 <script src="stage_bundle.js"></script>
 <script src="floor_index.js"></script>
@@ -230,6 +231,9 @@ const I18N = {
     handAuthored: f => `Hand-made boss stage (${f}).`, generated: 'Generated grid: running the generator again would replace hand edits.',
     cell: (x, y) => `Cell ${x}, ${y}`, kindLbl: 'Object', charLbl: 'Legend char', none: 'Floor (empty)', wall: 'Wall',
     hp: 'HP', atk: 'ATK', def: 'DEF', footprint: 'Size', effect: 'Effect', evKind: 'Kind', evPool: 'Pool', evText: 'Text', evFloors: 'Floors that can roll it',
+    npcPanel: 'NPC', npcChatLines: n => `${n} chat line(s) when no topic is offered`, npcNoFile: 'No NPC file yet: it plays dialogue/<id>.json',
+    npcNoTopics: 'No talk events.', npcEveryFloor: 'on every floor it stands on', npcOnlyHere: 'only on this floor', npcOnlyOn: f => `only on ${f}`,
+    npcHasCond: 'has conditions', npcAfter: 'after-dialogue', npcEditBtn: 'Edit in the event editor →',
     replaceWith: 'Replace with', clearCell: 'Clear cell', useAsBrush: 'Use as brush',
     probsH: n => `Checks (${n})`, noProbs: 'No problems on this floor.',
     pNoStart: 'No stairs and no player start: the player would appear at the bottom-left corner.', pManyStart: n => `${n} player starts (@); only one is used.`,
@@ -289,6 +293,9 @@ const I18N = {
     handAuthored: f => `手工製作的頭目關卡（${f}）。`, generated: '自動產生的地圖：重新執行產生器會覆蓋手動修改。',
     cell: (x, y) => `格子 ${x}, ${y}`, kindLbl: '物件', charLbl: '圖例字元', none: '地板（空）', wall: '牆壁',
     hp: '生命', atk: '攻擊', def: '防禦', footprint: '佔格', effect: '效果', evKind: '類型', evPool: '事件池', evText: '文字', evFloors: '可抽到它的樓層',
+    npcPanel: 'NPC', npcChatLines: n => `沒有話題時有 ${n} 段閒聊台詞`, npcNoFile: '還沒有 NPC 檔：播放 dialogue/<id>.json',
+    npcNoTopics: '沒有交談事件。', npcEveryFloor: '在它所在的每一層', npcOnlyHere: '只在這一層', npcOnlyOn: f => `只在 ${f}`,
+    npcHasCond: '有條件', npcAfter: '完成後對話', npcEditBtn: '在事件編輯器中編輯 →',
     replaceWith: '換成', clearCell: '清除格子', useAsBrush: '用作畫筆',
     probsH: n => `檢查（${n}）`, noProbs: '這個樓層沒有問題。',
     pNoStart: '沒有樓梯也沒有玩家起點：玩家會出現在左下角。', pManyStart: n => `有 ${n} 個玩家起點（@）；只會用一個。`,
@@ -667,8 +674,10 @@ function logicOrderIssues(rows) {
       if (l.type === 'runFlagSet' && String(l.flag).startsWith('event_')) { const x = l.flag.slice(6), j = idxOf[x];
         if (j === undefined || j > i) rowAt(i).issues.push({ sev: 'warn', msg: t('sNeedsEvent', e.id, x, j === undefined ? null : rowAt(j).fid) }); }
       if (l.type === 'varAtLeast') { let can = 0;
-        BUNDLE.events.forEach(o => (o.actions || []).forEach(a => { if (a.var !== l.var || idxOf[o.id] === undefined || idxOf[o.id] > i) return;
-          if (a.type === 'addVar' && a.delta > 0) can += a.delta; if (a.type === 'setVar') can = Math.max(can, a.value); }));
+        // the event's own actions, and (a talk event) every action its dialogue's choices can run
+        const actsOf = o => [...(o.actions || []), ...(o.trigger && o.trigger.on === 'talk' && o.dialogue ? (BUNDLE.dialogueActions || {})[o.dialogue] || [] : [])];
+        BUNDLE.events.forEach(o => actsOf(o).forEach(a => { if (!a || a.var !== l.var || idxOf[o.id] === undefined || idxOf[o.id] > i) return;
+          if (a.type === 'addVar' && a.delta > 0) can += a.delta; if (a.type === 'setVar') can = Math.max(can, a.value === true ? 1 : +a.value || 0); }));
         if (can < l.value) rowAt(i).issues.push({ sev: 'warn', msg: t('sNeedsVar', e.id, l.var, l.value, can) }); }
     }); });
   rows.forEach(r => (docOf(r.fid).spec.stairs || []).forEach(sp => { const x = sp.unlock && sp.unlock.eventDone; if (!x) return; const j = idxOf[x];
@@ -819,6 +828,59 @@ function setBrush(sem) {
 function setTool(tl) { tool = tl; document.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === tl)); cv.style.cursor = tl === 'select' ? 'default' : 'crosshair'; }
 document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => setTool(b.dataset.tool));
 
+// ---------------- an NPC's panel (docs/event_editor/08_NPC_DIALOGUE.md) ----------------
+// Its topics (talk events) in the game's menu order, marked by where they can be talked about: every floor the NPC
+// stands on, or only one (an "onStage" condition, the event editor's "Talked to on").
+const onStageOf = c => !c ? null : c.type === 'onStage' ? c.stageId : Array.isArray(c.all) ? (c.all.map(onStageOf).find(Boolean) || null) : null;
+function npcTopics(npc) {
+  const pools = [...new Set(BUNDLE.events.map(e => e.pool))].sort();
+  return BUNDLE.events.map((e, i) => ({ e, i })).filter(x => x.e.trigger && x.e.trigger.on === 'talk' && x.e.trigger.npc === npc)
+    .sort((a, b) => (a.e.topicOrder ?? 1e9) - (b.e.topicOrder ?? 1e9) || pools.indexOf(a.e.pool) - pools.indexOf(b.e.pool) || a.i - b.i).map(x => x.e);
+}
+function npcPanelHtml(npc) {
+  const f = (BUNDLE.npcs || {})[npc], topics = npcTopics(npc), lines = f && f.chat && f.chat.lines ? f.chat.lines.length : 0;
+  const name = f && f.name ? L(BUNDLE.texts[f.name]) : '';
+  const row = e => { const where = onStageOf(e.requires), here = !where || where === cur, title = L(BUNDLE.texts[e.title]) || e.id;
+    return `<div class="kv" style="opacity:${here ? 1 : .5}"><span>${here ? '💬' : '·'}</span><span><b>${esc(title)}</b> <code>${esc(e.id)}</code><br>
+      <span class="muted" style="font-size:11px">${where ? (where === cur ? t('npcOnlyHere') : t('npcOnlyOn', where)) : t('npcEveryFloor')}${e.requires ? ' · ' + t('npcHasCond') : ''}${e.afterDialogue ? ' · ✓ ' + t('npcAfter') : ''}${e.once === false ? ' · ↻' + (e.maxTimes ? ' ×' + e.maxTimes : '') : ''}</span>
+      <button class="link" data-openev="${esc(e.id)}">↗</button></span></div>`; };
+  return `<div class="field"><label>${t('npcPanel')}${name ? ' · ' + esc(name) : ''}</label>
+    ${f ? `<div class="muted" style="font-size:12px">${t('npcChatLines', lines)}</div>` : `<p class="warnTag">⚠ ${t('npcNoFile')}</p>`}
+    <div style="margin-top:6px">${topics.length ? topics.map(row).join('') : `<span class="muted" style="font-size:12px">${t('npcNoTopics')}</span>`}</div>
+    <p><button id="npcEdit">${t('npcEditBtn')}</button></p></div>`;
+}
+function openNpcInEventEditor(npc) {
+  if (inShell) return window.parent.postMessage({ toms: 'switch', to: 'event', forward: { toms: 'npc', id: npc } }, '*');
+  location.href = 'event_editor.html#npc=' + encodeURIComponent(npc);
+}
+function openEventInEventEditor(id) {
+  if (inShell) return window.parent.postMessage({ toms: 'switch', to: 'event', forward: { toms: 'select', id } }, '*');
+  location.href = 'event_editor.html#' + encodeURIComponent(id);
+}
+// project folder: the events and NPC files as they are on disk now (the event editor may have saved them)
+async function reloadEventsLive(dir) {
+  const A = 'assets/data/', d = await (async () => { let h = dir; for (const p of (A + 'events').split('/')) h = await h.getDirectoryHandle(p); return h; })();
+  const events = [];
+  const names = []; for await (const [n, h] of d.entries()) if (h.kind === 'file' && /^pool_.*\.json$/.test(n)) names.push(n);
+  for (const n of names.sort()) for (const e of (await readJson(dir, A + 'events/' + n)).obj.events || []) {
+    const rec = { id: e.eventId, kind: e.kind, pool: n.slice(0, -5), text: e.text, title: e.title || e.eventId + '.title' };
+    ['trigger', 'requires', 'actions', 'next', 'dialogue', 'afterDialogue', 'topicOrder', 'once', 'maxTimes'].forEach(k => { if (k in e) rec[k] = e[k]; });
+    events.push(rec); }
+  const npcs = {};
+  try { let h = dir; for (const p of (A + 'npcs').split('/')) h = await h.getDirectoryHandle(p);
+    for await (const [n, fh] of h.entries()) if (fh.kind === 'file' && n.endsWith('.json')) npcs[n.slice(0, -5)] = (await readJson(dir, A + 'npcs/' + n)).obj; } catch (_) {}
+  const strings = (await readJson(dir, A + 'text.json')).obj.strings || {};
+  [...events.flatMap(e => [e.text, e.title]), ...Object.values(npcs).map(n => n.name)].forEach(k => { if (k && strings[k]) BUNDLE.texts[k] = strings[k]; });
+  const dialogueActions = {};
+  try { let h = dir; for (const p of (A + 'dialogue').split('/')) h = await h.getDirectoryHandle(p);
+    for await (const [n, fh] of h.entries()) if (fh.kind === 'file' && n.endsWith('.json')) {
+      const acts = Object.values((await readJson(dir, A + 'dialogue/' + n)).obj.nodes || {}).flatMap(nd => (nd && nd.choices) || [])
+        .flatMap(c => Array.isArray(c.actions) ? c.actions : c.actions ? [c.actions] : []);
+      if (acts.length) dialogueActions[n.slice(0, -5)] = acts; } } catch (_) {}
+  BUNDLE.events = events; BUNDLE.npcs = npcs; BUNDLE.dialogueActions = dialogueActions;
+  Object.keys(evById).forEach(k => delete evById[k]); events.forEach(e => evById[e.id] = e);
+}
+
 // ---------------- inspector ----------------
 function renderInspector() {
   if (!cur) return; const d = docOf(cur);
@@ -837,11 +899,14 @@ function renderInspector() {
       <div class="field"><label>${t('evText')} · zh_TW</label><div class="txt">${esc(tx && tx.zh_TW) || '—'}</div><label style="margin-top:4px">en</label><div class="txt">${esc(tx && tx.en) || '—'}</div></div>`
       : `<p class="warnTag">⛔ ${t('notDefined')}</p>`;
     body += `<div class="field"><label>${t('evFloors')} (${rollers.length})</label><div class="chips">${rollers.map(f => `<span class="chip" data-floor="${f}">${f}</span>`).join('')}</div></div>`; }
+  if (sem && sem.startsWith('npc:')) body += npcPanelHtml(sem.slice(4));
   if (sem && sem.startsWith('event:')) {
     body += `<div class="field"><label>${t('replaceWith')}</label><select id="replEv">${BUNDLE.events.map(e => `<option${'event:' + e.id === sem ? ' selected' : ''}>${e.id}</option>`).join('')}</select></div>`; }
   body += `<p><button id="useBrush">${t('useAsBrush')}</button> <button id="clearCell">${t('clearCell')}</button></p>`;
   $('insp').innerHTML = body + `<hr style="border:none;border-top:1px solid var(--line);margin:12px 0">` + floorPanelHtml(d);
   $('useBrush').onclick = () => sem && setBrush(sem);
+  if ($('npcEdit')) $('npcEdit').onclick = () => openNpcInEventEditor(sem.slice(4));
+  document.querySelectorAll('#insp [data-openev]').forEach(b => b.onclick = () => openEventInEventEditor(b.dataset.openev));
   $('clearCell').onclick = () => edit(t('hErase', 1), dd => dd.grid[y][x] = '.');
   if ($('replEv')) $('replEv').onchange = () => edit(t('hPaint', $('replEv').value, 1), dd => putSem(dd, x, y, 'event:' + $('replEv').value));
   $('insp').querySelectorAll('.chip[data-floor]').forEach(ch => ch.onclick = () => openFloor(ch.dataset.floor));
@@ -1002,6 +1067,7 @@ async function useDir(dir, fromOther) {
       fresh.push({ ...f, spec: spec.obj, specEol: spec.eol, stage: stage.obj, stageEol: stage.eol });
     }
     FLOORS = fresh; Object.keys(DOCS).forEach(k => delete DOCS[k]); dirHandle = dir;
+    await reloadEventsLive(dir).catch(e => toast(String(e)));   // talk events and NPC files, for an NPC's panel
     $('src').textContent = t('srcLive'); $('src').classList.add('live');
     openFloor(FLOORS.some(f => f.id === cur) ? cur : FLOORS[0].id); toast(t('loadedLive', fresh.length));
     syncFloorIndex(dir).then(w => { if (w) toast(t('indexUpdated')); }).catch(e => toast(String(e)));   // the per-floor event index (floor_index.js)
@@ -1200,11 +1266,20 @@ addEventListener('message', ev => {
   const m = ev.data || {};
   if (m.toms === 'shown') { drawAll(); renderProblems(); }
   if (m.toms === 'dir' && m.handle && !dirHandle) useDir(m.handle, true);
+  if (m.toms === 'filesChanged' && dirHandle) reloadEventsLive(dirHandle).then(() => renderInspector()).catch(() => {});   // the event editor saved
   if (m.toms === 'place') enterPlaceMode(m.id, m.kind, m.floors);
   if (m.toms === 'floor' && FLOORS.some(f => f.id === m.floor)) { openFloor(m.floor);
     if (m.event) { const d = docOf(m.floor); d.grid.forEach((r, y) => r.forEach((c, x) => { if (d.st.legend[c] === 'event:' + m.event) { selCell = [x, y]; flashCells = [[x, y]]; } }));
       renderInspector(); drawAll(); setTimeout(() => { flashCells = []; drawAll(); }, 1600); } }
 });
+
+// Resizable panels (splitter.js): drag the edges of the palette / events column, the inspector, the checks below the map,
+// and between the palette and the events list. Sizes are kept per browser; a double-click on an edge resets it.
+addSplitter({ key: 'st-left', target: document.querySelector('.main > .dock.left'), axis: 'x', min: 180, max: 640, onChange: () => drawAll() });
+addSplitter({ key: 'st-right', target: document.querySelector('.main > .dock.right'), axis: 'x', after: true, min: 220, max: 720, onChange: () => drawAll() });
+addSplitter({ key: 'st-bottom', target: document.querySelector('.center > .bottom'), axis: 'y', after: true, min: 60,
+  max: () => document.querySelector('.center').clientHeight - 120, onChange: () => drawAll() });
+addSplitter({ key: 'st-palette', target: $('palette'), axis: 'y', min: 60, max: () => document.querySelector('.main > .dock.left').clientHeight - 140 });
 </script>
 </body>
 </html>

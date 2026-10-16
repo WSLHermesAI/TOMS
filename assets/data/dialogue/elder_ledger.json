@@ -1,0 +1,83 @@
+{
+  "npcId": "villager",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "你在井底……有沒有看到我的帳本？好幾年前掉下去的。",
+        "en": "Down in the well... did you see my ledger? It fell in years ago."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "在這裡，有點濕。",
+            "en": "Here it is, a little wet."
+          },
+          "id": "return",
+          "finish": true,
+          "requires": {
+            "type": "varEquals",
+            "var": "well_helped",
+            "value": true
+          },
+          "actions": [
+            {
+              "type": "addVar",
+              "var": "elder_trust",
+              "delta": 1
+            },
+            {
+              "type": "give",
+              "itemId": "gem_def"
+            }
+          ],
+          "next": "thanks"
+        },
+        {
+          "label": {
+            "zh_TW": "我沒有往下找那麼深。",
+            "en": "I didn't search that far down."
+          },
+          "id": "none",
+          "finish": true,
+          "requires": {
+            "type": "varEquals",
+            "var": "well_helped",
+            "value": false
+          },
+          "next": "sigh"
+        }
+      ]
+    },
+    "thanks": {
+      "text": {
+        "zh_TW": "就是它！這顆寶石是我年輕時撿的，給你。",
+        "en": "That's it! I found this gem when I was young. It's yours."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    },
+    "sigh": {
+      "text": {
+        "zh_TW": "唉，有些東西就是找不回來了。",
+        "en": "Ah well. Some things stay lost."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

@@ -1,5 +1,6 @@
 #include "ParticleDocument.h"
 
+#include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -98,6 +99,9 @@ QString ParticleDocument::defaultFxAtlas()
     const QString p = QString::fromUtf8(TOMS_FX_ATLAS);
     if (QFileInfo::exists(p)) return QFileInfo(p).absoluteFilePath();
 #endif
+    // the release in Editor/bin (another PC: the build path above is not there): the repo's own assets
+    const QString rel = QCoreApplication::applicationDirPath() + QStringLiteral("/../../assets/media/atlas/fx.atlas");
+    if (QFileInfo::exists(rel)) return QFileInfo(rel).absoluteFilePath();
     return QString();
 }
 

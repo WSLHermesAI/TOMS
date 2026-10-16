@@ -343,6 +343,7 @@ void Game::buildUiState(toms::UiState& u) const {
         // The box spans the 1024-px design width minus 40 px a side and scales about its bottom centre; scaled up
         // (phones) it is narrowed first, so it keeps that width on screen instead of running off both edges.
         d.side = (1024.0f - 944.0f / std::max(1.0f, uiScale_)) * 0.5f;
+        d.speaker = dlgSpeaker_;
         if (dlgData.contains("nodes") && dlgData["nodes"].contains(dlgNode) && dlgData["nodes"][dlgNode].contains("text"))
             d.text = L.field(dlgData["nodes"][dlgNode]["text"]);
         for (size_t i = 0; i < dlgChoices.size(); i++)
