@@ -34,6 +34,7 @@ struct ChatLine {
 struct NpcDef {
     std::string id, nameKey, greetingKey;
     std::string sprite;          // its map sprite (an atlas sprite name); empty: npc_<id>
+    nlohmann::json look;         // {"sprite", "anim", "tint"} (the stage editor's palette detail); null = none
     std::vector<ChatLine> lines;
     ChatOrder order = ChatOrder::Loop;
     bool menuAlways = false;     // topics.menu "always": the menu even for a single open topic

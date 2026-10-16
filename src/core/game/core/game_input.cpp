@@ -119,6 +119,7 @@ void Game::openDoor(int x, int y, char c) {
     for (auto& e : st.entities)   // the door's own map entry ("door:yellow" in the legend) no longer blocks or draws
         if (!e.consumed && e.x == x && e.y == y && e.kind.rfind("door:", 0) == 0) e.consumed = true;
     toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, x, y), toms::EntityStatus::Opened);
+    for (const auto& e : st.entities) if (e.x == x && e.y == y && e.kind.rfind("door:", 0) == 0) fireLinkedEvents(e);
     audio.play("confirm_click");
     const std::string colour = c == 'y' ? "yellow" : c == 'b' ? "blue" : "red";
     if (const toms::anim::Clip* clip = doorAnim_.find("door_open_" + colour)) mapFx_.push_back({clip, x, y, "door_" + colour, 0.0f});
@@ -180,6 +181,7 @@ void Game::movePlayer(int dx, int dy) {
                 // or the Stage Select hub) -- see entityStatus_'s declaration in game.h.
                 toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, e.x, e.y), toms::EntityStatus::Collected);
                 toms::globalEventBus().publish(toms::ItemCollected{e.id, curStage});
+                fireLinkedEvents(e);
             } else if (e.kind.rfind("event:",0)==0) {
                 // S3.5 (d): a floor event. Its text comes from the i18n table (generated for every
                 // event id by tools/gen_story_i18n.py, authored for acts 1-3), and the effect is
@@ -218,6 +220,7 @@ void Game::movePlayer(int dx, int dy) {
                 // conditions and stair locks read, the event log, its `next` events woken, and the stairs it opens say
                 // so (Q7).
                 completeEvent(evId);
+                fireLinkedEvents(e);
                 // A repeatable event ("once": false) stays on its tile until its last run (08 section 11.1).
                 if (canRepeat(evId)) return;
                 e.consumed = true;
@@ -226,7 +229,9 @@ void Game::movePlayer(int dx, int dy) {
                 return;
             } else if (e.kind.rfind("npc:",0)==0) {
                 // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md): its NPC file (data/npcs/<id>.json)
-                // decides between a chat line, a topic and the topic menu.
+                // decides between a chat line, a topic and the topic menu. Its linked events first: a linked talk event
+                // is then one of this talk's topics.
+                fireLinkedEvents(e);
                 talkTo(e.id);
             } else if (stepOntoStairs(nx, ny)) return;
         }
@@ -288,6 +293,7 @@ void Game::bumpGate(Entity& gate) {
     gate.consumed = true;
     st.tiles[gate.y][gate.x] = '.';
     toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, gate.x, gate.y), toms::EntityStatus::Opened);
+    fireLinkedEvents(gate);
     notifications_.push_back({toms::fillText(locale_.tr("gate.opened"), vars), 3200});
     audio.play("confirm_click");
     if (const toms::anim::Clip* clip = doorAnim_.find("door_open_yellow")) mapFx_.push_back({clip, gate.x, gate.y, "door_yellow", 0.0f});
@@ -343,6 +349,7 @@ void Game::interact() {
         if (e.consumed) continue;
         if (e.kind.rfind("npc:",0)!=0) continue;
         if (entityCovers(e, pl.x, pl.y)) {
+            fireLinkedEvents(e);
             talkTo(e.id);
             return;
         }

@@ -275,6 +275,18 @@ void Game::wakeEvent(const std::string& eventId, int depth) {
     completeEvent(eventId, depth + 1);
 }
 
+void Game::fireLinkedEvents(const Entity& e) {
+    for (const std::string& id : e.links) {
+        auto def = eventDefs_.find(id);
+        if (run_.eventFinished(id) && !canRepeat(id)) continue;
+        if (def != eventDefs_.end() && def->second.trigger == "talk") { run_.markEventStarted(id); continue; }   // a topic
+        if (def != eventDefs_.end() && !holds(def->second.requires)) { run_.markEventStarted(id); continue; }
+        noticeEventTitle(id);
+        completeEvent(id);
+    }
+    if (!e.links.empty()) markProgressDirty();
+}
+
 void Game::varChanged(const std::string& var) {
     if (var.empty() || varChangeDepth_ >= 16) return;   // 16: events that keep changing each other's variables
     ++varChangeDepth_;

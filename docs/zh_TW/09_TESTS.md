@@ -27,6 +27,7 @@ tools\test.cmd windows-debug -L unit     :: a ctest filter runs as given (only t
 | 節點動畫 | `anim_clip`、動畫編輯器、`.anim` 檔 | 動畫檢查、它的單元測試、`smoke.anim`（`.anim` 檔另加遊戲場景） |
 | Atlas | atlas 工具、atlas 檔 | atlas 檢查（atlas 檔另加遊戲場景） |
 | 圖片字型 | `tools/font`、`tests/font`、`src/core/engine/bitmap_font*` | `font.tool`、`font.editor_selftest` |
+| 關卡／事件編輯器程式 | `tools/stage_event_editor`（以及任何 `assets/data` 檔案：`unit.stage_core_test`） | `unit.stage_core_test`、`stage_editor.app_selftest` |
 | Qt 編輯器共用程式 | `tools/studio_common`（含 `i18n/` 中文字典） | atlas / anim / particle / font 編輯器的檢查與 `studio.*` |
 | toms_editor | `src/editor` | 沒有自動測試；桌面建置會編譯它 |
 | 引擎核心 | `src/core/engine` 的其他部分（條件、節點、事件 …） | 引擎的單元測試，再加上遊戲區域 |
@@ -77,6 +78,7 @@ toms_game 的渲染器上，在那裡繪製和編輯，並存下 bgfx 截圖以�
 | `particle` | 1 | `particle.check_recipes`：對 `docs/examples/fx_recipes.particle` 執行 `particle_editor --headless check`（能解析、每個 sprite 都在它的 atlas 中、曲線 / 池 / 爆發都合理；[17](17_PARTICLES.md)） | Qt 編輯器建置（也在 `unit` 中） |
 | `anim` | 6 | `anim.check_*`（4 個）：對 `tests/smoke/anim_preview.anim`、範例 `docs/examples/anim_recipes.anim` 以及遊戲的 `monster_idle` / `door_open` 執行 `anim_editor --headless check`（能解析、每個 sprite 都在遊戲 atlas 中、沒有重疊的 key；[15](15_ANIMATION.md)、[16](16_ANIMATION_RECIPES.md)）；`anim.mpdi_convert`：`tests/mpdi/` 中的舊 `.mpdi` → `.anim`；`anim.editor_selftest`：編輯器在 offscreen 下執行（`-platform offscreen`，不開視窗）——選取、Properties 與 key 清單編輯、viewport 拖曳、復原、儲存 | Qt 編輯器建置（也在 `unit` 中） |
 | `font` | 2 | `font.tool`：圖片字型執行期（`.fnt` 解析、排版）與字型工具：`tests/font/connect_score_pictures`（單張圖片）必須逐位元組重建舊專案的 `connect_score.fnt`，用它繪製的測試文字必須與 `tests/font/preview.png` 相符；`font.editor_selftest`：`font_editor` 在 offscreen 下執行（[22](22_FONT_TOOL.md)） | 不需要（兩者也在 `unit` 中；selftest 需要 Qt 建置） |
+| `stage_editor` | 2 | `unit.stage_core_test`：原生關卡編輯器的規則，用真實樓層檢查（每個樓層一個位元組不差地寫回、畫格子／復原、檢查與劇情檢查、使用 HTML 編輯器亂數的自動放置、樓層索引與 `floor_index.json` 一個位元組不差）；`stage_editor.app_selftest`：`stage_event_editor` 在 offscreen 下執行，分頁 ↔ 分開的視窗（[19](19_STAGE_EDITOR.md) 第 6 節） | selftest 需要 Qt 建置（兩者也在 `unit` 中） |
 | `studio` | 3 | `studio.canvas_coordinates`：編輯器畫布基底（座標顯示）；`studio.language`：編輯器的 English / 中文 切換，在 offscreen 的小視窗上檢查（[24](24_EDITOR_LANGUAGE.md)）；`studio.i18n_complete`：Qt 編輯器每個 `tr()` 文字在 `tools/studio_common/i18n/zh_TW` 中都有中文 | Qt 建置；`i18n_complete` 需要 Python（也在 `unit` 中） |
 | `smoke` | 21 | 真正的 `toms_game` 播放一段腳本化的場景；它的截圖必須和 `tests/golden/` 中的參考圖相符（包括 `smoke.anim` 和 `smoke.fx`：地圖上的 `.anim` 片段和粒子效果；`smoke.fx_cpu` / `fx_compute`：同樣的東西走 sprite 批次的其他路徑，`smoke.fx_gpu`：所有發射器都在 GPU 上模擬——全部對同一張圖比對） | GPU；每個測試開一個視窗約 2 秒 |
 | `smoke` + `gltf` | 24 | `gltf_viewer` 在固定時間繪製 `tests/gltf/` 中的測試模型；截圖必須和 `tests/golden/gltf_*.png` 相符：蒙皮（線性、cubic spline）、morph target（線性、step）、`EXT_mesh_gpu_instancing`、PBR 材質、法線檢視、陰影（平行光、點光、聚光、全部）；蒙皮、PBR 和陰影也在 Vulkan 和 OpenGL 上測（[18](18_GLTF.md)）。物理（Jolt 上的 KHR_physics_rigid_bodies，[18](18_GLTF.md) §7）2.5 秒時的畫面；檔案自己的燈光（KHR_lights_punctual）透過它的鏡頭：`gltf_lights`（透視）與 `gltf_camera_side`（正交）。`ctest -L gltf` 只執行這些 | GPU；每個約 1 秒 |

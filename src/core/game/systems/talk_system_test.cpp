@@ -8,7 +8,9 @@
 //   * story actions: every verb reaches the effects, failures are reported, checkActions finds bad data;
 //   * the run save keeps event variables and talk state;
 //   * the shipped data: every NPC file, talk event, dialogue and action is valid, and the village elder's five
-//     events open and close in the order the story needs.
+//     events open and close in the order the story needs;
+//   * the stage editor's per-object settings and the types' looks: on an object's cell, sprites in the atlas, clips that
+//     exist, tints, linked events that exist.
 // Run in assets/ (tests/CMakeLists.txt).
 #include "condition.h"
 #include "run_state.h"
@@ -466,6 +468,74 @@ void testData() {
           std::find(lines.begin() + 8, lines.end(), "elder_secret_well") != lines.end(), "the well's secret only after eight talks: %s", joined(lines).c_str());
 }
 
+// ---------- the stage editor's per-object settings and the types' looks (docs/19_STAGE_EDITOR.md) ----------
+void testObjects() {
+    // the game atlas's sprite names (libGDX text: unindented lines without ':' after the header)
+    std::set<std::string> sprites;
+    {
+        std::string text;
+        if (toms::vfsReadAll("media/atlas/game.atlas", text)) {
+            size_t a = 0; bool first = true;
+            while (a < text.size()) {
+                size_t b = text.find('\n', a); if (b == std::string::npos) b = text.size();
+                std::string line = text.substr(a, b - a); if (!line.empty() && line.back() == '\r') line.pop_back();
+                if (!first && !line.empty() && line[0] != ' ' && line[0] != '\t' && line.find(':') == std::string::npos &&
+                    line.find(".png") == std::string::npos) sprites.insert(line);
+                first = false; a = b + 1;
+            }
+        }
+    }
+    CHECK(sprites.count("slime") && sprites.count("npc_king"), "the atlas's sprite names are read (%zu)", sprites.size());
+    std::set<std::string> events;
+    for (const std::string& n : jsonFiles("data/events/"))
+        if (n.rfind("pool_", 0) == 0) for (const auto& e : readJson("data/events/" + n).value("events", json::array())) events.insert(e.value("eventId", std::string()));
+    std::map<std::string, std::set<std::string>> clips;   // anim file -> its clip names
+    auto clipOk = [&](const std::string& ref) {
+        const size_t h = ref.find('#'); if (h == std::string::npos) return false;
+        const std::string file = ref.substr(0, h);
+        if (!clips.count(file)) { std::set<std::string>& s = clips[file];
+            for (const auto& c : readJson("media/" + file).value("clips", json::array())) s.insert(c.value("name", std::string())); }
+        return clips[file].count(ref.substr(h + 1)) > 0;
+    };
+    auto checkLook = [&](const json& look, const std::string& where) {
+        if (!look.is_object()) { CHECK(look.is_null(), "%s: look is an object", where.c_str()); return; }
+        if (look.contains("sprite")) { std::string s = look["sprite"].get<std::string>(); if (s.size() > 4 && s.compare(s.size() - 4, 4, ".png") == 0) s.resize(s.size() - 4);
+            CHECK(sprites.count(s), "%s: sprite %s is in the game atlas", where.c_str(), s.c_str()); }
+        if (look.contains("anim")) CHECK(look["anim"].is_string() && clipOk(look["anim"].get<std::string>()), "%s: clip %s exists", where.c_str(), look["anim"].dump().c_str());
+        if (look.contains("tint")) { const json& t = look["tint"]; bool ok = t.is_array() && (t.size() == 3 || t.size() == 4);
+            if (ok) for (const auto& v : t) ok = ok && v.is_number() && v.get<double>() >= 0 && v.get<double>() <= 4;
+            CHECK(ok, "%s: tint is [r, g, b] or [r, g, b, a]", where.c_str()); }
+    };
+    // the types' looks
+    const json enemiesJ = readJson("data/enemies.json"), itemsJ = readJson("data/items.json");   // named: .items() of a temporary dangles
+    for (auto& [id, e] : enemiesJ.items()) if (e.is_object() && e.contains("look")) checkLook(e["look"], "enemies.json " + id);
+    for (auto& [id, e] : itemsJ.items()) if (e.is_object() && e.contains("look")) checkLook(e["look"], "items.json " + id);
+    for (const std::string& n : jsonFiles("data/npcs/")) { const json f = readJson("data/npcs/" + n); if (f.contains("look")) checkLook(f["look"], "npcs/" + n); }
+    // every stage's per-object settings: on an object's cell, a valid look, real events
+    std::vector<std::string> stages;
+    for (const std::string& n : jsonFiles("data/story/floors/")) if (n.find(".stage.") != std::string::npos) stages.push_back("data/story/floors/" + n);
+    for (const std::string& n : jsonFiles("data/stages/")) stages.push_back("data/stages/" + n);
+    stages.push_back("../tests/stage/objects.stage.json");
+    int objects = 0;
+    for (const std::string& path : stages) {
+        const json st = readJson(path);
+        if (!st.is_object() || !st.contains("objects")) continue;
+        const json& legend = st["legend"];
+        for (auto& [key, o] : st["objects"].items()) {
+            ++objects;
+            const std::string where = path + " " + key;
+            int x = -1, y = -1; std::sscanf(key.c_str(), "%d,%d", &x, &y);
+            const bool in = y >= 0 && y < (int)st["tiles"].size() && x >= 0 && x < (int)st["tiles"][y].get<std::string>().size();
+            CHECK(in, "%s: the cell is on the map", where.c_str());
+            if (in) { const std::string c(1, st["tiles"][y].get<std::string>()[x]);
+                CHECK(c != "." && c != "#" && legend.contains(c), "%s: an object stands on the cell ('%s')", where.c_str(), c.c_str()); }
+            checkLook(o.value("look", json()), where);
+            for (const auto& ev : o.value("events", json::array())) CHECK(events.count(ev.get<std::string>()), "%s: event %s exists", where.c_str(), ev.get<std::string>().c_str());
+        }
+    }
+    CHECK(objects >= 4, "the test stage's objects are checked (%d)", objects);
+}
+
 } // namespace
 
 int main() {
@@ -477,6 +547,7 @@ int main() {
         testActions();
         testSave();
         testData();
+        testObjects();
     } catch (const std::exception& e) {   // bad data must fail the test with a reason, not abort it
         std::printf("  FAIL: exception: %s\n", e.what());
         ++g_failed;

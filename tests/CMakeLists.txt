@@ -159,6 +159,10 @@ toms_smoke_test(talk_chain   talk_chain  d3d11   0.1  --frames=175 --keys=enter@
 # talk_trusted: the road, the well and the ledger bring elder_trust to 3, and the "varChanged" event ev_elder_trusted fires
 # (its title as a notice). talk_repeat: with the story done and 100 gold, the repeatable potion trade ("once": false,
 # maxTimes 3) is bought three times; the fourth talk no longer lists it.
+# The stage editor's per-object settings (docs/19_STAGE_EDITOR.md): tests/stage/objects.stage.json -- a tinted slime, a bat
+# playing another clip, a villager drawn with another sprite at half opacity; picking up the potion fires its linked event.
+toms_smoke_test(stage_objects stage_objects d3d11 0.1 --frames=100 --keys=enter@30,right@70
+                "--goto=${CMAKE_CURRENT_SOURCE_DIR}/stage/objects.stage.json")
 toms_smoke_test(talk_trusted talk_trusted d3d11  0.1  --frames=262 --keys=enter@30,up@60,left@66,left@72,enter@90,enter@105,enter@120,enter@135,enter@150,enter@165,enter@180,enter@195,enter@210,enter@225,enter@240 --goto=F02)
 toms_smoke_test(talk_repeat  talk_repeat d3d11   0.1  --frames=232 --keys=enter@30,up@60,left@66,left@72,enter@90,enter@105,enter@120,enter@135,enter@150,enter@165,enter@180,enter@195,enter@210 --goto=F02 --give=gold:100
                 --events-done=ev_elder_north_road,ev_elder_well_night,ev_elder_ledger,ev_elder_bell_rumour,ev_elder_last_wish)

@@ -12,6 +12,7 @@ Ready-to-run editors for TOMS. Nothing has to be built or installed: double-clic
 | `FontEditor.cmd` | `bin\font_editor.exe` | picture fonts (`.fnt` + `.png`) from one picture per character |
 | `GltfViewer.cmd` | `bin\gltf_viewer.exe` | views 3D models (`.gltf` / `.glb`): animations, lights, cameras, physics |
 | `TomsEditor.cmd` | `bin\toms_editor.exe` | the game in an editor window, on this repo's `assets` |
+| `StageEventEditor.cmd` | `bin\stage_event_editor.exe` | the stage (floor map) and event editors as one Windows app, on this repo's `assets\data` |
 | `WebEditors.cmd` | `..\tools\web_editors\serve.cmd` | the stage (floor map) and event editors, in the browser |
 | `Tools.cmd` | | a command prompt with `atlaspack`, `fontpack` and the editors on PATH |
 
@@ -107,6 +108,17 @@ light rig, shadows, and physics.
 
 The game running in an editor window, with the event flow and the old stage list beside it. It reads this repo's
 `assets` (the launcher points it there).
+
+### Stage & event editor — floors and events, as a Windows app ([docs/19](../docs/19_STAGE_EDITOR.md) section 6)
+
+The web stage editor, native: the map is drawn by the game's renderer (animations play), on the live files in
+`assets\data` (no folder to pick).
+
+- **View → Tabs / Separate windows** puts the stage and event editors in one window, or in two that you can resize,
+  maximise and minimise on their own. **Ctrl+1** / **Ctrl+2** switch.
+- **Save** backs each file up to `Build\editor_backups\` first.
+- The **Events** tab is the event editor, native too: events, their logic and text, floors and stairs, variables,
+  kinds, NPCs with the talk preview, and dialogues. The two editors open each other's items directly.
 
 ### Web editors — floors and events ([docs/19](../docs/19_STAGE_EDITOR.md), [event editor](../docs/event_editor/README.md))
 

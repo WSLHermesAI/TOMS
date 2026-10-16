@@ -91,6 +91,13 @@ What Save writes, only for the files that really change:
 
 ## Next steps
 
+**Native (Windows app):** `stage_event_editor.exe` ([19](../19_STAGE_EDITOR.md) section 6) holds both editors,
+natively, in tabs or separate windows. Its event editor has this editor's model, validator, condition rows, NPCs,
+talk preview, dialogue cards and Save (the same file formats). Still only here: the relationship diagram, the values
+map, the logic node graph and the tutorial.
+
+The older plan for `toms_editor`:
+
 1. **Phase 1:** add the four files to `src/editor/CMakeLists.txt` and open `EventFlowView` as a tab.
    That gives a read-only map and problem count with no new code.
 2. **Phase 2:** the inspector, saving, and undo.

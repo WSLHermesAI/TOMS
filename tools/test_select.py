@@ -79,6 +79,7 @@ RULES = [
     (['docs/examples/anim_*'], named('anim.check_recipes'), 'anim recipes'),
     (['tests/smoke/anim_preview.anim'], named('anim.check_preview', 'anim.editor_selftest'), 'the anim preview'),
     (['tests/mpdi/*'], named('anim.mpdi_convert'), 'the .mpdi converter fixtures'),
+    (['tests/stage/*'], named('smoke.stage_objects', 'unit.talk_system_test'), 'test stage files: per-object settings'),
     # picture fonts: toms_core builds the runtime, but no game screen draws with it yet, so the font tool's
     # tests (which test the runtime too); add the game's screenshots here once a screen uses FontText
     (['tools/font/*', 'tests/font/*', 'src/core/engine/bitmap_font*'], FONTS,
@@ -86,7 +87,10 @@ RULES = [
     (['tools/test_select.py', 'tools/test.cmd'], None, 'the test runner itself'),
     # the editor release: copies of what the build made, launchers and docs (run `tools\test.cmd all` before a release)
     (['Editor/*', 'tools/package_editors.*'], None, 'the packaged editors (Editor/): no test'),
-    (['tools/web_editors/floor_index.js'], named('unit.floor_index_test'), 'the event index the HTML editors write'),
+    (['tools/web_editors/floor_index.js'], named('unit.floor_index_test', 'unit.stage_core_test'),
+     'the event index the HTML editors write (the native editor builds the same bytes)'),
+    (['tools/stage_event_editor/*'], named('unit.stage_core_test', 'stage_editor.*'),
+     'the stage / event editor app: its rules test and its window self test'),
     (['tools/make_ui_font.py', 'assets/media/fonts/*'], named('data.ui_font_covers_text'), 'the UI font subset: it covers the text'),
     # nothing
     (['docs/*', '*.md', 'tools/web_editors/*', 'android/*', '.claude/*', '.gitignore', '.gitattributes', 'AIGamestyle*'],
@@ -113,7 +117,8 @@ RULES = [
     (['tools/atlas/*', 'src/core/engine/atlas*'], ATLAS, 'the atlas tool: atlas checks'),
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),
     (['src/editor/*'], None, 'toms_editor (Qt + the game viewport): no automated test; the desktop build compiles it'),
-    (['tools/studio_common/*'], named('atlas.core', 'anim.*', 'particle.*', 'font.*', 'studio.*'), 'the Qt editors: their checks'),
+    (['tools/studio_common/*'], named('atlas.core', 'anim.*', 'particle.*', 'font.*', 'studio.*', 'stage_editor.*'),
+     'the Qt editors: their checks'),
     # the renderer
     (['src/engine/src/bgfx_*', 'src/engine/src/embedded_shaders*', 'src/engine/src/shared_*', 'src/engine/CMakeLists.txt',
       'src/engine/shaders/varying.def.sc', 'src/engine/shaders/*.sh'],
@@ -197,6 +202,8 @@ def select(files, tests, since):
         take(GAME_UNIT, why)
         if f.startswith(('assets/data/', 'assets/media/ui/', 'assets/media/styles/')):   # text: the UI font must have it
             take(named('data.ui_font_covers_text'), why)
+        if f.startswith('assets/data/'):   # the native stage editor reads every floor, type and event (and the index)
+            take(named('unit.stage_core_test'), why)
         base = os.path.basename(f).lower()
         narrowed = [p for rx, p in GAME_SMOKE_BY_NAME if rx.search(base)]
         take(any_of(*narrowed) if narrowed else is_game_smoke_d3d11, why)

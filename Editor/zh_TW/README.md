@@ -12,6 +12,7 @@
 | `FontEditor.cmd` | `bin\font_editor.exe` | 圖片字型（`.fnt` + `.png`），每個字元一張圖片 |
 | `GltfViewer.cmd` | `bin\gltf_viewer.exe` | 檢視 3D 模型（`.gltf` / `.glb`）：動畫、燈光、鏡頭、物理 |
 | `TomsEditor.cmd` | `bin\toms_editor.exe` | 在編輯器視窗中執行遊戲，使用本 repo 的 `assets` |
+| `StageEventEditor.cmd` | `bin\stage_event_editor.exe` | 關卡（樓層地圖）與事件編輯器合成的 Windows 程式，使用本 repo 的 `assets\data` |
 | `WebEditors.cmd` | `..\tools\web_editors\serve.cmd` | 關卡（樓層地圖）與事件編輯器，在瀏覽器中使用 |
 | `Tools.cmd` | | 開啟命令提示字元，`atlaspack`、`fontpack` 與各編輯器都在 PATH 上 |
 
@@ -97,6 +98,16 @@
 ### Toms 編輯器：在視窗中執行遊戲
 
 在編輯器視窗中執行遊戲，旁邊有事件流程與舊的關卡清單。它讀取本 repo 的 `assets`（啟動檔會設定好路徑）。
+
+### 關卡與事件編輯器：樓層與事件的 Windows 程式（[docs/19](../../docs/zh_TW/19_STAGE_EDITOR.md) 第 6 節）
+
+網頁版關卡編輯器的原生版本：地圖由遊戲的渲染器繪製（動畫會播放），直接處理 `assets\data` 中的即時檔案（不用選資料夾）。
+
+- **檢視 → 分頁／分開的視窗** 可以把關卡與事件編輯器放在一個視窗，或放在兩個可以各自調整大小、最大化、最小化的視窗。
+  **Ctrl+1** / **Ctrl+2** 切換。
+- **儲存** 會先把每個檔案備份到 `Build\editor_backups\`。
+- **事件** 分頁是原生的事件編輯器：事件與其邏輯和文字、樓層與樓梯、變數、類型、NPC 與交談預覽，以及對話。兩個
+  編輯器可以直接開啟對方的項目。
 
 ### 網頁編輯器：樓層與事件（[docs/19](../../docs/zh_TW/19_STAGE_EDITOR.md)、[事件編輯器](../../docs/zh_TW/event_editor/README.md)）
 

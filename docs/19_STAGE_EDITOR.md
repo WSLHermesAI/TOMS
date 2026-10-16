@@ -1,9 +1,12 @@
-# 19 — Stage editor (HTML now, Qt + game engine next)
+# 19 — Stage editor (HTML, and the Windows app on the game engine)
 
-**Status:** the HTML editor works: `tools/web_editors/stage_editor.html`, next to the event editor (open
-`tools/web_editors/index.html` and switch with the **⇄** button). Section 6 plans the
-Qt/C++ version, which will draw with the game's own renderer, so the editor shows exactly what the
-game shows.
+**Status:** two editors on the same files.
+
+- **HTML:** `tools/web_editors/stage_editor.html`, next to the event editor (open
+  `tools/web_editors/index.html` and switch with the **⇄** button).
+- **Windows app (2026-10-16):** `stage_event_editor.exe` (section 6). It is Qt, C++ and the game's bgfx renderer, so
+  the map is drawn exactly as the game draws it, animations included. It holds both editors, natively: the stage
+  editor (phase 1) and the event editor (phase 2).
 
 The stage editor paints a floor's grid: walls, stairs, doors, keys, monsters, NPCs, items, the player
 start, and **event objects**. It reads and writes the same files the game loads:
@@ -123,6 +126,50 @@ one click:
 Each floor gets one undo step, every placed event can be moved or erased like any other, and Save shows
 the changes before writing. ◇ **Safe cells** shows the same cells at any time.
 
+## 2c. Types, objects and the game view (2026-10-16)
+
+**Palette types.** A monster, item or NPC in the palette is a *type*: its record in `assets/data/enemies.json`,
+`assets/data/items.json` or `assets/data/npcs/<id>.json`.
+- **Double-click** a palette entry (or **Type details** in the inspector) opens its window:
+  - **Look**: its default sprite (every sprite, with a search), an animation (any clip of `assets/media/anim/*.anim`),
+    and a colour tint with opacity;
+  - **Data**: a monster's name, HP, ATK, DEF, EXP and gold; an item's name, description, type, price, "important" and
+    effect (stat rows); an NPC's name and greeting (its chat lines and topics are in the event editor's NPCs tab).
+- **+** on the Monsters, Items or NPCs group adds a new type, copied from an existing one (a new NPC also gets a
+  one-page dialogue to rewrite). **Delete this type** works only when no floor places it.
+- A type's sprite is its record's `"sprite"`; the animation and tint go in `"look"`: `{ "anim": "anim/<file>.anim#<clip>",
+  "tint": [r, g, b, a] }`. The tint multiplies the sprite's colours (white = unchanged).
+
+**✎ Edit (O): one placed object's own settings.** Click an object on the map; its window has two tabs:
+- **Look**: its own sprite / animation / tint (empty = its type's);
+- **Events**: link or unlink event ids. A linked event fires when the player interacts with that object: defeats the
+  monster, picks up the item, opens the door or gate, talks to the NPC, steps on the event tile. A talk event becomes
+  one of the NPC's topics; the others run when their conditions hold (their title shows as a notice), else they are
+  started.
+
+They are saved in the floor's stage file, keyed by cell, and go with the object when it is moved (and away when it is
+erased or painted over):
+
+```json
+"objects": { "9,4": { "look": { "sprite": "npc_king", "tint": [1, 1, 1, 0.5] }, "events": ["ev_common_relic_road"] } }
+```
+
+On the map, an object with settings shows ✎ (own look), ▶ (an animation) and ⚡n (linked events). The checks report
+settings on an empty cell (⚠) and a linked event no pool defines (⛔).
+
+**🎮 Game view (P)** draws the floor as the game does: every look and tint, without the grid, markers, letters, the
+reachability outlines or the selection. The tools still work. Animations show their sprite here (the game plays them);
+running the real game on the floor is planned.
+
+**Saving:** the floors, and the type records that changed (`enemies.json`, `items.json`, `npcs/*.json`, a new NPC's
+dialogue). Names kept in `text.json` (items, NPCs) and deleted type files are written only with the project folder open.
+
+**In the game:** `Game::lookOf` (an object's look over its type's), `drawObjectAnim` (any clip, tinted, at the object's
+phase), `fireLinkedEvents`; checked by `unit.talk_system_test` (every look and object setting in the data) and
+`smoke.stage_objects` (`tests/stage/objects.stage.json`: a tinted slime, a bat playing another clip, a villager drawn
+with another sprite, a potion whose linked event fires on pickup). `toms_game --goto=<path to a .json>` opens a stage
+file directly (tests).
+
 ## 3. Data rules the editor follows
 
 - **Doors and stairs keep their chars.** The game reads `y` `b` `r` `U` `D` directly (`movePlayer`,
@@ -161,20 +208,100 @@ the changes before writing. ◇ **Safe cells** shows the same cells at any time.
 - Per-tile `footprints` and `encounter_overrides`: shown and respected, not editable.
 - Play-testing: walking the floor with the game's rules. That belongs in the Qt version (section 6).
 
-## 6. Plan: the Qt / C++ editor on the game engine
+## 6. The Windows app: `stage_event_editor` (Qt / C++ / bgfx)
 
-Goal: **what the editor shows is how the game works.** The same renderer, the same rules, and the
-ability to play the floor from inside the editor.
+The stage editor and the event editor as one Windows program, on the game's own stack (Qt 6, C++, the game's
+bgfx renderer) and no other library. **What the editor shows is how the game works.**
 
-| Piece | How |
+**Run it:** `Editor\StageEventEditor.cmd`, or `Build\windows-releasein\stage_event_editor.exe`. It finds the TOMS
+folder from its own folder upwards (or `--root=<folder>`) and works on the live files: no bundle, no folder picker.
+
+**Windows.** Both editors stay open together. **View → Tabs (one window)** or **View → Separate windows**:
+
+- **Tabs:** one window with a Stage tab and an Events tab.
+- **Separate windows:** one window each. Each can be moved, resized, maximised and minimised on its own, for
+  example one per monitor.
+
+Switching keeps everything open; the choice and the window sizes are kept between runs. **Ctrl+1** / **Ctrl+2** (the
+**Window** menu) or the **⇄** buttons bring the other editor up. With separate windows, closing one hides it; closing
+the last one quits after asking about unsaved changes. **中文** in the menu bar switches the language.
+
+**The stage editor** is the HTML editor's layout and rules (sections 2–3), in docks you can resize and move:
+
+- palette, events and inspector;
+- checks / story below the map;
+- the same tools and keys (B R E V O, G, P, [ ], Ctrl+Z / Y / S, Delete, Esc);
+- ✎ Edit and the type windows (2c);
+- auto-place with the same seeded results (2b);
+- Save with the change list, backups to `Build/editor_backups/`, the events-list merge, and the floor index.
+
+The map is drawn by the game's renderer (`GameCanvasView`, as in the atlas, anim and particle editors):
+
+- sprites come from the game atlas;
+- a look's **animation plays** (`anim/<file>.anim#<clip>`), and so do the monsters' idle clips;
+- tints multiply the sprite, and gates get their key's colour;
+- events are the game's story plates.
+
+Mouse wheel zooms around the cursor. Right or middle drag pans (as does Space + drag); a right click without
+moving is the eyedropper. Without a GPU the map is painted with QPainter (still sprites).
+
+**The event editor** (phase 2) is the HTML event editor's model and rules (`core/event_project`):
+
+- **Events tree:** every pool, plus the ids floors name but no pool defines. Find (id, text, kind, floor), a kind
+  filter, and "only problems".
+- **Inspector:** an event (id rename, kind, pool, floors with 📍 and ✕, the logic, its text in six languages, title,
+  description, event log, preview), a floor (chapter, stairs with their locks, reached from, events) or a missing id
+  (create it, create the whole chapter, or remove it from the floors).
+- **Logic:**
+  - fires when: on a tile, talking to an NPC (with its dialogue, after-dialogue, floor and menu order), a variable
+    changing, or a link;
+  - repeatable, with an optional limit;
+  - **condition rows** (all of / any of / is not, `{ }` for JSON), action rows, and "Then fire" links.
+- **Tabs below:**
+  - **Problems:** the validator, with rule filters, per-chapter creation and fix buttons.
+  - **Floor map:** chapters as rows, stairs as arrows, locked stairs gold.
+  - **Variables:** with categories, several at once; a click opens a value tab.
+  - **Kinds.**
+  - **NPCs:** the file, chat lines with their conditions and actions, topics in menu order, and the **talk preview**.
+  - **Dialogues:** nodes as cards, choices with conditions, actions and wakes.
+- **History:** each edit is one undo step.
+- **Save:** shows every file's change, backs each file up, and writes in the HTML editor's formats (`flags.json` and
+  `counters.json` keep their hand-aligned lines).
+
+Not ported (the inspector edits the same data): the relationship diagram, the values map and the logic node graph,
+which the HTML editor still has. The tutorial is not ported either; it runs on its own frozen copy of the data.
+
+**Together.** The two editors call each other directly:
+
+- ⇄ shows the selected event's floor;
+- **+ Add floor…** then 📍 opens the stage editor in place mode for that event;
+- ↗ on a stage object, and an NPC's **Edit in the event editor**, select it in the event editor.
+
+When one editor saves, the other rereads what it has not changed itself: the stage editor its events, NPC topics and
+untouched floors; the event editor everything, if it has nothing unsaved. Each Save also merges onto the files as they
+are on disk. The app also watches `assets/data/events`, `npcs`, `dialogue` and `text.json`, for edits made in the HTML
+editors.
+
+| Piece | Where |
 |---|---|
-| Window | A **Stage** tab in `toms_editor` (Qt6 Widgets), replacing the old `src/editor/stage` editor, laid out like this HTML version |
-| Viewport | `bgfx_viewport` (already embeds the game's bgfx view) drawing the floor with toms_game's `BgfxRenderer`: the same atlas, the per-act tint (`floorThemeTint`), footprints, and event plates |
-| Model | One C++ stage model shared with the game: `parseStage` to load, plus a writer that keeps the format rules of section 3. No second parser |
-| Editing | Paint / rectangle / erase / move on the viewport; palette, events list, inspector and checks as Qt docks; `QUndoStack` with the History dock and automatic backups, like the anim and particle editors |
-| Checks | The same checks, moved into a small Qt-free C++ library (like `event_graph`) with headless tests, so CI can check every floor |
-| Play | **▶ Play from here**: run the real `Game` on the edited floor inside the viewport, with the player's stats and keys set in a side panel; **■** returns to editing with the floor unchanged |
-| Links | Clicking an event opens it in the event editor; stairs show and edit their target floors (and later the `stairs` list from 05) |
+| The rules, without Qt | `tools/stage_event_editor/core/`: `stage_project` (files, cells, placement, undo, what Save writes), `stage_checks` (checks, the story key/door check, safe cells, auto-place), `stage_save` (changed files, diffs, backups, the floor index), `event_project` (the event editor's state, validator, condition rows, Save, the talk preview). Files are read and written with nlohmann's `ordered_json`, so an untouched file is written back byte for byte |
+| The window | `tools/stage_event_editor/app/`: `AppShell` (tabs / windows), `StageEditor`, `StageCanvas` (the game renderer), `ObjectWindow`, `SpriteBank`, `EventEditor` (+ `EventForms`, `EventTabs`, `EventNpcs`, `EventWidgets`); strings in `tools/studio_common/i18n/zh_TW/stage.json` and `events.json` |
+| Tests | `unit.stage_core_test` checks every floor written back byte for byte; painting, the reserved chars, object settings and undo; the checks and the story check on all floors; auto-place repeatable, with the HTML editor's random numbers; the floor index matching `floor_index.json` byte for byte. `stage_editor.app_selftest` is the window, offscreen: paint, undo, ✎ Edit, a type window, auto-place, the tables; the event editor's edits, undo and every tab; tabs ↔ separate windows. The event checks in `unit.stage_core_test`: every pool file already in the save format, a text / logic / flag edit writing only its file (one line of `flags.json`), condition rows, the talk preview |
 
-Phases: (1) the read-only viewport with the game renderer; (2) painting, saving, and undo; (3) the
-checks library and tests; (4) Play from here; (5) multi-stair floors once the runtime supports them.
+The ports were compared with the HTML editors on the real data (headless Chrome):
+
+- Stage editor: `stage_core_test --dump` gives the same check counts, story issues and safe cells on all 70 floors, and
+  the same auto-placed cells.
+- Event editor: `--dump-events` gives the same 166 problems.
+- Save: after the same three edits (an action, a text, a flag), `--dump-write` writes the same bytes as the HTML
+  editor's Save, apart from line endings.
+
+**Why its own program and not a tab in `toms_editor`.** `toms_editor`'s Play tab starts bgfx on its own. The studio
+canvases (`GameCanvasView`) share one renderer per process. A separate exe keeps them apart; "Play from here" can
+come back as a game canvas in this app.
+
+**Next:**
+
+1. **▶ Play from here:** the real `Game` on the edited floor, in the map view.
+2. The event editor's drawn views: the relationship diagram, the values map and the logic node graph.
+3. Multi-stair floors, once the runtime supports them; per-tile footprints editable.

@@ -29,7 +29,7 @@ void Game::finishCombatWin() {
     pl.gold += (int)std::lround(cs.enemy.gold * (1.0f + attrEffect("goldGain") / 100.0f));   // LUK
     gainExp(cs.enemy.exp);   // level-ups by data/stats.json
     // remove monster entity from stage
-    for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) e.consumed=true;
+    for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) { e.consumed=true; fireLinkedEvents(e); }
     st.tiles[cs.enemy.y][cs.enemy.x] = '.';
     // Milestone 7: persist the clear so it survives a reload of this floor (stairs or the Stage
     // Select hub) -- see entityStatus_'s declaration in game.h.

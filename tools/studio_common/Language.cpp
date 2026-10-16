@@ -192,7 +192,7 @@ public:
     using QObject::QObject;
     bool eventFilter(QObject* o, QEvent* e) override {
         if (e->type() == QEvent::Show)
-            if (auto* mw = qobject_cast<QMainWindow*>(o))
+            if (auto* mw = qobject_cast<QMainWindow*>(o); mw && mw->isWindow())   // not one hosted in a tab
                 if (QMenuBar* bar = mw->menuBar(); bar && !bar->cornerWidget(Qt::TopRightCorner)) addToggle(bar);
         return false;
     }

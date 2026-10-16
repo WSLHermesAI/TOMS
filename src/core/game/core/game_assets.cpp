@@ -338,6 +338,8 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
         std::string alt = dataDir + "/../data/stages/" + noUs + ".json";
         if (toms::vfsExists(alt)) path = alt;
     }
+    // a stage file by its path (tests: toms_game --stage=tests/stage/objects.stage.json)
+    if (id.size() > 5 && id.compare(id.size() - 5, 5, ".json") == 0 && toms::vfsExists(id)) path = id;
     // S3.5 (a): a floor id the tower knows (F01..F70) resolves through the floor table instead of
     // the bare data/stages/ path -- a normal floor to its generated grid, a boss floor to the
     // hand-authored map the spec names (section 3.2). Ids that are not floors (the eleven

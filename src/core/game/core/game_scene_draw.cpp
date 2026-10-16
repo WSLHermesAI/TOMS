@@ -121,6 +121,8 @@ void Game::draw() {
             float wash[4] = {0, 0, 0, 0};   // a gate: its key's colour washed over the door (alpha 0 = none)
             const std::string* monster = nullptr;   // enemy id: drawn with its idle animation when it has one
             int   tileX = 0, tileY = 0;
+            std::string anim;                        // its look's clip ("<file>#<clip>"), before the idle clip
+            float tint[4] = {1, 1, 1, 1};            // its look's tint
         };
         std::vector<FloorSprite> floor;
         floor.reserve(st.entities.size() + 1);
@@ -137,6 +139,18 @@ void Game::draw() {
             f.x = ox + e.x*ts + inset;
             f.y = oy + e.y*ts + inset;
             f.layer = spriteLayer(e.kind.rfind("npc:", 0) == 0 ? npcSprite(e.id) : entSprite(e.id));   // NPC files may name one
+            // the stage editor's look: an object's own sprite / clip / tint over its type's (docs/19_STAGE_EDITOR.md)
+            const nlohmann::json look = lookOf(e);
+            bool ownSprite = false;
+            if (look.contains("sprite") && look["sprite"].is_string()) {
+                std::string s = look["sprite"].get<std::string>();
+                if (s.size() > 4 && s.compare(s.size() - 4, 4, ".png") == 0) s.resize(s.size() - 4);
+                // only a placed object's own sprite replaces the idle clip (a type's sprite is what its clip is made of)
+                if (spriteAtlas_.find(s)) { f.layer = spriteLayer(s); ownSprite = e.look.is_object() && e.look.contains("sprite"); }
+            }
+            if (look.contains("anim") && look["anim"].is_string()) f.anim = look["anim"].get<std::string>();
+            if (look.contains("tint") && look["tint"].is_array())
+                for (int i = 0; i < 4 && i < (int)look["tint"].size(); i++) if (look["tint"][i].is_number()) f.tint[i] = look["tint"][i].get<float>();
             if (e.kind.rfind("gate:", 0) == 0) {
                 // a gate is drawn as a full-tile door with its key item's "tint" (data/items.json) washed over it, so
                 // it reads as no colour of key door (yellow / blue / red)
@@ -150,7 +164,8 @@ void Game::draw() {
             // the atlas has no "relic/whisper/cache" art yet (S8 owns that), and a plate reads as
             // "something to read here" without pretending to be a creature or an item.
             f.plate = e.kind.rfind("event:", 0) == 0;
-            if (e.kind.rfind("monster:", 0) == 0) { f.monster = &e.id; f.tileX = e.x; f.tileY = e.y; }
+            if (e.kind.rfind("monster:", 0) == 0 && !ownSprite) f.monster = &e.id;   // its own sprite: no idle_<id> clip
+            f.tileX = e.x; f.tileY = e.y;
             floor.push_back(f);
         }
         {
@@ -176,8 +191,10 @@ void Game::draw() {
                 ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, gold));
                 float in = f.w * 0.22f;
                 ren->drawSprite(spriteQuad(f.x + in, f.y + in, f.w - 2*in, f.h - 2*in, f.layer + 1, inner));
-            } else if (!f.monster || !drawIdleAnim(*f.monster, f.x, f.y, f.w, f.h, f.tileX, f.tileY)) {
-                ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, white));
+            } else if (!f.anim.empty() && drawObjectAnim(f.anim, f.x, f.y, f.w, f.h, f.tileX, f.tileY, f.tint)) {
+                // drawn by its look's clip
+            } else if (!f.monster || !drawIdleAnim(*f.monster, f.x, f.y, f.w, f.h, f.tileX, f.tileY, f.tint)) {
+                ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, f.tint));
                 if (f.wash[3] > 0) {
                     Quad q = spriteQuad(f.x, f.y, f.w, f.h, f.layer, f.wash);
                     q.solid = true;
@@ -313,7 +330,66 @@ void Game::loadIdleAnims() {
 
 
 
-bool Game::drawIdleAnim(const std::string& enemyId, float x, float y, float w, float h, int tileX, int tileY) {
+// ---- objects' looks (the stage editor's "objects" and the types' "look"; docs/19_STAGE_EDITOR.md) ----
+nlohmann::json Game::typeLook(const std::string& kind, const std::string& id) const {
+    const std::string k = kind.substr(0, kind.find(':'));
+    const nlohmann::json* src = nullptr;
+    if (k == "monster") { auto it = enemyTpl.find(id); if (it != enemyTpl.end()) src = &it->second; }
+    else if (k == "item") src = itemDef(id);
+    else if (k == "npc") {
+        auto it = npcDefs_.find(id);
+        if (it != npcDefs_.end()) { nlohmann::json l = it->second.look.is_object() ? it->second.look : nlohmann::json::object();
+            if (!l.contains("sprite") && !it->second.sprite.empty()) l["sprite"] = it->second.sprite;
+            return l; }
+    }
+    // a monster's / item's "sprite" (enemies.json / items.json, "slime.png"), then its "look" (anim, tint, ...)
+    nlohmann::json l = nlohmann::json::object();
+    if (src && src->contains("sprite") && (*src)["sprite"].is_string()) l["sprite"] = (*src)["sprite"];
+    if (src && src->contains("look") && (*src)["look"].is_object()) for (auto& [k, v] : (*src)["look"].items()) l[k] = v;
+    return l;
+}
+
+nlohmann::json Game::lookOf(const Entity& e) const {
+    nlohmann::json l = typeLook(e.kind, e.id);
+    if (e.look.is_object()) for (auto& [k, v] : e.look.items()) l[k] = v;   // field by field: the object's own win
+    return l;
+}
+
+std::string Game::typeSprite(const std::string& kind, const std::string& id) const {
+    const nlohmann::json l = typeLook(kind, id);
+    if (l.contains("sprite") && l["sprite"].is_string()) {
+        std::string s = l["sprite"].get<std::string>();
+        if (s.size() > 4 && s.compare(s.size() - 4, 4, ".png") == 0) s.resize(s.size() - 4);
+        if (spriteAtlas_.find(s)) return s;
+    }
+    return kind.rfind("npc", 0) == 0 ? npcSprite(id) : entSprite(id);
+}
+
+bool Game::drawObjectAnim(const std::string& ref, float x, float y, float w, float h, int tileX, int tileY, const float tint[4]) {
+    if (spriteAtlas_.pages.empty()) return false;
+    const size_t hash = ref.find('#');
+    if (hash == std::string::npos) return false;
+    const std::string file = ref.substr(0, hash), clipName = ref.substr(hash + 1);
+    std::unique_ptr<ObjAnim>& slot = objAnims_[file];
+    if (!slot) {   // first use: read the file and its atlases; a bad file is remembered as bad (logged once)
+        slot = std::make_unique<ObjAnim>();
+        const std::string path = dataDir + "/" + file;
+        std::string text, error;
+        if (toms::vfsReadAll(path, text) && toms::anim::parseAnim(text, slot->file, &error)) {
+            loadPreviewAtlases(path, slot->file.atlases, slot->set, slot->atlases, slot->textures);
+            slot->ok = true;
+        } else std::fprintf(stderr, "[anim] object clip file %s: %s\n", path.c_str(), error.empty() ? "cannot read" : error.c_str());
+    }
+    if (!slot->ok) return false;
+    const toms::anim::Clip* clip = slot->file.find(clipName);
+    if (!clip) return false;
+    const float len = clip->duration();
+    const double phase = (double)(((unsigned)tileX * 73856093u ^ (unsigned)tileY * 19349663u) % 997u) / 997.0 * len;
+    const float t = len > 0 ? (float)std::fmod(idleClockMs_ / 1000.0 + phase, (double)len) : 0.0f;
+    return drawClipInRect(*clip, t, slot->set, x, y, w, h, 32.0f, 32.0f, tint);   // authored as the 32x32 idle clips are
+}
+
+bool Game::drawIdleAnim(const std::string& enemyId, float x, float y, float w, float h, int tileX, int tileY, const float tint[4]) {
     if (spriteAtlas_.pages.empty() || idleAnim_.clips.empty()) return false;
     const toms::anim::Clip* clip = idleAnim_.find("idle_" + enemyId);
     if (!clip) return false;
@@ -323,16 +399,24 @@ bool Game::drawIdleAnim(const std::string& enemyId, float x, float y, float w, f
     // each monster at its own phase, fixed by its tile, so a room of slimes does not breathe in step
     const double phase = (double)(((unsigned)tileX * 73856093u ^ (unsigned)tileY * 19349663u) % 997u) / 997.0 * len;
     const float t = len > 0 ? (float)std::fmod(idleClockMs_ / 1000.0 + phase, (double)len) : 0.0f;
-    return drawClipInRect(*clip, t, idleSet_, x, y, w, h, sw, sh);
+    static const float kWhite[4] = {1, 1, 1, 1};
+    return drawClipInRect(*clip, t, idleSet_, x, y, w, h, sw, sh, tint ? tint : kWhite);
 }
 
 bool Game::drawClipInRect(const toms::anim::Clip& clip, float t, const toms::anim::AtlasSet& set, float x, float y, float w, float h,
                           float spriteW, float spriteH) {
+    static const float kWhite[4] = {1, 1, 1, 1};
+    return drawClipInRect(clip, t, set, x, y, w, h, spriteW, spriteH, kWhite);
+}
+
+bool Game::drawClipInRect(const toms::anim::Clip& clip, float t, const toms::anim::AtlasSet& set, float x, float y, float w, float h,
+                          float spriteW, float spriteH, const float tint[4]) {
     toms::anim::evaluate(clip, t, idlePoses_);
     const glm::mat3 place =
         toms::anim::flatten(toms::anim::compose({x + w * 0.5f, y + h, 0}, glm::vec3(0), {w / spriteW, h / spriteH, 1}));
     idleQuads_.clear();
-    toms::anim::appendQuads(idlePoses_, set, place, nullptr, idleQuads_);
+    const bool tinted = tint && (tint[0] != 1 || tint[1] != 1 || tint[2] != 1 || tint[3] != 1);
+    toms::anim::appendQuads(idlePoses_, set, place, tinted ? tint : nullptr, idleQuads_);
     if (idleQuads_.empty()) return false;
     for (const Quad& q : idleQuads_) ren->drawSprite(q);
     return true;

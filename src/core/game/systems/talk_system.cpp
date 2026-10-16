@@ -22,6 +22,7 @@ bool parseNpc(const nlohmann::json& j, NpcDef& out, std::string* err) {
     out.nameKey = str(j, "name");
     out.greetingKey = str(j, "greeting");
     out.sprite = str(j, "sprite");
+    if (j.contains("look") && j["look"].is_object()) out.look = j["look"];
     const nlohmann::json chat = j.value("chat", nlohmann::json::object());
     if (chat.contains("lines") && chat["lines"].is_array())
         for (const auto& l : chat["lines"]) {

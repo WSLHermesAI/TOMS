@@ -44,6 +44,7 @@
   .pgroup { margin-bottom: 8px; }
   .pgroup > .ph { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 6px 0 4px; cursor: pointer; user-select: none; }
   .pgrid { display: flex; flex-wrap: wrap; gap: 4px; }
+  .padd { padding: 0 6px; margin-left: 6px; font-size: 11px; line-height: 16px; }
   .pitem { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 4px; background: #15171a; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
   .pitem:hover { border-color: var(--accent); }
   .pitem.sel { border-color: #ffd24c; box-shadow: 0 0 0 1px #ffd24c; }
@@ -167,8 +168,10 @@
       <button data-tool="rect" data-i18n="tRect" title="R"></button>
       <button data-tool="erase" data-i18n="tErase" title="E"></button>
       <button data-tool="select" data-i18n="tSelect" title="V"></button>
+      <button data-tool="edit" data-i18n="tEdit" title="O"></button>
       <span class="sep"></span>
       <button id="gridBtn" data-i18n="tGrid" title="G"></button>
+      <button id="gameViewBtn" data-i18n="tGameView" title="P"></button>
       <button id="zoomOut" title="-">−</button><span id="zoomLbl" class="muted"></span><button id="zoomIn" title="+">+</button>
       <span class="sep"></span>
       <button id="safeBtn" data-i18n="tSafe"></button>
@@ -231,6 +234,26 @@ const I18N = {
     handAuthored: f => `Hand-made boss stage (${f}).`, generated: 'Generated grid: running the generator again would replace hand edits.',
     cell: (x, y) => `Cell ${x}, ${y}`, kindLbl: 'Object', charLbl: 'Legend char', none: 'Floor (empty)', wall: 'Wall',
     hp: 'HP', atk: 'ATK', def: 'DEF', footprint: 'Size', effect: 'Effect', evKind: 'Kind', evPool: 'Pool', evText: 'Text', evFloors: 'Floors that can roll it',
+    tEdit: '✎ Edit', tGameView: '🎮 Game view', cat_monster: 'monster', cat_item: 'item', cat_npc: 'NPC',
+    owLook: 'Look', owEvents: 'Events', owData: 'Data', owApply: 'Apply', owCreate: 'Create', owReset: 'Reset (type look, no events)',
+    owDeleteType: 'Delete this type', owUsedOn: f => `Placed on ${f}: remove it from those floors first.`, owDeleteQ: id => `Delete the type ${id}?`,
+    owDeleted: id => `${id} deleted (Save writes it).`, owSaved: id => `${id} changed (Save writes it).`, owCreated: id => `${id} created: set its look and data, then Save.`,
+    owNoRecord: s => `${s} has no record to edit.`, owSprite: 'Sprite', owAnim: 'Animation', owNoAnim: '(none: the sprite)', owTint: 'Colour',
+    owTintUse: 'tint', owAlpha: 'opacity', owFind: 'find a sprite', owUseDefault: 'Use the type\'s', owNone: 'None', owDefaultIs: v => `type's: ${v}`,
+    owOwnNote: 'This one object only: empty fields use its type\'s look.', owTypeNote: 'Every object of this type, unless an object sets its own (✎ Edit).',
+    owTintNote: 'The tint multiplies the sprite\'s colours (white = unchanged).', owEventsIntro: v => `Linked events fire when the player ${v} (a talk event becomes a topic).`,
+    verbMonster: 'defeats this monster', verbItem: 'picks this up', verbDoor: 'opens this', verbNpc: 'talks to this NPC', verbEvent: 'steps here',
+    owNoEvents: 'No linked events.', owLink: 'Link an event', owEvPh: 'event id', owLinkBtn: '+ Link', owNoEvent: id => `No event ${id}.`,
+    owNewTitle: c => `New ${c} type`, owNewId: 'Id', owCopyFrom: 'Copy from', owBadId: 'Use a-z, 0-9 and _ only.', owDupId: id => `${id} already exists.`,
+    owNewNote_monster: 'A new entry in enemies.json, copied from the one picked (stats, sprite); then set its name, stats and look.',
+    owNewNote_item: 'A new entry in items.json, copied from the one picked (effect, sprite); its name goes to text.json.',
+    owNewNote_npc: 'A new NPC file (npcs/<id>.json) with a one-page dialogue (dialogue/<id>.json); write its chat lines and topics in the event editor.',
+    owName: 'Name', owDesc: 'Description', owGreeting: 'Greeting', owItemType: 'Type', owPrice: 'Price', owImportant: 'Important', owStats: 'Effect',
+    owStAdd: '+ stat', st_hp: 'HP', st_atk: 'ATK', st_def: 'DEF', st_exp: 'EXP', st_gold: 'Gold',
+    owNpcNote: 'Its chat lines, topics and dialogues are in the event editor\'s NPCs tab.', owTextNeedsLive: 'Names in text.json and deleted files are written only with the project folder open (Open project folder…).',
+    owAddTip: 'Add a new type', owDblTip: 'double-click: its details', objSettings: 'This object', objNone: 'no settings of its own', objHasLook: v => `own look (${v})`,
+    objHasEvents: v => `linked: ${v}`, objEditBtn: 'Edit object', typeEditBtn: 'Type details', hObj: n => `Object settings: ${n}`,
+    pObjEmpty: (x, y) => `Object settings at (${x}, ${y}) but nothing stands there.`, pObjEvent: (id, x, y) => `The object at (${x}, ${y}) links ${id}, which no pool defines.`,
     npcPanel: 'NPC', npcChatLines: n => `${n} chat line(s) when no topic is offered`, npcNoFile: 'No NPC file yet: it plays dialogue/<id>.json',
     npcNoTopics: 'No talk events.', npcEveryFloor: 'on every floor it stands on', npcOnlyHere: 'only on this floor', npcOnlyOn: f => `only on ${f}`,
     npcHasCond: 'has conditions', npcAfter: 'after-dialogue', npcEditBtn: 'Edit in the event editor →',
@@ -293,6 +316,26 @@ const I18N = {
     handAuthored: f => `手工製作的頭目關卡（${f}）。`, generated: '自動產生的地圖：重新執行產生器會覆蓋手動修改。',
     cell: (x, y) => `格子 ${x}, ${y}`, kindLbl: '物件', charLbl: '圖例字元', none: '地板（空）', wall: '牆壁',
     hp: '生命', atk: '攻擊', def: '防禦', footprint: '佔格', effect: '效果', evKind: '類型', evPool: '事件池', evText: '文字', evFloors: '可抽到它的樓層',
+    tEdit: '✎ 編輯', tGameView: '🎮 遊戲畫面', cat_monster: '怪物', cat_item: '道具', cat_npc: 'NPC',
+    owLook: '外觀', owEvents: '事件', owData: '資料', owApply: '套用', owCreate: '建立', owReset: '重設（類型外觀、無事件）',
+    owDeleteType: '刪除這個類型', owUsedOn: f => `放置於 ${f}：請先從那些樓層移除。`, owDeleteQ: id => `刪除類型 ${id}？`,
+    owDeleted: id => `已刪除 ${id}（儲存時寫入）。`, owSaved: id => `已變更 ${id}（儲存時寫入）。`, owCreated: id => `已建立 ${id}：設定外觀與資料後儲存。`,
+    owNoRecord: s => `${s} 沒有可編輯的紀錄。`, owSprite: '精靈圖', owAnim: '動畫', owNoAnim: '（無：使用精靈圖）', owTint: '顏色',
+    owTintUse: '染色', owAlpha: '不透明度', owFind: '搜尋精靈圖', owUseDefault: '使用類型的', owNone: '無', owDefaultIs: v => `類型的：${v}`,
+    owOwnNote: '只影響這一個物件：空白的欄位使用類型的外觀。', owTypeNote: '影響這個類型的所有物件，除非物件自己設定（✎ 編輯）。',
+    owTintNote: '染色會乘上精靈圖的顏色（白色 = 不變）。', owEventsIntro: v => `玩家${v}時觸發連結的事件（交談事件會成為話題）。`,
+    verbMonster: '打敗這隻怪物', verbItem: '撿起它', verbDoor: '打開它', verbNpc: '與這個 NPC 交談', verbEvent: '踩到這裡',
+    owNoEvents: '沒有連結的事件。', owLink: '連結事件', owEvPh: '事件 id', owLinkBtn: '+ 連結', owNoEvent: id => `沒有事件 ${id}。`,
+    owNewTitle: c => `新增${c}類型`, owNewId: 'Id', owCopyFrom: '複製自', owBadId: '只能使用 a-z、0-9 與 _。', owDupId: id => `${id} 已經存在。`,
+    owNewNote_monster: '在 enemies.json 新增一筆，從所選的複製（數值、精靈圖）；之後設定它的名字、數值與外觀。',
+    owNewNote_item: '在 items.json 新增一筆，從所選的複製（效果、精靈圖）；名字寫入 text.json。',
+    owNewNote_npc: '新增一個 NPC 檔（npcs/<id>.json）與一頁的對話（dialogue/<id>.json）；在事件編輯器中撰寫它的閒聊台詞與話題。',
+    owName: '名字', owDesc: '描述', owGreeting: '招呼語', owItemType: '類型', owPrice: '價格', owImportant: '重要', owStats: '效果',
+    owStAdd: '+ 數值', st_hp: '生命', st_atk: '攻擊', st_def: '防禦', st_exp: '經驗', st_gold: '金幣',
+    owNpcNote: '它的閒聊台詞、話題與對話在事件編輯器的 NPC 分頁中。', owTextNeedsLive: 'text.json 中的名字與刪除的檔案，只有在開啟專案資料夾時才會寫入（Open project folder…）。',
+    owAddTip: '新增類型', owDblTip: '按兩下：詳細資料', objSettings: '這個物件', objNone: '沒有自己的設定', objHasLook: v => `自己的外觀（${v}）`,
+    objHasEvents: v => `連結：${v}`, objEditBtn: '編輯物件', typeEditBtn: '類型詳細資料', hObj: n => `物件設定：${n}`,
+    pObjEmpty: (x, y) => `(${x}, ${y}) 有物件設定，但那裡沒有物件。`, pObjEvent: (id, x, y) => `(${x}, ${y}) 的物件連結了 ${id}，但沒有事件池定義它。`,
     npcPanel: 'NPC', npcChatLines: n => `沒有話題時有 ${n} 段閒聊台詞`, npcNoFile: '還沒有 NPC 檔：播放 dialogue/<id>.json',
     npcNoTopics: '沒有交談事件。', npcEveryFloor: '在它所在的每一層', npcOnlyHere: '只在這一層', npcOnlyOn: f => `只在 ${f}`,
     npcHasCond: '有條件', npcAfter: '完成後對話', npcEditBtn: '在事件編輯器中編輯 →',
@@ -374,6 +417,8 @@ function spriteOf(sem) {
   if (sem === 'player_start') return 'player';
   if (sem === 'wall' || sem === 'floor' || sem === 'stairs_up' || sem === 'stairs_down') return sem;
   const [cat, id] = sem.split(':');
+  if (cat === 'monster' || cat === 'item' || cat === 'npc') {   // a type's own sprite (its record; the palette's detail window)
+    const own = spriteName(typeLookOf(sem).sprite); if (own && BUNDLE.sprites.includes(own)) return own; }
   if (cat === 'door' || cat === 'key') return cat + '_' + id;
   if (cat === 'gate') return 'door_yellow';   // the game draws a gate as a door with its key's colour washed over it
   if (cat === 'monster') return id === 'demonlord_vorkath' ? 'boss_demonlord' : id;
@@ -507,8 +552,11 @@ function charFor(d, sem) {
 // ---------------- state ----------------
 let showSafe = false, placeMode = null; const PAD = { x: 16, y: 16 };
 let tool = 'paint', brush = 'wall', zoom = Math.max(.5, Math.min(4, +ES.mapZoom || 1.5)), showGrid = true, selCell = null, hoverCell = null, flashCells = [];
-function snapshot(d) { return JSON.stringify({ grid: d.grid, legend: d.st.legend, spec: d.spec, connect: d.st.connect, name: d.st.name }); }
-function restore(d, s) { const o = JSON.parse(s); d.grid = o.grid; d.st.legend = o.legend; d.spec = o.spec; d.st.connect = o.connect; d.st.name = o.name; }
+function snapshot(d) { return JSON.stringify({ grid: d.grid, legend: d.st.legend, spec: d.spec, connect: d.st.connect, name: d.st.name, objects: d.st.objects }); }
+function restore(d, s) { const o = JSON.parse(s); d.grid = o.grid; d.st.legend = o.legend; d.spec = o.spec; d.st.connect = o.connect; d.st.name = o.name;
+  if (o.objects) d.st.objects = o.objects; else delete d.st.objects; }
+// a cell's own settings go with what stands on it: dropped when it is erased or painted over, moved with it
+function dropObj(d, x, y) { if (!d.st.objects) return; delete d.st.objects[x + ',' + y]; if (!Object.keys(d.st.objects).length) delete d.st.objects; }
 function beginEdit(d) { d.pending = snapshot(d); }
 function commitEdit(d, label) {
   if (!d.pending) return; if (d.pending === snapshot(d)) { d.pending = null; return; }
@@ -525,10 +573,297 @@ function putSem(d, x, y, sem, quiet) {
   if (!d.grid[y] || d.grid[y][x] === undefined) return false;
   if (sem === 'player_start') d.grid.forEach(r => r.forEach((c, i) => { if (c === '@') r[i] = '.'; }));
   const c = charFor(d, sem); if (d.grid[y][x] === c) return false;
-  d.grid[y][x] = c;
+  d.grid[y][x] = c; dropObj(d, x, y);
   if (sem.startsWith('event:')) { const id = sem.slice(6); d.spec.events = d.spec.events || [];
     if (!d.spec.events.includes(id)) { d.spec.events.push(id); if (!quiet) toast(t('autoListed', id)); } }
   return true;
+}
+
+// ---------------- types, looks and per-object settings (docs/19_STAGE_EDITOR.md) ----------------
+// A palette entry of a monster / item / NPC is a TYPE: its record in enemies.json / items.json / npcs/<id>.json, with a
+// default look (sprite; "look": { anim, tint }). Its detail window (double-click it, or + to add one) edits that record.
+// A placed object can have settings of its own: the stage file's "objects", keyed "x,y" ({ look, events }), edited with
+// the ✎ Edit tool. The game draws an object's own look over its type's, and fires its linked events when the player
+// interacts with it (defeats, picks up, opens, talks to it).
+const DATAF = JSON.parse(JSON.stringify(BUNDLE.dataFiles || {}));   // path -> { obj, eol }; obj null = to delete
+const DATA_ORIG = Object.fromEntries(Object.entries(DATAF).map(([p, f]) => [p, fmtJson(f.obj, f.eol)]));
+const TEXT_EDITS = {};   // text.json keys changed here (names, greetings): written with the project folder open
+const ENEMIES_P = 'assets/data/enemies.json', ITEMS_P = 'assets/data/items.json';
+const npcPath = id => 'assets/data/npcs/' + id + '.json', dlgPath = id => 'assets/data/dialogue/' + id + '.json';
+const spriteName = s => String(s || '').replace(/\.png$/, '');
+const textOfKey = k => TEXT_EDITS[k] || BUNDLE.texts[k] || {};
+let gameView = false;   // 🎮: the map as the game draws it, without the editor's marks
+function typeRec(sem) {
+  const [cat, id] = String(sem).split(':');
+  if (cat === 'monster') return (DATAF[ENEMIES_P] || {}).obj ? DATAF[ENEMIES_P].obj[id] : null;
+  if (cat === 'item' || cat === 'gate') return (DATAF[ITEMS_P] || {}).obj ? DATAF[ITEMS_P].obj[id] : null;
+  if (cat === 'npc') return (DATAF[npcPath(id)] || {}).obj || null;
+  return null;
+}
+const isTypeSem = sem => /^(monster|item|npc):/.test(sem || '');
+function typeLookOf(sem) {   // as Game::typeLook
+  const r = typeRec(sem), l = {}; if (!r) return l;
+  if (typeof r.sprite === 'string') l.sprite = r.sprite;
+  return Object.assign(l, r.look || {});
+}
+const objKey = (x, y) => x + ',' + y;
+const objOf = (d, x, y) => (d.st.objects || {})[objKey(x, y)] || null;
+function lookAt(d, x, y, sem) { const o = objOf(d, x, y); return { ...typeLookOf(sem), ...((o && o.look) || {}) }; }
+// the type tables the rest of the editor reads (names, stats), kept in step with the records edited here
+function syncTypes() {
+  const en = (DATAF[ENEMIES_P] || {}).obj || {}, it = (DATAF[ITEMS_P] || {}).obj || {};
+  Object.keys(BUNDLE.enemies).forEach(k => { if (!en[k]) delete BUNDLE.enemies[k]; });
+  Object.entries(en).forEach(([k, v]) => { if (k.startsWith('_') || !v) return; BUNDLE.enemies[k] = { name: v.name, hp: v.hp, atk: v.atk, def: v.def }; });
+  Object.keys(BUNDLE.items).forEach(k => { if (!it[k]) delete BUNDLE.items[k]; });
+  Object.entries(it).forEach(([k, v]) => { if (k.startsWith('_') || !v) return;
+    BUNDLE.items[k] = { name: typeof v.name === 'string' ? textOfKey(v.name) : v.name, effect: v.stats || v.effect, type: v.type || 'consumable', ...(v.tint ? { tint: v.tint } : {}) }; });
+  Object.entries(DATAF).forEach(([p, f]) => { const m = p.match(/^assets\/data\/npcs\/(.+)\.json$/); if (!m) return;
+    if (f.obj) { BUNDLE.npcs[m[1]] = f.obj; if (f.obj.name) NPC_NAMES[m[1]] = textOfKey(f.obj.name); } else delete BUNDLE.npcs[m[1]]; });
+}
+// where a type is placed (a type on any floor cannot be deleted)
+const typeUses = sem => FLOORS.filter(f => { const d = DOCS[f.id], lg = d ? d.st.legend : f.stage.legend, tiles = d ? d.grid.map(r => r.join('')).join('') : f.stage.tiles.join('');
+  return Object.entries(lg).some(([c, v]) => (v === sem || (sem.startsWith('item:') && v === 'gate:' + sem.slice(5))) && tiles.includes(c)); }).map(f => f.id);
+
+// ---- drawing a look: the sprite, multiplied by the tint (white = unchanged), at its alpha ----
+const TINTED = new Map();
+function tintedImage(im, tint) {
+  const key = im.src + '|' + tint.slice(0, 3).join(','); let c = TINTED.get(key); if (c) return c;
+  c = document.createElement('canvas'); c.width = im.naturalWidth || im.width; c.height = im.naturalHeight || im.height;
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(im, 0, 0);
+  x.globalCompositeOperation = 'multiply'; x.fillStyle = `rgb(${tint.slice(0, 3).map(v => Math.round(Math.max(0, Math.min(1, +v)) * 255)).join(',')})`; x.fillRect(0, 0, c.width, c.height);
+  x.globalCompositeOperation = 'destination-in'; x.drawImage(im, 0, 0);
+  TINTED.set(key, c); return c;
+}
+function drawLook(g2, sem, x, y, w, h, look) {
+  const sp = look && look.sprite ? spriteName(look.sprite) : null, im = sp && IMG[sp];
+  const tint = look && Array.isArray(look.tint) ? look.tint : null;
+  if (!im && !tint) return drawSem(g2, sem, x, y, w, h);
+  const base = im || IMG[spriteOf(sem)];
+  if (!base) return drawSem(g2, sem, x, y, w, h);
+  const a = tint && tint.length > 3 ? Math.max(0, Math.min(1, +tint[3])) : 1, keep = g2.globalAlpha;
+  g2.globalAlpha = keep * a; g2.drawImage(tint ? tintedImage(base, tint) : base, x, y, w, h); g2.globalAlpha = keep;
+}
+// editor marks on an object with settings: ✎ (its own look), ▶ (an animation), ⚡n (linked events)
+function drawObjMarks(g2, d, x, y, s, sem) {
+  const o = objOf(d, x, y), look = lookAt(d, x, y, sem), marks = [];
+  if (o && o.look && Object.keys(o.look).length) marks.push(['✎', '#4c9eff']);
+  if (look.anim) marks.push(['▶', '#4cd18a']);
+  if (o && o.events && o.events.length) marks.push(['⚡' + o.events.length, '#ffd24c']);
+  marks.forEach(([m, col], i) => { const fs = Math.max(9, Math.round(s * 0.22)); g2.font = `bold ${fs}px Segoe UI, sans-serif`;
+    const tw = g2.measureText(m).width + 4, bx = x * s + 1, by = y * s + s - (i + 1) * (fs + 3);
+    g2.fillStyle = 'rgba(0,0,0,.65)'; g2.fillRect(bx, by, tw, fs + 2); g2.fillStyle = col; g2.textAlign = 'left'; g2.textBaseline = 'top'; g2.fillText(m, bx + 2, by + 1); });
+}
+
+// ---- the windows (a modal of their own, beside the save dialog) ----
+const OW = document.createElement('div'); OW.className = 'modal-bg'; OW.id = 'objBg';
+OW.innerHTML = `<div class="modal" style="width:min(760px,94%)"><header id="owHead"></header><div class="owtabs" id="owTabs"></div><div class="content" id="owBody"></div>
+  <footer><span class="grow" id="owNote"></span><button id="owDel" class="danger"></button><button id="owCancel"></button><button id="owApply" class="primary"></button></footer></div>`;
+document.body.appendChild(OW);
+const owStyle = document.createElement('style');
+owStyle.textContent = `.owtabs { display: flex; gap: 2px; padding: 6px 14px 0; border-bottom: 1px solid var(--line); }
+  .owtabs button { border-bottom: none; border-radius: 4px 4px 0 0; } .owtabs button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .owrow { display: flex; gap: 8px; align-items: center; margin: 6px 0; flex-wrap: wrap; } .owrow > label:first-child { min-width: 110px; color: var(--muted); }
+  .spgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 4px; max-height: 200px; overflow: auto; border: 1px solid var(--line); padding: 4px; border-radius: 4px; }
+  .spgrid div { border: 1px solid transparent; border-radius: 4px; padding: 2px; text-align: center; font-size: 10px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spgrid div:hover { border-color: var(--line); } .spgrid div.on { border-color: var(--accent); background: rgba(76,158,255,.18); }
+  .spgrid canvas { display: block; margin: 0 auto 2px; image-rendering: pixelated; }
+  .owprev { display: flex; gap: 12px; align-items: center; } .owprev canvas { border: 1px solid var(--line); border-radius: 4px; image-rendering: pixelated; background: #2b2b33; }
+  .chips2 { display: flex; flex-wrap: wrap; gap: 4px; } button.danger { color: #ff9b9b; } .owwarn { color: var(--warn); font-size: 12px; }`;
+document.head.appendChild(owStyle);
+let OWS = null;   // the open window: { kind: 'obj' | 'type' | 'new', ... , tab, w (working copy) }
+const owClose = () => { OW.style.display = 'none'; OWS = null; };
+$('owCancel').onclick = owClose;
+OW.addEventListener('mousedown', ev => { if (ev.target === OW) owClose(); });
+const hexOf = t2 => '#' + (t2 || [1, 1, 1]).slice(0, 3).map(v => Math.round(Math.max(0, Math.min(1, +v)) * 255).toString(16).padStart(2, '0')).join('');
+const rgbOf = hex => [1, 3, 5].map(i => +(parseInt(hex.slice(i, i + 2), 16) / 255).toFixed(3));
+const animOptions = cur => `<option value="">${t('owNoAnim')}</option>` + Object.entries(BUNDLE.anims || {}).map(([f, cl]) =>
+  `<optgroup label="${esc(f)}">${cl.map(c => `<option value="${esc(f + '#' + c)}"${f + '#' + c === cur ? ' selected' : ''}>${esc(c)}</option>`).join('')}</optgroup>`).join('')
+  + (cur && !Object.entries(BUNDLE.anims || {}).some(([f, cl]) => cl.some(c => f + '#' + c === cur)) ? `<option selected value="${esc(cur)}">⛔ ${esc(cur)}</option>` : '');
+// the Look tab (an object's own look, or a type's default): sprite grid, animation, tint, a preview
+function lookTabHtml(look, base, sem) {
+  const sp = look.sprite ? spriteName(look.sprite) : '', tint = Array.isArray(look.tint) ? look.tint : null, q = OWS.spq || '';
+  const list = BUNDLE.sprites.filter(n => !q || n.includes(q.toLowerCase()));
+  return `<div class="owprev"><canvas id="owPrev" width="96" height="96"></canvas><div class="muted" style="font-size:12px">${base ? t('owOwnNote') : t('owTypeNote')}<br>${t('owTintNote')}</div></div>
+    <div class="owrow"><label>${t('owSprite')}</label><b>${sp ? esc(sp) : base && base.sprite ? esc(t('owDefaultIs', spriteName(base.sprite))) : esc(t('owDefaultIs', spriteOf(sem) || '—'))}</b>
+      ${sp ? `<button id="owSpClear">${t(base ? 'owUseDefault' : 'owNone')}</button>` : ''}<input id="owSpQ" type="search" placeholder="${t('owFind')}" value="${esc(q)}" style="width:150px"></div>
+    <div class="spgrid" id="owSprites">${list.map(n => `<div data-sp="${esc(n)}" class="${n === sp ? 'on' : ''}" title="${esc(n)}"><canvas width="32" height="32"></canvas>${esc(n)}</div>`).join('')}</div>
+    <div class="owrow"><label>${t('owAnim')}</label><select id="owAnim">${animOptions(look.anim || '')}</select>
+      ${base && base.anim && !look.anim ? `<span class="muted">${t('owDefaultIs', base.anim)}</span>` : ''}</div>
+    <div class="owrow"><label>${t('owTint')}</label><label><input type="checkbox" id="owTintOn"${tint ? ' checked' : ''}> ${t('owTintUse')}</label>
+      ${tint ? `<input type="color" id="owTintC" value="${hexOf(tint)}"> <span class="muted">${t('owAlpha')}</span><input type="range" id="owTintA" min="0" max="1" step="0.05" value="${tint.length > 3 ? tint[3] : 1}" style="width:120px"><span id="owTintAv">${Math.round((tint.length > 3 ? tint[3] : 1) * 100)}%</span>` : ''}</div>`;
+}
+function bindLookTab(look, base, sem) {
+  OW.querySelectorAll('#owSprites div').forEach(el => { const c = el.querySelector('canvas'), x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+    if (IMG[el.dataset.sp]) x.drawImage(IMG[el.dataset.sp], 0, 0, 32, 32); el.onclick = () => { look.sprite = el.dataset.sp + (OWS.pngSprite ? '.png' : ''); renderOW(); }; });
+  if ($('owSpClear')) $('owSpClear').onclick = () => { delete look.sprite; renderOW(); };
+  $('owSpQ').oninput = () => { OWS.spq = $('owSpQ').value.trim(); const pos = $('owSpQ').selectionStart; renderOW(); $('owSpQ').focus(); $('owSpQ').setSelectionRange(pos, pos); };
+  $('owAnim').onchange = () => { if ($('owAnim').value) look.anim = $('owAnim').value; else delete look.anim; renderOW(); };
+  $('owTintOn').onchange = () => { if ($('owTintOn').checked) look.tint = [1, 0.6, 0.6, 1]; else delete look.tint; renderOW(); };
+  const tintUpd = () => { look.tint = [...rgbOf($('owTintC').value), +$('owTintA').value]; $('owTintAv').textContent = Math.round(look.tint[3] * 100) + '%'; drawPrev(); };
+  if ($('owTintC')) { $('owTintC').oninput = tintUpd; $('owTintA').oninput = tintUpd; }
+  const drawPrev = () => { const c = $('owPrev'), x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.clearRect(0, 0, 96, 96); drawSem(x, 'floor', 0, 0, 96, 96);
+    drawLook(x, sem, 0, 0, 96, 96, { ...(base || {}), ...look }); };
+  drawPrev();
+}
+
+// ---- ✎ Edit: one placed object's own look and its linked events ----
+const VERB = { monster: 'verbMonster', item: 'verbItem', door: 'verbDoor', gate: 'verbDoor', npc: 'verbNpc', event: 'verbEvent', key: 'verbItem' };
+function openObjWin(x, y) {
+  const d = docOf(cur), sem = semAt(d, x, y); if (!isEntity(sem)) return;
+  const o = JSON.parse(JSON.stringify(objOf(d, x, y) || {}));
+  OWS = { kind: 'obj', x, y, sem, w: { look: o.look || {}, events: o.events || [] }, tab: OWS && OWS.kind === 'obj' ? OWS.tab : 'look' };
+  OW.style.display = 'flex'; renderOW();
+}
+function openTypeWin(sem) {
+  const r = typeRec(sem); if (!r) return toast(t('owNoRecord', sem));
+  const cat = sem.split(':')[0], w = JSON.parse(JSON.stringify(r)), texts = {};
+  ['name', 'desc', 'greeting'].forEach(k => { if (typeof w[k] === 'string') texts[k] = { ...textOfKey(w[k]) }; });
+  OWS = { kind: 'type', sem, cat, id: sem.split(':')[1], w, texts, tab: 'look', pngSprite: cat !== 'npc' };
+  OW.style.display = 'flex'; renderOW();
+}
+function openNewType(cat) {
+  const ids = cat === 'monster' ? Object.keys(BUNDLE.enemies) : cat === 'item' ? Object.keys(BUNDLE.items).filter(k => (BUNDLE.items[k].type || 'consumable') === 'consumable') : Object.keys(BUNDLE.npcs || {});
+  OWS = { kind: 'new', cat, from: ids[0] || '', id: '', tab: 'new' }; OW.style.display = 'flex'; renderOW();
+}
+function renderOW() {
+  if (!OWS) return;
+  const S2 = OWS, tabs = S2.kind === 'obj' ? [['look', 'owLook'], ['events', 'owEvents']] : S2.kind === 'type' ? [['look', 'owLook'], ['data', 'owData']] : [];
+  $('owTabs').innerHTML = tabs.map(([k, l]) => `<button data-tab="${k}" class="${S2.tab === k ? 'on' : ''}">${t(l)}</button>`).join('');
+  $('owTabs').style.display = tabs.length ? '' : 'none';
+  OW.querySelectorAll('#owTabs button').forEach(b => b.onclick = () => { S2.tab = b.dataset.tab; renderOW(); });
+  $('owCancel').textContent = t('cancel'); $('owApply').textContent = t(S2.kind === 'new' ? 'owCreate' : 'owApply'); $('owNote').textContent = '';
+  $('owDel').style.display = S2.kind === 'type' ? '' : S2.kind === 'obj' ? '' : 'none';
+  if (S2.kind === 'obj') {
+    const cat = S2.sem.split(':')[0];
+    $('owHead').innerHTML = `<b>${esc(nameOf(S2.sem))}</b> <span class="muted">${esc(S2.sem)} · ${t('cell', S2.x, S2.y)} · ${esc(cur)}</span>`;
+    $('owDel').textContent = t('owReset');
+    if (S2.tab === 'look') { $('owBody').innerHTML = lookTabHtml(S2.w.look, typeLookOf(S2.sem), S2.sem); bindLookTab(S2.w.look, typeLookOf(S2.sem), S2.sem); }
+    else {
+      const evs = S2.w.events;
+      $('owBody').innerHTML = `<p class="muted" style="margin-top:0">${t('owEventsIntro', t(VERB[cat] || 'verbEvent'))}</p>
+        <div class="chips2">${evs.map(id => `<span class="chip${evById[id] ? '' : ' bad'}">${esc(id)}${evById[id] ? ' · ' + esc(evById[id].kind) : ' ⛔'} <button class="link" data-goev="${esc(id)}">↗</button><button class="link" data-unlink="${esc(id)}">✕</button></span>`).join('') || `<span class="muted">${t('owNoEvents')}</span>`}</div>
+        <div class="owrow"><label>${t('owLink')}</label><input id="owEvQ" list="owEvList" placeholder="${t('owEvPh')}" style="width:260px"><datalist id="owEvList">${BUNDLE.events.filter(e => !evs.includes(e.id)).map(e => `<option value="${esc(e.id)}">${esc(L(BUNDLE.texts[e.title]) || e.kind)}</option>`).join('')}</datalist>
+          <button id="owEvAdd">${t('owLinkBtn')}</button></div>`;
+      OW.querySelectorAll('[data-unlink]').forEach(b => b.onclick = () => { S2.w.events = evs.filter(x => x !== b.dataset.unlink); renderOW(); });
+      OW.querySelectorAll('[data-goev]').forEach(b => b.onclick = () => openEventInEventEditor(b.dataset.goev));
+      const add = () => { const v = $('owEvQ').value.trim(); if (!v) return; if (!evById[v]) return toast(t('owNoEvent', v)); if (!evs.includes(v)) evs.push(v); renderOW(); };
+      $('owEvAdd').onclick = add; $('owEvQ').onkeydown = ev => { if (ev.key === 'Enter') add(); };
+    }
+    return;
+  }
+  if (S2.kind === 'new') {
+    const ids = S2.cat === 'monster' ? Object.keys(BUNDLE.enemies) : S2.cat === 'item' ? Object.keys(BUNDLE.items).filter(k => (BUNDLE.items[k].type || 'consumable') === 'consumable') : Object.keys(BUNDLE.npcs || {});
+    $('owHead').innerHTML = `<b>${t('owNewTitle', t('cat_' + S2.cat))}</b>`;
+    $('owBody').innerHTML = `<div class="owrow"><label>${t('owNewId')}</label><input id="owNewId" value="${esc(S2.id)}" placeholder="${S2.cat === 'monster' ? 'slime_red' : S2.cat === 'item' ? 'potion_green' : 'guard'}"></div>
+      <div class="owrow"><label>${t('owCopyFrom')}</label><select id="owFrom">${ids.map(k => `<option${k === S2.from ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select></div>
+      <p class="muted">${t('owNewNote_' + S2.cat)}</p>`;
+    $('owNewId').oninput = () => { S2.id = $('owNewId').value.trim(); }; $('owFrom').onchange = () => { S2.from = $('owFrom').value; };
+    return;
+  }
+  // a type's window
+  const r = S2.w, cat = S2.cat, uses = typeUses(S2.sem);
+  $('owHead').innerHTML = `<b>${esc(nameOf(S2.sem))}</b> <span class="muted">${esc(S2.sem)} · ${esc(cat === 'monster' ? ENEMIES_P : cat === 'item' ? ITEMS_P : npcPath(S2.id))}</span>`;
+  $('owDel').textContent = t('owDeleteType'); $('owDel').disabled = uses.length > 0; $('owDel').title = uses.length ? t('owUsedOn', uses.join(', ')) : '';
+  if (uses.length) $('owNote').textContent = t('owUsedOn', uses.join(', '));
+  if (S2.tab === 'look') {
+    const look = { ...(r.look || {}) }; if (typeof r.sprite === 'string') look.sprite = r.sprite;
+    $('owBody').innerHTML = lookTabHtml(look, null, S2.sem);
+    // the type's sprite is its record's "sprite"; animation and tint go in "look"
+    const proxy = new Proxy(look, { set(o, k, v) { o[k] = v; if (k === 'sprite') r.sprite = v; else { r.look = r.look || {}; r.look[k] = v; } return true; },
+      deleteProperty(o, k) { delete o[k]; if (k === 'sprite') delete r.sprite; else if (r.look) { delete r.look[k]; if (!Object.keys(r.look).length) delete r.look; } return true; } });
+    bindLookTab(proxy, null, S2.sem); return;
+  }
+  const num = (k, lbl) => `<div class="owrow"><label>${t(lbl)}</label><input type="number" data-num="${k}" value="${esc(r[k] ?? 0)}" style="width:90px"></div>`;
+  const tx = (k, lbl) => { const v = cat === 'monster' && k === 'name' ? (r.name || {}) : (S2.texts[k] || {});
+    return `<div class="owrow"><label>${t(lbl)}</label><input data-tx="${k}" data-l="zh_TW" value="${esc(v.zh_TW || '')}" placeholder="zh_TW" style="width:200px"><input data-tx="${k}" data-l="en" value="${esc(v.en || '')}" placeholder="en" style="width:200px"></div>`; };
+  let body = '';
+  if (cat === 'monster') body = tx('name', 'owName') + ['hp', 'atk', 'def', 'exp', 'gold'].map(k => num(k, 'st_' + k)).join('');
+  if (cat === 'item') {
+    const stats = r.stats || {};
+    body = tx('name', 'owName') + tx('desc', 'owDesc')
+      + `<div class="owrow"><label>${t('owItemType')}</label><select id="owItType">${['consumable', 'story', 'key'].map(v => `<option${(r.type || 'consumable') === v ? ' selected' : ''}>${v}</option>`).join('')}</select></div>`
+      + num('price', 'owPrice') + `<div class="owrow"><label>${t('owImportant')}</label><input type="checkbox" id="owImp"${r.important ? ' checked' : ''}></div>`
+      + `<div class="owrow"><label>${t('owStats')}</label><div>${Object.entries(stats).map(([k, v]) => `<div class="owrow" style="margin:2px 0"><select data-stk="${esc(k)}">${[...new Set(['hp', 'maxhp', 'atk', 'def', 'gold', 'exp', 'key_yellow', 'key_blue', 'key_red', ...(BUNDLE.statNames || []), k])].map(s => `<option${s === k ? ' selected' : ''}>${s}</option>`).join('')}</select>
+          <input type="number" data-stv="${esc(k)}" value="${esc(v)}" style="width:80px"><button class="link" data-stdel="${esc(k)}">✕</button></div>`).join('')}<button id="owStAdd">${t('owStAdd')}</button></div></div>`;
+  }
+  if (cat === 'npc') body = tx('name', 'owName') + tx('greeting', 'owGreeting')
+    + `<p class="muted">${t('owNpcNote')}</p><button id="owNpcEv">${t('npcEditBtn')}</button>`;
+  if ((cat === 'item' || cat === 'npc') && !dirHandle) body += `<p class="owwarn">${t('owTextNeedsLive')}</p>`;
+  $('owBody').innerHTML = body;
+  OW.querySelectorAll('[data-num]').forEach(i => i.onchange = () => { r[i.dataset.num] = parseInt(i.value, 10) || 0; });
+  OW.querySelectorAll('[data-tx]').forEach(i => i.onchange = () => { const k = i.dataset.tx;
+    if (cat === 'monster' && k === 'name') { r.name = { ...(typeof r.name === 'object' ? r.name : {}), [i.dataset.l]: i.value }; return; }
+    if (typeof r[k] !== 'string') r[k] = cat === 'npc' ? `npc.${S2.id}.${k}` : `item.${S2.id}.${k}`;
+    S2.texts[k] = { ...(S2.texts[k] || {}), [i.dataset.l]: i.value }; });
+  if ($('owItType')) $('owItType').onchange = () => { r.type = $('owItType').value; };
+  if ($('owImp')) $('owImp').onchange = () => { r.important = $('owImp').checked; };
+  OW.querySelectorAll('[data-stk]').forEach(s => s.onchange = () => { const old = s.dataset.stk, v = r.stats[old]; delete r.stats[old]; r.stats[s.value] = v; renderOW(); });
+  OW.querySelectorAll('[data-stv]').forEach(i => i.onchange = () => { r.stats[i.dataset.stv] = parseInt(i.value, 10) || 0; });
+  OW.querySelectorAll('[data-stdel]').forEach(b => b.onclick = () => { delete r.stats[b.dataset.stdel]; renderOW(); });
+  if ($('owStAdd')) $('owStAdd').onclick = () => { r.stats = r.stats || {}; const k = ['hp', 'atk', 'def', 'gold', 'exp'].find(x => !(x in r.stats)) || 'hp'; r.stats[k] = 1; renderOW(); };
+  if ($('owNpcEv')) $('owNpcEv').onclick = () => openNpcInEventEditor(S2.id);
+}
+$('owApply').onclick = () => {
+  const S2 = OWS; if (!S2) return;
+  if (S2.kind === 'obj') {
+    const look = S2.w.look, events = S2.w.events, o = {};
+    if (Object.keys(look).length) o.look = look; if (events.length) o.events = events;
+    edit(t('hObj', nameOf(S2.sem)), dd => { dd.st.objects = dd.st.objects || {}; const k = objKey(S2.x, S2.y);
+      if (Object.keys(o).length) dd.st.objects[k] = o; else delete dd.st.objects[k];
+      if (!Object.keys(dd.st.objects).length) delete dd.st.objects; });
+    owClose(); return;
+  }
+  if (S2.kind === 'new') {
+    const id = S2.id; if (!/^[a-z0-9_]+$/.test(id)) return toast(t('owBadId'));
+    const sem = S2.cat + ':' + id; if (typeRec(sem)) return toast(t('owDupId', id));
+    const src = JSON.parse(JSON.stringify(typeRec(S2.cat + ':' + S2.from) || {}));
+    if (S2.cat === 'monster') { src.name = { zh_TW: id, en: id }; DATAF[ENEMIES_P].obj[id] = src; }
+    if (S2.cat === 'item') { src.name = `item.${id}.name`; src.desc = `item.${id}.desc`; TEXT_EDITS[src.name] = { zh_TW: id, en: id }; TEXT_EDITS[src.desc] = { zh_TW: '', en: '' }; DATAF[ITEMS_P].obj[id] = src; }
+    if (S2.cat === 'npc') {   // a new NPC: its file, and a first chat line (a one-page dialogue to rewrite in the event editor)
+      const npc = { npcId: id, name: `npc.${id}.name`, chat: { lines: [{ dialogue: id }], order: 'loop' }, topics: { menu: 'auto' } };
+      if (src.sprite) npc.sprite = src.sprite; if (src.look) npc.look = src.look;
+      TEXT_EDITS[npc.name] = { zh_TW: id, en: id };
+      DATAF[npcPath(id)] = { obj: npc, eol: { crlf: false, finalNewline: true } };
+      if (!DATAF[dlgPath(id)]) DATAF[dlgPath(id)] = { obj: { npcId: id, start: 'root', nodes: { root: { text: { zh_TW: '……', en: '...' }, choices: [{ label: { zh_TW: '……', en: '...' }, next: null }] } } }, eol: { crlf: false, finalNewline: true } };
+    }
+    syncTypes(); renderPalette(); toast(t('owCreated', id)); openTypeWin(sem); return;
+  }
+  // a type: its working copy replaces the record; changed names go to text.json
+  const path = S2.cat === 'monster' ? ENEMIES_P : S2.cat === 'item' ? ITEMS_P : npcPath(S2.id);
+  if (S2.cat === 'npc') DATAF[path].obj = S2.w; else DATAF[path].obj[S2.id] = S2.w;
+  Object.entries(S2.texts).forEach(([k, v]) => { if (typeof S2.w[k] === 'string') TEXT_EDITS[S2.w[k]] = { ...textOfKey(S2.w[k]), ...v }; });
+  syncTypes(); TINTED.clear(); renderPalette(); drawAll(); renderInspector(); owClose(); toast(t('owSaved', S2.id));
+};
+$('owDel').onclick = () => {
+  const S2 = OWS; if (!S2) return;
+  if (S2.kind === 'obj') { S2.w = { look: {}, events: [] }; renderOW(); return; }   // "Reset": back to the type's look, no events
+  if (S2.kind !== 'type' || typeUses(S2.sem).length) return;
+  if (!confirm(t('owDeleteQ', S2.id))) return;
+  if (S2.cat === 'monster') delete DATAF[ENEMIES_P].obj[S2.id]; else if (S2.cat === 'item') delete DATAF[ITEMS_P].obj[S2.id];
+  else DATAF[npcPath(S2.id)].obj = null;
+  if (brush === S2.sem) setBrush('wall');
+  syncTypes(); renderPalette(); owClose(); toast(t('owDeleted', S2.id));
+};
+
+// ---- saving the type records and texts (Save: beside the floors) ----
+function dataChangedFiles() {
+  const out = [];
+  Object.entries(DATAF).forEach(([p, f]) => {
+    if (f.obj === null) { if (DATA_ORIG[p] != null) out.push({ path: p, text: null, before: DATA_ORIG[p], kind: 'delete' }); return; }
+    const txt2 = fmtJson(f.obj, f.eol); if (txt2 !== DATA_ORIG[p]) out.push({ path: p, text: txt2, before: DATA_ORIG[p] || '', kind: 'data' });
+  });
+  if (Object.keys(TEXT_EDITS).length) out.push({ path: 'assets/data/text.json', kind: 'text', text: Object.entries(TEXT_EDITS).map(([k, v]) => `"${k}": ${JSON.stringify(v)}`).join('\n'), before: '' });
+  return out;
+}
+async function textOnDisk(f) {   // text.json: the file as it is now, with this editor's keys
+  const raw = await (await (await fileIn(dirHandle, f.path)).getFile()).text(), obj = JSON.parse(raw);
+  Object.entries(TEXT_EDITS).forEach(([k, v]) => { obj.strings[k] = { ...(obj.strings[k] || {}), ...v }; });
+  let s = JSON.stringify(obj, null, 2) + (raw.endsWith('\n') ? '\n' : ''); if (raw.includes('\r\n')) s = s.replace(/\n/g, '\r\n');
+  return { ...f, text: s, before: raw };
+}
+function markDataSaved(files) {
+  files.forEach(f => { if (f.kind === 'data') DATA_ORIG[f.path] = f.text; if (f.kind === 'delete') { delete DATA_ORIG[f.path]; delete DATAF[f.path]; }
+    if (f.kind === 'text') { Object.entries(TEXT_EDITS).forEach(([k, v]) => BUNDLE.texts[k] = v); Object.keys(TEXT_EDITS).forEach(k => delete TEXT_EDITS[k]); } });
 }
 
 // ---------------- canvas ----------------
@@ -544,17 +879,19 @@ function drawAll() {
   const reach = reachableCells(d);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const ch = d.grid[y][x], sem = semAt(d, x, y);
-    if (!isEntity(sem)) { if (sem === null && ch !== undefined) { g.fillStyle = 'rgba(255,93,93,.55)'; g.fillRect(x * s, y * s, s, s); } continue; }
+    if (!isEntity(sem)) { if (sem === null && ch !== undefined && !gameView) { g.fillStyle = 'rgba(255,93,93,.55)'; g.fillRect(x * s, y * s, s, s); } continue; }
     const fp = sem.startsWith('monster:') ? footprintOf(d.st, ch, sem) : { w: 1, h: 1 };
-    drawSem(g, sem, x * s, y * s, fp.w * s, fp.h * s);
+    drawLook(g, sem, x * s, y * s, fp.w * s, fp.h * s, lookAt(d, x, y, sem));   // its type's look, then its own
+    if (gameView) continue;   // 🎮 game view: no editor marks
+    drawObjMarks(g, d, x, y, s, sem);
     if (sem.startsWith('event:')) {   // editor hint: the event's kind colour in the corner, and a red corner if no pool defines it
       const e = evById[sem.slice(6)]; g.fillStyle = e ? kindColor(e.kind) : '#ff5d5d'; g.beginPath(); g.arc(x * s + s - 6, y * s + 6, 4, 0, 7); g.fill();
     }
     if (reach && !reach.has(x + ',' + y) && sem !== 'player_start') { g.strokeStyle = 'rgba(255,159,67,.9)'; g.setLineDash([4, 3]); g.lineWidth = 2; g.strokeRect(x * s + 2, y * s + 2, s - 4, s - 4); g.setLineDash([]); }
   }
-  if (showSafe || placeMode) { g.fillStyle = 'rgba(76,209,138,.22)'; g.strokeStyle = 'rgba(76,209,138,.55)'; g.lineWidth = 1;
+  if ((showSafe || placeMode) && !gameView) { g.fillStyle = 'rgba(76,209,138,.22)'; g.strokeStyle = 'rgba(76,209,138,.55)'; g.lineWidth = 1;
     safeCells(cur).forEach(([x, y]) => { g.fillRect(x * s + 3, y * s + 3, s - 6, s - 6); g.strokeRect(x * s + 3.5, y * s + 3.5, s - 7, s - 7); }); }
-  if (showGrid) { g.strokeStyle = 'rgba(255,255,255,.08)'; g.lineWidth = 1; g.beginPath();
+  if (showGrid && !gameView) { g.strokeStyle = 'rgba(255,255,255,.08)'; g.lineWidth = 1; g.beginPath();
     for (let x = 0; x <= W; x++) { g.moveTo(x * s + .5, 0); g.lineTo(x * s + .5, H * s); }
     for (let y = 0; y <= H; y++) { g.moveTo(0, y * s + .5); g.lineTo(W * s, y * s + .5); } g.stroke(); }
   if (rectDrag) { const [x0, y0, x1, y1] = rectBounds(); g.fillStyle = 'rgba(76,158,255,.22)'; g.fillRect(x0 * s, y0 * s, (x1 - x0 + 1) * s, (y1 - y0 + 1) * s);
@@ -570,8 +907,8 @@ function drawAll() {
     g.strokeStyle = chk.ok ? '#4cd18a' : '#ff3c3c'; g.lineWidth = 3; g.strokeRect(hx * s + 1.5, hy * s + 1.5, fw * s - 3, fh * s - 3);
     cv.style.cursor = chk.ok ? '' : 'not-allowed';
     if (!chk.ok && !painting) setStatus(whyText(chk.why), true); else if (!painting && $('status').style.color) setStatus('');
-  } else { cv.style.cursor = ''; if (hoverCell) { g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1; g.strokeRect(hoverCell[0] * s + .5, hoverCell[1] * s + .5, s - 1, s - 1); } }
-  if (selCell) { g.strokeStyle = '#ffd24c'; g.lineWidth = 2.5; g.strokeRect(selCell[0] * s + 1.5, selCell[1] * s + 1.5, s - 3, s - 3); }
+  } else { cv.style.cursor = ''; if (hoverCell && !gameView) { g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1; g.strokeRect(hoverCell[0] * s + .5, hoverCell[1] * s + .5, s - 1, s - 1); } }
+  if (selCell && !gameView) { g.strokeStyle = '#ffd24c'; g.lineWidth = 2.5; g.strokeRect(selCell[0] * s + 1.5, selCell[1] * s + 1.5, s - 3, s - 3); }
   $('zoomLbl').textContent = Math.round(zoom * 100) + '%';
 }
 // Where the player appears, in the game's order (game_assets.cpp, loadStage): the stairs down (arriving from
@@ -738,6 +1075,7 @@ cv.addEventListener('mousedown', ev => {
   if (ev.button !== 0) return;   // right / middle buttons pan (and a right click is the eyedropper): see the pan handlers
   selCell = c; flashCells = [];
   if (tool === 'select') { if (isEntity(semAt(d, ...c))) moveFrom = c; renderInspector(); drawAll(); return; }
+  if (tool === 'edit') { renderInspector(); drawAll(); if (isEntity(semAt(d, ...c))) openObjWin(...c); return; }   // ✎: the object's own settings
   beginEdit(d); paintCount = 0;
   if (tool === 'rect') { rectDrag = { a: c, b: c }; drawAll(); return; }
   painting = true; paintAt(c);
@@ -759,12 +1097,13 @@ addEventListener('mouseup', ev => {
   if (moveFrom) { const to = hoverCell; const from = moveFrom; moveFrom = null;
     if (to && (to[0] !== from[0] || to[1] !== from[1])) { const sem = semAt(d, ...from), chk = placeCheck(d, to[0], to[1], sem, from);
       if (!chk.ok) { setStatus(whyText(chk.why), true); drawAll(); }
-      else { setStatus(''); edit(t('hMove', nameOf(sem)), dd => { const ch = dd.grid[from[1]][from[0]]; dd.grid[from[1]][from[0]] = '.'; dd.grid[to[1]][to[0]] = ch; });
+      else { setStatus(''); edit(t('hMove', nameOf(sem)), dd => { const ch = dd.grid[from[1]][from[0]]; dd.grid[from[1]][from[0]] = '.'; dd.grid[to[1]][to[0]] = ch;
+        const o = dd.st.objects && dd.st.objects[from[0] + ',' + from[1]]; if (o) { dropObj(dd, ...from); dd.st.objects = dd.st.objects || {}; dd.st.objects[to[0] + ',' + to[1]] = o; } });
         selCell = to; renderInspector(); drawAll(); } } }
 });
 function paintAt([x, y]) {
   const d = docOf(cur);
-  if (tool === 'erase') { if (d.grid[y][x] !== '.') { d.grid[y][x] = '.'; paintCount++; } }
+  if (tool === 'erase') { if (d.grid[y][x] !== '.') { d.grid[y][x] = '.'; dropObj(d, x, y); paintCount++; } }
   else { const chk = placeCheck(d, x, y, brush);
     if (!chk.ok) { setStatus(whyText(chk.why), true); drawAll(); return; }
     if (putSem(d, x, y, brush)) { paintCount++; setStatus(''); } }
@@ -785,7 +1124,7 @@ function paletteGroups() {
   const items = Object.keys(BUNDLE.items).filter(k => !k.startsWith('key_') && (BUNDLE.items[k].type || 'consumable') === 'consumable');
   // story items open gates: a gate ("gate:<item id>") takes only its own item, and the item can be put on the map too
   const storyItems = Object.keys(BUNDLE.items).filter(k => BUNDLE.items[k].type === 'story');
-  const npcs = [...new Set(['sorcerer', 'villager', 'king', 'princess', 'handmaiden', ...FLOORS.flatMap(f => Object.values(f.stage.legend).filter(v => v.startsWith('npc:')).map(v => v.slice(4)))])];
+  const npcs = [...new Set(['sorcerer', 'villager', 'king', 'princess', 'handmaiden', ...Object.keys(BUNDLE.npcs || {}), ...FLOORS.flatMap(f => Object.values(f.stage.legend).filter(v => v.startsWith('npc:')).map(v => v.slice(4)))])];
   return [
     ['gTerrain', ['wall', 'floor']], ['gStairs', ['stairs_up', 'stairs_down']], ['gPlayer', ['player_start']],
     ['gDoors', ['door:yellow', 'door:blue', 'door:red']], ['gKeys', ['key:yellow', 'key:blue', 'key:red']],
@@ -794,12 +1133,16 @@ function paletteGroups() {
   ];
 }
 function iconCanvas(sem, size = 32) { const c = document.createElement('canvas'); c.width = c.height = size; const gg = c.getContext('2d'); gg.imageSmoothingEnabled = false;
-  if (isEntity(sem) && !sem.startsWith('event:')) drawSem(gg, 'floor', 0, 0, size, size); drawSem(gg, sem, 0, 0, size, size); return c; }
+  if (isEntity(sem) && !sem.startsWith('event:')) drawSem(gg, 'floor', 0, 0, size, size); drawLook(gg, sem, 0, 0, size, size, typeLookOf(sem)); return c; }
 function renderPalette() {
   const d = cur && docOf(cur);
-  $('palette').innerHTML = paletteGroups().map(([gk, list]) => `<div class="pgroup"><div class="ph" data-g="${gk}">${collapsedGroups.has(gk) ? '▸' : '▾'} ${t(gk)}</div>
+  const ADD = { gMonsters: 'monster', gItems: 'item', gNpcs: 'npc' };   // groups whose types can be added (+)
+  $('palette').innerHTML = paletteGroups().map(([gk, list]) => `<div class="pgroup"><div class="ph" data-g="${gk}">${collapsedGroups.has(gk) ? '▸' : '▾'} ${t(gk)}${ADD[gk] ? ` <button class="padd" data-add="${ADD[gk]}" title="${t('owAddTip')}">+</button>` : ''}</div>
     ${collapsedGroups.has(gk) ? '' : `<div class="pgrid">${list.map(sem => `<div class="pitem${sem === brush ? ' sel' : ''}" data-sem="${sem}" title="${esc(nameOf(sem))} · ${sem}"><span class="ch">${d ? esc((Object.keys(d.st.legend).find(c => d.st.legend[c] === sem)) || PREFERRED[sem] || '') : ''}</span></div>`).join('')}</div>`}</div>`).join('');
-  $('palette').querySelectorAll('.pitem').forEach(el => { el.prepend(iconCanvas(el.dataset.sem)); el.onclick = () => setBrush(el.dataset.sem); });
+  $('palette').querySelectorAll('.pitem').forEach(el => { el.prepend(iconCanvas(el.dataset.sem)); el.onclick = () => setBrush(el.dataset.sem);
+    const ts = el.dataset.sem.startsWith('gate:') ? 'item:' + el.dataset.sem.slice(5) : el.dataset.sem;
+    if (isTypeSem(ts)) { el.ondblclick = () => openTypeWin(ts); el.title += ' · ' + t('owDblTip'); } });
+  $('palette').querySelectorAll('.padd').forEach(b => b.onclick = ev => { ev.stopPropagation(); openNewType(b.dataset.add); });
   $('palette').querySelectorAll('.ph').forEach(h => h.onclick = () => { const k = h.dataset.g; collapsedGroups.has(k) ? collapsedGroups.delete(k) : collapsedGroups.add(k); renderPalette(); });
 }
 function renderEventPalette() {
@@ -825,7 +1168,7 @@ function setBrush(sem) {
   $('brushName').textContent = nameOf(sem) + (sem.startsWith('event:') && evById[sem.slice(6)] ? ' · ' + evById[sem.slice(6)].kind : '');
   renderPalette(); renderEventPalette();
 }
-function setTool(tl) { tool = tl; document.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === tl)); cv.style.cursor = tl === 'select' ? 'default' : 'crosshair'; }
+function setTool(tl) { tool = tl; document.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === tl)); cv.style.cursor = tl === 'select' || tl === 'edit' ? 'default' : 'crosshair'; }
 document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => setTool(b.dataset.tool));
 
 // ---------------- an NPC's panel (docs/event_editor/08_NPC_DIALOGUE.md) ----------------
@@ -902,12 +1245,17 @@ function renderInspector() {
   if (sem && sem.startsWith('npc:')) body += npcPanelHtml(sem.slice(4));
   if (sem && sem.startsWith('event:')) {
     body += `<div class="field"><label>${t('replaceWith')}</label><select id="replEv">${BUNDLE.events.map(e => `<option${'event:' + e.id === sem ? ' selected' : ''}>${e.id}</option>`).join('')}</select></div>`; }
+  if (isEntity(sem) && sem !== 'player_start' && !sem.startsWith('stairs')) { const o = objOf(d, x, y), ts = sem.startsWith('gate:') ? 'item:' + sem.slice(5) : sem;
+    body += `<div class="field"><label>${t('objSettings')}</label><div class="muted" style="font-size:12px">${o ? [o.look && Object.keys(o.look).length ? t('objHasLook', Object.keys(o.look).join(', ')) : '', o.events && o.events.length ? t('objHasEvents', o.events.join(', ')) : ''].filter(Boolean).join(' · ') : t('objNone')}</div>
+      <p><button id="objEdit">✎ ${t('objEditBtn')}</button>${isTypeSem(ts) ? ` <button id="typeEdit">${t('typeEditBtn')}</button>` : ''}</p></div>`; }
   body += `<p><button id="useBrush">${t('useAsBrush')}</button> <button id="clearCell">${t('clearCell')}</button></p>`;
   $('insp').innerHTML = body + `<hr style="border:none;border-top:1px solid var(--line);margin:12px 0">` + floorPanelHtml(d);
   $('useBrush').onclick = () => sem && setBrush(sem);
   if ($('npcEdit')) $('npcEdit').onclick = () => openNpcInEventEditor(sem.slice(4));
   document.querySelectorAll('#insp [data-openev]').forEach(b => b.onclick = () => openEventInEventEditor(b.dataset.openev));
-  $('clearCell').onclick = () => edit(t('hErase', 1), dd => dd.grid[y][x] = '.');
+  $('clearCell').onclick = () => edit(t('hErase', 1), dd => { dd.grid[y][x] = '.'; dropObj(dd, x, y); });
+  if ($('objEdit')) $('objEdit').onclick = () => openObjWin(x, y);
+  if ($('typeEdit')) $('typeEdit').onclick = () => openTypeWin(sem.startsWith('gate:') ? 'item:' + sem.slice(5) : sem);
   if ($('replEv')) $('replEv').onchange = () => edit(t('hPaint', $('replEv').value, 1), dd => putSem(dd, x, y, 'event:' + $('replEv').value));
   $('insp').querySelectorAll('.chip[data-floor]').forEach(ch => ch.onclick = () => openFloor(ch.dataset.floor));
   bindFloorPanel(d);
@@ -967,6 +1315,9 @@ function problems(d) {
   { const reach = reachableCells(d) || new Set(), lost = [];
     d.grid.forEach((r, y) => r.forEach((c, x) => { if (isEntity(semAt(d, x, y)) && !reach.has(x + ',' + y)) lost.push([x, y]); }));
     if (lost.length) out.push({ sev: 'warn', msg: t('pUnreach', lost.length), cells: lost }); }
+  Object.entries(d.st.objects || {}).forEach(([k, o]) => { const [ox, oy] = k.split(',').map(Number);
+    if (!isEntity(semAt(d, ox, oy))) out.push({ sev: 'warn', msg: t('pObjEmpty', ox, oy), cells: [[ox, oy]] });
+    (o.events || []).filter(id => !evById[id]).forEach(id => out.push({ sev: 'error', msg: t('pObjEvent', id, ox, oy), cells: [[ox, oy]] })); });
   if (border) out.push({ sev: 'info', msg: t('pBorder'), cells: [] });
   return out;
 }
@@ -1068,6 +1419,9 @@ async function useDir(dir, fromOther) {
     }
     FLOORS = fresh; Object.keys(DOCS).forEach(k => delete DOCS[k]); dirHandle = dir;
     await reloadEventsLive(dir).catch(e => toast(String(e)));   // talk events and NPC files, for an NPC's panel
+    for (const p of Object.keys(DATAF)) { if (DATAF[p].obj === null) continue;   // the type records, from disk
+      try { const r = await readJson(dir, p); DATAF[p] = { obj: r.obj, eol: r.eol }; DATA_ORIG[p] = fmtJson(r.obj, r.eol); } catch (_) {} }
+    syncTypes(); renderPalette();
     $('src').textContent = t('srcLive'); $('src').classList.add('live');
     openFloor(FLOORS.some(f => f.id === cur) ? cur : FLOORS[0].id); toast(t('loadedLive', fresh.length));
     syncFloorIndex(dir).then(w => { if (w) toast(t('indexUpdated')); }).catch(e => toast(String(e)));   // the per-floor event index (floor_index.js)
@@ -1081,7 +1435,7 @@ function changedFiles() {
   FLOORS.forEach(f => { if (!DOCS[f.id]) return; const d = DOCS[f.id], st = stageText(d), sp = specText(d);
     if (st !== d.origStage) out.push({ path: f.stagePath, text: st, before: d.origStage, id: f.id, kind: 'stage' });
     if (sp !== d.origSpec) out.push({ path: f.specPath, text: sp, before: d.origSpec, id: f.id, kind: 'spec' }); });
-  return out;
+  return [...out, ...dataChangedFiles()];
 }
 function lineDiff(a, b) {   // a small LCS diff over lines, enough for a grid and a legend
   const A = a.replace(/\r/g, '').split('\n'), B = b.replace(/\r/g, '').split('\n'), n = A.length, m = B.length;
@@ -1102,7 +1456,8 @@ function openSave() {
   $('mWrite').disabled = !dirHandle; $('saveNote').textContent = dirHandle ? t('saveNoteLive') : t('saveNoteBundle');
   $('modalBg').style.display = 'flex';
 }
-function markSaved(files) { files.forEach(f => { const d = DOCS[f.id]; if (f.kind === 'stage') d.origStage = f.text; else d.origSpec = f.text; }); renderFloorSel(); }
+function markSaved(files) { files.forEach(f => { const d = DOCS[f.id]; if (!d) return; if (f.kind === 'stage') d.origStage = f.text; else if (f.kind === 'spec') d.origSpec = f.text; });
+  markDataSaved(files); renderFloorSel(); }
 $('save').onclick = openSave;
 $('mCancel').onclick = () => $('modalBg').style.display = 'none';
 // Write: a floor spec on disk may have changed since it was read (the event editor saves floors' events lists too), so
@@ -1119,11 +1474,14 @@ const stampNow = () => { const d = new Date(), p = n => String(n).padStart(2, '0
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`; };
 $('mWrite').onclick = async () => {
   try {
-    const files = []; for (const f of changedFiles()) files.push(f.kind === 'spec' ? await specOnDisk(f) : f);
+    const files = []; for (const f of changedFiles()) files.push(f.kind === 'spec' ? await specOnDisk(f) : f.kind === 'text' ? await textOnDisk(f) : f);
     const stamp = stampNow();
     for (const f of files) { let old = null; try { old = await (await (await fileIn(dirHandle, f.path)).getFile()).text(); } catch (_) {}
       if (old != null) { const w = await (await fileIn(dirHandle, `Build/editor_backups/${stamp}/${f.path}`, true)).createWritable(); await w.write(old); await w.close(); } }
-    for (const f of files) { const fh = await fileIn(dirHandle, f.path, true), w = await fh.createWritable(); await w.write(f.text); await w.close(); }
+    for (const f of files) {
+      if (f.kind === 'delete') { const parts = f.path.split('/'); let dh = dirHandle; for (const p of parts.slice(0, -1)) dh = await dh.getDirectoryHandle(p);
+        await dh.removeEntry(parts.at(-1)).catch(() => {}); continue; }   // a deleted type's file (backed up above)
+      const fh = await fileIn(dirHandle, f.path, true), w = await fh.createWritable(); await w.write(f.text); await w.close(); }
     markSaved(files); $('modalBg').style.display = 'none'; toast(t('savedBackupN', files.length, stamp));
     if (files.length && await syncFloorIndex(dirHandle)) setTimeout(() => toast(t('indexUpdated')), 2500);   // floor_index.js
     if (inShell) window.parent.postMessage({ toms: 'filesChanged', paths: files.map(f => f.path) }, '*');
@@ -1156,7 +1514,8 @@ function makeZip(files) {   // files: [{ path, text }] -> Uint8Array
 }
 function downloadBlob(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
-$('mDownload').onclick = () => { const files = changedFiles(); if (!files.length) return;
+$('mDownload').onclick = () => { const all = changedFiles(), files = all.filter(f => f.kind !== 'text' && f.kind !== 'delete'); if (!files.length) return toast(t('owTextNeedsLive'));
+  if (files.length < all.length) setTimeout(() => toast(t('owTextNeedsLive')), 3400);   // text.json and deletions need the project folder
   if (files.length === 1) downloadBlob(new Blob([files[0].text], { type: 'application/json' }), files[0].path.split('/').pop());
   else { const d = new Date(), p2 = n => String(n).padStart(2, '0');
     downloadBlob(new Blob([makeZip(files)], { type: 'application/zip' }), `toms_stage_changes_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}.zip`); }
@@ -1166,6 +1525,7 @@ $('mDownload').onclick = () => { const files = changedFiles(); if (!files.length
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(el._h); el._h = setTimeout(() => el.classList.remove('show'), 3200); }
 $('undo').onclick = undo; $('redo').onclick = redo;
 $('gridBtn').onclick = () => { showGrid = !showGrid; $('gridBtn').classList.toggle('on', showGrid); drawAll(); };
+$('gameViewBtn').onclick = () => { gameView = !gameView; $('gameViewBtn').classList.toggle('on', gameView); drawAll(); };
 const zoomCenter = factor => { const r = $('wrap').getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, zoom * factor); };
 $('zoomIn').onclick = () => zoomCenter(1.25); $('zoomOut').onclick = () => zoomCenter(1 / 1.25);
 $('evSearch').oninput = renderEventPalette;
@@ -1226,10 +1586,11 @@ addEventListener('keydown', ev => {
   else if (ev.ctrlKey && k === 's') { ev.preventDefault(); openSave(); }
   else if (ev.ctrlKey) return;
   else if (k === 'b') setTool('paint'); else if (k === 'r') setTool('rect'); else if (k === 'e') setTool('erase'); else if (k === 'v') setTool('select');
+  else if (k === 'o') setTool('edit'); else if (k === 'p') $('gameViewBtn').click();
   else if (k === 'g') $('gridBtn').click(); else if (k === '+' || k === '=') $('zoomIn').click(); else if (k === '-') $('zoomOut').click();
   else if (k === '[') step(-1); else if (k === ']') step(1);
-  else if (k === 'escape') { selCell = null; $('modalBg').style.display = 'none'; renderInspector(); drawAll(); }
-  else if ((k === 'delete' || k === 'backspace') && selCell) edit(t('hErase', 1), dd => dd.grid[selCell[1]][selCell[0]] = '.');
+  else if (k === 'escape') { if (OWS) return owClose(); selCell = null; $('modalBg').style.display = 'none'; renderInspector(); drawAll(); }
+  else if ((k === 'delete' || k === 'backspace') && selCell) edit(t('hErase', 1), dd => { dd.grid[selCell[1]][selCell[0]] = '.'; dropObj(dd, ...selCell); });
 });
 addEventListener('beforeunload', ev => { if (FLOORS.some(f => isDirty(f.id))) { ev.preventDefault(); ev.returnValue = t('unsavedLeave'); } });
 function applyStatic() {
@@ -1243,6 +1604,7 @@ $('uiLang').onchange = () => { LANG = $('uiLang').value; try { localStorage.setI
   applyStatic(); applyUiScale(); renderFloorSel(); renderPalette(); renderEventPalette(); renderInspector(); renderProblems(); setBrush(brush); };
 
 applyStatic(); applyUiScale(); setTool('paint'); $('gridBtn').classList.add('on');
+syncTypes();   // the palette's names and stats from the type records
 { const want = new URLSearchParams(location.search).get('floor') || location.hash.slice(1); openFloor(FLOORS.some(f => f.id === want) ? want : FLOORS[0].id); }
 setBrush('wall');
 // place mode: the event editor's "+ Add floor…" opens a floor here, ready to place that event

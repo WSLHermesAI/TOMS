@@ -32,6 +32,11 @@ struct Entity {
     std::string displayName;            // banner text for 4-grid entities; empty -> use `id`
     bool fpExplicit = false;            // true when THIS stage file named the footprint for this
                                         // tile char (it then beats the character-level type table)
+    // The stage editor's per-object settings (docs/19_STAGE_EDITOR.md): the stage file's "objects", keyed "x,y". Its
+    // look ({"sprite", "anim": "<file under media>#<clip>", "tint": [r, g, b, a]}; null = its type's look) and the
+    // events linked to it, which fire when the player interacts with it (Game::fireLinkedEvents).
+    nlohmann::json look;
+    std::vector<std::string> links;
 };
 
 struct Stage : public Trackable {
@@ -95,6 +100,9 @@ inline Stage parseStage(const std::string& path, const toms::Locale& locale) {
     const nlohmann::json* footprints = nullptr;
     if (j.contains("footprints") && j["footprints"].is_object())
         footprints = &j["footprints"];
+    const nlohmann::json* objects = nullptr;   // per-object look and linked events, keyed "x,y"
+    if (j.contains("objects") && j["objects"].is_object())
+        objects = &j["objects"];
     // parse entities
     for (int y = 0; y < (int)s.tiles.size(); y++) {
         for (int x = 0; x < (int)s.tiles[y].size(); x++) {
@@ -119,6 +127,14 @@ inline Stage parseStage(const std::string& path, const toms::Locale& locale) {
                 e.roamer = spec.roamer && spec.fp.big();   // a 1x1 "roamer" has nowhere to roam
                 e.displayName = spec.name;
                 e.fpExplicit = true;
+            }
+            if (objects) {
+                auto o = objects->find(std::to_string(x) + "," + std::to_string(y));
+                if (o != objects->end() && o->is_object()) {
+                    if (o->contains("look") && (*o)["look"].is_object()) e.look = (*o)["look"];
+                    if (o->contains("events") && (*o)["events"].is_array())
+                        for (const auto& id : (*o)["events"]) if (id.is_string()) e.links.push_back(id.get<std::string>());
+                }
             }
             s.entities.push_back(e);
         }

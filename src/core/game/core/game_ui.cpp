@@ -303,7 +303,7 @@ void Game::buildUiState(toms::UiState& u) const {
         b.active = cs.active;
         b.title = L.tr("battle.title") + " " + cs.enemy.name;
         b.player_sprite = uiSprite("player");
-        b.enemy_sprite = uiSprite(cs.enemy.boss ? "boss_demonlord" : entSprite(cs.enemy.id));
+        b.enemy_sprite = uiSprite(cs.enemy.boss ? "boss_demonlord" : typeSprite("monster", cs.enemy.id));
         b.player_hp_pct = pct((float)cs.playerHP, (float)effectiveMaxHp());
         b.enemy_hp_pct = pct((float)std::max(0, cs.enemyHP), (float)cs.enemy.hp);
         b.player_hp_text = L.tr("battle.you") + " HP " + std::to_string(cs.playerHP);

@@ -698,9 +698,24 @@ private:
     void loadIdleAnims();
     void loadDoorAnims();
     // Draws the monster's idle clip into the rect; false = no clip (or nothing drawn): draw the static sprite.
-    bool drawIdleAnim(const std::string& enemyId, float x, float y, float w, float h, int tileX, int tileY);
+    bool drawIdleAnim(const std::string& enemyId, float x, float y, float w, float h, int tileX, int tileY, const float tint[4] = nullptr);
+    // Objects' looks (docs/19_STAGE_EDITOR.md): an object's own "look" over its type's ("look" in enemies.json /
+    // items.json / its NPC file), field by field. typeSprite: the sprite a type is drawn with (its look, else the old
+    // table). drawObjectAnim: any clip "<file under media>#<clip>", loaded on first use, tinted, at the object's phase.
+    nlohmann::json lookOf(const Entity& e) const;
+    nlohmann::json typeLook(const std::string& kind, const std::string& id) const;
+    std::string typeSprite(const std::string& kind, const std::string& id) const;
+    bool drawObjectAnim(const std::string& ref, float x, float y, float w, float h, int tileX, int tileY, const float tint[4]);
+    struct ObjAnim { toms::anim::AnimFile file; toms::anim::AtlasSet set; std::vector<std::unique_ptr<toms::AtlasFile>> atlases;
+                     std::vector<uint16_t> textures; bool ok = false; };
+    std::map<std::string, std::unique_ptr<ObjAnim>> objAnims_;   // by file
+    // An object's linked events, when the player interacts with it: a talk event wakes (a topic), the others run when
+    // their `requires` holds (with their title as a notice), else they are started.
+    void fireLinkedEvents(const Entity& e);
     // A clip at time t placed on a map rect: its (0, 0) on the rect's bottom centre, scaled so a sprite of
     // spriteW x spriteH pixels fills the rect. False = nothing drawn.
+    bool drawClipInRect(const toms::anim::Clip& clip, float t, const toms::anim::AtlasSet& set, float x, float y, float w, float h,
+                        float spriteW, float spriteH, const float tint[4]);
     bool drawClipInRect(const toms::anim::Clip& clip, float t, const toms::anim::AtlasSet& set, float x, float y, float w, float h,
                         float spriteW, float spriteH);
     // Doors opening: assets/media/anim/door_open.anim (made in anim_editor), clip "door_open_<colour>", played once on

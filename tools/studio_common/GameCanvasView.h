@@ -107,6 +107,8 @@ protected:
 
     void paintEvent(QPaintEvent* e) override;
     void showEvent(QShowEvent* e) override;
+    // A new native window (the canvas moved to another top-level window): bgfx moves to it on the next paint.
+    bool event(QEvent* e) override;
     void resizeEvent(QResizeEvent* e) override;
 
 private:

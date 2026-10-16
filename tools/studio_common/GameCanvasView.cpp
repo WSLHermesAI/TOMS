@@ -231,6 +231,15 @@ bool GameCanvasView::saveGameRendererShot(const QString& path)
     return true;
 }
 
+bool GameCanvasView::event(QEvent* e)
+{
+    if (e->type() == QEvent::WinIdChange && m_active && host().current == this) {
+        host().current = nullptr;   // attach() points bgfx at the new window handle
+        update();
+    }
+    return CanvasView::event(e);
+}
+
 void GameCanvasView::showEvent(QShowEvent* e)
 {
     CanvasView::showEvent(e);

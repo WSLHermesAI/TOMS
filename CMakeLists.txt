@@ -96,6 +96,9 @@ if(NOT WEB AND NOT ANDROID)
     # Picture fonts (docs/22_FONT_TOOL.md): fontpack and, with Qt, font_editor -- .fnt + .png from
     # one picture per character; the runtime is src/core/engine/bitmap_font.cpp.
     add_subdirectory(tools/font)
+    # The stage and event editors as a Windows app (docs/19_STAGE_EDITOR.md section 6): stage_core (the
+    # rules, no Qt, unit.stage_core_test) and, with Qt, stage_event_editor on the game's renderer.
+    add_subdirectory(tools/stage_event_editor)
     if(TOMS_BUILD_TESTS)
         # The project opens from its packed atlas alone, and its other files (plist, rcss, the
         # art styles' atlases) match what it builds.

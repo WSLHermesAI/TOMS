@@ -21,7 +21,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 SOURCES = ['tools/atlas/qt', 'tools/anim/qt', 'tools/particle/qt', 'tools/font/qt', 'tools/studio_common',
-           'src/editor/src']
+           'src/editor/src', 'tools/stage_event_editor/app']
 DICT_DIR = os.path.join(ROOT, 'tools', 'studio_common', 'i18n', 'zh_TW')
 
 ESCAPES = {'n': '\n', 't': '\t', '"': '"', "'": "'", '\\': '\\', 'r': '\r', '0': '\0'}
