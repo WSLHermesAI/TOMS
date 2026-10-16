@@ -453,3 +453,19 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - `rml_ui.cpp` loads a system CJK font as the last fallback face (Windows `msjh.ttc` …, Android
     `NotoSansCJK-Regular.ttc` face 3; `TOMS_SYSTEM_FONT`). Proved on Windows with the old subset; the Android APK builds.
   - Changed-only run: 69 of 107 tests, all pass. Full suite and web build not run after the NPC work.
+- **2026-10-16** — **HTML editors** (committed `4067852` / `149856a`): resizable panels (`splitter.js`), the event
+  editor's text size; stage editor palette types with detail windows, ✎ Edit (an object's own look and linked events,
+  the stage file's `objects`), 🎮 game view; the game draws object looks and fires linked events (`smoke.stage_objects`).
+- **2026-10-16** — **Windows app `stage_event_editor.exe`** (committed `149856a`; [../19_STAGE_EDITOR.md](../19_STAGE_EDITOR.md) section 6):
+  - The owner chose the game's own stack (Qt / C++ / bgfx, no other library); a WebView2 host was started and dropped.
+  - `tools/stage_event_editor/core`: the rules without Qt (`stage_project`, `stage_checks`, `stage_save`,
+    `event_project`), read and written with `ordered_json` (untouched files byte for byte).
+  - `app`: `AppShell` (tabs or separate windows, View menu), `StageEditor` + `StageCanvas` (the game renderer through
+    `GameCanvasView`: `.anim` clips play), `ObjectWindow`, `EventEditor` (+ forms, tabs, NPCs / talk preview,
+    dialogues). The editors call each other directly; after a save the other rereads what it has not changed.
+  - Shared code: `GameCanvasView` follows a canvas to a new native window; the language toggle is not added to a
+    `QMainWindow` hosted in a tab (also fixes `toms_editor`'s duplicate).
+  - Checked against the HTML editors in headless Chrome (stage checks, story, safe cells, auto-place; 166 event
+    problems; Save bytes); the check found a read of a destroyed temporary in the pool merge, fixed.
+  - Tests: `unit.stage_core_test` (192), `stage_editor.app_selftest`; 401 + 237 new zh_TW strings. Changed-only:
+    23 of 110, all pass.

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPDIList Name="v13_features_mpdi" Count="1" MPDIVersion="1.3" PICount="1" ImageName="sheet.pi">
+    <MultiPathDynamicImage Name="fx" PathCount="4" PlayCount="2" TotalPlayTime="2.0000" StopAtLastFrame="1">
+        <CueToStartCurvesWithTime Name="a" BehaviorUpdate="1" Loop="1" StartTime="0.5" Blending="1" SrcBlendingData="5" DestBlendingData="1" Count="3" LOD="2">
+            <PointDataList Index="0" Position="0.00,0.00,0.00" Time="0.0000" Size="16.00,16.00" Scale="2.00,2.00" PIName="sheet" ImageName="ring" />
+            <PointDataList Index="1" Position="100.00,0.00,0.00" Time="0.5000" Size="16.00,16.00" Scale="2.00,2.00" PIName="sheet" ImageName="ring" />
+            <PointDataList Index="2" Position="100.00,100.00,0.00" Time="1.0000" Size="16.00,16.00" Scale="2.00,2.00" PIName="sheet" ImageName="ring" Mirror="1" />
+            <HintPoint PointIndex="1" Event="2" EventName="ding.wav" />
+        </CueToStartCurvesWithTime>
+        <CueToStartCurvesWithTime Name="b" AnchorType="CenterDown" StartTime="0" Count="1" LOD="1">
+            <PointDataList Index="0" Position="50.00,50.00,0.00" Time="0.0000" Size="20.00,10.00" PIName="sheet" ImageName="box" />
+        </CueToStartCurvesWithTime>
+        <CueToStartCurvesWithTime Name="c" RotationPosOffset="30.00,0.00,0.00" StartTime="0" Count="1" LOD="1">
+            <PointDataList Index="0" Position="0.00,0.00,0.00" Time="0.0000" Size="20.00,10.00" Angle="90" PIName="sheet" ImageName="box" />
+        </CueToStartCurvesWithTime>
+        <CueToStartCurvesWithTime Name="d" StartTime="0" Count="1" LOD="1">
+            <PointDataList Index="0" Position="0.00,0.00,0.00" Time="0.0000" Size="20.00,10.00" Angles="30.00,45.00,10.00" PIName="sheet" ImageName="box" />
+        </CueToStartCurvesWithTime>
+    </MultiPathDynamicImage>
+</MPDIList>

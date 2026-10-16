@@ -1,0 +1,22 @@
+{
+  "id": "test_objects",
+  "name": { "zh_TW": "物件測試", "en": "Objects test" },
+  "subtitle": "Objects test",
+  "index": 0,
+  "width": 9,
+  "height": 5,
+  "legend": { "#": "wall", ".": "floor", "@": "player_start", "1": "monster:slime", "2": "monster:bat", "h": "item:potion_red", "v": "npc:villager" },
+  "tiles": [
+    "#########",
+    "#.......#",
+    "#@h.1.2v#",
+    "#.......#",
+    "#########"
+  ],
+  "objects": {
+    "2,2": { "events": ["ev_common_relic_road"] },
+    "4,2": { "look": { "tint": [1, 0.35, 0.35, 1] } },
+    "6,2": { "look": { "anim": "anim/monster_idle.anim#idle_wraith", "tint": [0.55, 1, 0.55, 1] } },
+    "7,2": { "look": { "sprite": "npc_king", "tint": [1, 1, 1, 0.5] } }
+  }
+}

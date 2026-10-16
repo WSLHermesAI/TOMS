@@ -1,0 +1,5 @@
+<!-- Author:TOMS atlas tool -->
+<PuzzleImage OriginalNameSort="box,ring" ImageName="sheet.png" Count="2" GeneratePuzzleimageUnit="0" ImageDistance="1,1">
+    <PuzzleUnit Name="box" UV="0,0,0.6896552,0.625" OffsetPos="0,0" Size="20,10" OriginalSize="20,10" ShowPosInPI="0,0" />
+    <PuzzleUnit Name="ring" UV="0.7241379,0,1,0.5" OffsetPos="4,4" Size="8,8" OriginalSize="16,16" ShowPosInPI="21,0" />
+</PuzzleImage>

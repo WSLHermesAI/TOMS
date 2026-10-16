@@ -15,10 +15,16 @@
 
 ## ▶ Next Step
 
-**Editor release folder; NPCs and their events; NPC / dialogue editors; fonts** (2026-10-16; `Editor/` committed in
-`090736d`, the rest not; [DAILY_2026-10-16.md](DAILY_2026-10-16.md), [WORKING_LOG.md](WORKING_LOG.md)):
-- **First: commit `.gitattributes`** (its Git LFS rule for `Editor/bin`, which `090736d` needs) with
-  `tools/package_editors.*`; refresh `Editor/bin` (`tools\package_editors.cmd`) before committing it again.
+**The stage and event editors as a Windows app, native** (2026-10-16 evening; committed `149856a`;
+[DAILY_2026-10-16.md](DAILY_2026-10-16.md) rows 11–16, [../19_STAGE_EDITOR.md](../19_STAGE_EDITOR.md) section 6):
+- `stage_event_editor.exe`: both editors on the game's stack (Qt / C++ / bgfx), tabs or separate windows; the stage map
+  drawn by the game renderer (animations play); the event editor with the tree, inspector, condition rows, Problems,
+  Floor map, Variables, Kinds, NPCs with the talk preview, Dialogues. Checked against the HTML editors.
+- **Next:** refresh `Editor/bin` (`tools\package_editors.cmd`; it adds the app); `tools\test.cmd all` with the web
+  build; then the event editor's drawn views (diagram, values map, node graph) and ▶ Play from here.
+
+**Editor release folder; NPCs and their events; NPC / dialogue editors; fonts** (2026-10-16; committed `090736d`,
+`4067852`; [DAILY_2026-10-16.md](DAILY_2026-10-16.md), [WORKING_LOG.md](WORKING_LOG.md)):
 - NPCs and their events ([../event_editor/08_NPC_DIALOGUE.md](../event_editor/08_NPC_DIALOGUE.md)): NPC files, chat lines,
   topic menu, choices with results, after-dialogues, repeatable and `varChanged` events, one action list
   (`story_actions.h`); the village elder's seven events on F02 as the example.
@@ -26,8 +32,8 @@
   editor: an NPC's panel.
 - Fonts: the subset rebuilt (30 missing characters), `data.ui_font_covers_text`, a system fallback font (Windows,
   Android; Android not seen running).
-- Changed-only run: 69 of 107 tests, all pass. **Then:** `tools\test.cmd all` (with the web build: `toms_core` has two
-  new files) and commit, with the untracked reference images (now also the four `talk_*`).
+- Changed-only run: 69 of 107 tests, all pass. Committed, with the reference images. `tools\test.cmd all` with the web
+  build is still to run (`toms_core` has two new files).
 - **Owner:** read the elder's drafted text; names and topics for the other five NPCs when wanted.
 
 **Font tool, editor languages, the bell event chain with key gates, glTF lights / cameras / Unicode paths**
