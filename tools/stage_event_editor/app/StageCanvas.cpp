@@ -110,6 +110,92 @@ bool StageCanvas::drawClip(const GameScene& s, const std::string& ref, const QRe
     return !quads.empty();
 }
 
+namespace {
+const Json* ownLook(const Json& o) { auto it = o.find("look"); return it == o.end() ? nullptr : &*it; }
+
+// One frame's look-ups: each legend char's meaning and each type's look are found once, not for every cell (a JSON
+// look-up per cell made a big floor slow to draw, more so in a Debug build).
+struct Looks {
+    const stage::Project& p;
+    const stage::StageDoc& d;
+    std::array<std::string, 256> sems;
+    std::array<bool, 256> have{};
+    std::map<std::string, Json> types;
+    Json merged;
+
+    Looks(const stage::Project& pr, const stage::StageDoc& doc) : p(pr), d(doc) {}
+    const std::string& semAt(int x, int y) {
+        const unsigned char c = (unsigned char)d.at(x, y);
+        if (!have[c]) { sems[c] = p.semAt(d, x, y); have[c] = true; }
+        return sems[c];
+    }
+    const Json& typeLook(const std::string& sem) {
+        auto it = types.find(sem);
+        if (it == types.end()) it = types.emplace(sem, p.typeLook(sem)).first;
+        return it->second;
+    }
+    // as Project::lookAt: the type's look with the object's own look over it
+    const Json& lookAt(int x, int y, const std::string& sem, bool* ownSprite = nullptr) {
+        const Json& base = typeLook(sem);
+        if (ownSprite) *ownSprite = false;
+        const Json* o = stage::Project::objOf(d, x, y);
+        const Json* lk = o ? ownLook(*o) : nullptr;
+        if (!lk || !lk->is_object() || lk->empty()) return base;
+        if (ownSprite) *ownSprite = lk->contains("sprite");
+        merged = base;
+        for (auto& [k, v] : lk->items()) merged[k] = v;
+        return merged;
+    }
+};
+}  // namespace
+
+StageCanvas::Ghost StageCanvas::ghost() const {
+    Ghost gh;
+    stage::StageDoc* d = m_ed->curDoc();
+    const StageEditor::View& v = m_ed->view();
+    if (!d || !v.hover || isPanning()) return gh;
+    const stage::Project& p = m_ed->project();
+    if (v.moveFrom) {
+        if (*v.moveFrom == *v.hover) return gh;
+        gh.sem = p.semAt(*d, v.moveFrom->x, v.moveFrom->y);
+        gh.from = *v.moveFrom;
+        gh.look = p.lookAt(*d, v.moveFrom->x, v.moveFrom->y, gh.sem);   // its own look: sprite, tint, animation
+        const Json* o = stage::Project::objOf(*d, v.moveFrom->x, v.moveFrom->y);
+        const Json* lk = o ? ownLook(*o) : nullptr;
+        gh.ownSprite = lk && lk->is_object() && lk->contains("sprite");
+    } else if ((v.tool == StageEditor::Paint || (v.tool == StageEditor::Rect && !v.rectA)) && stage::Project::isEntity(v.brush)) {
+        gh.sem = v.brush;
+        gh.from = *v.hover;
+        gh.look = p.typeLook(gh.sem);
+    }
+    if (gh.sem.empty()) return gh;
+    const Cell h = *v.hover;
+    gh.chk = p.placeCheck(*d, h.x, h.y, gh.sem, v.moveFrom ? &*v.moveFrom : nullptr);
+    int fw = 1, fh = 1;
+    for (const Cell& c : gh.chk.cells) { fw = std::max(fw, c.x - h.x + 1); fh = std::max(fh, c.y - h.y + 1); }
+    gh.rect = cellRect(h.x, h.y, fw, fh);
+    gh.show = true;
+    return gh;
+}
+
+void StageCanvas::drawEntity(const GameScene& s, const std::string& sem, const Json& look, bool ownSprite, const QRectF& r, int tx, int ty,
+                             float alpha) {
+    if (sem.rfind("event:", 0) == 0) {   // the story plate (game_scene_draw.cpp)
+        s.rect(r, QColor(219, 184, 92, int(235 * alpha)));
+        const double i = std::min(r.width(), r.height()) * 0.22;
+        s.rect(r.adjusted(i, i, -i, -i), QColor(71, 87, 117, int(242 * alpha)));
+        return;
+    }
+    float tint[4];
+    StageDraw::lookTint(look, tint);
+    tint[3] *= alpha;
+    if (look.contains("anim") && look["anim"].is_string() && drawClip(s, look["anim"].get<std::string>(), r, tx, ty, tint)) return;
+    if (sem.rfind("monster:", 0) == 0 && !ownSprite && drawClip(s, "anim/monster_idle.anim#idle_" + sem.substr(8), r, tx, ty, tint)) return;
+    drawSprite(s, StageDraw::lookSprite(m_ed->project(), m_ed->bank(), sem, look), r, tint);
+    float wash[4];
+    if (StageDraw::gateWash(m_ed->project(), sem, wash)) s.rect(r, QColor::fromRgbF(wash[0], wash[1], wash[2], wash[3] * alpha));
+}
+
 void StageCanvas::paintGameScene(const GameScene& s) {
     m_animated = 0;
     stage::StageDoc* d = m_ed->curDoc();
@@ -119,35 +205,26 @@ void StageCanvas::paintGameScene(const GameScene& s) {
         m_atlasDirty = false;
         m_tex->setAtlases({{"game", m_ed->bank().atlasPath().toStdString(), &m_ed->bank().atlas()}});
     }
+    Looks L(p, *d);
     const QColor bg = QColor(0x12, 0x13, 0x16);
     s.rect(QRectF(0, 0, width(), height()), bg);
     // ground first, then objects in row order (a 2-wide monster spills to the right, like the game)
+    const QString wall = QStringLiteral("wall"), floor = QStringLiteral("floor");
     for (int y = 0; y < d->height(); y++)
         for (int x = 0; x < d->width(); x++)
-            drawSprite(s, p.semAt(*d, x, y) == "wall" ? QStringLiteral("wall") : QStringLiteral("floor"), cellRect(x, y), kWhite);
+            drawSprite(s, L.semAt(x, y) == "wall" ? wall : floor, cellRect(x, y), kWhite);
     for (int y = 0; y < d->height(); y++)
         for (int x = 0; x < d->width(); x++) {
-            const std::string sem = p.semAt(*d, x, y);
+            const std::string& sem = L.semAt(x, y);
             if (!stage::Project::isEntity(sem)) continue;
             const stage::Footprint fp = sem.rfind("monster:", 0) == 0 ? p.footprintOf(*d, d->at(x, y), sem) : stage::Footprint{};
-            const QRectF r = cellRect(x, y, fp.w, fp.h);
-            if (sem.rfind("event:", 0) == 0) {   // the story plate (game_scene_draw.cpp)
-                s.rect(r, QColor(219, 184, 92, 235));
-                const double i = std::min(r.width(), r.height()) * 0.22;
-                s.rect(r.adjusted(i, i, -i, -i), QColor(71, 87, 117, 242));
-                continue;
-            }
-            const Json look = p.lookAt(*d, x, y, sem);
-            float tint[4];
-            StageDraw::lookTint(look, tint);
-            const Json* own = stage::Project::objOf(*d, x, y);
-            const bool ownSprite = own && own->contains("look") && (*own)["look"].is_object() && (*own)["look"].contains("sprite");
-            if (look.contains("anim") && look["anim"].is_string() && drawClip(s, look["anim"].get<std::string>(), r, x, y, tint)) continue;
-            if (sem.rfind("monster:", 0) == 0 && !ownSprite && drawClip(s, "anim/monster_idle.anim#idle_" + sem.substr(8), r, x, y, tint)) continue;
-            drawSprite(s, StageDraw::lookSprite(p, m_ed->bank(), sem, look), r, tint);
-            float wash[4];
-            if (StageDraw::gateWash(p, sem, wash)) s.rect(r, QColor::fromRgbF(wash[0], wash[1], wash[2], wash[3]));
+            bool ownSprite = false;
+            const Json& look = L.lookAt(x, y, sem, &ownSprite);
+            drawEntity(s, sem, look, ownSprite, cellRect(x, y, fp.w, fp.h), x, y);
         }
+    // the ghost: drawn by the game renderer too, so a moved object keeps its own sprite and its animation plays
+    const Ghost gh = ghost();
+    if (gh.show && !gh.chk.same) drawEntity(s, gh.sem, gh.look, gh.ownSprite, gh.rect, gh.from.x, gh.from.y, 0.6f);
 }
 
 // ---- QPainter: the map without a GPU, and the editor's marks ---------------------------------------------------------
@@ -157,15 +234,16 @@ void StageCanvas::paintSceneQt(QPainter& g) {
     g.fillRect(rect(), QColor(0x12, 0x13, 0x16));
     if (!d) return;
     stage::Project& p = m_ed->project();
+    Looks L(p, *d);
     for (int y = 0; y < d->height(); y++)
         for (int x = 0; x < d->width(); x++)
-            StageDraw::drawSem(g, p, m_ed->bank(), p.semAt(*d, x, y) == "wall" ? "wall" : "floor", cellRect(x, y));
+            StageDraw::drawSem(g, p, m_ed->bank(), L.semAt(x, y) == "wall" ? "wall" : "floor", cellRect(x, y));
     for (int y = 0; y < d->height(); y++)
         for (int x = 0; x < d->width(); x++) {
-            const std::string sem = p.semAt(*d, x, y);
+            const std::string& sem = L.semAt(x, y);
             if (!stage::Project::isEntity(sem)) continue;
             const stage::Footprint fp = sem.rfind("monster:", 0) == 0 ? p.footprintOf(*d, d->at(x, y), sem) : stage::Footprint{};
-            StageDraw::drawSem(g, p, m_ed->bank(), sem, cellRect(x, y, fp.w, fp.h), p.lookAt(*d, x, y, sem));
+            StageDraw::drawSem(g, p, m_ed->bank(), sem, cellRect(x, y, fp.w, fp.h), L.lookAt(x, y, sem));
         }
 }
 
@@ -182,9 +260,10 @@ void StageCanvas::paintMarks(QPainter& g) {
     g.setRenderHint(QPainter::Antialiasing, false);
     const bool marks = !v.gameView;
     const std::vector<char> reach = marks ? stage::reachableCells(p, d) : std::vector<char>();
+    Looks L(p, d);
     for (int y = 0; y < d.height(); y++)
         for (int x = 0; x < d.width(); x++) {
-            const std::string sem = p.semAt(d, x, y);
+            const std::string& sem = L.semAt(x, y);
             const QRectF r = cellRect(x, y);
             if (!stage::Project::isEntity(sem)) {
                 if (sem.empty() && marks) g.fillRect(r, QColor(255, 93, 93, 140));   // a char with no legend entry
@@ -193,7 +272,7 @@ void StageCanvas::paintMarks(QPainter& g) {
             if (!marks) continue;
             // ✎ its own look, ▶ an animation, ⚡n linked events
             const Json* o = stage::Project::objOf(d, x, y);
-            const Json look = p.lookAt(d, x, y, sem);
+            const Json& look = L.lookAt(x, y, sem);
             std::vector<std::pair<QString, QColor>> badges;
             if (o && o->contains("look") && (*o)["look"].is_object() && !(*o)["look"].empty()) badges.push_back({QStringLiteral("✎"), QColor("#4c9eff")});
             if (look.contains("anim")) badges.push_back({QStringLiteral("▶"), QColor("#4cd18a")});
@@ -254,18 +333,15 @@ void StageCanvas::paintMarks(QPainter& g) {
         g.setPen(QPen(QColor("#ff5d5d"), 3));
         g.drawRect(cellRect(c.x, c.y).adjusted(1.5, 1.5, -1.5, -1.5));
     }
-    // the brush's ghost under the mouse: green where it can go, red (and why) where it cannot
-    const std::string ghost = v.moveFrom ? p.semAt(d, v.moveFrom->x, v.moveFrom->y)
-        : ((v.tool == StageEditor::Paint || (v.tool == StageEditor::Rect && !v.rectA)) && stage::Project::isEntity(v.brush)) ? v.brush : std::string();
-    if (v.hover && !ghost.empty() && !isPanning() && !(v.moveFrom && *v.moveFrom == *v.hover)) {
-        const Cell h = *v.hover;
-        const stage::PlaceCheck chk = p.placeCheck(d, h.x, h.y, ghost, v.moveFrom ? &*v.moveFrom : nullptr);
-        int fw = 1, fh = 1;
-        for (const Cell& c : chk.cells) { fw = std::max(fw, c.x - h.x + 1); fh = std::max(fh, c.y - h.y + 1); }
-        if (!chk.same) StageDraw::drawSem(g, p, m_ed->bank(), ghost, cellRect(h.x, h.y, fw, fh), p.typeLook(ghost), 0.6);
+    // the brush's ghost under the mouse: green where it can go, red (and why) where it cannot. With the game renderer
+    // the ghost itself is drawn in paintGameScene (animated); only the frame and the red cells are painted here.
+    const Ghost gh = ghost();
+    if (gh.show) {
+        const stage::PlaceCheck& chk = gh.chk;
+        if (!chk.same && !overGameScene()) StageDraw::drawSem(g, p, m_ed->bank(), gh.sem, gh.rect, gh.look, 0.6);
         if (!chk.ok) for (const Cell& c : chk.cells) g.fillRect(cellRect(c.x, c.y), QColor(255, 60, 60, 115));
         g.setPen(QPen(chk.ok ? QColor("#4cd18a") : QColor("#ff3c3c"), 3));
-        g.drawRect(cellRect(h.x, h.y, fw, fh).adjusted(1.5, 1.5, -1.5, -1.5));
+        g.drawRect(gh.rect.adjusted(1.5, 1.5, -1.5, -1.5));
         setCursor(chk.ok ? Qt::CrossCursor : Qt::ForbiddenCursor);
         m_ed->placeHint(chk);
     } else {

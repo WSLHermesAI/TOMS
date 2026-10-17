@@ -163,10 +163,27 @@ void Game::newGame(int slot) {
 
 
 void Game::update(int dtMs) {
-    idleClockMs_ += dtMs;   // the monsters' idle animations (drawIdleAnim)
-    for (MapFx& fx : mapFx_) fx.ms += dtMs;   // one-shot clips on the map (a door opening): gone once played
-    mapFx_.erase(std::remove_if(mapFx_.begin(), mapFx_.end(), [](const MapFx& fx) { return fx.ms / 1000.0f > fx.clip->duration(); }),
-                 mapFx_.end());
+    idleClockMs_ += dtMs;   // the looping clips on the map (each object at its own phase: map_objects.cpp)
+    // Hot reload (setHotReload: the editors, debug builds): files changed on disk are read again, in place. The clips
+    // and effects that were playing from a reloaded file start over from its new contents.
+    if (hotReload_ && res_ && (hotReloadMs_ += dtMs) >= 1000) {
+        hotReloadMs_ = 0;
+        res_->checkFiles();
+    }
+    if (previewAnim_ && previewAnim_->version() != previewAnimVer_) {
+        previewAnimVer_ = previewAnim_->version();
+        previewPlayer_.play(previewAnim_->find(previewClip_));
+    }
+    if (previewFxFile_ && previewFxFile_->version() != previewFxVer_) {
+        previewFxVer_ = previewFxFile_->version();
+        if (const toms::fx::Effect* e = previewFxFile_->find(previewFxName_)) previewFx_.play(e, e->seed ? e->seed : 1u);
+        else previewFx_.stop(true);
+    }
+    floor_.update(dtMs);   // the floor's objects: a door's opening clip plays out, ...
+    if (!resourceMessages_.empty() && !title_.isOpen()) {   // missing files, said once the map shows (resourceMissing)
+        for (const std::string& m : resourceMessages_) notifications_.push_back({m, 6000});
+        resourceMessages_.clear();
+    }
     if (previewPlayer_.clip()) {   // --anim preview: advances with the game clock, logs its events
         previewPlayer_.update(dtMs);
         for (const std::string& e : previewPlayer_.takeEvents()) std::fprintf(stderr, "[anim] event %s\n", e.c_str());

@@ -68,6 +68,11 @@ struct StageDoc {
     std::vector<Step> undo, redo;
     std::string origStage, origSpec;
     std::optional<std::string> pending;   // beginEdit's snapshot
+    // "changed since it was read or saved": comparing the file's text is costly, so the answer is kept until the floor
+    // changes again (ver goes up with every committed edit, undo, redo and save)
+    int ver = 0;
+    mutable int dirtyAt = -1;
+    mutable bool dirtyVal = false;
 
     int width() const { return grid.empty() ? 0 : (int)grid[0].size(); }
     int height() const { return (int)grid.size(); }
@@ -102,6 +107,7 @@ public:
     std::map<std::string, std::string> dataOrig;                // as last read / written
     std::vector<std::pair<std::string, std::vector<std::string>>> anims;   // "anim/<file>.anim" -> its clip names
     int storyVer = 0;                       // bumped by every edit (the story check's cache)
+    int dataVer = 0;                        // bumped when a type record or a text changes (dataDirty's cache)
 
     bool load(const std::string& tomsRoot, std::string& err);
     // The events, NPC files, dialogue actions and strings as they are on disk now (the event editor saved them).
@@ -127,9 +133,18 @@ public:
     // ---- types: a palette entry of a monster / item / NPC is a record in enemies.json / items.json / npcs/<id>.json
     static const char* enemiesPath() { return "assets/data/enemies.json"; }
     static const char* itemsPath() { return "assets/data/items.json"; }
+    // The palette's own categories (the editor's; the game never reads it): {"groups": ["Bosses", ...]} in order.
+    static const char* palettePath() { return "assets/data/editor_palette.json"; }
     static std::string npcPath(const std::string& id) { return "assets/data/npcs/" + id + ".json"; }
     static std::string dialoguePath(const std::string& id) { return "assets/data/dialogue/" + id + ".json"; }
     Json* typeRec(const std::string& sem);
+    // ---- the palette's own categories: the list (palettePath, kept even when empty) and each type's "group" field ----
+    std::vector<std::string> paletteGroups() const;
+    void setPaletteGroups(const std::vector<std::string>& groups);
+    std::string groupOf(const std::string& sem) const;               // "" = its usual group
+    bool setGroup(const std::string& sem, const std::string& group);  // "" = back to its usual group; false: no record
+    int renameGroup(const std::string& from, const std::string& to); // every type in it; returns how many
+    int clearGroup(const std::string& group);                        // its types back to their usual groups
     const Json* typeRec(const std::string& sem) const { return const_cast<Project*>(this)->typeRec(sem); }
     Json typeLook(const std::string& sem) const;    // as Game::typeLook: the record's "sprite", then its "look"
     std::string spriteOf(const std::string& sem) const;   // the sprite a semantic draws with ("" = an event plate)
@@ -141,6 +156,7 @@ public:
 
     // ---- the cell rules (the HTML editor's semAt / charFor / putSem / placeCheck)
     std::string semAt(const StageDoc& d, int x, int y) const;   // "" = outside or a char with no legend entry
+    std::map<std::string, int> placedEvents(const StageDoc& d) const;   // event id -> cells on the grid (one legend look-up per char)
     static bool isEntity(const std::string& sem) { return !sem.empty() && sem != "wall" && sem != "floor"; }
     char charFor(StageDoc& d, const std::string& sem) const;
     // Paints one cell; an event the floor does not list is added to its spec (`listed` is set then).
@@ -168,10 +184,13 @@ public:
     std::string specText(const StageDoc& d) const { return fmtJson(d.spec, d.f->specEol); }
     bool isDirty(const std::string& fid) const;
     bool anyDirty() const;
+    bool dataDirty() const;                 // a type record or a name changed (enemies / items / npcs, text.json)
 
 private:
     std::map<std::string, std::unique_ptr<StageDoc>> docs_;
     std::map<std::string, size_t> evIndex_;
+    mutable int dataDirtyAt_ = -1;
+    mutable bool dataDirtyVal_ = false;
     void indexEvents();
 };
 

@@ -22,6 +22,8 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLineEdit>
+#include <QInputDialog>
+#include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QPainter>
@@ -110,6 +112,10 @@ StageEditor::StageEditor(QWidget* parent) : QMainWindow(parent) {
     setWindowFlags(Qt::Widget);   // hosted in the app's tab or window
     setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks);
     buildUi();
+    m_checksTimer = new QTimer(this);
+    m_checksTimer->setSingleShot(true);
+    m_checksTimer->setInterval(30);
+    connect(m_checksTimer, &QTimer::timeout, this, &StageEditor::renderProblems);
     m_flashTimer = new QTimer(this);
     m_flashTimer->setSingleShot(true);
     connect(m_flashTimer, &QTimer::timeout, this, [this] { m_v.flash.clear(); m_canvas->update(); });
@@ -124,8 +130,37 @@ StageEditor::StageEditor(QWidget* parent) : QMainWindow(parent) {
 }
 
 StageEditor::~StageEditor() {
+    if (!m_saveLayout) return;
     QSettings s;
     s.setValue(QStringLiteral("stage/docks"), saveState());
+}
+
+QList<QDockWidget*> StageEditor::panels() const {
+    QList<QDockWidget*> out;
+    for (const char* n : {"PaletteDock", "EventsDock", "InspectorDock", "ChecksDock"})
+        if (auto* d = findChild<QDockWidget*>(QLatin1String(n))) out << d;
+    return out;
+}
+
+void StageEditor::resetLayout() {
+    const std::pair<const char*, Qt::DockWidgetArea> home[] = {{"PaletteDock", Qt::LeftDockWidgetArea}, {"EventsDock", Qt::LeftDockWidgetArea},
+                                                                {"InspectorDock", Qt::RightDockWidgetArea}, {"ChecksDock", Qt::BottomDockWidgetArea}};
+    for (const auto& [name, area] : home) {
+        auto* d = findChild<QDockWidget*>(QLatin1String(name));
+        if (!d) continue;
+        d->setFloating(false);
+        removeDockWidget(d);
+        addDockWidget(area, d);
+        d->show();
+    }
+    for (QToolBar* t : findChildren<QToolBar*>()) t->show();
+    // their starting sizes: the palette column, the inspector, the checks below the map; palette above events
+    const QList<QDockWidget*> p = panels();
+    if (p.size() == 4) {
+        resizeDocks({p[0], p[2]}, {260, 320}, Qt::Horizontal);
+        resizeDocks({p[0], p[1]}, {460, 300}, Qt::Vertical);
+        resizeDocks({p[3]}, {180}, Qt::Vertical);
+    }
 }
 
 void StageEditor::buildUi() {
@@ -394,6 +429,7 @@ void StageEditor::buildDocks() {
     sl->addWidget(m_story, 1);
     m_bottomTabs->addTab(storyW, QString());
     chk->setWidget(m_bottomTabs);
+    connect(m_bottomTabs, &QTabWidget::currentChanged, this, [this](int i) { if (i == 1) renderStory(); });   // built when shown
     addDockWidget(Qt::BottomDockWidgetArea, chk);
     m_evTree->setIndentation(12);
     resizeDocks({pal, ins}, {330, 330}, Qt::Horizontal);
@@ -456,7 +492,7 @@ void StageEditor::reloadEvents() {
     toast(tr("Events reloaded from the project folder (the event editor saved)."));
 }
 
-bool StageEditor::hasUnsaved() const { return !stage::changedFiles(m_p).empty(); }
+bool StageEditor::hasUnsaved() const { return m_p.anyDirty() || m_p.dataDirty(); }   // both cached: cheap
 
 // ---- floors and edits ------------------------------------------------------------------------------------------------
 
@@ -497,7 +533,7 @@ bool StageEditor::edit(const QString& label, const std::function<void(stage::Sta
 void StageEditor::afterEdit() {
     renderFloorSel();
     renderInspector();
-    renderProblems();
+    m_checksTimer->start();   // the checks re-run the all-floors story check: just after the map shows the edit
     renderEventPalette();
     renderPlaceBar();
     m_canvas->update();
@@ -520,6 +556,7 @@ void StageEditor::redo() {
 }
 
 void StageEditor::typesChanged() {
+    m_p.dataVer++;   // a type record or a name changed (ObjectWindow): the unsaved check looks again
     renderPalette();
     renderInspector();
     updateBrushInfo();
@@ -610,6 +647,7 @@ void StageEditor::canvasRelease() {
             const stage::PlaceCheck chk = m_p.placeCheck(*d, to.x, to.y, sem, &from);
             if (!chk.ok) toast(whyText(chk), true);
             else {
+                m_v.sel = to;   // before the edit: afterEdit shows it in the inspector (built once)
                 edit(tr("Move %1").arg(q(m_p.nameOf(sem))), [&](stage::StageDoc& dd) {
                     const char ch = dd.grid[(size_t)from.y][(size_t)from.x];
                     dd.grid[(size_t)from.y][(size_t)from.x] = '.';
@@ -620,8 +658,6 @@ void StageEditor::canvasRelease() {
                         dd.st["objects"][std::to_string(to.x) + "," + std::to_string(to.y)] = keep;
                     }
                 });
-                m_v.sel = to;
-                renderInspector();
             }
         }
         m_canvas->update();
@@ -745,6 +781,7 @@ void StageEditor::toast(const QString& msg, bool bad) {
 // ---- rendering the panels --------------------------------------------------------------------------------------------
 
 void StageEditor::retranslateDynamic() {
+    m_storyKey.clear();
     m_p.lang = StageText::lang();
     renderAll();
 }
@@ -813,22 +850,56 @@ void StageEditor::renderPalette() {
         for (const std::string& id : ids) out.push_back(pre + id);
         return out;
     };
-    // story items open gates: a gate ("gate:<item id>") takes only its own item, and the item can be put on the map too
-    const std::vector<std::pair<QString, std::vector<std::string>>> groups = {
+    // Doors: the three coloured doors, then every door that takes one key of its own (a gate, "gate:<item id>"); Keys:
+    // the three keys, then those own keys (story items, which can be put on the map too).
+    auto join = [](std::vector<std::string> a, const std::vector<std::string>& b) { a.insert(a.end(), b.begin(), b.end()); return a; };
+    const std::vector<std::pair<QString, std::vector<std::string>>> builtin = {
         {tr("Terrain"), {"wall", "floor"}}, {tr("Stairs"), {"stairs_up", "stairs_down"}}, {tr("Player"), {"player_start"}},
-        {tr("Doors"), {"door:yellow", "door:blue", "door:red"}}, {tr("Keys"), {"key:yellow", "key:blue", "key:red"}},
-        {tr("Gates (one key)"), prefixed("gate:", story)}, {tr("Gate keys"), prefixed("item:", story)},
+        {tr("Doors"), join({"door:yellow", "door:blue", "door:red"}, prefixed("gate:", story))},
+        {tr("Keys"), join({"key:yellow", "key:blue", "key:red"}, prefixed("item:", story))},
         {tr("Monsters"), prefixed("monster:", m_p.enemyIds())}, {tr("NPCs"), prefixed("npc:", m_p.npcIds())},
         {tr("Items"), prefixed("item:", items)}};
-    const std::map<QString, std::string> addable = {{tr("Monsters"), "monster"}, {tr("Items"), "item"}, {tr("NPCs"), "npc"}};
-    for (const auto& [title, list] : groups) {
-        const bool collapsed = m_collapsed.count(title.toStdString()) > 0;
+    // Every group has a +. A door with its own key (a "story" item) is how a new kind of door is made: its gate is the
+    // door only that key opens. Terrain, stairs and the player's start are the game's own: nothing to add there.
+    const QString doorKey = tr("Add a new door and its key (an item only that door takes)");
+    const QString builtIn = tr("Built into the game: walls, floor, stairs and the start have no data to copy");
+    // the + of each group: the category made, what the new one is painted as (its place in this group), the tip
+    struct Add { std::string cat, brush; QString tip; };
+    const std::map<QString, Add> addable = {
+        {tr("Monsters"), {"monster", "monster:", tr("Add a new monster type")}}, {tr("Items"), {"item", "item:", tr("Add a new item type")}},
+        {tr("NPCs"), {"npc", "npc:", tr("Add a new NPC")}},
+        {tr("Doors"), {"story", "gate:", doorKey}}, {tr("Keys"), {"story", "item:", doorKey}},
+        {tr("Terrain"), {"", "", builtIn}}, {tr("Stairs"), {"", "", builtIn}}, {tr("Player"), {"", "", builtIn}}};
+    // The palette's own categories: a type whose record names one ("group") shows there, not in its usual group.
+    struct Group { QString title; std::vector<std::string> list; std::string custom; };
+    std::vector<Group> groups;
+    std::vector<std::string> customNames = m_p.paletteGroups();
+    std::map<std::string, std::vector<std::string>> inCustom;
+    for (const auto& [title, list] : builtin) {
+        Group g{title, {}, std::string()};
+        for (const std::string& sem : list) {
+            const std::string grp = m_p.groupOf(sem);
+            if (grp.empty()) { g.list.push_back(sem); continue; }
+            inCustom[grp].push_back(sem);
+            if (std::find(customNames.begin(), customNames.end(), grp) == customNames.end()) customNames.push_back(grp);
+        }
+        groups.push_back(std::move(g));
+    }
+    for (const std::string& n : customNames) groups.push_back({q(n), inCustom[n], n});
+    // + New category, above the groups
+    auto* newCat = new QPushButton(tr("+ New category"));
+    newCat->setToolTip(tr("A category of your own: its + makes types that go into it; right-click a type to move it there"));
+    connect(newCat, &QPushButton::clicked, this, &StageEditor::newCategoryDialog);
+    v->addWidget(newCat);
+    for (const auto& [title, list, custom] : groups) {
+        const bool collapsed = m_collapsed.count((custom.empty() ? "" : "custom:") + title.toStdString()) > 0;
         auto* head = new QHBoxLayout();
         auto* h = new QToolButton;
         h->setText((collapsed ? QStringLiteral("▸ ") : QStringLiteral("▾ ")) + title);
         h->setAutoRaise(true);
         h->setStyleSheet(QStringLiteral("font-weight:bold; color:#8b929c"));
-        const std::string key = title.toStdString();
+        const std::string key = (custom.empty() ? "" : "custom:") + title.toStdString();
+        if (!custom.empty()) h->setStyleSheet(QStringLiteral("font-weight:bold; color:#c9a8ff"));   // one of yours
         connect(h, &QToolButton::clicked, this, [this, key] {
             if (m_collapsed.count(key)) m_collapsed.erase(key); else m_collapsed.insert(key);
             QTimer::singleShot(0, this, &StageEditor::renderPalette);
@@ -838,10 +909,37 @@ void StageEditor::renderPalette() {
         if (add != addable.end()) {
             auto* plus = new QToolButton;
             plus->setText(QStringLiteral("+"));
-            plus->setToolTip(tr("Add a new type"));
-            const std::string cat = add->second;
-            connect(plus, &QToolButton::clicked, this, [this, cat] { ObjectWindow::openNew(this, cat); });
+            plus->setToolTip(add->second.tip);
+            const std::string cat = add->second.cat, brush = add->second.brush;
+            plus->setEnabled(!cat.empty());
+            connect(plus, &QToolButton::clicked, this, [this, cat, brush] { ObjectWindow::openNew(this, cat, brush); });
             head->addWidget(plus);
+        }
+        if (!custom.empty()) {   // one of yours: + (which kind), rename, delete
+            auto* plus = new QToolButton;
+            plus->setText(QStringLiteral("+"));
+            plus->setToolTip(tr("Add a new type to this category"));
+            plus->setPopupMode(QToolButton::InstantPopup);
+            auto* m = new QMenu(plus);
+            const std::pair<QString, std::pair<std::string, std::string>> kinds[] = {
+                {tr("Monster"), {"monster", "monster:"}}, {tr("Item"), {"item", "item:"}}, {tr("NPC"), {"npc", "npc:"}},
+                {tr("Door and its key"), {"story", "gate:"}}};
+            for (const auto& [label, ck] : kinds) {
+                const std::string cat = ck.first, brush = ck.second;
+                m->addAction(label, this, [this, cat, brush, custom] { ObjectWindow::openNew(this, cat, brush, custom); });
+            }
+            plus->setMenu(m);
+            head->addWidget(plus);
+            auto* ren = new QToolButton;
+            ren->setText(QStringLiteral("✎"));
+            ren->setToolTip(tr("Rename this category"));
+            connect(ren, &QToolButton::clicked, this, [this, custom] { renameCategoryDialog(custom); });
+            head->addWidget(ren);
+            auto* del = new QToolButton;
+            del->setText(QStringLiteral("✕"));
+            del->setToolTip(tr("Delete this category (its types go back to their usual groups)"));
+            connect(del, &QToolButton::clicked, this, [this, custom] { deleteCategoryDialog(custom); });
+            head->addWidget(del);
         }
         head->addStretch(1);
         v->addLayout(head);
@@ -872,13 +970,39 @@ void StageEditor::renderPalette() {
             b->setCheckable(true);
             b->setChecked(sem == m_v.brush);
             QString tip = q(m_p.nameOf(sem)) + QStringLiteral(" · ") + q(sem);
-            const std::string ts = startsWith(sem, "gate:") ? "item:" + sem.substr(5) : sem;
-            if (startsWith(ts, "monster:") || startsWith(ts, "item:") || startsWith(ts, "npc:")) {
-                tip += QStringLiteral(" · ") + tr("double-click: its details");
-                b->onDouble = [this, ts] { ObjectWindow::openType(this, ts); };
-            }
+            // the record a click shows (a gate's is its key item's; a key is the item key_<colour>)
+            const std::string ts = startsWith(sem, "gate:") ? "item:" + sem.substr(5)
+                                 : startsWith(sem, "key:") ? "item:key_" + sem.substr(4) : sem;
+            const bool hasRecord = (startsWith(ts, "monster:") || startsWith(ts, "item:") || startsWith(ts, "npc:")) && m_p.typeRec(ts);
+            if (hasRecord) tip += QStringLiteral(" · ") + tr("click: paint with it and edit its details");
             b->setToolTip(tip);
-            connect(b, &QToolButton::clicked, this, [this, sem] { setBrush(sem); });
+            if (hasRecord) {
+                b->setContextMenuPolicy(Qt::CustomContextMenu);
+                connect(b, &QWidget::customContextMenuRequested, this, [this, b, sem] {
+                    QMenu menu(b);
+                    QMenu* to = menu.addMenu(tr("Move to category"));
+                    const std::string now = m_p.groupOf(sem);
+                    for (const std::string& n : m_p.paletteGroups()) {
+                        QAction* a = to->addAction(q(n), this, [this, sem, n] { moveToCategory(sem, n); });
+                        a->setCheckable(true);
+                        a->setChecked(n == now);
+                    }
+                    if (m_p.paletteGroups().empty()) to->addAction(tr("(no categories yet: + New category)"))->setEnabled(false);
+                    to->addSeparator();
+                    QAction* usual = to->addAction(tr("Its usual group"), this, [this, sem] { moveToCategory(sem, std::string()); });
+                    usual->setEnabled(!now.empty());
+                    menu.addAction(tr("New category with it…"), this, [this, sem] {
+                        bool ok = false;
+                        const QString name = QInputDialog::getText(this, tr("New category"), tr("Name"), QLineEdit::Normal, QString(), &ok).trimmed();
+                        if (ok && addCategory(name.toStdString())) moveToCategory(sem, name.toStdString());
+                    });
+                    menu.exec(QCursor::pos());
+                });
+            }
+            connect(b, &QToolButton::clicked, this, [this, sem, ts, hasRecord] {
+                setBrush(sem);
+                if (hasRecord) ObjectWindow::openType(this, ts);   // the details window follows the palette
+            });
             flow->addWidget(b);
         }
         v->addWidget(grid);
@@ -886,19 +1010,20 @@ void StageEditor::renderPalette() {
     v->addStretch(1);
     const int scroll = m_paletteArea->verticalScrollBar() ? m_paletteArea->verticalScrollBar()->value() : 0;
     m_paletteArea->setWidget(w);
-    QTimer::singleShot(0, this, [this, scroll] { m_paletteArea->verticalScrollBar()->setValue(scroll); });
+    QTimer::singleShot(0, this, [this, scroll] {
+        m_paletteArea->verticalScrollBar()->setValue(scroll);
+        if (!m_revealBrush) return;
+        m_revealBrush = false;
+        for (QToolButton* b : m_paletteArea->widget()->findChildren<QToolButton*>())
+            if (b->isCheckable() && b->isChecked()) { m_paletteArea->ensureWidgetVisible(b, 8, 24); break; }
+    });
 }
 
 void StageEditor::renderEventPalette() {
     stage::StageDoc* d = curDoc();
     if (!d) return;
     const QString query = m_evSearch->text().trimmed().toLower();
-    std::map<std::string, int> placed;
-    for (int y = 0; y < d->height(); y++)
-        for (int x = 0; x < d->width(); x++) {
-            const std::string s = m_p.semAt(*d, x, y);
-            if (startsWith(s, "event:")) placed[s.substr(6)]++;
-        }
+    std::map<std::string, int> placed = m_p.placedEvents(*d);
     auto match = [&](const std::string& id) {
         if (query.isEmpty()) return true;
         const stage::Event* e = m_p.event(id);
@@ -1090,12 +1215,7 @@ QWidget* StageEditor::floorPanel(stage::StageDoc& d) {
     form->addRow(tr("Size (w × h)"), size);
     v->addLayout(form);
     // the events this floor can roll: green = placed; a click paints it
-    std::set<std::string> placed;
-    for (int y = 0; y < d.height(); y++)
-        for (int x = 0; x < d.width(); x++) {
-            const std::string s = m_p.semAt(d, x, y);
-            if (startsWith(s, "event:")) placed.insert(s.substr(6));
-        }
+    const std::map<std::string, int> placed = m_p.placedEvents(d);
     std::vector<std::string> list;
     if (d.spec.contains("events") && d.spec["events"].is_array())
         for (const Json& e : d.spec["events"]) if (e.is_string()) list.push_back(e.get<std::string>());
@@ -1304,6 +1424,16 @@ void StageEditor::renderStory() {
         for (const stage::Issue& i : r.issues) { if (i.sev == stage::Sev::Error) nErr++; else if (i.sev == stage::Sev::Warn) nWarn++; }
     QStringList changed;
     for (const stage::Floor& f : m_p.floors) if (m_p.isDirty(f.id)) changed << q(f.id);
+    // the table (a row of rich labels per floor) is costly to build: only while its tab shows, and a floor switch only
+    // moves the highlight
+    if (m_bottomTabs->currentIndex() != 1) return;
+    const QString key = QStringLiteral("%1/%2/").arg(m_p.storyVer).arg(m_p.dataVer) + changed.join(QLatin1Char(','));
+    if (key == m_storyKey) {
+        for (int i = 0; i < (int)rows.size(); i++)
+            if (rows[(size_t)i].fid == m_cur) { m_story->selectRow(i); m_story->scrollToItem(m_story->item(i, 0)); }
+        return;
+    }
+    m_storyKey = key;
     m_storySum->setText(tr("Story check of all %1 floors.").arg(rows.size()) + QStringLiteral(" ")
                         + (changed.isEmpty() ? QStringLiteral("<span style='color:#8b929c'>%1</span>").arg(tr("No unsaved changes."))
                                              : QStringLiteral("<b style='color:#e0b44c'>%1</b> %2").arg(tr("● %1 floor(s) changed, not saved yet:").arg(changed.size()), changed.join(QStringLiteral(" "))))
@@ -1324,7 +1454,7 @@ void StageEditor::renderStory() {
         const QString up = r.top ? QStringLiteral("<span style='color:#8b929c'>%1</span>").arg(tr("top floor"))
                          : r.ex.route >= 0 ? keyChips(r.ex.all[(size_t)r.ex.route].opened) : QStringLiteral("⛔");
         int placed = 0;
-        for (int y = 0; y < d.height(); y++) for (int x = 0; x < d.width(); x++) if (startsWith(m_p.semAt(d, x, y), "event:")) placed++;
+        for (const auto& [id, n] : m_p.placedEvents(d)) { (void)id; placed += n; }
         const size_t listed = d.spec.contains("events") && d.spec["events"].is_array() ? d.spec["events"].size() : 0;
         QStringList iss;
         for (const stage::Issue& is : r.issues)
@@ -1484,6 +1614,77 @@ void StageEditor::openObjectWindow(const Cell& c) { ObjectWindow::openObject(thi
 void StageEditor::openTypeWindow(const std::string& sem) { ObjectWindow::openType(this, sem); }
 void StageEditor::openNewType(const std::string& cat) { ObjectWindow::openNew(this, cat); }
 
+// ---- the palette's own categories ---------------------------------------------------------------------------------
+
+bool StageEditor::addCategory(const std::string& name) {
+    std::vector<std::string> g = m_p.paletteGroups();
+    if (name.empty() || std::find(g.begin(), g.end(), name) != g.end()) return false;
+    g.push_back(name);
+    m_p.setPaletteGroups(g);
+    typesChanged();
+    return true;
+}
+
+bool StageEditor::renameCategory(const std::string& from, const std::string& to) {
+    const std::vector<std::string> g = m_p.paletteGroups();
+    if (to.empty() || from == to || std::find(g.begin(), g.end(), to) != g.end()) return false;
+    m_collapsed.erase("custom:" + from);
+    m_p.renameGroup(from, to);
+    typesChanged();
+    return true;
+}
+
+void StageEditor::deleteCategory(const std::string& name) {
+    m_p.clearGroup(name);
+    std::vector<std::string> g = m_p.paletteGroups();
+    g.erase(std::remove(g.begin(), g.end(), name), g.end());
+    m_p.setPaletteGroups(g);
+    m_collapsed.erase("custom:" + name);
+    typesChanged();
+}
+
+bool StageEditor::moveToCategory(const std::string& sem, const std::string& group) {
+    if (!m_p.setGroup(sem, group)) return false;
+    if (!group.empty()) {   // a name not in the list yet (a record's own) joins it
+        std::vector<std::string> g = m_p.paletteGroups();
+        if (std::find(g.begin(), g.end(), group) == g.end()) { g.push_back(group); m_p.setPaletteGroups(g); }
+    }
+    typesChanged();
+    return true;
+}
+
+void StageEditor::newCategoryDialog() {
+    bool ok = false;
+    const QString name = QInputDialog::getText(this, tr("New category"), tr("Name"), QLineEdit::Normal, QString(), &ok).trimmed();
+    if (!ok || name.isEmpty()) return;
+    if (!addCategory(name.toStdString())) toast(tr("%1 already exists.").arg(name), true);
+    else toast(tr("Category %1 added: its + makes types for it, or right-click a type to move it there.").arg(name));
+}
+
+void StageEditor::renameCategoryDialog(const std::string& name) {
+    bool ok = false;
+    const QString to = QInputDialog::getText(this, tr("Rename category"), tr("Name"), QLineEdit::Normal, q(name), &ok).trimmed();
+    if (!ok || to.isEmpty() || to == q(name)) return;
+    if (!renameCategory(name, to.toStdString())) toast(tr("%1 already exists.").arg(to), true);
+}
+
+void StageEditor::deleteCategoryDialog(const std::string& name) {
+    int n = 0;
+    for (const std::string& id : m_p.enemyIds()) n += m_p.groupOf("monster:" + id) == name;
+    for (const std::string& id : m_p.itemIds()) n += m_p.groupOf("item:" + id) == name;
+    for (const std::string& id : m_p.npcIds()) n += m_p.groupOf("npc:" + id) == name;
+    if (n > 0 && QMessageBox::question(this, tr("Delete category"),
+                                       tr("Delete the category %1? Its %2 type(s) go back to their usual groups (nothing is deleted).").arg(q(name)).arg(n))
+                     != QMessageBox::Yes)
+        return;
+    deleteCategory(name);
+}
+
+void StageEditor::revealBrush() {
+    m_revealBrush = true;
+    renderPalette();
+}
+
 // ---- --selftest ----------------------------------------------------------------------------------------------------
 
 QStringList StageEditor::selfTest() {
@@ -1539,13 +1740,111 @@ QStringList StageEditor::selfTest() {
     ObjectWindow::openType(this, "monster:slime");
     check(ObjectWindow::current() != nullptr, QStringLiteral("the slime's details open"));
     if (ObjectWindow::current()) ObjectWindow::current()->close();
+    // Reset stage layout brings back a closed panel and a floating one, docked
+    if (panels().size() == 4) {
+        panels()[0]->hide();
+        panels()[1]->setFloating(true);
+        resetLayout();
+        check(!panels()[0]->isHidden() && !panels()[1]->isFloating() && dockWidgetArea(panels()[0]) == Qt::LeftDockWidgetArea,
+              QStringLiteral("reset layout docks every panel back"));
+    } else {
+        fail << QStringLiteral("the stage editor has %1 panels, not 4").arg(panels().size());
+    }
+    // every palette group has a + (the game's own terrain, stairs and start: shown, disabled)
+    auto paletteButtons = [this] { return m_paletteArea->widget()->findChildren<QToolButton*>(); };
+    {
+        int plus = 0, enabled = 0;
+        for (QToolButton* b : paletteButtons())
+            if (b->text() == QStringLiteral("+")) { plus++; enabled += b->isEnabled() ? 1 : 0; }
+        check(plus == 8 && enabled == 5, QStringLiteral("every palette group has a + (%1, %2 enabled)").arg(plus).arg(enabled));
+    }
+    // a click on the palette paints with it and shows its details; the window follows the palette and does not block
+    auto clickPalette = [&](const std::string& sem) {
+        for (QToolButton* b : paletteButtons())
+            if (b->toolTip().contains(QStringLiteral(" · ") + q(sem))) { b->click(); return true; }
+        return false;
+    };
+    check(clickPalette("monster:slime") && m_v.brush == "monster:slime", QStringLiteral("a palette click picks the brush"));
+    ObjectWindow* details = ObjectWindow::current();
+    check(details && details->kind() == ObjectWindow::Type && details->sem() == "monster:slime" && !details->isModal(),
+          QStringLiteral("and opens its details, without blocking the editor"));
+    check(clickPalette("key:yellow") && ObjectWindow::current() == details && details && details->sem() == "item:key_yellow",
+          QStringLiteral("the same window follows the next click (a key: its key item)"));
+    check(clickPalette("wall") && ObjectWindow::current() == details && details && details->sem() == "item:key_yellow",
+          QStringLiteral("a built-in (wall) leaves the window as it is"));
+    // a key's tint (its item record key_blue) is what the palette and the map draw "key:blue" with
+    if (Json* kb = m_p.typeRec("item:key_blue")) {
+        const Json before = *kb;
+        (*kb)["look"]["tint"] = Json::array({0.0, 0.0, 0.5, 1.0});
+        check(m_p.typeRec("key:blue") == kb && m_p.typeLook("key:blue").contains("tint"), QStringLiteral("a map key uses its item's look"));
+        check(!m_p.typeUses("item:key_blue").empty(), QStringLiteral("key:blue cells count as uses of the item key_blue"));
+        *kb = before;
+    }
+    if (ObjectWindow::current()) ObjectWindow::current()->close();
+    // the palette's own categories: add one, a type moved in shows there (not in its usual group), rename, delete
+    {
+        const std::string cat = "測試分類";
+        auto groupHeads = [&] {
+            QStringList out;
+            for (QToolButton* b : paletteButtons()) if (b->text().startsWith(QStringLiteral("▾ ")) || b->text().startsWith(QStringLiteral("▸ "))) out << b->text().mid(2);
+            return out;
+        };
+        check(addCategory(cat) && !addCategory(cat) && groupHeads().contains(q(cat)), QStringLiteral("a new category shows in the palette (once)"));
+        check(moveToCategory("monster:slime", cat) && m_p.groupOf("monster:slime") == cat, QStringLiteral("a type moves into it"));
+        int slimeButtons = 0;
+        for (QToolButton* b : paletteButtons()) slimeButtons += b->toolTip().contains(QStringLiteral(" · monster:slime")) ? 1 : 0;
+        check(slimeButtons == 1, QStringLiteral("it shows in the category only, not twice (%1)").arg(slimeButtons));
+        check(renameCategory(cat, "Bosses") && m_p.groupOf("monster:slime") == "Bosses" && groupHeads().contains(QStringLiteral("Bosses")),
+              QStringLiteral("rename carries its types"));
+        deleteCategory("Bosses");
+        check(m_p.groupOf("monster:slime").empty() && !groupHeads().contains(QStringLiteral("Bosses")), QStringLiteral("delete sends them back"));
+        check(!hasUnsaved(), QStringLiteral("and nothing is left to save"));
+    }
+    // a new type's id may be Chinese (lowercase letters, CJK, digits, _); spaces and capitals are refused
+    ObjectWindow::openNew(this, "monster");
+    if (ObjectWindow* w = ObjectWindow::current()) { w->setNewId("Slime red", std::string()); w->apply(); }
+    check(!m_p.typeRec("monster:Slime red"), QStringLiteral("an id with a space or a capital is refused"));
+    if (ObjectWindow* w = ObjectWindow::current(); w && w->kind() == ObjectWindow::New) { w->setNewId("史萊姆_紅", std::string()); w->apply(); }
+    const std::string zhId = "史萊姆_紅";
+    check(m_p.typeRec("monster:" + zhId) != nullptr, QStringLiteral("a Traditional Chinese id is accepted"));
+    if (ObjectWindow::current()) ObjectWindow::current()->close();
+    m_p.dataFiles[stage::Project::enemiesPath()].obj.erase(zhId);   // and gone again (nothing to save)
+    typesChanged();
+    // a new door and its key: an item of type "story", whose gate shows in the palette
+    ObjectWindow::openNew(this, "story");
+    if (ObjectWindow* w = ObjectWindow::current()) {
+        w->setNewId("selftest_key", std::string());
+        w->apply();
+    }
+    const Json* keyRec = m_p.typeRec("item:selftest_key");
+    check(keyRec && keyRec->value("type", std::string()) == "story", QStringLiteral("the new door's key is a story item"));
+    check(m_v.brush == "gate:selftest_key", QStringLiteral("the new door is the brush"));
+    check(ObjectWindow::current() && ObjectWindow::current()->sem() == "item:selftest_key", QStringLiteral("its details open"));
+    bool gateShown = false;
+    for (QToolButton* b : paletteButtons()) gateShown |= b->toolTip().contains(QStringLiteral("gate:selftest_key"));
+    check(gateShown, QStringLiteral("its gate is in the palette"));
+    if (ObjectWindow::current()) ObjectWindow::current()->close();
+    m_p.dataFiles[stage::Project::itemsPath()].obj.erase("selftest_key");   // and gone again (nothing to save)
+    m_p.textEdits.erase("item.selftest_key.name");
+    m_p.textEdits.erase("item.selftest_key.desc");
+    typesChanged();
     // auto-place, undone in one step
     const stage::AutoPlaceResult r = stage::autoPlace(m_p, {"F02"}, "all", "7", [](int n) { return std::to_string(n); });
     afterEdit();
     check(r.placed > 0, QStringLiteral("auto-place places F02's events"));
     undo();
     check(!m_p.isDirty("F02"), QStringLiteral("auto-place undoes in one step"));
+    m_bottomTabs->setCurrentIndex(1);   // the story table is built when its tab shows
     check(m_story->rowCount() == 70, QStringLiteral("the story table has every floor (%1)").arg(m_story->rowCount()));
+    {   // the placed-event count (one legend look-up per char) matches a cell-by-cell count
+        const stage::StageDoc& d2 = m_p.doc("F02");
+        std::map<std::string, int> slow;
+        for (int y = 0; y < d2.height(); y++)
+            for (int x = 0; x < d2.width(); x++)
+                if (const std::string s2 = m_p.semAt(d2, x, y); startsWith(s2, "event:")) slow[s2.substr(6)]++;
+        check(m_p.placedEvents(d2) == slow, QStringLiteral("placed events counted the fast way match"));
+    }
+    check(!hasUnsaved(), QStringLiteral("nothing unsaved after the undos"));
     check(m_checks->topLevelItemCount() > 0, QStringLiteral("the checks list is filled"));
     setTool(Paint);
     setBrush("wall");

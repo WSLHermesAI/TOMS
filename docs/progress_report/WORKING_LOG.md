@@ -469,3 +469,27 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     problems; Save bytes); the check found a read of a destroyed temporary in the pool merge, fixed.
   - Tests: `unit.stage_core_test` (192), `stage_editor.app_selftest`; 401 + 237 new zh_TW strings. Changed-only:
     23 of 110, all pass.
+- **2026-10-17** — **Editors, resource manager, objects by class** (not committed; [DAILY_2026-10-17.md](DAILY_2026-10-17.md)):
+  - `AppShell`: one `QMainWindow`, two `QDockWidget`s (stage / events) tabbed on top; float (□, ⧉), dock back, split;
+    layout saved with a version. View: Default layout, Dock both as tabs, Stage panels, Reset stage layout.
+  - Stage editor speed: `StageDoc::ver` + cached `isDirty`, `Project::dataVer` + cached `dataDirty`, `placedEvents`
+    (one legend look-up per char), the Story table built only when shown and only when its key changes, the story
+    check deferred 30 ms after an edit, per-frame `Looks` in `StageCanvas`; the move ghost drawn on the GPU with
+    `lookAt(moveFrom)`.
+  - `src/core/engine/resource*`: `ResourceManager` (cache by type + absolute folded path, `provide`, path mapper,
+    budget / LRU, stamps, `checkFiles` / `refresh`, `report`, root + manifest + missing handler + `preload`),
+    `TextureRes` / `AtlasRes` / `AnimRes` / `ParticleRes` / `FontRes` / `JsonRes`, `AtlasList`. `render_object.*`:
+    `RenderObject` (a `GameObject`), the factory, six types, `lookToRenderJson`. `vfs.h`: `vfsOpen` / `vfsPath` /
+    `vfsUtf8`.
+  - Game: `res_` with `@sprite-atlas` provided from the loaded atlas; previews, idle / door / object clips through it;
+    `resources.json`; `res.missing` message held until the map shows; `SessionOptions::hotReload`, `--hot-reload`.
+  - `map_objects.*`: `MapObject` + kinds, `MapFloor` (built in `loadStage`), looks per status as `LookChain`s
+    (`SpriteLook`, `PlateLook`, `ClipLook`); `Game::draw` → `drawTileLayer` + `floor_.render`; `movePlayer` /
+    `interact` / `openDoor` / `bumpGate` dispatch to the objects.
+  - Palette: click → brush + non-modal type window that follows; + on every group (story items for doors / keys,
+    brush and scroll after Create, Data tab first); categories (`group` field, `editor_palette.json`); Chinese ids
+    (`\p{Ll}\p{Lo}\p{Nd}_`); `typeRec("key:<c>")` → `item:key_<c>`; screenshot mode `--create=<cat>:<id>`, shows
+    every panel and does not save the layout.
+  - Tests: `unit.resource_test`, `unit.render_object_test`, `test_select.py` rules `ENGINE_RES` and the manifest;
+    new self-test checks. Changed-only: 75 of 112, all pass. Full suite / web build not run.
+

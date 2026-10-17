@@ -806,3 +806,22 @@ QStringList EventEditor::selfTest() {
     renderAll();
     return fail;
 }
+
+void EventEditor::resetLayout() {
+    const std::pair<const char*, Qt::DockWidgetArea> home[] = {{"EventsTreeDock", Qt::LeftDockWidgetArea}, {"HistoryDock", Qt::RightDockWidgetArea}};
+    QList<QDockWidget*> docks;
+    for (const auto& [name, area] : home) {
+        auto* d = findChild<QDockWidget*>(QLatin1String(name));
+        if (!d) continue;
+        d->setFloating(false);
+        removeDockWidget(d);
+        addDockWidget(area, d);
+        d->show();
+        docks << d;
+    }
+    if (docks.size() == 2) resizeDocks(docks, {300, 280}, Qt::Horizontal);
+    if (m_split) {   // the form over the lists, 3 : 2
+        const int h = std::max(500, m_split->height());
+        m_split->setSizes({h * 3 / 5, h * 2 / 5});
+    }
+}

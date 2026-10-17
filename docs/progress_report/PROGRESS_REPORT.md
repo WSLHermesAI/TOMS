@@ -15,6 +15,19 @@
 
 ## ▶ Next Step
 
+**Resource manager, objects by class, the stage editor's palette and layout** (2026-10-17; not committed;
+[DAILY_2026-10-17.md](DAILY_2026-10-17.md), [../25_RESOURCE_MANAGER.md](../25_RESOURCE_MANAGER.md)):
+- The engine: a resource cache by path with a manifest (`assets/media/resources.json`), shared atlases, a memory budget,
+  hot reload, a missing-file message; render objects made from JSON by `"type"`; UTF-8 paths on Windows.
+- The game: a class per thing on a floor (`map_objects.h`), drawn by status; the map part of `Game::draw` is ~20 lines.
+  Every game screenshot unchanged.
+- The stage / event editor: one dockable window; the freezes fixed (floor switch 1.1–1.5 s → 0.15 s in Debug);
+  palette click opens the details; + on every group, new doors with their keys, your own categories, Chinese ids;
+  a key's tint shown; View → Default layout.
+- Changed-only run: 75 of 112, all pass. **First:** `tools\test.cmd all` with the web build (four new `toms_core`
+  files, `vfs.h`), then commit; refresh `Editor/bin`.
+- **Owner:** next is batching (§4.11) or stage / event data on the resource manager?
+
 **The stage and event editors as a Windows app, native** (2026-10-16 evening; committed `149856a`;
 [DAILY_2026-10-16.md](DAILY_2026-10-16.md) rows 11–16, [../19_STAGE_EDITOR.md](../19_STAGE_EDITOR.md) section 6):
 - `stage_event_editor.exe`: both editors on the game's stack (Qt / C++ / bgfx), tabs or separate windows; the stage map
@@ -309,7 +322,7 @@ the Visual Studio IDE (W1).
 | [2_PROGRESS_REPORT.md](2_PROGRESS_REPORT.md) | 2026-09-26 | web build done on Windows (host shaderc, `bimg_encode` excluded, one entry point for desktop + web, IDBFS saves); five bugs fixed; doc 06; `web_smoke_test.mjs` |
 
 Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_2026-10-12.md](DAILY_2026-10-12.md), [DAILY_2026-10-14.md](DAILY_2026-10-14.md),
-[DAILY_2026-10-16.md](DAILY_2026-10-16.md).
+[DAILY_2026-10-16.md](DAILY_2026-10-16.md), [DAILY_2026-10-17.md](DAILY_2026-10-17.md).
 
 ---
 

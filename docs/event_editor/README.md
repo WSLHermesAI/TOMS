@@ -92,7 +92,7 @@ What Save writes, only for the files that really change:
 ## Next steps
 
 **Native (Windows app):** `stage_event_editor.exe` ([19](../19_STAGE_EDITOR.md) section 6) holds both editors,
-natively, in tabs or separate windows. Its event editor has this editor's model, validator, condition rows, NPCs,
+natively, as tabs of one window that can be dragged out to float (as in Visual Studio). Its event editor has this editor's model, validator, condition rows, NPCs,
 talk preview, dialogue cards and Save (the same file formats). Still only here: the relationship diagram, the values
 map, the logic node graph and the tutorial.
 

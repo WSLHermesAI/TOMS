@@ -57,6 +57,33 @@ inline std::string vfsAssetPath(const std::string& path) {
 }
 #endif
 
+#if !defined(__ANDROID__)
+// A UTF-8 path as a std::filesystem path, and back (C++17 and C++20 spell these differently).
+inline std::filesystem::path vfsPath(const std::string& utf8) {
+#  if defined(__cpp_char8_t)
+    return std::filesystem::path(std::u8string(utf8.begin(), utf8.end()));
+#  else
+    return std::filesystem::u8path(utf8);
+#  endif
+}
+inline std::string vfsUtf8(const std::filesystem::path& p) {
+    const auto s = p.u8string();
+    return std::string(s.begin(), s.end());
+}
+#endif
+
+// fopen for a UTF-8 path. Windows' narrow fopen reads the path in the ANSI code page, so a file or folder with
+// non-ASCII letters (a Chinese folder name) would not open: there the path goes through std::filesystem as UTF-16.
+inline FILE* vfsOpen(const std::string& path) {
+#if defined(_WIN32)
+    FILE* fp = nullptr;
+    if (_wfopen_s(&fp, vfsPath(path).c_str(), L"rb") != 0) return nullptr;
+    return fp;
+#else
+    return fopen(path.c_str(), "rb");
+#endif
+}
+
 // Reads a whole file into `out`. Returns false and leaves `out` unchanged on failure.
 // `path` is the path as the game already writes it ("assets/data/story.json"). On Android it is
 // turned into the APK entry name (vfsAssetPath: no leading "assets/", ".." resolved).
@@ -78,7 +105,7 @@ inline bool vfsReadAll(const std::string& path, std::string& out) {
         // fall through: it may be a real file (extracted assets, or a user override)
     }
 #endif
-    FILE* fp = fopen(path.c_str(), "rb");
+    FILE* fp = vfsOpen(path);
     if (!fp) return false;
     fseek(fp, 0, SEEK_END);
     const long sz = ftell(fp);
@@ -104,7 +131,7 @@ inline bool vfsExists(const std::string& path) {
         }
     }
 #endif
-    if (FILE* fp = fopen(path.c_str(), "rb")) { fclose(fp); return true; }
+    if (FILE* fp = vfsOpen(path)) { fclose(fp); return true; }
     return false;
 }
 
@@ -124,8 +151,8 @@ inline std::vector<std::string> vfsListDir(const std::string& dir) {
     return names;
 #else
     std::error_code ec;
-    for (auto it = std::filesystem::directory_iterator(dir, ec); !ec && it != std::filesystem::directory_iterator(); it.increment(ec))
-        if (it->is_regular_file(ec)) names.push_back(it->path().filename().string());
+    for (auto it = std::filesystem::directory_iterator(vfsPath(dir), ec); !ec && it != std::filesystem::directory_iterator(); it.increment(ec))
+        if (it->is_regular_file(ec)) names.push_back(vfsUtf8(it->path().filename()));
     return names;
 #endif
 }

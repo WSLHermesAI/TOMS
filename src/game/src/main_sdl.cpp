@@ -27,6 +27,7 @@
 //   --ui-scale=<x>        the small-screen UI scale (the web build uses 1.5 on phones), to test it on desktop
 //   --battle-tuning=default  the battle bars' built-in values instead of data/battle.json (tests: smoke.battle)
 //   --fx=<file>#<effect>  play one particle effect of a .particle file over the screen (particle_fx.h)
+//   --hot-reload          read changed art, clips and effects again while playing (on by default in debug builds)
 //   --give=<id,...>       when the title first closes, hand the player these items (data/items.json ids;
 //                         gear is owned, not worn), gold:<n>, exp:<n>, points:<n> -- tests of the player menu (tests/CMakeLists.txt)
 //   --stair-lock=<floor>:<event>  lock that floor's first stair up until the event is finished (locked stairs, Q7)
@@ -78,6 +79,7 @@ struct Args {
     std::string renderer = "auto", assets, stage = "stage01", screenshot, anim, fx;
     int frames = 0;
     bool vsync = true, stats = false, fps = false;
+    bool hotReload = false;   // --hot-reload
     std::string spritePath = "auto";
     int fxGpuThreshold = -1;
     bool defaultBattleTuning = false;  // --battle-tuning=default
@@ -154,6 +156,7 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (s == "--no-instancing") a.spritePath = "cpu";
         else if (const char* v = value(s, "--sprite-path=")) a.spritePath = v;
         else if (s == "--fps") a.fps = true;
+        else if (s == "--hot-reload") a.hotReload = true;
         else if (const char* v = value(s, "--fx-gpu-threshold=")) a.fxGpuThreshold = std::max(0, std::atoi(v));
         else if (const char* v = value(s, "--title-scene=")) a.titleScene = v;
         else if (const char* v = value(s, "--ui-scale=")) a.uiScale = (float)std::atof(v);
@@ -354,6 +357,11 @@ bool appInit(App& app) {
     opts.previewFx = args.fx;
     opts.spritePath = args.spritePath;
     opts.showFps = args.fps;
+#if !defined(NDEBUG) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
+    opts.hotReload = true;   // a debug build on a desktop: art edited while playing shows up
+#else
+    opts.hotReload = args.hotReload;
+#endif
     opts.fxGpuThreshold = args.fxGpuThreshold;
     opts.defaultBattleTuning = args.defaultBattleTuning;
     opts.titleScene = args.titleScene;

@@ -10,11 +10,13 @@ add_library(toms_core STATIC
     ${L_ENGINE}/encounter.cpp ${L_ENGINE}/power_bar.cpp
     ${L_ENGINE}/anim_clip.cpp ${L_ENGINE}/anim_player.cpp ${L_ENGINE}/particle_fx.cpp ${L_ENGINE}/gltf_model.cpp ${L_ENGINE}/gltf_anim_texture.cpp ${L_ENGINE}/stb_image_impl.cpp
     ${L_ENGINE}/bitmap_font.cpp   # picture fonts: FontText (docs/22_FONT_TOOL.md)
+    ${L_ENGINE}/resource.cpp ${L_ENGINE}/resource_types.cpp ${L_ENGINE}/render_object.cpp   # docs/25_RESOURCE_MANAGER.md
     ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp
     ${L_GAME}/core/game_scene_draw.cpp ${L_GAME}/core/game_input.cpp ${L_GAME}/core/game_inventory.cpp
     ${L_GAME}/core/game_player_menu.cpp
     ${L_GAME}/core/game_store.cpp ${L_GAME}/core/game_combat.cpp ${L_GAME}/core/game_story.cpp
     ${L_GAME}/core/game_title_glue.cpp
+    ${L_GAME}/core/map_objects.cpp   # the floor's things, a class per kind (docs/25 §4.10)
     ${L_GAME}/audio/Audio.cpp
     ${L_GAME}/save/save_system.cpp ${L_GAME}/save/save_slots.cpp ${L_GAME}/save/game_settings.cpp
     ${L_GAME}/ui/localization.cpp ${L_GAME}/ui/title_screen.cpp

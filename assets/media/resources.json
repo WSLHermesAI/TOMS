@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "about": "The files the game needs, by key (docs/25_RESOURCE_MANAGER.md). Code asks the resource manager for a key or a path under assets/media; paths here are relative to this file. preload: loaded at startup. Types: texture, atlas, anim, particle, font, json.",
+  "resources": {
+    "atlas.game":         { "type": "atlas", "path": "atlas/game.atlas" },
+    "atlas.fx":           { "type": "atlas", "path": "atlas/fx.atlas", "preload": true },
+    "anim.monster_idle":  { "type": "anim",  "path": "anim/monster_idle.anim", "preload": true },
+    "anim.door_open":     { "type": "anim",  "path": "anim/door_open.anim", "preload": true }
+  }
+}

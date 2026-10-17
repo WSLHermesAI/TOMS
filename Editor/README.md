@@ -114,8 +114,9 @@ The game running in an editor window, with the event flow and the old stage list
 The web stage editor, native: the map is drawn by the game's renderer (animations play), on the live files in
 `assets\data` (no folder to pick).
 
-- **View → Tabs / Separate windows** puts the stage and event editors in one window, or in two that you can resize,
-  maximise and minimise on their own. **Ctrl+1** / **Ctrl+2** switch.
+- The stage and event editors are tabs of one window, as in Visual Studio: drag a tab out to float that editor as a
+  window of its own (□ maximises it), drag it back (or ⧉) to dock it. **View → Dock both as tabs** resets the layout;
+  **Ctrl+1** / **Ctrl+2** switch.
 - **Save** backs each file up to `Build\editor_backups\` first.
 - The **Events** tab is the event editor, native too: events, their logic and text, floors and stairs, variables,
   kinds, NPCs with the talk preview, and dialogues. The two editors open each other's items directly.

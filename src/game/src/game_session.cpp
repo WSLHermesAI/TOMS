@@ -81,6 +81,7 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
         return false;
     }
     renderer_ = dynamic_cast<BgfxRenderer*>(game_->renderer());
+    game_->setHotReload(opts.hotReload);
     if (!renderer_) {
         error = "internal: Game did not create a BgfxRenderer (is game/compat first on the include path?)";
         stop();

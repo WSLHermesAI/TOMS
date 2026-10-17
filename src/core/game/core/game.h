@@ -35,6 +35,8 @@
 #include "atlas_file.h"      // toms::AtlasFile — the prebuilt sprite atlas (tools/atlas)
 #include "particle_fx.h"     // toms::fx — particle effects on the atlases (docs/17_PARTICLES.md)
 #include "anim_player.h"     // toms::anim — node animations on that atlas (anim_clip.h)
+#include "resource_types.h"  // toms::res — the resource cache: atlases, clips, effects (docs/25_RESOURCE_MANAGER.md)
+#include "map_objects.h"     // MapObject / MapFloor — the floor's things, a class per kind (docs/25 §4.10)
 #include "localization.h"    // toms::Locale — key -> localized string (data/text.json)
 #include "Audio.h"        // SFX (miniaudio) -- native device backends on desktop, Web Audio in the browser
 
@@ -163,6 +165,21 @@ struct StoreItemDef {
 enum class StageArrival { Fresh, FromBelow, FromAbove };
 
 class Game : public Trackable {
+    // The floor's objects run the rules of their kind (touching a monster starts the battle, ...) and draw themselves:
+    // they reach into the game's state the way the code they came from (movePlayer, draw) did.
+    friend class MapObject;
+    friend class MonsterObject;
+    friend class ItemObject;
+    friend class EventObject;
+    friend class NpcObject;
+    friend class GateObject;
+    friend class DoorObject;
+    friend class PlayerObject;
+    friend class MapFloor;
+    friend class map_detail::SpriteLook;
+    friend class map_detail::PlateLook;
+    friend class map_detail::ClipLook;
+    friend struct map_detail::Builder;
 public:
     bool loadAssets(const std::string& assetDir);
     void loadStage(const std::string& id, StageArrival arrival = StageArrival::Fresh);
@@ -344,6 +361,10 @@ public:
     void inGameMenuBack();             // Esc: dialog->list, Settings->Main, Main->closed
     Player& player() { return pl; }
     IRenderer* renderer() { return ren; }   // for batch-metric inspection (demo)
+    // The resource cache (made in loadAssets). Hot reload: files that change on disk (art, clips, effects) are read
+    // again about once a second -- the editors and debug builds turn it on; a shipped game never looks.
+    toms::res::ResourceManager* resources() { return res_.get(); }
+    void setHotReload(bool on) { hotReload_ = on; }
 
     // ---- Title phase (Boot screen: New Game / Continue / Settings) ----
     // The title phase is the game's boot screen: Game::loadAssets() opens it, and nothing in
@@ -661,6 +682,12 @@ private:
     void buyStoreItem(int idx);                      // purchase + apply effect (or toast if poor)
 
     IRenderer* ren = nullptr;        // the bgfx renderer, created in loadAssets
+    // Every atlas, clip file and particle file the game draws, loaded once and shared (docs/25_RESOURCE_MANAGER.md).
+    // Declared before what holds its resources, so it goes last and frees their textures while the renderer is up.
+    std::unique_ptr<toms::res::ResourceManager> res_;
+    bool hotReload_ = false;         // setHotReload: reload changed files about once a second
+    int hotReloadMs_ = 0;
+    void provideSpriteAtlas();       // the loaded sprite atlas, as the cache's kSpriteAtlas
     Player pl;
     Stage st;
     CombatState cs;
@@ -673,42 +700,25 @@ private:
     std::vector<std::array<float, 4>> spriteUVs_;
     std::vector<std::array<float, 4>> spriteTrim_;   // x, y, w, h of the kept pixels, as fractions of the original
     toms::AtlasFile spriteAtlas_;
-    toms::anim::AnimFile previewAnim_;        // playPreviewAnim
+    std::shared_ptr<toms::res::AnimRes> previewAnim_;   // playPreviewAnim (its atlases come with it)
+    std::string previewClip_;
+    int previewAnimVer_ = -1;                           // previewAnim_'s version when the clip was started
     toms::anim::AnimPlayer previewPlayer_;
-    toms::anim::AtlasSet previewSet_;                               // its atlases, in lookup order
-    std::vector<std::unique_ptr<toms::AtlasFile>> previewAtlases_;  // the ones that are not the game's
-    std::vector<uint16_t> previewTextures_;                         // their pages (ren->loadTexture)
     std::vector<toms::anim::NodePose> previewPoses_;   // per-frame scratch
     std::vector<Quad> previewQuads_;
     std::vector<std::string> previewMissing_;          // sprites already reported missing
     void drawPreviewAnim();
-    // The atlases a preview file names (relative to it), into `set`; a ".../atlas/game.atlas" is
-    // the game's own loaded atlas. Loaded ones are kept in `owned` / `textures`.
-    void loadPreviewAtlases(const std::string& file, const std::vector<toms::anim::AtlasRef>& refs, toms::anim::AtlasSet& set,
-                            std::vector<std::unique_ptr<toms::AtlasFile>>& owned, std::vector<uint16_t>& textures);
-    // Monster idle animations: assets/media/anim/monster_idle.anim (made in anim_editor), clip "idle_<enemy id>".
-    // Every monster on the map plays its clip in a loop instead of standing still, each at its own phase.
-    toms::anim::AnimFile idleAnim_;
-    toms::anim::AtlasSet idleSet_;
-    std::vector<std::unique_ptr<toms::AtlasFile>> idleAtlases_;
-    std::vector<uint16_t> idleTextures_;
-    std::vector<toms::anim::NodePose> idlePoses_;   // per-frame scratch
+    // The looping clips on the map (a monster's idle clip "idle_<enemy id>" from the manifest's "anim.monster_idle",
+    // an object's own clip): one clock, each tile at its own phase (map_objects.cpp).
+    std::vector<toms::anim::NodePose> idlePoses_;   // per-frame scratch (drawClipInRect)
     std::vector<Quad> idleQuads_;
     double idleClockMs_ = 0;
-    void loadIdleAnims();
-    void loadDoorAnims();
-    // Draws the monster's idle clip into the rect; false = no clip (or nothing drawn): draw the static sprite.
-    bool drawIdleAnim(const std::string& enemyId, float x, float y, float w, float h, int tileX, int tileY, const float tint[4] = nullptr);
     // Objects' looks (docs/19_STAGE_EDITOR.md): an object's own "look" over its type's ("look" in enemies.json /
-    // items.json / its NPC file), field by field. typeSprite: the sprite a type is drawn with (its look, else the old
-    // table). drawObjectAnim: any clip "<file under media>#<clip>", loaded on first use, tinted, at the object's phase.
+    // items.json / its NPC file), field by field -- read once per floor, when its objects are made (map_objects.cpp).
+    // typeSprite: the sprite a type is drawn with (its look, else the old table).
     nlohmann::json lookOf(const Entity& e) const;
     nlohmann::json typeLook(const std::string& kind, const std::string& id) const;
     std::string typeSprite(const std::string& kind, const std::string& id) const;
-    bool drawObjectAnim(const std::string& ref, float x, float y, float w, float h, int tileX, int tileY, const float tint[4]);
-    struct ObjAnim { toms::anim::AnimFile file; toms::anim::AtlasSet set; std::vector<std::unique_ptr<toms::AtlasFile>> atlases;
-                     std::vector<uint16_t> textures; bool ok = false; };
-    std::map<std::string, std::unique_ptr<ObjAnim>> objAnims_;   // by file
     // An object's linked events, when the player interacts with it: a talk event wakes (a topic), the others run when
     // their `requires` holds (with their title as a notice), else they are started.
     void fireLinkedEvents(const Entity& e);
@@ -718,22 +728,21 @@ private:
                         float spriteW, float spriteH, const float tint[4]);
     bool drawClipInRect(const toms::anim::Clip& clip, float t, const toms::anim::AtlasSet& set, float x, float y, float w, float h,
                         float spriteW, float spriteH);
-    // Doors opening: assets/media/anim/door_open.anim (made in anim_editor), clip "door_open_<colour>", played once on
-    // the door's tile while the tile is already floor (openDoor).
-    toms::anim::AnimFile doorAnim_;
-    toms::anim::AtlasSet doorSet_;
-    std::vector<std::unique_ptr<toms::AtlasFile>> doorAtlases_;
-    std::vector<uint16_t> doorTextures_;
-    struct MapFx { const toms::anim::Clip* clip; int x, y; std::string sprite; float ms; };
-    std::vector<MapFx> mapFx_;   // one-shot clips playing on the map (cleared when a floor loads)
+    // A resource file the game asked for is missing or broken: a message on screen (once per file) and in the log.
+    void resourceMissing(const std::string& name, const std::string& path, const std::string& error);
+    // Its messages wait here until the map is on screen (startup loads happen behind the title, and a new game or a
+    // load clears the notifications).
+    std::vector<std::string> resourceMessages_;
+    // The floor's things, a class per kind (map_objects.h), made when a floor loads; they draw themselves by status.
+    MapFloor floor_;
+    void drawTileLayer(const MapView& v, int startX, int endX, int startY, int endY);   // tiles, locked stairs, walk target
     // A door the player walks into with its key: the key is used, the door opens (its clip plays), the tile becomes
     // floor and stays open on later visits (EntityStatus::Opened). The player stays where they were.
     void openDoor(int x, int y, char c);
-    toms::fx::ParticleFile previewFxFile_;    // playPreviewFx
+    std::shared_ptr<toms::res::ParticleRes> previewFxFile_;   // playPreviewFx (its atlases come with it)
+    std::string previewFxName_;
+    int previewFxVer_ = -1;
     toms::fx::EffectInstance previewFx_;
-    toms::anim::AtlasSet previewFxSet_;
-    std::vector<std::unique_ptr<toms::AtlasFile>> previewFxAtlases_;
-    std::vector<uint16_t> previewFxTextures_;
     float previewFxIdle_ = 0;                         // seconds since a one-shot effect finished
     int fxGpuThresholdOverride_ = -1;                 // --fx-gpu-threshold (-1: the setting)
     // art styles (assets/media/styles/styles.json); style 0 = the original art

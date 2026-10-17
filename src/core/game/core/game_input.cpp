@@ -121,8 +121,8 @@ void Game::openDoor(int x, int y, char c) {
     toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, x, y), toms::EntityStatus::Opened);
     for (const auto& e : st.entities) if (e.x == x && e.y == y && e.kind.rfind("door:", 0) == 0) fireLinkedEvents(e);
     audio.play("confirm_click");
-    const std::string colour = c == 'y' ? "yellow" : c == 'b' ? "blue" : "red";
-    if (const toms::anim::Clip* clip = doorAnim_.find("door_open_" + colour)) mapFx_.push_back({clip, x, y, "door_" + colour, 0.0f});
+    (void)c;
+    if (MapObject* door = floor_.objectAt(x, y, "door:")) door->play("opening");   // its clip plays on the tile
 }
 
 void Game::movePlayer(int dx, int dy) {
@@ -143,98 +143,30 @@ void Game::movePlayer(int dx, int dy) {
         openDoor(nx, ny, c);   // uses the key; the door opens and vanishes; the player stays put this turn
         return;
     }
-    // A gate opens only for its own key item (bumpGate); the player stays put this turn either way.
-    for (auto& e : st.entities)
-        if (!e.consumed && e.x == nx && e.y == ny && e.kind.rfind("gate:", 0) == 0) { bumpGate(e); return; }
+    // Something that is bumped instead of stepped onto (a gate: it opens for its key; the player stays put).
+    for (const auto& o : floor_.objects())
+        if (o->bumpBeforeStep(nx, ny)) return;
     // Q7: a locked stair is not stepped on: it says which event opens it.
     if (const toms::StairLink* s = toms::stairAt(st.stairs, nx, ny); s && stairLocked(*s)) {
         bumpLockedStairs(*s);
         return;
     }
-    // S1: a multi-grid monster is NOT walked into. A 1x1 monster keeps the shipped behavior (the
-    // player steps onto the tile and the fight happens there), but entering a 4-grid boss's cell
-    // would put the player *inside* the boss -- so big footprints are pure bumps: fight from the
-    // adjacent tile and let the boss keep its space (doc F4: the player can only circle it).
-    for (const auto& e : st.entities) {
-        if (e.consumed || !e.fp.big()) continue;
-        if (e.kind.rfind("monster:", 0) != 0) continue;
-        if (entityCovers(e, nx, ny)) { advanceRoamers(); engageMonster(e); return; }
-    }
+    // S1: a multi-grid monster is not walked into; it is fought from the adjacent tile (MonsterObject::bumpBig).
+    for (const auto& o : floor_.objects())
+        if (o->bumpBig(nx, ny)) return;
     pl.x = nx; pl.y = ny;
     audio.play("walk");
     // The player acted -> the world takes its turn (roamers step once; S1).
     advanceRoamers();
-    // check entity at new cell
-    for (auto& e : st.entities) {
-        if (e.consumed) continue;
-        if (entityCovers(e, nx, ny)) {
-            if (e.kind.rfind("monster:",0)==0) {
-                engageMonster(e);
-                return;
-            } else if (e.kind.rfind("item:",0)==0) {
-                // Keys/coins apply immediately (not stored in the 9-grid UI).
-                // Usable items (gems/potions/exp/scroll) go into the inventory.
-                receiveItem(e.id);
-                e.consumed = true;
-                st.tiles[e.y][e.x] = '.'; // clear from grid
-                // Milestone 7: persist the clear so it survives a reload of this floor (stairs
-                // or the Stage Select hub) -- see entityStatus_'s declaration in game.h.
-                toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, e.x, e.y), toms::EntityStatus::Collected);
-                toms::globalEventBus().publish(toms::ItemCollected{e.id, curStage});
-                fireLinkedEvents(e);
-            } else if (e.kind.rfind("event:",0)==0) {
-                // S3.5 (d): a floor event. Its text comes from the i18n table (generated for every
-                // event id by tools/gen_story_i18n.py, authored for acts 1-3), and the effect is
-                // derived from the event id's own vocabulary until the pools are loaded at runtime:
-                // shards feed the memory-shard state, traps cost HP, caches/relics give a little back.
-                std::string evId = e.id;
-                // An event whose `requires` does not hold yet only becomes "started": it stays on its tile, and
-                // the player's event log lists it as in progress (docs/event_editor/06_EVENT_LOGIC.md section 7).
-                auto def = eventDefs_.find(evId);
-                if (def != eventDefs_.end() && !def->second.requires.is_null() &&
-                    !toms::evaluate(def->second.requires, GameConditionContext(pl, meta_, missionTrackers_, run_, equipped_))) {
-                    if (!run_.eventStarted(evId)) {
-                        run_.markEventStarted(evId);
-                        const std::string title = locale_.tr(def->second.titleKey);
-                        notifications_.push_back({title == def->second.titleKey ? evId : title, 3000});
-                        markProgressDirty();
-                    }
-                    return;
-                }
-                std::string text = locale_.tr(evId + ".text");
-                if (text.empty() || text == evId + ".text") text = evId;   // missing -> the id, not blank
-                if (evId.find("shard") != std::string::npos) {
-                    run_.addShard(evId);
-                    notifications_.push_back({text + "  [memory shard " + std::to_string(run_.shardCount()) + "]", 4200});
-                } else if (evId.find("trap") != std::string::npos) {
-                    pl.hp = std::max(1, pl.hp - 8);
-                    notifications_.push_back({text + "  [-8 HP]", 3800});
-                } else if (evId.find("cache") != std::string::npos || evId.find("relic") != std::string::npos) {
-                    pl.hp = std::min(effectiveMaxHp(), pl.hp + 10);
-                    pl.gold += 12;
-                    notifications_.push_back({text + "  [+10 HP, +12 GOLD]", 3800});
-                } else {
-                    notifications_.push_back({text, 4200});      // whispers/rescues: remembered, no stat
-                }
-                // The record's `actions`, then finished the first time (06 section 6 item 2): the run flag the
-                // conditions and stair locks read, the event log, its `next` events woken, and the stairs it opens say
-                // so (Q7).
-                completeEvent(evId);
-                fireLinkedEvents(e);
-                // A repeatable event ("once": false) stays on its tile until its last run (08 section 11.1).
-                if (canRepeat(evId)) return;
-                e.consumed = true;
-                st.tiles[e.y][e.x] = '.'; // clear from grid
-                toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, e.x, e.y), toms::EntityStatus::Collected);
-                return;
-            } else if (e.kind.rfind("npc:",0)==0) {
-                // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md): its NPC file (data/npcs/<id>.json)
-                // decides between a chat line, a topic and the topic menu. Its linked events first: a linked talk event
-                // is then one of this talk's topics.
-                fireLinkedEvents(e);
-                talkTo(e.id);
-            } else if (stepOntoStairs(nx, ny)) return;
-        }
+    // What is on the new cell, in the stage file's order: each object does what its kind does (a monster's battle,
+    // an item picked up, an event, an NPC's talk, a stair); Stop ends the step. A copy of the list, and a stop if the
+    // floor changed under it (an event's action, a stair).
+    const int floorGen = floor_.generation();
+    const std::vector<std::shared_ptr<MapObject>> here = floor_.objects();
+    for (const auto& o : here) {
+        const Entity* e = o->entity();
+        if (!e || e->consumed || !o->covers(nx, ny)) continue;
+        if (o->onTouch(nx, ny) == MapObject::Touch::Stop || floor_.generation() != floorGen) return;
     }
     // stairs check (cell char)
     ++storyTurns_;                 // S3.5 (c): the footer line rotates with movement, not with time
@@ -296,8 +228,7 @@ void Game::bumpGate(Entity& gate) {
     fireLinkedEvents(gate);
     notifications_.push_back({toms::fillText(locale_.tr("gate.opened"), vars), 3200});
     audio.play("confirm_click");
-    if (const toms::anim::Clip* clip = doorAnim_.find("door_open_yellow")) mapFx_.push_back({clip, gate.x, gate.y, "door_yellow", 0.0f});
-    markProgressDirty();
+    markProgressDirty();   // (GateObject plays its opening clip)
 }
 
 void Game::dismissNotice() {
@@ -344,16 +275,9 @@ void Game::debugFinishEvent(const std::string& eventId) {
 
 void Game::interact() {
     if (modalActive()) return;   // any modal overlay blocks world interaction
-    // find NPC on player's cell or adjacent
-    for (auto& e : st.entities) {
-        if (e.consumed) continue;
-        if (e.kind.rfind("npc:",0)!=0) continue;
-        if (entityCovers(e, pl.x, pl.y)) {
-            fireLinkedEvents(e);
-            talkTo(e.id);
-            return;
-        }
-    }
+    // what can be talked to on the player's tile (an NPC)
+    for (const auto& o : floor_.objects())
+        if (o->onInteract()) return;
 }
 
 // S1: one turn for every room-wandering event monster. Walkability is answered here (the roamer

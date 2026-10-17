@@ -216,15 +216,40 @@ bgfx renderer) and no other library. **What the editor shows is how the game wor
 **Run it:** `Editor\StageEventEditor.cmd`, or `Build\windows-releasein\stage_event_editor.exe`. It finds the TOMS
 folder from its own folder upwards (or `--root=<folder>`) and works on the live files: no bundle, no folder picker.
 
-**Windows.** Both editors stay open together. **View → Tabs (one window)** or **View → Separate windows**:
+**Windows.** Both editors stay open together, as Visual Studio's document windows. They are two panes of one main
+window, tabbed along its top: **Stage | Events**.
 
-- **Tabs:** one window with a Stage tab and an Events tab.
-- **Separate windows:** one window each. Each can be moved, resized, maximised and minimised on its own, for
-  example one per monitor.
+- **Float:** drag a tab out, or use **View → Float the stage / event editor**. That editor becomes a window of its own,
+  which you can move, resize and put on another monitor. Its title bar has **□** (maximise / restore) and **⧉** (dock
+  back).
+- **Dock:** drag the floating window back over the main window, double-click its title, press **⧉**, or close it.
+  It docks as a tab again, or beside the other editor if you drop it at a side (split). A docked editor that is not a
+  tab has a slim bar with ⧉, to drag it by or float it.
+- **View → Dock both as tabs** puts everything back.
 
-Switching keeps everything open; the choice and the window sizes are kept between runs. **Ctrl+1** / **Ctrl+2** (the
-**Window** menu) or the **⇄** buttons bring the other editor up. With separate windows, closing one hides it; closing
-the last one quits after asking about unsaved changes. **中文** in the menu bar switches the language.
+The layout (docked or floating, sizes, places) is kept between runs; nothing open is lost when an editor moves.
+**Ctrl+1** / **Ctrl+2** (the **Window** menu) or the **⇄** buttons bring the other editor to the front. Closing the main
+window quits, after asking about unsaved changes. **中文** in the menu bar switches the language.
+
+**The palette (native app).**
+- **A click picks and opens:** one click on a monster, item, NPC, key or door paints with it and opens its details window
+  (Look | Data). The window does not block painting, follows the next click, and keeps its place; **Apply** keeps it
+  open. Changes not applied are asked about (Apply / Discard / Cancel) before it shows another type.
+- **Every group has +.** Monsters, Items and NPCs copy an existing type. **Doors** and **Keys** make a new door with its
+  own key: a key item of type `story`, and the door only that key opens (a gate). A new door appears in Doors, its key
+  in Keys. Terrain, stairs and the start are the game's own (their + is greyed).
+- **After Create:** the new type is the brush, the palette scrolls to it in the group whose + made it, and its details
+  open on **Data**. The Look tab's grid is the game's pictures: click one to draw the type with it.
+- **Ids:** lowercase letters, Chinese characters, digits and `_` (no spaces, capitals, `:` `#` `.` `/` `,`).
+- **Your own categories:** **+ New category** at the top of the palette adds one (any name, Chinese too). Its header
+  has **+** (a new monster, item, NPC, or door and its key, made into it), **✎** (rename) and **✕** (delete: its types
+  go back to their usual groups, nothing is deleted). Right-click a type → **Move to category** (or back to its usual
+  group). A type's category is a `"group"` field in its record; the list of categories (order, empty ones) is
+  `assets/data/editor_palette.json`. **Save** writes both; the game ignores them.
+- **A lost panel:** **View → Stage panels** lists Palette, Events, Inspector and Checks; **Reset stage layout** docks
+  them all back where they start, also one left floating off screen.
+- **View → Default layout** puts everything where it starts: the window's size and place, both editors docked as tabs,
+  every panel of both editors docked at its starting size, and an open details window over the middle.
 
 **The stage editor** is the HTML editor's layout and rules (sections 2–3), in docks you can resize and move:
 
@@ -285,8 +310,8 @@ editors.
 | Piece | Where |
 |---|---|
 | The rules, without Qt | `tools/stage_event_editor/core/`: `stage_project` (files, cells, placement, undo, what Save writes), `stage_checks` (checks, the story key/door check, safe cells, auto-place), `stage_save` (changed files, diffs, backups, the floor index), `event_project` (the event editor's state, validator, condition rows, Save, the talk preview). Files are read and written with nlohmann's `ordered_json`, so an untouched file is written back byte for byte |
-| The window | `tools/stage_event_editor/app/`: `AppShell` (tabs / windows), `StageEditor`, `StageCanvas` (the game renderer), `ObjectWindow`, `SpriteBank`, `EventEditor` (+ `EventForms`, `EventTabs`, `EventNpcs`, `EventWidgets`); strings in `tools/studio_common/i18n/zh_TW/stage.json` and `events.json` |
-| Tests | `unit.stage_core_test` checks every floor written back byte for byte; painting, the reserved chars, object settings and undo; the checks and the story check on all floors; auto-place repeatable, with the HTML editor's random numbers; the floor index matching `floor_index.json` byte for byte. `stage_editor.app_selftest` is the window, offscreen: paint, undo, ✎ Edit, a type window, auto-place, the tables; the event editor's edits, undo and every tab; tabs ↔ separate windows. The event checks in `unit.stage_core_test`: every pool file already in the save format, a text / logic / flag edit writing only its file (one line of `flags.json`), condition rows, the talk preview |
+| The window | `tools/stage_event_editor/app/`: `AppShell` (the docking main window), `StageEditor`, `StageCanvas` (the game renderer), `ObjectWindow`, `SpriteBank`, `EventEditor` (+ `EventForms`, `EventTabs`, `EventNpcs`, `EventWidgets`); strings in `tools/studio_common/i18n/zh_TW/stage.json` and `events.json` |
+| Tests | `unit.stage_core_test` checks every floor written back byte for byte; painting, the reserved chars, object settings and undo; the checks and the story check on all floors; auto-place repeatable, with the HTML editor's random numbers; the floor index matching `floor_index.json` byte for byte. `stage_editor.app_selftest` is the window, offscreen: paint, undo, ✎ Edit, a type window, auto-place, the tables; the event editor's edits, undo and every tab; docked tabs ↔ floating ↔ split. The event checks in `unit.stage_core_test`: every pool file already in the save format, a text / logic / flag edit writing only its file (one line of `flags.json`), condition rows, the talk preview |
 
 The ports were compared with the HTML editors on the real data (headless Chrome):
 

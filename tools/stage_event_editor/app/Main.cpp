@@ -1,8 +1,8 @@
 // Main.cpp -- stage_event_editor: the stage and event editors as one Windows app (docs/19_STAGE_EDITOR.md section 6).
 //
-//   stage_event_editor [--root=<TOMS folder>] [--tabs | --windows]
+//   stage_event_editor [--root=<TOMS folder>] [--windows]      (--windows: the event editor starts floating)
 //   stage_event_editor -platform offscreen --selftest [--root=<TOMS folder>]     (CTest: stage_editor.app_selftest)
-//   stage_event_editor --shot=<png> [--floor=<id>] [--select=<x>,<y>] [--event=<id>] [--evtab=<tab>] [--tabs | --windows]
+//   stage_event_editor --shot=<png> [--floor=<id>] [--select=<x>,<y>] [--event=<id>] [--evtab=<tab>] [--windows]
 //       saves each window (its widgets, and the map as the game renderer drew it) after a few seconds, then quits;
 //       a second window is saved as <png>_1.png
 //
@@ -12,6 +12,7 @@
 #include "StageCanvas.h"
 #include "EventEditor.h"
 #include "Language.h"
+#include "ObjectWindow.h"
 #include "StageEditor.h"
 #include "Theme.h"
 
@@ -51,7 +52,9 @@ QString argValue(const QStringList& args, const QString& name) {
 void saveShots(AppShell& shell, StageEditor* stage, const QString& png, const QString& gpuPng) {
     const QImage gpu(gpuPng);
     int i = 0;
-    for (QWidget* w : shell.windows()) {
+    QList<QWidget*> windows = shell.windows();
+    if (ObjectWindow* ow = ObjectWindow::current(); ow && ow->isVisible()) windows << ow;   // a details window too
+    for (QWidget* w : windows) {
         QImage img = w->grab().toImage();
         StageCanvas* cv = stage->canvas();
         if (!gpu.isNull() && cv->window() == w && cv->isVisible()) {
@@ -99,9 +102,10 @@ int main(int argc, char** argv) {
     int rc = 0;
     {
         AppShell shell(stage, events);
-        shell.start(args.contains(QStringLiteral("--windows")) ? AppShell::Windows : args.contains(QStringLiteral("--tabs")) || selftest ? AppShell::Tabs : -1);
+        shell.start(args.contains(QStringLiteral("--windows")));   // --windows: the event editor starts floating
         if (selftest) {
             QApplication::processEvents();
+            stage->setSaveLayout(false);   // the test leaves the user's layout as it was
             QStringList fail = stage->selfTest();
             fail += events->selfTest();
             fail += shell.selfTest();
@@ -111,6 +115,16 @@ int main(int argc, char** argv) {
             rc = fail.isEmpty() ? 0 : 1;
         } else if (const QString shot = argValue(args, QStringLiteral("--shot")); !shot.isEmpty()) {
             const QString floor = argValue(args, QStringLiteral("--floor")), sel = argValue(args, QStringLiteral("--select"));
+            stage->setSaveLayout(false);   // a screenshot shows every panel and leaves the user's layout as it was
+            stage->resetLayout();
+            // --create=<category>:<id>: the palette's + (category as its group gives it: monster, item, npc, story)
+            if (const QString cr = argValue(args, QStringLiteral("--create")); cr.contains(QLatin1Char(':'))) {
+                ObjectWindow::openNew(stage, cr.section(QLatin1Char(':'), 0, 0).toStdString());
+                if (ObjectWindow* w = ObjectWindow::current()) {
+                    w->setNewId(cr.section(QLatin1Char(':'), 1).toStdString(), std::string());
+                    w->apply();
+                }
+            }
             if (!floor.isEmpty()) stage->showEventOnFloor(floor.toStdString(), std::string());
             if (const QString ev = argValue(args, QStringLiteral("--event")); !ev.isEmpty()) events->selectEvent(ev);
             if (const QString tab = argValue(args, QStringLiteral("--evtab")); !tab.isEmpty()) events->showTab(tab);
@@ -128,7 +142,6 @@ int main(int argc, char** argv) {
             rc = app.exec();
         }
     }
-    delete stage;
-    delete events;
+    // the shell's window owned both editors and deleted them with itself
     return rc;
 }

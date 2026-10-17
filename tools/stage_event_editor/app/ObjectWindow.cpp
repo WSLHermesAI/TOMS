@@ -33,6 +33,14 @@ using StageText::q;
 namespace {
 QPointer<ObjectWindow> g_open;
 
+// A new type's id: lowercase letters, Chinese (or any other script's) characters, digits and _ -- it becomes a JSON key,
+// part of "monster:<id>" and text keys ("item.<id>.name"), and an NPC's file name (npcs/<id>.json), so no spaces and none
+// of : # . / , that those are joined with. Every file read and write here takes UTF-8 paths.
+bool validTypeId(const std::string& id) {
+    static const QRegularExpression re(QStringLiteral("^[\\p{Ll}\\p{Lo}\\p{Nd}_]+$"), QRegularExpression::UseUnicodePropertiesOption);
+    return re.match(QString::fromStdString(id)).hasMatch();
+}
+
 std::string catOf(const std::string& sem) { return sem.substr(0, sem.find(':')); }
 std::string idOf(const std::string& sem) { const size_t c = sem.find(':'); return c == std::string::npos ? std::string() : sem.substr(c + 1); }
 
@@ -47,14 +55,17 @@ QString verb(const std::string& cat) {
 QString catName(const std::string& cat) {
     if (cat == "monster") return ObjectWindow::tr("monster");
     if (cat == "item") return ObjectWindow::tr("item");
+    if (cat == "story") return ObjectWindow::tr("door and key");
     return ObjectWindow::tr("NPC");
 }
 
 std::vector<std::string> copyChoices(stage::Project& p, const std::string& cat) {
     if (cat == "monster") return p.enemyIds();
     if (cat == "npc") { std::vector<std::string> out; for (const auto& [id, n] : p.npcs) { (void)n; out.push_back(id); } return out; }
+    // "story": a key item that opens its own gate (the palette's doors, keys and gates)
+    const std::string type = cat == "story" ? "story" : "consumable";
     std::vector<std::string> out;
-    for (const std::string& id : p.itemIds()) if (p.itemType(id) == "consumable") out.push_back(id);
+    for (const std::string& id : p.itemIds()) if (p.itemType(id) == type) out.push_back(id);
     return out;
 }
 }  // namespace
@@ -63,7 +74,14 @@ ObjectWindow* ObjectWindow::current() { return g_open; }
 
 ObjectWindow::ObjectWindow(StageEditor* ed, Kind kind) : QDialog(ed), m_ed(ed), m_kind(kind) {
     setAttribute(Qt::WA_DeleteOnClose);
-    setWindowModality(Qt::WindowModal);
+    // A type's window follows the palette and leaves the editor usable (a tool window over it); an object's or a new
+    // type's is answered first.
+    if (kind == Type) {
+        setWindowFlag(Qt::Tool);
+        setWindowModality(Qt::NonModal);
+    } else {
+        setWindowModality(Qt::WindowModal);
+    }
     resize(760, 640);
     auto* lay = new QVBoxLayout(this);
     m_head = new QLabel(this);
@@ -110,25 +128,58 @@ void ObjectWindow::openObject(StageEditor* ed, int x, int y) {
 }
 
 void ObjectWindow::openType(StageEditor* ed, const std::string& sem) {
-    const Json* r = ed->project().typeRec(sem);
-    if (!r) { ed->toast(tr("%1 has no record to edit.").arg(q(sem))); return; }
+    if (!ed->project().typeRec(sem)) { ed->toast(tr("%1 has no record to edit.").arg(q(sem))); return; }
+    if (g_open && g_open->m_kind == Type) {   // the open type window shows this one, where it is
+        if (g_open->m_sem == sem) { g_open->raise(); return; }
+        if (!g_open->confirmLeave()) return;
+        g_open->loadType(sem);
+        g_open->render();
+        g_open->raise();
+        return;
+    }
     if (g_open) g_open->close();
     auto* w = new ObjectWindow(ed, Type);
-    w->m_sem = sem;
-    w->m_cat = catOf(sem);
-    w->m_id = idOf(sem);
-    w->m_w = *r;
-    for (const char* k : {"name", "desc", "greeting"})
-        if (r->contains(k) && (*r)[k].is_string()) w->m_texts[k] = ed->project().textOf((*r)[k].get<std::string>());
+    w->loadType(sem);
     g_open = w;
     w->render();
     w->show();
 }
 
-void ObjectWindow::openNew(StageEditor* ed, const std::string& cat) {
+void ObjectWindow::loadType(const std::string& sem) {
+    const Json* r = m_ed->project().typeRec(sem);
+    m_sem = sem;
+    m_cat = catOf(sem);
+    m_id = idOf(sem);
+    m_w = r ? *r : Json::object();
+    m_texts.clear();
+    if (r)
+        for (const char* k : {"name", "desc", "greeting"})
+            if (r->contains(k) && (*r)[k].is_string()) m_texts[k] = m_ed->project().textOf((*r)[k].get<std::string>());
+    m_orig = m_w;
+    m_origTexts = m_texts;
+}
+
+bool ObjectWindow::dirty() const { return m_kind == Type && (m_w != m_orig || m_texts != m_origTexts); }
+
+bool ObjectWindow::confirmLeave() {
+    if (!dirty()) return true;
+    QMessageBox box(QMessageBox::Question, tr("Changes not applied"),
+                    tr("%1 has changes that are not applied yet.").arg(q(m_ed->project().nameOf(m_sem))), QMessageBox::NoButton, this);
+    QPushButton* applyB = box.addButton(tr("Apply"), QMessageBox::AcceptRole);
+    QPushButton* discardB = box.addButton(tr("Discard"), QMessageBox::DestructiveRole);
+    box.addButton(tr("Cancel"), QMessageBox::RejectRole);
+    box.setDefaultButton(applyB);
+    box.exec();
+    if (box.clickedButton() == applyB) { apply(); return true; }
+    return box.clickedButton() == discardB;
+}
+
+void ObjectWindow::openNew(StageEditor* ed, const std::string& cat, const std::string& brush, const std::string& group) {
     if (g_open) g_open->close();
     auto* w = new ObjectWindow(ed, New);
     w->m_cat = cat;
+    w->m_group = group;
+    w->m_brushPrefix = !brush.empty() ? brush : cat == "story" ? std::string("gate:") : cat + ":";
     const std::vector<std::string> ids = copyChoices(ed->project(), cat);
     w->m_from = ids.empty() ? std::string() : ids[0];
     g_open = w;
@@ -266,7 +317,7 @@ QWidget* ObjectWindow::lookTab() {
     // sprite
     const QString sp = lk.contains("sprite") ? StageDraw::spriteName(lk["sprite"]) : QString();
     auto* row = new QHBoxLayout();
-    row->addWidget(new QLabel(tr("Sprite")));
+    row->addWidget(new QLabel(tr("Picture")));
     QString shown = sp;
     if (shown.isEmpty()) {
         const QString def = base.is_object() && base.contains("sprite") ? StageDraw::spriteName(base["sprite"]) : q(p.spriteOf(m_sem));
@@ -286,6 +337,9 @@ QWidget* ObjectWindow::lookTab() {
     find->setMaximumWidth(180);
     row->addWidget(find);
     v->addLayout(row);
+    auto* pick = new QLabel(tr("The game's pictures: click one to draw this with it."));
+    pick->setStyleSheet(QStringLiteral("color: #8b929c"));
+    v->addWidget(pick);
     auto* grid = new QListWidget;
     grid->setViewMode(QListView::IconMode);
     grid->setIconSize(QSize(32, 32));
@@ -556,7 +610,8 @@ QWidget* ObjectWindow::newForm() {
     auto* w = new QWidget;
     auto* form = new QFormLayout(w);
     auto* id = new QLineEdit(q(m_id));
-    id->setPlaceholderText(m_cat == "monster" ? QStringLiteral("slime_red") : m_cat == "item" ? QStringLiteral("potion_green") : QStringLiteral("guard"));
+    id->setPlaceholderText(m_cat == "monster" ? QStringLiteral("slime_red") : m_cat == "item" ? QStringLiteral("potion_green")
+                           : m_cat == "story" ? QStringLiteral("crypt_key") : QStringLiteral("guard"));
     connect(id, &QLineEdit::textEdited, this, [this](const QString& s) { m_id = s.trimmed().toStdString(); });
     form->addRow(tr("Id"), id);
     auto* from = new QComboBox;
@@ -567,6 +622,7 @@ QWidget* ObjectWindow::newForm() {
     QString note;
     if (m_cat == "monster") note = tr("A new entry in enemies.json, copied from the one picked (stats, sprite); then set its name, stats and look.");
     else if (m_cat == "item") note = tr("A new entry in items.json, copied from the one picked (effect, sprite); its name goes to text.json.");
+    else if (m_cat == "story") note = tr("A new key item in items.json (type \"story\"), copied from the one picked. Its gate -- a door only this key opens -- appears in the Gates group; put both on the map.");
     else note = tr("A new NPC file (npcs/<id>.json) with a one-page dialogue (dialogue/<id>.json); write its chat lines and topics in the event editor.");
     auto* n = new QLabel(note);
     n->setWordWrap(true);
@@ -595,16 +651,20 @@ void ObjectWindow::apply() {
     }
     if (m_kind == New) {
         const std::string id = m_id;
-        if (!QRegularExpression(QStringLiteral("^[a-z0-9_]+$")).match(q(id)).hasMatch()) { m_ed->toast(tr("Use a-z, 0-9 and _ only."), true); return; }
-        const std::string sem = m_cat + ":" + id;
+        if (!validTypeId(id)) { m_ed->toast(tr("Use lowercase letters, Chinese characters, 0-9 and _ only (no spaces)."), true); return; }
+        const bool story = m_cat == "story";   // a door and its key: an item of type "story"
+        const std::string cat = story ? std::string("item") : m_cat;
+        const std::string sem = cat + ":" + id;
         if (p.typeRec(sem) || (m_cat == "npc" && p.npcs.count(id))) { m_ed->toast(tr("%1 already exists.").arg(q(id)), true); return; }
-        const Json* srcP = p.typeRec(m_cat + ":" + m_from);
+        const Json* srcP = p.typeRec(cat + ":" + m_from);
         Json src = srcP ? *srcP : Json::object();
+        src.erase("group");   // its category is the + that made it, not the copied one's
         const Json idText = Json{{"zh_TW", id}, {"en", id}};
         if (m_cat == "monster") {
             src["name"] = idText;
             p.dataFiles[stage::Project::enemiesPath()].obj[id] = src;
-        } else if (m_cat == "item") {
+        } else if (cat == "item") {
+            if (story) src["type"] = "story";
             src["name"] = "item." + id + ".name";
             src["desc"] = "item." + id + ".desc";
             p.textEdits["item." + id + ".name"] = idText;
@@ -631,10 +691,18 @@ void ObjectWindow::apply() {
                 p.dataFiles[dlg] = dd;
             }
         }
+        // painted with right away, shown in the palette group whose + made it, its details open on Data
+        if (!m_group.empty()) p.setGroup(sem, m_group);
         m_ed->typesChanged();
-        m_ed->toast(tr("%1 created: set its look and data, then Save.").arg(q(id)));
+        m_ed->setBrush(m_brushPrefix + id);
+        m_ed->revealBrush();
+        m_ed->toast(tr("%1 created: set its data and look here, then Save.").arg(q(id)));
         close();
         openType(m_ed, sem);
+        if (ObjectWindow* w = g_open; w && w->m_kind == Type) {
+            w->m_tab = 1;   // Data
+            w->render();
+        }
         return;
     }
     // a type: the working copy replaces the record; changed names go to text.json
@@ -647,9 +715,11 @@ void ObjectWindow::apply() {
         for (auto& [l, t] : v.items()) merged[l] = t;
         p.textEdits[m_w[k].get<std::string>()] = merged;
     }
+    m_orig = m_w;
+    m_origTexts = m_texts;
     m_ed->typesChanged();
     m_ed->toast(tr("%1 changed (Save writes it).").arg(q(m_id)));
-    close();
+    render();   // stays open: the palette's details window
 }
 
 void ObjectWindow::doDelete() {

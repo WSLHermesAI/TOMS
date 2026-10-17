@@ -27,6 +27,7 @@
 #include <vector>
 
 class FlowLayout;
+class QDockWidget;
 class QAction;
 class QComboBox;
 class QFileSystemWatcher;
@@ -84,13 +85,29 @@ public:
     void selectCell(const stage::Cell& c);
     void enterPlaceMode(const std::string& id, const std::string& kind, const std::vector<std::string>& floors);
     bool hasUnsaved() const;
+    // Every panel docked where it starts (Palette and Events left, Inspector right, Checks below) and shown -- also one
+    // that was closed or left floating off screen. View > Reset stage layout.
+    void resetLayout();
+    QList<QDockWidget*> panels() const;   // for View > Stage panels
+    // The layout is not saved on exit (screenshots and tests leave the user's layout alone).
+    void setSaveLayout(bool save) { m_saveLayout = save; }
     bool save();                      // the Save dialog; true when written (or nothing to save)
     void reloadEvents();              // the events / NPC files changed on disk
 
     // used by ObjectWindow
     bool edit(const QString& label, const std::function<void(stage::StageDoc&)>& fn);
     void typesChanged();              // a type record changed: palette, map, inspector
+    // The palette's own categories (Project::paletteGroups): add / rename / delete one, move a type into one ("" = back
+    // to its usual group). False when the name is empty or taken. The ...Dialog ones ask first (the palette's buttons).
+    bool addCategory(const std::string& name);
+    bool renameCategory(const std::string& from, const std::string& to);
+    void deleteCategory(const std::string& name);
+    bool moveToCategory(const std::string& sem, const std::string& group);
+    void newCategoryDialog();
+    void renameCategoryDialog(const std::string& name);
+    void deleteCategoryDialog(const std::string& name);
     void setBrush(const std::string& sem);
+    void revealBrush();   // scrolls the palette to the brush's button (a type just made)
     void setTool(Tool t);
     void toast(const QString& msg, bool bad = false);
 
@@ -158,9 +175,13 @@ private:
     QTreeWidget* m_checks = nullptr;
     QTableWidget* m_story = nullptr;
     QLabel* m_storySum = nullptr;
+    QString m_storyKey;   // what the story table shows (check version, type data, unsaved floors): rebuilt only when it changes
     QFileSystemWatcher* m_watcher = nullptr;
     QTimer* m_reloadTimer = nullptr;
     QTimer* m_flashTimer = nullptr;
+    QTimer* m_checksTimer = nullptr;   // afterEdit's deferred renderProblems
     std::set<std::string> m_collapsed;
     bool m_ignoreWatch = false;
+    bool m_saveLayout = true;
+    bool m_revealBrush = false;
 };

@@ -19,6 +19,7 @@ change, skip the glTF tests; if the game did not change, skip all game tests"):
   node anims      anim_clip / anim_player, the anim editor, .anim files  anim checks, unit test, smoke.anim
   atlases         the atlas tool, atlas files                            atlas checks (+ game screenshots for sprites)
   picture fonts   tools/font, tests/font, bitmap_font.*                  font.tool, font.editor_selftest
+  resources       resource* / render_object* in src/core/engine          engine unit tests + anim / fx checks + the game area
   engine core     the rest of src/core/engine (conditions, nodes, ...)   the engine's unit tests + the game area
   renderer        src/engine: shared files                               every screenshot, every backend
                   src/engine: sprite / UI / ImGui files and shaders      the game screenshots, every backend
@@ -113,6 +114,8 @@ RULES = [
      'particles: checks, unit test, fx screenshots'),
     (['assets/media/particle*', 'assets/media/fx/*'], any_of(PARTICLES), 'particle files'),
     (['src/core/engine/anim*', 'tools/anim/*'], ANIMS, 'node animations: checks, unit test, anim screenshot'),
+    (['assets/media/resources.json'], any_of(named('unit.resource_test'), is_game_smoke_d3d11),
+     'the resource manifest: its check (every entry loads) + the game screenshots'),
     (['assets/media/anim/*'], any_of(ANIMS, is_game_smoke_d3d11), '.anim files: anim checks + game screenshots'),
     (['tools/atlas/*', 'src/core/engine/atlas*'], ATLAS, 'the atlas tool: atlas checks'),
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),
@@ -125,6 +128,8 @@ RULES = [
      any_of(is_smoke, named('unit.gltf_*')), 'the shared renderer: every screenshot, every backend'),
     (['src/engine/*'], is_game_smoke, 'the 2D / UI renderer: the game screenshots, every backend'),
     # engine core, then the game
+    (['src/core/engine/resource*', 'src/core/engine/render_object*'], 'ENGINE_RES',
+     'the resource cache and render objects: engine unit tests + the clip / effect previews + the game'),
     (['src/core/engine/*'], 'ENGINE', 'engine core: the engine unit tests + the game'),
     (['src/core/game/*', 'src/game/*', 'assets/*', 'src/core/CMakeLists.txt'], 'GAME',
      'the game: its unit tests + its screenshots (D3D11)'),
@@ -224,6 +229,11 @@ def select(files, tests, since):
                 take(lambda t: t['name'] in picked, why)
             elif what == 'ENGINE':
                 take(ENGINE_UNIT, why)
+                game(f, why)
+            elif what == 'ENGINE_RES':   # the game, the --anim / --fx previews and the tools load through it
+                take(ENGINE_UNIT, why)
+                take(ANIMS, why)
+                take(PARTICLES, why)
                 game(f, why)
             elif what == 'GAME':
                 game(f, why)

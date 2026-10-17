@@ -17,12 +17,15 @@
 #include <QElapsedTimer>
 #include <QTimer>
 
+#include <array>
+
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
 
 class StageEditor;
+using stage::Json;
 
 class StageCanvas : public GameCanvasView {
     Q_OBJECT
@@ -50,6 +53,20 @@ protected:
 
 private:
     struct AnimTex;
+    // the object under the mouse while moving it (its own look) or the brush's (its type's look), where it would go
+    struct Ghost {
+        bool show = false;
+        std::string sem;
+        stage::Json look;
+        bool ownSprite = false;
+        stage::Cell from;           // the moved object's cell (its animation phase), else the hover cell
+        QRectF rect;
+        stage::PlaceCheck chk;
+    };
+    Ghost ghost() const;
+    // (GPU) one object: its animation, else its sprite, tinted; alpha < 1 for the ghost
+    void drawEntity(const GameScene& s, const std::string& sem, const stage::Json& look, bool ownSprite, const QRectF& r, int tx, int ty,
+                    float alpha = 1.0f);
     void paintSceneQt(QPainter& p);   // no GPU: the map with QPainter
     void paintMarks(QPainter& p);
     QRectF cellRect(int x, int y, int w = 1, int h = 1) const;

@@ -176,10 +176,10 @@ bool writeFiles(Project& p, const std::string& stamp, std::vector<std::string>& 
     // what is on disk now is what this editor has
     for (const ChangedFile& f : files) {
         switch (f.kind) {
-        case ChangedFile::Stage: p.doc(f.floorId).origStage = f.text; break;
-        case ChangedFile::Spec: p.doc(f.floorId).origSpec = f.text; break;
-        case ChangedFile::Data: p.dataOrig[f.path] = f.text; break;
-        case ChangedFile::Delete: p.dataOrig.erase(f.path); p.dataFiles.erase(f.path); break;
+        case ChangedFile::Stage: p.doc(f.floorId).origStage = f.text; p.doc(f.floorId).ver++; break;
+        case ChangedFile::Spec: p.doc(f.floorId).origSpec = f.text; p.doc(f.floorId).ver++; break;
+        case ChangedFile::Data: p.dataOrig[f.path] = f.text; p.dataVer++; break;
+        case ChangedFile::Delete: p.dataOrig.erase(f.path); p.dataFiles.erase(f.path); p.dataVer++; break;
         case ChangedFile::Text:
             for (const auto& [k, v] : p.textEdits) {
                 Json& s = p.strings[k];

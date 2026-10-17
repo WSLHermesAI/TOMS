@@ -28,7 +28,6 @@ void Game::draw() {
     float ts; int viewCols, viewRows; cameraViewportTiles(ts, viewCols, viewRows);
     float ox = -cam_.x() * ts;
     oy -= cam_.y() * ts;
-    static const float white[4] = {1,1,1,1};
 
     const bool showStore = storeModal();
     // Milestone 7 bugfix (still relevant under Battle System v2): this used to fall back to
@@ -43,7 +42,7 @@ void Game::draw() {
     const bool showTalk   = !showStore && !showBattle && (hideMask & 2) == 0 && inDialogue;
     const bool showWalk   = !showStore && !showBattle && !showTalk;   // the player menu draws over the map
 
-    // ---- walking scene: STAGE + CHARACTER ----
+    // ---- walking scene: the floor's tiles, then its objects (each draws itself by status: map_objects.h) ----
     if (showWalk) {
         ren->setNode(NODE_STAGE);
         // Only draw tiles the camera can actually see (+1 tile of padding on every side so a
@@ -54,186 +53,102 @@ void Game::draw() {
         int endX   = std::min(gw, (int)std::ceil(cam_.x()) + viewCols + 1);
         int startY = std::max(0, (int)std::floor(cam_.y()) - 1);
         int endY   = std::min(gh, (int)std::ceil(cam_.y()) + viewRows + 1);
-        // S3.5 (e): the act's palette tints the map tiles. One atlas, ten looks -- no new art needed,
-        // and the maze stays readable because the tint is a light wash rather than a replace.
-        float themeTint[4];
-        toms::floorThemeTint(themeActIndex_, themeTint);
-        for (int y = startY; y < endY; y++) for (int x = startX; x < endX; x++) {
-            char c = st.at(x,y);
-            int layer = spriteLayer(cellSprite(c));
-            ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, themeTint));
-        }
-        // Q7: a locked stair stays visible, dimmed, with a padlock on it until its event is finished.
-        for (const toms::StairLink& s : st.stairs) {
-            if (!stairLocked(s) || s.x < startX || s.x >= endX || s.y < startY || s.y >= endY) continue;
-            auto solid = [&](float x, float y, float w, float h, float r, float g, float b, float a) {
-                Quad q; q.rect[0] = x; q.rect[1] = y; q.rect[2] = w; q.rect[3] = h;
-                q.uv[0] = 0; q.uv[1] = 0; q.uv[2] = 1; q.uv[3] = 1; q.solid = true;
-                q.tint[0] = r; q.tint[1] = g; q.tint[2] = b; q.tint[3] = a;
-                ren->drawSprite(q);
-            };
-            const float x0 = ox + s.x * ts, y0 = oy + s.y * ts, u = ts / 16.0f;
-            solid(x0, y0, ts, ts, 0.0f, 0.0f, 0.0f, 0.45f);                                   // dimmed stair
-            solid(x0 + 5 * u, y0 + 3 * u, 1.5f * u, 5 * u, 0.20f, 0.16f, 0.08f, 1.0f);       // shackle, left
-            solid(x0 + 9.5f * u, y0 + 3 * u, 1.5f * u, 5 * u, 0.20f, 0.16f, 0.08f, 1.0f);    // shackle, right
-            solid(x0 + 5 * u, y0 + 2.5f * u, 6 * u, 1.5f * u, 0.20f, 0.16f, 0.08f, 1.0f);    // shackle, top
-            solid(x0 + 3.5f * u, y0 + 7 * u, 9 * u, 7 * u, 0.20f, 0.16f, 0.08f, 1.0f);       // body outline
-            solid(x0 + 4.5f * u, y0 + 8 * u, 7 * u, 5 * u, 0.98f, 0.80f, 0.30f, 1.0f);       // body
-            solid(x0 + 7.5f * u, y0 + 9 * u, 1 * u, 2.5f * u, 0.20f, 0.16f, 0.08f, 1.0f);    // keyhole
-        }
-        // Click-to-move destination: a soft gold plate on the target tile while walking there.
-        if (walking() && walkTargetX_ >= 0) {
-            const float m = ts * 0.12f;
-            Quad t; t.rect[0] = ox + walkTargetX_*ts + m; t.rect[1] = oy + walkTargetY_*ts + m;
-            t.rect[2] = ts - 2*m; t.rect[3] = ts - 2*m;
-            t.uv[0] = 0; t.uv[1] = 0; t.uv[2] = 1; t.uv[3] = 1; t.solid = true;
-            t.tint[0] = 1.0f; t.tint[1] = 0.85f; t.tint[2] = 0.3f; t.tint[3] = 0.35f;
-            ren->drawSprite(t);
-        }
-        // One-shot clips on the map (a door opening), on the tile's full rect like the door tile itself.
-        if (!spriteAtlas_.pages.empty())
-            for (const MapFx& fx : mapFx_) {
-                const toms::AtlasRegion* r = spriteAtlas_.find(fx.sprite);
-                drawClipInRect(*fx.clip, fx.ms / 1000.0f, doorSet_, ox + fx.x * ts, oy + fx.y * ts, ts, ts,
-                               r && r->origW > 0 ? (float)r->origW : 32.0f, r && r->origH > 0 ? (float)r->origH : 32.0f);
-            }
-        // Entity/player sprites were inset by a fixed 8px into their 48px tile before
-        // Milestone 9; now that ts varies per stage, the inset scales with it (same
-        // ~1/6 ratio, so this renders identically to before at ts=48).
-        float inset = ts / 6.0f, sSize = ts - 2.0f * inset;
-        // S1 (docs/design/ART_AND_ABILITY_DESIGN.md section 1.7):
-        //   * a multi-grid entity is drawn at footprint * tile size, anchored on its top-left
-        //     occupied tile (F2: each grid keeps its own 32px art density -- this is more detail,
-        //     not a scaled-up sprite);
-        //   * everything on the floor is drawn in ONE y-sorted pass keyed on the bottom-most
-        //     occupied row (F5). Before S1 entities simply drew in file order and the player drew
-        //     last, which only read correctly while every sprite was one tile tall: a 2x2 boss
-        //     would have drawn over the wall above it and the player would always float on top of
-        //     monsters instead of standing behind the ones below them;
-        //   * 4-grid entities (and roamers) get a name banner (F6) -- drawn by the HUD (RmlUi, see
-        //     buildUiState's hud.banners), at this same position.
-        struct FloorSprite {
-            int   sortKey;         // bottom-most occupied row
-            int   tieX;            // stable, left-to-right tie-break within a row
-            float x, y, w, h;      // pixel rect
-            int   layer;
-            bool  plate = false;   // S3.5 (d): an event marker -> solid story plate, not an atlas sprite
-            float wash[4] = {0, 0, 0, 0};   // a gate: its key's colour washed over the door (alpha 0 = none)
-            const std::string* monster = nullptr;   // enemy id: drawn with its idle animation when it has one
-            int   tileX = 0, tileY = 0;
-            std::string anim;                        // its look's clip ("<file>#<clip>"), before the idle clip
-            float tint[4] = {1, 1, 1, 1};            // its look's tint
-        };
-        std::vector<FloorSprite> floor;
-        floor.reserve(st.entities.size() + 1);
-        for (auto& e : st.entities) {
-            if (e.consumed) continue;
-            // doors and stairs are map tiles (cellSprite draws them full size above); drawing their legend entry here too
-            // put a floor-coloured square over every door and stairs
-            if (e.kind.rfind("door:", 0) == 0 || e.kind == "stairs_up" || e.kind == "stairs_down" || e.kind == "player_start") continue;
-            FloorSprite f;
-            f.sortKey = footprintSortKey_T(e);
-            f.tieX = e.x;
-            f.w = e.fp.w * ts - 2.0f * inset;
-            f.h = e.fp.h * ts - 2.0f * inset;
-            f.x = ox + e.x*ts + inset;
-            f.y = oy + e.y*ts + inset;
-            f.layer = spriteLayer(e.kind.rfind("npc:", 0) == 0 ? npcSprite(e.id) : entSprite(e.id));   // NPC files may name one
-            // the stage editor's look: an object's own sprite / clip / tint over its type's (docs/19_STAGE_EDITOR.md)
-            const nlohmann::json look = lookOf(e);
-            bool ownSprite = false;
-            if (look.contains("sprite") && look["sprite"].is_string()) {
-                std::string s = look["sprite"].get<std::string>();
-                if (s.size() > 4 && s.compare(s.size() - 4, 4, ".png") == 0) s.resize(s.size() - 4);
-                // only a placed object's own sprite replaces the idle clip (a type's sprite is what its clip is made of)
-                if (spriteAtlas_.find(s)) { f.layer = spriteLayer(s); ownSprite = e.look.is_object() && e.look.contains("sprite"); }
-            }
-            if (look.contains("anim") && look["anim"].is_string()) f.anim = look["anim"].get<std::string>();
-            if (look.contains("tint") && look["tint"].is_array())
-                for (int i = 0; i < 4 && i < (int)look["tint"].size(); i++) if (look["tint"][i].is_number()) f.tint[i] = look["tint"][i].get<float>();
-            if (e.kind.rfind("gate:", 0) == 0) {
-                // a gate is drawn as a full-tile door with its key item's "tint" (data/items.json) washed over it, so
-                // it reads as no colour of key door (yellow / blue / red)
-                f.x = ox + e.x * ts; f.y = oy + e.y * ts; f.w = ts; f.h = ts;
-                f.layer = spriteLayer("door_yellow");
-                f.wash[0] = 0.6f; f.wash[1] = 0.3f; f.wash[2] = 0.9f; f.wash[3] = 0.6f;
-                if (const nlohmann::json* d = itemDef(e.id); d && d->contains("tint") && (*d)["tint"].is_array())
-                    for (int i = 0; i < 3 && i < (int)(*d)["tint"].size(); i++) f.wash[i] = (*d)["tint"][i].get<float>();
-            }
-            // S3.5 (d): an event marker is drawn as a solid story plate rather than an atlas sprite --
-            // the atlas has no "relic/whisper/cache" art yet (S8 owns that), and a plate reads as
-            // "something to read here" without pretending to be a creature or an item.
-            f.plate = e.kind.rfind("event:", 0) == 0;
-            if (e.kind.rfind("monster:", 0) == 0 && !ownSprite) f.monster = &e.id;   // its own sprite: no idle_<id> clip
-            f.tileX = e.x; f.tileY = e.y;
-            floor.push_back(f);
-        }
-        {
-            FloorSprite f;
-            f.sortKey = footprintSortKey_T(pl.x, pl.y, toms::Footprint{});
-            f.tieX = pl.x;
-            f.w = sSize; f.h = sSize;
-            f.x = ox + pl.x*ts + inset;
-            f.y = oy + pl.y*ts + inset;
-            f.layer = spriteLayer("player");
-            floor.push_back(f);
-        }
-        std::stable_sort(floor.begin(), floor.end(), [](const FloorSprite& a, const FloorSprite& b) {
-            if (a.sortKey != b.sortKey) return a.sortKey < b.sortKey;
-            return a.tieX < b.tieX;
-        });
-        for (auto& f : floor) {
-            if (f.plate) {
-                // S3.5 (d): a story plate -- a solid tile-sized marker with a lighter inset, so an
-                // event cell is visibly "something to read" on the map.
-                float gold[4] = {0.86f, 0.72f, 0.36f, 0.92f};
-                float inner[4] = {0.28f, 0.34f, 0.46f, 0.95f};
-                ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, gold));
-                float in = f.w * 0.22f;
-                ren->drawSprite(spriteQuad(f.x + in, f.y + in, f.w - 2*in, f.h - 2*in, f.layer + 1, inner));
-            } else if (!f.anim.empty() && drawObjectAnim(f.anim, f.x, f.y, f.w, f.h, f.tileX, f.tileY, f.tint)) {
-                // drawn by its look's clip
-            } else if (!f.monster || !drawIdleAnim(*f.monster, f.x, f.y, f.w, f.h, f.tileX, f.tileY, f.tint)) {
-                ren->drawSprite(spriteQuad(f.x, f.y, f.w, f.h, f.layer, f.tint));
-                if (f.wash[3] > 0) {
-                    Quad q = spriteQuad(f.x, f.y, f.w, f.h, f.layer, f.wash);
-                    q.solid = true;
-                    ren->drawSprite(q);
-                }
-            }
-        }
+        MapView view;
+        view.ox = ox; view.oy = oy; view.ts = ts;
+        // Entity/player sprites were inset by a fixed 8px into their 48px tile before Milestone 9; now that ts varies
+        // per stage, the inset scales with it (same ~1/6 ratio, so this renders identically to before at ts=48).
+        view.inset = ts / 6.0f;
+        view.sSize = ts - 2.0f * view.inset;
+        drawTileLayer(view, startX, endX, startY, endY);
+        floor_.render(view);
         drawStylingSpikeBackdrop();
     }
     // Battle / dialogue / inventory / store: the RmlUi documents fill the screen, no world behind.
     drawPreviewAnim(); ren->end();
 }
 
+// The floor's tiles (the act's colour washed over them), the locked stairs' padlocks and the click-to-move target.
+void Game::drawTileLayer(const MapView& v, int startX, int endX, int startY, int endY) {
+    const float ox = v.ox, oy = v.oy, ts = v.ts;
+    // S3.5 (e): the act's palette tints the map tiles. One atlas, ten looks -- no new art needed,
+    // and the maze stays readable because the tint is a light wash rather than a replace.
+    float themeTint[4];
+    toms::floorThemeTint(themeActIndex_, themeTint);
+    for (int y = startY; y < endY; y++) for (int x = startX; x < endX; x++) {
+        char c = st.at(x,y);
+        int layer = spriteLayer(cellSprite(c));
+        ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, themeTint));
+    }
+    // Q7: a locked stair stays visible, dimmed, with a padlock on it until its event is finished.
+    auto solid = [&](float x, float y, float w, float h, float r, float g, float b, float a) {
+        Quad q; q.rect[0] = x; q.rect[1] = y; q.rect[2] = w; q.rect[3] = h;
+        q.uv[0] = 0; q.uv[1] = 0; q.uv[2] = 1; q.uv[3] = 1; q.solid = true;
+        q.tint[0] = r; q.tint[1] = g; q.tint[2] = b; q.tint[3] = a;
+        ren->drawSprite(q);
+    };
+    for (const toms::StairLink& s : st.stairs) {
+        if (!stairLocked(s) || s.x < startX || s.x >= endX || s.y < startY || s.y >= endY) continue;
+        const float x0 = ox + s.x * ts, y0 = oy + s.y * ts, u = ts / 16.0f;
+        solid(x0, y0, ts, ts, 0.0f, 0.0f, 0.0f, 0.45f);                                   // dimmed stair
+        solid(x0 + 5 * u, y0 + 3 * u, 1.5f * u, 5 * u, 0.20f, 0.16f, 0.08f, 1.0f);       // shackle, left
+        solid(x0 + 9.5f * u, y0 + 3 * u, 1.5f * u, 5 * u, 0.20f, 0.16f, 0.08f, 1.0f);    // shackle, right
+        solid(x0 + 5 * u, y0 + 2.5f * u, 6 * u, 1.5f * u, 0.20f, 0.16f, 0.08f, 1.0f);    // shackle, top
+        solid(x0 + 3.5f * u, y0 + 7 * u, 9 * u, 7 * u, 0.20f, 0.16f, 0.08f, 1.0f);       // body outline
+        solid(x0 + 4.5f * u, y0 + 8 * u, 7 * u, 5 * u, 0.98f, 0.80f, 0.30f, 1.0f);       // body
+        solid(x0 + 7.5f * u, y0 + 9 * u, 1 * u, 2.5f * u, 0.20f, 0.16f, 0.08f, 1.0f);    // keyhole
+    }
+    // Click-to-move destination: a soft gold plate on the target tile while walking there.
+    if (walking() && walkTargetX_ >= 0) {
+        const float m = ts * 0.12f;
+        solid(ox + walkTargetX_ * ts + m, oy + walkTargetY_ * ts + m, ts - 2 * m, ts - 2 * m, 1.0f, 0.85f, 0.3f, 0.35f);
+    }
+}
+
+// The cache's error for a file, worded as the previews always reported it.
+static std::string resourceError(const std::string& file, const toms::res::Resource& r) {
+    return r.error() == "cannot read" ? "cannot read " + file : file + ": " + r.error();
+}
+
+// A preview's file comes from the command line: relative to the working folder, not to assets/media (the cache's root).
+static std::string fromWorkingDir(const std::string& file) {
+#if !defined(__ANDROID__)
+    if (!file.empty() && file[0] != '/' && file[0] != '\\' && !(file.size() > 1 && file[1] == ':')) {
+        std::error_code ec;
+        const std::filesystem::path abs = std::filesystem::absolute(toms::vfsPath(file), ec);
+        if (!ec) return toms::vfsUtf8(abs);
+    }
+#endif
+    return file;
+}
+
 bool Game::playPreviewAnim(const std::string& file, const std::string& clip, std::string& error) {
-    std::string text;
-    if (!toms::vfsReadAll(file, text)) { error = "cannot read " + file; return false; }
-    toms::anim::AnimFile f;
-    if (!toms::anim::parseAnim(text, f, &error)) { error = file + ": " + error; return false; }
-    if (!f.find(clip)) { error = file + " has no clip '" + clip + "'"; return false; }
-    loadPreviewAtlases(file, f.atlases, previewSet_, previewAtlases_, previewTextures_);
-    previewAnim_ = std::move(f);
-    previewPlayer_.play(previewAnim_.find(clip));
+    if (!res_) { error = "the renderer is not up yet"; return false; }
+    std::shared_ptr<toms::res::AnimRes> a = res_->get<toms::res::AnimRes>(fromWorkingDir(file));
+    res_->refresh(a);   // the anim editor may have saved it since it was last played
+    if (!a->ok()) { error = resourceError(file, *a); return false; }
+    if (!a->find(clip)) { error = file + " has no clip '" + clip + "'"; return false; }
+    previewAnim_ = a;
+    previewClip_ = clip;
+    previewAnimVer_ = a->version();
+    previewPlayer_.play(a->find(clip));
     previewMissing_.clear();
     std::fprintf(stderr, "[anim] preview %s#%s (%.2fs, %zu atlas(es))\n", file.c_str(), clip.c_str(),
-                 previewAnim_.find(clip)->duration(), previewSet_.entries.size());
+                 a->find(clip)->duration(), a->atlases().entries.size());
     return true;
 }
 
 bool Game::playPreviewFx(const std::string& file, const std::string& effect, std::string& error) {
-    std::string text;
-    if (!toms::vfsReadAll(file, text)) { error = "cannot read " + file; return false; }
-    toms::fx::ParticleFile f;
-    if (!toms::fx::parseParticles(text, f, &error)) { error = file + ": " + error; return false; }
-    if (!f.find(effect)) { error = file + " has no effect '" + effect + "'"; return false; }
-    loadPreviewAtlases(file, f.atlases, previewFxSet_, previewFxAtlases_, previewFxTextures_);
-    for (const toms::fx::Problem& p : toms::fx::checkParticles(f, &previewFxSet_))
+    if (!res_) { error = "the renderer is not up yet"; return false; }
+    std::shared_ptr<toms::res::ParticleRes> f = res_->get<toms::res::ParticleRes>(fromWorkingDir(file));
+    res_->refresh(f);   // the particle editor may have saved it since
+    if (!f->ok()) { error = resourceError(file, *f); return false; }
+    if (!f->find(effect)) { error = file + " has no effect '" + effect + "'"; return false; }
+    for (const toms::fx::Problem& p : toms::fx::checkParticles(f->file(), &f->atlases()))
         std::fprintf(stderr, "[fx] %s %s: %s\n", p.warning ? "warning" : "error", p.where.c_str(), p.text.c_str());
-    previewFxFile_ = std::move(f);
-    const toms::fx::Effect* e = previewFxFile_.find(effect);
+    previewFxFile_ = f;
+    previewFxName_ = effect;
+    previewFxVer_ = f->version();
+    const toms::fx::Effect* e = f->find(effect);
     // Placed before play(): the prewarm already makes world-space particles where the effect is.
     previewFx_.setTransform(toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f));
     previewFx_.setGpuSimulation(ren, particleGpuThreshold());   // big emitters on the GPU (setting)
@@ -244,54 +159,13 @@ bool Game::playPreviewFx(const std::string& file, const std::string& effect, std
     return true;
 }
 
-// Its atlases, in order. ".../atlas/game.atlas" (the original art's or an art style's) is the
-// game's own sprite atlas: drawn with the loaded one, so the preview follows the chosen art style.
-// Any other atlas is loaded here, one texture per page.
-void Game::loadPreviewAtlases(const std::string& file, const std::vector<toms::anim::AtlasRef>& refs, toms::anim::AtlasSet& set,
-                              std::vector<std::unique_ptr<toms::AtlasFile>>& owned, std::vector<uint16_t>& textures) {
-    for (uint16_t t : textures) ren->releaseTexture(t);
-    textures.clear();
-    owned.clear();
-    set = toms::anim::AtlasSet();
-    const std::string dir = file.find_last_of("/\\") == std::string::npos ? std::string() : file.substr(0, file.find_last_of("/\\") + 1);
-    for (const toms::anim::AtlasRef& ref : refs) {
-        const std::string& rel = ref.path;
-        const std::string path = rel.size() > 1 && (rel[0] == '/' || rel[1] == ':') ? rel : dir + rel;
-        const size_t slash = path.find_last_of("/\\");
-        const std::string name = path.substr(slash + 1);
-        const std::string parent = slash == std::string::npos ? std::string() : path.substr(0, slash);
-        if (name == "game.atlas" && parent.size() >= 5 && parent.compare(parent.size() - 5, 5, "atlas") == 0) {
-            set.add(spriteAtlas_, ref.id);
-            continue;
-        }
-        std::string atlasText, atlasErr;
-        auto atlas = std::make_unique<toms::AtlasFile>();
-        if (!toms::vfsReadAll(path, atlasText) || !toms::parseAtlas(atlasText, *atlas, &atlasErr)) {
-            std::fprintf(stderr, "[anim] cannot load the atlas %s %s\n", path.c_str(), atlasErr.c_str());
-            continue;
-        }
-        std::vector<uint16_t> pages;
-        for (toms::AtlasPage& pg : atlas->pages) {
-            std::string png;
-            int w = 0, h = 0, ch = 0;
-            unsigned char* px = toms::vfsReadAll(path.substr(0, slash + 1) + pg.file, png)
-                ? stbi_load_from_memory((const stbi_uc*)png.data(), (int)png.size(), &w, &h, &ch, 4) : nullptr;
-            uint16_t tex = kSpriteAtlasTexture;
-            if (px) {
-                tex = ren->loadTexture(std::vector<uint8_t>(px, px + (size_t)w * h * 4), (uint32_t)w, (uint32_t)h);
-                stbi_image_free(px);
-                pg.w = w; pg.h = h;
-                if (tex != kSpriteAtlasTexture) textures.push_back(tex);
-            } else {
-                std::fprintf(stderr, "[anim] cannot load the atlas page %s\n", pg.file.c_str());
-            }
-            pages.push_back(tex);
-        }
-        atlas->computeUVs();
-        set.add(*atlas, ref.id, pages);
-        owned.push_back(std::move(atlas));
-    }
-    if (refs.empty()) set.add(spriteAtlas_);   // no atlas named: the game's own
+// The game's loaded sprite atlas, as the cache's kSpriteAtlas: clips and effects that name ".../atlas/game.atlas" (or
+// no atlas) draw from it with the renderer's sprite texture, so they follow the chosen art style. Called whenever it
+// is (re)loaded; the cached object stays the same and its version goes up.
+void Game::provideSpriteAtlas() {
+    if (!res_) return;
+    res_->provide<toms::res::AtlasRes>(toms::res::ResourceManager::kSpriteAtlas,
+                                       [&](toms::res::AtlasRes& a) { a.setProvided(spriteAtlas_); });
 }
 
 // ---- monster idle animations ----
@@ -300,36 +174,6 @@ void Game::loadPreviewAtlases(const std::string& file, const std::vector<toms::a
 // centre of the monster's rect and scaled so the sprite fills that rect exactly as the static sprite did (a 2x1 golem
 // stretches the clip the same way). A missing file or clip, or the runtime sprite grid (no prebuilt atlas), keeps the
 // static sprite.
-void Game::loadDoorAnims() {   // assets/media/anim/door_open.anim: "door_open_<colour>" (openDoor)
-    const std::string file = dataDir + "/anim/door_open.anim";
-    std::string text, error;
-    doorAnim_ = toms::anim::AnimFile();
-    if (!toms::vfsReadAll(file, text)) return;   // none: doors simply vanish
-    if (!toms::anim::parseAnim(text, doorAnim_, &error)) {
-        std::fprintf(stderr, "[anim] %s: %s -- doors vanish without a clip\n", file.c_str(), error.c_str());
-        doorAnim_ = toms::anim::AnimFile();
-        return;
-    }
-    loadPreviewAtlases(file, doorAnim_.atlases, doorSet_, doorAtlases_, doorTextures_);
-}
-
-void Game::loadIdleAnims() {
-    const std::string file = dataDir + "/anim/monster_idle.anim";
-    std::string text, error;
-    idleAnim_ = toms::anim::AnimFile();
-    if (!toms::vfsReadAll(file, text)) return;   // none: monsters stand still, as before
-    if (!toms::anim::parseAnim(text, idleAnim_, &error)) {
-        std::fprintf(stderr, "[anim] %s: %s -- monsters stand still\n", file.c_str(), error.c_str());
-        idleAnim_ = toms::anim::AnimFile();
-        return;
-    }
-    loadPreviewAtlases(file, idleAnim_.atlases, idleSet_, idleAtlases_, idleTextures_);
-    loadDoorAnims();
-    std::fprintf(stderr, "[anim] monster idle animations: %zu clip(s)\n", idleAnim_.clips.size());
-}
-
-
-
 // ---- objects' looks (the stage editor's "objects" and the types' "look"; docs/19_STAGE_EDITOR.md) ----
 nlohmann::json Game::typeLook(const std::string& kind, const std::string& id) const {
     const std::string k = kind.substr(0, kind.find(':'));
@@ -365,44 +209,6 @@ std::string Game::typeSprite(const std::string& kind, const std::string& id) con
     return kind.rfind("npc", 0) == 0 ? npcSprite(id) : entSprite(id);
 }
 
-bool Game::drawObjectAnim(const std::string& ref, float x, float y, float w, float h, int tileX, int tileY, const float tint[4]) {
-    if (spriteAtlas_.pages.empty()) return false;
-    const size_t hash = ref.find('#');
-    if (hash == std::string::npos) return false;
-    const std::string file = ref.substr(0, hash), clipName = ref.substr(hash + 1);
-    std::unique_ptr<ObjAnim>& slot = objAnims_[file];
-    if (!slot) {   // first use: read the file and its atlases; a bad file is remembered as bad (logged once)
-        slot = std::make_unique<ObjAnim>();
-        const std::string path = dataDir + "/" + file;
-        std::string text, error;
-        if (toms::vfsReadAll(path, text) && toms::anim::parseAnim(text, slot->file, &error)) {
-            loadPreviewAtlases(path, slot->file.atlases, slot->set, slot->atlases, slot->textures);
-            slot->ok = true;
-        } else std::fprintf(stderr, "[anim] object clip file %s: %s\n", path.c_str(), error.empty() ? "cannot read" : error.c_str());
-    }
-    if (!slot->ok) return false;
-    const toms::anim::Clip* clip = slot->file.find(clipName);
-    if (!clip) return false;
-    const float len = clip->duration();
-    const double phase = (double)(((unsigned)tileX * 73856093u ^ (unsigned)tileY * 19349663u) % 997u) / 997.0 * len;
-    const float t = len > 0 ? (float)std::fmod(idleClockMs_ / 1000.0 + phase, (double)len) : 0.0f;
-    return drawClipInRect(*clip, t, slot->set, x, y, w, h, 32.0f, 32.0f, tint);   // authored as the 32x32 idle clips are
-}
-
-bool Game::drawIdleAnim(const std::string& enemyId, float x, float y, float w, float h, int tileX, int tileY, const float tint[4]) {
-    if (spriteAtlas_.pages.empty() || idleAnim_.clips.empty()) return false;
-    const toms::anim::Clip* clip = idleAnim_.find("idle_" + enemyId);
-    if (!clip) return false;
-    const toms::AtlasRegion* r = spriteAtlas_.find(entSprite(enemyId));
-    const float sw = r && r->origW > 0 ? (float)r->origW : 32.0f, sh = r && r->origH > 0 ? (float)r->origH : 32.0f;
-    const float len = clip->duration();
-    // each monster at its own phase, fixed by its tile, so a room of slimes does not breathe in step
-    const double phase = (double)(((unsigned)tileX * 73856093u ^ (unsigned)tileY * 19349663u) % 997u) / 997.0 * len;
-    const float t = len > 0 ? (float)std::fmod(idleClockMs_ / 1000.0 + phase, (double)len) : 0.0f;
-    static const float kWhite[4] = {1, 1, 1, 1};
-    return drawClipInRect(*clip, t, idleSet_, x, y, w, h, sw, sh, tint ? tint : kWhite);
-}
-
 bool Game::drawClipInRect(const toms::anim::Clip& clip, float t, const toms::anim::AtlasSet& set, float x, float y, float w, float h,
                           float spriteW, float spriteH) {
     static const float kWhite[4] = {1, 1, 1, 1};
@@ -424,18 +230,18 @@ bool Game::drawClipInRect(const toms::anim::Clip& clip, float t, const toms::ani
 
 // The preview clip and/or effect, centred on the screen, over the world (before ren->end()).
 void Game::drawPreviewAnim() {
-    if (previewFx_.effect()) {
+    if (previewFx_.effect() && previewFxFile_) {
         const size_t known = previewMissing_.size();
         previewFx_.setTransform(toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f));
-        previewFx_.draw(ren, previewFxSet_, glm::mat3(1.0f), nullptr, &previewMissing_);   // CPU quads + GPU emitters
+        previewFx_.draw(ren, previewFxFile_->atlases(), glm::mat3(1.0f), nullptr, &previewMissing_);   // CPU quads + GPU emitters
         for (size_t i = known; i < previewMissing_.size(); i++)
             std::fprintf(stderr, "[fx] sprite '%s' is not in the atlas\n", previewMissing_[i].c_str());
     }
-    if (!previewPlayer_.showing()) return;
+    if (!previewPlayer_.showing() || !previewAnim_) return;
     const size_t known = previewMissing_.size();
     toms::anim::evaluate(*previewPlayer_.clip(), previewPlayer_.poseTime(), previewPoses_);
     previewQuads_.clear();
-    toms::anim::appendQuads(previewPoses_, previewSet_, toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f),
+    toms::anim::appendQuads(previewPoses_, previewAnim_->atlases(), toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f),
                             nullptr, previewQuads_, &previewMissing_);
     for (const Quad& q : previewQuads_) ren->drawSprite(q);
     for (size_t i = known; i < previewMissing_.size(); i++)

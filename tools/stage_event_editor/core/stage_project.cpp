@@ -165,7 +165,7 @@ bool Project::load(const std::string& tomsRoot, std::string& err) {
     // the palette's type records, whole, for the detail windows (written back by Save)
     dataFiles.clear();
     dataOrig.clear();
-    std::vector<std::string> typePaths = {enemiesPath(), itemsPath()};
+    std::vector<std::string> typePaths = {enemiesPath(), itemsPath(), palettePath()};   // (the palette file may be absent)
     for (const std::string& n : listFiles(data + "npcs", "", ".json")) typePaths.push_back("assets/data/npcs/" + n);
     for (const std::string& p : typePaths) {
         DataFile df;
@@ -174,6 +174,7 @@ bool Project::load(const std::string& tomsRoot, std::string& err) {
         dataFiles[p] = std::move(df);
     }
     // each .anim file's clip names (a type's or an object's animation: "anim/<file>.anim#<clip>")
+    dataVer++;
     anims.clear();
     for (const std::string& n : listFiles(root + "/assets/media/anim", "", ".anim")) {
         std::vector<std::string> clips;
@@ -250,6 +251,7 @@ bool Project::reloadEvents(std::string& err) {
         }
     }
     storyVer++;
+    dataVer++;
     return true;
 }
 
@@ -384,7 +386,10 @@ std::string Project::nameOf(const std::string& sem) const {
 // ---- types ---------------------------------------------------------------------------------------------------------
 
 Json* Project::typeRec(const std::string& sem) {
-    const auto [cat, id] = splitSem(sem);
+    const auto [cat, rawId] = splitSem(sem);
+    // a map key "key:<colour>" is the item key_<colour> (items.json), as the game reads it (stage.h): its look and tint
+    // are that record's
+    const std::string id = cat == "key" ? "key_" + rawId : rawId;
     auto inFile = [&](const std::string& p, bool whole) -> Json* {
         auto it = dataFiles.find(p);
         if (it == dataFiles.end() || it->second.deleted) return nullptr;
@@ -395,9 +400,75 @@ Json* Project::typeRec(const std::string& sem) {
         return f == o.end() || !f->is_object() ? nullptr : &*f;
     };
     if (cat == "monster") return inFile(enemiesPath(), false);
-    if (cat == "item" || cat == "gate") return inFile(itemsPath(), false);
+    if (cat == "item" || cat == "gate" || cat == "key") return inFile(itemsPath(), false);
     if (cat == "npc") return inFile(npcPath(id), true);
     return nullptr;
+}
+
+// ---- the palette's own categories ---------------------------------------------------------------------------------
+
+std::vector<std::string> Project::paletteGroups() const {
+    std::vector<std::string> out;
+    auto it = dataFiles.find(palettePath());
+    if (it == dataFiles.end() || it->second.deleted) return out;
+    if (const Json* g = member(it->second.obj, "groups"); g && g->is_array())
+        for (const Json& n : *g)
+            if (n.is_string() && !n.get<std::string>().empty()) out.push_back(n.get<std::string>());
+    return out;
+}
+
+void Project::setPaletteGroups(const std::vector<std::string>& groups) {
+    auto it = dataFiles.find(palettePath());
+    if (groups.empty() && (it == dataFiles.end() || !dataOrig.count(palettePath()))) {   // never was a file: nothing to write
+        if (it != dataFiles.end()) dataFiles.erase(it);
+        return;
+    }
+    DataFile& df = dataFiles[palettePath()];
+    df.deleted = false;
+    if (!df.obj.is_object()) df.obj = Json::object();
+    df.obj["groups"] = groups;
+}
+
+std::string Project::groupOf(const std::string& sem) const {
+    const Json* r = typeRec(sem);
+    return r ? str(*r, "group", "") : std::string();
+}
+
+bool Project::setGroup(const std::string& sem, const std::string& group) {
+    Json* r = typeRec(sem);
+    if (!r) return false;
+    if (group.empty()) r->erase("group");
+    else (*r)["group"] = group;
+    return true;
+}
+
+namespace {
+// every type record: the monsters, the items, each NPC file
+template <class F> void forEachRecord(std::map<std::string, DataFile>& files, F&& f) {
+    for (auto& [path, df] : files) {
+        if (df.deleted || !df.obj.is_object()) continue;
+        if (path == Project::enemiesPath() || path == Project::itemsPath()) {
+            for (auto& [k, v] : df.obj.items()) if (v.is_object()) f(v);
+        } else if (startsWith(path, "assets/data/npcs/")) {
+            f(df.obj);
+        }
+    }
+}
+}  // namespace
+
+int Project::renameGroup(const std::string& from, const std::string& to) {
+    int n = 0;
+    forEachRecord(dataFiles, [&](Json& r) { if (str(r, "group", "") == from) { r["group"] = to; n++; } });
+    std::vector<std::string> g = paletteGroups();
+    for (std::string& s : g) if (s == from) s = to;
+    setPaletteGroups(g);
+    return n;
+}
+
+int Project::clearGroup(const std::string& group) {
+    int n = 0;
+    forEachRecord(dataFiles, [&](Json& r) { if (str(r, "group", "") == group) { r.erase("group"); n++; } });
+    return n;
 }
 
 Json Project::typeLook(const std::string& sem) const {
@@ -415,7 +486,7 @@ std::string Project::spriteOf(const std::string& sem) const {
     if (sem == "player_start") return "player";
     if (sem == "wall" || sem == "floor" || sem == "stairs_up" || sem == "stairs_down") return sem;
     const auto [cat, id] = splitSem(sem);
-    if (cat == "monster" || cat == "item" || cat == "npc") {   // a type's own sprite (its record)
+    if (cat == "monster" || cat == "item" || cat == "npc" || cat == "key") {   // a type's own sprite (its record)
         std::string own = str(typeLook(sem), "sprite");
         if (endsWith(own, ".png")) own.resize(own.size() - 4);
         if (!own.empty() && has(own)) return own;
@@ -466,6 +537,8 @@ std::vector<std::string> Project::typeUses(const std::string& sem) {
     std::vector<std::string> out;
     const bool item = startsWith(sem, "item:");
     const std::string gate = item ? "gate:" + sem.substr(5) : std::string();
+    // the item key_<colour> is also every "key:<colour>" cell
+    const std::string mapKey = item && startsWith(sem, "item:key_") ? "key:" + sem.substr(9) : std::string();
     for (const Floor& f : floors) {
         const bool open = hasDoc(f.id);
         const Json* lgP = member(open ? doc(f.id).st : f.stage, "legend");
@@ -476,7 +549,10 @@ std::vector<std::string> Project::typeUses(const std::string& sem) {
         for (auto& [c, v] : lgP->items()) {
             if (!v.is_string() || c.size() != 1) continue;
             const std::string s = v.get<std::string>();
-            if ((s == sem || (item && s == gate)) && tiles.find(c[0]) != std::string::npos) { out.push_back(f.id); break; }
+            if ((s == sem || (item && s == gate) || (!mapKey.empty() && s == mapKey)) && tiles.find(c[0]) != std::string::npos) {
+                out.push_back(f.id);
+                break;
+            }
         }
     }
     return out;
@@ -493,6 +569,20 @@ std::string Project::semAt(const StageDoc& d, int x, int y) const {
     const Json* lg = member(d.st, "legend");
     const Json* v = lg ? member(*lg, std::string(1, c).c_str()) : nullptr;
     return v && v->is_string() ? v->get<std::string>() : std::string();
+}
+
+std::map<std::string, int> Project::placedEvents(const StageDoc& d) const {
+    int count[256] = {};
+    for (const std::string& r : d.grid) for (char c : r) count[(unsigned char)c]++;
+    std::map<std::string, int> out;
+    const Json* lg = member(d.st, "legend");
+    if (!lg || !lg->is_object()) return out;
+    for (const auto& [k, v] : lg->items())
+        if (k.size() == 1 && count[(unsigned char)k[0]] && v.is_string()) {
+            const std::string& s = v.get_ref<const std::string&>();
+            if (s.rfind("event:", 0) == 0) out[s.substr(6)] += count[(unsigned char)k[0]];
+        }
+    return out;
 }
 
 char Project::charFor(StageDoc& d, const std::string& sem) const {
@@ -671,6 +761,7 @@ bool Project::commitEdit(StageDoc& d, const std::string& label) {
     if (before == snapshot(d)) return false;
     d.undo.push_back({std::move(before), label});
     d.redo.clear();
+    d.ver++;
     storyVer++;
     return true;
 }
@@ -682,6 +773,7 @@ bool Project::undo(StageDoc& d, std::string* label) {
     d.redo.push_back({snapshot(d), u.label});
     restore(d, u.snap);
     if (label) *label = u.label;
+    d.ver++;
     storyVer++;
     return true;
 }
@@ -693,6 +785,7 @@ bool Project::redo(StageDoc& d, std::string* label) {
     d.undo.push_back({snapshot(d), r.label});
     restore(d, r.snap);
     if (label) *label = r.label;
+    d.ver++;
     storyVer++;
     return true;
 }
@@ -723,7 +816,24 @@ bool Project::isDirty(const std::string& fid) const {
     auto it = docs_.find(fid);
     if (it == docs_.end()) return false;
     const StageDoc& d = *it->second;
-    return stageText(d) != d.origStage || specText(d) != d.origSpec;
+    if (d.dirtyAt != d.ver) {
+        d.dirtyVal = stageText(d) != d.origStage || specText(d) != d.origSpec;
+        d.dirtyAt = d.ver;
+    }
+    return d.dirtyVal;
+}
+
+bool Project::dataDirty() const {
+    if (!textEdits.empty()) return true;
+    if (dataDirtyAt_ != dataVer) {
+        dataDirtyVal_ = false;
+        for (const auto& [path, df] : dataFiles) {
+            auto orig = dataOrig.find(path);
+            if (df.deleted ? orig != dataOrig.end() : (orig == dataOrig.end() || fmtJson(df.obj, df.eol) != orig->second)) { dataDirtyVal_ = true; break; }
+        }
+        dataDirtyAt_ = dataVer;
+    }
+    return dataDirtyVal_;
 }
 
 bool Project::anyDirty() const {

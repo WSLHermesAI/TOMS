@@ -7805,6 +7805,10 @@
       "zh_TW": "刻著鐘紋的舊鑰匙。只能打開第四層敲鐘人小屋的鐘紋門。",
       "en": "An old key carved with a bell. It opens only the bell gate of the bell-ringer's room on the fourth floor."
     },
+    "res.missing": {
+      "zh_TW": "找不到檔案：{file}",
+      "en": "Missing file: {file}"
+    },
     "gate.locked": {
       "zh_TW": "這道門刻著紋樣，只有「{item}」能打開。",
       "en": "This gate is carved with a pattern. Only the {item} opens it."

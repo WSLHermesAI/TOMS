@@ -45,6 +45,8 @@ public:
     void selectEvent(const QString& id);   // from the stage editor (↗)
     void showNpc(const QString& id);       // from the stage editor's NPC panel
     void showTab(const QString& tab) { setTab(tab); }   // problems | floors | vars | kinds | npcs | dlg
+    // Its panels (the events tree left, History right) docked where they start, shown, at their starting sizes.
+    void resetLayout();
     QStringList selfTest();
 
 signals:

@@ -60,6 +60,7 @@ bool BgfxViewport::restartGame(const QString& stage) {
     SessionOptions opts;
     opts.assetDir = GameSession::defaultAssetDir();
     opts.startStage = stage.toStdString();
+    opts.hotReload = true;   // art, clips and effects saved in the tools show up in the running game
     std::string err;
     if (!session_.start(opts, err)) {
         timer_.stop();

@@ -64,6 +64,7 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
     std::fprintf(stderr, "[assets] sprites: prebuilt atlas %sgame.atlas, %dx%d, %zu region(s), art style '%s'\n", dir.c_str(),
                  w, h, atlas.regions.size(), artStyles_[style].id.empty() ? "original" : artStyles_[style].id.c_str());
     spriteAtlas_ = std::move(atlas);
+    provideSpriteAtlas();
     spriteAtlasRevision_++;   // the UI's sprite sheet (uiSpritesheet) follows from the next frame
     loadedArtStyle_ = style;
     return true;
@@ -126,6 +127,7 @@ bool Game::loadSpriteAtlas(int style) {
     spriteUVs_.clear();
     spriteTrim_.clear();
     spriteAtlas_ = toms::AtlasFile();   // no prebuilt atlas: the UI has no sprite sheet either
+    provideSpriteAtlas();
     spriteAtlasRevision_++;
     loadedArtStyle_ = style;
     return true;
@@ -146,13 +148,30 @@ bool Game::loadAssets(const std::string& assetDir) {
     // (GameSession) owns the window and frees the renderer.
     ren = new Renderer();
     ren->init(1280, 720);   // size ignored by the bgfx renderer: the host sets the backbuffer size
+    // The resource cache (docs/25_RESOURCE_MANAGER.md). Any ".../atlas/game.atlas" a clip or effect names -- the
+    // original art's or a style's -- is the sprite atlas loaded now (provideSpriteAtlas), so they follow the art style.
+    res_ = std::make_unique<toms::res::ResourceManager>(ren);
+    // Every file the game needs by key (assets/media/resources.json); a key or a path under assets/media is how code
+    // asks for one (res_->get<T>). A missing one is said on screen.
+    res_->setRoot(assetDir);
+    res_->setOnMissing([this](const std::string& name, const std::string& path, const std::string& error) { resourceMissing(name, path, error); });
+    res_->loadManifest("resources.json");
+    res_->setPathMapper([](const std::string& path) {
+        const size_t slash = path.find_last_of("/\\");
+        const std::string name = path.substr(slash == std::string::npos ? 0 : slash + 1);
+        const std::string parent = slash == std::string::npos ? std::string() : path.substr(0, slash);
+        if (name == "game.atlas" && parent.size() >= 5 && parent.compare(parent.size() - 5, 5, "atlas") == 0)
+            return std::string(toms::res::ResourceManager::kSpriteAtlas);
+        return path;
+    });
     // Art styles (Settings > art style; art_styles.h): start with the one settings.json names.
     artStyles_ = toms::artStylesFromJson(readJsonFile(assetDir + "/styles/styles.json"));
     if (!loadSpriteAtlas(toms::artStyleIndex(artStyles_,
             toms::loadGameSettings(toms::defaultSaveDir() + "/settings.json").artStyle)))
         return false;
     // (Text is RmlUi's: see assets/media/fonts/NotoSansCJKtc-TOMS.otf and tools/make_ui_font.py.)
-    loadIdleAnims();
+    // The manifest's "preload" entries (the map's clips and their atlases), now that the sprite atlas is provided.
+    if (const int failed = res_->preload()) std::fprintf(stderr, "[res] %d preloaded resource(s) missing\n", failed);
 
     // S1: character-level 佔格 table (docs/design/ART_AND_ABILITY_DESIGN.md F8). An absent file leaves
     // every entity at 1x1, i.e. exactly the pre-S1 behavior -- the table is purely additive.
@@ -302,6 +321,13 @@ bool Game::loadAssets(const std::string& assetDir) {
     return true;
 }
 
+void Game::resourceMissing(const std::string& name, const std::string& path, const std::string& error) {
+    std::fprintf(stderr, "[res] missing: %s (%s): %s\n", name.c_str(), path.c_str(), error.c_str());
+    std::string msg = locale_.tr("res.missing");
+    msg = msg == "res.missing" || msg.empty() ? "Missing file: " + name : toms::fillText(msg, {{"file", name}});
+    if (std::find(resourceMessages_.begin(), resourceMessages_.end(), msg) == resourceMessages_.end()) resourceMessages_.push_back(msg);
+}
+
 int Game::spriteLayer(const std::string& id) const {
     auto it = idToLayer.find(id);
     if (it == idToLayer.end()) it = idToLayer.find("floor");   // a sprite the atlas lacks draws as floor, as before
@@ -323,7 +349,7 @@ void Game::spriteUV(int layer, float uv[4]) const {
 
 void Game::loadStage(const std::string& id, StageArrival arrival) {
     const std::string fromStage = st.id;   // the floor being left: arriving by stairs lands on the stair back to it
-    mapFx_.clear();   // a door opening on the floor being left
+    floor_.clear();   // the objects of the floor being left (a door opening on it stops)
     cancelWalk();   // a click-to-move route belongs to the old floor
     curStage = id;
     // Resolve the stage JSON. Data ids in connect.up/down use "stage_02" (underscore)
@@ -546,6 +572,7 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
         for (auto& e : st.entities)
             if (e.kind == "stairs_down" || e.kind == "stairs_up") { pl.x = e.x; pl.y = e.y; break; }
     }
+    floor_.build(*this);   // a class per thing on the floor, with its looks (map_objects.h)
     // A floor change must never visibly pan in from wherever the camera was on the PREVIOUS
     // floor (different grid, different scale of "makes sense") -- jump straight to the new
     // floor's starting view instead of easing into it.
