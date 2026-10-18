@@ -30,10 +30,17 @@ std::string nowStamp();
 bool slotExists(const std::string& saveDir, int slot);
 bool deleteSlot(const std::string& saveDir, int slot);
 
+// The slot file's own format version (its header: savedAt, playTimeSec, meta, run). Raised only when that header
+// changes; the meta / run parts carry their own schemaVersion.
+constexpr int kSlotSaveVersion = 1;
+
 // What the Continue page shows for one slot.
 struct SlotSummary {
     int slot = 0;
-    bool exists = false;
+    bool exists = false;       // loadable (from the file or, failing that, its backup)
+    bool damaged = false;      // a file is there but neither it nor its backup can be read: never offered as empty
+    bool fromBackup = false;   // the slot file was unreadable and the backup (the save before it) is shown instead
+    bool newer = false;        // written by a newer version of the game: loads, but is never overwritten
     std::string stageId;
     std::string stageName;     // from data/stages/<id>.json's "name", when readable
     int lv = 1;
@@ -45,9 +52,16 @@ struct SlotSummary {
 bool writeSlotSave(const std::string& saveDir, int slot,
                    const MetaSaveData& meta, const RunSaveData& run,
                    int playTimeSec, const std::string& savedAt, const std::string& stageName);
+// How a slot was read (readSlotSave's optional report).
+struct SlotLoadInfo {
+    bool fromBackup = false;   // the slot file was damaged; its backup was loaded
+    bool newer = false;        // the file comes from a newer version of the game (writeSlotSave will not replace it)
+};
 bool readSlotSave(const std::string& saveDir, int slot,
                   MetaSaveData& metaOut, RunSaveData& runOut,
-                  int* playTimeSec = nullptr, std::string* savedAt = nullptr);
+                  int* playTimeSec = nullptr, std::string* savedAt = nullptr, SlotLoadInfo* info = nullptr);
+// True when the slot holds a save from a newer version of the game (its file or, if that is damaged, its backup).
+bool slotIsNewer(const std::string& saveDir, int slot);
 // Reads just the header/player fields the Continue list needs (no full parse of entityStatus).
 SlotSummary summarizeSlot(const std::string& saveDir, int slot, int maxSlot = 0);
 // Lowest unused slot in [1..slotCount], or -1 when every slot is taken.

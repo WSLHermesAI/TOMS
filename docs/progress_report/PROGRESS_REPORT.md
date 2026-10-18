@@ -15,6 +15,18 @@
 
 ## ▶ Next Step
 
+**AI restyles of 10085, 230 AI sprites, save-system guards, stable object ids** (2026-10-18; not committed in TOMS;
+[DAILY_2026-10-18.md](DAILY_2026-10-18.md), [../28_SAVE_SYSTEM.md](../28_SAVE_SYSTEM.md),
+[AIGamestyle/Doc/Reskin_Game_Art.md](../../AIGamestyle/Doc/Reskin_Game_Art.md)):
+- 10085 as Christmas and Zeus (drop-in, edges repaired); the reskin guide and a new-PC setup guide in AIGamestyle.
+- 230 TOMS sprites made and reviewed; the game can draw any atlas sprite, gate door pictures, floor themes, a player
+  look. **Not added to the game data yet** (`add_toms_types.py`, atlas, font; the flame door needs a recolour).
+- Saves: flush on quit / background / page hide, fsync, `.bak` backup and fallback, "Damaged" slots, newer-version
+  saves read-only, migration steps; floor objects saved by stable uid (all 71 stage files).
+- Changed-only run: 70 of 112, all pass. **First:** `tools\test.cmd all` with the web build, then commit TOMS and the
+  rest of AIGamestyle.
+- **Owner:** go-ahead to add the sprites to the game.
+
 **Resource manager, objects by class, the stage editor's palette and layout** (2026-10-17; not committed;
 [DAILY_2026-10-17.md](DAILY_2026-10-17.md), [../25_RESOURCE_MANAGER.md](../25_RESOURCE_MANAGER.md)):
 - The engine: a resource cache by path with a manifest (`assets/media/resources.json`), shared atlases, a memory budget,

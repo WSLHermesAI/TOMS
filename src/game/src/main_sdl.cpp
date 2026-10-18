@@ -395,11 +395,17 @@ bool appFrame(App& app) {
     in.wheel = 0;
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_EVENT_QUIT) quit = true;
+        if (e.type == SDL_EVENT_QUIT) {
+            quit = true;
+            if (::Game* g = app.session.game()) g->flushSave();   // the autosave's last seconds (docs/28)
+        }
         // Android (and any mobile OS) suspends the app: stop drawing while backgrounded, and resync the
         // drawable size on return -- a suspended app can come back at a different size, and its GL context
         // may have been lost. These events never fire on desktop, so this is inert there.
-        else if (e.type == SDL_EVENT_WILL_ENTER_BACKGROUND) app.suspended = true;
+        else if (e.type == SDL_EVENT_WILL_ENTER_BACKGROUND) {
+            app.suspended = true;
+            if (::Game* g = app.session.game()) g->flushSave();   // Android may end a backgrounded app without notice
+        }
         else if (e.type == SDL_EVENT_DID_ENTER_FOREGROUND) {
             app.suspended = false;      // the per-frame drawable-size compare handles the rest
             app.resumed = true;
@@ -540,6 +546,13 @@ void webFrame(void*) {
 // ---- JavaScript hooks (called from shell.html with Module.ccall) ----
 extern "C" {
 // IDBFS finished loading /save: re-read the save slots so the title's Continue list is right.
+// The page is being hidden or closed (pagehide / visibilitychange below): write the run now; the save code then
+// starts its IndexedDB flush.
+EMSCRIPTEN_KEEPALIVE void jsFlushSave() {
+    if (g_app)
+        if (::Game* g = g_app->session.game()) g->flushSave();
+}
+
 EMSCRIPTEN_KEEPALIVE void jsRefreshSlots() {
     if (g_app && g_app->session.game()) g_app->session.game()->refreshSlots();
 }
@@ -605,6 +618,9 @@ int main(int argc, char** argv) {
                 } catch (e) { console.warn('[TOMS] syncfs failed', e); }
             };
             Module.__tomsSyncfs(true);
+            var flush = function() { try { Module.ccall('jsFlushSave', null, [], []); } catch (e) {} };
+            window.addEventListener('pagehide', flush);
+            document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'hidden') flush(); });
         } catch (e) { console.warn('[TOMS] IndexedDB unavailable; saves last for this session only', e); }
     });
 

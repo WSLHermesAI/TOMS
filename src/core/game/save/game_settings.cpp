@@ -12,6 +12,7 @@ nlohmann::json toJson(const GameSettings& s) {
     j["cameraMode"] = s.cameraMode;
     j["viewCols"] = s.viewCols;
     j["artStyle"] = s.artStyle;
+    if (!s.playerLook.empty()) j["playerLook"] = s.playerLook;
     j["particleGpuThreshold"] = s.particleGpuThreshold;
     return j;
 }
@@ -37,6 +38,7 @@ GameSettings gameSettingsFromJson(const nlohmann::json& j) {
     if (vc > 60) vc = 60;    // past this a tile is a couple px, not a testing scenario
     s.viewCols = vc;
     s.artStyle = j.value("artStyle", std::string());
+    s.playerLook = j.value("playerLook", std::string());
     s.particleGpuThreshold = std::max(0, j.value("particleGpuThreshold", kDefaultParticleGpuThreshold));
     return s;
 }

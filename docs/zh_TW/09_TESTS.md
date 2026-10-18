@@ -39,6 +39,15 @@ tools\test.cmd windows-debug -L unit     :: a ctest filter runs as given (only t
 | 全域 | 根目錄的 `CMakeLists.txt`、preset、`cmake/`、`external/` | 所有桌面測試 |
 | 不測 | 文件、`*.md`、HTML 編輯器、`android/`、測試執行器本身 | 不執行 |
 
+**`tests/` 底下的資料夾**由 [tests/test_folders.json](../../tests/test_folders.json) 決定：它列出哪些資料夾是測試資料
+（`golden`、`smoke`、`tools`、`gltf`、`mpdi`、`stage`、`font`），以及各自要執行的測試（ctest 名稱、`label:<標籤>` 或
+`@golden`）。`tests/` 底下其他資料夾不是測試資料，不執行測試（其他專案的檔案、工具輸出）；執行時只會列出一次「not test
+data」。新測試要讀某個資料夾時，再把它加進去。
+
+**關閉測試：**`tools/test_switches.cmd` 開啟一個視窗，以樹狀（群組 > 區域 > 測試）列出每個測試，各有一個勾選框；按 Save
+把沒勾的寫進 [tests/test_switches.json](../../tests/test_switches.json)，`test.cmd` 就不會執行它們（只測變更或 `all`
+都一樣；手動給的 ctest 篩選照原樣執行）。`test_switches.cmd --list` 以文字印出同樣的樹。執行時會列出被略過的已選測試。
+
 沒有任何規則認得的檔案不會執行測試，並列為 **NOT MAPPED**：請在 `RULES` 中為它補一條規則。各後端版本
 （`stage_d3d12/vulkan/opengl`、`fx_cpu/compute/gpu`）只在繪圖器、它們的參考圖或全域設定改變時才執行。
 沒有 Python 時，`test.cmd` 會執行全部測試。

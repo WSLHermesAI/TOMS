@@ -507,6 +507,7 @@ void StageEditor::openFloor(const std::string& id) {
     m_v.rectA.reset();
     m_v.rectB.reset();
     m_v.painting = false;
+    syncTheme();
     renderAll();
     if (changed) m_canvas->floorChanged();
     updateTitle();
@@ -530,7 +531,14 @@ bool StageEditor::edit(const QString& label, const std::function<void(stage::Sta
     return true;
 }
 
+// The open floor's tile theme, for drawing its walls, floor and stairs (an edit, an undo or another floor changes it).
+void StageEditor::syncTheme() {
+    const stage::StageDoc* d = curDoc();
+    m_p.theme = d && d->st.contains("theme") && d->st["theme"].is_string() ? d->st["theme"].get<std::string>() : std::string();
+}
+
 void StageEditor::afterEdit() {
+    syncTheme();
     renderFloorSel();
     renderInspector();
     m_checksTimer->start();   // the checks re-run the all-floors story check: just after the map shows the edit
@@ -842,8 +850,10 @@ void StageEditor::renderPalette() {
     std::vector<std::string> items, story;
     for (const std::string& k : m_p.itemIds()) {
         const std::string t = m_p.itemType(k);
-        if (t == "consumable" && !startsWith(k, "key_")) items.push_back(k);
-        if (t == "story") story.push_back(k);
+        const stage::Json* rec = m_p.typeRec("item:" + k);
+        const bool gateKey = t == "story" && rec && rec->contains("opens");
+        if ((t == "consumable" && !startsWith(k, "key_")) || (t == "story" && !gateKey)) items.push_back(k);   // event items too
+        if (gateKey) story.push_back(k);   // a key that opens its own gate
     }
     auto prefixed = [](const char* pre, const std::vector<std::string>& ids) {
         std::vector<std::string> out;
@@ -1168,6 +1178,30 @@ QWidget* StageEditor::floorPanel(stage::StageDoc& d) {
             });
         });
         form->addRow(tr("Name") + QStringLiteral(" · ") + q(lang), e);
+    }
+    {   // the floor's tile theme: its walls, floor and stairs (wall_<theme> ... in the atlas)
+        auto* th = new QComboBox;
+        th->addItem(tr("(default)"), QString());
+        QStringList themes;
+        for (const std::string& s : m_p.sprites)
+            if (startsWith(s, "wall_")) themes << q(s.substr(5));
+        themes.sort();
+        for (const QString& t : themes) th->addItem(t, t);
+        const QString cur = d.st.contains("theme") && d.st["theme"].is_string() ? q(d.st["theme"].get<std::string>()) : QString();
+        th->setCurrentIndex(std::max(0, th->findData(cur)));
+        connect(th, &QComboBox::currentIndexChanged, this, [this, th](int) {
+            const std::string val = th->currentData().toString().toStdString();
+            QTimer::singleShot(0, this, [this, val] {
+                edit(tr("Floor theme → %1").arg(val.empty() ? tr("(default)") : q(val)), [&](stage::StageDoc& dd) {
+                    if (val.empty()) dd.st.erase("theme");
+                    else dd.st["theme"] = val;
+                });
+                m_p.theme = val;
+                renderPalette();
+                m_canvas->update();
+            });
+        });
+        form->addRow(tr("Floor theme"), th);
     }
     for (const char* k : {"up", "down"}) {
         const std::string key = k;

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <set>
 #include <fstream>
 #include <sstream>
 
@@ -473,6 +474,7 @@ int Project::clearGroup(const std::string& group) {
 
 Json Project::typeLook(const std::string& sem) const {
     Json l = Json::object();
+    if (sem.rfind("gate:", 0) == 0) return l;   // a gate is a door (spriteOf), not its key's picture: as the game draws it
     const Json* r = typeRec(sem);
     if (!r) return l;
     if (const Json* s = member(*r, "sprite"); s && s->is_string()) l["sprite"] = *s;
@@ -484,7 +486,8 @@ Json Project::typeLook(const std::string& sem) const {
 std::string Project::spriteOf(const std::string& sem) const {
     auto has = [&](const std::string& n) { return std::find(sprites.begin(), sprites.end(), n) != sprites.end(); };
     if (sem == "player_start") return "player";
-    if (sem == "wall" || sem == "floor" || sem == "stairs_up" || sem == "stairs_down") return sem;
+    if (sem == "wall" || sem == "floor" || sem == "stairs_up" || sem == "stairs_down")   // the floor's theme, if it has one
+        return !theme.empty() && has(sem + "_" + theme) ? sem + "_" + theme : sem;
     const auto [cat, id] = splitSem(sem);
     if (cat == "monster" || cat == "item" || cat == "npc" || cat == "key") {   // a type's own sprite (its record)
         std::string own = str(typeLook(sem), "sprite");
@@ -492,7 +495,11 @@ std::string Project::spriteOf(const std::string& sem) const {
         if (!own.empty() && has(own)) return own;
     }
     if (cat == "door" || cat == "key") return cat + "_" + id;
-    if (cat == "gate") return "door_yellow";   // the game draws a gate as a door with its key's colour over it
+    if (cat == "gate") {   // its key item's own door picture, else the yellow door with the key's colour over it
+        const Json* r = typeRec(sem);
+        const std::string door = r ? str(*r, "door", "") : std::string();
+        return !door.empty() && has(door) ? door : std::string("door_yellow");
+    }
     if (cat == "monster") return id == "demonlord_vorkath" ? "boss_demonlord" : id;
     if (cat == "npc") return has("npc_" + id) ? "npc_" + id : "skeleton";
     if (cat == "item") return id;
@@ -754,8 +761,38 @@ void Project::restore(StageDoc& d, const std::string& snap) {
     }
 }
 
+bool Project::savesState(const std::string& sem) {
+    for (const char* k : {"monster:", "item:", "key:", "event:", "gate:", "door:"})
+        if (startsWith(sem, k)) return true;
+    return false;
+}
+
+void Project::ensureUids(StageDoc& d) const {
+    std::set<std::string> used;
+    long long next = 1;
+    const auto num = [](const std::string& u) -> long long {
+        return u.size() > 1 && u[0] == 'o' && std::all_of(u.begin() + 1, u.end(), ::isdigit) ? std::atoll(u.c_str() + 1) : 0;
+    };
+    if (const Json* objs = member(d.st, "objects"); objs && objs->is_object())
+        for (auto& [k, o] : objs->items())
+            if (const Json* u = member(o, "uid"); u && u->is_string()) next = std::max(next, num(u->get<std::string>()) + 1);
+    for (int y = 0; y < d.height(); y++)
+        for (int x = 0; x < d.width(); x++) {
+            if (!savesState(semAt(d, x, y))) continue;
+            Json* o = objOf(d, x, y);
+            const Json* u = o ? member(*o, "uid") : nullptr;
+            std::string uid = u && u->is_string() ? u->get<std::string>() : std::string();
+            if (!uid.empty() && used.insert(uid).second) continue;
+            uid = "o" + std::to_string(next++);
+            used.insert(uid);
+            if (!d.st.contains("objects") || !d.st["objects"].is_object()) d.st["objects"] = Json::object();
+            d.st["objects"][cellKey(x, y)]["uid"] = uid;
+        }
+}
+
 bool Project::commitEdit(StageDoc& d, const std::string& label) {
     if (!d.pending) return false;
+    ensureUids(d);
     std::string before = std::move(*d.pending);
     d.pending.reset();
     if (before == snapshot(d)) return false;

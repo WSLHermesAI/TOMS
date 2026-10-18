@@ -107,7 +107,9 @@ public:
     std::map<std::string, std::string> dataOrig;                // as last read / written
     std::vector<std::pair<std::string, std::vector<std::string>>> anims;   // "anim/<file>.anim" -> its clip names
     int storyVer = 0;                       // bumped by every edit (the story check's cache)
-    int dataVer = 0;                        // bumped when a type record or a text changes (dataDirty's cache)
+    int dataVer = 0;
+    // The open floor's tile theme (its stage file's "theme"): spriteOf gives wall_<theme> etc. where they exist.
+    std::string theme;                        // bumped when a type record or a text changes (dataDirty's cache)
 
     bool load(const std::string& tomsRoot, std::string& err);
     // The events, NPC files, dialogue actions and strings as they are on disk now (the event editor saved them).
@@ -175,6 +177,12 @@ public:
     static void restore(StageDoc& d, const std::string& snap);
     void beginEdit(StageDoc& d) const { d.pending = snapshot(d); }
     bool commitEdit(StageDoc& d, const std::string& label);   // false: nothing changed
+    // Stable object ids (docs/28_SAVE_SYSTEM.md): every object whose state the game saves (monster, item, key, event,
+    // gate, door) gets objects."x,y".uid -- "o1", "o2" ... unique on its floor -- which moves with it, so a player's
+    // save still knows it after a designer moves it. Run on every committed edit; a duplicate (a copied entry) gets
+    // a new one.
+    static bool savesState(const std::string& sem);
+    void ensureUids(StageDoc& d) const;
     bool undo(StageDoc& d, std::string* label = nullptr);
     bool redo(StageDoc& d, std::string* label = nullptr);
 

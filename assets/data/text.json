@@ -7928,6 +7928,46 @@
     "ev_elder_trusted.text": {
       "zh_TW": "村長信任你了。",
       "en": "The elder trusts you."
+    },
+    "continue.damaged": {
+      "zh_TW": "存檔損毀",
+      "en": "Damaged",
+      "zh_CN": "存档损坏",
+      "ja": "破損",
+      "ko": "손상됨",
+      "es": "Dañado"
+    },
+    "continue.from_backup": {
+      "zh_TW": "使用備份",
+      "en": "From backup",
+      "zh_CN": "使用备份",
+      "ja": "バックアップ",
+      "ko": "백업",
+      "es": "Copia de seguridad"
+    },
+    "continue.newer": {
+      "zh_TW": "較新版本的存檔",
+      "en": "Newer version",
+      "zh_CN": "较新版本的存档",
+      "ja": "新しいバージョン",
+      "ko": "최신 버전",
+      "es": "Versión más nueva"
+    },
+    "save.restored": {
+      "zh_TW": "存檔損毀，已改用上一次的備份。",
+      "en": "The save was damaged; its previous backup was loaded.",
+      "zh_CN": "存档损坏，已改用上一次的备份。",
+      "ja": "セーブが破損していたため、前回のバックアップを読み込みました。",
+      "ko": "저장 파일이 손상되어 이전 백업을 불러왔습니다.",
+      "es": "La partida estaba dañada; se cargó la copia anterior."
+    },
+    "save.newer": {
+      "zh_TW": "這個存檔來自較新版本的遊戲：可以遊玩，但不會寫入這個存檔格。",
+      "en": "This save is from a newer version of the game: you can play, but this slot will not be saved over.",
+      "zh_CN": "这个存档来自较新版本的游戏：可以游玩，但不会写入这个存档格。",
+      "ja": "このセーブは新しいバージョンのものです。遊べますが、このスロットには保存されません。",
+      "ko": "이 저장은 더 새로운 버전의 게임에서 만들어졌습니다. 플레이할 수 있지만 이 슬롯에는 저장되지 않습니다.",
+      "es": "Esta partida es de una versión más nueva del juego: puedes jugar, pero no se guardará en esta ranura."
     }
   }
 }

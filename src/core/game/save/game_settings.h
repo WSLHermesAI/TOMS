@@ -45,6 +45,9 @@ struct GameSettings {
     // ones ("" = the original art). Read once at startup (Game::loadAssets), so changing it in
     // Settings takes effect after a restart -- the Settings dialog says so.
     std::string artStyle;
+    // The player's look: a sprite name in the atlas ("player_mage" ...; docs/27_AI_SPRITES.md). "" or a sprite the atlas
+    // lacks = the original "player".
+    std::string playerLook;
     // See kDefaultParticleGpuThreshold. Read whenever a particle effect starts.
     int particleGpuThreshold = kDefaultParticleGpuThreshold;
 };

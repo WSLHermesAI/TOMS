@@ -118,7 +118,7 @@ void Game::openDoor(int x, int y, char c) {
     st.tiles[y][x] = '.';
     for (auto& e : st.entities)   // the door's own map entry ("door:yellow" in the legend) no longer blocks or draws
         if (!e.consumed && e.x == x && e.y == y && e.kind.rfind("door:", 0) == 0) e.consumed = true;
-    toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, x, y), toms::EntityStatus::Opened);
+    toms::setEntityStatus(entityStatus_, statusKeyAt(x, y), toms::EntityStatus::Opened);
     for (const auto& e : st.entities) if (e.x == x && e.y == y && e.kind.rfind("door:", 0) == 0) fireLinkedEvents(e);
     audio.play("confirm_click");
     (void)c;
@@ -224,7 +224,7 @@ void Game::bumpGate(Entity& gate) {
     pl.inv.erase(it);   // the key goes into the lock
     gate.consumed = true;
     st.tiles[gate.y][gate.x] = '.';
-    toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, gate.x, gate.y), toms::EntityStatus::Opened);
+    toms::setEntityStatus(entityStatus_, statusKeyAt(gate.x, gate.y), toms::EntityStatus::Opened);
     fireLinkedEvents(gate);
     notifications_.push_back({toms::fillText(locale_.tr("gate.opened"), vars), 3200});
     audio.play("confirm_click");

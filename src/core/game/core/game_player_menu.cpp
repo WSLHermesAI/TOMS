@@ -781,6 +781,7 @@ void Game::saveLoadAsk(int index) {
     saveLoadSel_ = index;
     const bool exists = saveLoadSlots_[index].exists;
     if (saveLoadMode_ == 1 && !exists) { audio.play("deny"); return; }   // nothing to load
+    if (saveLoadMode_ == 0 && saveLoadSlots_[index].newer) { audio.play("deny"); return; }   // a newer game's save stays
     saveLoadConfirm_ = true;
     // The safe answer is preselected wherever something is lost: overwriting a save, leaving the run.
     saveLoadConfirmYes_ = saveLoadMode_ == 0 && !exists;
@@ -794,6 +795,7 @@ void Game::saveLoadAnswer(bool yes) {
     const int slot = saveLoadSel_ + 1;
     if (saveLoadMode_ == 0) {
         activeSlot_ = slot;
+        slotReadOnly_ = false;   // the Save tab never offers a newer game's slot (saveLoadAsk)
         saveCurrentRun();
         saveLoadSlots_[saveLoadSel_] = toms::summarizeSlot(toms::defaultSaveDir(), slot);
         toastMsg_ = trParam(locale_.tr("saveload.saved"), "slot", std::to_string(slot));
@@ -824,12 +826,16 @@ void Game::buildSaveLoadUi(toms::UiSaveLoad& v) const {
             c.line1 = (s.stageName.empty() ? s.stageId : s.stageName) + "   " + L.tr("hud.level") + " " + std::to_string(s.lv) +
                       "   HP " + std::to_string(s.hp) + "/" + std::to_string(s.maxhp) + "   " + std::to_string(s.gold) + "G";
             c.line2 = L.tr("continue.saved_at") + " " + s.savedAt + "    " + L.tr("continue.play_time") + " " + t;
+            if (s.fromBackup) c.line2 += "    [" + L.tr("continue.from_backup") + "]";
+            if (s.newer) c.line2 += "    [" + L.tr("continue.newer") + "]";
+        } else if (s.damaged) {
+            c.line1 = "[" + L.tr("continue.damaged") + "]";
         } else {
             c.line1 = saveLoadMode_ == 1 ? L.tr("saveload.load_empty") : "[" + L.tr("continue.empty") + "]";
         }
         if ((int)i + 1 == activeSlot_) c.tag = L.tr("saveload.current");
         c.selected = (int)i == saveLoadSel_;
-        c.enabled = saveLoadMode_ == 0 || s.exists;
+        c.enabled = saveLoadMode_ == 0 ? !s.newer : s.exists;
         v.cards.push_back(c);
     }
     if (saveLoadConfirm_ && saveLoadSel_ < (int)saveLoadSlots_.size()) {

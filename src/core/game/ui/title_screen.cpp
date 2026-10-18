@@ -156,6 +156,8 @@ TitleAction TitleScreen::activate() {
         case TitlePage::Continue: {
             if (slotSel_ < 0 || slotSel_ >= slotCount_) return TitleAction::None;
             const int slot = slotSel_ + 1;
+            // damaged: nothing loads, and a new game must not write over what may still be recovered from the file
+            if (slotSel_ < (int)slots_.size() && slots_[slotSel_].damaged) return TitleAction::None;
             if (!selectedSlotExists()) {
                 // Empty slot: ask before starting a new game here (owner's report: this used to
                 // do nothing at all, which read as a broken button).

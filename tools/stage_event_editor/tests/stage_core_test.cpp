@@ -110,10 +110,48 @@ static void testEdits(Project& p) {
         d.st["objects"][std::to_string(villager->x) + "," + std::to_string(villager->y)] = Json{{"events", Json::array({"ev_village_well"})}};
         CHECK(Project::objOf(d, villager->x, villager->y) != nullptr, "object settings set");
         p.putSem(d, villager->x, villager->y, "floor");
-        CHECK(Project::objOf(d, villager->x, villager->y) == nullptr && !d.st.contains("objects"), "painting over drops them");
+        CHECK(Project::objOf(d, villager->x, villager->y) == nullptr, "painting over drops them");
         p.commitEdit(d, "objects");
         p.undo(d);
         CHECK(!p.isDirty("F02"), "undo restores the cell");
+    }
+
+    // stable object ids (docs/28_SAVE_SYSTEM.md): every saved-state object has a uid, which moves with it; a new object
+    // gets a fresh one and a copied (duplicate) uid is replaced
+    if (const auto mon = p.find(d, "monster:slime")) {
+        const Json* o = Project::objOf(d, mon->x, mon->y);
+        CHECK(o && o->contains("uid"), "a shipped monster has a uid");
+        const std::string uid = o ? o->value("uid", std::string()) : std::string();
+        int fx = -1, fy = -1;
+        for (int y = 0; y < d.height() && fx < 0; y++)
+            for (int x = 0; x < d.width(); x++)
+                if (p.semAt(d, x, y) == "floor") { fx = x; fy = y; break; }
+        p.beginEdit(d);
+        const char ch = d.grid[(size_t)mon->y][(size_t)mon->x];
+        d.grid[(size_t)mon->y][(size_t)mon->x] = '.';
+        d.grid[(size_t)fy][(size_t)fx] = ch;
+        const Json keep = *Project::objOf(d, mon->x, mon->y);
+        Project::dropObj(d, mon->x, mon->y);
+        d.st["objects"][std::to_string(fx) + "," + std::to_string(fy)] = keep;
+        p.commitEdit(d, "move");
+        const Json* moved = Project::objOf(d, fx, fy);
+        CHECK(moved && moved->value("uid", std::string()) == uid, "a moved object keeps its uid");
+        p.undo(d);
+        p.beginEdit(d);
+        p.putSem(d, fx, fy, "monster:bat");
+        p.commitEdit(d, "new");
+        const Json* fresh = Project::objOf(d, fx, fy);
+        CHECK(fresh && !fresh->value("uid", std::string()).empty() && fresh->value("uid", std::string()) != uid,
+              "a new object gets its own uid");
+        p.beginEdit(d);
+        d.st["objects"][std::to_string(fx) + "," + std::to_string(fy)]["uid"] = uid;   // as if its entry were copied
+        p.commitEdit(d, "dup");
+        const Json* dup = Project::objOf(d, fx, fy);
+        const Json* orig = Project::objOf(d, mon->x, mon->y);
+        CHECK(dup && orig && dup->value("uid", std::string()) != orig->value("uid", std::string()), "a duplicate uid is replaced");
+        p.undo(d);
+        p.undo(d);
+        CHECK(!p.isDirty("F02"), "undo restores the uids");
     }
 }
 

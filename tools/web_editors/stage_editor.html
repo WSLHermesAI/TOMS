@@ -809,6 +809,7 @@ $('owApply').onclick = () => {
     const look = S2.w.look, events = S2.w.events, o = {};
     if (Object.keys(look).length) o.look = look; if (events.length) o.events = events;
     edit(t('hObj', nameOf(S2.sem)), dd => { dd.st.objects = dd.st.objects || {}; const k = objKey(S2.x, S2.y);
+      const old = dd.st.objects[k]; if (old && old.uid) o.uid = old.uid;   // its save id stays (docs/28_SAVE_SYSTEM.md)
       if (Object.keys(o).length) dd.st.objects[k] = o; else delete dd.st.objects[k];
       if (!Object.keys(dd.st.objects).length) delete dd.st.objects; });
     owClose(); return;

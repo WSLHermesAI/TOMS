@@ -107,7 +107,8 @@ public:
     void renameCategoryDialog(const std::string& name);
     void deleteCategoryDialog(const std::string& name);
     void setBrush(const std::string& sem);
-    void revealBrush();   // scrolls the palette to the brush's button (a type just made)
+    void revealBrush();
+    void syncTheme();     // Project::theme from the open floor's stage file   // scrolls the palette to the brush's button (a type just made)
     void setTool(Tool t);
     void toast(const QString& msg, bool bad = false);
 

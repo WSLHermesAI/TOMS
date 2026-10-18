@@ -40,6 +40,7 @@ toms::RunSaveData Game::runSaveFromState() const {
 
 void Game::saveCurrentRun() {
     if (activeSlot_ <= 0) return;          // no slot chosen yet (title still up at boot)
+    if (slotReadOnly_) { saveDirty_ = false; return; }   // a newer game's save: never written over
     ensureStageListLoaded();
     const std::string dir = toms::defaultSaveDir();
     if (toms::writeSlotSave(dir, activeSlot_, meta_, runSaveFromState(), playTimeSec_,
@@ -123,7 +124,8 @@ bool Game::continueFromSlot(int slot) {
     toms::MetaSaveData m;
     toms::RunSaveData r;
     int playSec = 0;
-    if (!toms::readSlotSave(toms::defaultSaveDir(), slot, m, r, &playSec, nullptr)) {
+    toms::SlotLoadInfo info;
+    if (!toms::readSlotSave(toms::defaultSaveDir(), slot, m, r, &playSec, nullptr, &info)) {
         // Deliberately silent: the Continue row already reads "[空]/[Empty]" and the page shows
         // "no saves yet -- start a new game first", and the toast path draws with ImGui's
         // default font, which has no CJK glyphs (it would render as a "?" box). The title stays
@@ -132,6 +134,9 @@ bool Game::continueFromSlot(int slot) {
         return false;
     }
     applyLoadedRun(m, r, slot, playSec);
+    slotReadOnly_ = info.newer;
+    if (info.fromBackup) notifications_.push_back({locale_.tr("save.restored"), 5000});
+    if (info.newer) notifications_.push_back({locale_.tr("save.newer"), 6000});
     return true;
 }
 

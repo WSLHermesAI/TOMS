@@ -37,6 +37,9 @@ struct Entity {
     // events linked to it, which fire when the player interacts with it (Game::fireLinkedEvents).
     nlohmann::json look;
     std::vector<std::string> links;
+    // Its stable id on this floor (objects."x,y".uid, given by the stage editor): what the save keys its status by,
+    // so moving it in the editor keeps a defeated monster defeated (docs/28_SAVE_SYSTEM.md). Empty in an old file.
+    std::string uid;
 };
 
 struct Stage : public Trackable {
@@ -49,6 +52,9 @@ struct Stage : public Trackable {
     std::vector<toms::StairLink> stairs;   // every stair with its tile and lock (game_assets.cpp builds it)
     int startX = -1, startY = -1;          // the '@' tile (player_start), -1 when the grid has none
     std::string story_note;
+    // The floor's tile theme (the stage file's "theme", e.g. "ice"): walls, floor and stairs are drawn with
+    // wall_<theme>, floor_<theme>, stairs_up_<theme>, stairs_down_<theme> where the atlas has them (docs/27_AI_SPRITES.md).
+    std::string theme;
 
     char at(int x, int y) const {
         if (y < 0 || y >= (int)tiles.size()) return '#';
@@ -90,6 +96,7 @@ inline Stage parseStage(const std::string& path, const toms::Locale& locale) {
     s.up = j["connect"]["up"].is_null() ? "" : (std::string)j["connect"]["up"];
     s.down = j["connect"]["down"].is_null() ? "" : (std::string)j["connect"]["down"];
     s.story_note = locale.field(j["story_note"]);
+    if (j.contains("theme") && j["theme"].is_string()) s.theme = j["theme"].get<std::string>();
     // Milestone 4: optional per-tile encounter-kind overrides, keyed by raw tile char. Absent
     // from every shipped stage today -- guarded so existing files parse identically to before.
     const nlohmann::json* encounterOverrides = nullptr;
@@ -132,6 +139,7 @@ inline Stage parseStage(const std::string& path, const toms::Locale& locale) {
                 auto o = objects->find(std::to_string(x) + "," + std::to_string(y));
                 if (o != objects->end() && o->is_object()) {
                     if (o->contains("look") && (*o)["look"].is_object()) e.look = (*o)["look"];
+                    if (o->contains("uid") && (*o)["uid"].is_string()) e.uid = (*o)["uid"].get<std::string>();
                     if (o->contains("events") && (*o)["events"].is_array())
                         for (const auto& id : (*o)["events"]) if (id.is_string()) e.links.push_back(id.get<std::string>());
                 }

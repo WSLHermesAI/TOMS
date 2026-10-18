@@ -153,6 +153,10 @@ void Game::buildUiState(toms::UiState& u) const {
                                    std::to_string(s.maxhp) + "   " + std::to_string(s.gold) + "G";
                         r.sub = L.tr("continue.saved_at") + " " + s.savedAt + "    " + L.tr("continue.play_time") +
                                 " " + fmtPlayTime(s.playTimeSec);
+                        if (s.fromBackup) r.sub += "    [" + L.tr("continue.from_backup") + "]";
+                        if (s.newer) r.sub += "    [" + L.tr("continue.newer") + "]";
+                    } else if (i < (int)sums.size() && sums[i].damaged) {
+                        r.label += "   [" + L.tr("continue.damaged") + "]";
                     } else {
                         r.label += "   [" + L.tr("continue.empty") + "]";
                     }
@@ -302,7 +306,7 @@ void Game::buildUiState(toms::UiState& u) const {
         b.visible = true;
         b.active = cs.active;
         b.title = L.tr("battle.title") + " " + cs.enemy.name;
-        b.player_sprite = uiSprite("player");
+        b.player_sprite = uiSprite(playerSprite());
         b.enemy_sprite = uiSprite(cs.enemy.boss ? "boss_demonlord" : typeSprite("monster", cs.enemy.id));
         b.player_hp_pct = pct((float)cs.playerHP, (float)effectiveMaxHp());
         b.enemy_hp_pct = pct((float)std::max(0, cs.enemyHP), (float)cs.enemy.hp);

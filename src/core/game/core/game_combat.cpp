@@ -33,7 +33,7 @@ void Game::finishCombatWin() {
     st.tiles[cs.enemy.y][cs.enemy.x] = '.';
     // Milestone 7: persist the clear so it survives a reload of this floor (stairs or the Stage
     // Select hub) -- see entityStatus_'s declaration in game.h.
-    toms::setEntityStatus(entityStatus_, toms::entityStatusKey(curStage, cs.enemy.x, cs.enemy.y), toms::EntityStatus::Defeated);
+    toms::setEntityStatus(entityStatus_, statusKeyAt(cs.enemy.x, cs.enemy.y), toms::EntityStatus::Defeated);
     toms::globalEventBus().publish(toms::EnemyDefeated{cs.enemy.id, curStage});
     if (cs.enemy.boss) { cs.log = locale_.tr("battle.boss_win"); loadStage("stage_11"); }
     markProgressDirty();   // gold/exp/level/entity-status all changed: autosave will flush it

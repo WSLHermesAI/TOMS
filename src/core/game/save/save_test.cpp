@@ -1,8 +1,11 @@
 // save_test.cpp — headless verification of the Meta/Run save schema (Milestone 1).
 // Exits 0 on success, 1 on any CHECK failure. Run: ./save_test
 #include "save_system.h"
+#include "save_slots.h"
+#include "entity_status.h"
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 
 using namespace toms;
 
@@ -96,7 +99,84 @@ int main() {
         CHECK(j.is_null(), "reading a nonexistent file returns a null json, not a throw");
     }
 
-    if (g_fail == 0) { printf("save_test: ALL PASS (18 checks)\n"); return 0; }
+    // 6-10: the data-loss guards (docs/28_SAVE_SYSTEM.md), on slots in a scratch folder.
+    const std::string dir = "save_test_slots";
+    std::error_code ec;
+    std::filesystem::remove_all(dir, ec);
+    MetaSaveData meta;
+    RunSaveData run;
+    run.currentStageId = "F02";
+    const auto overwriteWith = [](const std::string& path, const std::string& text) {
+        std::ofstream f(path, std::ios::binary | std::ios::trunc);
+        f << text;
+    };
+
+    // 6. A second save keeps the first one as the backup.
+    {
+        run.player.gold = 10;
+        CHECK(writeSlotSave(dir, 1, meta, run, 60, "2026-10-18 10:00:00", "F02"), "slot save 1 written");
+        run.player.gold = 20;
+        CHECK(writeSlotSave(dir, 1, meta, run, 70, "2026-10-18 10:01:00", "F02"), "slot save 2 written");
+        nlohmann::json bak = readJsonFileSafe(backupPath(slotPath(dir, 1)));
+        CHECK(bak.is_object() && bak["run"]["player"].value("gold", 0) == 10, "the backup holds the save before the last one");
+        CHECK(!std::filesystem::exists(slotPath(dir, 1) + ".tmp"), "no .tmp left behind");
+    }
+
+    // 7. A damaged slot file falls back to its backup, and is reported as such.
+    {
+        overwriteWith(slotPath(dir, 1), "{\"saveVersion\": 1, \"run\": {");   // cut off mid-write
+        MetaSaveData m2;
+        RunSaveData r2;
+        SlotLoadInfo info;
+        CHECK(readSlotSave(dir, 1, m2, r2, nullptr, nullptr, &info), "a damaged slot loads from its backup");
+        CHECK(info.fromBackup && r2.player.gold == 10, "the backup's progress is what loads");
+        SlotSummary s = summarizeSlot(dir, 1);
+        CHECK(s.exists && s.fromBackup && !s.damaged, "the Continue list shows it, marked as from the backup");
+        // the next save does not push the good backup out with the damaged file
+        run.player.gold = 30;
+        CHECK(writeSlotSave(dir, 1, meta, run, 80, "2026-10-18 10:02:00", "F02"), "saving over a damaged file works");
+        CHECK(readJsonFileSafe(backupPath(slotPath(dir, 1)))["run"]["player"].value("gold", 0) == 10,
+              "a damaged file never replaces the backup");
+    }
+
+    // 8. File and backup both unreadable: "damaged", never "empty" (so no new game is offered over it).
+    {
+        overwriteWith(slotPath(dir, 2), "not json");
+        SlotSummary s = summarizeSlot(dir, 2);
+        CHECK(!s.exists && s.damaged, "an unreadable slot is damaged, not empty");
+        CHECK(firstEmptySlot(dir, 3) == 3, "a damaged slot is not picked as the first empty one");
+        CHECK(!summarizeSlot(dir, 3).damaged, "a slot with no file is just empty");
+    }
+
+    // 9. A save from a newer version loads, but is never written over.
+    {
+        nlohmann::json j = readJsonFileSafe(slotPath(dir, 1));
+        j["run"]["schemaVersion"] = kRunSaveSchemaVersion + 1;
+        j["run"]["futureField"] = 7;
+        writeJsonAtomic(slotPath(dir, 1), j);
+        CHECK(slotIsNewer(dir, 1) && summarizeSlot(dir, 1).newer, "a newer save is recognised");
+        MetaSaveData m2;
+        RunSaveData r2;
+        SlotLoadInfo info;
+        CHECK(readSlotSave(dir, 1, m2, r2, nullptr, nullptr, &info) && info.newer, "a newer save still loads");
+        CHECK(!writeSlotSave(dir, 1, meta, run, 90, "", "F02"), "a newer save is not overwritten");
+        CHECK(readJsonFileSafe(slotPath(dir, 1))["run"].value("futureField", 0) == 7, "its unknown fields are kept");
+    }
+
+    // 10. Migration: an old file (version 1, fields missing) loads with defaults; an object's save key follows its uid.
+    {
+        nlohmann::json old = {{"schemaVersion", 1}, {"currentStageId", "stage01"}, {"player", {{"hp", 50}}}};
+        bool mismatch = false;
+        RunSaveData r2 = runFromJson(old, &mismatch);
+        CHECK(mismatch && r2.player.hp == 50 && r2.floor == "F01" && r2.superMax == 5, "a version-1 run loads with defaults");
+        CHECK(entityStatusKey("F03", 4, 5, "o12") == "F03#o12", "an object with a uid is keyed by it");
+        CHECK(entityStatusKey("F03", 4, 5, "") == "F03|4,5", "an object without one is keyed by its position");
+        deleteSlot(dir, 1);
+        CHECK(!std::filesystem::exists(backupPath(slotPath(dir, 1))), "deleting a slot removes its backup too");
+    }
+    std::filesystem::remove_all(dir, ec);
+
+    if (g_fail == 0) { printf("save_test: ALL PASS\n"); return 0; }
     printf("save_test: %d CHECK(s) FAILED\n", g_fail);
     return 1;
 }

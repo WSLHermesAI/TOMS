@@ -27,6 +27,10 @@ std::string entityStatusKey(const std::string& stageId, int x, int y) {
     return stageId + "|" + std::to_string(x) + "," + std::to_string(y);
 }
 
+std::string entityStatusKey(const std::string& stageId, int x, int y, const std::string& uid) {
+    return uid.empty() ? entityStatusKey(stageId, x, y) : stageId + "#" + uid;
+}
+
 EntityStatus getEntityStatus(const std::map<std::string, std::string>& statusMap, const std::string& key) {
     auto it = statusMap.find(key);
     return it == statusMap.end() ? EntityStatus::Untouched : fromString(it->second);

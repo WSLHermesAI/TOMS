@@ -36,6 +36,16 @@ test, and a game change runs no glTF test:
 | Global | the root `CMakeLists.txt`, presets, `cmake/`, `external/` | every desktop test |
 | Nothing | docs, `*.md`, the HTML editors, `android/`, the test runner | none |
 
+**Folders under `tests/`** are decided by [tests/test_folders.json](../tests/test_folders.json): it lists the folders that
+are test data (`golden`, `smoke`, `tools`, `gltf`, `mpdi`, `stage`, `font`) and the tests each one feeds (ctest names,
+`label:<label>`, or `@golden`). Any other folder under `tests/` is not test data and runs nothing (another project's
+files, tool output); the run names it once as "not test data". Add a folder there when a new test reads it.
+
+**Switching tests off:** `tools/test_switches.cmd` opens a window with every test as a tree (group > area > test) and a
+checkbox each; Save writes the unticked ones to [tests/test_switches.json](../tests/test_switches.json), and
+`test.cmd` never runs them (changed-only or `all`; a ctest filter given by hand runs as given). `test_switches.cmd
+--list` prints the same tree as text. The run names the selected tests it skipped.
+
 A file that no rule knows runs nothing, and is listed as **NOT MAPPED**: add a rule for it in `RULES`. The backend
 variants (`stage_d3d12/vulkan/opengl`, `fx_cpu/compute/gpu`) run only when the renderer, their reference image or
 the global setup changed. Without Python, `test.cmd` runs every test.

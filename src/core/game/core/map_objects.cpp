@@ -260,7 +260,7 @@ MapObject::Touch ItemObject::onTouch(int, int) {
     e.consumed = true;
     g_.st.tiles[(size_t)e.y][(size_t)e.x] = '.';
     // Milestone 7: the clear survives a reload of this floor (entityStatus_).
-    toms::setEntityStatus(g_.entityStatus_, toms::entityStatusKey(g_.curStage, e.x, e.y), toms::EntityStatus::Collected);
+    toms::setEntityStatus(g_.entityStatus_, g_.statusKeyAt(e.x, e.y), toms::EntityStatus::Collected);
     toms::globalEventBus().publish(toms::ItemCollected{e.id, g_.curStage});
     g_.fireLinkedEvents(e);
     return Touch::Pass;
@@ -311,7 +311,7 @@ MapObject::Touch EventObject::onTouch(int, int) {
     Entity& done = *entity();
     done.consumed = true;
     g.st.tiles[(size_t)done.y][(size_t)done.x] = '.';
-    toms::setEntityStatus(g.entityStatus_, toms::entityStatusKey(g.curStage, done.x, done.y), toms::EntityStatus::Collected);
+    toms::setEntityStatus(g.entityStatus_, g.statusKeyAt(done.x, done.y), toms::EntityStatus::Collected);
     return Touch::Stop;
 }
 
@@ -457,10 +457,16 @@ static LookChain legacyIdleLook(Game& g, const Entity& e) {
     if (startsWith(e.kind, "gate:")) {
         // a gate is a full-tile door with its key item's "tint" (data/items.json) washed over it, so it reads as no
         // colour of key door (yellow / blue / red)
-        layer = g.spriteLayer("door_yellow");
-        wash[0] = 0.6f; wash[1] = 0.3f; wash[2] = 0.9f; wash[3] = 0.6f;
-        if (const nlohmann::json* d = g.itemDef(e.id); d && d->contains("tint") && (*d)["tint"].is_array())
-            for (int i = 0; i < 3 && i < (int)(*d)["tint"].size(); i++) wash[i] = (*d)["tint"][i].get<float>();
+        const nlohmann::json* d = g.itemDef(e.id);
+        const std::string door = d && d->contains("door") && (*d)["door"].is_string() ? (*d)["door"].get<std::string>() : std::string();
+        if (!door.empty() && g.idToLayer.count(door)) {   // its own door picture (docs/27_AI_SPRITES.md)
+            layer = g.spriteLayer(door);
+        } else {
+            layer = g.spriteLayer("door_yellow");
+            wash[0] = 0.6f; wash[1] = 0.3f; wash[2] = 0.9f; wash[3] = 0.6f;
+            if (d && d->contains("tint") && (*d)["tint"].is_array())
+                for (int i = 0; i < 3 && i < (int)(*d)["tint"].size(); i++) wash[i] = (*d)["tint"][i].get<float>();
+        }
     }
     if (look.contains("anim") && look["anim"].is_string() && g.res_) {
         const std::string ref = look["anim"].get<std::string>();
@@ -528,7 +534,9 @@ void map_detail::Builder::build(Game& g, MapFloor& f, toms::Node& root, std::vec
             o->setLook("opening", openingLook(g, e.id));
         } else {
             o->setLook("idle", legacyIdleLook(g, e));
-            if (startsWith(e.kind, "gate:")) o->setLook("opening", openingLook(g, "yellow"));
+            // the yellow door's opening clip, for a gate drawn as the yellow door (one with its own door just opens)
+            const nlohmann::json* key = startsWith(e.kind, "gate:") ? g.itemDef(e.id) : nullptr;
+            if (key && !(key->contains("door") && (*key)["door"].is_string())) o->setLook("opening", openingLook(g, "yellow"));
         }
         // the data's own looks per status: the type's record, then the placed object's
         const size_t colon = e.kind.find(':');
@@ -545,7 +553,7 @@ void map_detail::Builder::build(Game& g, MapFloor& f, toms::Node& root, std::vec
     player->SetName("player");
     {
         LookChain c;
-        c.looks.push_back(std::make_unique<SpriteLook>(g.spriteLayer("player"), kWhite, std::array<float, 4>{0, 0, 0, 0}.data()));
+        c.looks.push_back(std::make_unique<SpriteLook>(g.spriteLayer(g.playerSprite()), kWhite, std::array<float, 4>{0, 0, 0, 0}.data()));
         player->setLook("idle", std::move(c));
     }
     root.AddChildToLast(player.get(), false);

@@ -209,7 +209,7 @@ void StageCanvas::paintGameScene(const GameScene& s) {
     const QColor bg = QColor(0x12, 0x13, 0x16);
     s.rect(QRectF(0, 0, width(), height()), bg);
     // ground first, then objects in row order (a 2-wide monster spills to the right, like the game)
-    const QString wall = QStringLiteral("wall"), floor = QStringLiteral("floor");
+    const QString wall = QString::fromStdString(p.spriteOf("wall")), floor = QString::fromStdString(p.spriteOf("floor"));   // themed
     for (int y = 0; y < d->height(); y++)
         for (int x = 0; x < d->width(); x++)
             drawSprite(s, L.semAt(x, y) == "wall" ? wall : floor, cellRect(x, y), kWhite);

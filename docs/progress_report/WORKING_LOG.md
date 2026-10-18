@@ -492,4 +492,24 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     every panel and does not save the layout.
   - Tests: `unit.resource_test`, `unit.render_object_test`, `test_select.py` rules `ENGINE_RES` and the manifest;
     new self-test checks. Changed-only: 75 of 112, all pass. Full suite / web build not run.
-
+- **2026-10-18** — **AI restyles and sprites, save-system guards, stable object ids** (not committed in TOMS;
+  [DAILY_2026-10-18.md](DAILY_2026-10-18.md)):
+  - 10085 restyled as Christmas (`tests/10085_christmas`, 2026-10-17 evening) and Zeus (`tests/10085_zeus`): 63 of 69
+    pictures each, Spine part by part, `check_restyle.py` passes. Zeus: objects at 0.8, a `badge` kind for the
+    ×-badges, plain Spine discs described alone.
+  - `fix_edges` (restyle_pilot `finish`): soft edges from the nearest solid pixel with the original's rim; wheel-rim
+    near-white edge pixels 30 % → 0 %; `repair_edges.py` repaired both outputs.
+  - Docs moved to `AIGamestyle/Doc/Reskin_Game_Art(.zh-TW).md` and `Reskin_Setup_New_PC(.zh-TW).md`;
+    `check_reskin_setup.py`; `docs/26` a pointer. The plan's `"also"` is not read (documented).
+  - `make_sprites.py` / `sprite_sheet.py` / `make_toms_sprites_plan.py` / `add_toms_types.py` (not run): 230 TOMS
+    sprites made and reviewed, about 50 redone; `--only` takes a list. Game: every atlas page-0 region gets a layer,
+    gate `"door"` picture, stage `"theme"`, `playerLook`; editor Floor theme combo, gate keys by `"opens"`.
+  - Save: `writeJsonAtomic` fsync + `.bak`, `readSlotJson` backup fallback, `SlotSummary::damaged / fromBackup /
+    newer`, `SlotLoadInfo`, `slotIsNewer` write guard, `slotReadOnly_`, `Game::flushSave` on quit / background /
+    `pagehide` (`jsFlushSave`), migration tables `kMetaMigrations` / `kRunMigrations`; text keys `continue.damaged`,
+    `continue.from_backup`, `continue.newer`, `save.restored`, `save.newer`; UI font rebuilt.
+  - Object ids: `Entity::uid`, `entityStatusKey(..., uid)`, `Game::statusKeyAt`, `Game::migrateStatusKeys` (also
+    fixes `curStage` vs `st.id` keys); `Project::ensureUids` in `commitEdit`; ObjectWindow and the HTML editor keep the
+    uid; `tools/add_stage_uids.py` (71 stage files; mapped in `test_select.py`). Doc `docs/28_SAVE_SYSTEM.md`.
+  - `AIGamestyle/App/make_vs_solution.bat` (vswhere, VS's CMake 4.3, VS 2026 `.slnx`; builds).
+  - Tests: `save_test` and `stage_core_test` extended. Changed-only: 70 of 112, all pass. Full suite / web not run.

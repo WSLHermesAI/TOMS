@@ -144,6 +144,7 @@ void Game::newGame(int slot) {
     storeOpen = false; storeUnlockDlg = false; storeFromMenu_ = false;
     stageSelectOpen_ = false; stairsConfirmOpen_ = false;
     playTimeSec_ = 0;
+    slotReadOnly_ = false;
     if (slot > 0) {
         // Explicit slot (the Continue page's "start a new game in this empty slot?" answer).
         activeSlot_ = slot;

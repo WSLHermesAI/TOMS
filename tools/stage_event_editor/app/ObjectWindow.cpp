@@ -641,6 +641,8 @@ void ObjectWindow::apply() {
         if (!m_w["events"].empty()) o["events"] = m_w["events"];
         const std::string key = std::to_string(m_x) + "," + std::to_string(m_y);
         m_ed->edit(tr("Object settings: %1").arg(q(p.nameOf(m_sem))), [&](stage::StageDoc& d) {
+            if (const Json* old = stage::Project::objOf(d, m_x, m_y); old && old->contains("uid"))
+                o["uid"] = (*old)["uid"];   // its save id stays (docs/28_SAVE_SYSTEM.md)
             if (!d.st.contains("objects") || !d.st["objects"].is_object()) d.st["objects"] = Json::object();
             if (!o.empty()) d.st["objects"][key] = o;
             else d.st["objects"].erase(key);
@@ -664,7 +666,10 @@ void ObjectWindow::apply() {
             src["name"] = idText;
             p.dataFiles[stage::Project::enemiesPath()].obj[id] = src;
         } else if (cat == "item") {
-            if (story) src["type"] = "story";
+            if (story) {   // a door and its key: the key opens its gate ("opens"), shown in Doors and Keys
+                src["type"] = "story";
+                src["opens"] = "gate:" + id;
+            }
             src["name"] = "item." + id + ".name";
             src["desc"] = "item." + id + ".desc";
             p.textEdits["item." + id + ".name"] = idText;

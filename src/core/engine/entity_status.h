@@ -27,6 +27,9 @@ EntityStatus fromString(const std::string& s);
 // key format: "<stageId>|<x>,<y>" -- matches the convention already used by save_test.cpp and
 // architecture-doc §5.2.
 std::string entityStatusKey(const std::string& stageId, int x, int y);
+// With the object's stable id (the stage file's objects."x,y".uid, docs/28_SAVE_SYSTEM.md): "<stageId>#<uid>", so the
+// status follows the object when a designer moves it. No uid -> the position key above.
+std::string entityStatusKey(const std::string& stageId, int x, int y, const std::string& uid);
 
 // Convenience accessors over the plain map RunSaveData::entityStatus already stores.
 EntityStatus getEntityStatus(const std::map<std::string, std::string>& statusMap, const std::string& key);

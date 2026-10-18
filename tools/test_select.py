@@ -24,12 +24,16 @@ change, skip the glTF tests; if the game did not change, skip all game tests"):
   renderer        src/engine: shared files                               every screenshot, every backend
                   src/engine: sprite / UI / ImGui files and shaders      the game screenshots, every backend
   web             web/, the web test                                     the web tests
-  tests           a *_test.cpp, a tests/golden/x.png, a line of          exactly those tests
-                  tests/CMakeLists.txt
+  tests           a *_test.cpp, a line of tests/CMakeLists.txt          exactly those tests
+                  a folder under tests/: tests/test_folders.json says    that folder's tests; a folder not listed there
+                  which ones are test data and what they feed            runs nothing (it is not test data)
   global          the root CMakeLists.txt, presets, cmake/, external/   every desktop test
   nothing         docs, *.md, the HTML editors, Android, this script
 
 A file no rule knows runs nothing and is listed as "not mapped": add a rule to RULES for it.
+
+Tests switched off in tests/test_switches.json (edit it with tools\test_switches.cmd: a tree with a checkbox per test)
+never run, changed-only or `all`; a ctest filter given by hand (-R, -L ...) runs as given.
 """
 import fnmatch
 import json
@@ -73,19 +77,59 @@ GAME_SMOKE_BY_NAME = [
     (re.compile(r'hud'), named('smoke.stage', 'smoke.player_*')),
 ]
 
+# tests/test_folders.json: the folders under tests/ that are test data, and the tests each one feeds. A test entry is a
+# ctest name (wildcards allowed), 'label:<label>', or '@golden' (the screenshot tests using the changed image).
+TEST_FOLDERS_FILE = 'tests/test_folders.json'
+
+
+def test_folders():
+    try:
+        with open(os.path.join(ROOT, TEST_FOLDERS_FILE), encoding='utf-8') as f:
+            j = json.load(f)
+    except (OSError, ValueError) as e:
+        print('[toms] %s unreadable (%s): every folder under tests/ runs nothing' % (TEST_FOLDERS_FILE, e))
+        return {}, {}
+    return j.get('folders', {}), j.get('files', {})
+
+
+TEST_SWITCHES_FILE = 'tests/test_switches.json'
+
+
+def switched_off():
+    """The tests the owner switched off (tools/test_switches.cmd writes the file)."""
+    try:
+        with open(os.path.join(ROOT, TEST_SWITCHES_FILE), encoding='utf-8-sig') as f:
+            return set(json.load(f).get('off', []))
+    except FileNotFoundError:
+        return set()
+    except (OSError, ValueError) as e:
+        print('[toms] %s unreadable (%s): no test is switched off' % (TEST_SWITCHES_FILE, e))
+        return set()
+
+
+def folder_pred(entries, f):
+    preds = []
+    for e in entries:
+        if e == '@golden':
+            preds.append(lambda t, g=os.path.basename(f): t['golden'] == g)
+        elif e.startswith('label:'):
+            preds.append(lambda t, l=e[6:]: l in t['labels'])
+        else:
+            preds.append(named(e))
+    return any_of(*preds)
+
+
 # (glob patterns, tests, why); the first rule a file matches decides. Paths are repo-relative with '/'.
 RULES = [
     # files other rules would take for the wrong area
     (['docs/examples/fx_*'], named('particle.check_recipes'), 'particle recipes'),
     (['docs/examples/anim_*'], named('anim.check_recipes'), 'anim recipes'),
-    (['tests/smoke/anim_preview.anim'], named('anim.check_preview', 'anim.editor_selftest'), 'the anim preview'),
-    (['tests/mpdi/*'], named('anim.mpdi_convert'), 'the .mpdi converter fixtures'),
-    (['tests/stage/*'], named('smoke.stage_objects', 'unit.talk_system_test'), 'test stage files: per-object settings'),
     # picture fonts: toms_core builds the runtime, but no game screen draws with it yet, so the font tool's
     # tests (which test the runtime too); add the game's screenshots here once a screen uses FontText
-    (['tools/font/*', 'tests/font/*', 'src/core/engine/bitmap_font*'], FONTS,
+    (['tools/font/*', 'src/core/engine/bitmap_font*'], FONTS,
      'picture fonts: the font tool tests'),
-    (['tools/test_select.py', 'tools/test.cmd'], None, 'the test runner itself'),
+    (['tools/test_select.py', 'tools/test.cmd', 'tests/test_folders.json', 'tests/test_switches.json',
+      'tools/test_switches.*'], None, 'the test runner itself'),
     # the editor release: copies of what the build made, launchers and docs (run `tools\test.cmd all` before a release)
     (['Editor/*', 'tools/package_editors.*'], None, 'the packaged editors (Editor/): no test'),
     (['tools/web_editors/floor_index.js'], named('unit.floor_index_test', 'unit.stage_core_test'),
@@ -101,14 +145,12 @@ RULES = [
      'global build setup: every desktop test'),
     # the tests themselves
     (['tests/CMakeLists.txt'], 'TESTS_CMAKE', 'the test list: the tests on the changed lines'),
-    (['tests/smoke/*'], is_smoke, 'the screenshot runner: every screenshot'),
     (['*_test.cpp'], 'SELF', 'a unit test itself'),
-    (['tests/golden/*.png'], 'GOLDEN', 'a reference image: the screenshot tests that use it'),
     # web
     (['web/*', 'tools/web_smoke_test.mjs', 'tools/build_web.cmd', 'tools/serve_web*'], is_web, 'the web page: web tests'),
     # glTF
     (['src/core/engine/gltf*', 'src/engine/src/gltf*', 'src/engine/shaders/*mesh*', 'src/engine/shaders/fs_shadow.sc',
-      'tools/gltf_viewer/*', 'tests/gltf/*'], GLTF, 'glTF: its unit tests and screenshots'),
+      'tools/gltf_viewer/*'], GLTF, 'glTF: its unit tests and screenshots'),
     # particles, node animations, atlases, the Qt editors' shared code
     (['src/core/engine/particle*', 'tools/particle/*', 'src/engine/shaders/cs_fx_*'], PARTICLES,
      'particles: checks, unit test, fx screenshots'),
@@ -131,7 +173,8 @@ RULES = [
     (['src/core/engine/resource*', 'src/core/engine/render_object*'], 'ENGINE_RES',
      'the resource cache and render objects: engine unit tests + the clip / effect previews + the game'),
     (['src/core/engine/*'], 'ENGINE', 'engine core: the engine unit tests + the game'),
-    (['src/core/game/*', 'src/game/*', 'assets/*', 'src/core/CMakeLists.txt'], 'GAME',
+    # tools/add_stage_uids.py writes the stage files' object ids (docs/28_SAVE_SYSTEM.md)
+    (['src/core/game/*', 'src/game/*', 'assets/*', 'src/core/CMakeLists.txt', 'tools/add_stage_uids.py'], 'GAME',
      'the game: its unit tests + its screenshots (D3D11)'),
 ]
 
@@ -197,6 +240,8 @@ def tests_cmake_changes(since, tests):
 
 def select(files, tests, since):
     chosen, unmapped = {}, []
+    folders, folder_files = test_folders()
+    not_test_data = []   # folders under tests/ that test_folders.json does not list
 
     def take(pred, why):
         for t in tests:
@@ -214,6 +259,17 @@ def select(files, tests, since):
         take(any_of(*narrowed) if narrowed else is_game_smoke_d3d11, why)
 
     for f in files:
+        # a folder under tests/: test_folders.json decides (a file entry first, then its folder; unlisted -> nothing)
+        if f.startswith('tests/') and f.count('/') >= 2:
+            rel = f[len('tests/'):]
+            entry = folder_files.get(rel) or folders.get(rel.split('/', 1)[0])
+            if entry:
+                take(folder_pred(entry.get('tests', []), f), f + ': ' + entry.get('why', TEST_FOLDERS_FILE))
+            else:
+                top = 'tests/' + rel.split('/', 1)[0] + '/'
+                if top not in not_test_data:
+                    not_test_data.append(top)
+            continue
         for patterns, what, why in RULES:
             if not any(fnmatch.fnmatch(f, p) for p in patterns):
                 continue
@@ -222,8 +278,6 @@ def select(files, tests, since):
                 pass
             elif what == 'SELF':
                 take(named('unit.' + os.path.splitext(os.path.basename(f))[0]), why)
-            elif what == 'GOLDEN':
-                take(lambda t, g=os.path.basename(f): t['golden'] == g, why)
             elif what == 'TESTS_CMAKE':
                 picked = tests_cmake_changes(since, tests)
                 take(lambda t: t['name'] in picked, why)
@@ -242,7 +296,7 @@ def select(files, tests, since):
             break
         else:
             unmapped.append(f)
-    return chosen, unmapped
+    return chosen, unmapped, not_test_data
 
 
 def main():
@@ -264,15 +318,30 @@ def main():
             rest.append(a)
         i += 1
     base = [opts['ctest'], '--preset', opts['preset'], '-j', '4']
-    if opts['mode'] == 'all' or any(a in rest for a in ('-L', '-LE', '-R', '-E', '-I', '--label-regex', '--tests-regex')):
-        print('[toms] running %s' % ('every test' if opts['mode'] == 'all' else 'the given ctest filter'))
+    off = switched_off()
+    if any(a in rest for a in ('-L', '-LE', '-R', '-E', '-I', '--label-regex', '--tests-regex')):
+        print('[toms] running the given ctest filter (switches not applied)')
+        return subprocess.call(base + rest, cwd=ROOT)
+    if opts['mode'] == 'all':
+        if off:
+            print('[toms] running every test but %d switched off in %s' % (len(off), TEST_SWITCHES_FILE))
+            rest = rest + ['-E', '^(' + '|'.join(re.escape(n) for n in sorted(off)) + ')$']
+        else:
+            print('[toms] running every test')
         return subprocess.call(base + rest, cwd=ROOT)
 
     files = changed_files(opts['since'])
     tests = list_tests(opts['ctest'], opts['preset'])
-    chosen, unmapped = select(files, tests, opts['since'])
+    chosen, unmapped, not_test_data = select(files, tests, opts['since'])
+    skipped = sorted(n for n in chosen if n in off)
+    for n in skipped:
+        del chosen[n]
     print('[toms] %d changed file(s)%s; %d of %d tests selected (tools\\test.cmd all runs every test)'
           % (len(files), ' since ' + opts['since'] if opts['since'] else '', len(chosen), len(tests)))
+    if skipped:
+        print('[toms] %d selected test(s) switched off in %s: %s' % (len(skipped), TEST_SWITCHES_FILE, ' '.join(skipped)))
+    if not_test_data:
+        print('[toms] not test data (not listed in %s), no test: %s' % (TEST_FOLDERS_FILE, ' '.join(not_test_data)))
     if unmapped:
         print('[toms] NOT MAPPED -- no test ran for these; add a rule to RULES in tools/test_select.py:')
         for f in unmapped:

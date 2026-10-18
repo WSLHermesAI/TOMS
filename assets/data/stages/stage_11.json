@@ -94,5 +94,13 @@
   "connect": {
     "up": "stage_10",
     "down": null
+  },
+  "objects": {
+    "8,23": {
+      "uid": "o1"
+    },
+    "20,26": {
+      "uid": "o2"
+    }
   }
 }

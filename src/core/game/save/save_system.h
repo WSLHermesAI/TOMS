@@ -86,6 +86,14 @@ struct RunSaveData {
     int superMax = 5;
 };
 
+// Migrations (docs/28_SAVE_SYSTEM.md): before a file is parsed, its json is brought up to the current schema one version
+// at a time (v1 -> v2 -> v3 ...). Adding a field needs no step -- a missing field takes its default. A step is needed
+// when a field is renamed, removed, split or changes meaning: add it to kMetaMigrations / kRunMigrations in
+// save_system.cpp and raise the schema version. A file NEWER than this build is left as it is (fields this build does
+// not know are kept in the json, never dropped by a migration) -- see SlotLoad::newer.
+void migrateMetaJson(nlohmann::json& j);
+void migrateRunJson(nlohmann::json& j);
+
 nlohmann::json toJson(const MetaSaveData& m);
 // Parses j into a MetaSaveData. If versionMismatch is non-null, it is set to true when the file's
 // schemaVersion differs from kMetaSaveSchemaVersion -- DETECTION ONLY: an older file is still loaded,
@@ -99,8 +107,11 @@ RunSaveData runFromJson(const nlohmann::json& j, bool* versionMismatch = nullptr
 // safe-read convention already used by src/game/stage.h's parseStage.
 nlohmann::json readJsonFileSafe(const std::string& path);
 
-// Writes `j` to `path` atomically: serializes to `path + ".tmp"`, then renames over `path`. Never
-// throws; returns false if either step fails (e.g. the containing directory doesn't exist).
-bool writeJsonAtomic(const std::string& path, const nlohmann::json& j);
+// Writes `j` to `path` atomically: serializes to `path + ".tmp"`, flushes it to the disk (so a power cut after the
+// rename cannot leave an empty file), then renames it over `path`. With keepBackup, the file being replaced is first
+// moved to `path + ".bak"` -- but only when it still parses, so a damaged file never replaces a good backup. Never
+// throws; returns false if a step fails (e.g. the containing directory doesn't exist).
+bool writeJsonAtomic(const std::string& path, const nlohmann::json& j, bool keepBackup = false);
+std::string backupPath(const std::string& path);   // path + ".bak"
 
 } // namespace toms

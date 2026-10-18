@@ -51,6 +51,7 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
         atlas.pages[0].h = h;
         atlas.computeUVs();
     }
+    idToLayer.clear();   // rebuilt for this atlas (an art style's may hold other sprites than the last one)
     spriteUVs_.assign(N_SPRITES, {});
     spriteTrim_.assign(N_SPRITES, {0.0f, 0.0f, 1.0f, 1.0f});
     for (int i = 0; i < N_SPRITES; i++) {
@@ -59,6 +60,17 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
         if (r->origW > 0 && r->origH > 0)
             spriteTrim_[i] = {(float)r->offX / r->origW, (float)r->offY / r->origH, (float)r->w / r->origW, (float)r->h / r->origH};
         idToLayer[SPRITE_ORDER[i]] = i;
+    }
+    // Every other sprite on the page (the new monsters, NPCs, items, doors, floor themes ...) is drawable by its name
+    // too: a type's or an object's "sprite" can be any of them (docs/27_AI_SPRITES.md). Only the first page is the
+    // renderer's sprite texture, so sprites on a further page are not.
+    for (const toms::AtlasRegion& r : atlas.regions) {
+        if (r.page != 0 || idToLayer.count(r.name)) continue;
+        idToLayer[r.name] = (int)spriteUVs_.size();
+        spriteUVs_.push_back({r.uv[0], r.uv[1], r.uv[2], r.uv[3]});
+        spriteTrim_.push_back(r.origW > 0 && r.origH > 0
+            ? std::array<float, 4>{(float)r.offX / r.origW, (float)r.offY / r.origH, (float)r.w / r.origW, (float)r.h / r.origH}
+            : std::array<float, 4>{0.0f, 0.0f, 1.0f, 1.0f});
     }
     ren->loadSpriteAtlas(px, (uint32_t)w, (uint32_t)h, dir + atlas.pages[0].file);
     std::fprintf(stderr, "[assets] sprites: prebuilt atlas %sgame.atlas, %dx%d, %zu region(s), art style '%s'\n", dir.c_str(),
@@ -102,6 +114,7 @@ bool Game::loadSpriteAtlas(int style) {
     });
     int SW = 0, SH = 0;
     std::vector<std::string> replaced;
+    idToLayer.clear();   // the grid holds only the built-in sprites
     for (int i = 0; i < N_SPRITES; i++) {
         if (layers[i].empty()) { std::fprintf(stderr, "load fail %s/sprites/%s.png\n", assetDir.c_str(), SPRITE_ORDER[i]); return false; }
         idToLayer[SPRITE_ORDER[i]] = i;
@@ -347,6 +360,28 @@ void Game::spriteUV(int layer, float uv[4]) const {
     uv[0]=u0; uv[1]=v0; uv[2]=u1; uv[3]=v1;
 }
 
+std::string Game::statusKeyAt(int x, int y) const {
+    for (const Entity& e : st.entities)
+        if (e.x == x && e.y == y && !e.uid.empty()) return toms::entityStatusKey(st.id, x, y, e.uid);
+    return toms::entityStatusKey(st.id, x, y);
+}
+
+void Game::migrateStatusKeys() {
+    for (const Entity& e : st.entities) {
+        const std::string now = toms::entityStatusKey(st.id, e.x, e.y, e.uid);
+        if (entityStatus_.count(now)) continue;
+        // the keys this object may have been saved under: its position, by the floor id or by the stage file's name
+        for (const std::string& old : {toms::entityStatusKey(st.id, e.x, e.y), toms::entityStatusKey(curStage, e.x, e.y)}) {
+            if (old == now) continue;
+            auto it = entityStatus_.find(old);
+            if (it == entityStatus_.end()) continue;
+            entityStatus_[now] = it->second;
+            entityStatus_.erase(it);
+            break;
+        }
+    }
+}
+
 void Game::loadStage(const std::string& id, StageArrival arrival) {
     const std::string fromStage = st.id;   // the floor being left: arriving by stairs lands on the stair back to it
     floor_.clear();   // the objects of the floor being left (a door opening on it stops)
@@ -456,11 +491,12 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     // back the next time this floor loads, contradicting the "cleared floors stay cleared"
     // decision. Doors are intentionally not covered (see entityStatus_'s declaration in game.h).
     // A door opened earlier stays open (openDoor): its tile is floor and its "door:" entry no longer blocks.
+    migrateStatusKeys();
     for (int y = 0; y < (int)st.tiles.size(); ++y)
         for (int x = 0; x < (int)st.tiles[y].size(); ++x) {
             const char c = st.tiles[y][x];
             if ((c == 'y' || c == 'b' || c == 'r') &&
-                toms::getEntityStatus(entityStatus_, toms::entityStatusKey(st.id, x, y)) == toms::EntityStatus::Opened) {
+                toms::getEntityStatus(entityStatus_, statusKeyAt(x, y)) == toms::EntityStatus::Opened) {
                 st.tiles[y][x] = '.';
                 for (auto& e : st.entities) if (e.x == x && e.y == y && e.kind.rfind("door:", 0) == 0) e.consumed = true;
             }
@@ -474,7 +510,7 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
         if (!isMonster && !isItem && !isGate) continue;
         toms::EntityStatus want = isMonster ? toms::EntityStatus::Defeated : isGate ? toms::EntityStatus::Opened
                                                                                      : toms::EntityStatus::Collected;
-        toms::EntityStatus have = toms::getEntityStatus(entityStatus_, toms::entityStatusKey(st.id, e.x, e.y));
+        toms::EntityStatus have = toms::getEntityStatus(entityStatus_, toms::entityStatusKey(st.id, e.x, e.y, e.uid));
         if (have == want) {
             e.consumed = true;
             st.tiles[e.y][e.x] = '.';

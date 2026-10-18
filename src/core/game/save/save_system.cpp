@@ -3,8 +3,43 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <functional>
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace toms {
+
+// ---- migrations (see save_system.h) -----------------------------------------------------------------------------------
+// Entry i upgrades a file from version i+1 to i+2. Versions 1 -> 3 only ADDED fields, so their steps are empty (the
+// readers below default what is missing). Example of a real step, for when a field is renamed in version 4:
+//     [](nlohmann::json& j) { if (j.contains("oldName")) { j["newName"] = j["oldName"]; j.erase("oldName"); } },
+using Migration = std::function<void(nlohmann::json&)>;
+static const std::vector<Migration> kMetaMigrations = {
+    [](nlohmann::json&) {},   // 1 -> 2
+    [](nlohmann::json&) {},   // 2 -> 3: cycleIndex, endingsSeen, hintsUnlocked (defaults)
+};
+static const std::vector<Migration> kRunMigrations = {
+    [](nlohmann::json&) {},   // 1 -> 2
+    [](nlohmann::json&) {},   // 2 -> 3: the story state (defaults)
+};
+static_assert(kMetaSaveSchemaVersion == 3 && kRunSaveSchemaVersion == 3,
+              "a new schema version needs its step in kMetaMigrations / kRunMigrations");
+
+static void migrate(nlohmann::json& j, const std::vector<Migration>& steps, int current) {
+    if (!j.is_object()) return;
+    int ver = std::max(1, j.value("schemaVersion", 1));
+    while (ver < current && ver - 1 < (int)steps.size()) {
+        steps[(size_t)ver - 1](j);
+        ++ver;
+    }
+    // the parsed result says which version it came from (versionMismatch); the json itself is now `ver`
+}
+
+void migrateMetaJson(nlohmann::json& j) { migrate(j, kMetaMigrations, kMetaSaveSchemaVersion); }
+void migrateRunJson(nlohmann::json& j) { migrate(j, kRunMigrations, kRunSaveSchemaVersion); }
 
 nlohmann::json toJson(const MetaSaveData& m) {
     nlohmann::json j;
@@ -25,10 +60,12 @@ nlohmann::json toJson(const MetaSaveData& m) {
     return j;
 }
 
-MetaSaveData metaFromJson(const nlohmann::json& j, bool* versionMismatch) {
+MetaSaveData metaFromJson(const nlohmann::json& in, bool* versionMismatch) {
     MetaSaveData m;
-    if (!j.is_object()) { if (versionMismatch) *versionMismatch = true; return m; }
-    int ver = j.value("schemaVersion", 0);
+    if (!in.is_object()) { if (versionMismatch) *versionMismatch = true; return m; }
+    int ver = in.value("schemaVersion", 0);
+    nlohmann::json j = in;
+    migrateMetaJson(j);
     if (versionMismatch) *versionMismatch = (ver != kMetaSaveSchemaVersion);
     m.schemaVersion = ver;
     if (j.contains("storyFlags") && j["storyFlags"].is_array())
@@ -89,10 +126,12 @@ nlohmann::json toJson(const RunSaveData& r) {
     return j;
 }
 
-RunSaveData runFromJson(const nlohmann::json& j, bool* versionMismatch) {
+RunSaveData runFromJson(const nlohmann::json& in, bool* versionMismatch) {
     RunSaveData r;
-    if (!j.is_object()) { if (versionMismatch) *versionMismatch = true; return r; }
-    int ver = j.value("schemaVersion", 0);
+    if (!in.is_object()) { if (versionMismatch) *versionMismatch = true; return r; }
+    int ver = in.value("schemaVersion", 0);
+    nlohmann::json j = in;
+    migrateRunJson(j);
     if (versionMismatch) *versionMismatch = (ver != kRunSaveSchemaVersion);
     r.schemaVersion = ver;
     r.currentStageId = j.value("currentStageId", std::string());
@@ -166,17 +205,33 @@ nlohmann::json readJsonFileSafe(const std::string& path) {
     }
 }
 
-bool writeJsonAtomic(const std::string& path, const nlohmann::json& j) {
+std::string backupPath(const std::string& path) { return path + ".bak"; }
+
+bool writeJsonAtomic(const std::string& path, const nlohmann::json& j, bool keepBackup) {
     std::string tmp = path + ".tmp";
     {
-        std::ofstream f(tmp, std::ios::binary | std::ios::trunc);
+        const std::string text = j.dump(2);
+        FILE* f = std::fopen(tmp.c_str(), "wb");
         if (!f) { fprintf(stderr, "[save_system] cannot open %s for write\n", tmp.c_str()); return false; }
-        f << j.dump(2);
-        if (!f) { fprintf(stderr, "[save_system] write failed for %s\n", tmp.c_str()); return false; }
+        bool ok = std::fwrite(text.data(), 1, text.size(), f) == text.size() && std::fflush(f) == 0;
+        // Flushed to the disk itself, not only to the OS cache: otherwise the rename below can reach the disk
+        // before the data does, and a power cut leaves an empty or partial file under the real name.
+#ifdef _WIN32
+        ok = ok && _commit(_fileno(f)) == 0;
+#else
+        ok = ok && fsync(fileno(f)) == 0;
+#endif
+        ok = (std::fclose(f) == 0) && ok;
+        if (!ok) { fprintf(stderr, "[save_system] write failed for %s\n", tmp.c_str()); return false; }
     }
+    std::error_code ec;
+    // The file being replaced becomes the backup -- only if it is still good (a damaged file must not push a
+    // good backup out). A failed backup step does not stop the save.
+    if (keepBackup && std::filesystem::exists(path, ec) && readJsonFileSafe(path).is_object())
+        std::filesystem::rename(path, backupPath(path), ec);
     // std::filesystem::rename replaces an existing file on every platform; std::rename does not on
     // Windows, where it made every save after the first one fail.
-    std::error_code ec;
+    ec.clear();
     std::filesystem::rename(tmp, path, ec);
     if (ec) {
         fprintf(stderr, "[save_system] rename %s -> %s failed: %s\n", tmp.c_str(), path.c_str(), ec.message().c_str());

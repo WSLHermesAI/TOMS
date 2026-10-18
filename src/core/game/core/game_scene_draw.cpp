@@ -74,9 +74,15 @@ void Game::drawTileLayer(const MapView& v, int startX, int endX, int startY, int
     // and the maze stays readable because the tint is a light wash rather than a replace.
     float themeTint[4];
     toms::floorThemeTint(themeActIndex_, themeTint);
+    // the floor's theme: its own wall / floor / stairs pictures where the atlas has them
+    auto themed = [&](const std::string& name) {
+        if (st.theme.empty() || (name != "wall" && name != "floor" && name != "stairs_up" && name != "stairs_down")) return name;
+        const std::string t = name + "_" + st.theme;
+        return idToLayer.count(t) ? t : name;
+    };
     for (int y = startY; y < endY; y++) for (int x = startX; x < endX; x++) {
         char c = st.at(x,y);
-        int layer = spriteLayer(cellSprite(c));
+        int layer = spriteLayer(themed(cellSprite(c)));
         ren->drawSprite(spriteQuad(ox + x*ts, oy + y*ts, ts, ts, layer, themeTint));
     }
     // Q7: a locked stair stays visible, dimmed, with a padlock on it until its event is finished.

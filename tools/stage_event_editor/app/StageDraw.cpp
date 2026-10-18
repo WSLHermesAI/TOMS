@@ -35,6 +35,9 @@ bool lookTint(const Json& look, float rgba[4]) {
 
 bool gateWash(const stage::Project& p, const std::string& sem, float rgba[4]) {
     if (sem.rfind("gate:", 0) != 0) return false;
+    if (const Json* it = p.typeRec("item:" + sem.substr(5)); it && it->contains("door") && (*it)["door"].is_string()
+        && !(*it)["door"].get<std::string>().empty())
+        return false;   // its own door picture: no wash
     rgba[0] = 0.6f; rgba[1] = 0.3f; rgba[2] = 0.9f; rgba[3] = 0.6f;
     if (const Json* it = p.typeRec("item:" + sem.substr(5)); it && it->contains("tint") && (*it)["tint"].is_array())
         for (size_t i = 0; i < 3 && i < (*it)["tint"].size(); i++) rgba[i] = (*it)["tint"][i].get<float>();

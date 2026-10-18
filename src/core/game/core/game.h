@@ -430,6 +430,10 @@ public:
     // Sprites the UI or the data (items, store) can ask for that the atlas lacks; empty = fine.
     std::vector<std::string> missingUiSprites() const;
     int chosenArtStyle() const { return toms::artStyleIndex(artStyles_, settings_.artStyle); }
+    // The player's sprite: the setting's look when the atlas has it, else "player".
+    std::string playerSprite() const {
+        return !settings_.playerLook.empty() && idToLayer.count(settings_.playerLook) ? settings_.playerLook : std::string("player");
+    }
     int activeSlot() const { return activeSlot_; }
     int playTimeSec() const { return playTimeSec_; }
     const toms::Locale& locale() const { return locale_; }
@@ -1067,11 +1071,23 @@ private:
     toms::GameSettings settings_;
     toms::Locale locale_;
     int activeSlot_ = 0;      // 0 = none chosen yet; set by newGame()/continueFromSlot()
+    bool slotReadOnly_ = false;   // the active slot holds a newer game's save: played, never written (docs/28)
     int playTimeSec_ = 0;     // this run's accumulated play time (shown in the Continue list)
     bool saveDirty_ = false;  // progress changed since the last slot write
     int saveFlushMs_ = 0;     // countdown used to throttle autosave (see update())
     static constexpr int kAutosaveIntervalMs = 3000;   // flush at most this often, when dirty
     void markProgressDirty() { saveDirty_ = true; }
+    // The save key of the object at (x, y) on the open floor: by its stable uid when the stage file gives one, else
+    // by its position (entity_status.h).
+    std::string statusKeyAt(int x, int y) const;
+    // Old saves keyed this floor's objects by position (and some by the file name rather than the floor id): move
+    // those statuses to the keys statusKeyAt uses now. Called when a floor loads.
+    void migrateStatusKeys();
+public:
+    // Writes the run now if it has unsaved changes -- the host calls it when the window closes or the app goes to
+    // the background, so the autosave's last few seconds are not lost (docs/28_SAVE_SYSTEM.md).
+    void flushSave() { if (saveDirty_ && !title_.isOpen()) saveCurrentRun(); }
+private:
     // Performs whatever the title phase asked for (see title_screen.h's TitleAction).
     void handleTitleAction(toms::TitleAction a);
     std::string stageDisplayName(const std::string& id) const;
