@@ -1,9 +1,0 @@
-<MPDIList Name="old_format_mpdi" Count="1" ImageName="sheet.pi">
-    <MultiPathDynamicImage Name="walk" PathCount="1" PlayCount="1" TotalPlayTime="1.000000">
-        <CueToStartCurvesWithTime Name="p" StartTime="0.000000" Count="2" LOD="1">
-            <CurvePoint P0="10.00,20.00,0.00," P1="110.00,20.00,0.00," />
-            <CurveTime P0="0.000000" P1="1.000000" />
-            <PointDataList P0="20,10,0.00,255,255,255,255,box,0" P1="40,20,90.00,255,0,0,128,box,1" />
-        </CueToStartCurvesWithTime>
-    </MultiPathDynamicImage>
-</MPDIList>

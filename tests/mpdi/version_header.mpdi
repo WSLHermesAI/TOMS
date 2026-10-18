@@ -1,9 +1,0 @@
-<Version MPDIVersion="1.0" />
-<MPDIList Name="version_header_mpdi" Count="1" PICount="1" ImageName="sheet.pi">
-    <MultiPathDynamicImage Name="still" PathCount="1" PlayCount="-1" TotalPlayTime="2.000000">
-        <CueToStartCurvesWithTime Name="ring" StartTime="0.000000" Count="2" LOD="1">
-            <PointDataList Index="0" Position="200.00,100.00,0.00" Time="0.000000" Size="8.00,8.00" PIName="sheet" ImageName="ring" />
-            <PointDataList Index="1" Position="200.00,140.00,0.00" Time="2.000000" Size="8.00,8.00" PIName="sheet" ImageName="ring" />
-        </CueToStartCurvesWithTime>
-    </MultiPathDynamicImage>
-</MPDIList>
