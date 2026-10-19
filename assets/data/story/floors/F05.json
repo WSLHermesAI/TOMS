@@ -14,8 +14,10 @@
   },
   "enemies": {
     "mix": [
+      "bat",
       "slime",
-      "bat"
+      "toadstool",
+      "vine_snake"
     ],
     "count": [
       4,

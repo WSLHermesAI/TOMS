@@ -219,7 +219,7 @@ point / line / box / circle / ring，`edge` 只在外框，`outward` 從中心�
 - `magic_circle`（軌道）、`smoke_puff`、`dust_landing`、`coin_burst`（遊戲 sprite）、
   `level_up`、`snow`、`dark_aura`（multiply）
 
-它們使用 **fx atlas** `assets/media/atlas/fx.atlasproj`：白色、可上色的 `dot`、`glow`、
+它們使用 **fx atlas** `art_raw/atlas/fx.atlasproj`：白色、可上色的 `dot`、`glow`、
 `spark`、`star`、`ring`、`smoke`、`flame_0..3` 和 `square`，由
 `tools/atlas/make_fx_sprites.py` 產生，再用 `atlaspack` 打包。
 

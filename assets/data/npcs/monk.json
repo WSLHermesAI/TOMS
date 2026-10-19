@@ -1,0 +1,17 @@
+{
+  "npcId": "monk",
+  "name": "npc.monk.name",
+  "sprite": "npc_monk",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "monk"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

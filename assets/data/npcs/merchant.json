@@ -1,0 +1,17 @@
+{
+  "npcId": "merchant",
+  "name": "npc.merchant.name",
+  "sprite": "npc_merchant",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "merchant"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

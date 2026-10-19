@@ -1,0 +1,17 @@
+{
+  "npcId": "fisherman",
+  "name": "npc.fisherman.name",
+  "sprite": "npc_fisherman",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "fisherman"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

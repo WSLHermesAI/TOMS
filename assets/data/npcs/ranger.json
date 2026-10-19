@@ -1,0 +1,17 @@
+{
+  "npcId": "ranger",
+  "name": "npc.ranger.name",
+  "sprite": "npc_ranger",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "ranger"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

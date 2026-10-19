@@ -225,27 +225,32 @@ Spine 執行環境能否載入擴充過的 `.atlas`。這些鍵遵循兩種解�
 
 ## 4. 在 TOMS 中
 
-`assets/media/atlas/` 是專案資料夾：`game.atlasproj` + `game.atlas` + `game.png`（+ `.plist`）。
-`dark16` 美術風格打包好的 atlas 在 `assets/media/styles/dark16/atlas/`。參考資料夾是 `assets/media/sprites` 和 `assets/media/styles/dark16/sprites`。
+**原始檔與成品分開**（2026-10-19）。`art_raw/` 放原始美術，不隨遊戲發佈：sprite PNG（`art_raw/sprites`，含
+`manifest.json`）、美術風格的 PNG（`art_raw/styles/dark16/sprites`）與專案（`art_raw/atlas/game.atlasproj`、
+`fx.atlasproj`）。`assets/` 只放遊戲載入的東西，也就是打包好的 atlas：`assets/media/atlas/game.atlas` + `game.png`
+（以及 `fx.*`）、`assets/media/styles/dark16/atlas/`。專案的 `output.dir` 指向那裡，只寫出 `atlas` 格式（沒有 `.plist`：
+TOMS 沒有任何東西讀它；編輯器的匯出仍會為 Cocos Creator 寫一份）。參考資料夾是 `art_raw/sprites` 和
+`art_raw/styles/dark16/sprites`。
 
 - **遊戲**（`Game::loadPrebuiltSpriteAtlas`，`src/core/game/core/game_assets.cpp`）為原版美術載入
   `atlas/game.atlas`，為某個風格載入 `styles/<id>/atlas/game.atlas`。它上傳
   頁面（`IRenderer::loadSpriteAtlas`），並從中取得每個 sprite 的 UV。裁切過的 sprite 仍然
   填滿它的格子，因為 `spriteQuad` 會用裁切偏移。整個 `toms::AtlasFile`（子 sprite、
   軸心、9-slice、標籤）都可以透過 `Game::spriteAtlas()` 取得，所以程式碼可以依名稱查詢
-  sprite。如果檔案不存在或缺少某個 sprite，遊戲會記錄原因，並和以前一樣在啟動時建立舊的格狀 atlas。
-  透過 atlas 繪製的地圖場景和格狀版逐像素相同（以 `image_diff` 檢查）。
+  sprite。某個風格的 atlas 不存在時改用原版美術；原版 atlas 不存在或缺少地圖用的 sprite 時，遊戲會停止並顯示
+  檔名與重建它的指令。（2026-10-19 之前會改用原始 PNG 建立格狀 atlas；原始 PNG 已不再隨遊戲發佈。）
 - **檔案是提交進 repo 的；建置時不產生任何東西。** 儲存專案就會寫出它們。
   CTest `atlas.assets_up_to_date`（`atlaspack build --check`）檢查專案只靠
-  打包好的 atlas 就能開啟，而且其他檔案（plist、風格的 atlas）都一致。
+  打包好的 atlas 就能開啟，而且風格的 atlas 一致。
 - **修改美術：** 在參考資料夾中編輯 PNG，然後在編輯器中執行 *從參考資料夾匯入*
   （它會把那個 PNG 列為 *已改變*），再儲存。不開視窗：
-  `atlaspack refs assets\media\atlas\game.atlasproj --import changed`。
+  `atlaspack refs art_raw\atlas\game.atlasproj --import changed`，再
+  `atlaspack build art_raw\atlas\game.atlasproj --all-variants`。
 - **UI（RmlUi）：** UI 從同一個 atlas 繪製它的圖示。啟動時，遊戲把載入的
   `game.atlas` 在記憶體中轉成 RmlUi 的 `@spritesheet`（`_atlas.rcss`，[08](08_RMLUI.md)），`.rml`
   檔則以名稱指定 sprite（`data-attr-sprite`）。重新打包 atlas 永遠不需要修改 UI。重新命名或
   刪除程式碼、`assets/data` 或某個 `.rml` 仍在使用的 sprite，會讓 `atlas_sprites_test` 失敗。
-  `media/sprites` 中的 PNG 現在只是參考資料（以及沒有 atlas 時後備格狀 atlas 的來源）。
+  `art_raw/sprites` 中的 PNG 只是參考資料：匯入新美術的來源。
 - **新的美術風格：** 在專案中加一個變體（[13](13_ART_STYLES.md)，第 5 步）。
 
 ## 5. 命令列

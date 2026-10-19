@@ -1,0 +1,17 @@
+{
+  "npcId": "dwarf",
+  "name": "npc.dwarf.name",
+  "sprite": "npc_dwarf",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "dwarf"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

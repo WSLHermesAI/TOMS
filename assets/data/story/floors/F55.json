@@ -14,8 +14,13 @@
   },
   "enemies": {
     "mix": [
+      "demon",
+      "frost_fairy",
+      "frost_wolf",
+      "ice_golem",
+      "ice_slime",
       "wraith",
-      "demon"
+      "yeti"
     ],
     "count": [
       18,

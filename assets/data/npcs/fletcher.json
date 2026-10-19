@@ -1,0 +1,17 @@
+{
+  "npcId": "fletcher",
+  "name": "npc.fletcher.name",
+  "sprite": "npc_fletcher",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "fletcher"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

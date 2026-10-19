@@ -1,0 +1,21 @@
+{
+  "npcId": "miner",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是礦工。",
+        "en": "Good day, traveller. I'm the miner."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

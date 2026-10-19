@@ -1,0 +1,77 @@
+{
+  "meta": {
+    "currentBeat": 1,
+    "cycleIndex": 1,
+    "endingsSeen": [],
+    "forgeRecipesKnown": [],
+    "hintsUnlocked": [],
+    "missionsClaimed": [],
+    "permanentAtkBonus": 0,
+    "permanentDefBonus": 0,
+    "permanentHpBonus": 0,
+    "schemaVersion": 3,
+    "storyFlags": [],
+    "unlockedStages": [
+      "F01"
+    ]
+  },
+  "playTimeSec": 0,
+  "run": {
+    "choices": {},
+    "clearedFloors": [],
+    "counters": {},
+    "currentStageId": "F01",
+    "deathsNonBoss": 0,
+    "deathsTotal": 0,
+    "entityStatus": {},
+    "eventsFinished": [],
+    "eventsStarted": [],
+    "flags": {
+      "_chapter_granted.ch_01": true,
+      "gameplay.combat": true,
+      "hub.village": true
+    },
+    "floor": "F01",
+    "player": {
+      "armor": "",
+      "atk": 12,
+      "attrPoints": 0,
+      "attrs": {
+        "agi": 5,
+        "dex": 5,
+        "int": 5,
+        "luk": 5,
+        "str": 5,
+        "vit": 5
+      },
+      "def": 4,
+      "exp": 0,
+      "gear": [],
+      "gold": 0,
+      "hp": 120,
+      "inv": [
+        "potion_red",
+        "potion_blue",
+        "exp_up"
+      ],
+      "key_blue": 0,
+      "key_red": 0,
+      "key_yellow": 0,
+      "lv": 1,
+      "maxhp": 120,
+      "talent": "",
+      "weapon": ""
+    },
+    "schemaVersion": 3,
+    "shards": [],
+    "sideStories": {},
+    "skillPoints": 1,
+    "skillsOwned": [
+      "s_yinqi"
+    ],
+    "superMax": 5
+  },
+  "saveVersion": 1,
+  "savedAt": "2026-10-19 10:31:37",
+  "stageName": "Village edge: the well"
+}

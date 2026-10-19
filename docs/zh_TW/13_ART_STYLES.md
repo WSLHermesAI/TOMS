@@ -29,10 +29,10 @@ assets/media/styles/<id>/sprites/<sprite>.png   要替換的圖（可以只放�
 save/settings.json  "artStyle": "<id>"      玩家的選擇（"" = 原版）
 ```
 
-- 風格裡沒有的圖沿用 `assets/media/sprites/` 的原版。
+- 風格裡沒有的圖沿用原版美術（它的原始 PNG 在 `art_raw/sprites/`）。
 - 尺寸可以不同（例如風格 64px、原版 32px）：遊戲取最大的尺寸，較小的圖以 nearest-neighbour 放大（像素維持銳利）。
 - 每個風格有預先打包好的 atlas：`assets/media/styles/<id>/atlas/game.atlas` + `game.png`，是
-  `assets/media/atlas/game.atlasproj` 的一個 variant（見 [14](14_ATLAS_TOOL.md)）；風格的圖就存在這張打包好的
+  `art_raw/atlas/game.atlasproj` 的一個 variant（見 [14](14_ATLAS_TOOL.md)）；風格的圖就存在這張打包好的
   texture 裡，`styles/<id>/sprites/` 只是匯入用的參考資料夾。有它時遊戲直接用它（每張圖維持原本尺寸）；
   沒有它時才在啟動時組上面那種格狀 atlas。
 - 地圖、戰鬥畫面、道具／商店圖示（玩家選單的格子、商店卡片）都跟著風格。
@@ -58,7 +58,7 @@ python tools/art/make_variant.py --run Build/art_out/dark16 --name dark16 --size
 :: 4. 風格名稱若用到新字，重建 UI 字型（它也會讀 styles.json）
 python tools/make_ui_font.py
 
-:: 5. 在 assets/media/atlas/game.atlasproj 的 "variants" 加一筆（照 dark16 那筆：id、
+:: 5. 在 art_raw/atlas/game.atlasproj 的 "variants" 加一筆（照 dark16 那筆：id、
 ::    "reference": "../styles/<id>/sprites"、output dir "../styles/<id>/atlas"），然後把風格的圖匯入並存檔
 ::    （編輯器：選這個 variant -> Import From References）。見 docs/14_ATLAS_TOOL.md
 Build\windows-release\bin\atlaspack.exe refs assets\media\atlas\game.atlasproj --variant <id> --import all

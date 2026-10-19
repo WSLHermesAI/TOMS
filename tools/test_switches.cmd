@@ -1,6 +1,6 @@
 @echo off
-rem test_switches.cmd [preset] [--list] -- switch tests on / off for tools	est.cmd (tools	est_switches.ps1).
-rem   test_switches.cmd            a window with the tests as a tree, a checkbox each; Save writes tests	est_switches.json
+rem test_switches.cmd [preset] [--list] -- switch tests on / off for tools\test.cmd (tools\test_switches.ps1).
+rem   test_switches.cmd            a window with the tests as a tree, a checkbox each; Save writes tests\test_switches.json
 rem   test_switches.cmd --list     the same tree as text
 setlocal
 rem (the folder first: shift below also shifts %0)

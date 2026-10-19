@@ -1,0 +1,17 @@
+{
+  "npcId": "pilgrim",
+  "name": "npc.pilgrim.name",
+  "sprite": "npc_pilgrim",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "pilgrim"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

@@ -7968,6 +7968,686 @@
       "ja": "このセーブは新しいバージョンのものです。遊べますが、このスロットには保存されません。",
       "ko": "이 저장은 더 새로운 버전의 게임에서 만들어졌습니다. 플레이할 수 있지만 이 슬롯에는 저장되지 않습니다.",
       "es": "Esta partida es de una versión más nueva del juego: puedes jugar, pero no se guardará en esta ranura."
+    },
+    "item.ancient_amulet.name": {
+      "zh_TW": "古代護身符",
+      "en": "Ancient Amulet"
+    },
+    "item.ancient_amulet.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.silver_ring.name": {
+      "zh_TW": "銀戒指",
+      "en": "Silver Ring"
+    },
+    "item.silver_ring.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.lost_crown.name": {
+      "zh_TW": "遺失的王冠",
+      "en": "Lost Crown"
+    },
+    "item.lost_crown.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.healing_herb.name": {
+      "zh_TW": "治療草藥",
+      "en": "Healing Herb"
+    },
+    "item.healing_herb.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.treasure_map.name": {
+      "zh_TW": "藏寶圖",
+      "en": "Treasure Map"
+    },
+    "item.treasure_map.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.sealed_letter.name": {
+      "zh_TW": "封印信件",
+      "en": "Sealed Letter"
+    },
+    "item.sealed_letter.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.old_lantern.name": {
+      "zh_TW": "舊油燈",
+      "en": "Old Lantern"
+    },
+    "item.old_lantern.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.spell_book.name": {
+      "zh_TW": "魔法書",
+      "en": "Spell Book"
+    },
+    "item.spell_book.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.golden_chalice.name": {
+      "zh_TW": "黃金聖杯",
+      "en": "Golden Chalice"
+    },
+    "item.golden_chalice.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.phoenix_feather.name": {
+      "zh_TW": "鳳凰羽毛",
+      "en": "Phoenix Feather"
+    },
+    "item.phoenix_feather.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.broken_sword.name": {
+      "zh_TW": "斷劍",
+      "en": "Broken Sword"
+    },
+    "item.broken_sword.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.magic_mirror.name": {
+      "zh_TW": "魔鏡",
+      "en": "Magic Mirror"
+    },
+    "item.magic_mirror.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.music_box.name": {
+      "zh_TW": "音樂盒",
+      "en": "Music Box"
+    },
+    "item.music_box.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.crystal_ball.name": {
+      "zh_TW": "水晶球",
+      "en": "Crystal Ball"
+    },
+    "item.crystal_ball.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.dragon_egg.name": {
+      "zh_TW": "龍蛋",
+      "en": "Dragon Egg"
+    },
+    "item.dragon_egg.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.holy_water.name": {
+      "zh_TW": "聖水",
+      "en": "Holy Water"
+    },
+    "item.holy_water.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.rope.name": {
+      "zh_TW": "繩索",
+      "en": "Rope"
+    },
+    "item.rope.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.pickaxe.name": {
+      "zh_TW": "十字鎬",
+      "en": "Pickaxe"
+    },
+    "item.pickaxe.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.fishing_rod.name": {
+      "zh_TW": "釣竿",
+      "en": "Fishing Rod"
+    },
+    "item.fishing_rod.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.lucky_clover.name": {
+      "zh_TW": "幸運草",
+      "en": "Lucky Clover"
+    },
+    "item.lucky_clover.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.silver_bell.name": {
+      "zh_TW": "銀鈴",
+      "en": "Silver Bell"
+    },
+    "item.silver_bell.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.hourglass.name": {
+      "zh_TW": "沙漏",
+      "en": "Hourglass"
+    },
+    "item.hourglass.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.compass.name": {
+      "zh_TW": "羅盤",
+      "en": "Compass"
+    },
+    "item.compass.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.star_fragment.name": {
+      "zh_TW": "星之碎片",
+      "en": "Star Fragment"
+    },
+    "item.star_fragment.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.moon_stone.name": {
+      "zh_TW": "月之石",
+      "en": "Moon Stone"
+    },
+    "item.moon_stone.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.sun_medallion.name": {
+      "zh_TW": "太陽徽章",
+      "en": "Sun Medallion"
+    },
+    "item.sun_medallion.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.wooden_doll.name": {
+      "zh_TW": "木偶",
+      "en": "Wooden Doll"
+    },
+    "item.wooden_doll.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.family_portrait.name": {
+      "zh_TW": "全家福",
+      "en": "Family Portrait"
+    },
+    "item.family_portrait.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.locket.name": {
+      "zh_TW": "心型項鍊墜",
+      "en": "Locket"
+    },
+    "item.locket.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.ancient_coin.name": {
+      "zh_TW": "古代錢幣",
+      "en": "Ancient Coin"
+    },
+    "item.ancient_coin.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.bone_flute.name": {
+      "zh_TW": "骨笛",
+      "en": "Bone Flute"
+    },
+    "item.bone_flute.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.rune_stone.name": {
+      "zh_TW": "符文石",
+      "en": "Rune Stone"
+    },
+    "item.rune_stone.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.candle.name": {
+      "zh_TW": "蠟燭",
+      "en": "Candle"
+    },
+    "item.candle.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.bread_loaf.name": {
+      "zh_TW": "麵包",
+      "en": "Bread Loaf"
+    },
+    "item.bread_loaf.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.red_apple.name": {
+      "zh_TW": "紅蘋果",
+      "en": "Red Apple"
+    },
+    "item.red_apple.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.cheese_wheel.name": {
+      "zh_TW": "起司",
+      "en": "Cheese Wheel"
+    },
+    "item.cheese_wheel.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.wine_bottle.name": {
+      "zh_TW": "葡萄酒",
+      "en": "Wine Bottle"
+    },
+    "item.wine_bottle.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.flower_bouquet.name": {
+      "zh_TW": "花束",
+      "en": "Flower Bouquet"
+    },
+    "item.flower_bouquet.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.bird_cage.name": {
+      "zh_TW": "鳥籠",
+      "en": "Bird Cage"
+    },
+    "item.bird_cage.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.quill.name": {
+      "zh_TW": "羽毛筆與墨水",
+      "en": "Quill and Ink"
+    },
+    "item.quill.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.spectacles.name": {
+      "zh_TW": "眼鏡",
+      "en": "Spectacles"
+    },
+    "item.spectacles.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.pocket_watch.name": {
+      "zh_TW": "懷錶",
+      "en": "Pocket Watch"
+    },
+    "item.pocket_watch.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.emblem_shield.name": {
+      "zh_TW": "紋章盾",
+      "en": "Emblem Shield"
+    },
+    "item.emblem_shield.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.war_horn.name": {
+      "zh_TW": "戰號角",
+      "en": "War Horn"
+    },
+    "item.war_horn.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.prayer_beads.name": {
+      "zh_TW": "念珠",
+      "en": "Prayer Beads"
+    },
+    "item.prayer_beads.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.poison_vial.name": {
+      "zh_TW": "毒藥瓶",
+      "en": "Poison Vial"
+    },
+    "item.poison_vial.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.antidote.name": {
+      "zh_TW": "解毒劑",
+      "en": "Antidote"
+    },
+    "item.antidote.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.mushroom_basket.name": {
+      "zh_TW": "蘑菇籃",
+      "en": "Mushroom Basket"
+    },
+    "item.mushroom_basket.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.crystal_shard.name": {
+      "zh_TW": "水晶碎片",
+      "en": "Crystal Shard"
+    },
+    "item.crystal_shard.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.old_key_ring.name": {
+      "zh_TW": "舊鑰匙圈",
+      "en": "Old Key Ring"
+    },
+    "item.old_key_ring.desc": {
+      "zh_TW": "也許有人正在找它。",
+      "en": "Someone may be looking for this."
+    },
+    "item.key_emerald.name": {
+      "zh_TW": "翡翠鑰匙",
+      "en": "Emerald Key"
+    },
+    "item.key_emerald.desc": {
+      "zh_TW": "只能打開翡翠之門。",
+      "en": "It opens only the emerald door."
+    },
+    "item.key_amethyst.name": {
+      "zh_TW": "紫水晶鑰匙",
+      "en": "Amethyst Key"
+    },
+    "item.key_amethyst.desc": {
+      "zh_TW": "只能打開紫水晶之門。",
+      "en": "It opens only the amethyst door."
+    },
+    "item.key_silver.name": {
+      "zh_TW": "白銀鑰匙",
+      "en": "Silver Key"
+    },
+    "item.key_silver.desc": {
+      "zh_TW": "只能打開白銀之門。",
+      "en": "It opens only the silver door."
+    },
+    "item.key_bronze.name": {
+      "zh_TW": "青銅鑰匙",
+      "en": "Bronze Key"
+    },
+    "item.key_bronze.desc": {
+      "zh_TW": "只能打開青銅之門。",
+      "en": "It opens only the bronze door."
+    },
+    "item.key_obsidian.name": {
+      "zh_TW": "黑曜石鑰匙",
+      "en": "Obsidian Key"
+    },
+    "item.key_obsidian.desc": {
+      "zh_TW": "只能打開黑曜石之門。",
+      "en": "It opens only the obsidian door."
+    },
+    "item.key_frost.name": {
+      "zh_TW": "寒冰鑰匙",
+      "en": "Frost Key"
+    },
+    "item.key_frost.desc": {
+      "zh_TW": "只能打開寒冰之門。",
+      "en": "It opens only the frost door."
+    },
+    "item.key_flame.name": {
+      "zh_TW": "烈焰鑰匙",
+      "en": "Flame Key"
+    },
+    "item.key_flame.desc": {
+      "zh_TW": "只能打開烈焰之門。",
+      "en": "It opens only the flame door."
+    },
+    "item.key_bone.name": {
+      "zh_TW": "骸骨鑰匙",
+      "en": "Bone Key"
+    },
+    "item.key_bone.desc": {
+      "zh_TW": "只能打開骸骨之門。",
+      "en": "It opens only the bone door."
+    },
+    "item.key_rune.name": {
+      "zh_TW": "符文鑰匙",
+      "en": "Rune Key"
+    },
+    "item.key_rune.desc": {
+      "zh_TW": "只能打開符文之門。",
+      "en": "It opens only the rune door."
+    },
+    "item.key_sun.name": {
+      "zh_TW": "太陽鑰匙",
+      "en": "Sun Key"
+    },
+    "item.key_sun.desc": {
+      "zh_TW": "只能打開太陽之門。",
+      "en": "It opens only the sun door."
+    },
+    "npc.farmer.name": {
+      "zh_TW": "農夫",
+      "en": "Farmer"
+    },
+    "npc.farmer_wife.name": {
+      "zh_TW": "農婦",
+      "en": "Farmer's Wife"
+    },
+    "npc.fisherman.name": {
+      "zh_TW": "漁夫",
+      "en": "Fisherman"
+    },
+    "npc.shepherd_girl.name": {
+      "zh_TW": "牧羊女",
+      "en": "Shepherd Girl"
+    },
+    "npc.old_woman.name": {
+      "zh_TW": "老婆婆",
+      "en": "Old Woman"
+    },
+    "npc.village_boy.name": {
+      "zh_TW": "村裡的男孩",
+      "en": "Village Boy"
+    },
+    "npc.village_girl.name": {
+      "zh_TW": "村裡的女孩",
+      "en": "Village Girl"
+    },
+    "npc.baker.name": {
+      "zh_TW": "麵包師",
+      "en": "Baker"
+    },
+    "npc.weaver.name": {
+      "zh_TW": "織布女",
+      "en": "Weaver"
+    },
+    "npc.miller.name": {
+      "zh_TW": "磨坊主",
+      "en": "Miller"
+    },
+    "npc.merchant.name": {
+      "zh_TW": "商人",
+      "en": "Merchant"
+    },
+    "npc.potion_seller.name": {
+      "zh_TW": "藥水商人",
+      "en": "Potion Seller"
+    },
+    "npc.jeweler.name": {
+      "zh_TW": "珠寶商",
+      "en": "Jeweler"
+    },
+    "npc.peddler.name": {
+      "zh_TW": "行腳商",
+      "en": "Peddler"
+    },
+    "npc.innkeeper.name": {
+      "zh_TW": "旅店老闆",
+      "en": "Innkeeper"
+    },
+    "npc.blacksmith.name": {
+      "zh_TW": "鐵匠",
+      "en": "Blacksmith"
+    },
+    "npc.armorer.name": {
+      "zh_TW": "盔甲匠",
+      "en": "Armorer"
+    },
+    "npc.fletcher.name": {
+      "zh_TW": "箭匠",
+      "en": "Fletcher"
+    },
+    "npc.cartographer.name": {
+      "zh_TW": "製圖師",
+      "en": "Cartographer"
+    },
+    "npc.tailor.name": {
+      "zh_TW": "裁縫",
+      "en": "Tailor"
+    },
+    "npc.town_guard.name": {
+      "zh_TW": "城鎮衛兵",
+      "en": "Town Guard"
+    },
+    "npc.guard_captain.name": {
+      "zh_TW": "衛兵隊長",
+      "en": "Guard Captain"
+    },
+    "npc.knight_errant.name": {
+      "zh_TW": "遊俠騎士",
+      "en": "Knight Errant"
+    },
+    "npc.archer_scout.name": {
+      "zh_TW": "弓箭斥候",
+      "en": "Archer Scout"
+    },
+    "npc.gatekeeper.name": {
+      "zh_TW": "守門人",
+      "en": "Gatekeeper"
+    },
+    "npc.duke.name": {
+      "zh_TW": "公爵",
+      "en": "Duke"
+    },
+    "npc.duchess.name": {
+      "zh_TW": "公爵夫人",
+      "en": "Duchess"
+    },
+    "npc.young_lord.name": {
+      "zh_TW": "少爺",
+      "en": "Young Lord"
+    },
+    "npc.jester.name": {
+      "zh_TW": "宮廷弄臣",
+      "en": "Court Jester"
+    },
+    "npc.advisor.name": {
+      "zh_TW": "皇家顧問",
+      "en": "Royal Advisor"
+    },
+    "npc.priest.name": {
+      "zh_TW": "神父",
+      "en": "Priest"
+    },
+    "npc.nun.name": {
+      "zh_TW": "修女",
+      "en": "Nun"
+    },
+    "npc.monk.name": {
+      "zh_TW": "僧侶",
+      "en": "Monk"
+    },
+    "npc.oracle.name": {
+      "zh_TW": "神諭者",
+      "en": "Oracle"
+    },
+    "npc.healer.name": {
+      "zh_TW": "治療師",
+      "en": "Healer"
+    },
+    "npc.bard.name": {
+      "zh_TW": "吟遊詩人",
+      "en": "Bard"
+    },
+    "npc.pilgrim.name": {
+      "zh_TW": "朝聖者",
+      "en": "Pilgrim"
+    },
+    "npc.wandering_mage.name": {
+      "zh_TW": "流浪法師",
+      "en": "Wandering Mage"
+    },
+    "npc.explorer.name": {
+      "zh_TW": "探險家",
+      "en": "Explorer"
+    },
+    "npc.fortune_teller.name": {
+      "zh_TW": "占卜師",
+      "en": "Fortune Teller"
+    },
+    "npc.hunter.name": {
+      "zh_TW": "獵人",
+      "en": "Hunter"
+    },
+    "npc.ranger.name": {
+      "zh_TW": "遊俠",
+      "en": "Ranger"
+    },
+    "npc.old_hero.name": {
+      "zh_TW": "退休的老英雄",
+      "en": "Old Hero"
+    },
+    "npc.scholar.name": {
+      "zh_TW": "學者",
+      "en": "Scholar"
+    },
+    "npc.alchemist.name": {
+      "zh_TW": "鍊金術士",
+      "en": "Alchemist"
+    },
+    "npc.miner.name": {
+      "zh_TW": "礦工",
+      "en": "Miner"
+    },
+    "npc.lumberjack.name": {
+      "zh_TW": "伐木工",
+      "en": "Lumberjack"
+    },
+    "npc.sailor.name": {
+      "zh_TW": "水手",
+      "en": "Sailor"
+    },
+    "npc.dwarf.name": {
+      "zh_TW": "矮人",
+      "en": "Dwarf"
+    },
+    "npc.elf.name": {
+      "zh_TW": "精靈旅人",
+      "en": "Elf Traveler"
     }
   }
 }

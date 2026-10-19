@@ -1,0 +1,21 @@
+{
+  "npcId": "ranger",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是遊俠。",
+        "en": "Good day, traveller. I'm the ranger."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

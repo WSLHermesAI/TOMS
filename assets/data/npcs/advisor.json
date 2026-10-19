@@ -1,0 +1,17 @@
+{
+  "npcId": "advisor",
+  "name": "npc.advisor.name",
+  "sprite": "npc_advisor",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "advisor"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

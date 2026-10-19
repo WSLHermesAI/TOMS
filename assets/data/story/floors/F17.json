@@ -15,7 +15,9 @@
   "enemies": {
     "mix": [
       "bat",
-      "golem"
+      "gem_slime",
+      "golem",
+      "mole_miner"
     ],
     "count": [
       8,

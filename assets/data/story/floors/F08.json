@@ -14,8 +14,9 @@
   },
   "enemies": {
     "mix": [
-      "slime",
-      "bat"
+      "bat",
+      "forest_wolf",
+      "slime"
     ],
     "count": [
       6,

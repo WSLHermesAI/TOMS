@@ -1,0 +1,17 @@
+{
+  "npcId": "alchemist",
+  "name": "npc.alchemist.name",
+  "sprite": "npc_alchemist",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "alchemist"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

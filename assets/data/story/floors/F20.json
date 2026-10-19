@@ -15,7 +15,12 @@
   "enemies": {
     "mix": [
       "bat",
-      "golem"
+      "cave_troll",
+      "crystal_spider",
+      "gem_slime",
+      "golem",
+      "rock_crab",
+      "stone_lizard"
     ],
     "count": [
       8,

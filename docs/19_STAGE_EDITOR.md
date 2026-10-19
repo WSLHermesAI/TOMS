@@ -46,7 +46,7 @@ The browser's own zoom (**Ctrl + =** / **Ctrl + -**) also works.
 - **Floor:** pick from the list, or press `[` / `]`. A ● marks floors with unsaved changes, and ★
   marks the hand-made boss stages.
 - **Palette:** terrain, stairs, player start, doors, keys, monsters, NPCs, items, drawn with the game's
-  sprites (`assets/media/sprites`). The small letter is the char this floor uses for it.
+  sprites (`art_raw/sprites`). The small letter is the char this floor uses for it.
 - **Events:** the list on the left. *This floor can roll* comes first (✓ n = placed n times), then every
   event by pool. Search matches id, kind and text. A placed event looks like the game's story plate
   (gold with a slate inset), plus a dot in its kind colour. A red dot means no pool defines it.

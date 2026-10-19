@@ -1,0 +1,17 @@
+{
+  "npcId": "village_boy",
+  "name": "npc.village_boy.name",
+  "sprite": "npc_village_boy",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "village_boy"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

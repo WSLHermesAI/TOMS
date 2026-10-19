@@ -1,0 +1,17 @@
+{
+  "npcId": "nun",
+  "name": "npc.nun.name",
+  "sprite": "npc_nun",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "nun"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

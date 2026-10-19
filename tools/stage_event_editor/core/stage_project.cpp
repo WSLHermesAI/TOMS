@@ -159,9 +159,22 @@ bool Project::load(const std::string& tomsRoot, std::string& err) {
     kinds = Json::object();
     if (readJson(data + "events/kinds.json", j))
         for (auto& [k, v] : j.items()) if (!startsWith(k, "_")) kinds[k] = v;
+    // the sprite names the game can draw: the regions of the cooked atlas (a region is a line with no indent and no
+    // ':'; the page lines end in ".png"). The raw PNGs live in art_raw/ and are not shipped.
     sprites.clear();
-    if (readJson(root + "/assets/media/sprites/manifest.json", j) && member(j, "sprites"))
-        for (const Json& s : j["sprites"]) if (s.is_string()) sprites.push_back(s.get<std::string>());
+    {
+        std::string atlasText;
+        if (readText(root + "/assets/media/atlas/game.atlas", atlasText)) {
+            std::istringstream in(atlasText);
+            for (std::string line; std::getline(in, line);) {
+                if (!line.empty() && line.back() == '\r') line.pop_back();
+                if (line.empty() || line[0] == ' ' || line[0] == '\t' || line.find(':') != std::string::npos ||
+                    endsWith(line, ".png"))
+                    continue;
+                sprites.push_back(line);
+            }
+        }
+    }
 
     // the palette's type records, whole, for the detail windows (written back by Save)
     dataFiles.clear();

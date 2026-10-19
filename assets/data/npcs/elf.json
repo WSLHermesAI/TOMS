@@ -1,0 +1,17 @@
+{
+  "npcId": "elf",
+  "name": "npc.elf.name",
+  "sprite": "npc_elf",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "elf"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

@@ -1,0 +1,17 @@
+{
+  "npcId": "guard_captain",
+  "name": "npc.guard_captain.name",
+  "sprite": "npc_guard_captain",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "guard_captain"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

@@ -1,0 +1,17 @@
+{
+  "npcId": "duchess",
+  "name": "npc.duchess.name",
+  "sprite": "npc_duchess",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "duchess"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

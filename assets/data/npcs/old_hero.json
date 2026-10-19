@@ -1,0 +1,17 @@
+{
+  "npcId": "old_hero",
+  "name": "npc.old_hero.name",
+  "sprite": "npc_old_hero",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "old_hero"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

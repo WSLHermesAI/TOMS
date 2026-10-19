@@ -1,0 +1,17 @@
+{
+  "npcId": "lumberjack",
+  "name": "npc.lumberjack.name",
+  "sprite": "npc_lumberjack",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "lumberjack"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

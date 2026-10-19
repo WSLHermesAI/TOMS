@@ -1,0 +1,21 @@
+{
+  "npcId": "bard",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是吟遊詩人。",
+        "en": "Good day, traveller. I'm the bard."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

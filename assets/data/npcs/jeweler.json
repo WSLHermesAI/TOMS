@@ -1,0 +1,17 @@
+{
+  "npcId": "jeweler",
+  "name": "npc.jeweler.name",
+  "sprite": "npc_jeweler",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "jeweler"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

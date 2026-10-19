@@ -100,7 +100,7 @@ public:
     Json strings = Json::object();          // text.json "strings"
     std::map<std::string, Json> textEdits;  // keys changed here (names, greetings): merged into text.json by Save
     Json footprints = Json::object(), kinds = Json::object();
-    std::vector<std::string> sprites;       // media/sprites/manifest.json
+    std::vector<std::string> sprites;       // the sprite names in assets/media/atlas/game.atlas
     std::map<std::string, Json> npcs;       // npcs/<id>.json
     std::map<std::string, std::vector<Json>> dialogueActions;   // dialogue id -> every action its choices run
     std::map<std::string, DataFile> dataFiles;                  // enemies.json, items.json, npcs/*.json (path -> file)

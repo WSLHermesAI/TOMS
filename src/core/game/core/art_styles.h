@@ -1,7 +1,8 @@
 // art_styles.h — the selectable art styles (Settings > art style).
 //
-// A style is a folder assets/media/styles/<id>/sprites/ holding replacement PNGs for some or all of
-// the atlas sprites (SPRITE_ORDER); a sprite the style does not have keeps the original art. The
+// A style is a cooked atlas assets/media/styles/<id>/atlas/game.atlas (built from the replacement PNGs in
+// art_raw/styles/<id>/sprites/ by art_raw/atlas/game.atlasproj's variant <id>); a sprite the style does not have
+// keeps the original art. The
 // list lives in assets/media/styles/styles.json (folders cannot be listed inside the Android APK):
 //
 //   { "styles": [ { "id": "dark16", "name": { "zh_TW": "暗黑奇幻", "en": "Dark fantasy" } } ] }

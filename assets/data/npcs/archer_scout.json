@@ -1,0 +1,17 @@
+{
+  "npcId": "archer_scout",
+  "name": "npc.archer_scout.name",
+  "sprite": "npc_archer_scout",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "archer_scout"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

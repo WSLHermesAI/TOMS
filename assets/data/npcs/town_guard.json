@@ -1,0 +1,17 @@
+{
+  "npcId": "town_guard",
+  "name": "npc.town_guard.name",
+  "sprite": "npc_town_guard",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "town_guard"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

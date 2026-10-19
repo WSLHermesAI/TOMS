@@ -14,6 +14,7 @@
   },
   "enemies": {
     "mix": [
+      "ghost_maiden",
       "skeleton",
       "wraith"
     ],

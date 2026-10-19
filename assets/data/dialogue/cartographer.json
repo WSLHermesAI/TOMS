@@ -1,0 +1,21 @@
+{
+  "npcId": "cartographer",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是製圖師。",
+        "en": "Good day, traveller. I'm the cartographer."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

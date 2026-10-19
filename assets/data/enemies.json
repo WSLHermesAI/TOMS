@@ -63,5 +63,605 @@
     "gold": 0,
     "boss": true,
     "atk_interval_ms": 3000
+  },
+  "mossling": {
+    "name": { "zh_TW": "苔蘚球", "en": "Mossling" },
+    "sprite": "m_mossling.png",
+    "hp": 20,
+    "atk": 9,
+    "def": 1,
+    "exp": 6,
+    "gold": 4,
+    "draft": true
+  },
+  "sprout_imp": {
+    "name": { "zh_TW": "芽苗小鬼", "en": "Sprout Imp" },
+    "sprite": "m_sprout_imp.png",
+    "hp": 21,
+    "atk": 10,
+    "def": 2,
+    "exp": 6,
+    "gold": 4,
+    "draft": true
+  },
+  "thorn_boar": {
+    "name": { "zh_TW": "荊棘野豬", "en": "Thorn Boar" },
+    "sprite": "m_thorn_boar.png",
+    "hp": 23,
+    "atk": 10,
+    "def": 2,
+    "exp": 7,
+    "gold": 5,
+    "draft": true
+  },
+  "forest_wolf": {
+    "name": { "zh_TW": "森林狼", "en": "Forest Wolf" },
+    "sprite": "m_forest_wolf.png",
+    "hp": 22,
+    "atk": 10,
+    "def": 2,
+    "exp": 7,
+    "gold": 5,
+    "draft": true
+  },
+  "horn_beetle": {
+    "name": { "zh_TW": "角甲蟲", "en": "Horn Beetle" },
+    "sprite": "m_horn_beetle.png",
+    "hp": 24,
+    "atk": 11,
+    "def": 2,
+    "exp": 7,
+    "gold": 5,
+    "draft": true
+  },
+  "toadstool": {
+    "name": { "zh_TW": "毒蕈怪", "en": "Toadstool" },
+    "sprite": "m_toadstool.png",
+    "hp": 22,
+    "atk": 10,
+    "def": 2,
+    "exp": 7,
+    "gold": 5,
+    "draft": true
+  },
+  "vine_snake": {
+    "name": { "zh_TW": "藤蔓蛇", "en": "Vine Snake" },
+    "sprite": "m_vine_snake.png",
+    "hp": 24,
+    "atk": 11,
+    "def": 2,
+    "exp": 7,
+    "gold": 5,
+    "draft": true
+  },
+  "bear_cub": {
+    "name": { "zh_TW": "暴躁小熊", "en": "Bear Cub" },
+    "sprite": "m_bear_cub.png",
+    "hp": 23,
+    "atk": 10,
+    "def": 2,
+    "exp": 7,
+    "gold": 5,
+    "draft": true
+  },
+  "pixie": {
+    "name": { "zh_TW": "惡作劇妖精", "en": "Trickster Pixie" },
+    "sprite": "m_pixie.png",
+    "hp": 24,
+    "atk": 11,
+    "def": 2,
+    "exp": 8,
+    "gold": 5,
+    "draft": true
+  },
+  "bandit": {
+    "name": { "zh_TW": "森林盜賊", "en": "Forest Bandit" },
+    "sprite": "m_bandit.png",
+    "hp": 25,
+    "atk": 11,
+    "def": 2,
+    "exp": 8,
+    "gold": 5,
+    "draft": true
+  },
+  "red_bat": {
+    "name": { "zh_TW": "赤洞蝙蝠", "en": "Red Cave Bat" },
+    "sprite": "m_red_bat.png",
+    "hp": 27,
+    "atk": 12,
+    "def": 2,
+    "exp": 8,
+    "gold": 6,
+    "draft": true
+  },
+  "rock_crab": {
+    "name": { "zh_TW": "岩殼蟹", "en": "Rock Crab" },
+    "sprite": "m_rock_crab.png",
+    "hp": 42,
+    "atk": 12,
+    "def": 4,
+    "exp": 13,
+    "gold": 8,
+    "draft": true
+  },
+  "mole_miner": {
+    "name": { "zh_TW": "鼴鼠礦工", "en": "Mole Miner" },
+    "sprite": "m_mole_miner.png",
+    "hp": 44,
+    "atk": 12,
+    "def": 4,
+    "exp": 14,
+    "gold": 8,
+    "draft": true
+  },
+  "crystal_spider": {
+    "name": { "zh_TW": "水晶蜘蛛", "en": "Crystal Spider" },
+    "sprite": "m_crystal_spider.png",
+    "hp": 48,
+    "atk": 14,
+    "def": 5,
+    "exp": 15,
+    "gold": 9,
+    "draft": true
+  },
+  "cave_troll": {
+    "name": { "zh_TW": "洞穴巨魔", "en": "Cave Troll" },
+    "sprite": "m_cave_troll.png",
+    "hp": 51,
+    "atk": 15,
+    "def": 5,
+    "exp": 16,
+    "gold": 10,
+    "draft": true
+  },
+  "gem_slime": {
+    "name": { "zh_TW": "寶石史萊姆", "en": "Gem Slime" },
+    "sprite": "m_gem_slime.png",
+    "hp": 46,
+    "atk": 13,
+    "def": 5,
+    "exp": 14,
+    "gold": 9,
+    "draft": true
+  },
+  "kobold": {
+    "name": { "zh_TW": "狗頭人斥候", "en": "Kobold Scout" },
+    "sprite": "m_kobold.png",
+    "hp": 26,
+    "atk": 12,
+    "def": 2,
+    "exp": 8,
+    "gold": 6,
+    "draft": true
+  },
+  "stone_lizard": {
+    "name": { "zh_TW": "石鱗蜥蜴", "en": "Stone Lizard" },
+    "sprite": "m_stone_lizard.png",
+    "hp": 49,
+    "atk": 14,
+    "def": 5,
+    "exp": 15,
+    "gold": 10,
+    "draft": true
+  },
+  "glow_worm": {
+    "name": { "zh_TW": "螢光蠕蟲", "en": "Glow Worm" },
+    "sprite": "m_glow_worm.png",
+    "hp": 48,
+    "atk": 14,
+    "def": 5,
+    "exp": 15,
+    "gold": 9,
+    "draft": true
+  },
+  "ore_golem": {
+    "name": { "zh_TW": "礦石魔像", "en": "Ore Golem" },
+    "sprite": "m_ore_golem.png",
+    "hp": 77,
+    "atk": 24,
+    "def": 7,
+    "exp": 30,
+    "gold": 17,
+    "draft": true
+  },
+  "zombie": {
+    "name": { "zh_TW": "殭屍", "en": "Zombie" },
+    "sprite": "m_zombie.png",
+    "hp": 50,
+    "atk": 14,
+    "def": 5,
+    "exp": 15,
+    "gold": 10,
+    "draft": true
+  },
+  "ghost_maiden": {
+    "name": { "zh_TW": "幽魂少女", "en": "Ghost Maiden" },
+    "sprite": "m_ghost_maiden.png",
+    "hp": 51,
+    "atk": 17,
+    "def": 5,
+    "exp": 17,
+    "gold": 11,
+    "draft": true
+  },
+  "bone_archer": {
+    "name": { "zh_TW": "骸骨弓手", "en": "Bone Archer" },
+    "sprite": "m_bone_archer.png",
+    "hp": 54,
+    "atk": 15,
+    "def": 6,
+    "exp": 17,
+    "gold": 10,
+    "draft": true
+  },
+  "mummy": {
+    "name": { "zh_TW": "木乃伊", "en": "Mummy" },
+    "sprite": "m_mummy.png",
+    "hp": 52,
+    "atk": 15,
+    "def": 5,
+    "exp": 16,
+    "gold": 10,
+    "draft": true
+  },
+  "vampire_bat": {
+    "name": { "zh_TW": "吸血蝙蝠", "en": "Vampire Bat" },
+    "sprite": "m_vampire_bat.png",
+    "hp": 53,
+    "atk": 18,
+    "def": 5,
+    "exp": 18,
+    "gold": 12,
+    "draft": true
+  },
+  "ghoul": {
+    "name": { "zh_TW": "食屍鬼", "en": "Ghoul" },
+    "sprite": "m_ghoul.png",
+    "hp": 56,
+    "atk": 16,
+    "def": 6,
+    "exp": 17,
+    "gold": 11,
+    "draft": true
+  },
+  "lich": {
+    "name": { "zh_TW": "巫妖學徒", "en": "Lich Apprentice" },
+    "sprite": "m_lich.png",
+    "hp": 62,
+    "atk": 21,
+    "def": 6,
+    "exp": 21,
+    "gold": 13,
+    "draft": true
+  },
+  "skull_knight": {
+    "name": { "zh_TW": "骷髏騎士", "en": "Skull Knight" },
+    "sprite": "m_skull_knight.png",
+    "hp": 60,
+    "atk": 20,
+    "def": 6,
+    "exp": 20,
+    "gold": 13,
+    "draft": true
+  },
+  "banshee": {
+    "name": { "zh_TW": "報喪女妖", "en": "Banshee" },
+    "sprite": "m_banshee.png",
+    "hp": 57,
+    "atk": 19,
+    "def": 6,
+    "exp": 19,
+    "gold": 12,
+    "draft": true
+  },
+  "grave_rat": {
+    "name": { "zh_TW": "墓穴巨鼠", "en": "Grave Rat" },
+    "sprite": "m_grave_rat.png",
+    "hp": 46,
+    "atk": 13,
+    "def": 5,
+    "exp": 14,
+    "gold": 9,
+    "draft": true
+  },
+  "salamander": {
+    "name": { "zh_TW": "火蜥蜴", "en": "Fire Salamander" },
+    "sprite": "m_salamander.png",
+    "hp": 60,
+    "atk": 19,
+    "def": 6,
+    "exp": 20,
+    "gold": 12,
+    "draft": true
+  },
+  "magma_slime": {
+    "name": { "zh_TW": "熔岩史萊姆", "en": "Magma Slime" },
+    "sprite": "m_magma_slime.png",
+    "hp": 62,
+    "atk": 20,
+    "def": 6,
+    "exp": 21,
+    "gold": 13,
+    "draft": true
+  },
+  "fire_imp": {
+    "name": { "zh_TW": "火焰小鬼", "en": "Fire Imp" },
+    "sprite": "m_fire_imp.png",
+    "hp": 65,
+    "atk": 21,
+    "def": 6,
+    "exp": 22,
+    "gold": 14,
+    "draft": true
+  },
+  "ember_wolf": {
+    "name": { "zh_TW": "餘燼狼", "en": "Ember Wolf" },
+    "sprite": "m_ember_wolf.png",
+    "hp": 68,
+    "atk": 21,
+    "def": 6,
+    "exp": 23,
+    "gold": 14,
+    "draft": true
+  },
+  "flame_spirit": {
+    "name": { "zh_TW": "火焰精靈", "en": "Flame Spirit" },
+    "sprite": "m_flame_spirit.png",
+    "hp": 73,
+    "atk": 23,
+    "def": 7,
+    "exp": 24,
+    "gold": 15,
+    "draft": true
+  },
+  "lava_golem": {
+    "name": { "zh_TW": "熔岩魔像", "en": "Lava Golem" },
+    "sprite": "m_lava_golem.png",
+    "hp": 70,
+    "atk": 22,
+    "def": 7,
+    "exp": 24,
+    "gold": 15,
+    "draft": true
+  },
+  "fire_drake": {
+    "name": { "zh_TW": "火焰飛龍", "en": "Fire Drake" },
+    "sprite": "m_fire_drake.png",
+    "hp": 74,
+    "atk": 24,
+    "def": 7,
+    "exp": 29,
+    "gold": 17,
+    "draft": true
+  },
+  "ash_wraith": {
+    "name": { "zh_TW": "灰燼怨靈", "en": "Ash Wraith" },
+    "sprite": "m_ash_wraith.png",
+    "hp": 69,
+    "atk": 22,
+    "def": 7,
+    "exp": 27,
+    "gold": 16,
+    "draft": true
+  },
+  "phoenix_chick": {
+    "name": { "zh_TW": "雛鳳凰", "en": "Phoenix Chick" },
+    "sprite": "m_phoenix_chick.png",
+    "hp": 72,
+    "atk": 23,
+    "def": 7,
+    "exp": 28,
+    "gold": 16,
+    "draft": true
+  },
+  "cinder_beetle": {
+    "name": { "zh_TW": "灰燼甲蟲", "en": "Cinder Beetle" },
+    "sprite": "m_cinder_beetle.png",
+    "hp": 66,
+    "atk": 21,
+    "def": 6,
+    "exp": 26,
+    "gold": 15,
+    "draft": true
+  },
+  "ice_golem": {
+    "name": { "zh_TW": "冰魔像", "en": "Ice Golem" },
+    "sprite": "m_ice_golem.png",
+    "hp": 88,
+    "atk": 28,
+    "def": 8,
+    "exp": 36,
+    "gold": 21,
+    "draft": true
+  },
+  "frost_wolf": {
+    "name": { "zh_TW": "霜狼", "en": "Frost Wolf" },
+    "sprite": "m_frost_wolf.png",
+    "hp": 76,
+    "atk": 24,
+    "def": 7,
+    "exp": 31,
+    "gold": 18,
+    "draft": true
+  },
+  "yeti": {
+    "name": { "zh_TW": "雪怪", "en": "Yeti" },
+    "sprite": "m_yeti.png",
+    "hp": 85,
+    "atk": 27,
+    "def": 8,
+    "exp": 35,
+    "gold": 20,
+    "draft": true
+  },
+  "ice_slime": {
+    "name": { "zh_TW": "冰史萊姆", "en": "Ice Slime" },
+    "sprite": "m_ice_slime.png",
+    "hp": 73,
+    "atk": 23,
+    "def": 7,
+    "exp": 30,
+    "gold": 17,
+    "draft": true
+  },
+  "frost_fairy": {
+    "name": { "zh_TW": "霜之妖精", "en": "Frost Fairy" },
+    "sprite": "m_frost_fairy.png",
+    "hp": 82,
+    "atk": 26,
+    "def": 8,
+    "exp": 33,
+    "gold": 19,
+    "draft": true
+  },
+  "penguin_knight": {
+    "name": { "zh_TW": "企鵝騎士", "en": "Penguin Knight" },
+    "sprite": "m_penguin_knight.png",
+    "hp": 79,
+    "atk": 25,
+    "def": 8,
+    "exp": 32,
+    "gold": 19,
+    "draft": true
+  },
+  "ice_wraith": {
+    "name": { "zh_TW": "冰之怨靈", "en": "Ice Wraith" },
+    "sprite": "m_ice_wraith.png",
+    "hp": 83,
+    "atk": 26,
+    "def": 8,
+    "exp": 34,
+    "gold": 20,
+    "draft": true
+  },
+  "mammoth": {
+    "name": { "zh_TW": "小長毛象", "en": "Mammoth Calf" },
+    "sprite": "m_mammoth.png",
+    "hp": 90,
+    "atk": 28,
+    "def": 9,
+    "exp": 37,
+    "gold": 21,
+    "draft": true
+  },
+  "crystal_serpent": {
+    "name": { "zh_TW": "冰晶巨蛇", "en": "Crystal Serpent" },
+    "sprite": "m_crystal_serpent.png",
+    "hp": 87,
+    "atk": 27,
+    "def": 8,
+    "exp": 35,
+    "gold": 21,
+    "draft": true
+  },
+  "blizzard_owl": {
+    "name": { "zh_TW": "暴雪貓頭鷹", "en": "Blizzard Owl" },
+    "sprite": "m_blizzard_owl.png",
+    "hp": 80,
+    "atk": 25,
+    "def": 8,
+    "exp": 33,
+    "gold": 19,
+    "draft": true
+  },
+  "dark_knight": {
+    "name": { "zh_TW": "黑暗騎士", "en": "Dark Knight" },
+    "sprite": "m_dark_knight.png",
+    "hp": 88,
+    "atk": 28,
+    "def": 8,
+    "exp": 36,
+    "gold": 21,
+    "draft": true
+  },
+  "gargoyle": {
+    "name": { "zh_TW": "石像鬼", "en": "Gargoyle" },
+    "sprite": "m_gargoyle.png",
+    "hp": 80,
+    "atk": 25,
+    "def": 8,
+    "exp": 31,
+    "gold": 18,
+    "draft": true
+  },
+  "demon_guard": {
+    "name": { "zh_TW": "惡魔守衛", "en": "Demon Guard" },
+    "sprite": "m_demon_guard.png",
+    "hp": 92,
+    "atk": 29,
+    "def": 9,
+    "exp": 38,
+    "gold": 22,
+    "draft": true
+  },
+  "shadow_assassin": {
+    "name": { "zh_TW": "暗影刺客", "en": "Shadow Assassin" },
+    "sprite": "m_shadow_assassin.png",
+    "hp": 55,
+    "atk": 19,
+    "def": 6,
+    "exp": 19,
+    "gold": 12,
+    "draft": true
+  },
+  "chimera": {
+    "name": { "zh_TW": "奇美拉", "en": "Chimera" },
+    "sprite": "m_chimera.png",
+    "hp": 96,
+    "atk": 31,
+    "def": 9,
+    "exp": 40,
+    "gold": 23,
+    "draft": true
+  },
+  "minotaur": {
+    "name": { "zh_TW": "牛頭人", "en": "Minotaur" },
+    "sprite": "m_minotaur.png",
+    "hp": 95,
+    "atk": 30,
+    "def": 9,
+    "exp": 39,
+    "gold": 23,
+    "draft": true
+  },
+  "dark_mage": {
+    "name": { "zh_TW": "黑暗法師", "en": "Dark Mage" },
+    "sprite": "m_dark_mage.png",
+    "hp": 93,
+    "atk": 30,
+    "def": 9,
+    "exp": 38,
+    "gold": 22,
+    "draft": true
+  },
+  "hellhound": {
+    "name": { "zh_TW": "地獄犬", "en": "Hellhound" },
+    "sprite": "m_hellhound.png",
+    "hp": 99,
+    "atk": 31,
+    "def": 9,
+    "exp": 41,
+    "gold": 24,
+    "draft": true
+  },
+  "armored_ogre": {
+    "name": { "zh_TW": "鐵甲食人魔", "en": "Armored Ogre" },
+    "sprite": "m_armored_ogre.png",
+    "hp": 102,
+    "atk": 32,
+    "def": 10,
+    "exp": 42,
+    "gold": 24,
+    "draft": true
+  },
+  "demon_general": {
+    "name": { "zh_TW": "惡魔將軍", "en": "Demon General" },
+    "sprite": "m_demon_general.png",
+    "hp": 106,
+    "atk": 34,
+    "def": 10,
+    "exp": 44,
+    "gold": 25,
+    "draft": true
   }
 }

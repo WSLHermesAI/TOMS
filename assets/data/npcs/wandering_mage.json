@@ -1,0 +1,17 @@
+{
+  "npcId": "wandering_mage",
+  "name": "npc.wandering_mage.name",
+  "sprite": "npc_wandering_mage",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "wandering_mage"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

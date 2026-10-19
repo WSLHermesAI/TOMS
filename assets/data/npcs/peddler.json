@@ -1,0 +1,17 @@
+{
+  "npcId": "peddler",
+  "name": "npc.peddler.name",
+  "sprite": "npc_peddler",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "peddler"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

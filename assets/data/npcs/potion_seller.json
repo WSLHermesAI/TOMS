@@ -1,0 +1,17 @@
+{
+  "npcId": "potion_seller",
+  "name": "npc.potion_seller.name",
+  "sprite": "npc_potion_seller",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "potion_seller"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

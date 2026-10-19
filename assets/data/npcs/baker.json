@@ -1,0 +1,17 @@
+{
+  "npcId": "baker",
+  "name": "npc.baker.name",
+  "sprite": "npc_baker",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "baker"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

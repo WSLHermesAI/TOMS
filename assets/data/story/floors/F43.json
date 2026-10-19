@@ -14,8 +14,9 @@
   },
   "enemies": {
     "mix": [
-      "skeleton",
-      "demon"
+      "cinder_beetle",
+      "demon",
+      "skeleton"
     ],
     "count": [
       16,

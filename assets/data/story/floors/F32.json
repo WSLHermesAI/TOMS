@@ -14,7 +14,11 @@
   },
   "enemies": {
     "mix": [
+      "banshee",
+      "ghost_maiden",
+      "shadow_assassin",
       "skeleton",
+      "vampire_bat",
       "wraith"
     ],
     "count": [

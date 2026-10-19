@@ -1,0 +1,17 @@
+{
+  "npcId": "sailor",
+  "name": "npc.sailor.name",
+  "sprite": "npc_sailor",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "sailor"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

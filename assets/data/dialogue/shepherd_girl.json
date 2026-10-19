@@ -1,0 +1,21 @@
+{
+  "npcId": "shepherd_girl",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是牧羊女。",
+        "en": "Good day, traveller. I'm the shepherd girl."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

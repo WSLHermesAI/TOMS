@@ -1,0 +1,21 @@
+{
+  "npcId": "old_hero",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是退休的老英雄。",
+        "en": "Good day, traveller. I'm the old hero."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

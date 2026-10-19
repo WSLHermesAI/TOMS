@@ -1,0 +1,17 @@
+{
+  "npcId": "farmer_wife",
+  "name": "npc.farmer_wife.name",
+  "sprite": "npc_farmer_wife",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "farmer_wife"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

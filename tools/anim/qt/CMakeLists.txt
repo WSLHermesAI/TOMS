@@ -75,6 +75,10 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME anim.check_monster_idle
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/monster_idle.anim")
     set_tests_properties(anim.check_monster_idle PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # the NPCs' idle animations (assets/media/anim/npc_idle.anim, tools/make_idle_clips.py)
+    add_test(NAME anim.check_npc_idle
+             COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/npc_idle.anim")
+    set_tests_properties(anim.check_npc_idle PROPERTIES LABELS "unit;anim" TIMEOUT 30)
     # the door-opening clips (assets/media/anim/door_open.anim, Game::openDoor)
     add_test(NAME anim.check_door_open
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/door_open.anim")

@@ -40,9 +40,9 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     assetDir_ = opts.assetDir.empty() ? defaultAssetDir() : opts.assetDir;
 
     // vfs, not std::filesystem: on Android these are entries inside the APK (folders via vfsListDir).
-    if (toms::vfsListDir(assetDir_ + "/sprites").empty()) {
+    if (toms::vfsListDir(assetDir_ + "/atlas").empty()) {
         error = "Game assets were not found at:\n  " + assetDir_ +
-                "\n\nExpected the game's media folder (assets/media, with sprites/ and fonts/). "
+                "\n\nExpected the game's media folder (assets/media, with atlas/ and fonts/). "
                 "Set the environment variable ASSET_DIR, or restore the content with: git checkout -- assets";
         return false;
     }

@@ -1,0 +1,17 @@
+{
+  "npcId": "armorer",
+  "name": "npc.armorer.name",
+  "sprite": "npc_armorer",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "armorer"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

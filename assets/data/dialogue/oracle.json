@@ -1,0 +1,21 @@
+{
+  "npcId": "oracle",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是神諭者。",
+        "en": "Good day, traveller. I'm the oracle."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

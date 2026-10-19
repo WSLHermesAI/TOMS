@@ -9,26 +9,24 @@
 
 using namespace toms::game_detail;
 
-// A prebuilt atlas made by tools/atlas (project media/atlas/game.atlasproj, which keeps its images
-// in the atlas itself): media/atlas/game.atlas + game.png for the original art,
-// media/styles/<id>/atlas/ for each art style. It replaces the grid
-// built in loadSpriteAtlas: sprites keep their own sizes, the .atlas carries child sprites, pivots,
-// 9-slices and tags (spriteAtlas_), and the web build fetches one image instead of thirty. Every
-// sprite in SPRITE_ORDER must be in it, on its first page -- otherwise the grid is used, as before.
+// The sprite atlas cooked by tools/atlas (project art_raw/atlas/game.atlasproj, which keeps its images in the atlas
+// itself): media/atlas/game.atlas + game.png for the original art, media/styles/<id>/atlas/ for each art style.
+// Sprites keep their own sizes; the .atlas carries child sprites, pivots, 9-slices and tags (spriteAtlas_). Every
+// sprite in SPRITE_ORDER must be in it, on its first page.
 bool Game::loadPrebuiltSpriteAtlas(int style) {
     const std::string dir = style > 0 ? dataDir + "/styles/" + artStyles_[style].id + "/atlas/" : dataDir + "/atlas/";
     std::string text;
-    if (!toms::vfsReadAll(dir + "game.atlas", text)) return false;   // none: the grid, quietly
+    if (!toms::vfsReadAll(dir + "game.atlas", text)) return false;
     toms::AtlasFile atlas;
     std::string err;
     if (!toms::parseAtlas(text, atlas, &err) || atlas.pages.empty()) {
-        std::fprintf(stderr, "[assets] %sgame.atlas: %s -- using the sprite grid\n", dir.c_str(), err.empty() ? "no pages" : err.c_str());
+        std::fprintf(stderr, "[assets] %sgame.atlas: %s\n", dir.c_str(), err.empty() ? "no pages" : err.c_str());
         return false;
     }
     for (int i = 0; i < N_SPRITES; i++) {
         const toms::AtlasRegion* r = atlas.find(SPRITE_ORDER[i]);
         if (!r || r->page != 0) {
-            std::fprintf(stderr, "[assets] %sgame.atlas has no sprite '%s'%s -- using the sprite grid\n", dir.c_str(),
+            std::fprintf(stderr, "[assets] %sgame.atlas has no sprite '%s'%s\n", dir.c_str(),
                          SPRITE_ORDER[i], r ? " on its first page" : "");
             return false;
         }
@@ -39,7 +37,7 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
     if (toms::vfsReadAll(dir + atlas.pages[0].file, file))
         d = stbi_load_from_memory((const stbi_uc*)file.data(), (int)file.size(), &w, &h, &ch, 4);
     if (!d) {
-        std::fprintf(stderr, "[assets] cannot load %s%s -- using the sprite grid\n", dir.c_str(), atlas.pages[0].file.c_str());
+        std::fprintf(stderr, "[assets] cannot load %s%s\n", dir.c_str(), atlas.pages[0].file.c_str());
         return false;
     }
     std::vector<uint8_t> px(d, d + (size_t)w * h * 4);
@@ -82,68 +80,22 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
     return true;
 }
 
-// Builds the sprite atlas for art style `style` (index into artStyles_; 0 = the original art) and
-// uploads it, replacing the previous atlas. A style replaces some or all sprites
-// (assets/media/styles/<id>/sprites/<sprite>.png); the others keep the original art. Runs at startup
-// (loadAssets) and again when the player is on the title screen with another style chosen
-// (refreshArtStyle). On failure the previous atlas and loadedArtStyle_ stay as they were.
+// Loads the sprite atlas for art style `style` (index into artStyles_; 0 = the original art) and uploads it,
+// replacing the previous one: media/atlas/game.atlas, or media/styles/<id>/atlas/game.atlas for a style. Runs at
+// startup (loadAssets) and again when the player is on the title screen with another style chosen
+// (refreshArtStyle). The atlases are cooked from art_raw/ by tools/atlas (art_raw/atlas/game.atlasproj); the game
+// ships only them, never the raw PNGs. A style whose atlas is missing falls back to the original art. On failure
+// the previous atlas and loadedArtStyle_ stay as they were.
 bool Game::loadSpriteAtlas(int style) {
-    const std::string& assetDir = dataDir;
     if (style < 0 || style >= (int)artStyles_.size()) style = 0;
-    const std::string styleDir = style > 0 ? assetDir + "/styles/" + artStyles_[style].id + "/sprites/" : std::string();
     if (loadPrebuiltSpriteAtlas(style)) return true;
-    // load sprites into a single uniform atlas (COLS columns). The cell size is the sprites' own
-    // pixel size (32x32 in assets/media; a style may ship 64x64 -- tools/art/make_variant.py).
-    const int COLS = 9;
-    spriteGridCols = COLS;
-    // The PNGs decode in parallel (JobSystem; inline where there are no threads): each job writes
-    // only its own slot, and stb_image keeps its error state per thread.
-    std::vector<std::vector<uint8_t>> layers(N_SPRITES);
-    std::vector<int> widths(N_SPRITES, 0), heights(N_SPRITES, 0);
-    std::vector<char> styled(N_SPRITES, 0);
-    toms::JobSystem::parallelFor(N_SPRITES, [&](int i) {
-        std::string file;   // vfs: inside the APK on Android, a plain file elsewhere
-        if (!styleDir.empty() && toms::vfsReadAll(styleDir + SPRITE_ORDER[i] + ".png", file)) styled[i] = 1;
-        else if (!toms::vfsReadAll(assetDir + "/sprites/" + SPRITE_ORDER[i] + ".png", file)) return;
-        int w, h, ch;
-        if (unsigned char* d = stbi_load_from_memory((const stbi_uc*)file.data(), (int)file.size(), &w, &h, &ch, 4)) {
-            layers[i].assign(d, d + w * h * 4);
-            widths[i] = w; heights[i] = h;
-            stbi_image_free(d);
-        }
-    });
-    int SW = 0, SH = 0;
-    std::vector<std::string> replaced;
-    idToLayer.clear();   // the grid holds only the built-in sprites
-    for (int i = 0; i < N_SPRITES; i++) {
-        if (layers[i].empty()) { std::fprintf(stderr, "load fail %s/sprites/%s.png\n", assetDir.c_str(), SPRITE_ORDER[i]); return false; }
-        idToLayer[SPRITE_ORDER[i]] = i;
-        if (styled[i]) replaced.push_back(SPRITE_ORDER[i]);
-        SW = std::max(SW, widths[i]); SH = std::max(SH, heights[i]);
+    if (style > 0) {
+        std::fprintf(stderr, "[assets] art style '%s' has no usable atlas: using the original art\n", artStyles_[style].id.c_str());
+        return loadPrebuiltSpriteAtlas(0);
     }
-    // One atlas cell size: a smaller sprite (an original 32px one next to a 64px style) is scaled
-    // up with nearest-neighbour, which keeps pixel art crisp.
-    for (int i = 0; i < N_SPRITES; i++) {
-        if (widths[i] == SW && heights[i] == SH) continue;
-        std::fprintf(stderr, "[assets] %s.png is %dx%d: scaled to %dx%d\n", SPRITE_ORDER[i], widths[i], heights[i], SW, SH);
-        std::vector<uint8_t> big((size_t)SW * SH * 4);
-        for (int y = 0; y < SH; y++)
-            for (int x = 0; x < SW; x++) {
-                const uint8_t* src = &layers[i][((size_t)(y * heights[i] / SH) * widths[i] + (x * widths[i] / SW)) * 4];
-                std::copy(src, src + 4, &big[((size_t)y * SW + x) * 4]);
-            }
-        layers[i].swap(big);
-    }
-    std::fprintf(stderr, "[assets] sprites: %d x %dx%d px, art style '%s' (%d replaced)\n", N_SPRITES, SW, SH,
-                 artStyles_[style].id.empty() ? "original" : artStyles_[style].id.c_str(), (int)replaced.size());
-    ren->loadSprites(layers, SW, SH);
-    spriteUVs_.clear();
-    spriteTrim_.clear();
-    spriteAtlas_ = toms::AtlasFile();   // no prebuilt atlas: the UI has no sprite sheet either
-    provideSpriteAtlas();
-    spriteAtlasRevision_++;
-    loadedArtStyle_ = style;
-    return true;
+    std::fprintf(stderr, "[assets] %s/atlas/game.atlas is missing or lacks the map sprites: rebuild it with\n"
+                         "  atlaspack build art_raw/atlas/game.atlasproj --all-variants\n", dataDir.c_str());
+    return false;
 }
 
 // The chosen style (Settings) takes effect only while the title screen is up -- nothing from a run

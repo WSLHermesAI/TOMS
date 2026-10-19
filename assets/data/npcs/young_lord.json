@@ -1,0 +1,17 @@
+{
+  "npcId": "young_lord",
+  "name": "npc.young_lord.name",
+  "sprite": "npc_young_lord",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "young_lord"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

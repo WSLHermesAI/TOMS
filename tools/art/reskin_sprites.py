@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Regenerate TOMS sprites with ComfyUI (SDXL + Pixel Art XL LoRA + ControlNet Union).
 
-Each 32x32 sprite in assets/media/sprites is scaled up (nearest) to 1024, redrawn by SDXL in pixel-art style
+Each 32x32 sprite in art_raw/sprites is scaled up (nearest) to 1024, redrawn by SDXL in pixel-art style
 while ControlNet keeps its outline, its background removed (InspyrenetRembg), then scaled back down to the
 game's sprite size: each sprite is reduced to a small palette first and every output pixel takes the most
 common colour of its block (keeps pixel-art edges crisp, unlike averaging). Outputs never touch assets/: they go
@@ -30,7 +30,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
-SPRITES = ROOT / "assets" / "media" / "sprites"
+SPRITES = ROOT / "art_raw" / "sprites"   # the raw sprites (not shipped)
 
 # What each sprite shows (prompt subject). Tiles are opaque and fill the whole cell.
 SUBJECTS = {

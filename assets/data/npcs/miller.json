@@ -1,0 +1,17 @@
+{
+  "npcId": "miller",
+  "name": "npc.miller.name",
+  "sprite": "npc_miller",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "miller"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

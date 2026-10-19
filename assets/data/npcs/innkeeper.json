@@ -1,0 +1,17 @@
+{
+  "npcId": "innkeeper",
+  "name": "npc.innkeeper.name",
+  "sprite": "npc_innkeeper",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "innkeeper"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

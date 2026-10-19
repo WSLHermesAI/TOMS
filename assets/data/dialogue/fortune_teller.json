@@ -1,0 +1,21 @@
+{
+  "npcId": "fortune_teller",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是占卜師。",
+        "en": "Good day, traveller. I'm the fortune teller."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

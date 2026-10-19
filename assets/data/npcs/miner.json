@@ -1,0 +1,17 @@
+{
+  "npcId": "miner",
+  "name": "npc.miner.name",
+  "sprite": "npc_miner",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "miner"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

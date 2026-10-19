@@ -1,0 +1,21 @@
+{
+  "npcId": "peddler",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是行腳商。",
+        "en": "Good day, traveller. I'm the peddler."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

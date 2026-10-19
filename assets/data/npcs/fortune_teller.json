@@ -1,0 +1,17 @@
+{
+  "npcId": "fortune_teller",
+  "name": "npc.fortune_teller.name",
+  "sprite": "npc_fortune_teller",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "fortune_teller"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

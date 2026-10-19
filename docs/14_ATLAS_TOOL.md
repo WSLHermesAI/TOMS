@@ -221,29 +221,33 @@ Pinned sprites (`"pin"`, or dragged in the editor) keep their place; the rest ar
 
 ## 4. In TOMS
 
-`assets/media/atlas/` is the project folder: `game.atlasproj` + `game.atlas` + `game.png` (+ `.plist`).
-The `dark16` art style's packed atlas is in `assets/media/styles/dark16/atlas/`. The references are `assets/media/sprites` and `assets/media/styles/dark16/sprites`.
+**Raw and cooked are apart** (2026-10-19). `art_raw/` holds the raw art, which is not shipped: the sprite PNGs
+(`art_raw/sprites`, with `manifest.json`), an art style's PNGs (`art_raw/styles/dark16/sprites`) and the projects
+(`art_raw/atlas/game.atlasproj`, `fx.atlasproj`). `assets/` holds only what the game loads, the cooked atlases:
+`assets/media/atlas/game.atlas` + `game.png` (and `fx.*`), `assets/media/styles/dark16/atlas/`. A project's
+`output.dir` points there and writes only the `atlas` format (no `.plist`: nothing in TOMS reads it; the editors'
+Export still writes one for Cocos Creator). The references are `art_raw/sprites` and `art_raw/styles/dark16/sprites`.
 
 - **The game** (`Game::loadPrebuiltSpriteAtlas`, `src/core/game/core/game_assets.cpp`) loads
   `atlas/game.atlas` for the original art or `styles/<id>/atlas/game.atlas` for a style. It uploads
   the page (`IRenderer::loadSpriteAtlas`) and takes each sprite's UVs from it. A trimmed sprite still
   fills its tile, because `spriteQuad` uses the trim offset. The whole `toms::AtlasFile` (children,
   pivots, 9-slices, tags) is available through `Game::spriteAtlas()`, so code can look a sprite up by
-  name. If the file is missing or lacks a sprite, the game logs why and builds the old grid atlas at
-  start-up as before. Through the atlas the map scene is pixel-identical to the grid (checked with
-  `image_diff`).
+  name. A style whose atlas is missing falls back to the original art; if the original atlas is missing or
+  lacks a map sprite, the game stops with a message naming the file and the command that rebuilds it. (Before
+  2026-10-19 it built a grid from the raw PNGs instead; the raw PNGs are no longer shipped.)
 - **The files are committed; nothing is generated at build time.** Saving the project writes them.
   The CTest `atlas.assets_up_to_date` (`atlaspack build --check`) checks that the project opens from
-  its packed atlas alone and that its other files (plist, the style's atlas) match.
+  its cooked atlas alone and that the style's atlas matches.
 - **Changing art**: edit the PNG in the reference folder, then in the editor run *Import From
   References* (it lists that PNG as *changed*), and Save. Without a window:
-  `atlaspack refs assets\media\atlas\game.atlasproj --import changed`.
+  `atlaspack refs art_raw\atlas\game.atlasproj --import changed`, then
+  `atlaspack build art_raw\atlas\game.atlasproj --all-variants`.
 - **UI (RmlUi)**: the UI draws its icons from the same atlas. At start-up the game turns the loaded
   `game.atlas` into an RmlUi `@spritesheet` in memory (`_atlas.rcss`, [08](08_RMLUI.md)), and the `.rml`
   files name sprites (`data-attr-sprite`). Repacking the atlas never needs a UI change. Renaming or
   deleting a sprite that the code, `assets/data` or an `.rml` still uses fails `atlas_sprites_test`.
-  The PNGs in `media/sprites` are now only references (and the fallback grid's source when no atlas
-  exists).
+  The PNGs in `art_raw/sprites` are only references: the source new art is imported from.
 - **A new art style**: add a variant to the project ([13](13_ART_STYLES.md), step 5).
 
 ## 5. Command line

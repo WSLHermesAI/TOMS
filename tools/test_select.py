@@ -158,8 +158,14 @@ RULES = [
     (['src/core/engine/anim*', 'tools/anim/*'], ANIMS, 'node animations: checks, unit test, anim screenshot'),
     (['assets/media/resources.json'], any_of(named('unit.resource_test'), is_game_smoke_d3d11),
      'the resource manifest: its check (every entry loads) + the game screenshots'),
-    (['assets/media/anim/*'], any_of(ANIMS, is_game_smoke_d3d11), '.anim files: anim checks + game screenshots'),
+    (['assets/media/anim/*', 'tools/make_idle_clips.py'], any_of(ANIMS, is_game_smoke_d3d11),
+     '.anim files (make_idle_clips.py writes the idle ones): anim checks + game screenshots'),
     (['tools/atlas/*', 'src/core/engine/atlas*'], ATLAS, 'the atlas tool: atlas checks'),
+    # the raw art (art_raw/, not shipped): a project change can change the cooked atlas; raw PNGs change nothing
+    # the game sees until they are imported and cooked
+    (['art_raw/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas projects: atlas checks + game screenshots'),
+    (['tools/art/*'], None, 'the AI reskin scripts (art_raw/ in, art_raw/ out): no test'),
+    (['art_raw/*'], ATLAS, 'raw art (sprite PNGs): the atlas checks'),
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),
     (['src/editor/*'], None, 'toms_editor (Qt + the game viewport): no automated test; the desktop build compiles it'),
     (['tools/studio_common/*'], named('atlas.core', 'anim.*', 'particle.*', 'font.*', 'studio.*', 'stage_editor.*'),
@@ -174,7 +180,8 @@ RULES = [
      'the resource cache and render objects: engine unit tests + the clip / effect previews + the game'),
     (['src/core/engine/*'], 'ENGINE', 'engine core: the engine unit tests + the game'),
     # tools/add_stage_uids.py writes the stage files' object ids (docs/28_SAVE_SYSTEM.md)
-    (['src/core/game/*', 'src/game/*', 'assets/*', 'src/core/CMakeLists.txt', 'tools/add_stage_uids.py'], 'GAME',
+    (['src/core/game/*', 'src/game/*', 'assets/*', 'src/core/CMakeLists.txt', 'tools/add_stage_uids.py',
+      'tools/redesign_floors.py'], 'GAME',
      'the game: its unit tests + its screenshots (D3D11)'),
 ]
 

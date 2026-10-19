@@ -1,0 +1,17 @@
+{
+  "npcId": "healer",
+  "name": "npc.healer.name",
+  "sprite": "npc_healer",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "healer"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

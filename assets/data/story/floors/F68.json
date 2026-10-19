@@ -14,7 +14,12 @@
   },
   "enemies": {
     "mix": [
+      "armored_ogre",
+      "dark_knight",
       "demon",
+      "demon_guard",
+      "hellhound",
+      "minotaur",
       "skeleton"
     ],
     "count": [

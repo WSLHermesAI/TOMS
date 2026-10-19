@@ -1,0 +1,21 @@
+{
+  "npcId": "old_woman",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是老婆婆。",
+        "en": "Good day, traveller. I'm the old woman."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

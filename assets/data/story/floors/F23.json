@@ -14,8 +14,10 @@
   },
   "enemies": {
     "mix": [
-      "skeleton",
-      "bat"
+      "bat",
+      "glow_worm",
+      "grave_rat",
+      "skeleton"
     ],
     "count": [
       10,

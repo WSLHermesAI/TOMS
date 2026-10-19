@@ -13,7 +13,7 @@ Build/assets_variants/<name>/data (a copy of assets/data: the game reads <assets
 Play it with:  toms_game.exe --assets=Build/assets_variants/<name>/media
 
 --install instead adds the picks to the game as a selectable art style (Settings > art style; the
-choice applies after a restart): assets/media/styles/<name>/sprites/ + an entry in
+choice applies after a restart): art_raw/styles/<name>/sprites/ (raw) + an entry in
 assets/media/styles/styles.json, with the display name from --title. Sprites without a pick keep the
 original art, which the game scales to the style's size by itself.
 
@@ -34,6 +34,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 MEDIA = ROOT / "assets" / "media"
+RAW = ROOT / "art_raw"   # the raw art: sprite PNGs, styles' PNGs, atlas projects (not shipped)
 DATA = ROOT / "assets" / "data"
 
 
@@ -53,7 +54,7 @@ def main():
     if not run.is_absolute():
         run = ROOT / run
     run_info = json.loads((run / "run.json").read_text())
-    manifest = json.loads((MEDIA / "sprites" / "manifest.json").read_text())
+    manifest = json.loads((RAW / "sprites" / "manifest.json").read_text())
     size = a.size or manifest["tile"]   # the engine's atlas cell = the sprites' own size (game_assets.cpp)
 
     picks_file = run / "picks.json"
@@ -106,7 +107,7 @@ def main():
     (out / "variant.json").write_text(json.dumps(
         {"run": str(run.relative_to(ROOT)) if run.is_relative_to(ROOT) else str(run),
          "style": run_info.get("style"), "size": size, "picks": picks, "upscaled_originals": upscaled,
-         "original": sorted(set(json.loads((MEDIA / "sprites" / "manifest.json").read_text())["sprites"]) - set(chosen))},
+         "original": sorted(set(json.loads((RAW / "sprites" / "manifest.json").read_text())["sprites"]) - set(chosen))},
         indent=2))
 
     print(f"[variant] {size}px: {len(chosen)} sprites replaced, {len(upscaled)} original(s) scaled up, the rest original -> {out}")
@@ -118,11 +119,12 @@ def main():
 
 
 def install_style(a, chosen, size):
-    """assets/media/styles/<name>/sprites/<id>.png for every pick + its styles.json entry."""
+    """art_raw/styles/<name>/sprites/<id>.png for every pick (raw) + its styles.json entry; the game draws the
+    style from its cooked atlas, built by atlaspack (printed at the end)."""
     if not a.name.replace("_", "").replace("-", "").isalnum():
         sys.exit(f"--name {a.name}: use letters, digits, '-' or '_' only (it is a folder name)")
     styles_dir = MEDIA / "styles"
-    target = styles_dir / a.name / "sprites"
+    target = RAW / "styles" / a.name / "sprites"
     if target.exists():
         shutil.rmtree(target)
     target.mkdir(parents=True)
@@ -141,6 +143,10 @@ def install_style(a, chosen, size):
     index_file.write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"[style] installed '{a.name}' ({size}px, {len(chosen)} sprites) -> {target}")
     print(f"[style] listed in {index_file}: {[s['id'] for s in index['styles']]}")
+    print(f"[style] cook its atlas: add a variant \"{a.name}\" (reference ../styles/{a.name}/sprites, output\n"
+          f"        ../../assets/media/styles/{a.name}/atlas) to art_raw/atlas/game.atlasproj, then\n"
+          "        atlaspack refs art_raw/atlas/game.atlasproj --variant <name> --import all\n"
+          "        atlaspack build art_raw/atlas/game.atlasproj --all-variants")
     print("[style] pick it in the game: Settings > art style, then restart the game")
 
 

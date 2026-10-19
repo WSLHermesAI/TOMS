@@ -14,7 +14,10 @@
   },
   "enemies": {
     "mix": [
+      "dark_knight",
       "demon",
+      "demon_guard",
+      "minotaur",
       "skeleton"
     ],
     "count": [

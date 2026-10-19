@@ -1,0 +1,17 @@
+{
+  "npcId": "bard",
+  "name": "npc.bard.name",
+  "sprite": "npc_bard",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "bard"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

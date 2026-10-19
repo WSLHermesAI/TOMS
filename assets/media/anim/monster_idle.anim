@@ -1703,6 +1703,4145 @@
           }
         ]
       }
+    },
+    {
+      "name": "idle_mossling",
+      "length": 1.84,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_mossling",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.104,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.325,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.546,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.84,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.546,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.656,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.84,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_sprout_imp",
+      "length": 1.5,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_sprout_imp",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.9,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.08,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.26,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.5,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.26,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.35,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.5,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_thorn_boar",
+      "length": 2.14,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_thorn_boar",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.07,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.14,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_forest_wolf",
+      "length": 1.38,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_forest_wolf",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.828,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.994,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.159,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.38,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.159,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.242,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.38,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_horn_beetle",
+      "length": 1.38,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_horn_beetle",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.828,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.994,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.159,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.38,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.159,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.242,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.38,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_toadstool",
+      "length": 1.81,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_toadstool",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.086,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.303,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.52,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.81,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.52,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.629,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.81,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_vine_snake",
+      "length": 1.73,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_vine_snake",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.038,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.246,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.453,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.73,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.453,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.557,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.73,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_bear_cub",
+      "length": 2.42,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_bear_cub",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.21,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.42,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_pixie",
+      "length": 0.85,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_pixie",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.425,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.85,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.106,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.212,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.319,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.425,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.531,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.637,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.744,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.85,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_bandit",
+      "length": 2.08,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_bandit",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.04,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.08,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_red_bat",
+      "length": 0.86,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_red_bat",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.43,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.86,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.107,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.215,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.323,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.43,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.537,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.645,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.752,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.86,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_rock_crab",
+      "length": 1.58,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_rock_crab",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.948,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.138,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.327,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.58,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.327,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.422,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.58,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_mole_miner",
+      "length": 2.0,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_mole_miner",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.0,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.0,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_crystal_spider",
+      "length": 1.47,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_crystal_spider",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.882,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.058,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.235,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.47,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.235,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.323,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.47,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_cave_troll",
+      "length": 2.16,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_cave_troll",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.08,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.16,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_gem_slime",
+      "length": 1.27,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_gem_slime",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.635,
+                  "v": [
+                    1.1,
+                    0.9
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.27,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_kobold",
+      "length": 2.04,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_kobold",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.02,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.04,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_stone_lizard",
+      "length": 2.62,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_stone_lizard",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.31,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.62,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_glow_worm",
+      "length": 1.44,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_glow_worm",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.72,
+                  "v": [
+                    1.1,
+                    0.9
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.44,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_ore_golem",
+      "length": 2.47,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_ore_golem",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.235,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.47,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_zombie",
+      "length": 2.14,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_zombie",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.07,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.14,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_ghost_maiden",
+      "length": 0.82,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_ghost_maiden",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.41,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.82,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.102,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.205,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.307,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.41,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.512,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.615,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.717,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.82,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_bone_archer",
+      "length": 2.08,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_bone_archer",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.04,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.08,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_mummy",
+      "length": 2.02,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_mummy",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.01,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.02,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_vampire_bat",
+      "length": 0.74,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_vampire_bat",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.37,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.74,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.092,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.185,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.277,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.37,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.463,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.555,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.647,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.74,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_ghoul",
+      "length": 1.92,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_ghoul",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.96,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.92,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_lich",
+      "length": 1.82,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_lich",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.91,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.82,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_skull_knight",
+      "length": 2.3,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_skull_knight",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.15,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.3,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_banshee",
+      "length": 0.81,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_banshee",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.405,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.81,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.101,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.203,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.304,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.405,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.506,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.608,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.709,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.81,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_grave_rat",
+      "length": 1.39,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_grave_rat",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.834,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.001,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.168,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.39,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.168,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.251,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.39,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_salamander",
+      "length": 2.64,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_salamander",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.32,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.64,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_magma_slime",
+      "length": 1.34,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_magma_slime",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.67,
+                  "v": [
+                    1.1,
+                    0.9
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.34,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_fire_imp",
+      "length": 0.81,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_fire_imp",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.405,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.81,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.101,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.203,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.304,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.405,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.506,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.608,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.709,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.81,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_ember_wolf",
+      "length": 1.52,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_ember_wolf",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.912,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.094,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.277,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.52,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.277,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.368,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.52,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_flame_spirit",
+      "length": 0.8,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_flame_spirit",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.4,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.8,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.1,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.2,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.3,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.4,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.5,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.6,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.7,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.8,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_lava_golem",
+      "length": 2.3,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_lava_golem",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.15,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.3,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_fire_drake",
+      "length": 0.86,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_fire_drake",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.43,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.86,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.107,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.215,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.323,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.43,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.537,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.645,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.752,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.86,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_ash_wraith",
+      "length": 0.75,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_ash_wraith",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.375,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.75,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.094,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.188,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.281,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.375,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.469,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.562,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.656,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.75,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_phoenix_chick",
+      "length": 0.77,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_phoenix_chick",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.385,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.77,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.096,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.193,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.289,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.385,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.481,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.578,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.674,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.77,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_cinder_beetle",
+      "length": 1.46,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_cinder_beetle",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.876,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.051,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.226,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.46,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.226,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.314,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.46,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_ice_golem",
+      "length": 2.21,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_ice_golem",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.105,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.21,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_frost_wolf",
+      "length": 1.42,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_frost_wolf",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.852,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.022,
+                  "v": [
+                    0,
+                    -2
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.193,
+                  "v": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 1.42,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 1.193,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 1.278,
+                  "v": [
+                    1.06,
+                    0.94
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 1.42,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_yeti",
+      "length": 2.45,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_yeti",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.225,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.45,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_ice_slime",
+      "length": 1.25,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_ice_slime",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.625,
+                  "v": [
+                    1.1,
+                    0.9
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.25,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_frost_fairy",
+      "length": 0.76,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_frost_fairy",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.38,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.76,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.095,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.19,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.285,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.38,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.475,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.57,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.665,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.76,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_penguin_knight",
+      "length": 2.28,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_penguin_knight",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.14,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.28,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_ice_wraith",
+      "length": 0.82,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_ice_wraith",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.41,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.82,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.102,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.205,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.307,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.41,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.512,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.615,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.717,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.82,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_mammoth",
+      "length": 2.04,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_mammoth",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.02,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.04,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_crystal_serpent",
+      "length": 2.54,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_crystal_serpent",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.27,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.54,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_blizzard_owl",
+      "length": 0.71,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_blizzard_owl",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.355,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.71,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.089,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.177,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.266,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.355,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.444,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.532,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.621,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.71,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_dark_knight",
+      "length": 1.96,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_dark_knight",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.98,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.96,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_gargoyle",
+      "length": 0.8,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_gargoyle",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.4,
+                  "v": [
+                    0,
+                    -3
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.8,
+                  "v": [
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.1,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.2,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.3,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.4,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.5,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.6,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.7,
+                  "v": [
+                    0.85,
+                    1.05
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.8,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_demon_guard",
+      "length": 2.06,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_demon_guard",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.03,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.06,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_shadow_assassin",
+      "length": 2.2,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_shadow_assassin",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.1,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.2,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_chimera",
+      "length": 2.16,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_chimera",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.08,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.16,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_minotaur",
+      "length": 2.18,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_minotaur",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.09,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.18,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_dark_mage",
+      "length": 1.9,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_dark_mage",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.95,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.9,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_hellhound",
+      "length": 2.57,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_hellhound",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.285,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.57,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_armored_ogre",
+      "length": 2.26,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_armored_ogre",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.13,
+                  "v": [
+                    1.04,
+                    0.96
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.26,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_demon_general",
+      "length": 2.12,
+      "playCount": -1,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:m_demon_general",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": -3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.06,
+                  "v": 3,
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.12,
+                  "v": -3
+                }
+              ]
+            }
+          }
+        ]
+      }
     }
   ]
 }

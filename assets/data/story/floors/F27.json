@@ -14,8 +14,12 @@
   },
   "enemies": {
     "mix": [
+      "bat",
+      "ghoul",
+      "grave_rat",
+      "mummy",
       "skeleton",
-      "bat"
+      "zombie"
     ],
     "count": [
       10,

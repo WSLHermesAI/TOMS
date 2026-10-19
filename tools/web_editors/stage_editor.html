@@ -217,7 +217,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const SPRITE_DIR = '../../assets/media/sprites/';   // the game's own sprites; a coloured square stands in if they cannot load
+const SPRITE_DIR = '../../art_raw/sprites/';   // the game's raw sprites; a coloured square stands in if they cannot load
 const TS = 32;                                          // the game's tile size (manifest "tile")
 
 // ---------------- strings ----------------

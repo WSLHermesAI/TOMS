@@ -1,0 +1,17 @@
+{
+  "npcId": "farmer",
+  "name": "npc.farmer.name",
+  "sprite": "npc_farmer",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "farmer"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

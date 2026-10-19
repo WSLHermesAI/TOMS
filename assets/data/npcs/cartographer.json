@@ -1,0 +1,17 @@
+{
+  "npcId": "cartographer",
+  "name": "npc.cartographer.name",
+  "sprite": "npc_cartographer",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "cartographer"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

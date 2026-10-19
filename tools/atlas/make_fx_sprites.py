@@ -1,10 +1,10 @@
-"""make_fx_sprites.py -- the particle sprites of assets/media/atlas/fx.atlasproj (docs/17_PARTICLES.md).
+"""make_fx_sprites.py -- the particle sprites of art_raw/atlas/fx.atlasproj (docs/17_PARTICLES.md).
 
 White shapes with soft alpha, so an emitter's colour tints them. Writes PNGs into OUT_DIR, then:
 
     python tools/atlas/make_fx_sprites.py <OUT_DIR>
-    atlaspack add assets/media/atlas/fx.atlasproj <OUT_DIR> --replace
-    atlaspack build assets/media/atlas/fx.atlasproj
+    atlaspack add art_raw/atlas/fx.atlasproj <OUT_DIR> --replace
+    atlaspack build art_raw/atlas/fx.atlasproj
 
 Needs Pillow. Deterministic (fixed noise seed), so rebuilding gives the same pixels.
 """

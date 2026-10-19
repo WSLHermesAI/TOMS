@@ -14,8 +14,12 @@
   },
   "enemies": {
     "mix": [
+      "bat",
+      "bone_archer",
+      "glow_worm",
+      "grave_rat",
       "skeleton",
-      "bat"
+      "zombie"
     ],
     "count": [
       10,

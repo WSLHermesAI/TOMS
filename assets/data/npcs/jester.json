@@ -1,0 +1,17 @@
+{
+  "npcId": "jester",
+  "name": "npc.jester.name",
+  "sprite": "npc_jester",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "jester"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

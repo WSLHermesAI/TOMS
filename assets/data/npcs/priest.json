@@ -1,0 +1,17 @@
+{
+  "npcId": "priest",
+  "name": "npc.priest.name",
+  "sprite": "npc_priest",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "priest"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

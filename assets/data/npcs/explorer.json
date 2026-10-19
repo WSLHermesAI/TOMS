@@ -1,0 +1,17 @@
+{
+  "npcId": "explorer",
+  "name": "npc.explorer.name",
+  "sprite": "npc_explorer",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "explorer"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

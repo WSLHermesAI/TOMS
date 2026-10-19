@@ -1,0 +1,17 @@
+{
+  "npcId": "duke",
+  "name": "npc.duke.name",
+  "sprite": "npc_duke",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "duke"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

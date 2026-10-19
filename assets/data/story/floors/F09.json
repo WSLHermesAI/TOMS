@@ -14,8 +14,9 @@
   },
   "enemies": {
     "mix": [
+      "bat",
       "slime",
-      "bat"
+      "thorn_boar"
     ],
     "count": [
       6,

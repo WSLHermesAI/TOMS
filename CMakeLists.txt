@@ -75,9 +75,10 @@ if(TOMS_BUILD_TESTS AND NOT WEB AND NOT ANDROID)
 endif()
 
 # The sprite atlas tool (tools/atlas, docs/14_ATLAS_TOOL.md): atlaspack and atlas_editor (Qt).
-# The game's atlas project, assets/media/atlas/game.atlasproj, keeps its images inside the packed
-# atlas next to it (game.atlas + game.png, one more per art style), so there is nothing to generate
-# at build time: the editor writes those files when the project is saved, and they are committed.
+# The game's atlas project, art_raw/atlas/game.atlasproj, keeps its images inside the cooked atlas it
+# writes to assets/media/atlas (game.atlas + game.png, one more per art style), so there is nothing to
+# generate at build time: the editor writes those files when the project is saved, and they are committed.
+# art_raw/ holds the raw art (sprite PNGs, the projects); assets/ only what the game loads.
 if(NOT WEB AND NOT ANDROID)
     set(ATLAS_BUILD_EDITOR ${TOMS_BUILD_EDITOR} CACHE BOOL "Build the Qt atlas editor (tools/atlas/qt)")
     if(NOT TOMS_HAVE_QT)
@@ -100,14 +101,13 @@ if(NOT WEB AND NOT ANDROID)
     # rules, no Qt, unit.stage_core_test) and, with Qt, stage_event_editor on the game's renderer.
     add_subdirectory(tools/stage_event_editor)
     if(TOMS_BUILD_TESTS)
-        # The project opens from its packed atlas alone, and its other files (plist, rcss, the
-        # art styles' atlases) match what it builds.
+        # The project opens from its cooked atlas alone, and the art styles' atlases match what it builds.
         add_test(NAME atlas.assets_up_to_date
-                 COMMAND atlaspack build "${TOMS_ASSET_DIR}/atlas/game.atlasproj" --all-variants --check --quiet)
+                 COMMAND atlaspack build "${CMAKE_SOURCE_DIR}/art_raw/atlas/game.atlasproj" --all-variants --check --quiet)
         set_tests_properties(atlas.assets_up_to_date PROPERTIES LABELS "unit;atlas" TIMEOUT 60)
         # The particle sprites (tools/atlas/make_fx_sprites.py, docs/17_PARTICLES.md), the same way.
         add_test(NAME atlas.fx_up_to_date
-                 COMMAND atlaspack build "${TOMS_ASSET_DIR}/atlas/fx.atlasproj" --check --quiet)
+                 COMMAND atlaspack build "${CMAKE_SOURCE_DIR}/art_raw/atlas/fx.atlasproj" --check --quiet)
         set_tests_properties(atlas.fx_up_to_date PROPERTIES LABELS "unit;atlas" TIMEOUT 60)
     endif()
 endif()

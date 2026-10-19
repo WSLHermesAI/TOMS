@@ -82,7 +82,48 @@ A category in the plan has its `style` (the prompt's start), `reference` (which 
 
 ## 5. Results
 
-(filled in after the run: see section 7)
+**In the game (2026-10-19).** All 230 sprites are in `art_raw/sprites` and on the game atlas (260 sprites, one
+502 × 682 page; `atlaspack refs --import new` brings new files into the embedded project, then `build --all-variants`).
+The data:
+
+| Made | Where |
+|---|---|
+| 60 monsters | `enemies.json`, draft stats by tier |
+| 50 NPCs | `npcs/<id>.json` + `dialogue/<id>.json`, one chat line each |
+| 50 event items | `items.json`, type `story` |
+| 10 gate keys | `items.json`, `"opens": "gate:key_<theme>"`, `"door": "door_<theme>"` |
+| names, descriptions | `text.json` (zh_TW, en) |
+
+The UI font subset was rebuilt for the new names (2292 → 2431 characters).
+
+**The review.** Every sprite was looked at on a contact sheet. About 50 were redone:
+- creatures that came out as people, and sheets of several small figures, with sharper descriptions ("no arms, no legs,
+  not a person"; "one single character") and new seeds;
+- a best-of-5 seed search for the hardest ones;
+- the flame door and its key stayed grey in every try, so they were recoloured from their own shading into a fire
+  gradient (outline kept).
+
+The first tries are kept in `AIGamestyle/output/toms_sprites/_first/`.
+
+**Simple animation.** `tools/make_idle_clips.py` gives every monster and draft NPC without one a looping idle clip,
+picked from its name:
+
+| Motion | For | Count |
+|---|---|---|
+| hover: bob up, wings squeeze | bat, pixie, ghost, drake, owl … | 14 |
+| squash and stretch | slimes, worms | 4 |
+| slow breathing | golem, troll, mammoth, yeti … | 15 |
+| sway left / right | skeleton, knight, mummy, lich … | 15 |
+| small hop | everything else | 12 |
+| gentle breath | the 50 new NPCs (`npc_idle.anim`) | 50 |
+
+Clips already there (the original seven monsters, hand-made in anim_editor) are never touched. Each clip's length is
+nudged by its id, and the game offsets every tile's loop, so a room does not move in step. NPCs can now have an idle
+clip (`idle_<npc id>` in `assets/media/anim/npc_idle.anim`, resource `anim.npc_idle`); the five shipped NPCs have none,
+so their screenshots stay the same. Edit any clip in anim_editor; `make_idle_clips.py` only adds missing ones.
+
+Checked on a test floor (ice theme, eight new monsters, four NPCs, the emerald and flame gates, items): everything
+draws, every monster and NPC moves between frames, the gates show their own doors.
 
 ## 6. Known limits
 
@@ -91,4 +132,5 @@ A category in the plan has its `style` (the prompt's start), `reference` (which 
 - **Draft types**: stats follow the tier, not a design; NPCs have one chat line; event items have a generic
   description. They are marked `"draft": true` for rewriting.
 - **Wall and floor tiles are not seamless** by construction; they repeat like the original ones (a 32-pixel tile).
-- **Monsters have no idle clip** (the anim editor's `monster_idle.anim` has clips for the original seven).
+- **Idle clips are simple** (one motion each, from the name); hand-make better ones in anim_editor.
+- **Tile letters `y` / `b` / `r` are the coloured doors** in a stage file: do not use them for anything else.

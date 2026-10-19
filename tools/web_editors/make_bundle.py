@@ -6,7 +6,7 @@ Reads (never writes) assets/data:
     story/floors/F??.stage.json   the generated grids; boss floors use stages/<handAuthoredStage> instead
     events/pool_*.json            every defined event (id, kind, pool, text key)
     text.json                     only the event strings
-    enemies.json, items.json, footprints.json, media/sprites/manifest.json
+    enemies.json, items.json, footprints.json, art_raw/sprites/manifest.json
 The page works from this copy; "Open project folder" in the page reads and writes the real files instead.
 """
 import datetime
@@ -92,7 +92,7 @@ def main():
                  **({'tint': v['tint']} if 'tint' in v else {})}
              for k, v in load(os.path.join(DATA, 'items.json'))[0].items() if not k.startswith('_')}
     footprints = {k: v for k, v in load(os.path.join(DATA, 'footprints.json'))[0].items() if not k.startswith('_')}
-    sprites = load(os.path.join(ROOT, 'assets', 'media', 'sprites', 'manifest.json'))[0]['sprites']
+    sprites = load(os.path.join(ROOT, 'art_raw', 'sprites', 'manifest.json'))[0]['sprites']
     kp = os.path.join(DATA, 'events', 'kinds.json')
     kinds = {k: v for k, v in load(kp)[0].items() if not k.startswith('_')} if os.path.exists(kp) else {}
 

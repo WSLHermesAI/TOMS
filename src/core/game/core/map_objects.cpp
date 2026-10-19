@@ -483,6 +483,15 @@ static LookChain legacyIdleLook(Game& g, const Entity& e) {
             c.looks.push_back(std::make_unique<ClipLook>(idle, "idle_" + e.id, sw, sh, tint, true));
         }
     }
+    // an NPC's idle clip "idle_<npc id>" (assets/media/anim/npc_idle.anim; tools/make_idle_clips.py); none: its sprite
+    if (npc && !ownSprite && g.res_) {
+        std::shared_ptr<toms::res::AnimRes> idle = g.res_->get<toms::res::AnimRes>("anim.npc_idle");
+        if (idle->ok() && idle->find("idle_" + e.id)) {
+            float sw, sh;
+            spriteSize(g, g.npcSprite(e.id), sw, sh);
+            c.looks.push_back(std::make_unique<ClipLook>(idle, "idle_" + e.id, sw, sh, tint, true));
+        }
+    }
     c.looks.push_back(std::make_unique<SpriteLook>(layer, tint, wash));
     return c;
 }

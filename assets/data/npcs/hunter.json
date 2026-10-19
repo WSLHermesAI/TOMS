@@ -1,0 +1,17 @@
+{
+  "npcId": "hunter",
+  "name": "npc.hunter.name",
+  "sprite": "npc_hunter",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "hunter"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

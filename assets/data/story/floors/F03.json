@@ -14,8 +14,9 @@
   },
   "enemies": {
     "mix": [
+      "bat",
       "slime",
-      "bat"
+      "toadstool"
     ],
     "count": [
       4,

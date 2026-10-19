@@ -1,0 +1,21 @@
+{
+  "npcId": "tailor",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是裁縫。",
+        "en": "Good day, traveller. I'm the tailor."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

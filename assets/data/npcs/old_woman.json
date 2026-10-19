@@ -1,0 +1,17 @@
+{
+  "npcId": "old_woman",
+  "name": "npc.old_woman.name",
+  "sprite": "npc_old_woman",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "old_woman"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

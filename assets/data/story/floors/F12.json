@@ -14,8 +14,12 @@
   },
   "enemies": {
     "mix": [
+      "bat",
+      "forest_wolf",
+      "horn_beetle",
+      "kobold",
       "slime",
-      "bat"
+      "thorn_boar"
     ],
     "count": [
       6,

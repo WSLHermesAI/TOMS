@@ -1,0 +1,17 @@
+{
+  "npcId": "blacksmith",
+  "name": "npc.blacksmith.name",
+  "sprite": "npc_blacksmith",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "blacksmith"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

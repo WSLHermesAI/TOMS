@@ -1,0 +1,17 @@
+{
+  "npcId": "gatekeeper",
+  "name": "npc.gatekeeper.name",
+  "sprite": "npc_gatekeeper",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "gatekeeper"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

@@ -14,8 +14,9 @@
   },
   "enemies": {
     "mix": [
-      "wraith",
-      "demon"
+      "demon",
+      "ice_slime",
+      "wraith"
     ],
     "count": [
       18,

@@ -14,6 +14,7 @@
   },
   "enemies": {
     "mix": [
+      "blizzard_owl",
       "demon",
       "wraith"
     ],

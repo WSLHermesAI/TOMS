@@ -381,13 +381,14 @@ int main() {
         CHECK(artStyleIndex(styles, "gone") == 0, "an unknown (removed) style falls back to the original");
         CHECK(artStylesFromJson(nlohmann::json()).size() == 1, "no styles.json = only the original");
 
-        // The shipped list, when present (the test runs in assets/): every listed style has sprites.
+        // The shipped list, when present (the test runs in assets/): every listed style has its cooked atlas (the raw
+        // PNGs are in art_raw/, not shipped).
         std::ifstream shipped("media/styles/styles.json");
         if (shipped) {
             auto list = artStylesFromJson(nlohmann::json::parse(shipped, nullptr, false));
             for (size_t i = 1; i < list.size(); i++)
-                CHECK(std::filesystem::is_directory("media/styles/" + list[i].id + "/sprites"),
-                      "every style in media/styles/styles.json has a sprites folder");
+                CHECK(std::filesystem::is_regular_file("media/styles/" + list[i].id + "/atlas/game.atlas"),
+                      "every style in media/styles/styles.json has its atlas");
         }
 
         // Settings persistence round trip.

@@ -14,8 +14,9 @@
   },
   "enemies": {
     "mix": [
-      "skeleton",
-      "bat"
+      "bat",
+      "grave_rat",
+      "skeleton"
     ],
     "count": [
       10,

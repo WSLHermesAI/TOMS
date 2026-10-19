@@ -30,8 +30,8 @@ holds the rules that most often go wrong and templates that pass the checks.
 
 | Asset | Files | Spec | Validate |
 |---|---|---|---|
-| Game sprite atlas | `assets/media/atlas/game.atlasproj` (+ `.atlas`, `.png`, `.plist`); source PNGs in `assets/media/sprites` | [14](../docs/14_ATLAS_TOOL.md) | `atlaspack build <proj> --check` |
-| fx atlas (particle sprites) | `assets/media/atlas/fx.atlasproj` | [17](../docs/17_PARTICLES.md) §3 | same |
+| Game sprite atlas | `art_raw/atlas/game.atlasproj` (raw, not shipped) cooks `assets/media/atlas/game.atlas` + `.png`; source PNGs in `art_raw/sprites` | [14](../docs/14_ATLAS_TOOL.md) | `atlaspack build <proj> --check` |
+| fx atlas (particle sprites) | `art_raw/atlas/fx.atlasproj` | [17](../docs/17_PARTICLES.md) §3 | same |
 | Node animations | `assets/media/anim/*.anim`; examples `docs/examples/anim_*.anim` | [15](../docs/15_ANIMATION.md), recipes [16](../docs/16_ANIMATION_RECIPES.md) | `anim_editor --headless check <file>` |
 | Particle effects | `*.particle`; examples `docs/examples/fx_recipes.particle` | [17](../docs/17_PARTICLES.md) | `particle_editor --headless check <file>` |
 | Picture fonts | `NAME.fnt` + `NAME.png`; test fonts in `tests/font` | [22](../docs/22_FONT_TOOL.md) | `fontpack info <fnt>`, `fontpack preview` |

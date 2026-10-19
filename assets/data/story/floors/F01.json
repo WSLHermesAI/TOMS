@@ -14,8 +14,9 @@
   },
   "enemies": {
     "mix": [
-      "slime",
-      "bat"
+      "bat",
+      "mossling",
+      "slime"
     ],
     "count": [
       4,

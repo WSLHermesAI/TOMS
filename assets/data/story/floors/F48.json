@@ -14,8 +14,13 @@
   },
   "enemies": {
     "mix": [
-      "skeleton",
-      "demon"
+      "ash_wraith",
+      "demon",
+      "fire_drake",
+      "gargoyle",
+      "ore_golem",
+      "phoenix_chick",
+      "skeleton"
     ],
     "count": [
       16,

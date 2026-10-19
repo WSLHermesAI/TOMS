@@ -14,7 +14,9 @@
   },
   "enemies": {
     "mix": [
+      "blizzard_owl",
       "demon",
+      "ice_wraith",
       "wraith"
     ],
     "count": [

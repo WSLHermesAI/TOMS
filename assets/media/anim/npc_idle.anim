@@ -1,0 +1,2259 @@
+{
+  "version": 1,
+  "atlases": [
+    "../atlas/game.atlas",
+    "../atlas/fx.atlas"
+  ],
+  "clips": [
+    {
+      "name": "idle_advisor",
+      "length": 2.16,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_advisor",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.08,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.16,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_alchemist",
+      "length": 2.07,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_alchemist",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.035,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.07,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_archer_scout",
+      "length": 1.94,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_archer_scout",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.97,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.94,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_armorer",
+      "length": 2.22,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_armorer",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.11,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.22,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_baker",
+      "length": 2.02,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_baker",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.01,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.02,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_bard",
+      "length": 2.49,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_bard",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.245,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.49,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_blacksmith",
+      "length": 2.13,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_blacksmith",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.065,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.13,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_cartographer",
+      "length": 2.4,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_cartographer",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.2,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.4,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_duchess",
+      "length": 2.2,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_duchess",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.1,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.2,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_duke",
+      "length": 2.31,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_duke",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.155,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.31,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_dwarf",
+      "length": 2.46,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_dwarf",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.23,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.46,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_elf",
+      "length": 2.13,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_elf",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.065,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.13,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_explorer",
+      "length": 2.38,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_explorer",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.19,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.38,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_farmer",
+      "length": 2.44,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_farmer",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.22,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.44,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_farmer_wife",
+      "length": 2.24,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_farmer_wife",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.12,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.24,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_fisherman",
+      "length": 2.0,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_fisherman",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.0,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_fletcher",
+      "length": 2.02,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_fletcher",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.01,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.02,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_fortune_teller",
+      "length": 1.91,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_fortune_teller",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.955,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.91,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_gatekeeper",
+      "length": 2.05,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_gatekeeper",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.025,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.05,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_guard_captain",
+      "length": 2.31,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_guard_captain",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.155,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.31,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_healer",
+      "length": 2.05,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_healer",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.025,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.05,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_hunter",
+      "length": 2.33,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_hunter",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.165,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.33,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_innkeeper",
+      "length": 2.0,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_innkeeper",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.0,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_jester",
+      "length": 2.05,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_jester",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.025,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.05,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_jeweler",
+      "length": 2.46,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_jeweler",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.23,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.46,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_knight_errant",
+      "length": 2.13,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_knight_errant",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.065,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.13,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_lumberjack",
+      "length": 2.13,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_lumberjack",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.065,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.13,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_merchant",
+      "length": 2.02,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_merchant",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.01,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.02,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_miller",
+      "length": 2.38,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_miller",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.19,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.38,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_miner",
+      "length": 2.0,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_miner",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.0,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_monk",
+      "length": 2.29,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_monk",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.145,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.29,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_nun",
+      "length": 2.29,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_nun",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.145,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.29,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_old_hero",
+      "length": 2.02,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_old_hero",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.01,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.02,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_old_woman",
+      "length": 2.27,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_old_woman",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.135,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.27,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_oracle",
+      "length": 2.4,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_oracle",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.2,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.4,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_peddler",
+      "length": 1.89,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_peddler",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.945,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.89,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_pilgrim",
+      "length": 1.98,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_pilgrim",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.99,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.98,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_potion_seller",
+      "length": 2.0,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_potion_seller",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.0,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_priest",
+      "length": 2.33,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_priest",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.165,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.33,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_ranger",
+      "length": 1.96,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_ranger",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.98,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.96,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_sailor",
+      "length": 2.46,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_sailor",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.23,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.46,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_scholar",
+      "length": 2.2,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_scholar",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.1,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.2,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_shepherd_girl",
+      "length": 2.13,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_shepherd_girl",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.065,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.13,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_tailor",
+      "length": 2.05,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_tailor",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.025,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.05,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_town_guard",
+      "length": 2.0,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_town_guard",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.0,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.0,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_village_boy",
+      "length": 2.31,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_village_boy",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.155,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.31,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_village_girl",
+      "length": 2.11,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_village_girl",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.055,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.11,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_wandering_mage",
+      "length": 2.29,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_wandering_mage",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.145,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.29,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_weaver",
+      "length": 2.53,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_weaver",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.265,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 2.53,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_young_lord",
+      "length": 1.98,
+      "playCount": -1,
+      "root": {
+        "name": "npc",
+        "children": [
+          {
+            "name": "body",
+            "sprite": "game:npc_young_lord",
+            "pivot": [
+              0.5,
+              1.0
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.99,
+                  "v": [
+                    1.0,
+                    1.025
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.98,
+                  "v": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

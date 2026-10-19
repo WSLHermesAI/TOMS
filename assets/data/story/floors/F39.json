@@ -14,7 +14,11 @@
   },
   "enemies": {
     "mix": [
+      "ember_wolf",
+      "fire_imp",
       "golem",
+      "magma_slime",
+      "salamander",
       "wraith"
     ],
     "count": [

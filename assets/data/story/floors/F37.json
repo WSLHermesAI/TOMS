@@ -15,6 +15,7 @@
   "enemies": {
     "mix": [
       "golem",
+      "magma_slime",
       "wraith"
     ],
     "count": [

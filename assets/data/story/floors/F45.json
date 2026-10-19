@@ -14,8 +14,11 @@
   },
   "enemies": {
     "mix": [
-      "skeleton",
-      "demon"
+      "ash_wraith",
+      "cinder_beetle",
+      "demon",
+      "phoenix_chick",
+      "skeleton"
     ],
     "count": [
       16,

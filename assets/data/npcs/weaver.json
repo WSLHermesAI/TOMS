@@ -1,0 +1,17 @@
+{
+  "npcId": "weaver",
+  "name": "npc.weaver.name",
+  "sprite": "npc_weaver",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "weaver"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

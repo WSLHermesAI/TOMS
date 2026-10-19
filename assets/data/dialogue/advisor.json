@@ -1,0 +1,21 @@
+{
+  "npcId": "advisor",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "旅人，你好。我是皇家顧問。",
+        "en": "Good day, traveller. I'm the royal advisor."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "再見。",
+            "en": "Goodbye."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

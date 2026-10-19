@@ -1,0 +1,17 @@
+{
+  "npcId": "shepherd_girl",
+  "name": "npc.shepherd_girl.name",
+  "sprite": "npc_shepherd_girl",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "shepherd_girl"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

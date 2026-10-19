@@ -1,0 +1,17 @@
+{
+  "npcId": "tailor",
+  "name": "npc.tailor.name",
+  "sprite": "npc_tailor",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "tailor"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

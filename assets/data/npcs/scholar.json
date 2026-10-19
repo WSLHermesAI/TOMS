@@ -1,0 +1,17 @@
+{
+  "npcId": "scholar",
+  "name": "npc.scholar.name",
+  "sprite": "npc_scholar",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "scholar"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

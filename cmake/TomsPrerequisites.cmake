@@ -145,7 +145,7 @@ foreach(_need
         "${TOMS_THIRD_PARTY_DIR}/json/json.hpp"
         "${TOMS_THIRD_PARTY_DIR}/stb/stb_image.h"
         "${TOMS_THIRD_PARTY_DIR}/miniaudio/miniaudio.h"
-        "${TOMS_ASSET_DIR}/sprites"
+        "${TOMS_ASSET_DIR}/atlas/game.atlas"
         "${TOMS_ASSET_DIR}/fonts"
         "${TOMS_DATA_DIR}/stages")
     if(NOT EXISTS "${_need}")

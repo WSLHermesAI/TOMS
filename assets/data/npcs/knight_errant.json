@@ -1,0 +1,17 @@
+{
+  "npcId": "knight_errant",
+  "name": "npc.knight_errant.name",
+  "sprite": "npc_knight_errant",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "knight_errant"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}

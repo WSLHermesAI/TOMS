@@ -14,7 +14,9 @@
   },
   "enemies": {
     "mix": [
+      "ghost_maiden",
       "skeleton",
+      "vampire_bat",
       "wraith"
     ],
     "count": [

@@ -5,6 +5,7 @@
     "atlas.game":         { "type": "atlas", "path": "atlas/game.atlas" },
     "atlas.fx":           { "type": "atlas", "path": "atlas/fx.atlas", "preload": true },
     "anim.monster_idle":  { "type": "anim",  "path": "anim/monster_idle.anim", "preload": true },
+    "anim.npc_idle":      { "type": "anim",  "path": "anim/npc_idle.anim", "preload": true },
     "anim.door_open":     { "type": "anim",  "path": "anim/door_open.anim", "preload": true }
   }
 }

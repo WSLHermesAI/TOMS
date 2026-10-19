@@ -30,11 +30,11 @@ assets/media/styles/<id>/sprites/<sprite>.png   the images to replace (can be on
 save/settings.json  "artStyle": "<id>"      the player's choice ("" = original)
 ```
 
-- An image the style does not have uses the original from `assets/media/sprites/`.
+- An image the style does not have uses the original art (its raw PNG is in `art_raw/sprites/`).
 - Sizes may differ (for example 64 px in the style, 32 px in the original): the game uses the
   largest size and scales smaller images up with nearest-neighbour (pixels stay sharp).
 - Each style has a pre-packed atlas: `assets/media/styles/<id>/atlas/game.atlas` + `game.png`, a
-  variant of `assets/media/atlas/game.atlasproj` (see [14](14_ATLAS_TOOL.md)). The style's images
+  variant of `art_raw/atlas/game.atlasproj` (see [14](14_ATLAS_TOOL.md)). The style's images
   live in that packed texture; `styles/<id>/sprites/` is only the reference folder they are imported
   from. When the atlas exists the game uses it directly (each image keeps its own size); only without
   it does the game build the grid atlas described above at start-up.
@@ -62,7 +62,7 @@ python tools/art/make_variant.py --run Build/art_out/dark16 --name dark16 --size
 :: 4. If the style's name uses new characters, rebuild the UI font (it also reads styles.json)
 python tools/make_ui_font.py
 
-:: 5. Add an entry to "variants" in assets/media/atlas/game.atlasproj (like the dark16 one: id,
+:: 5. Add an entry to "variants" in art_raw/atlas/game.atlasproj (like the dark16 one: id,
 ::    "reference": "../styles/<id>/sprites", output dir "../styles/<id>/atlas"), then import the style's images and save
 ::    (editor: select this variant -> Import From References). See docs/14_ATLAS_TOOL.md
 Build\windows-release\bin\atlaspack.exe refs assets\media\atlas\game.atlasproj --variant <id> --import all

@@ -1,0 +1,17 @@
+{
+  "npcId": "oracle",
+  "name": "npc.oracle.name",
+  "sprite": "npc_oracle",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "oracle"
+      }
+    ],
+    "order": "loop"
+  },
+  "topics": {
+    "menu": "auto"
+  },
+  "draft": true
+}
