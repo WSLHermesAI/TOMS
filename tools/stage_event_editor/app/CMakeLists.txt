@@ -14,6 +14,7 @@ add_executable(stage_event_editor WIN32
     EventEditor.h   EventEditor.cpp
     EventForms.cpp  EventTabs.cpp   EventNpcs.cpp
     EventWidgets.h  EventWidgets.cpp
+    EventGraph.h    EventGraph.cpp
     StageEditor.h   StageEditor.cpp
     StageCanvas.h   StageCanvas.cpp
     ObjectWindow.h  ObjectWindow.cpp

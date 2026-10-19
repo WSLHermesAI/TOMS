@@ -310,6 +310,19 @@ void EventEditor::setTab(const QString& tab) {
     scheduleRender();
 }
 
+// ---- logic graph ---------------------------------------------------------------------------------------------------
+
+QWidget* EventEditor::logicPane() {
+    auto* g = new LogicGraph(m_p, m_graph, [this](const QString& label, std::function<void()> fn) { edit(label, fn); },
+                             [this](const Json& o) { return L(o); });
+    g->onSelectEvent = [this](const std::string& id) { select(id); };
+    g->onOpenValue = [this](const std::string& ref) { openValue(ref); };
+    m_graphView = g;
+    m_info->setText(tr("%1 events · %2 values · white = fires an event · purple = event variable · teal = counter · red = flag · "
+                       "gold = event done").arg(g->eventNodes()).arg(g->valueNodes()));
+    return g;
+}
+
 void EventEditor::openValue(const std::string& ref) {
     if (!m_openVals.contains(q(ref))) m_openVals << q(ref);
     setTab(QStringLiteral("val:") + q(ref));
@@ -472,7 +485,8 @@ void EventEditor::renderTabs() {
     for (const auto& p : all) if (stage::ruleSev(p.rule) != 2) n++;
     struct T { QString key, label; };
     std::vector<T> tabs = {{QStringLiteral("problems"), tr("Problems (%1)").arg(n)}, {QStringLiteral("floors"), tr("Floor map")},
-                           {QStringLiteral("vars"), tr("Variables")}, {QStringLiteral("kinds"), tr("Kinds")},
+                           {QStringLiteral("vars"), tr("Variables")}, {QStringLiteral("logic"), tr("Logic graph")},
+                           {QStringLiteral("kinds"), tr("Kinds")},
                            {QStringLiteral("npcs"), tr("NPCs")}, {QStringLiteral("dlg"), tr("Dialogues")}};
     for (const QString& r : m_openVals) {
         const QString k = r.section(QLatin1Char(':'), 0, 0), name = r.section(QLatin1Char(':'), 1);
@@ -497,7 +511,9 @@ void EventEditor::renderPane() {
     const int scroll = m_pane->verticalScrollBar()->value();
     m_info->clear();
     QWidget* w = nullptr;
+    m_graphView = nullptr;
     if (m_tab == QStringLiteral("floors")) w = floorMapPane();
+    else if (m_tab == QStringLiteral("logic")) w = logicPane();
     else if (m_tab == QStringLiteral("vars")) w = varsPane();
     else if (m_tab == QStringLiteral("kinds")) w = kindsPane();
     else if (m_tab == QStringLiteral("npcs")) w = npcsPane();
@@ -783,10 +799,37 @@ QStringList EventEditor::selfTest() {
         undo();
     }
     // each tab renders
-    for (const QString& t : {QStringLiteral("problems"), QStringLiteral("floors"), QStringLiteral("vars"), QStringLiteral("kinds"), QStringLiteral("npcs"), QStringLiteral("dlg")}) {
+    for (const QString& t : {QStringLiteral("problems"), QStringLiteral("floors"), QStringLiteral("vars"), QStringLiteral("logic"), QStringLiteral("kinds"), QStringLiteral("npcs"), QStringLiteral("dlg")}) {
         m_tab = t;
         renderAll();
         check(m_pane->widget() != nullptr, QStringLiteral("tab %1 renders").arg(t));
+    }
+    // the logic graph: the elder's events are nodes with links; connecting two pins is an edit of the event
+    m_tab = QStringLiteral("logic");
+    renderAll();
+    check(m_graphView != nullptr && m_graphView->eventNodes() > 0 && !m_graphView->links().empty(),
+          QStringLiteral("the logic graph shows events and links"));
+    if (m_graphView) {
+        // two event nodes the first does not link to yet: Then -> Fire adds the link, undo removes it
+        std::vector<std::string> evs;
+        for (const std::string& id : m_graphView->nodeIds()) if (startsWith(id, "ev:") && m_p.ev(id.substr(3))) evs.push_back(id.substr(3));
+        std::string a, b;
+        for (const std::string& x : evs)
+            for (const std::string& y : evs) {
+                if (!a.empty() || x == y) continue;
+                bool already = false;
+                for (const Json& n : (*m_p.ev(x))["next"]) already |= n == y;
+                if (!already) { a = x; b = y; }
+            }
+        check(!a.empty(), QStringLiteral("the graph has two event nodes to link"));
+        if (!a.empty()) {
+            const size_t before = (*m_p.ev(a))["next"].size();
+            const bool linked = m_graphView->connectPins("ev:" + a + "|then", "ev:" + b + "|fire");
+            check(linked && (*m_p.ev(a))["next"].size() == before + 1, QStringLiteral("Then → Fire adds a link"));
+            check(!m_graphView->connectPins("ev:" + a + "|fire", "ev:" + b + "|fire"), QStringLiteral("two inputs do not connect"));
+            if (linked) undo();
+            check(!m_p.dirty(), QStringLiteral("undo removes the graph's link"));
+        }
     }
     // the talk preview on the villager
     showNpc(QStringLiteral("villager"));

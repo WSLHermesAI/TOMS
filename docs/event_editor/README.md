@@ -93,8 +93,8 @@ What Save writes, only for the files that really change:
 
 **Native (Windows app):** `stage_event_editor.exe` ([19](../19_STAGE_EDITOR.md) section 6) holds both editors,
 natively, as tabs of one window that can be dragged out to float (as in Visual Studio). Its event editor has this editor's model, validator, condition rows, NPCs,
-talk preview, dialogue cards and Save (the same file formats). Still only here: the relationship diagram, the values
-map, the logic node graph and the tutorial.
+talk preview, dialogue cards and Save (the same file formats). It has the logic node graph too (Logic graph tab).
+Still only here: the relationship diagram, the values map and the tutorial.
 
 The older plan for `toms_editor`:
 

@@ -2,8 +2,8 @@
 // (stage_core's EventProject), in a Qt window on the live files.
 //
 //   left        Events: every pool's events and the ids floors name but no pool defines; find, kind, only problems
-//   centre      the inspector (an event, a floor, a missing id) above the tabs: Problems, Floor map, Variables, Kinds,
-//               NPCs (with the talk preview), Dialogues, and one closable tab per opened value
+//   centre      the inspector (an event, a floor, a missing id) above the tabs: Problems, Floor map, Variables, Logic
+//               graph (EventGraph.h), Kinds, NPCs (with the talk preview), Dialogues, and one closable tab per opened value
 //   right       History (each edit is one undo step)
 //
 // Every edit is one snapshot of the whole state (EventProject::edit), so Undo restores everything it touched. The
@@ -11,6 +11,7 @@
 // the widget that made it.
 #pragma once
 
+#include "EventGraph.h"
 #include "event_project.h"
 
 #include <QMainWindow>
@@ -44,7 +45,7 @@ public:
     void reloadFromDisk();                 // the stage editor saved: reread (only when nothing is unsaved here)
     void selectEvent(const QString& id);   // from the stage editor (↗)
     void showNpc(const QString& id);       // from the stage editor's NPC panel
-    void showTab(const QString& tab) { setTab(tab); }   // problems | floors | vars | kinds | npcs | dlg
+    void showTab(const QString& tab) { setTab(tab); }   // problems | floors | vars | logic | kinds | npcs | dlg
     // Its panels (the events tree left, History right) docked where they start, shown, at their starting sizes.
     void resetLayout();
     QStringList selfTest();
@@ -99,6 +100,7 @@ private:
     QWidget* problemsPane();
     QWidget* floorMapPane();
     QWidget* varsPane();
+    QWidget* logicPane();
     QWidget* valuePane(const std::string& ref);
     QWidget* kindsPane();
     QWidget* npcsPane();
@@ -130,6 +132,8 @@ private:
     std::map<std::string, std::set<std::string>> m_kindSel;
     std::string m_npcSel, m_dlgSel;
     stage::TalkPreview m_pv;
+    LogicGraphState m_graph;                    // the logic graph's pan, zoom, positions, selection
+    LogicGraph* m_graphView = nullptr;          // the logic graph while its tab is shown
     int m_paneScroll = 0;
 
     // widgets

@@ -293,8 +293,19 @@ moving is the eyedropper. Without a GPU the map is painted with QPainter (still 
 - **Save:** shows every file's change, backs each file up, and writes in the HTML editor's formats (`flags.json` and
   `counters.json` keep their hand-aligned lines).
 
-Not ported (the inspector edits the same data): the relationship diagram, the values map and the logic node graph,
-which the HTML editor still has. The tutorial is not ported either; it runs on its own frozen copy of the data.
+- **Logic graph** (2026-10-19, `EventGraph.cpp`): the HTML editor's node graph, native, in the same blueprint style
+  (after thedmd/imgui-node-editor) and with the same rules. Events are nodes (▶ Fire and their conditions in; Then ▶,
+  done and their actions out), with event variables, counters, flags and NPCs. Every link is event data -- a trigger,
+  a condition, an action or a next link -- so connecting two pins or deleting a link is an ordinary edit (one undo
+  step, saved like any other). Drag pin → pin to connect (pins that fit turn green; dropping on empty space opens the
+  add-node menu filtered to nodes that fit); right-click for the add-node menu with search; right or middle drag pans,
+  the wheel zooms, F fits; click a link and press Delete to remove it; drag on empty space to box-select; click an
+  event to show it in the inspector, double-click a value to open its tab. Node positions are kept between runs. It
+  is a Qt widget drawn with QPainter, not the imgui-node-editor library: no new dependency, and Chinese text and
+  docking work as in the rest of the app.
+
+Not ported (the inspector edits the same data): the relationship diagram and the values map, which the HTML editor
+still has. The tutorial is not ported either; it runs on its own frozen copy of the data.
 
 **Together.** The two editors call each other directly:
 
@@ -328,5 +339,5 @@ come back as a game canvas in this app.
 **Next:**
 
 1. **▶ Play from here:** the real `Game` on the edited floor, in the map view.
-2. The event editor's drawn views: the relationship diagram, the values map and the logic node graph.
+2. The event editor's other drawn views: the relationship diagram and the values map.
 3. Multi-stair floors, once the runtime supports them; per-tile footprints editable.
