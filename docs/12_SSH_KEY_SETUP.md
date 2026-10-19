@@ -17,7 +17,13 @@ ssh-keygen -t ed25519 -C "your@email"          # press Enter three times (or typ
 cat ~/.ssh/id_ed25519.pub                       # copy this line into GitHub → Settings → SSH and GPG keys → New SSH key
 ssh -T git@github.com                           # "Hi <account>!" means success (note: the exit code can be 1 even then)
 git remote set-url origin git@github.com:WSLHermesAI/TOMS.git
+# TortoiseGit users: ALSO do §4.5 (Settings → Network → SSH client = C:\Windows\System32\OpenSSH\ssh.exe),
+# or TortoiseGit fails with "No supported authentication methods available (server sent: publickey)"
 ```
+
+**Using TortoiseGit?** It uses its own SSH client by default (`TortoiseGitPlink.exe`), which does **not** read
+`~/.ssh/id_ed25519`. So `ssh -T` works, but a TortoiseGit pull or push fails with
+`No supported authentication methods available (server sent: publickey)`. Fix it once, in §4.5.
 
 **If you only want to clone:** this repo is **public**, so `git clone` needs **no key at all**;
 use the anonymous HTTPS URL (see §2). **Only pushing needs an SSH key.**
@@ -166,6 +172,33 @@ git config --get core.sshCommand    # if the project sets one
 # to set it explicitly: git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
 ```
 
+### 4.5 TortoiseGit: switch it from plink to OpenSSH
+
+TortoiseGit comes set to `C:\Program Files\TortoiseGit\bin\TortoiseGitPlink.exe` (PuTTY's plink). Plink reads only
+PuTTY keys (`.ppk`, or keys loaded in Pageant), never `~/.ssh/id_ed25519`. The key works for `ssh -T`, but in
+TortoiseGit the dialog says **"TortoiseGitPlink Fatal Error: No supported authentication methods available (server
+sent: publickey)"**, and GitHub lists the key as *Never used*.
+
+**Fix (recommended, confirmed working by the owner on 2026-10-19):** make TortoiseGit use the same OpenSSH as `ssh -T`.
+
+1. Right-click in any folder → **TortoiseGit → Settings → Network**.
+2. Set **SSH client** to `C:\Windows\System32\OpenSSH\ssh.exe`. This path has no spaces; a path with spaces such as
+   `C:\Program Files\Git\usr\bin\ssh.exe` can break. Then press **OK**.
+3. Pull or push again.
+
+The same from a command line (the setting is stored in the registry):
+
+```powershell
+reg add HKCU\Software\TortoiseGit /v SSH /t REG_SZ /d "C:\Windows\System32\OpenSSH\ssh.exe" /f
+reg query HKCU\Software\TortoiseGit /v SSH      # check
+```
+
+`tools\check_git_ssh.cmd` finds this case and offers the same fix (§5).
+
+**Other way (keep plink):** open the key in **PuTTYgen** (Conversions → Import key → `~/.ssh/id_ed25519`), save it
+as `.ppk`, and load the `.ppk` in **Pageant** (TortoiseGit includes it) each time you log in. This is more work,
+so use OpenSSH unless you already use PuTTY.
+
 ---
 
 ## 5. Checking and troubleshooting
@@ -204,6 +237,7 @@ ssh -vT git@github.com 2>&1 | grep -iE "Offering public key|Server accepts key|A
 | `UNPROTECTED PRIVATE KEY FILE` | the private key's permissions are too open | Linux `chmod 600`; Windows see §4.2 |
 | `Could not open a connection to your authentication agent` | the agent is not running | §4.3, or use a key without a passphrase (your security trade-off) |
 | asks for the passphrase every time | it must be typed each time | `ssh-add` it to the agent |
+| `TortoiseGitPlink Fatal Error: No supported authentication methods available (server sent: publickey)`, while `ssh -T` works | TortoiseGit uses plink, which does not read `~/.ssh` keys | TortoiseGit → Settings → Network → SSH client = `C:\Windows\System32\OpenSSH\ssh.exe` (§4.5) |
 | push works but clone fails | they need different authentication | clone a public repo over HTTPS; only pushing needs the key |
 
 ---

@@ -16,7 +16,13 @@ ssh-keygen -t ed25519 -C "your@email"          # 直接 Enter 三次即可（若
 cat ~/.ssh/id_ed25519.pub                       # 複製這一行，貼到 GitHub → Settings → SSH and GPG keys → New SSH key
 ssh -T git@github.com                           # 看到 "Hi <帳號>!" 就成功（注意：就算成功，退出碼仍可能是 1）
 git remote set-url origin git@github.com:WSLHermesAI/TOMS.git
+# 用 TortoiseGit 的人：還要做 §4.5（Settings → Network → SSH client = C:\Windows\System32\OpenSSH\ssh.exe），
+# 否則 TortoiseGit 會出現 "No supported authentication methods available (server sent: publickey)"
 ```
+
+**用 TortoiseGit？** 它預設用自己的 SSH 程式（`TortoiseGitPlink.exe`），**不會**讀 `~/.ssh/id_ed25519`。所以
+`ssh -T` 成功，但 TortoiseGit 的 pull／push 會出現 `No supported authentication methods available (server sent:
+publickey)`。設定一次即可，見 §4.5。
 
 **但如果你只是要 clone**：這個 repo 是**公開的**，所以 `git clone` **完全不需要任何金鑰**，
 用 HTTPS 匿名網址即可（見 §2）。**只有 push 需要 SSH 金鑰。**
@@ -161,6 +167,32 @@ git config --get core.sshCommand    # 若專案特別指定
 # 需要明確指定時：git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
 ```
 
+### 4.5 TortoiseGit：從 plink 改成 OpenSSH
+
+TortoiseGit 預設是 `C:\Program Files\TortoiseGit\bin\TortoiseGitPlink.exe`（PuTTY 的 plink）。plink 只讀 PuTTY
+金鑰（`.ppk`，或載入 Pageant 的金鑰），從不讀 `~/.ssh/id_ed25519`。金鑰在 `ssh -T` 可以用，但 TortoiseGit 會跳出
+**「TortoiseGitPlink Fatal Error: No supported authentication methods available (server sent: publickey)」**，
+GitHub 上這把金鑰也會顯示 *Never used*。
+
+**修正（建議，負責人已於 2026-10-19 實測可用）：**讓 TortoiseGit 用和 `ssh -T` 相同的 OpenSSH。
+
+1. 在任一資料夾按右鍵 → **TortoiseGit → Settings → Network**。
+2. **SSH client** 設為 `C:\Windows\System32\OpenSSH\ssh.exe`。這個路徑沒有空格；`C:\Program Files\Git\usr\bin\ssh.exe`
+   這類有空格的路徑可能出錯。再按 **OK**。
+3. 重新 pull 或 push。
+
+用指令也一樣（這個設定存在登錄檔）：
+
+```powershell
+reg add HKCU\Software\TortoiseGit /v SSH /t REG_SZ /d "C:\Windows\System32\OpenSSH\ssh.exe" /f
+reg query HKCU\Software\TortoiseGit /v SSH      # 確認
+```
+
+`tools\check_git_ssh.cmd` 會找出這個情況並提供同樣的修正（§5）。
+
+**另一種做法（繼續用 plink）：**用 **PuTTYgen** 開啟金鑰（Conversions → Import key → `~/.ssh/id_ed25519`），存成
+`.ppk`，每次登入後在 **Pageant**（TortoiseGit 附帶）載入這個 `.ppk`。步驟較多，除非你本來就用 PuTTY，否則請用 OpenSSH。
+
 ---
 
 ## 5. 驗證與排錯
@@ -197,6 +229,7 @@ ssh -vT git@github.com 2>&1 | grep -iE "Offering public key|Server accepts key|A
 | `UNPROTECTED PRIVATE KEY FILE` | 私鑰權限太寬 | Linux `chmod 600`；Windows 見 §4.2 |
 | `Could not open a connection to your authentication agent` | 沒啟動 agent | §4.3，或改用無 passphrase 的金鑰（安全性自行取捨） |
 | 一直問 passphrase | 每次都要輸入 | `ssh-add` 進 agent |
+| `TortoiseGitPlink Fatal Error: No supported authentication methods available (server sent: publickey)`，但 `ssh -T` 成功 | TortoiseGit 用的是 plink，它不讀 `~/.ssh` 的金鑰 | TortoiseGit → Settings → Network → SSH client = `C:\Windows\System32\OpenSSH\ssh.exe`（§4.5） |
 | push 成功但 clone 失敗 | 兩者認證需求不同 | clone 公開 repo 用 HTTPS 即可；push 才需要金鑰 |
 
 ---
