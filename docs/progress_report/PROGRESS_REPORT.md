@@ -15,6 +15,14 @@
 
 ## ▶ Next Step
 
+**Body swap stopped, reskins fixed, a gameplay plan waiting for decisions** (2026-10-19;
+[DAILY_2026-10-19.md](DAILY_2026-10-19.md), [../30_GAMEPLAY_PLAN.md](../30_GAMEPLAY_PLAN.md)):
+- Premultiplied Spine pages fixed in every reskin tool (no ghost skirt or glowing edges); Zeus and Christmas repaired.
+- Woman → man swap stopped: a different body shape needs a Spine tool (AIGamestyle guide §11).
+- Floors redesigned per chapter; raw art in `art_raw/`; logic graph in the native event editor; TortoiseGit SSH fix.
+- **Owner:** decide **Q16–Q21** (the gameplay plan); restore or switch off the tests that need `tests/golden`,
+  `tests/mpdi`, `tests/font`; commit `docs/30`.
+
 **AI restyles of 10085, 230 AI sprites, save-system guards, stable object ids** (2026-10-18; not committed in TOMS;
 [DAILY_2026-10-18.md](DAILY_2026-10-18.md), [../28_SAVE_SYSTEM.md](../28_SAVE_SYSTEM.md),
 [AIGamestyle/Doc/Reskin_Game_Art.md](../../AIGamestyle/Doc/Reskin_Game_Art.md)):
@@ -357,3 +365,9 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 | Q15 | ~~Equipment tab: change or upgrade?~~ Answered 2026-10-10: change only for now; upgrading is a later task (W26); no Talent slot ([20](../20_PLAYER_MENU.md) §4) | — |
 | Q14 | ~~Chapter goals?~~ Answered 2026-10-10: every event (and mission, chapter) has a title and a description; the Events tab shows only those, plus the names of connected events ([20](../20_PLAYER_MENU.md) §6, [06](../event_editor/06_EVENT_LOGIC.md) §7) | — |
 | Q5 | The bgfx web build now passes its check (2026-09-26). Replace the old `build_web.sh` output (`web/`, `web-gl/`) with it, and where is it published? | keep both until the owner has played the new one (W9) |
+| Q16 | **Gameplay plan — cards** ([30](../30_GAMEPLAY_PLAN.md) §3): are the merged cards (A) companions fighting beside the hero, or (B) the hero's skills and weapon moves? Do gold, gems and cards replace today's store and forge, or sit beside them? *Waiting for the owner's decision (2026-10-19)* | (B), beside the store and forge |
+| Q17 | **Gameplay plan — AGI** ([30](../30_GAMEPLAY_PLAN.md) §4): today AGI shortens the bar cooldown; the notes make it set the marker's speed, and a faster marker is harder. Should high AGI slow the marker, or let the player afford more charge? *Waiting for the owner's decision* | high AGI slows the marker |
+| Q18 | **Gameplay plan — style choice** ([30](../30_GAMEPLAY_PLAN.md) §7): is the attack style chosen at the start tied to difficulty, fixed for the whole game, and can other weapon types still be picked up later? *Waiting for the owner's decision* | not tied to difficulty; fixed as the main style; other weapons can be picked up |
+| Q19 | **Gameplay plan — unarmed misses** ([30](../30_GAMEPLAY_PLAN.md) §5.1): does a miss let the marker turn back (the newer note), or send the combo back to the start (the older line)? *Waiting for the owner's decision* | the marker turns back; two misses in a row end the combo |
+| Q20 | **Gameplay plan — the enemy's turn** ([30](../30_GAMEPLAY_PLAN.md) §11): while the player is in a combo, does the enemy keep its own clock (as today) or wait? *Waiting for the owner's decision* | the enemy's clock pauses during a combo |
+| Q21 | **Gameplay plan — other modes** ([30](../30_GAMEPLAY_PLAN.md) §8): the idle side-scroller and the maze chase: part of TOMS (an event floor, a mini-game) or separate games? *Waiting for the owner's decision* | separate; not started |

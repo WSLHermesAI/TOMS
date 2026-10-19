@@ -513,3 +513,22 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     uid; `tools/add_stage_uids.py` (71 stage files; mapped in `test_select.py`). Doc `docs/28_SAVE_SYSTEM.md`.
   - `AIGamestyle/App/make_vs_solution.bat` (vswhere, VS's CMake 4.3, VS 2026 `.slnx`; builds).
   - Tests: `save_test` and `stage_core_test` extended. Changed-only: 70 of 112, all pass. Full suite / web not run.
+- **2026-10-19** — **Floors per chapter, raw art split, logic graph, reskin PMA fix, body swap stopped, gameplay plan**
+  ([DAILY_2026-10-19.md](DAILY_2026-10-19.md)):
+  - Tests: 10085 out of the TOMS tests; `tests/test_folders.json`; `tools/test_switches.cmd/.ps1` tree tool and
+    `tests/test_switches.json` (all off, the owner's choice); `test_select.py` rules for `art_raw`, `tools/art`,
+    `redesign_floors.py`, `make_idle_clips.py`, the test folders and switches.
+  - Sprites in `assets` via the atlas, `tools/make_idle_clips.py`; `tools/redesign_floors.py` and `docs/29`.
+  - `art_raw/` (sprites, `styles/dark16/sprites`, `atlas/*.atlasproj` writing `assets/media/atlas`); `game_assets.cpp`
+    atlas only; `game_session.cpp` and `cmake/TomsPrerequisites.cmake` check the atlas (owner commit `4e44076`).
+  - Native event editor: `EventGraph.h/.cpp`, the "logic" tab (owner commit `4f338cb`).
+  - AIGamestyle: `restyle_pilot.keep_skin`, `is_premultiplied / premultiply / unpremultiply`; PMA-aware
+    `restyle_game.py`, `repair_edges.py`; new `spine_render.py` (`--pma`), `spine_project.py`, `character_swap.py`
+    (guide, concept, projection with outline and trust masks, `cloth_parts`, `restyle_parts`, knee breeches,
+    `still_animations`, `rebind_breeches`), plan `man_10085.json`. Swap stopped by the owner; conclusion in
+    `Reskin_Game_Art(.zh-TW).md` §11.
+  - `docs/12` §1 hint and §4.5 TortoiseGit → OpenSSH (owner confirmed; commit `f04809c`).
+  - `docs/30_GAMEPLAY_PLAN.md` (+ zh_TW) from `docs/魔塔.txt`; open questions Q16–Q21.
+  - Tests: changed-only selections 0–1 of 113 per change; full suite / web not run; the smoke screenshot, `mpdi_convert`
+    and font tests need the folders removed in `795385a`.
+
