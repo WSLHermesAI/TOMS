@@ -5,7 +5,9 @@ and June 2). It sorts them into one plan and adds what the notes asked for:
 - three new weapons (the notes: "think of three new weapons and ways to fight");
 - the open questions the notes leave.
 
-Where this document adds its own proposal, it says **(proposal)**. Everything else comes from the notes.
+Where this document adds its own proposal, it says **(proposal)**. Everything else comes from the notes. The
+owner's answers of 2026-10-20 are in section 11 and are written into the sections they change, marked
+**Owner (2026-10-20)**.
 
 Nothing here is built yet. Today's battle is described in section 1, so each idea can be checked against it.
 
@@ -42,11 +44,32 @@ The notes' combat ideas grow **out of Battle v2**: its bars become each weapon's
    - the stronger the attack;
    - the bigger the animation and effects ("連招越多動畫越誇張攻擊力也越強").
    - Players should want the next level to see the new move.
-3. **Merge cards to grow.** Inside a run, cards are bought and merged to make the hero (or the party) stronger.
-   Between runs, gems raise how far merging can go.
+3. **Cards.** For now, a **collection**: monsters drop their card when defeated (section 3). Buying and merging
+   cards in a run, with gems raising how far merging can go, is a later idea.
 4. **Mobile time.** Early weapon levels come fast; after advancing a weapon, levels come slowly.
 
-## 3. The run and the meta (card merging)
+## 3. Cards
+
+**Owner (2026-10-20): for now, cards are only a collection system.**
+
+| Rule | Value |
+|---|---|
+| What a card records | per monster: how many times the player has defeated it, and how many times it has defeated the player |
+| Getting the card | a chance each time the monster is defeated: the **first** copy 100 %, a **second** (same) copy 50 % |
+| Where the chances are set | **in the monster's data** (`enemies.json`), so each monster can have its own |
+
+The chances in the monster's data **(proposal: the field names)**:
+
+```json
+"slime": { "hp": 24, "atk": 8, ..., "card": { "chance": 1.0, "repeatChance": 0.5 } }
+```
+
+- `chance`: the chance to get the card when the player has none yet. Missing: 1.0.
+- `repeatChance`: the chance to get another copy. Missing: 0.5.
+- The counts (copies, defeated, defeated by) are kept in the meta save, so they survive runs and rebirths
+  **(proposal)**. A Cards page in the player menu shows them **(proposal)**.
+
+### 3.1 Later: merging cards (from the notes, not now)
 
 From the notes:
 
@@ -62,13 +85,8 @@ From the notes:
 
 The notes name Clash Royale as the model ("學皇室戰爭中的回合制機制").
 
-**How it fits TOMS (proposal):** TOMS has one hero. Two ways to read "characters":
-- **(A) Companion cards:** cards are companions or summons that fight beside the hero in Battle v2. Each takes a
-  deploy slot and acts on its own clock, like the enemy does.
-- **(B) Skill and weapon cards:** cards are the hero's skills or weapon moves; merging one raises its star (one more
-  combo step, a stronger effect).
-
-(B) changes less of the current game. (A) is closer to Clash Royale. See the open questions.
+How merged cards would act in battle (companions beside the hero, or the hero's skills and moves) is decided when
+this part is built. The collection above comes first, and its copies are what merging would use later.
 
 ## 4. Combat: two bars
 
@@ -81,13 +99,20 @@ From the notes (the newest combat entry):
   - Each tap inside the accepted range lands a hit and continues the combo.
   - The weapon's level and the attributes decide how many hits a combo can have.
 - **Attributes:**
-  - **AGI** sets the marker's speed;
+  - **AGI** shortens the **waiting time** between attacks, so with higher AGI the player attacks more often in the
+    same time. **Owner (2026-10-20)**; this is what AGI does today (shorter bar cooldown). The marker's speed comes
+    from the charge and the weapon, not from AGI;
   - **DEX** sets the accepted range (DEX already widens the hit zone today).
 - The marker moves by a **tween** ("use tween to move the lighting indicator").
+- **Attacks pause the clocks. Owner (2026-10-20):** while the player or the enemy is attacking (its attack and
+  animation), **both** attack clocks pause until that attack is finished. Neither side can be hit in the middle of
+  its own combo, and no time is lost while an animation plays.
 
 The trade-off is the core: more charge means more damage, but a faster marker and so a harder combo.
 
 ## 5. The weapons
+
+**Owner (2026-10-20):** the battle's play depends on the weapon; each weapon type has its own way to play.
 
 ### 5.1 Unarmed (空手): a moving bar, five points
 
@@ -99,7 +124,7 @@ The trade-off is the core: more charge means more damage, but a faster marker an
 - **The marker turns back**, so a missed point can still be saved, and the order is free. Example: tap 1, miss 2
   and 3, tap 4 and 5; the marker turns back to 3, and the combo goes on from there.
 - Two misses in a row, or random tapping, is a **fail**: one plain attack, and the turn ends.
-- (An older line: a miss in the middle sends the combo back to the start.)
+- How far a miss sets the combo back depends on the weapon's level (section 5.6).
 
 ### 5.2 Sword (劍): a polygon of points, no second chance
 
@@ -145,6 +170,32 @@ Each weapon in this table also gets:
 - a recovery cost for a miss (the sword's "put back" wait is the model);
 - named moves (5.4).
 
+### 5.6 A miss sets the combo back (all weapons)
+
+**Owner (2026-10-20):** a miss sends the combo back to an earlier step, and how far depends on the weapon and its
+level. The owner's example:
+
+| Weapon level | A miss sends the combo |
+|---|---|
+| Lv 5 | back to the start |
+| Lv 10 | back 5 points |
+| Lv 15 | back 4 points |
+| … | less and less |
+
+It is set per weapon in a **settings file**, so each weapon's values can be changed without code. Proposal:
+`assets/data/weapon_play.json`:
+
+```json
+{
+  "unarmed": { "missBack": [ { "lv": 1, "back": "start" }, { "lv": 10, "back": 5 }, { "lv": 15, "back": 4 } ] },
+  "sword":   { "missBack": [ { "lv": 1, "back": "start" }, { "lv": 10, "back": 3 } ], "missWaitMs": 1200 }
+}
+```
+
+- The entry with the highest `lv` at or below the weapon's level applies.
+- `back` is a number of points, or `"start"`.
+- The same file holds each weapon's other play settings (points per level, wait after a miss, …).
+
 ## 6. Weapon growth
 
 - Two separate numbers:
@@ -168,12 +219,16 @@ Each weapon in this table also gets:
 ## 7. Choosing a style at the start
 
 - A story event at the start lets the player **choose an attack style**, which equals the starting weapon type.
-- The notes ask two things:
-  - Is the choice tied to difficulty?
-  - Is it fixed for the rest of the game ("之後不可改")?
-- Weapons decide the attack mode (武器跟攻擊模式有關).
+- Weapons decide the attack mode (武器跟攻擊模式有關). **Owner (2026-10-20):** the battle's play depends on the weapon.
+- Still to decide (the notes ask): is the choice tied to difficulty, and is it fixed for the rest of the game
+  ("之後不可改")? Until then: not tied to difficulty; the chosen style is the main one, and other weapons can still be
+  picked up.
 
-## 8. Other modes (separate ideas, for later)
+## 8. Other modes (for later)
+
+**Owner (2026-10-20):** these are **part of TOMS**, but each is built as an **independent module** that another
+game can reuse: its own code folder and data, talking to TOMS only through a small interface (start, the result,
+the player's stats in), not through `Game` internals.
 
 - **May 2024: an idle side-scroller.**
   - The hero walks one way; the top half keeps the little map where an enemy (one or a group) was met.
@@ -208,16 +263,26 @@ Each weapon in this table also gets:
 | 2 | **Sword** (5.2) and **staff** (5.3); named moves (5.4) | the two weapons the notes describe fully |
 | 3 | Weapon level, mastery, advancement, pacing (section 6); the new-weapon tutorial; the start-of-story choice (section 7) | needs the weapons to exist |
 | 4 | The three new weapons (5.5) | the same framework, new mini-games |
-| 5 | The card, gold and gem meta (section 3) | needs the owner's choice of (A) or (B) |
-| 6 | Prototypes of the other modes (section 8) | separate games; only if wanted |
+| 5 | The card collection (section 3): drop chances in `enemies.json`, counts in the meta save, a Cards page | decided; small, and it can come earlier |
+| 6 | The other modes (section 8), as reusable modules | part of TOMS, built to be reused |
 
 Each phase ends playable in the weapon test phase, and gets tests by the project's rules ([09_TESTS.md](09_TESTS.md)).
 
-## 11. Open questions for the owner
+## 11. The owner's decisions (2026-10-20)
 
-Tracked as **Q16–Q21** (waiting for the owner's decision) in
-[progress_report/PROGRESS_REPORT.md](progress_report/PROGRESS_REPORT.md), Open Questions, each with a default.
-Phase 0 (section 10) does not need these answers.
+The six open questions (Q16–Q21 in [progress_report/PROGRESS_REPORT.md](progress_report/PROGRESS_REPORT.md)) were
+answered on 2026-10-20:
+
+| # | Question | Decision |
+|---|---|---|
+| Q16 | Cards | For now **a collection only**: per monster, how many times it was defeated and how many times it defeated the player. The first card drops 100 %, a second copy 50 %, set **in each monster's data** (section 3) |
+| Q17 | AGI | AGI **reduces the waiting time**: with higher AGI the player attacks more often in the same time (section 4) |
+| Q18 | Style choice | The battle's play **depends on the weapon**; each weapon plays differently. Still open: whether the choice is tied to difficulty or fixed (section 7) |
+| Q19 | Misses | A miss sends the combo **back to an earlier step**, by the weapon and its level (Lv 5: to the start; Lv 10: back 5; Lv 15: back 4 …), set per weapon **in a settings file** (section 5.6) |
+| Q20 | The enemy's turn | While the player **or** the enemy is attacking, **both** attack clocks pause until the attack is finished (section 4) |
+| Q21 | Other modes | **Part of TOMS**, but built as **independent modules** that other games can reuse (section 8) |
+
+The questions as first asked:
 
 1. **Cards:** companions in battle (A) or the hero's skills and moves (B)? Do the gold, gem and card systems replace
    today's store and forge, or sit beside them?
