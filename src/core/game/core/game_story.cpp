@@ -681,18 +681,21 @@ void Game::rollDailyMissions() {
 }
 
 void Game::wireMissionEvents() {
-    toms::globalEventBus().subscribe<toms::EnemyDefeated>([this](const toms::EnemyDefeated& e) {
+    // listen(), not subscribe(): the global bus outlives this Game (the editor restarts the game for every scenario),
+    // so the handlers must go with it -- busSubs_ removes them when the Game is destroyed.
+    busSubs_.clear();   // loadAssets again on the same Game: never twice
+    busSubs_.push_back(toms::globalEventBus().listen<toms::EnemyDefeated>([this](const toms::EnemyDefeated& e) {
         for (auto& [id, tracker] : missionTrackers_) {
             auto it = missionDefs_.find(id);
             if (it != missionDefs_.end()) toms::applyProgressEvent(tracker, it->second, "defeat", e.enemyId);
         }
-    });
-    toms::globalEventBus().subscribe<toms::ItemCollected>([this](const toms::ItemCollected& e) {
+    }));
+    busSubs_.push_back(toms::globalEventBus().listen<toms::ItemCollected>([this](const toms::ItemCollected& e) {
         for (auto& [id, tracker] : missionTrackers_) {
             auto it = missionDefs_.find(id);
             if (it != missionDefs_.end()) toms::applyProgressEvent(tracker, it->second, "collect", e.itemId);
         }
-    });
+    }));
 }
 
 // M7 (first slice): the one path that can end a run. Not re-validated against the resolver here

@@ -8,6 +8,8 @@ set(L_GAME   ${L}/game)
 add_library(toms_core STATIC
     ${L_ENGINE}/node.cpp ${L_ENGINE}/job_system.cpp ${L_ENGINE}/condition.cpp ${L_ENGINE}/entity_status.cpp
     ${L_ENGINE}/encounter.cpp ${L_ENGINE}/power_bar.cpp
+    ${L_ENGINE}/safe_timer.cpp ${L_ENGINE}/tween.cpp ${L_ENGINE}/timed_hits.cpp   # docs/30_GAMEPLAY_PLAN.md phase 0
+    ${L_ENGINE}/singletons.cpp   # releaseSingletons() at the end of main (docs/33_LEAK_CHECK.md)
     ${L_ENGINE}/anim_clip.cpp ${L_ENGINE}/anim_player.cpp ${L_ENGINE}/particle_fx.cpp ${L_ENGINE}/gltf_model.cpp ${L_ENGINE}/gltf_anim_texture.cpp ${L_ENGINE}/stb_image_impl.cpp
     ${L_ENGINE}/bitmap_font.cpp   # picture fonts: FontText (docs/22_FONT_TOOL.md)
     ${L_ENGINE}/resource.cpp ${L_ENGINE}/resource_types.cpp ${L_ENGINE}/render_object.cpp   # docs/25_RESOURCE_MANAGER.md
@@ -16,6 +18,7 @@ add_library(toms_core STATIC
     ${L_GAME}/core/game_player_menu.cpp
     ${L_GAME}/core/game_store.cpp ${L_GAME}/core/game_combat.cpp ${L_GAME}/core/game_story.cpp
     ${L_GAME}/core/game_title_glue.cpp
+    ${L_GAME}/core/game_scenario.cpp   # test scenarios: one scene from a setting file (docs/31_TEST_SCENARIOS.md)
     ${L_GAME}/core/map_objects.cpp   # the floor's things, a class per kind (docs/25 §4.10)
     ${L_GAME}/audio/Audio.cpp
     ${L_GAME}/save/save_system.cpp ${L_GAME}/save/save_slots.cpp ${L_GAME}/save/game_settings.cpp
@@ -25,6 +28,8 @@ add_library(toms_core STATIC
     ${L_GAME}/systems/equipment_actives.cpp ${L_GAME}/systems/ending_system.cpp
     ${L_GAME}/systems/cycle_system.cpp ${L_GAME}/systems/camera.cpp ${L_GAME}/systems/roamer.cpp
     ${L_GAME}/systems/run_state.cpp ${L_GAME}/systems/floor_table.cpp
+    ${L_GAME}/systems/weapon_play.cpp   # data/weapon_play.json (docs/30 §5.6)
+    ${L_GAME}/systems/card_collection.cpp   # monster cards (docs/30 §3)
     ${L_GAME}/systems/story_actions.cpp ${L_GAME}/systems/talk_system.cpp   # NPCs and their events (docs/event_editor/08)
     compat/renderer.h)
 toms_target_defaults(toms_core)
@@ -79,7 +84,8 @@ if(ANDROID)
     set_target_properties(toms_game PROPERTIES OUTPUT_NAME main)
     target_link_options(toms_game PRIVATE "-Wl,--undefined=JNI_OnLoad" "-Wl,-z,max-page-size=16384")
 else()
-    add_executable(toms_game src/main_sdl.cpp)
+    add_executable(toms_game src/main_sdl.cpp
+        src/leak_check.h src/leak_check.cpp)   # Windows Debug: memory still allocated at exit (docs/33_LEAK_CHECK.md)
 endif()
 toms_target_defaults(toms_game)
 target_link_libraries(toms_game PRIVATE toms_game_host ${TOMS_SDL3_TARGET})

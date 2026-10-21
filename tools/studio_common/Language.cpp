@@ -200,6 +200,14 @@ public:
 
 }  // namespace
 
+void shutdown() {
+    if (g_dict) { QCoreApplication::removeTranslator(g_dict); delete g_dict; g_dict = nullptr; }
+    if (g_qt) { QCoreApplication::removeTranslator(g_qt); delete g_qt; g_qt = nullptr; }
+    QHash<QString, QString>().swap(toChinese());
+    QHash<QString, QString>().swap(toEnglish());
+    g_loaded = false;
+}
+
 void init() {
     load();
     Lang lang = settings().value(QStringLiteral("language")).toString() == QLatin1String("zh") ? Lang::Chinese : Lang::English;

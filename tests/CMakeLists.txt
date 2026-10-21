@@ -31,6 +31,7 @@ set(TOMS_UNIT_TESTS
     engine/node_transform_test      engine/object_test             engine/power_bar_test
     engine/state_machine_test
     engine/resource_test            engine/render_object_test
+    engine/safe_timer_test          engine/tween_test              engine/timed_hits_test
     game/core/atlas_sprites_test
     game/save/save_test
     game/systems/camera_test        game/systems/cycle_system_test     game/systems/ending_system_test
@@ -39,6 +40,7 @@ set(TOMS_UNIT_TESTS
     game/systems/mission_test       game/systems/run_state_test        game/systems/skill_system_test
     game/systems/player_menu_test   game/systems/stair_links_test  game/systems/floor_index_test
     game/systems/story_controller_test   game/systems/event_chain_test   game/systems/talk_system_test
+    game/systems/weapon_play_test   game/systems/card_collection_test
     game/ui/title_screen_test)
 
 get_filename_component(_data_parent "${TOMS_DATA_DIR}" DIRECTORY)
@@ -195,6 +197,23 @@ toms_smoke_test(fx_gpu       fx          d3d11   0.1  --frames=110 --keys=enter@
 toms_smoke_test(stage_d3d12  stage       d3d12   0.5  --frames=120 --keys=enter@30)
 toms_smoke_test(stage_vulkan stage       vulkan  0.5  --frames=120 --keys=enter@30)
 toms_smoke_test(stage_opengl stage       opengl  0.5  --frames=120 --keys=enter@30)
+
+# ---- test scenarios (docs/31_TEST_SCENARIOS.md) ----------------------------------------------------
+# Each folder tests/scenarios/<name>/ with a scenario.json is one test, scenario.<name>: the game starts straight in
+# that scene from the setting files (--scenario), runs the scenario's own "test" frames and keys (--scenario-test), and
+# fails when the scene it expects is not showing (exit 3). A screenshot is kept in test-run/scenario/<name>/ to look
+# at; nothing is compared with a reference image. A new folder is a new test after the next configure.
+file(GLOB _scenarios RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/scenarios" CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/scenarios/*/scenario.json")
+foreach(_s IN LISTS _scenarios)
+    get_filename_component(_name "${_s}" DIRECTORY)
+    add_test(NAME scenario.${_name}
+             COMMAND ${CMAKE_COMMAND} -DGAME=$<TARGET_FILE:toms_game> -DNAME=${_name}
+                     -DSCENARIO=${CMAKE_CURRENT_SOURCE_DIR}/scenarios/${_name}
+                     -DWORK=${CMAKE_BINARY_DIR}/test-run/scenario/${_name}
+                     -P ${CMAKE_CURRENT_SOURCE_DIR}/scenarios/run_scenario.cmake)
+    set_tests_properties(scenario.${_name} PROPERTIES LABELS scenario RUN_SERIAL TRUE TIMEOUT 120)
+endforeach()
 
 # glTF models (docs/18_GLTF.md) in tools/gltf_viewer, on the test models of tests/gltf/
 # (tools/gltf_viewer/make_test_models.py): GPU skinning (linear and cubic spline), morph targets,

@@ -293,8 +293,10 @@ Json buildFloorIndex(const std::string& root) {
                 const Json* dir = member(s, "dir");
                 o["dir"] = truthy(dir) ? *dir : Json("up");
                 if (const Json* to = member(s, "to"); truthy(to)) o["to"] = *to;
-                const Json* un = member(s, "unlock");
-                if (const Json* ed = un ? member(*un, "eventDone") : nullptr; truthy(ed)) o["unlock"] = *ed;
+                // the first event as "unlock" (as before W38); a lock with several events also lists them all
+                const std::vector<std::string> locks = stairUnlockEvents(s);
+                if (!locks.empty()) o["unlock"] = locks[0];
+                if (locks.size() > 1) o["unlockAll"] = locks;
                 sl.push_back(o);
             }
             entry["stairs"] = sl;
@@ -309,7 +311,10 @@ Json buildFloorIndex(const std::string& root) {
     for (auto& [fid, f] : floors.items()) {
         for (const Json& e : f["events"]) byEvent[e["id"].get<std::string>()].push_back(fid);
         for (const Json& b : f["beats"]) if (b.contains("eventId") && b["eventId"].is_string() && !b["eventId"].get<std::string>().empty()) add(b["eventId"].get<std::string>(), fid);
-        if (f.contains("stairs")) for (const Json& s : f["stairs"]) if (s.contains("unlock") && s["unlock"].is_string()) add(s["unlock"].get<std::string>(), fid);
+        if (f.contains("stairs")) for (const Json& s : f["stairs"]) {
+            if (s.contains("unlockAll") && s["unlockAll"].is_array()) { for (const Json& e : s["unlockAll"]) if (e.is_string()) add(e.get<std::string>(), fid); }
+            else if (s.contains("unlock") && s["unlock"].is_string()) add(s["unlock"].get<std::string>(), fid);
+        }
     }
     Json sorted = Json::object();
     for (const auto& [k, v] : byEvent) sorted[k] = v;   // std::map: sorted by key, as the JS sort()

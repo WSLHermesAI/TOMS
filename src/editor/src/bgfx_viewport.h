@@ -26,6 +26,9 @@ public:
 
     bool restartGame(const QString& stage = QStringLiteral("stage01"));
     void loadStage(const QString& id);
+    // A test scenario (docs/31_TEST_SCENARIOS.md): a fresh game, straight in the scenario's scene. When the view is not
+    // up yet the scenario waits and starts with the game. False (with the reason) when the scenario cannot start.
+    bool startScenario(const QString& path, QString& error);
     void setShowStats(bool on);
     // Smoke test: after `frames` frames, save the viewport (bgfx screenshot) to `png` and emit smokeTestDone.
     void runSmokeTest(int frames, const QString& png);
@@ -67,6 +70,7 @@ private:
     toms::next::GameSession session_;
     toms::next::InputState input_;
     QString pendingStage_ = QStringLiteral("stage01");
+    QString pendingScenario_;   // startScenario before bgfx was up: started by showEvent
     bool bgfxReady_ = false;
     bool failed_ = false;
     int framesSinceReport_ = 0;

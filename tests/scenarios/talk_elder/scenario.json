@@ -1,0 +1,11 @@
+{
+  "_comment": "Talk to the village elder (npcs/villager.json) on F02: his topic menu.",
+  "scene": "talk",
+  "stage": "F02",
+  "talk": {
+    "npc": "villager"
+  },
+  "test": {
+    "frames": 40
+  }
+}

@@ -92,6 +92,7 @@ toms_game 的渲染器上，在那裡繪製和編輯，並存下 bgfx 截圖以�
 | `studio` | 3 | `studio.canvas_coordinates`：編輯器畫布基底（座標顯示）；`studio.language`：編輯器的 English / 中文 切換，在 offscreen 的小視窗上檢查（[24](24_EDITOR_LANGUAGE.md)）；`studio.i18n_complete`：Qt 編輯器每個 `tr()` 文字在 `tools/studio_common/i18n/zh_TW` 中都有中文 | Qt 建置；`i18n_complete` 需要 Python（也在 `unit` 中） |
 | `smoke` | 21 | 真正的 `toms_game` 播放一段腳本化的場景；它的截圖必須和 `tests/golden/` 中的參考圖相符（包括 `smoke.anim` 和 `smoke.fx`：地圖上的 `.anim` 片段和粒子效果；`smoke.fx_cpu` / `fx_compute`：同樣的東西走 sprite 批次的其他路徑，`smoke.fx_gpu`：所有發射器都在 GPU 上模擬——全部對同一張圖比對） | GPU；每個測試開一個視窗約 2 秒 |
 | `smoke` + `gltf` | 24 | `gltf_viewer` 在固定時間繪製 `tests/gltf/` 中的測試模型；截圖必須和 `tests/golden/gltf_*.png` 相符：蒙皮（線性、cubic spline）、morph target（線性、step）、`EXT_mesh_gpu_instancing`、PBR 材質、法線檢視、陰影（平行光、點光、聚光、全部）；蒙皮、PBR 和陰影也在 Vulkan 和 OpenGL 上測（[18](18_GLTF.md)）。物理（Jolt 上的 KHR_physics_rigid_bodies，[18](18_GLTF.md) §7）2.5 秒時的畫面；檔案自己的燈光（KHR_lights_punctual）透過它的鏡頭：`gltf_lights`（透視）與 `gltf_camera_side`（正交）。`ctest -L gltf` 只執行這些 | GPU；每個約 1 秒 |
+| `scenario` | 32 | `tests/scenarios/` 的每個資料夾一個：`toms_game --scenario=<資料夾> --scenario-test` 依它的設定檔（存檔、玩家、事件）直接開始在某個場景（戰鬥、對話、商店、選單分頁……），執行它的畫格與按鍵，檢查場景正在顯示以及 `expect` 的數值。沒有參考圖；最後一個畫格存在 `test-run/scenario/<name>/`（[31](31_TEST_SCENARIOS.md)） | GPU；每個約 1 秒 |
 | `web` | 5 | 在無頭 Chrome 中執行 `tools/web_smoke_test.mjs`：標題 → 新遊戲 → 存檔 → 重新載入 → 存檔還在，沒有頁面錯誤。對單執行緒版、多執行緒版（用隔離標頭提供），以及打包好的頁面兩次：在沒有標頭的伺服器上（它必須透過 service worker 變成多執行緒）和加上 `?nothreads`（[10](10_THREADS.md)），再在**真正的 GPU** 上跑一次（`web.page_gpu`，`--gpu`：Direct3D 11 上的 ANGLE，對 shader 比其他測試用的 SwiftShader 軟體 GPU 更嚴格）。任何編譯或連結失敗的 WebGL shader 都會被記錄，並讓測試失敗 | web 版 / 套件（`build_web.bat`）、Node 22+、Chrome 或 Edge；缺少的話會**略過**，而不是失敗 |
 
 Smoke 場景有標題、地圖（HUD + 方向盤）、玩家選單的五個分頁（`player_status`、`player_gear`、`player_items`、
@@ -134,6 +135,8 @@ set TOMS_UPDATE_GOLDEN=
 - **單元測試：** 撰寫 `src/core/…/xxx_test.cpp`，其中 `main()` 成功時回傳 0，並把它的路徑加進
   `tests/CMakeLists.txt` 的 `TOMS_UNIT_TESTS`。它連結核心函式庫，並在 `assets/` 中執行，所以以
   `data/…` 讀取資料。
+- **要單獨測試的場景：**在 `tests/scenarios/` 加一個含 `scenario.json` 的資料夾（[31](31_TEST_SCENARIOS.md)）；下次
+  configure 之後就是 `scenario.<資料夾>`，`tools/test_select.py` 已經把資料夾對應到它。
 - **畫面：** 加一行 `toms_smoke_test(name reference backend limit scene…)`，用
   `TOMS_UPDATE_GOLDEN=1` 執行一次，檢查新的 `tests/golden/<name>.png`，然後提交它。
 

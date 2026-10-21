@@ -1,0 +1,9 @@
+{
+  "scene": "ending",
+  "ending": {
+    "id": "e_01"
+  },
+  "test": {
+    "frames": 40
+  }
+}

@@ -31,6 +31,10 @@
 #include "ui_state.h"       // toms::UiState -- what the UI shows (see buildUiState)
 #include "title_screen.h"    // toms::TitleScreen/TitleAction — the title phase (New Game/Continue/Settings)
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
+#include "event_bus.h"       // toms::Subscription -- Game::busSubs_
+#include "safe_timer.h"      // toms::TimerQueue / TimerOwner -- delayed calls that die with their owner (battle numbers)
+#include "tween.h"           // toms::Tween -- the damage numbers' rise
+#include "weapon_play.h"     // toms::WeaponPlayTable -- data/weapon_play.json (docs/30_GAMEPLAY_PLAN.md §5.6)
 #include "art_styles.h"      // toms::ArtStyle — the selectable art styles (assets/media/styles)
 #include "atlas_file.h"      // toms::AtlasFile — the prebuilt sprite atlas (tools/atlas)
 #include "particle_fx.h"     // toms::fx — particle effects on the atlases (docs/17_PARTICLES.md)
@@ -145,6 +149,13 @@ struct CombatState : public Trackable {
     // but the "you fell" message should stay on screen briefly rather than vanish the same
     // frame) -- a WIN uses `won` to stay open until dismissed instead. See draw()'s showBattle.
     int resultPauseMs = 0;
+    // Phase 0 (docs/30_GAMEPLAY_PLAN.md §4, the owner's rule 2026-10-20): while the player or the enemy is attacking,
+    // BOTH attack clocks pause -- the bars do not move or cool down and the enemy's clock does not run -- until the
+    // attack is over. Set by an attack (data/battle.json "attack_pause_ms"), counted down by Game::update.
+    int attackPauseMs = 0;
+    // Damage numbers rising over a fighter: added when the hit lands (a safe timer after the attack starts).
+    struct Popup { std::string text; bool overEnemy = true; int kind = 0; int ageMs = 0; toms::Tween rise; };   // kind 0 hit, 1 big, 2 guard
+    std::vector<Popup> popups;
     TOMS_OBJECT(CombatState)
 };
 
@@ -275,8 +286,8 @@ public:
     // ---- the player menu (docs/20_PLAYER_MENU.md): the walking scene's one button (≡, Esc) ----
     // Five tabs: Status, Equipment, Items, Events, System. Everything that was a button of its own
     // (the backpack, the store button, the old ≡ list, the web page's fullscreen button) is in here.
-    enum class MenuTab { Status, Gear, Items, Events, System };
-    static constexpr int kMenuTabs = 5;
+    enum class MenuTab { Status, Gear, Items, Events, Cards, System };   // player.rml shows them by number
+    static constexpr int kMenuTabs = 6;
     bool playerMenuOpen() const { return inGameMenuOpen_; }
     MenuTab playerMenuTab() const { return menuTab_; }
     void openPlayerMenu(int tab = -1);     // -1: the last tab used
@@ -384,7 +395,20 @@ public:
     // The overload starts the run in a specific slot -- what the Continue page's "start a new
     // game in this (empty) slot?" dialog needs.
     void newGame();
-    void newGame(int slot);
+    void newGame(int slot);                // slot -1: a test scenario's run -- no slot, never written
+    // ---- Test scenarios (docs/31_TEST_SCENARIOS.md, game_scenario.cpp) ----
+    // Starts the game straight in one scene from a scenario file (or a folder holding scenario.json): an optional save,
+    // the floor, the player, finished events and flags, then the scene itself (a battle, a dialogue, the store ...).
+    // False (with the reason) when the file cannot be read or names something that does not exist.
+    bool startScenario(const std::string& path, std::string& error);
+    // The same from a setting already read (toms_game --arena builds one); file names in it must be absolute.
+    bool startScenarioJson(const nlohmann::json& scenario, const std::string& name, std::string& error);
+    bool arenaOn() const { return arena_.on; }
+    // After the run: is the scene the scenario expects showing, and do its "expect" values hold? report says what failed.
+    bool scenarioCheck(std::string& report) const;
+    // The scenario's "test" block: frames to run and scripted keys (toms_game --scenario-test), or 0 / "".
+    int scenarioTestFrames() const { return scenarioTestFrames_; }
+    const std::string& scenarioTestKeys() const { return scenarioTestKeys_; }
     // Resumes slot N (1-based). Returns false (and leaves the title open) when that slot has no
     // save, so the caller can show "no save here" instead of dropping the player into nothing.
     bool continueFromSlot(int slot);
@@ -421,7 +445,9 @@ public:
     void overrideParticleGpuThreshold(int n) { fxGpuThresholdOverride_ = n; }
     // Tests (toms_game --battle-tuning=default): the battle bars' built-in values instead of data/battle.json, so a
     // screenshot of a fight does not change whenever the tuning does.
-    void useDefaultBattleTuning() { barSlowScale_ = 1.0f; barFastScale_ = 1.0f; barCooldownMs_ = CombatState::kBarCooldownMs; }
+    void useDefaultBattleTuning() { barSlowScale_ = 1.0f; barFastScale_ = 1.0f; barCooldownMs_ = CombatState::kBarCooldownMs;
+                                    attackPauseMs_ = 450; hitNumberDelayMs_ = 180; }
+    const toms::WeaponPlayTable& weaponPlay() const { return weaponPlay_; }
     // The UI's sprite sheet: RCSS made from spriteAtlas_, which GameUi serves to RmlUi as
     // "_atlas.rcss" -- so the UI draws from the same packed texture as the map. Empty without a
     // prebuilt atlas. The revision changes whenever another atlas is loaded (art style switch).
@@ -770,6 +796,10 @@ private:
     int gearSel_ = 0;
     int itemFilter_ = 0;        // Items: 0 all, 1 consumables, 2 gear, 3 keys
     int itemSel_ = 0;
+    int cardSel_ = 0;          // the Cards tab's selected card
+    bool newsCards_ = false;   // a dot on the Cards tab: a card was got since it was last opened
+    std::mt19937 cardRng_{20261021u};   // card drops (fixed seed: scripted test runs repeat)
+    std::vector<std::string> cardCells() const;   // the monsters with a record, easiest first
     int eventFilter_ = 0;       // Events: 0 unfinished, 1 all
     int eventSel_ = 0;
     bool dropConfirmOpen_ = false;
@@ -812,7 +842,16 @@ private:
     std::map<std::string, std::vector<StairUnlock>> stairUnlocks_;
     void loadStairLocks();
     void finishEvent(const std::string& evId, int depth = 0);
-    bool stairLocked(const toms::StairLink& s) const { return !s.unlockEvent.empty() && !run_.eventFinished(s.unlockEvent); }
+    // W38: a stair waits for all of its events.
+    bool stairLocked(const toms::StairLink& s) const {
+        for (const std::string& e : s.unlockEvents) if (!run_.eventFinished(e)) return true;
+        return false;
+    }
+    // The floor's stairs that are open but not taken yet since they opened (their "go to the stairs" event is
+    // started, not finished): the map points at them with an arrow (W38).
+    bool stairJustOpened(const std::string& floor, const toms::StairLink& s) const;
+    const toms::StairLink* findStair(const std::string& floor, const std::string& to) const;
+    std::map<std::string, std::pair<int, int>> stairSpots_;   // "F01>F02" -> the stair's tile, from floors loaded so far
     bool stepOntoStairs(int x, int y);       // the stair at (x, y), if open: ask to take it
     void bumpLockedStairs(const toms::StairLink& s);
     std::string stairsConfirmGoEvent_;       // the "go to the stairs" event taking the asked stair finishes
@@ -875,6 +914,15 @@ private:
     float barSlowScale_ = 1.0f;                           // "bar_slow_speed_scale": multiplies the slow start (v0)
     float barFastScale_ = 1.0f;                           // "bar_fast_speed_scale": multiplies the top speed (vmax)
     int barCooldownMs_ = CombatState::kBarCooldownMs;     // "bar_cooldown_ms": the wait after a tap before a bar moves again
+    int attackPauseMs_ = 450;     // "attack_pause_ms": both sides' clocks pause this long for each attack (0: off)
+    int hitNumberDelayMs_ = 180;  // "hit_number_delay_ms": the damage number appears this long after the attack starts
+    // Delayed calls of the scenes (the battle's damage numbers). battleTimers_ owns the battle's: reset when a battle
+    // starts, so a number from the last fight never lands in the next one.
+    toms::TimerQueue timers_;
+    toms::TimerOwner battleTimers_;
+    toms::WeaponPlayTable weaponPlay_;   // data/weapon_play.json
+    void startAttackPause();
+    void popDamage(int dmg, bool overEnemy, int kind);   // a damage number, hitNumberDelayMs_ from now
     // current stage id
     std::string curStage;
     std::string dataDir;
@@ -953,6 +1001,8 @@ private:
     // so this is safe to call unconditionally as soon as any floor names its chapter.
     void applyChapterGrants(const std::string& chapterId);
     void wireMissionEvents();   // subscribes mission-progress handlers to the global EventBus once
+    // This Game's handlers on the global EventBus: destroyed with the Game, which removes them (event_bus.h).
+    std::vector<toms::Subscription> busSubs_;
     // Milestone 5: daily-mission reset check (architecture-doc §8.3), run once per session start
     // (see loadAssets). Inert today since missionDefs_ is empty until Milestone 8, but pushes a
     // real notification the moment a tracked daily mission actually rolls to Available.
@@ -1095,5 +1145,23 @@ private:
     // Applies a loaded slot to the live game state, then loads its stage.
     void applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& r, int slot, int playTimeSec);
     float uiScale_ = 1.0f;    // setUiScale(): dialogue box size on phones
+    // Test scenarios (startScenario): what was asked for, checked by scenarioCheck.
+    std::string scenarioName_, scenarioScene_;
+    nlohmann::json scenarioExpect_;
+    int scenarioTestFrames_ = 0;
+    std::string scenarioTestKeys_;
+    // The weapon test arena (scene "arena", toms_game --arena; docs/30_GAMEPLAY_PLAN.md phase 0): fight after fight
+    // against the listed enemies in turn, full HP each time, no rewards and no story effects (no deaths counted).
+    struct Arena {
+        bool on = false;
+        std::vector<std::string> enemies;
+        nlohmann::json overrides;     // "battle"'s hp / atk / def / atk_interval_ms, for every fight
+        size_t next = 0;
+        int fights = 0, wins = 0, losses = 0;
+    };
+    Arena arena_;
+    bool enemyFromData(const std::string& id, const nlohmann::json& overrides, EnemyInst& out) const;
+    void arenaNextFight();
+    bool arenaEndFight(bool won);   // true: the arena took the fight's end (finishCombatWin / Lose return at once)
     TOMS_OBJECT(Game)
 };

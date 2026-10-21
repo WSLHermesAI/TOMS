@@ -1,0 +1,24 @@
+{
+  "_comment": "W38: both of the stair's events done: the 'stairs unlocked' notice, saying they are on this floor under the gold arrow.",
+  "scene": "notice",
+  "stage": "F01",
+  "stairLocks": [
+    {
+      "floor": "F01",
+      "events": [
+        "ev_village_well",
+        "ev_elder_north_road"
+      ]
+    }
+  ],
+  "eventsDone": [
+    "ev_village_well",
+    "ev_elder_north_road"
+  ],
+  "test": {
+    "frames": 40
+  },
+  "expect": {
+    "stairUpLocked": false
+  }
+}

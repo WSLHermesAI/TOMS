@@ -1,0 +1,16 @@
+{
+  "_comment": "The weapon test arena (docs/31 §3): no weapon, slime then bat, fight after fight.",
+  "scene": "arena",
+  "battle": {
+    "enemies": [
+      "slime",
+      "bat"
+    ]
+  },
+  "test": {
+    "frames": 60
+  },
+  "expect": {
+    "arenaFights": 1
+  }
+}

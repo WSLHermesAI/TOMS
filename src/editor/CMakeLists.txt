@@ -10,6 +10,8 @@ add_executable(toms_editor
     src/main.cpp
     src/editor_window.h src/editor_window.cpp
     src/bgfx_viewport.h src/bgfx_viewport.cpp
+    # Windows Debug: memory still allocated at exit (the game's leak check, docs/33_LEAK_CHECK.md)
+    ${CMAKE_SOURCE_DIR}/src/game/src/leak_check.h ${CMAKE_SOURCE_DIR}/src/game/src/leak_check.cpp
     # The existing stage editor, compiled as it is (only its main.cpp is left out).
     ${STAGE_EDITOR_DIR}/mainwindow.h ${STAGE_EDITOR_DIR}/mainwindow.cpp
     ${STAGE_EDITOR_DIR}/stagescene.h ${STAGE_EDITOR_DIR}/stagescene.cpp
@@ -20,7 +22,8 @@ toms_target_defaults(toms_editor)
 # both Qt and the game headers. Those files use Q_EMIT; the old stage editor keeps `emit`.
 set_source_files_properties(src/main.cpp src/editor_window.cpp src/bgfx_viewport.cpp
     PROPERTIES COMPILE_DEFINITIONS QT_NO_EMIT)
-target_include_directories(toms_editor PRIVATE src ${STAGE_EDITOR_DIR} ${TOMS_THIRD_PARTY_DIR}/json)
+target_include_directories(toms_editor PRIVATE src ${STAGE_EDITOR_DIR} ${TOMS_THIRD_PARTY_DIR}/json
+                           ${CMAKE_SOURCE_DIR}/src/game/src)   # leak_check.h
 # studio_common: the editors' shared Qt code -- here the English / 中文 switch (Language.h).
 if(NOT TARGET studio_common)
     add_subdirectory("${CMAKE_SOURCE_DIR}/tools/studio_common" "${CMAKE_BINARY_DIR}/tools/studio_common")

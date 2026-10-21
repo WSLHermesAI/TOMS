@@ -1,0 +1,9 @@
+{
+  "scene": "saveLoad",
+  "saveLoad": {
+    "mode": "load"
+  },
+  "test": {
+    "frames": 40
+  }
+}

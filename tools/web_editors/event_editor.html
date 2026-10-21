@@ -657,6 +657,8 @@ const I18N = {
     fMkFloor: 'Create floor', fOpenFloor: 'Open floor',
     hStairDir: (f, i) => `Stair ${i + 1} of ${f}: direction`, hStairTo: (f, to) => `Stair of ${f} → ${to}`, hAddStair: f => `Add stair to ${f}`,
     hDelStair: (f, to) => `Remove stair ${f} → ${to}`, hUnlock: (f, to, e) => e ? `Lock ${f} → ${to} until ${e}` : `Unlock ${f} → ${to}`,
+    hUnlockAdd: (f, to, e) => `Lock ${f} → ${to} also until ${e}`, hUnlockDrop: (f, to, e) => `Lock ${f} → ${to}: without ${e}`,
+    unlockMore: 'and when done:', unlockAddOpt: '+ another event', unlockDropTip: 'Remove this event from the lock',
     hCreateFloor: (id, a) => `Create floor ${id} (${a})`, hFloorAct: (f, a) => `${f} chapter → ${a}`,
     nextFloorKept: n => `  "nextFloor": "${n}",   (kept for older builds; stairs wins)`, stageGen: id => `  (${id}.stage.json is generated from this spec)`,
     searchPh: 'Find: id, text, kind or floor (Ctrl+F)', allKinds: '(all kinds)', probOnly: 'only problems',
@@ -962,6 +964,8 @@ const I18N = {
     fMkFloor: '建立樓層', fOpenFloor: '開啟樓層',
     hStairDir: (f, i) => `${f} 的樓梯 ${i + 1}：方向`, hStairTo: (f, to) => `${f} 的樓梯 → ${to}`, hAddStair: f => `為 ${f} 新增樓梯`,
     hDelStair: (f, to) => `移除樓梯 ${f} → ${to}`, hUnlock: (f, to, e) => e ? `${f} → ${to} 鎖到 ${e} 完成` : `解除 ${f} → ${to} 的鎖`,
+    hUnlockAdd: (f, to, e) => `${f} → ${to} 也要等 ${e} 完成`, hUnlockDrop: (f, to, e) => `${f} → ${to} 的鎖：移除 ${e}`,
+    unlockMore: '且完成後：', unlockAddOpt: '+ 再加一個事件', unlockDropTip: '從鎖中移除這個事件',
     hCreateFloor: (id, a) => `建立樓層 ${id}（${a}）`, hFloorAct: (f, a) => `${f} 的章節 → ${a}`,
     nextFloorKept: n => `  "nextFloor": "${n}",   （保留給舊版本；以 stairs 為準）`, stageGen: id => `  （${id}.stage.json 由此規格產生）`,
     searchPh: '搜尋：ID、文字、類型或樓層（Ctrl+F）', allKinds: '（所有類型）', probOnly: '只看有問題的',
@@ -1075,12 +1079,20 @@ const isFloor = id => !!flo(id);
 const fseq = id => parseInt(String(id).slice(1), 10) || 0;
 const modelStairs = () => new Set(S.floors.flatMap(f => f.stairs.map(st => f.id + '>' + st.to)));
 // which floors the player can reach from F01: open stairs always, locked ones once their event can be done on a reached floor
+// W38 (the owner's Q8 answer, 2026-10-21): a stair's lock is "unlock": { eventDone: id } and / or { eventsDone: [ids] };
+// it opens when all are done. unlockList reads both (eventDone first, no repeats); setUnlockList writes one as eventDone
+// (as before) and several as eventsDone. The native editor's stage::stairUnlockEvents / setStairUnlockEvents match.
+const unlockList = st => { const u = (st && st.unlock) || {}, out = [];
+  [u.eventDone, ...(Array.isArray(u.eventsDone) ? u.eventsDone : [])].forEach(x => { if (typeof x === 'string' && x && !out.includes(x)) out.push(x); });
+  return out; };
+const setUnlockList = (st, list) => { const l = list.filter((x, i) => x && list.indexOf(x) === i);
+  if (!l.length) delete st.unlock; else st.unlock = l.length === 1 ? { eventDone: l[0] } : { eventsDone: l }; };
 function reachable() {
   const start = flo('F01') || S.floors[0], seen = new Set([start.id]), done = new Set();
   for (let changed = true; changed;) { changed = false;
     S.floors.filter(f => seen.has(f.id)).forEach(f => { f.events.forEach(e => done.add(e));
-      f.stairs.forEach(st => { const lock = st.unlock && st.unlock.eventDone;
-        if (st.to && flo(st.to) && !seen.has(st.to) && (!lock || done.has(lock))) { seen.add(st.to); changed = true; } }); }); }
+      f.stairs.forEach(st => { const open = unlockList(st).every(x => done.has(x));
+        if (st.to && flo(st.to) && !seen.has(st.to) && open) { seen.add(st.to); changed = true; } }); }); }
   return seen;
 }
 const modelEdges = () => new Set([...S.floors.flatMap(f => f.events.map(id => f.id + '>' + id)), ...S.events.flatMap(e => [e.pool + '>' + e.id, e.id + '>' + e.text])]);
@@ -1162,8 +1174,7 @@ function problems() {
   // floors: every stair must lead to a floor that exists, a lock must name a real event, and every floor must be reachable
   S.floors.forEach(f => f.stairs.forEach(st => {
     if (st.to && !flo(st.to)) out.push({ rule: 'missing_floor', id: f.id, to: st.to, where: t('stairWhere', f.id, st.dir, st.to) });
-    const lock = st.unlock && st.unlock.eventDone;
-    if (lock && !ev(lock)) out.push({ rule: 'bad_unlock', id: f.id, to: st.to, where: t('badUnlockWhere', f.id, st.to, lock) });
+    unlockList(st).forEach(lock => { if (!ev(lock)) out.push({ rule: 'bad_unlock', id: f.id, to: st.to, where: t('badUnlockWhere', f.id, st.to, lock) }); });
   }));
   const reach = reachable();
   S.floors.forEach(f => { if (!reach.has(f.id)) out.push({ rule: 'unreachable', id: f.id, where: t('unreachWhere') }); });
@@ -1252,7 +1263,12 @@ function createFloor(id, fromId) {
     stairs: [{ dir: 'down', to: fromId }] }));
 }
 function setUnlock(fid, to, evId) { const f = flo(fid), st = f.stairs.find(x => x.to === to); if (!st) return;
-  editFloor(f, t('hUnlock', fid, to, evId), () => { if (evId) st.unlock = { eventDone: evId }; else delete st.unlock; }); }
+  // the first event changes, the others stay; none: the stair opens
+  editFloor(f, t('hUnlock', fid, to, evId), () => { const l = unlockList(st); if (!evId) l.length = 0; else if (!l.length) l.push(evId); else l[0] = evId; setUnlockList(st, l); }); }
+function addUnlock(fid, to, evId) { const f = flo(fid), st = f.stairs.find(x => x.to === to); if (!st || !evId) return;
+  editFloor(f, t('hUnlockAdd', fid, to, evId), () => setUnlockList(st, [...unlockList(st), evId])); }
+function dropUnlock(fid, to, evId) { const f = flo(fid), st = f.stairs.find(x => x.to === to); if (!st) return;
+  editFloor(f, t('hUnlockDrop', fid, to, evId), () => setUnlockList(st, unlockList(st).filter(x => x !== evId))); }
 function selectFloor(id) {
   selected = id; hlNode = null; flags.saw.add(id);
   if (tab === 'floors' && flo(id) && S.floors.some(o => o.stairs.some(st => st.to === id && st.unlock))) flags.sawLock = true;
@@ -1548,16 +1564,18 @@ function renderFloor(id) {
     </div>
     <div class="field"><label>${t('stairsLbl', f.stairs.length)}</label>
       <datalist id="floorList">${S.floors.map(x => `<option value="${x.id}">`).join('')}</datalist>
-      ${f.stairs.length ? `<table class="stairs"><tbody>${f.stairs.map((st, i) => { const lock = st.unlock && st.unlock.eventDone;
+      ${f.stairs.length ? `<table class="stairs"><tbody>${f.stairs.map((st, i) => { const locks = unlockList(st), lock = locks[0] || '';
         return `<tr class="st" data-i="${i}" data-to="${esc(st.to)}"><td><select class="stDir"><option value="up"${st.dir === 'up' ? ' selected' : ''}>${t('dirUp')}</option><option value="down"${st.dir === 'down' ? ' selected' : ''}>${t('dirDown')}</option></select></td>
           <td><input class="stTo" list="floorList" placeholder="${t('stToPh')}" value="${esc(st.to)}"></td>
           <td class="muted">${t('unlockLbl')}</td><td><select class="stUnlock">${evOpts(lock)}</select></td>
           <td><button class="stDel" title="✕">✕</button></td></tr>`
+          + (locks.length ? `<tr class="stmore" data-i="${i}"><td></td><td colspan="4"><span class="muted">${t('unlockMore')}</span> ${locks.slice(1).map(x => `<span class="chip link stDrop${ev(x) ? '' : ' bad'}" data-ev="${esc(x)}" title="${t('unlockDropTip')}">🔒 ${esc(x)} ✕</span>`).join(' ')}
+            <select class="stAddUnlock">${evOpts('').replace(t('alwaysOpen'), t('unlockAddOpt'))}</select></td></tr>` : '')
           + (st.to && !flo(st.to) ? `<tr class="sterr"><td></td><td colspan="4">${t('noFloorYet', esc(st.to))} <button class="mkFloor" data-to="${esc(st.to)}">${t('createFloor', esc(st.to))}</button></td></tr>` : ''); }).join('')}</tbody></table>`
         : `<p class="muted">${t('noStairs')}</p>`}
       <button id="addStair">${t('addStair')}</button></div>
     <div class="field"><label>${t('reachedFrom')}</label><div class="chips">${incoming.map(o => { const st = o.stairs.find(x => x.to === id);
-      return `<span class="chip link" data-floor="${o.id}">${st.dir === 'down' ? '↓' : '↑'} ${o.id}${st.unlock ? ` 🔒 ${esc(st.unlock.eventDone)}` : ''}</span>`; }).join('') || '<span class="muted">—</span>'}</div></div>
+      return `<span class="chip link" data-floor="${o.id}">${st.dir === 'down' ? '↓' : '↑'} ${o.id}${st.unlock ? ` 🔒 ${esc(unlockList(st).join(' + '))}` : ''}</span>`; }).join('') || '<span class="muted">—</span>'}</div></div>
     <div class="field"><label>${t('floorEvents', f.events.length)}</label><div class="chips">${f.events.map(e => `<span class="chip link${ev(e) ? '' : ' bad'}" data-ev="${esc(e)}">${esc(e)}</span>`).join('') || '<span class="muted">—</span>'}</div></div>
   </div>`;
   $('fAct').onchange = () => editFloor(f, t('hFloorAct', f.id, $('fAct').value), () => f.act = $('fAct').value);
@@ -1567,6 +1585,10 @@ function renderFloor(id) {
       if (v && !nameOk(v, true)) { ev2.target.value = st.to; return toast(t('floorNameErr')); } editFloor(f, t('hStairTo', f.id, v), () => st.to = v); };
     tr.querySelector('.stUnlock').onchange = ev2 => setUnlock(f.id, st.to, ev2.target.value);
     tr.querySelector('.stDel').onclick = () => editFloor(f, t('hDelStair', f.id, st.to), () => f.stairs.splice(+tr.dataset.i, 1));
+  });
+  document.querySelectorAll('.stairs tr.stmore').forEach(tr => { const st = f.stairs[+tr.dataset.i];
+    tr.querySelectorAll('.stDrop').forEach(c => c.onclick = () => dropUnlock(f.id, st.to, c.dataset.ev));
+    tr.querySelector('.stAddUnlock').onchange = ev2 => addUnlock(f.id, st.to, ev2.target.value);
   });
   document.querySelectorAll('.mkFloor').forEach(b => b.onclick = () => createFloor(b.dataset.to, f.id));
   $('addStair').onclick = () => { addStair(f.id); const last = [...document.querySelectorAll('.stairs tr.st .stTo')].pop(); if (last) last.focus(); };
@@ -2537,7 +2559,7 @@ function renderFloorMap() {
   S.floors.forEach(f => f.stairs.forEach(st => {
     if (!st.to || !pos[st.to]) return;
     if (st.dir === 'down' && flo(st.to) && flo(st.to).stairs.some(x => x.to === f.id && x.dir === 'up')) return;   // drawn once, as the up stair
-    const a = pos[f.id], b = pos[st.to], lock = st.unlock && st.unlock.eventDone;
+    const a = pos[f.id], b = pos[st.to], lock = unlockList(st).join(' + ');
     const sameRow = a.y === b.y, fwd = b.x > a.x;
     const x1 = sameRow ? (fwd ? a.x + FW : a.x) : a.x + FW / 2, y1 = sameRow ? a.y + FH / 2 : (b.y > a.y ? a.y + FH : a.y);
     const x2 = sameRow ? (fwd ? b.x : b.x + FW) : b.x + FW / 2, y2 = sameRow ? b.y + FH / 2 : (b.y > a.y ? b.y : b.y + FH);
@@ -2632,7 +2654,7 @@ function diffFiles() {
     out.push({ path: `assets/data/events/${p}.json${isNew ? t('newFile') : ''}`, body: [[isNew ? 'add' : 'ctx', '{'], [isNew ? 'add' : 'ctx', '  "events": ['],
       ...a.filter(l => !B.has(l)).flatMap(l => expand('del', l)), ...b.flatMap(l => expand(A.has(l) ? 'ctx' : 'add', l)), [isNew ? 'add' : 'ctx', '  ]'], [isNew ? 'add' : 'ctx', '}']] });
   });
-  const stLine = st => `    { "dir": "${st.dir}", "to": "${st.to}"${st.unlock ? `, "unlock": { "eventDone": "${st.unlock.eventDone}" }` : ''} },`;
+  const stLine = st => `    { "dir": "${st.dir}", "to": "${st.to}"${st.unlock ? `, "unlock": ${JSON.stringify(st.unlock).replace(/^\{/, '{ ').replace(/\}$/, ' }').replace(/":/g, '": ').replace(/,"/g, ', "')}` : ''} },`;
   S.floors.forEach(f => {
     const bf = base.floors.find(x => x.id === f.id), path = `assets/data/story/floors/${f.id}.json`;
     if (!bf) {   // a new floor: the whole spec is new

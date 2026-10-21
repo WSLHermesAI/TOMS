@@ -103,6 +103,42 @@ void Game::drawTileLayer(const MapView& v, int startX, int endX, int startY, int
         solid(x0 + 4.5f * u, y0 + 8 * u, 7 * u, 5 * u, 0.98f, 0.80f, 0.30f, 1.0f);       // body
         solid(x0 + 7.5f * u, y0 + 9 * u, 1 * u, 2.5f * u, 0.20f, 0.16f, 0.08f, 1.0f);    // keyhole
     }
+    // W38: a stair that just opened (its "go to the stairs" event is open) has a gold arrow bobbing over it, so the
+    // player sees where to go; it goes once the stair is taken.
+    for (const toms::StairLink& s : st.stairs) {
+        if (!stairJustOpened(st.id, s) || s.x < 0) continue;
+        const float u = ts / 16.0f;
+        if (s.x < startX || s.x >= endX || s.y < startY || s.y >= endY) {
+            // off screen: a gold badge at the edge of the view, its arrow pointing the way to the stair
+            const int tx = std::clamp(s.x, startX + 1, std::max(startX + 1, endX - 2));
+            const int ty = std::clamp(s.y, startY + 1, std::max(startY + 1, endY - 2));
+            const float bx = ox + tx * ts, by = oy + ty * ts;
+            const int dx = s.x - tx, dy = s.y - ty;
+            const bool horiz = std::abs(dx) >= std::abs(dy);
+            const int sign = horiz ? (dx > 0 ? 1 : -1) : (dy > 0 ? 1 : -1);
+            const float pulse = 0.75f + 0.25f * std::sin((float)std::fmod(idleClockMs_, 800.0) / 800.0f * 6.2831853f);
+            solid(bx + 2 * u, by + 2 * u, 12 * u, 12 * u, 0.20f, 0.16f, 0.08f, 0.9f);                  // badge outline
+            solid(bx + 3 * u, by + 3 * u, 10 * u, 10 * u, 1.0f, 0.85f, 0.3f, pulse);                   // badge
+            for (int r = 0; r < 4; r++) {                                                             // the arrow head
+                const float len = (7.0f - 2.0f * r) * u, off = (sign > 0 ? 9.0f + r : 6.0f - r) * u;
+                if (horiz) solid(bx + off, by + 8 * u - len * 0.5f, u, len, 0.20f, 0.16f, 0.08f, 1.0f);
+                else       solid(bx + 8 * u - len * 0.5f, by + off, len, u, 0.20f, 0.16f, 0.08f, 1.0f);
+            }
+            if (horiz) solid(bx + (sign > 0 ? 4 : 10) * u, by + 7.5f * u, 5 * u, u, 0.20f, 0.16f, 0.08f, 1.0f);   // the shaft
+            else       solid(bx + 7.5f * u, by + (sign > 0 ? 4 : 10) * u, u, 5 * u, 0.20f, 0.16f, 0.08f, 1.0f);
+            continue;
+        }
+        const float bob = std::sin((float)std::fmod(idleClockMs_, 1000.0) / 1000.0f * 6.2831853f) * 2.0f * u;
+        const float cx = ox + s.x * ts + ts * 0.5f, top = oy + s.y * ts - 9.0f * u + bob;
+        solid(ox + s.x * ts, oy + s.y * ts, ts, ts, 1.0f, 0.85f, 0.3f, 0.22f);                    // the stair glows
+        solid(cx - 1.5f * u, top, 3.0f * u, 5.0f * u, 0.20f, 0.16f, 0.08f, 1.0f);                 // shaft outline
+        solid(cx - 0.75f * u, top + 0.5f * u, 1.5f * u, 4.5f * u, 1.0f, 0.85f, 0.3f, 1.0f);       // shaft
+        for (int r = 0; r < 4; r++) {                                                             // the head, row by row
+            const float w = (7.0f - 2.0f * r) * u, y = top + 5.0f * u + r * u;
+            solid(cx - w * 0.5f - 0.5f * u, y, w + u, u, 0.20f, 0.16f, 0.08f, 1.0f);
+            solid(cx - w * 0.5f, y, w, u, 1.0f, 0.85f, 0.3f, 1.0f);
+        }
+    }
     // Click-to-move destination: a soft gold plate on the target tile while walking there.
     if (walking() && walkTargetX_ >= 0) {
         const float m = ts * 0.12f;

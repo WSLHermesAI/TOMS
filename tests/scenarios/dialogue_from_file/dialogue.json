@@ -1,0 +1,42 @@
+{
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "en": "A test line from the scenario folder.",
+        "zh_TW": "來自情境資料夾的測試對話。"
+      },
+      "choices": [
+        {
+          "label": {
+            "en": "Next",
+            "zh_TW": "下一句"
+          },
+          "next": "two"
+        },
+        {
+          "label": {
+            "en": "Bye",
+            "zh_TW": "再見"
+          },
+          "next": null
+        }
+      ]
+    },
+    "two": {
+      "text": {
+        "en": "The second line.",
+        "zh_TW": "第二句。"
+      },
+      "choices": [
+        {
+          "label": {
+            "en": "Bye",
+            "zh_TW": "再見"
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

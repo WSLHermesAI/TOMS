@@ -577,6 +577,38 @@
       "ko": "필살기 명중! {dmg}의 피해를 입혔습니다!",
       "es": "¡El ATAQUE ESPECIAL acierta! ¡Causaste {dmg} de daño!"
     },
+    "arena.summary": {
+      "zh_TW": "武器測試場：第 {n} 場（勝 {w}、敗 {l}）",
+      "en": "Weapon arena: fight {n} ({w} won, {l} lost)",
+      "zh_CN": "武器测试场：第 {n} 场（胜 {w}、败 {l}）",
+      "ja": "武器テスト場：第 {n} 戦（{w} 勝 {l} 敗）",
+      "ko": "무기 시험장: {n}번째 전투 ({w}승 {l}패)",
+      "es": "Arena de armas: combate {n} ({w} ganados, {l} perdidos)"
+    },
+    "arena.won": {
+      "zh_TW": "勝利！點擊開始下一場。",
+      "en": "Won! Tap for the next fight.",
+      "zh_CN": "胜利！点击开始下一场。",
+      "ja": "勝利！タップで次の戦いへ。",
+      "ko": "승리! 탭하면 다음 전투.",
+      "es": "¡Victoria! Toca para el siguiente combate."
+    },
+    "arena.lost": {
+      "zh_TW": "落敗……下一場即將開始。",
+      "en": "Lost... the next fight starts.",
+      "zh_CN": "落败……下一场即将开始。",
+      "ja": "敗北……次の戦いが始まる。",
+      "ko": "패배... 다음 전투가 시작됩니다.",
+      "es": "Derrota... empieza el siguiente combate."
+    },
+    "battle.popup_guard": {
+      "zh_TW": "格擋！",
+      "en": "Guard!",
+      "zh_CN": "格挡！",
+      "ja": "ガード！",
+      "ko": "막기!",
+      "es": "¡Bloqueo!"
+    },
     "battle.active_ready": {
       "zh_TW": "{name}！點擊灌注！",
       "en": "{name} — tap to channel!",
@@ -6057,6 +6089,94 @@
       "ko": "아이템",
       "es": "Objetos"
     },
+    "player.tab.cards": {
+      "zh_TW": "卡片",
+      "en": "Cards",
+      "zh_CN": "卡片",
+      "ja": "カード",
+      "ko": "카드",
+      "es": "Cartas"
+    },
+    "cards.new": {
+      "zh_TW": "獲得新卡片：{name}！",
+      "en": "New card: {name}!",
+      "zh_CN": "获得新卡片：{name}！",
+      "ja": "新しいカード：{name}！",
+      "ko": "새 카드: {name}!",
+      "es": "¡Carta nueva: {name}!"
+    },
+    "cards.more": {
+      "zh_TW": "{name} 的卡片 ×{n}",
+      "en": "{name} card x{n}",
+      "zh_CN": "{name} 的卡片 ×{n}",
+      "ja": "{name} のカード ×{n}",
+      "ko": "{name} 카드 x{n}",
+      "es": "Carta de {name} x{n}"
+    },
+    "cards.count": {
+      "zh_TW": "卡片：{n} / {all}",
+      "en": "Cards: {n} / {all}",
+      "zh_CN": "卡片：{n} / {all}",
+      "ja": "カード：{n} / {all}",
+      "ko": "카드: {n} / {all}",
+      "es": "Cartas: {n} / {all}"
+    },
+    "cards.empty": {
+      "zh_TW": "打倒怪物就能收集牠們的卡片。",
+      "en": "Defeat monsters to collect their cards.",
+      "zh_CN": "打倒怪物就能收集它们的卡片。",
+      "ja": "モンスターを倒すとカードが集まります。",
+      "ko": "몬스터를 쓰러뜨리면 카드를 모을 수 있습니다.",
+      "es": "Derrota monstruos para reunir sus cartas."
+    },
+    "cards.select": {
+      "zh_TW": "選擇一張卡片",
+      "en": "Choose a card",
+      "zh_CN": "选择一张卡片",
+      "ja": "カードを選んでください",
+      "ko": "카드를 선택하세요",
+      "es": "Elige una carta"
+    },
+    "cards.have": {
+      "zh_TW": "你已收集這張卡片。",
+      "en": "You have this card.",
+      "zh_CN": "你已收集这张卡片。",
+      "ja": "このカードを持っています。",
+      "ko": "이 카드를 가지고 있습니다.",
+      "es": "Tienes esta carta."
+    },
+    "cards.not_yet": {
+      "zh_TW": "還沒得到這張卡片，再打倒牠一次試試。",
+      "en": "Not collected yet: defeat it again for a chance.",
+      "zh_CN": "还没得到这张卡片，再打倒它一次试试。",
+      "ja": "まだ持っていません。もう一度倒してみましょう。",
+      "ko": "아직 없습니다. 다시 쓰러뜨려 보세요.",
+      "es": "Aún no la tienes: derrótalo otra vez."
+    },
+    "cards.copies": {
+      "zh_TW": "持有張數",
+      "en": "Copies",
+      "zh_CN": "持有张数",
+      "ja": "枚数",
+      "ko": "보유 수",
+      "es": "Copias"
+    },
+    "cards.defeated": {
+      "zh_TW": "打倒次數",
+      "en": "Defeated",
+      "zh_CN": "打倒次数",
+      "ja": "倒した回数",
+      "ko": "쓰러뜨린 횟수",
+      "es": "Derrotado"
+    },
+    "cards.defeated_by": {
+      "zh_TW": "被打倒次數",
+      "en": "Lost to it",
+      "zh_CN": "被打倒次数",
+      "ja": "倒された回数",
+      "ko": "패배한 횟수",
+      "es": "Perdiste"
+    },
     "player.tab.events": {
       "zh_TW": "事件",
       "en": "Events",
@@ -7712,6 +7832,30 @@
     },
     "stairs.locked": {
       "en": "These stairs are locked. Finish \"{event}\" to open them."
+    },
+    "stairs.locked.many": {
+      "en": "These stairs are locked. Finish these {n} events to open them: {events}."
+    },
+    "stairs.progress": {
+      "en": "One step closer: the stairs on floor {from} to floor {to} still wait for {n} more event(s)."
+    },
+    "stairs.unlocked.here": {
+      "en": "They are on this floor: follow the gold arrow on the map."
+    },
+    "stairs.unlocked.there": {
+      "en": "Go to floor {from}: a gold arrow marks them there. The Events list (menu, Events tab) says where."
+    },
+    "stairs.go.here": {
+      "en": "They are on this floor, under the gold arrow."
+    },
+    "stairs.go.where": {
+      "en": "They are on floor {from}, column {x}, row {y}."
+    },
+    "stairs.go.floor": {
+      "en": "They are on floor {from}: a gold arrow marks them there."
+    },
+    "stairs.unlocks.count": {
+      "en": "({done} of {all} events done.)"
     },
     "stairs.go.title": {
       "en": "Go to the stairs on floor {from}"

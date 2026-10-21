@@ -60,6 +60,9 @@ struct SlotLoadInfo {
 bool readSlotSave(const std::string& saveDir, int slot,
                   MetaSaveData& metaOut, RunSaveData& runOut,
                   int* playTimeSec = nullptr, std::string* savedAt = nullptr, SlotLoadInfo* info = nullptr);
+// A save in the slot format (what writeSlotSave writes) read from any file -- test scenarios start from one
+// (docs/31_TEST_SCENARIOS.md). No backup fallback: a scenario's file is test data, not a player's save.
+bool readSaveFile(const std::string& path, MetaSaveData& metaOut, RunSaveData& runOut, int* playTimeSec = nullptr);
 // True when the slot holds a save from a newer version of the game (its file or, if that is damaged, its backup).
 bool slotIsNewer(const std::string& saveDir, int slot);
 // Reads just the header/player fields the Continue list needs (no full parse of entityStatus).

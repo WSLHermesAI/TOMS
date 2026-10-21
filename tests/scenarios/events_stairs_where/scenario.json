@@ -1,0 +1,28 @@
+{
+  "_comment": "W38: F01's stair opened while the player is on F02; the Events tab's 'go to the stairs' entry says where they are.",
+  "scene": "menu",
+  "stage": "F02",
+  "stairLocks": [
+    {
+      "floor": "F01",
+      "events": [
+        "ev_village_well",
+        "ev_elder_north_road"
+      ]
+    }
+  ],
+  "eventsDone": [
+    "ev_village_well",
+    "ev_elder_north_road"
+  ],
+  "menu": {
+    "tab": "events"
+  },
+  "test": {
+    "frames": 50,
+    "keys": "enter@5,down@25"
+  },
+  "expect": {
+    "menuTab": "events"
+  }
+}

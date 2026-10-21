@@ -533,8 +533,9 @@ std::set<std::string> EventProject::reachable() const {
             for (const Json& e : f["events"]) if (e.is_string()) done.insert(e.get<std::string>());
             for (const Json& st : f["stairs"]) {
                 const std::string to = str(st, "to");
-                const std::string lock = st.contains("unlock") ? str(st["unlock"], "eventDone") : std::string();
-                if (!to.empty() && flo(to) && !seen.count(to) && (lock.empty() || done.count(lock))) { seen.insert(to); changed = true; }
+                bool open = true;   // every event of its lock can be done (W38: all of them)
+                for (const std::string& lock : stairUnlockEvents(st)) if (!done.count(lock)) open = false;
+                if (!to.empty() && flo(to) && !seen.count(to) && open) { seen.insert(to); changed = true; }
             }
         }
     }
@@ -883,8 +884,8 @@ std::vector<EvProblem> EventProject::problems() const {
         for (const Json& st : f["stairs"]) {
             const std::string fid = f["id"].get<std::string>(), to = str(st, "to");
             if (!to.empty() && !flo(to)) add("missing_floor", fid, "stairWhere", {fid, str(st, "dir", "up"), to})->to = to;
-            const std::string lock = st.contains("unlock") ? str(st["unlock"], "eventDone") : std::string();
-            if (!lock.empty() && !ev(lock)) add("bad_unlock", fid, "badUnlockWhere", {fid, to, lock})->to = to;
+            for (const std::string& lock : stairUnlockEvents(st))
+                if (!ev(lock)) add("bad_unlock", fid, "badUnlockWhere", {fid, to, lock})->to = to;
         }
     const std::set<std::string> reach = reachable();
     for (const Json& f : S["floors"]) if (!reach.count(f["id"].get<std::string>())) add("unreachable", f["id"].get<std::string>(), "unreachWhere", {});

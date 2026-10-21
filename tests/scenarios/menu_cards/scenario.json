@@ -1,0 +1,20 @@
+{
+  "_comment": "The Cards tab from a save with three monsters met: slime x3, bat x1, golem not collected yet (dimmed).",
+  "scene": "menu",
+  "save": "save.json",
+  "menu": {
+    "tab": "cards"
+  },
+  "test": {
+    "frames": 40,
+    "keys": "right@20"
+  },
+  "expect": {
+    "menuTab": "cards",
+    "cards": {
+      "slime": 3,
+      "bat": 1,
+      "golem": 0
+    }
+  }
+}

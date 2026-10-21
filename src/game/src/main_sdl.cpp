@@ -33,6 +33,15 @@
 //   --stair-lock=<floor>:<event>  lock that floor's first stair up until the event is finished (locked stairs, Q7)
 //   --events-done=<id,...>        when the title first closes, finish these events as the player would (tests)
 //   --goto=<floor>                when the title first closes, go to that floor (e.g. F04; tests)
+//   --scenario=<folder|file>      start straight in one scene from a scenario file (docs/31_TEST_SCENARIOS.md;
+//                                 a folder means its scenario.json). Nothing is saved.
+//   --arena=<enemy,...>[:<weapon>]  the weapon test arena: fight these enemies in turn, again and again, with this
+//                                 weapon (an items.json id; none = unarmed). No rewards, nothing saved (docs/31)
+//   --leak-trace=<n,m,...>        Windows Debug builds: add the call stacks of heap allocations n, m (the {n} of
+//                                 toms_leaks.log entries) to the report (docs/33_LEAK_CHECK.md)
+//   --leak-break=<n>              Windows Debug builds: stop in the debugger at heap allocation n
+//   --scenario-test               also run the scenario's "test" frames and keys, then exit 3 when the scene it
+//                                 expects is not showing (ctest scenario.*)
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
 #include "../../core/engine/vfs.h"   // toms::vfsInit: APK entries need the AAssetManager
@@ -46,6 +55,8 @@
 #  include <thread>
 #endif
 #include "game_session.h"
+#include "leak_check.h"
+#include "singletons.h"    // releaseSingletons() at the end of main    // Windows Debug builds: what is still allocated at exit (docs/33)
 #include "game.h"
 #include "job_system.h"
 #include "object.h"
@@ -94,6 +105,9 @@ struct Args {
     std::string stairLock;             // --stair-lock=<floor>:<event>
     std::vector<std::string> eventsDone;   // --events-done=<id,...>
     std::string gotoFloor;             // --goto=<floor>: after the title closes, go to that floor (tests)
+    std::string scenario;              // --scenario=<folder|file>
+    std::string arena;                 // --arena=<enemy,...>[:<weapon>]
+    bool scenarioTest = false;         // --scenario-test
 };
 
 bool keyFromName(const std::string& n, Key& out) {
@@ -163,6 +177,9 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--battle-tuning=")) a.defaultBattleTuning = std::string(v) == "default";
         else if (const char* v = value(s, "--stair-lock=")) a.stairLock = v;
         else if (const char* v = value(s, "--goto=")) a.gotoFloor = v;
+        else if (const char* v = value(s, "--scenario=")) a.scenario = v;
+        else if (const char* v = value(s, "--arena=")) a.arena = v;
+        else if (s == "--scenario-test") a.scenarioTest = true;
         else if (const char* v = value(s, "--events-done=")) {
             std::string list = v;
             for (size_t pos = 0; pos <= list.size();) {
@@ -254,6 +271,8 @@ struct App {
     uint64_t lastTicks = 0;
     int frameNo = 0;
     bool gave = false;          // --give applied
+    bool scenarioStarted = false;   // --scenario applied
+    int exitCode = 0;           // 3: --scenario-test found the scene it expected not showing
     int backW = 0, backH = 0;   // size bgfx was last initialized/reset with
     bool pressedKeys[SDL_SCANCODE_COUNT] = {};   // went down during this frame's events (readKeyboard)
     bool pressedLeft = false;                    // the same for the left button / a touch
@@ -480,6 +499,38 @@ bool appFrame(App& app) {
         in.hasMouse = true;
     }
 
+    // --scenario: once the game is up, straight into the scene (the title closes, unless the scenario is the title).
+    if ((!args.scenario.empty() || !args.arena.empty()) && !app.scenarioStarted && app.session.game()) {
+        app.scenarioStarted = true;
+        std::string err;
+        ::Game* g = app.session.game();
+        bool started = false;
+        if (!args.scenario.empty()) {
+            started = g->startScenario(args.scenario, err);
+        } else {   // --arena=slime,bat:wand -> the same as a scenario with scene "arena"
+            const size_t colon = args.arena.find(':');
+            const std::string list = args.arena.substr(0, colon);
+            const std::string weapon = colon == std::string::npos ? std::string() : args.arena.substr(colon + 1);
+            nlohmann::json sc = {{"scene", "arena"}, {"battle", {{"enemies", nlohmann::json::array()}}}};
+            for (size_t pos = 0; pos <= list.size();) {
+                const size_t comma = std::min(list.find(',', pos), list.size());
+                if (comma > pos) sc["battle"]["enemies"].push_back(list.substr(pos, comma - pos));
+                pos = comma + 1;
+            }
+            if (!weapon.empty() && weapon != "unarmed") sc["player"] = {{"equip", {weapon}}};
+            started = g->startScenarioJson(sc, "arena", err);
+        }
+        if (!started) {
+            std::fprintf(stderr, "[scenario] %s\n", err.c_str());
+            app.exitCode = 3;
+            quit = true;
+        } else if (args.scenarioTest) {   // the scenario's own frames and keys, counted from now
+            if (app.args.frames == 0) app.args.frames = app.frameNo + std::max(1, g->scenarioTestFrames());
+            const size_t before = app.args.presses.size();
+            parseKeys(g->scenarioTestKeys(), app.args);
+            for (size_t i = before; i < app.args.presses.size(); ++i) app.args.presses[i].frame += app.frameNo;
+        }
+    }
     if (!app.gave && (!args.give.empty() || !args.stairLock.empty() || !args.eventsDone.empty() || !args.gotoFloor.empty()) &&
         app.session.game() &&
         !app.session.game()->titleOpen()) {
@@ -523,6 +574,11 @@ bool appFrame(App& app) {
     bgfxHostFrame();
     ++app.frameNo;
     if (args.frames > 0 && app.frameNo > args.frames + (args.screenshot.empty() ? 0 : 3)) quit = true;
+    if (quit && args.scenarioTest && app.exitCode == 0 && app.scenarioStarted && app.session.game()) {
+        std::string report;
+        if (!app.session.game()->scenarioCheck(report)) app.exitCode = 3;
+        std::fprintf(stderr, "%s\n", report.c_str());
+    }
     return !quit;
 }
 
@@ -599,6 +655,16 @@ int main(int argc, char** argv) {
     pipeStderrToLogcat();
 #endif
     std::vector<std::string> argList(argv + 1, argv + argc);
+#if !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
+    // Windows Debug builds: track every heap block from here; the report is written when the game exits.
+    long leakBreak = 0;
+    std::string leakTrace;
+    for (const std::string& a : argList) {
+        if (a.rfind("--leak-break=", 0) == 0) leakBreak = std::atol(a.c_str() + 13);
+        if (a.rfind("--leak-trace=", 0) == 0) leakTrace = a.substr(13);
+    }
+    toms::leakCheckBegin(leakBreak, leakTrace.c_str());
+#endif
 #ifdef __EMSCRIPTEN__
     for (auto& s : urlArgs()) argList.push_back(s);
 
@@ -640,10 +706,13 @@ int main(int argc, char** argv) {
         } else {
             rc = 1;
         }
+        if (rc == 0) rc = app.exitCode;
         appShutdown(app);
         g_app = nullptr;
     }
+    toms::releaseSingletons();   // the job system and other singletons, now that the game is gone
     Object::DumpLeaks();   // same leak report as the old executable
+    toms::leakCheckEnd();  // Windows Debug: the leak report, written once the statics are destroyed (docs/33)
     return rc;
 #endif
 }

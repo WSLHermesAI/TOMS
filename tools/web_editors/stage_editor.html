@@ -1018,8 +1018,11 @@ function logicOrderIssues(rows) {
           if (a.type === 'addVar' && a.delta > 0) can += a.delta; if (a.type === 'setVar') can = Math.max(can, a.value === true ? 1 : +a.value || 0); }));
         if (can < l.value) rowAt(i).issues.push({ sev: 'warn', msg: t('sNeedsVar', e.id, l.var, l.value, can) }); }
     }); });
-  rows.forEach(r => (docOf(r.fid).spec.stairs || []).forEach(sp => { const x = sp.unlock && sp.unlock.eventDone; if (!x) return; const j = idxOf[x];
-    if (j === undefined || j > r.idx) r.issues.push({ sev: 'error', msg: t('sStairLock', sp.to, x) }); }));
+  // W38: each event of a stair's lock (unlock.eventDone and unlock.eventsDone)
+  rows.forEach(r => (docOf(r.fid).spec.stairs || []).forEach(sp => { const u = sp.unlock || {};
+    [u.eventDone, ...(Array.isArray(u.eventsDone) ? u.eventsDone : [])].filter((x, i, a) => typeof x === 'string' && x && a.indexOf(x) === i).forEach(x => {
+      const j = idxOf[x];
+      if (j === undefined || j > r.idx) r.issues.push({ sev: 'error', msg: t('sStairLock', sp.to, x) }); }); }));
 }
 
 // ---------------- safe cells and auto-placement ----------------

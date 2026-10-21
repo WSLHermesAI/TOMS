@@ -531,4 +531,23 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - `docs/30_GAMEPLAY_PLAN.md` (+ zh_TW) from `docs/魔塔.txt`; open questions Q16–Q21.
   - Tests: changed-only selections 0–1 of 113 per change; full suite / web not run; the smoke screenshot, `mpdi_convert`
     and font tests need the folders removed in `795385a`.
+- **2026-10-20 / 21** -- **Test scenarios, phase 0, cards, W38, editor scenarios, event bus fix, leak check**
+  ([DAILY_2026-10-21.md](DAILY_2026-10-21.md)):
+  - Scenarios: `game_scenario.cpp` (`Game::startScenario(Json)`, `scenarioCheck`), `--scenario` / `--scenario-test` /
+    `--arena`, `toms::readSaveFile`, `newGame(-1)` (no slot), `tests/scenarios/` (32) + `run_scenario.cmake`,
+    `test_select.py` scenario rules, `docs/31`.
+  - Phase 0: `safe_timer`, `tween`, `timed_hits` (+ tests), `weapon_play` + `assets/data/weapon_play.json` (+ test),
+    `attack_pause_ms` / `hit_number_delay_ms`, `CombatState::popups` + `battle.rml`, the arena (`Game::Arena`).
+  - Cards: `card_collection` (+ test), `MetaSaveData::cards`, `MenuTab::Cards` (System is tab 5), `enemies.json` "card".
+  - W38: `StairLink::unlockEvents`, `unlock.eventsDone`, progress notes, `stairJustOpened` arrow / edge badge,
+    `stairSpots_`, Events-tab location; `stage::stairUnlockEvents` in the native editor, `unlockList` in the web one,
+    `unlockAll` in the floor index.
+  - Editor: Scenarios dock, `BgfxViewport::startScenario`, `--scenario`; i18n strings.
+  - Event bus: `listen()` / `Subscription`, `Game::busSubs_` (crash at `game_story.cpp:685`).
+  - Leak check: `src/game/src/leak_check.*` (operator new / delete map, free hook on a private heap, report at exit),
+    `singletons.*` (`releaseSingletons`), `Language::shutdown`, `RmlUi::shutdown` clears virtual files, job system
+    registers its release; `StageScene` destructor, the stage editor's status label; `docs/33`.
+  - Docs: 30 (decisions, phase 0), 32 (downloads, DLC, file lists), 12 (TortoiseGit hint). Status board: Q3, Q5, Q8,
+    Q16-Q21 answered; Q22-Q26, W37-W40 added.
+  - Tests: changed-only 38 of 150, all pass; affected switched-off tests run by name, pass. Full suite / web not run.
 

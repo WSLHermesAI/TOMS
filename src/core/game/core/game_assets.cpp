@@ -159,10 +159,14 @@ bool Game::loadAssets(const std::string& assetDir) {
             barSlowScale_ = std::max(0.0f, bj.value("bar_slow_speed_scale", 1.0f));
             barFastScale_ = std::max(0.05f, bj.value("bar_fast_speed_scale", 1.0f));
             barCooldownMs_ = std::max(0, bj.value("bar_cooldown_ms", (int)CombatState::kBarCooldownMs));
+            attackPauseMs_ = std::max(0, bj.value("attack_pause_ms", attackPauseMs_));
+            hitNumberDelayMs_ = std::max(0, bj.value("hit_number_delay_ms", hitNumberDelayMs_));
             fprintf(stderr, "[assets] battle.json: bars start x%.2f, top speed x%.2f, %d ms after a tap\n", barSlowScale_,
                     barFastScale_, barCooldownMs_);
         }
     }
+    weaponPlay_ = toms::loadWeaponPlay(assetDir + "/../data/weapon_play.json");   // docs/30_GAMEPLAY_PLAN.md §5.6
+    fprintf(stderr, "[assets] weapon_play.json: %d weapon(s)\n", (int)weaponPlay_.weapons.size());
     // load enemy templates
     nlohmann::json ej = readJsonFile(assetDir+"/../data/enemies.json");
     for (auto& [k,v] : ej.items()) enemyTpl[k] = v;
@@ -434,6 +438,8 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
         st.stairs = toms::defaultStairLinks(st.up, st.down);
     }
     toms::placeStairLinks(st.stairs, st.tiles, st.legend);
+    for (const toms::StairLink& s : st.stairs)   // W38: remembered, so the Events tab can say where a stair is from any floor
+        if (s.x >= 0) stairSpots_[st.id + ">" + s.to] = {s.x, s.y};
     for (auto& e : st.entities)   // a "stairs_up:F96" tile is a plain stair tile now
         for (const char* k : {"stairs_up", "stairs_down"})
             if (e.kind.rfind(std::string(k) + ":", 0) == 0) e.kind = k;

@@ -1,5 +1,6 @@
 // job_system.cpp -- see job_system.h.
 #include "job_system.h"
+#include "singletons.h"   // released at the end of main (docs/33_LEAK_CHECK.md)
 
 #include <algorithm>
 #include <cstdio>
@@ -113,6 +114,11 @@ void JobSystem::start(int workers) {
     }
     for (int i = 0; i < workers; ++i) p.threads.emplace_back(workerMain, p.generation);
     std::fprintf(stderr, "[jobs] %d worker thread(s)\n", workers);
+    // A singleton with threads: stopped (and its thread list freed) by releaseSingletons() at the end of main()
+    if (workers > 0) onReleaseSingletons("job system", [] {
+        JobSystem::stop();
+        std::vector<std::thread>().swap(pool().threads);
+    });
 }
 
 void JobSystem::stop() {

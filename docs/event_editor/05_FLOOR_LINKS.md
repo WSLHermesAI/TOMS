@@ -40,7 +40,8 @@ A floor spec gets a `stairs` list:
 |---|---|
 | `dir` | `up` or `down`: which stair tile and arrival side to use |
 | `to` | The floor id it leads to. Any floor, in any chapter, including floors past F70 such as F96 |
-| `unlock.eventDone` | Optional. The stair is hidden until this event has been finished in the current run |
+| `unlock.eventDone` | Optional. The stair is locked until this event has been finished in the current run |
+| `unlock.eventsDone` | Optional, a list (W38, the owner's Q8 answer, 2026-10-21). The stair is locked until **all** these events are finished. It can be used with `eventDone`; the editors write one event as `eventDone` and several as `eventsDone` |
 
 **Compatibility.** A floor with no `stairs` list keeps today's behaviour: up to its `nextFloor`, and
 down to the floor whose `nextFloor` is this one. So the 70 existing floors need no change, and the
@@ -62,6 +63,17 @@ every other floor's.
      shows as "???", as in the event log.
    - When the event finishes, a dialog names the stairs: *Stairs unlocked — The stairs on floor 3 that
      lead to floor 4 are now open.* If the player is on that floor, the padlock goes at once.
+   - **Several events (W38):** the bump line lists every event still to do (*Finish these 2 events to
+     open them: "…", "…"*). Each one finished before the last shows a short note: *One step closer: the
+     stairs on floor 3 to floor 4 still wait for 1 more event(s).* The dialog comes with the last one.
+   - **Where the stairs are (W38, the owner's request):**
+     - the dialog says so: *They are on this floor: follow the gold arrow on the map*, or *Go to floor 3:
+       a gold arrow marks them there*;
+     - on that floor, a gold arrow bobs over the opened stair until the player takes it. When the stair
+       is off screen, a gold badge at the edge of the view points toward it;
+     - the event log's "go to the stairs" entry adds *They are on this floor, under the gold arrow*, or
+       *They are on floor 3, column 11, row 5* (the spot is remembered once that floor has been loaded);
+     - an unlocking event that is one of several says how many are done: *(1 of 2 events done.)*
    - The unlocking event's description in the event log ends with *Finishing it opens the stairs on
      floor 3 to floor 4.*
    - A follow-up event, **"Go to the stairs on floor 3"**, starts at the same moment, with the
@@ -101,7 +113,7 @@ In the mockup:
 
 | Where | Change | State |
 |---|---|---|
-| `systems/stair_links.h` (new) | `StairLink { up, to, unlockEvent, x, y }`; read the spec's list; give each stair its tile (`stairs_up:<to>` legend entries first, then the plain `U` / `D` in reading order); `arrivalStair`; `goStairsEventId` | done; `unit.stair_links_test` |
+| `systems/stair_links.h` (new) | `StairLink { up, to, unlockEvents, x, y }` (a list since W38); read the spec's list; give each stair its tile (`stairs_up:<to>` legend entries first, then the plain `U` / `D` in reading order); `arrivalStair`; `goStairsEventId` | done; `unit.stair_links_test` |
 | `floor_table` | `FloorInfo::stairs` / `hasStairs` from the spec | done |
 | `stage.h` / `game_assets.cpp` | `Stage::stairs` from `stairs`, or from the chain when absent; `up` / `down` stay as the first stair each way | done |
 | `game_input.cpp` | The stair under the player (`stepOntoStairs`); a locked one stops the player with the hint (`bumpLockedStairs`). Every finished event goes through `Game::finishEvent` (flag, log, `next`, the stairs it opens) | done |
@@ -123,8 +135,7 @@ load starts there.
 ## 6. Open questions
 
 - ~~Should a locked stair be invisible, or visible but closed?~~ Answered (Q7): visible, with a lock (section 3.2).
-- Should finished events reset on **rebirth**? (`flags.json` has `run` and `meta` scopes for flags.) *The owner
-  will decide later (Q8); today they are part of the run, so a new run starts with every stair locked again.*
-- Should one stair wait for **several** events (all of them), or allow a flag as well? The format
-  leaves room: `unlock` is an object, so `{ "eventsDone": [...] }` or `{ "flag": ... }` can be added
-  later.
+- ~~Should finished events reset on **rebirth**?~~ Answered (Q8, 2026-10-21): yes. They are part of the run, so a
+  new run starts with every stair locked again.
+- ~~Should one stair wait for **several** events?~~ Answered (Q8, 2026-10-21): yes, all of them: `unlock.eventsDone`
+  (built: W38). Finished events reset on rebirth. A flag as a lock can still be added later (`{ "flag": ... }`).

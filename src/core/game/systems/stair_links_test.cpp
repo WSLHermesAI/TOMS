@@ -23,13 +23,19 @@ int main() {
         { "dir": "up", "to": "F51" },
         { "dir": "down", "to": "F49" },
         { "dir": "up", "to": "F96", "unlock": { "eventDone": "ev_common_relic_road" } },
-        { "dir": "up" }
+        { "dir": "up" },
+        { "dir": "up", "to": "F97", "unlock": { "eventsDone": ["ev_a", "ev_b", "ev_a", ""] } },
+        { "dir": "up", "to": "F98", "unlock": { "eventDone": "ev_a", "eventsDone": ["ev_b", "ev_a"] } }
     ])");
     std::vector<StairLink> links = stairLinksFromJson(spec);
-    CHECK(links.size() == 3, "an entry without `to` is dropped (%zu)", links.size());
-    CHECK(links[0].up && links[0].to == "F51" && links[0].unlockEvent.empty(), "an open stair up");
+    CHECK(links.size() == 5, "an entry without `to` is dropped (%zu)", links.size());
+    CHECK(links[0].up && links[0].to == "F51" && links[0].unlockEvents.empty(), "an open stair up");
     CHECK(!links[1].up && links[1].to == "F49", "a stair down");
-    CHECK(links[2].unlockEvent == "ev_common_relic_road", "a stair locked by an event");
+    CHECK(links[2].unlockEvents == std::vector<std::string>{"ev_common_relic_road"}, "a stair locked by an event");
+    // W38: several events, all needed -- a list, repeats and empty ids dropped; eventDone first, then eventsDone
+    CHECK((links[3].unlockEvents == std::vector<std::string>{"ev_a", "ev_b"}), "eventsDone: several events, no repeats");
+    CHECK((links[4].unlockEvents == std::vector<std::string>{"ev_a", "ev_b"}), "eventDone + eventsDone together");
+    CHECK(unlockEventsFromJson(nlohmann::json::object()).empty(), "an empty unlock: open");
     CHECK(stairLinksFromJson(nlohmann::json::object()).empty(), "not a list: no stairs");
 
     const std::vector<StairLink> chain = defaultStairLinks("F02", "");
@@ -84,8 +90,8 @@ int main() {
         for (const FloorInfo& f : floors.all())
             for (const StairLink& s : f.stairs) {
                 CHECK(floors.find(s.to) != nullptr, "%s: a stair leads to %s, which is not a floor", f.id.c_str(), s.to.c_str());
-                CHECK(s.unlockEvent.empty() || events.count(s.unlockEvent), "%s: a stair waits for %s, which no pool defines",
-                      f.id.c_str(), s.unlockEvent.c_str());
+                for (const std::string& ev : s.unlockEvents)
+                    CHECK(events.count(ev), "%s: a stair waits for %s, which no pool defines", f.id.c_str(), ev.c_str());
             }
     }
 

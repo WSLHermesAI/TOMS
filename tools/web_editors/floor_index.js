@@ -74,8 +74,12 @@
       });
       const entry = { act: spec.act ?? null, map, events, beats: beats[fid] || [] };
       if (Array.isArray(spec.stairs))
-        entry.stairs = spec.stairs.map(s => Object.fromEntries(
-          [['dir', s.dir || 'up'], ['to', s.to], ['unlock', (s.unlock || {}).eventDone]].filter(([, v]) => v)));
+        entry.stairs = spec.stairs.map(s => {   // W38: the first lock event as "unlock" (as before); several also as "unlockAll"
+          const u = s.unlock || {};
+          const locks = [u.eventDone, ...(Array.isArray(u.eventsDone) ? u.eventsDone : [])].filter((x, i, a) => typeof x === 'string' && x && a.indexOf(x) === i);
+          return Object.fromEntries([['dir', s.dir || 'up'], ['to', s.to], ['unlock', locks[0]], ['unlockAll', locks.length > 1 ? locks : null]]
+            .filter(([, v]) => v));
+        });
       floors[fid] = entry;
     }
     const byEvent = {};
@@ -83,7 +87,7 @@
     for (const [fid, f] of Object.entries(floors)) {
       for (const e of f.events) (byEvent[e.id] = byEvent[e.id] || []).push(fid);
       for (const b of f.beats) if (b.eventId) add(b.eventId, fid);
-      for (const s of f.stairs || []) if (s.unlock) add(s.unlock, fid);
+      for (const s of f.stairs || []) for (const id of s.unlockAll || (s.unlock ? [s.unlock] : [])) add(id, fid);
     }
     const sorted = Object.fromEntries(Object.keys(byEvent).sort().map(k => [k, byEvent[k]]));
     return {

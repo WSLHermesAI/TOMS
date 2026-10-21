@@ -1,0 +1,129 @@
+{
+  "_comment": [
+    "Each weapon's play settings (docs/30_GAMEPLAY_PLAN.md §5.6; src/core/game/systems/weapon_play.h).",
+    "missBack: how far a miss sends the combo back, by weapon level. The entry with the highest lv at or below the",
+    "weapon's level applies; back is a number of points, or \"start\". The owner's example (2026-10-20): Lv 5 back to the",
+    "start, Lv 10 back 5 points, Lv 15 back 4 ... A level below every entry also goes back to the start.",
+    "missWaitMs: after a miss, how long before the next tap counts (the sword puts itself back).",
+    "Keys: an items.json weapon id, \"unarmed\" (no weapon worn), or \"default\" (any weapon without its own entry).",
+    "Weapon levels come in phase 3; until then every weapon is level 1."
+  ],
+  "default": {
+    "missBack": [
+      {
+        "lv": 1,
+        "back": "start"
+      },
+      {
+        "lv": 10,
+        "back": 5
+      },
+      {
+        "lv": 15,
+        "back": 4
+      },
+      {
+        "lv": 20,
+        "back": 3
+      },
+      {
+        "lv": 25,
+        "back": 2
+      },
+      {
+        "lv": 30,
+        "back": 1
+      }
+    ],
+    "missWaitMs": 0
+  },
+  "unarmed": {
+    "missBack": [
+      {
+        "lv": 1,
+        "back": "start"
+      },
+      {
+        "lv": 10,
+        "back": 5
+      },
+      {
+        "lv": 15,
+        "back": 4
+      },
+      {
+        "lv": 20,
+        "back": 3
+      }
+    ],
+    "missWaitMs": 0
+  },
+  "qingxiao_blade": {
+    "missBack": [
+      {
+        "lv": 1,
+        "back": "start"
+      },
+      {
+        "lv": 10,
+        "back": 3
+      },
+      {
+        "lv": 20,
+        "back": 2
+      }
+    ],
+    "missWaitMs": 1200
+  },
+  "wand": {
+    "missBack": [
+      {
+        "lv": 1,
+        "back": "start"
+      },
+      {
+        "lv": 10,
+        "back": 5
+      },
+      {
+        "lv": 15,
+        "back": 4
+      }
+    ],
+    "missWaitMs": 400
+  },
+  "twin_daggers": {
+    "missBack": [
+      {
+        "lv": 1,
+        "back": "start"
+      },
+      {
+        "lv": 5,
+        "back": 3
+      },
+      {
+        "lv": 10,
+        "back": 2
+      },
+      {
+        "lv": 15,
+        "back": 1
+      }
+    ],
+    "missWaitMs": 0
+  },
+  "war_hammer": {
+    "missBack": [
+      {
+        "lv": 1,
+        "back": "start"
+      },
+      {
+        "lv": 15,
+        "back": 4
+      }
+    ],
+    "missWaitMs": 800
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "scene": "stairsConfirm",
+  "stairs": {
+    "to": "F02",
+    "up": true
+  },
+  "test": {
+    "frames": 40
+  }
+}

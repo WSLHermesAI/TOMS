@@ -12,6 +12,7 @@
 
 #include <json.hpp>
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <optional>
@@ -23,6 +24,33 @@
 namespace stage {
 
 using Json = nlohmann::ordered_json;
+
+// A stair's lock (W38, the owner's Q8 answer 2026-10-21): "unlock": { "eventDone": id } and / or { "eventsDone": [ids] }
+// -- the stair opens when all are done. Read: eventDone first, then eventsDone, no repeats, no empty ids.
+inline std::vector<std::string> stairUnlockEvents(const Json& stair) {
+    std::vector<std::string> out;
+    if (!stair.is_object() || !stair.contains("unlock") || !stair["unlock"].is_object()) return out;
+    const Json& u = stair["unlock"];
+    auto add = [&](const Json& v) {
+        if (!v.is_string() || v.get<std::string>().empty()) return;
+        for (const std::string& e : out) if (e == v.get<std::string>()) return;
+        out.push_back(v.get<std::string>());
+    };
+    if (u.contains("eventDone")) add(u["eventDone"]);
+    if (u.contains("eventsDone") && u["eventsDone"].is_array()) for (const Json& v : u["eventsDone"]) add(v);
+    return out;
+}
+// Writes the list back: none -> no "unlock"; one -> { "eventDone": id } (as before W38); several -> { "eventsDone": [...] }.
+inline void setStairUnlockEvents(Json& stair, const std::vector<std::string>& events) {
+    std::vector<std::string> list;
+    for (const std::string& e : events)
+        if (!e.empty() && std::find(list.begin(), list.end(), e) == list.end()) list.push_back(e);
+    if (list.empty()) { stair.erase("unlock"); return; }
+    if (list.size() == 1) { stair["unlock"] = Json{{"eventDone", list[0]}}; return; }
+    Json arr = Json::array();
+    for (const std::string& e : list) arr.push_back(e);
+    stair["unlock"] = Json{{"eventsDone", arr}};
+}
 
 // How a file ends its lines, so it is written back the way it was read.
 struct Eol {

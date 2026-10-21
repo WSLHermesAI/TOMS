@@ -1,0 +1,15 @@
+{
+  "_comment": "F02 after the elder's first two events, with a flag set: what the walking scene shows then.",
+  "scene": "stage",
+  "stage": "F02",
+  "eventsDone": [
+    "ev_elder_north_road",
+    "ev_elder_well_night"
+  ],
+  "test": {
+    "frames": 60
+  },
+  "expect": {
+    "stage": "F02"
+  }
+}

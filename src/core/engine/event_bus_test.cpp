@@ -2,6 +2,7 @@
 // Exits 0 on success, 1 on any CHECK failure. Run: ./event_bus_test
 #include "event_bus.h"
 #include <cstdio>
+#include <memory>
 #include <vector>
 
 using namespace toms;
@@ -59,7 +60,42 @@ int main() {
         CHECK(aCalls == 0, "publishing on bus b doesn't reach bus a's subscribers");
     }
 
-    if (g_fail == 0) { printf("event_bus_test: ALL PASS (5 checks)\n"); return 0; }
+    // 6. listen(): the handler goes when its Subscription does -- the 2026-10-21 crash: a destroyed Game's handler was
+    //    still called when the next Game's battle published EnemyDefeated.
+    {
+        EventBus bus;
+        struct Owner { int hits = 0; Subscription sub; };
+        auto first = std::make_unique<Owner>();
+        Owner* p = first.get();
+        first->sub = bus.listen<EnemyDefeated>([p](const EnemyDefeated&) { p->hits++; });
+        bus.publish(EnemyDefeated{"slime", "F01"});
+        CHECK(first->hits == 1, "listen: delivered while the subscription lives");
+        first.reset();   // the owner (a Game) is destroyed: its Subscription removes the handler
+        CHECK(bus.subscriberCount<EnemyDefeated>() == 0, "listen: removed with its owner");
+        Owner second;
+        second.sub = bus.listen<EnemyDefeated>([&second](const EnemyDefeated&) { second.hits++; });
+        bus.publish(EnemyDefeated{"slime", "F01"});   // with the old handler still there this used freed memory
+        CHECK(second.hits == 1 && bus.subscriberCount<EnemyDefeated>() == 1, "listen: only the live owner is called");
+    }
+
+    // 7. A handler removing itself (or another) during a delivery: no crash, the removed one is not called again.
+    {
+        EventBus bus;
+        int a = 0, b = 0;
+        Subscription sa, sb;
+        sa = bus.listen<ItemCollected>([&](const ItemCollected&) { a++; sa.reset(); sb.reset(); });
+        sb = bus.listen<ItemCollected>([&](const ItemCollected&) { b++; });
+        bus.publish(ItemCollected{"coin", "F01"});
+        CHECK(a == 1 && b == 0, "removed during the delivery: not called");
+        bus.publish(ItemCollected{"coin", "F01"});
+        CHECK(a == 1 && b == 0 && bus.subscriberCount<ItemCollected>() == 0, "and gone afterwards");
+        Subscription moved;
+        { Subscription tmp = bus.listen<ItemCollected>([&](const ItemCollected&) { a++; }); moved = std::move(tmp); }
+        bus.publish(ItemCollected{"coin", "F01"});
+        CHECK(a == 2, "a moved Subscription keeps its handler");
+    }
+
+    if (g_fail == 0) { printf("event_bus_test: ALL PASS (7 checks)\n"); return 0; }
     printf("event_bus_test: %d CHECK(s) FAILED\n", g_fail);
     return 1;
 }

@@ -854,7 +854,9 @@ QWidget* EventEditor::floorForm(Json& f) {
     if (stairs.empty()) v->addWidget(muted(tr("No stairs.")));
     for (size_t i = 0; i < stairs.size(); i++) {
         const Json st = stairs[i];
-        const std::string to = st.value("to", std::string()), lock = st.contains("unlock") ? st["unlock"].value("eventDone", std::string()) : std::string();
+        const std::string to = st.value("to", std::string());
+        const std::vector<std::string> locks = stage::stairUnlockEvents(st);   // W38: the stair opens when all are done
+        const std::string lock = locks.empty() ? std::string() : locks[0];
         auto* h = row();
         auto* dir = new QComboBox;
         dir->addItem(tr("↑ up"), QStringLiteral("up"));
@@ -876,23 +878,29 @@ QWidget* EventEditor::floorForm(Json& f) {
             EF(tr("Stair of %1 → %2").arg(q(fid), q(nv)), [i, nv](Json& x) { x["stairs"][i]["to"] = nv; });
         });
         connect(toC, &QComboBox::activated, this, [=](int) { toC->lineEdit()->editingFinished(); });
-        auto* un = new QComboBox;
-        un->addItem(tr("(always open)"), QString());
-        if (!lock.empty() && !m_p.ev(lock)) un->addItem(tr("⛔ %1 (not defined)").arg(q(lock)), q(lock));
-        auto hdr = [un](const QString& t) {
-            un->addItem(t, QStringLiteral("\x01"));
-            if (auto* m = qobject_cast<QStandardItemModel*>(un->model())) m->item(un->count() - 1)->setEnabled(false);
+        // the event list of a combo: this floor's events first, then the others ("\x01": a heading, not choosable)
+        auto fillEvents = [&](QComboBox* c, const QString& none, const std::string& current) {
+            c->addItem(none, QString());
+            if (!current.empty() && !m_p.ev(current)) c->addItem(tr("⛔ %1 (not defined)").arg(q(current)), q(current));
+            auto hdr = [c](const QString& t) {
+                c->addItem(t, QStringLiteral("\x01"));
+                if (auto* m = qobject_cast<QStandardItemModel*>(c->model())) m->item(c->count() - 1)->setEnabled(false);
+            };
+            hdr(tr("events this floor can roll"));
+            for (const std::string& x : here) c->addItem(q(x), q(x));
+            hdr(tr("other events"));
+            for (const std::string& x : defined) if (std::find(here.begin(), here.end(), x) == here.end()) c->addItem(q(x), q(x));
+            c->setCurrentIndex(std::max(0, c->findData(q(current))));
         };
-        hdr(tr("events this floor can roll"));
-        for (const std::string& x : here) un->addItem(q(x), q(x));
-        hdr(tr("other events"));
-        for (const std::string& x : defined) if (std::find(here.begin(), here.end(), x) == here.end()) un->addItem(q(x), q(x));
-        un->setCurrentIndex(std::max(0, un->findData(q(lock))));
+        auto* un = new QComboBox;
+        fillEvents(un, tr("(always open)"), lock);
         connect(un, &QComboBox::activated, this, [=](int) {
             const std::string ev2 = un->currentData().toString().toStdString();
             if (ev2 == "\x01") return;
+            std::vector<std::string> nl = locks;   // the first event changes; the others stay (none: the stair opens)
+            if (ev2.empty()) nl.clear(); else if (nl.empty()) nl.push_back(ev2); else nl[0] = ev2;
             EF(ev2.empty() ? tr("Unlock %1 → %2").arg(q(fid), q(to)) : tr("Lock %1 → %2 until %3").arg(q(fid), q(to), q(ev2)),
-               [i, ev2](Json& x) { if (ev2.empty()) x["stairs"][i].erase("unlock"); else x["stairs"][i]["unlock"] = Json{{"eventDone", ev2}}; });
+               [i, nl](Json& x) { stage::setStairUnlockEvents(x["stairs"][i], nl); });
         });
         auto* del = new QToolButton;
         del->setText(QStringLiteral("✕"));
@@ -903,6 +911,32 @@ QWidget* EventEditor::floorForm(Json& f) {
         h->addWidget(un, 2);
         h->addWidget(del);
         v->addLayout(h);
+        if (!locks.empty()) {   // W38: more events the stair waits for (all must be done), each with ✕, and "+ another"
+            auto* eh = row();
+            eh->addWidget(muted(tr("and when done:")));
+            for (size_t k = 1; k < locks.size(); k++) {
+                auto* c = chip(QStringLiteral("🔒 ") + q(locks[k]) + (m_p.ev(locks[k]) ? QString() : QStringLiteral(" ⛔")) + QStringLiteral("  ✕"));
+                c->setToolTip(tr("Remove this event from the lock"));
+                connect(c, &QToolButton::clicked, this, [=] {
+                    std::vector<std::string> nl = locks;
+                    nl.erase(nl.begin() + (long)k);
+                    EF(tr("Lock %1 → %2: without %3").arg(q(fid), q(to), q(locks[k])), [i, nl](Json& x) { stage::setStairUnlockEvents(x["stairs"][i], nl); });
+                });
+                eh->addWidget(c);
+            }
+            auto* more = new QComboBox;
+            fillEvents(more, tr("+ another event"), std::string());
+            connect(more, &QComboBox::activated, this, [=](int) {
+                const std::string ev2 = more->currentData().toString().toStdString();
+                if (ev2.empty() || ev2 == "\x01") return;
+                std::vector<std::string> nl = locks;
+                nl.push_back(ev2);
+                EF(tr("Lock %1 → %2 also until %3").arg(q(fid), q(to), q(ev2)), [i, nl](Json& x) { stage::setStairUnlockEvents(x["stairs"][i], nl); });
+            });
+            eh->addWidget(more, 1);
+            eh->addStretch(1);
+            v->addLayout(eh);
+        }
         if (!to.empty() && !m_p.flo(to)) {
             auto* eh = row();
             eh->addWidget(rich(QStringLiteral("<span style='color:#ff5d5d'>%1</span>").arg(tr("⛔ %1 does not exist yet.").arg(esc(q(to))))));
@@ -931,7 +965,8 @@ QWidget* EventEditor::floorForm(Json& f) {
             for (const Json& st : o["stairs"])
                 if (st.value("to", std::string()) == fid) {
                     const std::string oid = o["id"].get<std::string>();
-                    const QString lock = st.contains("unlock") ? QStringLiteral(" 🔒 ") + q(st["unlock"].value("eventDone", std::string())) : QString();
+                    QString lock;
+                    for (const std::string& e : stage::stairUnlockEvents(st)) lock += (lock.isEmpty() ? QStringLiteral(" 🔒 ") : QStringLiteral(" + ")) + q(e);
                     auto* c = chip((st.value("dir", std::string("up")) == "down" ? QStringLiteral("↓ ") : QStringLiteral("↑ ")) + q(oid) + lock);
                     connect(c, &QToolButton::clicked, this, [this, oid] { select(oid); });
                     flow->addWidget(c);

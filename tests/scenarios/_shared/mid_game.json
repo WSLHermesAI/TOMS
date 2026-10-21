@@ -1,0 +1,4 @@
+{
+  "_comment": "Shared by several scenarios (\"include\"): a mid-game run from save_mid_game.json.",
+  "save": "save_mid_game.json"
+}

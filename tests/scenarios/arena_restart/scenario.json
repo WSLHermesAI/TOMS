@@ -1,0 +1,18 @@
+{
+  "_comment": "The arena goes on: a 1-HP slime, Enter strikes (a win), Enter continues, the next fight starts, and again.",
+  "scene": "arena",
+  "battle": {
+    "enemies": [
+      "slime"
+    ],
+    "hp": 1
+  },
+  "test": {
+    "frames": 170,
+    "keys": "enter@10,enter@60,enter@100,enter@150"
+  },
+  "expect": {
+    "arenaFights": 3,
+    "arenaWins": 2
+  }
+}

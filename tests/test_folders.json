@@ -7,7 +7,8 @@
     "gltf": { "tests": ["unit.gltf_*", "label:gltf"], "why": "the glTF test models: the glTF unit tests and screenshots" },
     "mpdi": { "tests": ["anim.mpdi_convert"], "why": "the .mpdi converter fixtures" },
     "stage": { "tests": ["smoke.stage_objects", "unit.talk_system_test"], "why": "test stage files: per-object settings" },
-    "font": { "tests": ["font.*"], "why": "picture-font samples: the font tool tests" }
+    "font": { "tests": ["font.*"], "why": "picture-font samples: the font tool tests" },
+    "scenarios": { "tests": ["label:scenario"], "why": "test scenarios (docs/31_TEST_SCENARIOS.md): a scenario folder runs its own scenario.<name>, shared files every scenario (tools/test_select.py)" }
   },
   "files": {
     "smoke/anim_preview.anim": { "tests": ["anim.check_preview", "anim.editor_selftest"], "why": "the anim preview" }

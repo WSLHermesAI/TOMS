@@ -1,0 +1,15 @@
+{
+  "_comment": "A first win against a slime always gives its card (enemies.json default: chance 1.0) and says so.",
+  "scene": "battleWon",
+  "battle": {
+    "enemy": "slime"
+  },
+  "test": {
+    "frames": 40
+  },
+  "expect": {
+    "cards": {
+      "slime": 1
+    }
+  }
+}

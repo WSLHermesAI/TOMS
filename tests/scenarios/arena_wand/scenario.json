@@ -1,0 +1,18 @@
+{
+  "_comment": "The arena with the wand worn, against a golem that attacks every 2 s.",
+  "scene": "arena",
+  "player": {
+    "equip": [
+      "wand"
+    ]
+  },
+  "battle": {
+    "enemies": [
+      "golem"
+    ],
+    "atk_interval_ms": 2000
+  },
+  "test": {
+    "frames": 90
+  }
+}

@@ -3,6 +3,7 @@
 #include "stagescene.h"
 #include "catalog.h"
 #include <QToolBar>
+#include <QStatusBar>
 #include <QListWidget>
 #include <QTreeWidget>
 #include <QVBoxLayout>
@@ -91,7 +92,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     setCentralWidget(central);
 
     status = new QLabel;
-    setStatusBar(statusBar()); status->setText("就緒 Ready");
+    // In the status bar, which owns it from here (before, it had no parent: never shown, never freed -- the leak check)
+    statusBar()->addWidget(status, 1);
+    status->setText("就緒 Ready");
 
     // connect scene
     connect(scene, &StageScene::selectionChanged, this, &MainWindow::onCanvasSelection);

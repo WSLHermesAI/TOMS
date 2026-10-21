@@ -61,6 +61,7 @@ void Game::playerMenuTab(int delta) {
     }
     if (menuTab_ == MenuTab::Gear) newsGear_ = false;
     if (menuTab_ == MenuTab::Events) newsEvents_ = false;
+    if (menuTab_ == MenuTab::Cards) newsCards_ = false;
 }
 
 // ---------- the Items and Equipment grids ----------
@@ -214,16 +215,36 @@ std::vector<Game::LogEntry> Game::eventLog(bool all) const {
         e.id = id;
         e.title = eventName(id);
         const EventDef& def = eventDefs_.at(id);
-        if (!def.stairsFrom.empty())
+        if (!def.stairsFrom.empty()) {
             e.desc = toms::fillText(locale_.tr("stairs.go.desc"), {{"from", toms::floorLabel(def.stairsFrom)},
                                                                    {"to", toms::floorLabel(def.stairsTo)}});
-        else
+            // W38: where they are -- on this floor the arrow marks them; elsewhere, the floor and the spot
+            if (!isDone) {
+                const auto spot = stairSpots_.find(def.stairsFrom + ">" + def.stairsTo);
+                if (def.stairsFrom == st.id) e.desc += " " + locale_.tr("stairs.go.here");
+                else if (spot != stairSpots_.end())
+                    e.desc += " " + toms::fillText(locale_.tr("stairs.go.where"), {{"from", toms::floorLabel(def.stairsFrom)},
+                                                                                {"x", std::to_string(spot->second.first)},
+                                                                                {"y", std::to_string(spot->second.second)}});
+                else
+                    e.desc += " " + toms::fillText(locale_.tr("stairs.go.floor"), {{"from", toms::floorLabel(def.stairsFrom)}});
+            }
+        } else
             e.desc = text(def.descKey);
         // Q7: an event that opens stairs says so in its description.
         if (auto u = stairUnlocks_.find(id); u != stairUnlocks_.end())
             for (const StairUnlock& s : u->second)
+            {
                 e.desc += (e.desc.empty() ? "" : " ") +
                           toms::fillText(locale_.tr("stairs.unlocks"), {{"from", toms::floorLabel(s.floor)}, {"to", toms::floorLabel(s.to)}});
+                // W38: a stair that waits for several events says how many are done
+                if (const toms::StairLink* link = findStair(s.floor, s.to); link && link->unlockEvents.size() > 1) {
+                    int done = 0;
+                    for (const std::string& ev : link->unlockEvents) if (run_.eventFinished(ev)) done++;
+                    e.desc += " " + toms::fillText(locale_.tr("stairs.unlocks.count"), {{"done", std::to_string(done)},
+                                                                                       {"all", std::to_string(link->unlockEvents.size())}});
+                }
+            }
         e.done = isDone;
         e.connected = connectedNames(connectedEvents(id));
         return e;
@@ -378,6 +399,12 @@ void Game::playerMenuMove(int dx, int dy) {
             if (!gridMove(itemSel_, n, dx, dy)) { itemFilter_ = ((itemFilter_ + (dx > 0 ? 1 : -1)) % 4 + 4) % 4; itemSel_ = 0; }
             break;
         }
+        case MenuTab::Cards: {
+            const int n = (int)cardCells().size();
+            cardSel_ = clampSel(cardSel_, n);
+            gridMove(cardSel_, n, dx, dy);
+            break;
+        }
         case MenuTab::Events: {
             if (dx != 0) { eventFilter_ = 1 - eventFilter_; eventSel_ = 0; break; }
             const int n = (int)eventLog(eventFilter_ == 1).size();
@@ -485,6 +512,7 @@ void Game::playerMenuEvent(const std::string& name, int arg) {
     if (name == "pm_cell") {
         if (menuTab_ == MenuTab::Items) itemSel_ = clampSel(arg, (int)itemCells().size());
         if (menuTab_ == MenuTab::Gear) gearSel_ = clampSel(arg, (int)gearCells().size());
+        if (menuTab_ == MenuTab::Cards) cardSel_ = clampSel(arg, (int)cardCells().size());
         return;
     }
     if (name == "pm_btn") {
@@ -527,8 +555,9 @@ void Game::buildPlayerUi(toms::UiState& u) const {
     p.tab = (int)menuTab_;
     p.hint = L.tr("player.hint");
     p.close_label = L.tr("inventory.close");
-    static const char* kTabKeys[kMenuTabs] = {"player.tab.status", "player.tab.gear", "player.tab.items", "player.tab.events", "player.tab.system"};
-    const bool tabNews[kMenuTabs] = {false, newsGear_, false, newsEvents_, newsStore_ || run_.skillPoints() > 0};
+    static const char* kTabKeys[kMenuTabs] = {"player.tab.status", "player.tab.gear", "player.tab.items", "player.tab.events",
+                                              "player.tab.cards", "player.tab.system"};
+    const bool tabNews[kMenuTabs] = {false, newsGear_, false, newsEvents_, newsCards_, newsStore_ || run_.skillPoints() > 0};
     for (int i = 0; i < kMenuTabs; i++) p.tabs.push_back({L.tr(kTabKeys[i]), i == (int)menuTab_, tabNews[i] && i != (int)menuTab_});
     const std::string none = L.tr("gear.none");
     auto signedNum = [](int v) { return (v >= 0 ? "+" : "") + std::to_string(v); };
@@ -755,9 +784,52 @@ void Game::buildPlayerUi(toms::UiState& u) const {
             }
             break;
         }
+        case MenuTab::Cards: {   // monster cards (docs/30_GAMEPLAY_PLAN.md §3): a grid of the monsters met | the record
+            const auto cells = cardCells();
+            const int sel = clampSel(cardSel_, (int)cells.size());
+            int held = 0;
+            for (const auto& [id, r] : meta_.cards) if (r.copies > 0 && enemyTpl.count(id)) held++;
+            p.worn_title = trParam(trParam(L.tr("cards.count"), "n", std::to_string(held)), "all", std::to_string(enemyTpl.size()));
+            for (size_t i = 0; i < cells.size(); i++) {
+                const toms::CardRecord& r = meta_.cards.at(cells[i]);
+                const auto& t = enemyTpl.at(cells[i]);
+                p.cells.push_back({uiSprite(typeSprite("monster", cells[i])), locale_.field(t["name"]),
+                                   r.copies > 1 ? "x" + std::to_string(r.copies) : "", (int)i == sel, false, r.copies == 0});
+            }
+            if (cells.empty()) p.empty_text = L.tr("cards.empty");
+            p.select_hint = L.tr("cards.select");
+            if (!cells.empty()) {
+                const std::string& id = cells[sel];
+                const toms::CardRecord& r = meta_.cards.at(id);
+                const auto& t = enemyTpl.at(id);
+                p.detail = true;
+                p.d_icon = uiSprite(typeSprite("monster", id));
+                p.d_name = locale_.field(t["name"]);
+                p.d_desc = r.copies > 0 ? L.tr("cards.have") : L.tr("cards.not_yet");
+                p.d_lines.push_back({L.tr("cards.copies"), std::to_string(r.copies), "", 0});
+                p.d_lines.push_back({L.tr("cards.defeated"), std::to_string(r.defeated), "", 0});
+                p.d_lines.push_back({L.tr("cards.defeated_by"), std::to_string(r.defeatedBy), "", 0});
+                p.d_lines.push_back({"HP", std::to_string(t.value("hp", 0)), "", 0});
+                p.d_lines.push_back({"ATK", std::to_string(t.value("atk", 0)), "", 0});
+                p.d_lines.push_back({"DEF", std::to_string(t.value("def", 0)), "", 0});
+            }
+            break;
+        }
         default:
             break;
     }
+}
+
+// The Cards tab's monsters: those with a record (met in a battle), the easiest first (HP, then attack, then id).
+std::vector<std::string> Game::cardCells() const {
+    std::vector<std::string> out;
+    for (const auto& [id, r] : meta_.cards) if (enemyTpl.count(id)) out.push_back(id);
+    auto key = [&](const std::string& id) {
+        const auto& t = enemyTpl.at(id);
+        return std::make_tuple(t.value("hp", 0), t.value("atk", 0), id);
+    };
+    std::sort(out.begin(), out.end(), [&](const std::string& a, const std::string& b) { return key(a) < key(b); });
+    return out;
 }
 
 // ---------- Save / Load (saveload.rml) ----------

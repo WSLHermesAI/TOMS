@@ -29,6 +29,7 @@ class StageScene : public QGraphicsScene {
     Q_OBJECT
 public:
     StageScene(StageModel* m, int cell, QObject* parent = nullptr);
+    ~StageScene() override;   // frees terrainOwned (found by the leak check, docs/33_LEAK_CHECK.md)
     void rebuild();
     void setActiveLayer(int l) { activeLayer = l; }
     int  cellSize() const { return cell; }

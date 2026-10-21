@@ -1,0 +1,12 @@
+{
+  "_comment": "A mid-game player (shared save) against a golem with more HP than its data.",
+  "include": "../_shared/mid_game.json",
+  "scene": "battle",
+  "battle": {
+    "enemy": "golem",
+    "hp": 300
+  },
+  "test": {
+    "frames": 90
+  }
+}

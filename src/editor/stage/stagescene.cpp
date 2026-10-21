@@ -41,6 +41,12 @@ StageScene::StageScene(StageModel* m, int cellSize, QObject* parent)
     rebuild();
 }
 
+StageScene::~StageScene() {
+    clear();                      // the items first: each NodeItem refers to its GameObject
+    qDeleteAll(terrainOwned);     // the terrain objects rebuild() made (rebuild frees the previous set; nothing freed the last)
+    terrainOwned.clear();
+}
+
 void StageScene::drawGrid() {
     setSceneRect(0, 0, model->width * cell, model->height * cell);
     for (int x = 0; x <= model->width; ++x)

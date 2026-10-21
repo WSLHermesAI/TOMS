@@ -68,6 +68,13 @@ struct UiPowerBar {                    // a Battle v2 timing bar; zones and mark
     float marker = 0;                  // 0..100
 };
 
+struct UiPopup {                       // a damage number rising over a fighter (docs/30_GAMEPLAY_PLAN.md phase 0)
+    std::string text;
+    float x = 0, y = 0;                // design px: its box's left / top
+    float opacity = 1;
+    int kind = 0;                      // 0 a hit, 1 a big hit (super), 2 a guarded hit
+};
+
 struct UiBattle {
     bool visible = false;
     bool active = false;               // fighting (false: won, showing "tap to continue")
@@ -87,6 +94,7 @@ struct UiBattle {
     std::string super_button;
     bool active_ready = false;
     std::string active_button;
+    std::vector<UiPopup> popups;
 };
 
 struct UiDialogue {

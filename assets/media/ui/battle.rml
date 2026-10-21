@@ -13,6 +13,9 @@
     <div id="title">{{battle.title}}</div>
     <img id="player" data-attr-sprite="battle.player_sprite"/>
     <img id="enemy" data-attr-sprite="battle.enemy_sprite"/>
+    <!-- damage numbers: they rise over the fighter that was hit (UiPopup) -->
+    <div class="popup" data-for="p : battle.popups" data-class-big="p.kind == 1" data-class-guard="p.kind == 2"
+         data-style-left="p.x + 'px'" data-style-top="p.y + 'px'" data-style-opacity="p.opacity">{{p.text}}</div>
 
     <div id="player-hp" class="hp"><div class="fill-bar good" data-style-width="battle.player_hp_pct + '%'"></div></div>
     <div id="player-hp-text" class="hp-text">{{battle.player_hp_text}}</div>

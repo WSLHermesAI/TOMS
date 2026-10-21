@@ -1,6 +1,8 @@
 // bgfx_viewport.cpp -- see bgfx_viewport.h.
 #include "bgfx_viewport.h"
 
+#include <QFileInfo>
+
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
 #include "game.h"
@@ -81,6 +83,22 @@ void BgfxViewport::loadStage(const QString& id) {
     setFocus();
 }
 
+bool BgfxViewport::startScenario(const QString& path, QString& error) {
+    if (!bgfxReady_) {   // the Play tab is not shown yet: start it with the game
+        pendingScenario_ = path;
+        return true;
+    }
+    if (!restartGame()) { error = tr("The game could not start."); return false; }
+    std::string err;
+    if (!session_.game()->startScenario(path.toStdString(), err)) {
+        error = QString::fromStdString(err);
+        return false;
+    }
+    Q_EMIT statusMessage(tr("Scenario %1").arg(QFileInfo(path).fileName()));
+    setFocus();
+    return true;
+}
+
 void BgfxViewport::setShowStats(bool on) { bgfxHostSetDebugText(on); }
 
 void BgfxViewport::runSmokeTest(int frames, const QString& png) {
@@ -97,7 +115,12 @@ QString BgfxViewport::assetDir() const { return QString::fromStdString(GameSessi
 
 void BgfxViewport::showEvent(QShowEvent* e) {
     QWidget::showEvent(e);
-    if (!bgfxReady_ && !failed_) restartGame(pendingStage_);
+    if (!bgfxReady_ && !failed_ && restartGame(pendingStage_) && !pendingScenario_.isEmpty()) {
+        const QString path = pendingScenario_;
+        pendingScenario_.clear();
+        QString err;
+        if (!startScenario(path, err)) Q_EMIT startFailed(tr("The scenario could not start"), err);
+    }
 }
 
 void BgfxViewport::resizeEvent(QResizeEvent* e) {

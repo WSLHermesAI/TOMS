@@ -145,7 +145,11 @@ void Game::newGame(int slot) {
     stageSelectOpen_ = false; stairsConfirmOpen_ = false;
     playTimeSec_ = 0;
     slotReadOnly_ = false;
-    if (slot > 0) {
+    if (slot < 0) {
+        // A test scenario (docs/31_TEST_SCENARIOS.md): no slot, and nothing is ever written.
+        activeSlot_ = 0;
+        slotReadOnly_ = true;
+    } else if (slot > 0) {
         // Explicit slot (the Continue page's "start a new game in this empty slot?" answer).
         activeSlot_ = slot;
     } else {
@@ -157,7 +161,7 @@ void Game::newGame(int slot) {
     // S3.5: with the tower data present the run starts on its first floor (F01), so progression,
     // the counter and the save all speak floor ids; otherwise the historical starting stage.
     loadStage(floorMode() ? floors_.at(1).id : std::string("stage01"));
-    saveCurrentRun();
+    if (slot >= 0) saveCurrentRun();
     title_.close();
     title_.setRunInProgress(true);
 }
@@ -230,7 +234,14 @@ void Game::update(int dtMs) {
     // Battle System v2: both bars auto-move continuously and independently, and the enemy fires
     // on its own fixed real-time clock -- none of this waits on player input, so it all just ticks
     // every frame combat is active. See CombatState's comment in game.h for the full model.
-    if (cs.active) {
+    timers_.update(dtMs);   // delayed calls (the battle's damage numbers); a gone owner's never run
+    for (auto& p : cs.popups) { p.ageMs += dtMs; p.rise.update(dtMs); }
+    cs.popups.erase(std::remove_if(cs.popups.begin(), cs.popups.end(),
+                                   [](const CombatState::Popup& p) { return p.rise.done(); }), cs.popups.end());
+    // An attack is playing (docs/30_GAMEPLAY_PLAN.md §4): both sides' clocks wait for it.
+    const bool attackPlaying = cs.active && cs.attackPauseMs > 0;
+    if (attackPlaying) cs.attackPauseMs = std::max(0, cs.attackPauseMs - dtMs);
+    if (cs.active && !attackPlaying) {
         auto stepBar = [&](CombatState::AutoBar& bar, const toms::PowerBarParams& z) {
             if (bar.cooling) {
                 bar.cooldownMs -= dtMs;
@@ -257,6 +268,8 @@ void Game::update(int dtMs) {
             resolveEnemyClockFire();
         }
     }
+    // The weapon test arena: when a fight is over (a win dismissed, a loss shown), the next one starts.
+    if (arena_.on && !cs.active && !cs.won && cs.resultPauseMs <= 0 && !title_.isOpen()) arenaNextFight();
     // The result-pause countdown must run regardless of cs.active: finishCombatLose() sets
     // active=false in the same call that starts this pause, so gating on cs.active would freeze
     // it forever and leave a stale "you fell" message stuck in cs.log (which -- see showBattle's

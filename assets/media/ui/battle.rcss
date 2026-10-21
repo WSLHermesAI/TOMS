@@ -58,3 +58,8 @@ body { z-index: 30; }
 #super-btn:hover  { background-color: #e89a8d; }
 #active-btn { top: 624px; background-color: #88c2d2; }
 #active-btn:hover { background-color: #9ad2e2; }
+
+/* damage numbers (UiPopup): a 100 px box over the fighter, rising and fading */
+.popup { position: absolute; width: 100px; text-align: center; font-size: 34px; color: #ffffff; font-effect: outline(2px #401010); }
+.popup.big { font-size: 46px; color: #ffe066; }
+.popup.guard { font-size: 28px; color: #9fd8ff; }

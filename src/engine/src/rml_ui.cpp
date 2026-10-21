@@ -373,6 +373,7 @@ void RmlUi::shutdown() {
     Rml::Shutdown();            // releases RmlUi's textures and geometry through the render interface
     impl_->render.destroy();
     impl_.reset();
+    std::map<std::string, std::string>().swap(virtualFiles());   // the in-memory documents go with RmlUi
 }
 
 bool RmlUi::ready() const { return impl_ && impl_->context; }

@@ -1,0 +1,48 @@
+{
+  "saveVersion": 1,
+  "savedAt": "2026-10-21 10:00:00",
+  "playTimeSec": 3600,
+  "stageName": "F04",
+  "meta": {
+    "schemaVersion": 3
+  },
+  "run": {
+    "schemaVersion": 3,
+    "currentStageId": "F04",
+    "player": {
+      "hp": 420,
+      "maxhp": 500,
+      "atk": 38,
+      "def": 22,
+      "gold": 350,
+      "exp": 40,
+      "lv": 9,
+      "key_yellow": 2,
+      "key_blue": 1,
+      "key_red": 0,
+      "inv": [
+        "potion_red",
+        "potion_red",
+        "potion_blue",
+        "scroll"
+      ],
+      "attrs": {
+        "str": 3,
+        "dex": 4,
+        "agi": 2
+      },
+      "gear": [
+        "wand",
+        "cloth_robe"
+      ],
+      "weapon": "wand",
+      "armor": "cloth_robe",
+      "talent": "",
+      "attrPoints": 2
+    },
+    "flags": [],
+    "eventsFinished": [
+      "ev_village_well"
+    ]
+  }
+}

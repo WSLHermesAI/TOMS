@@ -1,0 +1,9 @@
+{
+  "scene": "battleWon",
+  "battle": {
+    "enemy": "bat"
+  },
+  "test": {
+    "frames": 40
+  }
+}

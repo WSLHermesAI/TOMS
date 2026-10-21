@@ -1,0 +1,16 @@
+{
+  "_comment": "The walking scene at a saved moment: the save in this folder, on F04, the player moved to (3, 5).",
+  "scene": "stage",
+  "save": "save.json",
+  "player": {
+    "x": 3,
+    "y": 5
+  },
+  "test": {
+    "frames": 60
+  },
+  "expect": {
+    "stage": "F04",
+    "gold": 350
+  }
+}

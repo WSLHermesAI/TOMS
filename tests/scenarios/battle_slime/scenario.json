@@ -1,0 +1,9 @@
+{
+  "scene": "battle",
+  "battle": {
+    "enemy": "slime"
+  },
+  "test": {
+    "frames": 90
+  }
+}

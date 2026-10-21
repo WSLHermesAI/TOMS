@@ -17,34 +17,69 @@ void Game::startCombat(const EnemyInst& e) {
     cs.nextAttackCritDamageMult = 1.0f;
     cs.survivalArmed = false;
     cs.resultPauseMs = 0;
+    cs.attackPauseMs = 0;
+    cs.popups.clear();
+    battleTimers_.reset();   // a number still waiting from the last fight never lands in this one
     cs.log = locale_.tr("battle.start");
+}
+
+// The owner's rule (docs/30_GAMEPLAY_PLAN.md §4): an attack pauses both sides' clocks until it is over.
+void Game::startAttackPause() { cs.attackPauseMs = std::max(cs.attackPauseMs, attackPauseMs_); }
+
+// The number appears when the swing lands, not when the button is pressed: a safe timer owned by this battle.
+void Game::popDamage(int dmg, bool overEnemy, int kind) {
+    timers_.after(battleTimers_, hitNumberDelayMs_, [this, dmg, overEnemy, kind] {
+        CombatState::Popup p;
+        p.text = dmg > 0 ? std::to_string(dmg) : locale_.tr("battle.popup_guard");
+        p.overEnemy = overEnemy;
+        p.kind = dmg > 0 ? kind : 2;
+        p.rise = toms::Tween(0.0f, 1.0f, 900, toms::Ease::OutCubic);
+        cs.popups.push_back(p);
+    });
 }
 
 // Shared win/lose resolution -- identical to the pre-Milestone-6 auto-combat's own win/lose
 // handling (rewards, level-up, boss warp, respawn), just extracted so resolveAttackTap/
 // battleTapSuper (win) and resolveEnemyClockFire (lose) can all reach it without duplicating it.
 void Game::finishCombatWin() {
+    if (arenaEndFight(true)) return;   // the weapon test arena: no rewards, the next fight follows
     cs.active = false; cs.won = true;
     pl.hp = cs.playerHP;
     pl.gold += (int)std::lround(cs.enemy.gold * (1.0f + attrEffect("goldGain") / 100.0f));   // LUK
     gainExp(cs.enemy.exp);   // level-ups by data/stats.json
-    // remove monster entity from stage
-    for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) { e.consumed=true; fireLinkedEvents(e); }
-    st.tiles[cs.enemy.y][cs.enemy.x] = '.';
-    // Milestone 7: persist the clear so it survives a reload of this floor (stairs or the Stage
-    // Select hub) -- see entityStatus_'s declaration in game.h.
-    toms::setEntityStatus(entityStatus_, statusKeyAt(cs.enemy.x, cs.enemy.y), toms::EntityStatus::Defeated);
+    // Monster cards (docs/30_GAMEPLAY_PLAN.md §3): the win is counted, and the card may drop (enemies.json "card").
+    if (auto t = enemyTpl.find(cs.enemy.id); t != enemyTpl.end()) {
+        const float roll = std::uniform_real_distribution<float>(0.0f, 1.0f)(cardRng_);
+        if (toms::recordCardWin(meta_.cards, cs.enemy.id, toms::cardChanceFromJson(t->second), roll)) {
+            const int n = meta_.cards[cs.enemy.id].copies;
+            notifications_.push_back({n == 1 ? trParam(locale_.tr("cards.new"), "name", cs.enemy.name)
+                                             : trParam(trParam(locale_.tr("cards.more"), "name", cs.enemy.name), "n", std::to_string(n)), 3500});
+            newsCards_ = true;
+        }
+    }
+    // remove monster entity from stage -- only when it stands on the map (a test scenario's enemy does not: x, y -1)
+    const bool onMap = cs.enemy.y >= 0 && cs.enemy.y < (int)st.tiles.size() &&
+                       cs.enemy.x >= 0 && cs.enemy.x < (int)st.tiles[cs.enemy.y].size();
+    if (onMap) {
+        for (auto& e : st.entities) if (e.x==cs.enemy.x && e.y==cs.enemy.y && e.id==cs.enemy.id) { e.consumed=true; fireLinkedEvents(e); }
+        st.tiles[cs.enemy.y][cs.enemy.x] = '.';
+        // Milestone 7: persist the clear so it survives a reload of this floor (stairs or the Stage
+        // Select hub) -- see entityStatus_'s declaration in game.h.
+        toms::setEntityStatus(entityStatus_, statusKeyAt(cs.enemy.x, cs.enemy.y), toms::EntityStatus::Defeated);
+    }
     toms::globalEventBus().publish(toms::EnemyDefeated{cs.enemy.id, curStage});
     if (cs.enemy.boss) { cs.log = locale_.tr("battle.boss_win"); loadStage("stage_11"); }
     markProgressDirty();   // gold/exp/level/entity-status all changed: autosave will flush it
 }
 
 void Game::finishCombatLose() {
+    if (arenaEndFight(false)) return;   // the weapon test arena: no death counted, no respawn
     cs.active = false; cs.won = false;
     // M7 (first slice): noteDeath() existed since S3 (schemaVersion 3's deathsTotal/deathsNonBoss)
     // but nothing ever actually called it -- a real, pre-existing gap found while scoping this
     // slice, since e_13's condition depends entirely on this counter being real.
     run_.noteDeath(cs.enemy.boss);
+    toms::recordCardLoss(meta_.cards, cs.enemy.id);   // the monster's card record counts it
     // docs/story/STORY_DATA_SCHEMA.md §7.3's wipe row: only e_10 (cycleIndex>=9 -- reachable now
     // that M8's rebirth actually increments it) and e_13 (12 non-boss deaths) are ever checked on a
     // plain wipe -- never the full 15-ending resolver (see checkNamedEndings's own comment for why:
@@ -90,6 +125,8 @@ void Game::resolveAttackTap() {
     cs.enemyHP -= dmg;
     if (dmg > 0) cs.superCharge = std::min(run_.superMax(), cs.superCharge + 1);   // M8: superMax is per-run, halved by rebirth()
     audio.play("player_attack");
+    startAttackPause();
+    popDamage(dmg, /*overEnemy=*/true, 0);
 
     if (cs.enemyHP <= 0) {
         cs.log = trParam(locale_.tr("battle.crit_win"), "dmg", std::to_string(dmg));
@@ -125,6 +162,8 @@ void Game::resolveEnemyClockFire() {
 
     cs.playerHP -= dmg;
     if (dmg > 0) audio.play("enemy_attack");
+    startAttackPause();
+    popDamage(dmg, /*overEnemy=*/false, 0);
 
     if (cs.playerHP <= 0 && cs.survivalArmed) {
         // a_sanctuary_echo: once per battle, a lethal hit leaves 1 HP instead of ending the fight.
@@ -166,6 +205,8 @@ void Game::battleTapSuper() {
     cs.enemyHP -= dmg;
     cs.superCharge = 0;
     audio.play("player_attack");
+    startAttackPause();
+    popDamage(dmg, /*overEnemy=*/true, 1);
 
     if (cs.enemyHP <= 0) {
         cs.log = trParam(locale_.tr("battle.crit_win"), "dmg", std::to_string(dmg));

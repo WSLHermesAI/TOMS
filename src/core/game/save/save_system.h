@@ -7,6 +7,7 @@
 // once something real reads/writes these files (Milestone 5's Stage Select "Continue") — until
 // then this is schema + (de)serialization + atomic file I/O only.
 #pragma once
+#include "card_collection.h"   // toms::CardBook -- MetaSaveData::cards
 #include <json.hpp>
 #include <map>
 #include <set>
@@ -39,6 +40,9 @@ struct MetaSaveData {
     // known while resetting the crafted gear itself, so this lives on the META save, not the run
     // save's skillsOwned-style run-scoped list.
     std::vector<std::string> forgeRecipesKnown;
+    // Monster cards (card_collection.h; docs/30_GAMEPLAY_PLAN.md §3): per monster, wins, losses and copies held.
+    // Meta scope: survives rebirth. Optional in the file (an older save has none).
+    CardBook cards;
 };
 
 // Mirrors the fields of Player (src/game/game.h) that need to persist. Kept as its own struct

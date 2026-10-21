@@ -1,0 +1,12 @@
+{
+  "scene": "hub",
+  "flags": [
+    "hub.village"
+  ],
+  "hub": {
+    "location": "hub_village"
+  },
+  "test": {
+    "frames": 40
+  }
+}

@@ -220,9 +220,8 @@ It is set per weapon in a **settings file**, so each weapon's values can be chan
 
 - A story event at the start lets the player **choose an attack style**, which equals the starting weapon type.
 - Weapons decide the attack mode (武器跟攻擊模式有關). **Owner (2026-10-20):** the battle's play depends on the weapon.
-- Still to decide (the notes ask): is the choice tied to difficulty, and is it fixed for the rest of the game
-  ("之後不可改")? Until then: not tied to difficulty; the chosen style is the main one, and other weapons can still be
-  picked up.
+- **Owner (2026-10-21):** the difficulty is **not** tied to this choice and **can be changed during the game**.
+  The chosen style is the main one; other weapons can still be picked up and used.
 
 ## 8. Other modes (for later)
 
@@ -267,6 +266,9 @@ the player's stats in), not through `Game` internals.
 | 6 | The other modes (section 8), as reusable modules | part of TOMS, built to be reused |
 
 Each phase ends playable in the weapon test phase, and gets tests by the project's rules ([09_TESTS.md](09_TESTS.md)).
+**Every scene a phase adds or changes gets a test scenario** ([31_TEST_SCENARIOS.md](31_TEST_SCENARIOS.md)): a folder in
+`tests/scenarios/` that starts the game straight in that scene from setting files (a save, the player, the events),
+so each phase can be tested alone.
 
 ## 11. The owner's decisions (2026-10-20)
 
@@ -277,10 +279,13 @@ answered on 2026-10-20:
 |---|---|---|
 | Q16 | Cards | For now **a collection only**: per monster, how many times it was defeated and how many times it defeated the player. The first card drops 100 %, a second copy 50 %, set **in each monster's data** (section 3) |
 | Q17 | AGI | AGI **reduces the waiting time**: with higher AGI the player attacks more often in the same time (section 4) |
-| Q18 | Style choice | The battle's play **depends on the weapon**; each weapon plays differently. Still open: whether the choice is tied to difficulty or fixed (section 7) |
+| Q18 | Style choice | The battle's play **depends on the weapon**; each weapon plays differently. 2026-10-21: the difficulty is not tied to the choice and **can be changed during the game** (section 7) |
 | Q19 | Misses | A miss sends the combo **back to an earlier step**, by the weapon and its level (Lv 5: to the start; Lv 10: back 5; Lv 15: back 4 …), set per weapon **in a settings file** (section 5.6) |
 | Q20 | The enemy's turn | While the player **or** the enemy is attacking, **both** attack clocks pause until the attack is finished (section 4) |
 | Q21 | Other modes | **Part of TOMS**, but built as **independent modules** that other games can reuse (section 8) |
+
+**The proposals are accepted (owner, 2026-10-21):** the three new weapons (5.5), the level curve (section 6), and the
+names `card.chance` / `card.repeatChance` (section 3) and `assets/data/weapon_play.json` (5.6).
 
 The questions as first asked:
 
@@ -294,3 +299,29 @@ The questions as first asked:
    (the older line)?
 5. **The enemy's turn:** do enemies keep their own clock (as today) while the player is in a combo, or wait?
 6. **The other modes** (section 8): part of TOMS (an event floor, a mini-game), or separate games?
+
+## 12. Phase 0: done (2026-10-21)
+
+| Piece | Where | Tested by |
+|---|---|---|
+| **Safe timers**: a delayed call never runs after its owner is gone (`TimerOwner`; `reset()` cancels a battle's calls when the next battle starts) | `src/core/engine/safe_timer.h` | `unit.safe_timer_test` |
+| **Tweens**: a value over time with easing; once, repeat or back and forth; the speed can change in place (a marker that speeds up as power charges) | `src/core/engine/tween.h` | `unit.tween_test` |
+| **Timed hits**: points due at given times, a tap graded Perfect / Good / Miss by its distance, ordered (sword, staff) or free (unarmed) tracks, and each point's growth from "appears" to "due" (the growing lines) | `src/core/engine/timed_hits.h` | `unit.timed_hits_test` |
+| **Weapon play settings**: `assets/data/weapon_play.json`, a miss setting the combo back by weapon level (the owner's example is the `default` entry), the wait after a miss | `src/core/game/systems/weapon_play.h` | `unit.weapon_play_test` (also checks every key is a weapon of `items.json`) |
+| **Attacks pause both clocks**: while the player or the enemy attacks, the bars stop moving and cooling and the enemy's clock waits (`battle.json` `attack_pause_ms`, 450) | `Game::update`, `startAttackPause` | the arena scenarios |
+| **Damage numbers**: they rise over the fighter that was hit, when the swing lands (`hit_number_delay_ms`, 180, through a safe timer owned by the battle); a guarded hit shows "Guard!" | `Game::popDamage`, `battle.rml` | seen in the arena |
+| **AGI**: shortens the wait between attacks (already so: `stats.json`, cooldown −15 ms a point) | `stats.json` | — |
+| **The weapon test arena**: fight after fight against chosen enemies with a chosen weapon, full HP each time, no rewards, no story effects | scene `arena`, `toms_game --arena=slime,bat:wand` ([31](31_TEST_SCENARIOS.md)) | `scenario.arena_unarmed`, `arena_wand`, `arena_restart` |
+
+The engine pieces have no game dependency, so other games (and the other modes, section 8) can reuse them. Battle v3
+(phase 1) builds the two-bar battle and the unarmed play on them.
+
+**Done after phase 0 (2026-10-21):**
+- **The card collection** (section 3): `systems/card_collection.h` (`unit.card_collection_test`). A win counts and may
+  drop the card ("New card: Slime!"); a loss counts. The records are in the meta save (`cards`, kept over rebirth). The
+  player menu has a **Cards** tab (between Events and System): the monsters met, easiest first, `Cards: n / all`,
+  each card's copies, wins and losses. The arena gives no cards. Scenarios `cards_first_win`, `menu_cards`.
+- **Multi-event stair locks** (W38): see [event_editor/05](event_editor/05_FLOOR_LINKS.md) §3.
+
+**Next:** phase 1, Battle v3 with unarmed (section 10); or the download steps that need no decision
+([32](32_DOWNLOADS_AND_DLC.md) §6, steps 1-2).

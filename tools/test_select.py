@@ -52,6 +52,7 @@ def is_gltf(t):       return 'gltf' in t['labels']
 def is_game_smoke(t): return is_smoke(t) and not is_gltf(t)
 BACKEND_VARIANT = re.compile(r'_(d3d12|vulkan|opengl|cpu|compute|gpu)$')
 def is_game_smoke_d3d11(t): return is_game_smoke(t) and not BACKEND_VARIANT.search(t['name'])
+def is_scenario(t):    return 'scenario' in t['labels']   # tests/scenarios/<name>/ (docs/31_TEST_SCENARIOS.md)
 def named(*patterns): return lambda t: any(fnmatch.fnmatch(t['name'], p) for p in patterns)
 def any_of(*preds):   return lambda t: any(p(t) for p in preds)
 def unit_in(prefix):  return lambda t: t['name'].startswith('unit.') and t['src'].startswith(prefix)
@@ -67,13 +68,20 @@ ATLAS = named('atlas.*', 'unit.atlas_sprites_test')
 FONTS = named('font.*')
 
 # The game's screenshots narrowed by the changed file's name; a game file matching none runs every game screenshot.
+# The scenario tests (tests/scenarios/) are narrowed the same way: each scene's scenarios with its screenshots.
 GAME_SMOKE_BY_NAME = [
-    (re.compile(r'player|saveload|inventory|equipment|items?\.json|stats\.json'), named('smoke.player_*')),
-    (re.compile(r'battle|combat'), named('smoke.battle')),
-    (re.compile(r'store'), named('smoke.store')),
-    (re.compile(r'dialog'), named('smoke.dialogue', 'smoke.stairs_unlock')),
-    (re.compile(r'title|art_style'), named('smoke.title')),
-    (re.compile(r'stair|floor|stage|scene_draw|camera'), named('smoke.stage', 'smoke.stairs_*')),
+    (re.compile(r'scenario'), is_scenario),
+    (re.compile(r'player|saveload|inventory|equipment|items?\.json|stats\.json'),
+     named('smoke.player_*', 'scenario.menu_*', 'scenario.save_load')),
+    (re.compile(r'battle|combat|enemies\.json'), named('smoke.battle', 'scenario.battle_*')),
+    (re.compile(r'store'), named('smoke.store', 'scenario.store_*')),
+    (re.compile(r'dialog'), named('smoke.dialogue', 'smoke.stairs_unlock', 'scenario.dialogue_*', 'scenario.talk_*')),
+    (re.compile(r'talk|npc'), named('smoke.talk_*', 'scenario.talk_*')),
+    (re.compile(r'title|art_style'), named('smoke.title', 'scenario.title')),
+    (re.compile(r'stair|floor|stage|scene_draw|camera'),
+     named('smoke.stage', 'smoke.stairs_*', 'scenario.stage_*', 'scenario.stairs_*', 'scenario.notice_*')),
+    (re.compile(r'ending'), named('scenario.ending')),
+    (re.compile(r'hub'), named('scenario.hub_*')),
     (re.compile(r'hud'), named('smoke.stage', 'smoke.player_*')),
 ]
 
@@ -263,9 +271,18 @@ def select(files, tests, since):
             take(named('unit.stage_core_test'), why)
         base = os.path.basename(f).lower()
         narrowed = [p for rx, p in GAME_SMOKE_BY_NAME if rx.search(base)]
-        take(any_of(*narrowed) if narrowed else is_game_smoke_d3d11, why)
+        take(any_of(*narrowed) if narrowed else any_of(is_game_smoke_d3d11, is_scenario), why)
 
+    names = {t['name'] for t in tests}
     for f in files:
+        # a scenario folder (tests/scenarios/<name>/...): just that scenario; the shared files and the runner: all of them
+        if f.startswith('tests/scenarios/'):
+            parts = f.split('/')
+            if len(parts) > 3 and 'scenario.' + parts[2] in names:
+                take(named('scenario.' + parts[2]), f + ': its scenario')
+            else:
+                take(is_scenario, f + ': shared by the scenarios (or their runner): every scenario')
+            continue
         # a folder under tests/: test_folders.json decides (a file entry first, then its folder; unlisted -> nothing)
         if f.startswith('tests/') and f.count('/') >= 2:
             rel = f[len('tests/'):]

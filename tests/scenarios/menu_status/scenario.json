@@ -1,0 +1,12 @@
+{
+  "scene": "menu",
+  "menu": {
+    "tab": "status"
+  },
+  "test": {
+    "frames": 40
+  },
+  "expect": {
+    "menuTab": "status"
+  }
+}

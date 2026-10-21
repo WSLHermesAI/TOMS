@@ -1,0 +1,7 @@
+{
+  "include": "../_shared/mid_game.json",
+  "scene": "stageSelect",
+  "test": {
+    "frames": 40
+  }
+}

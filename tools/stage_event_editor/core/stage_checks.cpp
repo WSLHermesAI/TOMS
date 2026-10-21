@@ -402,10 +402,8 @@ void logicOrderIssues(Project& p, std::vector<StoryRow>& rows) {
         const Json* stairs = member(p.doc(r.fid).spec, "stairs");
         if (!stairs || !stairs->is_array()) continue;
         for (const Json& sp : *stairs) {
-            const Json* un = member(sp, "unlock");
-            const std::string x = un ? str(*un, "eventDone") : std::string();
-            if (x.empty()) continue;
-            if (!has(x) || idxOf[x] > r.idx) r.issues.push_back(issue(Sev::Error, "sStairLock", {str(sp, "to"), x}));
+            for (const std::string& x : stairUnlockEvents(sp))   // W38: each event of the lock
+                if (!has(x) || idxOf[x] > r.idx) r.issues.push_back(issue(Sev::Error, "sStairLock", {str(sp, "to"), x}));
         }
     }
 }

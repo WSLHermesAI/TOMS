@@ -6,7 +6,8 @@
 // stair to a given floor; the plain 'U' / 'D' tiles go, in order, to the stairs that have no tile of their own.
 //
 // Locked stairs (the owner's Q7 answer, 2026-10-12) stay visible with a lock icon, and cannot be taken until
-// their event is finished. Finishing it opens a dialog that names the floor, and starts a "go to the stairs"
+// their events are finished: `"unlock": { "eventDone": "ev_a" }` (one), `{ "eventsDone": ["ev_a", "ev_b"] }`
+// (several, all of them -- the owner's Q8 answer, 2026-10-21; W38), or both keys together. Finishing it opens a dialog that names the floor, and starts a "go to the stairs"
 // event (goStairsEventId) that is finished when the player takes those stairs.
 //
 // Pure data, no Game: unit-tested in stair_links_test.cpp.
@@ -22,9 +23,24 @@ namespace toms {
 struct StairLink {
     bool up = true;              // "dir": "up" (else "down")
     std::string to;              // the floor it leads to
-    std::string unlockEvent;     // "unlock": { "eventDone": id } -- "" when it is always open
+    std::vector<std::string> unlockEvents;   // "unlock": eventDone + eventsDone -- all must be finished; empty: open
     int x = -1, y = -1;          // its tile on the floor's grid (-1: the grid has no tile for it)
 };
+
+// A stair's `unlock` object: "eventDone" (one id) and "eventsDone" (a list), in that order, without repeats.
+inline std::vector<std::string> unlockEventsFromJson(const nlohmann::json& unlock) {
+    std::vector<std::string> out;
+    auto add = [&](const nlohmann::json& v) {
+        if (!v.is_string() || v.get<std::string>().empty()) return;
+        for (const std::string& e : out) if (e == v.get<std::string>()) return;
+        out.push_back(v.get<std::string>());
+    };
+    if (!unlock.is_object()) return out;
+    if (unlock.contains("eventDone")) add(unlock["eventDone"]);
+    if (unlock.contains("eventsDone") && unlock["eventsDone"].is_array())
+        for (const auto& v : unlock["eventsDone"]) add(v);
+    return out;
+}
 
 // The spec's `stairs` list. Entries without a `to` are dropped; an unknown `dir` reads as "up".
 inline std::vector<StairLink> stairLinksFromJson(const nlohmann::json& arr) {
@@ -35,7 +51,7 @@ inline std::vector<StairLink> stairLinksFromJson(const nlohmann::json& arr) {
         StairLink s;
         s.up = j.value("dir", std::string("up")) != "down";
         s.to = j["to"].get<std::string>();
-        if (j.contains("unlock") && j["unlock"].is_object()) s.unlockEvent = j["unlock"].value("eventDone", std::string());
+        if (j.contains("unlock") && j["unlock"].is_object()) s.unlockEvents = unlockEventsFromJson(j["unlock"]);
         out.push_back(s);
     }
     return out;

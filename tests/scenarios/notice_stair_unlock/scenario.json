@@ -1,0 +1,17 @@
+{
+  "_comment": "F01's stair up locked behind ev_village_well, then the event finished: the 'stairs unlocked' notice.",
+  "scene": "notice",
+  "stage": "F01",
+  "stairLocks": [
+    {
+      "floor": "F01",
+      "event": "ev_village_well"
+    }
+  ],
+  "eventsDone": [
+    "ev_village_well"
+  ],
+  "test": {
+    "frames": 40
+  }
+}

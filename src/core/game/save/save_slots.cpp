@@ -142,6 +142,15 @@ bool readSlotSave(const std::string& saveDir, int slot,
     return true;
 }
 
+bool readSaveFile(const std::string& path, MetaSaveData& metaOut, RunSaveData& runOut, int* playTimeSec) {
+    nlohmann::json j = readJsonFileSafe(path);
+    if (!j.is_object()) return false;
+    metaOut = metaFromJson(j.value("meta", nlohmann::json::object()));
+    runOut  = runFromJson(j.value("run", nlohmann::json::object()));
+    if (playTimeSec) *playTimeSec = j.value("playTimeSec", 0);
+    return true;
+}
+
 SlotSummary summarizeSlot(const std::string& saveDir, int slot, int /*maxSlot*/) {
     SlotSummary s;
     s.slot = slot;

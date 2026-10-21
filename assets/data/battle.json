@@ -6,9 +6,14 @@
     "bar_slow_speed_scale: multiplies the slow start (1 = as the gear sets it; lower = even slower start).",
     "bar_fast_speed_scale: multiplies the top speed it speeds up to (higher = faster after the slow start).",
     "bar_cooldown_ms: after a tap, how long that bar waits (milliseconds) before it moves again.",
-    "Read when the game starts; without this file the game uses 1, 1 and 1500."
+    "Read when the game starts; without this file the game uses 1, 1 and 1500.",
+    "attack_pause_ms: while the player or the enemy attacks, BOTH sides' clocks pause this long (the bars do not",
+    "move or cool down, the enemy's clock waits) -- the owner's rule, docs/30_GAMEPLAY_PLAN.md §4. 0 turns it off.",
+    "hit_number_delay_ms: the damage number appears this long after the attack starts (when the swing lands)."
   ],
   "bar_slow_speed_scale": 0.5,
   "bar_fast_speed_scale": 10,
-  "bar_cooldown_ms": 1000
+  "bar_cooldown_ms": 1000,
+  "attack_pause_ms": 450,
+  "hit_number_delay_ms": 180
 }

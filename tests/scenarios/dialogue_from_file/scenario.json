@@ -1,0 +1,10 @@
+{
+  "_comment": "A dialogue written in this folder (dialogue.json), not one of the game's.",
+  "scene": "dialogue",
+  "dialogue": {
+    "file": "dialogue.json"
+  },
+  "test": {
+    "frames": 40
+  }
+}

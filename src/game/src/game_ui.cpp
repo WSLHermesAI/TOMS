@@ -96,6 +96,14 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("red_r", &UiPowerBar::red_r);
         s.RegisterMember("marker", &UiPowerBar::marker);
     }
+    if (auto s = c.RegisterStruct<UiPopup>()) {
+        s.RegisterMember("text", &UiPopup::text);
+        s.RegisterMember("x", &UiPopup::x);
+        s.RegisterMember("y", &UiPopup::y);
+        s.RegisterMember("opacity", &UiPopup::opacity);
+        s.RegisterMember("kind", &UiPopup::kind);
+    }
+    c.RegisterArray<std::vector<UiPopup>>();
     if (auto s = c.RegisterStruct<UiBattle>()) {
         s.RegisterMember("visible", &UiBattle::visible);
         s.RegisterMember("active", &UiBattle::active);
@@ -122,6 +130,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("super_button", &UiBattle::super_button);
         s.RegisterMember("active_ready", &UiBattle::active_ready);
         s.RegisterMember("active_button", &UiBattle::active_button);
+        s.RegisterMember("popups", &UiBattle::popups);
     }
     if (auto s = c.RegisterStruct<UiDialogue>()) {
         s.RegisterMember("visible", &UiDialogue::visible);

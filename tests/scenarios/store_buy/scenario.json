@@ -1,0 +1,14 @@
+{
+  "_comment": "The store with 500 gold: Enter buys the selected item.",
+  "scene": "store",
+  "player": {
+    "gold": 500
+  },
+  "test": {
+    "frames": 60,
+    "keys": "enter@20"
+  },
+  "expect": {
+    "scene": "store"
+  }
+}

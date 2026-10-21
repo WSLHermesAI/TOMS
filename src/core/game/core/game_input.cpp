@@ -184,14 +184,37 @@ bool Game::stepOntoStairs(int x, int y) {
 }
 
 void Game::bumpLockedStairs(const toms::StairLink& s) {
-    auto d = eventDefs_.find(s.unlockEvent);
-    std::string name = d == eventDefs_.end() ? std::string() : locale_.tr(d->second.titleKey);
-    if (name.empty() || (d != eventDefs_.end() && name == d->second.titleKey)) name = s.unlockEvent;
-    // Before the event is met, its name is a spoiler: the event log shows "???" for it too.
-    if (!run_.eventStarted(s.unlockEvent)) name = locale_.tr("events.unknown");
-    const std::string msg = toms::fillText(locale_.tr("stairs.locked"), {{"event", name}});
+    // W38: the events still to finish, each by name -- "???" for one not met yet (a spoiler; the event log hides it too)
+    std::string names;
+    int left = 0;
+    for (const std::string& ev : s.unlockEvents) {
+        if (run_.eventFinished(ev)) continue;
+        auto d = eventDefs_.find(ev);
+        std::string name = d == eventDefs_.end() ? std::string() : locale_.tr(d->second.titleKey);
+        if (name.empty() || (d != eventDefs_.end() && name == d->second.titleKey)) name = ev;
+        if (!run_.eventStarted(ev)) name = locale_.tr("events.unknown");
+        names += (names.empty() ? "" : ", ") + ("\"" + name + "\"");
+        left++;
+    }
+    const std::string msg = left > 1
+        ? toms::fillText(locale_.tr("stairs.locked.many"), {{"events", names}, {"n", std::to_string(left)}})
+        : toms::fillText(locale_.tr("stairs.locked"), {{"event", names.size() >= 2 ? names.substr(1, names.size() - 2) : names}});
     if (notifications_.empty() || notifications_.back().first != msg) notifications_.push_back({msg, 3200});
     audio.play("confirm_click");
+}
+
+const toms::StairLink* Game::findStair(const std::string& floor, const std::string& to) const {
+    if (st.id == floor)
+        for (const toms::StairLink& s : st.stairs) if (s.to == to) return &s;
+    if (const toms::FloorInfo* f = floors_.find(floor))
+        for (const toms::StairLink& s : f->stairs) if (s.to == to) return &s;
+    return nullptr;
+}
+
+bool Game::stairJustOpened(const std::string& floor, const toms::StairLink& s) const {
+    if (s.unlockEvents.empty() || stairLocked(s)) return false;
+    const std::string go = toms::goStairsEventId(floor, s.to);
+    return run_.eventStarted(go) && !run_.eventFinished(go);
 }
 
 void Game::finishEvent(const std::string& evId, int depth) {
@@ -201,12 +224,24 @@ void Game::finishEvent(const std::string& evId, int depth) {
     auto def = eventDefs_.find(evId);
     if (def != eventDefs_.end() && !already)
         for (const std::string& n : def->second.next) wakeEvent(n, depth);   // started; a "chain" event runs now
-    // Q7: the stairs this event opens. A dialog names each one, and its "go to the stairs" event starts.
+    // Q7 / W38: the stairs this event helps open. When it was the last of a stair's events, a dialog names the stair
+    // and where it is (an arrow marks it on the map), and its "go to the stairs" event starts. When others are still
+    // to do, a short note says how many.
     if (auto u = stairUnlocks_.find(evId); u != stairUnlocks_.end() && !already)
         for (const StairUnlock& s : u->second) {
+            const toms::StairLink* link = findStair(s.floor, s.to);
+            int left = 0;
+            if (link) for (const std::string& e : link->unlockEvents) if (!run_.eventFinished(e)) left++;
+            const std::map<std::string, std::string> vars = {{"from", toms::floorLabel(s.floor)}, {"to", toms::floorLabel(s.to)},
+                                                             {"n", std::to_string(left)}};
+            if (left > 0) {
+                notifications_.push_back({toms::fillText(locale_.tr("stairs.progress"), vars), 4000});
+                continue;
+            }
             run_.markEventStarted(toms::goStairsEventId(s.floor, s.to));
-            const std::map<std::string, std::string> vars = {{"from", toms::floorLabel(s.floor)}, {"to", toms::floorLabel(s.to)}};
-            notices_.push_back({locale_.tr("stairs.unlocked.title"), toms::fillText(locale_.tr("stairs.unlocked.body"), vars)});
+            std::string body = toms::fillText(locale_.tr("stairs.unlocked.body"), vars);
+            body += " " + toms::fillText(locale_.tr(s.floor == st.id ? "stairs.unlocked.here" : "stairs.unlocked.there"), vars);
+            notices_.push_back({locale_.tr("stairs.unlocked.title"), body});
         }
     markProgressDirty();
 }
@@ -243,8 +278,8 @@ void Game::loadStairLocks() {
         it = it->second.stairsFrom.empty() ? std::next(it) : eventDefs_.erase(it);
     for (const toms::FloorInfo& f : floors_.all())
         for (const toms::StairLink& s : f.stairs) {
-            if (s.unlockEvent.empty()) continue;
-            stairUnlocks_[s.unlockEvent].push_back({f.id, s.to});
+            if (s.unlockEvents.empty()) continue;
+            for (const std::string& ev : s.unlockEvents) stairUnlocks_[ev].push_back({f.id, s.to});
             EventDef d;
             d.kind = "stairs";
             d.stairsFrom = f.id;
@@ -260,12 +295,12 @@ void Game::debugLockStairs(const std::string& floor, const std::string& eventId)
         f->stairs = toms::defaultStairLinks(f->nextFloor, floors_.prev(f->id));
         f->hasStairs = true;
     }
-    for (toms::StairLink& s : f->stairs)
-        if (s.up) { s.unlockEvent = eventId; break; }
+    for (toms::StairLink& s : f->stairs)   // another call adds another event: the stair waits for all of them (W38)
+        if (s.up) { if (std::find(s.unlockEvents.begin(), s.unlockEvents.end(), eventId) == s.unlockEvents.end()) s.unlockEvents.push_back(eventId); break; }
     loadStairLocks();
     if (st.id == floor)   // the floor the player is on: its stairs take the lock now
         for (toms::StairLink& s : st.stairs)
-            if (s.up) { s.unlockEvent = eventId; break; }
+            if (s.up) { if (std::find(s.unlockEvents.begin(), s.unlockEvents.end(), eventId) == s.unlockEvents.end()) s.unlockEvents.push_back(eventId); break; }
 }
 
 void Game::debugFinishEvent(const std::string& eventId) {

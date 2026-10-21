@@ -1,0 +1,13 @@
+{
+  "include": "../_shared/mid_game.json",
+  "scene": "menu",
+  "menu": {
+    "tab": "events"
+  },
+  "test": {
+    "frames": 40
+  },
+  "expect": {
+    "menuTab": "events"
+  }
+}

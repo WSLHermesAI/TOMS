@@ -1,0 +1,7 @@
+{
+  "include": "../_shared/mid_game.json",
+  "scene": "store",
+  "test": {
+    "frames": 40
+  }
+}

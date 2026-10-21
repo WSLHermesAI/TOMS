@@ -1,0 +1,9 @@
+{
+  "scene": "dialogue",
+  "dialogue": {
+    "id": "baker"
+  },
+  "test": {
+    "frames": 40
+  }
+}

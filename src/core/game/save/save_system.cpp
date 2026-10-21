@@ -57,6 +57,7 @@ nlohmann::json toJson(const MetaSaveData& m) {
     j["hintsUnlocked"] = m.hintsUnlocked;
     // S5: forging blueprints known -- meta-scope, survives rebirth (see the field's own comment).
     j["forgeRecipesKnown"] = m.forgeRecipesKnown;
+    if (!m.cards.empty()) j["cards"] = cardBookToJson(m.cards);   // monster cards (optional: an older file has none)
     return j;
 }
 
@@ -85,6 +86,7 @@ MetaSaveData metaFromJson(const nlohmann::json& in, bool* versionMismatch) {
     // S5: a pre-S5 file simply has none -- empty list is the documented migration default, same
     // rule as every other field above.
     m.forgeRecipesKnown = j.value("forgeRecipesKnown", std::vector<std::string>{});
+    m.cards = cardBookFromJson(j.value("cards", nlohmann::json::object()));
     return m;
 }
 

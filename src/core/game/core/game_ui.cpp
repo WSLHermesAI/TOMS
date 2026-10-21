@@ -314,6 +314,16 @@ void Game::buildUiState(toms::UiState& u) const {
         b.enemy_hp_text = cs.enemy.name + " HP " + std::to_string(std::max(0, cs.enemyHP));
         b.log = cs.log;
         b.continue_hint = L.tr("battle.continue_hint");
+        for (const auto& p : cs.popups) {   // over the fighter's picture (battle.rcss: #player 262, #enemy 652, top 84)
+            toms::UiPopup q;
+            q.text = p.text;
+            q.kind = p.kind;
+            const float r = p.rise.value();            // 0 -> 1 as it rises
+            q.x = (p.overEnemy ? 652.0f : 262.0f) + 17.0f;
+            q.y = 110.0f - 70.0f * r;
+            q.opacity = r < 0.6f ? 1.0f : std::max(0.0f, 1.0f - (r - 0.6f) / 0.4f);
+            b.popups.push_back(q);
+        }
         if (cs.active) {
             b.clock_label = L.tr("battle.enemy_clock");
             b.clock_pct = pct((float)cs.enemyClockMs, (float)std::max(500, cs.enemy.atkIntervalMs));

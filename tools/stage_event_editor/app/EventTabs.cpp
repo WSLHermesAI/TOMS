@@ -117,7 +117,9 @@ QWidget* EventEditor::floorMapPane() {
     for (const Json& f : m_p.S["floors"])
         for (const Json& st : f["stairs"]) {
             nStairs++;
-            const std::string to = st.value("to", std::string()), lock = st.contains("unlock") ? st["unlock"].value("eventDone", std::string()) : std::string();
+            const std::string to = st.value("to", std::string());
+            const std::vector<std::string> locks = stage::stairUnlockEvents(st);
+            const std::string lock = locks.empty() ? std::string() : locks[0];
             if (!lock.empty()) nLocked++;
             if (to.empty() || !pos.count(to)) continue;
             if (st.value("dir", std::string("up")) == "down")

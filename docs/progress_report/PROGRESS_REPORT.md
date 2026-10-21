@@ -15,12 +15,18 @@
 
 ## ▶ Next Step
 
+**Test scenarios, phase 0, cards, multi-event stair locks, leak check** (2026-10-20 / 21; [DAILY_2026-10-21.md](DAILY_2026-10-21.md)):
+- Every scene can start alone from setting files (`tests/scenarios/`, 32 scenario tests; double-click in `toms_editor`).
+- Gameplay phase 0 (safe timers, tweens, timed hits, `weapon_play.json`, attack pause, damage numbers, the weapon test arena), the card collection, W38 done.
+- Windows Debug leak check in `toms_game` and `toms_editor`: both report no leaks; 3 real leaks and an editor crash fixed.
+- **Owner:** describe the designer / artist workflow (Q26); Q22-Q25 (downloads) later; commit (about 90 files).
+
 **Body swap stopped, reskins fixed, a gameplay plan waiting for decisions** (2026-10-19;
 [DAILY_2026-10-19.md](DAILY_2026-10-19.md), [../30_GAMEPLAY_PLAN.md](../30_GAMEPLAY_PLAN.md)):
 - Premultiplied Spine pages fixed in every reskin tool (no ghost skirt or glowing edges); Zeus and Christmas repaired.
 - Woman → man swap stopped: a different body shape needs a Spine tool (AIGamestyle guide §11).
 - Floors redesigned per chapter; raw art in `art_raw/`; logic graph in the native event editor; TortoiseGit SSH fix.
-- **Owner:** Q16–Q21 answered 2026-10-20 (only Q18's difficulty / fixed part is open); restore or switch off the tests that need `tests/golden`,
+- **Owner:** every open question answered (Q3, Q5, Q8 on 2026-10-21; Q16–Q21 on 2026-10-20 / 21); restore or switch off the tests that need `tests/golden`,
   `tests/mpdi`, `tests/font`; commit `docs/30`.
 
 **AI restyles of 10085, 230 AI sprites, save-system guards, stable object ids** (2026-10-18; not committed in TOMS;
@@ -326,6 +332,10 @@ the Visual Studio IDE (W1).
 | W34 | **Locks are not in any floor yet** | the runtime is built and tested on F01 with `--stair-lock=`; no floor spec has a `stairs` list with `unlock`, and the generator does not place extra stair tiles ([05](../event_editor/05_FLOOR_LINKS.md) §5) | choose the floors and events (event editor, floor inspector), place the stair tiles (stage editor), or teach the generator |
 | W35 | **Docs in two languages, new ones** | `21_IMAGE_STAGES.md` has its `zh_TW` copy; the event-editor UI's own Chinese strings were kept | as W25 |
 | W36 | **Physics only on desktop tools** | `toms_physics` (Jolt) links into `gltf_viewer` and the tests; the game, the web and Android builds do not build it | when the game needs physics: link `toms_physics` into the game, build Jolt for wasm (WASM SIMD) and Android, check size and speed |
+| W37 | **WebGPU in the browser, WebGL2 as the fallback** (Q3, 2026-10-21) | the web build uses WebGL2 only. bgfx 1.161 has a WebGPU renderer, but it is not compiled in: the shaders need a WebGPU profile, Emscripten needs its WebGPU port, and the start-up has to try WebGPU and fall back to WebGL2 | build it only when the owner asks for a web build (Q5); check in a WebGPU browser and one without |
+| W38 | ~~**A stair waiting for several events**~~ Done 2026-10-21: `unlock.eventsDone` (all must be done) in the game, both editors and the floor index; progress notes, the unlock dialog says where, a gold arrow over the opened stair (an edge badge when off screen), the Events tab says the floor and spot ([event_editor/05](../event_editor/05_FLOOR_LINKS.md) §3) | — | — |
+| W39 | **Downloads: shared test scenarios and DLC packs** (owner, 2026-10-21; plan [32](../32_DOWNLOADS_AND_DLC.md)) | planned only. Steps 1-2 (an owner-guarded `fetch`, F9 "save this moment as a scenario") need no decision; steps 3-5 wait for Q22-Q25 | after the card collection and W38, or when the owner asks |
+| W40 | **Workflow for the game designer and the artist** (Q26) | not started: waits for the owner's description | a plan document in docs/, then the tool and data changes it needs |
 | W11 | **Web presets inside the VS IDE** | built only through `build_web.cmd` (which loads emsdk first) | select `web-release-windows` in VS after running `emsdk_env` in a developer prompt, or keep using the script |
 
 ---
@@ -352,11 +362,11 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 |---|---|---|
 | Q1 | ~~Commit the 2026-09-27 move?~~ Answered: committed (`ea386d6` and later) | — |
 | Q2 | ~~Keep the folder name `toms_next`?~~ Answered 2026-09-27: no folder, the project is the root | — |
-| Q3 | Is browser **WebGPU** definitely not needed? (bgfx only does WebGL2 in the browser) | WebGL2 only, as decided 2026-09-25 |
+| Q3 | ~~Browser WebGPU?~~ Answered 2026-10-21: **WebGPU by default, WebGL2 when WebGPU fails** (no adapter, no browser support). bgfx 1.161 has a WebGPU renderer (`renderer_webgpu.cpp`); not built or tested yet (W37) | — |
 | Q4 | ~~Game UI library for phase 3?~~ Answered 2026-09-27: RmlUi, every screen, desktop and web ([08](../08_RMLUI.md)) | — |
 | Q6 | ~~A generated floor edited by hand~~ Answered 2026-10-12: first a dialog before the generator replaced hand-edited floors; then the owner chose to **edit floors only in the stage editor**, and the generator was removed ([19](../19_STAGE_EDITOR.md) §3) | — |
 | Q7 | ~~Locked stairs: invisible or visible?~~ Answered 2026-10-12: **visible, with a lock icon**. When the unlocking event finishes, a **dialog says which floor's stairs are now open**, and the event's description says it too; a **follow-up event "go to F<n>'s stairs"** is started so the player is led there (and finished on reaching them). **Built 2026-10-12** ([05](../event_editor/05_FLOOR_LINKS.md) §3.2, §5); no shipped floor has a lock yet (W34) | — |
-| Q8 | Do finished events reset on rebirth (`run` or `meta` scope)? Can a stair wait for several events or a flag? *2026-10-12: the owner will decide later* | reset on rebirth; one event per lock |
+| Q8 | ~~Rebirth and stair locks?~~ Answered 2026-10-21: finished events **reset on rebirth** (`run` scope); a stair can **wait for several events** (W38) | — |
 | Q9 | ~~The `@` player start~~ Replaced 2026-10-12 by the owner's proposal: **stage maps as a 2D image** instead of characters -- each pixel an integer id (tile, monster, item, event, start, stairs ...), so there are far more ids than characters; a parser reads the pixels into the stage. **Design written 2026-10-12: [21_IMAGE_STAGES.md](../21_IMAGE_STAGES.md)**; three questions there (§6): packed RGB ids or a palette PNG; one id per event; convert all floors at once | keep the character maps until the owner confirms the design |
 | Q10 | ~~Event lists, `_v2`.. ids, languages~~ Answered 2026-10-12: a **per-floor event index** (metadata built from the floor files, for quick search of what happens on a floor); `_v2`..`_v5` explained (variant ids the floor generator made so a floor never repeats an id; most have no pool record, W22) -- owner's call (2026-10-12): **(a) each becomes a real event**, built; **languages: English only for now**, every text still through its key and the language setting, translations when the owner asks -- English is the default since 2026-10-12. **The per-floor index is built** (`assets/data/events/floor_index.json`) | — |
 | Q11 | ~~Player menu: STR / DEX / AGI?~~ Answered 2026-10-10: extend the status like a common RPG (STR, DEX, AGI, VIT, INT, LUK in a settings file `stats.json`); the gameplay that uses them comes later ([20](../20_PLAYER_MENU.md) §3) | — |
@@ -364,10 +374,15 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 | Q13 | ~~Items tab: owned items or every item?~~ Answered 2026-10-10: owned items only | — |
 | Q15 | ~~Equipment tab: change or upgrade?~~ Answered 2026-10-10: change only for now; upgrading is a later task (W26); no Talent slot ([20](../20_PLAYER_MENU.md) §4) | — |
 | Q14 | ~~Chapter goals?~~ Answered 2026-10-10: every event (and mission, chapter) has a title and a description; the Events tab shows only those, plus the names of connected events ([20](../20_PLAYER_MENU.md) §6, [06](../event_editor/06_EVENT_LOGIC.md) §7) | — |
-| Q5 | The bgfx web build now passes its check (2026-09-26). Replace the old `build_web.sh` output (`web/`, `web-gl/`) with it, and where is it published? | keep both until the owner has played the new one (W9) |
+| Q5 | ~~Replace the old web output, and where is it published?~~ Answered 2026-10-21: **build the web only when the owner asks** (not as part of other work or `test all`) | — |
 | Q16 | ~~Gameplay plan — cards?~~ Answered 2026-10-20: for now **a collection only** -- per monster, times defeated and times it defeated the player; first card 100 %, a second copy 50 %, set in each monster's data (`enemies.json`) ([30](../30_GAMEPLAY_PLAN.md) §3) | — |
 | Q17 | ~~Gameplay plan — AGI?~~ Answered 2026-10-20: AGI **reduces the waiting time**, so higher AGI attacks more often in the same time ([30](../30_GAMEPLAY_PLAN.md) §4) | — |
-| Q18 | ~~Gameplay plan — style choice?~~ Answered 2026-10-20: the battle's play **depends on the weapon**. *Not yet answered: tied to difficulty? fixed?* ([30](../30_GAMEPLAY_PLAN.md) §7) | not tied to difficulty; main style fixed, other weapons can be picked up |
+| Q18 | ~~Gameplay plan — style choice?~~ Answered 2026-10-20 / 21: the battle's play **depends on the weapon**; the difficulty is not tied to the choice and **can be changed during the game**; the plan's proposals (three new weapons, the level curve, `card.chance` / `repeatChance`, `weapon_play.json`) are accepted ([30](../30_GAMEPLAY_PLAN.md) §7, §11) | — |
 | Q19 | ~~Gameplay plan — misses?~~ Answered 2026-10-20: a miss sends the combo **back by weapon and level** (Lv 5 to the start, Lv 10 back 5, Lv 15 back 4 …), per weapon **in a settings file** ([30](../30_GAMEPLAY_PLAN.md) §5.6) | — |
 | Q20 | ~~Gameplay plan — the enemy's turn?~~ Answered 2026-10-20: while the player **or** the enemy is attacking, **both** attack clocks pause until the attack finishes ([30](../30_GAMEPLAY_PLAN.md) §4) | — |
 | Q21 | ~~Gameplay plan — other modes?~~ Answered 2026-10-20: **part of TOMS**, built as **independent modules** other games can reuse ([30](../30_GAMEPLAY_PLAN.md) §8) | — |
+| Q22 | **Downloads** ([32](../32_DOWNLOADS_AND_DLC.md) §7): where do shared test scenarios live (a cloud bucket such as Cloudflare R2 / S3 / Azure Blob, Google Drive, or our own server)? | a cloud bucket (R2) |
+| Q23 | **Downloads**: who can upload test scenarios -- each developer with their own key, or one shared developer key? | each developer their own key |
+| Q24 | **DLC packs**: may a pack change existing content, or only add new things? | add only |
+| Q25 | **DLC packs**: players get them in the game from our storage, or through the stores' DLC (Steam, Google Play asset packs)? Paid or free? | our storage, free packs first |
+| Q26 | **Two new collaborators: a game designer and an artist** (owner, 2026-10-21; the owner is the programmer). *Undecided: the owner will describe it next time.* Topics named so far: how to **change the UI without a programmer**; how to **add or change events and stage data**; how **every developer gets the same data for testing** (the test scenarios, [31](../31_TEST_SCENARIOS.md), and their sharing, [32](../32_DOWNLOADS_AND_DLC.md) Q22-Q23). Likely also: who edits which files with which tool (the stage / event editors, the anim / particle / atlas / font editors, the AI art pipeline), getting the repository and the tools on their PCs ([11](../11_NEW_MACHINE_SETUP.md)), and how their changes are checked and merged | wait for the owner's description |
