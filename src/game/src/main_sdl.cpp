@@ -31,6 +31,7 @@
 //   --character=<sprite>  with --anim: play a character clip (body / hand nodes) as this character (fitCharacter)
 //   --held=<file.anim>    with --anim: draw that file's clip of the same name at the character clip's hand (CharacterRig)
 //   --hot-reload          read changed art, clips and effects again while playing (on by default in debug builds)
+//   --skip-start-story    New Game goes straight to stage 1, skipping the weapon master (docs/30 phase 3; the screenshot tests)
 //   --give=<id,...>       when the title first closes, hand the player these items (data/items.json ids;
 //                         gear is owned, not worn), gold:<n>, exp:<n>, points:<n> -- tests of the player menu (tests/CMakeLists.txt)
 //   --stair-lock=<floor>:<event>  lock that floor's first stair up until the event is finished (locked stairs, Q7)
@@ -94,6 +95,7 @@ struct Args {
     int frames = 0;
     bool vsync = true, stats = false, fps = false;
     bool hotReload = false;   // --hot-reload
+    bool skipStartStory = false;   // --skip-start-story: New Game goes straight to stage 1 (the screenshot tests)
     std::string spritePath = "auto";
     int fxGpuThreshold = -1;
     bool defaultBattleTuning = false;  // --battle-tuning=default
@@ -177,6 +179,7 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--sprite-path=")) a.spritePath = v;
         else if (s == "--fps") a.fps = true;
         else if (s == "--hot-reload") a.hotReload = true;
+        else if (s == "--skip-start-story") a.skipStartStory = true;
         else if (const char* v = value(s, "--fx-gpu-threshold=")) a.fxGpuThreshold = std::max(0, std::atoi(v));
         else if (const char* v = value(s, "--title-scene=")) a.titleScene = v;
         else if (const char* v = value(s, "--ui-scale=")) a.uiScale = (float)std::atof(v);
@@ -508,6 +511,8 @@ bool appFrame(App& app) {
         in.hasMouse = true;
     }
 
+    if (args.skipStartStory)
+        if (::Game* g = app.session.game()) g->setSkipStartStory(true);
     // --scenario: once the game is up, straight into the scene (the title closes, unless the scenario is the title).
     if ((!args.scenario.empty() || !args.arena.empty()) && !app.scenarioStarted && app.session.game()) {
         app.scenarioStarted = true;

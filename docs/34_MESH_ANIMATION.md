@@ -13,7 +13,9 @@ the renderer draws triangle meshes, sprites have meshes cut from their alpha, cl
 deform lattice. Step 5 is under way: the anim tools add the meshes a clip needs to the mesh file beside its atlas, and
 a skinned sprite without a mesh is reported; part 1, `tools/refresh_meshes.py`, refreshes every atlas's meshes (art
 styles included) after the atlases change, and part 2, motion recipes, writes breathing, swaying or nodding keys for a
-node (both built 2026-10-22). Part 3, the weight view and painting in the editor, is next. Step 6 is skipped for now.
+node (both built 2026-10-22). Part 3, weight painting in the editor, **waits for the owner's decision** (2026-10-22): no character is skinned
+yet, and automatic weights, Show Skin (which already shades a selected bone's pull), the mesh grid and moving the bones
+cover today's needs. It is done when a real skinned character bends badly. Step 6 is skipped for now.
 The owner's decisions are in section 8.
 
 ## 1. Why
@@ -221,7 +223,7 @@ For one character with 10 nodes and 3 meshed parts, a 1 s idle with 5 keys:
 | 2 | Meshes cut from alpha: `sprite_mesh.h`, text or `.bin`, one mesh file beside each atlas, written by the anim tools; loaded with the atlas by the game, the resource cache and the anim editor | `assets/media/atlas/game.mesh.json` with the golem and the slime | **built 2026-10-21 – 22** |
 | 3 | Skinning: `skin` in `.anim` version 3, automatic weights, `appendDraws`, the editor's **Skin** field | `tests/smoke/anim_skin.anim`: the golem bent by hip / chest / head, its feet planted; `smoke.anim_skin` | **built 2026-10-21** |
 | 4 | Lattice deform: `lattice` (default 4 × 4, adjustable per node) + `tracks.deform`; a lattice mode in the anim editor's viewport and a Deform column in the key list | breathing / squash / sway on any sprite: `tests/smoke/anim_deform.anim` (`smoke.anim_deform`) | **built 2026-10-22** |
-| 5 | AI hooks: part 1, the meshes remade from the rebuilt or restyled atlases (`tools/refresh_meshes.py` in the pipeline); part 2, motion recipes (docs/16 §7) for lattices and bones that the editor, a script or AI can apply; part 3, a weight view and painting in the editor; a check that every skinned sprite has a mesh | a restyled or reshaped character plays its old clips | the editor's mesh cutting, `--headless meshes`, the mesh check, part 1 and part 2 **built 2026-10-22**; part 3 to do |
+| 5 | AI hooks: part 1, the meshes remade from the rebuilt or restyled atlases (`tools/refresh_meshes.py` in the pipeline); part 2, motion recipes (docs/16 §7) for lattices and bones that the editor, a script or AI can apply; part 3, a weight view and painting in the editor; a check that every skinned sprite has a mesh | a restyled or reshaped character plays its old clips | the editor's mesh cutting, `--headless meshes`, the mesh check, part 1 and part 2 **built 2026-10-22**; part 3 **waits for the owner's decision** (when a real skinned character needs it) |
 | 6 | Later: a Spine JSON → `.anim` importer; an old `.mx` importer; a binary `.anim` for release; batching skinned meshes | existing Spine art runs in TOMS without Spine | skipped for now (section 8) |
 
 ## 7. What was built
@@ -370,7 +372,8 @@ For one character with 10 nodes and 3 meshed parts, a 1 s idle with 5 keys:
 
 - The editor shows a skinned node's sprite bent only in its game-renderer view. Its selection outline and the
   QPainter fallback (no GPU) show the unbent rest quad; Show Skin's lines and points are bent in both.
-- Weights are automatic or written in the file; the editor cannot paint them yet (step 5, part 3).
+- Weights are automatic or written in the file; the editor cannot paint them (step 5, part 3, waiting for the owner's
+  decision). To improve a bend: a finer mesh grid, or move the bones at rest (the automatic weights follow them).
 - The mesh's points cannot be dragged by hand yet; the Mesh grid only makes it coarser or finer. Shape changes go
   through the lattice.
 - The lattice is shown and dragged in the node's own frame. On a skinned node its bones are not applied there, so drag

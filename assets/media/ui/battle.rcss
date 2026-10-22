@@ -36,6 +36,15 @@ body { z-index: 30; }
 .zone.green  { background-color: #94e6a8; }
 .bar-dim { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: #41414c8c; }
 .marker  { position: absolute; top: -8px; width: 5px; height: 44px; margin-left: -2px; background-color: #ffffff; }
+/* Battle v3's point play (docs/30 phase 1): a charge column, then the track with its points */
+.combo   { position: relative; height: 28px; }
+.charge  { position: absolute; left: 0; top: -8px; width: 12px; height: 44px; background-color: #41414c; }
+.charge-fill { position: absolute; left: 0; bottom: 0; width: 100%; background-color: #ffc861; }
+.track   { position: absolute; left: 22px; right: 0; top: 0; height: 28px; background-color: #5b6275; }
+.track.waiting { background-color: #6e4b52; }
+.pt      { position: absolute; top: 4px; width: 20px; height: 20px; margin-left: -10px; border-radius: 10px;
+           background-color: #94b1ed; }
+.pt.hit  { background-color: #94e6a8; }
 .action {
     margin-top: 18px; height: 62px; line-height: 62px; font-size: 21px; color: #ffffff;
     background-color: #8598b3; text-align: left; padding-left: 18px;
@@ -47,16 +56,16 @@ body { z-index: 30; }
 .note.shield { color: #c2e0ff; }
 .note.crit   { color: #ffed94; }
 
-#super { position: absolute; left: 262px; top: 530px; height: 24px; }
+#super { position: absolute; left: 262px; top: 550px; height: 24px; }   /* below the weapon level line (Battle v3) */
 #super-label { font-size: 19px; color: #f3f3ff; margin-right: 18px; }
 .dot-slot { display: inline-block; }
 .dot { width: 17px; height: 17px; margin-right: 8px; background-color: #7b7b88; }
 .dot.on { background-color: #ffca88; }
 
 .wide { position: absolute; left: 262px; width: 700px; height: 50px; line-height: 50px; font-size: 22px; color: #ffffff; }
-#super-btn  { top: 562px; background-color: #d9887b; }
+#super-btn  { top: 582px; background-color: #d9887b; }
 #super-btn:hover  { background-color: #e89a8d; }
-#active-btn { top: 624px; background-color: #88c2d2; }
+#active-btn { top: 644px; background-color: #88c2d2; }
 #active-btn:hover { background-color: #9ad2e2; }
 
 /* damage numbers (UiPopup): a 100 px box over the fighter, rising and fading */

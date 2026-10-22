@@ -1,0 +1,13 @@
+{
+  "npcId": "crystal_oracle",
+  "name": "npc.crystal_oracle.name",
+  "sprite": "npc_oracle",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "crystal_oracle"
+      }
+    ],
+    "order": "loop"
+  }
+}

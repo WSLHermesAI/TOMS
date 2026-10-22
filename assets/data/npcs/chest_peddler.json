@@ -1,0 +1,13 @@
+{
+  "npcId": "chest_peddler",
+  "name": "npc.chest_peddler.name",
+  "sprite": "npc_peddler",
+  "chat": {
+    "lines": [
+      {
+        "dialogue": "chest_peddler"
+      }
+    ],
+    "order": "loop"
+  }
+}

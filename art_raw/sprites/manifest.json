@@ -260,6 +260,8 @@
     "floor_sand",
     "floor_wood",
     "floor_crystal",
-    "floor_shadow"
+    "floor_shadow",
+    "item_sword",
+    "item_staff"
   ]
 }

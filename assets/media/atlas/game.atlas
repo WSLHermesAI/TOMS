@@ -9,7 +9,7 @@ bat
 boss_demonlord
   bounds: 1, 1, 32, 32
 coin
-  bounds: 452, 412, 23, 19
+  bounds: 483, 370, 23, 19
   offsets: 5, 6, 32, 32
 demon
   bounds: 145, 73, 29, 32
@@ -79,10 +79,10 @@ floor_shadow
 floor_wood
   bounds: 109, 37, 32, 32
 gem_atk
-  bounds: 460, 315, 23, 25
+  bounds: 396, 407, 23, 25
   offsets: 5, 3, 32, 32
 gem_def
-  bounds: 487, 315, 23, 25
+  bounds: 346, 442, 23, 25
   offsets: 5, 3, 32, 32
 golem
   bounds: 253, 139, 28, 27
@@ -172,7 +172,7 @@ item_music_box
   bounds: 34, 251, 28, 30
   offsets: 2, 1, 32, 32
 item_old_key_ring
-  bounds: 452, 435, 23, 19
+  bounds: 481, 393, 23, 19
   offsets: 1, 2, 32, 32
 item_old_lantern
   bounds: 306, 137, 16, 30
@@ -214,17 +214,23 @@ item_silver_ring
   bounds: 151, 383, 14, 17
   offsets: 9, 8, 32, 32
 item_spectacles
-  bounds: 488, 344, 22, 10
+  bounds: 1, 455, 22, 10
   offsets: 9, 11, 32, 32
 item_spell_book
   bounds: 154, 176, 25, 30
   offsets: 3, 1, 32, 32
+item_staff
+  bounds: 460, 315, 25, 27
+  offsets: 4, 2, 32, 32
 item_star_fragment
   bounds: 67, 214, 27, 30
   offsets: 2, 1, 32, 32
 item_sun_medallion
   bounds: 389, 1, 30, 29
   offsets: 1, 2, 32, 32
+item_sword
+  bounds: 396, 378, 25, 25
+  offsets: 3, 3, 32, 32
 item_treasure_map
   bounds: 253, 1, 30, 30
   offsets: 1, 1, 32, 32
@@ -241,40 +247,40 @@ key_amethyst
   bounds: 102, 448, 24, 18
   offsets: 5, 9, 32, 32
 key_blue
-  bounds: 396, 378, 24, 18
-  offsets: 5, 9, 32, 32
-key_bone
-  bounds: 396, 400, 24, 18
-  offsets: 5, 9, 32, 32
-key_bronze
-  bounds: 396, 422, 24, 18
-  offsets: 5, 9, 32, 32
-key_emerald
   bounds: 123, 384, 24, 18
   offsets: 5, 9, 32, 32
-key_flame
-  bounds: 346, 442, 24, 18
+key_bone
+  bounds: 373, 442, 24, 18
   offsets: 5, 9, 32, 32
-key_frost
-  bounds: 460, 344, 24, 18
+key_bronze
+  bounds: 401, 436, 24, 18
   offsets: 5, 9, 32, 32
-key_obsidian
+key_emerald
   bounds: 428, 346, 24, 18
   offsets: 5, 9, 32, 32
-key_red
+key_flame
+  bounds: 456, 346, 24, 18
+  offsets: 5, 9, 32, 32
+key_frost
   bounds: 427, 368, 24, 18
   offsets: 5, 9, 32, 32
+key_obsidian
+  bounds: 455, 368, 24, 18
+  offsets: 5, 9, 32, 32
+key_red
+  bounds: 425, 390, 24, 18
+  offsets: 5, 9, 32, 32
 key_rune
-  bounds: 424, 390, 24, 18
+  bounds: 453, 390, 24, 18
   offsets: 5, 9, 32, 32
 key_silver
-  bounds: 424, 412, 24, 18
+  bounds: 423, 412, 24, 18
   offsets: 5, 9, 32, 32
 key_sun
-  bounds: 424, 434, 24, 18
+  bounds: 451, 412, 24, 18
   offsets: 5, 9, 32, 32
 key_yellow
-  bounds: 456, 366, 24, 18
+  bounds: 429, 434, 24, 18
   offsets: 5, 9, 32, 32
 m_armored_ogre
   bounds: 65, 382, 26, 30
@@ -658,16 +664,16 @@ potion_blue
   bounds: 102, 350, 17, 24
   offsets: 8, 3, 32, 32
 potion_red
-  bounds: 374, 442, 17, 24
+  bounds: 489, 315, 17, 24
   offsets: 8, 3, 32, 32
 scroll
-  bounds: 455, 388, 23, 20
+  bounds: 484, 346, 23, 20
   offsets: 5, 6, 32, 32
 skeleton
   bounds: 428, 315, 28, 27
   offsets: 3, 3, 32, 32
 slime
-  bounds: 395, 444, 23, 21
+  bounds: 457, 434, 23, 21
   offsets: 5, 2, 32, 32
 stairs_down
   bounds: 247, 442, 29, 22

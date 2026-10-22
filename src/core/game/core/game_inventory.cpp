@@ -95,6 +95,7 @@ void Game::receiveItem(const std::string& id) {
 
 void Game::debugGive(const std::string& id) {
     if (id.rfind("gold:", 0) == 0) { pl.gold += std::atoi(id.c_str() + 5); return; }
+    if (id.rfind("crystals:", 0) == 0) { pl.crystals += std::max(0, std::atoi(id.c_str() + 9)); return; }
     if (id.rfind("exp:", 0) == 0) { gainExp(std::atoi(id.c_str() + 4)); return; }
     if (id.rfind("points:", 0) == 0) { pl.attrPoints += std::max(0, std::atoi(id.c_str() + 7)); return; }
     receiveItem(id);
@@ -155,7 +156,25 @@ int Game::attrValue(const std::string& id) const {
         auto s = e->second.stats.find(id);
         if (s != e->second.stats.end()) v += s->second;
     }
+    // The equipped weapon's level (docs/30 phase 1, data/weapon_play.json "levels"): its bonuses at that level.
+    const std::string key = weaponKey();
+    const auto& lvStats = toms::weaponLevelEntry(weaponPlayOf(key), weaponLevel(key)).stats;
+    if (auto s = lvStats.find(id); s != lvStats.end()) v += s->second;
     return v;
+}
+
+std::string Game::weaponKey() const { return equipped_.weaponId.empty() ? std::string("unarmed") : equipped_.weaponId; }
+
+const toms::WeaponPlay& Game::weaponPlayOf(const std::string& key) const { return weaponPlay_.get(key); }
+
+int Game::weaponLevel(const std::string& key) const {
+    auto it = weaponUses_.find(key);
+    return toms::weaponLevelFromUses(weaponPlayOf(key), it == weaponUses_.end() ? 0 : it->second);
+}
+
+float Game::comboCharge() const {
+    const int full = std::max(1, weaponPlayOf(weaponKey()).chargeMs);
+    return std::min(1.0f, float(cs.chargeMs) / float(full));
 }
 
 // ---------- owned gear ----------

@@ -15,6 +15,15 @@
 
 ## ▶ Next Step
 
+**Gameplay phases 1-6, the bow as the starting weapon, the web build fixed** (2026-10-22 evening;
+[DAILY_2026-10-22.md](DAILY_2026-10-22.md) rows 21-28, [../30_GAMEPLAY_PLAN.md](../30_GAMEPLAY_PLAN.md) §13-16):
+- Battle v3: the point play (charge, marker, points from the weapon level), weapon levels in `weapon_play.json`.
+- Sword and staff (clips by status, generated clips and icons); the start story (try weapons with the weapon master).
+- Reward events (`minigames.json`) and crystals; on stage 1 the peddler (gold) and the shrine (crystals, Chinese only).
+- The bow is the starting weapon; Jolt builds for the web again; mesh weight painting waits for the owner.
+- Changed-only 32 of 184 pass; battle / arena / trial / mini-game scenarios pass by name; 3 references refreshed.
+  **Owner:** play the new start; tune the numbers. **Next:** the sword's and staff's own plays (§5.2, §5.3).
+
 **Deform lattice, meshes owned by the anim tools, motion recipes** (2026-10-22 evening; not committed;
 [DAILY_2026-10-22.md](DAILY_2026-10-22.md) rows 13–20, [../34_MESH_ANIMATION.md](../34_MESH_ANIMATION.md)):
 - Mesh animation step 4 (deform lattice: `lattice` + `deform` keys, Lattice mode L, Properties Lattice, Deform column).

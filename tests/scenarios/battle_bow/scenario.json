@@ -1,8 +1,10 @@
 {
-  "_comment": "A battle with the bow (items.json \"bow\": its battle clips, docs/15_ANIMATION.md \"Characters\"): the player's character draws and holds the bow (charge) while the attack bar waits for the tap, shoots on the tap (attack), and lowers it (idle) while the bar recovers for the next round. A sturdy slime that hardly attacks, so the bow can be watched. The test taps once: attack.",
+  "_comment": "A battle with the bow (items.json \"bow\": its battle clips, docs/15_ANIMATION.md \"Characters\"): the player's character draws and holds the bow (charge) while the attack waits, shoots when the combo ends (attack), and lowers it (idle) while the attack recovers. A sturdy slime that hardly attacks, so the bow can be watched. Battle v3 (docs/30 phase 1): the tap at frame 40 starts the combo (charge 640 of 2200 ms), and the three taps after it land on the bow's Lv 1 points (1/4, 2/4, 3/4 of the track, about 21, 41 and 62 frames later at --fixed-dt=16): all three hit, the bow shoots.",
   "scene": "battle",
   "player": {
-    "equip": ["bow"]
+    "equip": [
+      "bow"
+    ]
   },
   "battle": {
     "enemy": "slime",
@@ -10,8 +12,8 @@
     "atk_interval_ms": 60000
   },
   "test": {
-    "frames": 50,
-    "keys": "enter@40"
+    "frames": 110,
+    "keys": "enter@40,enter@61,enter@81,enter@102"
   },
   "expect": {
     "battleAnim": "attack"

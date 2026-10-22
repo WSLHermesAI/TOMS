@@ -116,6 +116,11 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME anim.check_archer
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/archer_bow.anim")
     set_tests_properties(anim.check_archer PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # The sword's and the staff's battle clips (tools/make_weapon_anims.py; docs/30 phase 4).
+    foreach(_clip weapon_sword fighter_sword weapon_staff caster_staff)
+        add_test(NAME anim.check_${_clip} COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/${_clip}.anim")
+        set_tests_properties(anim.check_${_clip} PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    endforeach()
     add_test(NAME anim.check_deform   # the deform lattice's demo (docs/34 step 4)
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/tests/smoke/anim_deform.anim")
     set_tests_properties(anim.check_deform PROPERTIES LABELS "unit;anim" TIMEOUT 30)

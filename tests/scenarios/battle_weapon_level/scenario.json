@@ -1,0 +1,20 @@
+{
+  "_comment": "Weapon levels (docs/30 phase 1): the bow at 2 wins (Lv 1 needs 3 for Lv 2, data/weapon_play.json usesToLevel); one more win makes it Lv 2, with 3 points still (Lv 3 brings 4).",
+  "scene": "battleWon",
+  "player": {
+    "weaponUses": {
+      "bow": 2
+    }
+  },
+  "battle": {
+    "enemy": "slime"
+  },
+  "test": {
+    "frames": 10
+  },
+  "expect": {
+    "weaponLevel": {
+      "bow": 2
+    }
+  }
+}

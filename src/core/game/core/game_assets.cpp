@@ -184,6 +184,7 @@ bool Game::loadAssets(const std::string& assetDir) {
         }
     }
     weaponPlay_ = toms::loadWeaponPlay(assetDir + "/../data/weapon_play.json");   // docs/30_GAMEPLAY_PLAN.md §5.6
+    miniGames_ = toms::loadMiniGames(assetDir + "/../data/minigames.json");      // docs/30 phase 6
     characterFit_ = readJsonFile(assetDir + "/../data/character_fit.json");      // character clips' nudges (docs/15)
     fprintf(stderr, "[assets] weapon_play.json: %d weapon(s)\n", (int)weaponPlay_.weapons.size());
     // load enemy templates

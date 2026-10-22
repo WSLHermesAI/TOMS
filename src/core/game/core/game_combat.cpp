@@ -8,6 +8,8 @@ void Game::startCombat(const EnemyInst& e) {
     cs.enemy = e; cs.playerHP = pl.hp; cs.enemyHP = e.hp; cs.active = true; cs.won = false;
     cs.atkBar = CombatState::AutoBar{};
     cs.defBar = CombatState::AutoBar{};
+    cs.combo = toms::ComboPlay{};
+    cs.chargeMs = 0;
     cs.shieldBanked = false; cs.shieldPower = 0.0f;
     cs.enemyClockMs = 0;
     cs.superCharge = 0;
@@ -49,18 +51,23 @@ bool Game::battleRigReady() const { return battleCharacterAnim_ || battleHeldAni
 void Game::setBattleRigState(const std::string& state, bool restart) {
     if (state == battleRigState_ && !restart) return;
     battleRigState_ = state;
-    const toms::anim::Clip* body = battleCharacterAnim_ ? battleCharacterAnim_->find(state) : nullptr;
+    // The weapon's clip for this status (items.json "battleAnim" "clips"; docs/30 phase 2), else the status's own name.
+    auto def = equipmentDefs_.find(equipped_.weaponId);
+    const std::string clipName = def != equipmentDefs_.end() ? def->second.battleClip(state) : state;
+    const toms::anim::Clip* body = battleCharacterAnim_ ? battleCharacterAnim_->find(clipName) : nullptr;
     if (body) {   // the player's character in the clip made with another
         battleFitted_ = fitClipToCharacter(*body, playerSprite());
         body = &battleFitted_;
     }
-    battleRig_.play(body, battleHeldAnim_ ? battleHeldAnim_->find(state) : nullptr);
+    const toms::anim::Clip* held = battleHeldAnim_ ? battleHeldAnim_->find(clipName) : nullptr;
+    battleRigClip_ = body || held ? clipName : std::string();   // what plays (a test scenario checks it)
+    battleRig_.play(body, held);
 }
 
 void Game::updateBattleRig(int dtMs) {
     const bool shown = cs.active || cs.won || cs.resultPauseMs > 0;
     if (!shown) {
-        if (!battleRigState_.empty()) { battleRig_.stop(); battleRigState_.clear(); }
+        if (!battleRigState_.empty()) { battleRig_.stop(); battleRigState_.clear(); battleRigClip_.clear(); }
         return;
     }
     loadBattleRig();
@@ -126,6 +133,18 @@ void Game::finishCombatWin() {
         // Milestone 7: persist the clear so it survives a reload of this floor (stairs or the Stage
         // Select hub) -- see entityStatus_'s declaration in game.h.
         toms::setEntityStatus(entityStatus_, statusKeyAt(cs.enemy.x, cs.enemy.y), toms::EntityStatus::Defeated);
+    }
+    {   // the weapon's win (docs/30 phase 1): enough of them raise its level -- more points, bigger bonuses
+        const std::string key = weaponKey();
+        const int before = weaponLevel(key);
+        weaponUses_[key]++;
+        const int after = weaponLevel(key);
+        if (after > before) {
+            const std::string name = equipmentDefs_.count(key) ? itemName(key) : locale_.tr("battle.unarmed");
+            const int points = toms::weaponLevelEntry(weaponPlayOf(key), after).points;
+            notifications_.push_back({trParam(trParam(trParam(locale_.tr("battle.weapon_level_up"), "name", name), "lv",
+                                                      std::to_string(after)), "n", std::to_string(points)), 3500});
+        }
     }
     toms::globalEventBus().publish(toms::EnemyDefeated{cs.enemy.id, curStage});
     if (cs.enemy.boss) { cs.log = locale_.tr("battle.boss_win"); loadStage("stage_11"); }
@@ -239,11 +258,56 @@ void Game::resolveEnemyClockFire() {
     }
 }
 
+// Battle v3 (docs/30 phase 1): the first tap starts the combo with the charge built so far; the next taps hit the
+// points. The combo's end (all hit, the sweeps run out, or two misses) resolves the attack.
 void Game::battleTapAttack() {
     if (!cs.active || cs.atkBar.cooling) return;
-    resolveAttackTap();
-    if (battleRigReady()) setBattleRigState(lastAttackDamage_ > 0 ? "attack" : "miss", true);   // shoot (also the winning one)
-    if (!cs.active) return;   // the tap just won the fight -- nothing left to cool down
+    if (!cs.combo.running()) {
+        const std::string key = weaponKey();
+        cs.combo.start(toms::comboSettings(weaponPlayOf(key), weaponLevel(key)), comboCharge());
+        cs.log = locale_.tr("battle.combo_go");
+        audio.play("confirm_click");
+        return;
+    }
+    switch (cs.combo.tap()) {
+    case toms::ComboPlay::Tap::Hit: audio.play("confirm_click"); break;
+    case toms::ComboPlay::Tap::Miss: audio.play("deny"); break;
+    case toms::ComboPlay::Tap::Ignored: break;
+    }
+    if (cs.combo.done()) resolveCombo();
+}
+
+void Game::resolveCombo() {
+    const toms::ComboResult r = cs.combo.result();
+    cs.combo = toms::ComboPlay{};
+    cs.chargeMs = 0;
+    const bool activeCrit = cs.nextAttackGuaranteedCrit;   // a scripted perfect release: every point counts
+    const float power = activeCrit ? 100.0f : r.power();
+    const float maxMult = toms::effectiveMaxMult(equipped_, equipmentDefs_);
+    const int baseHit = std::max(1, effectiveAtk() - cs.enemy.def);
+    int dmg = toms::computeAttackDamage(baseHit, power, maxMult);
+    dmg = (int)std::lround(dmg * (1.0f + weaponPlayOf(weaponKey()).chargeDamage * r.charge));   // the charge
+    if (!activeCrit && r.failed && toms::talentZerosRedZoneAttacks(equipped_.talentId)) dmg = 0;   // Berserker: a fail deals nothing
+    if (activeCrit) {
+        dmg = (int)std::lround(dmg * cs.nextAttackCritDamageMult);
+        cs.nextAttackGuaranteedCrit = false;
+        cs.nextAttackCritDamageMult = 1.0f;
+    }
+    cs.enemyHP -= dmg;
+    lastAttackDamage_ = r.failed || r.hits == 0 ? 0 : dmg;   // the battle rig: attack, or miss for a fail
+    if (dmg > 0 && !r.failed) cs.superCharge = std::min(run_.superMax(), cs.superCharge + 1);
+    audio.play("player_attack");
+    startAttackPause();
+    popDamage(dmg, /*overEnemy=*/true, r.hits == r.points && !r.failed ? 1 : 0);
+    if (battleRigReady()) setBattleRigState(lastAttackDamage_ > 0 ? "attack" : "miss", true);
+    const std::string combo = trParam(trParam(locale_.tr(r.failed ? "battle.combo_fail" : "battle.combo_hits"), "hits",
+                                              std::to_string(r.hits)), "n", std::to_string(r.points));
+    if (cs.enemyHP <= 0) {
+        cs.log = combo + " " + trParam(locale_.tr("battle.crit_win"), "dmg", std::to_string(dmg));
+        finishCombatWin();
+        return;
+    }
+    cs.log = combo + " " + trParam(locale_.tr("battle.hit"), "dmg", std::to_string(dmg));
     cs.atkBar.cooling = true;
     cs.atkBar.cooldownMs = barCooldownMs();   // AGI shortens it
 }

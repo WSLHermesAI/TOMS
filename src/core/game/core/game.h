@@ -35,6 +35,8 @@
 #include "safe_timer.h"      // toms::TimerQueue / TimerOwner -- delayed calls that die with their owner (battle numbers)
 #include "tween.h"           // toms::Tween -- the damage numbers' rise
 #include "weapon_play.h"     // toms::WeaponPlayTable -- data/weapon_play.json (docs/30_GAMEPLAY_PLAN.md §5.6)
+#include "combo_play.h"      // toms::ComboPlay -- Battle v3's point play (docs/30 §4, §5.1)
+#include "mini_game.h"       // toms::MiniGameTable -- reusable reward events (docs/30 phase 6)
 #include "art_styles.h"      // toms::ArtStyle — the selectable art styles (assets/media/styles)
 #include "atlas_file.h"      // toms::AtlasFile — the prebuilt sprite atlas (tools/atlas)
 #include "particle_fx.h"     // toms::fx — particle effects on the atlases (docs/17_PARTICLES.md)
@@ -47,6 +49,7 @@
 struct Player : public Trackable {
     int hp, maxhp, atk, def, gold, exp, lv;
     int key_yellow = 0, key_blue = 0, key_red = 0;
+    int crystals = 0;   // the second currency (docs/30 phase 6): earned by the reward events (mini_game.h)
     int x = 1, y = 1;
     // inventory: list of item ids (a 9-grid, extendable UI). Keys/coins are NOT
     // stored here (they apply immediately); usable items (gems/potions/exp/scroll) are.
@@ -119,6 +122,10 @@ struct CombatState : public Trackable {
     bool won = false;
 
     AutoBar atkBar, defBar;
+    // Battle v3 (docs/30 phase 1): the attack is the point play. While the attack waits (not cooling, no combo), charge
+    // builds up (chargeMs); the first tap starts the combo with it.
+    toms::ComboPlay combo;
+    int chargeMs = 0;
     bool shieldBanked = false;
     float shieldPower = 0.0f;
     int enemyClockMs = 0;      // counts up to enemy.atkIntervalMs, then fires and resets to 0
@@ -314,7 +321,7 @@ public:
     // as a modal overlay too, not just cs.active -- otherwise the world underneath (movement,
     // NPC interact, the store icon, Tab/B shortcuts) keeps responding to input while the victory
     // screen is still up. See docs/progress_report/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
-    bool modalActive() const { return cs.active || cs.won || inDialogue || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_ || endingActive() || !notices_.empty(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu/ending)
+    bool modalActive() const { return cs.active || cs.won || miniGame_.open || inDialogue || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_ || endingActive() || !notices_.empty(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu/ending)
     bool combatWon() const { return cs.won; }
     bool combatActive() const { return cs.active; }
     // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
@@ -525,6 +532,13 @@ private:
     // damage if none is, and calls finishCombatLose on a kill. The UI shows either bar at its live
     // auto-moving position (frozen while cooling down after a tap).
     void resolveAttackTap();
+    void resolveCombo();                            // Battle v3: the combo ended -- its damage, then the cooldown
+    // Weapon levels (docs/30 phase 1): the equipped weapon's key in weapon_play.json ("unarmed" for none), its level
+    // from the wins with it, and its play settings.
+    std::string weaponKey() const;
+    int weaponLevel(const std::string& key) const;
+    const toms::WeaponPlay& weaponPlayOf(const std::string& key) const;
+    float comboCharge() const;                      // 0 .. 1, the charge built while the attack waits
     void resolveDefenseTap();
     void resolveEnemyClockFire();
     // Builds the EnemyInst for a monster tile and starts the fight (or its dialogue gate); shared
@@ -753,6 +767,7 @@ private:
     std::map<std::string, toms::SpriteBox> spriteBoxes_;   // each sprite's visible pixels (fitCharacter)
     toms::SpriteMeshFile spriteMeshes_;   // its meshes (game.mesh.json beside it, written by the anim tools; docs/34)
     nlohmann::json characterFit_;                          // assets/data/character_fit.json (read at startup)
+    std::string battleRigClip_;   // the clip the battle picture plays for battleRigState_ ("" = none found)
     std::shared_ptr<toms::res::AnimRes> previewAnim_;   // playPreviewAnim (its atlases come with it)
     std::string previewClip_;
     std::string previewCharacter_;                      // setPreviewCharacter
@@ -835,6 +850,7 @@ private:
     LevelUpRule levelUp_;
     // The weapons / armor / talents the player owns (bought or forged), in the order they were got.
     std::vector<std::string> gearOwned_;
+    std::map<std::string, int> weaponUses_;   // wins with each weapon (weaponKey()); its level comes from them
     // ---- the player menu's state (inGameMenuOpen_ = it is open) ----
     MenuTab menuTab_ = MenuTab::Status;
     int attrSel_ = -1;          // Status: the attribute whose description shows (-1 none)
@@ -1207,8 +1223,36 @@ private:
         nlohmann::json overrides;     // "battle"'s hp / atk / def / atk_interval_ms, for every fight
         size_t next = 0;
         int fights = 0, wins = 0, losses = 0;
+        bool trial = false;           // the start story's weapon trial (docs/30 phase 3): one fight, then back to the master
     };
     Arena arena_;
+public:
+    // The start story (docs/30 phase 3): the weapon master lets the player try the weapons (dialogue/weapon_master.json),
+    // a trial fight each, until one is chosen; the run then begins on stage 1. Opened by the title's New Game.
+    void startWeaponTrial();
+    // --skip-start-story (the screenshot tests): New Game goes straight to stage 1, as before the start story.
+    void setSkipStartStory(bool on) { skipStartStory_ = on; }
+    // Reward events (docs/30 phase 6, data/minigames.json): opened by the dialogue action {"type": "miniGame", "id": ...}.
+    // Enter / a tap: start, then tap the points, then close; Esc closes when not playing.
+    bool miniGameOpen() const { return miniGame_.open; }
+    void openMiniGame(const std::string& id);
+    void miniGameTap();
+    void closeMiniGame();
+private:
+    bool skipStartStory_ = false;
+    struct MiniGameState {
+        bool open = false;
+        std::string id;
+        int phase = 0;              // 0: the text, waiting to start; 1: playing; 2: the result
+        toms::ComboPlay play;
+        int reward = 0;
+    };
+    MiniGameState miniGame_;
+    toms::MiniGameTable miniGames_;   // data/minigames.json
+    void finishMiniGame();
+    void tryWeapon(const std::string& weaponId);   // dialogue action "tryWeapon": wear it, fight the training slime
+    void chooseWeapon();                           // dialogue action "chooseWeapon": keep the worn weapon, begin
+    void endWeaponTrialFight();                    // the trial fight is over: back to the master's "after" node
     bool enemyFromData(const std::string& id, const nlohmann::json& overrides, EnemyInst& out) const;
     void arenaNextFight();
     bool arenaEndFight(bool won);   // true: the arena took the fight's end (finishCombatWin / Lose return at once)

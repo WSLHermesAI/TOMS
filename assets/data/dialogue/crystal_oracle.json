@@ -1,0 +1,29 @@
+{
+  "npcId": "crystal_oracle",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "「旅人，祭壇的光正盛。靜下心，觸碰掠過的光點，水晶自會成形。」"
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "觸碰祭壇。"
+          },
+          "action": {
+            "type": "miniGame",
+            "id": "crystal_shrine"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "離開。"
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

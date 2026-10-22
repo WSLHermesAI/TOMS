@@ -234,7 +234,8 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         if (keyPressed(in, Key::F1)) showDebugOverlay = !showDebugOverlay;
         if (keyPressed(in, Key::F2)) showStylingSpike = !showStylingSpike;
         if (escPressed) {
-            if (g.endingActive()) g.dismissEndingScreen();
+            if (g.miniGameOpen()) g.closeMiniGame();
+            else if (g.endingActive()) g.dismissEndingScreen();
             else if (g.noticeOpen()) g.dismissNotice();
             else if (g.storeModal()) g.storeKey(27);
             else if (g.stairsConfirmOpen()) g.cancelStageTransition();
@@ -273,6 +274,7 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
             else if (g.noticeOpen()) g.dismissNotice();
             else if (g.playerMenuOpen()) g.playerMenuActivate();
             else if (g.stairsConfirmOpen()) g.confirmStageTransition();
+            else if (g.miniGameOpen()) g.miniGameTap();
             else if (g.combatWon()) g.dismissVictory();
             else if (g.combatActive()) g.battleTapAttack();
             else if (g.inDialogueFlag()) g.chooseDialogue(g.dialogueSel());

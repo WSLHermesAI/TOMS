@@ -297,7 +297,8 @@ archer
   [`assets/data/character_fit.json`](../../assets/data/character_fit.json) 加微調：`"player_viking": {"hand": [0, -1]}`
   （像素，x 向右、y 向下）。沒列出的角色什麼都不需要。
 - **戰鬥中：** `items.json` 中的武器指定它的兩個檔案：`"battleAnim": {"character": "anim/archer_bow.anim",
-  "held": "anim/weapon_bow.anim"}`（`bow` 就是如此）。裝備它時，戰鬥畫面會在玩家圖片的位置畫出玩家角色與武器（圖片隱藏），
+  "held": "anim/weapon_bow.anim"}`（`bow` 就是如此）。`"clips": {"idle": "ready", "charge": "raise", ...}` 指定每個狀態
+  播放的片段，給片段有自己名稱的武器用（`sword` 與 `staff` 就是如此；沒列出的狀態播放同名片段）。裝備它時，戰鬥畫面會在玩家圖片的位置畫出玩家角色與武器（圖片隱藏），
   播放戰鬥狀態選出的片段：
 
   | 狀態 | 時機 |

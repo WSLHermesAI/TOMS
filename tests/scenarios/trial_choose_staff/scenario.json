@@ -1,0 +1,18 @@
+{
+  "_comment": "Choosing after a trial: try the staff (Down x3, Enter); a strong player (ATK 999) ends the trial fight with one failed combo: Enter at 50 starts it, misses at 53 and 66 (after the staff's 200 ms wait, before the marker reaches the first point's window): a fail, a plain hit that still wins. Enter continues, the master's 'after' node opens, and Enter on its first choice keeps the staff: it is the only gear, worn, and the stage shows.",
+  "scene": "weaponTrial",
+  "player": {
+    "atk": 999
+  },
+  "test": {
+    "frames": 140,
+    "keys": "down@10,down@16,down@22,enter@28,enter@50,enter@53,enter@66,enter@100,enter@125"
+  },
+  "expect": {
+    "scene": "stage",
+    "equipped": "staff",
+    "gearOwned": [
+      "staff"
+    ]
+  }
+}

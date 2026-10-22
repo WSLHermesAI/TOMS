@@ -1,0 +1,24 @@
+<rml>
+<head>
+    <title>Mini-game</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="minigame.rcss"/>
+</head>
+<!-- A reward event (docs/30 phase 6, data/minigames.json): its text, then Battle v3's point track; each point hit earns
+     the reward. Data: minigame.* (UiMinigame). -->
+<body data-model="game">
+    <div id="panel">
+        <div id="title">{{minigame.title}}</div>
+        <div id="text">{{minigame.text}}</div>
+        <div id="prompt">{{minigame.prompt}}</div>
+        <div id="track">
+            <div class="pt" data-for="q : minigame.points" data-class-hit="q.hit" data-style-left="q.pos + '%'"></div>
+            <div class="marker" data-visible="minigame.running" data-style-left="minigame.marker + '%'"></div>
+        </div>
+        <div id="result" data-if="minigame.done">{{minigame.result}}</div>
+        <div id="go" class="btn" data-event-click="act('minigame_tap')">{{minigame.button_label}}</div>
+        <div id="close" class="btn" data-if="!minigame.running && !minigame.done"
+             data-event-click="act('minigame_close')">{{minigame.close_label}}</div>
+    </div>
+</body>
+</rml>

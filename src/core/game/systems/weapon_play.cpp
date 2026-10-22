@@ -23,7 +23,55 @@ WeaponPlay weaponPlayFromJson(const std::string& id, const nlohmann::json& j) {
         std::stable_sort(w.missBack.begin(), w.missBack.end(),
                          [](const MissBackRule& a, const MissBackRule& b) { return a.lv < b.lv; });
     }
+    if (j.contains("levels") && j["levels"].is_array()) {
+        for (const auto& l : j["levels"]) {
+            if (!l.is_object()) continue;
+            WeaponLevel lv;
+            lv.lv = std::max(1, l.value("lv", 1));
+            lv.points = std::clamp(l.value("points", 3), 1, kMaxComboPoints);
+            if (l.contains("stats") && l["stats"].is_object())
+                for (auto s = l["stats"].begin(); s != l["stats"].end(); ++s)
+                    if (s.value().is_number_integer()) lv.stats[s.key()] = s.value().get<int>();
+            w.levels.push_back(lv);
+        }
+        std::stable_sort(w.levels.begin(), w.levels.end(), [](const WeaponLevel& a, const WeaponLevel& b) { return a.lv < b.lv; });
+    }
+    if (j.contains("usesToLevel") && j["usesToLevel"].is_array())
+        for (const auto& u : j["usesToLevel"])
+            if (u.is_number_integer()) w.usesToLevel.push_back(std::max(1, u.get<int>()));
+    w.turnBack = j.value("turnBack", w.turnBack);
+    w.sweepMs = std::max(200, j.value("sweepMs", w.sweepMs));
+    w.maxSweeps = std::max(1, j.value("maxSweeps", w.maxSweeps));
+    w.chargeMs = std::max(1, j.value("chargeMs", w.chargeMs));
+    w.chargeSpeedUp = std::max(0.0f, j.value("chargeSpeedUp", w.chargeSpeedUp));
+    w.chargeDamage = std::max(0.0f, j.value("chargeDamage", w.chargeDamage));
+    w.hitWindow = std::clamp(j.value("hitWindow", w.hitWindow), 0.01f, 0.25f);
     return w;
+}
+
+const WeaponLevel& weaponLevelEntry(const WeaponPlay& w, int weaponLevel) {
+    static const WeaponLevel builtIn;
+    const WeaponLevel* best = nullptr;
+    for (const WeaponLevel& l : w.levels)
+        if (l.lv <= weaponLevel) best = &l;
+    return best ? *best : (w.levels.empty() ? builtIn : w.levels.front());
+}
+
+int weaponMaxLevel(const WeaponPlay& w) { return w.levels.empty() ? 1 : std::max(1, w.levels.back().lv); }
+
+int weaponLevelFromUses(const WeaponPlay& w, int uses) {
+    int lv = 1, need = 0;
+    for (int step : w.usesToLevel) {
+        need += step;
+        if (uses < need) break;
+        lv++;
+    }
+    return std::min(lv, weaponMaxLevel(w));
+}
+
+int usesToNextLevel(const WeaponPlay& w, int weaponLevel) {
+    if (weaponLevel >= weaponMaxLevel(w) || weaponLevel - 1 >= (int)w.usesToLevel.size()) return 0;
+    return w.usesToLevel[(size_t)(weaponLevel - 1)];
 }
 
 WeaponPlayTable loadWeaponPlay(const std::string& path) {
@@ -38,7 +86,7 @@ WeaponPlayTable loadWeaponPlay(const std::string& path) {
 }
 
 const WeaponPlay& WeaponPlayTable::get(const std::string& weaponId) const {
-    static const WeaponPlay builtIn{"builtin", {}, 0};
+    static const WeaponPlay builtIn = [] { WeaponPlay w; w.id = "builtin"; return w; }();
     auto it = weapons.find(weaponId);
     if (it != weapons.end()) return it->second;
     it = weapons.find("default");

@@ -68,6 +68,27 @@ struct UiPowerBar {                    // a Battle v2 timing bar; zones and mark
     float marker = 0;                  // 0..100
 };
 
+struct UiComboPoint {                  // one point of the combo track
+    float pos = 0;                     // 0..100
+    bool hit = false;
+};
+
+struct UiCombo {                       // Battle v3's point play (docs/30 phase 1): the charge, the track, its points
+    std::string prompt, button_label, level_text;
+    bool running = false, cooling = false, waiting = false;
+    float charge_pct = 0;              // 0..100
+    float marker = 0;                  // 0..100
+    std::vector<UiComboPoint> points;
+};
+
+struct UiMiniGame {                    // a reward event (docs/30 phase 6): its text, the point track, the result
+    bool visible = false;
+    std::string title, text, prompt, button_label, result, close_label;
+    bool running = false, done = false;
+    float marker = 0;                  // 0..100
+    std::vector<UiComboPoint> points;
+};
+
 struct UiPopup {                       // a damage number rising over a fighter (docs/30_GAMEPLAY_PLAN.md phase 0)
     std::string text;
     float x = 0, y = 0;                // design px: its box's left / top
@@ -84,7 +105,8 @@ struct UiBattle {
     std::string player_hp_text, enemy_hp_text, log, continue_hint;
     std::string clock_label;
     float clock_pct = 0;
-    UiPowerBar attack, defense;
+    UiPowerBar attack, defense;            // (attack: Battle v2's bar, no longer shown; combo replaced it)
+    UiCombo combo;
     std::string shield_text;
     bool shield_armed = false;
     bool crit_armed = false;
@@ -266,6 +288,7 @@ struct UiState {
     UiNotice notice;
     UiStageSelect stage_select;
     UiEnding ending;
+    UiMiniGame minigame;
     UiOverlay overlay;
 };
 

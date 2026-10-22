@@ -29,8 +29,10 @@ nlohmann::json toJson(const EquipmentDefinition& d) {
     };
     j["talent"] = d.talent;
     j["actives"] = d.actives;
-    if (!d.battleCharacterAnim.empty() || !d.battleHeldAnim.empty())
+    if (!d.battleCharacterAnim.empty() || !d.battleHeldAnim.empty()) {
         j["battleAnim"] = {{"character", d.battleCharacterAnim}, {"held", d.battleHeldAnim}};
+        if (!d.battleClips.empty()) j["battleAnim"]["clips"] = d.battleClips;
+    }
     return j;
 }
 
@@ -66,6 +68,10 @@ EquipmentDefinition equipmentFromJson(const nlohmann::json& j) {
     if (j.contains("battleAnim") && j["battleAnim"].is_object()) {
         d.battleCharacterAnim = j["battleAnim"].value("character", std::string());
         d.battleHeldAnim = j["battleAnim"].value("held", std::string());
+        const auto& clips = j["battleAnim"].value("clips", nlohmann::json::object());
+        if (clips.is_object())
+            for (auto it = clips.begin(); it != clips.end(); ++it)
+                if (it.value().is_string()) d.battleClips[it.key()] = it.value().get<std::string>();
     }
     return d;
 }

@@ -1,5 +1,5 @@
 game.png
-size: 505, 599
+size: 505, 604
 format: RGBA8888
 filter: Nearest, Nearest
 repeat: none
@@ -16,40 +16,40 @@ demon
   bounds: 1, 425, 50, 56
   offsets: 7, 4, 64, 64
 door_amethyst
-  bounds: 454, 507, 28, 28
+  bounds: 421, 507, 28, 28
   offsets: 2, 2, 32, 32
 door_blue
   bounds: 69, 1, 56, 56
   offsets: 4, 4, 64, 64
 door_bone
-  bounds: 250, 536, 28, 28
+  bounds: 453, 507, 28, 28
   offsets: 2, 2, 32, 32
 door_bronze
-  bounds: 240, 568, 28, 28
+  bounds: 250, 536, 28, 28
   offsets: 2, 2, 32, 32
 door_emerald
-  bounds: 272, 568, 28, 28
+  bounds: 240, 568, 28, 28
   offsets: 2, 2, 32, 32
 door_flame
-  bounds: 282, 536, 28, 28
+  bounds: 272, 568, 28, 28
   offsets: 2, 2, 32, 32
 door_frost
-  bounds: 314, 535, 28, 28
+  bounds: 282, 536, 28, 28
   offsets: 2, 2, 32, 32
 door_obsidian
-  bounds: 304, 568, 28, 28
+  bounds: 314, 535, 28, 28
   offsets: 2, 2, 32, 32
 door_red
   bounds: 1, 129, 56, 54
   offsets: 4, 4, 64, 64
 door_rune
-  bounds: 336, 567, 28, 28
+  bounds: 346, 540, 28, 28
   offsets: 2, 2, 32, 32
 door_silver
-  bounds: 346, 535, 28, 28
+  bounds: 378, 540, 28, 28
   offsets: 2, 2, 32, 32
 door_sun
-  bounds: 378, 540, 28, 28
+  bounds: 410, 540, 28, 28
   offsets: 2, 2, 32, 32
 door_yellow
   bounds: 1, 69, 56, 56
@@ -173,7 +173,7 @@ item_music_box
   bounds: 129, 332, 28, 30
   offsets: 2, 1, 32, 32
 item_old_key_ring
-  bounds: 95, 578, 23, 19
+  bounds: 62, 584, 23, 19
   offsets: 1, 2, 32, 32
 item_old_lantern
   bounds: 456, 361, 16, 30
@@ -182,7 +182,7 @@ item_phoenix_feather
   bounds: 131, 497, 30, 27
   offsets: 1, 3, 32, 32
 item_pickaxe
-  bounds: 410, 540, 16, 28
+  bounds: 442, 539, 16, 28
   offsets: 8, 3, 32, 32
 item_pocket_watch
   bounds: 125, 558, 25, 30
@@ -194,7 +194,7 @@ item_prayer_beads
   bounds: 491, 395, 13, 30
   offsets: 9, 1, 32, 32
 item_quill
-  bounds: 386, 507, 20, 29
+  bounds: 353, 507, 20, 29
   offsets: 6, 2, 32, 32
 item_red_apple
   bounds: 315, 116, 29, 30
@@ -220,12 +220,18 @@ item_spectacles
 item_spell_book
   bounds: 154, 564, 25, 30
   offsets: 3, 1, 32, 32
+item_staff
+  bounds: 462, 539, 25, 27
+  offsets: 4, 2, 32, 32
 item_star_fragment
   bounds: 159, 398, 27, 30
   offsets: 2, 1, 32, 32
 item_sun_medallion
   bounds: 381, 123, 30, 29
   offsets: 1, 2, 32, 32
+item_sword
+  bounds: 95, 578, 25, 25
+  offsets: 3, 3, 32, 32
 item_treasure_map
   bounds: 97, 480, 30, 30
   offsets: 1, 1, 32, 32
@@ -239,40 +245,40 @@ item_wooden_doll
   bounds: 476, 361, 16, 30
   offsets: 8, 1, 32, 32
 key_amethyst
-  bounds: 1, 580, 24, 18
+  bounds: 139, 202, 24, 18
   offsets: 5, 9, 32, 32
 key_blue
   bounds: 1, 533, 56, 43
   offsets: 4, 4, 64, 64
 key_bone
-  bounds: 29, 580, 24, 18
-  offsets: 5, 9, 32, 32
-key_bronze
-  bounds: 139, 202, 24, 18
-  offsets: 5, 9, 32, 32
-key_emerald
   bounds: 479, 429, 24, 18
   offsets: 5, 9, 32, 32
+key_bronze
+  bounds: 304, 568, 24, 18
+  offsets: 5, 9, 32, 32
+key_emerald
+  bounds: 332, 572, 24, 18
+  offsets: 5, 9, 32, 32
 key_flame
-  bounds: 430, 540, 24, 18
+  bounds: 360, 572, 24, 18
   offsets: 5, 9, 32, 32
 key_frost
-  bounds: 458, 539, 24, 18
+  bounds: 388, 572, 24, 18
   offsets: 5, 9, 32, 32
 key_obsidian
-  bounds: 368, 572, 24, 18
+  bounds: 416, 572, 24, 18
   offsets: 5, 9, 32, 32
 key_red
   bounds: 129, 61, 56, 42
   offsets: 4, 4, 64, 64
 key_rune
-  bounds: 396, 572, 24, 18
+  bounds: 444, 571, 24, 18
   offsets: 5, 9, 32, 32
 key_silver
-  bounds: 430, 562, 24, 18
+  bounds: 472, 570, 24, 18
   offsets: 5, 9, 32, 32
 key_sun
-  bounds: 458, 561, 24, 18
+  bounds: 34, 584, 24, 18
   offsets: 5, 9, 32, 32
 key_yellow
   bounds: 189, 59, 56, 42
@@ -488,7 +494,7 @@ npc_duke
   bounds: 383, 292, 18, 30
   offsets: 7, 0, 32, 32
 npc_dwarf
-  bounds: 410, 507, 20, 29
+  bounds: 377, 507, 20, 29
   offsets: 6, 1, 32, 32
 npc_elf
   bounds: 165, 530, 26, 30
@@ -545,7 +551,7 @@ npc_lumberjack
   bounds: 451, 395, 16, 30
   offsets: 8, 0, 32, 32
 npc_merchant
-  bounds: 434, 507, 16, 29
+  bounds: 401, 507, 16, 29
   offsets: 8, 1, 32, 32
 npc_miller
   bounds: 427, 259, 18, 30
@@ -674,67 +680,67 @@ stairs_down
   bounds: 69, 61, 56, 43
   offsets: 4, 4, 64, 64
 stairs_down_castle
-  bounds: 347, 428, 29, 22
+  bounds: 1, 580, 29, 22
   offsets: 2, 4, 32, 32
 stairs_down_cave
-  bounds: 336, 454, 29, 22
+  bounds: 347, 428, 29, 22
   offsets: 2, 4, 32, 32
 stairs_down_crypt
-  bounds: 380, 429, 29, 22
+  bounds: 336, 454, 29, 22
   offsets: 2, 4, 32, 32
 stairs_down_crystal
-  bounds: 413, 429, 29, 22
+  bounds: 380, 429, 29, 22
   offsets: 2, 4, 32, 32
 stairs_down_forest
-  bounds: 446, 429, 29, 22
+  bounds: 413, 429, 29, 22
   offsets: 2, 4, 32, 32
 stairs_down_ice
-  bounds: 369, 455, 29, 22
+  bounds: 446, 429, 29, 22
   offsets: 2, 4, 32, 32
 stairs_down_lava
-  bounds: 402, 455, 29, 22
+  bounds: 369, 455, 29, 22
   offsets: 2, 4, 32, 32
 stairs_down_sand
-  bounds: 435, 455, 29, 22
+  bounds: 402, 455, 29, 22
   offsets: 2, 4, 32, 32
 stairs_down_shadow
-  bounds: 254, 484, 29, 22
+  bounds: 435, 455, 29, 22
   offsets: 2, 4, 32, 32
 stairs_down_wood
-  bounds: 287, 483, 29, 22
+  bounds: 254, 484, 29, 22
   offsets: 2, 4, 32, 32
 stairs_up
   bounds: 1, 485, 56, 44
   offsets: 4, 4, 64, 64
 stairs_up_castle
-  bounds: 320, 483, 29, 22
+  bounds: 287, 483, 29, 22
   offsets: 2, 4, 32, 32
 stairs_up_cave
-  bounds: 353, 481, 29, 22
+  bounds: 320, 483, 29, 22
   offsets: 2, 4, 32, 32
 stairs_up_crypt
-  bounds: 386, 481, 29, 22
+  bounds: 353, 481, 29, 22
   offsets: 2, 4, 32, 32
 stairs_up_crystal
-  bounds: 419, 481, 29, 22
+  bounds: 386, 481, 29, 22
   offsets: 2, 4, 32, 32
 stairs_up_forest
-  bounds: 452, 481, 29, 22
+  bounds: 419, 481, 29, 22
   offsets: 2, 4, 32, 32
 stairs_up_ice
-  bounds: 468, 455, 29, 22
+  bounds: 452, 481, 29, 22
   offsets: 2, 4, 32, 32
 stairs_up_lava
-  bounds: 254, 510, 29, 22
+  bounds: 468, 455, 29, 22
   offsets: 2, 4, 32, 32
 stairs_up_sand
-  bounds: 287, 509, 29, 22
+  bounds: 254, 510, 29, 22
   offsets: 2, 4, 32, 32
 stairs_up_shadow
-  bounds: 320, 509, 29, 22
+  bounds: 287, 509, 29, 22
   offsets: 2, 4, 32, 32
 stairs_up_wood
-  bounds: 353, 507, 29, 22
+  bounds: 320, 509, 29, 22
   offsets: 2, 4, 32, 32
 wall
   bounds: 1, 1, 64, 64

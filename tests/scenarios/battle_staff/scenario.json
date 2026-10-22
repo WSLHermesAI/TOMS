@@ -1,0 +1,22 @@
+{
+  "_comment": "The staff (docs/30 phase 2): Enter at frame 40 starts the combo (charge 640 of 3000 ms, sweep 1900 ms, chargeSpeedUp 0.6: a sweep takes about 1684 ms), and the taps at its three points (about 26, 53 and 79 frames later) all hit: the attack plays the staff's \"cast\" clip.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "staff"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000
+  },
+  "test": {
+    "frames": 125,
+    "keys": "enter@40,enter@66,enter@93,enter@119"
+  },
+  "expect": {
+    "battleAnim": "attack",
+    "battleClip": "cast"
+  }
+}

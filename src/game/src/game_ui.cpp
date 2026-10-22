@@ -26,6 +26,7 @@ const DocSpec kDocs[] = {
     {"dialogs.rml",      [](const toms::UiState& s) { return s.stairs.visible || s.store.unlocked_dialog || s.notice.visible; }},
     {"title.rml",        [](const toms::UiState& s) { return s.title.visible; }},
     {"ending.rml",       [](const toms::UiState& s) { return s.ending.visible; }},
+    {"minigame.rml",     [](const toms::UiState& s) { return s.minigame.visible; }},
     {"overlay.rml",      [](const toms::UiState&)   { return true; }},
 };
 
@@ -96,6 +97,35 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("red_r", &UiPowerBar::red_r);
         s.RegisterMember("marker", &UiPowerBar::marker);
     }
+    if (auto s = c.RegisterStruct<UiComboPoint>()) {
+        s.RegisterMember("pos", &UiComboPoint::pos);
+        s.RegisterMember("hit", &UiComboPoint::hit);
+    }
+    c.RegisterArray<std::vector<UiComboPoint>>();
+    if (auto s = c.RegisterStruct<UiCombo>()) {
+        s.RegisterMember("prompt", &UiCombo::prompt);
+        s.RegisterMember("button_label", &UiCombo::button_label);
+        s.RegisterMember("level_text", &UiCombo::level_text);
+        s.RegisterMember("running", &UiCombo::running);
+        s.RegisterMember("cooling", &UiCombo::cooling);
+        s.RegisterMember("waiting", &UiCombo::waiting);
+        s.RegisterMember("charge_pct", &UiCombo::charge_pct);
+        s.RegisterMember("marker", &UiCombo::marker);
+        s.RegisterMember("points", &UiCombo::points);
+    }
+    if (auto s = c.RegisterStruct<UiMiniGame>()) {
+        s.RegisterMember("visible", &UiMiniGame::visible);
+        s.RegisterMember("title", &UiMiniGame::title);
+        s.RegisterMember("text", &UiMiniGame::text);
+        s.RegisterMember("prompt", &UiMiniGame::prompt);
+        s.RegisterMember("button_label", &UiMiniGame::button_label);
+        s.RegisterMember("result", &UiMiniGame::result);
+        s.RegisterMember("close_label", &UiMiniGame::close_label);
+        s.RegisterMember("running", &UiMiniGame::running);
+        s.RegisterMember("done", &UiMiniGame::done);
+        s.RegisterMember("marker", &UiMiniGame::marker);
+        s.RegisterMember("points", &UiMiniGame::points);
+    }
     if (auto s = c.RegisterStruct<UiPopup>()) {
         s.RegisterMember("text", &UiPopup::text);
         s.RegisterMember("x", &UiPopup::x);
@@ -121,6 +151,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("clock_pct", &UiBattle::clock_pct);
         s.RegisterMember("attack", &UiBattle::attack);
         s.RegisterMember("defense", &UiBattle::defense);
+        s.RegisterMember("combo", &UiBattle::combo);
         s.RegisterMember("shield_text", &UiBattle::shield_text);
         s.RegisterMember("shield_armed", &UiBattle::shield_armed);
         s.RegisterMember("crit_armed", &UiBattle::crit_armed);
@@ -355,6 +386,7 @@ bool GameUi::init(Rml::Context* ctx, Game* game, const std::string& uiDir, std::
     c.Bind("notice", &state_.notice);
     c.Bind("stage_select", &state_.stage_select);
     c.Bind("ending", &state_.ending);
+    c.Bind("minigame", &state_.minigame);
     c.Bind("overlay", &state_.overlay);
     // act('name') / act('name', n): the one event every button uses. The innermost handler wins
     // (a choice inside the dialogue box must not also count as a click on the box).
@@ -443,6 +475,7 @@ void GameUi::sync() {
     take(state_.notice, next.notice);
     take(state_.stage_select, next.stage_select);
     take(state_.ending, next.ending);
+    take(state_.minigame, next.minigame);   // a reward event (docs/30 phase 6)
     if (next.store.visible || next.store.unlocked_dialog) state_.store = std::move(next.store);
     else { state_.store.visible = false; state_.store.unlocked_dialog = false; }
     state_.overlay = std::move(next.overlay);

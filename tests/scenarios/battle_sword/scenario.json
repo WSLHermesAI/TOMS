@@ -1,0 +1,21 @@
+{
+  "_comment": "The sword (docs/30 phase 2): its battleAnim names its own clips; while the attack waits (status charge) the picture plays \"raise\" from fighter_sword.anim and weapon_sword.anim.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "sword"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000
+  },
+  "test": {
+    "frames": 30
+  },
+  "expect": {
+    "battleAnim": "charge",
+    "battleClip": "raise"
+  }
+}

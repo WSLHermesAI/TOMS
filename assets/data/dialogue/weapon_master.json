@@ -1,0 +1,147 @@
+{
+  "npcId": "weapon_master",
+  "_comment": "The start story (docs/30 phase 3): the player tries the weapons (tryWeapon: a fight with a training slime), comes back to 'after' each time, and keeps one (chooseWeapon). Opened by the title's New Game.",
+  "start": "intro",
+  "nodes": {
+    "intro": {
+      "text": {
+        "zh_TW": "村口，一位老武師攔住了你：「要上塔？先挑一把趁手的兵器。拿我的練習史萊姆試試，不合手就換。」",
+        "en": "At the edge of the village an old weapon master stops you: \"Climbing the tower? Pick a weapon that fits your hand first. Try them on my training slime, and change if one does not suit you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "聽聽各種兵器。",
+            "en": "Tell me about them."
+          },
+          "next": "weapons"
+        },
+        {
+          "label": {
+            "zh_TW": "試試弓",
+            "en": "Try the bow"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "bow"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "試試劍",
+            "en": "Try the sword"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "sword"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "試試法杖",
+            "en": "Try the staff"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "staff"
+          },
+          "next": null
+        }
+      ]
+    },
+    "weapons": {
+      "text": {
+        "zh_TW": "「弓：拉得越久越有力，標記會折返，射偏了還能補救。劍：一揮到底，不回頭，失手要收劍。法杖：要聚氣，慢，但滿氣時最重。」",
+        "en": "\"The bow: the longer the draw, the harder the shot, and the marker turns back, so a miss can be saved. The sword: one sweep, no turning back, and a miss means putting it back first. The staff: it needs focus and is slow, but a full charge hits hardest.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "試試弓",
+            "en": "Try the bow"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "bow"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "試試劍",
+            "en": "Try the sword"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "sword"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "試試法杖",
+            "en": "Try the staff"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "staff"
+          },
+          "next": null
+        }
+      ]
+    },
+    "after": {
+      "text": {
+        "zh_TW": "「怎麼樣？順手就帶上它出發；不然再換一把試試。」",
+        "en": "\"Well? If it fits your hand, take it with you. If not, try another.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "就用這把出發。",
+            "en": "I'll set out with this one."
+          },
+          "action": {
+            "type": "chooseWeapon"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "換試弓",
+            "en": "Try the bow"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "bow"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "換試劍",
+            "en": "Try the sword"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "sword"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "換試法杖",
+            "en": "Try the staff"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "staff"
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

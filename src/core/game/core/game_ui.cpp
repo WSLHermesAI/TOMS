@@ -236,7 +236,8 @@ void Game::buildUiState(toms::UiState& u) const {
         h.hp_pct = pct((float)pl.hp, (float)effectiveMaxHp());
         h.hp_text = "HP " + std::to_string(pl.hp) + "/" + std::to_string(effectiveMaxHp());
         h.stats_line = "ATK " + std::to_string(effectiveAtk()) + "   DEF " + std::to_string(effectiveDef()) + "   LV " + std::to_string(pl.lv);
-        h.res_line = "GOLD " + std::to_string(pl.gold) + "   EXP " + std::to_string(pl.exp) + "   " + L.tr("hud.keys") +
+        h.res_line = "GOLD " + std::to_string(pl.gold) + "   " + L.tr("hud.crystals") + " " + std::to_string(pl.crystals) +
+                     "   EXP " + std::to_string(pl.exp) + "   " + L.tr("hud.keys") +
                      " Y" + std::to_string(pl.key_yellow) + " B" + std::to_string(pl.key_blue) + " R" +
                      std::to_string(pl.key_red);
         // The floor's story line: its intro, then its ambient lines as the player moves.
@@ -328,8 +329,36 @@ void Game::buildUiState(toms::UiState& u) const {
         if (cs.active) {
             b.clock_label = L.tr("battle.enemy_clock");
             b.clock_pct = pct((float)cs.enemyClockMs, (float)std::max(500, cs.enemy.atkIntervalMs));
-            b.attack = powerBar(attackBarParams(), cs.atkBar, L.tr("battle.attack_prompt"),
-                                L.tr(cs.atkBar.cooling ? "battle.btn_charging" : "battle.btn_hold_attack"));
+            {   // Battle v3 (docs/30 phase 1): the charge, the track with the weapon level's points, the marker
+                toms::UiCombo& c = b.combo;
+                const std::string key = weaponKey();
+                const int lv = weaponLevel(key);
+                const toms::WeaponPlay& wp = weaponPlayOf(key);
+                c.running = cs.combo.running();
+                c.cooling = cs.atkBar.cooling;
+                c.waiting = cs.combo.waiting();
+                c.charge_pct = c.running ? 100.0f * cs.combo.result().charge : 100.0f * comboCharge();
+                if (c.running) {
+                    c.charge_pct = 0;   // spent on this combo
+                    c.marker = 100.0f * cs.combo.marker();
+                    for (size_t i = 0; i < cs.combo.pointsAt().size(); i++)
+                        c.points.push_back({100.0f * cs.combo.pointsAt()[i], (bool)cs.combo.pointsHit()[i]});
+                } else {   // the points this combo will have, before it starts
+                    const int n = toms::weaponLevelEntry(wp, lv).points;
+                    for (int i = 0; i < n; i++) c.points.push_back({100.0f * float(i + 1) / float(n + 1), false});
+                }
+                const std::string name = equipmentDefs_.count(key) ? itemName(key) : L.tr("battle.unarmed");
+                const int next = toms::usesToNextLevel(wp, lv);
+                int done = 0;
+                if (auto u = weaponUses_.find(key); u != weaponUses_.end()) {
+                    done = u->second;
+                    for (int l = 1; l < lv; l++) done -= toms::usesToNextLevel(wp, l);
+                }
+                c.level_text = trParam(trParam(L.tr("battle.weapon_level"), "name", name), "lv", std::to_string(lv)) +
+                               (next > 0 ? "  " + std::to_string(std::max(0, done)) + "/" + std::to_string(next) : std::string());
+                c.prompt = L.tr(c.running ? "battle.combo_prompt_run" : "battle.combo_prompt");
+                c.button_label = L.tr(c.cooling ? "battle.btn_charging" : c.running ? "battle.combo_tap" : "battle.combo_start");
+            }
             b.defense = powerBar(toms::effectiveDefenseBar(equipped_, equipmentDefs_), cs.defBar, L.tr("battle.defense_prompt"),
                                  L.tr(cs.defBar.cooling ? "battle.btn_charging" : "battle.btn_hold_defense"));
             b.shield_armed = cs.shieldBanked;
@@ -346,6 +375,37 @@ void Game::buildUiState(toms::UiState& u) const {
             if (!activeIds.empty() && toms::canUseActive(activeIds[0], activeDefs_, cs.activeRuntime, cs.activeStatus)) {
                 b.active_ready = true;   // (ActiveDefinition has no display name yet: the id is shown)
                 b.active_button = trParam(L.tr("battle.active_ready"), "name", activeIds[0]);
+            }
+        }
+    }
+
+    // ---- a reward event (docs/30 phase 6) ----
+    if (miniGame_.open) {
+        if (const toms::MiniGameDef* def = miniGames_.find(miniGame_.id)) {
+            toms::UiMiniGame& m = u.minigame;
+            m.visible = true;
+            m.title = L.field(def->title);
+            m.text = L.field(def->text);
+            m.running = miniGame_.phase == 1;
+            m.done = miniGame_.phase == 2;
+            const std::string unit = L.tr(def->currency == "crystals" ? "minigame.crystals" : "minigame.gold");
+            m.prompt = m.running ? L.tr("battle.combo_prompt_run")
+                                 : trParam(trParam(trParam(L.tr("minigame.rule"), "n", std::to_string(def->perHit)), "unit", unit),
+                                           "bonus", std::to_string(def->bonusAll));
+            m.button_label = L.tr(m.done ? "minigame.close" : m.running ? "battle.combo_tap" : "minigame.start");
+            m.close_label = L.tr("minigame.close");
+            if (m.done)
+                m.result = miniGame_.reward > 0
+                    ? trParam(trParam(L.tr("minigame.result"), "n", std::to_string(miniGame_.reward)), "unit", unit)
+                    : L.tr("minigame.result_none");
+            if (m.running) {
+                m.marker = 100.0f * miniGame_.play.marker();
+                for (size_t i = 0; i < miniGame_.play.pointsAt().size(); i++)
+                    m.points.push_back({100.0f * miniGame_.play.pointsAt()[i], (bool)miniGame_.play.pointsHit()[i]});
+            } else {
+                const int n = def->play.points;
+                for (int i = 0; i < n; i++)
+                    m.points.push_back({100.0f * float(i + 1) / float(n + 1), m.done && i < miniGame_.play.result().hits});
             }
         }
     }
@@ -559,6 +619,8 @@ void Game::uiEvent(const std::string& name, int arg) {
     if (name == "hud_menu")      { if (!modalActive()) { cancelWalk(); openPlayerMenu(); } return; }
     // ---- battle ----
     if (name == "battle_attack")   { battleTapAttack(); return; }
+    if (name == "minigame_tap")    { miniGameTap(); return; }
+    if (name == "minigame_close")  { closeMiniGame(); return; }
     if (name == "battle_defend")   { battleTapDefense(); return; }
     if (name == "battle_super")    { battleTapSuper(); return; }
     if (name == "battle_active")   { battleTapActive(); return; }

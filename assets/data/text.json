@@ -8808,6 +8808,217 @@
     "npc.elf.name": {
       "zh_TW": "精靈旅人",
       "en": "Elf Traveler"
+    },
+    "battle.combo_prompt": {
+      "zh_TW": "攻擊：等待時集氣",
+      "en": "Attack: charge while you wait",
+      "zh_CN": "攻击：等待时集气",
+      "ja": "攻撃：待つ間に溜める",
+      "ko": "공격: 기다리는 동안 모으기",
+      "es": "Ataque: carga mientras esperas"
+    },
+    "battle.combo_prompt_run": {
+      "zh_TW": "在光點上點擊！",
+      "en": "Tap on the points!",
+      "zh_CN": "在光点上点击！",
+      "ja": "光る点でタップ！",
+      "ko": "점 위에서 탭!",
+      "es": "¡Toca sobre los puntos!"
+    },
+    "battle.combo_start": {
+      "zh_TW": "點擊開始攻擊",
+      "en": "Tap to start the attack",
+      "zh_CN": "点击开始攻击",
+      "ja": "タップで攻撃開始",
+      "ko": "탭하여 공격 시작",
+      "es": "Toca para atacar"
+    },
+    "battle.combo_tap": {
+      "zh_TW": "點擊！",
+      "en": "Tap!",
+      "zh_CN": "点击！",
+      "ja": "タップ！",
+      "ko": "탭!",
+      "es": "¡Toca!"
+    },
+    "battle.combo_go": {
+      "zh_TW": "連擊開始！",
+      "en": "Combo!",
+      "zh_CN": "连击开始！",
+      "ja": "コンボ！",
+      "ko": "콤보!",
+      "es": "¡Combo!"
+    },
+    "battle.combo_hits": {
+      "zh_TW": "命中 {hits}/{n}。",
+      "en": "{hits}/{n} hits.",
+      "zh_CN": "命中 {hits}/{n}。",
+      "ja": "{hits}/{n} ヒット。",
+      "ko": "{hits}/{n} 명중.",
+      "es": "{hits}/{n} golpes."
+    },
+    "battle.combo_fail": {
+      "zh_TW": "連擊失敗！",
+      "en": "Combo failed!",
+      "zh_CN": "连击失败！",
+      "ja": "コンボ失敗！",
+      "ko": "콤보 실패!",
+      "es": "¡Combo fallido!"
+    },
+    "battle.weapon_level": {
+      "zh_TW": "{name} Lv {lv}",
+      "en": "{name} Lv {lv}",
+      "zh_CN": "{name} Lv {lv}",
+      "ja": "{name} Lv {lv}",
+      "ko": "{name} Lv {lv}",
+      "es": "{name} Nv {lv}"
+    },
+    "battle.weapon_level_up": {
+      "zh_TW": "{name} 升到 Lv {lv}：{n} 個點！",
+      "en": "{name} reached Lv {lv}: {n} points!",
+      "zh_CN": "{name} 升到 Lv {lv}：{n} 个点！",
+      "ja": "{name} が Lv {lv} に：{n} ポイント！",
+      "ko": "{name} Lv {lv} 달성: {n}개 점!",
+      "es": "¡{name} sube a Nv {lv}: {n} puntos!"
+    },
+    "battle.unarmed": {
+      "zh_TW": "空手",
+      "en": "Unarmed",
+      "zh_CN": "空手",
+      "ja": "素手",
+      "ko": "맨손",
+      "es": "Sin arma"
+    },
+    "item.sword.name": {
+      "zh_TW": "鐵劍",
+      "en": "Iron Sword",
+      "zh_CN": "铁剑",
+      "ja": "鉄の剣",
+      "ko": "철검",
+      "es": "Espada de hierro"
+    },
+    "item.sword.desc": {
+      "zh_TW": "直來直往的劍：標記只掃一次，失手要收劍重來。",
+      "en": "A straight blade: the marker sweeps once, and a miss means putting the sword back first.",
+      "zh_CN": "直来直往的剑：标记只扫一次，失手要收剑重来。",
+      "ja": "まっすぐな剣：マーカーは一度だけ走り、外すと構え直しが必要。",
+      "ko": "곧은 검: 표시가 한 번만 지나가고, 놓치면 검을 다시 잡아야 한다.",
+      "es": "Una hoja recta: el marcador pasa una vez y fallar obliga a recolocar la espada."
+    },
+    "item.staff.name": {
+      "zh_TW": "橡木法杖",
+      "en": "Oak Staff",
+      "zh_CN": "橡木法杖",
+      "ja": "樫の杖",
+      "ko": "참나무 지팡이",
+      "es": "Bastón de roble"
+    },
+    "item.staff.desc": {
+      "zh_TW": "要聚氣的法杖：集氣較久，但滿氣時威力最大。",
+      "en": "A staff that needs focus: it charges slowly, but a full charge hits hardest.",
+      "zh_CN": "要聚气的法杖：集气较久，但满气时威力最大。",
+      "ja": "集中が必要な杖：溜めは遅いが、満タンなら最も強い。",
+      "ko": "집중이 필요한 지팡이: 모으기는 느리지만 가득 차면 가장 강하다.",
+      "es": "Un bastón que exige concentración: carga despacio, pero a plena carga golpea más fuerte."
+    },
+    "trial.fight_log": {
+      "zh_TW": "試試這把兵器！",
+      "en": "Try this weapon!",
+      "zh_CN": "试试这把兵器！",
+      "ja": "この武器を試そう！",
+      "ko": "이 무기를 시험해 보자!",
+      "es": "¡Prueba esta arma!"
+    },
+    "trial.chosen": {
+      "zh_TW": "你帶著{name}出發了。",
+      "en": "You set out with the {name}.",
+      "zh_CN": "你带着{name}出发了。",
+      "ja": "{name}を手に旅立った。",
+      "ko": "{name}을(를) 들고 길을 나섰다.",
+      "es": "Partes con: {name}."
+    },
+    "hud.crystals": {
+      "zh_TW": "水晶",
+      "en": "CRYSTALS",
+      "zh_CN": "水晶",
+      "ja": "クリスタル",
+      "ko": "수정",
+      "es": "CRISTALES"
+    },
+    "minigame.gold": {
+      "zh_TW": "金幣",
+      "en": "gold",
+      "zh_CN": "金币",
+      "ja": "ゴールド",
+      "ko": "골드",
+      "es": "oro"
+    },
+    "minigame.rule": {
+      "zh_TW": "每命中一點得 {n} {unit}，全中再加 {bonus}。",
+      "en": "{n} {unit} a point hit, {bonus} more for all of them.",
+      "zh_CN": "每命中一点得 {n} {unit}，全中再加 {bonus}。",
+      "ja": "1点命中ごとに {unit} {n}、全命中でさらに {bonus}。",
+      "ko": "점 하나 명중마다 {unit} {n}, 모두 명중하면 {bonus} 추가.",
+      "es": "{n} de {unit} por punto, {bonus} más por todos."
+    },
+    "minigame.start": {
+      "zh_TW": "開始",
+      "en": "Start",
+      "zh_CN": "开始",
+      "ja": "開始",
+      "ko": "시작",
+      "es": "Empezar"
+    },
+    "minigame.close": {
+      "zh_TW": "離開",
+      "en": "Leave",
+      "zh_CN": "离开",
+      "ja": "やめる",
+      "ko": "떠나기",
+      "es": "Salir"
+    },
+    "minigame.result": {
+      "zh_TW": "得到 {n} {unit}！",
+      "en": "You got {n} {unit}!",
+      "zh_CN": "得到 {n} {unit}！",
+      "ja": "{unit} {n} を手に入れた！",
+      "ko": "{unit} {n} 획득!",
+      "es": "¡Obtienes {n} de {unit}!"
+    },
+    "minigame.result_none": {
+      "zh_TW": "什麼都沒得到……",
+      "en": "Nothing this time…",
+      "zh_CN": "什么都没得到……",
+      "ja": "何も得られなかった……",
+      "ko": "이번엔 아무것도 없다…",
+      "es": "Nada esta vez…"
+    },
+    "minigame.used_up": {
+      "zh_TW": "今天已經沒有更多了。",
+      "en": "There is nothing more to gain here this run.",
+      "zh_CN": "今天已经没有更多了。",
+      "ja": "ここではもう何も得られない。",
+      "ko": "여기서 더 얻을 것은 없다.",
+      "es": "Aquí ya no queda nada que ganar."
+    },
+    "npc.chest_peddler.name": {
+      "zh_TW": "抱寶箱的行商",
+      "en": "Peddler with a Chest",
+      "zh_CN": "抱宝箱的行商",
+      "ja": "宝箱を抱えた行商人",
+      "ko": "상자를 든 행상",
+      "es": "Buhonero del cofre"
+    },
+    "npc.crystal_oracle.name": {
+      "zh_TW": "水晶祭司"
+    },
+    "minigame.crystals": {
+      "zh_TW": "水晶",
+      "en": "crystals",
+      "zh_CN": "水晶",
+      "ja": "クリスタル",
+      "ko": "수정",
+      "es": "cristales"
     }
   }
 }

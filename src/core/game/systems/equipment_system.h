@@ -44,6 +44,13 @@ struct EquipmentDefinition {
     // the held clip (the weapon) is drawn at its hand; the battle's status picks the clip of both (idle, charge,
     // attack, miss). Empty: the battle shows the player's picture.
     std::string battleCharacterAnim, battleHeldAnim;
+    // "battleAnim": {"clips": {"idle": "ready", "charge": "raise", "attack": "slash", "miss": "fumble"}} (docs/30 phase 2):
+    // the clip each battle status plays, in both files. A status not listed plays the clip of its own name.
+    std::map<std::string, std::string> battleClips;
+    std::string battleClip(const std::string& status) const {
+        auto it = battleClips.find(status);
+        return it == battleClips.end() ? status : it->second;
+    }
 };
 
 nlohmann::json toJson(const EquipmentDefinition& d);

@@ -1,0 +1,46 @@
+{
+  "_comment": [
+    "Reward events (docs/30 phase 6; src/core/game/systems/mini_game.h): a timing game that earns gold or crystals,",
+    "started from any dialogue choice: {\"type\": \"miniGame\", \"id\": \"<key here>\"}. The play is Battle v3's point play:",
+    "points (1-5) on a track, a marker sweeping it (sweepMs; turnBack; maxSweeps), a tap within hitWindow of a point hits",
+    "it. Each hit earns perHit of the currency (gold or crystals), every point hit bonusAll more; two misses in a row end",
+    "it with nothing. limit: plays a run (0: no limit). title / text: per language; a language missing falls back (en,",
+    "then any), so crystal_shrine, written in Traditional Chinese only, shows Chinese in every language (the owner's test)."
+  ],
+  "chest_lockpick": {
+    "title": {
+      "zh_TW": "上鎖的寶箱",
+      "en": "The locked chest"
+    },
+    "text": {
+      "zh_TW": "行商的寶箱鎖住了。撬開鎖芯：標記經過每個鎖栓時點擊。撬開幾個，就分你幾份金幣。",
+      "en": "The peddler's chest is locked. Pick it: tap as the marker passes each pin. Every pin you free earns you a share of gold."
+    },
+    "currency": "gold",
+    "perHit": 15,
+    "bonusAll": 30,
+    "points": 4,
+    "sweepMs": 1600,
+    "turnBack": true,
+    "maxSweeps": 2,
+    "hitWindow": 0.07,
+    "limit": 3
+  },
+  "crystal_shrine": {
+    "title": {
+      "zh_TW": "水晶祭壇"
+    },
+    "text": {
+      "zh_TW": "古老的祭壇上浮著三顆微光。光點掠過時，以指尖輕觸，就能凝出水晶。全部凝成，祭壇會多贈一顆。"
+    },
+    "currency": "crystals",
+    "perHit": 1,
+    "bonusAll": 2,
+    "points": 3,
+    "sweepMs": 1800,
+    "turnBack": true,
+    "maxSweeps": 2,
+    "hitWindow": 0.08,
+    "limit": 3
+  }
+}

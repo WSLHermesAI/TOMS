@@ -19,10 +19,29 @@ struct MissBackRule {
     int back = -1;        // points the combo goes back; -1: to the start
 };
 
+// One weapon level (docs/30 phase 1, the owner 2026-10-22): how many points the combo track has, and the attribute
+// bonuses the weapon gives at that level (data/stats.json ids: "str", "agi", ...).
+struct WeaponLevel {
+    int lv = 1;
+    int points = 3;                       // 1 .. kMaxComboPoints
+    std::map<std::string, int> stats;
+};
+constexpr int kMaxComboPoints = 5;
+
 struct WeaponPlay {
     std::string id;                       // an items.json weapon id, "unarmed", or "default"
     std::vector<MissBackRule> missBack;   // sorted by lv
     int missWaitMs = 0;                   // after a miss, the wait before the next tap counts (the sword's "put back")
+    // Battle v3's point play (docs/30 §4, §5.1): the marker sweeps a track with the level's points.
+    std::vector<WeaponLevel> levels;      // sorted by lv; empty: Lv 1 with 3 points, no bonus
+    std::vector<int> usesToLevel;         // wins needed from Lv 1 to 2, 2 to 3, ...; the level stops at levels.back()
+    bool turnBack = true;                 // the marker turns back at the ends (a missed point can be saved); false: one sweep
+    int sweepMs = 1600;                   // one end-to-end sweep with no charge
+    int maxSweeps = 3;                    // turning back: the combo ends after this many sweeps
+    int chargeMs = 2000;                  // waiting this long fills the charge
+    float chargeSpeedUp = 1.0f;           // a full charge makes the marker this much faster (1: twice as fast)
+    float chargeDamage = 1.0f;            // a full charge adds this much damage (1: twice the damage)
+    float hitWindow = 0.07f;              // how close (a fraction of the track) a tap must be to a point
 };
 
 struct WeaponPlayTable {
@@ -34,6 +53,15 @@ struct WeaponPlayTable {
 WeaponPlay weaponPlayFromJson(const std::string& id, const nlohmann::json& j);
 // data/weapon_play.json; a missing or broken file gives an empty table (every weapon on the built-in rule).
 WeaponPlayTable loadWeaponPlay(const std::string& path);
+
+// The level entry for a weapon level: the highest at or below it (a built-in Lv 1, 3 points, when none).
+const WeaponLevel& weaponLevelEntry(const WeaponPlay& w, int weaponLevel);
+// The weapon level reached after `uses` wins with it (Lv 1 at 0; capped at the last level entry).
+int weaponLevelFromUses(const WeaponPlay& w, int uses);
+// The wins needed from `weaponLevel` to the next level; 0 at the top.
+int usesToNextLevel(const WeaponPlay& w, int weaponLevel);
+// The highest level the weapon can reach.
+int weaponMaxLevel(const WeaponPlay& w);
 
 // The rule for a weapon level: how many points a miss goes back (-1: to the start).
 int missBackPoints(const WeaponPlay& w, int weaponLevel);

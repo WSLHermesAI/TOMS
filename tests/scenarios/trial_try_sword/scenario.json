@@ -1,0 +1,13 @@
+{
+  "_comment": "Trying the sword: Down twice picks 'Try the sword' (the third choice of 'intro'), Enter: the trial fight starts in the arena with the sword worn, its raise clip while the attack waits.",
+  "scene": "weaponTrial",
+  "test": {
+    "frames": 60,
+    "keys": "down@10,down@16,enter@22"
+  },
+  "expect": {
+    "scene": "arena",
+    "equipped": "sword",
+    "battleClip": "raise"
+  }
+}

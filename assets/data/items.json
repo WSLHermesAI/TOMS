@@ -970,5 +970,65 @@
     "important": true,
     "opens": "gate:key_sun",
     "draft": true
+  },
+  "sword": {
+    "type": "weapon",
+    "sprite": "item_sword.png",
+    "name": "item.sword.name",
+    "desc": "item.sword.desc",
+    "stats": {
+      "atk": 2
+    },
+    "price": 30,
+    "important": false,
+    "bar": {
+      "v0": 12,
+      "vmax": 180,
+      "rampTime": 2.2,
+      "greenHalf": 12,
+      "blueOuter": 32,
+      "redOuter": 60,
+      "maxMult": 2.2
+    },
+    "battleAnim": {
+      "character": "anim/fighter_sword.anim",
+      "held": "anim/weapon_sword.anim",
+      "clips": {
+        "idle": "ready",
+        "charge": "raise",
+        "attack": "slash",
+        "miss": "fumble"
+      }
+    }
+  },
+  "staff": {
+    "type": "weapon",
+    "sprite": "item_staff.png",
+    "name": "item.staff.name",
+    "desc": "item.staff.desc",
+    "stats": {
+      "atk": 1
+    },
+    "price": 30,
+    "important": false,
+    "bar": {
+      "v0": 12,
+      "vmax": 180,
+      "rampTime": 2.2,
+      "greenHalf": 12,
+      "blueOuter": 32,
+      "redOuter": 60,
+      "maxMult": 2.2
+    },
+    "battleAnim": {
+      "character": "anim/caster_staff.anim",
+      "held": "anim/weapon_staff.anim",
+      "clips": {
+        "idle": "hold",
+        "charge": "focus",
+        "attack": "cast",
+        "miss": "fizzle"
+      }
+    }
   }
 }

@@ -589,3 +589,20 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - Docs: 34, 16, 15, 14, 13, 27, 09 (EN and zh_TW).
   - Tests: changed-only 23 of 170 pass; `anim.editor_selftest`, `studio.i18n_complete`, `atlas.assets_up_to_date` by
     name pass. Full suite / web not run.
+
+- **2026-10-22 (night)** — **Gameplay phases 1-6, the bow as the starting weapon, the web fix** ([DAILY_2026-10-22.md](DAILY_2026-10-22.md) rows 21-28):
+  - Owner commits before this: `5da31ba` (meshes), `7613ced` (bow default), `cc164e4` (Jolt for the web).
+  - Bow default: `Game::kStartingWeapon`; scenario `player.unarmed`; `--arena` without a weapon is unarmed.
+  - Web: Jolt `USE_WASM_SIMD` ON under Emscripten (`-msimd128` everywhere needed Jolt's `-msse4.2`).
+  - Phase 1: `systems/combo_play.*` (+ test), `weapon_play.json` levels / usesToLevel / play settings, `Game::resolveCombo`,
+    weapon uses saved (`player.weaponUses`), level stats in `attrValue`, `UiCombo` + battle.rml track; scenarios fixed for
+    the new attack (`battle_bow`, `battle_bow_idle`, `arena_restart`), `battle_weapon_level`.
+  - Phases 2 + 4: items `sword`, `staff`; `battleAnim.clips`; `tools/make_weapon_anims.py` (4 .anim), `tools/make_weapon_icons.py`
+    (icons into art_raw + both atlases); `anim.check_*` for the clips; scenarios `battle_sword`, `battle_staff` (`battleClip`).
+  - Phase 3: `dialogue/weapon_master.json`, `tryWeapon` / `chooseWeapon`, `Arena::trial`, title New Game hook,
+    `--skip-start-story` in every screenshot test; scenarios `trial_*`.
+  - Phase 6: `Player::crystals` (save, HUD), `systems/mini_game.*` (+ test), `minigames.json`, `minigame.rml/.rcss`,
+    NPCs `chest_peddler`, `crystal_oracle` on stage01 (zh_TW-only shrine); scenarios `minigame_*`.
+  - UI font regenerated (2483 characters). Docs 30 §13-16, 15, 31 (EN + zh_TW); mesh docs 34 part 3 "waits".
+  - Tests: changed-only 32 of 184 pass; the affected switched-off scenarios by name pass; references `mesh`, `anim_skin`,
+    `anim_deform` refreshed. Full suite / web in a browser not run.

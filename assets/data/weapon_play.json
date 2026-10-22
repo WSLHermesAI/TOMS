@@ -6,7 +6,12 @@
     "start, Lv 10 back 5 points, Lv 15 back 4 ... A level below every entry also goes back to the start.",
     "missWaitMs: after a miss, how long before the next tap counts (the sword puts itself back).",
     "Keys: an items.json weapon id, \"unarmed\" (no weapon worn), or \"default\" (any weapon without its own entry).",
-    "Weapon levels come in phase 3; until then every weapon is level 1."
+    "Battle v3's point play (docs/30 §4, §5.1; phase 1, the owner 2026-10-22): levels: per weapon level, the points on the",
+    "combo track (1-5) and the attribute bonuses it gives (data/stats.json ids). usesToLevel: wins needed from Lv 1 to 2,",
+    "2 to 3, ... (the level stops at the last levels entry). turnBack: the marker turns back at the ends; false: one sweep.",
+    "sweepMs: one sweep with no charge; maxSweeps: turning back, the combo ends after this many. chargeMs: waiting this long",
+    "fills the charge; chargeSpeedUp / chargeDamage: a full charge makes the marker and the damage this much more (1 = x2).",
+    "hitWindow: how close a tap must be to a point (a fraction of the track). The values are first guesses (made up for now)."
   ],
   "default": {
     "missBack": [
@@ -35,7 +40,61 @@
         "back": 1
       }
     ],
-    "missWaitMs": 0
+    "missWaitMs": 0,
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "str": 10
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "str": 12,
+          "agi": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "str": 14,
+          "agi": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "str": 16,
+          "agi": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "str": 20,
+          "agi": 15
+        }
+      }
+    ],
+    "usesToLevel": [
+      3,
+      5,
+      8,
+      12
+    ],
+    "turnBack": true,
+    "sweepMs": 1600,
+    "maxSweeps": 3,
+    "chargeMs": 2000,
+    "chargeSpeedUp": 1.0,
+    "chargeDamage": 1.0,
+    "hitWindow": 0.07
   },
   "unarmed": {
     "missBack": [
@@ -56,7 +115,28 @@
         "back": 3
       }
     ],
-    "missWaitMs": 0
+    "missWaitMs": 0,
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3
+      },
+      {
+        "lv": 3,
+        "points": 4
+      },
+      {
+        "lv": 5,
+        "points": 5
+      }
+    ],
+    "usesToLevel": [
+      3,
+      5,
+      8,
+      12
+    ],
+    "sweepMs": 1500
   },
   "qingxiao_blade": {
     "missBack": [
@@ -73,7 +153,56 @@
         "back": 2
       }
     ],
-    "missWaitMs": 1200
+    "missWaitMs": 1200,
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "str": 10
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "str": 12,
+          "dex": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "str": 14,
+          "dex": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "str": 16,
+          "dex": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "str": 20,
+          "dex": 15
+        }
+      }
+    ],
+    "usesToLevel": [
+      3,
+      5,
+      8,
+      12
+    ],
+    "turnBack": false,
+    "sweepMs": 1400
   },
   "wand": {
     "missBack": [
@@ -90,7 +219,54 @@
         "back": 4
       }
     ],
-    "missWaitMs": 400
+    "missWaitMs": 400,
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "int": 10
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "int": 12,
+          "dex": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "int": 14,
+          "dex": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "int": 16,
+          "dex": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "int": 20,
+          "dex": 15
+        }
+      }
+    ],
+    "usesToLevel": [
+      3,
+      5,
+      8,
+      12
+    ]
   },
   "twin_daggers": {
     "missBack": [
@@ -111,7 +287,55 @@
         "back": 1
       }
     ],
-    "missWaitMs": 0
+    "missWaitMs": 0,
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "agi": 10
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "agi": 12,
+          "dex": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "agi": 14,
+          "dex": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "agi": 16,
+          "dex": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "agi": 20,
+          "dex": 15
+        }
+      }
+    ],
+    "usesToLevel": [
+      3,
+      5,
+      8,
+      12
+    ],
+    "sweepMs": 1200
   },
   "war_hammer": {
     "missBack": [
@@ -124,6 +348,247 @@
         "back": 4
       }
     ],
-    "missWaitMs": 800
+    "missWaitMs": 800,
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "str": 10
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "str": 12,
+          "vit": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "str": 14,
+          "vit": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "str": 16,
+          "vit": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "str": 20,
+          "vit": 15
+        }
+      }
+    ],
+    "usesToLevel": [
+      3,
+      5,
+      8,
+      12
+    ],
+    "sweepMs": 2000,
+    "chargeDamage": 1.4
+  },
+  "bow": {
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "str": 10
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "str": 12,
+          "agi": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "str": 14,
+          "agi": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "str": 16,
+          "agi": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "str": 20,
+          "agi": 15
+        }
+      }
+    ],
+    "usesToLevel": [
+      3,
+      5,
+      8,
+      12
+    ],
+    "turnBack": true,
+    "sweepMs": 1700,
+    "chargeMs": 2200,
+    "chargeSpeedUp": 1.0,
+    "chargeDamage": 1.2,
+    "hitWindow": 0.07
+  },
+  "sword": {
+    "missBack": [
+      {
+        "lv": 1,
+        "back": "start"
+      },
+      {
+        "lv": 3,
+        "back": 2
+      },
+      {
+        "lv": 5,
+        "back": 1
+      }
+    ],
+    "missWaitMs": 600,
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "str": 10
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "str": 12,
+          "dex": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "str": 14,
+          "dex": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "str": 16,
+          "dex": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "str": 20,
+          "dex": 15
+        }
+      }
+    ],
+    "usesToLevel": [
+      3,
+      5,
+      8,
+      12
+    ],
+    "turnBack": false,
+    "sweepMs": 1500,
+    "chargeMs": 1800,
+    "chargeSpeedUp": 0.8,
+    "chargeDamage": 1.0,
+    "hitWindow": 0.07
+  },
+  "staff": {
+    "missBack": [
+      {
+        "lv": 1,
+        "back": "start"
+      },
+      {
+        "lv": 4,
+        "back": 2
+      }
+    ],
+    "missWaitMs": 200,
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "int": 10
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "int": 12,
+          "dex": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "int": 14,
+          "dex": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "int": 16,
+          "dex": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "int": 20,
+          "dex": 15
+        }
+      }
+    ],
+    "usesToLevel": [
+      3,
+      5,
+      8,
+      12
+    ],
+    "turnBack": true,
+    "sweepMs": 1900,
+    "maxSweeps": 3,
+    "chargeMs": 3000,
+    "chargeSpeedUp": 0.6,
+    "chargeDamage": 1.6,
+    "hitWindow": 0.08
   }
 }

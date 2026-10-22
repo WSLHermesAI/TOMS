@@ -42,7 +42,7 @@ set(TOMS_UNIT_TESTS
     game/systems/mission_test       game/systems/run_state_test        game/systems/skill_system_test
     game/systems/player_menu_test   game/systems/stair_links_test  game/systems/floor_index_test
     game/systems/story_controller_test   game/systems/event_chain_test   game/systems/talk_system_test
-    game/systems/weapon_play_test   game/systems/card_collection_test
+    game/systems/weapon_play_test   game/systems/card_collection_test   game/systems/combo_play_test   game/systems/mini_game_test
     game/ui/title_screen_test)
 
 get_filename_component(_data_parent "${TOMS_DATA_DIR}" DIRECTORY)
@@ -125,7 +125,8 @@ set(TOMS_GOLDEN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/golden")
 function(toms_smoke_test name golden renderer tolerance)
     # The game's arguments travel as one "a|b|c" string; run_smoke.cmake splits it again.
     list(JOIN ARGN "|" _scene)
-    set(_args "--renderer=${renderer}|--fixed-dt=16|${_scene}")
+    # --skip-start-story: Enter on the title's New Game goes straight to stage 1, as when these references were made
+    set(_args "--renderer=${renderer}|--fixed-dt=16|--skip-start-story|${_scene}")
     add_test(NAME smoke.${name}
              COMMAND ${CMAKE_COMMAND}
                      -DGAME=$<TARGET_FILE:toms_game> -DDIFF=$<TARGET_FILE:image_diff>

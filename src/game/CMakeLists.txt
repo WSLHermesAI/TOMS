@@ -29,6 +29,8 @@ add_library(toms_core STATIC
     ${L_GAME}/systems/cycle_system.cpp ${L_GAME}/systems/camera.cpp ${L_GAME}/systems/roamer.cpp
     ${L_GAME}/systems/run_state.cpp ${L_GAME}/systems/floor_table.cpp
     ${L_GAME}/systems/weapon_play.cpp   # data/weapon_play.json (docs/30 §5.6)
+    ${L_GAME}/systems/combo_play.cpp    # Battle v3 point play (docs/30 §4, §5.1)
+    ${L_GAME}/systems/mini_game.cpp     # reward events, data/minigames.json (docs/30 phase 6)
     ${L_GAME}/systems/card_collection.cpp   # monster cards (docs/30 §3)
     ${L_GAME}/systems/story_actions.cpp ${L_GAME}/systems/talk_system.cpp   # NPCs and their events (docs/event_editor/08)
     compat/renderer.h)

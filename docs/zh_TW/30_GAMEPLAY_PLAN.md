@@ -309,5 +309,55 @@
   `menu_cards`。
 - **多事件樓梯鎖**（W38）：見 [event_editor/05](event_editor/05_FLOOR_LINKS.md) 第 3a 節。
 
-**下一步：**第 1 階段，戰鬥 v3 與空手（第 10 節）；或不需要決定就能做的下載步驟（[32](32_DOWNLOADS_AND_DLC.md) 第 6 節，
+## 13. 第 1 階段：戰鬥 v3 的點擊玩法與武器等級（2026-10-22）
+
+擁有者（2026-10-22）：點數（最多五個）由**武器等級**決定，每把武器每個等級都有自己的資料（例如 Lv 1：STR +10、3 個點；
+數值暫時隨意設定）。
+
+| 項目 | 位置 | 測試 |
+|---|---|---|
+| **武器等級**：`assets/data/weapon_play.json` 每把武器的 `levels`（每級的點數 1-5 與屬性加成，例如弓 Lv 1 STR +10／3 點 …… Lv 5 STR +20、AGI +15／5 點）、`usesToLevel`（每級需要的勝場：3、5、8、12）。用裝備中的武器獲勝才算（武器測試場不算）；升級時顯示「獵弓 升到 Lv 2：3 個點！」。等級加成加到屬性上（`Game::attrValue`）。存在進度中（`player.weaponUses`）；新遊戲與輪迴時每把武器回到 Lv 1 | `weapon_play.h`、`Game::weaponLevel` | `unit.combo_play_test`、`scenario.battle_weapon_level` |
+| **點擊玩法**（第 4 節、5.1）：攻擊等待時累積**集氣**（`chargeMs`）；第一次點擊讓標記開始在該等級的點上移動，集氣越多越快（`chargeSpeedUp`）；在點附近點擊即命中，順序不限；點不到任何點是**失誤**（連擊依 `missBack` 退回，之後等待 `missWaitMs`）；連續兩次失誤是**失敗**（一次普通攻擊）。所有點都命中、掃過次數用完（`maxSweeps`；`turnBack: false` 只掃一次）或失敗時，連擊結束 | `systems/combo_play.h`（不依賴遊戲） | `unit.combo_play_test` |
+| **傷害**：命中點數的比例就是原有傷害公式的力量（0-100），再乘上集氣（`chargeDamage`：滿集氣傷害加倍）。失敗是力量 0（仍是一次普通攻擊）。連擊進行中敵人的計時會等待（第 4 節）。全部命中時顯示大號數字 | `Game::resolveCombo` | 戰鬥與武器測試場情境 |
+| **畫面**：攻擊欄顯示集氣（黃色直條）、帶點的軌道（命中變綠）與標記，以及「獵弓 Lv 1 0/3」（等級與到下一級的勝場）；防禦條不變 | `battle.rml`／`.rcss`、`UiCombo` | 截圖 |
+| **情境**：`player.weaponUses` 設定每把武器的勝場；`expect.weaponLevel` 檢查等級；`battle_bow` 點中弓的三個點 | [31](31_TEST_SCENARIOS.md) | `battle_bow`、`battle_bow_idle`、`arena_restart`、`battle_weapon_level` |
+
+目前每把武器都使用點擊玩法；5.2／5.3 的劍與法杖之後會有自己的玩法。
+
+## 14. 第 2 與第 4 階段：劍與法杖，依狀態播放片段（2026-10-22）
+
+| 項目 | 位置 | 測試 |
+|---|---|---|
+| **兩種新武器** 在 `items.json`：`sword`（鐵劍）與 `staff`（橡木法杖），名稱有六種語言。它們用點擊玩法，各有設定（`weapon_play.json`）：劍的標記**不會折返**（只掃一次），失誤要花 600 ms「收劍」；法杖**集氣較久**（3 秒）但傷害較高（滿氣 x2.6），標記較慢。它們自己的玩法（5.2 多邊形、5.3 圓圈）之後再做 | `items.json`、`weapon_play.json` | `unit.atlas_sprites_test`、`scenario.battle_sword`、`battle_staff` |
+| **依狀態的片段**：`"battleAnim": {"character": ..., "held": ..., "clips": {"idle": "ready", "charge": "raise", "attack": "slash", "miss": "fumble"}}` 指定每個戰鬥狀態播放的片段（兩個檔案都是）；沒列出的狀態播放同名片段（弓） | `EquipmentDefinition::battleClips`、`Game::setBattleRigState` | `scenario.battle_sword`（`expect.battleClip`） |
+| **動畫**（第 4 階段）：`tools/make_weapon_anims.py` 寫出 `weapon_sword.anim` + `fighter_sword.anim`（ready、raise、slash、fumble）與 `weapon_staff.anim` + `caster_staff.anim`（hold、focus、cast、fizzle），武器像弓一樣用 fx 形狀組成；集氣片段在攻擊等待時持續循環顫動／發光。任何角色都能播放（`body`／`hand`，執行時套用） | `tools/make_weapon_anims.py`、`assets/media/anim/` | `anim_editor --headless check`（0 錯誤） |
+| **圖示**（第 4 階段）：`item_sword`、`item_staff`（32 x 32，`tools/make_weapon_icons.py`）放進遊戲圖集（dark16 沿用它們） | `art_raw/sprites/`、`assets/media/atlas/` | `unit.atlas_sprites_test` |
+
+## 15. 第 3 階段：開場故事，試用武器（2026-10-22）
+
+擁有者（2026-10-22）：一段簡單的開場故事讓玩家拿起武器試用，不滿意可以再換一把試，直到滿意；之後從第 1 關開始
+（第 7 節的「開場選擇風格」）。
+
+| 項目 | 位置 | 測試 |
+|---|---|---|
+| **老武師**（`assets/data/dialogue/weapon_master.json`，zh_TW + en）：在村口提供弓、劍、法杖試用（「聽聽各種兵器」說明每種的玩法）。標題畫面的**新遊戲**在新進度設定好後開啟它 | `Game::startWeaponTrial` | `scenario.trial_start` |
+| **試用戰鬥**：對話動作 `{"type": "tryWeapon", "weapon": "sword"}` 裝上該武器，在武器測試場與練習史萊姆（40 HP，弱、攻擊慢）打一場，沒有獎勵，也不算武器勝場 | `Game::tryWeapon`、`Arena::trial` | `scenario.trial_try_sword` |
+| **回到武師面前**：試用戰鬥結束時（勝利後點擊、或顯示落敗後），他的 `after` 節點問：帶這把出發，或換一把試 | `Game::endWeaponTrialFight` | `scenario.trial_choose_staff` |
+| **選定**：`{"type": "chooseWeapon"}` 把裝備中的武器留下作為唯一的裝備（選了別把時，初始的弓會被拿走），設定進度旗標 `start.weapon.<id>`，玩家在第 1 關開始行動 | `Game::chooseWeapon` | `scenario.trial_choose_staff` |
+
+測試情境不會經過它（它們直接呼叫 `newGame`）；場景 `weaponTrial` 會開啟它（[31](31_TEST_SCENARIOS.md)）。
+
+## 16. 第 6 階段：可重複使用的獎勵事件，金幣或水晶（2026-10-22）
+
+擁有者（2026-10-22）：一個簡單、可重複使用的事件，讓玩家賺金幣或水晶，其中一個用繁體中文（看看中文是否正常）。
+第 5 階段（卡片收集）已經完成（第 12 節）。
+
+| 項目 | 位置 | 測試 |
+|---|---|---|
+| **水晶**：金幣之外的第二種貨幣，顯示在 HUD（`GOLD 0  水晶 0`），隨進度存檔（`player.crystals`），新遊戲與輪迴時歸零 | `Player::crystals`、`PlayerSaveData::crystals` | `unit.save_test`、`scenario.minigame_crystal` |
+| **獎勵事件模組**：`assets/data/minigames.json` 定義每個事件（各語言的標題與內文、貨幣、`perHit`、`bonusAll`、每次進度可玩 `limit` 次，以及點擊玩法：點數、掃過時間、是否折返、命中範圍）。任何對話選項都能開啟：`{"type": "miniGame", "id": "chest_lockpick"}`。它的畫面（`minigame.rml`）先顯示內文，再顯示點的軌道：Enter／點擊開始，接著點中各點；每命中一點得 `perHit`，全中再加 `bonusAll`；連續兩次失誤就結束、什麼都沒有 | `systems/mini_game.h`（不依賴遊戲）、`Game::openMiniGame` | `unit.mini_game_test` |
+| **第 1 關的兩個**：**抱寶箱的行商**（`P`，`chest_lockpick`：4 個鎖栓，每個 15 金幣，全中 +30）與**水晶祭司**（`O`，`crystal_shrine`：3 道光，每道 1 顆水晶，全中 +2）。祭壇的對話、事件文字與祭司的名稱**只有繁體中文**：缺少的語言會退回可用的語言，所以在任何語言下都顯示中文 | `stages/stage01.json`、`npcs/chest_peddler.json`、`npcs/crystal_oracle.json`、`dialogue/` | `scenario.minigame_chest`、`minigame_crystal` |
+
+**下一步：**擁有者 2026-10-22 要求的階段（1、2、3、4、6）都已完成；第 5 階段先前已完成。之後：劍與法杖自己的玩法（5.2、5.3）、
+招式名稱（5.4）、熟練度與進階（第 6 節）、其他模式（第 8 節）；或不需要決定就能做的下載步驟（[32](32_DOWNLOADS_AND_DLC.md) 第 6 節，
 步驟 1-2）。

@@ -320,7 +320,9 @@ archer
   [`assets/data/character_fit.json`](../assets/data/character_fit.json): `"player_viking": {"hand": [0, -1]}`
   (pixels, x right, y down). An unlisted character needs nothing.
 - **In battle:** a weapon in `items.json` names its two files, `"battleAnim": {"character": "anim/archer_bow.anim",
-  "held": "anim/weapon_bow.anim"}` (the `bow` does). With it worn, the battle screen draws the player's character and
+  "held": "anim/weapon_bow.anim"}` (the `bow` does). `"clips": {"idle": "ready", "charge": "raise", ...}` names the clip
+  each status plays, for clips with their own names (the `sword` and `staff` do; a status not listed plays the clip of its
+  own name). With it worn, the battle screen draws the player's character and
   the weapon in the player picture's place (the picture is hidden), on the clip the battle's status picks:
 
   | Status | When |

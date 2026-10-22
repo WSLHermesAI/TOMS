@@ -54,7 +54,9 @@
     "Z": "monster:demonlord_vorkath",
     "E": "event:ev_village_chapel_dust",
     "F": "event:ev_village_old_plough",
-    "G": "event:ev_common_rescue_lost_soldier"
+    "G": "event:ev_common_rescue_lost_soldier",
+    "P": "npc:chest_peddler",
+    "O": "npc:crystal_oracle"
   },
   "tiles": [
     "###################",
@@ -67,10 +69,10 @@
     "#...........#..#..#",
     "#...G.......#.2#.U#",
     "#..####..####..####",
-    "#.................#",
+    "#...........P.....#",
     "#.......1.........#",
     "#..####..#..#..####",
-    "#.....#.....#.....#",
+    "#.....#.....#.O...#",
     "#.1..D#.....#..F..#",
     "###################"
   ],

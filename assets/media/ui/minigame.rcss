@@ -1,0 +1,18 @@
+/* minigame.rml: a reward event (docs/30 phase 6). The design screen is 1024 x 768 (common.rcss). */
+body { z-index: 40; width: 100%; height: 100%; }
+#panel  { position: absolute; left: 212px; top: 150px; width: 600px; padding: 28px 32px; background-color: #2e3346;
+          word-break: break-word;   /* Chinese has no spaces: lines break anywhere */
+          border-width: 2px; border-color: #c9a85c; }
+#title  { font-size: 30px; color: #ffd98a; margin-bottom: 14px; }
+#text   { font-size: 21px; color: #eef0f8; line-height: 30px; margin-bottom: 16px; }
+#prompt { font-size: 19px; color: #cfd5e3; height: 28px; }
+#track  { position: relative; height: 34px; background-color: #5b6275; margin-top: 8px; }
+.pt     { position: absolute; top: 6px; width: 22px; height: 22px; margin-left: -11px; border-radius: 11px; background-color: #94b1ed; }
+.pt.hit { background-color: #ffd36a; }
+.marker { position: absolute; top: -8px; width: 5px; height: 50px; margin-left: -2px; background-color: #ffffff; }
+#result { font-size: 24px; color: #ffe9a8; margin-top: 16px; }
+.btn    { margin-top: 18px; height: 56px; line-height: 56px; font-size: 22px; color: #ffffff; background-color: #8598b3;
+          padding-left: 18px; }
+.btn:hover  { background-color: #97aac5; }
+.btn:active { background-color: #a9bcd6; }
+#close  { background-color: #6f7580; margin-top: 10px; }

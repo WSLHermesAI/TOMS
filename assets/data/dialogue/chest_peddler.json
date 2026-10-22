@@ -1,0 +1,32 @@
+{
+  "npcId": "chest_peddler",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "「這寶箱的鎖卡住了。你手巧的話幫我撬開，裡面的金幣分你。」",
+        "en": "\"The lock on this chest is stuck. If you have quick hands, pick it for me and I'll share the gold inside.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "我來試試。",
+            "en": "Let me try."
+          },
+          "action": {
+            "type": "miniGame",
+            "id": "chest_lockpick"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "下次吧。",
+            "en": "Another time."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

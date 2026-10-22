@@ -174,6 +174,11 @@ RULES = [
     (['assets/media/resources.json'], any_of(named('unit.resource_test'), is_game_smoke_d3d11),
      'the resource manifest: its check (every entry loads) + the game screenshots'),
     # the bow's clips: no game screen plays them yet, so only their check
+    (['assets/media/anim/weapon_sword.anim', 'assets/media/anim/fighter_sword.anim', 'assets/media/anim/weapon_staff.anim',
+      'assets/media/anim/caster_staff.anim', 'tools/make_weapon_anims.py'],
+     named('anim.check_weapon_*', 'anim.check_fighter_sword', 'anim.check_caster_staff', 'scenario.battle_sword', 'scenario.battle_staff'),
+     'the sword and staff clips (make_weapon_anims.py writes them): their checks and battles'),
+    (['tools/make_weapon_icons.py'], named('atlas.*', 'unit.atlas_sprites_test'), 'the weapon icons: the atlas checks'),
     (['assets/media/anim/weapon_bow.anim', 'tools/make_bow_anim.py'], named('anim.check_bow', 'anim.check_archer', 'unit.anim_character_test'),
      'the bow clips (make_bow_anim.py writes them; the archer clips are built on them): their checks'),
     (['assets/media/anim/archer_bow.anim', 'tools/make_archer_anim.py', 'assets/data/character_fit.json'],

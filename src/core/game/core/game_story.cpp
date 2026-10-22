@@ -392,9 +392,99 @@ void Game::runStoryActions(const nlohmann::json& actions) {
 // enum-style switch rather than a scripting hook, matching this project's existing preference
 // (see docs/design/MAIN_BATTLE_SCENE_DESIGN.md §4.4's `talent` enum / dialogue's own `action.give`
 // precedent in the design docs).
+// ---- reward events (docs/30 phase 6) ----
+
+void Game::openMiniGame(const std::string& id) {
+    const toms::MiniGameDef* def = miniGames_.find(id);
+    if (!def) { std::fprintf(stderr, "[minigame] no \"%s\" in data/minigames.json\n", id.c_str()); return; }
+    if (def->limit > 0 && run_.counter("minigame." + id) >= def->limit) {   // played out for this run
+        notifications_.push_back({locale_.tr("minigame.used_up"), 3000});
+        return;
+    }
+    miniGame_ = MiniGameState{};
+    miniGame_.open = true;
+    miniGame_.id = id;
+    audio.play("dialogue_popup");
+}
+
+void Game::miniGameTap() {
+    if (!miniGame_.open) return;
+    const toms::MiniGameDef* def = miniGames_.find(miniGame_.id);
+    if (!def) { closeMiniGame(); return; }
+    if (miniGame_.phase == 0) {   // start
+        miniGame_.play.start(def->play, 0.0f);
+        miniGame_.phase = 1;
+        audio.play("confirm_click");
+        return;
+    }
+    if (miniGame_.phase == 1) {
+        const auto t = miniGame_.play.tap();
+        audio.play(t == toms::ComboPlay::Tap::Hit ? "confirm_click" : "deny");
+        if (miniGame_.play.done()) finishMiniGame();
+        return;
+    }
+    closeMiniGame();   // the result: done
+}
+
+void Game::finishMiniGame() {
+    const toms::MiniGameDef* def = miniGames_.find(miniGame_.id);
+    miniGame_.phase = 2;
+    if (!def) return;
+    miniGame_.reward = toms::miniGameReward(*def, miniGame_.play.result());
+    if (def->currency == "crystals") pl.crystals += miniGame_.reward;
+    else pl.gold += miniGame_.reward;
+    run_.addCounter("minigame." + miniGame_.id, 1);
+    audio.play(miniGame_.reward > 0 ? "get_item" : "deny");
+    markProgressDirty();
+}
+
+void Game::closeMiniGame() {
+    if (miniGame_.phase == 1) return;   // playing: the play ends by itself
+    miniGame_ = MiniGameState{};
+}
+
+// ---- the start story: the weapon trial (docs/30 phase 3) ----
+
+void Game::startWeaponTrial() { startDialogue("weapon_master"); }
+
+void Game::tryWeapon(const std::string& weaponId) {
+    if (!equipmentDefs_.count(weaponId)) return;
+    equipped_.weaponId = weaponId;   // worn for the trial; owned only when chosen
+    endDialogue();
+    arena_ = Arena{};
+    arena_.on = true;
+    arena_.trial = true;
+    arena_.enemies = {"slime"};      // a training slime: weak, slow to strike back
+    arena_.overrides = {{"hp", 40}, {"atk", 2}, {"atk_interval_ms", 5000}};
+    arenaNextFight();
+    cs.log = locale_.tr("trial.fight_log");
+}
+
+void Game::endWeaponTrialFight() {
+    arena_ = Arena{};
+    cs = CombatState{};
+    pl.hp = effectiveMaxHp();
+    startDialogue("weapon_master");
+    if (inDialogue) { dlgNode = "after"; enterNode(dlgNode); }
+}
+
+void Game::chooseWeapon() {
+    const std::string chosen = equipped_.weaponId.empty() ? std::string(kStartingWeapon) : equipped_.weaponId;
+    gearOwned_.clear();              // only the chosen weapon goes with the player
+    ownGear(chosen, true);
+    newsGear_ = false;
+    run_.setFlag("start.weapon." + chosen);
+    endDialogue();
+    notifications_.push_back({trParam(locale_.tr("trial.chosen"), "name", itemName(chosen)), 3500});
+    markProgressDirty();
+}
+
 void Game::runDialogueAction(const nlohmann::json& action) {
     if (!action.is_object()) return;
     std::string type = action.value("type", std::string());
+    if (type == "tryWeapon") { tryWeapon(action.value("weapon", std::string())); return; }   // docs/30 phase 3
+    if (type == "chooseWeapon") { chooseWeapon(); return; }
+    if (type == "miniGame") { endDialogue(); openMiniGame(action.value("id", std::string())); return; }   // docs/30 phase 6
     if (type == "give") {
         std::string itemId = action.value("itemId", std::string());
         if (!itemId.empty()) receiveItem(itemId);
@@ -750,11 +840,13 @@ bool Game::rebirth() {
     pl.def = kStartingDef + oldDefBonus / 2;
     pl.maxhp = kStartingHp; pl.hp = kStartingHp;
     pl.gold = 0; pl.exp = 0; pl.lv = 1;
+    pl.crystals = 0;
     pl.key_yellow = pl.key_blue = pl.key_red = 0;
     pl.inv.clear();
     resetAttrs();
     equipped_ = toms::EquippedSet{};
     gearOwned_.clear();
+    weaponUses_.clear();
     ownGear(kStartingWeapon, true);
 
     activeEndingId_.clear();

@@ -323,5 +323,56 @@ The engine pieces have no game dependency, so other games (and the other modes, 
   each card's copies, wins and losses. The arena gives no cards. Scenarios `cards_first_win`, `menu_cards`.
 - **Multi-event stair locks** (W38): see [event_editor/05](event_editor/05_FLOOR_LINKS.md) §3.
 
-**Next:** phase 1, Battle v3 with unarmed (section 10); or the download steps that need no decision
+## 13. Phase 1: Battle v3's point play and weapon levels (2026-10-22)
+
+The owner (2026-10-22): the points (up to five) come from the **weapon's level**, and each weapon has its own data per
+level (for example Lv 1: STR +10, 3 points; values made up for now).
+
+| Piece | Where | Tested by |
+|---|---|---|
+| **Weapon levels**: `assets/data/weapon_play.json` per weapon: `levels` (per level the points, 1-5, and the attribute bonuses, e.g. bow Lv 1 STR +10 / 3 points ... Lv 5 STR +20, AGI +15 / 5 points), `usesToLevel` (wins per level: 3, 5, 8, 12). A win with the equipped weapon counts (not in the arena); a level-up shows "Bow reached Lv 2: 3 points!". The level's bonuses add to the attributes (`Game::attrValue`). Saved in the run (`player.weaponUses`); a new game and a rebirth start every weapon at Lv 1 | `weapon_play.h`, `Game::weaponLevel` | `unit.combo_play_test`, `scenario.battle_weapon_level` |
+| **The point play** (§4, §5.1): while the attack waits, **charge** builds up (`chargeMs`); the first tap starts the marker over the level's points, faster with more charge (`chargeSpeedUp`); a tap near a point hits it, in any order; a tap on nothing is a **miss** (the combo goes back by `missBack`, then `missWaitMs`); two misses in a row are a **fail** (a plain attack). The combo ends when every point is hit, when the sweeps run out (`maxSweeps`; `turnBack: false` is one sweep), or on a fail | `systems/combo_play.h` (no game dependency) | `unit.combo_play_test` |
+| **The damage**: the share of points hit is the power (0-100) of the existing damage formula, times the charge (`chargeDamage`: a full charge doubles it). A fail is power 0 (still a plain hit). The enemy's clock waits while a combo runs (§4). All points hit shows a big number | `Game::resolveCombo` | the battle and arena scenarios |
+| **The screen**: the attack column shows the charge (a yellow column), the track with its points (green when hit) and the marker, and "Bow Lv 1 0/3" (the level and the wins toward the next); the defence bar is unchanged | `battle.rml` / `.rcss`, `UiCombo` | screenshots |
+| **Scenarios**: `player.weaponUses` sets wins per weapon; `expect.weaponLevel` checks levels; `battle_bow` taps the bow's three points | [31](31_TEST_SCENARIOS.md) | `battle_bow`, `battle_bow_idle`, `arena_restart`, `battle_weapon_level` |
+
+Every weapon uses the point play for now; the sword and staff of §5.2 / §5.3 get their own plays later.
+
+## 14. Phases 2 and 4: the sword and the staff, their clips by status (2026-10-22)
+
+| Piece | Where | Tested by |
+|---|---|---|
+| **Two new weapon types** in `items.json`: `sword` (Iron Sword) and `staff` (Oak Staff), names in six languages. They use the point play with their own settings (`weapon_play.json`): the sword's marker **does not turn back** (one sweep) and a miss costs a 600 ms "put back"; the staff **charges longer** (3 s) for more damage (x2.6 at full charge) and a slower marker. Their own plays (§5.2 polygon, §5.3 circles) come later | `items.json`, `weapon_play.json` | `unit.atlas_sprites_test`, `scenario.battle_sword`, `battle_staff` |
+| **Clips by status**: `"battleAnim": {"character": ..., "held": ..., "clips": {"idle": "ready", "charge": "raise", "attack": "slash", "miss": "fumble"}}` names the clip each battle status plays (in both files); a status not listed plays the clip of its own name (the bow) | `EquipmentDefinition::battleClips`, `Game::setBattleRigState` | `scenario.battle_sword` (`expect.battleClip`) |
+| **The animations** (phase 4): `tools/make_weapon_anims.py` writes `weapon_sword.anim` + `fighter_sword.anim` (ready, raise, slash, fumble) and `weapon_staff.anim` + `caster_staff.anim` (hold, focus, cast, fizzle), weapons built from the fx shapes like the bow; the charge clips keep a looping tremble / glow while the attack waits. Any character plays them (`body` / `hand`, fitted at run time) | `tools/make_weapon_anims.py`, `assets/media/anim/` | `anim_editor --headless check` (0 errors) |
+| **The sprites** (phase 4): `item_sword`, `item_staff` (32 x 32, `tools/make_weapon_icons.py`) in the game atlas (and dark16, which falls back to them) | `art_raw/sprites/`, `assets/media/atlas/` | `unit.atlas_sprites_test` |
+
+## 15. Phase 3: the start story, trying the weapons (2026-10-22)
+
+The owner (2026-10-22): a simple start story lets the player pick up a weapon and try it, and try another until
+satisfied; then the run begins on stage 1 (section 7's "choose a style at the start").
+
+| Piece | Where | Tested by |
+|---|---|---|
+| **The weapon master** (`assets/data/dialogue/weapon_master.json`, zh_TW + en): at the village edge he offers the bow, the sword and the staff ("Tell me about them" explains each one's play). The title's **New Game** opens it, after the new run is set up | `Game::startWeaponTrial` | `scenario.trial_start` |
+| **A trial fight**: dialogue action `{"type": "tryWeapon", "weapon": "sword"}` wears that weapon and starts one fight in the weapon test arena against a training slime (40 HP, weak, slow), no rewards and no weapon win counted | `Game::tryWeapon`, `Arena::trial` | `scenario.trial_try_sword` |
+| **Back to the master**: when the trial fight is over (a win dismissed, or a loss shown), his `after` node asks: set out with this one, or try another | `Game::endWeaponTrialFight` | `scenario.trial_choose_staff` |
+| **The choice**: `{"type": "chooseWeapon"}` keeps the worn weapon as the only gear (the starting bow goes if another was chosen), sets the run flag `start.weapon.<id>`, and the player walks on stage 1 | `Game::chooseWeapon` | `scenario.trial_choose_staff` |
+
+Test scenarios start without it (they call `newGame` directly); scene `weaponTrial` opens it ([31](31_TEST_SCENARIOS.md)).
+
+## 16. Phase 6: a reusable reward event, gold or crystals (2026-10-22)
+
+The owner (2026-10-22): a simple, reusable event that lets the player earn money or crystals, one of them in
+Traditional Chinese (to see Chinese working). Phase 5 (the card collection) was already done (§12).
+
+| Piece | Where | Tested by |
+|---|---|---|
+| **Crystals**: a second currency beside gold, in the HUD (`GOLD 0  CRYSTALS 0`), saved with the run (`player.crystals`), reset by a new game and a rebirth | `Player::crystals`, `PlayerSaveData::crystals` | `unit.save_test`, `scenario.minigame_crystal` |
+| **The reward event module**: `assets/data/minigames.json` defines each event (title and text per language, the currency, `perHit`, `bonusAll`, `limit` plays a run, and the point play: points, sweep, turning back, hit window). Any dialogue choice starts one: `{"type": "miniGame", "id": "chest_lockpick"}`. Its screen (`minigame.rml`) shows the text, then the point track: Enter / a tap starts, then hits the points; each hit earns `perHit`, all of them `bonusAll` more; two misses in a row end it with nothing | `systems/mini_game.h` (no game dependency), `Game::openMiniGame` | `unit.mini_game_test` |
+| **Two on stage 1**: the **Peddler with a Chest** (`P`, `chest_lockpick`: 4 pins, 15 gold each, +30 for all) and the **crystal shrine's priest** (`O`, `crystal_shrine`: 3 lights, 1 crystal each, +2 for all). The shrine's dialogue, event text and the priest's name are **Traditional Chinese only**: a language missing falls back, so it shows Chinese in every language | `stages/stage01.json`, `npcs/chest_peddler.json`, `npcs/crystal_oracle.json`, `dialogue/` | `scenario.minigame_chest`, `minigame_crystal` |
+
+**Next:** the phases the owner asked for on 2026-10-22 (1, 2, 3, 4, 6) are built; phase 5 was already. Later: the sword's and
+the staff's own plays (§5.2, §5.3), named moves (§5.4), mastery and advancement (§6), the other modes (§8); or the
+download steps that need no decision
 ([32](32_DOWNLOADS_AND_DLC.md) §6, steps 1-2).

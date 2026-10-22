@@ -104,6 +104,8 @@ nlohmann::json toJson(const RunSaveData& r) {
     p["gear"] = r.player.gear;
     p["weapon"] = r.player.weapon; p["armor"] = r.player.armor; p["talent"] = r.player.talent;
     p["attrPoints"] = r.player.attrPoints;
+    p["weaponUses"] = r.player.weaponUses;
+    p["crystals"] = r.player.crystals;
     j["player"] = p;
     j["entityStatus"] = r.entityStatus;
     // S3 (schemaVersion 3): the run's story state -- see RunStoryState for what writes/reads it.
@@ -158,6 +160,10 @@ RunSaveData runFromJson(const nlohmann::json& in, bool* versionMismatch) {
         r.player.armor = p.value("armor", std::string());
         r.player.talent = p.value("talent", std::string());
         r.player.attrPoints = p.value("attrPoints", 0);
+        r.player.crystals = std::max(0, p.value("crystals", 0));
+        if (p.contains("weaponUses") && p["weaponUses"].is_object())   // optional: an older save has none (every weapon Lv 1)
+            for (auto& [k, v] : p["weaponUses"].items())
+                if (v.is_number_integer()) r.player.weaponUses[k] = std::max(0, v.get<int>());
     }
     if (j.contains("entityStatus") && j["entityStatus"].is_object())
         for (auto& [k, v] : j["entityStatus"].items())

@@ -130,6 +130,7 @@ void Game::newGame(int slot) {
     resetAttrs();
     equipped_ = toms::EquippedSet{};
     gearOwned_.clear();
+    weaponUses_.clear();               // every weapon back to Lv 1
     ownGear(kStartingWeapon, true);   // the bow, worn from the start (not "new" in the gear menu)
     newsStore_ = newsGear_ = newsEvents_ = false;
     eventLogSeen_ = 0;
@@ -245,6 +246,10 @@ void Game::update(int dtMs) {
     for (auto& p : cs.popups) { p.ageMs += dtMs; p.rise.update(dtMs); }
     cs.popups.erase(std::remove_if(cs.popups.begin(), cs.popups.end(),
                                    [](const CombatState::Popup& p) { return p.rise.done(); }), cs.popups.end());
+    if (miniGame_.open && miniGame_.phase == 1) {   // a reward event's play (docs/30 phase 6)
+        miniGame_.play.update(dtMs);
+        if (miniGame_.play.done()) finishMiniGame();
+    }
     // An attack is playing (docs/30_GAMEPLAY_PLAN.md §4): both sides' clocks wait for it.
     const bool attackPlaying = cs.active && cs.attackPauseMs > 0;
     if (attackPlaying) cs.attackPauseMs = std::max(0, cs.attackPauseMs - dtMs);
@@ -265,18 +270,33 @@ void Game::update(int dtMs) {
             if (bar.pos > span) { bar.pos = span; bar.dir = -1; bar.legMs = 0.0f; }
             if (bar.pos < 0.0f)  { bar.pos = 0.0f;  bar.dir = 1;  bar.legMs = 0.0f; }
         };
-        stepBar(cs.atkBar, toms::effectiveAttackBar(equipped_, equipmentDefs_));
+        // Battle v3 (docs/30 phase 1): the attack side is the point play. Cooling after an attack; then charge builds up
+        // while it waits; a running combo moves its marker, and the enemy waits for it (the owner's rule, §4).
+        if (cs.atkBar.cooling) {
+            cs.atkBar.cooldownMs -= dtMs;
+            if (cs.atkBar.cooldownMs <= 0) { cs.atkBar.cooling = false; cs.chargeMs = 0; }
+        } else if (cs.combo.running()) {
+            cs.combo.update(dtMs);
+            if (cs.combo.done()) resolveCombo();
+        } else {
+            cs.chargeMs = std::min(cs.chargeMs + dtMs, std::max(1, weaponPlayOf(weaponKey()).chargeMs));
+        }
         stepBar(cs.defBar, toms::effectiveDefenseBar(equipped_, equipmentDefs_));
 
-        cs.enemyClockMs += dtMs;
-        int interval = std::max(500, cs.enemy.atkIntervalMs);
-        if (cs.enemyClockMs >= interval) {
-            cs.enemyClockMs = 0;
-            resolveEnemyClockFire();
+        if (cs.active && !cs.combo.running()) {
+            cs.enemyClockMs += dtMs;
+            int interval = std::max(500, cs.enemy.atkIntervalMs);
+            if (cs.enemyClockMs >= interval) {
+                cs.enemyClockMs = 0;
+                resolveEnemyClockFire();
+            }
         }
     }
     // The weapon test arena: when a fight is over (a win dismissed, a loss shown), the next one starts.
-    if (arena_.on && !cs.active && !cs.won && cs.resultPauseMs <= 0 && !title_.isOpen()) arenaNextFight();
+    if (arena_.on && !cs.active && !cs.won && cs.resultPauseMs <= 0 && !title_.isOpen()) {
+        if (arena_.trial) endWeaponTrialFight();   // the start story: back to the weapon master
+        else arenaNextFight();
+    }
     // The result-pause countdown must run regardless of cs.active: finishCombatLose() sets
     // active=false in the same call that starts this pause, so gating on cs.active would freeze
     // it forever and leave a stale "you fell" message stuck in cs.log (which -- see showBattle's

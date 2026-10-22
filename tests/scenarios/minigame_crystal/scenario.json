@@ -1,0 +1,12 @@
+{
+  "_comment": "The crystal reward event, written in Traditional Chinese only (the owner's test of zh_TW text; it shows Chinese in every language): 3 points on an 1800 ms sweep, one every 28 frames; the taps hit all three: 3 x 1 + 2 = 5 crystals.",
+  "scene": "miniGame",
+  "miniGame": "crystal_shrine",
+  "test": {
+    "frames": 110,
+    "keys": "enter@10,enter@38,enter@66,enter@94"
+  },
+  "expect": {
+    "crystals": 5
+  }
+}

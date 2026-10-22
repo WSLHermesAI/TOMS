@@ -1,9 +1,11 @@
 {
-  "_comment": "battle_bow's check of the next-round status: one tap at frame 20; the shot plays out by about frame 64 (0.7 s) and the attack bar recovers no sooner than frame 82 (battle.json bar_cooldown_ms 1000): at frame 78 the bow is lowered (idle).",
-  "include": ["../battle_bow/scenario.json"],
+  "_comment": "battle_bow's check of the next-round status: the same combo (it ends at frame 102); the shot plays out by about frame 146 (0.7 s) and the attack recovers no sooner than about frame 190 (the attack pause, then battle.json bar_cooldown_ms): at frame 160 the bow is lowered (idle).",
+  "include": [
+    "../battle_bow/scenario.json"
+  ],
   "test": {
-    "frames": 78,
-    "keys": "enter@20"
+    "frames": 160,
+    "keys": "enter@40,enter@61,enter@81,enter@102"
   },
   "expect": {
     "battleAnim": "idle"

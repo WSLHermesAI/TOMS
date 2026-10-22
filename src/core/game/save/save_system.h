@@ -57,6 +57,9 @@ struct PlayerSaveData {
     std::vector<std::string> gear;               // owned weapons / armor / talents
     std::string weapon, armor, talent;           // what is worn ("" = nothing)
     int attrPoints = 0;                          // attribute points not placed yet
+    // 2026-10-22 (Battle v3, docs/30 phase 1): wins with each weapon ("unarmed" for none) -- its level comes from them.
+    std::map<std::string, int> weaponUses;
+    int crystals = 0;                            // 2026-10-22 (docs/30 phase 6): the second currency; optional
 };
 
 // The current session/run in progress.

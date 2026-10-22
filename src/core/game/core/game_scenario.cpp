@@ -171,6 +171,8 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
     if (p.contains("attrs"))
         for (auto it = p["attrs"].begin(); it != p["attrs"].end(); ++it) pl.attrs[it.key()] = it.value().get<int>();
     if (p.contains("inventory")) pl.inv = strings(p, "inventory");
+    if (p.contains("weaponUses") && p["weaponUses"].is_object())   // wins with each weapon: its level (docs/30 phase 1)
+        for (auto it = p["weaponUses"].begin(); it != p["weaponUses"].end(); ++it) weaponUses_[it.key()] = it.value().get<int>();
 
     // 5. The scene.
     const std::string& s = scenarioScene_;
@@ -197,6 +199,11 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
         arena_.overrides = b;
         arena_.on = true;
         arenaNextFight();
+    } else if (s == "miniGame") {   // a reward event (docs/30 phase 6): "miniGame": "<id in data/minigames.json>"
+        openMiniGame(sc.value("miniGame", std::string()));
+        if (!miniGame_.open) return bad("no mini-game \"" + sc.value("miniGame", std::string()) + "\" (data/minigames.json)");
+    } else if (s == "weaponTrial") {   // the start story (docs/30 phase 3): the weapon master's dialogue
+        startWeaponTrial();
     } else if (s == "dialogue") {
         const nlohmann::json d = sc.value("dialogue", nlohmann::json::object());
         if (d.contains("file")) {
@@ -261,7 +268,8 @@ bool Game::scenarioCheck(std::string& report) const {
     else if (scene == "battle") showing = cs.active;
     else if (scene == "battleWon") showing = cs.won;
     else if (scene == "arena") showing = arena_.on && (cs.active || cs.won || cs.resultPauseMs > 0);
-    else if (scene == "dialogue" || scene == "talk") showing = inDialogue;
+    else if (scene == "dialogue" || scene == "talk" || scene == "weaponTrial") showing = inDialogue;
+    else if (scene == "miniGame") showing = miniGame_.open;
     else if (scene == "store") showing = storeOpen;
     else if (scene == "menu") showing = inGameMenuOpen_;
     else if (scene == "saveLoad") showing = saveLoadOpen_;
@@ -279,7 +287,7 @@ bool Game::scenarioCheck(std::string& report) const {
         if (scenarioExpect_.contains(key) && scenarioExpect_[key].get<int>() != have)
             fail(std::string(key) + " is " + std::to_string(have) + ", expected " + std::to_string(scenarioExpect_[key].get<int>()));
     };
-    num("gold", pl.gold); num("hp", pl.hp); num("lv", pl.lv);
+    num("gold", pl.gold); num("hp", pl.hp); num("lv", pl.lv); num("crystals", pl.crystals);
     num("arenaFights", arena_.fights); num("arenaWins", arena_.wins);
     if (scenarioExpect_.contains("stage") && curStage != scenarioExpect_["stage"].get<std::string>())
         fail("the floor is " + curStage + ", expected " + scenarioExpect_["stage"].get<std::string>());
@@ -304,6 +312,23 @@ bool Game::scenarioCheck(std::string& report) const {
             stairJustOpened(st.id, *up) != scenarioExpect_["stairUpMarked"].get<bool>())
             fail(std::string("the stair up is ") + (scenarioExpect_["stairUpMarked"].get<bool>() ? "not marked" : "marked") + " with the arrow");
     }
+    if (scenarioExpect_.contains("equipped") && equipped_.weaponId != scenarioExpect_["equipped"].get<std::string>())
+        fail("the worn weapon is \"" + equipped_.weaponId + "\", expected \"" + scenarioExpect_["equipped"].get<std::string>() + "\"");
+    if (scenarioExpect_.contains("gearOwned")) {   // exactly these, in any order
+        std::vector<std::string> want = scenarioExpect_["gearOwned"].get<std::vector<std::string>>(), have = gearOwned_;
+        std::sort(want.begin(), want.end());
+        std::sort(have.begin(), have.end());
+        if (want != have) fail("the owned gear is not what was expected");
+    }
+    if (scenarioExpect_.contains("dialogueNode") && (!inDialogue || dlgNode != scenarioExpect_["dialogueNode"].get<std::string>()))
+        fail("the dialogue is not at node \"" + scenarioExpect_["dialogueNode"].get<std::string>() + "\"");
+    if (scenarioExpect_.contains("weaponLevel") && scenarioExpect_["weaponLevel"].is_object())   // weapon id -> its level
+        for (auto it = scenarioExpect_["weaponLevel"].begin(); it != scenarioExpect_["weaponLevel"].end(); ++it)
+            if (weaponLevel(it.key()) != it.value().get<int>())
+                fail("the weapon \"" + it.key() + "\" is Lv " + std::to_string(weaponLevel(it.key())) + ", expected " +
+                     std::to_string(it.value().get<int>()));
+    if (scenarioExpect_.contains("battleClip") && battleRigClip_ != scenarioExpect_["battleClip"].get<std::string>())
+        fail("the battle picture plays the clip \"" + battleRigClip_ + "\", expected \"" + scenarioExpect_["battleClip"].get<std::string>() + "\"");
     if (scenarioExpect_.contains("battleAnim") && battleRigState_ != scenarioExpect_["battleAnim"].get<std::string>())
         fail("the battle picture shows \"" + battleRigState_ + "\", expected \"" + scenarioExpect_["battleAnim"].get<std::string>() + "\"");
     if (scenarioExpect_.contains("condition") && !holds(scenarioExpect_["condition"]))
