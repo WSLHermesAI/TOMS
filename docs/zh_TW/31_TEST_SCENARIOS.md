@@ -72,7 +72,7 @@ tests/scenarios/
 | `stairLocks` | 把某層第一個上樓梯鎖在事件之後：`{ "floor": "F01", "event": "ev_a" }`，或多個事件用 `"events": [...]`（全部完成才打開，W38）。 |
 | `flags` | 要設定的流程旗標（例如 `hub.village` 解鎖村莊）。 |
 | `eventsDone` | 像玩家一樣完成的事件。它們的獎勵、解鎖與通知都會發生。 |
-| `player` | 先 `give` 與 `equip`（依 `items.json` 的 id 給道具與裝備；`give` 中也可以用 `gold:<n>`、`exp:<n>`、`points:<n>`），再套用給定的數值。`inventory` 會取代背包內容。 |
+| `player` | 新遊戲開始時裝備著弓（初始武器）；`"unarmed": true` 會卸下它。接著 `give` 與 `equip`（依 `items.json` 的 id 給道具與裝備；`give` 中也可以用 `gold:<n>`、`exp:<n>`、`points:<n>`），再套用給定的數值。`inventory` 會取代背包內容。 |
 | `test` | 自動測試用：場景開啟後執行幾個畫格，以及要按的鍵（`鍵@畫格`，從場景的第一個畫格算起；鍵名和 `--keys` 相同）。 |
 | `expect` | 測試結束時檢查什麼（第 4 節）。沒有的話只檢查場景是否正在顯示。 |
 
@@ -86,7 +86,7 @@ tests/scenarios/
 | `stage` | 行走場景：玩家在樓層中，處於存檔或給定的時刻 | — | `stage_new_game`、`stage_from_save`、`stage_from_events` |
 | `battle` | 與 `enemies.json` 中某個敵人的戰鬥（敵人不在地圖上） | `battle`：`enemy`，可選擇覆寫 `hp`、`atk`、`def`、`atk_interval_ms` | `battle_slime`、`battle_strong_player`、`battle_bow`（弓的戰鬥片段；另有 `battle_bow_charge`、`battle_bow_idle`） |
 | `battleWon` | 那場戰鬥之後的勝利畫面 | 同 `battle` | `battle_won` |
-| `arena` | **武器測試場**（[30](30_GAMEPLAY_PLAN.md) 第 0 階段）：依序和列出的敵人一場接一場地戰鬥，每場都是滿血，沒有獎勵，也不影響故事。勝利後按 Enter 開始下一場；落敗後自動開始。武器是玩家的（`player.equip`），沒有就是空手。`toms_game --arena=<敵人,...>[:<武器>]` 不用檔案也能開啟 | `battle`：`enemies`（或 `enemy`），以及和 `battle` 相同的覆寫值，套用到每一場 | `arena_unarmed`、`arena_wand`、`arena_restart` |
+| `arena` | **武器測試場**（[30](30_GAMEPLAY_PLAN.md) 第 0 階段）：依序和列出的敵人一場接一場地戰鬥，每場都是滿血，沒有獎勵，也不影響故事。勝利後按 Enter 開始下一場；落敗後自動開始。武器是玩家的：初始的弓，用 `player.equip` 換別的，用 `player.unarmed` 則空手。`toms_game --arena=<敵人,...>[:<武器>]` 不用檔案也能開啟（沒寫武器：空手） | `battle`：`enemies`（或 `enemy`），以及和 `battle` 相同的覆寫值，套用到每一場 | `arena_unarmed`、`arena_wand`、`arena_restart` |
 | `dialogue` | 一段對話：遊戲內的（`id`），或設定檔旁邊的檔案（`file`）；可用 `node` 指定起始節點 | `dialogue`：`id` 或 `file`、`node` | `dialogue_by_id`、`dialogue_from_file` |
 | `talk` | 和 NPC 交談：依已完成的事件出現閒聊、話題或話題選單 | `talk`：`npc`（`npcs/` 的 id） | `talk_elder` |
 | `store` | 商店（情境中直接解鎖） | — | `store_buy`、`store_from_save` |

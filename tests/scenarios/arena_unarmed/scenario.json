@@ -1,6 +1,9 @@
 {
   "_comment": "The weapon test arena (docs/31 §3): no weapon, slime then bat, fight after fight.",
   "scene": "arena",
+  "player": {
+    "unarmed": true
+  },
   "battle": {
     "enemies": [
       "slime",

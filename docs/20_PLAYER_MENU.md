@@ -170,7 +170,8 @@ changes the Status tab, the level-up and the save without code changes:
   `rampTime`, hit zone from `greenHalf`, top multiplier `maxMult`), and the skills it grants (`actives`).
   Better values are green, worse are red.
 - **Buttons:** **Equip** (swaps it in; the old one goes back to the list) or **Unequip** for the worn
-  one (armor only; a weapon slot always holds one, the starter wand at worst).
+  one (armor only; a weapon slot always holds one, the starting bow at worst: a new game and a rebirth start with
+  it equipped, `Game::kStartingWeapon`).
 - **Talent** (the third slot in `equipment.json`) is not shown here for now (Q15).
 - Changing gear is free and allowed any time the menu can open (not in battle).
 

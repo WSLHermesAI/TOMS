@@ -727,7 +727,7 @@ void Game::dismissEndingScreen() {
 // M8 (first slice): docs/story/STORY_BIBLE.md §8.1's "入輪迴" -- carries skills (at half effect --
 // see skillEffectScale()), memory shards (already reset(keepShards=true)'s job), skill points and
 // the Super gauge cap (both halved-and-floored), and cycleIndex (+1) forward; resets everything
-// else (equipment to the starting wand, consumables/materials/gold/keys, main-line flags/choices/
+// else (equipment to the starting weapon, consumables/materials/gold/keys, main-line flags/choices/
 // counters/side-stories, floor back to F01). Forge blueprints and known actives need no code here
 // at all -- they already live on meta_, which this never touches except cycleIndex/endingsSeen.
 bool Game::rebirth() {
@@ -755,7 +755,7 @@ bool Game::rebirth() {
     resetAttrs();
     equipped_ = toms::EquippedSet{};
     gearOwned_.clear();
-    ownGear("wand", true);
+    ownGear(kStartingWeapon, true);
 
     activeEndingId_.clear();
     entityStatus_.clear();

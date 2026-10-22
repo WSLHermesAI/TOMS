@@ -1021,6 +1021,9 @@ private:
     // *over* these, so it needs the exact same baseline newGame() used, not just "looks about
     // right").
     static constexpr int kStartingAtk = 12, kStartingDef = 4, kStartingHp = 120;
+    // The weapon a new game (and a rebirth) starts with, owned and equipped: the bow (owner, 2026-10-22). In battle the
+    // player is drawn as the archer with it (its "battleAnim" in data/items.json).
+    static constexpr const char* kStartingWeapon = "bow";
     // Milestone 4 (Encounter Resolution): when a monster tile resolves to EncounterKind::
     // DialogueGate, the enemy instance is stashed here so a later `action.enterBattle` dialogue
     // choice knows what to fight. hasPendingEncounter_ guards against acting on a stale/unset

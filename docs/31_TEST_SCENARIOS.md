@@ -73,7 +73,7 @@ Everything except `scene` is optional. The game applies the fields in this order
 | `stairLocks` | Lock a floor's first stair up behind events: `{ "floor": "F01", "event": "ev_a" }`, or `"events": [...]` for several (all must be done, W38). |
 | `flags` | Run flags to set (e.g. `hub.village` unlocks the village). |
 | `eventsDone` | Events to finish as the player would. Their rewards, unlocks and notices happen. |
-| `player` | `give` and `equip` first (items and gear by `items.json` id; `gold:<n>`, `exp:<n>` and `points:<n>` work in `give`), then the numbers as given. `inventory` replaces the backpack. |
+| `player` | A new game starts with the bow equipped (the starting weapon); `"unarmed": true` takes it off. Then `give` and `equip` (items and gear by `items.json` id; `gold:<n>`, `exp:<n>` and `points:<n>` work in `give`), then the numbers as given. `inventory` replaces the backpack. |
 | `test` | For the automated test: how many frames to run after the scene opens, and keys to press (`key@frame`, counted from the scene's first frame; the keys are those of `--keys`). |
 | `expect` | What the test checks at the end (section 4). Without it, only that the scene is showing. |
 
@@ -87,7 +87,7 @@ A file name in a setting file is relative to **that** file. A shared file's save
 | `stage` | the walking scene: the floor with the player, at the saved or given moment | — | `stage_new_game`, `stage_from_save`, `stage_from_events` |
 | `battle` | a battle with an enemy from `enemies.json` (not on the map) | `battle`: `enemy`, and optional `hp`, `atk`, `def`, `atk_interval_ms` overrides | `battle_slime`, `battle_strong_player`, `battle_bow` (the bow's battle clips; also `battle_bow_charge`, `battle_bow_idle`) |
 | `battleWon` | the victory screen after that battle | as `battle` | `battle_won` |
-| `arena` | **the weapon test arena** ([30](30_GAMEPLAY_PLAN.md) phase 0): fight after fight against the listed enemies in turn, full HP each time, no rewards and no story effects. After a win, Enter starts the next fight; after a loss it starts by itself. The weapon is the player's (`player.equip`), unarmed without one. `toms_game --arena=<enemy,...>[:<weapon>]` is the same without a file | `battle`: `enemies` (or `enemy`), and the same overrides as `battle`, for every fight | `arena_unarmed`, `arena_wand`, `arena_restart` |
+| `arena` | **the weapon test arena** ([30](30_GAMEPLAY_PLAN.md) phase 0): fight after fight against the listed enemies in turn, full HP each time, no rewards and no story effects. After a win, Enter starts the next fight; after a loss it starts by itself. The weapon is the player's: the starting bow, another with `player.equip`, none with `player.unarmed`. `toms_game --arena=<enemy,...>[:<weapon>]` is the same without a file (no weapon given: unarmed) | `battle`: `enemies` (or `enemy`), and the same overrides as `battle`, for every fight | `arena_unarmed`, `arena_wand`, `arena_restart` |
 | `dialogue` | a dialogue: one of the game's (`id`), or a file next to the setting file (`file`); optional `node` to start at | `dialogue`: `id` or `file`, `node` | `dialogue_by_id`, `dialogue_from_file` |
 | `talk` | talking to an NPC: their chat line, topic or topic menu, by the events finished | `talk`: `npc` (an `npcs/` id) | `talk_elder` |
 | `store` | the store (unlocked for the scenario) | — | `store_buy`, `store_from_save` |

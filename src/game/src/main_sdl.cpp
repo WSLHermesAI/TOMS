@@ -527,6 +527,7 @@ bool appFrame(App& app) {
                 pos = comma + 1;
             }
             if (!weapon.empty() && weapon != "unarmed") sc["player"] = {{"equip", {weapon}}};
+            else sc["player"] = {{"unarmed", true}};   // no weapon named: unarmed (a new game would wear the bow)
             started = g->startScenarioJson(sc, "arena", err);
         }
         if (!started) {

@@ -130,6 +130,7 @@ void Game::newGame(int slot) {
     resetAttrs();
     equipped_ = toms::EquippedSet{};
     gearOwned_.clear();
+    ownGear(kStartingWeapon, true);   // the bow, worn from the start (not "new" in the gear menu)
     newsStore_ = newsGear_ = newsEvents_ = false;
     eventLogSeen_ = 0;
     pl.x = 1; pl.y = 1;

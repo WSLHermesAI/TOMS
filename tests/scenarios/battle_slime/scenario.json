@@ -1,9 +1,13 @@
 {
+  "_comment": "A plain battle from a new game: the player starts with the bow (the starting weapon), so it is drawn as the archer, the bow held drawn while the attack bar waits.",
   "scene": "battle",
   "battle": {
     "enemy": "slime"
   },
   "test": {
     "frames": 90
+  },
+  "expect": {
+    "battleAnim": "charge"
   }
 }

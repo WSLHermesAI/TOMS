@@ -146,8 +146,10 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
     for (const std::string& f : strings(sc, "flags")) debugSetFlag(f);
     for (const std::string& e : strings(sc, "eventsDone")) debugFinishEvent(e);
 
-    // 4. The player: items and gear first (gear can change the stats), then the numbers as given.
+    // 4. The player: items and gear first (gear can change the stats), then the numbers as given. A new game starts with
+    // the starting weapon (the bow) equipped; "unarmed": true takes it off.
     const nlohmann::json p = sc.value("player", nlohmann::json::object());
+    if (p.value("unarmed", false)) equipped_.weaponId.clear();
     for (const std::string& id : strings(p, "give")) debugGive(id);
     for (const std::string& id : strings(p, "equip"))
         if (!debugEquip(id)) return bad("no equipment \"" + id + "\" in data/items.json");
@@ -183,7 +185,7 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
         if (s == "battleWon") finishCombatWin();
     } else if (s == "arena") {
         // the weapon test arena: "battle": { "enemies": [...] } (or "enemy"), fought in turn; the weapon is the
-        // player's ("player": { "equip": [...] }), unarmed without one
+        // player's ("player": { "equip": [...] }; the starting bow unless "unarmed": true)
         const nlohmann::json b = sc.value("battle", nlohmann::json::object());
         arena_.enemies = strings(b, "enemies");
         if (arena_.enemies.empty()) arena_.enemies = strings(b, "enemy");
