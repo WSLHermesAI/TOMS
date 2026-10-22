@@ -319,3 +319,64 @@ Why it is built like this:
 > `<file>.anim`: `<what happens, in order, with rough timing>`. Sprites: `<names>`. Send the event
 > `<name>` at `<moment>`. Follow the rules and the checklist, run `--headless check`, and fix
 > anything it reports.
+
+## 7. Motion recipes for meshes
+
+A motion recipe writes the keys of a short named motion for one node, so a new sprite or character moves decently
+without hand-keying: breathing, swaying, a squash, a nod. Lattice recipes bend any sprite with its deform lattice;
+bone recipes turn the bones of a skinned node ([34_MESH_ANIMATION.md](34_MESH_ANIMATION.md) §4.2, §4.3). They are
+applied from the editor or from a script / AI; the code is `tools/anim/core/anim_recipes.h/.cpp`.
+
+**Rules (every recipe):**
+
+- It **replaces** the keys it writes between `start` and `start + period` and keeps the clip's other keys. A clip with
+  a `length` grows to fit.
+- All its keys ease with `sinusoidalInOut`.
+- **Strength** 1 is the normal size; 0.5 is subtle, 2 strong.
+- For an idle that repeats, loop the clip (`playCount: -1`) or the node (`"loop": true`).
+
+**Lattice recipes** (any sprite, on the node's deform lattice). Offsets are sized by the sprite's original size; the
+bottom row (the feet) never moves; values are rounded to a quarter pixel.
+
+| id | Default period | What it does |
+|---|---|---|
+| `breathe` | 2.0 s | the top rises 6 % of the height and widens 4 % (more toward the top), then settles; keys at 0, ½, 1 of the period |
+| `sway` | 2.0 s | the top leans 15 % of the width right, then left (more toward the top), only across; keys at 0, ¼, ¾, 1 |
+| `squash` | 0.6 s | squashed down 20 % and wide 12 %, then a stretch and a settle; six keys |
+| `jelly` | 1.0 s | a dying wobble of squash and stretch; seven keys |
+
+**Bone recipes** (a **skinned** node). They write z rotation keys on the bones of its skin, found in the clip by
+name, added to each bone's rest angle. On a node without a skin they are refused ("needs a skinned node
+(Properties > Skin)").
+
+| id | Default period | What it does |
+|---|---|---|
+| `bone_sway` | 2.0 s | every bone ±8°, more toward the tip (bone i of n gets (i+1)/n of it) |
+| `nod` | 0.8 s | only the **last** bone: +12°, then −3°, then back |
+| `swing` | 0.7 s | wind up −20°, swing +30°, settle +6°, back to 0 (scaled along the chain like `bone_sway`) |
+
+**In the editor:** select the node, then **Key > Motion Recipe…**. Pick the recipe (bone recipes are marked
+"(bones)"; the tooltip says what it does), its Start (default: the playhead), Period (default: the recipe's) and
+Strength. OK is disabled for a bone recipe when the node has no skin. Applying is one undo step ("Recipe: Breathe").
+
+**Headless, for scripts and AI:**
+
+```
+Build\windows-release\bin\anim_editor.exe --headless recipe hero.anim --node body --recipe breathe --period 2
+Build\windows-release\bin\anim_editor.exe --headless recipe hero.anim --node body --recipe nod --start 2 --strength 1.5
+Build\windows-release\bin\anim_editor.exe --headless check hero.anim
+```
+
+- `anim_editor --headless recipe <file.anim> --node <name> --recipe <id> [--clip <name>] [--start s] [--period s]
+  [--strength k] [--out <file.anim>]` writes the keys into the file. With `--out`, use the same folder: atlas paths
+  are relative. The sprite's size comes from the file's atlases.
+- `anim_editor --headless recipe --list` lists the recipes.
+- Exit codes: 0 ok, 2 the file, the node or the recipe did not work, 3 usage.
+
+**Tests:**
+
+| Test | What it checks |
+|---|---|
+| `anim.recipes` (`tools/anim/tests/anim_recipes_test.cpp`) | breathe's keys and shape (the top rises and widens, the feet stay); keys outside the range kept; the clip length grows; the squash, jelly and sway shapes; bone_sway along the chain from each bone's rest angle; nod on the last bone only; the refusals (no skin, no sprite size, an unknown id, no node); the written file reads back the same |
+| `anim.recipe_headless` | `--list`; breathe and nod written into a copy of the skinned golem; a bone recipe on a bone without a skin refused; the result passes `--headless check` |
+| `anim.editor_selftest` (its recipe part) | breathe and nod on the golem, one undo step each; swing refused on the hip |

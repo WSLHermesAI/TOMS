@@ -34,7 +34,8 @@ struct AtlasSet {
         const toms::AtlasFile* atlas = nullptr;
         std::string id;
         std::vector<uint16_t> pageTextures;   // per page; empty = every page is the sprite atlas texture
-        const toms::SpriteMeshFile* meshes = nullptr;   // its sprites' meshes (<atlas>.mesh.json); nullptr = none
+        // Its sprites' meshes (<atlas>.mesh.json beside it, by meshKey; written by the anim tools); nullptr = none.
+        const toms::SpriteMeshFile* meshes = nullptr;
     };
     std::vector<Entry> entries;
 
@@ -46,13 +47,32 @@ struct AtlasSet {
     // The region a sprite reference names (nullptr: not found) and the texture to draw it with.
     // `entry` (optional) gets the index of the atlas it came from.
     const toms::AtlasRegion* find(const std::string& ref, uint16_t* texture = nullptr, int* entry = nullptr) const;
-    // The mesh of the sprite a reference names, from the atlas find() takes it from (nullptr: none).
-    const toms::SpriteMesh* findMesh(const std::string& ref) const;
-    // Gives the atlas with this id its meshes (an editor that loads them separately).
-    void setMeshes(const std::string& id, const toms::SpriteMeshFile* meshes) {
-        for (Entry& e : entries) if (e.id == id) e.meshes = meshes;
-    }
+    // The mesh a node bends: its sprite reference `ref` (the one at that time) cut on the node's mesh grid, from the
+    // mesh file of the atlas the sprite comes from (nullptr: none there, or no atlas has the sprite).
+    const toms::SpriteMesh* findMesh(const std::string& ref, const Node& node) const;
+    // The key that mesh has in its atlas's mesh file (meshKey), "" when no atlas has the sprite; `entry` (optional)
+    // gets the atlas.
+    std::string meshKeyFor(const std::string& ref, const Node& node, int* entry = nullptr) const;
 };
+
+// A mesh's key in its atlas's mesh file: the sprite name and the grid, "@CxR" for a node's meshGrid, nothing for 8-pixel
+// cells: "golem", "golem@6x8". Every clip using that atlas shares the mesh.
+std::string meshKey(const std::string& sprite, int cols = 0, int rows = 0);
+
+// A mesh a clip file needs: a skinned or deformed node's sprite (its rest sprite and its sprite keys) on its grid.
+struct MeshNeed {
+    std::string key;                          // meshKey, in the mesh file of atlas `entry`
+    int entry = -1;                           // the AtlasSet entry the sprite comes from
+    const toms::AtlasRegion* region = nullptr;
+    int cols = 0, rows = 0;                   // the node's meshGrid; 0 = 8-pixel cells
+};
+// Every mesh the file's clips need, each once (by atlas, then key). Sprites no atlas has are left out.
+std::vector<MeshNeed> meshesNeeded(const AnimFile& file, const AtlasSet& atlases);
+std::vector<MeshNeed> meshesNeeded(const Clip& clip, const AtlasSet& atlases);
+// The mesh a need asks for, cut from its sprite's alpha: `rgba` points at the region's packed pixels (its top-left),
+// rows `stride` pixels apart. On the node's grid, or on 8-pixel cells. A rotated or child region, or an empty sprite,
+// gives an empty mesh (the node draws as a quad, or a deform on a plain grid).
+toms::SpriteMesh cutMesh(const MeshNeed& need, const uint8_t* rgba, int stride);
 
 // What a clip draws, in draw order: quads, and the meshes of skinned nodes (docs/34_MESH_ANIMATION.md).
 struct DrawList {
@@ -98,6 +118,15 @@ bool makeQuad(const NodePose& pose, const AtlasSet& atlases, const glm::mat3& pl
 // rest pose comes from `clip` (the clip the poses were evaluated from).
 void appendDraws(const Clip& clip, const std::vector<NodePose>& poses, const AtlasSet& atlases, const glm::mat3& placement,
                  const float tint[4], DrawList& out, std::vector<std::string>* missing = nullptr);
+// A skinned node's sprite that has no mesh in its atlas's mesh file (docs/34_MESH_ANIMATION.md): it is drawn as a
+// plain quad, not bent by its bones. Sprites no atlas has are left out (that is another problem).
+struct MissingMesh {
+    std::string node;     // "root/child/node"
+    std::string sprite;   // the reference, as the clip writes it
+};
+// Every skinned node's sprites (its rest sprite and its sprite keys) without a mesh, each once per node.
+std::vector<MissingMesh> skinnedWithoutMesh(const Clip& clip, const AtlasSet& atlases);
+
 // A skinned pose as the editor's skin view shows it: the bent mesh with its weights, and the bones -- each the segment
 // the automatic weights measure against, where its bone has carried it now. Everything placed (like the draw).
 struct SkinView {
@@ -161,6 +190,19 @@ private:
 
     double total() const;              // playCount * duration; < 0 = forever
 };
+
+// The deform lattice's offset at a point of the sprite's original image (bilinear in the cell it lies in): offsets
+// from deformAt (cols x rows, row major), the point and the original size in pixels.
+glm::vec2 latticeOffset(const std::vector<glm::vec2>& offsets, int cols, int rows, float x, float y, float origW, float origH);
+// A sprite node's lattice as the editor shows and drags it: every point placed (with the deform at the node's time),
+// where it is at rest in the sprite's pixels, its offset now, and the map from sprite pixels to placed coordinates
+// (the node's own transform; a skinned node's bones are not applied). False: no sprite.
+struct LatticeView {
+    int cols = 0, rows = 0;
+    std::vector<glm::vec2> points, rest, offsets;   // row major
+    glm::mat3 spriteToPlaced{1.0f};
+};
+bool latticeView(const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases, const glm::mat3& placement, LatticeView& out);
 
 // Where a thing held by a node is drawn: `place` times that node's world transform in `poses` (its position, turn and
 // scale at that frame). False: no node of that name.

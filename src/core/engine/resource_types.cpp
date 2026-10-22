@@ -37,9 +37,8 @@ bool TextureRes::load(ResourceManager& rm, std::string& error) {
 
 // ---- AtlasRes ----------------------------------------------------------------------------------------------------
 
-bool readSpriteMeshes(const std::string& atlasPath, toms::SpriteMeshFile& out, std::string& error) {
+bool readMeshFile(const std::string& path, toms::SpriteMeshFile& out, std::string& error) {
     out = toms::SpriteMeshFile();
-    const std::string path = toms::spriteMeshPath(atlasPath);
     std::string text;
     if (!toms::vfsExists(path) || !toms::vfsReadAll(path, text)) return true;
     const std::string dir = ResourceManager::dirOf(path);
@@ -70,9 +69,9 @@ bool AtlasRes::load(ResourceManager& rm, std::string& error) {
         pages.push_back(std::move(t));
     }
     atlas.computeUVs();
-    toms::SpriteMeshFile meshes;
+    toms::SpriteMeshFile meshes;   // its meshes (docs/34_MESH_ANIMATION.md): skinned and deformed nodes bend them
     std::string meshError;
-    if (!readSpriteMeshes(path(), meshes, meshError)) std::fprintf(stderr, "[res] %s\n", meshError.c_str());   // drawn as quads
+    if (!readMeshFile(toms::spriteMeshPath(path()), meshes, meshError)) std::fprintf(stderr, "[res] %s\n", meshError.c_str());
     meshes_ = std::move(meshes);
     atlas_ = std::move(atlas);
     pages_ = std::move(pages);
@@ -122,10 +121,14 @@ bool AnimRes::load(ResourceManager& rm, std::string& error) {
     if (!toms::vfsReadAll(path(), text)) { error = "cannot read"; return false; }
     toms::anim::AnimFile f;
     if (!toms::anim::parseAnim(text, f, &error)) return false;
-    AtlasList atlases;
-    atlases.resolve(rm, path(), f.atlases);
     file_ = std::move(f);
-    atlases_ = std::move(atlases);
+    atlases_.resolve(rm, path(), file_.atlases);
+    // A skinned sprite without a mesh still draws, as a flat quad: say so (docs/34_MESH_ANIMATION.md).
+    for (const toms::anim::Clip& c : file_.clips)
+        for (const toms::anim::MissingMesh& m : toms::anim::skinnedWithoutMesh(c, atlases_.set()))
+            std::fprintf(stderr, "[res] %s: clip '%s', node %s: the skinned sprite '%s' has no mesh, so it is drawn unbent "
+                                 "(open and save the clip in the anim editor, or anim_editor --headless meshes)\n",
+                         path().c_str(), c.name.c_str(), m.node.c_str(), m.sprite.c_str());
     bytes_ = text.size();   // about what the parsed clips take
     return true;
 }

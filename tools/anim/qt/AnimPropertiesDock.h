@@ -42,7 +42,7 @@ private:
 public:
     QString skinInfoText() const;   // the note as shown ("" when hidden; the selftest)
     bool bonesOutsideShown() const;   // the "bones outside" warning is up (the selftest)
-    QSpinBox* meshGridBox() const { return m_meshGrid; }
+    QSpinBox* meshGridBox() const { return m_meshCols; }   // cells across (and m_meshRows down)
 private:
     AnimDocument* m_doc;
     bool m_updating = false;
@@ -62,7 +62,9 @@ private:
     QLabel* m_skinInfo;      // its mesh, bones and weights, or why it has none
     QWidget* m_bonesOutside;          // a warning + "Move Bones Under This Sprite" (bones the node does not carry)
     QLabel* m_bonesOutsideText;
-    QSpinBox* m_meshGrid;             // the sprite's mesh grid, cells across and down (re-cuts the mesh)
+    QSpinBox *m_meshCols, *m_meshRows;   // the node's mesh grid, cells across and down (re-cuts its mesh)
+    QWidget* m_meshGridRow;
+    QSpinBox *m_latticeCols, *m_latticeRows;   // the deform lattice's points across and down (docs/34 step 4)
     QLabel* m_playLabel;
     QDoubleSpinBox *m_pos[3], *m_rot[3], *m_scale[3], *m_color[4];   // x, y, z
     QLabel* m_spriteHere;

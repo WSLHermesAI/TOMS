@@ -27,6 +27,10 @@ struct BgfxHostConfig {
     bool        vsync = true;
     bool        debugText = false;         // bgfx's on-screen stats overlay
     int         msaa = 0;                  // 0, 2, 4, 8, 16: multisampled backbuffer (3D viewers; the 2D game draws with none)
+    // Present each frame as soon as it is rendered. bgfx otherwise presents a frame at the start of the
+    // next bgfx::frame(): fine for a loop that draws all the time (the game), but a view that only redraws
+    // when something changes (the editors' canvases) would show the frame before the last one.
+    bool        flipAfterRender = false;
 };
 
 // Initializes bgfx in single-threaded mode (bgfx::renderFrame() before bgfx::init), which is what

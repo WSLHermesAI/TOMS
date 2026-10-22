@@ -112,7 +112,8 @@ see [16_ANIMATION_RECIPES.md](16_ANIMATION_RECIPES.md).
   Problems dock warns: "key at …, after the clip's length").
 - **Node:** `name`, `sprite` (absent = a group that only moves its children), rest values `pos`
   `rot` `scale` `color` `visible`, `pivot` (0..1 of the sprite, top-left = 0,0; absent = the
-  atlas's `x_pivot`, else the centre), `order`, `blend` (`normal` / `add`), `inheritColor`, `loop`, `stayAtLastFrame`, `children`.
+  atlas's `x_pivot`, else the centre), `order`, `blend` (`normal` / `add`), `inheritColor`, `loop`, `stayAtLastFrame`, `children`;
+  in version 3 also `skin`, `lattice` and `meshGrid` (below, and [34_MESH_ANIMATION.md](34_MESH_ANIMATION.md)).
 - **How a node plays** (each node on its own; its range is first..last key of its subtree):
 
   | Setting | After the node's last key | Use |
@@ -151,10 +152,14 @@ camera even though the game draws in 2D today.
   scale z = 1, the number is the z rotation) and are saved as version 2.
 
 **Skins (version 3):** a sprite node can bend its sprite's triangle mesh with other nodes of the clip, its bones:
-`"skin": {"bones": ["hip", "chest", "head"], "weights": "auto"}`. The mesh comes from `<atlas>.mesh.json` beside the
-atlas (`atlaspack meshes`). `"auto"` weights are made from the rest pose; painted ones are
-`[[bone, weight, ...], ...]` per vertex. A file is saved as version 3 only when a node has a skin, so other files
-still open in older builds. A skinned sprite without a mesh draws as its quad. In the editor it is the **Skin** field
+`"skin": {"bones": ["hip", "chest", "head"], "weights": "auto"}`. The mesh comes from the mesh file beside the sprite's
+atlas (`game.atlas` → `game.mesh.json`, + `game.mesh.bin` when binary), shared by every clip that uses the atlas. The
+anim tools add the meshes a clip needs to it: the editor when the clip is saved, or `anim_editor --headless meshes`
+after an atlas is rebuilt or restyled. `"meshGrid": [cols,
+rows]` (1–32 each) sets the grid the node's sprite is cut on; without it, 8-pixel cells. `"auto"` weights are made
+from the rest pose; painted ones are `[[bone, weight, ...], ...]` per vertex. A file is saved as version 3 only when a
+node has a skin, a lattice or a mesh grid, so other files still open in older builds. A skinned sprite without a mesh
+draws as its quad (the check reports it as an error). In the editor it is the **Skin** field
 under Properties (bone names, comma separated); under it a note says the sprite's mesh, its bones and weights, or
 why it draws as a quad. **View > Show Skin** (Shift+K) draws, over every skinned node, its mesh, its points coloured
 by the bones they follow (mixed by weight), and its bones with their names; select a bone and the points shade from
@@ -170,9 +175,13 @@ bright (follows it fully) to dark (not at all). Details: [34_MESH_ANIMATION.md](
   - Bones mode shows the skin and picks only bones (a joint or a bone line), never the sprite under them. The
     Move / Rotate / Scale gizmo then works on the bone: with Auto-Key on it poses the bone (keys), with Auto-Key off it
     places the bone in the sprite (its rest pose).
-- **Mesh grid** (Properties, skinned nodes) cuts the sprite's mesh again from its alpha on N × N cells (1–32; a
-  32-pixel sprite starts at 4 × 4). More cells bend more smoothly. The mesh is saved at once to the mesh file beside
-  the atlas (text or `.bin`, as it was), and `atlaspack meshes` keeps that grid when it runs again.
+- **Mesh grid** x / y (Properties, skinned or deformed nodes) sets the node's `meshGrid`: its sprite's mesh is cut
+  again from its alpha on that many cells (1–32 each; without it, 8-pixel cells, so a 32-pixel sprite starts at
+  4 × 4). More cells bend more smoothly. It is one undo step; the mesh is cut again at once and is added to the
+  atlas's mesh file when the clip is saved, beside the other grids' meshes (`golem`, `golem@8x8`).
+- **Lattice mode (L)** bends a sprite with its deform lattice (default 4 × 4; **Properties → Lattice** sets the size):
+  drag a point and the deform is keyed at the playhead. The key list's **Deform** column lists the moved points
+  (`5: 0, -2; 6: 0, -2`). See [34_MESH_ANIMATION.md](34_MESH_ANIMATION.md) §4.3.
 - **Editing pauses playback.** A drag in the viewport or any edit (a typed value, a key) while the clip plays pauses it
   first, so with Auto-Key on the edit keys the frame on screen once instead of every frame the playhead passes.
 - **The mouse wheel changes a number field only after you click it** (or Tab into it). Over an unfocused spin box,
@@ -343,6 +352,15 @@ anim_editor                                    the editor
 anim_editor tests/smoke/anim_preview.anim      with a file open (Visual Studio: "anim_editor (preview clip)")
 anim_editor --headless check x.anim [--atlas [id=]a.atlas]...
                                                parse + check sprites and keys; exit 0 ok (warnings allowed), 2 errors, 3 usage
+anim_editor --headless meshes x.anim... [--atlas [id=]a.atlas]... [--default-atlas [id=]a.atlas]
+            [--map from.atlas=to.atlas]... [--bin|--text] [--check] [--prune]
+                                               add the clips' meshes to the mesh file beside each atlas they use
+                                               (a.mesh.json); --prune: only what these clips need; --check: exit 1
+                                               when a needed mesh is missing or stale (or, with --prune, extra);
+                                               python tools/refresh_meshes.py runs it for every clip and art style
+anim_editor --headless recipe x.anim --node <name> --recipe <id> [--clip <name>] [--start s] [--period s]
+            [--strength k] [--out y.anim]      write a motion recipe's keys (docs/16 §7); exit 0 ok, 2 failed, 3 usage
+anim_editor --headless recipe --list           the motion recipes
 anim_editor --selftest x.anim outdir           automated check (with -platform offscreen); outdir must be on
                                                the atlases' drive, e.g. Build/anim_selftest
 ```
@@ -353,7 +371,8 @@ list, in order. It reports an error per atlas that cannot be loaded; per sprite 
 `"id:name"` an error when no atlas has that id or that atlas lacks the name; per bare `"name"` an
 error when no atlas has it and a warning when several do (only bare references: the first wins --
 pick it in the Sprites dock or use Qualify Sprite References to store the atlas; qualified
-references to such names are fine); and a warning per absolute atlas path.
+references to such names are fine); a warning per absolute atlas path; and, reading the mesh file beside
+each atlas, an error per skinned node's sprite that has no mesh in it.
 
 **Sprite references in the editor.** Picking a sprite anywhere -- dragging it from the Sprites dock
 into the viewport or onto a node, double-clicking it, Sprite Seq, the Properties sprite field, a
@@ -403,7 +422,7 @@ Atlas paths are always stored relative:
 | **Keys** | the MPDI-style key list (below) |
 | **Events** | the selected node's event keys: add at the playhead, remove, edit time / name |
 | **Timeline** | placeholder for the phase 4 multi-track timeline; takes dropped sprites (below) |
-| **Problems / Log** | sprite references to an unknown atlas id or a name their atlas lacks, bare names in no atlas or (warning) in several, overlapping key times, keys past the clip's length, clip name clashes, atlases that do not load, absolute atlas paths (same checks as `--headless check`); the log shows opened / saved files and events fired during playback |
+| **Problems / Log** | sprite references to an unknown atlas id or a name their atlas lacks, bare names in no atlas or (warning) in several, overlapping key times, keys past the clip's length, clip name clashes, atlases that do not load, absolute atlas paths, skinned sprites without a mesh (same checks as `--headless check`); the log shows opened / saved files and events fired during playback |
 
 **Transport:** play / pause (Space), stop, loop preview, speed, time, a scrubber with the selected
 node's key times (`,` / `.` jump between them). Playback is `AnimPlayer` (play count,
@@ -444,6 +463,12 @@ adds a new track.
 | Fade In / Out | alpha 0 → 1 / 1 → 0 across the rows |
 | Sprite Seq | sprite keys cycling through the sprites selected in the Sprites dock (2 or more, in list order) |
 | Ease… | the ease of every interpolated key in the rows |
+
+**Key > Motion Recipe…** writes a short named motion for the selected node: lattice recipes (breathe, sway,
+squash, jelly) on any sprite's deform lattice, bone recipes (marked "(bones)": bone sway, nod, swing) on the bones
+of a skinned node. Pick the recipe, its Start (default: the playhead), Period and Strength; the recipe replaces the
+keys it writes in that range, and applying it is one undo step. Loop the clip or the node for an idle that repeats.
+See [16_ANIMATION_RECIPES.md](16_ANIMATION_RECIPES.md) §7.
 
 Every edit is one undo step (drags and spin box edits fold into one); `*` in the title marks
 unsaved changes. The editor's `AnimEditor` object creates the document, viewport, docks, menus and

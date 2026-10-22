@@ -23,6 +23,7 @@ namespace {
 bool g_ready = false;
 bool g_vsync = true;
 int g_msaa = 0;   // BgfxHostConfig::msaa
+bool g_flipAfterRender = false;   // BgfxHostConfig::flipAfterRender
 uint32_t g_debug = BGFX_DEBUG_NONE;
 bool g_stats = false, g_hud = false;   // --stats overlay, F3 HUD: both make g_debug
 std::atomic<int> g_screenshots{0};
@@ -97,6 +98,7 @@ bgfx::RendererType::Enum parseRendererName(const std::string& in) {
 // Device/frame settings go in the reset flags; per-surface settings (size, sRGB) in the SwapChain.
 uint32_t bgfxHostResetFlags() {
     uint32_t f = g_vsync ? BGFX_RESET_VSYNC : BGFX_RESET_NONE;
+    if (g_flipAfterRender) f |= BGFX_RESET_FLIP_AFTER_RENDER;
     switch (g_msaa) {
     case 2: f |= BGFX_RESET_MSAA_X2; break;
     case 4: f |= BGFX_RESET_MSAA_X4; break;
@@ -123,6 +125,7 @@ bool bgfxHostInit(const BgfxHostConfig& cfg, std::string& error) {
     }
     g_vsync = cfg.vsync;
     g_msaa = cfg.msaa;
+    g_flipAfterRender = cfg.flipAfterRender;
 
     // Calling renderFrame() before init() makes a multi-threaded bgfx render on this thread (no
     // render thread). A single-threaded bgfx (Emscripten) already does, and its debug build asserts

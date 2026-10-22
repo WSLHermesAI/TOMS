@@ -4,6 +4,7 @@
 #include "anim_clip.h"
 
 #include <map>
+#include <set>
 #include <optional>
 #include "anim_check.h"
 #include "anim_keys.h"
@@ -73,8 +74,14 @@ public:
     struct LoadedAtlas {
         QString path;              // absolute
         toms::AtlasFile atlas;
-        toms::SpriteMeshFile meshes;   // <atlas>.mesh.json beside it (skinned nodes bend them; docs/34)
-        bool meshesBinary = false;     // the file keeps its numbers in a .mesh.bin (written back the same way)
+        std::vector<QImage> rgba;   // its pages as RGBA8888, what meshes are cut from (docs/34)
+        // Its mesh file (<atlas>.mesh.json beside it, shared by every clip using the atlas): as on disk, and with the
+        // meshes this file's clips need added (what is drawn, and merged into the file on save).
+        toms::SpriteMeshFile meshesOnDisk, meshes;
+        bool meshesBinary = true;                     // the mesh file's form: kept; a new one binary
+        QString meshWarning;                          // its mesh file could not be read (cut again)
+        std::set<std::string> neededKeys;             // the keys this file's clips need now
+        std::map<std::string, toms::SpriteMesh> cut;  // meshes cut from its pixels, by key
         bool ok = false;
         QString error;
         SpriteImageCache images;
@@ -232,12 +239,22 @@ public:
     // bones together. One undo step; false (and a message) when the node and the old parent differ by more than a
     // move (rotated or scaled against each other), or a bone holds the node.
     bool parentBonesUnder(const NodePath& path);
-    // Cuts the mesh of the sprite `ref` again from its alpha on a grid of cells x cells (the Mesh grid; at most the
-    // sprite's pixels). The atlas's mesh file (<atlas>.mesh.json, .bin kept as it was) is written when `write`; skinned
-    // nodes bend the new mesh at once. Not an undo step: the mesh file is the atlas's, not the .anim's.
-    bool setMeshGrid(const std::string& ref, int cells, bool write = true);
-    // The grid the sprite's mesh was cut on (cells across), or what `atlaspack meshes` uses (8-pixel cells); 0 = no sprite.
-    int meshGrid(const std::string& ref) const;
+    // The selected node's mesh grid, cells across and down (its meshGrid; 0, 0 = 8-pixel cells). One undo step; the
+    // mesh is cut again at once, and saved with the file (docs/34_MESH_ANIMATION.md).
+    bool setMeshGrid(int cols, int rows);
+    // A motion recipe (anim_recipes.h: breathe, sway, squash, jelly on the lattice; bone_sway, nod, swing on a skin's
+    // bones) written on the selected node from `start`: one undo step. `period` 0 = the recipe's own. False and a
+    // message when it does not fit the node.
+    bool applyMotionRecipe(const std::string& id, float start, float period, float strength);
+    // The selected node's lattice size (cols x rows, 2 .. 16). Its deform keys are kept: each moved point goes to the
+    // nearest point of the new grid. One undo step.
+    bool setLatticeSize(int cols, int rows);
+    // The grid a node's sprite (the one at the playhead) is cut on: its meshGrid, or the cells 8-pixel cells make.
+    // False when no atlas has the sprite.
+    bool meshGridOf(const toms::anim::Node& n, int& cols, int& rows) const;
+    // Atlas i's meshes: its mesh file with every mesh this file's clips need (each skinned or deformed node's sprite on
+    // its grid, cut from the atlas's pixels as the clips change). Saving adds those to the atlas's mesh file.
+    const toms::SpriteMeshFile& atlasMeshes(int i) const { return m_atlases[size_t(i)]->meshes; }
     bool pasteNode(const NodePath& parent, int index, const QString& text);
     bool renameNode(const NodePath& path, const QString& name);
     bool moveNode(const NodePath& from, const NodePath& toParent, int index);   // reparent / reorder
@@ -292,6 +309,8 @@ private:
 
     std::vector<std::shared_ptr<LoadedAtlas>> m_atlases;   // = m_state.atlasesAbs
     toms::anim::AtlasSet m_atlasSet;
+    void updateMeshes();                    // each atlas's meshes for the current file
+    bool saveMeshes(QString* error);        // adds this file's meshes to its atlases' mesh files
     std::vector<std::pair<int, int>> m_textures;           // texture id -> (atlas, page)
     std::vector<int> m_setToDoc;                           // m_atlasSet entry -> atlas index
     QStringList m_spriteNames;

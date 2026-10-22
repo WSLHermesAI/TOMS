@@ -40,9 +40,9 @@ private:
     int w_ = 0, h_ = 0;
 };
 
-// The meshes beside an atlas (<atlas>.mesh.json and the .mesh.bin it may name), through the vfs. No file: true and
+// A mesh file (`meshPath` = spriteMeshPath(<atlas>), and the .mesh.bin it may name), through the vfs. No file: true and
 // `out` empty. A broken file: false and `error`.
-bool readSpriteMeshes(const std::string& atlasPath, toms::SpriteMeshFile& out, std::string& error);
+bool readMeshFile(const std::string& meshPath, toms::SpriteMeshFile& out, std::string& error);
 
 class AtlasRes : public Resource {
     TOMS_OBJECT(AtlasRes)

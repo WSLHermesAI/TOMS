@@ -24,6 +24,8 @@ set_target_properties(toms_anim PROPERTIES FOLDER "tools/anim")
 add_library(anim_tools STATIC
     core/anim_keys.h  core/anim_keys.cpp
     core/anim_check.h core/anim_check.cpp
+    core/anim_meshes.h core/anim_meshes.cpp      # the atlases' sprite meshes the clips need (docs/34_MESH_ANIMATION.md)
+    core/anim_recipes.h core/anim_recipes.cpp    # motion recipes for lattices and bones (docs/16 section 7)
     core/mpdi_convert.h core/mpdi_convert.cpp)   # the old engine's .mpdi (+ .pi) -> .anim (+ atlas)
 toms_target_defaults(anim_tools)
 target_include_directories(anim_tools PUBLIC core)
@@ -39,6 +41,16 @@ if(TOMS_BUILD_TESTS)
     add_test(NAME anim.mpdi_convert
              COMMAND mpdi_convert_test "${CMAKE_SOURCE_DIR}/tests/mpdi" "${CMAKE_BINARY_DIR}/test-run/mpdi_convert")
     set_tests_properties(anim.mpdi_convert PROPERTIES LABELS "unit;anim" TIMEOUT 60)
+endif()
+
+# The motion recipes (core/anim_recipes.h; docs/16_ANIMATION_RECIPES.md section 7).
+add_executable(anim_recipes_test tests/anim_recipes_test.cpp)
+toms_target_defaults(anim_recipes_test)
+target_link_libraries(anim_recipes_test PRIVATE anim_tools)
+set_target_properties(anim_recipes_test PROPERTIES FOLDER "tools/anim")
+if(TOMS_BUILD_TESTS)
+    add_test(NAME anim.recipes COMMAND anim_recipes_test)
+    set_tests_properties(anim.recipes PROPERTIES LABELS "unit;anim" TIMEOUT 30)
 endif()
 
 if(ATLAS_BUILD_EDITOR AND TARGET Qt6::Widgets AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/qt/CMakeLists.txt")

@@ -197,9 +197,10 @@ void AnimViewport::paintGameScene(const GameScene& s)
             if (m_doc->atlasAt(i).ok)
                 atlases.emplace_back(m_doc->atlasId(i).toStdString(), m_doc->atlasAt(i).path.toStdString(), &m_doc->atlasAt(i).atlas);
         m_tex.setAtlases(atlases);
-        for (int i = 0; i < m_doc->atlasCount(); i++)   // skinned nodes bend these (docs/34_MESH_ANIMATION.md)
-            if (m_doc->atlasAt(i).ok) m_tex.setMeshes(m_doc->atlasId(i).toStdString(), &m_doc->atlasAt(i).meshes);
     }
+    for (int i = 0; i < m_doc->atlasCount(); i++)   // skinned and deformed nodes bend these (docs/34_MESH_ANIMATION.md)
+        if (m_doc->atlasAt(i).ok)
+            m_tex.setMeshes(m_doc->atlasId(i).toStdString(), m_doc->atlasMeshes(i).meshes.empty() ? nullptr : &m_doc->atlasMeshes(i));
     const QPointF o = toWidget(QPointF(0, 0));   // origin cross: where the game places the clip
     s.line(QPointF(std::round(o.x()) + 0.5, 0), QPointF(std::round(o.x()) + 0.5, height()), 1, tc.gridAxis);
     s.line(QPointF(0, std::round(o.y()) + 0.5), QPointF(width(), std::round(o.y()) + 0.5), 1, tc.gridAxis);
@@ -259,6 +260,7 @@ void AnimViewport::paintContent(QPainter& p)
             p.drawPolygon(view.map(corners(it.quad)));
         }
     drawSkins(p, view);
+    drawLattice(p, view);
     drawGizmo(p, gizmo());
 
     // Status text over the view.
@@ -273,6 +275,7 @@ void AnimViewport::paintContent(QPainter& p)
     if (clip && m_doc->previewTime() > m_doc->time())
         info += tr("   (ended: looping nodes play on, +%1 s)").arg(m_doc->previewTime() - m_doc->time(), 0, 'f', 1);
     if (m_mode == EditMode::Bones) info += tr("   BONES: click a bone (Auto-Key on: pose it; off: place it in the sprite)");
+    if (m_mode == EditMode::Lattice) info += tr("   LATTICE: drag a point to key the deform at the playhead");
     if (!m_doc->previewCharacter().isEmpty()) info += tr("   AS: %1").arg(m_doc->previewCharacter());
     if (m_doc->atlasCount() == 0) info += tr("   (no atlas: add one under Properties > Atlases)");
     else if (!m_doc->atlasLoaded()) info += tr("   (an atlas did not load: see Problems)");
@@ -286,7 +289,55 @@ void AnimViewport::setEditMode(EditMode m)
     m_mode = m;
     m_hover = -1;
     m_hoverBone.clear();
+    m_hoverPoint = -1;
     update();
+}
+
+bool AnimViewport::selectedLattice(toms::anim::LatticeView& out) const
+{
+    const Node* sel = m_doc->drawNode(m_doc->selectedNode());
+    if (!sel || sel->sprite.empty()) return false;
+    for (size_t i = 0; i < m_poses.size(); i++)
+        if (m_poses[i].node == sel)
+            return m_poses[i].visible && toms::anim::latticeView(m_poses, i, m_doc->atlasSet(), toms::anim::placement(0, 0), out);
+    return false;
+}
+
+int AnimViewport::latticePointAt(const QPointF& w) const
+{
+    toms::anim::LatticeView lv;
+    if (m_mode != EditMode::Lattice || !selectedLattice(lv)) return -1;
+    const QTransform view = viewTransform();
+    int best = -1;
+    double bestD = 9.0;
+    for (size_t i = 0; i < lv.points.size(); i++) {
+        const QPointF pt = view.map(QPointF(lv.points[i].x, lv.points[i].y));
+        const double d = std::hypot(w.x() - pt.x(), w.y() - pt.y());
+        if (d < bestD) { bestD = d; best = int(i); }
+    }
+    return best;
+}
+
+void AnimViewport::drawLattice(QPainter& p, const QTransform& view) const
+{
+    toms::anim::LatticeView lv;
+    if (m_mode != EditMode::Lattice || !selectedLattice(lv)) return;
+    auto at = [&](int c, int r) { const glm::vec2& v = lv.points[size_t(r * lv.cols + c)]; return view.map(QPointF(v.x, v.y)); };
+    p.setPen(QPen(QColor(255, 210, 90, 170), 1));
+    for (int r = 0; r < lv.rows; r++)
+        for (int c = 0; c < lv.cols; c++) {
+            if (c + 1 < lv.cols) p.drawLine(at(c, r), at(c + 1, r));
+            if (r + 1 < lv.rows) p.drawLine(at(c, r), at(c, r + 1));
+        }
+    for (int r = 0; r < lv.rows; r++)
+        for (int c = 0; c < lv.cols; c++) {
+            const int i = r * lv.cols + c;
+            const bool moved = lv.offsets[size_t(i)] != glm::vec2(0.0f);
+            const bool hot = i == m_hoverPoint || i == m_dragPoint;
+            p.setPen(QPen(hot ? Qt::white : QColor(0, 0, 0, 200), hot ? 2 : 1));
+            p.setBrush(moved ? QColor(255, 140, 60) : QColor(255, 220, 110));
+            p.drawRect(QRectF(at(c, r) - QPointF(4, 4), QSizeF(8, 8)));
+        }
 }
 
 QString AnimViewport::boneAt(const QPointF& w) const
@@ -550,6 +601,24 @@ void AnimViewport::mousePressEvent(QMouseEvent* e)
     rebuild();
     Gizmo g = gizmo();
     Drag d = handleAt(e->position(), g);
+    if (d == Drag::None && m_mode == EditMode::Lattice) {   // Lattice mode: a point of the selected node's lattice
+        const int point = latticePointAt(e->position());
+        toms::anim::LatticeView lv;
+        if (point >= 0 && selectedLattice(lv)) {
+            m_dragPoint = point;
+            m_dragStart = e->position();
+            m_dragStartDeform.clear();
+            for (size_t i = 0; i < lv.offsets.size(); i++)
+                if (lv.offsets[i] != glm::vec2(0.0f)) m_dragStartDeform[int(i)] = lv.offsets[i];
+            // content -> sprite pixels: the inverse of the lattice's own direction and scale on screen
+            const glm::mat2 toContent(glm::vec2(lv.spriteToPlaced[0]), glm::vec2(lv.spriteToPlaced[1]));
+            m_dragToSprite = std::fabs(glm::determinant(toContent)) > 1e-9f ? glm::inverse(toContent) : glm::mat2(1.0f);
+            m_dragSerial++;
+            emit dragStarted();   // playback pauses: the key goes to the frame on screen
+            update();
+            return;
+        }
+    }
     if (d == Drag::None && m_mode == EditMode::Bones) {   // Bones mode: only bones are picked, never sprites
         const QString bone = boneAt(e->position());
         if (bone.isEmpty() || !m_doc->selectNodeByName(bone)) return;
@@ -586,11 +655,31 @@ void AnimViewport::mousePressEvent(QMouseEvent* e)
 void AnimViewport::mouseMoveEvent(QMouseEvent* e)
 {
     if (panMove(e)) return;
+    if (m_dragPoint >= 0) {   // Lattice mode: the point follows the mouse; a key at the playhead
+        const QTransform inv = viewTransform().inverted();
+        const QPointF c0 = inv.map(m_dragStart), c1 = inv.map(e->position());
+        glm::vec2 move = m_dragToSprite * glm::vec2(float(c1.x() - c0.x()), float(c1.y() - c0.y()));
+        if (m_snap) move = glm::round(move);
+        animed::Value v;
+        v.d = m_dragStartDeform;
+        v.d[m_dragPoint] = (m_dragStartDeform.count(m_dragPoint) ? m_dragStartDeform[m_dragPoint] : glm::vec2(0.0f)) + move;
+        if (v.d[m_dragPoint] == glm::vec2(0.0f)) v.d.erase(m_dragPoint);
+        m_doc->setChannel(Channel::Deform, v, QStringLiteral("lattice.%1").arg(m_dragSerial));
+        return;
+    }
     if (m_drag != Drag::None) {
         applyDrag(e->position(), e->modifiers());
         return;
     }
     rebuild();
+    if (m_mode == EditMode::Lattice) {
+        const int point = latticePointAt(e->position());
+        if (point != m_hoverPoint) {
+            m_hoverPoint = point;
+            update();
+        }
+        if (point >= 0) { setCursor(Qt::SizeAllCursor); return; }
+    }
     if (m_mode == EditMode::Bones) {
         const QString bone = boneAt(e->position());
         const Drag h = handleAt(e->position(), gizmo());
@@ -615,6 +704,11 @@ void AnimViewport::mouseMoveEvent(QMouseEvent* e)
 void AnimViewport::mouseReleaseEvent(QMouseEvent* e)
 {
     if (panRelease(e)) return;
+    if (e->button() == Qt::LeftButton && m_dragPoint >= 0) {
+        m_dragPoint = -1;
+        update();
+        return;
+    }
     if (e->button() == Qt::LeftButton && m_drag != Drag::None) {
         m_drag = Drag::None;
         update();

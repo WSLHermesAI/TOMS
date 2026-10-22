@@ -54,6 +54,7 @@ int columnChannel(int col)
     case AnimKeyListDock::ColSprite: return int(Channel::Sprite);
     case AnimKeyListDock::ColVisible: return int(Channel::Visible);
     case AnimKeyListDock::ColEvent: return int(Channel::Event);
+    case AnimKeyListDock::ColDeform: return int(Channel::Deform);
     default: return -1;
     }
 }
@@ -154,12 +155,12 @@ AnimKeyListDock::AnimKeyListDock(AnimDocument* doc, QWidget* parent)
 {
     setObjectName(QStringLiteral("AnimKeyListDock"));
     m_table->setHorizontalHeaderLabels({tr("#"), tr("Time"), tr("Pos"), tr("Rot"), tr("Scale"), tr("Color"), tr("Sprite"),
-                                        tr("Visible"), tr("Event"), tr("Ease")});
+                                        tr("Visible"), tr("Event"), tr("Deform"), tr("Ease")});
     m_table->verticalHeader()->hide();
     m_table->verticalHeader()->setDefaultSectionSize(22);
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     m_table->horizontalHeader()->setStretchLastSection(true);
-    const int widths[ColCount] = {34, 64, 110, 64, 90, 150, 110, 58, 90, 120};
+    const int widths[ColCount] = {34, 64, 110, 64, 90, 150, 110, 58, 90, 110, 120};
     for (int i = 0; i < ColCount; i++) m_table->setColumnWidth(i, widths[i]);
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -286,7 +287,7 @@ void AnimKeyListDock::rebuild()
         auto* time = new QTableWidgetItem(QString::number(double(t), 'f', 3));
         time->setData(kEditRole, time->text());
         m_table->setItem(r, ColTime, time);
-        for (int col = ColPos; col <= ColEvent; col++) {
+        for (int col = ColPos; col <= ColDeform; col++) {
             const Channel c = Channel(columnChannel(col));
             Value v;
             QTableWidgetItem* it;

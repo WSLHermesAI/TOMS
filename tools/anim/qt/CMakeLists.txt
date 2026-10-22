@@ -71,6 +71,27 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME anim.check_skin
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/tests/smoke/anim_skin.anim")
     set_tests_properties(anim.check_skin PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # A skinned sprite without a mesh is an error of the check (docs/34 step 5).
+    add_test(NAME anim.check_skin_meshes
+             COMMAND "${CMAKE_COMMAND}" -DANIM_EDITOR=$<TARGET_FILE:anim_editor> -DROOT=${CMAKE_SOURCE_DIR}
+                     -DOUT=${CMAKE_BINARY_DIR}/test-run/check_skin_meshes
+                     -P "${CMAKE_SOURCE_DIR}/tools/anim/tests/check_skin_meshes.cmake")
+    set_tests_properties(anim.check_skin_meshes PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # Motion recipes written by the headless command into a copy of the skinned golem pass the check.
+    add_test(NAME anim.recipe_headless
+             COMMAND "${CMAKE_COMMAND}" -DANIM_EDITOR=$<TARGET_FILE:anim_editor> -DROOT=${CMAKE_SOURCE_DIR}
+                     -DOUT=${CMAKE_BINARY_DIR}/test-run/recipe_headless
+                     -P "${CMAKE_SOURCE_DIR}/tools/anim/tests/recipe_headless.cmake")
+    set_tests_properties(anim.recipe_headless PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # Every atlas's mesh file (the art styles' too) has what the clips need, cut fresh, and nothing else:
+    # tools/refresh_meshes.py --check (it reads every .anim of assets/, tests/smoke/ and docs/examples/).
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME anim.meshes_up_to_date
+                 COMMAND Python3::Interpreter "${CMAKE_SOURCE_DIR}/tools/refresh_meshes.py" --check
+                         --anim-editor $<TARGET_FILE:anim_editor>)
+        set_tests_properties(anim.meshes_up_to_date PROPERTIES LABELS "unit;anim" TIMEOUT 60)
+    endif()
     # The hand-writing guide's examples (docs/16_ANIMATION_RECIPES.md) stay valid.
     add_test(NAME anim.check_recipes
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/docs/examples/anim_recipes.anim")
@@ -95,4 +116,7 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME anim.check_archer
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/archer_bow.anim")
     set_tests_properties(anim.check_archer PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    add_test(NAME anim.check_deform   # the deform lattice's demo (docs/34 step 4)
+             COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/tests/smoke/anim_deform.anim")
+    set_tests_properties(anim.check_deform PROPERTIES LABELS "unit;anim" TIMEOUT 30)
 endif()

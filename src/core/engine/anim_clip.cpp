@@ -139,6 +139,7 @@ void firstKey(const Node& n, float& m, bool& any) {
     firstTime(n.spriteKeys, m, any);
     firstTime(n.eventKeys, m, any);
     firstTime(n.visibleKeys, m, any);
+    firstTime(n.deformKeys, m, any);
     for (const Node& c : n.children) firstKey(c, m, any);
 }
 
@@ -153,7 +154,7 @@ bool visibleAt(const Node& n, float t) { return sampleStep(n.visibleKeys, t, n.v
 
 float Node::lastKeyTime() const {
     float m = std::max({lastTime(posKeys), lastTime(scaleKeys), lastTime(rotKeys), lastTime(colorKeys),
-                        lastTime(spriteKeys), lastTime(eventKeys), lastTime(visibleKeys)});
+                        lastTime(spriteKeys), lastTime(eventKeys), lastTime(visibleKeys), lastTime(deformKeys)});
     for (const Node& c : children) m = std::max(m, c.lastKeyTime());
     return m;
 }
@@ -176,7 +177,9 @@ bool Node::operator==(const Node& o) const {
     return name == o.name && sprite == o.sprite && pos == o.pos && rot == o.rot && scale == o.scale && color == o.color &&
            visible == o.visible && hasPivot == o.hasPivot && pivot == o.pivot && order == o.order && blend == o.blend &&
            inheritColor == o.inheritColor && loop == o.loop && stayAtLastFrame == o.stayAtLastFrame &&
-           skinBones == o.skinBones && skinWeights == o.skinWeights &&
+           skinBones == o.skinBones && skinWeights == o.skinWeights && lattice[0] == o.lattice[0] &&
+           lattice[1] == o.lattice[1] && deformKeys == o.deformKeys && meshGrid[0] == o.meshGrid[0] &&
+           meshGrid[1] == o.meshGrid[1] &&
            posKeys == o.posKeys && rotKeys == o.rotKeys && scaleKeys == o.scaleKeys && colorKeys == o.colorKeys &&
            spriteKeys == o.spriteKeys && eventKeys == o.eventKeys && visibleKeys == o.visibleKeys && children == o.children;
 }
@@ -263,6 +266,27 @@ glm::mat3 flatten(const glm::mat4& m) {
     return f;
 }
 
+std::vector<glm::vec2> deformAt(const Node& n, float t) {
+    const size_t count = (size_t)n.latticeCols() * (size_t)n.latticeRows();
+    std::vector<glm::vec2> out(count, glm::vec2(0.0f));
+    const auto& keys = n.deformKeys;
+    if (keys.empty()) return out;
+    auto put = [&](const Deform& d, float w) {
+        for (const auto& [i, v] : d)
+            if (i >= 0 && (size_t)i < count) out[(size_t)i] += w * v;
+    };
+    if (t <= keys.front().t) { put(keys.front().v, 1.0f); return out; }
+    if (t >= keys.back().t) { put(keys.back().v, 1.0f); return out; }
+    auto it = std::upper_bound(keys.begin(), keys.end(), t, [](float x, const Key<Deform>& k) { return x < k.t; });
+    const Key<Deform>& b = *it;
+    const Key<Deform>& a = *(it - 1);
+    const float span = b.t - a.t;
+    const float f = span <= 0 || a.ease.isStepped() ? 0.0f : a.ease.apply((t - a.t) / span);
+    put(a.v, 1.0f - f);   // a point one key leaves out is at 0 there
+    put(b.v, f);
+    return out;
+}
+
 glm::mat4 localTransform(const Node& n, float t) { return compose(positionAt(n, t), rotationAt(n, t), scaleAt(n, t)); }
 
 namespace {
@@ -279,6 +303,7 @@ void walk(const Node& n, float t, const glm::mat4& parentWorld, const glm::vec4&
     me.color = n.inheritColor ? parentColor * own : own;
     me.visible = parentVisible && visibleAt(n, t) && !ended;
     me.sprite = spriteAt(n, t);
+    me.time = t;
     // Children in order (stable: equal orders keep their list order).
     std::vector<const Node*> kids;
     for (const Node& c : n.children) kids.push_back(&c);
@@ -426,6 +451,7 @@ void PoseCache::seek(float t) {
             vis |= ended != it.ended;
             it.ended = ended;
         }
+        p.time = it.time;
         if (it.animated) {   // only the tracks that have keys; a node without keys skips all of this
             const Node& n = *it.node;
             const float nt = it.time;
@@ -497,6 +523,8 @@ json nodeToJson(const Node& n) {
     if (!n.inheritColor) j["inheritColor"] = false;
     if (n.loop) j["loop"] = true;
     if (!n.stayAtLastFrame) j["stayAtLastFrame"] = false;
+    if (n.lattice[0] >= 2 || n.lattice[1] >= 2) j["lattice"] = {n.latticeCols(), n.latticeRows()};
+    if (n.hasMeshGrid()) j["meshGrid"] = {n.meshGrid[0], n.meshGrid[1]};
     if (n.skinned()) {
         json skin{{"bones", n.skinBones}};
         if (n.skinWeights.empty()) {
@@ -525,6 +553,14 @@ json nodeToJson(const Node& n) {
     if (!n.spriteKeys.empty()) tr["sprite"] = keysToJson(n.spriteKeys, s, false);
     if (!n.visibleKeys.empty()) tr["visible"] = keysToJson(n.visibleKeys, b, false);
     if (!n.eventKeys.empty()) tr["event"] = keysToJson(n.eventKeys, s, false);
+    if (!n.deformKeys.empty()) {   // only the points that move: {"5": [0, -2], ...}
+        auto d = [](const Deform& v) {
+            json o = json::object();
+            for (const auto& [i, off] : v) o[std::to_string(i)] = vec(off);
+            return o;
+        };
+        tr["deform"] = keysToJson(n.deformKeys, d, true);
+    }
     if (!tr.empty()) j["tracks"] = tr;
     if (!n.children.empty()) {
         j["children"] = json::array();
@@ -585,6 +621,22 @@ void nodeFromJson(const json& j, Node& n, const std::string& where) {
     n.inheritColor = j.value("inheritColor", true);
     n.loop = j.value("loop", false);
     n.stayAtLastFrame = j.value("stayAtLastFrame", true);
+    if (j.contains("lattice")) {
+        const json& l = j["lattice"];
+        if (!l.is_array() || l.size() != 2 || !l[0].is_number_integer() || !l[1].is_number_integer() ||
+            l[0].get<int>() < 2 || l[1].get<int>() < 2 || l[0].get<int>() > kMaxLattice || l[1].get<int>() > kMaxLattice)
+            throw std::runtime_error(here + ": lattice must be [cols, rows], 2 to " + std::to_string(kMaxLattice) + " each");
+        n.lattice[0] = l[0].get<int>();
+        n.lattice[1] = l[1].get<int>();
+    }
+    if (j.contains("meshGrid")) {
+        const json& g = j["meshGrid"];
+        if (!g.is_array() || g.size() != 2 || !g[0].is_number_integer() || !g[1].is_number_integer() ||
+            g[0].get<int>() < 1 || g[1].get<int>() < 1 || g[0].get<int>() > kMaxMeshGrid || g[1].get<int>() > kMaxMeshGrid)
+            throw std::runtime_error(here + ": meshGrid must be [cols, rows], 1 to " + std::to_string(kMaxMeshGrid) + " each");
+        n.meshGrid[0] = g[0].get<int>();
+        n.meshGrid[1] = g[1].get<int>();
+    }
     if (j.contains("skin")) {
         const json& skin = j["skin"];
         n.skinBones = skin.value("bones", std::vector<std::string>());
@@ -616,6 +668,19 @@ void nodeFromJson(const json& j, Node& n, const std::string& where) {
         keysFromJson(tr, "sprite", n.spriteKeys, [](const json& v) { return v.get<std::string>(); }, here);
         keysFromJson(tr, "visible", n.visibleKeys, [](const json& v) { return v.get<bool>(); }, here);
         keysFromJson(tr, "event", n.eventKeys, [](const json& v) { return v.get<std::string>(); }, here);
+        const int points = n.latticeCols() * n.latticeRows();
+        keysFromJson(tr, "deform", n.deformKeys, [&](const json& v) {
+            if (!v.is_object()) throw std::runtime_error(here + ".deform: a key's value is {\"point\": [dx, dy], ...}");
+            Deform d;
+            for (auto it = v.begin(); it != v.end(); ++it) {
+                int i = -1;
+                try { i = std::stoi(it.key()); } catch (...) {}
+                if (i < 0 || i >= points)
+                    throw std::runtime_error(here + ".deform: no lattice point " + it.key() + " (" + std::to_string(points) + " points)");
+                d[i] = toVec2(it.value());
+            }
+            return d;
+        }, here);
     }
     for (const json& c : j.value("children", json::array())) {
         n.children.emplace_back();
@@ -736,8 +801,8 @@ bool parseNodeJson(const std::string& text, Node& out, std::string* err) {
 }
 
 namespace {
-bool anySkin(const Node& n) {
-    if (n.skinned()) return true;
+bool anySkin(const Node& n) {   // version 3's fields: a skin or a lattice
+    if (n.skinned() || n.deformed() || n.lattice[0] >= 2 || n.lattice[1] >= 2 || n.hasMeshGrid()) return true;
     for (const Node& c : n.children) if (anySkin(c)) return true;
     return false;
 }

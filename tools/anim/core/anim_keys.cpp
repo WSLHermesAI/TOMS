@@ -26,6 +26,7 @@ template <class NodeT, class F> auto visit(NodeT& n, Channel c, F&& f) {
     case Channel::Color: return f(n.colorKeys);
     case Channel::Sprite: return f(n.spriteKeys);
     case Channel::Visible: return f(n.visibleKeys);
+    case Channel::Deform: return f(n.deformKeys);
     case Channel::Event: break;
     }
     return f(n.eventKeys);
@@ -47,6 +48,10 @@ template <> struct Conv<std::string> {
 template <> struct Conv<bool> {
     static bool from(const Value& v) { return v.b; }
     static Value to(bool x) { Value v; v.b = x; return v; }
+};
+template <> struct Conv<toms::anim::Deform> {
+    static toms::anim::Deform from(const Value& v) { return v.d; }
+    static Value to(const toms::anim::Deform& x) { Value v; v.d = x; return v; }
 };
 
 template <class T> int findKey(const std::vector<Key<T>>& keys, float t) {
@@ -94,7 +99,9 @@ bool parseNumbers(const std::string& text, std::vector<float>& out) {
 
 }  // namespace
 
-bool isInterpolated(Channel c) { return c == Channel::Pos || c == Channel::Rot || c == Channel::Scale || c == Channel::Color; }
+bool isInterpolated(Channel c) {
+    return c == Channel::Pos || c == Channel::Rot || c == Channel::Scale || c == Channel::Color || c == Channel::Deform;
+}
 
 const char* channelName(Channel c) {
     switch (c) {
@@ -104,6 +111,7 @@ const char* channelName(Channel c) {
     case Channel::Color: return "color";
     case Channel::Sprite: return "sprite";
     case Channel::Visible: return "visible";
+    case Channel::Deform: return "deform";
     case Channel::Event: break;
     }
     return "event";
@@ -156,6 +164,7 @@ Value restValue(const Node& n, Channel c) {
     case Channel::Color: return Conv<glm::vec4>::to(n.color);
     case Channel::Sprite: return Conv<std::string>::to(n.sprite);
     case Channel::Visible: return Conv<bool>::to(n.visible);
+    case Channel::Deform:   // no rest: the lattice's points sit on the image
     case Channel::Event: break;
     }
     return Value();
@@ -173,6 +182,13 @@ Value valueAt(const Node& n, Channel c, float t) {
     }
     case Channel::Sprite: return Conv<std::string>::to(spriteAt(n, t));
     case Channel::Visible: return Conv<bool>::to(visibleAt(n, t));
+    case Channel::Deform: {   // the points that are off their place at t
+        Value v;
+        const std::vector<glm::vec2> all = deformAt(n, t);
+        for (size_t i = 0; i < all.size(); i++)
+            if (all[i] != glm::vec2(0.0f)) v.d[(int)i] = all[i];
+        return v;
+    }
     case Channel::Event: break;
     }
     Value v;
@@ -249,6 +265,7 @@ void setRest(Node& n, Channel c, const Value& v) {
     case Channel::Color: n.color = v.v; break;
     case Channel::Sprite: n.sprite = v.s; break;
     case Channel::Visible: n.visible = v.b; break;
+    case Channel::Deform:   // keys only
     case Channel::Event: break;
     }
 }
@@ -315,6 +332,12 @@ std::string formatValue(Channel c, const Value& v) {
     case Channel::Color: return num(v.v.x) + ", " + num(v.v.y) + ", " + num(v.v.z) + ", " + num(v.v.w);
     case Channel::Sprite: return v.s.empty() ? std::string("(none)") : v.s;
     case Channel::Visible: return v.b ? "true" : "false";
+    case Channel::Deform: {   // "5: 0, -2; 6: 0, -2"
+        if (v.d.empty()) return "(none)";
+        std::string s;
+        for (const auto& [i, off] : v.d) s += (s.empty() ? "" : "; ") + std::to_string(i) + ": " + num(off.x) + ", " + num(off.y);
+        return s;
+    }
     case Channel::Event: break;
     }
     return v.s;
@@ -355,6 +378,23 @@ bool parseValue(Channel c, const std::string& text, Value& out, std::string* err
         else if (t == "false" || t == "0" || t == "no" || t == "off") out.b = false;
         else return fail("expected true or false");
         return true;
+    case Channel::Deform: {   // "point: dx, dy; ..." ; "(none)" or nothing = every point in place
+        if (t.empty() || t == "(none)") return true;
+        std::istringstream parts(t);
+        std::string part;
+        while (std::getline(parts, part, ';')) {
+            part = trim(part);
+            if (part.empty()) continue;
+            const size_t colon = part.find(':');
+            char* end = nullptr;
+            const long i = colon == std::string::npos ? -1 : std::strtol(part.c_str(), &end, 10);
+            if (colon == std::string::npos || !end || trim(std::string(static_cast<const char*>(end), part.c_str() + colon)).size() || i < 0 ||
+                !parseNumbers(part.substr(colon + 1), f) || f.size() != 2)
+                return fail("expected point: dx, dy; ... (e.g. 5: 0, -2; 6: 0, -2)");
+            out.d[(int)i] = {f[0], f[1]};
+        }
+        return true;
+    }
     case Channel::Event: break;
     }
     if (t.empty()) return fail("an event needs a name");

@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <map>
 
 namespace toms::anim {
 
@@ -35,11 +37,70 @@ const toms::AtlasRegion* AtlasSet::find(const std::string& ref, uint16_t* textur
     return nullptr;
 }
 
-const toms::SpriteMesh* AtlasSet::findMesh(const std::string& ref) const {
+std::string meshKey(const std::string& sprite, int cols, int rows) {
+    return cols > 0 && rows > 0 ? sprite + "@" + std::to_string(cols) + "x" + std::to_string(rows) : sprite;
+}
+
+std::string AtlasSet::meshKeyFor(const std::string& ref, const Node& node, int* entry) const {
+    int e = -1;
+    const toms::AtlasRegion* r = find(ref, nullptr, &e);
+    if (entry) *entry = e;
+    if (!r || e < 0) return std::string();
+    return node.hasMeshGrid() ? meshKey(r->name, node.meshGrid[0], node.meshGrid[1]) : meshKey(r->name);
+}
+
+const toms::SpriteMesh* AtlasSet::findMesh(const std::string& ref, const Node& node) const {
     int entry = -1;
-    const toms::AtlasRegion* r = find(ref, nullptr, &entry);
-    if (!r || entry < 0 || !entries[(size_t)entry].meshes) return nullptr;
-    return entries[(size_t)entry].meshes->find(r->name);
+    const std::string key = meshKeyFor(ref, node, &entry);
+    if (key.empty() || !entries[(size_t)entry].meshes) return nullptr;
+    return entries[(size_t)entry].meshes->find(key);
+}
+
+namespace {
+void collectNeeds(const Node& n, const AtlasSet& atlases, std::map<std::string, MeshNeed>& out) {
+    if (n.usesMesh()) {
+        std::vector<std::string> sprites;
+        if (!n.sprite.empty()) sprites.push_back(n.sprite);
+        for (const auto& k : n.spriteKeys)
+            if (!k.v.empty()) sprites.push_back(k.v);
+        for (const std::string& s : sprites) {
+            MeshNeed need;
+            need.region = atlases.find(s, nullptr, &need.entry);
+            if (!need.region || need.entry < 0) continue;
+            if (n.hasMeshGrid()) { need.cols = n.meshGrid[0]; need.rows = n.meshGrid[1]; }
+            need.key = atlases.meshKeyFor(s, n);
+            char at[16];
+            std::snprintf(at, sizeof at, "%04d|", need.entry);   // by atlas, then key
+            out.emplace(at + need.key, need);
+        }
+    }
+    for (const Node& c : n.children) collectNeeds(c, atlases, out);
+}
+std::vector<MeshNeed> sorted(std::map<std::string, MeshNeed>& m) {
+    std::vector<MeshNeed> v;
+    for (auto& kv : m) v.push_back(kv.second);
+    return v;
+}
+}  // namespace
+
+std::vector<MeshNeed> meshesNeeded(const Clip& clip, const AtlasSet& atlases) {
+    std::map<std::string, MeshNeed> m;
+    collectNeeds(clip.root, atlases, m);
+    return sorted(m);
+}
+
+toms::SpriteMesh cutMesh(const MeshNeed& need, const uint8_t* rgba, int stride) {
+    const toms::AtlasRegion* r = need.region;
+    if (!r || !rgba || r->rotated || r->child || r->w <= 0 || r->h <= 0) return toms::SpriteMesh();
+    if (need.cols > 0 && need.rows > 0)
+        return toms::meshFromAlphaGrid(rgba, stride, r->w, r->h, r->offX, r->offY, need.cols, need.rows);
+    return toms::meshFromAlpha(rgba, stride, r->w, r->h, r->offX, r->offY, kMeshCell);
+}
+
+std::vector<MeshNeed> meshesNeeded(const AnimFile& file, const AtlasSet& atlases) {
+    std::map<std::string, MeshNeed> m;
+    for (const Clip& c : file.clips) collectNeeds(c.root, atlases, m);
+    return sorted(m);
 }
 
 void DrawList::submit(IRenderer* ren) const {
@@ -116,24 +177,73 @@ struct Bent {
     const toms::AtlasRegion* region = nullptr;
     uint16_t texture = kSpriteAtlasTexture;
     const toms::SpriteMesh* mesh = nullptr;
+    toms::SpriteMesh own;              // a deformed sprite without a mesh file: a plain grid over it
     SkinView view;                     // placed vertices, weights, bones
 };
+
+// A plain grid of cols x rows cells over a region's packed pixels (every cell, transparent or not), in original pixels.
+toms::SpriteMesh gridMesh(const toms::AtlasRegion& r, int cols, int rows) {
+    toms::SpriteMesh m;
+    for (int y = 0; y <= rows; y++)
+        for (int x = 0; x <= cols; x++) {
+            m.vertices.push_back((float)r.offX + (float)r.w * x / cols);
+            m.vertices.push_back((float)r.offY + (float)r.h * y / rows);
+        }
+    for (int y = 0; y < rows; y++)
+        for (int x = 0; x < cols; x++) {
+            const uint16_t a = (uint16_t)(y * (cols + 1) + x), b = (uint16_t)(a + 1), c = (uint16_t)(a + cols + 2), d = (uint16_t)(a + cols + 1);
+            m.triangles.insert(m.triangles.end(), {a, b, c, a, c, d});
+        }
+    return m;
+}
+}  // namespace
+
+glm::vec2 latticeOffset(const std::vector<glm::vec2>& offsets, int cols, int rows, float x, float y, float origW, float origH) {
+    if (cols < 2 || rows < 2 || offsets.size() < (size_t)cols * rows || origW <= 0 || origH <= 0) return glm::vec2(0.0f);
+    const float u = std::clamp(x / origW, 0.0f, 1.0f) * (cols - 1), v = std::clamp(y / origH, 0.0f, 1.0f) * (rows - 1);
+    const int c0 = std::min((int)u, cols - 2), r0 = std::min((int)v, rows - 2);
+    const float fu = u - c0, fv = v - r0;
+    auto at = [&](int c, int r) { return offsets[(size_t)r * cols + c]; };
+    return (at(c0, r0) * (1 - fu) + at(c0 + 1, r0) * fu) * (1 - fv) + (at(c0, r0 + 1) * (1 - fu) + at(c0 + 1, r0 + 1) * fu) * fv;
+}
+
+namespace {
 
 SkinState bend(const std::vector<NodePose>& poses, size_t i, const std::vector<std::pair<const Node*, glm::mat4>>& rest,
                const AtlasSet& atlases, const glm::mat3& place, Bent& out) {
     const NodePose& p = poses[i];
-    if (!p.node || !p.node->skinned()) return SkinState::NotSkinned;
+    if (!p.node || !p.node->usesMesh()) return SkinState::NotSkinned;
     const Node& n = *p.node;
     const toms::AtlasRegion* r = p.sprite.empty() ? nullptr : atlases.find(p.sprite, &out.texture);
     if (!r || r->w <= 0 || r->h <= 0) return SkinState::NoSprite;
     if (r->rotated) return SkinState::Rotated;   // meshes are cut from unrotated pixels: drawn as a quad
-    const toms::SpriteMesh* mesh = atlases.findMesh(p.sprite);
+    const toms::SpriteMesh* mesh = atlases.findMesh(p.sprite, n);
+    if ((!mesh || mesh->triangles.empty()) && !n.skinned()) {   // a deform only: a plain grid, twice the lattice
+        out.own = gridMesh(*r, (n.latticeCols() - 1) * 2, (n.latticeRows() - 1) * 2);
+        mesh = &out.own;
+    }
     const glm::mat4* nodeRest = restOf(rest, &n);
-    if (!mesh || mesh->triangles.empty() || !nodeRest) return SkinState::NoMesh;
+    if (!mesh || mesh->triangles.empty() || (n.skinned() && !nodeRest)) return SkinState::NoMesh;
     out.region = r;
     out.mesh = mesh;
     SkinView& v = out.view;
     auto placed = [&](const glm::vec2& c) { const glm::vec3 s = place * glm::vec3(c, 1.0f); return glm::vec2(s); };
+    // Each vertex around the pivot, moved by the lattice (at the node's own time): the shape the rest works on.
+    const glm::vec2 pivot = n.hasPivot ? n.pivot : glm::vec2(r->pivot[0], r->pivot[1]);
+    const uint32_t verts = mesh->vertexCount();
+    const std::vector<glm::vec2> lattice = n.deformed() ? deformAt(n, p.time) : std::vector<glm::vec2>();
+    auto local = [&](uint32_t k) {
+        const float x = mesh->vertices[2 * k], y = mesh->vertices[2 * k + 1];
+        glm::vec2 l(x - pivot.x * r->origW, y - pivot.y * r->origH);
+        if (!lattice.empty()) l += latticeOffset(lattice, n.latticeCols(), n.latticeRows(), x, y, (float)r->origW, (float)r->origH);
+        return l;
+    };
+    if (!n.skinned()) {   // a deform only: the bent shape, carried by the node itself
+        v.vertices.resize(verts);
+        for (uint32_t k = 0; k < verts; k++) v.vertices[k] = placed(glm::vec2(p.world * glm::vec4(local(k), 0, 1)));
+        v.triangles = mesh->triangles;
+        return SkinState::Ok;
+    }
 
     // The bones: rest transform, where they are now (a bone left out of the poses, e.g. by an editor's solo,
     // stays at rest), and the segment the automatic weights measure against. A bone name no node has is the
@@ -170,12 +280,10 @@ SkinState bend(const std::vector<NodePose>& poses, size_t i, const std::vector<s
         v.boneEnd.push_back(placed(glm::vec2(boneSkin[b] * glm::vec4(boneEnd[b], 0, 1))));
     }
 
-    // The mesh at rest in clip space: its original-pixel vertices around the pivot, through the node's rest transform.
-    const glm::vec2 pivot = n.hasPivot ? n.pivot : glm::vec2(r->pivot[0], r->pivot[1]);
-    const uint32_t verts = mesh->vertexCount();
+    // The mesh at rest in clip space: its (deformed) vertices through the node's rest transform; the bones carry it.
     std::vector<float> restV((size_t)verts * 2);
     for (uint32_t k = 0; k < verts; k++) {
-        const glm::vec4 c = *nodeRest * glm::vec4(mesh->vertices[2 * k] - pivot.x * r->origW, mesh->vertices[2 * k + 1] - pivot.y * r->origH, 0, 1);
+        const glm::vec4 c = *nodeRest * glm::vec4(local(k), 0, 1);
         restV[2 * k] = c.x;
         restV[2 * k + 1] = c.y;
     }
@@ -216,10 +324,14 @@ bool makeSkinnedMesh(const std::vector<NodePose>& poses, size_t i, const std::ve
     item.vertexCount = mesh->vertexCount();
     item.firstIndex = (uint32_t)out.indices.size();
     item.indexCount = (uint32_t)mesh->triangles.size();
+    // The UVs stay inside the region: a mesh cut from another packing or art style (the game's sprite atlas follows the
+    // chosen style, a clip file has one mesh file) must not sample the neighbouring sprites.
     const float du = (r->uv[2] - r->uv[0]) / r->w, dv = (r->uv[3] - r->uv[1]) / r->h;
-    for (uint32_t v = 0; v < item.vertexCount; v++)
-        out.vertices.push_back({b.view.vertices[v].x, b.view.vertices[v].y, r->uv[0] + (mesh->vertices[2 * v] - r->offX) * du,
-                                r->uv[1] + (mesh->vertices[2 * v + 1] - r->offY) * dv});
+    for (uint32_t v = 0; v < item.vertexCount; v++) {
+        const float px = std::clamp(mesh->vertices[2 * v] - r->offX, 0.0f, (float)r->w);
+        const float py = std::clamp(mesh->vertices[2 * v + 1] - r->offY, 0.0f, (float)r->h);
+        out.vertices.push_back({b.view.vertices[v].x, b.view.vertices[v].y, r->uv[0] + px * du, r->uv[1] + py * dv});
+    }
     out.indices.insert(out.indices.end(), mesh->triangles.begin(), mesh->triangles.end());
     const glm::vec4 col = p.color * t;
     item.tint[0] = col.r; item.tint[1] = col.g; item.tint[2] = col.b; item.tint[3] = col.a;
@@ -241,6 +353,32 @@ SkinState skinView(const Clip& clip, const std::vector<NodePose>& poses, size_t 
     return s;
 }
 
+namespace {
+void findMissingMeshes(const Node& n, const std::string& parent, const AtlasSet& atlases, std::vector<MissingMesh>& out) {
+    const std::string path = parent.empty() ? n.name : parent + "/" + n.name;
+    if (n.skinned()) {
+        std::vector<std::string> sprites;
+        if (!n.sprite.empty()) sprites.push_back(n.sprite);
+        for (const auto& k : n.spriteKeys)
+            if (!k.v.empty()) sprites.push_back(k.v);
+        std::sort(sprites.begin(), sprites.end());
+        sprites.erase(std::unique(sprites.begin(), sprites.end()), sprites.end());
+        for (const std::string& s : sprites) {
+            if (!atlases.find(s)) continue;
+            const toms::SpriteMesh* m = atlases.findMesh(s, n);
+            if (!m || m->triangles.empty()) out.push_back({path, s});
+        }
+    }
+    for (const Node& c : n.children) findMissingMeshes(c, path, atlases, out);
+}
+}  // namespace
+
+std::vector<MissingMesh> skinnedWithoutMesh(const Clip& clip, const AtlasSet& atlases) {
+    std::vector<MissingMesh> out;
+    findMissingMeshes(clip.root, std::string(), atlases, out);
+    return out;
+}
+
 void appendDraws(const Clip& clip, const std::vector<NodePose>& poses, const AtlasSet& atlases, const glm::mat3& place,
                  const float tint[4], DrawList& out, std::vector<std::string>* missing) {
     const glm::vec4 t = tint ? glm::vec4(tint[0], tint[1], tint[2], tint[3]) : glm::vec4(1.0f);
@@ -249,7 +387,7 @@ void appendDraws(const Clip& clip, const std::vector<NodePose>& poses, const Atl
     Quad q;
     for (size_t i = 0; i < poses.size(); i++) {
         const NodePose& p = poses[i];
-        if (p.node && p.node->skinned()) {
+        if (p.node && p.node->usesMesh()) {
             if (!restMade) { restWorlds(clip, rest); restMade = true; }
             if (makeSkinnedMesh(poses, i, rest, atlases, place, t, out)) continue;
         }
@@ -394,7 +532,7 @@ void AnimPlayer::draw(IRenderer* ren, const AtlasSet& atlases, const glm::mat3& 
         quadTint_ = t;
     }
     for (size_t i = 0; i < poses.size(); i++) {
-        if (poses[i].node && poses[i].node->skinned()) {   // bent again every frame: its bones may have moved
+        if (poses[i].node && poses[i].node->usesMesh()) {   // bent again every frame: its bones / lattice may move
             meshScratch_.clear();
             if (makeSkinnedMesh(poses, i, rest_, atlases, place, t, meshScratch_)) {
                 meshScratch_.submit(ren);
@@ -404,6 +542,34 @@ void AnimPlayer::draw(IRenderer* ren, const AtlasSet& atlases, const glm::mat3& 
         if (all || cache_.changed(i)) hasQuad_[i] = makeQuad(poses[i], atlases, place, t, quads_[i]);
         if (hasQuad_[i]) ren->drawSprite(quads_[i]);
     }
+}
+
+// ---- the lattice --------------------------------------------------------------------------------
+
+bool latticeView(const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases, const glm::mat3& place, LatticeView& out) {
+    if (i >= poses.size() || !poses[i].node || poses[i].sprite.empty()) return false;
+    const NodePose& p = poses[i];
+    const Node& n = *p.node;
+    const toms::AtlasRegion* r = atlases.find(p.sprite);
+    if (!r || r->origW <= 0 || r->origH <= 0) return false;
+    out.cols = n.latticeCols();
+    out.rows = n.latticeRows();
+    const glm::vec2 pivot = n.hasPivot ? n.pivot : glm::vec2(r->pivot[0], r->pivot[1]);
+    // sprite pixels -> placed: around the pivot, through the node's world transform, placed
+    glm::mat3 toLocal(1.0f);
+    toLocal[2] = glm::vec3(-pivot.x * r->origW, -pivot.y * r->origH, 1.0f);
+    out.spriteToPlaced = place * flatten(p.world) * toLocal;
+    const std::vector<glm::vec2> offsets = deformAt(n, p.time);
+    out.rest.clear();
+    out.points.clear();
+    for (int row = 0; row < out.rows; row++)
+        for (int col = 0; col < out.cols; col++) {
+            const glm::vec2 at((float)r->origW * col / (out.cols - 1), (float)r->origH * row / (out.rows - 1));
+            out.rest.push_back(at);
+            out.points.push_back(glm::vec2(out.spriteToPlaced * glm::vec3(at + offsets[(size_t)row * out.cols + col], 1.0f)));
+        }
+    out.offsets = offsets;
+    return true;
 }
 
 // ---- CharacterRig ------------------------------------------------------------------------------

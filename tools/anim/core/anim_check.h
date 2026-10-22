@@ -3,6 +3,7 @@
 #pragma once
 #include "anim_clip.h"
 #include "atlas_file.h"
+#include "sprite_mesh.h"
 
 #include <string>
 #include <vector>
@@ -25,13 +26,15 @@ struct CheckAtlas {
     const toms::AtlasFile* atlas = nullptr;  // nullptr: it could not be loaded
     std::string error;                       // why not (optional)
     bool absolute = false;                   // the file names it with an absolute path
+    const toms::SpriteMeshFile* meshes = nullptr;   // <atlas>.mesh.json beside it; nullptr: it has none
 };
 
 // Problems of the file against its atlases: an error per atlas that could not be loaded; per sprite
 // reference (anim_clip.h SpriteRef) -- "id:name": an error when no atlas has that id or that atlas
 // lacks the name; a bare "name": an error when it is in no atlas (checked when at least one atlas
 // loaded), a warning when it is in more than one (the first wins; storing the atlas fixes it); a
-// warning per absolute atlas path.
+// warning per absolute atlas path; an error per skinned node's sprite that has no mesh in its atlas's mesh file (it
+// would be drawn as a flat quad, unbent; docs/34_MESH_ANIMATION.md).
 std::vector<Problem> checkAnim(const toms::anim::AnimFile& f, const std::vector<CheckAtlas>& atlases);
 
 const char* levelName(Problem::Level l);
@@ -45,6 +48,7 @@ bool isAtlasId(const std::string& id);
 // True for a path that is not relative ("C:/x", "/x", "//server/x", "C:x").
 bool isAbsoluteAtlasPath(const std::string& path);
 
+// `anim_editor --headless meshes ...`: anim_meshes.h headlessMeshes.
 // `anim_editor --headless check <file.anim> [--atlas [<id>=]<file.atlas>]...`: prints the problems,
 // returns 0 (no errors), 2 (errors or the file did not parse) or 3 (usage). --atlas (repeatable)
 // replaces the file's atlas list; its id is the file name without ".atlas" unless given.

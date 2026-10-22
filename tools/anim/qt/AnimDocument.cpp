@@ -1,4 +1,6 @@
 #include "AnimDocument.h"
+#include "anim_meshes.h"
+#include "anim_recipes.h"
 #include <json.hpp>
 
 #include <QDateTime>
@@ -195,6 +197,7 @@ bool AnimDocument::save(const QString& path, QString* error)
         if (error) *error = out.errorString();
         return false;
     }
+    if (!saveMeshes(error)) return false;   // its meshes go into its atlases' mesh files (docs/34_MESH_ANIMATION.md)
     const bool moved = abs != m_filePath;
     m_filePath = abs;
     m_state.file.atlases = f.atlases;
@@ -238,6 +241,7 @@ void AnimDocument::reset(AnimState s, const QString& path)
     m_time = 0;
     m_absoluteInFile.clear();
     loadAtlases(true);
+    updateMeshes();
     emit fileReset();
     emit fileChanged();
     emit clipChanged();
@@ -295,6 +299,7 @@ void AnimDocument::restoreState(const AnimState& s)
     fixSelection(m_state);
     m_state.file.atlases = storedAtlases(m_state, m_filePath);
     if (atlasChanged_) loadAtlases(false);
+    updateMeshes();
     emit fileChanged();
     if (clipChanged_) emit clipChanged();
     if (selChanged) emit selectionChanged();
@@ -332,20 +337,18 @@ std::shared_ptr<AnimDocument::LoadedAtlas> loadOne(const QString& path)
         pages.push_back(img);
     }
     if (sizesChanged) a->atlas.computeUVs();
-    // Its meshes (docs/34_MESH_ANIMATION.md), when it has them: skinned nodes are drawn bent with them.
-    QFile meshFile(qs(toms::spriteMeshPath(path.toStdString())));
-    if (meshFile.open(QIODevice::ReadOnly)) {
-        const QDir meshDir = QFileInfo(meshFile.fileName()).absoluteDir();
-        auto readBuffer = [&](const std::string& uri, std::string& bytes) {
-            QFile b(meshDir.filePath(qs(uri)));
-            if (!b.open(QIODevice::ReadOnly)) return false;
-            bytes = b.readAll().toStdString();
-            return true;
-        };
-        const std::string meshText = meshFile.readAll().toStdString();
-        a->meshesBinary = meshText.find("\"buffers\"") != std::string::npos;
-        if (!toms::parseSpriteMeshes(meshText, readBuffer, a->meshes, &err))
-            a->error = AnimDocument::tr("%1: %2").arg(QDir::toNativeSeparators(meshFile.fileName()), qs(err));
+    for (const QImage& img : pages) a->rgba.push_back(img.convertToFormat(QImage::Format_RGBA8888));   // meshes are cut from these
+    {   // its mesh file (docs/34_MESH_ANIMATION.md): what other clips put there, "hand" meshes, and its form
+        const std::string meshPath = toms::spriteMeshPath(u8(path));
+        const bool there = QFileInfo::exists(qs(meshPath));
+        bool binary = false;
+        std::string merr;
+        if (!animed::readMeshFile(meshPath, a->meshesOnDisk, &binary, &merr)) {
+            a->meshesOnDisk = toms::SpriteMeshFile();
+            a->meshWarning = AnimDocument::tr("Meshes: %1 (cut again)").arg(qs(merr));
+        }
+        a->meshesBinary = there ? binary : true;
+        a->meshes = a->meshesOnDisk;
     }
     a->images.setPages(pages);
     for (const toms::AtlasRegion& r : a->atlas.regions) a->spriteNames << qs(r.name);
@@ -371,6 +374,7 @@ void AnimDocument::loadAtlases(bool force)
         if (!a) {
             a = loadOne(path);
             if (!a->error.isEmpty()) emit message(tr("Atlas: %1").arg(a->error));
+            if (!a->meshWarning.isEmpty()) emit message(a->meshWarning);
         }
         next.push_back(a);
     }
@@ -389,7 +393,6 @@ void AnimDocument::loadAtlases(bool force)
             m_textures.push_back({int(i), int(p)});
         }
         m_atlasSet.add(a.atlas, u8(atlasId(int(i))), std::move(pageTextures));
-        if (!a.meshes.meshes.empty()) m_atlasSet.entries.back().meshes = &a.meshes;
         m_setToDoc.push_back(int(i));
         m_spriteNames << a.spriteNames;
     }
@@ -406,6 +409,7 @@ void AnimDocument::loadAtlases(bool force)
 void AnimDocument::reloadAtlases()
 {
     loadAtlases(true);
+    updateMeshes();   // cut again from the reloaded pixels
     emit fileChanged();   // repaint everything that shows sprites
 }
 
@@ -446,6 +450,7 @@ std::vector<CheckAtlas> AnimDocument::checkAtlases() const
         r.atlas = a.ok ? &a.atlas : nullptr;
         r.error = u8(a.error);
         r.absolute = atlasPathIsAbsoluteInFile(i);
+        r.meshes = a.ok && !a.meshes.meshes.empty() ? &a.meshes : nullptr;
         out.push_back(r);
     }
     return out;
@@ -753,7 +758,15 @@ void AnimDocument::setTime(float t)
 {
     if (!std::isfinite(t)) return;
     t = std::clamp(t, 0.0f, 3600.0f);
-    if (t == m_time) return;
+    if (t == m_time) {
+        // Asked for the time it already has: still back from a preview that ran on (looping nodes past the end),
+        // so a click on the playhead's own key row shows that row.
+        if (m_preview >= 0) {
+            setPreviewTime(-1);
+            emit timeChanged(m_time);
+        }
+        return;
+    }
     m_time = t;
     setPreviewTime(-1);
     emit timeChanged(m_time);
@@ -935,7 +948,7 @@ bool AnimDocument::setChannel(Channel c, const Value& v, const QString& mergeKey
     if (!sel) return false;
     emit aboutToEdit();   // playback stops before the key's time is taken
     const float t = m_time;
-    const bool keyed = m_autoKey || c == Channel::Event || hasKeyAt(*sel, c, t);
+    const bool keyed = m_autoKey || c == Channel::Event || c == Channel::Deform || hasKeyAt(*sel, c, t);   // no rest deform
     const bool ok = editSelected(keyed ? tr("Key %1").arg(QLatin1String(channelName(c))) : tr("Set %1").arg(QLatin1String(channelName(c))),
                                  [&](Node& n) {
                                      if (keyed) setKey(n, c, t, v);
@@ -1302,51 +1315,136 @@ bool AnimDocument::parentBonesUnder(const NodePath& path)
     return done;
 }
 
-int AnimDocument::meshGrid(const std::string& ref) const
+bool AnimDocument::setLatticeSize(int cols, int rows)
 {
-    int ai = -1;
-    const toms::AtlasRegion* r = findSprite(ref, &ai);
-    if (!r || ai < 0) return 0;
-    if (const toms::SpriteMesh* m = m_atlases[size_t(ai)]->meshes.find(r->name))
-        if (m->cells[0] > 0) return m->cells[0];
-    return std::max(1, (r->w + 7) / 8);   // atlaspack meshes' 8-pixel cells
+    cols = std::clamp(cols, 2, toms::anim::kMaxLattice);
+    rows = std::clamp(rows, 2, toms::anim::kMaxLattice);
+    const Node* sel = selectedNode();
+    if (!sel || (sel->latticeCols() == cols && sel->latticeRows() == rows && sel->lattice[0] >= 2)) return false;
+    return editSelected(tr("Lattice"), [cols, rows](Node& n) {
+        const int oc = n.latticeCols(), orows = n.latticeRows();
+        for (auto& k : n.deformKeys) {
+            toms::anim::Deform moved;
+            for (const auto& [i, off] : k.v) {
+                const int c = i % oc, r = i / oc;
+                const int nc = (int)std::lround(float(c) / (oc - 1) * (cols - 1)), nr = (int)std::lround(float(r) / (orows - 1) * (rows - 1));
+                moved[nr * cols + nc] = off;
+            }
+            k.v = std::move(moved);
+        }
+        n.lattice[0] = cols;
+        n.lattice[1] = rows;
+    });
 }
 
-bool AnimDocument::setMeshGrid(const std::string& ref, int cells, bool write)
+void AnimDocument::updateMeshes()
 {
-    int ai = -1;
-    const toms::AtlasRegion* r = findSprite(ref, &ai);
-    if (!r || ai < 0) return false;
-    LoadedAtlas& a = *m_atlases[size_t(ai)];
-    if (r->rotated || r->child || r->page < 0 || r->page >= a.images.pages().size()) {
-        emit message(tr("Mesh grid: sprite '%1' has no pixels of its own to cut (rotated or a child sprite)").arg(qs(r->name)));
-        return false;
+    // Each atlas: its mesh file as on disk, with every mesh this file's clips need added -- cut from its pixels (cached
+    // by key), or the file's own when it is marked "hand".
+    for (const auto& a : m_atlases) {
+        a->meshes = a->meshesOnDisk;
+        a->neededKeys.clear();
     }
-    const QImage page = a.images.pages()[r->page].convertToFormat(QImage::Format_RGBA8888);
-    if (r->x < 0 || r->y < 0 || r->x + r->w > page.width() || r->y + r->h > page.height()) return false;
-    const uchar* px = page.constBits() + size_t(r->y) * page.bytesPerLine() + size_t(r->x) * 4;
-    toms::SpriteMesh m = toms::meshFromAlphaGrid(px, page.bytesPerLine() / 4, r->w, r->h, r->offX, r->offY, cells, cells);
-    if (m.triangles.empty()) return false;
-    a.meshes.meshes[r->name] = std::move(m);
-    if (write) {
-        const QString path = qs(toms::spriteMeshPath(u8(a.path)));
-        const QString binName = QFileInfo(path).completeBaseName() + QStringLiteral(".bin");   // game.mesh.json -> game.mesh.bin
-        std::string binary;
-        const std::string json = toms::spriteMeshesToJson(a.meshes, a.meshesBinary ? u8(binName) : std::string(),
-                                                          a.meshesBinary ? &binary : nullptr);
-        QFile f(path);
-        bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate) && f.write(json.data(), qint64(json.size())) == qint64(json.size());
-        f.close();
-        if (ok && a.meshesBinary) {
-            QFile b(QFileInfo(path).dir().filePath(binName));
-            ok = b.open(QIODevice::WriteOnly | QIODevice::Truncate) && b.write(binary.data(), qint64(binary.size())) == qint64(binary.size());
+    for (const toms::anim::MeshNeed& need : toms::anim::meshesNeeded(m_state.file, m_atlasSet)) {
+        const int doc = need.entry >= 0 && need.entry < int(m_setToDoc.size()) ? m_setToDoc[size_t(need.entry)] : -1;
+        if (doc < 0) continue;
+        LoadedAtlas& a = *m_atlases[size_t(doc)];
+        a.neededKeys.insert(need.key);
+        if (const toms::SpriteMesh* hand = a.meshesOnDisk.find(need.key); hand && hand->source == "hand") continue;
+        auto cached = a.cut.find(need.key);
+        if (cached == a.cut.end()) {
+            toms::SpriteMesh m;
+            const toms::AtlasRegion* r = need.region;
+            if (r->page >= 0 && r->page < int(a.rgba.size())) {
+                const QImage& page = a.rgba[size_t(r->page)];
+                if (r->x >= 0 && r->y >= 0 && r->x + r->w <= page.width() && r->y + r->h <= page.height())
+                    m = toms::anim::cutMesh(need, page.constBits() + size_t(r->y) * page.bytesPerLine() + size_t(r->x) * 4,
+                                            page.bytesPerLine() / 4);
+            }
+            cached = a.cut.emplace(need.key, std::move(m)).first;
         }
-        emit message(ok ? tr("Mesh grid: '%1' cut on %2 x %3 cells, saved to %4").arg(qs(r->name)).arg(cells).arg(cells).arg(QDir::toNativeSeparators(path))
-                        : tr("Mesh grid: cannot write %1").arg(QDir::toNativeSeparators(path)));
+        if (!cached->second.triangles.empty()) a.meshes.meshes[need.key] = cached->second;
     }
-    loadAtlases(false);   // the lookup picks up a first mesh of an atlas; the views redraw
-    emit fileChanged();
+    for (size_t e = 0; e < m_atlasSet.entries.size() && e < m_setToDoc.size(); e++) {
+        const LoadedAtlas& a = *m_atlases[size_t(m_setToDoc[e])];
+        m_atlasSet.entries[e].meshes = a.meshes.meshes.empty() ? nullptr : &a.meshes;
+    }
+}
+
+bool AnimDocument::saveMeshes(QString* error)
+{
+    // Each atlas's mesh file gets this file's meshes; the others in it (other clips') stay. It is read again first, so
+    // what another clip saved meanwhile is kept.
+    for (const auto& ap : m_atlases) {
+        LoadedAtlas& a = *ap;
+        if (!a.ok || a.neededKeys.empty()) continue;
+        const std::string meshPath = toms::spriteMeshPath(u8(a.path));
+        toms::SpriteMeshFile now;
+        std::string err;
+        if (!animed::readMeshFile(meshPath, now, nullptr, &err)) now = toms::SpriteMeshFile();   // broken: made again
+        toms::SpriteMeshFile merged = now;
+        for (const std::string& key : a.neededKeys)
+            if (const toms::SpriteMesh* m = a.meshes.find(key)) merged.meshes[key] = *m;
+        if (merged.meshes == now.meshes && err.empty()) {
+            a.meshesOnDisk = std::move(now);
+            continue;
+        }
+        if (!animed::writeMeshFile(meshPath, merged, a.meshesBinary, &err)) {
+            if (error) *error = tr("The .anim was saved, but the mesh file %1 was not: %2").arg(QDir::toNativeSeparators(qs(meshPath)), qs(err));
+            return false;
+        }
+        a.meshesOnDisk = std::move(merged);
+    }
+    updateMeshes();
     return true;
+}
+
+bool AnimDocument::applyMotionRecipe(const std::string& id, float start, float period, float strength)
+{
+    const Node* sel = selectedNode();
+    const animed::MotionRecipe* recipe = animed::findMotionRecipe(id);
+    if (!sel || !recipe) return false;
+    animed::RecipeParams p;
+    p.start = start;
+    p.period = period;
+    p.strength = strength;
+    if (const toms::AtlasRegion* r = findSprite(toms::anim::spriteAt(*sel, start))) {
+        p.spriteW = float(r->origW);
+        p.spriteH = float(r->origH);
+    }
+    const NodePath path = m_state.node;
+    std::string err;
+    const bool ok = edit(tr("Recipe: %1").arg(qs(recipe->title)), [&](AnimState& s) {
+        if (s.file.clips.empty()) return false;
+        return animed::applyMotionRecipe(s.file.clips[size_t(s.clip)], path, id, p, &err);
+    });
+    if (!ok && !err.empty()) emit message(tr("Motion recipe: %1").arg(qs(err)));
+    return ok;
+}
+
+bool AnimDocument::meshGridOf(const Node& n, int& cols, int& rows) const
+{
+    const toms::AtlasRegion* r = findSprite(toms::anim::spriteAt(n, m_time));
+    if (!r) return false;
+    if (n.hasMeshGrid()) {
+        cols = n.meshGrid[0];
+        rows = n.meshGrid[1];
+    } else {   // 8-pixel cells
+        cols = std::max(1, (r->w + toms::anim::kMeshCell - 1) / toms::anim::kMeshCell);
+        rows = std::max(1, (r->h + toms::anim::kMeshCell - 1) / toms::anim::kMeshCell);
+    }
+    return true;
+}
+
+bool AnimDocument::setMeshGrid(int cols, int rows)
+{
+    cols = std::clamp(cols, 0, toms::anim::kMaxMeshGrid);
+    rows = std::clamp(rows, 0, toms::anim::kMaxMeshGrid);
+    if (cols == 0 || rows == 0) cols = rows = 0;
+    return editSelected(tr("Mesh grid"), [&](Node& n) {
+        n.meshGrid[0] = cols;
+        n.meshGrid[1] = rows;
+    });
 }
 
 QString AnimDocument::copyNodeText(const NodePath& path) const

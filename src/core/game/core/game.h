@@ -751,8 +751,8 @@ private:
     std::vector<std::array<float, 4>> spriteTrim_;   // x, y, w, h of the kept pixels, as fractions of the original
     toms::AtlasFile spriteAtlas_;
     std::map<std::string, toms::SpriteBox> spriteBoxes_;   // each sprite's visible pixels (fitCharacter)
+    toms::SpriteMeshFile spriteMeshes_;   // its meshes (game.mesh.json beside it, written by the anim tools; docs/34)
     nlohmann::json characterFit_;                          // assets/data/character_fit.json (read at startup)
-    toms::SpriteMeshFile spriteMeshes_;   // its meshes (game.mesh.json beside it; docs/34_MESH_ANIMATION.md)
     std::shared_ptr<toms::res::AnimRes> previewAnim_;   // playPreviewAnim (its atlases come with it)
     std::string previewClip_;
     std::string previewCharacter_;                      // setPreviewCharacter

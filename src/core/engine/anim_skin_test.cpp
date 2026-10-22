@@ -41,7 +41,7 @@ struct Fixture {
         meshes.meshes["bar"] = toms::meshFromAlpha(px.data(), 8, 8, 32, 0, 0, 8);
         meshes.meshes["tilted"] = meshes.meshes["bar"];
         set.add(atlas);
-        set.entries.back().meshes = &meshes;
+        set.entries.back().meshes = &meshes;   // the atlas's mesh file, by meshKey ("bar": 8-pixel cells)
     }
 };
 
@@ -159,6 +159,15 @@ void testFallbacks() {
     DrawList d;
     appendDraws(c, poses, noMeshes, glm::mat3(1.0f), nullptr, d);
     CHECK(d.meshes.empty() && d.quads.size() == 1, "a skinned sprite without a mesh draws as its quad");
+    // ... and is named, so the check and the game can say so; with its mesh, nothing is.
+    const std::vector<MissingMesh> missing = skinnedWithoutMesh(c, noMeshes);
+    CHECK(missing.size() == 1 && missing[0].node == "root/bar" && missing[0].sprite == "bar",
+          "skinnedWithoutMesh: the skinned bar, by its node path and sprite");
+    CHECK(skinnedWithoutMesh(c, fx.set).empty(), "skinnedWithoutMesh: none when the mesh is there");
+    c.root.children[0].sprite = "nowhere";
+    CHECK(skinnedWithoutMesh(c, noMeshes).empty(), "skinnedWithoutMesh: a sprite no atlas has is another problem");
+    c.root.children[0].sprite = "bar";
+    evaluate(c, 0, poses);
     // A rotated region: its quad (meshes are cut from unrotated pixels).
     c.root.children[0].sprite = "tilted";
     evaluate(c, 0, poses);
@@ -247,9 +256,41 @@ void testPlayer() {
     for (size_t i = 0; i < atRest.size() && i < r.lastMesh.size(); i++) moved = moved || !near(atRest[i].x, r.lastMesh[i].x);
     CHECK(moved, "the mesh is bent again as the bones move");
 }
+void testMeshKeys() {
+    // An atlas's mesh file (docs/34_MESH_ANIMATION.md): keyed by sprite and the node's grid, shared by every clip using
+    // the atlas; what a clip file needs; cut from alpha on the node's grid.
+    CHECK(meshKey("golem") == "golem" && meshKey("golem", 6, 8) == "golem@6x8", "meshKey");
+    Fixture fx;
+    Clip c = skinnedBar();
+    Node& bar = c.root.children[0];
+    CHECK(fx.set.meshKeyFor("bar", bar) == "bar" && fx.set.findMesh("bar", bar) != nullptr, "no grid: the 8-pixel mesh");
+    bar.meshGrid[0] = 1;
+    bar.meshGrid[1] = 2;
+    CHECK(fx.set.meshKeyFor("bar", bar) == "bar@1x2" && fx.set.findMesh("bar", bar) == nullptr, "a grid: its own key, not cut yet");
+    Key<std::string> swap;
+    swap.t = 1;
+    swap.v = "tilted";
+    bar.spriteKeys = {swap};
+    AnimFile f;
+    f.clips.push_back(c);
+    f.clips.push_back(c);   // a second clip using the same: shared
+    const std::vector<MeshNeed> needs = meshesNeeded(f, fx.set);
+    CHECK(needs.size() == 2 && needs[0].key == "bar@1x2" && needs[1].key == "tilted@1x2" && needs[0].cols == 1 && needs[0].rows == 2,
+          "meshesNeeded: the skinned node's rest sprite and its sprite key, on its grid, once for both clips");
+    std::vector<uint8_t> px(8 * 32 * 4, 255);
+    const toms::SpriteMesh cut = cutMesh(needs[0], px.data(), 8);
+    CHECK(cut.vertexCount() == 6 && cut.triangles.size() == 12, "cutMesh: 1 x 2 cells: 6 points, 4 triangles");
+    CHECK(cutMesh(needs[1], px.data(), 8).triangles.empty(), "cutMesh: a rotated region has none");
+    toms::SpriteMeshFile own;
+    own.meshes["bar@1x2"] = cut;
+    AtlasSet withOwn = fx.set;
+    withOwn.entries[0].meshes = &own;
+    CHECK(withOwn.findMesh("bar", bar) == &own.meshes["bar@1x2"], "findMesh: the node's grid's mesh");
+}
 }  // namespace
 
 int main() {
+    testMeshKeys();
     testFile();
     testRest();
     testBend();

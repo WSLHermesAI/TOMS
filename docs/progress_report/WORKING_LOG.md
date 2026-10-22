@@ -567,3 +567,25 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     error dialog.
   - Tests: changed-only 16 of 163 pass; switched-off tests run by name pass (49 unit, anim, studio, battle scenarios).
     Full suite / web not run.
+
+- **2026-10-22 (evening)** — **Deform lattice, meshes owned by the anim tools, motion recipes** ([DAILY_2026-10-22.md](DAILY_2026-10-22.md) rows 13–20; not committed):
+  - Committed by the owner before this: `aeae0d0` "anim editor add skinning" (16:49, 91 files).
+  - docs/34 step 4: `Node::lattice`, `deformKeys`, `deformAt`, `latticeOffset`, `latticeView`, `NodePose::time`; editor
+    Lattice mode, Properties Lattice, key list Deform; `anim_lattice_test`, `smoke.anim_deform`.
+  - Editor frames: `BgfxHostConfig::flipAfterRender` for the studio canvases (a single repaint showed the frame before);
+    `AnimDocument::setTime` ends a run-on preview; self-test reads the presented window (`PrintWindow` +
+    `GameCanvasView::holdFrames`).
+  - Meshes (redesigned twice; final): per atlas `<atlas>.mesh.json` (+ `.bin`, binary by default, `"version"` first and
+    required), keys `sprite[@CxR]` from `Node::meshGrid`; `AtlasSet::Entry::meshes`, `meshKey`, `meshesNeeded`,
+    `cutMesh`, UVs clamped to the region; `tools/anim/core/anim_meshes.*` (`addAnimMeshes`, `headlessMeshes` with
+    `--atlas`, `--default-atlas`, `--map`, `--prune`, `--check`); the editor merges its clips' meshes on save. Removed:
+    `atlaspack meshes`, the atlas-write hook, the atlas mesh tests. `skinnedWithoutMesh`: check error, `[res]` warning.
+  - Trimmed game atlas kept: `"trim": true` in `art_raw/atlas/game.atlasproj`, dark16 rebuilt; `--mesh-test` and three
+    self-test checks trim-aware; stray `assets/media/atlas/game.atlasproj` / `game.plist` deleted.
+  - Step 5 part 1: `tools/refresh_meshes.py` (+ `--check` = `anim.meshes_up_to_date`); dark16 `game.mesh.*`; docs 13 / 27
+    steps and project path fixed; `add_toms_types.py` docstring.
+  - Step 5 part 2: `tools/anim/core/anim_recipes.*` (7 recipes), Key > Motion Recipe…, `--headless recipe`;
+    `anim.recipes`, `anim.recipe_headless`; docs/16 §7; zh_TW strings.
+  - Docs: 34, 16, 15, 14, 13, 27, 09 (EN and zh_TW).
+  - Tests: changed-only 23 of 170 pass; `anim.editor_selftest`, `studio.i18n_complete`, `atlas.assets_up_to_date` by
+    name pass. Full suite / web not run.

@@ -59,13 +59,15 @@ def unit_in(prefix):  return lambda t: t['name'].startswith('unit.') and t['src'
 DESKTOP = lambda t: not is_web(t)
 
 GAME_UNIT = unit_in('game/')
-ENGINE_SPECIFIC = re.compile(r'^unit\.(gltf_|anim_clip|anim_skin|anim_character|sprite_mesh|particle_fx)')
+ENGINE_SPECIFIC = re.compile(r'^unit\.(gltf_|anim_clip|anim_skin|anim_character|anim_lattice|sprite_mesh|particle_fx)')
 ENGINE_UNIT = lambda t: unit_in('engine/')(t) and not ENGINE_SPECIFIC.match(t['name'])
 GLTF = any_of(named('unit.gltf_*'), is_gltf)
 PARTICLES = named('unit.particle_fx_test', 'particle.*', 'smoke.fx*')
-ANIMS = named('unit.anim_clip_test', 'unit.anim_skin_test', 'unit.anim_character_test', 'anim.*', 'smoke.anim', 'smoke.anim_skin')
+ANIMS = named('unit.anim_clip_test', 'unit.anim_skin_test', 'unit.anim_character_test', 'unit.anim_lattice_test', 'anim.*',
+              'smoke.anim', 'smoke.anim_skin', 'smoke.anim_deform')
 # sprite meshes (docs/34_MESH_ANIMATION.md): the mesh file and cutter, the skinning that bends them, `atlaspack meshes`
-MESHES = named('unit.sprite_mesh_test', 'unit.anim_skin_test', 'smoke.anim_skin', 'anim.check_skin', 'atlas.core')
+MESHES = named('unit.sprite_mesh_test', 'unit.anim_skin_test', 'unit.anim_lattice_test', 'smoke.anim_skin',
+               'smoke.anim_deform', 'anim.check_skin', 'anim.check_skin_meshes', 'anim.meshes_up_to_date')
 ATLAS = named('atlas.*', 'unit.atlas_sprites_test')
 FONTS = named('font.*')
 
@@ -165,10 +167,10 @@ RULES = [
     (['src/core/engine/particle*', 'tools/particle/*', 'src/engine/shaders/cs_fx_*'], PARTICLES,
      'particles: checks, unit test, fx screenshots'),
     (['assets/media/particle*', 'assets/media/fx/*'], any_of(PARTICLES), 'particle files'),
-    (['src/core/engine/sprite_mesh*'], MESHES, 'sprite meshes: their unit tests, the skinned clip, the atlas tool'),
+    (['src/core/engine/sprite_mesh*'], MESHES, 'sprite meshes: their unit tests, the skinned and deformed clips'),
     (['src/core/engine/anim*', 'tools/anim/*'], ANIMS, 'node animations: checks, unit test, anim screenshot'),
-    (['assets/media/atlas/*.mesh.*', 'assets/media/styles/*.mesh.*'], any_of(MESHES, is_game_smoke_d3d11),
-     'sprite meshes beside the atlases: the mesh tests + the game screenshots'),
+    (['*.mesh.json', '*.mesh.bin', 'tools/refresh_meshes.py'], MESHES,
+     "an atlas's sprite meshes (written by the anim tools): the mesh tests"),
     (['assets/media/resources.json'], any_of(named('unit.resource_test'), is_game_smoke_d3d11),
      'the resource manifest: its check (every entry loads) + the game screenshots'),
     # the bow's clips: no game screen plays them yet, so only their check

@@ -34,7 +34,20 @@
 // (docs/34_MESH_ANIMATION.md); a file is saved as version 3 only when a node has one, so files without
 // skins still open in older builds.
 //
-// Skinning: a node whose sprite has a mesh (sprite_mesh.h, next to its atlas) and a skin bends that mesh
+// Deform (a lattice; version 3 too): a node's `lattice` is a grid of points over its sprite's original image, cols x
+// rows (default 4 x 4, 2 .. 16 each), and its `deform` keys move some of those points, in the sprite's pixels. Every
+// mesh vertex follows the grid cell it lies in (bilinear), so the sprite squashes, stretches, breathes, sways. The
+// lattice belongs to the image, not to the mesh: a sprite re-meshed after a reskin bends the same way. A sprite without
+// a mesh file is bent on a grid of its own. Keys are eased like the other interpolated channels; a point a key does
+// not list is at 0 there. The deform comes before skinning (it changes the shape the bones then carry).
+//
+// Meshes: the triangles a skinned or deformed node bends are in its atlas's mesh file (`game.atlas` ->
+// `game.mesh.json` beside it, sprite_mesh.h), keyed by sprite and grid (meshKey), so every clip using that atlas shares
+// them. Each node says the grid its sprite is cut on (`meshGrid`, cells across and down; none = 8-pixel cells). The anim
+// tools add the meshes their clips need when a clip is saved (anim editor, `anim_editor --headless meshes`); the atlas
+// tool never touches them.
+//
+// Skinning: a node whose sprite has a mesh and a skin bends that mesh
 // with other nodes of the clip, its bones. Each mesh vertex follows up to kSkinInfluences bones, weighted;
 // the weights are the file's, or made automatically from how near each vertex is to each bone in the rest
 // pose (the nodes' rest values, keys ignored: Spine's setup pose). Without a mesh it draws as a quad.
@@ -49,6 +62,7 @@
 #include <glm/glm.hpp>
 
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -86,6 +100,13 @@ template <class T> struct Key {
 
 enum class Blend { Normal, Add };
 
+// One deform key's value: lattice point index (row major: row * cols + col) -> its offset, sprite pixels.
+using Deform = std::map<int, glm::vec2>;
+constexpr int kDefaultLattice = 4;   // points across and down when a node does not set its lattice
+constexpr int kMaxLattice = 16;
+constexpr int kMaxMeshGrid = 32;    // a node's meshGrid, cells across or down
+constexpr int kMeshCell = 8;        // without a meshGrid: square cells of this many pixels
+
 struct Node {
     std::string name;
     std::string sprite;                // rest sprite ("atlas:name" or "name"); "" = a group node
@@ -106,6 +127,17 @@ struct Node {
     std::vector<std::string> skinBones;
     std::vector<float> skinWeights;
     bool skinned() const { return !skinBones.empty(); }
+    // The deform lattice (see the top): points across and down, 0 = the default; and its keys.
+    int lattice[2] = {0, 0};
+    std::vector<Key<Deform>> deformKeys;
+    bool deformed() const { return !deformKeys.empty(); }
+    int latticeCols() const { return lattice[0] >= 2 ? lattice[0] : kDefaultLattice; }
+    int latticeRows() const { return lattice[1] >= 2 ? lattice[1] : kDefaultLattice; }
+    // The grid its sprite's mesh is cut on, cells across and down (1 .. kMaxMeshGrid); 0 = 8-pixel cells.
+    int meshGrid[2] = {0, 0};
+    bool hasMeshGrid() const { return meshGrid[0] > 0 && meshGrid[1] > 0; }
+    // Drawn as a bent mesh (a skin or a deform), not a quad.
+    bool usesMesh() const { return skinned() || deformed(); }
 
     std::vector<Key<glm::vec3>> posKeys, rotKeys, scaleKeys;
     std::vector<Key<glm::vec4>> colorKeys;
@@ -211,6 +243,7 @@ struct NodePose {
     glm::vec4 color{1, 1, 1, 1};       // with the parents' colour when inherited
     std::string sprite;                // "" = nothing to draw
     bool visible = true;               // false: hidden (itself or a parent)
+    float time = 0;                    // the time its own tracks see (a looping ancestor's wraps it): deformAt
 };
 
 // The time a node's tracks (and its children) see when its parent's time is t, with its key range
@@ -288,5 +321,7 @@ glm::vec3 scaleAt(const Node& n, float t);
 glm::vec4 colorAt(const Node& n, float t);
 std::string spriteAt(const Node& n, float t);
 bool visibleAt(const Node& n, float t);
+// The lattice's offsets at time t: every point (latticeCols() * latticeRows(), row major), eased between keys.
+std::vector<glm::vec2> deformAt(const Node& n, float t);
 
 }  // namespace toms::anim

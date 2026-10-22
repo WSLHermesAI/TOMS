@@ -25,7 +25,9 @@ public:
     // What a click in the viewport picks (docs/34_MESH_ANIMATION.md): Object = sprites (the node moves, and with it
     // the bones under it); Bones = the bones of skinned nodes (their joints and segments), never sprites -- the skin
     // is shown, and the gizmo poses the bone (Auto-Key on) or places it in the sprite (Auto-Key off: its rest pose).
-    enum class EditMode { Object, Bones };
+    // Lattice: the selected sprite's deform lattice is shown; dragging a point keys the deform at the playhead (always a
+    // key: a deform has no rest). A click away from the points picks a sprite, as Object mode.
+    enum class EditMode { Object, Bones, Lattice };
 
     // One sprite quad as drawn, and where it came from.
     struct DrawItem {
@@ -52,6 +54,8 @@ public:
     // The bone (node name) whose joint or segment is under widget point w, nearest first; "" = none. Bones of
     // skinned nodes that are drawn (visible, solo) only.
     QString boneAt(const QPointF& w) const;
+    // Lattice mode: the selected node's lattice point under widget point w, -1 = none.
+    int latticePointAt(const QPointF& w) const;
     // The colour the skin view gives bone b of a skin (a fixed palette, repeating).
     static QColor boneColor(int b);
 
@@ -104,6 +108,8 @@ private:
     void applyDrag(const QPointF& w, Qt::KeyboardModifiers mods);
     void drawGizmo(QPainter& p, const Gizmo& g) const;
     void drawSkins(QPainter& p, const QTransform& view) const;
+    void drawLattice(QPainter& p, const QTransform& view) const;
+    bool selectedLattice(toms::anim::LatticeView& out) const;   // the selected node's, placed in content space
 
     AnimDocument* m_doc;
     Tool m_tool = Tool::Move;
@@ -111,6 +117,10 @@ private:
     bool m_showSkin = false;
     EditMode m_mode = EditMode::Object;
     QString m_hoverBone;   // Bones mode: the bone under the cursor
+    int m_hoverPoint = -1;   // Lattice mode: the point under the cursor
+    int m_dragPoint = -1;    // ... being dragged
+    toms::anim::Deform m_dragStartDeform;   // the deform at the playhead when the drag began
+    glm::mat2 m_dragToSprite{1.0f};         // content -> sprite pixels (the drag's direction and scale)
     QRectF m_stage{-128, -128, 256, 256};
     std::vector<toms::anim::NodePose> m_poses;
     std::vector<DrawItem> m_items;

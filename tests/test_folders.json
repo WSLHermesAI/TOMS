@@ -12,6 +12,7 @@
   },
   "files": {
     "smoke/anim_preview.anim": { "tests": ["anim.check_preview", "anim.editor_selftest"], "why": "the anim preview" },
-    "smoke/anim_skin.anim": { "tests": ["anim.check_skin", "smoke.anim_skin"], "why": "the skinned clip (docs/34)" }
+    "smoke/anim_skin.anim": { "tests": ["anim.check_skin", "smoke.anim_skin"], "why": "the skinned clip (docs/34)" },
+    "smoke/anim_deform.anim": { "tests": ["anim.check_deform", "smoke.anim_deform"], "why": "the deform lattice's demo (docs/34)" }
   }
 }

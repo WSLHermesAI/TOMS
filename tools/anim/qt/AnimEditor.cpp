@@ -16,6 +16,7 @@
 #include "AnimTransport.h"
 #include "AnimViewport.h"
 #include "Icons.h"
+#include "anim_recipes.h"
 #include "mpdi_convert.h"
 
 #include <QAction>
@@ -23,6 +24,7 @@
 #include <QToolButton>
 #include <QApplication>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDir>
@@ -227,9 +229,12 @@ void AnimEditor::createActions()
     m_boneModeAct = makeAction(this, tr("&Bones Mode"), QKeySequence(Qt::Key_B), int(Id::Node));
     m_boneModeAct->setToolTip(tr("Bones mode (B): the skin is shown and a click picks a bone, never a sprite. "
                                  "Auto-Key on: pose the bone (keys); off: place it in the sprite (its rest pose)"));
+    m_latticeModeAct = makeAction(this, tr("&Lattice Mode"), QKeySequence(Qt::Key_L), int(Id::Grid));
+    m_latticeModeAct->setToolTip(tr("Lattice mode (L): the selected sprite's deform lattice; drag a point to key the deform at "
+                                    "the playhead (squash, stretch, breathe). Properties > Lattice sets its size"));
     {
         auto* group = new QActionGroup(this);
-        for (QAction* a : {m_objectModeAct, m_boneModeAct}) {
+        for (QAction* a : {m_objectModeAct, m_boneModeAct, m_latticeModeAct}) {
             a->setCheckable(true);
             group->addAction(a);
         }
@@ -239,6 +244,9 @@ void AnimEditor::createActions()
         });
         connect(m_boneModeAct, &QAction::toggled, this, [this](bool on) {
             if (on) m_viewport->setEditMode(AnimViewport::EditMode::Bones);
+        });
+        connect(m_latticeModeAct, &QAction::toggled, this, [this](bool on) {
+            if (on) m_viewport->setEditMode(AnimViewport::EditMode::Lattice);
         });
     }
     m_insertKeyAct = makeAction(this, tr("&Insert Key at Playhead"), QKeySequence(Qt::Key_K), int(Id::KeyOn));
@@ -366,6 +374,7 @@ void AnimEditor::createMenus()
     edit->addSeparator();
     edit->addAction(m_objectModeAct);
     edit->addAction(m_boneModeAct);
+    edit->addAction(m_latticeModeAct);
     edit->addSeparator();
     edit->addAction(m_moveAct);
     edit->addAction(m_rotateAct);
@@ -396,6 +405,7 @@ void AnimEditor::createMenus()
     key->addAction(tr("Fade Out"), m_keys, &AnimKeyListDock::fadeOut);
     key->addAction(tr("Apply Sprite Sequence"), m_keys, &AnimKeyListDock::spriteSequence);
     key->addAction(tr("Set Ease…"), m_keys, &AnimKeyListDock::setEaseDialog);
+    key->addAction(tr("Motion Recipe…"), this, &AnimEditor::motionRecipeDialog);
     key->addSeparator();
     key->addAction(m_qualifyAct);
 
@@ -482,7 +492,8 @@ void AnimEditor::createToolBars()
     m_mainBar->addSeparator();
     m_mainBar->addAction(m_objectModeAct);   // shown with text: the mode is the first thing to know
     m_mainBar->addAction(m_boneModeAct);
-    for (QAction* a : {m_objectModeAct, m_boneModeAct})
+    m_mainBar->addAction(m_latticeModeAct);
+    for (QAction* a : {m_objectModeAct, m_boneModeAct, m_latticeModeAct})
         if (auto* b = qobject_cast<QToolButton*>(m_mainBar->widgetForAction(a))) b->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_mainBar->addSeparator();
     m_mainBar->addAction(m_moveAct);
@@ -536,7 +547,11 @@ void AnimEditor::readSettings()
     m_autoKeyAct->setChecked(m_doc->autoKey());
     m_snapAct->setChecked(s.value(QStringLiteral("snap"), false).toBool());
     m_showSkinAct->setChecked(s.value(QStringLiteral("showSkin"), false).toBool());
-    (s.value(QStringLiteral("boneMode"), false).toBool() ? m_boneModeAct : m_objectModeAct)->setChecked(true);
+    {
+        const QString mode = s.value(QStringLiteral("editMode")).toString();
+        (mode == QLatin1String("bones") || s.value(QStringLiteral("boneMode"), false).toBool() ? m_boneModeAct
+         : mode == QLatin1String("lattice") ? m_latticeModeAct : m_objectModeAct)->setChecked(true);
+    }
     m_transport->loopAction()->setChecked(s.value(QStringLiteral("loopPreview"), false).toBool());
 }
 
@@ -546,7 +561,9 @@ void AnimEditor::writeSettings() const
     s.setValue(QStringLiteral("autoKey"), m_doc->autoKey());
     s.setValue(QStringLiteral("snap"), m_snapAct->isChecked());
     s.setValue(QStringLiteral("showSkin"), m_showSkinAct->isChecked());
-    s.setValue(QStringLiteral("boneMode"), m_boneModeAct->isChecked());
+    s.setValue(QStringLiteral("editMode"), m_boneModeAct->isChecked() ? QStringLiteral("bones")
+                                           : m_latticeModeAct->isChecked() ? QStringLiteral("lattice") : QStringLiteral("object"));
+    s.remove(QStringLiteral("boneMode"));
     s.setValue(QStringLiteral("loopPreview"), m_transport->loopAction()->isChecked());
 }
 
@@ -917,3 +934,66 @@ void AnimEditor::convertMpdiFolder()
     m_host->statusBar()->showMessage(summary.section(QLatin1Char('\n'), 0, 0), 10000);
 }
 
+void AnimEditor::motionRecipeDialog()
+{
+    const toms::anim::Node* n = m_doc->selectedNode();
+    if (!n) {
+        QMessageBox::information(m_host, tr("Motion Recipe"), tr("Select the node the motion is for first."));
+        return;
+    }
+    QDialog dlg(m_host);
+    dlg.setWindowTitle(tr("Motion Recipe: %1").arg(QString::fromStdString(n->name)));
+    auto* form = new QFormLayout(&dlg);
+    auto* recipe = new QComboBox(&dlg);
+    for (const animed::MotionRecipe& r : animed::motionRecipes()) {
+        const QString title = tr(r.title.c_str()), description = tr(r.description.c_str());   // anim.json has them
+        recipe->addItem(r.bones ? tr("%1 (bones)").arg(title) : title, QString::fromStdString(r.id));
+        recipe->setItemData(recipe->count() - 1, description, Qt::ToolTipRole);
+    }
+    auto* about = new QLabel(&dlg);
+    about->setWordWrap(true);
+    about->setForegroundRole(QPalette::PlaceholderText);
+    auto* start = new QDoubleSpinBox(&dlg);
+    start->setRange(0, 3600);
+    start->setDecimals(3);
+    start->setSingleStep(0.1);
+    start->setSuffix(tr(" s"));
+    start->setValue(m_doc->time());
+    auto* period = new QDoubleSpinBox(&dlg);
+    period->setRange(0.05, 60);
+    period->setDecimals(2);
+    period->setSingleStep(0.1);
+    period->setSuffix(tr(" s"));
+    auto* strength = new QDoubleSpinBox(&dlg);
+    strength->setRange(0.1, 4);
+    strength->setDecimals(2);
+    strength->setSingleStep(0.1);
+    strength->setValue(1.0);
+    strength->setToolTip(tr("1 = the recipe's normal size; 0.5 subtle, 2 strong"));
+    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
+    auto update = [&] {
+        const animed::MotionRecipe* r = animed::findMotionRecipe(recipe->currentData().toString().toStdString());
+        if (!r) return;
+        period->setValue(r->period);
+        const bool fits = !r->bones || n->skinned();
+        about->setText(tr(r->description.c_str()) +
+                       (fits ? QString() : QStringLiteral("\n") + tr("This node has no skin: give it one in Properties > Skin first.")));
+        buttons->button(QDialogButtonBox::Ok)->setEnabled(fits);
+    };
+    connect(recipe, &QComboBox::currentIndexChanged, &dlg, update);
+    form->addRow(tr("Recipe"), recipe);
+    form->addRow(QString(), about);
+    form->addRow(tr("Start"), start);
+    form->addRow(tr("Period"), period);
+    form->addRow(tr("Strength"), strength);
+    form->addRow(new QLabel(tr("It replaces the node's keys of that kind (deform, or its bones' rotations) between the\n"
+                               "start and the end. Loop the clip (or the node) for an idle that repeats."), &dlg));
+    form->addRow(buttons);
+    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+    update();
+    if (dlg.exec() != QDialog::Accepted) return;
+    if (m_doc->applyMotionRecipe(recipe->currentData().toString().toStdString(), float(start->value()), float(period->value()),
+                                 float(strength->value())))
+        m_host->statusBar()->showMessage(tr("Motion recipe written: %1").arg(recipe->currentText()), 4000);
+}

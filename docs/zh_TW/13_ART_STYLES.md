@@ -61,7 +61,11 @@ python tools/make_ui_font.py
 :: 5. 在 art_raw/atlas/game.atlasproj 的 "variants" 加一筆（照 dark16 那筆：id、
 ::    "reference": "../styles/<id>/sprites"、output dir "../styles/<id>/atlas"），然後把風格的圖匯入並存檔
 ::    （編輯器：選這個 variant -> Import From References）。見 docs/14_ATLAS_TOOL.md
-Build\windows-release\bin\atlaspack.exe refs assets\media\atlas\game.atlasproj --variant <id> --import all
+Build\windows-release\bin\atlaspack.exe refs art_raw\atlas\game.atlasproj --variant <id> --import all
+
+:: 6. 風格自己的 sprite 網格（styles/<id>/atlas/game.mesh.json），從它的像素為蒙皮與變形的片段切出
+::    （docs/34_MESH_ANIMATION.md）；之後每次重建圖集也要執行
+python tools/refresh_meshes.py
 ```
 
 `Build/art_out/` 與 `Build/assets_variants/` 不進版控；`assets/media/styles/` 要進版控（那是出貨內容）。

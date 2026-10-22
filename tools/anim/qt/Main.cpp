@@ -56,12 +56,61 @@
 
 #include <cmath>
 #include <cstdio>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <memory>
 
 using namespace animed;
 using toms::anim::Node;
 
 namespace {
+
+// The image a window presents (the game renderer's swap chain included), also behind other windows: PrintWindow
+// with PW_RENDERFULLCONTENT reads it from the compositor. A null image where that is not available.
+QImage presentedImage(QWidget* w)
+{
+#ifdef _WIN32
+    // PrintWindow asks the window to paint, and a new frame would hide what was on the screen before it.
+    auto* canvas = qobject_cast<GameCanvasView*>(w);
+    if (canvas) canvas->holdFrames(true);
+    struct Release { GameCanvasView* c; ~Release() { if (c) c->holdFrames(false); } } release{canvas};
+    const HWND hwnd = reinterpret_cast<HWND>(w->winId());
+    RECT rc{};
+    if (!GetClientRect(hwnd, &rc) || rc.right <= 0 || rc.bottom <= 0) return QImage();
+    const int width = rc.right, height = rc.bottom;
+    HDC screenDc = GetDC(nullptr);
+    HDC dc = CreateCompatibleDC(screenDc);
+    HBITMAP bmp = CreateCompatibleBitmap(screenDc, width, height);
+    HGDIOBJ old = SelectObject(dc, bmp);
+    const bool printed = PrintWindow(hwnd, dc, PW_CLIENTONLY | PW_RENDERFULLCONTENT) != 0;
+    QImage img(width, height, QImage::Format_RGB32);
+    BITMAPINFO bi{};
+    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+    bi.bmiHeader.biWidth = width;
+    bi.bmiHeader.biHeight = -height;   // top-down
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    SelectObject(dc, old);
+    const bool read = GetDIBits(dc, bmp, 0, UINT(height), img.bits(), &bi, DIB_RGB_COLORS) == height;
+    DeleteObject(bmp);
+    DeleteDC(dc);
+    ReleaseDC(nullptr, screenDc);
+    return printed && read ? img : QImage();
+#else
+    (void)w;
+    return QImage();
+#endif
+}
+
+// The game atlas's coin as packed (trimmed: smaller than its 32 x 32 image).
+QSize gameCoinSize(const AnimDocument* doc)
+{
+    const toms::AtlasRegion* r = doc->atlasCount() > 0 ? doc->atlasAt(0).atlas.find("coin") : nullptr;
+    return r ? QSize(r->w, r->h) : QSize();
+}
 
 void processEvents()
 {
@@ -299,7 +348,7 @@ bool atlasReferences(AnimEditor* ed, const QString& workDir, const QString& outD
     ok &= check(gem->spriteKeys.size() == 3 && gem->spriteKeys[0].v == "game:coin" && gem->spriteKeys[1].v == "extra:spark" &&
                     gem->spriteKeys[2].v == "extra:coin" && steps() == 3,
                 "(d) sprite keys 0 game:coin, 0.2 extra:spark, 0.4 extra:coin");
-    ok &= check(drawnFrom(ed, "gem", 0.1f, &src) == gamePage && src.size() == QSize(32, 32), "(d) t=0.1: game's coin (32x32)");
+    ok &= check(drawnFrom(ed, "gem", 0.1f, &src) == gamePage && src.size() == gameCoinSize(doc), "(d) t=0.1: game's coin (its packed pixels)");
     ok &= check(drawnFrom(ed, "gem", 0.3f, &src) == extraPage && src == QRect(0, 0, 16, 16), "(d) t=0.3: extra's spark");
     ok &= check(drawnFrom(ed, "gem", 0.5f, &src) == extraPage && src == QRect(16, 0, 16, 16), "(d) t=0.5: extra's coin");
     for (float t : {0.1f, 0.3f, 0.5f}) ok &= check(checkDrawing(ed, t), "(d) viewport quads == appendQuads");
@@ -788,7 +837,7 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
         for (const AnimViewport::DrawItem& it : items) {
             const Node* n = nodeAt(doc->clip()->root, it.path);
             if (n && n->name == "spark") spark = it.images == &doc->atlasAt(1).images && it.src == QRect(0, 0, 16, 16);
-            if (n && n->name == "coin") coin = it.images == &doc->atlasAt(0).images && it.src.size() == QSize(32, 32);
+            if (n && n->name == "coin") coin = it.images == &doc->atlasAt(0).images && it.src.size() == gameCoinSize(doc);
         }
         ok &= check(spark && coin, "(c) viewport: spark from extra.atlas's page, coin from game.atlas's");
         ok &= check(checkDrawing(ed, 0.0f), "(c) viewport quads == appendQuads over both atlases");
@@ -911,7 +960,7 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
                         "skin: Properties says its mesh, 3 bones, automatic weights");
             // Bone 2's colour (head, yellow; the hip's red sits under the Move arrow): none with Show Skin off, its segment and joint with it on.
             auto boneColoured = [&](int bone) {
-                const QImage img = view->grab().toImage();
+                const QImage img = view->usingGameRenderer() ? presentedImage(view) : view->grab().toImage();
                 const QColor c = AnimViewport::boneColor(bone);
                 int n = 0;
                 for (int y = 0; y < img.height(); y++)
@@ -1076,12 +1125,22 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
             ok &= check(!ed->propertiesDock()->bonesOutsideShown(), "bones inside: no warning");
             while (doc->undoStack()->index() > fixAt) doc->undoStack()->undo();
 
-            // Mesh grid: the golem's mesh cut again on 8 x 8 cells (not written: the shipped mesh file stays).
+            // Mesh grid: the golem's node asks for 8 x 8 cells; its mesh is cut again at once (one undo step).
             doc->selectNodeByName(QStringLiteral("golem"));
             processEvents();
-            ok &= check(ed->propertiesDock()->meshGridBox()->isVisibleTo(ed->propertiesDock()) && doc->meshGrid("golem") == 4,
+            int gc = 0, gr = 0;
+            ok &= check(ed->propertiesDock()->meshGridBox()->isVisibleTo(ed->propertiesDock()) &&
+                            doc->meshGridOf(*doc->selectedNode(), gc, gr) && gc == 4 && gr == 4,
                         "mesh grid: shown for the skinned golem, 4 x 4 (8-pixel cells of a 32-pixel sprite)");
-            ok &= check(doc->setMeshGrid("golem", 8, false) && doc->meshGrid("golem") == 8, "mesh grid: cut again on 8 x 8");
+            ok &= check(doc->atlasMeshes(0).find(doc->atlasSet().meshKeyFor("golem", *doc->selectedNode())) != nullptr,
+                        "mesh grid: the golem's mesh is in the atlas's mesh file (key \"golem\")");
+            const int gridAt = doc->undoStack()->index();
+            ok &= check(doc->setMeshGrid(8, 8) && doc->meshGridOf(*doc->selectedNode(), gc, gr) && gc == 8 && gr == 8 &&
+                            doc->selectedNode()->meshGrid[0] == 8 && doc->undoStack()->index() == gridAt + 1,
+                        "mesh grid: 8 x 8, kept in the node, one undo step");
+            ok &= check(doc->atlasSet().meshKeyFor("golem", *doc->selectedNode()) == "golem@8x8" &&
+                            doc->atlasMeshes(0).find("golem@8x8") != nullptr && doc->atlasMeshes(0).find("golem") != nullptr,
+                        "mesh grid: the 8 x 8 mesh is added beside the 8-pixel one (other clips may use that)");
             processEvents();
             ok &= check(ed->propertiesDock()->skinInfoText().contains(QStringLiteral("Mesh: ")) &&
                             !ed->propertiesDock()->skinInfoText().contains(QStringLiteral(" 25 points")),
@@ -1090,7 +1149,23 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
             processEvents();
             ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("skin_grid8.png"))), "skin_grid8.png");
             ed->showSkinAction()->setChecked(false);
-            doc->setMeshGrid("golem", 4, false);
+            while (doc->undoStack()->index() > gridAt) doc->undoStack()->undo();
+
+            // Motion recipes (docs/16 section 7): on the golem, one undo step each; a bone recipe needs a skin.
+            doc->selectNodeByName(QStringLiteral("golem"));
+            const int recipeAt = doc->undoStack()->index();
+            ok &= check(doc->applyMotionRecipe("breathe", 0.0f, 1.0f, 1.0f) && doc->selectedNode()->deformKeys.size() >= 3 &&
+                            doc->undoStack()->index() == recipeAt + 1,
+                        "recipe: breathe keys the golem's lattice, one undo step");
+            const toms::anim::Node* headBefore = toms::anim::findNode(doc->clip()->root, "head");
+            const size_t headKeys = headBefore ? headBefore->rotKeys.size() : 0;
+            ok &= check(doc->applyMotionRecipe("nod", 2.0f, 0.8f, 1.0f) && doc->undoStack()->index() == recipeAt + 2 &&
+                            toms::anim::findNode(doc->clip()->root, "head")->rotKeys.size() > headKeys,
+                        "recipe: nod keys the skin's last bone");
+            doc->selectNodeByName(QStringLiteral("hip"));
+            ok &= check(!doc->applyMotionRecipe("swing", 0.0f, 0.0f, 1.0f) && doc->undoStack()->index() == recipeAt + 2,
+                        "recipe: a bone recipe on a node without a skin is refused");
+            while (doc->undoStack()->index() > recipeAt) doc->undoStack()->undo();
         } else {
             ok &= check(false, "skin: open tests/smoke/anim_skin.anim");
         }
@@ -1123,6 +1198,115 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
             ok &= check(doc->drawClip() == doc->clip(), "character: back to as made");
         } else {
             ok &= check(false, "character: open archer_bow.anim");
+        }
+    }
+    {   // Lattice mode (docs/34 step 4): drag a lattice point of a sprite with no deform yet -> a deform key at the playhead.
+        const QString deformFile = QFileInfo(file).dir().filePath(QStringLiteral("anim_deform.anim"));
+        AnimViewport* view = ed->viewport();
+        if (!QFileInfo::exists(deformFile) || !ed->openFile(deformFile, false)) {
+            ok &= check(false, "lattice: open tests/smoke/anim_deform.anim");
+        } else {
+            view->resize(640, 480);
+            processEvents();
+            view->frameClip();
+            doc->setTime(0.25f);
+            ed->latticeModeAction()->setChecked(true);
+            ok &= check(view->editMode() == AnimViewport::EditMode::Lattice && doc->selectNodeByName(QStringLiteral("plain")),
+                        "lattice: L mode, the plain slime selected");
+            processEvents();
+            const toms::anim::Node* plain = doc->selectedNode();
+            ok &= check(plain && plain->deformKeys.empty() && plain->latticeCols() == 4, "lattice: no deform yet, 4 x 4");
+            // where point 5 (second row, second column) is drawn
+            std::vector<toms::anim::NodePose> poses;
+            toms::anim::evaluate(*doc->clip(), doc->previewTime(), poses);
+            toms::anim::LatticeView lv;
+            QPointF at(-1, -1);
+            for (size_t i = 0; i < poses.size(); i++)
+                if (poses[i].node == plain && toms::anim::latticeView(poses, i, doc->atlasSet(), toms::anim::placement(0, 0), lv))
+                    at = view->widgetPos(QPointF(lv.points[5].x, lv.points[5].y));
+            ok &= check(view->latticePointAt(at) == 5, "lattice: point 5 is found under its square");
+            const int undoAt = doc->undoStack()->index();
+            auto send = [&](QEvent::Type type, const QPointF& pt, Qt::MouseButtons held) {
+                QMouseEvent e(type, pt, view->mapToGlobal(pt), type == QEvent::MouseMove ? Qt::NoButton : Qt::LeftButton, held, Qt::NoModifier);
+                QApplication::sendEvent(view, &e);
+                processEvents();
+            };
+            send(QEvent::MouseButtonPress, at, Qt::LeftButton);
+            for (int i = 1; i <= 4; i++) send(QEvent::MouseMove, at + QPointF(0, 5.0 * i), Qt::LeftButton);
+            send(QEvent::MouseButtonRelease, at + QPointF(0, 20), Qt::NoButton);
+            plain = doc->selectedNode();
+            ok &= check(plain && plain->deformKeys.size() == 1 && std::fabs(plain->deformKeys[0].t - 0.25f) < 1e-3f &&
+                            plain->deformKeys[0].v.count(5) && plain->deformKeys[0].v.at(5).y > 0.5f && plain->deformKeys[0].v.size() == 1,
+                        "lattice: one deform key at the playhead, point 5 moved down");
+            ok &= check(doc->undoStack()->index() == undoAt + 1, "lattice: the whole drag is one undo step");
+            ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("lattice_drag.png"))), "lattice_drag.png");
+            // a smaller lattice keeps the key: point 5 (col 1, row 1 of 4 x 4) -> point 4 (col 1, row 1 of 3 x 3)
+            ok &= check(doc->setLatticeSize(3, 3) && doc->selectedNode()->latticeCols() == 3 &&
+                            doc->selectedNode()->deformKeys[0].v.count(4) == 1,
+                        "lattice: resized to 3 x 3, the moved point remapped");
+            while (doc->undoStack()->index() > undoAt) doc->undoStack()->undo();
+            ok &= check(doc->selectedNode() && doc->selectedNode()->deformKeys.empty(), "lattice: undo");
+            // A key row shows its time: the slime's empty deform key at t = 1 draws it at rest, also clicked during
+            // playback, and also when the playhead already is at 1 with a preview run on past it (looping nodes).
+            ok &= check(doc->selectNodeByName(QStringLiteral("slime")), "lattice: the deformed slime selected");
+            QTableWidget* keys = ed->keyListDock()->table();
+            auto wait = [&](int ms) { QElapsedTimer w; w.start(); while (w.elapsed() < ms) processEvents(); };
+            auto rowAt = [&](const QString& t) {
+                for (int r = 0; r < keys->rowCount(); r++)
+                    if (keys->item(r, 1) && keys->item(r, 1)->text() == t) return r;
+                return -1;
+            };
+            auto click = [&](int row) {
+                const QRect rc = keys->visualRect(keys->model()->index(row, 1));
+                for (QEvent::Type type : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease}) {
+                    QMouseEvent e(type, QPointF(rc.center()), keys->viewport()->mapToGlobal(QPointF(rc.center())), Qt::LeftButton,
+                                  type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton, Qt::NoModifier);
+                    QApplication::sendEvent(keys->viewport(), &e);
+                }
+            };
+            auto mostShown = [&] {   // the largest offset of the slime's lattice on screen
+                std::vector<toms::anim::NodePose> ps;
+                toms::anim::evaluate(*doc->clip(), doc->previewTime(), ps);
+                float most = 0;
+                for (const auto& p : ps)
+                    if (p.node == doc->selectedNode())
+                        for (const glm::vec2& o : toms::anim::deformAt(*p.node, p.time)) most = std::max(most, glm::length(o));
+                return most;
+            };
+            const int halfRow = rowAt(QStringLiteral("0.500")), lastRow = rowAt(QStringLiteral("1.000"));
+            ed->transport()->play();
+            wait(200);
+            if (halfRow >= 0) click(halfRow);
+            wait(100);
+            ok &= check(halfRow >= 0 && !ed->transport()->isPlaying() && doc->previewTime() == 0.5f && mostShown() > 5,
+                        "lattice: the t = 0.5 row clicked during playback: paused there, deformed");
+            if (lastRow >= 0) click(lastRow);
+            wait(100);
+            ok &= check(lastRow >= 0 && doc->previewTime() == 1.0f && mostShown() < 1e-4f,
+                        "lattice: the t = 1 row (an empty deform key): the slime at rest");
+            // What is on the screen (not the widget's own grab: the game renderer presents to the window): one click
+            // = one repaint, and that frame must be the one shown, not the frame before it (bgfx presents a frame at
+            // the next bgfx::frame() unless flip-after-render is on).
+            if (view->usingGameRenderer()) {
+                // One repaint, captured before anything else can paint again: a click can bring two (the press
+                // moves the row, the release clicks it), which would hide a frame shown one late.
+                auto settle = [&] { for (int i = 0; i < 3; i++) { view->repaint(); wait(50); } };
+                doc->setTime(0.5f);
+                settle();
+                const QImage half = presentedImage(view);
+                doc->setTime(1.0f);
+                view->repaint();
+                const QImage once = presentedImage(view);
+                settle();
+                const QImage settled = presentedImage(view);
+                ok &= check(!once.isNull() && once != half && once == settled,
+                            "lattice: one repaint puts the new time on the screen (not the frame before)");
+            }
+            doc->setPreviewTime(1.5f);   // as playback leaves it when looping nodes run on past the end
+            if (lastRow >= 0) click(lastRow);
+            ok &= check(doc->previewTime() == 1.0f && mostShown() < 1e-4f, "lattice: clicking the playhead's own row ends a run-on preview");
+            while (doc->undoStack()->index() > undoAt) doc->undoStack()->undo();
+            ed->objectModeAction()->setChecked(true);
         }
     }
     std::printf("selftest: %s\n", ok ? "ok" : "FAILED");

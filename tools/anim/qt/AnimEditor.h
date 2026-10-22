@@ -48,6 +48,7 @@ public:
     QList<QAction*> nodeClipboardActions() const { return {m_cutAct, m_copyAct, m_pasteAct, m_pasteSiblingAct}; }
     QAction* objectModeAction() const { return m_objectModeAct; }
     QAction* boneModeAction() const { return m_boneModeAct; }
+    QAction* latticeModeAction() const { return m_latticeModeAct; }
     AnimNodesDock* nodesDock() const { return m_nodes; }
     AnimSpritesDock* spritesDock() const { return m_sprites; }
     AnimPropertiesDock* propertiesDock() const { return m_props; }
@@ -70,6 +71,8 @@ public:
     // Sprites dropped on a time area: asks for the time gap (Yes / No), then one sprite key per
     // reference on the selected node at time, time + gap, ... (one undo step). False = nothing inserted.
     bool insertSpriteKeys(const QStringList& refs, float time);
+    // Key > Motion Recipe: picks a recipe for the selected node (anim_recipes.h), its start, period and strength.
+    void motionRecipeDialog();
 
     static QSettings settings();
     void readSettings();
@@ -113,7 +116,7 @@ private:
     QAction *m_newAct, *m_openAct, *m_saveAct, *m_saveAsAct, *m_addAtlasAct, *m_reloadAtlasAct, *m_quitAct;
     QAction *m_undoAct, *m_redoAct;
     QAction* m_showSkinAct = nullptr;   // View > Show Skin (AnimViewport::setShowSkin)
-    QAction *m_objectModeAct = nullptr, *m_boneModeAct = nullptr;   // what a viewport click picks (AnimViewport::EditMode)
+    QAction *m_objectModeAct = nullptr, *m_boneModeAct = nullptr, *m_latticeModeAct = nullptr;   // AnimViewport::EditMode
     QAction *m_cutAct = nullptr, *m_copyAct = nullptr, *m_pasteAct = nullptr, *m_pasteSiblingAct = nullptr;   // nodes
     void copyNode(bool cut);
     void pasteNode(bool sibling);

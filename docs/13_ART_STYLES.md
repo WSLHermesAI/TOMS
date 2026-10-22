@@ -65,7 +65,11 @@ python tools/make_ui_font.py
 :: 5. Add an entry to "variants" in art_raw/atlas/game.atlasproj (like the dark16 one: id,
 ::    "reference": "../styles/<id>/sprites", output dir "../styles/<id>/atlas"), then import the style's images and save
 ::    (editor: select this variant -> Import From References). See docs/14_ATLAS_TOOL.md
-Build\windows-release\bin\atlaspack.exe refs assets\media\atlas\game.atlasproj --variant <id> --import all
+Build\windows-release\bin\atlaspack.exe refs art_raw\atlas\game.atlasproj --variant <id> --import all
+
+:: 6. The style's own sprite meshes (styles/<id>/atlas/game.mesh.json), cut from its pixels for the skinned and
+::    deformed clips (docs/34_MESH_ANIMATION.md); also after any later rebuild of the atlases
+python tools/refresh_meshes.py
 ```
 
 `Build/art_out/` and `Build/assets_variants/` are not version-controlled; `assets/media/styles/` is

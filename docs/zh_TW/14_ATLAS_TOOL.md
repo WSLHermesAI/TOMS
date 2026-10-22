@@ -297,18 +297,6 @@ atlaspack import cocos\ui.plist --project ui\ui.atlasproj :: Cocos / TexturePack
 （`.ti`）和變形（`.mx`）不會帶過來（見第 7 節）。`--images DIR` 改成把 unit
 寫成 PNG，並建立資料夾專案。
 
-### Sprite 網格
-
-```bat
-atlaspack meshes assets\media\atlas\game.atlas            :: 在旁邊寫出 game.mesh.json（純文字）
-atlaspack meshes assets\media\atlas\game.atlas --bin      :: game.mesh.json + game.mesh.bin（glTF 式）
-atlaspack meshes assets\media\atlas\game.atlas --check    :: 檔案與重新產生的不同時以 1 結束
-```
-
-依每個 sprite 的 alpha 切出它的三角網格（每格 `--cell` 像素，預設 8；`--alpha-threshold`），給蒙皮的片段用
-（[34_MESH_ANIMATION.md](34_MESH_ANIMATION.md)）。子 sprite 與旋轉的區域沒有網格（以四邊形繪製）；標為
-`"source": "hand"` 的網格會保留。重建圖集後要再執行一次，每種美術風格也一樣。
-
 ## 6. 測試
 
 `atlas_core_test`（CTest `atlas.core`）：
@@ -339,6 +327,7 @@ MagicTower 目錄中所有 95 個可讀的檔案都通過。那裡有一個檔�
 ## 7. 刻意省略的功能
 
 - **舊的三角網格和變形**（`.ti`、`.mx`，舊的 Triangulator 分頁）不會匯入。TOMS 有自己的 sprite 網格
-  （`atlaspack meshes`，§5），以蒙皮彎曲它們（[34_MESH_ANIMATION.md](34_MESH_ANIMATION.md)）。舊的 PI.exe 仍可編輯舊檔案。
+  （圖集旁的 `<atlas>.mesh.json`，只由動畫工具寫出：圖集工具從不讀寫它），並以蒙皮與變形晶格彎曲它們
+  （[34_MESH_ANIMATION.md](34_MESH_ANIMATION.md)）。舊的 PI.exe 仍可編輯舊檔案。
 - **打包時旋轉**：見 §2。
 - **`.pib`/`.pngb`**（FM79979 的 Huffman 壓縮副本）和 **DDS**：不寫出。單純的 `.pi` + `.png` 到哪裡都能載入。

@@ -55,7 +55,8 @@ python make_sprites.py ..\..\output\toms_sprites --plan ..\style_profiles\toms_s
 python make_sprites.py ..\..\output\toms_sprites --plan ..\style_profiles\toms_sprites.json --only m_yeti --force   # 重做一張
 python sprite_sheet.py sheet.png ..\..\output\toms_sprites --big                                  # 檢視
 python add_toms_types.py ..\..\output\toms_sprites    # 放進遊戲：圖、清單、草稿類型、名稱
-Build\windows-release\bin\atlaspack.exe build assets\media\atlas\game.atlasproj --all-variants      # 重建圖集
+Build\windows-release\bin\atlaspack.exe build art_raw\atlas\game.atlasproj --all-variants      # 重建圖集
+python tools\refresh_meshes.py                       # 依新的像素重新切 sprite 網格（docs/34）
 ```
 
 計畫中的類別有 `style`（提示詞開頭）、`reference`（外觀參考哪些遊戲圖）、`mode`，衍生類別還有 `base` 與 `denoise`。

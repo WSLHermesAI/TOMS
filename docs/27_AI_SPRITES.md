@@ -58,7 +58,8 @@ python make_sprites.py ..\..\output\toms_sprites --plan ..\style_profiles\toms_s
 python make_sprites.py ..\..\output\toms_sprites --plan ..\style_profiles\toms_sprites.json --only m_yeti --force   # redo one
 python sprite_sheet.py sheet.png ..\..\output\toms_sprites --big                                  # look at them
 python add_toms_types.py ..\..\output\toms_sprites    # into the game: sprites, manifest, draft types, names
-Build\windows-release\bin\atlaspack.exe build assets\media\atlas\game.atlasproj --all-variants      # rebuild the atlas
+Build\windows-release\bin\atlaspack.exe build art_raw\atlas\game.atlasproj --all-variants      # rebuild the atlas
+python tools\refresh_meshes.py                       # the sprite meshes, cut again from the new pixels (docs/34)
 ```
 
 A category in the plan has its `style` (the prompt's start), `reference` (which game sprites the look follows),

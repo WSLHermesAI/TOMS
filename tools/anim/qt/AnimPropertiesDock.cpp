@@ -119,7 +119,7 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
                               "Loop: plays first..last key again, forever, also after the clip has ended."));
     m_skin = new QLineEdit(m_nodeBox);
     m_skin->setPlaceholderText(tr("(not skinned)"));
-    m_skin->setToolTip(tr("Bones that bend this sprite's mesh: node names of this clip, comma separated. Empty = not skinned (drawn as a quad). The weights are made from the rest pose; the sprite needs a mesh beside its atlas (atlaspack meshes). docs/34_MESH_ANIMATION.md"));
+    m_skin->setToolTip(tr("Bones that bend this sprite's mesh: node names of this clip, comma separated. Empty = not skinned (drawn as a quad). The weights are made from the rest pose; its mesh is cut from the sprite and saved with the .anim (<name>.mesh.json). docs/34_MESH_ANIMATION.md"));
     nf->addRow(tr("Name"), m_name);
     nf->addRow(tr("Sprite"), m_sprite);
     nf->addRow(tr("Playback"), m_playback);
@@ -151,18 +151,31 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
         connect(fix, &QPushButton::clicked, this, [this] { m_doc->parentBonesUnder(m_doc->selectedPath()); });
         nf->addRow(QString(), m_bonesOutside);
     }
-    m_meshGrid = new QSpinBox(m_nodeBox);
-    m_meshGrid->setRange(1, 32);
-    m_meshGrid->setKeyboardTracking(false);
-    m_meshGrid->setPrefix(tr("cells: "));
-    m_meshGrid->setToolTip(tr("The sprite's mesh: cut again from its alpha on N x N cells (more cells bend more smoothly). "
-                              "Saved at once to the mesh file beside its atlas, for every clip using the sprite"));
-    nf->addRow(tr("Mesh grid"), m_meshGrid);
-    connect(m_meshGrid, &QSpinBox::valueChanged, this, [this](int n) {
-        if (m_updating) return;
-        if (const Node* sel = m_doc->selectedNode()) m_doc->setMeshGrid(toms::anim::spriteAt(*sel, m_doc->time()), n);
-        refresh();
-    });
+    m_meshCols = new QSpinBox(m_nodeBox);
+    m_meshRows = new QSpinBox(m_nodeBox);
+    for (QSpinBox* b : {m_meshCols, m_meshRows}) {
+        b->setRange(1, toms::anim::kMaxMeshGrid);
+        b->setKeyboardTracking(false);
+        b->setToolTip(tr("This node's mesh: its sprite cut from its alpha on cells across x down (more cells bend more "
+                         "smoothly). Kept in the node; the mesh is saved with the .anim (<name>.mesh.json)"));
+        connect(b, &QSpinBox::valueChanged, this, [this] {
+            if (!m_updating) m_doc->setMeshGrid(m_meshCols->value(), m_meshRows->value());
+        });
+    }
+    m_meshGridRow = row(m_nodeBox, {{QStringLiteral("x"), m_meshCols}, {QStringLiteral("y"), m_meshRows}});
+    nf->addRow(tr("Mesh grid"), m_meshGridRow);
+    m_latticeCols = new QSpinBox(m_nodeBox);
+    m_latticeRows = new QSpinBox(m_nodeBox);
+    for (QSpinBox* b : {m_latticeCols, m_latticeRows}) {
+        b->setRange(2, toms::anim::kMaxLattice);
+        b->setKeyboardTracking(false);
+        b->setToolTip(tr("The deform lattice: points across and down over the sprite (default 4 x 4). View > Lattice Mode "
+                         "(L) shows it; drag a point to key the deform at the playhead"));
+        connect(b, &QSpinBox::valueChanged, this, [this] {
+            if (!m_updating) m_doc->setLatticeSize(m_latticeCols->value(), m_latticeRows->value());
+        });
+    }
+    nf->addRow(tr("Lattice"), row(m_nodeBox, {{QStringLiteral("x"), m_latticeCols}, {QStringLiteral("y"), m_latticeRows}}));
     layout->addWidget(m_nodeBox);
 
     // ---- at the playhead ----
@@ -372,7 +385,7 @@ QString AnimPropertiesDock::skinInfo(const Node& n) const
     case toms::anim::SkinState::NoSprite: return tr("No sprite to bend.");
     case toms::anim::SkinState::Rotated: return tr("The sprite is rotated in its atlas: it has no mesh and draws as a quad.");
     case toms::anim::SkinState::NoMesh:
-        return tr("No mesh for this sprite: run \"atlaspack meshes\" on its atlas. Until then it draws as a quad.");
+        return tr("No mesh for this sprite (a child sprite, or no visible pixels): it draws as a quad.");
     case toms::anim::SkinState::Ok: break;
     }
     QString text = tr("Mesh: %1 points, %2 triangles. %3 bone(s), weights %4. View > Show Skin shows them.")
@@ -423,12 +436,17 @@ void AnimPropertiesDock::refresh()
         m_bonesOutside->setVisible(!outside.isEmpty());
         m_bonesOutsideText->setText(tr("Bones outside this sprite: %1. Moving the sprite in Object mode slides its mesh off "
                                        "them; to move the whole object, put them under it.").arg(outside.join(QStringLiteral(", "))));
-        const std::string sprite = toms::anim::spriteAt(*n, m_doc->time());
-        const int grid = n->skinned() ? m_doc->meshGrid(sprite) : 0;
-        m_meshGrid->setVisible(grid > 0);
+        int cols = 0, rows = 0;
+        const bool grid = n->usesMesh() && m_doc->meshGridOf(*n, cols, rows);
+        m_meshGridRow->setVisible(grid);
         if (auto* form = qobject_cast<QFormLayout*>(m_nodeBox->layout()))
-            if (QWidget* label = form->labelForField(m_meshGrid)) label->setVisible(grid > 0);
-        if (grid > 0) m_meshGrid->setValue(grid);
+            if (QWidget* label = form->labelForField(m_meshGridRow)) label->setVisible(grid);
+        if (grid) {
+            m_meshCols->setValue(cols);
+            m_meshRows->setValue(rows);
+        }
+        m_latticeCols->setValue(n->latticeCols());
+        m_latticeRows->setValue(n->latticeRows());
     } else {
         m_nodeBox->setTitle(tr("Node"));
     }

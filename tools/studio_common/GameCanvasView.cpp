@@ -264,6 +264,7 @@ bool GameCanvasView::attach()
         cfg.nativeWindow = reinterpret_cast<void*>(winId());
         cfg.width = pw;
         cfg.height = ph;
+        cfg.flipAfterRender = true;   // drawn on demand (a click, an edit): show this frame now, not with the next one
         if (const char* r = std::getenv("TOMS_RENDERER")) cfg.renderer = r;
         std::string err;
         if (!toms::next::bgfxHostInit(cfg, err)) {   // QPainter from now on, for every canvas
@@ -305,6 +306,7 @@ void GameCanvasView::paintEvent(QPaintEvent* e)
         CanvasView::paintEvent(e);
         return;
     }
+    if (m_hold) return;
     BgfxRenderer& ren = *host().ren;
     preparePaint();
     const double dpr = devicePixelRatioF();

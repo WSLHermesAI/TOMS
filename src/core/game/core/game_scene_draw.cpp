@@ -327,15 +327,18 @@ void Game::drawPreviewMesh() {
     const toms::AtlasRegion* r = previewMeshSprite_.empty() ? nullptr : spriteAtlas_.find(previewMeshSprite_);
     if (!r || r->rotated) return;
     constexpr int kCells = 8;
-    const float w = r->w * 4.0f, h = r->h * 4.0f;
-    const float x0 = ren->width() / 2.0f - w - 16.0f, y0 = ren->height() * 0.65f - h / 2.0f;
+    // The sprite's whole original frame is laid out (4x); a trimmed region's pixels sit at their offset inside it.
+    const float fw = r->origW * 4.0f, fh = r->origH * 4.0f;
+    const float w = r->w * 4.0f, h = r->h * 4.0f, ox = r->offX * 4.0f, oy = r->offY * 4.0f;
+    const float x0 = ren->width() / 2.0f - fw - 16.0f, y0 = ren->height() * 0.65f - fh / 2.0f;
     const float t = (float)(previewMeshMs_ / 1000.0);
     previewMeshVerts_.clear();
     for (int j = 0; j <= kCells; j++)
         for (int i = 0; i <= kCells; i++) {
             const float fx = (float)i / kCells, fy = (float)j / kCells;
-            const float sway = std::sin(t * 4.0f + fy * 3.0f) * w * 0.12f * (1.0f - fy);
-            previewMeshVerts_.push_back({x0 + fx * w + sway, y0 + fy * h,
+            const float down = (oy + fy * h) / fh;   // 0 at the frame's top, 1 at its bottom: the feet stay put
+            const float sway = std::sin(t * 4.0f + down * 3.0f) * fw * 0.12f * (1.0f - down);
+            previewMeshVerts_.push_back({x0 + ox + fx * w + sway, y0 + oy + fy * h,
                                          r->uv[0] + fx * (r->uv[2] - r->uv[0]), r->uv[1] + fy * (r->uv[3] - r->uv[1])});
         }
     previewMeshIdx_.clear();
@@ -352,7 +355,7 @@ void Game::drawPreviewMesh() {
     m.indexCount = (uint32_t)previewMeshIdx_.size();
     ren->drawMesh(m);
     Quad q;
-    q.rect[0] = ren->width() / 2.0f + 16.0f; q.rect[1] = y0; q.rect[2] = w; q.rect[3] = h;
+    q.rect[0] = ren->width() / 2.0f + 16.0f + ox; q.rect[1] = y0 + oy; q.rect[2] = w; q.rect[3] = h;
     std::copy(r->uv, r->uv + 4, q.uv);
     for (float& c : q.tint) c = 1.0f;
     ren->drawSprite(q);

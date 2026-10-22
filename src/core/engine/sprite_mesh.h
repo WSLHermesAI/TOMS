@@ -1,12 +1,14 @@
-// sprite_mesh.h -- triangle meshes of atlas sprites (docs/34_MESH_ANIMATION.md): what a skinned or deformed sprite
-// is bent with. A mesh belongs to a sprite, not to a clip, so it lives next to the atlas, in "<atlas>.mesh.json"
-// (game.atlas -> game.mesh.json), keyed by sprite name. Like glTF, the numbers are either in the JSON itself (plain
-// text) or in a binary buffer beside it ("<atlas>.mesh.bin"); the writer picks, the reader takes both.
+// sprite_mesh.h -- triangle meshes of sprites (docs/34_MESH_ANIMATION.md): what a skinned or deformed sprite is bent
+// with. Each atlas has one mesh file beside it, "game.atlas" -> "game.mesh.json" (spriteMeshPath), keyed by
+// anim_player.h meshKey ("golem", "golem@6x8" for a node's grid) and shared by every clip using the atlas. Only the anim
+// tools write it (the editor merges a clip's meshes in on save; `anim_editor --headless meshes`); the atlas tool never
+// touches it. Like glTF, the numbers are either in the JSON itself (plain text) or in a binary buffer beside it
+// ("game.mesh.bin"); the writer picks, the reader takes both. "version" is the first key.
 //
 //   { "version": 1,
 //     "buffers": [{"uri": "game.mesh.bin", "byteLength": 1234}],          // only with a binary buffer
 //     "meshes": {
-//       "golem": { "source": "alpha", "cells": [8, 8],                   // made from the alpha, or "hand"; the grid
+//       "golem@8x8": { "source": "alpha", "cells": [8, 8],          // made from the alpha, or "hand"; the grid
 //                  "vertices": [x, y, ...],  "triangles": [i, j, k, ...] },          // plain text, or
 //       "slime": { "vertexCount": 25, "vertices":  {"buffer": 0, "byteOffset": 0},    // float32 x, y each
 //                  "indexCount": 96, "triangles": {"buffer": 0, "byteOffset": 200} }  // uint16, little-endian
@@ -26,9 +28,9 @@ namespace toms {
 struct SpriteMesh {
     std::vector<float> vertices;       // x, y pairs, original sprite pixels
     std::vector<uint16_t> triangles;   // three per triangle
-    std::string source = "alpha";      // "alpha": remade by `atlaspack meshes`; "hand": kept as it is
-    // The grid it was cut on, cells across and down (meshFromAlphaGrid; the anim editor's Mesh grid). 0 = cut on
-    // square cells of `atlaspack meshes --cell` pixels. `atlaspack meshes` cuts a mesh with a grid on the same grid again.
+    std::string source = "alpha";      // "alpha": cut again by the anim editor; "hand": kept as it is
+    // The grid it was cut on, cells across and down (meshFromAlphaGrid; a node's meshGrid). 0 = cut on square cells of
+    // anim::kMeshCell pixels (meshFromAlpha).
     int cells[2] = {0, 0};
 
     uint32_t vertexCount() const { return (uint32_t)(vertices.size() / 2); }
@@ -46,6 +48,10 @@ struct SpriteMeshFile {
         return it == meshes.end() ? nullptr : &it->second;
     }
 };
+
+// The format version a mesh file starts with ("version", always the first key) and the newest this build reads. A
+// file without one is an error.
+constexpr int kSpriteMeshVersion = 1;
 
 // "dir/game.atlas" -> "dir/game.mesh.json" (any extension is replaced; none: appended).
 std::string spriteMeshPath(const std::string& atlasPath);

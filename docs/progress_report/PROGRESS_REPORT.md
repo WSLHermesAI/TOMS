@@ -15,7 +15,20 @@
 
 ## ▶ Next Step
 
-**Mesh animation replaces Spine; the bow in battle; editor fixes** (2026-10-21 / 22; [DAILY_2026-10-22.md](DAILY_2026-10-22.md), [../34_MESH_ANIMATION.md](../34_MESH_ANIMATION.md)):
+**Deform lattice, meshes owned by the anim tools, motion recipes** (2026-10-22 evening; not committed;
+[DAILY_2026-10-22.md](DAILY_2026-10-22.md) rows 13–20, [../34_MESH_ANIMATION.md](../34_MESH_ANIMATION.md)):
+- Mesh animation step 4 (deform lattice: `lattice` + `deform` keys, Lattice mode L, Properties Lattice, Deform column).
+- Meshes: one binary file per atlas (`game.mesh.json` + `.bin`, version first), written only by the anim tools (editor on
+  save, `anim_editor --headless meshes`); nodes pick a `meshGrid`; the atlas tool never touches them. Trimmed game atlas
+  kept (trim on in `art_raw/atlas/game.atlasproj`).
+- Step 5 parts 1 and 2: `tools/refresh_meshes.py` after any atlas rebuild / restyle (styles get their own mesh files);
+  motion recipes (breathe, sway, squash, jelly; bone sway, nod, swing) in Key > Motion Recipe and
+  `--headless recipe`; a skinned sprite without a mesh is an error of the check.
+- Editors show a redrawn frame at once (a clicked key row no longer shows the previous time).
+- Changed-only 23 of 170 pass; `anim.editor_selftest`, `studio.i18n_complete`, `atlas.assets_up_to_date` by name pass.
+  **Owner:** commit (75 paths); rebuild the debug build. **Next: step 5 part 3, weight view and painting** (remind).
+
+**Mesh animation replaces Spine; the bow in battle; editor fixes** (2026-10-21 / 22; committed `aeae0d0`; [DAILY_2026-10-22.md](DAILY_2026-10-22.md), [../34_MESH_ANIMATION.md](../34_MESH_ANIMATION.md)):
 - Mesh animation steps 1-3: `drawMesh`, sprite meshes from alpha (`atlaspack meshes`, text or `.bin`), skinning (`.anim` v3).
 - Anim editor: Show Skin, Object / Bones modes, mesh grid, copy / paste nodes, pause on edit, wheel only on a focused field.
 - The bow: `weapon_bow.anim` and the character-only `archer_bow.anim`, bound in code (`CharacterRig`); any character fits

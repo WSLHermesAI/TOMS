@@ -2,7 +2,7 @@
 //
 // The runtime (src/core/engine/anim_clip.h) stores one typed key vector per channel. The editor
 // works on "channels" and "key times" generically: Value carries any channel's value (pos / rot /
-// scale in xyz, color in xyzw, sprite/event in s, visible in b). Key times are compared with
+// scale in xyz, color in xyzw, sprite/event in s, visible in b, deform in d). Key times are compared with
 // kTimeEps, so 0.3 typed into a spin box finds the key at 0.3f.
 #pragma once
 #include "anim_clip.h"
@@ -16,10 +16,12 @@ namespace animed {
 using toms::anim::Ease;
 using toms::anim::Node;
 
-enum class Channel { Pos, Rot, Scale, Color, Sprite, Visible, Event };
-constexpr int kChannelCount = 7;
+// Deform: the lattice's offsets (anim_clip.h; docs/34_MESH_ANIMATION.md). Interpolated (eased) but not one of
+// kInterpolated: "key all channels together" keys the transform and colour only.
+enum class Channel { Pos, Rot, Scale, Color, Sprite, Visible, Event, Deform };
+constexpr int kChannelCount = 8;
 constexpr Channel kAllChannels[kChannelCount] = {Channel::Pos,    Channel::Rot,     Channel::Scale, Channel::Color,
-                                                 Channel::Sprite, Channel::Visible, Channel::Event};
+                                                 Channel::Sprite, Channel::Visible, Channel::Event, Channel::Deform};
 constexpr Channel kInterpolated[4] = {Channel::Pos, Channel::Rot, Channel::Scale, Channel::Color};
 
 constexpr float kTimeEps = 1e-4f;
@@ -32,6 +34,7 @@ struct Value {
     glm::vec4 v{0, 0, 0, 0};
     std::string s;
     bool b = false;
+    toms::anim::Deform d;   // the lattice points that move ("5: 0, -2; 6: 0, -2" as text)
 };
 
 // ---- reading ----

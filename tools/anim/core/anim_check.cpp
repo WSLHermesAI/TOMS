@@ -3,6 +3,9 @@
 #include "mpdi_convert.h"
 
 #include "anim_keys.h"
+#include "anim_meshes.h"
+#include "anim_recipes.h"
+#include "anim_player.h"
 
 #include <cctype>
 #include <cmath>
@@ -44,6 +47,7 @@ struct SpriteLookup {
     std::vector<const CheckAtlas*> all;      // every atlas of the file, loaded or not
     std::vector<const CheckAtlas*> loaded;
     bool complete = true;      // every atlas loaded
+    toms::anim::AtlasSet set;  // the loaded ones with their meshes, as the game looks sprites up
     bool check() const { return !loaded.empty(); }
     const CheckAtlas* byId(const std::string& id) const {
         for (const CheckAtlas* a : all)
@@ -113,7 +117,24 @@ void checkNode(const Node& n, int clip, const Clip& c, std::vector<int>& path, c
             if (!k.v.empty()) used.insert(k.v);
         for (const std::string& s : used) checkSprite(s, clip, path, where, atlases, out);
     }
-    // A skin (docs/34_MESH_ANIMATION.md): every bone must be a node of the clip; a bone no node has bends nothing.
+    // A skin (docs/34_MESH_ANIMATION.md): its sprites need a mesh to bend; every bone must be a node of the clip (a bone
+    // no node has bends nothing).
+    if (n.skinned() && atlases.check()) {
+        Node alone = n;   // this node only: skinnedWithoutMesh walks the children too, and they get their own turn
+        alone.children.clear();
+        Clip one;
+        one.root = std::move(alone);
+        for (const toms::anim::MissingMesh& m : toms::anim::skinnedWithoutMesh(one, atlases.set)) {
+            int entry = -1;
+            const std::string key = atlases.set.meshKeyFor(m.sprite, n, &entry);
+            const CheckAtlas* a = entry >= 0 && entry < (int)atlases.loaded.size() ? atlases.loaded[(size_t)entry] : nullptr;
+            const std::string meshFile = a ? toms::spriteMeshPath(a->path) : std::string("<atlas>.mesh.json");
+            add(out, Problem::Error, clip, path, where,
+                "skinned, but the sprite '" + m.sprite + "' has no mesh '" + key + "' in " + meshFile +
+                    (a && !a->meshes ? " (there is no such file)" : "") +
+                    ": it is drawn as a flat quad, not bent. Save the clip in the anim editor, or run anim_editor --headless meshes");
+        }
+    }
     for (const std::string& bone : n.skinBones)
         if (!hasNodeNamed(c.root, bone))
             add(out, Problem::Warning, clip, path, where, "skin bone '" + bone + "' is no node of this clip: it holds the mesh still");
@@ -160,7 +181,11 @@ std::vector<Problem> checkAnim(const AnimFile& f, const std::vector<CheckAtlas>&
         add(out, Problem::Warning, -1, {}, "file", "no atlas: sprites cannot be shown or checked (add one in the Atlases list)");
     for (const CheckAtlas& a : atlases) {
         lookup.all.push_back(&a);
-        if (a.atlas) lookup.loaded.push_back(&a);
+        if (a.atlas) {
+            lookup.loaded.push_back(&a);
+            lookup.set.add(*a.atlas, a.id);
+            lookup.set.entries.back().meshes = a.meshes;
+        }
         else {
             lookup.complete = false;
             add(out, Problem::Error, -1, {}, "atlas",
@@ -215,6 +240,8 @@ bool isAbsoluteAtlasPath(const std::string& p) {
 }
 
 int headlessMain(const std::vector<std::string>& args) {
+    if (!args.empty() && args[0] == "meshes") return headlessMeshes(args);
+    if (!args.empty() && args[0] == "recipe") return headlessRecipe(args);
     if (args.size() >= 2 && args[0] == "convert-mpdi") {   // the old engine's .mpdi (+ .pi) -> .anim (+ atlas)
         std::string out;
         for (size_t i = 2; i < args.size(); i++) {
@@ -231,7 +258,9 @@ int headlessMain(const std::vector<std::string>& args) {
     if (args.size() < 2 || args[0] != "check") {
         std::fputs("usage: anim_editor --headless check <file.anim> [--atlas [<id>=]<file.atlas>]...\n"
                    "  parses the file, checks sprite references against its atlases and the keys; exit 0 = no errors, 2 = errors\n"
-                   "  --atlas (repeatable) replaces the file's atlas list, in lookup order; the id defaults to the file name\n",
+                   "  --atlas (repeatable) replaces the file's atlas list, in lookup order; the id defaults to the file name\n"
+                   "       anim_editor --headless meshes <file.anim>... [--atlas ...] [--bin|--text] [--check] [--prune]\n"
+                   "  adds the meshes of their skinned and deformed nodes to their atlases' <atlas>.mesh.json (docs/34)\n",
                    stderr);
         return 3;
     }
@@ -269,6 +298,7 @@ int headlessMain(const std::vector<std::string>& args) {
     const bool fromArgs = !overrides.empty();
     const std::vector<toms::anim::AtlasRef>& names = fromArgs ? overrides : f.atlases;
     std::vector<toms::AtlasFile> parsed(names.size());
+    std::vector<toms::SpriteMeshFile> meshes(names.size());
     std::vector<CheckAtlas> refs(names.size());
     int loaded = 0;
     for (size_t i = 0; i < names.size(); i++) {
@@ -284,6 +314,12 @@ int headlessMain(const std::vector<std::string>& args) {
         else {
             r.atlas = &parsed[i];
             loaded++;
+            // Its meshes, when it has a mesh file (skinned sprites need them).
+            std::string merr;
+            if (fs::exists(fs::u8path(toms::spriteMeshPath(p.u8string())))) {
+                if (readMeshFile(toms::spriteMeshPath(p.u8string()), meshes[i], nullptr, &merr)) r.meshes = &meshes[i];
+                else std::fprintf(stderr, "%s: warning: %s\n", file.c_str(), merr.c_str());
+            }
         }
     }
     const std::vector<Problem> problems = checkAnim(f, refs);

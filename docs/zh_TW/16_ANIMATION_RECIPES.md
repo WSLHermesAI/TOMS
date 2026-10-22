@@ -317,3 +317,61 @@
 > 閱讀 docs/16_ANIMATION_RECIPES.md 和 docs/examples/anim_recipes.anim。在 `<file>.anim` 中加入
 > 片段 `<name>`：`<依序發生什麼，附大約的時間>`。Sprite：`<名稱>`。在 `<時機>` 送出事件
 > `<name>`。遵守規則和檢查清單，執行 `--headless check`，並修正它回報的任何問題。
+
+## 7. 給網格用的動作範本
+
+動作範本替一個節點寫出一段有名稱的短動作的 key，讓新的 sprite 或角色不必手動設 key 也能動得像樣：呼吸、擺動、壓扁、
+點頭。晶格範本用變形晶格彎曲任何 sprite；骨頭範本轉動蒙皮節點的骨頭（[34_MESH_ANIMATION.md](34_MESH_ANIMATION.md)
+§4.2、§4.3）。可以在編輯器中套用，也可以由腳本或 AI 套用；程式在 `tools/anim/core/anim_recipes.h/.cpp`。
+
+**規則（每個範本都一樣）：**
+
+- 它會**取代**自己在 `start` 到 `start + period` 之間寫的 key，片段的其他 key 保留。有 `length` 的片段會加長以容納它。
+- 它的所有 key 都用 `sinusoidalInOut` 緩動。
+- **強度** 1 是正常大小；0.5 輕微，2 強烈。
+- 要重複的待機動作，就讓片段循環（`playCount: -1`）或讓節點循環（`"loop": true`）。
+
+**晶格範本**（任何 sprite，作用在節點的變形晶格上）。位移依 sprite 的原始大小計算；最下面一列（腳）永遠不動；數值
+取到四分之一像素。
+
+| id | 預設週期 | 做什麼 |
+|---|---|---|
+| `breathe` | 2.0 秒 | 頂端上升高度的 6 %、變寬 4 %（越往上越多），再回復；key 在週期的 0、½、1 |
+| `sway` | 2.0 秒 | 頂端先向右、再向左傾斜寬度的 15 %（越往上越多），只有橫向；key 在 0、¼、¾、1 |
+| `squash` | 0.6 秒 | 向下壓扁 20 %、變寬 12 %，接著拉長再回復；六個 key |
+| `jelly` | 1.0 秒 | 逐漸停下的壓扁與拉長晃動；七個 key |
+
+**骨頭範本**（**蒙皮**節點）。它們在蒙皮的骨頭（在片段中依名稱找到）上寫 z 旋轉 key，加在每根骨頭的靜止角度上。
+節點沒有蒙皮時會被拒絕（「needs a skinned node (Properties > Skin)」）。
+
+| id | 預設週期 | 做什麼 |
+|---|---|---|
+| `bone_sway` | 2.0 秒 | 每根骨頭 ±8°，越靠末端越多（n 根中的第 i 根取它的 (i+1)/n） |
+| `nod` | 0.8 秒 | 只有**最後一根**骨頭：+12°，再 −3°，再回到原位 |
+| `swing` | 0.7 秒 | 蓄力 −20°、揮出 +30°、停在 +6°、回到 0（和 `bone_sway` 一樣沿著骨頭鏈縮放） |
+
+**在編輯器中：** 選取節點，然後 **Key > Motion Recipe…**。選擇範本（骨頭範本標有「(bones)」；滑鼠提示說明它做什麼）、
+開始時間（預設：播放頭）、週期（預設：範本的週期）與強度。節點沒有蒙皮時，骨頭範本的 OK 會停用。套用是一個復原步驟
+（「Recipe: Breathe」）。
+
+**Headless，給腳本和 AI 用：**
+
+```
+Build\windows-release\bin\anim_editor.exe --headless recipe hero.anim --node body --recipe breathe --period 2
+Build\windows-release\bin\anim_editor.exe --headless recipe hero.anim --node body --recipe nod --start 2 --strength 1.5
+Build\windows-release\bin\anim_editor.exe --headless check hero.anim
+```
+
+- `anim_editor --headless recipe <file.anim> --node <name> --recipe <id> [--clip <name>] [--start s] [--period s]
+  [--strength k] [--out <file.anim>]` 把 key 寫進檔案。用 `--out` 時請放在同一個資料夾：atlas 路徑是相對路徑。
+  sprite 的大小來自檔案的 atlas。
+- `anim_editor --headless recipe --list` 列出所有範本。
+- 結束碼：0 正常，2 檔案、節點或範本無法套用，3 用法錯誤。
+
+**測試：**
+
+| 測試 | 檢查內容 |
+|---|---|
+| `anim.recipes`（`tools/anim/tests/anim_recipes_test.cpp`） | breathe 的 key 與形狀（頂端上升並變寬，腳不動）；範圍外的 key 保留；片段長度變長；squash、jelly 與 sway 的形狀；bone_sway 沿著骨頭鏈、從每根骨頭的靜止角度起算；nod 只作用在最後一根骨頭；拒絕的情況（沒有蒙皮、沒有 sprite 大小、未知的 id、沒有節點）；寫出的檔案讀回相同 |
+| `anim.recipe_headless` | `--list`；把 breathe 與 nod 寫進蒙皮 golem 的副本；對沒有蒙皮的骨頭套用骨頭範本會被拒絕；結果通過 `--headless check` |
+| `anim.editor_selftest`（範本部分） | 在 golem 上套用 breathe 與 nod，各是一個復原步驟；在 hip 上套用 swing 會被拒絕 |

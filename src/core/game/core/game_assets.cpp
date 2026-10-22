@@ -82,9 +82,16 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
     std::fprintf(stderr, "[assets] sprites: prebuilt atlas %sgame.atlas, %dx%d, %zu region(s), art style '%s'\n", dir.c_str(),
                  w, h, atlas.regions.size(), artStyles_[style].id.empty() ? "original" : artStyles_[style].id.c_str());
     spriteAtlas_ = std::move(atlas);
-    std::string meshError;   // its meshes (docs/34_MESH_ANIMATION.md): skinned clips bend them; none = quads
-    if (!toms::res::readSpriteMeshes(dir + "game.atlas", spriteMeshes_, meshError))
-        std::fprintf(stderr, "[assets] %s\n", meshError.c_str());
+    {   // its meshes (docs/34_MESH_ANIMATION.md): beside the style's atlas, else the original art's (cut from the same
+        // sprites; drawn inside each region, so a different packing only changes how closely they follow the shape)
+        std::string meshError;
+        const std::string base = dataDir + "/atlas/game.atlas";
+        const std::string own = dir + "game.atlas";
+        if (!toms::res::readMeshFile(toms::spriteMeshPath(own), spriteMeshes_, meshError))
+            std::fprintf(stderr, "[assets] %s\n", meshError.c_str());
+        if (spriteMeshes_.meshes.empty() && own != base && !toms::res::readMeshFile(toms::spriteMeshPath(base), spriteMeshes_, meshError))
+            std::fprintf(stderr, "[assets] %s\n", meshError.c_str());
+    }
     provideSpriteAtlas();
     spriteAtlasRevision_++;   // the UI's sprite sheet (uiSpritesheet) follows from the next frame
     loadedArtStyle_ = style;

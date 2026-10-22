@@ -46,7 +46,12 @@ bool parseSpriteMeshes(const std::string& text, const std::function<bool(const s
                        SpriteMeshFile& out, std::string* err) {
     try {
         const json j = json::parse(text);
-        if (j.value("version", 1) > 1) throw std::runtime_error("version " + std::to_string(j.value("version", 1)) + " is newer than this build reads (1)");
+        if (!j.is_object() || !j.contains("version") || !j["version"].is_number_integer())
+            throw std::runtime_error("no \"version\" (the file's format version; this build reads " + std::to_string(kSpriteMeshVersion) + ")");
+        const int version = j["version"].get<int>();
+        if (version < 1 || version > kSpriteMeshVersion)
+            throw std::runtime_error("version " + std::to_string(version) + " is not one this build reads (1 .. " +
+                                     std::to_string(kSpriteMeshVersion) + ")");
         std::vector<std::string> buffers;
         for (const json& b : j.value("buffers", json::array())) {
             const std::string uri = b.at("uri").get<std::string>();
@@ -87,13 +92,14 @@ bool parseSpriteMeshes(const std::string& text, const std::function<bool(const s
 }
 
 std::string spriteMeshesToJson(const SpriteMeshFile& f, const std::string& binaryUri, std::string* binary) {
+    using ojson = nlohmann::ordered_json;   // keys in the order written: the version first, as a header
     const bool bin = !binaryUri.empty() && binary;
     if (bin) binary->clear();
-    json j;
-    j["version"] = 1;
-    json meshes = json::object();
+    ojson j;
+    j["version"] = kSpriteMeshVersion;
+    ojson meshes = ojson::object();
     for (const auto& [name, m] : f.meshes) {
-        json mj;
+        ojson mj;
         mj["source"] = m.source;
         if (m.cells[0] > 0 && m.cells[1] > 0) mj["cells"] = {m.cells[0], m.cells[1]};
         if (bin) {
@@ -102,14 +108,14 @@ std::string spriteMeshesToJson(const SpriteMeshFile& f, const std::string& binar
                 while (binary->size() % 4) binary->push_back('\0');
                 const size_t at = binary->size();
                 binary->append((const char*)data, bytes);
-                return json{{"buffer", 0}, {"byteOffset", at}};
+                return ojson{{"buffer", 0}, {"byteOffset", at}};
             };
             mj["vertexCount"] = m.vertexCount();
             mj["vertices"] = put(m.vertices.data(), m.vertices.size() * sizeof(float));
             mj["indexCount"] = m.triangles.size();
             mj["triangles"] = put(m.triangles.data(), m.triangles.size() * sizeof(uint16_t));
         } else {
-            json v = json::array();   // whole pixels (meshes cut from alpha) as integers: "8", not "8.0"
+            ojson v = ojson::array();   // whole pixels (meshes cut from alpha) as integers: "8", not "8.0"
             for (float x : m.vertices)
                 if (x == (float)(long long)x) v.push_back((long long)x);
                 else v.push_back(x);
@@ -120,7 +126,7 @@ std::string spriteMeshesToJson(const SpriteMeshFile& f, const std::string& binar
     }
     if (bin) {
         while (binary->size() % 4) binary->push_back('\0');
-        j["buffers"] = json::array({{{"uri", binaryUri}, {"byteLength", binary->size()}}});
+        j["buffers"] = ojson::array({{{"uri", binaryUri}, {"byteLength", binary->size()}}});
     }
     j["meshes"] = meshes;
     return j.dump() + "\n";   // compact: it is data (the atlas tool and the anim editor show it)

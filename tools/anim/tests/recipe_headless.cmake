@@ -1,0 +1,43 @@
+# anim.recipe_headless -- `anim_editor --headless recipe` writes motion recipes into a copy of a clip file (the sprite size
+# from its atlas), and the result passes `--headless check` (docs/16_ANIMATION_RECIPES.md section 7). Run with
+#   cmake -DANIM_EDITOR=<anim_editor> -DROOT=<TOMS> -DOUT=<scratch folder> -P recipe_headless.cmake
+
+file(REMOVE_RECURSE "${OUT}")
+file(MAKE_DIRECTORY "${OUT}")
+set(atlas "${ROOT}/assets/media/atlas/game.atlas")
+# The copy names its atlas with an absolute path, so it still finds it from the scratch folder.
+file(READ "${ROOT}/tests/smoke/anim_skin.anim" text)
+string(REPLACE "../../assets/media/atlas/game.atlas" "${atlas}" text "${text}")
+file(WRITE "${OUT}/golem.anim" "${text}")
+
+function(run)
+    execute_process(COMMAND "${ANIM_EDITOR}" --headless ${ARGN} RESULT_VARIABLE code OUTPUT_VARIABLE out ERROR_VARIABLE err)
+    set(code "${code}" PARENT_SCOPE)
+    set(out "${out}${err}" PARENT_SCOPE)
+endfunction()
+
+run(recipe --list)
+if(NOT code EQUAL 0 OR NOT out MATCHES "breathe" OR NOT out MATCHES "swing")
+    message(FATAL_ERROR "recipe --list: ${code}\n${out}")
+endif()
+run(recipe "${OUT}/golem.anim" --node golem --recipe breathe --start 0 --period 1.5)
+if(NOT code EQUAL 0)
+    message(FATAL_ERROR "breathe on the golem: ${code}\n${out}")
+endif()
+run(recipe "${OUT}/golem.anim" --node golem --recipe nod --start 1.5 --strength 1.5)
+if(NOT code EQUAL 0)
+    message(FATAL_ERROR "nod on the golem's bones: ${code}\n${out}")
+endif()
+run(recipe "${OUT}/golem.anim" --node hip --recipe swing)
+if(NOT code EQUAL 2 OR NOT out MATCHES "skinned")
+    message(FATAL_ERROR "a bone recipe on a bone (not skinned) must be refused: ${code}\n${out}")
+endif()
+file(READ "${OUT}/golem.anim" result)
+if(NOT result MATCHES "\"deform\"")
+    message(FATAL_ERROR "no deform keys written:\n${result}")
+endif()
+run(check "${OUT}/golem.anim")
+if(NOT code EQUAL 0)
+    message(FATAL_ERROR "the clip with its recipes does not pass the check: ${code}\n${out}")
+endif()
+message(STATUS "anim.recipe_headless: ok")

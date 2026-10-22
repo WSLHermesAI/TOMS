@@ -1,525 +1,763 @@
 game.png
-size: 502, 882
+size: 505, 599
 format: RGBA8888
 filter: Nearest, Nearest
 repeat: none
 bat
-  bounds: 1, 1, 64, 64
+  bounds: 369, 1, 56, 46
+  offsets: 4, 4, 64, 64
 boss_demonlord
-  bounds: 69, 1, 64, 64
+  bounds: 1, 365, 50, 56
+  offsets: 7, 4, 64, 64
 coin
-  bounds: 137, 1, 64, 64
+  bounds: 429, 1, 56, 46
+  offsets: 4, 4, 64, 64
 demon
-  bounds: 205, 1, 64, 64
+  bounds: 1, 425, 50, 56
+  offsets: 7, 4, 64, 64
 door_amethyst
-  bounds: 69, 273, 32, 32
+  bounds: 454, 507, 28, 28
+  offsets: 2, 2, 32, 32
 door_blue
-  bounds: 273, 1, 64, 64
+  bounds: 69, 1, 56, 56
+  offsets: 4, 4, 64, 64
 door_bone
-  bounds: 105, 273, 32, 32
+  bounds: 250, 536, 28, 28
+  offsets: 2, 2, 32, 32
 door_bronze
-  bounds: 141, 273, 32, 32
+  bounds: 240, 568, 28, 28
+  offsets: 2, 2, 32, 32
 door_emerald
-  bounds: 177, 273, 32, 32
+  bounds: 272, 568, 28, 28
+  offsets: 2, 2, 32, 32
 door_flame
-  bounds: 213, 273, 32, 32
+  bounds: 282, 536, 28, 28
+  offsets: 2, 2, 32, 32
 door_frost
-  bounds: 249, 273, 32, 32
+  bounds: 314, 535, 28, 28
+  offsets: 2, 2, 32, 32
 door_obsidian
-  bounds: 285, 273, 32, 32
+  bounds: 304, 568, 28, 28
+  offsets: 2, 2, 32, 32
 door_red
-  bounds: 341, 1, 64, 64
+  bounds: 1, 129, 56, 54
+  offsets: 4, 4, 64, 64
 door_rune
-  bounds: 321, 273, 32, 32
+  bounds: 336, 567, 28, 28
+  offsets: 2, 2, 32, 32
 door_silver
-  bounds: 357, 273, 32, 32
+  bounds: 346, 535, 28, 28
+  offsets: 2, 2, 32, 32
 door_sun
-  bounds: 393, 273, 32, 32
+  bounds: 378, 540, 28, 28
+  offsets: 2, 2, 32, 32
 door_yellow
-  bounds: 409, 1, 64, 64
+  bounds: 1, 69, 56, 56
+  offsets: 4, 4, 64, 64
 exp_up
-  bounds: 1, 69, 64, 64
+  bounds: 129, 1, 56, 56
+  offsets: 4, 4, 64, 64
 floor
-  bounds: 429, 273, 32, 32
+  bounds: 392, 51, 32, 32
 floor_castle
-  bounds: 465, 273, 32, 32
+  bounds: 428, 51, 32, 32
 floor_cave
-  bounds: 69, 309, 32, 32
+  bounds: 392, 87, 32, 32
 floor_crypt
-  bounds: 1, 341, 32, 32
+  bounds: 428, 87, 32, 32
 floor_crystal
-  bounds: 105, 309, 32, 32
+  bounds: 464, 51, 32, 32
 floor_forest
-  bounds: 141, 309, 32, 32
+  bounds: 464, 87, 32, 32
 floor_ice
-  bounds: 177, 309, 32, 32
+  bounds: 61, 228, 32, 32
 floor_lava
-  bounds: 213, 309, 32, 32
+  bounds: 97, 228, 32, 32
 floor_sand
-  bounds: 249, 309, 32, 32
+  bounds: 57, 264, 32, 32
 floor_shadow
-  bounds: 285, 309, 32, 32
+  bounds: 57, 300, 32, 32
 floor_wood
-  bounds: 321, 309, 32, 32
+  bounds: 93, 264, 32, 32
 gem_atk
-  bounds: 69, 69, 64, 64
+  bounds: 1, 245, 52, 56
+  offsets: 6, 4, 64, 64
 gem_def
-  bounds: 137, 69, 64, 64
+  bounds: 1, 305, 52, 56
+  offsets: 6, 4, 64, 64
 golem
-  bounds: 205, 69, 64, 64
+  bounds: 189, 1, 56, 54
+  offsets: 4, 4, 64, 64
 item_ancient_amulet
-  bounds: 357, 309, 32, 32
+  bounds: 179, 107, 30, 29
+  offsets: 1, 2, 32, 32
 item_ancient_coin
-  bounds: 393, 309, 32, 32
+  bounds: 213, 105, 30, 29
+  offsets: 1, 2, 32, 32
 item_antidote
-  bounds: 429, 309, 32, 32
+  bounds: 492, 259, 12, 30
+  offsets: 10, 1, 32, 32
 item_bird_cage
-  bounds: 465, 309, 32, 32
+  bounds: 189, 344, 20, 30
+  offsets: 6, 1, 32, 32
 item_bone_flute
-  bounds: 37, 345, 32, 32
+  bounds: 129, 264, 28, 30
+  offsets: 2, 1, 32, 32
 item_bread_loaf
-  bounds: 1, 377, 32, 32
+  bounds: 161, 432, 30, 26
+  offsets: 1, 3, 32, 32
 item_broken_sword
-  bounds: 73, 345, 32, 32
+  bounds: 179, 140, 29, 30
+  offsets: 1, 1, 32, 32
 item_candle
-  bounds: 109, 345, 32, 32
+  bounds: 489, 1, 15, 30
+  offsets: 8, 1, 32, 32
 item_cheese_wheel
-  bounds: 145, 345, 32, 32
+  bounds: 247, 116, 30, 29
+  offsets: 1, 2, 32, 32
 item_compass
-  bounds: 181, 345, 32, 32
+  bounds: 281, 116, 30, 29
+  offsets: 1, 2, 32, 32
 item_crystal_ball
-  bounds: 217, 345, 32, 32
+  bounds: 276, 212, 18, 30
+  offsets: 7, 1, 32, 32
 item_crystal_shard
-  bounds: 253, 345, 32, 32
+  bounds: 213, 138, 30, 29
+  offsets: 1, 2, 32, 32
 item_dragon_egg
-  bounds: 289, 345, 32, 32
+  bounds: 195, 208, 23, 30
+  offsets: 4, 1, 32, 32
 item_emblem_shield
-  bounds: 325, 345, 32, 32
+  bounds: 271, 450, 29, 28
+  offsets: 2, 2, 32, 32
 item_family_portrait
-  bounds: 361, 345, 32, 32
+  bounds: 247, 149, 29, 30
+  offsets: 1, 1, 32, 32
 item_fishing_rod
-  bounds: 397, 345, 32, 32
+  bounds: 129, 298, 28, 30
+  offsets: 2, 1, 32, 32
 item_flower_bouquet
-  bounds: 433, 345, 32, 32
+  bounds: 327, 184, 24, 30
+  offsets: 4, 1, 32, 32
 item_golden_chalice
-  bounds: 469, 345, 32, 32
+  bounds: 317, 252, 18, 30
+  offsets: 7, 1, 32, 32
 item_healing_herb
-  bounds: 37, 381, 32, 32
+  bounds: 162, 462, 26, 30
+  offsets: 3, 1, 32, 32
 item_holy_water
-  bounds: 1, 413, 32, 32
+  bounds: 383, 156, 21, 30
+  offsets: 5, 1, 32, 32
 item_hourglass
-  bounds: 73, 381, 32, 32
+  bounds: 195, 428, 15, 30
+  offsets: 8, 1, 32, 32
 item_locket
-  bounds: 109, 381, 32, 32
+  bounds: 127, 432, 30, 27
+  offsets: 1, 3, 32, 32
 item_lost_crown
-  bounds: 145, 381, 32, 32
+  bounds: 222, 212, 23, 30
+  offsets: 4, 1, 32, 32
 item_lucky_clover
-  bounds: 181, 381, 32, 32
+  bounds: 165, 496, 26, 30
+  offsets: 3, 1, 32, 32
 item_magic_mirror
-  bounds: 217, 381, 32, 32
+  bounds: 280, 149, 29, 30
+  offsets: 1, 1, 32, 32
 item_moon_stone
-  bounds: 253, 381, 32, 32
+  bounds: 61, 516, 30, 30
+  offsets: 1, 1, 32, 32
 item_mushroom_basket
-  bounds: 289, 381, 32, 32
+  bounds: 131, 463, 27, 30
+  offsets: 2, 1, 32, 32
 item_music_box
-  bounds: 325, 381, 32, 32
+  bounds: 129, 332, 28, 30
+  offsets: 2, 1, 32, 32
 item_old_key_ring
-  bounds: 361, 381, 32, 32
+  bounds: 95, 578, 23, 19
+  offsets: 1, 2, 32, 32
 item_old_lantern
-  bounds: 397, 381, 32, 32
+  bounds: 456, 361, 16, 30
+  offsets: 8, 1, 32, 32
 item_phoenix_feather
-  bounds: 433, 381, 32, 32
+  bounds: 131, 497, 30, 27
+  offsets: 1, 3, 32, 32
 item_pickaxe
-  bounds: 469, 381, 32, 32
+  bounds: 410, 540, 16, 28
+  offsets: 8, 3, 32, 32
 item_pocket_watch
-  bounds: 1, 449, 32, 32
+  bounds: 125, 558, 25, 30
+  offsets: 3, 1, 32, 32
 item_poison_vial
-  bounds: 1, 485, 32, 32
+  bounds: 170, 174, 26, 30
+  offsets: 3, 1, 32, 32
 item_prayer_beads
-  bounds: 1, 521, 32, 32
+  bounds: 491, 395, 13, 30
+  offsets: 9, 1, 32, 32
 item_quill
-  bounds: 1, 557, 32, 32
+  bounds: 386, 507, 20, 29
+  offsets: 6, 2, 32, 32
 item_red_apple
-  bounds: 1, 593, 32, 32
+  bounds: 315, 116, 29, 30
+  offsets: 1, 1, 32, 32
 item_rope
-  bounds: 1, 629, 32, 32
+  bounds: 97, 514, 30, 26
+  offsets: 1, 3, 32, 32
 item_rune_stone
-  bounds: 1, 665, 32, 32
+  bounds: 348, 114, 29, 30
+  offsets: 1, 1, 32, 32
 item_sealed_letter
-  bounds: 1, 701, 32, 32
+  bounds: 313, 150, 29, 30
+  offsets: 1, 1, 32, 32
 item_silver_bell
-  bounds: 1, 737, 32, 32
+  bounds: 249, 212, 23, 30
+  offsets: 4, 1, 32, 32
 item_silver_ring
-  bounds: 1, 773, 32, 32
+  bounds: 333, 354, 14, 17
+  offsets: 9, 8, 32, 32
 item_spectacles
-  bounds: 1, 809, 32, 32
+  bounds: 223, 550, 22, 10
+  offsets: 9, 11, 32, 32
 item_spell_book
-  bounds: 1, 845, 32, 32
+  bounds: 154, 564, 25, 30
+  offsets: 3, 1, 32, 32
 item_star_fragment
-  bounds: 37, 417, 32, 32
+  bounds: 159, 398, 27, 30
+  offsets: 2, 1, 32, 32
 item_sun_medallion
-  bounds: 73, 417, 32, 32
+  bounds: 381, 123, 30, 29
+  offsets: 1, 2, 32, 32
 item_treasure_map
-  bounds: 109, 417, 32, 32
+  bounds: 97, 480, 30, 30
+  offsets: 1, 1, 32, 32
 item_war_horn
-  bounds: 145, 417, 32, 32
+  bounds: 482, 123, 22, 30
+  offsets: 5, 1, 32, 32
 item_wine_bottle
-  bounds: 181, 417, 32, 32
+  bounds: 257, 450, 10, 30
+  offsets: 11, 1, 32, 32
 item_wooden_doll
-  bounds: 217, 417, 32, 32
+  bounds: 476, 361, 16, 30
+  offsets: 8, 1, 32, 32
 key_amethyst
-  bounds: 253, 417, 32, 32
+  bounds: 1, 580, 24, 18
+  offsets: 5, 9, 32, 32
 key_blue
-  bounds: 273, 69, 64, 64
+  bounds: 1, 533, 56, 43
+  offsets: 4, 4, 64, 64
 key_bone
-  bounds: 289, 417, 32, 32
+  bounds: 29, 580, 24, 18
+  offsets: 5, 9, 32, 32
 key_bronze
-  bounds: 325, 417, 32, 32
+  bounds: 139, 202, 24, 18
+  offsets: 5, 9, 32, 32
 key_emerald
-  bounds: 361, 417, 32, 32
+  bounds: 479, 429, 24, 18
+  offsets: 5, 9, 32, 32
 key_flame
-  bounds: 397, 417, 32, 32
+  bounds: 430, 540, 24, 18
+  offsets: 5, 9, 32, 32
 key_frost
-  bounds: 433, 417, 32, 32
+  bounds: 458, 539, 24, 18
+  offsets: 5, 9, 32, 32
 key_obsidian
-  bounds: 469, 417, 32, 32
+  bounds: 368, 572, 24, 18
+  offsets: 5, 9, 32, 32
 key_red
-  bounds: 341, 69, 64, 64
+  bounds: 129, 61, 56, 42
+  offsets: 4, 4, 64, 64
 key_rune
-  bounds: 37, 453, 32, 32
+  bounds: 396, 572, 24, 18
+  offsets: 5, 9, 32, 32
 key_silver
-  bounds: 37, 489, 32, 32
+  bounds: 430, 562, 24, 18
+  offsets: 5, 9, 32, 32
 key_sun
-  bounds: 37, 525, 32, 32
+  bounds: 458, 561, 24, 18
+  offsets: 5, 9, 32, 32
 key_yellow
-  bounds: 409, 69, 64, 64
+  bounds: 189, 59, 56, 42
+  offsets: 4, 4, 64, 64
 m_armored_ogre
-  bounds: 37, 561, 32, 32
+  bounds: 95, 544, 26, 30
+  offsets: 3, 0, 32, 32
 m_ash_wraith
-  bounds: 37, 597, 32, 32
+  bounds: 317, 286, 18, 30
+  offsets: 7, 0, 32, 32
 m_bandit
-  bounds: 37, 633, 32, 32
+  bounds: 161, 276, 22, 30
+  offsets: 5, 0, 32, 32
 m_banshee
-  bounds: 37, 669, 32, 32
+  bounds: 349, 218, 19, 30
+  offsets: 6, 0, 32, 32
 m_bear_cub
-  bounds: 37, 705, 32, 32
+  bounds: 161, 310, 22, 30
+  offsets: 5, 0, 32, 32
 m_blizzard_owl
-  bounds: 37, 741, 32, 32
+  bounds: 183, 564, 25, 30
+  offsets: 3, 0, 32, 32
 m_bone_archer
-  bounds: 37, 777, 32, 32
+  bounds: 214, 416, 15, 30
+  offsets: 8, 0, 32, 32
 m_cave_troll
-  bounds: 37, 813, 32, 32
+  bounds: 346, 150, 24, 30
+  offsets: 4, 0, 32, 32
 m_chimera
-  bounds: 37, 849, 32, 32
+  bounds: 167, 242, 23, 30
+  offsets: 4, 0, 32, 32
 m_cinder_beetle
-  bounds: 73, 453, 32, 32
+  bounds: 355, 184, 24, 30
+  offsets: 4, 0, 32, 32
 m_crystal_serpent
-  bounds: 109, 453, 32, 32
+  bounds: 192, 462, 24, 30
+  offsets: 4, 0, 32, 32
 m_crystal_spider
-  bounds: 145, 453, 32, 32
+  bounds: 129, 366, 30, 28
+  offsets: 1, 0, 32, 32
 m_dark_knight
-  bounds: 181, 453, 32, 32
+  bounds: 339, 252, 18, 30
+  offsets: 7, 0, 32, 32
 m_dark_mage
-  bounds: 217, 453, 32, 32
+  bounds: 351, 394, 16, 30
+  offsets: 8, 0, 32, 32
 m_demon_general
-  bounds: 253, 453, 32, 32
+  bounds: 187, 276, 22, 30
+  offsets: 5, 0, 32, 32
 m_demon_guard
-  bounds: 289, 453, 32, 32
+  bounds: 187, 310, 22, 30
+  offsets: 5, 0, 32, 32
 m_ember_wolf
-  bounds: 325, 453, 32, 32
+  bounds: 339, 286, 18, 30
+  offsets: 7, 0, 32, 32
 m_fire_drake
-  bounds: 361, 453, 32, 32
+  bounds: 230, 183, 30, 25
+  offsets: 1, 0, 32, 32
 m_fire_imp
-  bounds: 397, 453, 32, 32
+  bounds: 361, 258, 18, 30
+  offsets: 7, 0, 32, 32
 m_flame_spirit
-  bounds: 433, 453, 32, 32
+  bounds: 383, 258, 18, 30
+  offsets: 7, 0, 32, 32
 m_forest_wolf
-  bounds: 469, 453, 32, 32
+  bounds: 213, 348, 20, 30
+  offsets: 6, 0, 32, 32
 m_frost_fairy
-  bounds: 73, 489, 32, 32
+  bounds: 61, 550, 30, 30
+  offsets: 1, 0, 32, 32
 m_frost_wolf
-  bounds: 73, 525, 32, 32
+  bounds: 487, 225, 17, 30
+  offsets: 7, 0, 32, 32
 m_gargoyle
-  bounds: 73, 561, 32, 32
+  bounds: 131, 528, 30, 26
+  offsets: 1, 1, 32, 32
 m_gem_slime
-  bounds: 73, 597, 32, 32
+  bounds: 139, 168, 27, 30
+  offsets: 2, 0, 32, 32
 m_ghost_maiden
-  bounds: 73, 633, 32, 32
+  bounds: 371, 394, 16, 30
+  offsets: 8, 0, 32, 32
 m_ghoul
-  bounds: 73, 669, 32, 32
+  bounds: 471, 259, 17, 30
+  offsets: 7, 0, 32, 32
 m_glow_worm
-  bounds: 73, 705, 32, 32
+  bounds: 194, 242, 23, 30
+  offsets: 4, 0, 32, 32
 m_grave_rat
-  bounds: 73, 741, 32, 32
+  bounds: 127, 398, 28, 30
+  offsets: 2, 0, 32, 32
 m_hellhound
-  bounds: 73, 777, 32, 32
+  bounds: 408, 156, 21, 30
+  offsets: 5, 0, 32, 32
 m_horn_beetle
-  bounds: 73, 813, 32, 32
+  bounds: 195, 496, 24, 30
+  offsets: 4, 0, 32, 32
 m_ice_golem
-  bounds: 73, 849, 32, 32
+  bounds: 190, 378, 19, 30
+  offsets: 6, 0, 32, 32
 m_ice_slime
-  bounds: 109, 489, 32, 32
+  bounds: 213, 280, 22, 30
+  offsets: 5, 0, 32, 32
 m_ice_wraith
-  bounds: 145, 489, 32, 32
+  bounds: 213, 382, 19, 30
+  offsets: 6, 0, 32, 32
 m_kobold
-  bounds: 181, 489, 32, 32
+  bounds: 383, 190, 21, 30
+  offsets: 5, 0, 32, 32
 m_lava_golem
-  bounds: 217, 489, 32, 32
+  bounds: 408, 190, 21, 30
+  offsets: 5, 0, 32, 32
 m_lich
-  bounds: 253, 489, 32, 32
+  bounds: 223, 484, 27, 29
+  offsets: 2, 0, 32, 32
 m_magma_slime
-  bounds: 289, 489, 32, 32
+  bounds: 239, 280, 22, 30
+  offsets: 5, 0, 32, 32
 m_mammoth
-  bounds: 325, 489, 32, 32
+  bounds: 213, 314, 22, 30
+  offsets: 5, 0, 32, 32
 m_minotaur
-  bounds: 361, 489, 32, 32
+  bounds: 236, 382, 19, 30
+  offsets: 6, 0, 32, 32
 m_mole_miner
-  bounds: 397, 489, 32, 32
+  bounds: 237, 348, 20, 30
+  offsets: 6, 0, 32, 32
 m_mossling
-  bounds: 433, 489, 32, 32
+  bounds: 259, 382, 19, 30
+  offsets: 6, 0, 32, 32
 m_mummy
-  bounds: 469, 489, 32, 32
+  bounds: 391, 395, 16, 30
+  offsets: 8, 0, 32, 32
 m_ore_golem
-  bounds: 109, 525, 32, 32
+  bounds: 195, 530, 24, 30
+  offsets: 4, 0, 32, 32
 m_penguin_knight
-  bounds: 109, 561, 32, 32
+  bounds: 433, 157, 21, 30
+  offsets: 5, 0, 32, 32
 m_phoenix_chick
-  bounds: 109, 597, 32, 32
+  bounds: 261, 348, 20, 30
+  offsets: 6, 0, 32, 32
 m_pixie
-  bounds: 109, 633, 32, 32
+  bounds: 221, 246, 23, 30
+  offsets: 4, 0, 32, 32
 m_red_bat
-  bounds: 109, 669, 32, 32
+  bounds: 415, 123, 30, 29
+  offsets: 1, 0, 32, 32
 m_rock_crab
-  bounds: 109, 705, 32, 32
+  bounds: 264, 183, 30, 25
+  offsets: 1, 0, 32, 32
 m_salamander
-  bounds: 109, 741, 32, 32
+  bounds: 285, 348, 20, 30
+  offsets: 6, 0, 32, 32
 m_shadow_assassin
-  bounds: 109, 777, 32, 32
+  bounds: 449, 123, 29, 30
+  offsets: 1, 0, 32, 32
 m_skull_knight
-  bounds: 109, 813, 32, 32
+  bounds: 471, 293, 17, 30
+  offsets: 7, 0, 32, 32
 m_sprout_imp
-  bounds: 109, 849, 32, 32
+  bounds: 333, 320, 17, 30
+  offsets: 7, 0, 32, 32
 m_stone_lizard
-  bounds: 145, 525, 32, 32
+  bounds: 212, 564, 24, 30
+  offsets: 4, 0, 32, 32
 m_thorn_boar
-  bounds: 181, 525, 32, 32
+  bounds: 304, 450, 28, 29
+  offsets: 2, 1, 32, 32
 m_toadstool
-  bounds: 217, 525, 32, 32
+  bounds: 223, 517, 23, 29
+  offsets: 4, 1, 32, 32
 m_vampire_bat
-  bounds: 253, 525, 32, 32
+  bounds: 133, 228, 30, 29
+  offsets: 1, 0, 32, 32
 m_vine_snake
-  bounds: 289, 525, 32, 32
+  bounds: 239, 314, 22, 30
+  offsets: 5, 0, 32, 32
 m_yeti
-  bounds: 325, 525, 32, 32
+  bounds: 458, 157, 21, 30
+  offsets: 5, 0, 32, 32
 m_zombie
-  bounds: 361, 525, 32, 32
+  bounds: 411, 395, 16, 30
+  offsets: 8, 0, 32, 32
 npc_advisor
-  bounds: 397, 525, 32, 32
+  bounds: 282, 382, 19, 30
+  offsets: 6, 0, 32, 32
 npc_alchemist
-  bounds: 433, 525, 32, 32
+  bounds: 431, 395, 16, 30
+  offsets: 8, 0, 32, 32
 npc_archer_scout
-  bounds: 469, 525, 32, 32
+  bounds: 483, 157, 21, 30
+  offsets: 5, 0, 32, 32
 npc_armorer
-  bounds: 145, 561, 32, 32
+  bounds: 265, 280, 22, 30
+  offsets: 5, 0, 32, 32
 npc_baker
-  bounds: 145, 597, 32, 32
+  bounds: 233, 416, 15, 30
+  offsets: 8, 0, 32, 32
 npc_bard
-  bounds: 145, 633, 32, 32
+  bounds: 298, 184, 25, 30
+  offsets: 3, 0, 32, 32
 npc_blacksmith
-  bounds: 145, 669, 32, 32
+  bounds: 361, 292, 18, 30
+  offsets: 7, 0, 32, 32
 npc_cartographer
-  bounds: 145, 705, 32, 32
+  bounds: 252, 416, 15, 30
+  offsets: 8, 0, 32, 32
 npc_duchess
-  bounds: 145, 741, 32, 32
+  bounds: 354, 326, 17, 30
+  offsets: 7, 0, 32, 32
 npc_duke
-  bounds: 145, 777, 32, 32
+  bounds: 383, 292, 18, 30
+  offsets: 7, 0, 32, 32
 npc_dwarf
-  bounds: 145, 813, 32, 32
+  bounds: 410, 507, 20, 29
+  offsets: 6, 1, 32, 32
 npc_elf
-  bounds: 145, 849, 32, 32
+  bounds: 165, 530, 26, 30
+  offsets: 3, 0, 32, 32
 npc_explorer
-  bounds: 181, 561, 32, 32
+  bounds: 375, 326, 17, 30
+  offsets: 7, 0, 32, 32
 npc_farmer
-  bounds: 217, 561, 32, 32
+  bounds: 265, 314, 22, 30
+  offsets: 5, 0, 32, 32
 npc_farmer_wife
-  bounds: 253, 561, 32, 32
+  bounds: 396, 327, 17, 30
+  offsets: 7, 0, 32, 32
 npc_fisherman
-  bounds: 289, 561, 32, 32
+  bounds: 309, 348, 20, 30
+  offsets: 6, 0, 32, 32
 npc_fletcher
-  bounds: 325, 561, 32, 32
+  bounds: 275, 246, 22, 30
+  offsets: 5, 0, 32, 32
 npc_fortune_teller
-  bounds: 361, 561, 32, 32
+  bounds: 301, 218, 20, 30
+  offsets: 6, 0, 32, 32
 npc_gatekeeper
-  bounds: 397, 561, 32, 32
+  bounds: 417, 327, 17, 30
+  offsets: 7, 0, 32, 32
 npc_guard_captain
-  bounds: 433, 561, 32, 32
+  bounds: 271, 416, 15, 30
+  offsets: 8, 0, 32, 32
 npc_handmaiden
-  bounds: 1, 137, 64, 64
+  bounds: 107, 108, 32, 56
+  offsets: 16, 4, 64, 64
 npc_healer
-  bounds: 469, 561, 32, 32
+  bounds: 305, 382, 19, 30
+  offsets: 6, 0, 32, 32
 npc_hunter
-  bounds: 181, 597, 32, 32
+  bounds: 239, 450, 14, 30
+  offsets: 9, 0, 32, 32
 npc_innkeeper
-  bounds: 181, 633, 32, 32
+  bounds: 405, 259, 18, 30
+  offsets: 7, 0, 32, 32
 npc_jester
-  bounds: 181, 669, 32, 32
+  bounds: 433, 191, 21, 30
+  offsets: 5, 0, 32, 32
 npc_jeweler
-  bounds: 181, 705, 32, 32
+  bounds: 438, 327, 17, 30
+  offsets: 7, 0, 32, 32
 npc_king
-  bounds: 69, 137, 64, 64
+  bounds: 290, 56, 30, 56
+  offsets: 17, 4, 64, 64
 npc_knight_errant
-  bounds: 181, 741, 32, 32
+  bounds: 290, 416, 15, 30
+  offsets: 8, 0, 32, 32
 npc_lumberjack
-  bounds: 181, 777, 32, 32
+  bounds: 451, 395, 16, 30
+  offsets: 8, 0, 32, 32
 npc_merchant
-  bounds: 181, 813, 32, 32
+  bounds: 434, 507, 16, 29
+  offsets: 8, 1, 32, 32
 npc_miller
-  bounds: 181, 849, 32, 32
+  bounds: 427, 259, 18, 30
+  offsets: 7, 0, 32, 32
 npc_miner
-  bounds: 217, 597, 32, 32
+  bounds: 291, 280, 22, 30
+  offsets: 5, 0, 32, 32
 npc_monk
-  bounds: 253, 597, 32, 32
+  bounds: 309, 416, 15, 30
+  offsets: 8, 0, 32, 32
 npc_nun
-  bounds: 289, 597, 32, 32
+  bounds: 328, 416, 15, 30
+  offsets: 8, 0, 32, 32
 npc_old_hero
-  bounds: 325, 597, 32, 32
+  bounds: 458, 191, 21, 30
+  offsets: 5, 0, 32, 32
 npc_old_woman
-  bounds: 361, 597, 32, 32
+  bounds: 449, 259, 18, 30
+  offsets: 7, 0, 32, 32
 npc_oracle
-  bounds: 397, 597, 32, 32
+  bounds: 459, 327, 17, 30
+  offsets: 7, 0, 32, 32
 npc_peddler
-  bounds: 433, 597, 32, 32
+  bounds: 405, 293, 18, 30
+  offsets: 7, 0, 32, 32
 npc_pilgrim
-  bounds: 469, 597, 32, 32
+  bounds: 427, 293, 18, 30
+  offsets: 7, 0, 32, 32
 npc_potion_seller
-  bounds: 217, 633, 32, 32
+  bounds: 480, 327, 17, 30
+  offsets: 7, 0, 32, 32
 npc_priest
-  bounds: 217, 669, 32, 32
+  bounds: 351, 360, 17, 30
+  offsets: 7, 0, 32, 32
 npc_princess
-  bounds: 137, 137, 64, 64
+  bounds: 103, 168, 32, 56
+  offsets: 16, 4, 64, 64
 npc_ranger
-  bounds: 217, 705, 32, 32
+  bounds: 248, 246, 23, 30
+  offsets: 4, 0, 32, 32
 npc_sailor
-  bounds: 217, 741, 32, 32
+  bounds: 372, 224, 19, 30
+  offsets: 6, 0, 32, 32
 npc_scholar
-  bounds: 217, 777, 32, 32
+  bounds: 372, 360, 17, 30
+  offsets: 7, 0, 32, 32
 npc_shepherd_girl
-  bounds: 217, 813, 32, 32
+  bounds: 395, 224, 19, 30
+  offsets: 6, 0, 32, 32
 npc_sorcerer
-  bounds: 205, 137, 64, 64
+  bounds: 324, 54, 30, 56
+  offsets: 17, 4, 64, 64
 npc_tailor
-  bounds: 217, 849, 32, 32
+  bounds: 393, 361, 17, 30
+  offsets: 7, 0, 32, 32
 npc_town_guard
-  bounds: 253, 633, 32, 32
+  bounds: 220, 450, 15, 30
+  offsets: 8, 0, 32, 32
 npc_village_boy
-  bounds: 289, 633, 32, 32
+  bounds: 200, 174, 26, 30
+  offsets: 3, 0, 32, 32
 npc_village_girl
-  bounds: 325, 633, 32, 32
+  bounds: 492, 293, 12, 30
+  offsets: 10, 0, 32, 32
 npc_villager
-  bounds: 273, 137, 64, 64
+  bounds: 358, 54, 30, 56
+  offsets: 17, 4, 64, 64
 npc_wandering_mage
-  bounds: 361, 633, 32, 32
+  bounds: 325, 218, 20, 30
+  offsets: 6, 0, 32, 32
 npc_weaver
-  bounds: 397, 633, 32, 32
+  bounds: 418, 225, 19, 30
+  offsets: 6, 0, 32, 32
 npc_young_lord
-  bounds: 433, 633, 32, 32
+  bounds: 449, 293, 18, 30
+  offsets: 7, 0, 32, 32
 player
-  bounds: 341, 137, 64, 64
+  bounds: 143, 107, 32, 56
+  offsets: 16, 4, 64, 64
 player_knight_girl
-  bounds: 469, 633, 32, 32
+  bounds: 167, 208, 24, 30
+  offsets: 4, 0, 32, 32
 player_mage
-  bounds: 253, 669, 32, 32
+  bounds: 483, 191, 21, 30
+  offsets: 5, 0, 32, 32
 player_monk
-  bounds: 253, 705, 32, 32
+  bounds: 414, 361, 17, 30
+  offsets: 7, 0, 32, 32
 player_ninja
-  bounds: 253, 741, 32, 32
+  bounds: 441, 225, 19, 30
+  offsets: 6, 0, 32, 32
 player_paladin
-  bounds: 253, 777, 32, 32
+  bounds: 435, 361, 17, 30
+  offsets: 7, 0, 32, 32
 player_pirate
-  bounds: 253, 813, 32, 32
+  bounds: 291, 314, 22, 30
+  offsets: 5, 0, 32, 32
 player_ranger
-  bounds: 253, 849, 32, 32
+  bounds: 471, 395, 16, 30
+  offsets: 8, 0, 32, 32
 player_red
-  bounds: 289, 669, 32, 32
+  bounds: 163, 344, 22, 30
+  offsets: 5, 0, 32, 32
 player_rogue
-  bounds: 325, 669, 32, 32
+  bounds: 464, 225, 19, 30
+  offsets: 6, 0, 32, 32
 player_viking
-  bounds: 361, 669, 32, 32
+  bounds: 328, 382, 19, 30
+  offsets: 6, 0, 32, 32
 potion_blue
-  bounds: 409, 137, 64, 64
+  bounds: 61, 168, 38, 56
+  offsets: 13, 4, 64, 64
 potion_red
-  bounds: 1, 205, 64, 64
+  bounds: 249, 56, 37, 56
+  offsets: 13, 4, 64, 64
 scroll
-  bounds: 69, 205, 64, 64
+  bounds: 309, 1, 56, 49
+  offsets: 4, 4, 64, 64
 skeleton
-  bounds: 137, 205, 64, 64
+  bounds: 1, 187, 56, 54
+  offsets: 4, 4, 64, 64
 slime
-  bounds: 205, 205, 64, 64
+  bounds: 249, 1, 56, 51
+  offsets: 4, 4, 64, 64
 stairs_down
-  bounds: 273, 205, 64, 64
+  bounds: 69, 61, 56, 43
+  offsets: 4, 4, 64, 64
 stairs_down_castle
-  bounds: 397, 669, 32, 32
+  bounds: 347, 428, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_down_cave
-  bounds: 433, 669, 32, 32
+  bounds: 336, 454, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_down_crypt
-  bounds: 469, 669, 32, 32
+  bounds: 380, 429, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_down_crystal
-  bounds: 289, 705, 32, 32
+  bounds: 413, 429, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_down_forest
-  bounds: 289, 741, 32, 32
+  bounds: 446, 429, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_down_ice
-  bounds: 289, 777, 32, 32
+  bounds: 369, 455, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_down_lava
-  bounds: 289, 813, 32, 32
+  bounds: 402, 455, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_down_sand
-  bounds: 289, 849, 32, 32
+  bounds: 435, 455, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_down_shadow
-  bounds: 325, 705, 32, 32
+  bounds: 254, 484, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_down_wood
-  bounds: 361, 705, 32, 32
+  bounds: 287, 483, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_up
-  bounds: 341, 205, 64, 64
+  bounds: 1, 485, 56, 44
+  offsets: 4, 4, 64, 64
 stairs_up_castle
-  bounds: 397, 705, 32, 32
+  bounds: 320, 483, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_up_cave
-  bounds: 433, 705, 32, 32
+  bounds: 353, 481, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_up_crypt
-  bounds: 469, 705, 32, 32
+  bounds: 386, 481, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_up_crystal
-  bounds: 325, 741, 32, 32
+  bounds: 419, 481, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_up_forest
-  bounds: 325, 777, 32, 32
+  bounds: 452, 481, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_up_ice
-  bounds: 325, 813, 32, 32
+  bounds: 468, 455, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_up_lava
-  bounds: 325, 849, 32, 32
+  bounds: 254, 510, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_up_sand
-  bounds: 361, 741, 32, 32
+  bounds: 287, 509, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_up_shadow
-  bounds: 397, 741, 32, 32
+  bounds: 320, 509, 29, 22
+  offsets: 2, 4, 32, 32
 stairs_up_wood
-  bounds: 433, 741, 32, 32
+  bounds: 353, 507, 29, 22
+  offsets: 2, 4, 32, 32
 wall
-  bounds: 409, 205, 64, 64
+  bounds: 1, 1, 64, 64
 wall_castle
-  bounds: 469, 741, 32, 32
+  bounds: 93, 300, 32, 32
 wall_cave
-  bounds: 361, 777, 32, 32
+  bounds: 57, 336, 32, 32
 wall_crypt
-  bounds: 361, 813, 32, 32
+  bounds: 93, 336, 32, 32
 wall_crystal
-  bounds: 361, 849, 32, 32
+  bounds: 55, 372, 32, 32
 wall_forest
-  bounds: 397, 777, 32, 32
+  bounds: 55, 408, 32, 32
 wall_ice
-  bounds: 433, 777, 32, 32
+  bounds: 91, 372, 32, 32
 wall_lava
-  bounds: 469, 777, 32, 32
+  bounds: 55, 444, 32, 32
 wall_sand
-  bounds: 397, 813, 32, 32
+  bounds: 91, 408, 32, 32
 wall_shadow
-  bounds: 397, 849, 32, 32
+  bounds: 91, 444, 32, 32
 wall_wood
-  bounds: 433, 813, 32, 32
+  bounds: 61, 480, 32, 32
 wraith
-  bounds: 1, 273, 64, 64
+  bounds: 61, 108, 42, 56
+  offsets: 11, 4, 64, 64

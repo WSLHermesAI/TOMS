@@ -112,7 +112,8 @@
   問題面板會警告：「key at …, after the clip's length」）。
 - **節點：** `name`、`sprite`（沒有 = 只移動它的子節點的群組）、靜止值 `pos`
   `rot` `scale` `color` `visible`、`pivot`（sprite 的 0..1，左上 = 0,0；沒有 =
-  atlas 的 `x_pivot`，再沒有就是中心）、`order`、`blend`（`normal` / `add`）、`inheritColor`、`loop`、`stayAtLastFrame`、`children`。
+  atlas 的 `x_pivot`，再沒有就是中心）、`order`、`blend`（`normal` / `add`）、`inheritColor`、`loop`、`stayAtLastFrame`、`children`；
+  版本 3 另有 `skin`、`lattice` 與 `meshGrid`（見下文與 [34_MESH_ANIMATION.md](34_MESH_ANIMATION.md)）。
 - **節點如何播放**（每個節點各自獨立；它的範圍是它子樹的第一個..最後一個 key）：
 
   | 設定 | 節點最後一個 key 之後 | 用途 |
@@ -147,9 +148,12 @@
   旋轉），儲存時寫成版本 2。
 
 **蒙皮（版本 3）：** sprite 節點可以用片段中的其他節點（它的骨頭）彎曲它的 sprite 的三角網格：
-`"skin": {"bones": ["hip", "chest", "head"], "weights": "auto"}`。網格來自圖集旁的 `<atlas>.mesh.json`
-（`atlaspack meshes`）。`"auto"` 權重由靜止姿勢產生；手繪的權重是每個頂點一組 `[[bone, weight, ...], ...]`。
-只有節點有蒙皮時檔案才存成版本 3，所以其他檔案在舊版程式中照樣能開。沒有網格的蒙皮 sprite 以四邊形繪製。在編輯器中
+`"skin": {"bones": ["hip", "chest", "head"], "weights": "auto"}`。網格來自 sprite 所屬圖集旁的網格檔
+（`game.atlas` → `game.mesh.json`，二進位時另有 `game.mesh.bin`），由所有用到該圖集的片段共用。動畫工具把片段需要的網格
+加進去：編輯器在儲存片段時，圖集重建或換皮後則用 `anim_editor --headless meshes`。`"meshGrid": [cols, rows]`（各 1–32）設定節點的 sprite 切割用的格子；
+沒有時用 8 像素的格子。`"auto"` 權重由靜止姿勢產生；手繪的權重是每個頂點一組 `[[bone, weight, ...], ...]`。
+只有節點有蒙皮、晶格或網格格數時檔案才存成版本 3，所以其他檔案在舊版程式中照樣能開。沒有網格的蒙皮 sprite 以四邊形繪製
+（檢查會回報為錯誤）。在編輯器中
 是 Properties 下的 **Skin（蒙皮）** 欄位（骨頭名稱，以逗號分隔）；欄位下方的說明列出 sprite 的網格、骨頭與權重，或它
 為何以四邊形繪製。**檢視 > 顯示蒙皮**（Shift+K）在每個蒙皮節點上畫出它的網格、依所跟隨骨頭上色的頂點（依權重混色），
 以及帶名稱的骨頭；選取一根骨頭時，頂點從亮（完全跟隨它）到暗（不跟隨）著色。詳見 [34_MESH_ANIMATION.md](34_MESH_ANIMATION.md)。
@@ -162,9 +166,11 @@
   - 物件模式選取精靈圖，和以前一樣。
   - 骨頭模式顯示蒙皮，只會選到骨頭（關節或骨頭線），不會選到底下的精靈圖。移動／旋轉／縮放控制點作用在骨頭上：
     自動關鍵影格開啟時擺動骨頭（設定關鍵影格），關閉時把骨頭放到精靈圖上（它的靜止姿勢）。
-- **網格格數**（Properties，蒙皮節點）依精靈圖的 alpha 以 N × N 格重新切割網格（1–32；32 像素的精靈圖從 4 × 4
-  開始）。格數越多彎曲越平滑。網格會立即存到圖集旁的網格檔（維持原本的文字或 `.bin`），`atlaspack meshes` 再次
-  執行時會保留這個格數。
+- **網格格數** x／y（Properties，蒙皮或變形節點）設定節點的 `meshGrid`：依精靈圖的 alpha 以這麼多格重新切割網格
+  （各 1–32；沒有設定時用 8 像素的格子，所以 32 像素的精靈圖從 4 × 4 開始）。格數越多彎曲越平滑。這是一個復原步驟；
+  網格立即重新切割，儲存片段時加進圖集的網格檔，和其他格數的網格並存（`golem`、`golem@8x8`）。
+- **晶格模式（L）** 用變形晶格彎曲 sprite（預設 4 × 4；**Properties → 晶格** 設定大小）：拖曳一個點，就在播放頭設定變形關鍵影格。
+  關鍵影格清單的 **Deform（變形）** 欄列出移動過的點（`5: 0, -2; 6: 0, -2`）。見 [34_MESH_ANIMATION.md](34_MESH_ANIMATION.md) §4.3。
 - **編輯會暫停播放。** 片段播放中在檢視區拖曳或做任何編輯（輸入數值、關鍵影格）時會先暫停，所以開啟自動關鍵影格時，
   編輯只會在畫面上的這一格設定一次關鍵影格，而不是播放頭經過的每一格。
 - **滑鼠滾輪只會在點選（或按 Tab 進入）數值欄位後才改變它的值。** 游標停在未取得焦點的數值框、下拉選單或滑桿上時，
@@ -322,11 +328,24 @@ anim_editor                                    the editor
 anim_editor tests/smoke/anim_preview.anim      with a file open (Visual Studio: "anim_editor (preview clip)")
 anim_editor --headless check x.anim [--atlas [id=]a.atlas]...
                                                parse + check sprites and keys; exit 0 ok (warnings allowed), 2 errors, 3 usage
+anim_editor --headless meshes x.anim... [--atlas [id=]a.atlas]... [--default-atlas [id=]a.atlas]
+            [--map from.atlas=to.atlas]... [--bin|--text] [--check] [--prune]
+                                               add the clips' meshes to the mesh file beside each atlas they use
+                                               (a.mesh.json); --prune: only what these clips need; --check: exit 1
+                                               when a needed mesh is missing or stale (or, with --prune, extra);
+                                               python tools/refresh_meshes.py runs it for every clip and art style
+anim_editor --headless recipe x.anim --node <name> --recipe <id> [--clip <name>] [--start s] [--period s]
+            [--strength k] [--out y.anim]      write a motion recipe's keys (docs/16 §7); exit 0 ok, 2 failed, 3 usage
+anim_editor --headless recipe --list           the motion recipes
 anim_editor --selftest x.anim outdir           automated check (with -platform offscreen); outdir must be on
                                                the atlases' drive, e.g. Build/anim_selftest
 ```
 
 （`--headless check`：解析並檢查 sprite 和 key，結束碼 0 正常（允許警告）、2 錯誤、3 用法錯誤。
+`--headless meshes`：把片段的網格加進它們用到的每個 atlas 旁的網格檔（a.mesh.json）；`--prune`：只留這些片段需要的；
+`--check`：缺少需要的網格或網格已過時（加上 `--prune` 時也包括多餘的）時以 1 結束；`--default-atlas`：沒有寫明圖集的
+片段所用的圖集；`--map`：把片段用到的某個圖集換成另一個。`python tools/refresh_meshes.py` 會對每個片段與美術風格執行它。
+`--headless recipe`：把動作範本的關鍵影格寫進檔案（docs/16 §7），`--list` 列出所有範本；結束碼 0 正常、2 失敗、3 用法錯誤。
 `--selftest`：自動檢查（搭配 `-platform offscreen`），outdir 必須和 atlas 在同一個磁碟上。）
 
 `--headless check` 載入檔案的 `atlases`（相對於 `.anim`）；每個 `--atlas`（可重複，
@@ -335,7 +354,7 @@ anim_editor --selftest x.anim outdir           automated check (with -platform o
 `"id:name"`，若沒有 atlas 有那個 id、或那個 atlas 沒有那個名稱，回報一個錯誤；對每個不帶前綴的 `"name"`，
 若沒有 atlas 有它就回報錯誤，若有好幾個 atlas 有它就回報警告（只針對不帶前綴的引用：第一個勝出——
 在 Sprites 面板中選它，或用 Qualify Sprite References 存下 atlas；指向這些名稱的帶前綴引用
-沒有問題）；每個絕對的 atlas 路徑回報一個警告。
+沒有問題）；每個絕對的 atlas 路徑回報一個警告；並讀取每個 atlas 旁的網格檔，對每個在其中沒有網格的蒙皮節點 sprite 回報一個錯誤。
 
 **編輯器中的 sprite 引用。** 在任何地方挑選 sprite——從 Sprites 面板拖到
 viewport 或節點上、雙擊它、Sprite Seq、屬性中的 sprite 欄位、key 清單的 Sprite 格——
@@ -385,7 +404,7 @@ Atlas 路徑永遠以相對路徑存放：
 | **Keys** | MPDI 風格的 key 清單（見下方） |
 | **Events** | 選取節點的事件 key：在播放頭新增、移除、編輯時間 / 名稱 |
 | **Timeline** | 第 4 階段多軌時間軸的預留位置；可接收拖放的 sprite（見下方） |
-| **Problems / Log** | 指向未知 atlas id 或其 atlas 沒有的名稱的 sprite 引用、不在任何 atlas 中或（警告）在多個 atlas 中的不帶前綴名稱、重疊的 key 時間、超出片段長度的 key、片段名稱衝突、無法載入的 atlas、絕對的 atlas 路徑（和 `--headless check` 相同的檢查）；log 顯示開啟 / 儲存的檔案，以及播放時觸發的事件 |
+| **Problems / Log** | 指向未知 atlas id 或其 atlas 沒有的名稱的 sprite 引用、不在任何 atlas 中或（警告）在多個 atlas 中的不帶前綴名稱、重疊的 key 時間、超出片段長度的 key、片段名稱衝突、無法載入的 atlas、絕對的 atlas 路徑、沒有網格的蒙皮 sprite（和 `--headless check` 相同的檢查）；log 顯示開啟 / 儲存的檔案，以及播放時觸發的事件 |
 
 **播放控制：** 播放 / 暫停（Space）、停止、循環預覽、速度、時間、帶有選取節點 key 時間的
 拖曳條（`,` / `.` 在 key 之間跳）。播放使用 `AnimPlayer`（播放次數、
@@ -425,6 +444,11 @@ Pos、Rot、Scale、Color、Sprite（`name (id)`，無法解析時為紅色）�
 | Fade In / Out | 在這些列之間 alpha 0 → 1 / 1 → 0 |
 | Sprite Seq | 在 Sprites 面板中選取的 sprite（2 個以上，依清單順序）之間循環的 sprite key |
 | Ease… | 這些列中每個內插 key 的緩動 |
+
+**Key > Motion Recipe…** 替選取的節點寫出一段有名稱的短動作：晶格範本（breathe、sway、squash、jelly）作用在任何 sprite
+的變形晶格上，骨頭範本（標有「(bones)」：bone sway、nod、swing）作用在蒙皮節點的骨頭上。選好範本、開始時間（預設：
+播放頭）、週期與強度；範本會取代它在這段範圍內寫的 key，套用是一個復原步驟。要重複的待機動作，就讓片段或節點循環。
+見 [16_ANIMATION_RECIPES.md](16_ANIMATION_RECIPES.md) §7。
 
 每次編輯都是一個復原步驟（拖曳和數值框編輯會合併成一步）；標題中的 `*` 表示
 有未儲存的變更。編輯器的 `AnimEditor` 物件為宿主視窗建立文件、viewport、面板、選單和

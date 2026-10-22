@@ -25,6 +25,7 @@ set(_core "${TOMS_CORE_SRC}")
 set(TOMS_UNIT_TESTS
     engine/anim_clip_test           engine/particle_fx_test        engine/gltf_model_test
     engine/anim_skin_test           engine/sprite_mesh_test        engine/anim_character_test
+    engine/anim_lattice_test
     engine/gltf_anim_texture_test   engine/gltf_physics_test
     engine/condition_eval_test      engine/encounter_resolve_test  engine/entity_status_test
     engine/job_system_test
@@ -188,6 +189,9 @@ toms_smoke_test(mesh_cpu     mesh        d3d11   0.1  --frames=110 --keys=enter@
 # bones, hip / chest / head, the chest and head swaying -- the feet stay, the top leans.
 toms_smoke_test(anim_skin    anim_skin   d3d11   0.1  --frames=110 --keys=enter@30
                 "--anim=${CMAKE_CURRENT_SOURCE_DIR}/smoke/anim_skin.anim#bend")
+# A deform lattice (tests/smoke/anim_deform.anim): the slime squashed by its 4 x 4 lattice, the plain slime beside it.
+toms_smoke_test(anim_deform  anim_deform d3d11   0.1  --frames=31 --scenario=${CMAKE_CURRENT_SOURCE_DIR}/scenarios/stage_new_game
+                "--anim=${CMAKE_CURRENT_SOURCE_DIR}/smoke/anim_deform.anim#squash")
 # A particle effect (docs/examples/fx_recipes.particle, particle_fx.h) over the map: a prewarmed
 # fire from the fx atlas -- flipbook frames, additive and normal emitters, colour/size curves, seed 1.
 toms_smoke_test(fx           fx          d3d11   0.1  --frames=110 --keys=enter@30

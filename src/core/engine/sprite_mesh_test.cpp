@@ -67,10 +67,12 @@ int main() {
     CHECK(back.meshes == f.meshes, "the text form reads back the same");
     CHECK(text.find("\"buffers\"") == std::string::npos, "the text form has no buffer");
     CHECK(text.find("8.0") == std::string::npos, "whole pixels are written as integers");
+    CHECK(text.rfind("{\"version\":1,", 0) == 0, "the file starts with its version (a header)");
 
     std::string bin;
     const std::string withBin = toms::spriteMeshesToJson(f, "x.mesh.bin", &bin);
     CHECK(!bin.empty() && bin.size() % 4 == 0, "the binary buffer is padded to 4 bytes");
+    CHECK(withBin.rfind("{\"version\":1,", 0) == 0, "the binary form's JSON starts with its version too");
     auto readBin = [&](const std::string& uri, std::string& bytes) { if (uri != "x.mesh.bin") return false; bytes = bin; return true; };
     toms::SpriteMeshFile backBin;
     CHECK(toms::parseSpriteMeshes(withBin, readBin, backBin, &err), "the binary form parses");
@@ -82,39 +84,18 @@ int main() {
     CHECK(!toms::parseSpriteMeshes(withBin, readShort, none, &err), "a cut-off buffer is an error");
 
     // ---- broken meshes ----
-    CHECK(!toms::parseSpriteMeshes(R"({"meshes":{"a":{"vertices":[0,0,1,0,1,1],"triangles":[0,1,3]}}})", noBuffer, none, &err),
+    CHECK(!toms::parseSpriteMeshes(R"({"version":1,"meshes":{"a":{"vertices":[0,0,1,0,1,1],"triangles":[0,1,3]}}})", noBuffer, none, &err),
           "an index past the last vertex");
-    CHECK(!toms::parseSpriteMeshes(R"({"meshes":{"a":{"vertices":[0,0,1,0,1,1],"triangles":[0,1]}}})", noBuffer, none, &err),
+    CHECK(!toms::parseSpriteMeshes(R"({"version":1,"meshes":{"a":{"vertices":[0,0,1,0,1,1],"triangles":[0,1]}}})", noBuffer, none, &err),
           "a triangle that is not whole");
-    CHECK(!toms::parseSpriteMeshes(R"({"meshes":{"a":{"vertices":[0,0,1],"triangles":[]}}})", noBuffer, none, &err),
+    CHECK(!toms::parseSpriteMeshes(R"({"version":1,"meshes":{"a":{"vertices":[0,0,1],"triangles":[]}}})", noBuffer, none, &err),
           "vertices not in pairs");
     CHECK(!toms::parseSpriteMeshes(R"({"version":2,"meshes":{}})", noBuffer, none, &err), "a newer version");
+    CHECK(!toms::parseSpriteMeshes(R"({"meshes":{}})", noBuffer, none, &err) && err.find("version") != std::string::npos,
+          "no version: an error that says so");
 
     CHECK(toms::spriteMeshPath("a/b/game.atlas") == "a/b/game.mesh.json", "game.atlas -> game.mesh.json");
     CHECK(toms::spriteMeshPath("a.b/game") == "a.b/game.mesh.json", "no extension: appended");
-
-    // ---- the shipped meshes fit the shipped atlas (`atlaspack meshes assets/media/atlas/game.atlas`) ----
-    std::string atlasText, meshText;
-    toms::AtlasFile atlas;
-    toms::SpriteMeshFile game;
-    if (toms::vfsReadAll("media/atlas/game.atlas", atlasText) && toms::parseAtlas(atlasText, atlas) &&
-        toms::vfsReadAll("media/atlas/game.mesh.json", meshText)) {
-        CHECK(toms::parseSpriteMeshes(meshText, noBuffer, game, &err), "game.mesh.json parses");
-        int outside = 0, unknown = 0;
-        for (const auto& [name, gm] : game.meshes) {
-            const toms::AtlasRegion* r = atlas.find(name);
-            if (!r) { unknown++; continue; }
-            for (size_t i = 0; i < gm.vertices.size(); i += 2)
-                if (gm.vertices[i] < r->offX || gm.vertices[i] > r->offX + r->w || gm.vertices[i + 1] < r->offY ||
-                    gm.vertices[i + 1] > r->offY + r->h) { outside++; break; }
-        }
-        CHECK(unknown == 0, "every mesh names a sprite of game.atlas (run atlaspack meshes again after a rebuild)");
-        CHECK(outside == 0, "every mesh lies on its sprite's packed pixels");
-        CHECK(game.find("golem") != nullptr, "the golem has a mesh (tests/smoke/anim_skin.anim bends it)");
-    } else {
-        std::printf("FAIL: media/atlas/game.atlas or game.mesh.json not found (run in assets/)\n");
-        ++g_fail;
-    }
 
     if (g_fail) { std::printf("sprite_mesh_test: %d failure(s)\n", g_fail); return 1; }
     std::printf("sprite_mesh_test: OK\n");

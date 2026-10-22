@@ -51,8 +51,10 @@ public:
     // `atlases` = (id, absolute .atlas path, parsed atlas); pages are read from disk next to it.
     void setAtlases(const std::vector<std::tuple<std::string, std::string, const toms::AtlasFile*>>& atlases);
     const toms::anim::AtlasSet& atlasSet() const { return *m_set; }
-    // The meshes of the atlas with this id (kept by the caller; nullptr = none): skinned nodes bend them.
-    void setMeshes(const std::string& id, const toms::SpriteMeshFile* meshes) { if (m_set) m_set->setMeshes(id, meshes); }
+    // The meshes of the atlas with this id (kept by the caller; nullptr = none): skinned and deformed nodes bend them.
+    void setMeshes(const std::string& id, const toms::SpriteMeshFile* meshes) {
+        if (m_set) for (auto& e : m_set->entries) if (e.id == id) e.meshes = meshes;
+    }
     void clear();
 
 private:
@@ -91,6 +93,8 @@ public:
     QPaintEngine* paintEngine() const override;
     bool saveGameRendererShot(const QString& path);   // a bgfx screenshot of the next frame
     int framesDrawn() const { return m_frames; }
+    // Tests: draw no frame while on (a capture of the window, which asks it to paint, then sees what was shown).
+    void holdFrames(bool on) { m_hold = on; }
     toms::next::BgfxRenderer* gameRenderer() const;   // while usingGameRenderer()
 
 signals:
@@ -121,4 +125,5 @@ private:
     QSize m_overlaySize;
     QString m_shotPath;
     int m_frames = 0;
+    bool m_hold = false;
 };

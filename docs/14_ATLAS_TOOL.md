@@ -294,18 +294,6 @@ Each unit is cut out at its original size, with its trimmed pixels put back at t
 meshes (`.ti`) and morphing (`.mx`) are not carried over (see 7). `--images DIR` writes the units
 out as PNGs instead and makes a folder project.
 
-### Sprite meshes
-
-```bat
-atlaspack meshes assets\media\atlas\game.atlas            :: game.mesh.json beside it, as plain text
-atlaspack meshes assets\media\atlas\game.atlas --bin      :: game.mesh.json + game.mesh.bin (glTF style)
-atlaspack meshes assets\media\atlas\game.atlas --check    :: exit 1 when the files differ from a fresh run
-```
-
-Cuts every sprite's triangle mesh from its alpha (cells of `--cell` pixels, default 8; `--alpha-threshold`), for
-skinned clips ([34_MESH_ANIMATION.md](34_MESH_ANIMATION.md)). Child sprites and rotated regions get none (they draw
-as quads); a mesh marked `"source": "hand"` is kept. Run it again after rebuilding an atlas, for each art style too.
-
 ## 6. Tests
 
 `atlas_core_test` (CTest `atlas.core`):
@@ -336,7 +324,9 @@ and one has a missing PNG.
 ## 7. Left out on purpose
 
 - **The old triangle meshes and morphing** (`.ti`, `.mx`, the old Triangulator tab) are not imported. TOMS has its
-  own sprite meshes (`atlaspack meshes`, §5) and bends them by skinning
-  ([34_MESH_ANIMATION.md](34_MESH_ANIMATION.md)). The old PI.exe still edits the old files.
+  own sprite meshes (`<atlas>.mesh.json` beside the atlas, written only by the anim tools: the atlas tool never reads
+  or writes them) and bends them by
+  skinning and a deform lattice ([34_MESH_ANIMATION.md](34_MESH_ANIMATION.md)). The old PI.exe still edits the old
+  files.
 - **Rotation** in packing: see §2.
 - **`.pib`/`.pngb`** (FM79979 Huffman-compressed copies) and **DDS**: not written. Plain `.pi` + `.png` load everywhere.

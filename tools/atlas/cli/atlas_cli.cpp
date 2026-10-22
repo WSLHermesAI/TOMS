@@ -1,13 +1,12 @@
 // atlas_cli.cpp -- the command line of the atlas tool: atlaspack, and `atlas_editor --headless`.
 //
-// Commands: new, add, refs, extract, embed, build, import, pack, info, meshes -- see kUsage below.
+// Commands: new, add, refs, extract, embed, build, import, pack, info -- see kUsage below.
 // Exit codes: 0 ok, 1 warnings and --strict, 2 errors, 3 bad command line.
 #include "atlas_cli.h"
 #include "atlas_build.h"
 #include "atlas_export.h"
 #include "atlas_store.h"
 #include "atlas_file.h"
-#include "sprite_mesh.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -50,10 +49,6 @@ const char* kUsage =
     "  atlaspack pack    <folder>... --out DIR [--name NAME] [--format LIST] [options] [--save-project FILE]\n"
     "                    pack folders straight to files (a folder project)\n"
     "  atlaspack info    <file.pi|.atlas|.json>\n"
-    "  atlaspack meshes  <file.atlas> [--cell N] [--alpha-threshold N] [--bin] [--check]\n"
-    "                    cut every sprite's triangle mesh from its alpha into <atlas>.mesh.json (docs/34);\n"
-    "                    --bin: the numbers in <atlas>.mesh.bin beside it (glTF style); \"hand\" meshes are kept;\n"
-    "                    a mesh with a grid (\"cells\", the anim editor's Mesh grid) is cut on that grid again\n"
     "\n"
     "formats (LIST is comma separated): atlas, atlas-spine3, plist, tp-json, pi, rcss\n"
     "options: --max WxH  --pot  --square  --padding N  --border N  --extrude N  --no-trim\n"
@@ -288,92 +283,6 @@ int cmdImport(const Args& a) {
     return saveAll(projPath, p, a.has("--quiet"));
 }
 
-// atlaspack meshes: each sprite's mesh from its packed pixels' alpha (sprite_mesh.h meshFromAlpha), written beside the
-// atlas. Child sprites (no pixels of their own) and rotated regions get none (they draw as quads); a mesh the file
-// marks "hand" is kept as it is.
-int cmdMeshes(const Args& a) {
-    if (a.pos.size() != 1) { std::fprintf(stderr, "meshes: give one .atlas file\n"); return 3; }
-    const std::string atlasPath = a.pos[0];
-    std::ifstream in(fs::u8path(atlasPath), std::ios::binary);
-    const std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-    toms::AtlasFile atlas;
-    std::string err;
-    if (text.empty() || !toms::parseAtlas(text, atlas, &err)) {
-        std::fprintf(stderr, "%s: error: %s\n", atlasPath.c_str(), err.empty() ? "cannot read" : err.c_str());
-        return 2;
-    }
-    const int cell = std::max(1, std::atoi(a.get("--cell", "8").c_str()));
-    const int alphaMin = std::max(1, std::atoi(a.get("--alpha-threshold", "1").c_str()));
-    const fs::path dir = fs::u8path(atlasPath).parent_path();
-    std::vector<Image> pages;
-    for (const toms::AtlasPage& pg : atlas.pages) {
-        Image img;
-        if (!loadImage((dir / fs::u8path(pg.file)).u8string(), img, &err)) {
-            std::fprintf(stderr, "%s: error: page %s: %s\n", atlasPath.c_str(), pg.file.c_str(), err.c_str());
-            return 2;
-        }
-        pages.push_back(std::move(img));
-    }
-    // The meshes already there: "hand" ones stay.
-    const std::string meshPath = toms::spriteMeshPath(atlasPath);
-    toms::SpriteMeshFile old, out;
-    {
-        std::ifstream mf(fs::u8path(meshPath), std::ios::binary);
-        const std::string mtext((std::istreambuf_iterator<char>(mf)), std::istreambuf_iterator<char>());
-        auto readBuffer = [&](const std::string& uri, std::string& bytes) {
-            std::ifstream bf(fs::u8path(meshPath).parent_path() / fs::u8path(uri), std::ios::binary);
-            bytes.assign((std::istreambuf_iterator<char>(bf)), std::istreambuf_iterator<char>());
-            return (bool)bf || !bytes.empty();
-        };
-        if (!mtext.empty() && !toms::parseSpriteMeshes(mtext, readBuffer, old, &err))
-            std::fprintf(stderr, "%s: warning: %s (made again)\n", meshPath.c_str(), err.c_str());
-    }
-    int made = 0, kept = 0, skipped = 0;
-    for (const toms::AtlasRegion& r : atlas.regions) {
-        if (const toms::SpriteMesh* m = old.find(r.name); m && m->source == "hand") { out.meshes[r.name] = *m; kept++; continue; }
-        if (r.child || r.rotated || r.page < 0 || r.page >= (int)pages.size() || r.w <= 0 || r.h <= 0) { skipped++; continue; }
-        const Image& pg = pages[(size_t)r.page];
-        if (r.x < 0 || r.y < 0 || r.x + r.w > pg.w || r.y + r.h > pg.h) { skipped++; continue; }
-        // A mesh cut on a grid (the anim editor's Mesh grid) is cut on that grid again; the others on --cell cells.
-        const toms::SpriteMesh* was = old.find(r.name);
-        toms::SpriteMesh m = was && was->cells[0] > 0 && was->cells[1] > 0
-                                 ? toms::meshFromAlphaGrid(pg.at(r.x, r.y), pg.w, r.w, r.h, r.offX, r.offY, was->cells[0], was->cells[1], alphaMin)
-                                 : toms::meshFromAlpha(pg.at(r.x, r.y), pg.w, r.w, r.h, r.offX, r.offY, cell, alphaMin);
-        if (m.triangles.empty()) { skipped++; continue; }
-        out.meshes[r.name] = std::move(m);
-        made++;
-    }
-    const bool bin = a.has("--bin");
-    const std::string binName = fs::u8path(meshPath).stem().u8string() + ".bin";   // game.mesh.json -> game.mesh.bin
-    std::string binary;
-    const std::string json = toms::spriteMeshesToJson(out, bin ? binName : std::string(), bin ? &binary : nullptr);
-    const fs::path binPath = fs::u8path(meshPath).parent_path() / fs::u8path(binName);
-    auto readAll = [](const fs::path& f) {
-        std::ifstream i(f, std::ios::binary);
-        return std::string((std::istreambuf_iterator<char>(i)), std::istreambuf_iterator<char>());
-    };
-    if (a.has("--check")) {
-        const bool same = readAll(fs::u8path(meshPath)) == json && (!bin || readAll(binPath) == binary);
-        std::printf("%s: %s\n", meshPath.c_str(), same ? "up to date" : "out of date: run atlaspack meshes again");
-        return same ? 0 : 1;
-    }
-    {
-        std::ofstream o(fs::u8path(meshPath), std::ios::binary);
-        o << json;
-        if (!o) { std::fprintf(stderr, "error: cannot write %s\n", meshPath.c_str()); return 2; }
-    }
-    if (bin) {
-        std::ofstream o(binPath, std::ios::binary);
-        o.write(binary.data(), (std::streamsize)binary.size());
-        if (!o) { std::fprintf(stderr, "error: cannot write %s\n", binPath.u8string().c_str()); return 2; }
-    }
-    const std::string where = bin ? ", numbers in " + binName + " (" + std::to_string(binary.size()) + " bytes)" : std::string();
-    if (!a.has("--quiet"))
-        std::printf("%s: %d mesh(es) made, %d kept (hand), %d sprite(s) without one (child, rotated or empty); cell %d px%s\n",
-                    meshPath.c_str(), made, kept, skipped, cell, where.c_str());
-    return 0;
-}
-
 int cmdInfo(const Args& a) {
     if (a.pos.size() != 1) { std::fprintf(stderr, "info: give one atlas file\n"); return 3; }
     BuildResult in;
@@ -567,7 +476,6 @@ int atlasCliMain(const std::vector<std::string>& args) {
     if (cmd == "pack") return cmdPack(a);
     if (cmd == "import") return cmdImport(a);
     if (cmd == "info") return cmdInfo(a);
-    if (cmd == "meshes") return cmdMeshes(a);
     if (cmd == "new") return cmdNew(a);
     if (cmd == "embed") return cmdEmbed(a);
     if (cmd == "add") return cmdAdd(a);
