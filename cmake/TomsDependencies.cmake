@@ -122,6 +122,12 @@ set(ENABLE_OBJECT_STREAM               OFF CACHE BOOL "" FORCE)
 foreach(_jolt_isa USE_AVX USE_AVX2 USE_AVX512 USE_LZCNT USE_TZCNT USE_F16C USE_FMADD)
     set(${_jolt_isa} OFF CACHE BOOL "" FORCE)
 endforeach()
+# The web: every target is built with -msimd128 (CMakePresets.json), and with __wasm_simd128__ Jolt takes its SSE code
+# path, which needs Emscripten's SSE headers (-msse4.2). USE_WASM_SIMD adds both to Jolt; off, Jolt fails to compile
+# ("unknown type name '__m128'", "use of undeclared identifier '_mm_set_ss'").
+if(EMSCRIPTEN)
+    set(USE_WASM_SIMD ON CACHE BOOL "" FORCE)
+endif()
 toms_declare_dep(JoltPhysics https://github.com/jrouwe/JoltPhysics.git v5.6.0 SOURCE_SUBDIR Build EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(JoltPhysics)
 toms_deps_fetched(JoltPhysics)
