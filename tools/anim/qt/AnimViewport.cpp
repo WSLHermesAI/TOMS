@@ -113,7 +113,7 @@ void AnimViewport::buildFrame(float t, std::vector<NodePose>& poses, std::vector
 {
     poses.clear();
     items.clear();
-    const toms::anim::Clip* clip = m_doc->clip();
+    const toms::anim::Clip* clip = m_doc->drawClip();   // as a previewed character, when one is chosen
     if (!clip) return;
     toms::anim::evaluate(*clip, t, poses);
     const glm::mat3 place = toms::anim::placement(0, 0);
@@ -197,21 +197,23 @@ void AnimViewport::paintGameScene(const GameScene& s)
             if (m_doc->atlasAt(i).ok)
                 atlases.emplace_back(m_doc->atlasId(i).toStdString(), m_doc->atlasAt(i).path.toStdString(), &m_doc->atlasAt(i).atlas);
         m_tex.setAtlases(atlases);
+        for (int i = 0; i < m_doc->atlasCount(); i++)   // skinned nodes bend these (docs/34_MESH_ANIMATION.md)
+            if (m_doc->atlasAt(i).ok) m_tex.setMeshes(m_doc->atlasId(i).toStdString(), &m_doc->atlasAt(i).meshes);
     }
     const QPointF o = toWidget(QPointF(0, 0));   // origin cross: where the game places the clip
     s.line(QPointF(std::round(o.x()) + 0.5, 0), QPointF(std::round(o.x()) + 0.5, height()), 1, tc.gridAxis);
     s.line(QPointF(0, std::round(o.y()) + 0.5), QPointF(width(), std::round(o.y()) + 0.5), 1, tc.gridAxis);
-    // The clip, exactly as the game draws it (Game::drawPreviewAnim): evaluate + appendQuads.
-    const toms::anim::Clip* clip = m_doc->clip();
+    // The clip, exactly as the game draws it (Game::drawPreviewAnim): evaluate + appendDraws (skinned nodes bent).
+    const toms::anim::Clip* clip = m_doc->drawClip();
     if (!clip) return;
     std::vector<NodePose> poses;
     toms::anim::evaluate(*clip, m_doc->previewTime(), poses);
     if (m_doc->solo())   // only the solo node's subtree
         poses.erase(std::remove_if(poses.begin(), poses.end(), [this](const NodePose& p) { return !m_doc->soloShows(p.node); }),
                     poses.end());
-    std::vector<Quad> quads;
-    toms::anim::appendQuads(poses, m_tex.atlasSet(), GameScene::placement(viewTransform()), nullptr, quads);
-    for (const Quad& q : quads) s.ren.drawSprite(q);
+    toms::anim::DrawList draws;
+    toms::anim::appendDraws(*clip, poses, m_tex.atlasSet(), GameScene::placement(viewTransform()), nullptr, draws);
+    draws.submit(&s.ren);
 }
 
 void AnimViewport::paintContent(QPainter& p)
@@ -256,6 +258,7 @@ void AnimViewport::paintContent(QPainter& p)
             p.setBrush(Qt::NoBrush);
             p.drawPolygon(view.map(corners(it.quad)));
         }
+    drawSkins(p, view);
     drawGizmo(p, gizmo());
 
     // Status text over the view.
@@ -269,17 +272,146 @@ void AnimViewport::paintContent(QPainter& p)
             info += tr("   SOLO: %1").arg(QString::fromStdString(sn->name));
     if (clip && m_doc->previewTime() > m_doc->time())
         info += tr("   (ended: looping nodes play on, +%1 s)").arg(m_doc->previewTime() - m_doc->time(), 0, 'f', 1);
+    if (m_mode == EditMode::Bones) info += tr("   BONES: click a bone (Auto-Key on: pose it; off: place it in the sprite)");
+    if (!m_doc->previewCharacter().isEmpty()) info += tr("   AS: %1").arg(m_doc->previewCharacter());
     if (m_doc->atlasCount() == 0) info += tr("   (no atlas: add one under Properties > Atlases)");
     else if (!m_doc->atlasLoaded()) info += tr("   (an atlas did not load: see Problems)");
     drawLabel(p, QPointF(8, 8), info);
     if (!m_missing.isEmpty()) drawLabel(p, QPointF(8, 32), tr("missing sprites: %1").arg(m_missing.join(QStringLiteral(", "))));
 }
 
+void AnimViewport::setEditMode(EditMode m)
+{
+    if (m == m_mode) return;
+    m_mode = m;
+    m_hover = -1;
+    m_hoverBone.clear();
+    update();
+}
+
+QString AnimViewport::boneAt(const QPointF& w) const
+{
+    const toms::anim::Clip* clip = m_doc->drawClip();
+    if (!clip) return QString();
+    const glm::mat3 place = toms::anim::placement(0, 0);
+    const QTransform view = viewTransform();
+    QString best;
+    double bestD = 9.0;   // widget pixels: a joint or a segment within this
+    for (size_t i = 0; i < m_poses.size(); i++) {
+        const NodePose& pose = m_poses[i];
+        if (!pose.node || !pose.node->skinned() || !pose.visible || !m_doc->soloShows(pose.node)) continue;
+        toms::anim::SkinView sv;
+        if (toms::anim::skinView(*clip, m_poses, i, m_doc->atlasSet(), place, &sv) != toms::anim::SkinState::Ok) continue;
+        for (size_t b = 0; b < sv.bones.size(); b++) {
+            if (!sv.boneFound[b]) continue;
+            const QPointF s = view.map(QPointF(sv.boneStart[b].x, sv.boneStart[b].y)), e = view.map(QPointF(sv.boneEnd[b].x, sv.boneEnd[b].y));
+            // The joint wins over a segment passing by: it counts 3 pixels nearer.
+            const double joint = std::hypot(w.x() - s.x(), w.y() - s.y()) - 3.0;
+            const QPointF se = e - s;
+            const double len2 = se.x() * se.x() + se.y() * se.y();
+            const double t = len2 > 1e-9 ? std::clamp(((w.x() - s.x()) * se.x() + (w.y() - s.y()) * se.y()) / len2, 0.0, 1.0) : 0.0;
+            const double seg = std::hypot(w.x() - (s.x() + t * se.x()), w.y() - (s.y() + t * se.y()));
+            const double d = std::min(joint, seg);
+            if (d < bestD) {
+                bestD = d;
+                best = QString::fromStdString(sv.bones[b]);
+            }
+        }
+    }
+    return best;
+}
+
+QColor AnimViewport::boneColor(int b)
+{
+    static const QColor kPalette[] = {QColor(0xff, 0x5c, 0x5c), QColor(0x4f, 0xc3, 0xf7), QColor(0xff, 0xd5, 0x4f),
+                                      QColor(0x81, 0xc7, 0x84), QColor(0xba, 0x68, 0xc8), QColor(0xff, 0x8a, 0x65),
+                                      QColor(0x4d, 0xb6, 0xac), QColor(0xf0, 0x62, 0x92)};
+    return kPalette[size_t(b < 0 ? 0 : b) % (sizeof(kPalette) / sizeof(kPalette[0]))];
+}
+
+void AnimViewport::drawSkins(QPainter& p, const QTransform& view) const
+{
+    const toms::anim::Clip* clip = m_doc->drawClip();
+    if ((!m_showSkin && m_mode != EditMode::Bones) || !clip) return;
+    const Node* sel = m_doc->selectedNode();
+    const glm::mat3 place = toms::anim::placement(0, 0);   // content = clip space, as buildFrame
+    auto at = [&](const glm::vec2& c) { return view.map(QPointF(c.x, c.y)); };
+    for (size_t i = 0; i < m_poses.size(); i++) {
+        const NodePose& pose = m_poses[i];
+        // Hidden (itself, a parent, a visible key) or left out by solo: no mesh is drawn, so no overlay either.
+        if (!pose.node || !pose.node->skinned() || !pose.visible || !m_doc->soloShows(pose.node)) continue;
+        toms::anim::SkinView sv;
+        if (toms::anim::skinView(*clip, m_poses, i, m_doc->atlasSet(), place, &sv) != toms::anim::SkinState::Ok) continue;
+        const int bones = int(sv.bones.size());
+        int selBone = -1;   // the selected node is one of this skin's bones: shade by its weight
+        for (int b = 0; b < bones && sel; b++)
+            if (sv.boneFound[size_t(b)] && sv.bones[size_t(b)] == sel->name) selBone = b;
+
+        // The mesh: every triangle's edges.
+        p.setPen(QPen(QColor(255, 255, 255, 80), 1));
+        p.setBrush(Qt::NoBrush);
+        for (size_t t = 0; t + 2 < sv.triangles.size(); t += 3) {
+            const QPointF a = at(sv.vertices[sv.triangles[t]]), b = at(sv.vertices[sv.triangles[t + 1]]),
+                          c = at(sv.vertices[sv.triangles[t + 2]]);
+            p.drawLine(a, b);
+            p.drawLine(b, c);
+            p.drawLine(c, a);
+        }
+        // The points: the colours of the bones they follow, mixed by weight; or how much they follow the selected bone.
+        for (size_t v = 0; v < sv.vertices.size(); v++) {
+            double r = 0, g = 0, bl = 0, sum = 0, mine = 0;
+            for (int k = 0; k < toms::anim::kSkinInfluences; k++) {
+                const float w = sv.weights[v * 2 * toms::anim::kSkinInfluences + 2 * size_t(k) + 1];
+                const int b = int(sv.weights[v * 2 * toms::anim::kSkinInfluences + 2 * size_t(k)]);
+                if (w <= 0 || b < 0 || b >= bones) continue;
+                const QColor c = boneColor(b);
+                r += w * c.redF(); g += w * c.greenF(); bl += w * c.blueF(); sum += w;
+                if (b == selBone) mine += w;
+            }
+            QColor col;
+            if (selBone >= 0) {
+                const double f = sum > 0 ? mine / sum : 0, dim = 0.18;
+                const QColor c = boneColor(selBone);
+                col = QColor::fromRgbF(float(dim + (c.redF() - dim) * f), float(dim + (c.greenF() - dim) * f), float(dim + (c.blueF() - dim) * f));
+            } else {
+                col = sum > 0 ? QColor::fromRgbF(float(r / sum), float(g / sum), float(bl / sum)) : QColor(128, 128, 128);
+            }
+            p.setPen(QPen(QColor(0, 0, 0, 200), 1));
+            p.setBrush(col);
+            p.drawEllipse(at(sv.vertices[v]), 3.5, 3.5);
+        }
+        // The bones: the segment each one's weights are measured against, where the bone has carried it now.
+        for (int b = 0; b < bones; b++) {
+            const QPointF s = at(sv.boneStart[size_t(b)]), e = at(sv.boneEnd[size_t(b)]);
+            const bool picked = b == selBone;
+            const bool hovered = m_mode == EditMode::Bones && !picked && sv.boneFound[size_t(b)] &&
+                                 QString::fromStdString(sv.bones[size_t(b)]) == m_hoverBone;
+            const QColor c = hovered ? boneColor(b).lighter(135) : boneColor(b);
+            if (hovered) {
+                p.setPen(QPen(QColor(255, 255, 255, 140), 6, Qt::SolidLine, Qt::RoundCap));
+                p.drawLine(s, e);
+            }
+            if (picked) {
+                p.setPen(QPen(Qt::white, 7, Qt::SolidLine, Qt::RoundCap));
+                p.drawLine(s, e);
+            }
+            p.setPen(QPen(sv.boneFound[size_t(b)] ? c : QColor(255, 60, 60), picked ? 4 : 3,
+                          sv.boneFound[size_t(b)] ? Qt::SolidLine : Qt::DashLine, Qt::RoundCap));
+            p.drawLine(s, e);
+            p.setBrush(c);
+            p.setPen(QPen(picked ? Qt::white : QColor(0, 0, 0, 200), picked ? 2 : 1));
+            p.drawEllipse(s, 5.5, 5.5);
+            drawLabel(p, s + QPointF(8, -22), sv.boneFound[size_t(b)] ? QString::fromStdString(sv.bones[size_t(b)])
+                                                                      : tr("%1 (no such node)").arg(QString::fromStdString(sv.bones[size_t(b)])));
+        }
+    }
+}
+
 AnimViewport::Gizmo AnimViewport::gizmo() const
 {
     Gizmo g;
-    const toms::anim::Clip* clip = m_doc->clip();
-    const Node* sel = m_doc->selectedNode();
+    const toms::anim::Clip* clip = m_doc->drawClip();
+    const Node* sel = m_doc->drawNode(m_doc->selectedNode());
     if (!clip || !sel) return g;
     const NodePose* me = nullptr;
     const NodePose* parent = nullptr;
@@ -398,7 +530,7 @@ int AnimViewport::itemAt(const QPointF& w) const
 
 QPointF AnimViewport::parentPointAt(const NodePath& parent, const QPointF& contentPos) const
 {
-    const toms::anim::Clip* clip = m_doc->clip();
+    const toms::anim::Clip* clip = m_doc->drawClip();   // m_poses are the drawn copy's
     if (!clip) return contentPos;
     const Node* pn = nodeAt(clip->root, parent);
     for (const NodePose& pose : m_poses)
@@ -418,6 +550,14 @@ void AnimViewport::mousePressEvent(QMouseEvent* e)
     rebuild();
     Gizmo g = gizmo();
     Drag d = handleAt(e->position(), g);
+    if (d == Drag::None && m_mode == EditMode::Bones) {   // Bones mode: only bones are picked, never sprites
+        const QString bone = boneAt(e->position());
+        if (bone.isEmpty() || !m_doc->selectNodeByName(bone)) return;
+        if (m_tool != Tool::Move) return;
+        rebuild();
+        g = gizmo();
+        d = Drag::MoveFree;   // drag a bone to move it
+    }
     if (d == Drag::None) {
         const int hit = itemAt(e->position());
         if (hit < 0) return;
@@ -429,6 +569,7 @@ void AnimViewport::mousePressEvent(QMouseEvent* e)
     }
     const Node* sel = m_doc->selectedNode();
     if (!sel || !g.valid) return;
+    emit dragStarted();   // playback pauses first: the drag edits the frame on screen
     m_drag = d;
     m_dragStart = e->position();
     m_dragGizmo = g;
@@ -450,6 +591,18 @@ void AnimViewport::mouseMoveEvent(QMouseEvent* e)
         return;
     }
     rebuild();
+    if (m_mode == EditMode::Bones) {
+        const QString bone = boneAt(e->position());
+        const Drag h = handleAt(e->position(), gizmo());
+        setCursor(h != Drag::None ? Qt::PointingHandCursor : !bone.isEmpty() ? (m_tool == Tool::Move ? Qt::SizeAllCursor : Qt::PointingHandCursor)
+                                                                             : Qt::ArrowCursor);
+        if (bone != m_hoverBone || m_hover != -1) {
+            m_hoverBone = bone;
+            m_hover = -1;
+            update();
+        }
+        return;
+    }
     const int hover = itemAt(e->position());
     const Drag h = handleAt(e->position(), gizmo());
     setCursor(h != Drag::None ? Qt::PointingHandCursor : hover >= 0 && m_tool == Tool::Move ? Qt::SizeAllCursor : Qt::ArrowCursor);

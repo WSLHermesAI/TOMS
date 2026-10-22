@@ -4,6 +4,8 @@
 #include "game_internal.h"
 
 #include <stb_image.h>   // declarations only (game_assets.cpp has the implementation)
+#include <algorithm>
+#include <cmath>
 #include <memory>
 
 using namespace toms::game_detail;
@@ -63,7 +65,9 @@ void Game::draw() {
         floor_.render(view);
         drawStylingSpikeBackdrop();
     }
-    // Battle / dialogue / inventory / store: the RmlUi documents fill the screen, no world behind.
+    // Battle / dialogue / inventory / store: the RmlUi documents fill the screen, no world behind. A weapon with battle
+    // clips draws the player's character and the weapon where the battle screen's player picture would be.
+    if (showBattle) drawBattleRig();
     drawPreviewAnim(); ren->end();
 }
 
@@ -172,11 +176,47 @@ bool Game::playPreviewAnim(const std::string& file, const std::string& clip, std
     previewAnim_ = a;
     previewClip_ = clip;
     previewAnimVer_ = a->version();
-    previewPlayer_.play(a->find(clip));
+    startPreviewClip();
     previewMissing_.clear();
     std::fprintf(stderr, "[anim] preview %s#%s (%.2fs, %zu atlas(es))\n", file.c_str(), clip.c_str(),
                  a->find(clip)->duration(), a->atlases().entries.size());
     return true;
+}
+
+void Game::startPreviewClip() {
+    const toms::anim::Clip* c = previewAnim_ ? previewAnim_->find(previewClip_) : nullptr;
+    if (c && !previewCharacter_.empty()) {
+        previewFitted_ = fitClipToCharacter(*c, previewCharacter_);
+        c = &previewFitted_;
+    }
+    // A held thing (--held): its clip of the same name, bound at the character's hand; the two play as one.
+    if (!previewHeldFile_.empty() && res_) {
+        previewHeld_ = res_->get<toms::res::AnimRes>(fromWorkingDir(previewHeldFile_));
+        res_->refresh(previewHeld_);
+        const toms::anim::Clip* held = previewHeld_->ok() ? previewHeld_->find(previewClip_) : nullptr;
+        if (!held)
+            std::fprintf(stderr, "[anim] --held=%s: %s\n", previewHeldFile_.c_str(),
+                         previewHeld_->ok() ? ("no clip '" + previewClip_ + "'").c_str() : previewHeld_->error().c_str());
+        previewRig_.play(c, held);
+        previewPlayer_.stop();
+        return;
+    }
+    previewPlayer_.play(c);
+}
+
+toms::anim::Clip Game::fitClipToCharacter(const toms::anim::Clip& clip, const std::string& sprite) const {
+    auto boxOf = [this](const std::string& ref, toms::SpriteBox& out) {
+        auto it = spriteBoxes_.find(toms::anim::parseSpriteRef(ref).name);
+        if (it == spriteBoxes_.end()) return false;
+        out = it->second;
+        return true;
+    };
+    glm::vec2 nudge(0.0f);
+    if (characterFit_.is_object() && characterFit_.contains(sprite)) {
+        const nlohmann::json& hand = characterFit_[sprite].value("hand", nlohmann::json::array());
+        if (hand.is_array() && hand.size() == 2) nudge = {hand[0].get<float>(), hand[1].get<float>()};
+    }
+    return toms::anim::fitCharacter(clip, sprite, boxOf, nudge);
 }
 
 bool Game::playPreviewFx(const std::string& file, const std::string& effect, std::string& error) {
@@ -207,7 +247,7 @@ bool Game::playPreviewFx(const std::string& file, const std::string& effect, std
 void Game::provideSpriteAtlas() {
     if (!res_) return;
     res_->provide<toms::res::AtlasRes>(toms::res::ResourceManager::kSpriteAtlas,
-                                       [&](toms::res::AtlasRes& a) { a.setProvided(spriteAtlas_); });
+                                       [&](toms::res::AtlasRes& a) { a.setProvided(spriteAtlas_, spriteMeshes_); });
 }
 
 // ---- monster idle animations ----
@@ -262,16 +302,65 @@ bool Game::drawClipInRect(const toms::anim::Clip& clip, float t, const toms::ani
     toms::anim::evaluate(clip, t, idlePoses_);
     const glm::mat3 place =
         toms::anim::flatten(toms::anim::compose({x + w * 0.5f, y + h, 0}, glm::vec3(0), {w / spriteW, h / spriteH, 1}));
-    idleQuads_.clear();
+    idleDraws_.clear();
     const bool tinted = tint && (tint[0] != 1 || tint[1] != 1 || tint[2] != 1 || tint[3] != 1);
-    toms::anim::appendQuads(idlePoses_, set, place, tinted ? tint : nullptr, idleQuads_);
-    if (idleQuads_.empty()) return false;
-    for (const Quad& q : idleQuads_) ren->drawSprite(q);
+    toms::anim::appendDraws(clip, idlePoses_, set, place, tinted ? tint : nullptr, idleDraws_);
+    if (idleDraws_.empty()) return false;
+    idleDraws_.submit(ren);
     return true;
+}
+
+bool Game::playPreviewMesh(const std::string& sprite, std::string& error) {
+    const toms::AtlasRegion* r = spriteAtlas_.find(sprite);
+    if (!r) { error = "no sprite '" + sprite + "' in the game atlas"; return false; }
+    if (r->rotated) { error = "sprite '" + sprite + "' is rotated in the atlas"; return false; }
+    previewMeshSprite_ = sprite;
+    previewMeshMs_ = 0;
+    std::fprintf(stderr, "[mesh] preview %s (%dx%d)\n", sprite.c_str(), r->w, r->h);
+    return true;
+}
+
+// --mesh-test: the sprite as a grid of triangles, each row swaying by a sine wave that grows towards the top (the
+// bottom row stays put), 4x its size left of the centre; the plain sprite at the same size right of it. Both sit
+// below the centre, clear of the floor-name banner.
+void Game::drawPreviewMesh() {
+    const toms::AtlasRegion* r = previewMeshSprite_.empty() ? nullptr : spriteAtlas_.find(previewMeshSprite_);
+    if (!r || r->rotated) return;
+    constexpr int kCells = 8;
+    const float w = r->w * 4.0f, h = r->h * 4.0f;
+    const float x0 = ren->width() / 2.0f - w - 16.0f, y0 = ren->height() * 0.65f - h / 2.0f;
+    const float t = (float)(previewMeshMs_ / 1000.0);
+    previewMeshVerts_.clear();
+    for (int j = 0; j <= kCells; j++)
+        for (int i = 0; i <= kCells; i++) {
+            const float fx = (float)i / kCells, fy = (float)j / kCells;
+            const float sway = std::sin(t * 4.0f + fy * 3.0f) * w * 0.12f * (1.0f - fy);
+            previewMeshVerts_.push_back({x0 + fx * w + sway, y0 + fy * h,
+                                         r->uv[0] + fx * (r->uv[2] - r->uv[0]), r->uv[1] + fy * (r->uv[3] - r->uv[1])});
+        }
+    previewMeshIdx_.clear();
+    for (int j = 0; j < kCells; j++)
+        for (int i = 0; i < kCells; i++) {
+            const uint16_t a = (uint16_t)(j * (kCells + 1) + i), b = (uint16_t)(a + 1);
+            const uint16_t c = (uint16_t)(a + kCells + 1), d = (uint16_t)(c + 1);
+            previewMeshIdx_.insert(previewMeshIdx_.end(), {a, b, d, a, d, c});
+        }
+    Mesh m;
+    m.vertices = previewMeshVerts_.data();
+    m.vertexCount = (uint32_t)previewMeshVerts_.size();
+    m.indices = previewMeshIdx_.data();
+    m.indexCount = (uint32_t)previewMeshIdx_.size();
+    ren->drawMesh(m);
+    Quad q;
+    q.rect[0] = ren->width() / 2.0f + 16.0f; q.rect[1] = y0; q.rect[2] = w; q.rect[3] = h;
+    std::copy(r->uv, r->uv + 4, q.uv);
+    for (float& c : q.tint) c = 1.0f;
+    ren->drawSprite(q);
 }
 
 // The preview clip and/or effect, centred on the screen, over the world (before ren->end()).
 void Game::drawPreviewAnim() {
+    drawPreviewMesh();
     if (previewFx_.effect() && previewFxFile_) {
         const size_t known = previewMissing_.size();
         previewFx_.setTransform(toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f));
@@ -279,13 +368,19 @@ void Game::drawPreviewAnim() {
         for (size_t i = known; i < previewMissing_.size(); i++)
             std::fprintf(stderr, "[fx] sprite '%s' is not in the atlas\n", previewMissing_[i].c_str());
     }
+    if (previewAnim_ && (previewRig_.character() || previewRig_.held())) {   // --held: the character and what it holds
+        static const toms::anim::AtlasSet kNone;
+        previewRig_.draw(ren, previewAnim_->atlases(), previewHeld_ && previewHeld_->ok() ? previewHeld_->atlases() : kNone,
+                         toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f));
+        return;
+    }
     if (!previewPlayer_.showing() || !previewAnim_) return;
     const size_t known = previewMissing_.size();
     toms::anim::evaluate(*previewPlayer_.clip(), previewPlayer_.poseTime(), previewPoses_);
-    previewQuads_.clear();
-    toms::anim::appendQuads(previewPoses_, previewAnim_->atlases(), toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f),
-                            nullptr, previewQuads_, &previewMissing_);
-    for (const Quad& q : previewQuads_) ren->drawSprite(q);
+    previewDraws_.clear();
+    toms::anim::appendDraws(*previewPlayer_.clip(), previewPoses_, previewAnim_->atlases(),
+                            toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f), nullptr, previewDraws_, &previewMissing_);
+    previewDraws_.submit(ren);
     for (size_t i = known; i < previewMissing_.size(); i++)
         std::fprintf(stderr, "[anim] sprite '%s' is not in the atlas\n", previewMissing_[i].c_str());
 }

@@ -51,6 +51,8 @@ public:
     // `atlases` = (id, absolute .atlas path, parsed atlas); pages are read from disk next to it.
     void setAtlases(const std::vector<std::tuple<std::string, std::string, const toms::AtlasFile*>>& atlases);
     const toms::anim::AtlasSet& atlasSet() const { return *m_set; }
+    // The meshes of the atlas with this id (kept by the caller; nullptr = none): skinned nodes bend them.
+    void setMeshes(const std::string& id, const toms::SpriteMeshFile* meshes) { if (m_set) m_set->setMeshes(id, meshes); }
     void clear();
 
 private:

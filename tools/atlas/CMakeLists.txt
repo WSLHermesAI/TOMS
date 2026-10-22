@@ -52,7 +52,11 @@ target_include_directories(atlas_core
 
 if(NOT EMSCRIPTEN)
     # The command line lives in a library: atlaspack and `atlas_editor --headless` share it.
-    add_library(atlas_cli STATIC cli/atlas_cli.h cli/atlas_cli.cpp)
+    # sprite_mesh.cpp: `atlaspack meshes` (docs/34_MESH_ANIMATION.md). Here, not in atlas_core, which the anim tools
+    # link next to toms_anim (which has it too).
+    add_library(atlas_cli STATIC cli/atlas_cli.h cli/atlas_cli.cpp
+                "${ATLAS_TOMS_ROOT}/src/core/engine/sprite_mesh.h" "${ATLAS_TOMS_ROOT}/src/core/engine/sprite_mesh.cpp")
+    target_include_directories(atlas_cli PRIVATE "${TOMS_THIRD_PARTY_DIR}/json")
     atlas_defaults(atlas_cli)
     target_include_directories(atlas_cli PUBLIC cli)
     target_link_libraries(atlas_cli PUBLIC atlas_core)

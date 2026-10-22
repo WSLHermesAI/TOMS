@@ -43,6 +43,11 @@ public:
 
     AnimDocument* document() const { return m_doc; }
     AnimViewport* viewport() const { return m_viewport; }
+    QAction* showSkinAction() const { return m_showSkinAct; }
+    // Edit > Cut / Copy / Paste / Paste as Sibling (nodes; the selftest).
+    QList<QAction*> nodeClipboardActions() const { return {m_cutAct, m_copyAct, m_pasteAct, m_pasteSiblingAct}; }
+    QAction* objectModeAction() const { return m_objectModeAct; }
+    QAction* boneModeAction() const { return m_boneModeAct; }
     AnimNodesDock* nodesDock() const { return m_nodes; }
     AnimSpritesDock* spritesDock() const { return m_sprites; }
     AnimPropertiesDock* propertiesDock() const { return m_props; }
@@ -107,6 +112,11 @@ private:
     QToolBar* m_mainBar = nullptr;
     QAction *m_newAct, *m_openAct, *m_saveAct, *m_saveAsAct, *m_addAtlasAct, *m_reloadAtlasAct, *m_quitAct;
     QAction *m_undoAct, *m_redoAct;
+    QAction* m_showSkinAct = nullptr;   // View > Show Skin (AnimViewport::setShowSkin)
+    QAction *m_objectModeAct = nullptr, *m_boneModeAct = nullptr;   // what a viewport click picks (AnimViewport::EditMode)
+    QAction *m_cutAct = nullptr, *m_copyAct = nullptr, *m_pasteAct = nullptr, *m_pasteSiblingAct = nullptr;   // nodes
+    void copyNode(bool cut);
+    void pasteNode(bool sibling);
     QAction *m_addChildAct, *m_addSiblingAct, *m_addSpriteAct, *m_dupAct, *m_deleteAct, *m_renameAct, *m_upAct, *m_downAct;
     QAction *m_moveAct, *m_rotateAct, *m_scaleAct, *m_autoKeyAct, *m_snapAct;
     QAction *m_insertKeyAct, *m_qualifyAct, *m_fitAct, *m_zoomInAct, *m_zoomOutAct, *m_frameAct;

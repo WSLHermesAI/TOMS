@@ -30,7 +30,14 @@
 // key's value, after its last key the last.
 //
 // Files: version 2 stores pos / rot / scale as [x, y, z]. Version 1 files ([x, y] and a single rot
-// number, the z rotation) still load; they are saved as version 2.
+// number, the z rotation) still load; they are saved as version 2. Version 3 adds a node's "skin"
+// (docs/34_MESH_ANIMATION.md); a file is saved as version 3 only when a node has one, so files without
+// skins still open in older builds.
+//
+// Skinning: a node whose sprite has a mesh (sprite_mesh.h, next to its atlas) and a skin bends that mesh
+// with other nodes of the clip, its bones. Each mesh vertex follows up to kSkinInfluences bones, weighted;
+// the weights are the file's, or made automatically from how near each vertex is to each bone in the rest
+// pose (the nodes' rest values, keys ignored: Spine's setup pose). Without a mesh it draws as a quad.
 //
 // Draw order: depth first. A node draws its children with order < 0 (sorted by order, then by
 // position in the list), then its own sprite, then the children with order >= 0. Colour multiplies
@@ -41,8 +48,11 @@
 #pragma once
 #include <glm/glm.hpp>
 
+#include <functional>
 #include <string>
 #include <vector>
+
+namespace toms { struct SpriteBox; }
 
 namespace toms::anim {
 
@@ -91,6 +101,11 @@ struct Node {
     bool inheritColor = true;
     bool loop = false;                 // after its key range: play it again (see the top)
     bool stayAtLastFrame = true;       // after its key range (not looping): false = hide the subtree
+    // The skin (see the top): bone node names; empty = not skinned. skinWeights: kSkinInfluences
+    // (bone index into skinBones, weight) pairs per mesh vertex; empty = automatic.
+    std::vector<std::string> skinBones;
+    std::vector<float> skinWeights;
+    bool skinned() const { return !skinBones.empty(); }
 
     std::vector<Key<glm::vec3>> posKeys, rotKeys, scaleKeys;
     std::vector<Key<glm::vec4>> colorKeys;
@@ -145,10 +160,11 @@ struct SpriteRef {
 SpriteRef parseSpriteRef(const std::string& ref);
 std::string spriteRef(const std::string& atlasId, const std::string& name);   // "id:name", or "name" when id is ""
 
-constexpr int kAnimVersion = 2;       // pos / rot / scale as [x, y, z]
+constexpr int kAnimVersion = 3;       // the newest this build reads: 3 = skins (written only when used)
+constexpr int kSkinInfluences = 4;    // bones per skinned vertex
 
 struct AnimFile {
-    int version = kAnimVersion;        // as read; saving always writes kAnimVersion
+    int version = kAnimVersion;        // as read; saving writes 3 with a skin, else 2
     // The .atlas files its sprites come from (anim_player.h AtlasSet), in lookup order. JSON:
     // "atlases": ["path", {"id": "...", "path": "..."}, ...] -- a plain path's id is its file name
     // without ".atlas"; an older file's single "atlas": "path" reads as a one-entry list.
@@ -163,6 +179,27 @@ struct AnimFile {
 
 bool parseAnim(const std::string& json, AnimFile& out, std::string* err = nullptr);
 std::string animToJson(const AnimFile& f);
+// One node and its subtree in the file's node format (what the editor's Copy puts on the clipboard).
+std::string nodeToJsonText(const Node& n);
+bool parseNodeJson(const std::string& json, Node& out, std::string* err = nullptr);
+
+// ---- characters ---------------------------------------------------------------------------------
+//
+// A character clip (docs/15_ANIMATION.md, "Characters"; tools/make_archer_anim.py) is made with one character and
+// played by any other. Its contract is two node names:
+//   body   the character's sprite, pivot at the bottom centre (feet), unscaled
+//   hand   where a held thing (a bow) sits, a sibling of the body's chain under a node at the feet
+// fitCharacter gives every `body` node (rest sprite and sprite keys) the new sprite, and moves every `hand` node (rest
+// position and position keys) so the hand stays at the same place on the new body: its height keeps its share of the
+// visible body (head to feet) and its x its distance from the body's right edge -- both measured from the sprites'
+// visible pixels (boxOf: a sprite reference -> its SpriteBox; false = unknown, the hand is not moved). `extra` is added
+// on top (a per-character nudge, assets/data/character_fit.json). The clip itself is not changed.
+glm::vec2 characterHandOffset(const glm::vec2& handRest, const toms::SpriteBox& from, const toms::SpriteBox& to);
+Clip fitCharacter(const Clip& c, const std::string& sprite,
+                  const std::function<bool(const std::string& ref, toms::SpriteBox& out)>& boxOf,
+                  const glm::vec2& extra = glm::vec2(0.0f));
+// The first node with this name (depth first), or nullptr.
+const Node* findNode(const Node& root, const std::string& name);
 
 // ---- evaluation --------------------------------------------------------------------------------
 

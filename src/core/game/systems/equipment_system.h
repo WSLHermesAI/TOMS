@@ -39,6 +39,11 @@ struct EquipmentDefinition {
     // equipment_actives.h's ActiveDefinition map. Almost always empty -- only a handful of
     // named pieces (per docs/design/ART_AND_ABILITY_DESIGN.md) ever grant one.
     std::vector<std::string> actives;
+    // The battle picture (docs/15_ANIMATION.md "Characters"): items.json "battleAnim": {"character": .anim, "held":
+    // .anim}, paths under assets/media. The character clip (body / hand nodes) is played by the player's character and
+    // the held clip (the weapon) is drawn at its hand; the battle's status picks the clip of both (idle, charge,
+    // attack, miss). Empty: the battle shows the player's picture.
+    std::string battleCharacterAnim, battleHeldAnim;
 };
 
 nlohmann::json toJson(const EquipmentDefinition& d);

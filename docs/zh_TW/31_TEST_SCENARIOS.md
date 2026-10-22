@@ -84,7 +84,7 @@ tests/scenarios/
 |---|---|---|---|
 | `title` | 遊戲啟動時的標題畫面 | — | `title` |
 | `stage` | 行走場景：玩家在樓層中，處於存檔或給定的時刻 | — | `stage_new_game`、`stage_from_save`、`stage_from_events` |
-| `battle` | 與 `enemies.json` 中某個敵人的戰鬥（敵人不在地圖上） | `battle`：`enemy`，可選擇覆寫 `hp`、`atk`、`def`、`atk_interval_ms` | `battle_slime`、`battle_strong_player` |
+| `battle` | 與 `enemies.json` 中某個敵人的戰鬥（敵人不在地圖上） | `battle`：`enemy`，可選擇覆寫 `hp`、`atk`、`def`、`atk_interval_ms` | `battle_slime`、`battle_strong_player`、`battle_bow`（弓的戰鬥片段；另有 `battle_bow_charge`、`battle_bow_idle`） |
 | `battleWon` | 那場戰鬥之後的勝利畫面 | 同 `battle` | `battle_won` |
 | `arena` | **武器測試場**（[30](30_GAMEPLAY_PLAN.md) 第 0 階段）：依序和列出的敵人一場接一場地戰鬥，每場都是滿血，沒有獎勵，也不影響故事。勝利後按 Enter 開始下一場；落敗後自動開始。武器是玩家的（`player.equip`），沒有就是空手。`toms_game --arena=<敵人,...>[:<武器>]` 不用檔案也能開啟 | `battle`：`enemies`（或 `enemy`），以及和 `battle` 相同的覆寫值，套用到每一場 | `arena_unarmed`、`arena_wand`、`arena_restart` |
 | `dialogue` | 一段對話：遊戲內的（`id`），或設定檔旁邊的檔案（`file`）；可用 `node` 指定起始節點 | `dialogue`：`id` 或 `file`、`node` | `dialogue_by_id`、`dialogue_from_file` |
@@ -120,6 +120,7 @@ tests/scenarios/
   | `menuTab` | 玩家選單所在的分頁 |
   | `gold`、`hp`、`lv` | 玩家的數值 |
   | `arenaFights`、`arenaWins` | 測試場中開始的場數／勝利的場數 |
+  | `battleAnim` | 有戰鬥片段的武器，戰鬥畫面顯示的片段：`charge`、`attack`、`miss` 或 `idle`（[15](15_ANIMATION.md)〈角色〉） |
   | `cards` | `{ "slime": 1 }`：每種怪物持有的卡片張數 |
   | `stairUpLocked`、`stairUpMarked` | 目前樓層第一個上樓梯：鎖住或打開；有金色箭頭標記（剛打開） |
   | `stage` | 目前的樓層 |

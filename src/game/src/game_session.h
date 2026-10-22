@@ -48,6 +48,9 @@ struct SessionOptions {
     int fxGpuThreshold = -1;           // --fx-gpu-threshold (-1: GameSettings::particleGpuThreshold)
     bool defaultBattleTuning = false;  // --battle-tuning=default: ignore data/battle.json (tests)
     std::string previewFx;             // "<file>#<effect>": play this particle effect over the screen (--fx)
+    std::string previewMesh;           // a game-atlas sprite drawn as a waving triangle mesh (--mesh-test)
+    std::string previewCharacter;      // --character: the character a --anim character clip is played by
+    std::string previewHeld;           // --held: a held thing's .anim, its clip of the same name at the hand
     bool        enableDebugUi = true;  // ImGui windows (F1 / F2 / Tab stage select / toasts)
     // Mobile: grow the UI objects, keep the 1024x768 game resolution (Game::setUiScale,
     // the owner's rule). 1.0 = unchanged. The web host sets these on small screens.

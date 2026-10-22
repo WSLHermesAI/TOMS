@@ -10,7 +10,7 @@ add_library(toms_core STATIC
     ${L_ENGINE}/encounter.cpp ${L_ENGINE}/power_bar.cpp
     ${L_ENGINE}/safe_timer.cpp ${L_ENGINE}/tween.cpp ${L_ENGINE}/timed_hits.cpp   # docs/30_GAMEPLAY_PLAN.md phase 0
     ${L_ENGINE}/singletons.cpp   # releaseSingletons() at the end of main (docs/33_LEAK_CHECK.md)
-    ${L_ENGINE}/anim_clip.cpp ${L_ENGINE}/anim_player.cpp ${L_ENGINE}/particle_fx.cpp ${L_ENGINE}/gltf_model.cpp ${L_ENGINE}/gltf_anim_texture.cpp ${L_ENGINE}/stb_image_impl.cpp
+    ${L_ENGINE}/anim_clip.cpp ${L_ENGINE}/anim_player.cpp ${L_ENGINE}/sprite_mesh.cpp ${L_ENGINE}/particle_fx.cpp ${L_ENGINE}/gltf_model.cpp ${L_ENGINE}/gltf_anim_texture.cpp ${L_ENGINE}/stb_image_impl.cpp
     ${L_ENGINE}/bitmap_font.cpp   # picture fonts: FontText (docs/22_FONT_TOOL.md)
     ${L_ENGINE}/resource.cpp ${L_ENGINE}/resource_types.cpp ${L_ENGINE}/render_object.cpp   # docs/25_RESOURCE_MANAGER.md
     ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp

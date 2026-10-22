@@ -11,7 +11,7 @@
 <body data-model="game" data-event-click="act('battle_continue')">
     <div class="fill focus"></div>
     <div id="title">{{battle.title}}</div>
-    <img id="player" data-attr-sprite="battle.player_sprite"/>
+    <img id="player" data-if="!battle.player_anim" data-attr-sprite="battle.player_sprite"/>
     <img id="enemy" data-attr-sprite="battle.enemy_sprite"/>
     <!-- damage numbers: they rise over the fighter that was hit (UiPopup) -->
     <div class="popup" data-for="p : battle.popups" data-class-big="p.kind == 1" data-class-guard="p.kind == 2"

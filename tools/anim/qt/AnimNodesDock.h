@@ -38,6 +38,8 @@ public:
 
     QToolBar* toolBar() const { return m_toolBar; }
     void beginRename();
+    // The right-click menu on a node (it selects the node first): these actions, nullptr = a separator.
+    void setContextActions(const QList<QAction*>& actions) { m_contextActions = actions; }
 
 signals:
     void addSpriteNodeRequested();   // the editor knows which sprite is picked
@@ -53,4 +55,5 @@ private:
     QToolBar* m_toolBar;
     QSet<QString> m_collapsed;   // path strings
     bool m_updating = false;
+    QList<QAction*> m_contextActions;
 };

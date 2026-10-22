@@ -177,7 +177,7 @@ void Game::update(int dtMs) {
     }
     if (previewAnim_ && previewAnim_->version() != previewAnimVer_) {
         previewAnimVer_ = previewAnim_->version();
-        previewPlayer_.play(previewAnim_->find(previewClip_));
+        startPreviewClip();
     }
     if (previewFxFile_ && previewFxFile_->version() != previewFxVer_) {
         previewFxVer_ = previewFxFile_->version();
@@ -188,6 +188,12 @@ void Game::update(int dtMs) {
     if (!resourceMessages_.empty() && !title_.isOpen()) {   // missing files, said once the map shows (resourceMissing)
         for (const std::string& m : resourceMessages_) notifications_.push_back({m, 6000});
         resourceMessages_.clear();
+    }
+    if (!previewMeshSprite_.empty()) previewMeshMs_ += dtMs;   // --mesh-test: the wave's clock
+    updateBattleRig(dtMs);   // the bow and the player's character on the battle screen (battleRigState)
+    if (previewRig_.character() || previewRig_.held()) {   // --anim with --held: both clips, one clock
+        previewRig_.update(dtMs);
+        for (const std::string& e : previewRig_.takeEvents()) std::fprintf(stderr, "[anim] event %s\n", e.c_str());
     }
     if (previewPlayer_.clip()) {   // --anim preview: advances with the game clock, logs its events
         previewPlayer_.update(dtMs);

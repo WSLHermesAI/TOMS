@@ -1,11 +1,13 @@
 // anim_keys.cpp -- see anim_keys.h.
 #include "anim_keys.h"
+#include <json.hpp>
 
 #include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <map>
 #include <set>
 #include <sstream>
 
@@ -420,6 +422,80 @@ std::string uniqueNodeName(const Node& root, const std::string& base) {
         const std::string s = b + "_" + std::to_string(i);
         if (!taken.count(s)) return s;
     }
+}
+
+std::string nodeClipboardText(const Node& n) {
+    // The node's own JSON, wrapped so a paste can tell it from any other text.
+    std::string node = toms::anim::nodeToJsonText(n);
+    while (!node.empty() && (node.back() == '\n' || node.back() == ' ')) node.pop_back();
+    return "{\"toms\": \"anim-node\", \"version\": 3, \"node\": " + node + "}\n";
+}
+
+bool nodeFromClipboardText(const std::string& text, Node& out, std::string* err) {
+    try {
+        const nlohmann::json j = nlohmann::json::parse(text);
+        if (!j.is_object() || j.value("toms", std::string()) != "anim-node" || !j.contains("node"))
+            throw std::runtime_error("the clipboard holds no copied node");
+        return toms::anim::parseNodeJson(j["node"].dump(), out, err);
+    } catch (const std::exception& e) {
+        if (err) *err = dynamic_cast<const nlohmann::json::exception*>(&e) ? "the clipboard holds no copied node" : e.what();
+        return false;
+    }
+}
+
+namespace {
+void renameWalk(Node& n, std::set<std::string>& taken, std::map<std::string, std::string>& renamed, int& count) {
+    const std::string base = n.name.empty() ? std::string("node") : n.name;
+    std::string name = base;
+    for (int i = 2; taken.count(name); i++) name = base + "_" + std::to_string(i);
+    if (name != n.name) {
+        if (!renamed.count(n.name)) renamed[n.name] = name;   // a skin names the first node with a name
+        n.name = name;
+        count++;
+    }
+    taken.insert(name);
+    for (Node& c : n.children) renameWalk(c, taken, renamed, count);
+}
+void remapSkins(Node& n, const std::map<std::string, std::string>& renamed) {
+    for (std::string& b : n.skinBones) {
+        auto it = renamed.find(b);
+        if (it != renamed.end()) b = it->second;
+    }
+    for (Node& c : n.children) remapSkins(c, renamed);
+}
+}  // namespace
+
+int renameForPaste(const Node& root, Node& pasted) {
+    std::vector<std::string> names;
+    collectNames(root, names);
+    std::set<std::string> taken(names.begin(), names.end());
+    std::map<std::string, std::string> renamed;
+    int count = 0;
+    renameWalk(pasted, taken, renamed, count);
+    remapSkins(pasted, renamed);
+    return count;
+}
+
+namespace {
+const Node* firstNamed(const Node& n, const std::string& name) {   // depth first, as the skin's lookup
+    if (n.name == name) return &n;
+    for (const Node& c : n.children)
+        if (const Node* f = firstNamed(c, name)) return f;
+    return nullptr;
+}
+bool inside(const Node& top, const Node* n) {
+    if (&top == n) return true;
+    for (const Node& c : top.children) if (inside(c, n)) return true;
+    return false;
+}
+}  // namespace
+
+std::vector<std::string> bonesOutside(const Node& root, const Node& skinned) {
+    std::vector<std::string> out;
+    for (const std::string& b : skinned.skinBones)
+        if (const Node* bn = firstNamed(root, b))
+            if (!inside(skinned, bn)) out.push_back(b);
+    return out;
 }
 
 void collectSpriteRefs(const Node& root, std::vector<std::string>& out) {

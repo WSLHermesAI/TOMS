@@ -1,4 +1,7 @@
 #include "AnimEditor.h"
+#include <QMimeData>
+#include <QGuiApplication>
+#include <QClipboard>
 
 #include "AnimAtlasesPanel.h"
 #include "AnimClipsDock.h"
@@ -17,6 +20,7 @@
 
 #include <QAction>
 #include <QActionGroup>
+#include <QToolButton>
 #include <QApplication>
 #include <QCheckBox>
 #include <QDialog>
@@ -87,6 +91,15 @@ AnimEditor::AnimEditor(QMainWindow* host)
         m_host->statusBar()->showMessage(text, 3000);
         m_problems->appendLog(text);
     });
+    // Editing while the clip plays: pause at the frame on screen. Otherwise every drag step (Auto-Key on) keys a new
+    // time as the playhead moves on, and the clip fills with keys.
+    auto pauseForEdit = [this] {
+        if (!m_transport->isPlaying()) return;
+        m_transport->pause();
+        m_host->statusBar()->showMessage(tr("Playback paused for the edit: keys go to the frame on screen"), 4000);
+    };
+    connect(m_viewport, &AnimViewport::dragStarted, this, pauseForEdit);
+    connect(m_doc, &AnimDocument::aboutToEdit, this, pauseForEdit);
     connect(m_viewport, &AnimViewport::toolChanged, this, [this](AnimViewport::Tool t) {
         (t == AnimViewport::Tool::Move ? m_moveAct : t == AnimViewport::Tool::Rotate ? m_rotateAct : m_scaleAct)->setChecked(true);
     });
@@ -159,6 +172,20 @@ void AnimEditor::createActions()
     });
     connect(m_addSpriteAct, &QAction::triggered, this, &AnimEditor::addSpriteNode);
     connect(m_dupAct, &QAction::triggered, this, [this] { m_doc->duplicateNode(m_doc->selectedPath()); });
+    // Copy / paste nodes: the subtree as text on the system clipboard (another editor window or a text file can take it).
+    m_cutAct = makeAction(this, tr("Cu&t Node"), QKeySequence::Cut, int(Id::Remove));
+    m_cutAct->setToolTip(tr("Copy the selected node with its children, keys and skin, then delete it"));
+    m_copyAct = makeAction(this, tr("&Copy Node"), QKeySequence::Copy, int(Id::Duplicate));
+    m_copyAct->setToolTip(tr("Copy the selected node with its children, keys and skin (as text: it pastes into another editor window too)"));
+    m_pasteAct = makeAction(this, tr("&Paste Node"), QKeySequence::Paste, int(Id::Add));
+    m_pasteAct->setToolTip(tr("Paste a copied node under the selected node. Names the clip already has get _2, _3, ...; "
+                              "a pasted skin follows its own pasted bones"));
+    m_pasteSiblingAct = makeAction(this, tr("Paste Node as &Sibling"), QKeySequence(tr("Ctrl+Shift+V")), int(Id::Add));
+    m_pasteSiblingAct->setToolTip(tr("Paste a copied node right after the selected node, under the same parent"));
+    connect(m_cutAct, &QAction::triggered, this, [this] { copyNode(true); });
+    connect(m_copyAct, &QAction::triggered, this, [this] { copyNode(false); });
+    connect(m_pasteAct, &QAction::triggered, this, [this] { pasteNode(false); });
+    connect(m_pasteSiblingAct, &QAction::triggered, this, [this] { pasteNode(true); });
     connect(m_deleteAct, &QAction::triggered, this, [this] { m_doc->deleteNode(m_doc->selectedPath()); });
     connect(m_upAct, &QAction::triggered, this, [this] { moveSelected(-1); });
     connect(m_downAct, &QAction::triggered, this, [this] { moveSelected(1); });
@@ -187,6 +214,33 @@ void AnimEditor::createActions()
     m_snapAct->setCheckable(true);
     m_snapAct->setToolTip(tr("Snap moves to whole pixels, rotation to degrees, scale to 0.05"));
     connect(m_snapAct, &QAction::toggled, m_viewport, &AnimViewport::setSnap);
+    m_showSkinAct = new QAction(tr("Show &Skin"), this);
+    m_showSkinAct->setCheckable(true);
+    m_showSkinAct->setShortcut(QKeySequence(Qt::SHIFT | Qt::Key_K));
+    m_showSkinAct->setToolTip(tr("Over every skinned node: its mesh, its points coloured by the bones they follow, and its "
+                                 "bones. Select a bone to see how much each point follows it (bright = fully, dark = not)."));
+    connect(m_showSkinAct, &QAction::toggled, m_viewport, &AnimViewport::setShowSkin);
+    // Object / Bones: what a click in the viewport picks (docs/34_MESH_ANIMATION.md).
+    m_objectModeAct = makeAction(this, tr("&Object Mode"), QKeySequence(Qt::Key_O), int(Id::SpriteNode));
+    m_objectModeAct->setToolTip(tr("Object mode (O): a click picks a sprite; moving a skinned sprite moves its mesh and the "
+                                   "bones under it"));
+    m_boneModeAct = makeAction(this, tr("&Bones Mode"), QKeySequence(Qt::Key_B), int(Id::Node));
+    m_boneModeAct->setToolTip(tr("Bones mode (B): the skin is shown and a click picks a bone, never a sprite. "
+                                 "Auto-Key on: pose the bone (keys); off: place it in the sprite (its rest pose)"));
+    {
+        auto* group = new QActionGroup(this);
+        for (QAction* a : {m_objectModeAct, m_boneModeAct}) {
+            a->setCheckable(true);
+            group->addAction(a);
+        }
+        m_objectModeAct->setChecked(true);
+        connect(m_objectModeAct, &QAction::toggled, this, [this](bool on) {
+            if (on) m_viewport->setEditMode(AnimViewport::EditMode::Object);
+        });
+        connect(m_boneModeAct, &QAction::toggled, this, [this](bool on) {
+            if (on) m_viewport->setEditMode(AnimViewport::EditMode::Bones);
+        });
+    }
     m_insertKeyAct = makeAction(this, tr("&Insert Key at Playhead"), QKeySequence(Qt::Key_K), int(Id::KeyOn));
     m_qualifyAct = makeAction(this, tr("&Qualify Sprite References"));
     m_qualifyAct->setToolTip(tr("Every bare sprite name in the file (every clip) -> id:name with the atlas the lookup picks now"));
@@ -231,6 +285,8 @@ void AnimEditor::createDocks()
         m_transport->play();
     });
     m_nodes = new AnimNodesDock(m_doc, m_host);
+    m_nodes->setContextActions({m_cutAct, m_copyAct, m_pasteAct, m_pasteSiblingAct, nullptr, m_dupAct, m_renameAct,
+                                nullptr, m_deleteAct});
     m_sprites = new AnimSpritesDock(m_doc, m_host);
     m_props = new AnimPropertiesDock(m_doc, m_host);
     m_keys = new AnimKeyListDock(m_doc, m_host);
@@ -306,6 +362,11 @@ void AnimEditor::createMenus()
     edit->addAction(m_undoAct);
     edit->addAction(m_redoAct);
     edit->addSeparator();
+    for (QAction* a : {m_cutAct, m_copyAct, m_pasteAct, m_pasteSiblingAct}) edit->addAction(a);
+    edit->addSeparator();
+    edit->addAction(m_objectModeAct);
+    edit->addAction(m_boneModeAct);
+    edit->addSeparator();
     edit->addAction(m_moveAct);
     edit->addAction(m_rotateAct);
     edit->addAction(m_scaleAct);
@@ -358,6 +419,30 @@ void AnimEditor::createMenus()
         });
         m_viewMenu->addSeparator();
     }
+    m_viewMenu->addAction(m_showSkinAct);
+    {   // A character clip (body / hand nodes) shown as another character: the view only (docs/15 "Characters").
+        QMenu* who = m_viewMenu->addMenu(tr("Preview as &Character"));
+        who->setToolTipsVisible(true);
+        connect(who, &QMenu::aboutToShow, this, [this, who] {
+            who->clear();
+            const QStringList choices = m_doc->characterChoices();
+            if (choices.isEmpty()) {
+                QAction* none = who->addAction(tr("(this clip has no body / hand nodes)"));
+                none->setEnabled(false);
+                return;
+            }
+            auto add = [&](const QString& label, const QString& sprite) {
+                QAction* a = who->addAction(label);
+                a->setCheckable(true);
+                a->setChecked(m_doc->previewCharacter() == sprite);
+                connect(a, &QAction::triggered, this, [this, sprite] { m_doc->setPreviewCharacter(sprite); });
+            };
+            add(tr("As Made"), QString());
+            who->addSeparator();
+            for (const QString& s : choices) add(s, s);
+        });
+    }
+    m_viewMenu->addSeparator();
     m_viewMenu->addAction(m_fitAct);
     m_viewMenu->addAction(m_frameAct);
     m_viewMenu->addAction(m_zoomInAct);
@@ -394,6 +479,11 @@ void AnimEditor::createToolBars()
     m_mainBar->addSeparator();
     m_mainBar->addAction(m_undoAct);
     m_mainBar->addAction(m_redoAct);
+    m_mainBar->addSeparator();
+    m_mainBar->addAction(m_objectModeAct);   // shown with text: the mode is the first thing to know
+    m_mainBar->addAction(m_boneModeAct);
+    for (QAction* a : {m_objectModeAct, m_boneModeAct})
+        if (auto* b = qobject_cast<QToolButton*>(m_mainBar->widgetForAction(a))) b->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_mainBar->addSeparator();
     m_mainBar->addAction(m_moveAct);
     m_mainBar->addAction(m_rotateAct);
@@ -445,6 +535,8 @@ void AnimEditor::readSettings()
     m_doc->setAutoKey(s.value(QStringLiteral("autoKey"), true).toBool());
     m_autoKeyAct->setChecked(m_doc->autoKey());
     m_snapAct->setChecked(s.value(QStringLiteral("snap"), false).toBool());
+    m_showSkinAct->setChecked(s.value(QStringLiteral("showSkin"), false).toBool());
+    (s.value(QStringLiteral("boneMode"), false).toBool() ? m_boneModeAct : m_objectModeAct)->setChecked(true);
     m_transport->loopAction()->setChecked(s.value(QStringLiteral("loopPreview"), false).toBool());
 }
 
@@ -453,6 +545,8 @@ void AnimEditor::writeSettings() const
     QSettings s = settings();
     s.setValue(QStringLiteral("autoKey"), m_doc->autoKey());
     s.setValue(QStringLiteral("snap"), m_snapAct->isChecked());
+    s.setValue(QStringLiteral("showSkin"), m_showSkinAct->isChecked());
+    s.setValue(QStringLiteral("boneMode"), m_boneModeAct->isChecked());
     s.setValue(QStringLiteral("loopPreview"), m_transport->loopAction()->isChecked());
 }
 
@@ -743,7 +837,36 @@ void AnimEditor::updateActions()
     const bool child = node && !m_doc->selectedPath().empty();
     for (QAction* a : {m_addChildAct, m_addSiblingAct, m_addSpriteAct, m_renameAct, m_insertKeyAct}) a->setEnabled(node);
     m_qualifyAct->setEnabled(m_doc->bareSpriteReferenceCount() > 0);
-    for (QAction* a : {m_dupAct, m_deleteAct, m_upAct, m_downAct}) a->setEnabled(child);
+    for (QAction* a : {m_dupAct, m_deleteAct, m_upAct, m_downAct, m_cutAct}) a->setEnabled(child);
+    for (QAction* a : {m_copyAct, m_pasteAct}) a->setEnabled(node);
+    m_pasteSiblingAct->setEnabled(child);
+}
+
+void AnimEditor::copyNode(bool cut)
+{
+    const NodePath p = m_doc->selectedPath();
+    const QString text = m_doc->copyNodeText(p);
+    if (text.isEmpty()) return;
+    auto* mime = new QMimeData;
+    mime->setText(text);
+    mime->setData(QStringLiteral("application/x-toms-anim-node"), text.toUtf8());
+    QGuiApplication::clipboard()->setMimeData(mime);
+    const Node* n = m_doc->selectedNode();
+    m_host->statusBar()->showMessage(tr("Copied node '%1'").arg(n ? QString::fromStdString(n->name) : QString()), 4000);
+    if (cut && !p.empty()) m_doc->deleteNode(p);
+}
+
+void AnimEditor::pasteNode(bool sibling)
+{
+    const QMimeData* mime = QGuiApplication::clipboard()->mimeData();
+    const QString text = !mime ? QString()
+                         : mime->hasFormat(QStringLiteral("application/x-toms-anim-node"))
+                             ? QString::fromUtf8(mime->data(QStringLiteral("application/x-toms-anim-node")))
+                             : mime->text();
+    const NodePath sel = m_doc->selectedPath();
+    if (!m_doc->selectedNode()) return;
+    if (sibling && !sel.empty()) m_doc->pasteNode(NodePath(sel.begin(), sel.end() - 1), sel.back() + 1, text);
+    else m_doc->pasteNode(sel, -1, text);
 }
 
 void AnimEditor::convertMpdiFolder()

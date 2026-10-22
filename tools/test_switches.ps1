@@ -12,16 +12,70 @@ param([string]$Preset = 'windows-release', [switch]$List, [string]$SelfTest = ''
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
+
+# The window mode is started by a double-click: say at once that something is happening, and say in a message box
+# (not only in a console that closes) when it cannot go on.
+$window = -not $List
+if ($window) {
+    Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+    [Windows.Forms.Application]::EnableVisualStyles()
+    $splash = New-Object Windows.Forms.Form
+    $splash.Text = 'TOMS tests: on / off'
+    $splash.Size = New-Object Drawing.Size(380, 110)
+    $splash.StartPosition = 'CenterScreen'
+    $splash.FormBorderStyle = 'FixedDialog'
+    $splash.ControlBox = $false
+    $splash.TopMost = $true
+    $splashText = New-Object Windows.Forms.Label
+    $splashText.Dock = 'Fill'; $splashText.TextAlign = 'MiddleCenter'
+    $splashText.Font = New-Object Drawing.Font('Segoe UI', 10)
+    $splashText.Text = "Loading the test list from Build\$Preset ..."
+    $splash.Controls.Add($splashText)
+    if (-not $SelfTest) {
+        # The console this runs in shows nothing useful in window mode, and would cover the window: hide it (the
+        # message boxes below say anything that goes wrong).
+        Add-Type -Name ConsoleWindow -Namespace Toms -MemberDefinition @'
+[DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow();
+[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+'@
+        $console = [Toms.ConsoleWindow]::GetConsoleWindow()
+        if ($console -ne [IntPtr]::Zero) { [void][Toms.ConsoleWindow]::ShowWindow($console, 0) }
+        $splash.Show(); $splash.Activate(); $splash.Refresh()
+    }
+}
+function Stop-WithMessage([string]$text) {
+    Write-Host "[toms] $text"
+    if ($window -and -not $SelfTest) {
+        # The loading box becomes the message, as a dialog with OK. (A MessageBox here returned at once, unseen.)
+        $splash.Hide()
+        $splash.Size = New-Object Drawing.Size(560, 200)
+        $splash.ControlBox = $true
+        $splash.TopMost = $true
+        $splashText.Text = $text
+        $splashText.TextAlign = 'MiddleLeft'
+        $splashText.Padding = '14,10,14,0'
+        $ok = New-Object Windows.Forms.Button
+        $ok.Text = 'OK'; $ok.Dock = 'Bottom'; $ok.Height = 36; $ok.DialogResult = 'OK'
+        $splash.Controls.Add($ok)
+        $splashText.BringToFront()   # docked last: it fills what the button leaves
+        $splash.AcceptButton = $ok
+        [void]$splash.ShowDialog()
+    }
+    exit 1
+}
+trap {   # anything unexpected: the same message box, with the error
+    Stop-WithMessage ("test_switches failed: " + $_.Exception.Message)
+}
 $switchFile = Join-Path $root 'tests\test_switches.json'
 $saveFile = if ($SelfTest) { Join-Path $SelfTest 'test_switches.json' } else { $switchFile }
 
 # ---- the tests: ctest's list (Visual Studio's ctest, as test.cmd uses) ----
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-if (-not (Test-Path $vswhere)) { Write-Host '[toms] Visual Studio not found (vswhere).'; exit 1 }
+if (-not (Test-Path $vswhere)) { Stop-WithMessage 'Visual Studio was not found (vswhere.exe is missing), so the test list cannot be read.' }
 $vs = & $vswhere -latest -products * -property installationPath
 $ctest = Join-Path $vs 'Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe'
 if (-not (Test-Path (Join-Path $root "Build\$Preset\CTestTestfile.cmake"))) {
-    Write-Host "[toms] Build\$Preset has no tests yet: run tools\build.cmd $Preset first."; exit 1
+    Stop-WithMessage "Build\$Preset has no tests yet: build first with tools\build.cmd $Preset, then open this again."
 }
 Push-Location $root
 try { $json = (& $ctest --preset $Preset --show-only=json-v1) -join "`n" } finally { Pop-Location }
@@ -92,8 +146,7 @@ if ($List) {
 }
 
 # ---- the window ----
-Add-Type -AssemblyName System.Windows.Forms, System.Drawing
-[Windows.Forms.Application]::EnableVisualStyles()
+if (-not $tests.Count) { Stop-WithMessage "Build\$Preset lists no tests: rebuild with tools\build.cmd $Preset." }
 $form = New-Object Windows.Forms.Form
 $form.Text = 'TOMS tests: on / off'
 $form.Size = New-Object Drawing.Size(560, 720)
@@ -182,6 +235,10 @@ $form.Controls.Add($status)
 $form.Controls.Add($bar)
 # Built once the window is shown: a TreeView drops the checkbox states set before its window exists.
 $form.Add_Shown({
+    # In front of every other window once (Windows may keep a new window behind the one in use), then normal again.
+    $form.TopMost = $true
+    $form.Activate()
+    $form.TopMost = $false
     Build-Tree
     if ($SelfTest) { $timer.Start() }
 })
@@ -199,4 +256,7 @@ if ($SelfTest) {
         $form.Close()
     })
 }
+# The loading box goes first: a dialog takes the active window (the box) as its owner, and closing the owner later
+# would close the dialog with it.
+$splash.Close()
 [void]$form.ShowDialog()

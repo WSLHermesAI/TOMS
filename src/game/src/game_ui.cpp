@@ -109,6 +109,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("active", &UiBattle::active);
         s.RegisterMember("title", &UiBattle::title);
         s.RegisterMember("player_sprite", &UiBattle::player_sprite);
+        s.RegisterMember("player_anim", &UiBattle::player_anim);
         s.RegisterMember("enemy_sprite", &UiBattle::enemy_sprite);
         s.RegisterMember("player_hp_pct", &UiBattle::player_hp_pct);
         s.RegisterMember("enemy_hp_pct", &UiBattle::enemy_hp_pct);

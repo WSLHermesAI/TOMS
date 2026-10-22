@@ -150,6 +150,38 @@ camera even though the game draws in 2D today.
 - **Older files:** version 1 files store `[x, y]` and a single `rot` number. They still load (z = 0,
   scale z = 1, the number is the z rotation) and are saved as version 2.
 
+**Skins (version 3):** a sprite node can bend its sprite's triangle mesh with other nodes of the clip, its bones:
+`"skin": {"bones": ["hip", "chest", "head"], "weights": "auto"}`. The mesh comes from `<atlas>.mesh.json` beside the
+atlas (`atlaspack meshes`). `"auto"` weights are made from the rest pose; painted ones are
+`[[bone, weight, ...], ...]` per vertex. A file is saved as version 3 only when a node has a skin, so other files
+still open in older builds. A skinned sprite without a mesh draws as its quad. In the editor it is the **Skin** field
+under Properties (bone names, comma separated); under it a note says the sprite's mesh, its bones and weights, or
+why it draws as a quad. **View > Show Skin** (Shift+K) draws, over every skinned node, its mesh, its points coloured
+by the bones they follow (mixed by weight), and its bones with their names; select a bone and the points shade from
+bright (follows it fully) to dark (not at all). Details: [34_MESH_ANIMATION.md](34_MESH_ANIMATION.md).
+
+**Skin workflow in the editor.**
+- **A rig is a sprite node with its bones under it** (`golem` > `hip` > `chest` > `head`). Moving the sprite then
+  moves its mesh and bones together. A skin whose bones lie outside the node gets a warning in Properties and a
+  **Move Bones Under This Sprite** button, which re-parents them without anything moving on screen.
+- **Object mode (O)** and **Bones mode (B)**, on the toolbar and in the Edit menu, decide what a click in the viewport
+  picks:
+  - Object mode picks sprites, as before.
+  - Bones mode shows the skin and picks only bones (a joint or a bone line), never the sprite under them. The
+    Move / Rotate / Scale gizmo then works on the bone: with Auto-Key on it poses the bone (keys), with Auto-Key off it
+    places the bone in the sprite (its rest pose).
+- **Mesh grid** (Properties, skinned nodes) cuts the sprite's mesh again from its alpha on N × N cells (1–32; a
+  32-pixel sprite starts at 4 × 4). More cells bend more smoothly. The mesh is saved at once to the mesh file beside
+  the atlas (text or `.bin`, as it was), and `atlaspack meshes` keeps that grid when it runs again.
+- **Editing pauses playback.** A drag in the viewport or any edit (a typed value, a key) while the clip plays pauses it
+  first, so with Auto-Key on the edit keys the frame on screen once instead of every frame the playhead passes.
+- **The mouse wheel changes a number field only after you click it** (or Tab into it). Over an unfocused spin box,
+  combo box or slider the wheel scrolls the panel around it instead (the Properties dock scrolls over its fields);
+  scroll bars and lists always take the wheel. This holds in every Qt editor (`Theme.cpp`,
+  `WheelNeedsFocus`).
+- A hidden skinned node (rest `visible` off, a hidden parent, a visible key) shows no skin overlay and has no bones
+  to pick.
+
 **Space and order:** a node's world transform = parent's × translate · rotate · scale. Draw order is depth first: children with `order < 0` (by order,
 then list position), the node's own sprite, then children with `order >= 0`. Colour multiplies
 down the tree unless `inheritColor` is false; a hidden node hides its subtree.
@@ -228,6 +260,77 @@ floor, and the door is remembered as opened (`EntityStatus::Opened`): it stays o
 again and never costs another key. The player stays where they were on that turn. Placed like the idle clips
 (bottom centre of the tile, scaled to the door sprite's size). CTest `anim.check_door_open`.
 
+### The bow (weapon clips)
+
+[`assets/media/anim/weapon_bow.anim`](../assets/media/anim/weapon_bow.anim) has a bow's four clips. There is no bow
+art yet, so the bow is built from the fx atlas's plain shapes, tinted: a stretched `square` for the limbs, grip,
+string, arrow shaft and fletching, `dot` tips, and `glow` / `ring` / `spark` / `smoke` / `star` effects. The bow faces
+right with its grip at the clip's origin, about 95 px tall.
+
+| Clip | Length | What it shows | Events |
+|---|---|---|---|
+| `idle` | 1.6 s, loops | the bow at rest with an arrow nocked, a slow bob, a glint on the top tip | |
+| `charge` | 1.2 s, once, stays | the string draws back (0.6 s), trembling near full draw; then, for as long as the shot is held, the whole bow shakes with the strain, a gold aura pulses along it, sparks rise off the limbs and the arrowhead glows | `charged` at full draw |
+| `attack` | 0.7 s, once | from full draw: the string snaps and rings, the arrow flies 400 px with a trail, a flash, the bow recoils | `release` at 0.06 s, `hit` at 0.42 s |
+| `miss` | 1.0 s, once | from full draw: the arrow slips, tumbles short and drops, a puff of dust, the bow droops | `miss` at 0.08 s |
+
+The file is written by `python tools/make_bow_anim.py`, which works out the string pieces' angles so the string always
+meets the arrow's nock. Change the script and run it again, rather than editing the file by hand. No game screen plays
+these clips on their own: the battle plays them at a character's hand (below). CTest `anim.check_bow`.
+
+A looping node loops every key under it, so `charge` holds the bow twice: `drawing` (0–0.6 s, then hidden) and `held`
+(shown from 0.6 s, the same pose inside `shake`, a looping group whose keys all lie in 0.6–1.0 s). The shaking goes on
+after the clip ends without drawing the bow again. `STRAIN` in the script sets how hard it shakes.
+
+### Characters and what they hold: two files, bound in code
+
+A character's motion and the thing it holds are **two .anim files**, bound together by the game:
+
+- [`assets/media/anim/archer_bow.anim`](../assets/media/anim/archer_bow.anim): **only the character** shooting a bow
+  (`python tools/make_archer_anim.py`). Made with the `player` sprite, played by any character.
+- [`assets/media/anim/weapon_bow.anim`](../assets/media/anim/weapon_bow.anim): **only the bow** (above).
+
+Both have the clips `idle`, `charge`, `attack` and `miss`, timed alike. The character file's contract is two node
+names:
+
+```
+archer
+  lean            the body's motion from the feet: breathing, leaning back, recoil, flinch
+    body          the character: pivot at the bottom centre, feet at (0, 0)      <- swapped per character
+    hand          no sprite: where a held thing is drawn -- position, turn, scale <- moved per character
+```
+
+- **Binding:** `CharacterRig` (anim_player.h) plays a character clip and a held clip of the same name together.
+  Every frame it draws the character, then the held clip at the character's `hand` node (`attachPlacement`: the hand's
+  world transform), so the bow moves with the body's lean, recoil and shake. The hand's scale (0.32) draws the
+  95-pixel bow at a 32-pixel character's size. Events come from both clips.
+- **Any character:** `fitCharacter` (anim_clip.h) gives `body` another sprite and moves `hand` so it stays at the
+  same place on that body: its height keeps its share of the visible body (head to feet), its x its distance from the
+  body's right edge. Both are measured from the sprites' visible pixels (`visibleBox`, sprite_mesh.h). Every sprite of
+  the game atlas is measured when the atlas loads. A character that still looks off gets a nudge in
+  [`assets/data/character_fit.json`](../assets/data/character_fit.json): `"player_viking": {"hand": [0, -1]}`
+  (pixels, x right, y down). An unlisted character needs nothing.
+- **In battle:** a weapon in `items.json` names its two files, `"battleAnim": {"character": "anim/archer_bow.anim",
+  "held": "anim/weapon_bow.anim"}` (the `bow` does). With it worn, the battle screen draws the player's character and
+  the weapon in the player picture's place (the picture is hidden), on the clip the battle's status picks:
+
+  | Status | When |
+  |---|---|
+  | `charge` | the attack bar waits for the tap (the bow held drawn and shaking, for as long as it waits) |
+  | `attack` | a tap that hit, played to its end |
+  | `miss` | a tap that dealt nothing, played to its end |
+  | `idle` | the bar recovers for the next round, and after the fight |
+
+  (`Game::updateBattleRig` / `drawBattleRig`, game_combat.cpp.) Scenarios: `battle_bow` (play it; its test taps once:
+  `attack`), `battle_bow_charge` (`charge`) and `battle_bow_idle` (`idle`), [31](31_TEST_SCENARIOS.md).
+- **See it:** `toms_game --anim=assets/media/anim/archer_bow.anim#charge --character=player_mage
+  --held=assets/media/anim/weapon_bow.anim`. In the anim editor, **View > Preview as Character** shows the character
+  file as another character (the view only; edits go to the clip as made).
+- **Another weapon or action:** a character file with the same `body` / `hand` nodes and a held file with clips of the
+  same names; a weapon names both in `battleAnim`.
+- **Tested:** `unit.anim_character_test` (fitting every `player*` sprite; the held clip drawn at the hand and following
+  its keys); CTest `anim.check_archer`; the editor self test previews the knight girl; the three scenarios.
+
 ## Editor
 
 `anim_editor` (tools/anim/qt, built with the Qt editors) opens and saves `.anim` files. Its preview
@@ -293,7 +396,7 @@ Atlas paths are always stored relative:
 | View | What it does |
 |---|---|
 | **Clips** | **double-click** (or Enter) opens a clip, shown in bold; when the open clip has changes since it was opened or saved, it asks *Discard all changes to “A” and open “B”?* (Yes discards, as one undo step; No stays); F2 or the toolbar renames; add / duplicate / rename / delete act on the highlighted clip; length (0 = up to the last key), plays (-1 = loop), stay at last frame |
-| **Nodes** | the node tree with each node's rest sprite (`name (id)`): a **Playback** column (↻: click a row's icon for once and stay ▶ / once then hide ■ / loop ↻); a **Solo** column (◎: click a row's target to draw only that node and its children while the clip plays as usual: the parents still move them, their own sprites are hidden; click again, or open another clip, to end; preview only, not saved; the status line shows `SOLO: name`); add child / sibling / sprite node, duplicate, delete, rename (F2), drag & drop to reparent or reorder (list order = draw order among equal `order`), eye = rest `visible`, `order` column |
+| **Nodes** | the node tree with each node's rest sprite (`name (id)`): a **Playback** column (↻: click a row's icon for once and stay ▶ / once then hide ■ / loop ↻); a **Solo** column (◎: click a row's target to draw only that node and its children while the clip plays as usual: the parents still move them, their own sprites are hidden; click again, or open another clip, to end; preview only, not saved; the status line shows `SOLO: name`); add child / sibling / sprite node, duplicate, delete, rename (F2); **cut / copy / paste** (Edit menu or right-click: Ctrl+X / Ctrl+C / Ctrl+V pastes under the selected node, Ctrl+Shift+V after it) -- a node goes with its children, keys and skin, as text on the system clipboard (another editor window or a text file takes it); names the clip already has get `_2`, `_3`, ..., and a skin inside what is pasted (or duplicated) follows its own pasted bones, so a copied rig is a second rig; drag & drop to reparent or reorder (list order = draw order among equal `order`), eye = rest `visible`, `order` column |
 | **Sprites** | one tab per atlas (titled with its id and sprite count, in lookup order), each listing that atlas's sprites with thumbnails; the filter applies to every tab (the titles then show how many match); each row is one atlas's copy and picking it stores that atlas (`id:name`); a name in more than one atlas has a small badge ("also in X; each copy is usable"); the filter matches `id:name`; drag a sprite into the viewport (a node under the selected node, at the drop point) or onto a node; double-click = the selected node's sprite (a sprite key at the playhead with auto-key) |
 | **Viewport** | the clip at the playhead; click selects the topmost node; **Move (W)** / **Rotate (E)** (rot z) / **Scale (R)** gizmo. With **Auto-key (N, on by default)** a drag writes a key at the playhead, without it the rest value (a key exactly at the playhead is updated either way). Ctrl = pixel snap while moving, Shift = 15° steps / keep proportions; middle mouse pans, wheel zooms |
 | **Properties** | clip settings; the **Atlases** list (above); the node's rest settings (name, sprite, pivot, order, blend, inherit colour, visible, **Playback**: once and stay / once then hide / loop); the values at the playhead (Pos, Rot and Scale as x, y, z; type x / y rotations here), each channel with a key button (◆ key here: click removes; ◇ animated: click keys the shown value; dotted: no track); the ease of the key at / before the playhead (any Tweeny ease, or Bezier… with a curve editor) |

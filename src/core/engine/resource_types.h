@@ -40,6 +40,10 @@ private:
     int w_ = 0, h_ = 0;
 };
 
+// The meshes beside an atlas (<atlas>.mesh.json and the .mesh.bin it may name), through the vfs. No file: true and
+// `out` empty. A broken file: false and `error`.
+bool readSpriteMeshes(const std::string& atlasPath, toms::SpriteMeshFile& out, std::string& error);
+
 class AtlasRes : public Resource {
     TOMS_OBJECT(AtlasRes)
 public:
@@ -48,14 +52,19 @@ public:
     // Per page, the texture it is drawn with; empty = every page is the renderer's sprite atlas (the game's own).
     const std::vector<uint16_t>& pageTextures() const { return pageTex_; }
     int contentVersion() const override;   // its own version + its pages'
+    // Its sprites' meshes (<atlas>.mesh.json beside it, docs/34_MESH_ANIMATION.md); empty when it has none.
+    const toms::SpriteMeshFile& meshes() const { return meshes_; }
     // For provide(): the game's sprite atlas, drawn with the renderer's sprite texture.
-    void setProvided(const toms::AtlasFile& atlas) { atlas_ = atlas; pages_.clear(); pageTex_.clear(); }
+    void setProvided(const toms::AtlasFile& atlas, const toms::SpriteMeshFile& meshes = {}) {
+        atlas_ = atlas; meshes_ = meshes; pages_.clear(); pageTex_.clear();
+    }
 
 protected:
     bool load(ResourceManager& rm, std::string& error) override;
 
 private:
     toms::AtlasFile atlas_;
+    toms::SpriteMeshFile meshes_;
     std::vector<std::shared_ptr<TextureRes>> pages_;
     std::vector<uint16_t> pageTex_;
 };

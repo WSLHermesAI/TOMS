@@ -115,6 +115,8 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     }
     game_->loadStage(opts.startStage);
     keyWas_.fill(false);
+    game_->setPreviewCharacter(opts.previewCharacter);   // --character (before the clip starts: it is fitted then)
+    game_->setPreviewHeld(opts.previewHeld);             // --held (bound when the clip starts)
     if (!opts.previewAnim.empty()) {   // --anim=<file>#<clip> (a developer/test option)
         const size_t hash = opts.previewAnim.rfind('#');
         std::string animError;
@@ -130,6 +132,11 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
             !game_->playPreviewFx(opts.previewFx.substr(0, hash), opts.previewFx.substr(hash + 1), fxError))
             std::fprintf(stderr, "[fx] --fx=%s: %s\n", opts.previewFx.c_str(),
                          hash == std::string::npos ? "expected <file>#<effect>" : fxError.c_str());
+    }
+    if (!opts.previewMesh.empty()) {   // --mesh-test=<sprite> (a developer/test option)
+        std::string meshError;
+        if (!game_->playPreviewMesh(opts.previewMesh, meshError))
+            std::fprintf(stderr, "[mesh] --mesh-test=%s: %s\n", opts.previewMesh.c_str(), meshError.c_str());
     }
 
     // The UI: RmlUi on bgfx (view kViewUi), every screen bound to the game (game_ui.h).

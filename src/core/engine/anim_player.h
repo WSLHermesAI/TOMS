@@ -15,6 +15,7 @@
 #include "anim_clip.h"
 #include "atlas_file.h"
 #include "render_iface.h"
+#include "sprite_mesh.h"
 
 #include <string>
 #include <vector>
@@ -33,6 +34,7 @@ struct AtlasSet {
         const toms::AtlasFile* atlas = nullptr;
         std::string id;
         std::vector<uint16_t> pageTextures;   // per page; empty = every page is the sprite atlas texture
+        const toms::SpriteMeshFile* meshes = nullptr;   // its sprites' meshes (<atlas>.mesh.json); nullptr = none
     };
     std::vector<Entry> entries;
 
@@ -44,7 +46,45 @@ struct AtlasSet {
     // The region a sprite reference names (nullptr: not found) and the texture to draw it with.
     // `entry` (optional) gets the index of the atlas it came from.
     const toms::AtlasRegion* find(const std::string& ref, uint16_t* texture = nullptr, int* entry = nullptr) const;
+    // The mesh of the sprite a reference names, from the atlas find() takes it from (nullptr: none).
+    const toms::SpriteMesh* findMesh(const std::string& ref) const;
+    // Gives the atlas with this id its meshes (an editor that loads them separately).
+    void setMeshes(const std::string& id, const toms::SpriteMeshFile* meshes) {
+        for (Entry& e : entries) if (e.id == id) e.meshes = meshes;
+    }
 };
+
+// What a clip draws, in draw order: quads, and the meshes of skinned nodes (docs/34_MESH_ANIMATION.md).
+struct DrawList {
+    std::vector<Quad> quads;
+    struct MeshItem {
+        uint32_t firstVertex = 0, vertexCount = 0, firstIndex = 0, indexCount = 0;
+        float tint[4] = {1, 1, 1, 1};
+        bool additive = false;
+        uint16_t texture = kSpriteAtlasTexture;
+    };
+    std::vector<MeshItem> meshes;
+    std::vector<MeshVertex> vertices;       // every mesh's, in turn
+    std::vector<uint16_t> indices;          // local to each mesh's first vertex
+    struct Item { bool mesh; uint32_t index; };
+    std::vector<Item> order;
+
+    void clear() { quads.clear(); meshes.clear(); vertices.clear(); indices.clear(); order.clear(); }
+    bool empty() const { return order.empty(); }
+    void addQuad(const Quad& q) { order.push_back({false, (uint32_t)quads.size()}); quads.push_back(q); }
+    void submit(IRenderer* ren) const;      // drawSprite / drawMesh each, in order
+};
+
+// The skin weights a skinned pose's mesh uses (kSkinInfluences (bone, weight) pairs per vertex): the node's own
+// when they fit the mesh, else automatic -- each vertex weighted by its distance to each bone in the rest pose (a
+// bone is the segment from its origin to the first of its children that is also a bone, else its origin).
+// restVerts: the mesh's vertices in clip space at rest (x, y pairs); boneRest: each bone's rest world transform;
+// boneEnd: each bone's segment end (= its origin when it has no bone child).
+void autoSkinWeights(const std::vector<float>& restVerts, const std::vector<glm::mat4>& boneRest,
+                     const std::vector<glm::vec2>& boneEnd, std::vector<float>& out);
+// Every node's rest world transform (rest pos / rot / scale, keys ignored), by node.
+void restWorlds(const Clip& clip, std::vector<std::pair<const Node*, glm::mat4>>& out);
+
 
 // The quads for one evaluated pose list (anim_clip.h evaluate), in draw order. tint multiplies
 // every colour (nullptr = white). Sprites no atlas has are skipped and, with `missing`, reported
@@ -54,6 +94,29 @@ void appendQuads(const std::vector<NodePose>& poses, const AtlasSet& atlases, co
 // The quad of one pose; false = nothing to draw (hidden, transparent, no sprite or not found).
 bool makeQuad(const NodePose& pose, const AtlasSet& atlases, const glm::mat3& placement, const glm::vec4& tint,
               Quad& out, const toms::AtlasRegion** region = nullptr);
+// As appendQuads, but a skinned node whose sprite has a mesh is a bent mesh (the others are quads, as there). The
+// rest pose comes from `clip` (the clip the poses were evaluated from).
+void appendDraws(const Clip& clip, const std::vector<NodePose>& poses, const AtlasSet& atlases, const glm::mat3& placement,
+                 const float tint[4], DrawList& out, std::vector<std::string>* missing = nullptr);
+// A skinned pose as the editor's skin view shows it: the bent mesh with its weights, and the bones -- each the segment
+// the automatic weights measure against, where its bone has carried it now. Everything placed (like the draw).
+struct SkinView {
+    std::vector<glm::vec2> vertices;              // bent, placed
+    std::vector<uint16_t> triangles;
+    std::vector<float> weights;                   // kSkinInfluences (bone, weight) pairs per vertex
+    bool autoWeights = true;                      // false: the node's painted weights
+    std::vector<std::string> bones;               // the node's skinBones
+    std::vector<bool> boneFound;                  // a node of the clip has that name
+    std::vector<glm::vec2> boneStart, boneEnd;    // per bone, placed
+};
+enum class SkinState { NotSkinned, NoSprite, Rotated, NoMesh, Ok };
+// The skin of pose i of `poses` (evaluated from `clip`): Ok and *out filled, or why there is none to show (the node
+// then draws as its quad). Hidden poses are shown too.
+SkinState skinView(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases,
+                   const glm::mat3& placement, SkinView* out);
+// The bent mesh of pose i (skinned, with a mesh); false = draw its quad instead.
+bool makeSkinnedMesh(const std::vector<NodePose>& poses, size_t i, const std::vector<std::pair<const Node*, glm::mat4>>& rest,
+                     const AtlasSet& atlases, const glm::mat3& placement, const glm::vec4& tint, DrawList& out);
 
 class AnimPlayer {
 public:
@@ -73,7 +136,8 @@ public:
 
     // Draws the clip at time(). The poses are a PoseCache (only the key tracks that have keys move)
     // and each quad is kept until its pose, the placement, the tint or the AtlasSet changes, so a
-    // still part of a clip costs nothing but its drawSprite call.
+    // still part of a clip costs nothing but its drawSprite call. A skinned node's mesh is bent
+    // again every frame (its bones may move).
     void draw(IRenderer* ren, const AtlasSet& atlases, const glm::mat3& placement,
               const float tint[4] = nullptr) const;
     // The atlases' contents changed under the same AtlasSet (a reload): rebuild every quad.
@@ -92,8 +156,37 @@ private:
     mutable const AtlasSet* quadAtlases_ = nullptr;  // what quads_ were made with
     mutable glm::mat3 quadPlace_{1.0f};
     mutable glm::vec4 quadTint_{1.0f};
+    mutable std::vector<std::pair<const Node*, glm::mat4>> rest_;   // the clip's rest pose (skins)
+    mutable DrawList meshScratch_;
 
     double total() const;              // playCount * duration; < 0 = forever
+};
+
+// Where a thing held by a node is drawn: `place` times that node's world transform in `poses` (its position, turn and
+// scale at that frame). False: no node of that name.
+bool attachPlacement(const std::vector<NodePose>& poses, const std::string& node, const glm::mat3& place, glm::mat3& out);
+
+// A character clip and a held thing's clip played together (docs/15_ANIMATION.md "Characters"): the character clip
+// (archer_bow.anim: body, hand) and the held clip (weapon_bow.anim) are separate files, bound here. Both start
+// together; every frame the held clip is drawn at the character's `hand` node, in front of the character, so it moves
+// with the body's lean, recoil and shake. Events come from both. Either clip may be missing (only the other plays).
+class CharacterRig {
+public:
+    void play(const Clip* character, const Clip* held);   // both from the start; nullptrs = stop
+    void stop() { play(nullptr, nullptr); }
+    void update(int dtMs);
+    std::vector<std::string> takeEvents();
+    const Clip* character() const { return body_.clip(); }
+    const Clip* held() const { return held_.clip(); }
+    bool finished() const;   // both played out (a looping clip never is)
+    float time() const { return body_.clip() ? body_.time() : held_.time(); }
+    // The character drawn at `place` from characterAtlases, then the held clip at its hand from heldAtlases.
+    void draw(IRenderer* ren, const AtlasSet& characterAtlases, const AtlasSet& heldAtlases, const glm::mat3& place,
+              const float tint[4] = nullptr) const;
+    const AnimPlayer& characterPlayer() const { return body_; }
+
+private:
+    AnimPlayer body_, held_;
 };
 
 }  // namespace toms::anim

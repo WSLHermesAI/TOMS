@@ -27,6 +27,9 @@
 //   --ui-scale=<x>        the small-screen UI scale (the web build uses 1.5 on phones), to test it on desktop
 //   --battle-tuning=default  the battle bars' built-in values instead of data/battle.json (tests: smoke.battle)
 //   --fx=<file>#<effect>  play one particle effect of a .particle file over the screen (particle_fx.h)
+//   --mesh-test=<sprite>  draw that game-atlas sprite as a waving triangle mesh beside the plain sprite (IRenderer::drawMesh)
+//   --character=<sprite>  with --anim: play a character clip (body / hand nodes) as this character (fitCharacter)
+//   --held=<file.anim>    with --anim: draw that file's clip of the same name at the character clip's hand (CharacterRig)
 //   --hot-reload          read changed art, clips and effects again while playing (on by default in debug builds)
 //   --give=<id,...>       when the title first closes, hand the player these items (data/items.json ids;
 //                         gear is owned, not worn), gold:<n>, exp:<n>, points:<n> -- tests of the player menu (tests/CMakeLists.txt)
@@ -87,7 +90,7 @@ using namespace toms::next;
 namespace {
 
 struct Args {
-    std::string renderer = "auto", assets, stage = "stage01", screenshot, anim, fx;
+    std::string renderer = "auto", assets, stage = "stage01", screenshot, anim, fx, meshTest, character, held;
     int frames = 0;
     bool vsync = true, stats = false, fps = false;
     bool hotReload = false;   // --hot-reload
@@ -165,6 +168,9 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--fixed-dt=")) a.fixedDtMs = std::atoi(v);
         else if (const char* v = value(s, "--anim=")) a.anim = v;
         else if (const char* v = value(s, "--fx=")) a.fx = v;
+        else if (const char* v = value(s, "--mesh-test=")) a.meshTest = v;
+        else if (const char* v = value(s, "--character=")) a.character = v;
+        else if (const char* v = value(s, "--held=")) a.held = v;
         else if (s == "--no-vsync") a.vsync = false;
         else if (s == "--stats") a.stats = true;
         else if (s == "--no-instancing") a.spritePath = "cpu";
@@ -374,6 +380,9 @@ bool appInit(App& app) {
     opts.startStage = args.stage;
     opts.previewAnim = args.anim;
     opts.previewFx = args.fx;
+    opts.previewMesh = args.meshTest;
+    opts.previewCharacter = args.character;
+    opts.previewHeld = args.held;
     opts.spritePath = args.spritePath;
     opts.showFps = args.fps;
 #if !defined(NDEBUG) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)

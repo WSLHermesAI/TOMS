@@ -1,0 +1,49 @@
+{
+  "version": 3,
+  "atlases": ["../../assets/media/atlas/game.atlas"],
+  "clips": [
+    {
+      "name": "bend",
+      "length": 1.0,
+      "playCount": -1,
+      "root": {
+        "name": "stage",
+        "pos": [0, 170],
+        "scale": [4, 4],
+        "children": [
+          {
+            "name": "golem",
+            "sprite": "golem",
+            "pivot": [0.5, 1.0],
+            "skin": { "bones": ["hip", "chest", "head"], "weights": "auto" },
+            "children": [
+              {
+                "name": "hip",
+                "children": [
+                  {
+                    "name": "chest",
+                    "pos": [0, -12],
+                    "tracks": {
+                      "rot": [ { "t": 0, "v": [0, 0, 0], "ease": "sinusoidalInOut" }, { "t": 0.25, "v": [0, 0, 18], "ease": "sinusoidalInOut" },
+                               { "t": 0.75, "v": [0, 0, -18], "ease": "sinusoidalInOut" }, { "t": 1, "v": [0, 0, 0] } ]
+                    },
+                    "children": [
+                      {
+                        "name": "head",
+                        "pos": [0, -12],
+                        "tracks": {
+                          "rot": [ { "t": 0, "v": [0, 0, 0], "ease": "sinusoidalInOut" }, { "t": 0.25, "v": [0, 0, 14], "ease": "sinusoidalInOut" },
+                                   { "t": 0.75, "v": [0, 0, -14], "ease": "sinusoidalInOut" }, { "t": 1, "v": [0, 0, 0] } ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

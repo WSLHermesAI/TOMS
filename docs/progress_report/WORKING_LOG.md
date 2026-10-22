@@ -551,3 +551,19 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     Q16-Q21 answered; Q22-Q26, W37-W40 added.
   - Tests: changed-only 38 of 150, all pass; affected switched-off tests run by name, pass. Full suite / web not run.
 
+- **2026-10-21 / 22** — **Mesh animation (Spine replacement), the bow, editor fixes** ([DAILY_2026-10-22.md](DAILY_2026-10-22.md)):
+  - AIGamestyle reskin guide §2.1: the ComfyUI models per script (names, folders, sizes, links).
+  - docs/34: steps 1-3 built. `IRenderer::drawMesh` (bgfx mesh markers between quads; `--mesh-test`); `sprite_mesh.h`
+    (alpha meshes, grid meshes, `visibleBox`, text / `.bin` file), `atlaspack meshes`; skinning (`.anim` v3 `skin`, auto
+    weights, `appendDraws`, `skinView`); shipped `game.mesh.json` for the original art and dark16.
+  - Anim editor: Properties Skin + note, View > Show Skin, Object / Bones modes, Move Bones Under This Sprite, Mesh grid,
+    cut / copy / paste / paste as sibling (unique names, skins remapped), Preview as Character, pause on edit.
+  - Every Qt editor: wheel only on a focused field, panels scroll over fields (`Theme.cpp`); AutoBackup same-millisecond
+    names fixed.
+  - Bow and characters: `weapon_bow.anim` / `archer_bow.anim` (generated), `fitCharacter`, `character_fit.json`,
+    `CharacterRig` (`--held`), the `bow` item with `battleAnim`, `Game::updateBattleRig`, scenarios `battle_bow*`,
+    scenario check `battleAnim`; UI font regenerated.
+  - PC: hung Windows Terminal closed, default terminal = Console Host (docs/05); `test_switches.cmd` loading window and
+    error dialog.
+  - Tests: changed-only 16 of 163 pass; switched-off tests run by name pass (49 unit, anim, studio, battle scenarios).
+    Full suite / web not run.

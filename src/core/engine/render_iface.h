@@ -36,6 +36,31 @@ struct Quad {
     uint8_t node = 0;
 };
 
+// A textured triangle mesh (docs/34_MESH_ANIMATION.md): a sprite cut into triangles whose corners can
+// move on their own -- what a skinned or deformed (morphing) sprite is drawn with. Drawn in submission
+// order among the quads, from the same textures, with the same blending.
+struct MeshVertex {
+    float x, y;   // pixels (dst)
+    float u, v;   // the texture (src atlas)
+};
+struct Mesh {
+    const MeshVertex* vertices = nullptr;
+    uint32_t vertexCount = 0;              // at most 65536 (16-bit indices)
+    const uint16_t* indices = nullptr;     // three per triangle, into vertices
+    uint32_t indexCount = 0;
+    float tint[4] = {1, 1, 1, 1};          // rgba, the whole mesh
+    bool additive = false;
+    uint16_t texture = kSpriteAtlasTexture;   // as Quad::texture
+};
+// What IRenderer::drawMesh draws: whole triangles, every index naming a vertex, 16-bit indices.
+inline bool validMesh(const Mesh& m) {
+    if (!m.vertices || !m.indices || m.vertexCount == 0 || m.vertexCount > 65536u) return false;
+    if (m.indexCount == 0 || m.indexCount % 3 != 0) return false;
+    for (uint32_t i = 0; i < m.indexCount; i++)
+        if (m.indices[i] >= m.vertexCount) return false;
+    return true;
+}
+
 // Node tags (keep in sync with Quad::node comments above).
 enum RenderNode : uint8_t { NODE_UNSPEC=0, NODE_STAGE=1, NODE_CHAR=2, NODE_TALK=3, NODE_BATTLE=4, NODE_STORE=5 };
 
@@ -124,6 +149,10 @@ public:
     virtual void releaseTexture(uint16_t texture) { (void)texture; }
     virtual void begin() = 0;
     virtual void drawSprite(const Quad& q) = 0;
+    // A triangle mesh (Mesh above), between the quads drawn before and after it. The data is copied.
+    // A mesh with an index out of range, an index count that is not a multiple of 3, or more than
+    // 65536 vertices is not drawn. No-op by default (a backend without meshes).
+    virtual void drawMesh(const Mesh& m) { (void)m; }
     // Diagnostic: tag subsequent quads with a "node" id (for the 4-way split-screen
     // render). No-op by default; BgfxRenderer stamps it onto each quad.
     virtual void setNode(uint8_t n) { (void)n; }

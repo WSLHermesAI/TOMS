@@ -5767,6 +5767,22 @@
       "ko": "속도와 위력이 고르게 균형 잡힌 입문용 무기입니다.",
       "es": "Un arma inicial equilibrada, con velocidad y poder moderados."
     },
+    "item.bow.name": {
+      "zh_TW": "獵人短弓",
+      "en": "Hunter's Bow",
+      "zh_CN": "猎人短弓",
+      "ja": "狩人の短弓",
+      "ko": "사냥꾼의 단궁",
+      "es": "Arco del Cazador"
+    },
+    "item.bow.desc": {
+      "zh_TW": "拉滿弓弦蓄力，時機對了一箭重創敵人。",
+      "en": "Draw the string and hold your aim: a well-timed shot hits hard.",
+      "zh_CN": "拉满弓弦蓄力，时机对了一箭重创敌人。",
+      "ja": "弦を引き絞って狙え。タイミングが合えば一矢で深手を負わせる。",
+      "ko": "시위를 당겨 조준을 유지하라. 때를 맞춘 한 발은 강력하다.",
+      "es": "Tensa la cuerda y mantén la puntería: un disparo a tiempo golpea fuerte."
+    },
     "item.twin_daggers.name": {
       "zh_TW": "雙生短匕",
       "en": "Twin Daggers",

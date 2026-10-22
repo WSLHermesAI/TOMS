@@ -22,6 +22,10 @@ class AnimViewport : public GameCanvasView
 
 public:
     enum class Tool { Move, Rotate, Scale };
+    // What a click in the viewport picks (docs/34_MESH_ANIMATION.md): Object = sprites (the node moves, and with it
+    // the bones under it); Bones = the bones of skinned nodes (their joints and segments), never sprites -- the skin
+    // is shown, and the gizmo poses the bone (Auto-Key on) or places it in the sprite (Auto-Key off: its rest pose).
+    enum class EditMode { Object, Bones };
 
     // One sprite quad as drawn, and where it came from.
     struct DrawItem {
@@ -39,6 +43,17 @@ public:
     void setTool(Tool t);
     void setSnap(bool on) { m_snap = on; }
     bool snap() const { return m_snap; }
+    // View > Show Skin: over every skinned node, its mesh (lines), its points coloured by the bones they follow, and
+    // its bones; with a bone selected, the points shade by how much they follow that bone (docs/34_MESH_ANIMATION.md).
+    void setShowSkin(bool on) { m_showSkin = on; update(); }
+    bool showSkin() const { return m_showSkin; }
+    void setEditMode(EditMode m);
+    EditMode editMode() const { return m_mode; }
+    // The bone (node name) whose joint or segment is under widget point w, nearest first; "" = none. Bones of
+    // skinned nodes that are drawn (visible, solo) only.
+    QString boneAt(const QPointF& w) const;
+    // The colour the skin view gives bone b of a skin (a fixed palette, repeating).
+    static QColor boneColor(int b);
 
     // What the viewport draws at time t of the current clip, in clip space, in draw order (one
     // appendQuads() call per pose, so every quad knows its node). Public for the selftest.
@@ -54,6 +69,7 @@ public slots:
 
 signals:
     void toolChanged(AnimViewport::Tool t);
+    void dragStarted();   // a gizmo / sprite / bone drag begins (the editor pauses playback)
 
 protected:
     QSize contentSize() const override;
@@ -87,10 +103,14 @@ private:
     QPointF parentPointAt(const NodePath& parent, const QPointF& contentPos) const;
     void applyDrag(const QPointF& w, Qt::KeyboardModifiers mods);
     void drawGizmo(QPainter& p, const Gizmo& g) const;
+    void drawSkins(QPainter& p, const QTransform& view) const;
 
     AnimDocument* m_doc;
     Tool m_tool = Tool::Move;
     bool m_snap = false;
+    bool m_showSkin = false;
+    EditMode m_mode = EditMode::Object;
+    QString m_hoverBone;   // Bones mode: the bone under the cursor
     QRectF m_stage{-128, -128, 256, 256};
     std::vector<toms::anim::NodePose> m_poses;
     std::vector<DrawItem> m_items;

@@ -24,13 +24,14 @@
 set(_core "${TOMS_CORE_SRC}")
 set(TOMS_UNIT_TESTS
     engine/anim_clip_test           engine/particle_fx_test        engine/gltf_model_test
+    engine/anim_skin_test           engine/sprite_mesh_test        engine/anim_character_test
     engine/gltf_anim_texture_test   engine/gltf_physics_test
     engine/condition_eval_test      engine/encounter_resolve_test  engine/entity_status_test
     engine/job_system_test
     engine/event_bus_test           engine/log_test                engine/node_test
     engine/node_transform_test      engine/object_test             engine/power_bar_test
     engine/state_machine_test
-    engine/resource_test            engine/render_object_test
+    engine/resource_test            engine/render_object_test      engine/render_mesh_test
     engine/safe_timer_test          engine/tween_test              engine/timed_hits_test
     game/core/atlas_sprites_test
     game/save/save_test
@@ -178,6 +179,15 @@ toms_smoke_test(store        store       d3d11   0.1  --stage=stage02 --frames=1
 # rotation, easing, draw order and additive blending through the real sprite batch.
 toms_smoke_test(anim         anim        d3d11   0.1  --frames=110 --keys=enter@30
                 "--anim=${CMAKE_CURRENT_SOURCE_DIR}/smoke/anim_preview.anim#orbit")
+# A triangle mesh (IRenderer::drawMesh, docs/34_MESH_ANIMATION.md) over the map: the golem as an 8 x 8 grid
+# swaying in a sine wave, the plain golem beside it -- a mesh drawn between quads, from the sprite atlas.
+toms_smoke_test(mesh         mesh        d3d11   0.1  --frames=110 --keys=enter@30 --mesh-test=golem)
+# ... and between quads of the CPU path: the same image.
+toms_smoke_test(mesh_cpu     mesh        d3d11   0.1  --frames=110 --keys=enter@30 --mesh-test=golem --sprite-path=cpu)
+# A skinned clip (tests/smoke/anim_skin.anim, docs/34_MESH_ANIMATION.md): the golem's mesh (game.mesh.json) bent by three
+# bones, hip / chest / head, the chest and head swaying -- the feet stay, the top leans.
+toms_smoke_test(anim_skin    anim_skin   d3d11   0.1  --frames=110 --keys=enter@30
+                "--anim=${CMAKE_CURRENT_SOURCE_DIR}/smoke/anim_skin.anim#bend")
 # A particle effect (docs/examples/fx_recipes.particle, particle_fx.h) over the map: a prewarmed
 # fire from the fx atlas -- flipbook frames, additive and normal emitters, colour/size curves, seed 1.
 toms_smoke_test(fx           fx          d3d11   0.1  --frames=110 --keys=enter@30

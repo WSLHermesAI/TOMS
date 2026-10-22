@@ -1,4 +1,5 @@
 #include "AnimDocument.h"
+#include <json.hpp>
 
 #include <QDateTime>
 #include <QDir>
@@ -331,6 +332,21 @@ std::shared_ptr<AnimDocument::LoadedAtlas> loadOne(const QString& path)
         pages.push_back(img);
     }
     if (sizesChanged) a->atlas.computeUVs();
+    // Its meshes (docs/34_MESH_ANIMATION.md), when it has them: skinned nodes are drawn bent with them.
+    QFile meshFile(qs(toms::spriteMeshPath(path.toStdString())));
+    if (meshFile.open(QIODevice::ReadOnly)) {
+        const QDir meshDir = QFileInfo(meshFile.fileName()).absoluteDir();
+        auto readBuffer = [&](const std::string& uri, std::string& bytes) {
+            QFile b(meshDir.filePath(qs(uri)));
+            if (!b.open(QIODevice::ReadOnly)) return false;
+            bytes = b.readAll().toStdString();
+            return true;
+        };
+        const std::string meshText = meshFile.readAll().toStdString();
+        a->meshesBinary = meshText.find("\"buffers\"") != std::string::npos;
+        if (!toms::parseSpriteMeshes(meshText, readBuffer, a->meshes, &err))
+            a->error = AnimDocument::tr("%1: %2").arg(QDir::toNativeSeparators(meshFile.fileName()), qs(err));
+    }
     a->images.setPages(pages);
     for (const toms::AtlasRegion& r : a->atlas.regions) a->spriteNames << qs(r.name);
     a->spriteNames.removeDuplicates();
@@ -344,6 +360,8 @@ std::shared_ptr<AnimDocument::LoadedAtlas> loadOne(const QString& path)
 // force: reread every atlas; else keep the ones already loaded (undo / redo of a list change).
 void AnimDocument::loadAtlases(bool force)
 {
+    m_boxes.clear();   // the sprites' visible pixels are measured again (drawClip)
+    m_fitValid = false;
     std::vector<std::shared_ptr<LoadedAtlas>> next;
     for (const QString& path : m_state.atlasesAbs) {
         std::shared_ptr<LoadedAtlas> a;
@@ -371,6 +389,7 @@ void AnimDocument::loadAtlases(bool force)
             m_textures.push_back({int(i), int(p)});
         }
         m_atlasSet.add(a.atlas, u8(atlasId(int(i))), std::move(pageTextures));
+        if (!a.meshes.meshes.empty()) m_atlasSet.entries.back().meshes = &a.meshes;
         m_setToDoc.push_back(int(i));
         m_spriteNames << a.spriteNames;
     }
@@ -747,10 +766,84 @@ void AnimDocument::setSolo(const std::optional<NodePath>& path)
     emit soloChanged();
 }
 
+void AnimDocument::setPreviewCharacter(const QString& sprite)
+{
+    if (sprite == m_previewCharacter) return;
+    m_previewCharacter = sprite;
+    m_fitValid = false;
+    emit fileChanged();   // every view redraws
+}
+
+QStringList AnimDocument::characterChoices() const
+{
+    const Clip* c = clip();
+    const Node* body = c ? toms::anim::findNode(c->root, "body") : nullptr;
+    if (!body || !toms::anim::findNode(c->root, "hand") || body->sprite.empty()) return {};
+    const QString base = qs(toms::anim::parseSpriteRef(body->sprite).name);
+    QStringList out;
+    for (const QString& name : m_spriteNames)
+        if (name == base || name.startsWith(base + QLatin1Char('_'))) out << name;
+    return out;
+}
+
+const Clip* AnimDocument::drawClip() const
+{
+    const Clip* c = clip();
+    if (!c || m_previewCharacter.isEmpty()) return c;
+    if (m_fitValid && m_fitFor == m_previewCharacter && m_fitSource == *c) return &m_fitted;
+    // A sprite's visible pixels, from its atlas page (cached by reference until the atlases reload).
+    auto boxOf = [this](const std::string& ref, toms::SpriteBox& out) {
+        auto it = m_boxes.find(ref);
+        if (it == m_boxes.end()) {
+            int ai = -1;
+            const toms::AtlasRegion* r = findSprite(ref, &ai);
+            if (!r || ai < 0 || r->rotated || r->child || r->page < 0 || r->page >= m_atlases[size_t(ai)]->images.pages().size())
+                return false;
+            const QImage page = m_atlases[size_t(ai)]->images.pages()[r->page].convertToFormat(QImage::Format_RGBA8888);
+            if (r->x < 0 || r->y < 0 || r->x + r->w > page.width() || r->y + r->h > page.height()) return false;
+            const uchar* px = page.constBits() + size_t(r->y) * page.bytesPerLine() + size_t(r->x) * 4;
+            it = m_boxes.emplace(ref, toms::visibleBox(px, page.bytesPerLine() / 4, r->w, r->h, r->offX, r->offY, r->origW, r->origH)).first;
+        }
+        out = it->second;
+        return true;
+    };
+    // The character's nudge, as the game reads it: data/character_fit.json above the .anim (assets/data/).
+    glm::vec2 nudge(0.0f);
+    for (QDir d = QFileInfo(m_filePath).absoluteDir(); !m_filePath.isEmpty(); ) {
+        QFile f(d.filePath(QStringLiteral("data/character_fit.json")));
+        if (f.open(QIODevice::ReadOnly)) {
+            const nlohmann::json j = nlohmann::json::parse(f.readAll().toStdString(), nullptr, false);
+            const std::string id = u8(m_previewCharacter);
+            if (j.is_object() && j.contains(id) && j[id].is_object()) {
+                const nlohmann::json h = j[id].value("hand", nlohmann::json::array());
+                if (h.is_array() && h.size() == 2 && h[0].is_number() && h[1].is_number()) nudge = {h[0].get<float>(), h[1].get<float>()};
+            }
+            break;
+        }
+        if (!d.cdUp()) break;
+    }
+    m_fitSource = *c;
+    m_fitted = toms::anim::fitCharacter(*c, u8(m_previewCharacter), boxOf, nudge);
+    m_fitFor = m_previewCharacter;
+    m_fitValid = true;
+    return &m_fitted;
+}
+
+const Node* AnimDocument::drawNode(const Node* n) const
+{
+    const Clip* c = clip();
+    const Clip* d = drawClip();
+    if (!n || !c || c == d) return n;
+    NodePath p;
+    return findPath(c->root, n, p) ? nodeAt(d->root, p) : nullptr;
+}
+
 bool AnimDocument::soloShows(const Node* n) const
 {
     const Clip* c = clip();
     if (!m_solo || !c) return true;
+    NodePath probe;
+    if (!findPath(c->root, n, probe) && drawClip() != c) c = drawClip();   // a node of the fitted copy
     const Node* top = nodeAt(c->root, *m_solo);
     if (!top) return true;
     std::function<bool(const Node&)> inside = [&](const Node& x) {
@@ -787,6 +880,7 @@ void AnimDocument::setAutoKey(bool on)
 
 bool AnimDocument::edit(const QString& text, const std::function<bool(AnimState&)>& change, const QString& mergeKey)
 {
+    emit aboutToEdit();
     AnimState after = m_state;
     if (!change(after)) return false;
     fixSelection(after);
@@ -839,6 +933,7 @@ bool AnimDocument::setChannel(Channel c, const Value& v, const QString& mergeKey
 {
     const Node* sel = selectedNode();
     if (!sel) return false;
+    emit aboutToEdit();   // playback stops before the key's time is taken
     const float t = m_time;
     const bool keyed = m_autoKey || c == Channel::Event || hasKeyAt(*sel, c, t);
     const bool ok = editSelected(keyed ? tr("Key %1").arg(QLatin1String(channelName(c))) : tr("Set %1").arg(QLatin1String(channelName(c))),
@@ -1124,10 +1219,161 @@ bool AnimDocument::duplicateNode(const NodePath& path)
         Node* p = nodeAt(root, parent);
         if (!p || path.back() >= int(p->children.size())) return false;
         Node copy = p->children[size_t(path.back())];
-        copy.name = uniqueNodeName(root, copy.name);
+        animed::renameForPaste(root, copy);
         p->children.insert(p->children.begin() + path.back() + 1, std::move(copy));
         s.node = parent;
         s.node.push_back(path.back() + 1);
+        return true;
+    });
+}
+
+bool AnimDocument::parentBonesUnder(const NodePath& path)
+{
+    QString why;
+    const bool done = edit(tr("Move bones under the sprite"), [&](AnimState& s) {
+        if (s.file.clips.empty()) return false;
+        toms::anim::Clip& clip = s.file.clips[size_t(s.clip)];
+        NodePath cur = path;   // the skinned node's path, as bones before it move out of its parent
+        Node* node = nodeAt(clip.root, cur);
+        if (!node || !node->skinned()) return false;
+        bool moved = false;
+        // One bone subtree at a time (paths change as nodes move); a bone under another outside bone moves with it.
+        for (int guard = 0; guard < 64; guard++) {
+            node = nodeAt(clip.root, cur);
+            const std::vector<std::string> outside = animed::bonesOutside(clip.root, *node);
+            if (outside.empty()) break;
+            // The outermost of them: one whose parent is not itself an outside bone.
+            NodePath bonePath;
+            for (const std::string& b : outside) {
+                NodePath p;
+                std::function<bool(const Node&, NodePath&)> find = [&](const Node& n, NodePath& at) {
+                    if (n.name == b) return true;
+                    for (size_t i = 0; i < n.children.size(); i++) {
+                        at.push_back(int(i));
+                        if (find(n.children[i], at)) return true;
+                        at.pop_back();
+                    }
+                    return false;
+                };
+                if (!find(clip.root, p)) continue;
+                const Node* parent = p.empty() ? nullptr : nodeAt(clip.root, NodePath(p.begin(), p.end() - 1));
+                if (parent && std::find(outside.begin(), outside.end(), parent->name) != outside.end()) continue;
+                bonePath = p;
+                break;
+            }
+            if (bonePath.empty()) { why = tr("the bones hold the sprite node: move the sprite out of them first"); return false; }
+            if (bonePath.size() <= cur.size() && std::equal(bonePath.begin(), bonePath.end(), cur.begin())) {
+                why = tr("bone '%1' holds the sprite node: move the sprite out of it first").arg(qs(nodeAt(clip.root, bonePath)->name));
+                return false;
+            }
+            // The offset between the bone's old parent and the node, at rest: it must be a move only.
+            std::vector<std::pair<const Node*, glm::mat4>> rest;
+            toms::anim::restWorlds(clip, rest);
+            auto restOf = [&](const Node* n) {
+                for (const auto& r : rest) if (r.first == n) return r.second;
+                return glm::mat4(1.0f);
+            };
+            const NodePath parentPath(bonePath.begin(), bonePath.end() - 1);
+            const glm::mat4 t = glm::inverse(restOf(nodeAt(clip.root, cur))) * restOf(nodeAt(clip.root, parentPath));
+            for (int c = 0; c < 3; c++)
+                for (int r = 0; r < 3; r++)
+                    if (std::fabs(t[c][r] - (c == r ? 1.0f : 0.0f)) > 1e-4f) {
+                        why = tr("the sprite node is rotated or scaled against the parent of bone '%1': move it by hand")
+                                  .arg(qs(nodeAt(clip.root, bonePath)->name));
+                        return false;
+                    }
+            const glm::vec3 shift(t[3]);
+            Node* oldParent = nodeAt(clip.root, parentPath);
+            Node bone = std::move(oldParent->children[size_t(bonePath.back())]);
+            oldParent->children.erase(oldParent->children.begin() + bonePath.back());
+            bone.pos += shift;
+            for (auto& k : bone.posKeys) k.v += shift;
+            // The node's path may have moved up if the bone came before it under the same parent.
+            if (cur.size() >= bonePath.size() && std::equal(parentPath.begin(), parentPath.end(), cur.begin()) &&
+                cur[parentPath.size()] > bonePath.back())
+                cur[parentPath.size()]--;
+            nodeAt(clip.root, cur)->children.push_back(std::move(bone));
+            moved = true;
+        }
+        s.node = cur;   // the skinned node stays selected
+        return moved;
+    });
+    if (!why.isEmpty()) emit message(tr("Move bones under the sprite: %1").arg(why));
+    return done;
+}
+
+int AnimDocument::meshGrid(const std::string& ref) const
+{
+    int ai = -1;
+    const toms::AtlasRegion* r = findSprite(ref, &ai);
+    if (!r || ai < 0) return 0;
+    if (const toms::SpriteMesh* m = m_atlases[size_t(ai)]->meshes.find(r->name))
+        if (m->cells[0] > 0) return m->cells[0];
+    return std::max(1, (r->w + 7) / 8);   // atlaspack meshes' 8-pixel cells
+}
+
+bool AnimDocument::setMeshGrid(const std::string& ref, int cells, bool write)
+{
+    int ai = -1;
+    const toms::AtlasRegion* r = findSprite(ref, &ai);
+    if (!r || ai < 0) return false;
+    LoadedAtlas& a = *m_atlases[size_t(ai)];
+    if (r->rotated || r->child || r->page < 0 || r->page >= a.images.pages().size()) {
+        emit message(tr("Mesh grid: sprite '%1' has no pixels of its own to cut (rotated or a child sprite)").arg(qs(r->name)));
+        return false;
+    }
+    const QImage page = a.images.pages()[r->page].convertToFormat(QImage::Format_RGBA8888);
+    if (r->x < 0 || r->y < 0 || r->x + r->w > page.width() || r->y + r->h > page.height()) return false;
+    const uchar* px = page.constBits() + size_t(r->y) * page.bytesPerLine() + size_t(r->x) * 4;
+    toms::SpriteMesh m = toms::meshFromAlphaGrid(px, page.bytesPerLine() / 4, r->w, r->h, r->offX, r->offY, cells, cells);
+    if (m.triangles.empty()) return false;
+    a.meshes.meshes[r->name] = std::move(m);
+    if (write) {
+        const QString path = qs(toms::spriteMeshPath(u8(a.path)));
+        const QString binName = QFileInfo(path).completeBaseName() + QStringLiteral(".bin");   // game.mesh.json -> game.mesh.bin
+        std::string binary;
+        const std::string json = toms::spriteMeshesToJson(a.meshes, a.meshesBinary ? u8(binName) : std::string(),
+                                                          a.meshesBinary ? &binary : nullptr);
+        QFile f(path);
+        bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate) && f.write(json.data(), qint64(json.size())) == qint64(json.size());
+        f.close();
+        if (ok && a.meshesBinary) {
+            QFile b(QFileInfo(path).dir().filePath(binName));
+            ok = b.open(QIODevice::WriteOnly | QIODevice::Truncate) && b.write(binary.data(), qint64(binary.size())) == qint64(binary.size());
+        }
+        emit message(ok ? tr("Mesh grid: '%1' cut on %2 x %3 cells, saved to %4").arg(qs(r->name)).arg(cells).arg(cells).arg(QDir::toNativeSeparators(path))
+                        : tr("Mesh grid: cannot write %1").arg(QDir::toNativeSeparators(path)));
+    }
+    loadAtlases(false);   // the lookup picks up a first mesh of an atlas; the views redraw
+    emit fileChanged();
+    return true;
+}
+
+QString AnimDocument::copyNodeText(const NodePath& path) const
+{
+    const toms::anim::Clip* c = clip();
+    const Node* n = c ? animed::nodeAt(c->root, path) : nullptr;
+    return n ? qs(animed::nodeClipboardText(*n)) : QString();
+}
+
+bool AnimDocument::pasteNode(const NodePath& parent, int index, const QString& text)
+{
+    Node node;
+    std::string err;
+    if (!animed::nodeFromClipboardText(u8(text), node, &err)) {
+        emit message(tr("Paste: %1").arg(qs(err)));
+        return false;
+    }
+    return edit(tr("Paste node"), [&](AnimState& s) {
+        if (s.file.clips.empty()) return false;
+        Node& root = s.file.clips[size_t(s.clip)].root;
+        Node* p = nodeAt(root, parent);
+        if (!p) return false;
+        animed::renameForPaste(root, node);
+        const int at = index < 0 || index > int(p->children.size()) ? int(p->children.size()) : index;
+        p->children.insert(p->children.begin() + at, std::move(node));
+        s.node = parent;
+        s.node.push_back(at);
         return true;
     });
 }

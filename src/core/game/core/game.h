@@ -433,9 +433,29 @@ public:
     // whatever is on screen, centred, looping; its events are logged. Draws with the real
     // AnimPlayer through the sprite batch, so a screenshot shows exactly what the game would draw.
     bool playPreviewAnim(const std::string& file, const std::string& clip, std::string& error);
+    // The character a character clip (docs/15_ANIMATION.md "Characters": `body` / `hand` nodes) is shown with: a sprite
+    // of the game atlas ("player_mage"; toms_game --character=). "" = the clip as made. Set before playPreviewAnim.
+    void setPreviewCharacter(const std::string& sprite) { previewCharacter_ = sprite; }
+    // A held thing's clips (an .anim file, e.g. media/anim/weapon_bow.anim; toms_game --held=): its clip of the preview
+    // clip's name is drawn at the character clip's `hand` (CharacterRig). "" = none. Set before playPreviewAnim.
+    void setPreviewHeld(const std::string& file) { previewHeldFile_ = file; }
+    // The battle picture of a weapon with a "battleAnim" (equipment_system.h; docs/15_ANIMATION.md "Characters"): the
+    // player's character clip with the weapon's clip at its hand, both on the clip the battle's status picks --
+    //   charge   the attack bar waits for the tap (held, shaking, for as long as it waits)
+    //   attack   a tap that hit; miss: a tap that dealt nothing (played to its end)
+    //   idle     the bar recovers for the next round (and after the fight)
+    // It replaces the battle screen's player picture. battleRigState(): the status shown ("" = none: no such weapon).
+    const std::string& battleRigState() const { return battleRigState_; }
+    bool battleRigReady() const;   // the equipped weapon has battle clips and they loaded
+    // A character clip played by `sprite`: fitted to its visible pixels (fitCharacter), plus its nudge from
+    // assets/data/character_fit.json ({"player_mage": {"hand": [x, y]}}, pixels; none = no nudge).
+    toms::anim::Clip fitClipToCharacter(const toms::anim::Clip& clip, const std::string& sprite) const;
     // The same for a particle effect (toms_game --fx=<file>#<effect>): centred, a one-shot effect
     // starts again 0.5 s after it ends. The seed is the effect's, else 1, so screenshots repeat.
     bool playPreviewFx(const std::string& file, const std::string& effect, std::string& error);
+    // The renderer's triangle meshes (IRenderer::drawMesh, docs/34_MESH_ANIMATION.md; toms_game --mesh-test=<sprite>):
+    // that sprite of the game atlas as an 8 x 8 grid mesh waving in time, the plain sprite beside it.
+    bool playPreviewMesh(const std::string& sprite, std::string& error);
     int previewFxLive() const { return previewFx_.liveCount(); }   // the --fx effect's live particles (HUD)
     int previewFxGpuEmitters() const { return previewFx_.gpuEmitters(); }
     int previewFxEmitters() const { return previewFx_.effect() ? (int)previewFx_.effect()->emitters.size() : 0; }
@@ -730,18 +750,44 @@ private:
     std::vector<std::array<float, 4>> spriteUVs_;
     std::vector<std::array<float, 4>> spriteTrim_;   // x, y, w, h of the kept pixels, as fractions of the original
     toms::AtlasFile spriteAtlas_;
+    std::map<std::string, toms::SpriteBox> spriteBoxes_;   // each sprite's visible pixels (fitCharacter)
+    nlohmann::json characterFit_;                          // assets/data/character_fit.json (read at startup)
+    toms::SpriteMeshFile spriteMeshes_;   // its meshes (game.mesh.json beside it; docs/34_MESH_ANIMATION.md)
     std::shared_ptr<toms::res::AnimRes> previewAnim_;   // playPreviewAnim (its atlases come with it)
     std::string previewClip_;
+    std::string previewCharacter_;                      // setPreviewCharacter
+    // The battle rig (battleRigState above): the weapon its clips were loaded for, the two files, the character clip
+    // fitted to the player's character, and the rig playing them.
+    std::string battleRigWeapon_;
+    std::shared_ptr<toms::res::AnimRes> battleCharacterAnim_, battleHeldAnim_;
+    toms::anim::Clip battleFitted_;
+    toms::anim::CharacterRig battleRig_;
+    std::string battleRigState_;
+    int lastAttackDamage_ = 0;                          // the last attack tap's damage (attack or miss)
+    void loadBattleRig();                               // (re)loads the clips when the weapon changes
+    void setBattleRigState(const std::string& state, bool restart = false);
+    void updateBattleRig(int dtMs);                     // picks the status; Game::update
+    void drawBattleRig();                               // over the player's place on the battle screen; Game::draw
+    std::string previewHeldFile_;                       // setPreviewHeld
+    std::shared_ptr<toms::res::AnimRes> previewHeld_;   // its clips
+    toms::anim::CharacterRig previewRig_;               // the preview clip with the held clip at its hand
+    toms::anim::Clip previewFitted_;                    // the preview clip fitted to previewCharacter_
+    void startPreviewClip();                            // (re)starts the preview clip, fitted when a character is set
     int previewAnimVer_ = -1;                           // previewAnim_'s version when the clip was started
     toms::anim::AnimPlayer previewPlayer_;
     std::vector<toms::anim::NodePose> previewPoses_;   // per-frame scratch
-    std::vector<Quad> previewQuads_;
+    toms::anim::DrawList previewDraws_;
     std::vector<std::string> previewMissing_;          // sprites already reported missing
+    std::string previewMeshSprite_;                    // playPreviewMesh
+    double previewMeshMs_ = 0;
+    std::vector<MeshVertex> previewMeshVerts_;         // per-frame scratch
+    std::vector<uint16_t> previewMeshIdx_;
+    void drawPreviewMesh();
     void drawPreviewAnim();
     // The looping clips on the map (a monster's idle clip "idle_<enemy id>" from the manifest's "anim.monster_idle",
     // an object's own clip): one clock, each tile at its own phase (map_objects.cpp).
     std::vector<toms::anim::NodePose> idlePoses_;   // per-frame scratch (drawClipInRect)
-    std::vector<Quad> idleQuads_;
+    toms::anim::DrawList idleDraws_;
     double idleClockMs_ = 0;
     // Objects' looks (docs/19_STAGE_EDITOR.md): an object's own "look" over its type's ("look" in enemies.json /
     // items.json / its NPC file), field by field -- read once per floor, when its objects are made (map_objects.cpp).

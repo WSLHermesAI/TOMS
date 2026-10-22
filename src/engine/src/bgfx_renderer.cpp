@@ -230,9 +230,10 @@ void BgfxRenderer::destroy() {
     if (csIn_ != kInvalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{csIn_}); csIn_ = kInvalid; }
     if (csOut_ != kInvalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{csOut_}); csOut_ = kInvalid; }
     if (chunkIb_ != kInvalid) { bgfx::destroy(bgfx::IndexBufferHandle{chunkIb_}); chunkIb_ = kInvalid; }
-    for (uint16_t* vb : {&cpuVb_, &instVb_})
+    for (uint16_t* vb : {&cpuVb_, &instVb_, &meshVb_})
         if (*vb != kInvalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{*vb}); *vb = kInvalid; }
-    csCapacity_ = csOutCap_ = cpuCap_ = instCap_ = 0;
+    if (meshIb_ != kInvalid) { bgfx::destroy(bgfx::DynamicIndexBufferHandle{meshIb_}); meshIb_ = kInvalid; }
+    csCapacity_ = csOutCap_ = cpuCap_ = instCap_ = meshVbCap_ = meshIbCap_ = 0;
     if (sampler_ != kInvalid) { bgfx::destroy(bgfx::UniformHandle{sampler_}); sampler_ = kInvalid; }
 }
 
@@ -314,6 +315,8 @@ void BgfxRenderer::releaseTexture(uint16_t texture) {
 void BgfxRenderer::begin() {
     sprites_.clear();
     gpuDraws_.clear();
+    meshVerts_.clear();
+    meshIdx_.clear();
 }
 void BgfxRenderer::setNode(uint8_t n) { node_ = n; }
 void BgfxRenderer::setNodeFilter(uint8_t n) { nodeFilter_ = n; }
@@ -324,10 +327,52 @@ void BgfxRenderer::drawSprite(const Quad& q) {
     sprites_.back().node = node_;
 }
 
+void BgfxRenderer::drawMesh(const Mesh& m) {
+    if (nodeFilter_ && node_ != nodeFilter_) return;
+    if (!validMesh(m)) return;
+    GpuDraw d{sprites_.size(), 0, m.texture, m.additive};
+    d.firstVertex = (uint32_t)(meshVerts_.size() / 9);
+    d.vertexCount = m.vertexCount;
+    d.firstIndex = (uint32_t)meshIdx_.size();
+    d.indexCount = m.indexCount;
+    // The CPU path's vertex (SpriteVertex): position, uv, the mesh's tint, not solid.
+    for (uint32_t i = 0; i < m.vertexCount; i++) {
+        const MeshVertex& v = m.vertices[i];
+        meshVerts_.insert(meshVerts_.end(), {v.x, v.y, v.u, v.v, m.tint[0], m.tint[1], m.tint[2], m.tint[3], 0.0f});
+    }
+    meshIdx_.insert(meshIdx_.end(), m.indices, m.indices + m.indexCount);
+    gpuDraws_.push_back(d);
+}
+
+// This frame's meshes into their buffers, once (end(), before any path draws).
+void BgfxRenderer::uploadMeshes() {
+    if (meshIdx_.empty()) return;
+    const uint32_t verts = (uint32_t)(meshVerts_.size() / 9), indices = (uint32_t)meshIdx_.size();
+    auto grow = [](uint32_t cap, uint32_t need) { cap = std::max(cap, 1024u); while (cap < need) cap *= 2; return cap; };
+    if (meshVb_ == kInvalid || verts > meshVbCap_) {
+        if (meshVb_ != kInvalid) bgfx::destroy(bgfx::DynamicVertexBufferHandle{meshVb_});
+        meshVbCap_ = grow(meshVbCap_, verts);
+        meshVb_ = bgfx::createDynamicVertexBuffer(meshVbCap_, spriteLayout(), BGFX_BUFFER_NONE).idx;
+    }
+    if (meshIb_ == kInvalid || indices > meshIbCap_) {
+        if (meshIb_ != kInvalid) bgfx::destroy(bgfx::DynamicIndexBufferHandle{meshIb_});
+        meshIbCap_ = grow(meshIbCap_, indices);
+        meshIb_ = bgfx::createDynamicIndexBuffer(meshIbCap_, BGFX_BUFFER_NONE).idx;
+    }
+    if (meshVb_ == kInvalid || meshIb_ == kInvalid) {
+        std::fprintf(stderr, "[toms] meshes: no buffers for %u vertices\n", verts);
+        meshVbCap_ = meshIbCap_ = 0;
+        return;
+    }
+    bgfx::update(bgfx::DynamicVertexBufferHandle{meshVb_}, 0, bgfx::copy(meshVerts_.data(), (uint32_t)(meshVerts_.size() * sizeof(float))));
+    bgfx::update(bgfx::DynamicIndexBufferHandle{meshIb_}, 0, bgfx::copy(meshIdx_.data(), indices * (uint32_t)sizeof(uint16_t)));
+}
+
 void BgfxRenderer::end() {
     lastDrawCalls_ = 0;
     lastDrawnQuads_ = 0;
     lastGpuEmitters_ = 0;
+    lastMeshCount_ = 0;
     lastQuadCount_ = sprites_.size();
 
     // A 3D scene behind the sprites (setSceneViews): run its views right after the clear.
@@ -361,8 +406,9 @@ void BgfxRenderer::end() {
     bgfx::setViewTransform(kViewGame, nullptr, proj);
 
     if (program_ == kInvalid) return;
+    uploadMeshes();
     // text and UI are RmlUi's, in view kViewUi
-    if (sprites_.empty()) {   // only GPU particles (if any)
+    if (sprites_.empty()) {   // only GPU particles and meshes (if any)
         size_t next = 0;
         drawGpuAt(SIZE_MAX, next, spriteTex_);
         return;
@@ -608,6 +654,18 @@ void BgfxRenderer::drawGpuParticles(const GpuParticleFrame& f) {
 size_t BgfxRenderer::drawGpuAt(size_t at, size_t& next, uint16_t texture) {
     for (; next < gpuDraws_.size() && gpuDraws_[next].at <= at; next++) {
         const GpuDraw& d = gpuDraws_[next];
+        const uint16_t use = d.texture == kSpriteAtlasTexture ? texture : d.texture;
+        if (d.emitter == 0) {   // a mesh (drawMesh): the CPU path's program, its own part of the frame's buffers
+            if (meshVb_ == kInvalid || meshIb_ == kInvalid) continue;
+            bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{meshVb_}, d.firstVertex, d.vertexCount);
+            bgfx::setIndexBuffer(bgfx::DynamicIndexBufferHandle{meshIb_}, d.firstIndex, d.indexCount);
+            if (use != kInvalid) bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{use});
+            bgfx::setState(blendState(d.additive));
+            bgfx::submit(kViewGame, bgfx::ProgramHandle{program_});
+            ++lastDrawCalls_;
+            ++lastMeshCount_;
+            continue;
+        }
         const GpuEmitterBuffers& b = gpuEmitters_[d.emitter - 1];
         if (b.out == kInvalid) continue;
         // Every slot's quad (empty slots are degenerate: nothing to rasterize), in chunks.
@@ -615,7 +673,6 @@ size_t BgfxRenderer::drawGpuAt(size_t at, size_t& next, uint16_t texture) {
             const uint32_t count = std::min(kChunk, b.capacity - first);
             bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{b.out}, first * 4, count * 4);
             bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
-            const uint16_t use = d.texture == kSpriteAtlasTexture ? texture : d.texture;
             if (use != kInvalid) bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{use});
             bgfx::setState(blendState(d.additive));
             bgfx::submit(kViewGame, bgfx::ProgramHandle{csDrawProgram_});

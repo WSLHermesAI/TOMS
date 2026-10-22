@@ -14,6 +14,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
 #include <QScrollArea>
 #include <QSignalBlocker>
 #include <QSpinBox>
@@ -116,6 +117,9 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
                               "Once, stay: holds its last pose (drawn, nothing updates).\n"
                               "Once, then hide: hidden with its children after its last key.\n"
                               "Loop: plays first..last key again, forever, also after the clip has ended."));
+    m_skin = new QLineEdit(m_nodeBox);
+    m_skin->setPlaceholderText(tr("(not skinned)"));
+    m_skin->setToolTip(tr("Bones that bend this sprite's mesh: node names of this clip, comma separated. Empty = not skinned (drawn as a quad). The weights are made from the rest pose; the sprite needs a mesh beside its atlas (atlaspack meshes). docs/34_MESH_ANIMATION.md"));
     nf->addRow(tr("Name"), m_name);
     nf->addRow(tr("Sprite"), m_sprite);
     nf->addRow(tr("Playback"), m_playback);
@@ -125,6 +129,40 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
     nf->addRow(tr("Blend"), m_blend);
     nf->addRow(QString(), m_inheritColor);
     nf->addRow(QString(), m_restVisible);
+    nf->addRow(tr("Skin"), m_skin);
+    m_skinInfo = new QLabel(m_nodeBox);
+    m_skinInfo->setWordWrap(true);
+    m_skinInfo->setForegroundRole(QPalette::PlaceholderText);
+    nf->addRow(QString(), m_skinInfo);
+    {   // Bones the node does not carry: moving it slides the mesh off them. One click puts them under it.
+        m_bonesOutside = new QWidget(m_nodeBox);
+        auto* v = new QVBoxLayout(m_bonesOutside);
+        v->setContentsMargins(0, 0, 0, 0);
+        m_bonesOutsideText = new QLabel(m_bonesOutside);
+        m_bonesOutsideText->setWordWrap(true);
+        QPalette warn = m_bonesOutsideText->palette();
+        warn.setColor(QPalette::WindowText, QColor(0xe0, 0xa0, 0x30));
+        m_bonesOutsideText->setPalette(warn);
+        auto* fix = new QPushButton(tr("Move Bones Under This Sprite"), m_bonesOutside);
+        fix->setToolTip(tr("The bones become children of this node, nothing moving on screen: then moving the sprite "
+                           "(Object mode) moves its mesh and bones together. One undo step"));
+        v->addWidget(m_bonesOutsideText);
+        v->addWidget(fix);
+        connect(fix, &QPushButton::clicked, this, [this] { m_doc->parentBonesUnder(m_doc->selectedPath()); });
+        nf->addRow(QString(), m_bonesOutside);
+    }
+    m_meshGrid = new QSpinBox(m_nodeBox);
+    m_meshGrid->setRange(1, 32);
+    m_meshGrid->setKeyboardTracking(false);
+    m_meshGrid->setPrefix(tr("cells: "));
+    m_meshGrid->setToolTip(tr("The sprite's mesh: cut again from its alpha on N x N cells (more cells bend more smoothly). "
+                              "Saved at once to the mesh file beside its atlas, for every clip using the sprite"));
+    nf->addRow(tr("Mesh grid"), m_meshGrid);
+    connect(m_meshGrid, &QSpinBox::valueChanged, this, [this](int n) {
+        if (m_updating) return;
+        if (const Node* sel = m_doc->selectedNode()) m_doc->setMeshGrid(toms::anim::spriteAt(*sel, m_doc->time()), n);
+        refresh();
+    });
     layout->addWidget(m_nodeBox);
 
     // ---- at the playhead ----
@@ -233,6 +271,16 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
     connect(m_blend, &QComboBox::activated, this, [this](int i) {
         if (!m_updating) m_doc->editSelected(tr("Blend"), [i](Node& n) { n.blend = i == 1 ? toms::anim::Blend::Add : toms::anim::Blend::Normal; });
     });
+    connect(m_skin, &QLineEdit::editingFinished, this, [this] {
+        if (m_updating) return;
+        std::vector<std::string> bones;
+        for (const QString& b : m_skin->text().split(QLatin1Char(','), Qt::SkipEmptyParts))
+            if (!b.trimmed().isEmpty()) bones.push_back(b.trimmed().toStdString());
+        m_doc->editSelected(tr("Skin"), [bones](Node& n) {
+            if (n.skinBones != bones) n.skinWeights.clear();   // other bones: the weights are made again
+            n.skinBones = bones;
+        });
+    });
     connect(m_inheritColor, &QCheckBox::toggled, this, [this](bool on) {
         if (!m_updating) m_doc->editSelected(tr("Inherit colour"), [on](Node& n) { n.inheritColor = on; });
     });
@@ -304,6 +352,39 @@ void AnimPropertiesDock::commitChannel(Channel c)
     m_doc->setChannel(c, v, QStringLiteral("prop.%1.%2").arg(QLatin1String(channelName(c)), pathToString(m_doc->selectedPath())));
 }
 
+bool AnimPropertiesDock::bonesOutsideShown() const { return m_bonesOutside->isVisibleTo(m_nodeBox); }
+
+QString AnimPropertiesDock::skinInfoText() const { return m_skinInfo->isVisibleTo(m_nodeBox) ? m_skinInfo->text() : QString(); }
+
+// What the selected node's skin is: its mesh, bones and weights (as the game bends it at the playhead), or why it
+// draws as a plain quad.
+QString AnimPropertiesDock::skinInfo(const Node& n) const
+{
+    const toms::anim::Clip* clip = m_doc->clip();
+    if (!clip) return QString();
+    std::vector<toms::anim::NodePose> poses;
+    toms::anim::evaluate(*clip, m_doc->time(), poses);
+    size_t i = 0;
+    while (i < poses.size() && poses[i].node != &n) i++;
+    toms::anim::SkinView sv;
+    switch (toms::anim::skinView(*clip, poses, i, m_doc->atlasSet(), toms::anim::placement(0, 0), &sv)) {
+    case toms::anim::SkinState::NotSkinned: return QString();
+    case toms::anim::SkinState::NoSprite: return tr("No sprite to bend.");
+    case toms::anim::SkinState::Rotated: return tr("The sprite is rotated in its atlas: it has no mesh and draws as a quad.");
+    case toms::anim::SkinState::NoMesh:
+        return tr("No mesh for this sprite: run \"atlaspack meshes\" on its atlas. Until then it draws as a quad.");
+    case toms::anim::SkinState::Ok: break;
+    }
+    QString text = tr("Mesh: %1 points, %2 triangles. %3 bone(s), weights %4. View > Show Skin shows them.")
+                       .arg(sv.vertices.size()).arg(sv.triangles.size() / 3).arg(sv.bones.size())
+                       .arg(sv.autoWeights ? tr("automatic") : tr("painted"));
+    QStringList missing;
+    for (size_t b = 0; b < sv.bones.size(); b++)
+        if (!sv.boneFound[b]) missing << QString::fromStdString(sv.bones[b]);
+    if (!missing.isEmpty()) text += QLatin1Char(' ') + tr("Not a node of this clip: %1.").arg(missing.join(QStringLiteral(", ")));
+    return text;
+}
+
 void AnimPropertiesDock::refresh()
 {
     m_updating = true;
@@ -331,6 +412,23 @@ void AnimPropertiesDock::refresh()
         m_inheritColor->setChecked(n->inheritColor);
         m_restVisible->setChecked(n->visible);
         m_playback->setCurrentIndex(n->loop ? 2 : n->stayAtLastFrame ? 0 : 1);
+        QStringList bones;
+        for (const std::string& b : n->skinBones) bones << qs(b);
+        m_skin->setText(bones.join(QStringLiteral(", ")));
+        m_skinInfo->setVisible(n->skinned());
+        if (n->skinned()) m_skinInfo->setText(skinInfo(*n));
+        QStringList outside;
+        if (n->skinned() && m_doc->clip())
+            for (const std::string& b : animed::bonesOutside(m_doc->clip()->root, *n)) outside << qs(b);
+        m_bonesOutside->setVisible(!outside.isEmpty());
+        m_bonesOutsideText->setText(tr("Bones outside this sprite: %1. Moving the sprite in Object mode slides its mesh off "
+                                       "them; to move the whole object, put them under it.").arg(outside.join(QStringLiteral(", "))));
+        const std::string sprite = toms::anim::spriteAt(*n, m_doc->time());
+        const int grid = n->skinned() ? m_doc->meshGrid(sprite) : 0;
+        m_meshGrid->setVisible(grid > 0);
+        if (auto* form = qobject_cast<QFormLayout*>(m_nodeBox->layout()))
+            if (QWidget* label = form->labelForField(m_meshGrid)) label->setVisible(grid > 0);
+        if (grid > 0) m_meshGrid->setValue(grid);
     } else {
         m_nodeBox->setTitle(tr("Node"));
     }

@@ -77,6 +77,17 @@ Node* nodeAt(Node& root, const std::vector<int>& path);
 bool findPath(const Node& root, const Node* target, std::vector<int>& path);   // by address
 void collectNames(const Node& root, std::vector<std::string>& out);
 std::string uniqueNodeName(const Node& root, const std::string& base);
+// A copied node (Edit > Copy): {"toms": "anim-node", "version": 3, "node": {...}}, the .anim's node format.
+std::string nodeClipboardText(const Node& n);
+// The node of a copied text; false when it is not one (other text on the clipboard).
+bool nodeFromClipboardText(const std::string& text, Node& out, std::string* err = nullptr);
+// Makes a subtree about to be put into the clip `root` fit it: every node whose name the clip (or an earlier node of
+// the subtree) already has gets name_2, name_3, ...; a skin inside the subtree that names a renamed node is pointed at
+// the new name, so a copied rig bends with its own bones. Returns how many nodes were renamed.
+int renameForPaste(const Node& root, Node& pasted);
+// A skin's bones that are nodes of the clip but not inside the skinned node (not it, not under it): moving the node
+// does not carry them, so its mesh slides off them. Names in the skin's order.
+std::vector<std::string> bonesOutside(const Node& root, const Node& skinned);
 
 // ---- sprite references (anim_clip.h SpriteRef: "atlas:name" or a bare "name") ----
 // Every non-empty sprite reference of the node and its subtree: rest sprites and sprite keys.

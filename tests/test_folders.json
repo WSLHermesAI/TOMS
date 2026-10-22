@@ -11,6 +11,7 @@
     "scenarios": { "tests": ["label:scenario"], "why": "test scenarios (docs/31_TEST_SCENARIOS.md): a scenario folder runs its own scenario.<name>, shared files every scenario (tools/test_select.py)" }
   },
   "files": {
-    "smoke/anim_preview.anim": { "tests": ["anim.check_preview", "anim.editor_selftest"], "why": "the anim preview" }
+    "smoke/anim_preview.anim": { "tests": ["anim.check_preview", "anim.editor_selftest"], "why": "the anim preview" },
+    "smoke/anim_skin.anim": { "tests": ["anim.check_skin", "smoke.anim_skin"], "why": "the skinned clip (docs/34)" }
   }
 }

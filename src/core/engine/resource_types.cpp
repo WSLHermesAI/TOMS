@@ -37,6 +37,18 @@ bool TextureRes::load(ResourceManager& rm, std::string& error) {
 
 // ---- AtlasRes ----------------------------------------------------------------------------------------------------
 
+bool readSpriteMeshes(const std::string& atlasPath, toms::SpriteMeshFile& out, std::string& error) {
+    out = toms::SpriteMeshFile();
+    const std::string path = toms::spriteMeshPath(atlasPath);
+    std::string text;
+    if (!toms::vfsExists(path) || !toms::vfsReadAll(path, text)) return true;
+    const std::string dir = ResourceManager::dirOf(path);
+    auto readBuffer = [&](const std::string& uri, std::string& bytes) { return toms::vfsReadAll(ResourceManager::join(dir, uri), bytes); };
+    if (toms::parseSpriteMeshes(text, readBuffer, out, &error)) return true;
+    error = path + ": " + error;
+    return false;
+}
+
 int AtlasRes::contentVersion() const {
     int v = version();
     for (const auto& p : pages_) v += p->version();
@@ -58,6 +70,10 @@ bool AtlasRes::load(ResourceManager& rm, std::string& error) {
         pages.push_back(std::move(t));
     }
     atlas.computeUVs();
+    toms::SpriteMeshFile meshes;
+    std::string meshError;
+    if (!readSpriteMeshes(path(), meshes, meshError)) std::fprintf(stderr, "[res] %s\n", meshError.c_str());   // drawn as quads
+    meshes_ = std::move(meshes);
     atlas_ = std::move(atlas);
     pages_ = std::move(pages);
     pageTex_ = std::move(pageTex);
@@ -90,7 +106,10 @@ const toms::anim::AtlasSet& AtlasList::set() const {
     const int v = contentVersion();
     if (v != builtAt_) {
         set_ = toms::anim::AtlasSet();
-        for (const Item& i : items_) set_.add(i.atlas->atlas(), i.id, i.atlas->pageTextures());
+        for (const Item& i : items_) {
+            set_.add(i.atlas->atlas(), i.id, i.atlas->pageTextures());
+            if (!i.atlas->meshes().meshes.empty()) set_.entries.back().meshes = &i.atlas->meshes();
+        }
         builtAt_ = v;
     }
     return set_;

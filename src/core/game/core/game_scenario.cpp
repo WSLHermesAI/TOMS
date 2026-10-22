@@ -302,6 +302,8 @@ bool Game::scenarioCheck(std::string& report) const {
             stairJustOpened(st.id, *up) != scenarioExpect_["stairUpMarked"].get<bool>())
             fail(std::string("the stair up is ") + (scenarioExpect_["stairUpMarked"].get<bool>() ? "not marked" : "marked") + " with the arrow");
     }
+    if (scenarioExpect_.contains("battleAnim") && battleRigState_ != scenarioExpect_["battleAnim"].get<std::string>())
+        fail("the battle picture shows \"" + battleRigState_ + "\", expected \"" + scenarioExpect_["battleAnim"].get<std::string>() + "\"");
     if (scenarioExpect_.contains("condition") && !holds(scenarioExpect_["condition"]))
         fail("the condition " + scenarioExpect_["condition"].dump() + " does not hold");
     report = "[scenario] " + scenarioName_ + ": " + (ok ? "ok (" + scene + ")" : "FAILED" + out);

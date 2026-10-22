@@ -1,0 +1,11 @@
+{
+  "_comment": "battle_bow's check of the waiting status: no tap, so the attack bar waits and the bow is held drawn (charge).",
+  "include": ["../battle_bow/scenario.json"],
+  "test": {
+    "frames": 60,
+    "keys": null
+  },
+  "expect": {
+    "battleAnim": "charge"
+  }
+}

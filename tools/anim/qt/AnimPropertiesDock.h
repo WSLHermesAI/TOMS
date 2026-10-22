@@ -38,6 +38,12 @@ private:
     void commitChannel(animed::Channel c);
     QToolButton* makeKeyButton(animed::Channel c, QWidget* parent);
 
+    QString skinInfo(const toms::anim::Node& n) const;   // the Skin row's note
+public:
+    QString skinInfoText() const;   // the note as shown ("" when hidden; the selftest)
+    bool bonesOutsideShown() const;   // the "bones outside" warning is up (the selftest)
+    QSpinBox* meshGridBox() const { return m_meshGrid; }
+private:
     AnimDocument* m_doc;
     bool m_updating = false;
     ClipFields m_clip;
@@ -52,6 +58,11 @@ private:
     QComboBox* m_blend;
     QCheckBox *m_inheritColor, *m_restVisible;
     QComboBox* m_playback;   // once + stay / once + hide / loop
+    QLineEdit* m_skin;       // skin bones, comma separated (docs/34_MESH_ANIMATION.md)
+    QLabel* m_skinInfo;      // its mesh, bones and weights, or why it has none
+    QWidget* m_bonesOutside;          // a warning + "Move Bones Under This Sprite" (bones the node does not carry)
+    QLabel* m_bonesOutsideText;
+    QSpinBox* m_meshGrid;             // the sprite's mesh grid, cells across and down (re-cuts the mesh)
     QLabel* m_playLabel;
     QDoubleSpinBox *m_pos[3], *m_rot[3], *m_scale[3], *m_color[4];   // x, y, z
     QLabel* m_spriteHere;

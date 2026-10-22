@@ -53,6 +53,7 @@ public:
     void releaseTexture(uint16_t texture) override;
     void begin() override;
     void drawSprite(const Quad& q) override;
+    void drawMesh(const Mesh& m) override;     // the CPU path's program, from one vertex / index buffer per frame
     void setNode(uint8_t n) override;
     void setNodeFilter(uint8_t n) override;
     void end() override;                          // submits to kViewClear/kViewGame; host calls bgfx::frame()
@@ -81,6 +82,7 @@ public:
     bool hasInstancingPath() const { return instProgram_ != kInvalid; }
     size_t   lastQuadCount() const { return lastQuadCount_; }   // quads asked for last frame
     size_t   lastDrawnQuads() const { return lastDrawnQuads_; } // quads actually submitted to the GPU
+    size_t   lastMeshCount() const { return lastMeshCount_; }   // meshes drawn last frame
 
     // Same API the old Vulkan Renderer had, so callers ported 1:1.
     static inline uint32_t kDesignW = 1024, kDesignH = 768;
@@ -107,10 +109,14 @@ private:
     bool submitQuadsInstanced(const std::vector<Quad>& quads, uint16_t texture);
     bool submitQuadsCompute(const std::vector<Quad>& quads, uint16_t texture);
     uint64_t blendState(bool additive) const;
-    // GPU particle draws are placed among the sprites: before quad `at` (sprites_ index).
-    struct GpuDraw { size_t at; uint32_t emitter; uint16_t texture; bool additive; };
-    // Draws the GPU emitters placed at quad index `at` (markers from `next` on); returns where the
-    // next marker is (the quads up to it can go in one run).
+    // GPU particle and mesh draws are placed among the sprites: before quad `at` (sprites_ index).
+    // emitter 0 = a mesh: its vertices and indices in meshVerts_ / meshIdx_ (indices local to its first vertex).
+    struct GpuDraw {
+        size_t at; uint32_t emitter; uint16_t texture; bool additive;
+        uint32_t firstVertex = 0, vertexCount = 0, firstIndex = 0, indexCount = 0;
+    };
+    // Draws the GPU emitters and meshes placed at quad index `at` (markers from `next` on); returns
+    // where the next marker is (the quads up to it can go in one run).
     size_t drawGpuAt(size_t at, size_t& next, uint16_t texture);
     size_t nextGpuAt(size_t next) const { return next < gpuDraws_.size() ? gpuDraws_[next].at : SIZE_MAX; }
     uint16_t createAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h);
@@ -140,6 +146,13 @@ private:
     uint16_t uFxSim_ = kInvalid, uFxForce_ = kInvalid, uFxOrigin_ = kInvalid, uFxXform_ = kInvalid, uFxTint_ = kInvalid;
     uint16_t uFxColorLut_ = kInvalid, uFxScalarLut_ = kInvalid, uFxFrameUv_ = kInvalid, uFxFrameRect_ = kInvalid;
     uint32_t lastGpuEmitters_ = 0;
+    // drawMesh: this frame's mesh vertices (SpriteVertex, 9 floats each) and indices, uploaded in end().
+    std::vector<float> meshVerts_;
+    std::vector<uint16_t> meshIdx_;
+    uint16_t meshVb_ = kInvalid, meshIb_ = kInvalid;   // dynamic buffers, grown as needed
+    uint32_t meshVbCap_ = 0, meshIbCap_ = 0;
+    size_t lastMeshCount_ = 0;
+    void uploadMeshes();
     uint16_t spriteTex_ = kInvalid;
     std::vector<uint16_t> extraTex_;   // loadTexture (freed by releaseTexture or destroy)
     uint32_t devW_ = 1280, devH_ = 720;

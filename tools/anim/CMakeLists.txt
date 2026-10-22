@@ -11,7 +11,8 @@ set(ANIM_ENGINE_DIR "${TOMS_CORE_SRC}/engine")
 
 add_library(toms_anim STATIC
     "${ANIM_ENGINE_DIR}/anim_clip.h"   "${ANIM_ENGINE_DIR}/anim_clip.cpp"
-    "${ANIM_ENGINE_DIR}/anim_player.h" "${ANIM_ENGINE_DIR}/anim_player.cpp")
+    "${ANIM_ENGINE_DIR}/anim_player.h" "${ANIM_ENGINE_DIR}/anim_player.cpp"
+    "${ANIM_ENGINE_DIR}/sprite_mesh.h" "${ANIM_ENGINE_DIR}/sprite_mesh.cpp")   # meshes of skinned sprites (docs/34)
 toms_target_defaults(toms_anim)
 target_include_directories(toms_anim PUBLIC
     "${ANIM_ENGINE_DIR}"                   # anim_clip.h, anim_player.h, atlas_file.h, render_iface.h

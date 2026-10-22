@@ -96,6 +96,12 @@ void checkSprite(const std::string& ref, int clip, const std::vector<int>& path,
                 owners.front()->id + "'s is used. Pick it in the Sprites dock, or Key > Qualify Sprite References, to store the atlas");
 }
 
+bool hasNodeNamed(const Node& n, const std::string& name) {
+    if (n.name == name) return true;
+    for (const Node& c : n.children) if (hasNodeNamed(c, name)) return true;
+    return false;
+}
+
 void checkNode(const Node& n, int clip, const Clip& c, std::vector<int>& path, const std::string& parentWhere,
                const SpriteLookup& atlases, std::vector<Problem>& out) {
     const std::string where = parentWhere + "/" + (n.name.empty() ? std::string("(unnamed)") : n.name);
@@ -107,6 +113,10 @@ void checkNode(const Node& n, int clip, const Clip& c, std::vector<int>& path, c
             if (!k.v.empty()) used.insert(k.v);
         for (const std::string& s : used) checkSprite(s, clip, path, where, atlases, out);
     }
+    // A skin (docs/34_MESH_ANIMATION.md): every bone must be a node of the clip; a bone no node has bends nothing.
+    for (const std::string& bone : n.skinBones)
+        if (!hasNodeNamed(c.root, bone))
+            add(out, Problem::Warning, clip, path, where, "skin bone '" + bone + "' is no node of this clip: it holds the mesh still");
     for (Channel ch : kAllChannels) {
         if (const int o = overlappingKeys(n, ch))
             add(out, Problem::Warning, clip, path, where,

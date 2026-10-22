@@ -1,5 +1,6 @@
 // anim_clip.cpp -- see anim_clip.h.
 #include "anim_clip.h"
+#include "sprite_mesh.h"
 
 #include <tweeny/easing.h>
 #include <json.hpp>
@@ -175,6 +176,7 @@ bool Node::operator==(const Node& o) const {
     return name == o.name && sprite == o.sprite && pos == o.pos && rot == o.rot && scale == o.scale && color == o.color &&
            visible == o.visible && hasPivot == o.hasPivot && pivot == o.pivot && order == o.order && blend == o.blend &&
            inheritColor == o.inheritColor && loop == o.loop && stayAtLastFrame == o.stayAtLastFrame &&
+           skinBones == o.skinBones && skinWeights == o.skinWeights &&
            posKeys == o.posKeys && rotKeys == o.rotKeys && scaleKeys == o.scaleKeys && colorKeys == o.colorKeys &&
            spriteKeys == o.spriteKeys && eventKeys == o.eventKeys && visibleKeys == o.visibleKeys && children == o.children;
 }
@@ -495,6 +497,22 @@ json nodeToJson(const Node& n) {
     if (!n.inheritColor) j["inheritColor"] = false;
     if (n.loop) j["loop"] = true;
     if (!n.stayAtLastFrame) j["stayAtLastFrame"] = false;
+    if (n.skinned()) {
+        json skin{{"bones", n.skinBones}};
+        if (n.skinWeights.empty()) {
+            skin["weights"] = "auto";
+        } else {   // per vertex [bone, weight, ...], the zero weights left out
+            json w = json::array();
+            for (size_t v = 0; v + 2 * kSkinInfluences <= n.skinWeights.size(); v += 2 * kSkinInfluences) {
+                json one = json::array();
+                for (int k = 0; k < kSkinInfluences; k++)
+                    if (n.skinWeights[v + 2 * k + 1] != 0.0f) { one.push_back((int)n.skinWeights[v + 2 * k]); one.push_back(n.skinWeights[v + 2 * k + 1]); }
+                w.push_back(one);
+            }
+            skin["weights"] = w;
+        }
+        j["skin"] = skin;
+    }
     json tr = json::object();
     auto v3 = [](const glm::vec3& v) { return vec(v); };
     auto v4 = [](const glm::vec4& v) { return vec(v); };
@@ -567,6 +585,28 @@ void nodeFromJson(const json& j, Node& n, const std::string& where) {
     n.inheritColor = j.value("inheritColor", true);
     n.loop = j.value("loop", false);
     n.stayAtLastFrame = j.value("stayAtLastFrame", true);
+    if (j.contains("skin")) {
+        const json& skin = j["skin"];
+        n.skinBones = skin.value("bones", std::vector<std::string>());
+        if (n.skinBones.empty()) throw std::runtime_error(here + ": a skin needs bones");
+        const json w = skin.value("weights", json("auto"));
+        if (w.is_array()) {
+            for (const json& one : w) {
+                if (!one.is_array() || one.size() % 2 || one.size() > 2 * kSkinInfluences)
+                    throw std::runtime_error(here + ": skin weights are [bone, weight, ...] per vertex, at most " +
+                                             std::to_string(kSkinInfluences) + " bones");
+                for (size_t k = 0; k < (size_t)kSkinInfluences; k++) {
+                    const bool has = 2 * k < one.size();
+                    const int bone = has ? one[2 * k].get<int>() : 0;
+                    if (bone < 0 || bone >= (int)n.skinBones.size()) throw std::runtime_error(here + ": skin weight names bone " + std::to_string(bone));
+                    n.skinWeights.push_back((float)bone);
+                    n.skinWeights.push_back(has ? one[2 * k + 1].get<float>() : 0.0f);
+                }
+            }
+        } else if (!w.is_string() || w.get<std::string>() != "auto") {
+            throw std::runtime_error(here + ": skin weights must be \"auto\" or a list per vertex");
+        }
+    }
     if (j.contains("tracks")) {
         const json& tr = j["tracks"];
         keysFromJson(tr, "pos", n.posKeys, toPos, here);
@@ -624,9 +664,88 @@ bool parseAnim(const std::string& text, AnimFile& out, std::string* err) {
     }
 }
 
+// ---- characters ----
+
+const Node* findNode(const Node& root, const std::string& name) {
+    if (root.name == name) return &root;
+    for (const Node& c : root.children)
+        if (const Node* f = findNode(c, name)) return f;
+    return nullptr;
+}
+
+glm::vec2 characterHandOffset(const glm::vec2& hand, const toms::SpriteBox& from, const toms::SpriteBox& to) {
+    if (from.empty() || to.empty()) return glm::vec2(0.0f);
+    // Both bodies pivoted at the bottom centre: body space x from the centre, y up from the feet (negative).
+    auto top = [](const toms::SpriteBox& b) { return b.top - b.origH; };
+    auto bottom = [](const toms::SpriteBox& b) { return b.bottom - b.origH; };
+    auto right = [](const toms::SpriteBox& b) { return b.right - b.origW * 0.5f; };
+    const float share = (hand.y - top(from)) / (bottom(from) - top(from));   // 0 = top of the head, 1 = the feet
+    const float y = top(to) + share * (bottom(to) - top(to));
+    const float x = hand.x + (right(to) - right(from));
+    return glm::vec2(x - hand.x, y - hand.y);
+}
+
+namespace {
+void fitWalk(Node& n, const std::string& sprite, const glm::vec2& offset) {
+    if (n.name == "body") {
+        n.sprite = sprite;
+        for (auto& k : n.spriteKeys)
+            if (!k.v.empty()) k.v = sprite;
+    }
+    if (n.name == "hand") {
+        n.pos += glm::vec3(offset, 0.0f);
+        for (auto& k : n.posKeys) k.v += glm::vec3(offset, 0.0f);
+    }
+    for (Node& c : n.children) fitWalk(c, sprite, offset);
+}
+}  // namespace
+
+Clip fitCharacter(const Clip& c, const std::string& sprite,
+                  const std::function<bool(const std::string&, toms::SpriteBox&)>& boxOf, const glm::vec2& extra) {
+    Clip out = c;
+    const Node* body = findNode(c.root, "body");
+    const Node* hand = findNode(c.root, "hand");
+    glm::vec2 offset = extra;
+    toms::SpriteBox from, to;
+    if (body && hand && boxOf && boxOf(body->sprite, from) && boxOf(sprite, to))
+        offset += characterHandOffset(glm::vec2(hand->pos), from, to);
+    // A bare name keeps the body's atlas: "player_mage" for a body "game:player" is "game:player_mage".
+    std::string ref = sprite;
+    if (body && sprite.find(':') == std::string::npos) {
+        const SpriteRef was = parseSpriteRef(body->sprite);
+        if (!was.atlas.empty()) ref = spriteRef(was.atlas, sprite);
+    }
+    fitWalk(out.root, ref, offset);
+    return out;
+}
+
+std::string nodeToJsonText(const Node& n) { return nodeToJson(n).dump(2) + "\n"; }
+
+bool parseNodeJson(const std::string& text, Node& out, std::string* err) {
+    try {
+        const json j = json::parse(text);
+        if (!j.is_object()) throw std::runtime_error("not a node");
+        Node n;
+        nodeFromJson(j, n, std::string());
+        out = std::move(n);
+        return true;
+    } catch (const std::exception& e) {
+        if (err) *err = e.what();
+        return false;
+    }
+}
+
+namespace {
+bool anySkin(const Node& n) {
+    if (n.skinned()) return true;
+    for (const Node& c : n.children) if (anySkin(c)) return true;
+    return false;
+}
+}  // namespace
+
 std::string animToJson(const AnimFile& f) {
     json j;
-    j["version"] = kAnimVersion;
+    j["version"] = std::any_of(f.clips.begin(), f.clips.end(), [](const Clip& c) { return anySkin(c.root); }) ? 3 : 2;
     if (!f.atlases.empty()) {
         json a = json::array();
         for (const AtlasRef& r : f.atlases) {   // the short form when the id is the default one

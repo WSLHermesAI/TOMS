@@ -1,0 +1,19 @@
+{
+  "_comment": "A battle with the bow (items.json \"bow\": its battle clips, docs/15_ANIMATION.md \"Characters\"): the player's character draws and holds the bow (charge) while the attack bar waits for the tap, shoots on the tap (attack), and lowers it (idle) while the bar recovers for the next round. A sturdy slime that hardly attacks, so the bow can be watched. The test taps once: attack.",
+  "scene": "battle",
+  "player": {
+    "equip": ["bow"]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000
+  },
+  "test": {
+    "frames": 50,
+    "keys": "enter@40"
+  },
+  "expect": {
+    "battleAnim": "attack"
+  }
+}

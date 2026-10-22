@@ -15,6 +15,16 @@
 
 ## ▶ Next Step
 
+**Mesh animation replaces Spine; the bow in battle; editor fixes** (2026-10-21 / 22; [DAILY_2026-10-22.md](DAILY_2026-10-22.md), [../34_MESH_ANIMATION.md](../34_MESH_ANIMATION.md)):
+- Mesh animation steps 1-3: `drawMesh`, sprite meshes from alpha (`atlaspack meshes`, text or `.bin`), skinning (`.anim` v3).
+- Anim editor: Show Skin, Object / Bones modes, mesh grid, copy / paste nodes, pause on edit, wheel only on a focused field.
+- The bow: `weapon_bow.anim` and the character-only `archer_bow.anim`, bound in code (`CharacterRig`); any character fits
+  (`fitCharacter`). In battle the bow follows the status (charge / attack / miss / idle); scenarios `battle_bow*`.
+- Double-click `.cmd` fixed (Windows Terminal hung; Console Host is the default); `test_switches.cmd` never silent.
+- Changed-only 16 of 163 pass; switched-off tests run by name pass. **Owner:** commit (87 files); rebuild the debug
+  build; check `test_switches.json` (scenarios switched off 10-22 14:52); restore `tests/golden`, `tests/mpdi`,
+  `tests/font` or switch those tests off. Next: lattice (step 4), weight painting, held-clip preview in the editor.
+
 **Test scenarios, phase 0, cards, multi-event stair locks, leak check** (2026-10-20 / 21; [DAILY_2026-10-21.md](DAILY_2026-10-21.md)):
 - Every scene can start alone from setting files (`tests/scenarios/`, 32 scenario tests; double-click in `toms_editor`).
 - Gameplay phase 0 (safe timers, tweens, timed hits, `weapon_play.json`, attack pause, damage numbers, the weapon test arena), the card collection, W38 done.

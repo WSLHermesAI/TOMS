@@ -79,6 +79,7 @@ struct UiBattle {
     bool visible = false;
     bool active = false;               // fighting (false: won, showing "tap to continue")
     std::string title, player_sprite, enemy_sprite;   // sprite names (_atlas.rcss)
+    bool player_anim = false;          // the game draws the player (a weapon's battle clips): no picture
     float player_hp_pct = 0, enemy_hp_pct = 0;
     std::string player_hp_text, enemy_hp_text, log, continue_hint;
     std::string clock_label;

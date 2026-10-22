@@ -106,8 +106,10 @@ QString AutoBackup::backupNow(QString* error)
     QDir().mkpath(dir);
     const QString time = QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmss-zzz"));
     QString path = QDir(dir).filePath(stem + QLatin1Char('_') + time + m_ext);
+    // Two backups in the same millisecond: _002, _003 ... after the time. '_' sorts after the '.' of the extension and
+    // the number is padded, so the later backup also sorts later (prune keeps the newest by name).
     for (int i = 2; QFileInfo::exists(path) || QFileInfo::exists(path.left(path.size() - m_ext.size())); i++)
-        path = QDir(dir).filePath(QStringLiteral("%1_%2-%3%4").arg(stem, time).arg(i).arg(m_ext));
+        path = QDir(dir).filePath(QStringLiteral("%1_%2_%3%4").arg(stem, time).arg(i, 3, 10, QLatin1Char('0')).arg(m_ext));
     QString err;
     if (!m_write(path, &err)) {
         if (error) *error = err;

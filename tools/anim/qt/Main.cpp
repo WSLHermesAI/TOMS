@@ -36,6 +36,11 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
+#include <QScrollBar>
+#include <QScrollArea>
+#include <QWheelEvent>
+#include <QGuiApplication>
+#include <QClipboard>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -853,6 +858,272 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
         ok &= check(doc->filePath().isEmpty() && doc->atlasCount() == 2 && !ed->addAtlasFile(extra) &&
                         ed->problemsDock()->logText().contains(QStringLiteral("save the animation first")),
                     "untitled: adding an atlas asks to save the .anim first");
+    }
+    {   // The mouse wheel changes a number only in a field that has focus (Theme.cpp WheelNeedsFocus).
+        QDoubleSpinBox* box = nullptr;
+        for (QDoubleSpinBox* b : ed->propertiesDock()->findChildren<QDoubleSpinBox*>())
+            if (b->isEnabled() && b->isVisibleTo(ed->propertiesDock()) && b->value() < b->maximum() - 1) { box = b; break; }
+        if (!box) {
+            ok &= check(false, "wheel: a number field in Properties");
+        } else {
+            auto wheel = [&](int delta) {
+                const QPointF at(box->width() / 2.0, box->height() / 2.0);
+                QWheelEvent e(at, box->mapToGlobal(at), QPoint(), QPoint(0, delta), Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+                QApplication::sendEvent(box, &e);
+                processEvents();
+            };
+            ok &= check(box->focusPolicy() == Qt::StrongFocus, "wheel: number fields take focus by click or Tab, not by the wheel");
+            w.setFocus();
+            processEvents();
+            // A short Properties panel, so it has something to scroll.
+            QScrollArea* area = ed->propertiesDock()->findChild<QScrollArea*>();
+            if (area) { area->setMaximumHeight(160); processEvents(); area->verticalScrollBar()->setValue(0); processEvents(); }
+            const double before = box->value();
+            const int scrolledFrom = area ? area->verticalScrollBar()->value() : 0;
+            wheel(-120);
+            ok &= check(box->value() == before && !box->hasFocus(), "wheel: over an unfocused field the value stays");
+            ok &= check(area && area->verticalScrollBar()->maximum() > 0 && area->verticalScrollBar()->value() > scrolledFrom,
+                        "wheel: over an unfocused field the Properties panel scrolls");
+            if (area) { area->setMaximumHeight(QWIDGETSIZE_MAX); processEvents(); }
+            box->setFocus();
+            processEvents();
+            if (box->hasFocus()) {   // the offscreen platform may not focus a window
+                wheel(120);
+                ok &= check(box->value() != before, "wheel: in a focused field it changes the value");
+                doc->undoStack()->undo();
+            }
+        }
+    }
+    {   // The skin view (docs/34_MESH_ANIMATION.md) on tests/smoke/anim_skin.anim, next to the file under test.
+        const QString skinFile = QFileInfo(file).dir().filePath(QStringLiteral("anim_skin.anim"));
+        AnimViewport* view = ed->viewport();
+        if (!QFileInfo::exists(skinFile)) {
+            ok &= check(false, "skin: tests/smoke/anim_skin.anim is next to the file under test");
+        } else if (ed->openFile(skinFile, false)) {
+            view->resize(640, 480);
+            processEvents();
+            ed->viewport()->frameClip();
+            doc->setTime(0.25f);   // the chest and head turned their furthest
+            ok &= check(doc->selectNodeByName(QStringLiteral("golem")), "skin: select the skinned golem");
+            processEvents();
+            const QString info = ed->propertiesDock()->skinInfoText();
+            ok &= check(info.contains(QStringLiteral("3 bone(s)")) && info.contains(QStringLiteral("automatic")),
+                        "skin: Properties says its mesh, 3 bones, automatic weights");
+            // Bone 2's colour (head, yellow; the hip's red sits under the Move arrow): none with Show Skin off, its segment and joint with it on.
+            auto boneColoured = [&](int bone) {
+                const QImage img = view->grab().toImage();
+                const QColor c = AnimViewport::boneColor(bone);
+                int n = 0;
+                for (int y = 0; y < img.height(); y++)
+                    for (int x = 0; x < img.width(); x++) {
+                        const QColor p = img.pixelColor(x, y);
+                        if (std::abs(p.red() - c.red()) < 6 && std::abs(p.green() - c.green()) < 6 && std::abs(p.blue() - c.blue()) < 6) n++;
+                    }
+                return n;
+            };
+            ed->showSkinAction()->setChecked(false);
+            processEvents();
+            const int off = boneColoured(2);
+            ed->showSkinAction()->setChecked(true);
+            processEvents();
+            const int on = boneColoured(2);
+            ok &= check(view->showSkin() && on > off + 50, "skin: View > Show Skin draws the bones over the sprite");
+            ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("skin_view.png"))), "skin_view.png");
+            ok &= check(doc->selectNodeByName(QStringLiteral("chest")), "skin: select the chest bone");
+            processEvents();
+            ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("skin_bone.png"))), "skin_bone.png (shaded by the chest's weights)");
+            ok &= check(ed->propertiesDock()->skinInfoText().isEmpty(), "skin: a bone has no skin note");
+            ed->showSkinAction()->setChecked(false);
+
+            // Copy / paste nodes (Edit menu): the whole rig, pasted into the same clip, becomes a second rig.
+            const QList<QAction*> clip = ed->nodeClipboardActions();   // cut, copy, paste, paste as sibling
+            const toms::anim::Clip* c = doc->clip();
+            const int undoAt = doc->undoStack()->index();
+            const size_t children = c->root.children.size();
+            doc->selectNode({});   // the root, "stage"
+            clip[1]->trigger();
+            ok &= check(QGuiApplication::clipboard()->text().contains(QStringLiteral("\"anim-node\"")),
+                        "copy: the node is on the clipboard as text");
+            clip[2]->trigger();   // under the root
+            c = doc->clip();
+            const Node* pasted = c->root.children.size() == children + 1 ? &c->root.children.back() : nullptr;
+            ok &= check(pasted && pasted->name == "stage_2" && doc->selectedNode() == pasted,
+                        "paste: under the selected node, renamed stage_2, selected");
+            const Node* golem2 = pasted ? animed::nodeAt(*pasted, {0}) : nullptr;
+            ok &= check(golem2 && golem2->name == "golem_2" &&
+                            golem2->skinBones == std::vector<std::string>({"hip_2", "chest_2", "head_2"}),
+                        "paste: the pasted skin follows the pasted bones (hip_2, chest_2, head_2)");
+            const Node* chest2 = golem2 ? animed::nodeAt(*golem2, {0, 0}) : nullptr;   // golem_2 > hip_2 > chest_2
+            ok &= check(chest2 && chest2->name == "chest_2" && chest2->rotKeys.size() == 4, "paste: children and keys come along");
+            ok &= check(doc->selectNodeByName(QStringLiteral("hip_2")), "select hip_2");
+            clip[0]->trigger();   // cut
+            ok &= check(!doc->selectNodeByName(QStringLiteral("hip_2")) && !doc->selectNodeByName(QStringLiteral("chest_2")),
+                        "cut: the node and its children are gone");
+            ok &= check(doc->selectNodeByName(QStringLiteral("golem_2")), "select golem_2");
+            clip[3]->trigger();   // paste as sibling: right after golem_2
+            c = doc->clip();
+            pasted = &c->root.children.back();
+            ok &= check(pasted->children.size() == 2 && pasted->children[1].name == "hip_2",
+                        "paste as sibling: after the selected node, the name free again (hip_2)");
+            QGuiApplication::clipboard()->setText(QStringLiteral("just some text"));
+            const int before = doc->undoStack()->index();
+            clip[2]->trigger();
+            ok &= check(doc->undoStack()->index() == before, "paste: other text on the clipboard changes nothing");
+            while (doc->undoStack()->index() > undoAt) doc->undoStack()->undo();
+            ok &= check(doc->clip()->root.children.size() == children, "undo: the clip is as it was");
+
+            // Bones mode: a click picks a bone (here the chest's joint), never the sprite under it.
+            ed->boneModeAction()->setChecked(true);
+            processEvents();
+            ok &= check(view->editMode() == AnimViewport::EditMode::Bones, "bones mode: B / the toolbar switch");
+            doc->selectNodeByName(QStringLiteral("golem"));
+            processEvents();
+            auto bonePoint = [&](const char* name) {   // where a bone's joint is drawn, in widget pixels
+                std::vector<toms::anim::NodePose> poses;
+                toms::anim::evaluate(*doc->clip(), doc->previewTime(), poses);
+                for (size_t i = 0; i < poses.size(); i++) {
+                    toms::anim::SkinView sv;
+                    if (toms::anim::skinView(*doc->clip(), poses, i, doc->atlasSet(), toms::anim::placement(0, 0), &sv) != toms::anim::SkinState::Ok)
+                        continue;
+                    for (size_t b = 0; b < sv.bones.size(); b++)
+                        if (sv.bones[b] == name) return view->widgetPos(QPointF(sv.boneStart[b].x, sv.boneStart[b].y));
+                }
+                return QPointF(-1, -1);
+            };
+            auto click = [&](const QPointF& at) {
+                for (QEvent::Type type : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease}) {
+                    QMouseEvent e(type, at, view->mapToGlobal(at), Qt::LeftButton,
+                                  type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton, Qt::NoModifier);
+                    QApplication::sendEvent(view, &e);
+                }
+                processEvents();
+            };
+            const QPointF chestAt = bonePoint("chest");
+            ok &= check(view->boneAt(chestAt) == QStringLiteral("chest"), "bones mode: the chest's joint is found under its point");
+            click(chestAt);
+            ok &= check(doc->selectedNode() && doc->selectedNode()->name == "chest", "bones mode: a click on the joint selects the chest");
+            {   // Editing while the clip plays pauses it: a drag (Auto-Key on) keys the frame on screen once.
+                auto pump = [](int ms) {   // let the playback timer run
+                    QElapsedTimer t;
+                    t.start();
+                    while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+                };
+                const bool autoKey = doc->autoKey();
+                doc->setAutoKey(true);
+                const int playAt = doc->undoStack()->index();
+                const size_t keysBefore = doc->selectedNode()->posKeys.size();
+                ed->transport()->play();
+                pump(150);
+                ok &= check(ed->transport()->isPlaying(), "playing");
+                const QPointF from = bonePoint("chest");
+                QMouseEvent press(QEvent::MouseButtonPress, from, view->mapToGlobal(from), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                QApplication::sendEvent(view, &press);
+                ok &= check(!ed->transport()->isPlaying(), "a drag starting pauses playback");
+                for (int i = 1; i <= 6; i++) {   // the drag goes on over several frames
+                    const QPointF to = from + QPointF(3.0 * i, 0);
+                    QMouseEvent move(QEvent::MouseMove, to, view->mapToGlobal(to), Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+                    QApplication::sendEvent(view, &move);
+                    pump(40);
+                }
+                QMouseEvent release(QEvent::MouseButtonRelease, from + QPointF(18, 0), view->mapToGlobal(from + QPointF(18, 0)),
+                                    Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+                QApplication::sendEvent(view, &release);
+                processEvents();
+                ok &= check(doc->selectedNode()->posKeys.size() == keysBefore + 1, "the whole drag added one key, not one per frame");
+                ed->transport()->play();
+                pump(150);
+                doc->setChannel(animed::Channel::Pos, animed::Value{glm::vec4(1, -12, 0, 0)});
+                ok &= check(!ed->transport()->isPlaying(), "a typed value pauses playback too");
+                while (doc->undoStack()->index() > playAt) doc->undoStack()->undo();
+                doc->setAutoKey(autoKey);
+            }
+            // Hidden: the golem off, its bones are neither drawn nor picked.
+            doc->editNode(NodePath{0}, QStringLiteral("hide"), [](Node& n) { n.visible = false; });
+            processEvents();
+            ok &= check(view->boneAt(chestAt).isEmpty(), "a hidden skinned node: no bones to pick (and no overlay)");
+            doc->undoStack()->undo();
+            ed->objectModeAction()->setChecked(true);
+            processEvents();
+            ok &= check(view->editMode() == AnimViewport::EditMode::Object, "object mode: O");
+
+            // Bones outside the sprite: the warning, and Move Bones Under This Sprite (nothing moves on screen).
+            const int fixAt = doc->undoStack()->index();
+            doc->editClip(QStringLiteral("rig"), [](toms::anim::Clip& c) {
+                Node g;
+                g.name = "lamp";
+                g.sprite = "golem";
+                g.pos = {40, 0, 0};
+                g.skinBones = {"lampbone"};
+                Node b;
+                b.name = "lampbone";
+                b.pos = {45, -8, 0};
+                toms::anim::Key<glm::vec3> k;
+                k.t = 0.5f;
+                k.v = {47, -8, 0};
+                b.posKeys.push_back(k);
+                c.root.children.push_back(g);
+                c.root.children.push_back(b);
+            });
+            ok &= check(doc->selectNodeByName(QStringLiteral("lamp")), "select a sprite whose bone is its sibling");
+            processEvents();
+            ok &= check(ed->propertiesDock()->bonesOutsideShown(), "bones outside: Properties warns");
+            ok &= check(doc->parentBonesUnder(doc->selectedPath()), "Move Bones Under This Sprite");
+            const Node* lamp = doc->selectedNode();
+            ok &= check(lamp && lamp->name == "lamp" && lamp->children.size() == 1 && lamp->children[0].name == "lampbone" &&
+                            lamp->children[0].pos == glm::vec3(5, -8, 0) && lamp->children[0].posKeys[0].v == glm::vec3(7, -8, 0),
+                        "the bone is under the sprite, its rest and keys shifted: it stays where it was");
+            processEvents();
+            ok &= check(!ed->propertiesDock()->bonesOutsideShown(), "bones inside: no warning");
+            while (doc->undoStack()->index() > fixAt) doc->undoStack()->undo();
+
+            // Mesh grid: the golem's mesh cut again on 8 x 8 cells (not written: the shipped mesh file stays).
+            doc->selectNodeByName(QStringLiteral("golem"));
+            processEvents();
+            ok &= check(ed->propertiesDock()->meshGridBox()->isVisibleTo(ed->propertiesDock()) && doc->meshGrid("golem") == 4,
+                        "mesh grid: shown for the skinned golem, 4 x 4 (8-pixel cells of a 32-pixel sprite)");
+            ok &= check(doc->setMeshGrid("golem", 8, false) && doc->meshGrid("golem") == 8, "mesh grid: cut again on 8 x 8");
+            processEvents();
+            ok &= check(ed->propertiesDock()->skinInfoText().contains(QStringLiteral("Mesh: ")) &&
+                            !ed->propertiesDock()->skinInfoText().contains(QStringLiteral(" 25 points")),
+                        "mesh grid: the skin uses the new mesh at once");
+            ed->showSkinAction()->setChecked(true);
+            processEvents();
+            ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("skin_grid8.png"))), "skin_grid8.png");
+            ed->showSkinAction()->setChecked(false);
+            doc->setMeshGrid("golem", 4, false);
+        } else {
+            ok &= check(false, "skin: open tests/smoke/anim_skin.anim");
+        }
+    }
+    {   // Preview as Character (docs/15 "Characters"): assets/media/anim/archer_bow.anim shown as other characters.
+        const QString archerFile = QFileInfo(file).dir().filePath(QStringLiteral("../../assets/media/anim/archer_bow.anim"));
+        if (!QFileInfo::exists(archerFile)) {
+            ok &= check(false, "character: assets/media/anim/archer_bow.anim");
+        } else if (ed->openFile(archerFile, false)) {
+            processEvents();
+            const QStringList who = doc->characterChoices();
+            ok &= check(who.contains(QStringLiteral("player")) && who.contains(QStringLiteral("player_knight_girl")) && who.size() >= 11,
+                        "character: every player_* sprite is offered");
+            ok &= check(doc->drawClip() == doc->clip(), "character: as made, the view draws the clip itself");
+            const glm::vec3 handMade = toms::anim::findNode(doc->clip()->root, "hand")->pos;
+            doc->setPreviewCharacter(QStringLiteral("player_knight_girl"));
+            processEvents();
+            const toms::anim::Clip* shown = doc->drawClip();
+            const toms::anim::Node* body = shown ? toms::anim::findNode(shown->root, "body") : nullptr;
+            const toms::anim::Node* hand = shown ? toms::anim::findNode(shown->root, "hand") : nullptr;
+            ok &= check(shown != doc->clip() && body && body->sprite == "game:player_knight_girl" && hand && hand->pos.x > handMade.x,
+                        "character: the view draws the knight girl, the bow further out (a wider body)");
+            ok &= check(doc->drawClip() == shown, "character: the fitted copy is kept (poses stay valid)");
+            ok &= check(toms::anim::findNode(doc->clip()->root, "body")->sprite == "game:player", "character: the clip itself is unchanged");
+            ok &= check(doc->selectNodeByName(QStringLiteral("hand")) && doc->drawNode(doc->selectedNode()) == hand,
+                        "character: the selected node is found in the drawn copy (gizmo, outline)");
+            ok &= check(ed->viewport()->grab().save(QDir(outDir).filePath(QStringLiteral("character_knight.png"))), "character_knight.png");
+            doc->setPreviewCharacter(QString());
+            processEvents();
+            ok &= check(doc->drawClip() == doc->clip(), "character: back to as made");
+        } else {
+            ok &= check(false, "character: open archer_bow.anim");
+        }
     }
     std::printf("selftest: %s\n", ok ? "ok" : "FAILED");
     return ok ? 0 : 1;

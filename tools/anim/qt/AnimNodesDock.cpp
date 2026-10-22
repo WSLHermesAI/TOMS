@@ -140,6 +140,18 @@ AnimNodesDock::AnimNodesDock(AnimDocument* doc, QWidget* parent)
     connect(doc, &AnimDocument::soloChanged, this, &AnimNodesDock::rebuild);
     connect(doc, &AnimDocument::atlasChanged, this, &AnimNodesDock::rebuild);   // "(auto: id)" follows the lookup
     connect(doc, &AnimDocument::selectionChanged, this, &AnimNodesDock::syncSelection);
+    m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_tree, &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
+        QTreeWidgetItem* it = m_tree->itemAt(pos);
+        if (!it || m_contextActions.isEmpty()) return;
+        m_tree->setCurrentItem(it);   // the node right-clicked is the one the actions work on
+        QMenu menu(this);
+        for (QAction* a : m_contextActions) {
+            if (a) menu.addAction(a);
+            else menu.addSeparator();
+        }
+        menu.exec(m_tree->viewport()->mapToGlobal(pos));
+    });
     connect(m_tree, &QTreeWidget::itemSelectionChanged, this, [this] {
         if (m_updating) return;
         const QList<QTreeWidgetItem*> sel = m_tree->selectedItems();

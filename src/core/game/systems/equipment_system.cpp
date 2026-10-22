@@ -29,6 +29,8 @@ nlohmann::json toJson(const EquipmentDefinition& d) {
     };
     j["talent"] = d.talent;
     j["actives"] = d.actives;
+    if (!d.battleCharacterAnim.empty() || !d.battleHeldAnim.empty())
+        j["battleAnim"] = {{"character", d.battleCharacterAnim}, {"held", d.battleHeldAnim}};
     return j;
 }
 
@@ -61,6 +63,10 @@ EquipmentDefinition equipmentFromJson(const nlohmann::json& j) {
     }
     d.talent = j.value("talent", std::string());
     d.actives = j.value("actives", std::vector<std::string>{});
+    if (j.contains("battleAnim") && j["battleAnim"].is_object()) {
+        d.battleCharacterAnim = j["battleAnim"].value("character", std::string());
+        d.battleHeldAnim = j["battleAnim"].value("held", std::string());
+    }
     return d;
 }
 

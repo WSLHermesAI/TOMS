@@ -85,7 +85,7 @@ A file name in a setting file is relative to **that** file. A shared file's save
 |---|---|---|---|
 | `title` | the title screen, as the game starts | — | `title` |
 | `stage` | the walking scene: the floor with the player, at the saved or given moment | — | `stage_new_game`, `stage_from_save`, `stage_from_events` |
-| `battle` | a battle with an enemy from `enemies.json` (not on the map) | `battle`: `enemy`, and optional `hp`, `atk`, `def`, `atk_interval_ms` overrides | `battle_slime`, `battle_strong_player` |
+| `battle` | a battle with an enemy from `enemies.json` (not on the map) | `battle`: `enemy`, and optional `hp`, `atk`, `def`, `atk_interval_ms` overrides | `battle_slime`, `battle_strong_player`, `battle_bow` (the bow's battle clips; also `battle_bow_charge`, `battle_bow_idle`) |
 | `battleWon` | the victory screen after that battle | as `battle` | `battle_won` |
 | `arena` | **the weapon test arena** ([30](30_GAMEPLAY_PLAN.md) phase 0): fight after fight against the listed enemies in turn, full HP each time, no rewards and no story effects. After a win, Enter starts the next fight; after a loss it starts by itself. The weapon is the player's (`player.equip`), unarmed without one. `toms_game --arena=<enemy,...>[:<weapon>]` is the same without a file | `battle`: `enemies` (or `enemy`), and the same overrides as `battle`, for every fight | `arena_unarmed`, `arena_wand`, `arena_restart` |
 | `dialogue` | a dialogue: one of the game's (`id`), or a file next to the setting file (`file`); optional `node` to start at | `dialogue`: `id` or `file`, `node` | `dialogue_by_id`, `dialogue_from_file` |
@@ -121,6 +121,7 @@ At the end of the `test` frames:
   | `menuTab` | the tab the player menu is on |
   | `gold`, `hp`, `lv` | the player's value |
   | `arenaFights`, `arenaWins` | fights started / won in the arena |
+  | `battleAnim` | the clip the battle picture shows for a weapon with battle clips: `charge`, `attack`, `miss` or `idle` ([15](15_ANIMATION.md), "Characters") |
   | `cards` | `{ "slime": 1 }`: copies of each monster's card held |
   | `stairUpLocked`, `stairUpMarked` | the current floor's first stair up: locked or open; marked with the gold arrow (just opened) |
   | `stage` | the current floor |

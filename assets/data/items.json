@@ -161,6 +161,30 @@
       "maxMult": 2.0
     }
   },
+  "bow": {
+    "type": "weapon",
+    "sprite": "gem_atk.png",
+    "name": "item.bow.name",
+    "desc": "item.bow.desc",
+    "stats": {
+      "atk": 0
+    },
+    "price": 20,
+    "important": false,
+    "bar": {
+      "v0": 12,
+      "vmax": 180,
+      "rampTime": 2.2,
+      "greenHalf": 12,
+      "blueOuter": 32,
+      "redOuter": 60,
+      "maxMult": 2.2
+    },
+    "battleAnim": {
+      "character": "anim/archer_bow.anim",
+      "held": "anim/weapon_bow.anim"
+    }
+  },
   "twin_daggers": {
     "type": "weapon",
     "sprite": "gem_atk.png",

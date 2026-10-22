@@ -23,6 +23,66 @@ void Game::startCombat(const EnemyInst& e) {
     cs.log = locale_.tr("battle.start");
 }
 
+// ---- the battle rig (Game::battleRigState) ----
+
+void Game::loadBattleRig() {
+    if (battleRigWeapon_ == equipped_.weaponId && (battleCharacterAnim_ || battleHeldAnim_ || battleRigWeapon_.empty())) return;
+    battleRigWeapon_ = equipped_.weaponId;
+    battleCharacterAnim_.reset();
+    battleHeldAnim_.reset();
+    battleRig_.stop();
+    battleRigState_.clear();
+    auto it = equipmentDefs_.find(equipped_.weaponId);
+    if (it == equipmentDefs_.end() || !res_) return;
+    auto load = [this](const std::string& path) -> std::shared_ptr<toms::res::AnimRes> {
+        if (path.empty()) return nullptr;
+        auto a = res_->get<toms::res::AnimRes>(path);
+        if (!a->ok()) { std::fprintf(stderr, "[battle] %s: %s\n", path.c_str(), a->error().c_str()); return nullptr; }
+        return a;
+    };
+    battleCharacterAnim_ = load(it->second.battleCharacterAnim);
+    battleHeldAnim_ = load(it->second.battleHeldAnim);
+}
+
+bool Game::battleRigReady() const { return battleCharacterAnim_ || battleHeldAnim_; }
+
+void Game::setBattleRigState(const std::string& state, bool restart) {
+    if (state == battleRigState_ && !restart) return;
+    battleRigState_ = state;
+    const toms::anim::Clip* body = battleCharacterAnim_ ? battleCharacterAnim_->find(state) : nullptr;
+    if (body) {   // the player's character in the clip made with another
+        battleFitted_ = fitClipToCharacter(*body, playerSprite());
+        body = &battleFitted_;
+    }
+    battleRig_.play(body, battleHeldAnim_ ? battleHeldAnim_->find(state) : nullptr);
+}
+
+void Game::updateBattleRig(int dtMs) {
+    const bool shown = cs.active || cs.won || cs.resultPauseMs > 0;
+    if (!shown) {
+        if (!battleRigState_.empty()) { battleRig_.stop(); battleRigState_.clear(); }
+        return;
+    }
+    loadBattleRig();
+    if (!battleRigReady()) return;
+    // An attack or a miss plays to its end; then the bar decides: waiting for the tap = charge, recovering = idle.
+    const bool shooting = (battleRigState_ == "attack" || battleRigState_ == "miss") && !battleRig_.finished();
+    if (!shooting) setBattleRigState(cs.active && !cs.atkBar.cooling ? "charge" : "idle");
+    battleRig_.update(dtMs);
+    battleRig_.takeEvents();   // (release / hit / miss: the battle's own timers place the numbers)
+}
+
+void Game::drawBattleRig() {
+    if (!battleRigReady() || battleRigState_.empty()) return;
+    // The player's place on the battle screen (battle.rcss #player: 262, 84, 134 x 134): the feet at its bottom centre,
+    // the 32-pixel character filling its height.
+    static const toms::anim::AtlasSet kNone;
+    const float size = 134.0f;
+    battleRig_.draw(ren, battleCharacterAnim_ ? battleCharacterAnim_->atlases() : kNone,
+                    battleHeldAnim_ ? battleHeldAnim_->atlases() : kNone,
+                    toms::anim::placement(262.0f + size / 2.0f, 84.0f + size, size / 32.0f));
+}
+
 // The owner's rule (docs/30_GAMEPLAY_PLAN.md §4): an attack pauses both sides' clocks until it is over.
 void Game::startAttackPause() { cs.attackPauseMs = std::max(cs.attackPauseMs, attackPauseMs_); }
 
@@ -123,6 +183,7 @@ void Game::resolveAttackTap() {
     }
 
     cs.enemyHP -= dmg;
+    lastAttackDamage_ = dmg;   // the battle rig shows attack or miss
     if (dmg > 0) cs.superCharge = std::min(run_.superMax(), cs.superCharge + 1);   // M8: superMax is per-run, halved by rebirth()
     audio.play("player_attack");
     startAttackPause();
@@ -181,6 +242,7 @@ void Game::resolveEnemyClockFire() {
 void Game::battleTapAttack() {
     if (!cs.active || cs.atkBar.cooling) return;
     resolveAttackTap();
+    if (battleRigReady()) setBattleRigState(lastAttackDamage_ > 0 ? "attack" : "miss", true);   // shoot (also the winning one)
     if (!cs.active) return;   // the tap just won the fight -- nothing left to cool down
     cs.atkBar.cooling = true;
     cs.atkBar.cooldownMs = barCooldownMs();   // AGI shortens it

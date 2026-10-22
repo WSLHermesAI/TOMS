@@ -59,6 +59,14 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
             spriteTrim_[i] = {(float)r->offX / r->origW, (float)r->offY / r->origH, (float)r->w / r->origW, (float)r->h / r->origH};
         idToLayer[SPRITE_ORDER[i]] = i;
     }
+    // Every sprite's visible box (its pixels with alpha): how character clips are fitted to a character
+    // (anim_clip.h fitCharacter, docs/15_ANIMATION.md "Characters").
+    spriteBoxes_.clear();
+    for (const toms::AtlasRegion& r : atlas.regions) {
+        if (r.page != 0 || r.child || r.rotated || r.x < 0 || r.y < 0 || r.x + r.w > w || r.y + r.h > h) continue;
+        spriteBoxes_[r.name] = toms::visibleBox(px.data() + ((size_t)r.y * w + r.x) * 4, w, r.w, r.h, r.offX, r.offY,
+                                                r.origW, r.origH);
+    }
     // Every other sprite on the page (the new monsters, NPCs, items, doors, floor themes ...) is drawable by its name
     // too: a type's or an object's "sprite" can be any of them (docs/27_AI_SPRITES.md). Only the first page is the
     // renderer's sprite texture, so sprites on a further page are not.
@@ -74,6 +82,9 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
     std::fprintf(stderr, "[assets] sprites: prebuilt atlas %sgame.atlas, %dx%d, %zu region(s), art style '%s'\n", dir.c_str(),
                  w, h, atlas.regions.size(), artStyles_[style].id.empty() ? "original" : artStyles_[style].id.c_str());
     spriteAtlas_ = std::move(atlas);
+    std::string meshError;   // its meshes (docs/34_MESH_ANIMATION.md): skinned clips bend them; none = quads
+    if (!toms::res::readSpriteMeshes(dir + "game.atlas", spriteMeshes_, meshError))
+        std::fprintf(stderr, "[assets] %s\n", meshError.c_str());
     provideSpriteAtlas();
     spriteAtlasRevision_++;   // the UI's sprite sheet (uiSpritesheet) follows from the next frame
     loadedArtStyle_ = style;
@@ -166,6 +177,7 @@ bool Game::loadAssets(const std::string& assetDir) {
         }
     }
     weaponPlay_ = toms::loadWeaponPlay(assetDir + "/../data/weapon_play.json");   // docs/30_GAMEPLAY_PLAN.md §5.6
+    characterFit_ = readJsonFile(assetDir + "/../data/character_fit.json");      // character clips' nudges (docs/15)
     fprintf(stderr, "[assets] weapon_play.json: %d weapon(s)\n", (int)weaponPlay_.weapons.size());
     // load enemy templates
     nlohmann::json ej = readJsonFile(assetDir+"/../data/enemies.json");

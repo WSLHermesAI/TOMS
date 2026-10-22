@@ -42,3 +42,19 @@ it and links the download. Web-build problems are in [06 §7](06_BUILD_WEB.md#7-
 | Saves are not where the old build put them | the working directory differs | saves go to `save\` in the working directory (`Build\<preset>\bin` under F5) |
 | Screenshot or screen-recording tool shows the editor's game view as white or black | tools that capture a window through GDI cannot read a DXGI flip-model swap chain | capture the screen or desktop region instead (the editor's own `--screenshot` does this), or use `toms_game --screenshot` / RenderDoc |
 | Text edges look one pixel different between `--renderer=vulkan` and Direct3D | backend rasterisation rules | expected; compare golden images per backend |
+
+## A double-clicked .cmd does nothing
+
+Double-clicking a tool such as `tools\test_switches.cmd` shows no window at all, and nothing runs. In Task Manager a
+`WindowsTerminal` (and an `OpenConsole`) process is running with no window.
+
+**Cause:** Windows 11 hands every console program to its *default terminal*. When that is Windows Terminal and Windows
+Terminal hangs without drawing its window, every `.cmd` waits for it: the script never reaches its first line, so it
+cannot show a message either. (Seen 2026-10-22: `test_switches.cmd` and every other `.cmd` stayed silent.)
+
+**Fix:**
+
+1. End the stuck `WindowsTerminal`, `OpenConsole` and `cmd` processes in Task Manager (or sign out and in).
+2. To stop it happening again, make the classic console the default: **Settings > System > For developers >
+   Terminal > Windows Console Host**. (The same as setting `DelegationConsole` and `DelegationTerminal` under
+   `HKCU\Console\%%Startup` to `{B23D10C0-E52E-411E-9D5B-C09FDF709C7D}`.) Choose Windows Terminal there again to undo it.

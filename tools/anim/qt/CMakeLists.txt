@@ -67,6 +67,10 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME anim.check_preview
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/tests/smoke/anim_preview.anim")
     set_tests_properties(anim.check_preview PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # the skinned clip (docs/34_MESH_ANIMATION.md): its skin bones are nodes of the clip
+    add_test(NAME anim.check_skin
+             COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/tests/smoke/anim_skin.anim")
+    set_tests_properties(anim.check_skin PROPERTIES LABELS "unit;anim" TIMEOUT 30)
     # The hand-writing guide's examples (docs/16_ANIMATION_RECIPES.md) stay valid.
     add_test(NAME anim.check_recipes
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/docs/examples/anim_recipes.anim")
@@ -83,4 +87,12 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME anim.check_door_open
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/door_open.anim")
     set_tests_properties(anim.check_door_open PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # the bow's clips (assets/media/anim/weapon_bow.anim, written by tools/make_bow_anim.py): idle, charge, attack, miss
+    add_test(NAME anim.check_bow
+             COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/weapon_bow.anim")
+    set_tests_properties(anim.check_bow PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # a character shooting it, for every character (archer_bow.anim, tools/make_archer_anim.py)
+    add_test(NAME anim.check_archer
+             COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/archer_bow.anim")
+    set_tests_properties(anim.check_archer PROPERTIES LABELS "unit;anim" TIMEOUT 30)
 endif()

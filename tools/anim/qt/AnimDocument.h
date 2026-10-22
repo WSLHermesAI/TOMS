@@ -3,6 +3,7 @@
 #include "SpriteImageCache.h"
 #include "anim_clip.h"
 
+#include <map>
 #include <optional>
 #include "anim_check.h"
 #include "anim_keys.h"
@@ -72,6 +73,8 @@ public:
     struct LoadedAtlas {
         QString path;              // absolute
         toms::AtlasFile atlas;
+        toms::SpriteMeshFile meshes;   // <atlas>.mesh.json beside it (skinned nodes bend them; docs/34)
+        bool meshesBinary = false;     // the file keeps its numbers in a .mesh.bin (written back the same way)
         bool ok = false;
         QString error;
         SpriteImageCache images;
@@ -136,6 +139,17 @@ public:
     // ---- current clip / node / time ----
     int clipIndex() const { return m_state.clip; }
     const toms::anim::Clip* clip() const;
+    // ---- a character clip shown as another character (docs/15_ANIMATION.md "Characters"; View > Preview as Character).
+    // Only the view changes: edits still go to clip(). The fitted copy is kept until the clip or the character changes,
+    // so poses made from it stay valid.
+    void setPreviewCharacter(const QString& sprite);   // "" = as made
+    QString previewCharacter() const { return m_previewCharacter; }
+    // The sprites the clip's `body` can be shown as: its own sprite and the atlas's sprites named like it
+    // ("player" -> "player", "player_mage", ...). Empty: the clip has no `body` / `hand` nodes.
+    QStringList characterChoices() const;
+    const toms::anim::Clip* drawClip() const;           // clip(), or it fitted to previewCharacter()
+    // The node of drawClip() at the same place as `n` of clip() (the same node when not previewing).
+    const toms::anim::Node* drawNode(const toms::anim::Node* n) const;
     void setClipIndex(int index);
     // The current clip differs from how it was when it became current (or when the file was last
     // saved, if later).
@@ -156,7 +170,7 @@ public:
     const std::optional<NodePath>& solo() const { return m_solo; }
     void setSolo(const std::optional<NodePath>& path);
     // The nodes the viewport draws under the solo (null when there is no solo: all of them).
-    bool soloShows(const toms::anim::Node* n) const;
+    bool soloShows(const toms::anim::Node* n) const;   // n: a node of clip() or of drawClip()
     void setPreviewTime(float t);   // < 0 = back to time()
     float duration() const;
     bool autoKey() const { return m_autoKey; }
@@ -207,7 +221,24 @@ public:
     bool addNode(const NodePath& parent, toms::anim::Node node, const QString& text);   // selects it
     bool addSpriteNode(const NodePath& parent, const QString& sprite, const glm::vec2& pos);
     bool deleteNode(const NodePath& path);
-    bool duplicateNode(const NodePath& path);
+    bool duplicateNode(const NodePath& path);   // the copy's names made unique, its skins pointed at its own bones
+    // Copy / paste (Edit menu): the node at `path` and its subtree as clipboard text (animed::nodeClipboardText);
+    // empty when there is no such node. pasteNode puts a copied node under `parent` at `index` (-1 = last), renamed
+    // to fit the clip (animed::renameForPaste), and selects it; false (and a message) when the text holds none.
+    QString copyNodeText(const NodePath& path) const;
+    // The skinned node at `path` gets the bones of its skin that lie outside it (animed::bonesOutside) as its
+    // children, nothing moving on screen: each such bone's subtree goes under the node with its rest position and
+    // position keys shifted by the offset between its old parent and the node. Then moving the node moves its mesh and
+    // bones together. One undo step; false (and a message) when the node and the old parent differ by more than a
+    // move (rotated or scaled against each other), or a bone holds the node.
+    bool parentBonesUnder(const NodePath& path);
+    // Cuts the mesh of the sprite `ref` again from its alpha on a grid of cells x cells (the Mesh grid; at most the
+    // sprite's pixels). The atlas's mesh file (<atlas>.mesh.json, .bin kept as it was) is written when `write`; skinned
+    // nodes bend the new mesh at once. Not an undo step: the mesh file is the atlas's, not the .anim's.
+    bool setMeshGrid(const std::string& ref, int cells, bool write = true);
+    // The grid the sprite's mesh was cut on (cells across), or what `atlaspack meshes` uses (8-pixel cells); 0 = no sprite.
+    int meshGrid(const std::string& ref) const;
+    bool pasteNode(const NodePath& parent, int index, const QString& text);
     bool renameNode(const NodePath& path, const QString& name);
     bool moveNode(const NodePath& from, const NodePath& toParent, int index);   // reparent / reorder
     bool addClip(const QString& name);
@@ -218,6 +249,9 @@ public:
 signals:
     void fileReset();          // another file was opened / created (also fileChanged, clipChanged)
     void fileChanged();        // any edit, undo or redo
+    // An edit is about to change the file (before it reads the playhead): the editor pauses playback, so a drag or
+    // a typed value with Auto-Key on keys the frame on screen once, not every frame the playhead passes.
+    void aboutToEdit();
     void clipChanged();
     void selectionChanged();
     void timeChanged(float t);
@@ -248,6 +282,11 @@ private:
     void markClipBase();
     float m_preview = -1;   // see previewTime()
     std::optional<NodePath> m_solo;
+    QString m_previewCharacter;                       // setPreviewCharacter
+    mutable toms::anim::Clip m_fitSource, m_fitted;   // drawClip's cache: the clip it was made from, and the copy
+    mutable QString m_fitFor;
+    mutable bool m_fitValid = false;
+    mutable std::map<std::string, toms::SpriteBox> m_boxes;   // sprites' visible pixels, by reference (fitting)
     bool m_autoKey = true;
     bool m_keyTogether = false;
 

@@ -44,3 +44,19 @@
 | 存檔不在舊版放的位置 | 工作目錄不同 | 存檔放在工作目錄的 `save\`（F5 時是 `Build\<preset>\bin`） |
 | 截圖或螢幕錄影工具把編輯器的遊戲畫面錄成白色或黑色 | 透過 GDI 擷取視窗的工具讀不到 DXGI flip-model swap chain | 改成擷取螢幕或桌面區域（編輯器自己的 `--screenshot` 就是這樣做），或使用 `toms_game --screenshot` / RenderDoc |
 | `--renderer=vulkan` 和 Direct3D 之間文字邊緣差一個像素 | 後端的光柵化規則 | 正常現象；每個後端各自比對基準圖 |
+
+## 按兩下 .cmd 沒有反應
+
+按兩下 `tools\test_switches.cmd` 這類工具時完全沒有視窗出現，也沒有任何東西執行。工作管理員中有一個沒有視窗的
+`WindowsTerminal`（以及 `OpenConsole`）處理程序。
+
+**原因：** Windows 11 會把每個主控台程式交給它的*預設終端機*。若預設是 Windows Terminal，而 Windows Terminal 卡住、
+沒有畫出視窗，每個 `.cmd` 都會等它：腳本連第一行都執行不到，所以也無法顯示任何訊息。（2026-10-22 發生過：
+`test_switches.cmd` 與其他所有 `.cmd` 都沒有反應。）
+
+**解決方法：**
+
+1. 在工作管理員結束卡住的 `WindowsTerminal`、`OpenConsole` 與 `cmd` 處理程序（或登出再登入）。
+2. 避免再發生：把傳統主控台設為預設，**設定 > 系統 > 開發人員專用 > 終端機 > Windows 主控台主機**。（等同於把
+   `HKCU\Console\%%Startup` 下的 `DelegationConsole` 與 `DelegationTerminal` 設為
+   `{B23D10C0-E52E-411E-9D5B-C09FDF709C7D}`。）要復原，在同一處改回 Windows Terminal。
