@@ -873,7 +873,7 @@ void EffectInstance::appendEmitterQuads(size_t ei, const toms::anim::AtlasSet& a
             q.rect[0] = minX; q.rect[1] = minY; q.rect[2] = maxX - minX; q.rect[3] = maxY - minY;
             std::copy(r.uv, r.uv + 4, q.uv);
             q.tint[0] = col.r; q.tint[1] = col.g; q.tint[2] = col.b; q.tint[3] = col.a;
-            q.additive = additive;   // other blend modes: phase 2b (docs/17_PARTICLES.md 3a)
+            q.additive = additive;   // other blend modes: phase 2b (docs/engine/07_PARTICLES.md 3a)
             q.texture = look.tex;
             out.push_back(q);
         }

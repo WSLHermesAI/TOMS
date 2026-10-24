@@ -1,4 +1,4 @@
-# tools/font/qt -- font_editor: the font tool's window (docs/22_FONT_TOOL.md).
+# tools/font/qt -- font_editor: the font tool's window (docs/engine/09_FONT_TOOL.md).
 # Added by tools/font/CMakeLists.txt when Qt6::Widgets is there. Uses tools/studio_common's theme.
 if(NOT TARGET studio_common)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../studio_common" "${CMAKE_BINARY_DIR}/tools/studio_common")

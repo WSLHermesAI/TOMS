@@ -1,4 +1,4 @@
-# tools/font -- picture fonts (BMFont .fnt + .png) from single pictures (docs/22_FONT_TOOL.md).
+# tools/font -- picture fonts (BMFont .fnt + .png) from single pictures (docs/engine/09_FONT_TOOL.md).
 #
 #   toms_bitmap_font  the runtime (src/core/engine/bitmap_font.cpp) on its own: what the game and the
 #                     tool lay text out with

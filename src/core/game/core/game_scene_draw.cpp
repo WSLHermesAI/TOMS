@@ -256,7 +256,7 @@ void Game::provideSpriteAtlas() {
 // centre of the monster's rect and scaled so the sprite fills that rect exactly as the static sprite did (a 2x1 golem
 // stretches the clip the same way). A missing file or clip, or the runtime sprite grid (no prebuilt atlas), keeps the
 // static sprite.
-// ---- objects' looks (the stage editor's "objects" and the types' "look"; docs/19_STAGE_EDITOR.md) ----
+// ---- objects' looks (the stage editor's "objects" and the types' "look"; docs/gameplay/02_STAGE_EDITOR.md) ----
 nlohmann::json Game::typeLook(const std::string& kind, const std::string& id) const {
     const std::string k = kind.substr(0, kind.find(':'));
     const nlohmann::json* src = nullptr;
@@ -429,7 +429,7 @@ void Game::drawDebugOverlay() {
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         settings_.viewCols = cam_.viewCols();
         toms::ensureSaveDir(toms::defaultSaveDir());
-        toms::saveGameSettings(toms::defaultSaveDir() + "/settings.json", settings_);
+        toms::saveGameSettings(toms::settingsPath(), settings_);
     }
     ImGui::Separator();
     ImGui::TextWrapped("Last combat log: %s", cs.log.empty() ? "(none)" : cs.log.c_str());

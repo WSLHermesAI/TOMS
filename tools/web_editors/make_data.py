@@ -32,8 +32,8 @@ def main():
                    'title': e.get('title', e['eventId'] + '.title'), 'desc': e.get('desc', e['eventId'] + '.desc')}
             if 'inLog' in e:
                 rec['inLog'] = e['inLog']
-            for k in ('trigger', 'requires', 'actions', 'next', 'once',   # event logic, docs/event_editor/06_EVENT_LOGIC.md
-                      'dialogue', 'afterDialogue', 'topicOrder', 'maxTimes'):  # NPC topics, docs/event_editor/08_NPC_DIALOGUE.md
+            for k in ('trigger', 'requires', 'actions', 'next', 'once',   # event logic, docs/gameplay/event_editor/06_EVENT_LOGIC.md
+                      'dialogue', 'afterDialogue', 'topicOrder', 'maxTimes'):  # NPC topics, docs/gameplay/event_editor/08_NPC_DIALOGUE.md
                 if k in e:
                     rec[k] = e[k]
             events.append(rec)
@@ -43,7 +43,7 @@ def main():
         d = load(p)
         rec = {'id': d['id'], 'act': d['act'], 'role': d.get('role', 'normal'), 'events': list(d.get('events', [])),
                'next': d.get('nextFloor')}
-        if isinstance(d.get('stairs'), list):   # docs/event_editor/05_FLOOR_LINKS.md; absent = derived from nextFloor
+        if isinstance(d.get('stairs'), list):   # docs/gameplay/event_editor/05_FLOOR_LINKS.md; absent = derived from nextFloor
             rec['stairs'] = d['stairs']
         floors.append(rec)
 
@@ -51,7 +51,7 @@ def main():
     strings = load(os.path.join(DATA, 'text.json'))['strings']
     known = {e['id'] for e in events}
     wanted = {e[k] for e in events for k in ('text', 'title', 'desc')} | {i for f in floors for i in f['events'] if i not in known}
-    # the NPC files (docs/event_editor/08_NPC_DIALOGUE.md): their name / greeting keys are texts too
+    # the NPC files (docs/gameplay/event_editor/08_NPC_DIALOGUE.md): their name / greeting keys are texts too
     npc_files = {os.path.basename(p)[:-5]: load(p) for p in sorted(glob.glob(os.path.join(DATA, 'npcs', '*.json')))}
     wanted |= {n.get(k) for n in npc_files.values() for k in ('name', 'greeting') if n.get(k)}
     texts = {k: strings[k] for k in sorted(wanted) if k in strings}
@@ -84,7 +84,7 @@ def main():
 
     # every item id (data/items.json): what an event's "give" action may name
     items = sorted(k for k in load(os.path.join(os.path.dirname(story), 'items.json')) if not k.startswith('_'))
-    # the dialogue files a talk event may play, and the player statuses addStat may change (docs/event_editor/08_NPC_DIALOGUE.md)
+    # the dialogue files a talk event may play, and the player statuses addStat may change (docs/gameplay/event_editor/08_NPC_DIALOGUE.md)
     dialogues = sorted(os.path.basename(p)[:-5] for p in glob.glob(os.path.join(DATA, 'dialogue', '*.json')))
     dialogue_files = {d: load(os.path.join(DATA, 'dialogue', d + '.json')) for d in dialogues}   # the Dialogues tab edits them
     sprites = []   # the atlas's sprite names (an NPC file's "sprite"): unindented lines without ':' in game.atlas

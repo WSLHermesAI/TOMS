@@ -1,4 +1,4 @@
-// player_menu_rules.h — the player menu's small rules as plain functions (docs/20_PLAYER_MENU.md), so
+// player_menu_rules.h — the player menu's small rules as plain functions (docs/gameplay/03_PLAYER_MENU.md), so
 // player_menu_test.cpp can check them without a running game: stacking the backpack, the 3-per-row
 // grid cursor, what may be dropped, and level-ups by data/stats.json's "levelUp".
 #pragma once
@@ -47,16 +47,27 @@ inline bool gridMove(int& sel, int n, int dx, int dy, int cols = 3) {
 // Keys and items marked "important" are never dropped, nor is the gear being worn.
 inline bool canDrop(bool important, bool worn) { return !important && !worn; }
 
-// Spends EXP on levels: each level needs lv * expPerLevel. Returns how many levels were gained.
-inline int levelUps(int& exp, int& lv, int expPerLevel) {
+// Spends EXP on levels: each level needs lv * expPerLevel. Returns how many levels were gained. maxLevel > 0 caps the
+// level (the EXP past it is kept, for when the cap is raised).
+inline int levelUps(int& exp, int& lv, int expPerLevel, int maxLevel = 0) {
     if (expPerLevel < 1) expPerLevel = 1;
     int gained = 0;
-    while (exp >= lv * expPerLevel) {
+    while ((maxLevel <= 0 || lv < maxLevel) && exp >= lv * expPerLevel) {
         exp -= lv * expPerLevel;
         lv++;
         gained++;
     }
     return gained;
+}
+
+// The attribute points a level gives (data/stats.json levelUp.points, the owner 2026-10-24): the row with the highest
+// `from` at or below the level reached; below every row (or no table) the fallback.
+struct LevelPoints { int from = 2; int points = 0; };
+inline int pointsForLevel(const std::vector<LevelPoints>& table, int levelReached, int fallback) {
+    int n = fallback, best = 0;
+    for (const LevelPoints& r : table)
+        if (r.from <= levelReached && r.from >= best) { best = r.from; n = r.points; }
+    return n < 0 ? 0 : n;
 }
 
 }  // namespace toms

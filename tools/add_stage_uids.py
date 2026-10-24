@@ -1,4 +1,4 @@
-"""Give every object whose state the game saves a stable id in its stage file (docs/28_SAVE_SYSTEM.md).
+"""Give every object whose state the game saves a stable id in its stage file (docs/gameplay/05_SAVE_SYSTEM.md).
 
     python tools/add_stage_uids.py [--check]
 

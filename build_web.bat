@@ -10,7 +10,7 @@ cd /d "%~dp0"
 echo [toms] building the web game (preset web-release-windows)...
 call tools\build_web.cmd release
 if errorlevel 1 goto :failed
-rem The multithreaded variant: the page uses it where the browser allows threads (docs\10_THREADS.md).
+rem The multithreaded variant: the page uses it where the browser allows threads (docs\engine\02_THREADS.md).
 echo [toms] building the multithreaded web game (preset web-release-mt-windows)...
 call tools\build_web.cmd mt
 if errorlevel 1 goto :failed

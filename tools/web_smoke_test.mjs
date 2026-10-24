@@ -5,7 +5,7 @@
 //        [--isolate] [--expect-threads=yes|no] [--query=a=b] [--gpu]
 //
 //   --isolate            the built-in server sends COOP/COEP (cross-origin isolation), which the
-//                        multithreaded build needs (docs/10_THREADS.md)
+//                        multithreaded build needs (docs/engine/02_THREADS.md)
 //   --expect-threads=    yes: the page must run with job-system workers; no: without
 //   --query=             appended to the page URL (e.g. nothreads, the page's opt-out)
 //   --gpu                the real GPU (Windows: ANGLE on Direct3D 11, what Chrome uses there) instead of

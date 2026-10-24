@@ -1,4 +1,4 @@
-// leak_check.h -- Windows: which memory is still allocated when the game exits (docs/33_LEAK_CHECK.md).
+// leak_check.h -- Windows: which memory is still allocated when the game exits (docs/engine/15_LEAK_CHECK.md).
 //
 // Two reports at exit:
 //   * every build: Object::DumpLeaks() -- the game objects (Trackable) still alive, by type and name;

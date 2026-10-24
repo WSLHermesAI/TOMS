@@ -1,4 +1,4 @@
-// rml_ui.h -- RmlUi (HTML/CSS-like UI) drawn with bgfx. See docs/08_RMLUI.md.
+// rml_ui.h -- RmlUi (HTML/CSS-like UI) drawn with bgfx. See docs/gameplay/01_RMLUI.md.
 //
 // One RmlUi context sized to the game's design resolution (1024x768). The host tells it where the
 // letterboxed game image is on screen (setViewport) and renders it into its own bgfx view after the
@@ -27,7 +27,7 @@ public:
     // (`font-family: toms;` in RCSS) and as the fallback for characters other fonts lack. Web:
     // ignored -- text is drawn by the browser (rml_canvas_font.h), no font file is needed.
     bool init(int designW, int designH, const std::string& defaultFont, std::string& error);
-    // The font family to use for a language (docs/08_RMLUI.md, "Fonts"). Desktop: registers
+    // The font family to use for a language (docs/gameplay/01_RMLUI.md, "Fonts"). Desktop: registers
     // fontFile as "toms-<code>" the first time and returns that, or "toms" when fontFile is empty
     // or missing. Web: switches the browser font list to webFonts (CSS) and returns "toms".
     std::string languageFont(const std::string& code, const std::string& fontFile, const std::string& webFonts);

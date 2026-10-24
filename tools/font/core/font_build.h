@@ -1,4 +1,4 @@
-// font_build.h -- picture fonts from single pictures (docs/22_FONT_TOOL.md).
+// font_build.h -- picture fonts from single pictures (docs/engine/09_FONT_TOOL.md).
 //
 // Input: pictures, one PNG per character, each given its character (code point). font_editor lets you
 // add pictures and type each one's character; fontpack takes PNG files (or folders of them) and reads

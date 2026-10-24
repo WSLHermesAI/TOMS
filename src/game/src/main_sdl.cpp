@@ -16,7 +16,7 @@
 //   --fx-gpu-threshold=N  particle emitters above N particles run on the GPU (0 = never); this run only,
 //                         the saved setting (particleGpuThreshold: desktop 5000, phones 3000) is unchanged
 //   --title-scene=<f|none> the 3D scene behind the title: a .glb / .gltf, or none (default:
-//                         assets/media/models/VirtualCity.glb when it is there; docs/18_GLTF.md)
+//                         assets/media/models/VirtualCity.glb when it is there; docs/engine/08_GLTF.md)
 //   --frames=<n>          quit after n frames (automated tests; desktop)
 //   --screenshot=<png>    save the last frame to a PNG (with --frames; desktop)
 //   --keys=<k@f,...>      press key k at frame f, e.g. enter@30,enter@60 (automated tests)
@@ -31,18 +31,18 @@
 //   --character=<sprite>  with --anim: play a character clip (body / hand nodes) as this character (fitCharacter)
 //   --held=<file.anim>    with --anim: draw that file's clip of the same name at the character clip's hand (CharacterRig)
 //   --hot-reload          read changed art, clips and effects again while playing (on by default in debug builds)
-//   --skip-start-story    New Game goes straight to stage 1, skipping the weapon master (docs/30 phase 3; the screenshot tests)
+//   --skip-start-story    New Game goes straight to stage 1, skipping the weapon master (docs/gameplay/07 phase 3; the screenshot tests)
 //   --give=<id,...>       when the title first closes, hand the player these items (data/items.json ids;
 //                         gear is owned, not worn), gold:<n>, exp:<n>, points:<n> -- tests of the player menu (tests/CMakeLists.txt)
 //   --stair-lock=<floor>:<event>  lock that floor's first stair up until the event is finished (locked stairs, Q7)
 //   --events-done=<id,...>        when the title first closes, finish these events as the player would (tests)
 //   --goto=<floor>                when the title first closes, go to that floor (e.g. F04; tests)
-//   --scenario=<folder|file>      start straight in one scene from a scenario file (docs/31_TEST_SCENARIOS.md;
+//   --scenario=<folder|file>      start straight in one scene from a scenario file (docs/gameplay/08_TEST_SCENARIOS.md;
 //                                 a folder means its scenario.json). Nothing is saved.
 //   --arena=<enemy,...>[:<weapon>]  the weapon test arena: fight these enemies in turn, again and again, with this
-//                                 weapon (an items.json id; none = unarmed). No rewards, nothing saved (docs/31)
+//                                 weapon (an items.json id; none = unarmed). No rewards, nothing saved (docs/gameplay/08)
 //   --leak-trace=<n,m,...>        Windows Debug builds: add the call stacks of heap allocations n, m (the {n} of
-//                                 toms_leaks.log entries) to the report (docs/33_LEAK_CHECK.md)
+//                                 toms_leaks.log entries) to the report (docs/engine/15_LEAK_CHECK.md)
 //   --leak-break=<n>              Windows Debug builds: stop in the debugger at heap allocation n
 //   --scenario-test               also run the scenario's "test" frames and keys, then exit 3 when the scene it
 //                                 expects is not showing (ctest scenario.*)
@@ -60,7 +60,7 @@
 #endif
 #include "game_session.h"
 #include "leak_check.h"
-#include "singletons.h"    // releaseSingletons() at the end of main    // Windows Debug builds: what is still allocated at exit (docs/33)
+#include "singletons.h"    // releaseSingletons() at the end of main    // Windows Debug builds: what is still allocated at exit (docs/engine/15)
 #include "game.h"
 #include "job_system.h"
 #include "object.h"
@@ -428,7 +428,7 @@ bool appFrame(App& app) {
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_EVENT_QUIT) {
             quit = true;
-            if (::Game* g = app.session.game()) g->flushSave();   // the autosave's last seconds (docs/28)
+            if (::Game* g = app.session.game()) g->flushSave();   // the autosave's last seconds (docs/gameplay/05)
         }
         // Android (and any mobile OS) suspends the app: stop drawing while backgrounded, and resync the
         // drawable size on return -- a suspended app can come back at a different size, and its GL context
@@ -633,7 +633,7 @@ EMSCRIPTEN_KEEPALIVE void jsInventory() {
 }
 // For page tests: frames drawn so far and whether the title screen is up.
 EMSCRIPTEN_KEEPALIVE int jsFrameCount() { return g_app ? g_app->frameNo : 0; }
-// Job-system worker threads (0 in the single-threaded build, see docs/10_THREADS.md).
+// Job-system worker threads (0 in the single-threaded build, see docs/engine/02_THREADS.md).
 EMSCRIPTEN_KEEPALIVE int jsWorkerCount() { return toms::JobSystem::workers(); }
 EMSCRIPTEN_KEEPALIVE int jsTitleOpen() {
     return (g_app && g_app->session.game() && g_app->session.game()->titleOpen()) ? 1 : 0;
@@ -727,7 +727,7 @@ int main(int argc, char** argv) {
     }
     toms::releaseSingletons();   // the job system and other singletons, now that the game is gone
     Object::DumpLeaks();   // same leak report as the old executable
-    toms::leakCheckEnd();  // Windows Debug: the leak report, written once the statics are destroyed (docs/33)
+    toms::leakCheckEnd();  // Windows Debug: the leak report, written once the statics are destroyed (docs/engine/15)
     return rc;
 #endif
 }

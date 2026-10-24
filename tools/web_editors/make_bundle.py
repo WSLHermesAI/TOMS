@@ -47,16 +47,16 @@ def main():
         pool = os.path.basename(p)[:-5]
         for e in load(p)[0]['events']:
             rec = {'id': e['eventId'], 'kind': e['kind'], 'pool': pool, 'text': e['text'], 'title': e.get('title', e['eventId'] + '.title')}
-            for k in ('trigger', 'requires', 'actions', 'next',   # event logic, docs/event_editor/06_EVENT_LOGIC.md
+            for k in ('trigger', 'requires', 'actions', 'next',   # event logic, docs/gameplay/event_editor/06_EVENT_LOGIC.md
                       'dialogue', 'afterDialogue', 'topicOrder', 'once', 'maxTimes'):   # NPC topics, 08_NPC_DIALOGUE.md
                 if k in e:
                     rec[k] = e[k]
             events.append(rec)
 
     strings = load(os.path.join(DATA, 'text.json'))[0]['strings']
-    # the NPC files (an NPC's panel: its name, chat lines; docs/event_editor/08_NPC_DIALOGUE.md)
+    # the NPC files (an NPC's panel: its name, chat lines; docs/gameplay/event_editor/08_NPC_DIALOGUE.md)
     npcs = {os.path.basename(p)[:-5]: load(p)[0] for p in sorted(glob.glob(os.path.join(DATA, 'npcs', '*.json')))}
-    # the palette's type data, whole, for its detail window (docs/19_STAGE_EDITOR.md): written back by Save
+    # the palette's type data, whole, for its detail window (docs/gameplay/02_STAGE_EDITOR.md): written back by Save
     data_files = {}
     for p in [os.path.join(DATA, 'enemies.json'), os.path.join(DATA, 'items.json')] + sorted(glob.glob(os.path.join(DATA, 'npcs', '*.json'))):
         obj, eol = load(p)

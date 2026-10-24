@@ -1,4 +1,4 @@
-// game_ui.h -- the game's whole UI: RmlUi documents bound to Game (docs/08_RMLUI.md).
+// game_ui.h -- the game's whole UI: RmlUi documents bound to Game (docs/gameplay/01_RMLUI.md).
 //
 // Every screen (title, HUD, pad, battle, dialogue, inventory, store, menus, stage select, ending,
 // toasts) is an .rml/.rcss pair in assets/media/ui. They all bind one data model, "game", which is

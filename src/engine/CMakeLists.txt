@@ -37,7 +37,7 @@ bgfx_compile_shaders(TYPE FRAGMENT
     PROFILES     ${TOMS_SHADER_PROFILES}
     AS_HEADERS)
 
-# 3D meshes (glTF models, src/engine/src/gltf_renderer.*, docs/18_GLTF.md) and debug lines: their own
+# 3D meshes (glTF models, src/engine/src/gltf_renderer.*, docs/engine/08_GLTF.md) and debug lines: their own
 # varyings (varying_mesh.def.sc); mesh_common.sh (GPU skinning) is included from this folder.
 bgfx_compile_shaders(TYPE VERTEX
     SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_mesh.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/vs_mesh_inst.sc
@@ -117,7 +117,7 @@ target_link_libraries(toms_bgfx PUBLIC toms_imgui glm::glm PRIVATE bgfx bx)
 # bx requires C++20. Only this target sees bgfx headers, so the core game code stays C++17.
 set_target_properties(toms_bgfx PROPERTIES FOLDER "toms" CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
-# RmlUi: the game's whole UI (docs/08_RMLUI.md). PUBLIC: the host builds its data model with
+# RmlUi: the game's whole UI (docs/gameplay/01_RMLUI.md). PUBLIC: the host builds its data model with
 # RmlUi's API.
 # The D3D/HLSL shader set only exists on Windows (s_5_0 needs shaderc's D3D4Linux support), and
 # embedded_shaders.cpp includes those generated headers. One define, set from the same condition that

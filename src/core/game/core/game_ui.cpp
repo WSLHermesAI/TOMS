@@ -330,7 +330,7 @@ void Game::buildUiState(toms::UiState& u) const {
         if (cs.active) {
             b.clock_label = L.tr("battle.enemy_clock");
             b.clock_pct = pct((float)cs.enemyClockMs, (float)std::max(500, cs.enemy.atkIntervalMs));
-            {   // Battle v3 (docs/30 phase 1): the charge, the track with the weapon level's points, the marker
+            {   // Battle v3 (docs/gameplay/07 phase 1): the charge, the track with the weapon level's points, the marker
                 toms::UiCombo& c = b.combo;
                 const std::string key = weaponKey();
                 const int lv = weaponLevel(key);
@@ -380,7 +380,7 @@ void Game::buildUiState(toms::UiState& u) const {
         }
     }
 
-    // ---- a reward event (docs/30 phase 6) ----
+    // ---- a reward event (docs/gameplay/07 phase 6) ----
     if (miniGame_.open) {
         if (const toms::MiniGameDef* def = miniGames_.find(miniGame_.id)) {
             toms::UiMiniGame& m = u.minigame;

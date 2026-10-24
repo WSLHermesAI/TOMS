@@ -2,6 +2,8 @@
 // (tap-to-freeze attack/defense bars, the enemy clock, super attack). Split out of game.cpp 2026-09-13.
 #include "game_internal.h"
 
+#include <limits>
+
 using namespace toms::game_detail;
 
 void Game::startCombat(const EnemyInst& e) {
@@ -22,6 +24,7 @@ void Game::startCombat(const EnemyInst& e) {
     cs.attackPauseMs = 0;
     cs.popups.clear();
     battleTimers_.reset();   // a number still waiting from the last fight never lands in this one
+    battleFx_.clear();
     monsterRig_.stop();      // the new monster starts idle (updateMonsterRig)
     monsterRigState_.clear();
     monsterRigClip_.clear();
@@ -55,7 +58,7 @@ bool Game::battleRigReady() const { return battleCharacterAnim_ || battleHeldAni
 void Game::setBattleRigState(const std::string& state, bool restart) {
     if (state == battleRigState_ && !restart) return;
     battleRigState_ = state;
-    // The weapon's clip for this status (items.json "battleAnim" "clips"; docs/30 phase 2), else the status's own name.
+    // The weapon's clip for this status (items.json "battleAnim" "clips"; docs/gameplay/07 phase 2), else the status's own name.
     auto def = equipmentDefs_.find(equipped_.weaponId);
     const std::string clipName = def != equipmentDefs_.end() ? def->second.battleClip(state) : state;
     const toms::anim::Clip* body = battleCharacterAnim_ ? battleCharacterAnim_->find(clipName) : nullptr;
@@ -109,6 +112,47 @@ void Game::drawBattleRig() {
         const float longer = r ? (float)std::max(std::max(r->origW, r->origH), 1) : 32.0f;
         monsterRig_.draw(ren, monsterAnim_->atlases(), kNone, toms::anim::placement(652.0f + size / 2.0f, 84.0f + size, size / longer));
     }
+    if (battleFxFile_)
+        for (toms::fx::EffectInstance& fx : battleFx_) fx.draw(ren, battleFxFile_->atlases(), glm::mat3(1.0f), nullptr);
+}
+
+// ---- the battle's particles (Game::battleFx_) ----
+
+const toms::WeaponFx* Game::battleWeaponFx(bool top) const {
+    const std::string key = weaponKey();
+    const int lv = top ? std::numeric_limits<int>::max() : weaponLevel(key);
+    if (const toms::WeaponFx* f = toms::weaponFxEntry(weaponPlayOf(key), lv)) return f;
+    return toms::weaponFxEntry(weaponPlay_.get("default"), lv);   // a weapon without its own: the default's
+}
+
+// One-shot, at the player's weapon (#player's box, a little ahead of the character) or the monster's middle (#enemy's).
+void Game::playBattleFx(const std::string& effect, bool atEnemy, int delayMs) {
+    if (effect.empty()) return;
+    if (!battleFxFile_ && !battleFxTried_ && res_) {   // once: without the file the battle has no particles
+        battleFxTried_ = true;
+        auto f = res_->get<toms::res::ParticleRes>(kBattleFxFile);
+        if (f->ok()) battleFxFile_ = f;
+        else std::fprintf(stderr, "[battle] %s: %s\n", kBattleFxFile, f->error().c_str());
+    }
+    if (!battleFxFile_) return;
+    const toms::fx::Effect* e = battleFxFile_->find(effect);
+    if (!e) { std::fprintf(stderr, "[battle] %s has no effect '%s'\n", kBattleFxFile, effect.c_str()); return; }
+    auto start = [this, e, atEnemy] {
+        toms::fx::EffectInstance fx;
+        fx.setTransform(atEnemy ? toms::anim::placement(719.0f, 151.0f) : toms::anim::placement(360.0f, 150.0f));
+        fx.setGpuSimulation(ren, particleGpuThreshold());
+        fx.play(e);
+        battleFx_.push_back(std::move(fx));
+    };
+    if (delayMs > 0) timers_.after(battleTimers_, delayMs, start);   // dies with the battle, as the damage numbers
+    else start();
+}
+
+void Game::updateBattleFx(int dtMs) {
+    if (!(cs.active || cs.won || cs.resultPauseMs > 0)) { battleFx_.clear(); return; }
+    for (toms::fx::EffectInstance& fx : battleFx_) fx.update(dtMs / 1000.0f);
+    battleFx_.erase(std::remove_if(battleFx_.begin(), battleFx_.end(), [](const toms::fx::EffectInstance& fx) { return fx.finished(); }),
+                    battleFx_.end());
 }
 
 // ---- the monster on the battle screen (Game::monsterRigState) ----
@@ -158,7 +202,7 @@ void Game::updateMonsterRig(int dtMs) {
     monsterRig_.takeEvents();   // (hit: the battle's own timers place the numbers)
 }
 
-// The owner's rule (docs/30_GAMEPLAY_PLAN.md §4): an attack pauses both sides' clocks until it is over.
+// The owner's rule (docs/gameplay/07_GAMEPLAY_PLAN.md §4): an attack pauses both sides' clocks until it is over.
 void Game::startAttackPause() { cs.attackPauseMs = std::max(cs.attackPauseMs, attackPauseMs_); }
 
 // The number appears when the swing lands, not when the button is pressed: a safe timer owned by this battle.
@@ -183,7 +227,7 @@ void Game::finishCombatWin() {
     pl.hp = cs.playerHP;
     pl.gold += (int)std::lround(cs.enemy.gold * (1.0f + attrEffect("goldGain") / 100.0f));   // LUK
     gainExp(cs.enemy.exp);   // level-ups by data/stats.json
-    // Monster cards (docs/30_GAMEPLAY_PLAN.md §3): the win is counted, and the card may drop (enemies.json "card").
+    // Monster cards (docs/gameplay/07_GAMEPLAY_PLAN.md §3): the win is counted, and the card may drop (enemies.json "card").
     if (auto t = enemyTpl.find(cs.enemy.id); t != enemyTpl.end()) {
         const float roll = std::uniform_real_distribution<float>(0.0f, 1.0f)(cardRng_);
         if (toms::recordCardWin(meta_.cards, cs.enemy.id, toms::cardChanceFromJson(t->second), roll)) {
@@ -203,7 +247,7 @@ void Game::finishCombatWin() {
         // Select hub) -- see entityStatus_'s declaration in game.h.
         toms::setEntityStatus(entityStatus_, statusKeyAt(cs.enemy.x, cs.enemy.y), toms::EntityStatus::Defeated);
     }
-    {   // the weapon's win (docs/30 phase 1): enough of them raise its level -- more points, bigger bonuses
+    {   // the weapon's win (docs/gameplay/07 phase 1): enough of them raise its level -- more points, bigger bonuses
         const std::string key = weaponKey();
         const int before = weaponLevel(key);
         weaponUses_[key]++;
@@ -328,7 +372,7 @@ void Game::resolveEnemyClockFire() {
     }
 }
 
-// Battle v3 (docs/30 phase 1): the first tap starts the combo with the charge built so far; the next taps hit the
+// Battle v3 (docs/gameplay/07 phase 1): the first tap starts the combo with the charge built so far; the next taps hit the
 // points. The combo's end (all hit, the sweeps run out, or two misses) resolves the attack.
 void Game::battleTapAttack() {
     if (!cs.active || cs.atkBar.cooling) return;
@@ -369,6 +413,11 @@ void Game::resolveCombo() {
     audio.play("player_attack");
     startAttackPause();
     popDamage(dmg, /*overEnemy=*/true, r.hits == r.points && !r.failed ? 1 : 0);
+    if (lastAttackDamage_ > 0)   // the weapon's particles for its level: off it now, on the monster with the number
+        if (const toms::WeaponFx* fx = battleWeaponFx()) {
+            playBattleFx(fx->release, /*atEnemy=*/false);
+            playBattleFx(fx->hit, /*atEnemy=*/true, hitNumberDelayMs_);
+        }
     if (battleRigReady()) setBattleRigState(lastAttackDamage_ > 0 ? "attack" : "miss", true);
     const std::string combo = trParam(trParam(locale_.tr(r.failed ? "battle.combo_fail" : "battle.combo_hits"), "hits",
                                               std::to_string(r.hits)), "n", std::to_string(r.points));
@@ -403,6 +452,10 @@ void Game::battleTapSuper() {
     audio.play("player_attack");
     startAttackPause();
     popDamage(dmg, /*overEnemy=*/true, 1);
+    if (const toms::WeaponFx* fx = battleWeaponFx(/*top=*/true)) {   // the super attack: the weapon's best effects
+        playBattleFx(fx->release, /*atEnemy=*/false);
+        playBattleFx(fx->hit, /*atEnemy=*/true, hitNumberDelayMs_);
+    }
 
     if (cs.enemyHP <= 0) {
         cs.log = trParam(locale_.tr("battle.crit_win"), "dmg", std::to_string(dmg));

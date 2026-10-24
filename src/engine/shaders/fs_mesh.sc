@@ -1,6 +1,6 @@
 $input v_worldPos, v_normal, v_tangent, v_texcoord0, v_color0
 
-// glTF metallic-roughness PBR (gltf_renderer.cpp, docs/18_GLTF.md):
+// glTF metallic-roughness PBR (gltf_renderer.cpp, docs/engine/08_GLTF.md):
 //   base colour x vertex colour x texture, metal/rough texture (B = metal, G = rough), normal map
 //   (with the file's tangents, else a tangent frame from screen-space derivatives), occlusion (R),
 //   emissive; alpha mask (discard) / blend; double-sided back faces lit from behind; unlit.

@@ -1,4 +1,4 @@
-"""Give every monster and NPC that has no idle animation a simple looping one (docs/27_AI_SPRITES.md).
+"""Give every monster and NPC that has no idle animation a simple looping one (docs/engine/14_AI_SPRITES.md).
 
     python tools/make_idle_clips.py [--check] [--all-npcs]
 

@@ -16,6 +16,8 @@ namespace toms {
 
 // Directory save files live in for this platform. Never empty.
 const std::string& defaultSaveDir();
+// The player's settings file (game_settings.h) in it: the one place its name is written.
+inline std::string settingsPath() { return defaultSaveDir() + "/settings.json"; }
 // Creates the save directory if needed. Returns false if it could not be created.
 bool ensureSaveDir(const std::string& saveDir);
 // Flushes pending writes to persistent storage. No-op on desktop; on the browser this kicks
@@ -61,7 +63,7 @@ bool readSlotSave(const std::string& saveDir, int slot,
                   MetaSaveData& metaOut, RunSaveData& runOut,
                   int* playTimeSec = nullptr, std::string* savedAt = nullptr, SlotLoadInfo* info = nullptr);
 // A save in the slot format (what writeSlotSave writes) read from any file -- test scenarios start from one
-// (docs/31_TEST_SCENARIOS.md). No backup fallback: a scenario's file is test data, not a player's save.
+// (docs/gameplay/08_TEST_SCENARIOS.md). No backup fallback: a scenario's file is test data, not a player's save.
 bool readSaveFile(const std::string& path, MetaSaveData& metaOut, RunSaveData& runOut, int* playTimeSec = nullptr);
 // True when the slot holds a save from a newer version of the game (its file or, if that is damaged, its backup).
 bool slotIsNewer(const std::string& saveDir, int slot);

@@ -1,5 +1,5 @@
 {
-  "_comment": "The sword (docs/30 phase 2): its battleAnim names its own clips; while the attack waits (status charge) the picture plays \"raise\" from fighter_sword.anim and weapon_sword.anim.",
+  "_comment": "The sword (docs/gameplay/07 phase 2): its battleAnim names its own clips; while the attack waits (status charge) the picture plays \"raise\" from fighter_sword.anim and weapon_sword.anim.",
   "scene": "battle",
   "player": {
     "equip": [

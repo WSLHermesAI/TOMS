@@ -1,4 +1,4 @@
-// anim_recipes.h -- motion recipes for meshes (docs/16_ANIMATION_RECIPES.md section 7, docs/34_MESH_ANIMATION.md step 5):
+// anim_recipes.h -- motion recipes for meshes (docs/engine/06_ANIMATION_RECIPES.md section 7, docs/engine/16_MESH_ANIMATION.md step 5):
 // short named motions that write the keys of a deformed or skinned node, so a new sprite or character gets decent
 // motion without hand-keying, from the editor (Key > Motion Recipe) or a script / AI (`anim_editor --headless recipe`).
 //

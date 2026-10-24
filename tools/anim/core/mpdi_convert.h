@@ -1,5 +1,5 @@
 // mpdi_convert.h -- converts the old engine's (FM79979) .mpdi animations to .anim, and the .pi sprite sheets they
-// draw from to the atlas tool's format (.atlasproj + .atlas + .png). docs/15_ANIMATION.md, "Converting MPDI".
+// draw from to the atlas tool's format (.atlasproj + .atlas + .png). docs/engine/05_ANIMATION.md, "Converting MPDI".
 //
 // What an .mpdi becomes:
 //   the file (MPDIList)                -> one .anim; its .pi files (ImageName) -> its atlases (id = the .pi's name)

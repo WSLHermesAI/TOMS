@@ -1,4 +1,4 @@
-// particle_editor -- the Qt editor for .particle effects (docs/17_PARTICLES.md):
+// particle_editor -- the Qt editor for .particle effects (docs/engine/07_PARTICLES.md):
 //
 //   particle_editor                                    the editor
 //   particle_editor file.particle                      the editor with that file open

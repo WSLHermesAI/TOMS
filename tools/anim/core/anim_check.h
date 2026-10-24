@@ -34,7 +34,7 @@ struct CheckAtlas {
 // lacks the name; a bare "name": an error when it is in no atlas (checked when at least one atlas
 // loaded), a warning when it is in more than one (the first wins; storing the atlas fixes it); a
 // warning per absolute atlas path; an error per skinned node's sprite that has no mesh in its atlas's mesh file (it
-// would be drawn as a flat quad, unbent; docs/34_MESH_ANIMATION.md).
+// would be drawn as a flat quad, unbent; docs/engine/16_MESH_ANIMATION.md).
 std::vector<Problem> checkAnim(const toms::anim::AnimFile& f, const std::vector<CheckAtlas>& atlases);
 
 const char* levelName(Problem::Level l);

@@ -1,6 +1,6 @@
 <# : batch part -- this file is both a batch file and a PowerShell script
 @echo off
-rem setup_new_pc.bat -- set up TOMS on a brand-new Windows PC (docs/11, docs/12).
+rem setup_new_pc.bat -- set up TOMS on a brand-new Windows PC (docs/project/09, docs/project/10).
 rem   Double-click it. It works on its own: download just this file onto a new PC and run it.
 rem   Installs Git + Visual Studio 2026 (C++ workload, CMake tools, Windows SDK), enables long paths,
 rem   clones the repository, optionally creates an SSH key for pushing, then builds and tests.
@@ -71,7 +71,7 @@ function Get-VsInfo {
     $info.Path = & $VsWhere -latest -products * -version '[18.0,' -property installationPath | Select-Object -First 1
     if ($info.Path) {
         $full = & $VsWhere -latest -products * -version '[18.0,' -requires $VsComponents[0] $VsComponents[1] -property installationPath
-        # Any Windows 10/11 SDK is fine (docs/02 item 4); check the registry rather than one exact component.
+        # Any Windows 10/11 SDK is fine (docs/project/01 item 4); check the registry rather than one exact component.
         $sdkRoot = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows Kits\Installed Roots' -ErrorAction SilentlyContinue).KitsRoot10
         $hasSdk = $sdkRoot -and @(Get-ChildItem (Join-Path $sdkRoot 'Include') -Directory -ErrorAction SilentlyContinue |
                                   Where-Object { $_.Name -match '^10\.' }).Count -gt 0
@@ -232,7 +232,7 @@ if ((Test-Path (Join-Path $SelfDir '.git')) -and (Test-Path (Join-Path $SelfDir 
 # ------------------------------------------------------------------ 5. SSH key (only needed to push)
 $sshText = "Do you want to be able to PUSH to GitHub from this PC?`n`n" +
            "Cloning and building do not need this (the repository is public).`n`n" +
-           "'Yes' creates an SSH key for this PC (one PC = one key, docs/12 method A),`n" +
+           "'Yes' creates an SSH key for this PC (one PC = one key, docs/project/10 method A),`n" +
            "copies the public key to the clipboard and opens GitHub so you can add it`n" +
            "to the account that owns the repository (WSLHermesAI)."
 if ((Show-Box $sshText 'TOMS setup - SSH key' 'YesNo' 'Question') -eq 'Yes') {
@@ -265,7 +265,7 @@ if ((Show-Box $sshText 'TOMS setup - SSH key' 'YesNo' 'Question') -eq 'Yes') {
         $label = [Microsoft.VisualBasic.Interaction]::InputBox($labelNote, 'TOMS setup - SSH key label', '')
         Show-Box ("The key is created in the BLACK CONSOLE WINDOW.`n`n" +
                   "After you click OK, switch to that window. It asks for a passphrase twice:`n" +
-                  "type one (recommended, docs/12 section 7) or just press Enter twice for none.") 'TOMS setup - SSH key' | Out-Null
+                  "type one (recommended, docs/project/10 section 7) or just press Enter twice for none.") 'TOMS setup - SSH key' | Out-Null
         & $keygen -t ed25519 -C $(if ($label) { $label } else { '""' }) -f $key
         if (-not (Test-Path "$key.pub")) {
             Show-Box 'ssh-keygen did not create a key. See the console output.' 'TOMS setup' 'OK' 'Error' | Out-Null
@@ -291,7 +291,7 @@ if ((Show-Box $sshText 'TOMS setup - SSH key' 'YesNo' 'Question') -eq 'Yes') {
             Log "git/SSH check finished (exit $LASTEXITCODE); rerun any time: tools\check_git_ssh.cmd"
         } elseif ($added -eq 'OK') {
             # Older checkout without the checker: at least test the login.
-            # GitHub has no shell, so ssh -T exits with 1 even on success: read the text (docs/12 section 5.1).
+            # GitHub has no shell, so ssh -T exits with 1 even on success: read the text (docs/project/10 section 5.1).
             $reply = (& $ssh -T -o StrictHostKeyChecking=accept-new git@github.com 2>&1 | ForEach-Object { "$_" }) -join "`n"
             Log "ssh -T: $reply"
             if ($reply -match 'Hi ([^!]+)!') {
@@ -349,7 +349,7 @@ if ($built) {
     }
 } else {
     $summary += "Build: not run (or failed). Later: tools\build.cmd windows-release`n`n" +
-                "Optional extras (editor = Qt, web = Emscripten) are in docs\02_INSTALL_WINDOWS.md."
+                "Optional extras (editor = Qt, web = Emscripten) are in docs\project\01_INSTALL_WINDOWS.md."
     Show-Box $summary 'TOMS setup - done' | Out-Null
 }
 Start-Process explorer.exe $repo

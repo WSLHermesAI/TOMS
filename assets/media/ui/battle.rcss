@@ -37,7 +37,7 @@ body { z-index: 30; }
 .zone.green  { background-color: #94e6a8; }
 .bar-dim { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: #41414c8c; }
 .marker  { position: absolute; top: -8px; width: 5px; height: 44px; margin-left: -2px; background-color: #ffffff; }
-/* Battle v3's point play (docs/30 phase 1): a charge column, then the track with its points */
+/* Battle v3's point play (docs/gameplay/07 phase 1): a charge column, then the track with its points */
 .combo   { position: relative; height: 28px; }
 .charge  { position: absolute; left: 0; top: -8px; width: 12px; height: 44px; background-color: #41414c; }
 .charge-fill { position: absolute; left: 0; bottom: 0; width: 100%; background-color: #ffc861; }

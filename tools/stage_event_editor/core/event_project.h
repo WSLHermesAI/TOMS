@@ -1,4 +1,4 @@
-// event_project.h -- the event editor's data, without Qt (docs/event_editor/README.md).
+// event_project.h -- the event editor's data, without Qt (docs/gameplay/event_editor/README.md).
 //
 // The same model as tools/web_editors/event_editor.html, read straight from the TOMS folder (its readLiveData):
 // every pool's events, the floors' event lists and stairs, the texts they use, event variables / counters / flags,
@@ -126,7 +126,7 @@ public:
     bool writeAll(const std::vector<FileWrite>& files, const std::string& stamp, std::string& err);
 };
 
-// The talk preview (docs/event_editor/08_NPC_DIALOGUE.md): the game's rules (talk_system.cpp, condition.cpp) on a
+// The talk preview (docs/gameplay/event_editor/08_NPC_DIALOGUE.md): the game's rules (talk_system.cpp, condition.cpp) on a
 // pretend run.
 struct TalkPreview {
     std::string npc, stage;

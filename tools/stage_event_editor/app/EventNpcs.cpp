@@ -1,5 +1,5 @@
 // EventNpcs.cpp -- the event editor's NPCs tab (an NPC file, its chat lines and topics, the talk preview) and Dialogues
-// tab (a dialogue file's nodes as cards). docs/event_editor/08_NPC_DIALOGUE.md; event_editor.html's renderNpcs,
+// tab (a dialogue file's nodes as cards). docs/gameplay/event_editor/08_NPC_DIALOGUE.md; event_editor.html's renderNpcs,
 // previewHtml and renderDialogues.
 #include "EventEditor.h"
 

@@ -1,4 +1,4 @@
-// anim_recipes_test.cpp -- the motion recipes (anim_recipes.h; docs/16_ANIMATION_RECIPES.md section 7): the lattice
+// anim_recipes_test.cpp -- the motion recipes (anim_recipes.h; docs/engine/06_ANIMATION_RECIPES.md section 7): the lattice
 // recipes' keys and shapes, the bone recipes on a skin's bones, what they replace and keep, and what they refuse.
 #include "anim_recipes.h"
 

@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "Reward events (docs/30 phase 6; src/core/game/systems/mini_game.h): a timing game that earns gold or crystals,",
+    "Reward events (docs/gameplay/07 phase 6; src/core/game/systems/mini_game.h): a timing game that earns gold or crystals,",
     "started from any dialogue choice: {\"type\": \"miniGame\", \"id\": \"<key here>\"}. The play is Battle v3's point play:",
     "points (1-5) on a track, a marker sweeping it (sweepMs; turnBack; maxSweeps), a tap within hitWindow of a point hits",
     "it. Each hit earns perHit of the currency (gold or crystals), every point hit bonusAll more; two misses in a row end",

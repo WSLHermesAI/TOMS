@@ -94,7 +94,7 @@ set(GLM_BUILD_TESTS   OFF CACHE BOOL "" FORCE)
 set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 toms_declare_dep(glm https://github.com/g-truc/glm.git 1.0.1)
 
-# ---- cgltf: glTF 2.0 (.gltf / .glb) parsing for 3D models (src/core/engine/gltf_model.*, docs/18_GLTF.md).
+# ---- cgltf: glTF 2.0 (.gltf / .glb) parsing for 3D models (src/core/engine/gltf_model.*, docs/engine/08_GLTF.md).
 # One header (MIT). SOURCE_SUBDIR points at a folder without a CMakeLists.txt, so FetchContent only
 # downloads it (its own CMakeLists builds cgltf's tests).
 toms_declare_dep(cgltf https://github.com/jkuhlmann/cgltf.git v1.15 SOURCE_SUBDIR "no-cmake")
@@ -103,7 +103,7 @@ FetchContent_MakeAvailable(bgfx SDL3 imgui glm cgltf)
 toms_deps_fetched(bgfx SDL3 imgui glm cgltf)
 
 # ---- Jolt Physics (MIT): rigid-body simulation for glTF files with KHR_physics_rigid_bodies
-# (src/core/engine/gltf_physics.*, docs/18_GLTF.md §7). Only the targets that link toms_physics build it (the
+# (src/core/engine/gltf_physics.*, docs/engine/08_GLTF.md §7). Only the targets that link toms_physics build it (the
 # game does not, yet): EXCLUDE_FROM_ALL. Cross-platform determinism on, so a simulation gives the same result on
 # every machine and in the tests; the plain SSE4.2 instruction set, so it runs on any x64 CPU.
 set(TARGET_UNIT_TESTS                  OFF CACHE BOOL "" FORCE)
@@ -157,7 +157,7 @@ if(EXISTS "${_toms_egl}")
     endif()
 endif()
 
-# ---- RmlUi (the game UI, HTML/CSS-like), docs/08_RMLUI.md ----
+# ---- RmlUi (the game UI, HTML/CSS-like), docs/gameplay/01_RMLUI.md ----
 # Desktop: FreeType draws the text from font files (assets/media/fonts/NotoSansCJKtc-TOMS.otf by
 # default, tools/make_ui_font.py; per-language fonts from text.json). Web: no FreeType and no font
 # file -- the browser draws the text (src/engine/src/rml_canvas_font.*).

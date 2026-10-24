@@ -1,4 +1,4 @@
-# gltf_viewer -- the glTF 2.0 model viewer on the engine's renderer (docs/18_GLTF.md): SDL3 window,
+# gltf_viewer -- the glTF 2.0 model viewer on the engine's renderer (docs/engine/08_GLTF.md): SDL3 window,
 # bgfx (toms_bgfx: GltfRenderer, the bgfx host, ImGui), the loader in toms_core (gltf_model.*).
 # Desktop only. The test models it is checked with live in tests/gltf/ (make_test_models.py).
 add_executable(gltf_viewer main.cpp make_test_models.py fetch_samples.py)

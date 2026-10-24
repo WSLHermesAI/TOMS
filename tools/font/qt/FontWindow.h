@@ -13,7 +13,7 @@ class QPlainTextEdit;
 class QSpinBox;
 class QTableWidget;
 
-// font_editor's window (docs/22_FONT_TOOL.md, docs/23_FONT_TOOL_GUIDE.md): add pictures, give each one
+// font_editor's window (docs/engine/09_FONT_TOOL.md, docs/engine/10_FONT_TOOL_GUIDE.md): add pictures, give each one
 // its character, and save them combined as a picture font (.fnt + .png). A test text is drawn with the
 // font the way the game lays text out (BitmapFont::layout). Opening a .fnt turns its glyphs back into
 // pictures to change and save again.

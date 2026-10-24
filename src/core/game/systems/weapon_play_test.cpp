@@ -54,6 +54,33 @@ int main() {
               "the default entry is the owner's example");
     }
 
+    // 4. The battle particles by level (the owner 2026-10-24): the highest entry at or below the level; every name in the
+    //    shipped file is an effect of media/fx/battle.particle.
+    {
+        const WeaponPlay w = weaponPlayFromJson("bow", nlohmann::json::parse(
+            R"({"fx":[{"lv":5,"hit":"h3"},{"lv":1,"release":"r1","hit":"h1"},{"lv":3,"hit":"h2"}]})"));
+        CHECK(weaponFxEntry(w, 1) && weaponFxEntry(w, 1)->hit == "h1" && weaponFxEntry(w, 1)->release == "r1", "Lv 1: tier 1");
+        CHECK(weaponFxEntry(w, 4)->hit == "h2" && weaponFxEntry(w, 4)->release.empty(), "Lv 4: tier 2, no release");
+        CHECK(weaponFxEntry(w, 99)->hit == "h3", "above every entry: the last");
+        CHECK(weaponFxEntry(weaponPlayFromJson("none", nlohmann::json::object()), 3) == nullptr, "no fx: none");
+
+        std::ifstream f("media/fx/battle.particle");
+        const nlohmann::json fxFile = nlohmann::json::parse(f, nullptr, false);
+        std::set<std::string> effects;
+        if (fxFile.is_object() && fxFile.contains("effects"))
+            for (const auto& e : fxFile["effects"]) effects.insert(e.value("name", std::string()));
+        CHECK(!effects.empty(), "media/fx/battle.particle loads");
+        const WeaponPlayTable t = loadWeaponPlay("data/weapon_play.json");
+        CHECK(!t.get("default").fx.empty(), "the default entry has fx (weapons without their own use it)");
+        for (const auto& [id, wp] : t.weapons)
+            for (const WeaponFx& fx : wp.fx)
+                for (const std::string& name : {fx.release, fx.hit})
+                    if (!name.empty() && !effects.count(name)) {
+                        std::printf("FAIL: weapon_play.json %s fx \"%s\" is not in battle.particle\n", id.c_str(), name.c_str());
+                        g_fail++;
+                    }
+    }
+
     if (g_fail) { std::printf("weapon_play_test: %d failure(s)\n", g_fail); return 1; }
     std::printf("weapon_play_test: all passed\n");
     return 0;

@@ -1,4 +1,4 @@
-// story_actions.h -- the one action vocabulary every story place runs (docs/event_editor/08_NPC_DIALOGUE.md section 7).
+// story_actions.h -- the one action vocabulary every story place runs (docs/gameplay/event_editor/08_NPC_DIALOGUE.md section 7).
 //
 // An action is plain JSON, { "type": "<verb>", ...fields }, and a result is a list of them, in any mix:
 //   addStat / setStat   a player status value by name (hp, atk, def, gold, exp, lv, maxhp, ...)

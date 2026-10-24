@@ -1,6 +1,6 @@
 // rml_canvas_font.h -- RmlUi font engine for the browser build: the browser draws the text.
 //
-// The web build ships no font file (docs/08_RMLUI.md, "Fonts"). Instead of FreeType, this engine
+// The web build ships no font file (docs/gameplay/01_RMLUI.md, "Fonts"). Instead of FreeType, this engine
 // asks an HTML canvas: widths come from measureText(), and every distinct string is drawn WHOLE
 // with fillText() into its own small texture. Drawing whole strings (not glyph by glyph) is what
 // lets the browser do the hard parts for every script -- Arabic/Persian joining, right-to-left

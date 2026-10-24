@@ -1,7 +1,7 @@
 @echo off
 rem run_android.cmd [release] -- install the APK of tools\build_android.cmd on the running emulator or
 rem the connected phone, start it, and show the game's log (adb logcat, tag "toms"). Ctrl+C stops the log.
-rem Start an emulator first: Android Studio, Device Manager, the play button (docs/07_BUILD_ANDROID.md).
+rem Start an emulator first: Android Studio, Device Manager, the play button (docs/project/06_BUILD_ANDROID.md).
 setlocal EnableExtensions
 set "ROOT=%~dp0.."
 if "%ANDROID_HOME%"=="" set "ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk"

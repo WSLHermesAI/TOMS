@@ -30,16 +30,16 @@ holds the rules that most often go wrong and templates that pass the checks.
 
 | Asset | Files | Spec | Validate |
 |---|---|---|---|
-| Game sprite atlas | `art_raw/atlas/game.atlasproj` (raw, not shipped) cooks `assets/media/atlas/game.atlas` + `.png`; source PNGs in `art_raw/sprites` | [14](../docs/14_ATLAS_TOOL.md) | `atlaspack build <proj> --check` |
-| fx atlas (particle sprites) | `art_raw/atlas/fx.atlasproj` | [17](../docs/17_PARTICLES.md) §3 | same |
-| Node animations | `assets/media/anim/*.anim`; examples `docs/examples/anim_*.anim` | [15](../docs/15_ANIMATION.md), recipes [16](../docs/16_ANIMATION_RECIPES.md) | `anim_editor --headless check <file>` |
-| Particle effects | `*.particle`; examples `docs/examples/fx_recipes.particle` | [17](../docs/17_PARTICLES.md) | `particle_editor --headless check <file>` |
-| Picture fonts | `NAME.fnt` + `NAME.png`; test fonts in `tests/font` | [22](../docs/22_FONT_TOOL.md) | `fontpack info <fnt>`, `fontpack preview` |
-| 3D models | `assets/media/models/*.glb` | [18](../docs/18_GLTF.md) | `gltf_viewer <file> --frames=5 --screenshot=out.png` |
-| Floors (maps) | `assets/data/story/floors/F??.stage.json` (grid) + `F??.json` (spec, events list) | [19](../docs/19_STAGE_EDITOR.md) | `node tools/web_editors/sync_floor_index.mjs --check` |
-| Events, NPCs, dialogues | `assets/data/events/pool_*.json`, `floor_index.json`, `assets/data/npcs/*.json`, `assets/data/dialogue/*.json`, `assets/data/story/vars.json` | [event_editor/01](../docs/event_editor/01_DATA_MODEL.md), [06](../docs/event_editor/06_EVENT_LOGIC.md), [07](../docs/event_editor/07_KEY_GATES.md) | same, plus `tools\test.cmd` |
-| Items, text | `assets/data/items.json`, `assets/data/text.json` | [07](../docs/event_editor/07_KEY_GATES.md) §1 | `tools\test.cmd` |
-| Editor UI text | `tools/studio_common/i18n/zh_TW/*.json` | [24](../docs/24_EDITOR_LANGUAGE.md) | `python tools/studio_common/i18n/i18n_check.py --check` |
+| Game sprite atlas | `art_raw/atlas/game.atlasproj` (raw, not shipped) cooks `assets/media/atlas/game.atlas` + `.png`; source PNGs in `art_raw/sprites` | [04](../docs/engine/04_ATLAS_TOOL.md) | `atlaspack build <proj> --check` |
+| fx atlas (particle sprites) | `art_raw/atlas/fx.atlasproj` | [07](../docs/engine/07_PARTICLES.md) §3 | same |
+| Node animations | `assets/media/anim/*.anim`; examples `docs/examples/anim_*.anim` | [05](../docs/engine/05_ANIMATION.md), recipes [06](../docs/engine/06_ANIMATION_RECIPES.md) | `anim_editor --headless check <file>` |
+| Particle effects | `*.particle`; examples `docs/examples/fx_recipes.particle` | [07](../docs/engine/07_PARTICLES.md) | `particle_editor --headless check <file>` |
+| Picture fonts | `NAME.fnt` + `NAME.png`; test fonts in `tests/font` | [09](../docs/engine/09_FONT_TOOL.md) | `fontpack info <fnt>`, `fontpack preview` |
+| 3D models | `assets/media/models/*.glb` | [08](../docs/engine/08_GLTF.md) | `gltf_viewer <file> --frames=5 --screenshot=out.png` |
+| Floors (maps) | `assets/data/story/floors/F??.stage.json` (grid) + `F??.json` (spec, events list) | [02](../docs/gameplay/02_STAGE_EDITOR.md) | `node tools/web_editors/sync_floor_index.mjs --check` |
+| Events, NPCs, dialogues | `assets/data/events/pool_*.json`, `floor_index.json`, `assets/data/npcs/*.json`, `assets/data/dialogue/*.json`, `assets/data/story/vars.json` | [event_editor/01](../docs/gameplay/event_editor/01_DATA_MODEL.md), [06](../docs/gameplay/event_editor/06_EVENT_LOGIC.md), [07](../docs/gameplay/event_editor/07_KEY_GATES.md) | same, plus `tools\test.cmd` |
+| Items, text | `assets/data/items.json`, `assets/data/text.json` | [07](../docs/gameplay/event_editor/07_KEY_GATES.md) §1 | `tools\test.cmd` |
+| Editor UI text | `tools/studio_common/i18n/zh_TW/*.json` | [11](../docs/engine/11_EDITOR_LANGUAGE.md) | `python tools/studio_common/i18n/i18n_check.py --check` |
 
 ## 2. Sprite atlas (`atlaspack`)
 
@@ -190,8 +190,8 @@ These are game data; the web editors are the normal way to change them, but the 
 - **Floor spec** `F??.json`: `events` lists the event ids the floor can hold.
 - **Event** (in a `pool_*.json`): `eventId` (unique across all pools), `kind` (`relic`, `whisper`, `cache`, `trap`, `rescue`, `merchant_echo`, `memory_shard`; more can be added in the event editor's **Kinds** tab), `text` / `title` /
   `desc` (keys in `text.json`), and optionally `requires` (e.g. `{"type": "runFlagSet", "flag": "event_<eventId>"}` = that event is done), `next` (event ids it wakes), `actions` (`give`, `addCounter`, `setFlag`). See
-  [07](../docs/event_editor/07_KEY_GATES.md) §2–5 for a worked chain.
-- **NPCs and talk events** ([event_editor/08](../docs/event_editor/08_NPC_DIALOGUE.md)): an NPC file in `assets/data/npcs/`
+  [07](../docs/gameplay/event_editor/07_KEY_GATES.md) §2–5 for a worked chain.
+- **NPCs and talk events** ([event_editor/08](../docs/gameplay/event_editor/08_NPC_DIALOGUE.md)): an NPC file in `assets/data/npcs/`
   (chat lines, greeting), events with `"trigger": {"on": "talk", "npc": id}` plus `dialogue` / `afterDialogue`, and
   dialogue files in `assets/data/dialogue/` whose choices carry `actions`, `finish`, `fire` and `id`. Results use one
   action list (`addStat` by any status or attribute, `give`, `take`, `setVar`, `addVar`, `addCounter`, `fireEvent`, …).

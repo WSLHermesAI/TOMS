@@ -5,7 +5,7 @@
     <link type="text/rcss" href="_atlas.rcss"/>
     <link type="text/rcss" href="player.rcss"/>
 </head>
-<!-- The player menu (docs/20_PLAYER_MENU.md): the walking scene's one button (≡ / Esc) opens it.
+<!-- The player menu (docs/gameplay/03_PLAYER_MENU.md): the walking scene's one button (≡ / Esc) opens it.
      Tabs: Status, Equipment, Items, Events, System. Equipment, Items, Events and System share one
      layout: a list on the left (Items and Equipment: a grid of 3 per row), the selected entry on the
      right. Data: player.* (UiPlayer); the System tab's rows and pages are menu.* (UiMenu).
@@ -37,8 +37,9 @@
             <div id="st-right">
                 <div class="heading">{{player.attr_title}}<span id="attr-points" data-if="player.attr_points != ''">{{player.attr_points}}</span></div>
                 <div id="attrs">
-                    <div data-for="a, i : player.attrs"><div class="row attr" data-class-selected="a.selected" data-event-click="act('pm_attr', i)">{{a.label}}<span class="attr-add btn" data-if="player.attr_can_add" data-event-click="act('pm_attr_add', i)">+</span><span class="attr-value">{{a.sub}}</span></div></div>
+                    <div data-for="a, i : player.attrs"><div class="row attr" data-class-selected="a.selected" data-event-click="act('pm_attr', i)">{{a.label}}<span class="attr-add btn" data-if="player.attr_can_add" data-event-click="act('pm_attr_add', i)">+</span><span class="attr-sub btn" data-if="a.extra" data-event-click="act('pm_attr_sub', i)">-</span><span class="attr-value">{{a.sub}}</span></div></div>
                 </div>
+                <div id="attr-actions" data-if="player.attr_draft"><span class="btn attr-confirm" data-class-selected="player.attr_confirm_sel" data-event-click="act('pm_attr_confirm')">{{player.attr_confirm}}</span><span class="btn attr-reset" data-class-selected="player.attr_reset_sel" data-event-click="act('pm_attr_reset')">{{player.attr_reset}}</span></div>
                 <div id="attr-desc">{{player.attr_desc}}
                     <div class="attr-eff" data-if="player.attr_per != ''">{{player.attr_per}}</div>
                     <div class="attr-eff now" data-if="player.attr_now != ''">{{player.attr_now}}</div>

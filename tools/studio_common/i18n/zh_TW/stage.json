@@ -210,7 +210,7 @@
  "The native event editor comes next (phase 2: the event tree, details, conditions, NPCs, talk preview and dialogues in Qt). Until then, edit events in the HTML event editor: it saves into the same files, and the stage editor in this app reloads the events as soon as it does.": "原生的事件編輯器是下一步（第 2 階段：用 Qt 做事件樹、詳細資料、條件、NPC、交談預覽與對話）。在那之前，請用 HTML 事件編輯器編輯事件：它存進相同的檔案，而本程式的關卡編輯器會在它儲存後立刻重新載入事件。",
  "The object at (%1, %2) links %3, which no pool defines.": "(%1, %2) 的物件連結了 %3，但沒有事件池定義它。",
  "The outer edge has open cells.": "外圈有開放的格子。",
- "The stage and event editors on the game's stack (Qt %1 + the game's bgfx renderer).\nDocs: docs/19_STAGE_EDITOR.md, docs/event_editor/README.md": "使用遊戲相同技術的關卡與事件編輯器（Qt %1 + 遊戲的 bgfx 繪圖器）。\n文件：docs/19_STAGE_EDITOR.md、docs/event_editor/README.md",
+ "The stage and event editors on the game's stack (Qt %1 + the game's bgfx renderer).\nDocs: docs/gameplay/02_STAGE_EDITOR.md, docs/gameplay/event_editor/README.md": "使用遊戲相同技術的關卡與事件編輯器（Qt %1 + 遊戲的 bgfx 繪圖器）。\n文件：docs/gameplay/02_STAGE_EDITOR.md、docs/gameplay/event_editor/README.md",
  "The stage editor has unsaved changes. Save them before closing?": "關卡編輯器有未儲存的變更。關閉前要儲存嗎？",
  "The stair to %1 waits for %2, which cannot be done by this floor.": "通往 %1 的樓梯要等 %2，但到這一層為止無法完成它。",
  "The stairs up cannot be reached at all (walls).": "往上的樓梯完全走不到（被牆擋住）。",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""make_test_models.py -- the glTF test models in tests/gltf/ (docs/18_GLTF.md).
+"""make_test_models.py -- the glTF test models in tests/gltf/ (docs/engine/08_GLTF.md).
 
 Small, self-contained .gltf files (buffers and textures embedded as data URIs), made by this script so
 the tests own every byte (no licence questions) and each one checks one feature:

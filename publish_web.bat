@@ -4,7 +4,7 @@ rem   Site: https://wslhermesai.github.io/TOMS/
 rem   It asks before pushing. Options:
 rem     publish_web.bat nobuild   publish the existing Build\dist\TOMS-web without rebuilding
 rem     publish_web.bat dryrun    build + prepare, show what would change, push nothing
-rem Details: docs\07_PUBLISH_GITHUB_PAGES.md
+rem Details: docs\project\07_PUBLISH_GITHUB_PAGES.md
 setlocal EnableExtensions
 cd /d "%~dp0"
 set "PUBARGS="

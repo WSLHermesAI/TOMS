@@ -713,7 +713,7 @@ void EventEditor::runFix(const stage::EvProblem& p, const QString& k) {
 
 bool EventEditor::save() {
     const std::map<std::string, std::string> comments = {
-        {"vars", "Event variables: read and written by event logic (docs/event_editor/06_EVENT_LOGIC.md)."},
+        {"vars", "Event variables: read and written by event logic (docs/gameplay/event_editor/06_EVENT_LOGIC.md)."},
         {"kinds", "Event kinds: names and editor colours (edited in the event editor's Kinds tab)."}};
     const auto files = m_p.liveWrites(comments);
     if (files.empty()) { toast(tr("Nothing to save")); if (m_p.dirty()) { m_p.base = m_p.S; scheduleRender(); } return true; }

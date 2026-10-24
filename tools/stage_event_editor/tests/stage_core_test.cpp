@@ -116,7 +116,7 @@ static void testEdits(Project& p) {
         CHECK(!p.isDirty("F02"), "undo restores the cell");
     }
 
-    // stable object ids (docs/28_SAVE_SYSTEM.md): every saved-state object has a uid, which moves with it; a new object
+    // stable object ids (docs/gameplay/05_SAVE_SYSTEM.md): every saved-state object has a uid, which moves with it; a new object
     // gets a fresh one and a copied (duplicate) uid is replaced
     if (const auto mon = p.find(d, "monster:slime")) {
         const Json* o = Project::objOf(d, mon->x, mon->y);

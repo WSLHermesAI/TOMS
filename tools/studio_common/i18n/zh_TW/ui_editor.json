@@ -37,7 +37,7 @@
  "Practice screen (tutorial)": "練習畫面（教學）",
  "The UI editor tutorial's practice screen (docs/examples/ui_tutorial): Preview \"Practice screen\" shows it": "UI 編輯器教學的練習畫面（docs/examples/ui_tutorial）：在預覽中選「練習畫面」即可顯示",
  "The practice screen (docs/examples/ui_tutorial) is not in this copy of the editor's repo": "這個編輯器所在的儲存庫中沒有練習畫面（docs/examples/ui_tutorial）",
- "The tutorial is docs/37_UI_EDITOR.md in the TOMS repo; it could not be opened from here.": "教學是 TOMS 儲存庫中的 docs/37_UI_EDITOR.md；無法從這裡開啟。",
+ "The tutorial is docs/gameplay/10_UI_EDITOR.md in the TOMS repo; it could not be opened from here.": "教學是 TOMS 儲存庫中的 docs/gameplay/10_UI_EDITOR.md；無法從這裡開啟。",
  "UI Editor &Tutorial": "UI 編輯器教學(&T)",
  "UI Editor Tutorial": "UI 編輯器教學",
  "practice.rml could not be loaded: see Problems": "無法載入 practice.rml：請看問題清單"

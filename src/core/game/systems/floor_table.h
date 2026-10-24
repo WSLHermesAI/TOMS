@@ -9,7 +9,7 @@
 // 1..70, which act a floor belongs to, which floor comes next (the specs' `nextFloor` chain), and
 // for the ten act-boss floors which hand-authored map stands in for the generated grid. It is pure
 // data logic -- no Renderer, no Stage, no Game -- so floor_table_test.cpp can hold the shipped data
-// to the contract headlessly. See docs/progress_report/PROGRESS_REPORT.md "S3.5" and docs/story/STORY_DATA_SCHEMA.md section 4.
+// to the contract headlessly. See docs/project/progress_report/PROGRESS_REPORT.md "S3.5" and docs/story/STORY_DATA_SCHEMA.md section 4.
 #pragma once
 
 #include <string>
@@ -38,7 +38,7 @@ struct FloorInfo {
     std::string introKey;                        // e.g. "story.f07.intro"
     std::vector<std::string> ambientKeys;        // "story.f07.ambient.1|2" -- rotated as the player moves
     std::vector<std::string> eventIds;           // the floor's event slots, in spec order
-    // The spec's `stairs` list (stair_links.h; docs/event_editor/05_FLOOR_LINKS.md). hasStairs false: the floor
+    // The spec's `stairs` list (stair_links.h; docs/gameplay/event_editor/05_FLOOR_LINKS.md). hasStairs false: the floor
     // keeps the chain (up to nextFloor, down to the floor before it).
     std::vector<StairLink> stairs;
     bool hasStairs = false;

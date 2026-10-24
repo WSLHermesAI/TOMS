@@ -58,13 +58,13 @@ private:
     QComboBox* m_blend;
     QCheckBox *m_inheritColor, *m_restVisible;
     QComboBox* m_playback;   // once + stay / once + hide / loop
-    QLineEdit* m_skin;       // skin bones, comma separated (docs/34_MESH_ANIMATION.md)
+    QLineEdit* m_skin;       // skin bones, comma separated (docs/engine/16_MESH_ANIMATION.md)
     QLabel* m_skinInfo;      // its mesh, bones and weights, or why it has none
     QWidget* m_bonesOutside;          // a warning + "Move Bones Under This Sprite" (bones the node does not carry)
     QLabel* m_bonesOutsideText;
     QSpinBox *m_meshCols, *m_meshRows;   // the node's mesh grid, cells across and down (re-cuts its mesh)
     QWidget* m_meshGridRow;
-    QSpinBox *m_latticeCols, *m_latticeRows;   // the deform lattice's points across and down (docs/34 step 4)
+    QSpinBox *m_latticeCols, *m_latticeRows;   // the deform lattice's points across and down (docs/engine/16 step 4)
     QLabel* m_playLabel;
     QDoubleSpinBox *m_pos[3], *m_rot[3], *m_scale[3], *m_color[4];   // x, y, z
     QLabel* m_spriteHere;

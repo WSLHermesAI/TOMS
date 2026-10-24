@@ -1,6 +1,6 @@
 {
   "npcId": "weapon_master",
-  "_comment": "The start story (docs/30 phase 3): the player tries the weapons (tryWeapon: a fight with a training slime), comes back to 'after' each time, and keeps one (chooseWeapon). Opened by the title's New Game.",
+  "_comment": "The start story (docs/gameplay/07 phase 3): the player tries the weapons (tryWeapon: a fight with a training slime), comes back to 'after' each time, and keeps one (chooseWeapon). Opened by the title's New Game.",
   "start": "intro",
   "nodes": {
     "intro": {

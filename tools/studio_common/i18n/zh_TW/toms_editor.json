@@ -1,6 +1,6 @@
 {
- "\n\nSee docs/05_TROUBLESHOOTING.md": "\n\n請參考 docs/05_TROUBLESHOOTING.md",
- "\n\nSee docs/31_TEST_SCENARIOS.md": "\n\n請參考 docs/31_TEST_SCENARIOS.md",
+ "\n\nSee docs/project/04_TROUBLESHOOTING.md": "\n\n請參考 docs/project/04_TROUBLESHOOTING.md",
+ "\n\nSee docs/gameplay/08_TEST_SCENARIOS.md": "\n\n請參考 docs/gameplay/08_TEST_SCENARIOS.md",
  "%1 fps · %2 quads · %3 draw calls": "%1 fps · %2 個四邊形 · %3 次繪製呼叫",
  "(all)": "（全部）",
  "(not started)": "（未啟動）",

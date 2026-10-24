@@ -1,4 +1,4 @@
-// Tests for the player menu (docs/20_PLAYER_MENU.md): its rules (player_menu_rules.h) and the data it
+// Tests for the player menu (docs/gameplay/03_PLAYER_MENU.md): its rules (player_menu_rules.h) and the data it
 // reads -- data/items.json (the all-item file), data/store.json, data/stats.json, the chapters' and
 // missions' titles, and their text in data/text.json. Run in assets/ (tests/CMakeLists.txt).
 #include "player_menu_rules.h"
@@ -65,6 +65,19 @@ int main() {
         CHECK(levelUps(exp, lv, 30) == 2 && lv == 3 && exp == 5, "95 EXP: Lv 1 -> 3 with 5 left, got lv %d exp %d", lv, exp);
         exp = 10; lv = 1;
         CHECK(levelUps(exp, lv, 0) == 4 && lv == 5 && exp == 0, "expPerLevel 0 is read as 1 (1+2+3+4 = 10 EXP: Lv 5)");
+        exp = 10; lv = 1;
+        CHECK(levelUps(exp, lv, 0, 3) == 2 && lv == 3 && exp == 7, "the cap: Lv 3 at most, the EXP past it kept");
+        exp = 1000; lv = 99;
+        CHECK(levelUps(exp, lv, 1, 99) == 0 && lv == 99, "Lv 99 is the top");
+    }
+    // ---- attribute points by level (stats.json levelUp.points) ----
+    {
+        const std::vector<LevelPoints> t = {{20, 4}, {2, 3}, {50, 5}};
+        CHECK(pointsForLevel(t, 2, 0) == 3 && pointsForLevel(t, 19, 0) == 3, "Lv 2-19: 3 points");
+        CHECK(pointsForLevel(t, 20, 0) == 4 && pointsForLevel(t, 49, 0) == 4, "Lv 20-49: 4 points (rows in any order)");
+        CHECK(pointsForLevel(t, 99, 0) == 5, "Lv 50+: 5 points");
+        CHECK(pointsForLevel(t, 1, 7) == 7 && pointsForLevel({}, 10, 2) == 2, "below every row, or no table: the fallback");
+        CHECK(pointsForLevel({{2, -1}}, 5, 0) == 0, "never negative");
     }
 
     // ---- the data ----

@@ -1,4 +1,4 @@
-// ObjectWindow.h -- the stage editor's detail windows (docs/19_STAGE_EDITOR.md section 2c), as the HTML editor's:
+// ObjectWindow.h -- the stage editor's detail windows (docs/gameplay/02_STAGE_EDITOR.md section 2c), as the HTML editor's:
 //
 //   an object (✎ Edit)   one placed object's own settings, the stage file's "objects" keyed "x,y":
 //                         Look (sprite, animation, tint over its type's look) | Events (linked: fired when the player

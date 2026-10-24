@@ -4,7 +4,7 @@
 
 Like `python -m http.server`, plus the two headers that make the page cross-origin isolated
 (Cross-Origin-Opener-Policy / Cross-Origin-Embedder-Policy), which the multithreaded build needs
-(docs/10_THREADS.md), and the right type for .wasm. Harmless for the single-threaded build.
+(docs/engine/02_THREADS.md), and the right type for .wasm. Harmless for the single-threaded build.
 Only for local testing: it listens on 127.0.0.1.
 """
 import functools

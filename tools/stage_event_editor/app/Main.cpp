@@ -1,4 +1,4 @@
-// Main.cpp -- stage_event_editor: the stage and event editors as one Windows app (docs/19_STAGE_EDITOR.md section 6).
+// Main.cpp -- stage_event_editor: the stage and event editors as one Windows app (docs/gameplay/02_STAGE_EDITOR.md section 6).
 //
 //   stage_event_editor [--root=<TOMS folder>] [--windows]      (--windows: the event editor starts floating)
 //   stage_event_editor -platform offscreen --selftest [--root=<TOMS folder>]     (CTest: stage_editor.app_selftest)

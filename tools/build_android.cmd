@@ -1,5 +1,5 @@
 @echo off
-rem build_android.cmd [x86_64-debug|debug|release] -- build the Android APK (docs/07_BUILD_ANDROID.md).
+rem build_android.cmd [x86_64-debug|debug|release] -- build the Android APK (docs/project/06_BUILD_ANDROID.md).
 rem   x86_64-debug  (default) for the Android Studio emulator     debug / release  arm64 phones
 rem Steps: CMake preset android-<kind> (libmain.so, NDK) -> copy libmain.so + libc++_shared.so into
 rem android\app\libs\<abi>\ -> android\gradlew assemble. Result: android\app\build\outputs\apk\...
@@ -46,7 +46,7 @@ set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 set "VSDIR="
 if exist "%VSWHERE%" for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -products * -property installationPath`) do set "VSDIR=%%i"
 if "%VSDIR%"=="" (
-  echo [toms] Visual Studio not found ^(its CMake and Ninja are used^). See docs/02_INSTALL_WINDOWS.md
+  echo [toms] Visual Studio not found ^(its CMake and Ninja are used^). See docs/project/01_INSTALL_WINDOWS.md
   exit /b 1
 )
 set "PATH=%VSDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;%VSDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja;%PATH%"

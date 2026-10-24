@@ -1,7 +1,7 @@
 @echo off
 rem build_web.cmd [release|debug|mt] -- build the browser version of toms_game on Windows.
 rem   Output: Build\web-<release|debug>-windows\bin\toms_game.html (+ .js .wasm .data)
-rem   mt = the multithreaded release: Build\web-release-mt-windows (docs\10_THREADS.md)
+rem   mt = the multithreaded release: Build\web-release-mt-windows (docs\engine\02_THREADS.md)
 rem   Then run tools\serve_web.cmd to play it in the browser.
 rem Needs: emsdk (Emscripten), Visual Studio's CMake + Ninja (or both on PATH), and a host
 rem shaderc (built automatically from the desktop shipping preset if there is none yet).

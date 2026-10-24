@@ -74,7 +74,7 @@ public:
     struct LoadedAtlas {
         QString path;              // absolute
         toms::AtlasFile atlas;
-        std::vector<QImage> rgba;   // its pages as RGBA8888, what meshes are cut from (docs/34)
+        std::vector<QImage> rgba;   // its pages as RGBA8888, what meshes are cut from (docs/engine/16)
         // Its mesh file (<atlas>.mesh.json beside it, shared by every clip using the atlas): as on disk, and with the
         // meshes this file's clips need added (what is drawn, and merged into the file on save).
         toms::SpriteMeshFile meshesOnDisk, meshes;
@@ -146,7 +146,7 @@ public:
     // ---- current clip / node / time ----
     int clipIndex() const { return m_state.clip; }
     const toms::anim::Clip* clip() const;
-    // ---- a character clip shown as another character (docs/15_ANIMATION.md "Characters"; View > Preview as Character).
+    // ---- a character clip shown as another character (docs/engine/05_ANIMATION.md "Characters"; View > Preview as Character).
     // Only the view changes: edits still go to clip(). The fitted copy is kept until the clip or the character changes,
     // so poses made from it stay valid.
     void setPreviewCharacter(const QString& sprite);   // "" = as made
@@ -240,7 +240,7 @@ public:
     // move (rotated or scaled against each other), or a bone holds the node.
     bool parentBonesUnder(const NodePath& path);
     // The selected node's mesh grid, cells across and down (its meshGrid; 0, 0 = 8-pixel cells). One undo step; the
-    // mesh is cut again at once, and saved with the file (docs/34_MESH_ANIMATION.md).
+    // mesh is cut again at once, and saved with the file (docs/engine/16_MESH_ANIMATION.md).
     bool setMeshGrid(int cols, int rows);
     // A motion recipe (anim_recipes.h: breathe, sway, squash, jelly on the lattice; bone_sway, nod, swing on a skin's
     // bones) written on the selected node from `start`: one undo step. `period` 0 = the recipe's own. False and a

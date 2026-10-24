@@ -5,7 +5,7 @@
     <link type="text/rcss" href="_atlas.rcss"/>
     <link type="text/rcss" href="battle.rcss"/>
 </head>
-<!-- Battle v3 attack (docs/30 phase 1): charge while it waits, the first tap starts the marker over the weapon
+<!-- Battle v3 attack (docs/gameplay/07 phase 1): charge while it waits, the first tap starts the marker over the weapon
      level's points, each tap on a point hits it. Battle v2's defence bar: tap to guard at the marker's zone. Super and the equipment active appear only when usable.
      After a win, a tap anywhere continues. Data: battle.* (UiBattle). -->
 <body data-model="game" data-event-click="act('battle_continue')">
@@ -28,7 +28,7 @@
         <div id="clock"><div class="fill-bar clock" data-style-width="battle.clock_pct + '%'"></div></div>
 
         <div id="attack" class="column">
-            <!-- Battle v3 (docs/30 phase 1): the charge, then the track with the weapon level's points -->
+            <!-- Battle v3 (docs/gameplay/07 phase 1): the charge, then the track with the weapon level's points -->
             <div class="prompt">{{battle.combo.prompt}}</div>
             <div class="combo">
                 <div class="charge"><div class="charge-fill" data-style-height="battle.combo.charge_pct + '%'"></div></div>

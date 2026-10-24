@@ -1,4 +1,4 @@
-"""Give each chapter of the tower its own look and cast with the AI-made sprites (docs/29_FLOOR_REDESIGN.md).
+"""Give each chapter of the tower its own look and cast with the AI-made sprites (docs/gameplay/06_FLOOR_REDESIGN.md).
 
     python tools/redesign_floors.py [--dry-run]
 

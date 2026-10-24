@@ -42,6 +42,19 @@ body { z-index: 45; }
 .attr-add { float: right; width: 30px; height: 30px; line-height: 30px; margin: 6px 0 0 12px; text-align: center;
             font-size: 22px; color: #2e3140; background-color: #9ff0b4; border-radius: 15px; }
 .attr-add:hover { background-color: #b8f5c8; }
+.attr-sub { float: right; width: 30px; height: 30px; line-height: 30px; margin: 6px 0 0 12px; text-align: center;
+            font-size: 22px; color: #3a1d14; background-color: #f0b8a8; border-radius: 15px; }
+.attr-sub:hover { background-color: #ffd2c6; }
+/* points placed, not kept yet: Confirm keeps them (and saves), Reset drops them */
+#attr-actions { margin-top: 10px; text-align: right; }
+.attr-confirm, .attr-reset { display: inline-block; height: 38px; line-height: 38px; padding: 0 20px; margin-left: 12px;
+                             border-radius: 8px; font-size: 18px; }
+.attr-confirm { background-color: #9ff0b4; color: #12321c; }
+.attr-confirm:hover { background-color: #c4f7d2; }
+.attr-reset { background-color: #5a6478; color: #ffffff; }
+.attr-reset:hover { background-color: #78839a; }
+.attr-confirm, .attr-reset { border-width: 3px; border-color: transparent; }
+.attr-confirm.selected, .attr-reset.selected { border-color: #ffed7b; }
 #attr-points { margin-left: 16px; font-size: 16px; color: #9ff0b4; }
 .attr-eff { margin-top: 8px; font-size: 17px; color: #cfe7ff; }
 .attr-eff.now { color: #9ff0b4; }

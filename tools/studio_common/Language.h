@@ -22,7 +22,7 @@ enum class Lang { English, Chinese };
 
 // Once, after QApplication and before any window is made: the saved choice, its translator.
 void init();
-// Before QApplication goes (end of main): the translators and the English <-> 中文 tables are freed (docs/33).
+// Before QApplication goes (end of main): the translators and the English <-> 中文 tables are freed (docs/engine/15).
 void shutdown();
 Lang current();
 // Switches, saves the choice and re-translates every open window.

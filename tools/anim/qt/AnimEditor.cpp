@@ -231,7 +231,7 @@ void AnimEditor::createActions()
     m_showSkinAct->setToolTip(tr("Over every skinned node: its mesh, its points coloured by the bones they follow, and its "
                                  "bones. Select a bone to see how much each point follows it (bright = fully, dark = not)."));
     connect(m_showSkinAct, &QAction::toggled, m_viewport, &AnimViewport::setShowSkin);
-    // Object / Bones: what a click in the viewport picks (docs/34_MESH_ANIMATION.md).
+    // Object / Bones: what a click in the viewport picks (docs/engine/16_MESH_ANIMATION.md).
     m_objectModeAct = makeAction(this, tr("&Object Mode"), QKeySequence(Qt::Key_O), int(Id::SpriteNode));
     m_objectModeAct->setToolTip(tr("Object mode (O): a click picks a sprite; moving a skinned sprite moves its mesh and the "
                                    "bones under it"));
@@ -301,11 +301,11 @@ void AnimEditor::createActions()
     m_tutorialDoneAct = makeAction(this, tr("Open Tutorial &Finished File"));
     m_tutorialDoneAct->setToolTip(tr("The golem as the tutorial ends: bones, skin, painted weights, sway, nod and breath"));
     connect(m_tutorialAct, &QAction::triggered, this, [this] {
-        const QString doc = repoFile(Language::current() == Language::Lang::Chinese ? QStringLiteral("docs/zh_TW/35_SKINNING_TUTORIAL.md")
-                                                                                     : QStringLiteral("docs/35_SKINNING_TUTORIAL.md"));
+        const QString doc = repoFile(Language::current() == Language::Lang::Chinese ? QStringLiteral("docs/engine/zh_TW/17_SKINNING_TUTORIAL.md")
+                                                                                     : QStringLiteral("docs/engine/17_SKINNING_TUTORIAL.md"));
         if (doc.isEmpty() || !QDesktopServices::openUrl(QUrl::fromLocalFile(doc)))
             QMessageBox::information(m_host, tr("Skinning Tutorial"),
-                                     tr("The tutorial is docs/35_SKINNING_TUTORIAL.md in the TOMS repo. This editor runs "
+                                     tr("The tutorial is docs/engine/17_SKINNING_TUTORIAL.md in the TOMS repo. This editor runs "
                                         "outside the repo, so it cannot open it."));
     });
     for (auto [act, name] : {std::pair{m_tutorialStartAct, QStringLiteral("golem_start.anim")},
@@ -335,7 +335,7 @@ void AnimEditor::createActions()
     connect(m_aboutAct, &QAction::triggered, this, [this] {
         QMessageBox::about(m_host, tr("Anim Editor"),
                            tr("<b>Anim Editor</b><p>Node animations (.anim) on the packed sprite atlas for TOMS. "
-                              "The preview uses the game's own evaluate() and appendQuads().</p><p>docs/15_ANIMATION.md</p>"));
+                              "The preview uses the game's own evaluate() and appendQuads().</p><p>docs/engine/05_ANIMATION.md</p>"));
     });
 }
 
@@ -489,7 +489,7 @@ void AnimEditor::createMenus()
         m_viewMenu->addSeparator();
     }
     m_viewMenu->addAction(m_showSkinAct);
-    {   // A character clip (body / hand nodes) shown as another character: the view only (docs/15 "Characters").
+    {   // A character clip (body / hand nodes) shown as another character: the view only (docs/engine/05 "Characters").
         QMenu* who = m_viewMenu->addMenu(tr("Preview as &Character"));
         who->setToolTipsVisible(true);
         connect(who, &QMenu::aboutToShow, this, [this, who] {

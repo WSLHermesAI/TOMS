@@ -2,7 +2,7 @@
 //
 // The score / counter fonts of the old slot projects (tests/font/connect_score.fnt) are this format, written
 // by BMFont ("Arial" header) or convert2fnt-web. tools/font (fontpack, font_editor) makes them from
-// one picture per character; docs/22_FONT_TOOL.md.
+// one picture per character; docs/engine/09_FONT_TOOL.md.
 //
 // The font is only data and layout: the caller loads the page PNG (IRenderer::loadTexture) and
 // draws the quads appendQuads() makes. The font tool's preview lays text out the same way.

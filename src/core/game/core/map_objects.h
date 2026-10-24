@@ -1,4 +1,4 @@
-// map_objects.h -- the things on a floor, each its own class (docs/25_RESOURCE_MANAGER.md §4.10).
+// map_objects.h -- the things on a floor, each its own class (docs/engine/12_RESOURCE_MANAGER.md §4.10).
 //
 // Every entity of the floor (Stage::entities, parsed from the stage file) gets a MapObject made for its kind:
 //
@@ -41,9 +41,7 @@ struct Entity;
 class MapFloor;
 
 namespace map_detail {   // map_objects.cpp: the looks and the builder (friends of Game)
-class SpriteLook;
-class PlateLook;
-class ClipLook;
+class RenderLook;
 struct Builder;
 }  // namespace map_detail
 
@@ -63,16 +61,19 @@ struct MapRect {
 class MapLook {
 public:
     virtual ~MapLook() = default;
-    virtual bool draw(Game& g, const MapRect& r, int tileX, int tileY, float statusMs) const = 0;
+    // v: the camera (v.ox, v.oy); r: the object's rect on screen.
+    virtual bool draw(Game& g, const MapView& v, const MapRect& r, int tileX, int tileY, float statusMs) const = 0;
     virtual float onceSeconds() const { return 0; }   // a one-shot clip: its length (0 = holds)
+    virtual void update(float dt) { (void)dt; }       // seconds: what runs on its own (an effect) moves on
 };
 
 // The looks of one status, tried in order.
 struct LookChain {
     std::vector<std::unique_ptr<MapLook>> looks;
     std::string next;        // the status after a one-shot clip ends ("" = stays)
-    bool draw(Game& g, const MapRect& r, int tileX, int tileY, float statusMs) const;
+    bool draw(Game& g, const MapView& v, const MapRect& r, int tileX, int tileY, float statusMs) const;
     float onceSeconds() const;
+    void update(float dt) const { for (const auto& l : looks) l->update(dt); }
     bool empty() const { return looks.empty(); }
 };
 

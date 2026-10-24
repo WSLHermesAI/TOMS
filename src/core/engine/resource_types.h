@@ -1,4 +1,4 @@
-// resource_types.h -- the resources the engine loads (resource.h, docs/25_RESOURCE_MANAGER.md):
+// resource_types.h -- the resources the engine loads (resource.h, docs/engine/12_RESOURCE_MANAGER.md):
 //
 //   TextureRes    a PNG on the GPU (IRenderer::loadTexture); freed with the object
 //   AtlasRes      a .atlas file and its page textures (TextureRes, shared with every other atlas using the same PNG)
@@ -52,7 +52,7 @@ public:
     // Per page, the texture it is drawn with; empty = every page is the renderer's sprite atlas (the game's own).
     const std::vector<uint16_t>& pageTextures() const { return pageTex_; }
     int contentVersion() const override;   // its own version + its pages'
-    // Its sprites' meshes (<atlas>.mesh.json beside it, docs/34_MESH_ANIMATION.md); empty when it has none.
+    // Its sprites' meshes (<atlas>.mesh.json beside it, docs/engine/16_MESH_ANIMATION.md); empty when it has none.
     const toms::SpriteMeshFile& meshes() const { return meshes_; }
     // For provide(): the game's sprite atlas, drawn with the renderer's sprite texture.
     void setProvided(const toms::AtlasFile& atlas, const toms::SpriteMeshFile& meshes = {}) {

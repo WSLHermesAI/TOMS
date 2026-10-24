@@ -1,4 +1,4 @@
-// talk_system_test -- NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md): talk_system.h + story_actions.h.
+// talk_system_test -- NPCs and their events (docs/gameplay/event_editor/08_NPC_DIALOGUE.md): talk_system.h + story_actions.h.
 //
 //   * chat lines: one line, loop, stay, random (never twice in a row), a line joining when its condition comes true,
 //     talkCountAtLeast seeing the talks before this one;
@@ -468,7 +468,7 @@ void testData() {
           std::find(lines.begin() + 8, lines.end(), "elder_secret_well") != lines.end(), "the well's secret only after eight talks: %s", joined(lines).c_str());
 }
 
-// ---------- the stage editor's per-object settings and the types' looks (docs/19_STAGE_EDITOR.md) ----------
+// ---------- the stage editor's per-object settings and the types' looks (docs/gameplay/02_STAGE_EDITOR.md) ----------
 void testObjects() {
     // the game atlas's sprite names (libGDX text: unindented lines without ':' after the header)
     std::set<std::string> sprites;

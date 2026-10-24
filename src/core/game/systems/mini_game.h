@@ -1,4 +1,4 @@
-// mini_game.h -- reusable reward events (docs/30 phase 6, the owner 2026-10-22): a short timing game that earns gold or
+// mini_game.h -- reusable reward events (docs/gameplay/07 phase 6, the owner 2026-10-22): a short timing game that earns gold or
 // crystals, defined in data/minigames.json and started from any dialogue choice ({"type": "miniGame", "id": ...}), so any
 // NPC or event can offer one. The play is Battle v3's point play (combo_play.h): tap the points as the marker passes;
 // each hit earns `perHit`, all of them `bonusAll` more. Each one can be played `limit` times a run.

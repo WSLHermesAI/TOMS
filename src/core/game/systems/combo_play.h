@@ -1,4 +1,4 @@
-// combo_play.h -- Battle v3's point play (docs/30_GAMEPLAY_PLAN.md §4, §5.1; phase 1, the owner 2026-10-22).
+// combo_play.h -- Battle v3's point play (docs/gameplay/07_GAMEPLAY_PLAN.md §4, §5.1; phase 1, the owner 2026-10-22).
 //
 // While the attack waits, charge builds up (0 .. 1). The first tap starts the combo: a marker sweeps a track with the
 // weapon level's points (1 .. 5), faster the more charge there was. Each tap close to a point not hit yet hits it, in

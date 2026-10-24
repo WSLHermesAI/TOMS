@@ -54,7 +54,7 @@ EditorWindow::EditorWindow(QWidget* parent) : QMainWindow(parent) {
         statsLabel_->setText(tr("%1 fps · %2 quads · %3 draw calls").arg(fps, 0, 'f', 0).arg(quads).arg(calls));
     });
     connect(viewport_, &BgfxViewport::startFailed, this, [this](const QString& title, const QString& text) {
-        QMessageBox::warning(this, title, text + tr("\n\nSee docs/05_TROUBLESHOOTING.md"));
+        QMessageBox::warning(this, title, text + tr("\n\nSee docs/project/04_TROUBLESHOOTING.md"));
     });
     statusBar()->showMessage(tr("Click the game view to give it the keyboard. F1 = debug overlay."));
 }
@@ -106,7 +106,7 @@ QString EditorWindow::scenarioRoot() const {
 }
 
 // One row per scenario folder (a folder holding scenario.json): its name, its scene, and its _comment as the tooltip.
-// "_shared" and other folders starting with "_" hold shared files, not scenarios; "_cloud" (downloaded ones, docs/32)
+// "_shared" and other folders starting with "_" hold shared files, not scenarios; "_cloud" (downloaded ones, docs/gameplay/09)
 // is listed as a group of its own when it is there.
 void EditorWindow::fillScenarioList() {
     scenarioList_->clear();
@@ -146,7 +146,7 @@ void EditorWindow::playScenario(const QString& path) {
     tabs_->setCurrentWidget(viewport_);
     QString err;
     if (!viewport_->startScenario(path, err))
-        QMessageBox::warning(this, tr("The scenario could not start"), err + tr("\n\nSee docs/31_TEST_SCENARIOS.md"));
+        QMessageBox::warning(this, tr("The scenario could not start"), err + tr("\n\nSee docs/gameplay/08_TEST_SCENARIOS.md"));
     else
         statusBar()->showMessage(tr("Scenario %1: playing. Restart game (Session) leaves it.").arg(QFileInfo(path).fileName()), 8000);
 }

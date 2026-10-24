@@ -17,41 +17,34 @@ and is in git history before commit `979bcf3`.
 |---|---|---|
 | **`build_windows.bat`** | the shipping Windows game (Release, no editor, no Qt, no console window) | `Build\dist\TOMS-windows\` (+ `.zip`): `toms_game.exe`, `assets\`, the MSVC runtime DLLs. Copy the folder anywhere and double-click `toms_game.exe`. |
 | **`build_web.bat`** | the web game (Release, WebGL2) | `Build\dist\TOMS-web\` (+ `.zip`): `index.html`, `toms_game.<stamp>.js/.wasm/.data`, `.htaccess`, `web.config`. Copy the files to any web server and open its URL. |
-| **`publish_web.bat`** | `build_web.bat` + publish to GitHub Pages (asks before pushing) | live at https://wslhermesai.github.io/TOMS/ ([docs/07](docs/07_PUBLISH_GITHUB_PAGES.md)) |
+| **`publish_web.bat`** | `build_web.bat` + publish to GitHub Pages (asks before pushing) | live at https://wslhermesai.github.io/TOMS/ ([docs/project/07](docs/project/07_PUBLISH_GITHUB_PAGES.md)) |
 
 Both check the prerequisites first (popups with download links) and print where the result is.
 
 ## Quick start for development (Windows)
 
 1. **Check prerequisites:** double-click `tools\check_env.cmd`. Anything missing is listed in a
-   popup with its download link. Details: [docs/02_INSTALL_WINDOWS.md](docs/02_INSTALL_WINDOWS.md).
+   popup with its download link. Details: [docs/project/01_INSTALL_WINDOWS.md](docs/project/01_INSTALL_WINDOWS.md).
 2. **Open in Visual Studio 2022 or newer:** *File → Open → Folder…* → this `TOMS` folder (the repository root).
    The first configure downloads and builds bgfx, SDL3, Dear ImGui and glm (a few minutes).
 3. Pick **Windows x64 Debug** (or Release), choose **toms_game** or **toms_editor** as the startup
-   item, and press **F5**. Details: [docs/03_VISUAL_STUDIO.md](docs/03_VISUAL_STUDIO.md).
+   item, and press **F5**. Details: [docs/project/02_VISUAL_STUDIO.md](docs/project/02_VISUAL_STUDIO.md).
 
 Without Visual Studio open: `tools\build.cmd windows-release`.
 
 **Web version:** `tools\build_web.cmd`, then `tools\serve_web.cmd` (needs the Emscripten SDK).
-Details: [docs/06_BUILD_WEB.md](docs/06_BUILD_WEB.md).
+Details: [docs/project/05_BUILD_WEB.md](docs/project/05_BUILD_WEB.md).
 
 ## Documents
 
-| Doc | Contents |
+All documents: **[docs/README.md](docs/README.md)**, in three folders, each with its Traditional Chinese copies in
+its own `zh_TW/`:
+
+| Folder | What belongs there |
 |---|---|
-| [01_ARCHITECTURE.md](docs/01_ARCHITECTURE.md) | targets, how the old code runs on bgfx unmodified, one frame, Qt + bgfx embedding, shaders |
-| [02_INSTALL_WINDOWS.md](docs/02_INSTALL_WINDOWS.md) | every prerequisite with links, the checker and popups, Qt and font setup |
-| [03_VISUAL_STUDIO.md](docs/03_VISUAL_STUDIO.md) | open, configure, F5 targets, command-line options, smoke tests, debugging |
-| [04_MIGRATION_PLAN.md](docs/04_MIGRATION_PLAN.md) | phases from the Vulkan project to the full Qt + bgfx engine |
-| [05_TROUBLESHOOTING.md](docs/05_TROUBLESHOOTING.md) | configure, build and runtime problems |
-| [06_BUILD_WEB.md](docs/06_BUILD_WEB.md) | the browser version: emsdk, `build_web.cmd`, `serve_web.cmd`, how it works, debugging |
-| [07_BUILD_ANDROID.md](docs/07_BUILD_ANDROID.md) | the Android build: `tools\build_android.cmd` / `run_android.cmd`, runs on the emulator |
-| [07_PUBLISH_GITHUB_PAGES.md](docs/07_PUBLISH_GITHUB_PAGES.md) | publishing the web version to GitHub Pages: setup, `publish_web.bat`, cache-safe file names, rollback |
-| [08_RMLUI.md](docs/08_RMLUI.md) | the game UI (RmlUi, HTML/CSS-like): where each screen lives, how it binds to the game, editing (F5/F8), the UI font, adding screens |
-| [09_TESTS.md](docs/09_TESTS.md) | the tests: `tools\test.cmd` / Test Explorer, unit + screenshot + web tests, updating reference images |
-| [10_THREADS.md](docs/10_THREADS.md) | the job system, and threads on the web: two web builds, cross-origin isolation, GitHub Pages via a service worker |
-| [progress_report/](docs/progress_report/PROGRESS_REPORT.md) | **status board**: next step, phase status, what is still open, dated log |
-| [zh_TW/](docs/zh_TW/) | 繁體中文版: every document above in Traditional Chinese, with the same file names |
+| [docs/gameplay/](docs/README.md#gameplay) | the game and its content: battle, stages, events, UI (RmlUi), saves, the stage/event and UI editors |
+| [docs/engine/](docs/README.md#engine) | the core engine and its tools: rendering, resources, animation, atlas, particles, fonts, glTF |
+| [docs/project/](docs/README.md#project) | setup, building, tests, the team, progress reports ([status board](docs/project/progress_report/PROGRESS_REPORT.md)) |
 
 The long-term engine design (`docs/EngineBlueprint/`) was removed with the old project; read it
 from git history: `git show 979bcf3^:docs/EngineBlueprint/README.md`.

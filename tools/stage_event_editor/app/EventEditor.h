@@ -1,4 +1,4 @@
-// EventEditor.h -- the event editor, native (docs/event_editor/README.md): the HTML editor's model and rules
+// EventEditor.h -- the event editor, native (docs/gameplay/event_editor/README.md): the HTML editor's model and rules
 // (stage_core's EventProject), in a Qt window on the live files.
 //
 //   left        Events: every pool's events and the ids floors name but no pool defines; find, kind, only problems

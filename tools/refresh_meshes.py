@@ -1,7 +1,7 @@
-"""Refresh the sprite meshes beside every atlas the clips use (docs/34_MESH_ANIMATION.md).
+"""Refresh the sprite meshes beside every atlas the clips use (docs/engine/16_MESH_ANIMATION.md).
 
 Run it after the atlases change: a rebuild (`atlaspack build art_raw/atlas/game.atlasproj --all-variants`), new AI
-sprites (docs/27_AI_SPRITES.md) or a restyled art style (docs/13_ART_STYLES.md). The atlas tool never touches meshes;
+sprites (docs/engine/14_AI_SPRITES.md) or a restyled art style (docs/engine/03_ART_STYLES.md). The atlas tool never touches meshes;
 this cuts them again from the new pixels with the anim editor's headless command:
 
   - every .anim of the game (assets/), of the tests (tests/smoke/) and of the docs' examples is read;

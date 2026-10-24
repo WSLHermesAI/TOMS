@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "Player attributes (docs/20_PLAYER_MENU.md sections 3 and 12). Add, remove or reorder attributes here: the Status tab,",
+    "Player attributes (docs/gameplay/03_PLAYER_MENU.md sections 3 and 12). Add, remove or reorder attributes here: the Status tab,",
     "the level-up and the save follow without code changes. Items and equipment raise them through their \"stats\" in",
     "items.json ({ \"str\": 2 }).",
     "effects: what each point ABOVE \"base\" gives, so a fresh Lv 1 character plays exactly as before. \"per\" may be a",
@@ -13,7 +13,10 @@
     "  goldGain        percent more gold from won battles",
     "An empty effects list (or per 0) turns an attribute's gameplay off.",
     "levelUp: EXP needed for the next level = lv * expPerLevel; atk/def/maxhp are what each level gives;",
-    "freePoints: attribute points the player places by hand on the Status tab each level (0 = none)."
+    "maxLevel: the top level (the owner 2026-10-24: 99 for now).",
+    "points: the attribute points each level gives, placed by hand on the Status tab (+ / -, then Confirm saves them;",
+    "the owner 2026-10-24). The row with the highest \"from\" at or below the level reached applies (Lv 2-19: 3, ...).",
+    "freePoints: the points for a level below every row (and without a table)."
   ],
   "attributes": [
     {
@@ -106,6 +109,12 @@
     "atk": 2,
     "def": 1,
     "maxhp": 10,
-    "freePoints": 0
+    "freePoints": 0,
+    "maxLevel": 99,
+    "points": [
+      { "from": 2, "points": 3 },
+      { "from": 20, "points": 4 },
+      { "from": 50, "points": 5 }
+    ]
   }
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""make_bow_anim.py -- writes assets/media/anim/weapon_bow.anim: a bow's four clips (docs/15_ANIMATION.md, the .anim
-format; docs/16_ANIMATION_RECIPES.md for the parts).
+"""make_bow_anim.py -- writes assets/media/anim/weapon_bow.anim: a bow's four clips (docs/engine/05_ANIMATION.md, the .anim
+format; docs/engine/06_ANIMATION_RECIPES.md for the parts).
 
     python tools/make_bow_anim.py
 

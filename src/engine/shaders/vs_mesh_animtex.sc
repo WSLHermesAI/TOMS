@@ -1,7 +1,7 @@
 $input a_position, a_normal, a_tangent, a_texcoord0, a_texcoord1, a_color0, a_indices, a_weight, i_data0, i_data1, i_data2, i_data3, i_data4
 $output v_worldPos, v_normal, v_tangent, v_texcoord0, v_color0
 
-// Instanced skinning for crowds (gltf_anim_texture.h, docs/18_GLTF.md "Crowds"): one draw call for every
+// Instanced skinning for crowds (gltf_anim_texture.h, docs/engine/08_GLTF.md "Crowds"): one draw call for every
 // instance of a model; each instance reads its joints from the shared animation texture.
 //   s_animTex: RGBA32F, one row per baked frame, 2 texels per joint -- (rotation quaternion) and
 //              (translation xyz, uniform scale) of world(joint) x inverseBind.

@@ -1,4 +1,4 @@
-// stage_save.h -- what the stage editor's Save writes, without Qt (docs/19_STAGE_EDITOR.md, section 3).
+// stage_save.h -- what the stage editor's Save writes, without Qt (docs/gameplay/02_STAGE_EDITOR.md, section 3).
 //
 //   changedFiles()   the floors' stage and spec files, the type records (enemies.json, items.json, npcs/*.json; a
 //                    deleted NPC type removes its file) and text.json's keys changed here

@@ -197,7 +197,7 @@ bool AnimDocument::save(const QString& path, QString* error)
         if (error) *error = out.errorString();
         return false;
     }
-    if (!saveMeshes(error)) return false;   // its meshes go into its atlases' mesh files (docs/34_MESH_ANIMATION.md)
+    if (!saveMeshes(error)) return false;   // its meshes go into its atlases' mesh files (docs/engine/16_MESH_ANIMATION.md)
     const bool moved = abs != m_filePath;
     m_filePath = abs;
     m_state.file.atlases = f.atlases;
@@ -338,7 +338,7 @@ std::shared_ptr<AnimDocument::LoadedAtlas> loadOne(const QString& path)
     }
     if (sizesChanged) a->atlas.computeUVs();
     for (const QImage& img : pages) a->rgba.push_back(img.convertToFormat(QImage::Format_RGBA8888));   // meshes are cut from these
-    {   // its mesh file (docs/34_MESH_ANIMATION.md): what other clips put there, "hand" meshes, and its form
+    {   // its mesh file (docs/engine/16_MESH_ANIMATION.md): what other clips put there, "hand" meshes, and its form
         const std::string meshPath = toms::spriteMeshPath(u8(path));
         const bool there = QFileInfo::exists(qs(meshPath));
         bool binary = false;

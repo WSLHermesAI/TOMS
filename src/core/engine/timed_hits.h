@@ -1,4 +1,4 @@
-// timed_hits.h -- judging taps against hits due at given times (docs/30_GAMEPLAY_PLAN.md §5, §9: "timing collisions
+// timed_hits.h -- judging taps against hits due at given times (docs/gameplay/07_GAMEPLAY_PLAN.md §5, §9: "timing collisions
 // with a time offset first").
 //
 // Every weapon's play is some form of this: points (circles, beats, polygon corners, a marker crossing a spot) are

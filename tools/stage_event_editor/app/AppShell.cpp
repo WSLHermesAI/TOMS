@@ -221,7 +221,7 @@ void AppShell::buildMenus() {
     help->addAction(tr("About"), m_main, [this] {
         QMessageBox::about(m_main, tr("TOMS Stage & Event Editor"),
                            tr("The stage and event editors on the game's stack (Qt %1 + the game's bgfx renderer).\n"
-                              "Docs: docs/19_STAGE_EDITOR.md, docs/event_editor/README.md").arg(QString::fromLatin1(qVersion())));
+                              "Docs: docs/gameplay/02_STAGE_EDITOR.md, docs/gameplay/event_editor/README.md").arg(QString::fromLatin1(qVersion())));
     });
     Language::addToggle(bar);
 }

@@ -8,7 +8,7 @@
        TortoiseGit's SSH client (TortoiseGitPlink ignores ~/.ssh keys -> "No supported authentication
        methods available (server sent: publickey)")
     2. the SSH key files and their fingerprints (compare with GitHub > Settings > SSH and GPG keys)
-    3. the login itself (ssh -T git@github.com -> "Hi <account>!"; exit code 1 is normal, docs/12 5.1)
+    3. the login itself (ssh -T git@github.com -> "Hi <account>!"; exit code 1 is normal, docs/project/10 5.1)
     4. the remote URL (push over SSH needs git@github.com:...)
     5. git fetch (read) and git push --dry-run (write; sends nothing)
     6. user.name / user.email
@@ -155,7 +155,7 @@ if ($tgSsh -and $tgSsh -match 'plink') {
 $sshDir = Join-Path $env:USERPROFILE '.ssh'
 $keys = @('id_ed25519', 'id_ecdsa', 'id_rsa' | ForEach-Object { Join-Path $sshDir $_ } | Where-Object { Test-Path $_ })
 if (-not $keys) {
-    Add-Result FAIL 'SSH key' "no key in $sshDir. Create one: setup_new_pc.bat (SSH step) or docs/12 section 3.A."
+    Add-Result FAIL 'SSH key' "no key in $sshDir. Create one: setup_new_pc.bat (SSH step) or docs/project/10 section 3.A."
 } else {
     foreach ($k in $keys) {
         $fp = if (Test-Path "$k.pub") { Invoke-Native $keygen @('-lf', "$k.pub") } else { '(no .pub file next to it)' }
@@ -204,7 +204,7 @@ if ($isRepo) {
             $url = $sshUrl
             Add-Result OK 'remote switched to SSH' $sshUrl
         } else {
-            Add-Result WARN 'remote uses HTTPS' "$url  (pull works without login; push over HTTPS needs a token, docs/12 3.C)"
+            Add-Result WARN 'remote uses HTTPS' "$url  (pull works without login; push over HTTPS needs a token, docs/project/10 3.C)"
         }
     } else { Add-Result OK 'remote' $url }
 

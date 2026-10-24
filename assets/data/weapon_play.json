@@ -1,17 +1,20 @@
 {
   "_comment": [
-    "Each weapon's play settings (docs/30_GAMEPLAY_PLAN.md §5.6; src/core/game/systems/weapon_play.h).",
+    "Each weapon's play settings (docs/gameplay/07_GAMEPLAY_PLAN.md §5.6; src/core/game/systems/weapon_play.h).",
     "missBack: how far a miss sends the combo back, by weapon level. The entry with the highest lv at or below the",
     "weapon's level applies; back is a number of points, or \"start\". The owner's example (2026-10-20): Lv 5 back to the",
     "start, Lv 10 back 5 points, Lv 15 back 4 ... A level below every entry also goes back to the start.",
     "missWaitMs: after a miss, how long before the next tap counts (the sword puts itself back).",
     "Keys: an items.json weapon id, \"unarmed\" (no weapon worn), or \"default\" (any weapon without its own entry).",
-    "Battle v3's point play (docs/30 §4, §5.1; phase 1, the owner 2026-10-22): levels: per weapon level, the points on the",
+    "Battle v3's point play (docs/gameplay/07 §4, §5.1; phase 1, the owner 2026-10-22): levels: per weapon level, the points on the",
     "combo track (1-5) and the attribute bonuses it gives (data/stats.json ids). usesToLevel: wins needed from Lv 1 to 2,",
     "2 to 3, ... (the level stops at the last levels entry). turnBack: the marker turns back at the ends; false: one sweep.",
     "sweepMs: one sweep with no charge; maxSweeps: turning back, the combo ends after this many. chargeMs: waiting this long",
     "fills the charge; chargeSpeedUp / chargeDamage: a full charge makes the marker and the damage this much more (1 = x2).",
-    "hitWindow: how close a tap must be to a point (a fraction of the track). The values are first guesses (made up for now)."
+    "hitWindow: how close a tap must be to a point (a fraction of the track). The values are first guesses (made up for now).",
+    "fx: the battle's particles by weapon level (media/fx/battle.particle): the entry with the highest lv at or",
+    "below the level plays; release at the player as the attack goes off, hit at the monster with the damage number.",
+    "A weapon without fx uses the default entry's."
   ],
   "default": {
     "missBack": [
@@ -94,7 +97,24 @@
     "chargeMs": 2000,
     "chargeSpeedUp": 1.0,
     "chargeDamage": 1.0,
-    "hitWindow": 0.07
+    "hitWindow": 0.07,
+    "fx": [
+      {
+        "lv": 1,
+        "release": "",
+        "hit": "default_hit_1"
+      },
+      {
+        "lv": 3,
+        "release": "",
+        "hit": "default_hit_2"
+      },
+      {
+        "lv": 5,
+        "release": "default_release_3",
+        "hit": "default_hit_3"
+      }
+    ]
   },
   "unarmed": {
     "missBack": [
@@ -202,7 +222,24 @@
       12
     ],
     "turnBack": false,
-    "sweepMs": 1400
+    "sweepMs": 1400,
+    "fx": [
+      {
+        "lv": 1,
+        "release": "sword_release_1",
+        "hit": "sword_hit_1"
+      },
+      {
+        "lv": 3,
+        "release": "sword_release_2",
+        "hit": "sword_hit_2"
+      },
+      {
+        "lv": 5,
+        "release": "sword_release_3",
+        "hit": "sword_hit_3"
+      }
+    ]
   },
   "wand": {
     "missBack": [
@@ -266,6 +303,23 @@
       5,
       8,
       12
+    ],
+    "fx": [
+      {
+        "lv": 1,
+        "release": "staff_release_1",
+        "hit": "staff_hit_1"
+      },
+      {
+        "lv": 3,
+        "release": "staff_release_2",
+        "hit": "staff_hit_2"
+      },
+      {
+        "lv": 5,
+        "release": "staff_release_3",
+        "hit": "staff_hit_3"
+      }
     ]
   },
   "twin_daggers": {
@@ -452,7 +506,24 @@
     "chargeMs": 2200,
     "chargeSpeedUp": 1.0,
     "chargeDamage": 1.2,
-    "hitWindow": 0.07
+    "hitWindow": 0.07,
+    "fx": [
+      {
+        "lv": 1,
+        "release": "bow_release_1",
+        "hit": "bow_hit_1"
+      },
+      {
+        "lv": 3,
+        "release": "bow_release_2",
+        "hit": "bow_hit_2"
+      },
+      {
+        "lv": 5,
+        "release": "bow_release_3",
+        "hit": "bow_hit_3"
+      }
+    ]
   },
   "sword": {
     "missBack": [
@@ -522,7 +593,24 @@
     "chargeMs": 1800,
     "chargeSpeedUp": 0.8,
     "chargeDamage": 1.0,
-    "hitWindow": 0.07
+    "hitWindow": 0.07,
+    "fx": [
+      {
+        "lv": 1,
+        "release": "sword_release_1",
+        "hit": "sword_hit_1"
+      },
+      {
+        "lv": 3,
+        "release": "sword_release_2",
+        "hit": "sword_hit_2"
+      },
+      {
+        "lv": 5,
+        "release": "sword_release_3",
+        "hit": "sword_hit_3"
+      }
+    ]
   },
   "staff": {
     "missBack": [
@@ -589,6 +677,23 @@
     "chargeMs": 3000,
     "chargeSpeedUp": 0.6,
     "chargeDamage": 1.6,
-    "hitWindow": 0.08
+    "hitWindow": 0.08,
+    "fx": [
+      {
+        "lv": 1,
+        "release": "staff_release_1",
+        "hit": "staff_hit_1"
+      },
+      {
+        "lv": 3,
+        "release": "staff_release_2",
+        "hit": "staff_hit_2"
+      },
+      {
+        "lv": 5,
+        "release": "staff_release_3",
+        "hit": "staff_hit_3"
+      }
+    ]
   }
 }

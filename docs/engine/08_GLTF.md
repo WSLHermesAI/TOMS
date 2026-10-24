@@ -1,0 +1,464 @@
+# 08 — glTF 3D models
+
+The engine loads and draws **glTF 2.0** models (`.gltf` with its `.bin` and images, or a single
+`.glb`). That includes skinned characters, morph targets, GPU instancing and PBR materials, on
+every backend the game runs on (Direct3D 11/12, Vulkan, OpenGL). `gltf_viewer` is a test viewer for
+it, in the spirit of [gltf-viewer.donmccurdy.com](https://gltf-viewer.donmccurdy.com/).
+
+```
+Build\windows-release\bin\gltf_viewer.exe tests\gltf\skin_tube.gltf
+python tools\gltf_viewer\fetch_samples.py           Khronos sample models -> Build\gltf_samples\
+Build\windows-release\bin\gltf_viewer.exe Build\gltf_samples\Fox.glb
+```
+In Visual Studio: the launch targets *gltf_viewer (skinned test model)* and *gltf_viewer (Fox sample)*.
+
+## 1. What is supported
+
+| Area | Supported |
+|---|---|
+| Geometry | triangles (and strips / fans), lines, points; 16/32-bit indices or none; every accessor type: normalized and quantized integers are read as floats, sparse accessors; normals computed (flat) when missing |
+| Vertex data | position, normal, tangent, 2 UV sets, `COLOR_0`, `JOINTS_0` / `WEIGHTS_0` |
+| Materials | metallic-roughness PBR: base colour, metal/rough, normal, occlusion and emissive textures and factors; alpha `OPAQUE` / `MASK` / `BLEND`; double-sided; vertex colours |
+| Skins | joints and inverse bind matrices, up to **128 joints per skin**, skinned on the GPU |
+| Morph targets | any number of targets (position, normal, tangent), morphed on the CPU when the weights change |
+| Animation | translation, rotation, scale, morph weights; `LINEAR` (rotation: slerp), `STEP`, `CUBICSPLINE`; several animations at once |
+| Scenes | node hierarchy (TRS or matrix), the default scene, mirrored nodes (negative scale) |
+| Files | `.glb`, `.gltf` + `.bin`, data URIs, external PNG / JPEG / BMP / TGA images |
+| Extensions | `EXT_mesh_gpu_instancing`, `KHR_materials_unlit`, `KHR_texture_transform`, `KHR_materials_emissive_strength`, `KHR_mesh_quantization`, `KHR_materials_pbrSpecularGlossiness` (as base colour + roughness), `KHR_materials_transmission` + `KHR_materials_volume` (glass, approximated: see-through with its reflections, no refraction of what is behind), `KHR_physics_rigid_bodies` + `KHR_implicit_shapes` (simulated on Jolt: §7) |
+
+**Not yet supported:**
+- **No shadows on OpenGL ES / WebGL** (the web build, Android's GLES path).
+  - **Why:** WebGL on Windows runs through ANGLE on Direct3D, and it cannot link the glTF fragment
+    shader with its shadow lookups (a dynamically indexed array of shadow matrices). The link fails
+    with an empty log and bgfx stops the game; it only fails on the real GPU, not on Chrome's
+    SwiftShader that the older web tests used.
+  - **What happens now:** that shader build (`BGFX_SHADER_LANGUAGE_ESSL`) leaves the shadow code out
+    and `GltfRenderer::shadowsSupported()` is false there. Lighting is otherwise the same.
+  - **To bring them back:** read the shadow matrices from a small float texture (`texelFetch`)
+    instead of a uniform array.
+- **Compressed files are refused** with a message naming the extension, when the file *requires*
+  it: `KHR_draco_mesh_compression`, `EXT_meshopt_compression`, `KHR_texture_basisu` (KTX2). To use
+  such a file, re-export it without them, e.g. with `gltf-transform`.
+- **Optional extensions are listed but not drawn:** for example clearcoat, sheen and
+  `KHR_lights_punctual`. They appear in `Model::ignoredExtensions` and in orange in the viewer.
+- **`KHR_texture_transform`:** one transform per material, taken from the base colour texture (or
+  else the normal texture) and applied to all of its textures.
+- **No image-based lighting yet** (no HDR environment maps).
+
+Checked with the Khronos samples Fox, CesiumMan, RiggedFigure, BrainStem, AnimatedMorphCube,
+MorphStressTest, SimpleInstancing, DamagedHelmet, MetalRoughSpheres, AlphaBlendModeTest,
+BoxAnimated and InterpolationTest (`fetch_samples.py` downloads them).
+
+## 2. Code
+
+| Part | File | What it does |
+|---|---|---|
+| Loading and posing | `src/core/engine/gltf_model.h/.cpp` (`toms_core`, C++17, no GPU) | `loadModel()` → `gltf::Model` (plain CPU data, through [cgltf](https://github.com/jkuhlmann/cgltf)); `gltf::Pose`: animations, world matrices, joint matrices, morph weights, bounds |
+| Drawing | `src/engine/src/gltf_renderer.h/.cpp` (`toms_bgfx`) | `GltfRenderer`: uploads a `Model`, draws a `Pose` |
+| Shaders | `src/engine/shaders/vs_mesh.sc`, `vs_mesh_inst.sc`, `fs_mesh.sc`, `mesh_common.sh`, `vs_line.sc`, `fs_line.sc`, `varying_mesh.def.sc` | compiled for every backend and embedded (`ShaderProgram::Mesh`, `MeshInstanced`, `Line`) |
+| Crowds | `src/core/engine/gltf_anim_texture.h/.cpp`, `vs_mesh_animtex.sc`, `GltfRenderer::drawCrowd` | instanced skinning from a baked animation texture (§6) |
+| Viewer | `tools/gltf_viewer/main.cpp` | SDL3 + ImGui panel |
+| Test models | `tests/gltf/*.gltf`, made by `tools/gltf_viewer/make_test_models.py` | self-contained (embedded buffers and textures) |
+
+**Using it from game code:**
+```cpp
+gltf::Model model;                              // keep it alive while it is drawn
+gltf::loadModel("assets/media/models/hero.glb", model, &error);
+GltfRenderer renderer;   renderer.init();       // once, after bgfx starts
+auto gpu = renderer.upload(model);              // buffers + textures
+gltf::Pose pose;         pose.bind(&model);     // one per character on screen
+
+// every frame
+pose.reset();
+pose.apply(walk, std::fmod(t, model.animations[walk].duration));   // or blend(i, t, weight)
+pose.updateWorld();
+GltfRenderer::Frame f;  f.view = view;  f.proj = GltfRenderer::projection(45, aspect, 0.1f, 100);  f.eye = eye;
+f.srgbOut = false;       // the desktop backbuffer is sRGB; true on the web
+f.lights = {...};        // up to 4 GltfRenderer::Light (directional / point / spot); default: key + fill
+f.boundsMin = ...; f.boundsMax = ...;   // what the directional shadow must cover (the scene and its floor)
+renderer.begin(viewId, f, width, height);       // uses views viewId .. viewId + GltfRenderer::kViews - 1
+renderer.draw(*gpu, pose, placement);           // casts and receives shadows
+renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
+```
+
+**How it draws:**
+- **One vertex layout** for every primitive: position, normal, tangent, two UVs, colour, joints,
+  weights. Missing data gets neutral values. Without tangents, the shader builds a tangent frame
+  from screen-space derivatives.
+- **Skinning:** the joint matrices are `world(joint) × inverseBind`, in the `u_joints[128]`
+  uniform. A skinned primitive is drawn with only the placement matrix, as the glTF spec says.
+- **Morph targets:** morphed into a dynamic vertex buffer, only when a node's weights change.
+  - Limitation: a mesh shared by two nodes with *different* weights in the same frame shows the
+    last node's weights on both.
+- **Instancing (`EXT_mesh_gpu_instancing`):** one instanced draw per primitive. Each instance's
+  matrix is `world × instance` (for a skinned node, `placement × instance`), in bgfx instance data.
+- **Lighting:**
+  - up to 4 lights: directional, point and spot (GGX / Smith / Schlick); point and spot lights
+    fall off with 1/d² and their range (`KHR_lights_punctual`'s window), spots between their
+    inner and outer cones;
+  - the file's own lights (`KHR_lights_punctual`) come from `Pose::lights()`, placed by their
+    nodes;
+  - hemisphere ambient (sky / ground), and a studio-like reflection with a bright horizon, so
+    metals read as metal;
+  - an analytic environment BRDF, exposure, and ACES tone mapping.
+- **Shadows** (each light can cast; on by default for the key light):
+  - **One shadow atlas**, a square depth texture (`Frame::shadowMapSize`, default 4096), split
+    into tiles: a directional light takes 1 tile, a spot light 1, a point light 6 (one 90° view per
+    cube face; the shader picks the face from the direction to the light). At most 24 tiles; they
+    shrink as more lights cast.
+  - **Fitting:** a directional light's orthographic view covers `Frame::boundsMin..boundsMax`; a
+    spot light's view is its cone; point and spot views reach to their range (or the far side of
+    the bounds).
+  - **The shadow pass** draws every opaque or masked triangle primitive into each tile with the
+    colour pass's vertex shader (`fs_shadow.sc`), so skinned, morphed and instanced meshes cast
+    exactly what is drawn. Blended and glass materials cast no shadow.
+  - **Sampling:** 3×3 taps of hardware 2×2 PCF (soft edges), kept inside the tile.
+  - **Against acne:** a normal offset of about one shadow texel (more where the light grazes the
+    surface, which also hides the facets of low-poly curved meshes). Point and spot lights also
+    step one texel towards the light, in world units: a depth-buffer bias would grow far too big
+    away from a perspective light. `Frame::shadowBias` (viewer: *shadow bias*,
+    `--shadow-bias=`) scales both.
+  - **Caps:** `GltfRenderer::shadowsSupported()`; without a renderable + sampleable depth format
+    everything draws unshadowed.
+- **Alpha:** `MASK` discards below the cutoff. `BLEND` draws go to the second view, sorted far to
+  near, without depth writes. Glass (transmission) is blended there too, premultiplied, so its
+  reflections stay bright.
+- **Back faces:** a double-sided material flips the normal when it faces away from the camera. The
+  shader does not use `gl_FrontFacing`: Direct3D calls clockwise triangles "front", glTF calls
+  counter-clockwise ones front, so that flag is backwards on D3D (it once lit every model from
+  below).
+
+## 3. In the game: the title scene
+
+The title screen draws a glTF scene behind its menu: `assets/media/models/VirtualCity.glb` by
+default (`src/game/src/title_scene.*`, owned by `GameSession`).
+
+- **Animation and cameras:** it plays the file's first animation in a loop and looks through the
+  file's own cameras, cutting to the next every 10 s.
+  - Each camera keeps its path and where it looks, but its horizon is held level: banking cameras
+    look odd behind a menu.
+  - A file without cameras gets a slow orbit.
+- **Draw order:** `BgfxRenderer::setSceneViews(first, count)` orders the scene's bgfx views (from
+  `TitleScene::kFirstView` = 16) after the screen clear (view 0) and before the sprites, RmlUi and
+  ImGui (views 1..3), with `bgfx::setViewOrder`. With `count = 0` the plain id order is back.
+- **The menu over it:** `title.rml`'s body has `data-class-scene="title.scene"`, and
+  `body.scene { background-color: transparent; }` replaces the opaque `#414155` while the scene is
+  drawn. The scene is drawn a little dark (exposure 0.75) so the menu stays readable.
+- **Cost:** shadows (2048 atlas) on desktop; none on Android and the web. The scene draws only while
+  the title is open.
+- **Choosing the scene:** `toms_game --title-scene=<file.glb|none>`. Without the file, or if it does
+  not load, the title is plain as before (the log says why).
+- **Not verified:** the web and Android builds. The model adds 3 MB to their packed assets.
+
+## 4. The viewer
+
+| Input | Does |
+|---|---|
+| drop a `.gltf` / `.glb`, or *Open...* | loads it, frames it (over the playing animations' range) |
+| left drag / right or middle drag / wheel | orbit / pan / zoom |
+| `Space` `F` `G` `K` `B` `W` `R` `H` | play-pause, frame, grid, skeleton, bounds, wireframe, auto-rotate, panel |
+| `1`..`9` | play only that animation |
+| arrow keys (held) | move the camera left / right / up / down on the screen |
+| `C` | the next of the file's cameras (then back to the free camera) |
+| on a file camera: left drag / wheel / double-click | look around / zoom / look ahead again, still riding its animation |
+| `+` / `-` (or numpad) | faster / slower arrow-key movement (x1.5 per press; also *move speed* in Display) |
+
+**The panel:**
+- **Model:** counts (vertices, triangles, nodes, meshes, materials, textures, skins and joints,
+  morph targets, instances), and every extension, green when drawn and orange when ignored, plus
+  warnings.
+- **Camera** (when the file has cameras): *free (orbit)* or one of the file's cameras, by name
+  (unnamed ones take their node's or a parent's name), from the drop-down or a row of buttons (**free**, **1 front**,
+  **2 top**, …; the one in use is lit) with **◀ / ▶** to step through them. An animated camera node moves the view.
+  Perspective cameras keep their field of view and near / far; orthographic ones their height.
+  **Riding a camera:** left drag looks around (yaw about the camera's up, pitch about its right, in
+  the camera's own frame) and the wheel zooms its lens; the camera keeps following its node's
+  animation. A double-click (or *look ahead*) looks straight ahead again. Right / middle drag or the
+  arrow keys leave for the free camera, from where the file camera was looking.
+- **Animation:** play / pause, speed, a time slider, and a checkbox per animation (several can
+  play together).
+- **Morph targets:** a slider per weight, which overrides the animation for that weight.
+- **Display:** grid, axes, bounds, skeleton, wireframe, background, field of view, and the views
+  lit / normals / base colour / metal-rough / UV / shadow (the first shadowed light's term).
+- **Lights and shadows:**
+  - shadows on / off, a *ground* (a floor under the model that catches the shadows), the atlas
+    size, the shadow bias;
+  - the file's own lights (`KHR_lights_punctual`), when it has some: the rig is off and the ambient drops to 0.1
+    (its slider reads *ambient (file lights)*), so the file's lights light the scene, not the viewer's default look;
+    unticking *the file's lights* goes back to the rig and its ambient (0.7);
+  - otherwise a rig: *default* (key + fill), *point*, *spot*, *all*, or your own. Each light has
+    a type, colour, intensity, cast shadows, then direction (yaw / pitch), or position, range and
+    cones. Up to 4; `+ directional` / `+ point` / `+ spot` add one;
+  - exposure, ambient, sky and ground colours, tone mapping.
+
+  The lights are drawn in the view: an arrow for a directional light, a star for a point light, a
+  cone for a spot light.
+- **Performance:** fps, backend, draw calls, instances, skinned draws, morph uploads, shadow tiles
+  and shadow draws.
+
+**Command line** (also used by the tests):
+- `--anim=<index|name|none>`, `--time=<s>` (freezes the animations at that time);
+- `--frames=<n> --screenshot=<png>`;
+- `--yaw= --pitch= --zoom=`, `--size=WxH`, `--no-ui`, `--debug=<0..5>`;
+- `--camera=<index|name>` (one of the file's cameras) and `--look=<yaw>,<pitch>` (turned in its own frame, degrees), `--light=default|point|spot|all|file`, `--shadows=0|1`, `--ground=0|1`, `--shadow-bias=<x>`;
+- `--renderer=d3d11|d3d12|vulkan|opengl`.
+
+### Editing nodes (2026-10-14)
+
+- **Scene tree** (under Model): the nodes of the scene as a tree, tagged `[mesh]`, `[skinned mesh]`, `[camera]`,
+  `[light]`, and with physics `[body]`, `[kinematic]`, `[collider]`, `[trigger]`, `[joint]`. An edited node shows `*`.
+  Click a node to select it.
+- **Click a mesh in the view** to select its node. The pick tests each mesh's bounds, instances included. Clicking
+  the same spot again selects the next node behind, for example a mesh inside a see-through volume. An orange box
+  outlines the selection.
+- **Node inspector:** translation, rotation (degrees) and scale of the node's local transform, plus a uniform
+  scale. Buttons: **reset node** (Delete), **reset all edits**, **look at it**, **deselect**, and **parent** to go
+  up the tree.
+- **Handles in the view:** drag them with the left mouse button. Dragging elsewhere still orbits.
+
+  | Tool | Key | Handles | Space |
+  |---|---|---|---|
+  | Move | T | an arrow per axis; the centre square moves in the view plane | world axes |
+  | Rotate | E | a ring per axis | world axes |
+  | Scale | S | a box per axis; the centre square scales evenly | the node's own axes |
+
+- **Edits replace the node's animation** (they are applied after it). With physics on, the simulation restarts from
+  the edited scene when a drag or field edit ends, so a moved body falls from its new place. Opening another file
+  drops the edits. They are not saved to the file.
+- Test options: `--select=<node>`, `--tool=move|rotate|scale`, `--pick=<x>,<y>`, and `--drag=<x0>,<y0>,<x1>,<y1>`
+  (pixels from the selected node's origin on screen).
+
+## 5. Tests
+
+- **Unit test `gltf_model_test`:** 47 checks on the test models.
+  - **Skin:** rest-pose joint matrices are identity; slerp at 0.25 s; the cubic spline's Hermite
+    values; CPU-skinned bounds.
+  - **Morph:** weights for linear and step interpolation; CPU morph results.
+  - **Instancing:** 100 instance matrices and their bounds.
+  - **Materials:** factors, sRGB, the embedded PNG, the texture transform, emissive strength,
+    unlit, alpha modes.
+  - **Glass and lights:** `KHR_materials_transmission` + volume read; a `KHR_lights_punctual` spot
+    (colour, intensity, range, cones) placed by its node.
+  - **Errors:** a missing file; a required extension we cannot read.
+- **Screenshot tests `smoke.gltf_*`:** `gltf_viewer` renders a frozen frame, compared with
+  `tests/golden/gltf_*.png`.
+  - **Scenes:** skin (linear and cubic), morph (linear and step), instancing, PBR, the normals
+    view, and shadows: directional (`gltf_shadow_dir`), point (`gltf_shadow_point`), spot
+    (`gltf_shadow_spot`), all three at once (`gltf_shadow_all`). Every scene stands on the ground
+    with the default key light's shadow.
+  - **Backends:** all on Direct3D 11; skin, PBR and all-shadows also on Vulkan and OpenGL,
+    against the same images.
+  - **Running them:** `ctest --preset windows-release -L gltf`.
+  - **After an intended change:** `TOMS_UPDATE_GOLDEN=1 ctest ... -L gltf`, then look at the
+    images.
+- **Crowds:** unit test `gltf_anim_texture_test` (35 checks); `smoke.gltf_crowd_one` (one copy = the `gltf_skin`
+  reference), `smoke.gltf_crowd` (nine copies with their own clips, times and blends) on D3D11, Vulkan and OpenGL.
+- **Changing a test model:** edit `make_test_models.py`, run it, then update the references.
+
+## 6. Crowds: instanced skinning from an animation texture
+
+Many copies of one animated model (monsters, soldiers, villagers) in **one draw call per primitive**, each copy
+with its own clip and time, and able to **blend or cross-fade between two clips**. The animation is baked once
+into a texture that every copy of the model shares, so the CPU does no posing per copy.
+
+| | `Pose` + `draw()` | Crowd: `drawCrowd()` |
+|---|---|---|
+| CPU per copy per frame | sample every channel, world and joint matrices | one 80-byte record (where, which clips, what time) |
+| Upload per copy per frame | up to 128 joint matrices (8 KB) | 80 bytes |
+| Draw calls | one per primitive per copy | one per primitive for all copies |
+| Animation | exact, any number of blended animations, morph targets | baked at `fps` (default 30), frames nlerped; one clip, or two blended |
+| Use for | the hero, bosses, faces | everyone else |
+
+**Code**
+
+| Part | File |
+|---|---|
+| Baking, the clip table, save / load, the per-copy animation state (`Crowd`) | `src/core/engine/gltf_anim_texture.h/.cpp` (CPU, no GPU; unit-tested) |
+| Upload, the instanced draw | `GltfRenderer::uploadAnimTexture`, `drawCrowd`, `crowdsSupported` |
+| The vertex shader | `src/engine/shaders/vs_mesh_animtex.sc` (+ `fs_mesh.sc`, `fs_shadow.sc`: `ShaderProgram::MeshAnimTex`, `MeshShadowAnimTex`) |
+| Viewer | `gltf_viewer --crowd=<n>` and the panel's *Crowd* section |
+
+```cpp
+// once per model
+auto anim = std::make_shared<gltf::AnimTexture>();
+gltf::bakeAnimTexture(model, /*skin*/ 0, /*fps*/ 30.0f, *anim);       // ~1 ms for a 24-joint model with 3 clips
+auto animGpu = renderer.uploadAnimTexture(anim);                     // shared by every crowd of this model
+
+gltf::Crowd crowd(anim);
+int i = crowd.add(placement, anim->clipIndex("Walk"));
+crowd.crossFade(i, anim->clipIndex("Run"), 0.4f);                     // 0.4 s fade, then Run alone
+crowd.setBlend(j, walk, run, 0.3f);                                   // hold 70 % walk + 30 % run
+crowd.play(k, anim->clipIndex("Survey"), /*loop*/ false);
+
+// every frame
+crowd.update(dt);
+renderer.drawCrowd(*gpu, *animGpu, crowd);                            // between begin() and the frame's end
+```
+
+**The texture.** RGBA32F; **one row per baked frame**, every clip's frames stacked; **2 texels per joint**:
+
+| Texel | Holds |
+|---|---|
+| `2j` | the joint's rotation, a quaternion (x, y, z, w) |
+| `2j + 1` | its translation (x, y, z) and uniform scale (w) |
+
+of `world(joint) × inverseBind`, exactly what `Pose::jointMatrices` gives. Frame `f` of a clip is the pose at
+`min(f / fps, duration)`, so a clip has `ceil(duration × fps) + 1` rows and its last row is its end pose. Size:
+joints × 2 × rows × 16 bytes, e.g. the Fox (24 joints, 3 clips, 163 rows) is 122 KB; 128 joints and 10 s of
+clips at 30 fps is about 1.2 MB. The GPU limits the rows (WebGL2 guarantees 2048–4096: about 1–2 minutes of clips
+at 30 fps); a texture over the limit is refused with a message (bake at a lower fps).
+
+**Why rotation + translation, not matrices.** Two clips are blended per joint: the rotations with nlerp (signs
+aligned so they take the short way), translation and scale linearly. A straight average of two joint matrices
+shrinks or flattens a limb when the poses differ a lot (an arm forward against back); quaternions do not. It
+also needs 2 texels per joint instead of 3. Limits of the format:
+- **Non-uniform joint scale** is averaged: `AnimTexture::maxScaleError` reports how much (0 for ordinary rigs).
+- **Mirrored joints** (negative scale) cannot be stored: `mirroredJoints` says so.
+
+**Per copy** (bgfx instance data, 80 bytes, `CrowdGpuInstance`):
+
+| | Holds |
+|---|---|
+| `i_data0..2` | the placement's first three rows (the fourth is 0, 0, 0, 1) |
+| `i_data3` | clip A: row of the frame, row of the next frame, how far between them |
+| `i_data4` | clip B: the same, and in `w` the weight of B (0: B is not read at all) |
+
+The frame rows and blends are worked out on the CPU (`gltf::framePair`: looping wraps, a one-shot holds its last
+frame), so the shader does no timing.
+
+**The shader.** For each of the vertex's four joints (a joint with weight 0 is skipped) it reads clip A's two frames
+(4 texels), and clip B's two (4 more) only while blending; nlerps; builds the joint matrix; then linear blend
+skinning and the same lighting as every other mesh. Shadows use the same vertex shader, so they move too.
+
+**Not drawn by a crowd:** primitives of other skins or unskinned ones (draw those with a `Pose`); morph targets
+(not baked). One skin per texture: a model with several skins needs one texture per skin.
+
+**Save / load** (`saveAnimTexture` / `loadAnimTexture`, `.animtex`). The file holds a magic and version, the
+joint and row counts, fps, the clip table and the raw floats. It also holds `modelHash()` of the skin (joint
+names, inverse bind matrices) and the animations (names, durations, channel counts): loading it against a model
+that changed since the bake fails with *stale*. Baking takes milliseconds, so baking at load is fine too.
+
+**Compared with the old engine's `cAnimTexture`** (FM79979 `AnimationTexture.cpp`): same idea (bake, per-instance
+frames, blend two frames in the shader), and these differences:
+- clips share one texture, and one draw can mix clips and times;
+- two clips can be blended;
+- instance data instead of uniform arrays, so there is no instance limit;
+- frame 0 is t = 0 (the old bake started one step late);
+- the file says what it was baked from, so a stale cache is caught.
+
+**Checked:**
+- one crowd copy draws pixel-identical to the same clip through `Pose` (`smoke.gltf_crowd_one` uses the
+  `gltf_skin` reference);
+- the Fox crowd matches between D3D11, D3D12, Vulkan and OpenGL;
+- `gltf_anim_texture_test` compares the bake with `Pose::jointMatrices` (exact at frame times, within 0.01
+  between them) and checks the blends, the crowd state and save / load.
+
+## 7. Physics: KHR_physics_rigid_bodies on Jolt
+
+**Status:** built 2026-10-12. The loader, `gltf_viewer` and the tests use it. The game does not link it yet, and
+the web and Android builds don't build it (W36).
+
+### 7.1 What it is
+
+Two Khronos extensions, still drafts, describe rigid-body physics in a glTF file
+([spec and samples](https://github.com/eoineoineoin/glTF_Physics)):
+
+- **`KHR_implicit_shapes`** lists shapes on the document: `sphere`, `box` (full extents), `capsule`, `cylinder`
+  (`radiusTop` / `radiusBottom`, so a cone is a cylinder with one radius 0) and `plane`.
+- **`KHR_physics_rigid_bodies`** puts physics on nodes:
+  - `motion` makes the node a rigid body: mass, centre of mass, inertia, starting velocities, gravity factor and
+    `isKinematic`;
+  - `collider` is solid geometry: an implicit shape, or a mesh used as triangles or as its convex hull;
+  - `trigger` is a volume that reports what enters and leaves it;
+  - `joint` constrains the node's body to another node's body.
+
+  The document level holds physics materials (friction, restitution, combine modes), collision filters
+  ("systems") and joint definitions (limits and drives per axis).
+
+`falling_cube.glb` from the old engine's media is **not** one of these files. It has no extension at all: it is
+a soft-body simulation baked by Blender, 50 separate meshes, one per frame, all visible at once. Playing it needs
+a mesh-sequence player, not physics.
+
+### 7.2 Code
+
+| Part | Where | What |
+|---|---|---|
+| Data | `gltf_model.h` (`Model::physics`) | `PhysicsShape`, `PhysicsMaterial`, `PhysicsFilter`, `PhysicsJoint` (limits, drives), `NodePhysics` (motion, collider, trigger, joint), read by `gltf_model.cpp` from cgltf's raw extension JSON. Defaults come from the extensions' schemas. Bad indices are dropped with a warning |
+| Simulation | `gltf_physics.h/.cpp` (`gltf::PhysicsWorld`) | `build(model, pose)`, `step(dt, pose)` (fixed 1/60 s steps), `simulateTo(t, pose)`, `writePose(pose)`, `takeEvents()` (trigger enter / leave), `inside()`, `isSleeping()`, `stats()`, `warnings()`, `debugBoxes()` |
+| Library | `toms_physics` (`src/game/CMakeLists.txt`) | Links Jolt privately, so `gltf_physics.h` shows no Jolt type |
+| Engine | [Jolt Physics](https://github.com/jrouwe/JoltPhysics) v5.6.0, MIT (`cmake/TomsDependencies.cmake`) | Fetched like the other libraries. Cross-platform deterministic; SSE4.2 only (runs on any x64); single-threaded job system, so a run gives the same numbers every time |
+
+How the file's data becomes Jolt objects:
+
+- **A node with `motion` is one body.** Its own collider and the colliders of descendants without their own
+  `motion` form a compound. Each collider's node scale is baked into its shape's size.
+- **`isKinematic`, or a mass of 0, gives a kinematic body:** it moves at its own velocity and nothing pushes it.
+- **A node an animation moves** (a channel on it or an ancestor) is kinematic and follows the animation. The file
+  says animation wins over simulation.
+- **A collider with no `motion` above it is static.**
+- **A trigger is a sensor.** Inside a moving body it follows that body. A part of a compound trigger reports the
+  compound's node.
+- **Friction and restitution** use the KHR combine rule (average, then minimum, then maximum, then multiply).
+  With no mode given, Jolt's own rules apply (square root of the product for friction, the larger restitution).
+- **Collision filters:** two colliders collide when each one's `collideWithSystems` / `notCollideWithSystems`
+  lets the other's `collisionSystems` through. A collider without a filter collides with everything.
+- **A joint is a six-degrees-of-freedom constraint between the two nodes' frames.**
+  - A limit of `min = max = 0` locks the axis; other limits bound it.
+  - A linear `stiffness` makes the limit soft.
+  - Drives become motors: position motors (stiffness / damping springs) or velocity motors, with `maxForce` as
+    the force or torque limit.
+  - `enableCollision: false` stops the two bodies colliding.
+- **Writing back:** after the steps, every dynamic and kinematic body (not the animated ones) is written into the
+  `Pose` as its node's local transform, parents first, keeping the node's scale.
+
+Approximations (Jolt has no direct equivalent):
+
+- **Friction:** one friction value per body (`dynamicFriction`).
+- **Compound bodies:** the first collider's material and filter apply to the whole body.
+- **Multi-axis limits:** a limit on 2 or 3 linear axes is a box, not a circle or sphere.
+- **Angular limits:** they are hard; Jolt has no spring limit on rotation.
+- **Dynamic triangle meshes:** they become their convex hull, and a warning says so.
+- **Infinite inertia:** an inertia component of 0 ("infinite") becomes a very large value.
+- **Penetration:** resting contacts may sink up to Jolt's penetration slop of 2 cm. A 1 m box rests at 0.48–0.50.
+
+### 7.3 In the viewer
+
+A file with these extensions simulates as soon as it opens (`--physics=0` turns it off). The **Physics** panel
+has:
+
+- the simulated time and the bodies (dynamic and awake, kinematic, static, triggers, joints);
+- **paused** / **step** / **restart**;
+- a gravity slider;
+- **collider boxes**: grey static, blue kinematic, green dynamic (dark when asleep), yellow triggers;
+- any build warnings;
+- the last trigger events.
+
+With `--time=<t>` the scene is simulated once up to `t`, for screenshots.
+
+Checked on the extension author's samples as well (not committed: they carry no licence). ShapeTypes, JointTypes,
+Triggers, MotionProperties, Filtering, Materials_Restitution and Materials_Friction all load, build and simulate.
+The only warning is ShapeTypes' dynamic triangle mesh, which becomes its hull.
+
+### 7.4 Tests
+
+- **`tests/gltf/physics_scene.gltf`** (`tools/gltf_viewer/make_test_models.py`):
+  - a static ground;
+  - a falling box, a bouncy sphere, a lying capsule, a cone, a two-box compound and a convex-hull octahedron;
+  - a "ghost" box whose filter skips the ground;
+  - a kinematic platform at 0.5 m/s;
+  - a trigger zone the box falls through;
+  - a pendulum (ball joint);
+  - an animated sweeper.
+- **`unit.gltf_physics_test`** (35 checks):
+  - reading;
+  - resting height and sleep;
+  - the bounce;
+  - every shape lands, and the compound's parts keep their places;
+  - the ghost falls through;
+  - the platform moves exactly 1 m in 2 s;
+  - trigger enter / leave;
+  - the pendulum keeps its length;
+  - the sweeper follows its animation;
+  - `simulateTo` equals single steps bit for bit;
+  - a model without physics refuses to build.
+- **`smoke.gltf_physics`:** the scene at 2.5 s on D3D11.

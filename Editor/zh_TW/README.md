@@ -34,7 +34,7 @@
 
 每一節是簡短版本；完整細節請看連結的文件。
 
-### 圖集編輯器：把精靈圖合成一張貼圖（[docs/14](../../docs/zh_TW/14_ATLAS_TOOL.md)）
+### 圖集編輯器：把精靈圖合成一張貼圖（[docs/engine/04](../../docs/engine/zh_TW/04_ATLAS_TOOL.md)）
 
 1. **檔案 → 新增**，然後 **加入圖片…**（PNG 或整個資料夾，也可以直接拖到視窗上）。
 2. 在右側設定打包方式：最大頁面大小、**padding**（精靈圖之間的空白像素）、**extrude**（在每張精靈圖四周重複邊緣像素，
@@ -48,7 +48,7 @@
 - **匯入舊圖集：** **匯入圖集** 可讀取 `.pi`、`.atlas`、TexturePacker `.json` 與 Cocos `.plist`。
 - 遊戲自己的圖集是 `assets\media\atlas\game.atlasproj`。
 
-### 動畫編輯器：節點動畫（[docs/15](../../docs/zh_TW/15_ANIMATION.md)，範例：[docs/16](../../docs/zh_TW/16_ANIMATION_RECIPES.md)）
+### 動畫編輯器：節點動畫（[docs/engine/05](../../docs/engine/zh_TW/05_ANIMATION.md)，範例：[docs/engine/06](../../docs/engine/zh_TW/06_ANIMATION_RECIPES.md)）
 
 1. **檔案 → 新增**，然後對每個精靈圖來源圖集按 **加入圖集…**。
 2. 按 **加入精靈圖節點**（或從精靈圖面板把精靈圖拖進畫面）建立節點。節點組成樹狀結構；子節點會跟著父節點移動。
@@ -62,7 +62,7 @@
 - **轉換 → MPDI 資料夾轉為 .anim…** 可匯入舊引擎的 `.mpdi` 動畫。
 - **問題 / 記錄** 面板會列出缺少的精靈圖，以及超過片段長度的關鍵影格。
 
-### 粒子編輯器：特效（[docs/17](../../docs/zh_TW/17_PARTICLES.md)）
+### 粒子編輯器：特效（[docs/engine/07](../../docs/engine/zh_TW/07_PARTICLES.md)）
 
 1. **檔案 → 新增**，或開啟 `docs\examples\fx_recipes.particle`（11 個現成特效：火把、命中火花、治療、下雪…）再修改。
 2. **加入效果**，然後 **加入發射器**（或 **加入預設效果**）。一個特效包含多個發射器。每個發射器可設定：發射（每秒數量與爆發）、
@@ -73,7 +73,7 @@
 
 預設的精靈圖是 fx 圖集（`assets\media\atlas\fx.atlas`：dot、glow、spark、star、ring、smoke、flame）。
 
-### 字型編輯器：圖片字型（[docs/23](../../docs/zh_TW/23_FONT_TOOL_GUIDE.md)）
+### 字型編輯器：圖片字型（[docs/engine/10](../../docs/engine/zh_TW/10_FONT_TOOL_GUIDE.md)）
 
 1. **加入圖片...**（每個字元一張 PNG，也可以拖到視窗上）。檔名為 `0.png`、`K.png`、`dot.png`、`comma.png`、
    `space.png` 的圖片會自動得到對應的字元。
@@ -82,7 +82,7 @@
 4. 設定 **頁面版面**（一列、緊密、緊密 2 的次方）、**空白寬度** 與 **行高**（兩者預設為 *自動*）。
 5. **字型另存新檔...** 會寫出 `NAME.fnt` + `NAME.png`。**開啟字型** 可載入現有字型來修改。
 
-### glTF 檢視器：3D 模型（[docs/18](../../docs/zh_TW/18_GLTF.md)）
+### glTF 檢視器：3D 模型（[docs/engine/08](../../docs/engine/zh_TW/08_GLTF.md)）
 
 把 `.gltf` / `.glb` 拖到視窗上（或拖到 `GltfViewer.cmd` 上）。
 
@@ -100,14 +100,14 @@
 
 在編輯器視窗中執行遊戲，旁邊有事件流程與舊的關卡清單。它讀取本 repo 的 `assets`（啟動檔會設定好路徑）。
 
-### UI 編輯器：遊戲的畫面（[docs/08](../../docs/zh_TW/08_RMLUI.md)「UI 編輯器」）
+### UI 編輯器：遊戲的畫面（[docs/gameplay/01](../../docs/gameplay/zh_TW/01_RMLUI.md)「UI 編輯器」）
 
 左邊是 UI 檔案，中間是文字，右邊是真正的遊戲。輸入、停頓，遊戲就會顯示修改；在 **Ctrl+S** 之前磁碟上的檔案不會改變。
 **預覽**選擇畫面（標題，或一個測試情境：戰鬥、對話、商店…），**語言**用來檢查長文字，**檢查**（Ctrl+I）+ 在遊戲中點擊會開啟
 那個元素的那一行，並列出套用到它的樣式規則。和 TomsEditor 一樣需要支援 Direct3D 11 的顯示卡。
-第一次用？**說明 > UI 編輯器教學**（F1，[docs/37](../../docs/zh_TW/37_UI_EDITOR.md)）會在練習畫面上一步一步帶你操作（**說明 > 開啟練習畫面**）。
+第一次用？**說明 > UI 編輯器教學**（F1，[docs/gameplay/10](../../docs/gameplay/zh_TW/10_UI_EDITOR.md)）會在練習畫面上一步一步帶你操作（**說明 > 開啟練習畫面**）。
 
-### 關卡與事件編輯器：樓層與事件的 Windows 程式（[docs/19](../../docs/zh_TW/19_STAGE_EDITOR.md) 第 6 節）
+### 關卡與事件編輯器：樓層與事件的 Windows 程式（[docs/gameplay/02](../../docs/gameplay/zh_TW/02_STAGE_EDITOR.md) 第 6 節）
 
 網頁版關卡編輯器的原生版本：地圖由遊戲的渲染器繪製（動畫會播放），直接處理 `assets\data` 中的即時檔案（不用選資料夾）。
 
@@ -117,7 +117,7 @@
 - **事件** 分頁是原生的事件編輯器：事件與其邏輯和文字、樓層與樓梯、變數、類型、NPC 與交談預覽，以及對話。兩個
   編輯器可以直接開啟對方的項目。
 
-### 網頁編輯器：樓層與事件（[docs/19](../../docs/zh_TW/19_STAGE_EDITOR.md)、[事件編輯器](../../docs/zh_TW/event_editor/README.md)）
+### 網頁編輯器：樓層與事件（[docs/gameplay/02](../../docs/gameplay/zh_TW/02_STAGE_EDITOR.md)、[事件編輯器](../../docs/gameplay/zh_TW/event_editor/README.md)）
 
 `WebEditors.cmd` 會從 `assets\data` 更新編輯器的資料，以 `http://localhost:8000` 開啟瀏覽器，並在它的視窗中持續執行伺服器
 （關閉視窗或按 Ctrl+C 即停止）。
@@ -128,7 +128,7 @@
   有問題的樓梯。
 - **事件編輯器：** 事件、各語言的文字，以及事件之間的連結（*Active only when*、*Then fire*、*Then do → give*）。
   **NPC** 分頁編輯 NPC（名字、招呼語、閒聊台詞、話題順序），並有 **交談預覽**；**對話** 分頁以卡片編輯對話
-  （[docs/event_editor/08](../../docs/zh_TW/event_editor/08_NPC_DIALOGUE.md)）。
+  （[docs/gameplay/event_editor/08](../../docs/gameplay/zh_TW/event_editor/08_NPC_DIALOGUE.md)）。
 
 ## 3. 發生問題時
 

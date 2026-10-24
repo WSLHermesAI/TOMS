@@ -1,4 +1,4 @@
-# test_switches.ps1 -- switch tests on / off for tools\test.cmd (docs/09_TESTS.md). Run it with tools\test_switches.cmd.
+# test_switches.ps1 -- switch tests on / off for tools\test.cmd (docs/project/08_TESTS.md). Run it with tools\test_switches.cmd.
 #
 #   test_switches.cmd              a window: the tests as a tree (group > area > test), a checkbox each; Save
 #   test_switches.cmd --list       the same tree as text: [x] on, [ ] off

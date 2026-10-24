@@ -1,4 +1,4 @@
-// stage_project.h -- the stage editor's data, without Qt (docs/19_STAGE_EDITOR.md, section 6).
+// stage_project.h -- the stage editor's data, without Qt (docs/gameplay/02_STAGE_EDITOR.md, section 6).
 //
 // What tools/web_editors/stage_editor.html reads from its bundle, read here straight from the TOMS folder:
 //   assets/data/story/floors/F??.json (+ .stage.json, or stages/<handAuthoredStage>)   the floors
@@ -205,7 +205,7 @@ public:
     static void restore(StageDoc& d, const std::string& snap);
     void beginEdit(StageDoc& d) const { d.pending = snapshot(d); }
     bool commitEdit(StageDoc& d, const std::string& label);   // false: nothing changed
-    // Stable object ids (docs/28_SAVE_SYSTEM.md): every object whose state the game saves (monster, item, key, event,
+    // Stable object ids (docs/gameplay/05_SAVE_SYSTEM.md): every object whose state the game saves (monster, item, key, event,
     // gate, door) gets objects."x,y".uid -- "o1", "o2" ... unique on its floor -- which moves with it, so a player's
     // save still knows it after a designer moves it. Run on every committed edit; a duplicate (a copied entry) gets
     // a new one.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""make_weapon_anims.py -- writes the sword's and the staff's battle clips (docs/30 phase 4; docs/15_ANIMATION.md
+"""make_weapon_anims.py -- writes the sword's and the staff's battle clips (docs/gameplay/07 phase 4; docs/engine/05_ANIMATION.md
 "Characters"): for each weapon the held thing and a character's motion, as two .anim files bound in code (anim_player.h
 CharacterRig: the weapon clip of the same name is drawn at the character clip's `hand` node).
 

@@ -1,4 +1,4 @@
-// sprite_mesh_test.cpp -- sprite meshes (sprite_mesh.h, docs/34_MESH_ANIMATION.md): cutting a mesh from alpha, the
+// sprite_mesh_test.cpp -- sprite meshes (sprite_mesh.h, docs/engine/16_MESH_ANIMATION.md): cutting a mesh from alpha, the
 // mesh file as plain text and with a binary buffer (glTF style) read back the same, the errors, and the shipped
 // game.mesh.json fitting the game atlas. Runs in assets/ (the shipped atlas). No GPU.
 #include "sprite_mesh.h"

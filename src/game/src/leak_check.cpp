@@ -369,7 +369,7 @@ static long writeReport(const char* reportPath) {
     uint64_t newLeft = 0;
     if (file != INVALID_HANDLE_VALUE) {
         writeLine(file,
-            "TOMS leak report (Windows Debug). docs/33_LEAK_CHECK.md\r\n"
+            "TOMS leak report (Windows Debug). docs/engine/15_LEAK_CHECK.md\r\n"
             "The new / delete map (where each allocation of this program was made), then a short debug-heap summary.\r\n"
             "Written at the very end: after main() returned, toms::releaseSingletons() ran and the statics were destroyed.\r\n\r\n");
         HANDLE process = GetCurrentProcess();

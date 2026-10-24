@@ -1,4 +1,4 @@
-// anim_editor -- the Qt editor for .anim node animations (docs/15_ANIMATION.md):
+// anim_editor -- the Qt editor for .anim node animations (docs/engine/05_ANIMATION.md):
 //
 //   anim_editor                                   the editor
 //   anim_editor file.anim                         the editor with that file open
@@ -943,7 +943,7 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
             }
         }
     }
-    {   // The skin view (docs/34_MESH_ANIMATION.md) on tests/smoke/anim_skin.anim, next to the file under test.
+    {   // The skin view (docs/engine/16_MESH_ANIMATION.md) on tests/smoke/anim_skin.anim, next to the file under test.
         const QString skinFile = QFileInfo(file).dir().filePath(QStringLiteral("anim_skin.anim"));
         AnimViewport* view = ed->viewport();
         if (!QFileInfo::exists(skinFile)) {
@@ -1151,7 +1151,7 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
             ed->showSkinAction()->setChecked(false);
             while (doc->undoStack()->index() > gridAt) doc->undoStack()->undo();
 
-            // Motion recipes (docs/16 section 7): on the golem, one undo step each; a bone recipe needs a skin.
+            // Motion recipes (docs/engine/06 section 7): on the golem, one undo step each; a bone recipe needs a skin.
             doc->selectNodeByName(QStringLiteral("golem"));
             const int recipeAt = doc->undoStack()->index();
             ok &= check(doc->applyMotionRecipe("breathe", 0.0f, 1.0f, 1.0f) && doc->selectedNode()->deformKeys.size() >= 3 &&
@@ -1167,7 +1167,7 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
                         "recipe: a bone recipe on a node without a skin is refused");
             while (doc->undoStack()->index() > recipeAt) doc->undoStack()->undo();
 
-            // Weights mode (docs/34 step 5 part 3): a click on a joint picks the bone; a stroke paints its weights (one
+            // Weights mode (docs/engine/16 step 5 part 3): a click on a joint picks the bone; a stroke paints its weights (one
             // undo step); Ctrl+stroke takes them off; Reset to Automatic Weights drops them.
             ed->weightModeAction()->setChecked(true);
             processEvents();
@@ -1242,10 +1242,10 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
             ok &= check(false, "skin: open tests/smoke/anim_skin.anim");
         }
     }
-    {   // Help > Skinning Tutorial (docs/35): the tutorial and its two files are found from the editor's folder and open.
-        ok &= check(!AnimEditor::repoFile(QStringLiteral("docs/35_SKINNING_TUTORIAL.md")).isEmpty() &&
-                        !AnimEditor::repoFile(QStringLiteral("docs/zh_TW/35_SKINNING_TUTORIAL.md")).isEmpty(),
-                    "tutorial: docs/35 (both languages) found from the editor's folder");
+    {   // Help > Skinning Tutorial (docs/engine/17): the tutorial and its two files are found from the editor's folder and open.
+        ok &= check(!AnimEditor::repoFile(QStringLiteral("docs/engine/17_SKINNING_TUTORIAL.md")).isEmpty() &&
+                        !AnimEditor::repoFile(QStringLiteral("docs/engine/zh_TW/17_SKINNING_TUTORIAL.md")).isEmpty(),
+                    "tutorial: docs/engine/17 (both languages) found from the editor's folder");
         ed->tutorialActions()[1]->trigger();   // the start file: the golem only
         processEvents();
         const Node* g = doc->clip() ? toms::anim::findNode(doc->clip()->root, "golem") : nullptr;
@@ -1269,7 +1269,7 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
                         !g->deformKeys.empty() && toms::anim::findNode(doc->clip()->root, "chest")->rotKeys.size() == 3,
                     "tutorial: Open Tutorial Finished File: 3 bones, painted weights that fit the mesh, a breath, a sway");
     }
-    {   // Preview as Character (docs/15 "Characters"): assets/media/anim/archer_bow.anim shown as other characters.
+    {   // Preview as Character (docs/engine/05 "Characters"): assets/media/anim/archer_bow.anim shown as other characters.
         const QString archerFile = QFileInfo(file).dir().filePath(QStringLiteral("../../assets/media/anim/archer_bow.anim"));
         if (!QFileInfo::exists(archerFile)) {
             ok &= check(false, "character: assets/media/anim/archer_bow.anim");
@@ -1299,7 +1299,7 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
             ok &= check(false, "character: open archer_bow.anim");
         }
     }
-    {   // Lattice mode (docs/34 step 4): drag a lattice point of a sprite with no deform yet -> a deform key at the playhead.
+    {   // Lattice mode (docs/engine/16 step 4): drag a lattice point of a sprite with no deform yet -> a deform key at the playhead.
         const QString deformFile = QFileInfo(file).dir().filePath(QStringLiteral("anim_deform.anim"));
         AnimViewport* view = ed->viewport();
         if (!QFileInfo::exists(deformFile) || !ed->openFile(deformFile, false)) {

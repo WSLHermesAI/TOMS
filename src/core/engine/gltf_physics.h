@@ -1,5 +1,5 @@
 // gltf_physics.h -- rigid-body simulation of a glTF model's KHR_physics_rigid_bodies + KHR_implicit_shapes
-// (read by gltf_model into Model::physics), on Jolt Physics. docs/18_GLTF.md §7.
+// (read by gltf_model into Model::physics), on Jolt Physics. docs/engine/08_GLTF.md §7.
 //
 //   PhysicsWorld world;
 //   pose.updateWorld();

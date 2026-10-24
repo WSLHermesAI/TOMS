@@ -14,7 +14,7 @@ namespace toms {
 constexpr int kGameSettingsSchemaVersion = 2;
 
 // Particle emitters with more than this many particles (maxParticles) are simulated on the GPU,
-// where the renderer has compute shaders (docs/17_PARTICLES.md); 0 = always on the CPU. Phones get
+// where the renderer has compute shaders (docs/engine/07_PARTICLES.md); 0 = always on the CPU. Phones get
 // a lower default: their CPUs are slower, so the GPU pays off sooner.
 #if defined(__ANDROID__) || defined(TOMS_IOS)
 constexpr int kDefaultParticleGpuThreshold = 3000;
@@ -45,7 +45,7 @@ struct GameSettings {
     // ones ("" = the original art). Read once at startup (Game::loadAssets), so changing it in
     // Settings takes effect after a restart -- the Settings dialog says so.
     std::string artStyle;
-    // The player's look: a sprite name in the atlas ("player_mage" ...; docs/27_AI_SPRITES.md). "" or a sprite the atlas
+    // The player's look: a sprite name in the atlas ("player_mage" ...; docs/engine/14_AI_SPRITES.md). "" or a sprite the atlas
     // lacks = the original "player".
     std::string playerLook;
     // See kDefaultParticleGpuThreshold. Read whenever a particle effect starts.

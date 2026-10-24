@@ -1,4 +1,4 @@
-// resource_test.cpp -- the resource cache (resource.h, docs/25_RESOURCE_MANAGER.md):
+// resource_test.cpp -- the resource cache (resource.h, docs/engine/12_RESOURCE_MANAGER.md):
 // one object per file, shared dependencies, failures cached once, the memory budget, stamps, reloading in place,
 // textures freed with their last holder and never through a renderer that is gone. Runs in assets/ (tests/CMakeLists.txt),
 // on the shipped atlases and clips plus copies in a temp folder (for the reload checks). No GPU: a counting renderer.
@@ -229,10 +229,11 @@ int main() {
         CHECK(!rm.keys().empty(), "it names some resources");
         for (const std::string& k : rm.keys()) {
             const auto* e = rm.entry(k);
-            CHECK(e && toms::vfsExists(rm.resolve(k)), ("the manifest's file is there: " + k).c_str());
             const std::string t = e ? e->type : std::string();
-            CHECK(t == "texture" || t == "atlas" || t == "anim" || t == "particle" || t == "font" || t == "json",
-                  ("a known type: " + k + " (" + t + ")").c_str());
+            CHECK(e && (e->optional || (t == "folder" ? !toms::vfsListDir(rm.resolve(k)).empty() : toms::vfsExists(rm.resolve(k)))),
+                  ("the manifest's file is there: " + k).c_str());
+            CHECK(t == "texture" || t == "atlas" || t == "anim" || t == "particle" || t == "font" || t == "json" ||
+                  t == "file" || t == "folder", ("a known type: " + k + " (" + t + ")").c_str());
         }
         rm.preload();
         for (const std::string& k : rm.keys())

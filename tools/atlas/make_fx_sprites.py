@@ -1,4 +1,4 @@
-"""make_fx_sprites.py -- the particle sprites of art_raw/atlas/fx.atlasproj (docs/17_PARTICLES.md).
+"""make_fx_sprites.py -- the particle sprites of art_raw/atlas/fx.atlasproj (docs/engine/07_PARTICLES.md).
 
 White shapes with soft alpha, so an emitter's colour tints them. Writes PNGs into OUT_DIR, then:
 

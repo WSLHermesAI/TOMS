@@ -1,5 +1,5 @@
 #pragma once
-// job_system.h -- run work on worker threads, the same code on every platform (docs/10_THREADS.md).
+// job_system.h -- run work on worker threads, the same code on every platform (docs/engine/02_THREADS.md).
 //
 // A fixed pool of worker threads plus the calling thread share each job. With zero workers --
 // the single-threaded web build always, or JobSystem::start(0) -- a job simply runs inline on the

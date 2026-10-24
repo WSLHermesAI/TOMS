@@ -1,5 +1,5 @@
 {
-  "about": "Which folders under tests/ are test data, and which tests a change in each one runs (tools/test_select.py reads this; docs/09_TESTS.md). A folder not listed here runs no test: put another project's files, tool output or scratch data in tests/ freely, and add a folder here only when a test reads it. Tests are ctest names (wildcards allowed, e.g. 'font.*'), 'label:<label>' for every test with that ctest label, or '@golden' for the screenshot tests that use the changed reference image. 'files' entries win over their folder's entry.",
+  "about": "Which folders under tests/ are test data, and which tests a change in each one runs (tools/test_select.py reads this; docs/project/08_TESTS.md). A folder not listed here runs no test: put another project's files, tool output or scratch data in tests/ freely, and add a folder here only when a test reads it. Tests are ctest names (wildcards allowed, e.g. 'font.*'), 'label:<label>' for every test with that ctest label, or '@golden' for the screenshot tests that use the changed reference image. 'files' entries win over their folder's entry.",
   "folders": {
     "golden": { "tests": ["@golden"], "why": "a reference image: the screenshot tests that use it" },
     "smoke": { "tests": ["label:smoke"], "why": "the screenshot runner: every screenshot" },
@@ -8,11 +8,11 @@
     "mpdi": { "tests": ["anim.mpdi_convert"], "why": "the .mpdi converter fixtures" },
     "stage": { "tests": ["smoke.stage_objects", "unit.talk_system_test"], "why": "test stage files: per-object settings" },
     "font": { "tests": ["font.*"], "why": "picture-font samples: the font tool tests" },
-    "scenarios": { "tests": ["label:scenario"], "why": "test scenarios (docs/31_TEST_SCENARIOS.md): a scenario folder runs its own scenario.<name>, shared files every scenario (tools/test_select.py)" }
+    "scenarios": { "tests": ["label:scenario"], "why": "test scenarios (docs/gameplay/08_TEST_SCENARIOS.md): a scenario folder runs its own scenario.<name>, shared files every scenario (tools/test_select.py)" }
   },
   "files": {
     "smoke/anim_preview.anim": { "tests": ["anim.check_preview", "anim.editor_selftest"], "why": "the anim preview" },
-    "smoke/anim_skin.anim": { "tests": ["anim.check_skin", "smoke.anim_skin"], "why": "the skinned clip (docs/34)" },
-    "smoke/anim_deform.anim": { "tests": ["anim.check_deform", "smoke.anim_deform"], "why": "the deform lattice's demo (docs/34)" }
+    "smoke/anim_skin.anim": { "tests": ["anim.check_skin", "smoke.anim_skin"], "why": "the skinned clip (docs/engine/16)" },
+    "smoke/anim_deform.anim": { "tests": ["anim.check_deform", "smoke.anim_deform"], "why": "the deform lattice's demo (docs/engine/16)" }
   }
 }

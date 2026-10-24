@@ -22,6 +22,7 @@ struct UiRow {
     bool selected = false;    // keyboard cursor / hover
     bool enabled = true;      // false = shown dimmed (locked skill, unaffordable recipe, ...)
     std::string section;      // a heading drawn above this row ("" = none): Settings' Language / Art style
+    bool extra = false;       // the row's second button shows (the Status tab: - takes a draft point back)
 };
 
 // A world-anchored name plate over a boss or roaming monster (design-space position).
@@ -52,7 +53,7 @@ struct UiHud {
     std::string title_line;            // "魔法塔 — <floor> (n/70)"
     float hp_pct = 0;                  // 0..100
     std::string hp_text, stats_line, res_line, footer;
-    // The walking scene's one button, ≡: it opens the player menu (docs/20_PLAYER_MENU.md).
+    // The walking scene's one button, ≡: it opens the player menu (docs/gameplay/03_PLAYER_MENU.md).
     std::string menu_label;
     bool menu_news = false;            // a dot on it: something new inside (store, gear, events, skill points)
     bool chapter_card = false;
@@ -73,7 +74,7 @@ struct UiComboPoint {                  // one point of the combo track
     bool hit = false;
 };
 
-struct UiCombo {                       // Battle v3's point play (docs/30 phase 1): the charge, the track, its points
+struct UiCombo {                       // Battle v3's point play (docs/gameplay/07 phase 1): the charge, the track, its points
     std::string prompt, button_label, level_text;
     bool running = false, cooling = false, waiting = false;
     float charge_pct = 0;              // 0..100
@@ -81,7 +82,7 @@ struct UiCombo {                       // Battle v3's point play (docs/30 phase 
     std::vector<UiComboPoint> points;
 };
 
-struct UiMiniGame {                    // a reward event (docs/30 phase 6): its text, the point track, the result
+struct UiMiniGame {                    // a reward event (docs/gameplay/07 phase 6): its text, the point track, the result
     bool visible = false;
     std::string title, text, prompt, button_label, result, close_label;
     bool running = false, done = false;
@@ -89,7 +90,7 @@ struct UiMiniGame {                    // a reward event (docs/30 phase 6): its 
     std::vector<UiComboPoint> points;
 };
 
-struct UiPopup {                       // a damage number rising over a fighter (docs/30_GAMEPLAY_PLAN.md phase 0)
+struct UiPopup {                       // a damage number rising over a fighter (docs/gameplay/07_GAMEPLAY_PLAN.md phase 0)
     std::string text;
     float x = 0, y = 0;                // design px: its box's left / top
     float opacity = 1;
@@ -165,6 +166,9 @@ struct UiPlayer {
     std::string attr_points;           // "Points to spend: 2" ("" = none to spend)
     std::string attr_points_hint;
     bool attr_can_add = false;         // the rows show a + button
+    bool attr_draft = false;           // points placed, not confirmed: Confirm / Reset show
+    std::string attr_confirm, attr_reset;
+    bool attr_confirm_sel = false, attr_reset_sel = false;   // the keyboard cursor is on Confirm / Reset
     std::vector<UiLine> combat;        // ATK, DEF, Gold, Keys, Floor, Chapter
     std::vector<UiLine> more;          // Weapon, Armor, Skills, Memory shards, State of mind
     std::vector<UiRow> attrs;          // label "STR  力量", sub = the value

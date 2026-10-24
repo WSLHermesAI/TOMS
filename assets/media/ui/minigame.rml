@@ -4,7 +4,7 @@
     <link type="text/rcss" href="common.rcss"/>
     <link type="text/rcss" href="minigame.rcss"/>
 </head>
-<!-- A reward event (docs/30 phase 6, data/minigames.json): its text, then Battle v3's point track; each point hit earns
+<!-- A reward event (docs/gameplay/07 phase 6, data/minigames.json): its text, then Battle v3's point track; each point hit earns
      the reward. Data: minigame.* (UiMinigame). -->
 <body data-model="game">
     <div id="panel">

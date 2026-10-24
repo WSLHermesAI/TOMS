@@ -52,7 +52,8 @@ std::string ResourceManager::resolve(const std::string& name) const {
     auto m = manifest_.find(name);
     std::string p = normalize(m != manifest_.end() ? m->second.path : name);
     // under the root, unless it is absolute or already there (a dependency's path, made from a resolved one)
-    if (!root_.empty() && !isAbsolute(p) && p.compare(0, root_.size(), root_) != 0) p = root_ + p;
+    if (!root_.empty() && !isAbsolute(p) && p.compare(0, root_.size(), root_) != 0) p = normalize(root_ + p);   // "../data/x" leaves the root
+    if (p.empty()) p = ".";   // the root's parent, when the root is one relative folder
     return p;
 }
 
@@ -79,9 +80,36 @@ bool ResourceManager::loadManifest(const std::string& path, std::string* error) 
         e.type = v.value("type", std::string());
         e.path = join(dir, v["path"].get<std::string>());
         e.preload = v.value("preload", false);
+        e.optional = v.value("optional", false);
         manifest_[k] = std::move(e);
     }
+    if (auto pat = j.find("patterns"); pat != j.end() && pat->is_object())
+        for (auto& [k, v] : pat->items()) {
+            if (!v.is_string() || v.get<std::string>().find("{id}") == std::string::npos) {
+                std::fprintf(stderr, "[res] manifest %s: pattern '%s' needs a path with {id}\n", resolve(path).c_str(), k.c_str());
+                continue;
+            }
+            patterns_[k] = join(dir, v.get<std::string>());
+        }
     return true;
+}
+
+std::string ResourceManager::pathFor(const std::string& pattern, const std::string& id) const {
+    auto it = patterns_.find(pattern);
+    if (it == patterns_.end()) {
+        if (onMissing_) onMissing_(pattern, std::string(), "no pattern '" + pattern + "' in the manifest");
+        return std::string();
+    }
+    std::string p = it->second;
+    p.replace(p.find("{id}"), 4, id);
+    return resolve(p);
+}
+
+std::vector<std::string> ResourceManager::patternNames() const {
+    std::vector<std::string> out;
+    for (const auto& [k, p] : patterns_) out.push_back(k);
+    std::sort(out.begin(), out.end());
+    return out;
 }
 
 const ResourceManager::ManifestEntry* ResourceManager::entry(const std::string& key) const {

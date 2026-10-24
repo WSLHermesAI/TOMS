@@ -1,5 +1,5 @@
 // uied_window.h -- ui_editor: the game's UI files (assets/media/ui/*.rml, *.rcss) beside the running game, which
-// shows every edit as it is typed (docs/08_RMLUI.md "The UI editor").
+// shows every edit as it is typed (docs/gameplay/01_RMLUI.md "The UI editor").
 //
 //   * Files (left): the UI folder's documents; ● = changed, not saved.
 //   * The text (middle): colours, line numbers. A pause in typing (0.3 s) previews it: the changed files are handed to
@@ -53,7 +53,7 @@ public:
     void inspectNow();                                  // as a click in inspect mode
     QString inspectSummary() const;
     int inspectRuleCount() const;
-    // Help: the tutorial (docs/37_UI_EDITOR.md) and its practice screen (docs/examples/ui_tutorial/practice.rml), which
+    // Help: the tutorial (docs/gameplay/10_UI_EDITOR.md) and its practice screen (docs/examples/ui_tutorial/practice.rml), which
     // the game itself never shows: Preview "Practice screen" loads it over the map of a new game.
     void openTutorial();
     void openPracticeScreen();

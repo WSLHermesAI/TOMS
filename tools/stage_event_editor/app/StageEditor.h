@@ -1,4 +1,4 @@
-// StageEditor.h -- the stage editor, native (docs/19_STAGE_EDITOR.md): the HTML editor's layout and rules, on the
+// StageEditor.h -- the stage editor, native (docs/gameplay/02_STAGE_EDITOR.md): the HTML editor's layout and rules, on the
 // game's renderer.
 //
 //   toolbar     ⇄ Event editor, floor (◀ ▶, ● = unsaved), undo / redo, Save

@@ -69,7 +69,7 @@ function(toms_prerequisites_report)
         message(STATUS "[toms] prerequisites: all OK")
         return()
     endif()
-    string(APPEND _body "\nFull install guide: docs/02_INSTALL_WINDOWS.md\n"
+    string(APPEND _body "\nFull install guide: docs/project/01_INSTALL_WINDOWS.md\n"
                         "Check again at any time: tools/check_env.cmd")
     if(_errors)
         _toms_prereq_popup("TOMS: required tools are missing" "${_body}")
@@ -108,7 +108,7 @@ if(WEB)
 elseif(NOT WIN32)
     toms_prereq_problem(WARNING
         "This project is set up and tested for Windows + Visual Studio. Other platforms are not configured yet."
-        "docs/02_INSTALL_WINDOWS.md")
+        "docs/project/01_INSTALL_WINDOWS.md")
 endif()
 if(WIN32 AND NOT MSVC)
     toms_prereq_problem(ERROR
@@ -118,7 +118,7 @@ endif()
 if(NOT WEB AND NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     toms_prereq_problem(ERROR
         "A 32-bit compiler is active. Select the x64 configuration (the presets in CMakePresets.json do this)."
-        "docs/03_VISUAL_STUDIO.md")
+        "docs/project/02_VISUAL_STUDIO.md")
 endif()
 if(NOT WEB AND MSVC AND MSVC_VERSION LESS 1930)
     toms_prereq_problem(ERROR
@@ -160,7 +160,7 @@ get_filename_component(_toms_data_name "${TOMS_DATA_DIR}" NAME)
 if(NOT _toms_data_parent STREQUAL _toms_media_parent OR NOT _toms_data_name STREQUAL "data")
     toms_prereq_problem(ERROR
         "TOMS_DATA_DIR must be the folder 'data' next to TOMS_ASSET_DIR (the game code reads <media>/../data). Now: media=${TOMS_ASSET_DIR}, data=${TOMS_DATA_DIR}."
-        "docs/01_ARCHITECTURE.md")
+        "docs/engine/01_ARCHITECTURE.md")
 endif()
 
 toms_prerequisites_stop_on_error()
@@ -237,11 +237,11 @@ if(WEB OR ANDROID)
         # No fallback like the web's: a shaderc built for Android cannot run on the build machine.
         message(FATAL_ERROR "[toms] An Android build needs a shaderc for this machine. Build a desktop preset once "
                             "(tools\\build.cmd windows-shipping) or pass -DTOMS_HOST_SHADERC=<path to shaderc>. "
-                            "See docs/07_BUILD_ANDROID.md.")
+                            "See docs/project/06_BUILD_ANDROID.md.")
     else()
         set(TOMS_HOST_SHADERC "" CACHE FILEPATH "" FORCE)
         toms_prereq_problem(WARNING
             "No host shaderc found, so this web build compiles shaderc itself to wasm and runs it with node. That is much slower and needs a lot of RAM (build with few jobs). Faster: build any desktop preset once (tools\\build.cmd windows-shipping) or pass -DTOMS_HOST_SHADERC=<path to shaderc>."
-            "docs/06_BUILD_WEB.md")
+            "docs/project/05_BUILD_WEB.md")
     endif()
 endif()

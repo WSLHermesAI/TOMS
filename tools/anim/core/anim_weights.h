@@ -1,4 +1,4 @@
-// anim_weights.h -- painting a skin's weights (docs/34_MESH_ANIMATION.md step 5 part 3): what the anim editor's Weights
+// anim_weights.h -- painting a skin's weights (docs/engine/16_MESH_ANIMATION.md step 5 part 3): what the anim editor's Weights
 // mode (P) does to the weights of the vertices under its brush. No Qt.
 //
 // Weights are laid out as Node::skinWeights and SkinView::weights: kSkinInfluences (bone, weight) pairs per vertex, the

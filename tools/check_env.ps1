@@ -218,7 +218,7 @@ $hostShaderc = Get-ChildItem (Join-Path $root 'Build') -Recurse -Filter shaderc.
 Add-Result "Host shaderc.exe (from a desktop build) - web build only" ([bool]$hostShaderc) $false `
     $(if ($hostShaderc) { $hostShaderc.FullName } else { "not built yet (tools\build_web.cmd builds the desktop shipping preset first to get it)" }) `
     "Run tools\build.cmd windows-shipping once, or just run tools\build_web.cmd (it does this for you)." `
-    "docs/06_BUILD_WEB.md"
+    "docs/project/05_BUILD_WEB.md"
 
 # ---------------------------------------------------------------------------------------------
 # 15. Optional GPU extras
@@ -274,7 +274,7 @@ if (-not $NoGui -and ($missReq.Count + $missOpt.Count) -gt 0) {
         foreach ($r in $missOpt) { [void]$sb.AppendLine("  * $($r.Name)`n      $($r.Fix)`n      $($r.Link)") }
     }
     [void]$sb.AppendLine("")
-    [void]$sb.AppendLine("Details: docs\02_INSTALL_WINDOWS.md")
+    [void]$sb.AppendLine("Details: docs\project\01_INSTALL_WINDOWS.md")
     $title = if ($missReq.Count) { "TOMS: required tools are missing" } else { "TOMS: optional tools are missing" }
     $links = @($missReq + $missOpt | ForEach-Object { $_.Link } | Where-Object { $_ -match '^https?://' })
     & (Join-Path $PSScriptRoot 'show_message.ps1') -Title $title -Message $sb.ToString() -Links $links

@@ -1,5 +1,5 @@
 // font_tool_test -- the picture font runtime (src/core/engine/bitmap_font.h) and the font tool
-// (tools/font/core/font_build.h) on tests/font (docs/22_FONT_TOOL.md).
+// (tools/font/core/font_build.h) on tests/font (docs/engine/09_FONT_TOOL.md).
 //
 //   font_tool_test <tests/font> <scratch dir>
 //

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""test_select.py -- run only the tests the current changes can break (tools/test.cmd calls it; docs/09_TESTS.md).
+"""test_select.py -- run only the tests the current changes can break (tools/test.cmd calls it; docs/project/08_TESTS.md).
 
     tools\\test.cmd                       the tests for what changed (uncommitted changes, untracked files included)
     tools\\test.cmd all                   every test, web included
@@ -52,7 +52,7 @@ def is_gltf(t):       return 'gltf' in t['labels']
 def is_game_smoke(t): return is_smoke(t) and not is_gltf(t)
 BACKEND_VARIANT = re.compile(r'_(d3d12|vulkan|opengl|cpu|compute|gpu)$')
 def is_game_smoke_d3d11(t): return is_game_smoke(t) and not BACKEND_VARIANT.search(t['name'])
-def is_scenario(t):    return 'scenario' in t['labels']   # tests/scenarios/<name>/ (docs/31_TEST_SCENARIOS.md)
+def is_scenario(t):    return 'scenario' in t['labels']   # tests/scenarios/<name>/ (docs/gameplay/08_TEST_SCENARIOS.md)
 def named(*patterns): return lambda t: any(fnmatch.fnmatch(t['name'], p) for p in patterns)
 def any_of(*preds):   return lambda t: any(p(t) for p in preds)
 def unit_in(prefix):  return lambda t: t['name'].startswith('unit.') and t['src'].startswith(prefix)
@@ -65,7 +65,7 @@ GLTF = any_of(named('unit.gltf_*'), is_gltf)
 PARTICLES = named('unit.particle_fx_test', 'particle.*', 'smoke.fx*')
 ANIMS = named('unit.anim_clip_test', 'unit.anim_skin_test', 'unit.anim_character_test', 'unit.anim_lattice_test', 'anim.*',
               'smoke.anim', 'smoke.anim_skin', 'smoke.anim_deform')
-# sprite meshes (docs/34_MESH_ANIMATION.md): the mesh file and cutter, the skinning that bends them, `atlaspack meshes`
+# sprite meshes (docs/engine/16_MESH_ANIMATION.md): the mesh file and cutter, the skinning that bends them, `atlaspack meshes`
 MESHES = named('unit.sprite_mesh_test', 'unit.anim_skin_test', 'unit.anim_lattice_test', 'smoke.anim_skin',
                'smoke.anim_deform', 'anim.check_skin', 'anim.check_skin_meshes', 'anim.meshes_up_to_date')
 ATLAS = named('atlas.*', 'unit.atlas_sprites_test')
@@ -136,7 +136,7 @@ RULES = [
     # files other rules would take for the wrong area
     (['docs/examples/fx_*'], named('particle.check_recipes'), 'particle recipes'),
     (['docs/examples/anim_*'], named('anim.check_recipes'), 'anim recipes'),
-    (['docs/examples/tutorial/*', 'docs/35_SKINNING_TUTORIAL.md', 'docs/zh_TW/35_SKINNING_TUTORIAL.md'],
+    (['docs/examples/tutorial/*', 'docs/engine/17_SKINNING_TUTORIAL.md', 'docs/engine/zh_TW/17_SKINNING_TUTORIAL.md'],
      named('anim.check_tutorial_*', 'anim.editor_selftest', 'anim.meshes_up_to_date'),
      'the skinning tutorial and its golem files (the editor opens them from Help)'),
     # picture fonts: toms_core builds the runtime, but no game screen draws with it yet, so the font tool's
@@ -155,6 +155,9 @@ RULES = [
     # nothing
     (['docs/*', '*.md', 'tools/web_editors/*', 'android/*', '.claude/*', '.gitignore', '.gitattributes', 'AIGamestyle*'],
      None, 'docs / HTML editors / Android: no test'),
+    (['build_web.bat', 'publish_web.bat', 'setup_new_pc.bat', 'tools/build_android.cmd', 'tools/run_android.cmd',
+      'tools/check_env.ps1', 'tools/check_git_ssh.*', 'tools/package.ps1'], None,
+     'setup, web publish, Android and packaging scripts: no automated test (run them by hand)'),
     # global
     (['CMakeLists.txt', 'CMakePresets.json', 'cmake/*', 'external/*', 'tools/build.cmd'], DESKTOP,
      'global build setup: every desktop test'),
@@ -169,13 +172,16 @@ RULES = [
     # particles, node animations, atlases, the Qt editors' shared code
     (['src/core/engine/particle*', 'tools/particle/*', 'src/engine/shaders/cs_fx_*'], PARTICLES,
      'particles: checks, unit test, fx screenshots'),
+    (['assets/media/fx/battle.particle'], named('particle.check_battle', 'unit.weapon_play_test'),
+     "the battle's weapon effects: their check + weapon_play.json's names in them"),
     (['assets/media/particle*', 'assets/media/fx/*'], any_of(PARTICLES), 'particle files'),
     (['src/core/engine/sprite_mesh*'], MESHES, 'sprite meshes: their unit tests, the skinned and deformed clips'),
     (['src/core/engine/anim*', 'tools/anim/*'], ANIMS, 'node animations: checks, unit test, anim screenshot'),
     (['*.mesh.json', '*.mesh.bin', 'tools/refresh_meshes.py'], MESHES,
      "an atlas's sprite meshes (written by the anim tools): the mesh tests"),
-    (['assets/media/resources.json'], any_of(named('unit.resource_test'), is_game_smoke_d3d11),
-     'the resource manifest: its check (every entry loads) + the game screenshots'),
+    (['assets/media/resources.json', 'tools/make_res_keys.py', 'src/core/game/core/res_keys.h'],
+     any_of(named('unit.resource_test', 'unit.res_keys_test'), is_game_smoke_d3d11),
+     'the resource manifest and its keys: its checks (every entry is there, res_keys.h up to date) + the game screenshots'),
     # the bow's clips: no game screen plays them yet, so only their check
     (['assets/media/anim/weapon_sword.anim', 'assets/media/anim/fighter_sword.anim', 'assets/media/anim/weapon_staff.anim',
       'assets/media/anim/caster_staff.anim', 'tools/make_weapon_anims.py'],
@@ -199,7 +205,7 @@ RULES = [
     (['tools/art/*'], None, 'the AI reskin scripts (art_raw/ in, art_raw/ out): no test'),
     (['art_raw/*'], ATLAS, 'raw art (sprite PNGs): the atlas checks'),
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),
-    (['docs/examples/ui_tutorial/*', 'docs/37_UI_EDITOR.md', 'docs/zh_TW/37_UI_EDITOR.md'], named('ui_editor.selftest', 'smoke.ui_editor'),
+    (['docs/examples/ui_tutorial/*', 'docs/gameplay/10_UI_EDITOR.md', 'docs/gameplay/zh_TW/10_UI_EDITOR.md'], named('ui_editor.selftest', 'smoke.ui_editor'),
      "the UI editor's tutorial and its practice screen (the editor opens them from Help)"),
     (['src/editor/src/uied_*', 'src/editor/src/bgfx_viewport*'], named('ui_editor.selftest', 'smoke.ui_editor'),
      'the UI editor (ui_editor) and the game viewport it shares with toms_editor'),
@@ -215,7 +221,7 @@ RULES = [
     (['src/core/engine/resource*', 'src/core/engine/render_object*'], 'ENGINE_RES',
      'the resource cache and render objects: engine unit tests + the clip / effect previews + the game'),
     (['src/core/engine/*'], 'ENGINE', 'engine core: the engine unit tests + the game'),
-    # tools/add_stage_uids.py writes the stage files' object ids (docs/28_SAVE_SYSTEM.md)
+    # tools/add_stage_uids.py writes the stage files' object ids (docs/gameplay/05_SAVE_SYSTEM.md)
     (['src/core/game/*', 'src/game/*', 'assets/*', 'src/core/CMakeLists.txt', 'tools/add_stage_uids.py',
       'tools/redesign_floors.py'], 'GAME',
      'the game: its unit tests + its screenshots (D3D11)'),

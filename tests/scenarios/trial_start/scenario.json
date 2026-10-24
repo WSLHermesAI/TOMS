@@ -1,5 +1,5 @@
 {
-  "_comment": "The start story (docs/30 phase 3): a new game opens the weapon master's dialogue at 'intro'; the bow is worn (the starting weapon).",
+  "_comment": "The start story (docs/gameplay/07 phase 3): a new game opens the weapon master's dialogue at 'intro'; the bow is worn (the starting weapon).",
   "scene": "weaponTrial",
   "test": {
     "frames": 20

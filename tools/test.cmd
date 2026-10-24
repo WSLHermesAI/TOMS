@@ -1,5 +1,5 @@
 @echo off
-rem test.cmd [preset] [all | --since REF | --list] [ctest options] -- run the tests (docs/09_TESTS.md).
+rem test.cmd [preset] [all | --since REF | --list] [ctest options] -- run the tests (docs/project/08_TESTS.md).
 rem   test.cmd                        only the tests the uncommitted changes can break (tools\test_select.py)
 rem   test.cmd all                    every test of windows-release, web included
 rem   test.cmd --since main           the tests for what changed since a commit or branch

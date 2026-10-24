@@ -6,28 +6,29 @@
 
 #include <RmlUi/Core.h>
 
+#include <cstring>
 #include <filesystem>
 
 namespace toms::next {
 
 namespace {
 
-// Which document shows when. Order = load order; the stacking itself is each document's
-// `z-index` in its .rcss (the overlay document is always on top).
-struct DocSpec { const char* file; bool (*visible)(const toms::UiState&); };
+// Which document shows when, by its key in assets/media/resources.json (res_keys.h). Order = load order; the stacking
+// itself is each document's `z-index` in its .rcss (the overlay document is always on top).
+struct DocSpec { const char* key; bool (*visible)(const toms::UiState&); };
 const DocSpec kDocs[] = {
-    {"hud.rml",          [](const toms::UiState& s) { return s.hud.visible; }},
-    {"battle.rml",       [](const toms::UiState& s) { return s.battle.visible; }},
-    {"dialogue.rml",     [](const toms::UiState& s) { return s.dialogue.visible; }},
-    {"store.rml",        [](const toms::UiState& s) { return s.store.visible; }},
-    {"stage_select.rml", [](const toms::UiState& s) { return s.stage_select.visible; }},
-    {"player.rml",       [](const toms::UiState& s) { return s.player.visible; }},
-    {"saveload.rml",     [](const toms::UiState& s) { return s.saveload.visible; }},
-    {"dialogs.rml",      [](const toms::UiState& s) { return s.stairs.visible || s.store.unlocked_dialog || s.notice.visible; }},
-    {"title.rml",        [](const toms::UiState& s) { return s.title.visible; }},
-    {"ending.rml",       [](const toms::UiState& s) { return s.ending.visible; }},
-    {"minigame.rml",     [](const toms::UiState& s) { return s.minigame.visible; }},
-    {"overlay.rml",      [](const toms::UiState&)   { return true; }},
+    {toms::key::kUiHud,          [](const toms::UiState& s) { return s.hud.visible; }},
+    {toms::key::kUiBattle,       [](const toms::UiState& s) { return s.battle.visible; }},
+    {toms::key::kUiDialogue,     [](const toms::UiState& s) { return s.dialogue.visible; }},
+    {toms::key::kUiStore,        [](const toms::UiState& s) { return s.store.visible; }},
+    {toms::key::kUiStageSelect,  [](const toms::UiState& s) { return s.stage_select.visible; }},
+    {toms::key::kUiPlayer,       [](const toms::UiState& s) { return s.player.visible; }},
+    {toms::key::kUiSaveload,     [](const toms::UiState& s) { return s.saveload.visible; }},
+    {toms::key::kUiDialogs,      [](const toms::UiState& s) { return s.stairs.visible || s.store.unlocked_dialog || s.notice.visible; }},
+    {toms::key::kUiTitle,        [](const toms::UiState& s) { return s.title.visible; }},
+    {toms::key::kUiEnding,       [](const toms::UiState& s) { return s.ending.visible; }},
+    {toms::key::kUiMinigame,     [](const toms::UiState& s) { return s.minigame.visible; }},
+    {toms::key::kUiOverlay,      [](const toms::UiState&)   { return true; }},
 };
 
 // Registers every UiState type with the data model. Member names are the ones the .rml files use.
@@ -41,6 +42,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("selected", &UiRow::selected);
         s.RegisterMember("enabled", &UiRow::enabled);
         s.RegisterMember("section", &UiRow::section);
+        s.RegisterMember("extra", &UiRow::extra);
     }
     c.RegisterArray<std::vector<UiRow>>();
     if (auto s = c.RegisterStruct<UiBanner>()) {
@@ -219,6 +221,11 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("attr_points", &UiPlayer::attr_points);
         s.RegisterMember("attr_points_hint", &UiPlayer::attr_points_hint);
         s.RegisterMember("attr_can_add", &UiPlayer::attr_can_add);
+        s.RegisterMember("attr_draft", &UiPlayer::attr_draft);
+        s.RegisterMember("attr_confirm", &UiPlayer::attr_confirm);
+        s.RegisterMember("attr_reset", &UiPlayer::attr_reset);
+        s.RegisterMember("attr_confirm_sel", &UiPlayer::attr_confirm_sel);
+        s.RegisterMember("attr_reset_sel", &UiPlayer::attr_reset_sel);
         s.RegisterMember("combat", &UiPlayer::combat);
         s.RegisterMember("more", &UiPlayer::more);
         s.RegisterMember("attrs", &UiPlayer::attrs);
@@ -408,7 +415,7 @@ bool GameUi::loadDocuments(std::string& error) {
     docs_.clear();
     for (const DocSpec& spec : kDocs) {
         Doc d;
-        d.file = dir_ + "/" + spec.file;
+        d.file = game_->pathOf(spec.key);
         d.doc = ctx_->LoadDocument(d.file);
         if (!d.doc) { error = "RmlUi could not load " + d.file + " (see the console log)"; return false; }
         if (family_ != "toms") d.doc->SetProperty("font-family", family_);
@@ -497,7 +504,7 @@ void GameUi::sync() {
     take(state_.notice, next.notice);
     take(state_.stage_select, next.stage_select);
     take(state_.ending, next.ending);
-    take(state_.minigame, next.minigame);   // a reward event (docs/30 phase 6)
+    take(state_.minigame, next.minigame);   // a reward event (docs/gameplay/07 phase 6)
     if (next.store.visible || next.store.unlocked_dialog) state_.store = std::move(next.store);
     else { state_.store.visible = false; state_.store.unlocked_dialog = false; }
     state_.overlay = std::move(next.overlay);
@@ -517,7 +524,7 @@ void GameUi::sync() {
         const bool want = kDocs[i].visible(state_);
         // The player menu's grids and lists scroll: an entry selected with the keyboard is scrolled
         // into view. The selection is laid out by the next context update, so this looks one frame later.
-        if (want && d.shown && scrollFrames_ > 0 && d.file.size() >= 10 && d.file.compare(d.file.size() - 10, 10, "player.rml") == 0) {
+        if (want && d.shown && scrollFrames_ > 0 && std::strcmp(kDocs[i].key, toms::key::kUiPlayer) == 0) {
             --scrollFrames_;
             for (Rml::Element* sel : {d.doc->QuerySelector(".cell.selected"), d.doc->QuerySelector(".evrow.selected"),
                                       d.doc->QuerySelector(".attr.selected"), d.doc->QuerySelector("#sys-page .row.selected")})

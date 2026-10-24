@@ -10,7 +10,7 @@ add_executable(toms_editor
     src/main.cpp
     src/editor_window.h src/editor_window.cpp
     src/bgfx_viewport.h src/bgfx_viewport.cpp
-    # Windows Debug: memory still allocated at exit (the game's leak check, docs/33_LEAK_CHECK.md)
+    # Windows Debug: memory still allocated at exit (the game's leak check, docs/engine/15_LEAK_CHECK.md)
     ${CMAKE_SOURCE_DIR}/src/game/src/leak_check.h ${CMAKE_SOURCE_DIR}/src/game/src/leak_check.cpp
     # The existing stage editor, compiled as it is (only its main.cpp is left out).
     ${STAGE_EDITOR_DIR}/mainwindow.h ${STAGE_EDITOR_DIR}/mainwindow.cpp
@@ -34,7 +34,7 @@ set_target_properties(toms_editor PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 # ui_editor: the game's UI files (.rml / .rcss) beside the running game, every edit shown as it is typed
-# (docs/08_RMLUI.md "The UI editor"). It shares toms_editor's game viewport.
+# (docs/gameplay/01_RMLUI.md "The UI editor"). It shares toms_editor's game viewport.
 add_executable(ui_editor
     src/uied_main.cpp
     src/uied_window.h src/uied_window.cpp

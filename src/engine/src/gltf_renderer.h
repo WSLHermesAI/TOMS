@@ -2,7 +2,7 @@
 // skinning, morph targets (morphed on the CPU, uploaded when the weights change), instancing
 // (EXT_mesh_gpu_instancing: one instanced draw per primitive), alpha mask / blend (blended draws go
 // to a second, back-to-front view), up to 4 directional / point / spot lights with shadow maps.
-// docs/18_GLTF.md.
+// docs/engine/08_GLTF.md.
 //
 // Usage, once per frame:
 //   GltfRenderer::Frame f;  f.view = ...; f.proj = projection(...); f.eye = ...; f.lights = {...};

@@ -1,4 +1,4 @@
-// uied_main.cpp -- ui_editor: the game's UI files beside the running game (docs/08_RMLUI.md "The UI editor").
+// uied_main.cpp -- ui_editor: the game's UI files beside the running game (docs/gameplay/01_RMLUI.md "The UI editor").
 //   ui_editor                      the editor
 //   ui_editor --selftest           -platform offscreen: the text logic and the file handling, no GPU (exit 0 = ok)
 //   ui_editor --smoke=<png>        with a GPU: battle_bow previewed, the title's colour typed (not saved) shows in the

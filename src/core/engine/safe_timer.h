@@ -1,4 +1,4 @@
-// safe_timer.h -- delayed calls that never run after their owner is gone (docs/30_GAMEPLAY_PLAN.md §9).
+// safe_timer.h -- delayed calls that never run after their owner is gone (docs/gameplay/07_GAMEPLAY_PLAN.md §9).
 //
 // A battle schedules things for later: show the damage number when the swing lands, end the attack's pause when its
 // animation is over. If the battle (or whatever scheduled the call) is destroyed or restarted first, the call must

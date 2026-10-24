@@ -74,7 +74,7 @@ std::vector<MeshNeed> meshesNeeded(const Clip& clip, const AtlasSet& atlases);
 // gives an empty mesh (the node draws as a quad, or a deform on a plain grid).
 toms::SpriteMesh cutMesh(const MeshNeed& need, const uint8_t* rgba, int stride);
 
-// What a clip draws, in draw order: quads, and the meshes of skinned nodes (docs/34_MESH_ANIMATION.md).
+// What a clip draws, in draw order: quads, and the meshes of skinned nodes (docs/engine/16_MESH_ANIMATION.md).
 struct DrawList {
     std::vector<Quad> quads;
     struct MeshItem {
@@ -118,7 +118,7 @@ bool makeQuad(const NodePose& pose, const AtlasSet& atlases, const glm::mat3& pl
 // rest pose comes from `clip` (the clip the poses were evaluated from).
 void appendDraws(const Clip& clip, const std::vector<NodePose>& poses, const AtlasSet& atlases, const glm::mat3& placement,
                  const float tint[4], DrawList& out, std::vector<std::string>* missing = nullptr);
-// A skinned node's sprite that has no mesh in its atlas's mesh file (docs/34_MESH_ANIMATION.md): it is drawn as a
+// A skinned node's sprite that has no mesh in its atlas's mesh file (docs/engine/16_MESH_ANIMATION.md): it is drawn as a
 // plain quad, not bent by its bones. Sprites no atlas has are left out (that is another problem).
 struct MissingMesh {
     std::string node;     // "root/child/node"
@@ -152,6 +152,9 @@ public:
     void play(const Clip* clip);       // from the start; nullptr = stop
     void stop() { play(nullptr); }
     void update(int dtMs);             // advances; events passed go to takeEvents()
+    // Jumps to this time since play() (seconds; past the duration = a later play), sending no events -- for a clip
+    // driven by an outside clock (the floor's idle clock: render_object.h ClipObject::setTime).
+    void seek(double seconds);
     std::vector<std::string> takeEvents();
 
     const Clip* clip() const { return clip_; }
@@ -208,7 +211,7 @@ bool latticeView(const std::vector<NodePose>& poses, size_t i, const AtlasSet& a
 // scale at that frame). False: no node of that name.
 bool attachPlacement(const std::vector<NodePose>& poses, const std::string& node, const glm::mat3& place, glm::mat3& out);
 
-// A character clip and a held thing's clip played together (docs/15_ANIMATION.md "Characters"): the character clip
+// A character clip and a held thing's clip played together (docs/engine/05_ANIMATION.md "Characters"): the character clip
 // (archer_bow.anim: body, hand) and the held clip (weapon_bow.anim) are separate files, bound here. Both start
 // together; every frame the held clip is drawn at the character's `hand` node, in front of the character, so it moves
 // with the body's lean, recoil and shake. Events come from both. Either clip may be missing (only the other plays).

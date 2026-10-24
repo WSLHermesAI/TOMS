@@ -31,7 +31,7 @@
 //
 // Files: version 2 stores pos / rot / scale as [x, y, z]. Version 1 files ([x, y] and a single rot
 // number, the z rotation) still load; they are saved as version 2. Version 3 adds a node's "skin"
-// (docs/34_MESH_ANIMATION.md); a file is saved as version 3 only when a node has one, so files without
+// (docs/engine/16_MESH_ANIMATION.md); a file is saved as version 3 only when a node has one, so files without
 // skins still open in older builds.
 //
 // Deform (a lattice; version 3 too): a node's `lattice` is a grid of points over its sprite's original image, cols x
@@ -217,7 +217,7 @@ bool parseNodeJson(const std::string& json, Node& out, std::string* err = nullpt
 
 // ---- characters ---------------------------------------------------------------------------------
 //
-// A character clip (docs/15_ANIMATION.md, "Characters"; tools/make_archer_anim.py) is made with one character and
+// A character clip (docs/engine/05_ANIMATION.md, "Characters"; tools/make_archer_anim.py) is made with one character and
 // played by any other. Its contract is two node names:
 //   body   the character's sprite, pivot at the bottom centre (feet), unscaled
 //   hand   where a held thing (a bow) sits, a sibling of the body's chain under a node at the feet

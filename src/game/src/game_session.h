@@ -58,7 +58,7 @@ struct SessionOptions {
     // The 3D scene behind the title (title_scene.h): a .glb / .gltf path, "" = the default
     // (<assets>/models/VirtualCity.glb, when it exists), "none" = the plain title (--title-scene).
     std::string titleScene;
-    // Read changed art, clips and effects again while running (Game::setHotReload, docs/25_RESOURCE_MANAGER.md §4.6).
+    // Read changed art, clips and effects again while running (Game::setHotReload, docs/engine/12_RESOURCE_MANAGER.md §4.6).
     bool hotReload = false;
 };
 

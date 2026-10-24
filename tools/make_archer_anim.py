@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """make_archer_anim.py -- writes assets/media/anim/archer_bow.anim: a character's motion while shooting a bow, one set
-of clips for every character (docs/15_ANIMATION.md, "Characters"). Only the character: the bow is its own file
+of clips for every character (docs/engine/05_ANIMATION.md, "Characters"). Only the character: the bow is its own file
 (weapon_bow.anim), and the game binds the two together (anim_player.h CharacterRig: the bow clip of the same name is
 drawn at this clip's `hand` node, every frame).
 

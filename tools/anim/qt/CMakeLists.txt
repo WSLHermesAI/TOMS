@@ -1,4 +1,4 @@
-# tools/anim/qt -- anim_editor: the Qt 6 editor for .anim node animations (docs/15_ANIMATION.md).
+# tools/anim/qt -- anim_editor: the Qt 6 editor for .anim node animations (docs/engine/05_ANIMATION.md).
 #
 # Added by tools/anim/CMakeLists.txt when Qt6::Widgets is there. Shares tools/studio_common
 # (theme, icons, canvas base) with the atlas editor; AnimEditor is the unit Phase 2's plugin host
@@ -67,11 +67,11 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME anim.check_preview
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/tests/smoke/anim_preview.anim")
     set_tests_properties(anim.check_preview PROPERTIES LABELS "unit;anim" TIMEOUT 30)
-    # the skinned clip (docs/34_MESH_ANIMATION.md): its skin bones are nodes of the clip
+    # the skinned clip (docs/engine/16_MESH_ANIMATION.md): its skin bones are nodes of the clip
     add_test(NAME anim.check_skin
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/tests/smoke/anim_skin.anim")
     set_tests_properties(anim.check_skin PROPERTIES LABELS "unit;anim" TIMEOUT 30)
-    # A skinned sprite without a mesh is an error of the check (docs/34 step 5).
+    # A skinned sprite without a mesh is an error of the check (docs/engine/16 step 5).
     add_test(NAME anim.check_skin_meshes
              COMMAND "${CMAKE_COMMAND}" -DANIM_EDITOR=$<TARGET_FILE:anim_editor> -DROOT=${CMAKE_SOURCE_DIR}
                      -DOUT=${CMAKE_BINARY_DIR}/test-run/check_skin_meshes
@@ -92,15 +92,15 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
                          --anim-editor $<TARGET_FILE:anim_editor>)
         set_tests_properties(anim.meshes_up_to_date PROPERTIES LABELS "unit;anim" TIMEOUT 60)
     endif()
-    # The hand-writing guide's examples (docs/16_ANIMATION_RECIPES.md) stay valid.
+    # The hand-writing guide's examples (docs/engine/06_ANIMATION_RECIPES.md) stay valid.
     add_test(NAME anim.check_recipes
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/docs/examples/anim_recipes.anim")
     set_tests_properties(anim.check_recipes PROPERTIES LABELS "unit;anim" TIMEOUT 30)
-    # The monsters on the battle screen (tools/make_monster_battle_anims.py; docs/15 "Monsters in battle").
+    # The monsters on the battle screen (tools/make_monster_battle_anims.py; docs/engine/05 "Monsters in battle").
     add_test(NAME anim.check_monster_battle
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/monster_battle.anim")
     set_tests_properties(anim.check_monster_battle PROPERTIES LABELS "unit;anim" TIMEOUT 30)
-    # The skinning tutorial's files (docs/35_SKINNING_TUTORIAL.md): the start and the finished golem stay valid.
+    # The skinning tutorial's files (docs/engine/17_SKINNING_TUTORIAL.md): the start and the finished golem stay valid.
     foreach(_tut golem_start golem_done)
         add_test(NAME anim.check_tutorial_${_tut}
                  COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/docs/examples/tutorial/${_tut}.anim")
@@ -126,12 +126,12 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME anim.check_archer
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/archer_bow.anim")
     set_tests_properties(anim.check_archer PROPERTIES LABELS "unit;anim" TIMEOUT 30)
-    # The sword's and the staff's battle clips (tools/make_weapon_anims.py; docs/30 phase 4).
+    # The sword's and the staff's battle clips (tools/make_weapon_anims.py; docs/gameplay/07 phase 4).
     foreach(_clip weapon_sword fighter_sword weapon_staff caster_staff)
         add_test(NAME anim.check_${_clip} COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/${_clip}.anim")
         set_tests_properties(anim.check_${_clip} PROPERTIES LABELS "unit;anim" TIMEOUT 30)
     endforeach()
-    add_test(NAME anim.check_deform   # the deform lattice's demo (docs/34 step 4)
+    add_test(NAME anim.check_deform   # the deform lattice's demo (docs/engine/16 step 4)
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/tests/smoke/anim_deform.anim")
     set_tests_properties(anim.check_deform PROPERTIES LABELS "unit;anim" TIMEOUT 30)
 endif()

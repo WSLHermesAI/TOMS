@@ -1,4 +1,4 @@
-// tween.h -- a value moving from one number to another over time, with easing (docs/30_GAMEPLAY_PLAN.md §4, §9).
+// tween.h -- a value moving from one number to another over time, with easing (docs/gameplay/07_GAMEPLAY_PLAN.md §4, §9).
 //
 // The battle's markers ("use tween to move the lighting indicator"), floating damage numbers, growing hit lines:
 // anything that moves over a known time. Once, looping, or back and forth (a marker sweeping a bar).

@@ -1,4 +1,4 @@
-// event_chain_test -- event logic in the data (docs/event_editor/06_EVENT_LOGIC.md) and key gates.
+// event_chain_test -- event logic in the data (docs/gameplay/event_editor/06_EVENT_LOGIC.md) and key gates.
 //
 //   * every event `action` is a valid story action (story_actions.h) naming a real item / counter, every `requires` that waits for an event
 //     (runFlagSet "event_<id>") names a real event;
@@ -107,7 +107,7 @@ int main() {
     for (const auto& [id, e] : events) {
         if (e.contains("actions")) {
             CHECK(e["actions"].is_array(), "%s: actions is a list", id.c_str());
-            // the one action vocabulary (story_actions.h; docs/event_editor/08_NPC_DIALOGUE.md section 7)
+            // the one action vocabulary (story_actions.h; docs/gameplay/event_editor/08_NPC_DIALOGUE.md section 7)
             toms::story::Catalog cat;
             for (auto& [k, v] : items.items()) if (!k.empty() && k[0] != '_') cat.items.insert(k);
             for (auto& [k, v] : counters.items()) if (!k.empty() && k[0] != '_') cat.counters.insert(k);

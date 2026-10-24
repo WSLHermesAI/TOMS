@@ -642,7 +642,7 @@ void ObjectWindow::apply() {
         const std::string key = std::to_string(m_x) + "," + std::to_string(m_y);
         m_ed->edit(tr("Object settings: %1").arg(q(p.nameOf(m_sem))), [&](stage::StageDoc& d) {
             if (const Json* old = stage::Project::objOf(d, m_x, m_y); old && old->contains("uid"))
-                o["uid"] = (*old)["uid"];   // its save id stays (docs/28_SAVE_SYSTEM.md)
+                o["uid"] = (*old)["uid"];   // its save id stays (docs/gameplay/05_SAVE_SYSTEM.md)
             if (!d.st.contains("objects") || !d.st["objects"].is_object()) d.st["objects"] = Json::object();
             if (!o.empty()) d.st["objects"][key] = o;
             else d.st["objects"].erase(key);

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""fetch_samples.py -- download Khronos glTF sample models to try in gltf_viewer (docs/18_GLTF.md).
+"""fetch_samples.py -- download Khronos glTF sample models to try in gltf_viewer (docs/engine/08_GLTF.md).
 
 They go to Build/gltf_samples/ (not committed: each model has its own licence, see its README at
 https://github.com/KhronosGroup/glTF-Sample-Assets). Already downloaded files are skipped.

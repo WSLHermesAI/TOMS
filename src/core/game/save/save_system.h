@@ -40,7 +40,7 @@ struct MetaSaveData {
     // known while resetting the crafted gear itself, so this lives on the META save, not the run
     // save's skillsOwned-style run-scoped list.
     std::vector<std::string> forgeRecipesKnown;
-    // Monster cards (card_collection.h; docs/30_GAMEPLAY_PLAN.md §3): per monster, wins, losses and copies held.
+    // Monster cards (card_collection.h; docs/gameplay/07_GAMEPLAY_PLAN.md §3): per monster, wins, losses and copies held.
     // Meta scope: survives rebirth. Optional in the file (an older save has none).
     CardBook cards;
 };
@@ -51,15 +51,15 @@ struct PlayerSaveData {
     int hp = 120, maxhp = 120, atk = 12, def = 4, gold = 0, exp = 0, lv = 1;
     int key_yellow = 0, key_blue = 0, key_red = 0;
     std::vector<std::string> inv;
-    // 2026-10 (the player menu, docs/20_PLAYER_MENU.md): optional, so an older save still loads --
+    // 2026-10 (the player menu, docs/gameplay/03_PLAYER_MENU.md): optional, so an older save still loads --
     // missing attributes are rebuilt from data/stats.json, missing gear is none.
     std::map<std::string, int> attrs;            // data/stats.json's attributes by id
     std::vector<std::string> gear;               // owned weapons / armor / talents
     std::string weapon, armor, talent;           // what is worn ("" = nothing)
     int attrPoints = 0;                          // attribute points not placed yet
-    // 2026-10-22 (Battle v3, docs/30 phase 1): wins with each weapon ("unarmed" for none) -- its level comes from them.
+    // 2026-10-22 (Battle v3, docs/gameplay/07 phase 1): wins with each weapon ("unarmed" for none) -- its level comes from them.
     std::map<std::string, int> weaponUses;
-    int crystals = 0;                            // 2026-10-22 (docs/30 phase 6): the second currency; optional
+    int crystals = 0;                            // 2026-10-22 (docs/gameplay/07 phase 6): the second currency; optional
 };
 
 // The current session/run in progress.
@@ -78,7 +78,7 @@ struct RunSaveData {
     std::string                        floor = "F01";// the 70-floor tower's current floor id
     std::vector<std::string>           clearedFloors;// feeds the `stageCleared` condition
     std::vector<std::string>           eventsStarted, eventsFinished;   // the event log (2026-10; optional)
-    // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md section 8; optional): the event variables set this
+    // NPCs and their events (docs/gameplay/event_editor/08_NPC_DIALOGUE.md section 8; optional): the event variables set this
     // run (story/vars.json; the rest are at their default), and per NPC [talk index, talk count, last random line].
     std::map<std::string, int>              vars;
     std::map<std::string, std::vector<int>> npcTalk;
@@ -93,7 +93,7 @@ struct RunSaveData {
     int superMax = 5;
 };
 
-// Migrations (docs/28_SAVE_SYSTEM.md): before a file is parsed, its json is brought up to the current schema one version
+// Migrations (docs/gameplay/05_SAVE_SYSTEM.md): before a file is parsed, its json is brought up to the current schema one version
 // at a time (v1 -> v2 -> v3 ...). Adding a field needs no step -- a missing field takes its default. A step is needed
 // when a field is renamed, removed, split or changes meaning: add it to kMetaMigrations / kRunMigrations in
 // save_system.cpp and raise the schema version. A file NEWER than this build is left as it is (fields this build does

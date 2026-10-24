@@ -117,7 +117,7 @@ void checkNode(const Node& n, int clip, const Clip& c, std::vector<int>& path, c
             if (!k.v.empty()) used.insert(k.v);
         for (const std::string& s : used) checkSprite(s, clip, path, where, atlases, out);
     }
-    // A skin (docs/34_MESH_ANIMATION.md): its sprites need a mesh to bend; every bone must be a node of the clip (a bone
+    // A skin (docs/engine/16_MESH_ANIMATION.md): its sprites need a mesh to bend; every bone must be a node of the clip (a bone
     // no node has bends nothing).
     if (n.skinned() && atlases.check()) {
         Node alone = n;   // this node only: skinnedWithoutMesh walks the children too, and they get their own turn
@@ -260,7 +260,7 @@ int headlessMain(const std::vector<std::string>& args) {
                    "  parses the file, checks sprite references against its atlases and the keys; exit 0 = no errors, 2 = errors\n"
                    "  --atlas (repeatable) replaces the file's atlas list, in lookup order; the id defaults to the file name\n"
                    "       anim_editor --headless meshes <file.anim>... [--atlas ...] [--bin|--text] [--check] [--prune]\n"
-                   "  adds the meshes of their skinned and deformed nodes to their atlases' <atlas>.mesh.json (docs/34)\n",
+                   "  adds the meshes of their skinned and deformed nodes to their atlases' <atlas>.mesh.json (docs/engine/16)\n",
                    stderr);
         return 3;
     }

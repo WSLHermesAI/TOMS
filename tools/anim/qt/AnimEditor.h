@@ -135,6 +135,6 @@ private:
     QAction *m_moveAct, *m_rotateAct, *m_scaleAct, *m_autoKeyAct, *m_snapAct;
     QAction *m_insertKeyAct, *m_qualifyAct, *m_fitAct, *m_zoomInAct, *m_zoomOutAct, *m_frameAct;
     QAction *m_helpCliAct, *m_aboutAct;
-    // Help > Skinning Tutorial (docs/35_SKINNING_TUTORIAL.md) and its example files (docs/examples/tutorial/).
+    // Help > Skinning Tutorial (docs/engine/17_SKINNING_TUTORIAL.md) and its example files (docs/examples/tutorial/).
     QAction *m_tutorialAct = nullptr, *m_tutorialStartAct = nullptr, *m_tutorialDoneAct = nullptr;
 };

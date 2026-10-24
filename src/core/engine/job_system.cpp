@@ -1,6 +1,6 @@
 // job_system.cpp -- see job_system.h.
 #include "job_system.h"
-#include "singletons.h"   // released at the end of main (docs/33_LEAK_CHECK.md)
+#include "singletons.h"   // released at the end of main (docs/engine/15_LEAK_CHECK.md)
 
 #include <algorithm>
 #include <cstdio>

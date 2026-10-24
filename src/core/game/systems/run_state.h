@@ -28,7 +28,7 @@ namespace toms {
 // Declaration of one accumulator, from data/story/counters.json: `displayAt` is the threshold at
 // which the HUD shows the state *word* (never the number), and `clamp` bounds it so the rebirth
 // maths in section 8 can never produce a negative or absurd value.
-// An event variable from story/vars.json (docs/event_editor/08_NPC_DIALOGUE.md section 8): its value before anything
+// An event variable from story/vars.json (docs/gameplay/event_editor/08_NPC_DIALOGUE.md section 8): its value before anything
 // sets it, and its range ("bool" variables are 0..1).
 struct VarDecl {
     int def = 0;
@@ -110,7 +110,7 @@ public:
     bool floorCleared(const std::string& floorId) const;
     const std::vector<std::string>& clearedFloors() const { return clearedFloors_; }
 
-    // ---- events: the player's event log (docs/event_editor/06_EVENT_LOGIC.md section 7) --------
+    // ---- events: the player's event log (docs/gameplay/event_editor/06_EVENT_LOGIC.md section 7) --------
     // Started = the player has met the event (reached its tile, or a finished event's `next` points at
     // it); finished = it fired. Both keep the order they happened in (the log lists the newest first).
     // Finishing also starts it, so "finished" is always a subset of "started".
@@ -121,7 +121,7 @@ public:
     const std::vector<std::string>& eventsStarted() const { return eventsStarted_; }
     const std::vector<std::string>& eventsFinished() const { return eventsFinished_; }
 
-    // ---- event variables and NPC talk state (docs/event_editor/08_NPC_DIALOGUE.md section 8) ---
+    // ---- event variables and NPC talk state (docs/gameplay/event_editor/08_NPC_DIALOGUE.md section 8) ---
     // A variable never set reads its declared default (0 when undeclared); setting clamps to the declared range.
     int var(const std::string& name) const;
     void setVar(const std::string& name, int value);

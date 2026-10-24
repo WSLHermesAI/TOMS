@@ -1,5 +1,5 @@
 {
-  "_comment": "The gold reward event (docs/30 phase 6): Enter at 10 starts it (4 points at 1/5 .. 4/5 of a 1600 ms sweep, no charge: one every 20 frames at --fixed-dt=16), the taps at 30, 50, 70 and 90 hit all four: 4 x 15 + 30 = 90 gold; Enter at 100 closes it.",
+  "_comment": "The gold reward event (docs/gameplay/07 phase 6): Enter at 10 starts it (4 points at 1/5 .. 4/5 of a 1600 ms sweep, no charge: one every 20 frames at --fixed-dt=16), the taps at 30, 50, 70 and 90 hit all four: 4 x 15 + 30 = 90 gold; Enter at 100 closes it.",
   "scene": "miniGame",
   "miniGame": "chest_lockpick",
   "test": {

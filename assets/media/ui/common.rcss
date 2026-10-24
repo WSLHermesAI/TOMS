@@ -1,4 +1,4 @@
-/* common.rcss -- shared by every screen in this folder (see docs/08_RMLUI.md).
+/* common.rcss -- shared by every screen in this folder (see docs/gameplay/01_RMLUI.md).
 
    Units: every document is laid out in the game's 1024x768 design space, so px here are design
    pixels (the game scales the whole UI to the window, letterboxed like the map).

@@ -1,4 +1,4 @@
-// stage_checks.h -- the stage editor's checks, without Qt (docs/19_STAGE_EDITOR.md, sections 2 and 6).
+// stage_checks.h -- the stage editor's checks, without Qt (docs/gameplay/02_STAGE_EDITOR.md, sections 2 and 6).
 //
 //   problems()     one floor: unknown chars, the player start, events placed / listed / defined, stairs and their
 //                  targets, objects the player cannot reach, big monsters' room, object settings

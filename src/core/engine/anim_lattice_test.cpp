@@ -1,5 +1,5 @@
 // anim_lattice_test.cpp -- the deform lattice (anim_clip.h deformAt / lattice, anim_player.h latticeOffset /
-// latticeView / the mesh path; docs/34_MESH_ANIMATION.md step 4): the file (version 3 only when used, the errors), the
+// latticeView / the mesh path; docs/engine/16_MESH_ANIMATION.md step 4): the file (version 3 only when used, the errors), the
 // eased offsets between keys, the bilinear offset inside a cell, a deformed sprite drawn as a bent mesh (a plain grid
 // when it has no mesh file), and the lattice the editor shows. No GPU.
 #include "anim_player.h"

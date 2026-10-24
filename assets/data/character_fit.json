@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "Per-character nudges for character clips (docs/15_ANIMATION.md, 'Characters'; e.g. media/anim/archer_bow.anim).",
+    "Per-character nudges for character clips (docs/engine/05_ANIMATION.md, 'Characters'; e.g. media/anim/archer_bow.anim).",
     "A character clip is made with one character and fitted to any other automatically: its 'hand' (where the bow is",
     "held) keeps its share of the visible body's height and its distance from the body's right edge, measured from the",
     "sprite's pixels. A character whose hand still looks off gets an entry here: the sprite name and the hand's extra",

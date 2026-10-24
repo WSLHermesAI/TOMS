@@ -57,7 +57,7 @@
  ", additive": "，加法混合",
  "/ %1 s%2": "/ %1 秒%2",
  "1 sprite": "1 個精靈圖",
- "<b>Anim Editor</b><p>Node animations (.anim) on the packed sprite atlas for TOMS. The preview uses the game's own evaluate() and appendQuads().</p><p>docs/15_ANIMATION.md</p>": "<b>動畫編輯器</b><p>TOMS 用的節點動畫（.anim），使用打包的精靈圖集。預覽使用遊戲本身的 evaluate() 與 appendQuads()。</p><p>docs/15_ANIMATION.md</p>",
+ "<b>Anim Editor</b><p>Node animations (.anim) on the packed sprite atlas for TOMS. The preview uses the game's own evaluate() and appendQuads().</p><p>docs/engine/05_ANIMATION.md</p>": "<b>動畫編輯器</b><p>TOMS 用的節點動畫（.anim），使用打包的精靈圖集。預覽使用遊戲本身的 evaluate() 與 appendQuads()。</p><p>docs/engine/05_ANIMATION.md</p>",
  "@ %1": "@ %1",
  "A file keeps at least one clip.": "檔案至少要保留一個片段。",
  "A group node under the selected node": "在選取節點下新增群組節點",
@@ -389,7 +389,7 @@
  "z: depth (into the screen). The 2D view does not move with it; a 3D camera would": "z：深度（往螢幕內）。2D 檢視不會隨之移動；3D 攝影機會",
  "z: depth scale (shows with x / y tilts and a 3D camera)": "z：深度縮放（搭配 x / y 傾斜與 3D 攝影機時可見）",
  "z: turn in the screen plane, clockwise (the viewport's rotate handle)": "z：在螢幕平面上順時針旋轉（檢視區的旋轉控制點）",
- "Bones that bend this sprite's mesh: node names of this clip, comma separated. Empty = not skinned (drawn as a quad). The weights are made from the rest pose; its mesh is cut from the sprite and saved with the .anim (<name>.mesh.json). docs/34_MESH_ANIMATION.md": "彎曲此精靈圖網格的骨頭：此片段的節點名稱，以逗號分隔。空白 = 無蒙皮（以四邊形繪製）。權重由靜止姿勢產生；它的網格從精靈圖切出，隨 .anim 一起存檔（<name>.mesh.json）。docs/34_MESH_ANIMATION.md",
+ "Bones that bend this sprite's mesh: node names of this clip, comma separated. Empty = not skinned (drawn as a quad). The weights are made from the rest pose; its mesh is cut from the sprite and saved with the .anim (<name>.mesh.json). docs/engine/16_MESH_ANIMATION.md": "彎曲此精靈圖網格的骨頭：此片段的節點名稱，以逗號分隔。空白 = 無蒙皮（以四邊形繪製）。權重由靜止姿勢產生；它的網格從精靈圖切出，隨 .anim 一起存檔（<name>.mesh.json）。docs/engine/16_MESH_ANIMATION.md",
  "No mesh for this sprite (a child sprite, or no visible pixels): it draws as a quad.": "此精靈圖沒有網格（子精靈圖，或沒有可見像素）：它以四邊形繪製。",
  "This node's mesh: its sprite cut from its alpha on cells across x down (more cells bend more smoothly). Kept in the node; the mesh is saved with the .anim (<name>.mesh.json)": "此節點的網格：依橫向 x 縱向的格數，從精靈圖的 alpha 切出（格子越多，彎曲越平滑）。格數存在節點中；網格隨 .anim 一起存檔（<name>.mesh.json）",
  "Meshes: %1 (cut again)": "網格：%1（重新切割）",
@@ -446,6 +446,6 @@
  "The golem the tutorial starts from: the sprite only. Save it under another name first (File > Save As), so the start file stays as it is": "教學起點的石像：只有 sprite。請先另存成別的名稱（檔案 > 另存新檔），讓起始檔保持原樣",
  "Open Tutorial &Finished File": "開啟教學完成檔(&F)",
  "The golem as the tutorial ends: bones, skin, painted weights, sway, nod and breath": "教學完成時的石像：骨頭、蒙皮、手繪權重、擺動、點頭與呼吸",
- "The tutorial is docs/35_SKINNING_TUTORIAL.md in the TOMS repo. This editor runs outside the repo, so it cannot open it.": "教學是 TOMS 儲存庫中的 docs/35_SKINNING_TUTORIAL.md。這個編輯器在儲存庫之外執行，所以無法開啟它。",
+ "The tutorial is docs/engine/17_SKINNING_TUTORIAL.md in the TOMS repo. This editor runs outside the repo, so it cannot open it.": "教學是 TOMS 儲存庫中的 docs/engine/17_SKINNING_TUTORIAL.md。這個編輯器在儲存庫之外執行，所以無法開啟它。",
  "The tutorial's files are in docs/examples/tutorial of the TOMS repo. This editor runs outside the repo, so it cannot find them.": "教學的檔案在 TOMS 儲存庫的 docs/examples/tutorial。這個編輯器在儲存庫之外執行，所以找不到它們。"
 }

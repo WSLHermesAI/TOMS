@@ -251,7 +251,7 @@ void ParticleEditor::createMenus()
                                     "particle_editor --headless check file.particle\n"
                                     "particle_editor --headless render file.particle#effect out.png [frames] [every]\n"
                                     "particle_editor --selftest file.particle outdir</pre>"
-                                    "In the game: <code>toms_game --fx=file.particle#effect</code>. See docs/17_PARTICLES.md."));
+                                    "In the game: <code>toms_game --fx=file.particle#effect</code>. See docs/engine/07_PARTICLES.md."));
     });
 }
 

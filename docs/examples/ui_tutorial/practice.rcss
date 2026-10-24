@@ -1,4 +1,4 @@
-/* practice.rcss -- the UI editor tutorial's practice screen (docs/37_UI_EDITOR.md). Sizes are design pixels of the
+/* practice.rcss -- the UI editor tutorial's practice screen (docs/gameplay/10_UI_EDITOR.md). Sizes are design pixels of the
    game's 1024 x 768 screen. */
 body { z-index: 90; }
 

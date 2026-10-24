@@ -1,5 +1,5 @@
 // resource.h -- loaded things (textures, atlases, clips, particle files, fonts, data) and the one cache that hands them out
-// (docs/25_RESOURCE_MANAGER.md).
+// (docs/engine/12_RESOURCE_MANAGER.md).
 //
 // FM79979's cGameResourceManager + cSmartObject + cResourceStamp, in modern C++:
 //   * a Resource is an Object (type, name, unique id, leak list): the name is its file path;
@@ -115,12 +115,15 @@ public:
     void setRoot(const std::string& dir);
     const std::string& root() const { return root_; }
     // The resource manifest: {"resources": {"<key>": {"type": "anim", "path": "anim/door_open.anim", "preload": true}}}.
-    // Paths are relative to the manifest's folder. Types: texture, atlas, anim, particle, font, json. False (and why)
-    // when it cannot be read; keys already known stay.
+    // Paths are relative to the manifest's folder. Types: texture, atlas, anim, particle, font, json -- loaded by get<>;
+    // file (a file something else reads: an RmlUi document, a data file with its own loader) and folder (a folder
+    // read file by file) -- only named, resolve() gives their path. "optional": true = the file may not be there. "patterns": {"<name>": "../data/stages/{id}.json"}
+    // name families of files (pathFor). False (and why) when it cannot be read; keys already known stay.
     bool loadManifest(const std::string& path, std::string* error = nullptr);
     struct ManifestEntry {
         std::string type, path;   // path: as read (relative to the root when the manifest is in it)
         bool preload = false;
+        bool optional = false;   // may be missing (a file an editor makes when it is first needed)
     };
     bool has(const std::string& key) const { return manifest_.count(key) != 0; }
     const ManifestEntry* entry(const std::string& key) const;
@@ -130,6 +133,11 @@ public:
     int preload();
     // The path a name reads: a manifest key's path, else the name itself; both under the root when relative.
     std::string resolve(const std::string& name) const;
+    // A file of a family: the manifest pattern with {id} replaced, under the root ("stage", "stage01" ->
+    // ".../data/stages/stage01.json"). An unknown pattern is told to the missing handler and gives "".
+    std::string pathFor(const std::string& pattern, const std::string& id) const;
+    bool hasPattern(const std::string& pattern) const { return patterns_.count(pattern) != 0; }
+    std::vector<std::string> patternNames() const;
     // Told once per resource that cannot be loaded (missing file, broken file, wrong type): what was asked for and why.
     void setOnMissing(std::function<void(const std::string& name, const std::string& path, const std::string& error)> fn) {
         onMissing_ = std::move(fn);
@@ -209,6 +217,7 @@ private:
     std::shared_ptr<GpuLink> link_;
     std::string root_;                                  // ends with '/' (or empty)
     std::unordered_map<std::string, ManifestEntry> manifest_;
+    std::unordered_map<std::string, std::string> patterns_;   // name -> path with "{id}", relative like the entries
     std::function<void(const std::string&, const std::string&, const std::string&)> onMissing_;
     std::unordered_map<std::string, Entry> cache_;   // "<type>|<key>"
     std::function<std::string(const std::string&)> mapper_;

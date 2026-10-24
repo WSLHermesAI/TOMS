@@ -1,5 +1,5 @@
 // anim_character_test.cpp -- character clips played by any character (anim_clip.h fitCharacter, sprite_mesh.h
-// visibleBox; docs/15_ANIMATION.md "Characters"): the visible box of a sprite, where the hand goes on another body, the
+// visibleBox; docs/engine/05_ANIMATION.md "Characters"): the visible box of a sprite, where the hand goes on another body, the
 // fitted copy (sprite, hand and its keys, the nudge), and the shipped archer_bow.anim fitted to every player sprite of
 // the game atlas: the bow stays in front of each body at the same share of its height. Runs in assets/. No GPU.
 #include "anim_player.h"

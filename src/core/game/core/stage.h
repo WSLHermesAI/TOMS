@@ -32,13 +32,13 @@ struct Entity {
     std::string displayName;            // banner text for 4-grid entities; empty -> use `id`
     bool fpExplicit = false;            // true when THIS stage file named the footprint for this
                                         // tile char (it then beats the character-level type table)
-    // The stage editor's per-object settings (docs/19_STAGE_EDITOR.md): the stage file's "objects", keyed "x,y". Its
+    // The stage editor's per-object settings (docs/gameplay/02_STAGE_EDITOR.md): the stage file's "objects", keyed "x,y". Its
     // look ({"sprite", "anim": "<file under media>#<clip>", "tint": [r, g, b, a]}; null = its type's look) and the
     // events linked to it, which fire when the player interacts with it (Game::fireLinkedEvents).
     nlohmann::json look;
     std::vector<std::string> links;
     // Its stable id on this floor (objects."x,y".uid, given by the stage editor): what the save keys its status by,
-    // so moving it in the editor keeps a defeated monster defeated (docs/28_SAVE_SYSTEM.md). Empty in an old file.
+    // so moving it in the editor keeps a defeated monster defeated (docs/gameplay/05_SAVE_SYSTEM.md). Empty in an old file.
     std::string uid;
 };
 
@@ -53,7 +53,7 @@ struct Stage : public Trackable {
     int startX = -1, startY = -1;          // the '@' tile (player_start), -1 when the grid has none
     std::string story_note;
     // The floor's tile theme (the stage file's "theme", e.g. "ice"): walls, floor and stairs are drawn with
-    // wall_<theme>, floor_<theme>, stairs_up_<theme>, stairs_down_<theme> where the atlas has them (docs/27_AI_SPRITES.md).
+    // wall_<theme>, floor_<theme>, stairs_up_<theme>, stairs_down_<theme> where the atlas has them (docs/engine/14_AI_SPRITES.md).
     std::string theme;
 
     char at(int x, int y) const {

@@ -165,7 +165,7 @@
     {
       "name": "web-release-mt-windows",
       "displayName": "Web/WASM Release, multithreaded (Windows)",
-      "description": "Like web-release-windows, plus WebAssembly threads (-pthread, a pool of pre-started Web Workers for the job system). Runs only on a cross-origin-isolated page; the published page picks it or the single-threaded build (docs/10_THREADS.md).",
+      "description": "Like web-release-windows, plus WebAssembly threads (-pthread, a pool of pre-started Web Workers for the job system). Runs only on a cross-origin-isolated page; the published page picks it or the single-threaded build (docs/engine/02_THREADS.md).",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
         "CMAKE_CROSSCOMPILING_EMULATOR": "node",
@@ -188,7 +188,7 @@
     {
       "name": "android-debug",
       "displayName": "Android/arm64 Debug",
-      "description": "NDK arm64-v8a, android-24, c++_shared. Needs ANDROID_NDK + a host shaderc (see docs/07_BUILD_ANDROID.md).",
+      "description": "NDK arm64-v8a, android-24, c++_shared. Needs ANDROID_NDK + a host shaderc (see docs/project/06_BUILD_ANDROID.md).",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/Build/android-debug",
       "cacheVariables": {

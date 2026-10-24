@@ -18,7 +18,7 @@ void Game::startDialogue(const std::string& npc) {
 
 nlohmann::json Game::readDialogue(const std::string& id) const {
     if (id.empty()) return nlohmann::json();
-    return readJsonFile(dataDir + "/../data/dialogue/" + id + ".json");
+    return readJsonFile(pathFor(toms::pattern::kDialogue, id));
 }
 
 bool Game::holds(const nlohmann::json& condition) const {
@@ -128,11 +128,11 @@ void Game::endDialogue() {
     dlgFinishOnClose_ = false;
 }
 
-// ---------- NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md) ----------
+// ---------- NPCs and their events (docs/gameplay/event_editor/08_NPC_DIALOGUE.md) ----------
 
-void Game::loadNpcs(const std::string& assetDir) {
+void Game::loadNpcs() {
     npcDefs_.clear();
-    const std::string dir = assetDir + "/../data/npcs/";
+    const std::string dir = pathOf(toms::key::kFolderNpcs) + "/";
     for (const std::string& name : toms::vfsListDir(dir)) {
         if (name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
         toms::talk::NpcDef d;
@@ -142,7 +142,7 @@ void Game::loadNpcs(const std::string& assetDir) {
     }
     // Event variables (story/vars.json, the event editor's Variables tab): defaults and ranges.
     std::map<std::string, toms::VarDecl> decls;
-    nlohmann::json vj = readJsonFile(assetDir + "/../data/story/vars.json");
+    nlohmann::json vj = readJsonFile(pathOf(toms::key::kDataStoryVars));
     if (vj.is_object())
         for (auto& [k, v] : vj.items()) {
             if (k.empty() || k[0] == '_' || !v.is_object()) continue;
@@ -392,7 +392,7 @@ void Game::runStoryActions(const nlohmann::json& actions) {
 // enum-style switch rather than a scripting hook, matching this project's existing preference
 // (see docs/design/MAIN_BATTLE_SCENE_DESIGN.md §4.4's `talent` enum / dialogue's own `action.give`
 // precedent in the design docs).
-// ---- reward events (docs/30 phase 6) ----
+// ---- reward events (docs/gameplay/07 phase 6) ----
 
 void Game::openMiniGame(const std::string& id) {
     const toms::MiniGameDef* def = miniGames_.find(id);
@@ -443,7 +443,7 @@ void Game::closeMiniGame() {
     miniGame_ = MiniGameState{};
 }
 
-// ---- the start story: the weapon trial (docs/30 phase 3) ----
+// ---- the start story: the weapon trial (docs/gameplay/07 phase 3) ----
 
 void Game::startWeaponTrial() { startDialogue("weapon_master"); }
 
@@ -482,9 +482,9 @@ void Game::chooseWeapon() {
 void Game::runDialogueAction(const nlohmann::json& action) {
     if (!action.is_object()) return;
     std::string type = action.value("type", std::string());
-    if (type == "tryWeapon") { tryWeapon(action.value("weapon", std::string())); return; }   // docs/30 phase 3
+    if (type == "tryWeapon") { tryWeapon(action.value("weapon", std::string())); return; }   // docs/gameplay/07 phase 3
     if (type == "chooseWeapon") { chooseWeapon(); return; }
-    if (type == "miniGame") { endDialogue(); openMiniGame(action.value("id", std::string())); return; }   // docs/30 phase 6
+    if (type == "miniGame") { endDialogue(); openMiniGame(action.value("id", std::string())); return; }   // docs/gameplay/07 phase 6
     if (type == "give") {
         std::string itemId = action.value("itemId", std::string());
         if (!itemId.empty()) receiveItem(itemId);
@@ -562,7 +562,7 @@ void Game::applyChapterGrants(const std::string& chapterId) {
     if (chapterId.empty()) return;
     std::string grantedFlag = "_chapter_granted." + chapterId;
     if (run_.flag(grantedFlag)) return;   // idempotent: revisiting ch_01's floors must not re-grant
-    nlohmann::json ch = readJsonFile(dataDir + "/../data/story/chapters/" + chapterId + ".json");
+    nlohmann::json ch = readJsonFile(pathFor(toms::pattern::kChapter, chapterId));
     if (!ch.is_object() || !ch.contains("grants") || !ch["grants"].is_object()) {
         // No chapter file yet (ch_04+, per S3's own scope) -- mark it granted anyway so the moment
         // that content DOES land, its grants apply from a fresh chapter entry, not retroactively

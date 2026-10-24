@@ -1,4 +1,4 @@
-// anim_meshes.h -- the sprite meshes clips bend (docs/34_MESH_ANIMATION.md), kept per atlas: `game.atlas` ->
+// anim_meshes.h -- the sprite meshes clips bend (docs/engine/16_MESH_ANIMATION.md), kept per atlas: `game.atlas` ->
 // `game.mesh.json` (+ `game.mesh.bin`) beside it, keyed by sprite and grid (anim_player.h meshKey), so every clip using
 // the atlas shares them. The anim tools add what their clips need -- every skinned or deformed node's sprite on that
 // node's mesh grid, cut from the atlas page's alpha -- when a clip is saved in the editor or by

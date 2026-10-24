@@ -1,4 +1,4 @@
-# tools/atlas/qt -- atlas_editor: the Qt 6 editor for .atlasproj files (docs/14_ATLAS_TOOL.md).
+# tools/atlas/qt -- atlas_editor: the Qt 6 editor for .atlasproj files (docs/engine/04_ATLAS_TOOL.md).
 #
 # Added by tools/atlas/CMakeLists.txt once Qt6::Widgets is found. Builds run on a worker thread
 # through Qt Concurrent; without it the editor is skipped (atlaspack still covers every build).

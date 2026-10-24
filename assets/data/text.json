@@ -7074,12 +7074,44 @@
       "es": "Puntos por repartir: {n}"
     },
     "status.points_hint": {
-      "zh_TW": "選一個屬性按 Enter 或 ＋ 加一點。",
-      "en": "Pick an attribute and press Enter or + to add a point.",
-      "zh_CN": "选一个属性按 Enter 或 ＋ 加一点。",
-      "ja": "能力値を選んで Enter か ＋ で 1 ポイント。",
-      "ko": "능력치를 고르고 Enter 또는 +로 1포인트.",
-      "es": "Elige un atributo y pulsa Enter o + para sumar un punto."
+      "zh_TW": "選一個屬性按 Enter 或 ＋ 加一點，再按「確認」保存。",
+      "en": "Pick an attribute and press Enter or + to add a point, then Confirm to keep them.",
+      "zh_CN": "选一个属性按 Enter 或 ＋ 加一点，再按「确认」保存。",
+      "ja": "能力値を選んで Enter か ＋ で 1 ポイント、「確認」で保存。",
+      "ko": "능력치를 고르고 Enter 또는 +로 1포인트, '확인'으로 저장.",
+      "es": "Elige un atributo y pulsa Enter o + para sumar un punto; luego Confirmar para guardarlos."
+    },
+    "status.points_confirm_hint": {
+      "zh_TW": "按「確認」保存這些點數；「重設」或關閉選單會取消。",
+      "en": "Confirm keeps these points and saves; Reset or closing the menu drops them.",
+      "zh_CN": "按「确认」保存这些点数；「重设」或关闭菜单会取消。",
+      "ja": "「確認」で保存。「リセット」かメニューを閉じると取り消し。",
+      "ko": "'확인'으로 저장합니다. '초기화'나 메뉴를 닫으면 취소됩니다.",
+      "es": "Confirmar guarda estos puntos; Restablecer o cerrar el menú los descarta."
+    },
+    "status.confirm": {
+      "zh_TW": "確認",
+      "en": "Confirm",
+      "zh_CN": "确认",
+      "ja": "確認",
+      "ko": "확인",
+      "es": "Confirmar"
+    },
+    "status.reset": {
+      "zh_TW": "重設",
+      "en": "Reset",
+      "zh_CN": "重设",
+      "ja": "リセット",
+      "ko": "초기화",
+      "es": "Restablecer"
+    },
+    "status.points_saved": {
+      "zh_TW": "屬性點數已保存。",
+      "en": "Attribute points saved.",
+      "zh_CN": "属性点数已保存。",
+      "ja": "能力ポイントを保存しました。",
+      "ko": "능력치 포인트를 저장했습니다.",
+      "es": "Puntos de atributo guardados."
     },
     "ev_common_relic_road_v2.title": {
       "en": "Cart Ruts in Stone"

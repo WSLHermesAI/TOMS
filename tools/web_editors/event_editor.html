@@ -642,7 +642,7 @@ const I18N = {
     lgInfo: (e, v) => `${e} events · ${v} variables · white = fires an event · purple = event variable · teal = counter · red = flag · gold = event done`,
     hTrigger: id => `Trigger of ${id}`, hReq: id => `Conditions of ${id}`, hAct: id => `Actions of ${id}`, hNext: id => `Links of ${id}`,
     hVarAdd: n => `New variable ${n}`, hVarEdit: n => `Variable ${n}`, hVarDel: n => `Delete variable ${n}`, hNewLogicEvent: id => `New event ${id} with logic`,
-    varsComment: 'Event variables: read and written by event logic (docs/event_editor/06_EVENT_LOGIC.md).',
+    varsComment: 'Event variables: read and written by event logic (docs/gameplay/event_editor/06_EVENT_LOGIC.md).',
     tutBtn: '📘 Tutorial', tutBtnTitle: 'Show or hide the tutorial (opens by itself only the first time)', tutHide: '◀ Hide', tutHideTitle: 'Hide the tutorial; the 📘 Tutorial button brings it back',
     edTitle: 'TOMS Event Editor', toStage: '⇄ Stage editor', leaveUnsaved: 'The event editor cannot save to disk yet: switching to the stage editor in this window loses these edits. Open index.html to switch without losing them. Leave anyway?',
     tFloors: 'Floor map', fmInfo: (n, s, l) => `${n} floors · ${s} stairs · ${l} locked · click a floor`,
@@ -949,7 +949,7 @@ const I18N = {
     lgInfo: (e, v) => `${e} 個事件 · ${v} 個變數 · 白色 = 觸發事件 · 紫色 = 事件變數 · 青色 = 計數 · 紅色 = 旗標 · 金色 = 事件完成`,
     hTrigger: id => `${id} 的觸發時機`, hReq: id => `${id} 的條件`, hAct: id => `${id} 的動作`, hNext: id => `${id} 的連結`,
     hVarAdd: n => `新增變數 ${n}`, hVarEdit: n => `變數 ${n}`, hVarDel: n => `刪除變數 ${n}`, hNewLogicEvent: id => `新增有邏輯的事件 ${id}`,
-    varsComment: '事件變數：由事件邏輯讀取與寫入（docs/event_editor/06_EVENT_LOGIC.md）。',
+    varsComment: '事件變數：由事件邏輯讀取與寫入（docs/gameplay/event_editor/06_EVENT_LOGIC.md）。',
     tutBtn: '📘 教學', tutBtnTitle: '顯示或隱藏教學（只有第一次會自動開啟）', tutHide: '◀ 隱藏', tutHideTitle: '隱藏教學；按「📘 教學」可再打開',
     edTitle: 'TOMS 事件編輯器', toStage: '⇄ 關卡編輯器', leaveUnsaved: '事件編輯器還不能存檔：在這個視窗切換到關卡編輯器會失去這些修改。請開啟 index.html，切換時就不會遺失。仍要離開嗎？',
     tFloors: '樓層圖', fmInfo: (n, s, l) => `${n} 個樓層 · ${s} 個樓梯 · ${l} 個上鎖 · 點樓層查看`,
@@ -1022,7 +1022,7 @@ function logicFrom(e) {
   const rq = e.requires; let req = [], reqRaw = null;
   if (rq && rq.type) req = [rq]; else if (rq && Array.isArray(rq.all) && rq.all.every(x => x && x.type)) req = rq.all; else if (rq) reqRaw = rq;
   return { trigger: e.trigger || { on: 'step' }, req: JSON.parse(JSON.stringify(req)), reqRaw, actions: JSON.parse(JSON.stringify(e.actions || [])), next: [...(e.next || [])],
-    // NPC topics (docs/event_editor/08_NPC_DIALOGUE.md): the dialogue a talk event plays, the one after it is finished, its menu order
+    // NPC topics (docs/gameplay/event_editor/08_NPC_DIALOGUE.md): the dialogue a talk event plays, the one after it is finished, its menu order
     dialogue: e.dialogue || '', afterDialogue: e.afterDialogue || '', topicOrder: Number.isInteger(e.topicOrder) ? e.topicOrder : null,
     once: e.once !== false, maxTimes: Number.isInteger(e.maxTimes) ? e.maxTimes : 0 };   // repeatable: "once": false, up to maxTimes (0 = no limit)
 }
@@ -1711,7 +1711,7 @@ function makeAction(type, target, val) {
   return type === 'addVar' ? { type, var: target, delta: n } : type === 'setVar' ? { type, var: target, value: n } : type === 'addCounter' ? { type, counter: target, delta: n }
     : type === 'setFlag' ? { type, flag: target } : type === 'addStat' ? { type, stat: target, delta: n } : type === 'take' ? { type, itemId: target } : { type: 'give', itemId: target };
 }
-// A talk event (docs/event_editor/08_NPC_DIALOGUE.md): the dialogue its topic plays (none: its text as one page), what
+// A talk event (docs/gameplay/event_editor/08_NPC_DIALOGUE.md): the dialogue its topic plays (none: its text as one page), what
 // its topic does once finished (hidden, or an after-dialogue), and its place in the NPC's topic menu.
 const dialogueList = () => (typeof S !== 'undefined' && S && S.dialogues ? Object.keys(S.dialogues).sort() : Array.isArray(DATA.dialogues) ? DATA.dialogues : []);
 const dlgOptions = (cur, none) => `<option value="">${esc(none)}</option>` + [...new Set([...dialogueList(), cur].filter(Boolean))]
@@ -3008,7 +3008,7 @@ function renderKinds() {
   $('kNewId').onkeydown = ev2 => { if (ev2.key === 'Enter') $('kAdd').click(); };
   if (kindFocusNew) { kindFocusNew = false; $('kNewId').focus(); }
 }
-// ---------- NPCs and dialogues (docs/event_editor/08_NPC_DIALOGUE.md) ----------
+// ---------- NPCs and dialogues (docs/gameplay/event_editor/08_NPC_DIALOGUE.md) ----------
 // NPCs tab: an NPC file (name, greeting, sprite, chat lines and their order, the menu rule), its topics in menu order,
 // and a talk preview that follows the game's rules (talk_system.cpp). Dialogues tab: a dialogue file's nodes as cards.
 let npcSel = null, dlgSel = null, PV = null;

@@ -69,7 +69,7 @@ bool AtlasRes::load(ResourceManager& rm, std::string& error) {
         pages.push_back(std::move(t));
     }
     atlas.computeUVs();
-    toms::SpriteMeshFile meshes;   // its meshes (docs/34_MESH_ANIMATION.md): skinned and deformed nodes bend them
+    toms::SpriteMeshFile meshes;   // its meshes (docs/engine/16_MESH_ANIMATION.md): skinned and deformed nodes bend them
     std::string meshError;
     if (!readMeshFile(toms::spriteMeshPath(path()), meshes, meshError)) std::fprintf(stderr, "[res] %s\n", meshError.c_str());
     meshes_ = std::move(meshes);
@@ -123,7 +123,7 @@ bool AnimRes::load(ResourceManager& rm, std::string& error) {
     if (!toms::anim::parseAnim(text, f, &error)) return false;
     file_ = std::move(f);
     atlases_.resolve(rm, path(), file_.atlases);
-    // A skinned sprite without a mesh still draws, as a flat quad: say so (docs/34_MESH_ANIMATION.md).
+    // A skinned sprite without a mesh still draws, as a flat quad: say so (docs/engine/16_MESH_ANIMATION.md).
     for (const toms::anim::Clip& c : file_.clips)
         for (const toms::anim::MissingMesh& m : toms::anim::skinnedWithoutMesh(c, atlases_.set()))
             std::fprintf(stderr, "[res] %s: clip '%s', node %s: the skinned sprite '%s' has no mesh, so it is drawn unbent "

@@ -71,7 +71,7 @@ void Game::applyLanguage() {
     settings_.language = locale_.languageCode();   // normalize (e.g. an unknown code -> default)
     title_.setLanguageIndex(locale_.languageIndex());
     toms::ensureSaveDir(toms::defaultSaveDir());
-    toms::saveGameSettings(toms::defaultSaveDir() + "/settings.json", settings_);
+    toms::saveGameSettings(toms::settingsPath(), settings_);
 }
 
 void Game::applyArtStyle(int idx) {
@@ -82,7 +82,7 @@ void Game::applyArtStyle(int idx) {
     settings_.artStyle = artStyles_[idx].id;
     title_.setStyleIndex(idx);
     toms::ensureSaveDir(toms::defaultSaveDir());
-    toms::saveGameSettings(toms::defaultSaveDir() + "/settings.json", settings_);
+    toms::saveGameSettings(toms::settingsPath(), settings_);
     refreshArtStyle();
 }
 
@@ -108,6 +108,7 @@ void Game::applyLoadedRun(const toms::MetaSaveData& m, const toms::RunSaveData& 
     resetAttrs();                                  // a save from before the attributes: base + levels
     for (const auto& [k, v] : r.player.attrs) pl.attrs[k] = v;
     pl.attrPoints = std::max(0, r.player.attrPoints);
+    attrDraft_.clear();   // a draft belongs to the run it was made in
     gearOwned_.clear();
     for (const std::string& g : r.player.gear) if (equipmentDefs_.count(g)) gearOwned_.push_back(g);
     equipped_ = toms::EquippedSet{};
@@ -148,7 +149,7 @@ void Game::newGame() { newGame(0); }
 
 void Game::handleTitleAction(toms::TitleAction a) {
     switch (a) {
-        case toms::TitleAction::NewGame:             // then the start story (docs/30 phase 3)
+        case toms::TitleAction::NewGame:             // then the start story (docs/gameplay/07 phase 3)
             newGame();
             if (!skipStartStory_) startWeaponTrial();
             break;

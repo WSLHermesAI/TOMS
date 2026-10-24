@@ -36,7 +36,7 @@ struct Quad {
     uint8_t node = 0;
 };
 
-// A textured triangle mesh (docs/34_MESH_ANIMATION.md): a sprite cut into triangles whose corners can
+// A textured triangle mesh (docs/engine/16_MESH_ANIMATION.md): a sprite cut into triangles whose corners can
 // move on their own -- what a skinned or deformed (morphing) sprite is drawn with. Drawn in submission
 // order among the quads, from the same textures, with the same blending.
 struct MeshVertex {
@@ -97,7 +97,7 @@ inline bool packAtlas(const std::vector<std::vector<uint8_t>>& layers,
     return true;
 }
 
-// GPU-simulated particles (particle_fx.h, docs/17_PARTICLES.md): an emitter whose particles live
+// GPU-simulated particles (particle_fx.h, docs/engine/07_PARTICLES.md): an emitter whose particles live
 // in GPU buffers. The CPU only spawns (it decides when, where and with which random values, and
 // which slot each newborn takes); a compute shader moves every particle, applies the curves and
 // writes its quad, which is drawn where drawGpuParticles was called among the sprites.

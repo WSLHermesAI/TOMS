@@ -1,4 +1,4 @@
-// Tests for stair_links.h: a floor's stairs list, its tiles, locks and arrival (docs/event_editor/05_FLOOR_LINKS.md,
+// Tests for stair_links.h: a floor's stairs list, its tiles, locks and arrival (docs/gameplay/event_editor/05_FLOOR_LINKS.md,
 // the owner's Q7 answer). Pure data; the shipped floor specs are checked too (run in assets/, tests/CMakeLists.txt).
 #include "stair_links.h"
 #include "floor_table.h"

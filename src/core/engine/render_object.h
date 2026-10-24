@@ -1,4 +1,4 @@
-// render_object.h -- things that draw, made from JSON (docs/25_RESOURCE_MANAGER.md §4.7).
+// render_object.h -- things that draw, made from JSON (docs/engine/12_RESOURCE_MANAGER.md §4.7).
 //
 // FM79979's GetMe, done with a map: a JSON object names its class in "type", the factory finds that class's maker in
 // one look-up, and the class reads the rest:
@@ -53,6 +53,10 @@ public:
 
     // Advances clips and effects (seconds), its children too.
     virtual void update(float dt);
+    // The camera it is seen through, for it and its children: it draws at view * its transform. An effect keeps its
+    // particles under the view (where they were born on the map), so a scrolling camera carries them along.
+    void setView(const glm::mat3& view);
+    const glm::mat3& view() const { return view_; }
     // Draws itself; RenderTree() draws it and its children, skipping a hidden one with everything under it.
     void Render(IRenderer* ren) override;
 
@@ -76,6 +80,7 @@ private:
     friend class RenderObjectFactory;   // build() sets the common fields
     void applyTransform();
     std::vector<std::shared_ptr<RenderObject>> owned_;
+    glm::mat3 view_{1.0f};
     glm::vec2 pos_{0.0f, 0.0f}, scale_{1.0f, 1.0f};
     float rotation_ = 0;
 };
@@ -131,6 +136,7 @@ public:
     const std::shared_ptr<res::AtlasRes>& atlas() const { return atlas_; }
     const std::string& spriteName() const { return name_; }
     bool additive = false;
+    bool solid = false;      // one flat colour (the tint) in the sprite's shape: a gate's key colour washed over it
 
 protected:
     void draw(IRenderer* ren, const glm::mat3& world) override;
@@ -163,6 +169,9 @@ public:
     bool loop = false;       // play again when it finishes (a clip with looping nodes keeps moving anyway)
     float phase = 0;         // seconds it starts in (a row of the same clip out of step)
     bool ok() const override { return anim_ && anim_->find(clip_) != nullptr; }
+    // Driven by an outside clock instead of update(): shows the clip at this time (seconds since it started).
+    void setTime(float seconds);
+    float duration() const;  // of one play (0 when the clip is missing)
 
 protected:
     void draw(IRenderer* ren, const glm::mat3& world) override;

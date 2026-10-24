@@ -1,4 +1,4 @@
-// font_cli.cpp -- the font tool's command line: fontpack, and `font_editor --headless` (docs/22_FONT_TOOL.md).
+// font_cli.cpp -- the font tool's command line: fontpack, and `font_editor --headless` (docs/engine/09_FONT_TOOL.md).
 //
 //   fontpack build   <picture.png | folder>... --out NAME.fnt [--chars C] [--layout row|tight|pot] [--face F]
 //                    [--max-width N] [--space N] [--line-height N] [--advance-pad N]

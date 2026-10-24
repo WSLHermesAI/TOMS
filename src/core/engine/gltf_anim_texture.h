@@ -1,4 +1,4 @@
-// gltf_anim_texture.h -- instanced skinning for crowds (docs/18_GLTF.md "Crowds"): a skin's animations baked
+// gltf_anim_texture.h -- instanced skinning for crowds (docs/engine/08_GLTF.md "Crowds"): a skin's animations baked
 // into one float texture, shared by every instance of the model, and the per-instance animation state
 // (play / cross-fade / blend two clips). No GPU code here: GltfRenderer uploads an AnimTexture and draws a
 // Crowd in one instanced draw per primitive.

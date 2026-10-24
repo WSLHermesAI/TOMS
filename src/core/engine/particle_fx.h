@@ -1,5 +1,5 @@
 // particle_fx.h -- 2D particle effects on the packed sprite atlas(es): data, .particle files,
-// simulation, drawing. The plan and the format: docs/17_PARTICLES.md.
+// simulation, drawing. The plan and the format: docs/engine/07_PARTICLES.md.
 //
 // A .particle file (JSON) holds effects; an effect is a group of emitters. Every emitter has the
 // same fixed sections -- emission (rate + bursts), shape, start values (numbers or [min, max]),

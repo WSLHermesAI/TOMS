@@ -1,5 +1,5 @@
 // game_scenario.cpp -- test scenarios: start the game straight in one scene from a setting file
-// (docs/31_TEST_SCENARIOS.md). toms_game --scenario=<folder or file> plays it; --scenario-test also runs the
+// (docs/gameplay/08_TEST_SCENARIOS.md). toms_game --scenario=<folder or file> plays it; --scenario-test also runs the
 // scenario's own "test" frames and keys and exits 3 when scenarioCheck fails (tests/scenarios/, ctest scenario.*).
 //
 // A scenario never writes a save: its run has no slot (newGame(-1)), and a save it starts from is read from the
@@ -162,6 +162,7 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
     if (p.contains("gold")) pl.gold = p["gold"].get<int>();
     if (p.contains("exp")) pl.exp = p["exp"].get<int>();
     if (p.contains("lv")) pl.lv = p["lv"].get<int>();
+    if (p.contains("attrPoints")) pl.attrPoints = std::max(0, p["attrPoints"].get<int>());   // to place on the Status tab
     if (p.contains("keys")) {
         const nlohmann::json& k = p["keys"];
         pl.key_yellow = k.value("yellow", pl.key_yellow);
@@ -171,7 +172,7 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
     if (p.contains("attrs"))
         for (auto it = p["attrs"].begin(); it != p["attrs"].end(); ++it) pl.attrs[it.key()] = it.value().get<int>();
     if (p.contains("inventory")) pl.inv = strings(p, "inventory");
-    if (p.contains("weaponUses") && p["weaponUses"].is_object())   // wins with each weapon: its level (docs/30 phase 1)
+    if (p.contains("weaponUses") && p["weaponUses"].is_object())   // wins with each weapon: its level (docs/gameplay/07 phase 1)
         for (auto it = p["weaponUses"].begin(); it != p["weaponUses"].end(); ++it) weaponUses_[it.key()] = it.value().get<int>();
 
     // 5. The scene.
@@ -199,10 +200,10 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
         arena_.overrides = b;
         arena_.on = true;
         arenaNextFight();
-    } else if (s == "miniGame") {   // a reward event (docs/30 phase 6): "miniGame": "<id in data/minigames.json>"
+    } else if (s == "miniGame") {   // a reward event (docs/gameplay/07 phase 6): "miniGame": "<id in data/minigames.json>"
         openMiniGame(sc.value("miniGame", std::string()));
         if (!miniGame_.open) return bad("no mini-game \"" + sc.value("miniGame", std::string()) + "\" (data/minigames.json)");
-    } else if (s == "weaponTrial") {   // the start story (docs/30 phase 3): the weapon master's dialogue
+    } else if (s == "weaponTrial") {   // the start story (docs/gameplay/07 phase 3): the weapon master's dialogue
         startWeaponTrial();
     } else if (s == "dialogue") {
         const nlohmann::json d = sc.value("dialogue", nlohmann::json::object());
@@ -251,7 +252,7 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
         const std::string loc = sc.value("hub", nlohmann::json::object()).value("location", std::string());
         if (!activateHubLocation(loc)) return bad("hub location \"" + loc + "\" is unknown or locked");
     } else {
-        return bad("unknown scene \"" + s + "\" (docs/31_TEST_SCENARIOS.md lists them)");
+        return bad("unknown scene \"" + s + "\" (docs/gameplay/08_TEST_SCENARIOS.md lists them)");
     }
     std::fprintf(stderr, "[scenario] %s: scene %s started\n", scenarioName_.c_str(), s.c_str());
     return true;

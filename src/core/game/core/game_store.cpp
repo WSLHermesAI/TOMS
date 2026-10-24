@@ -6,10 +6,10 @@
 using namespace toms::game_detail;
 
 // ---------- store system ----------
-void Game::loadStore(const std::string& assetDir) {
+void Game::loadStore() {
     // What the store sells: ids into data/items.json, which holds every item's name, icon, stats and
     // price (loadAssets reads items.json first). An entry naming no known item is skipped.
-    nlohmann::json j = readJsonFile(assetDir + "/../data/store.json");
+    nlohmann::json j = readJsonFile(pathOf(toms::key::kDataStore));
     if (j.is_null() || j.empty()) { return; }
     if (j.contains("store_title")) storeTitle_ = j["store_title"];
     if (j.contains("unlockstage")) storeUnlockStage_ = j["unlockstage"].get<int>();
@@ -67,7 +67,7 @@ void Game::ensureStageListLoaded() {
         }
         return;
     }
-    std::string dir = dataDir + "/../data/stages/";
+    std::string dir = pathOf(toms::key::kFolderStages) + "/";
     for (const std::string& name : toms::vfsListDir(dir)) {   // vfs: APK folders on Android
         if (name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
         try {

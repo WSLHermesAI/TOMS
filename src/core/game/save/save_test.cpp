@@ -99,7 +99,7 @@ int main() {
         CHECK(j.is_null(), "reading a nonexistent file returns a null json, not a throw");
     }
 
-    // 6-10: the data-loss guards (docs/28_SAVE_SYSTEM.md), on slots in a scratch folder.
+    // 6-10: the data-loss guards (docs/gameplay/05_SAVE_SYSTEM.md), on slots in a scratch folder.
     const std::string dir = "save_test_slots";
     std::error_code ec;
     std::filesystem::remove_all(dir, ec);

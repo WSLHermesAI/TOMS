@@ -25,7 +25,7 @@
 #include "entity_status.h"   // toms::EntityStatus/entityStatusKey — see Game::entityStatus_
 #include "roamer.h"          // toms::Roamer — S1: floor wanderers that chase the player
 #include "run_state.h"       // toms::RunStoryState — S3: choices/counters/side stories/flags/shards
-#include "talk_system.h"     // toms::talk -- NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md)
+#include "talk_system.h"     // toms::talk -- NPCs and their events (docs/gameplay/event_editor/08_NPC_DIALOGUE.md)
 #include "floor_table.h"     // toms::FloorTable — S3.5: the 70-floor tower as ordered data
 #include "stage.h"
 #include "ui_state.h"       // toms::UiState -- what the UI shows (see buildUiState)
@@ -34,22 +34,25 @@
 #include "event_bus.h"       // toms::Subscription -- Game::busSubs_
 #include "safe_timer.h"      // toms::TimerQueue / TimerOwner -- delayed calls that die with their owner (battle numbers)
 #include "tween.h"           // toms::Tween -- the damage numbers' rise
-#include "weapon_play.h"     // toms::WeaponPlayTable -- data/weapon_play.json (docs/30_GAMEPLAY_PLAN.md §5.6)
-#include "combo_play.h"      // toms::ComboPlay -- Battle v3's point play (docs/30 §4, §5.1)
-#include "mini_game.h"       // toms::MiniGameTable -- reusable reward events (docs/30 phase 6)
+#include "player_menu_rules.h" // toms::LevelPoints -- attribute points by level (stats.json levelUp.points)
+#include "res_keys.h"        // toms::key / toms::pattern -- every file by key (assets/media/resources.json)
+#include "weapon_play.h"     // toms::WeaponPlayTable -- data/weapon_play.json (docs/gameplay/07_GAMEPLAY_PLAN.md §5.6)
+#include "combo_play.h"      // toms::ComboPlay -- Battle v3's point play (docs/gameplay/07 §4, §5.1)
+#include "mini_game.h"       // toms::MiniGameTable -- reusable reward events (docs/gameplay/07 phase 6)
 #include "art_styles.h"      // toms::ArtStyle — the selectable art styles (assets/media/styles)
 #include "atlas_file.h"      // toms::AtlasFile — the prebuilt sprite atlas (tools/atlas)
-#include "particle_fx.h"     // toms::fx — particle effects on the atlases (docs/17_PARTICLES.md)
+#include "particle_fx.h"
+#include "render_object.h"   // toms::RenderObject -- what a floor object draws for a status (map_objects.cpp)     // toms::fx — particle effects on the atlases (docs/engine/07_PARTICLES.md)
 #include "anim_player.h"     // toms::anim — node animations on that atlas (anim_clip.h)
-#include "resource_types.h"  // toms::res — the resource cache: atlases, clips, effects (docs/25_RESOURCE_MANAGER.md)
-#include "map_objects.h"     // MapObject / MapFloor — the floor's things, a class per kind (docs/25 §4.10)
+#include "resource_types.h"  // toms::res — the resource cache: atlases, clips, effects (docs/engine/12_RESOURCE_MANAGER.md)
+#include "map_objects.h"     // MapObject / MapFloor — the floor's things, a class per kind (docs/engine/12 §4.10)
 #include "localization.h"    // toms::Locale — key -> localized string (data/text.json)
 #include "Audio.h"        // SFX (miniaudio) -- native device backends on desktop, Web Audio in the browser
 
 struct Player : public Trackable {
     int hp, maxhp, atk, def, gold, exp, lv;
     int key_yellow = 0, key_blue = 0, key_red = 0;
-    int crystals = 0;   // the second currency (docs/30 phase 6): earned by the reward events (mini_game.h)
+    int crystals = 0;   // the second currency (docs/gameplay/07 phase 6): earned by the reward events (mini_game.h)
     int x = 1, y = 1;
     // inventory: list of item ids (a 9-grid, extendable UI). Keys/coins are NOT
     // stored here (they apply immediately); usable items (gems/potions/exp/scroll) are.
@@ -81,7 +84,7 @@ struct DialogueNode : public Trackable {
 struct DialogueChoice {
     std::string label, next;
     nlohmann::json action;   // null if the choice has no action (the common case today)
-    // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md section 6.2): story actions (story_actions.h),
+    // NPCs and their events (docs/gameplay/event_editor/08_NPC_DIALOGUE.md section 6.2): story actions (story_actions.h),
     // whether picking it finishes the dialogue's event, the events it wakes, and its id for `choiceMade`.
     nlohmann::json actions;
     bool finish = false;
@@ -122,7 +125,7 @@ struct CombatState : public Trackable {
     bool won = false;
 
     AutoBar atkBar, defBar;
-    // Battle v3 (docs/30 phase 1): the attack is the point play. While the attack waits (not cooling, no combo), charge
+    // Battle v3 (docs/gameplay/07 phase 1): the attack is the point play. While the attack waits (not cooling, no combo), charge
     // builds up (chargeMs); the first tap starts the combo with it.
     toms::ComboPlay combo;
     int chargeMs = 0;
@@ -156,7 +159,7 @@ struct CombatState : public Trackable {
     // but the "you fell" message should stay on screen briefly rather than vanish the same
     // frame) -- a WIN uses `won` to stay open until dismissed instead. See draw()'s showBattle.
     int resultPauseMs = 0;
-    // Phase 0 (docs/30_GAMEPLAY_PLAN.md §4, the owner's rule 2026-10-20): while the player or the enemy is attacking,
+    // Phase 0 (docs/gameplay/07_GAMEPLAY_PLAN.md §4, the owner's rule 2026-10-20): while the player or the enemy is attacking,
     // BOTH attack clocks pause -- the bars do not move or cool down and the enemy's clock does not run -- until the
     // attack is over. Set by an attack (data/battle.json "attack_pause_ms"), counted down by Game::update.
     int attackPauseMs = 0;
@@ -194,9 +197,7 @@ class Game : public Trackable {
     friend class DoorObject;
     friend class PlayerObject;
     friend class MapFloor;
-    friend class map_detail::SpriteLook;
-    friend class map_detail::PlateLook;
-    friend class map_detail::ClipLook;
+    friend class map_detail::RenderLook;
     friend struct map_detail::Builder;
 public:
     bool loadAssets(const std::string& assetDir);
@@ -249,7 +250,7 @@ public:
         dlgSel = ((dlgSel + delta) % n + n) % n;
     }
     void startDialogue(const std::string& npc);   // open a dialogue file by id (public for tests)
-    // Talk to an NPC (docs/event_editor/08_NPC_DIALOGUE.md): a chat line, one topic, or the topic menu.
+    // Talk to an NPC (docs/gameplay/event_editor/08_NPC_DIALOGUE.md): a chat line, one topic, or the topic menu.
     void talkTo(const std::string& npcId);
     std::string dialogueSpeaker() const { return dlgSpeaker_; }
     void enterNode(const std::string& node);      // jump to a dialogue node (public for tests)
@@ -290,7 +291,7 @@ public:
     // S7 (equipment actives, first slice): the 4th battle action -- a no-op unless the currently
     // equipped gear grants one (equippedActives()) and it hasn't been spent this battle already.
     void battleTapActive();
-    // ---- the player menu (docs/20_PLAYER_MENU.md): the walking scene's one button (≡, Esc) ----
+    // ---- the player menu (docs/gameplay/03_PLAYER_MENU.md): the walking scene's one button (≡, Esc) ----
     // Five tabs: Status, Equipment, Items, Events, System. Everything that was a button of its own
     // (the backpack, the store button, the old ≡ list, the web page's fullscreen button) is in here.
     enum class MenuTab { Status, Gear, Items, Events, Cards, System };   // player.rml shows them by number
@@ -320,7 +321,7 @@ public:
     // Milestone 7 bugfix: cs.won (the post-victory "press any key to continue" pause) must count
     // as a modal overlay too, not just cs.active -- otherwise the world underneath (movement,
     // NPC interact, the store icon, Tab/B shortcuts) keeps responding to input while the victory
-    // screen is still up. See docs/progress_report/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
+    // screen is still up. See docs/project/progress_report/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
     bool modalActive() const { return cs.active || cs.won || miniGame_.open || inDialogue || storeOpen || storeUnlockDlg || stageSelectOpen_ || stairsConfirmOpen_ || title_.isOpen() || inGameMenuOpen_ || endingActive() || !notices_.empty(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu/ending)
     bool combatWon() const { return cs.won; }
     bool combatActive() const { return cs.active; }
@@ -406,7 +407,7 @@ public:
     // game in this (empty) slot?" dialog needs.
     void newGame();
     void newGame(int slot);                // slot -1: a test scenario's run -- no slot, never written
-    // ---- Test scenarios (docs/31_TEST_SCENARIOS.md, game_scenario.cpp) ----
+    // ---- Test scenarios (docs/gameplay/08_TEST_SCENARIOS.md, game_scenario.cpp) ----
     // Starts the game straight in one scene from a scenario file (or a folder holding scenario.json): an optional save,
     // the floor, the player, finished events and flags, then the scene itself (a battle, a dialogue, the store ...).
     // False (with the reason) when the file cannot be read or names something that does not exist.
@@ -443,13 +444,13 @@ public:
     // whatever is on screen, centred, looping; its events are logged. Draws with the real
     // AnimPlayer through the sprite batch, so a screenshot shows exactly what the game would draw.
     bool playPreviewAnim(const std::string& file, const std::string& clip, std::string& error);
-    // The character a character clip (docs/15_ANIMATION.md "Characters": `body` / `hand` nodes) is shown with: a sprite
+    // The character a character clip (docs/engine/05_ANIMATION.md "Characters": `body` / `hand` nodes) is shown with: a sprite
     // of the game atlas ("player_mage"; toms_game --character=). "" = the clip as made. Set before playPreviewAnim.
     void setPreviewCharacter(const std::string& sprite) { previewCharacter_ = sprite; }
     // A held thing's clips (an .anim file, e.g. media/anim/weapon_bow.anim; toms_game --held=): its clip of the preview
     // clip's name is drawn at the character clip's `hand` (CharacterRig). "" = none. Set before playPreviewAnim.
     void setPreviewHeld(const std::string& file) { previewHeldFile_ = file; }
-    // The battle picture of a weapon with a "battleAnim" (equipment_system.h; docs/15_ANIMATION.md "Characters"): the
+    // The battle picture of a weapon with a "battleAnim" (equipment_system.h; docs/engine/05_ANIMATION.md "Characters"): the
     // player's character clip with the weapon's clip at its hand, both on the clip the battle's status picks --
     //   charge   the attack bar waits for the tap (held, shaking, for as long as it waits)
     //   attack   a tap that hit; miss: a tap that dealt nothing (played to its end)
@@ -463,7 +464,7 @@ public:
     // The same for a particle effect (toms_game --fx=<file>#<effect>): centred, a one-shot effect
     // starts again 0.5 s after it ends. The seed is the effect's, else 1, so screenshots repeat.
     bool playPreviewFx(const std::string& file, const std::string& effect, std::string& error);
-    // The renderer's triangle meshes (IRenderer::drawMesh, docs/34_MESH_ANIMATION.md; toms_game --mesh-test=<sprite>):
+    // The renderer's triangle meshes (IRenderer::drawMesh, docs/engine/16_MESH_ANIMATION.md; toms_game --mesh-test=<sprite>):
     // that sprite of the game atlas as an 8 x 8 grid mesh waving in time, the plain sprite beside it.
     bool playPreviewMesh(const std::string& sprite, std::string& error);
     int previewFxLive() const { return previewFx_.liveCount(); }   // the --fx effect's live particles (HUD)
@@ -478,6 +479,11 @@ public:
     void useDefaultBattleTuning() { barSlowScale_ = 1.0f; barFastScale_ = 1.0f; barCooldownMs_ = CombatState::kBarCooldownMs;
                                     attackPauseMs_ = 450; hitNumberDelayMs_ = 180; }
     const toms::WeaponPlayTable& weaponPlay() const { return weaponPlay_; }
+    // Files by key, never by path (assets/media/resources.json; the keys: res_keys.h, made by tools/make_res_keys.py).
+    // pathOf: a key's path, for what reads the file itself (a loader, RmlUi, the sound folder). pathFor: one file of a
+    // family ("stage", "stage01"). Both are paths under assets/media's folder, as the resource manager reads them.
+    std::string pathOf(const char* key) const { return res_ ? res_->resolve(key) : std::string(); }
+    std::string pathFor(const char* pattern, const std::string& id) const { return res_ ? res_->pathFor(pattern, id) : std::string(); }
     // The UI's sprite sheet: RCSS made from spriteAtlas_, which GameUi serves to RmlUi as
     // "_atlas.rcss" -- so the UI draws from the same packed texture as the map. Empty without a
     // prebuilt atlas. The revision changes whenever another atlas is loaded (art style switch).
@@ -512,7 +518,7 @@ public:
     // Milestone 2 styling spike (a prerequisite the roadmap flags before Milestone 5 commits real
     // screens to the hybrid UI approach): proves a transparent, undecorated ImGui window laid
     // exactly over a scene-graph-drawn backdrop rect reads as one panel, not two overlapping
-    // things — see docs/progress_report/PROGRESS_REPORT.md's M2 log entry for why this needed checking before
+    // things — see docs/project/progress_report/PROGRESS_REPORT.md's M2 log entry for why this needed checking before
     // any real screen was built on the assumption. Dev-only, F2 to toggle.
     void drawStylingSpike();
     void setStylingSpikeVisible(bool v) { stylingSpikeVisible_ = v; }
@@ -536,7 +542,7 @@ private:
     // auto-moving position (frozen while cooling down after a tap).
     void resolveAttackTap();
     void resolveCombo();                            // Battle v3: the combo ended -- its damage, then the cooldown
-    // Weapon levels (docs/30 phase 1): the equipped weapon's key in weapon_play.json ("unarmed" for none), its level
+    // Weapon levels (docs/gameplay/07 phase 1): the equipped weapon's key in weapon_play.json ("unarmed" for none), its level
     // from the wins with it, and its play settings.
     std::string weaponKey() const;
     int weaponLevel(const std::string& key) const;
@@ -617,13 +623,16 @@ public:
     // Base + equipment + skills + attributes (data/stats.json effects "atk" / "def", rounded down).
     int effectiveAtk() const { int a=pl.atk,d=pl.def; toms::applyEquipmentStats(equipped_,equipmentDefs_,a,d); toms::applySkillEffects(skillDefs_, run_.skillsOwned(), a, d, skillEffectScale()); return a + (int)std::floor(attrEffect("atk")); }
     int effectiveDef() const { int a=pl.atk,d=pl.def; toms::applyEquipmentStats(equipped_,equipmentDefs_,a,d); toms::applySkillEffects(skillDefs_, run_.skillsOwned(), a, d, skillEffectScale()); return d + (int)std::floor(attrEffect("def")); }
-    // P3 (docs/20_PLAYER_MENU.md section 12): what the attributes do. attrEffect(stat) sums, over every attribute,
+    // P3 (docs/gameplay/03_PLAYER_MENU.md section 12): what the attributes do. attrEffect(stat) sums, over every attribute,
     // (its value - its base) * per for the effects naming `stat`; so a Lv 1 character with no bonuses gets 0.
     float attrEffect(const std::string& stat) const;
     int effectiveMaxHp() const { return std::max(1, pl.maxhp + (int)std::floor(attrEffect("maxhp"))); }   // VIT
     toms::PowerBarParams attackBarParams() const;   // the worn weapon's bar, its hit zone widened by DEX
     int barCooldownMs() const;                      // battle.json's wait after a tap, shortened by AGI
-    void spendAttrPoint(int index);                 // a hand-placed point (levelUp.freePoints)
+    void spendAttrPoint(int index);                 // + on the Status tab: one point into the draft (attrDraft_)
+    void unspendAttrPoint(int index);               // -: one point back out of the draft
+    void confirmAttrPoints();                       // Confirm: the draft becomes the attributes, and the run is saved
+    void resetAttrDraft();                          // Reset: the draft is dropped
     // S5: forging. forgeDefs() is read-only content; tryCraft() re-checks canCraft() itself (same
     // "never trust the caller" rule as tryUnlockSkill) -- it deducts gold/materials and equips the
     // result in one atomic step, so a UI bug can never spend materials without getting the item.
@@ -742,16 +751,19 @@ private:
     struct LogEntry { int kind = 0; std::string id, title, desc; bool done = false; std::vector<std::string> connected; };
     std::vector<LogEntry> eventLog(bool all) const;
     // store system
-    void loadStore(const std::string& assetDir);   // parse data/store.json
+    void loadStore();   // parse data/store.json
     // Milestone 8: the store's items are split into tabs of <=3 cards each. Returns the indices
     // into storeItems_ that belong to the current storeTab_ (0=potions,1=weapons,2=armor,3=talents).
     std::vector<int> storeTabIndices() const;
     void buyStoreItem(int idx);                      // purchase + apply effect (or toast if poor)
 
     IRenderer* ren = nullptr;        // the bgfx renderer, created in loadAssets
-    // Every atlas, clip file and particle file the game draws, loaded once and shared (docs/25_RESOURCE_MANAGER.md).
+    // Every atlas, clip file and particle file the game draws, loaded once and shared (docs/engine/12_RESOURCE_MANAGER.md).
     // Declared before what holds its resources, so it goes last and frees their textures while the renderer is up.
     std::unique_ptr<toms::res::ResourceManager> res_;
+    // Makes render objects from JSON (render_object.h): everything the floor's objects draw (map_objects.cpp's looks).
+    // A description used for many objects is made once and cloned (instance()).
+    toms::RenderObjectFactory renderFactory_;
     bool hotReload_ = false;         // setHotReload: reload changed files about once a second
     int hotReloadMs_ = 0;
     void provideSpriteAtlas();       // the loaded sprite atlas, as the cache's kSpriteAtlas
@@ -768,7 +780,7 @@ private:
     std::vector<std::array<float, 4>> spriteTrim_;   // x, y, w, h of the kept pixels, as fractions of the original
     toms::AtlasFile spriteAtlas_;
     std::map<std::string, toms::SpriteBox> spriteBoxes_;   // each sprite's visible pixels (fitCharacter)
-    toms::SpriteMeshFile spriteMeshes_;   // its meshes (game.mesh.json beside it, written by the anim tools; docs/34)
+    toms::SpriteMeshFile spriteMeshes_;   // its meshes (game.mesh.json beside it, written by the anim tools; docs/engine/16)
     nlohmann::json characterFit_;                          // assets/data/character_fit.json (read at startup)
     std::string battleRigClip_;   // the clip the battle picture plays for battleRigState_ ("" = none found)
     std::shared_ptr<toms::res::AnimRes> previewAnim_;   // playPreviewAnim (its atlases come with it)
@@ -790,7 +802,7 @@ private:
     // clip for the battle's status -- idle; attack (its clock fired); hurt (the player's hit landed); die (the fight is
     // won) -- with the enemy's own sprite in its `body` (fitCharacter). "<status>_<enemy id>" in the file wins over the
     // shared clip. monsterRigState(): the status shown ("" = none: the file did not load, the UI's picture is drawn).
-    static constexpr const char* kMonsterBattleAnim = "anim/monster_battle.anim";
+    static constexpr const char* kMonsterBattleAnim = toms::key::kAnimMonsterBattle;
     std::shared_ptr<toms::res::AnimRes> monsterAnim_;
     bool monsterAnimTried_ = false;
     toms::anim::Clip monsterFitted_;
@@ -801,6 +813,15 @@ private:
     std::string monsterSprite() const;                  // the enemy's sprite (the boss's own; else its type's)
     void setMonsterRigState(const std::string& state);
     void updateMonsterRig(int dtMs);                    // Game::update
+    // The battle's particles (media/fx/battle.particle; weapon_play.json "fx" picks them by weapon level): one-shot
+    // effects at the player's weapon or the monster, drawn over both. Cleared when a battle starts or the screen closes.
+    static constexpr const char* kBattleFxFile = toms::key::kFxBattle;
+    std::shared_ptr<toms::res::ParticleRes> battleFxFile_;
+    bool battleFxTried_ = false;
+    std::vector<toms::fx::EffectInstance> battleFx_;
+    const toms::WeaponFx* battleWeaponFx(bool top = false) const;   // the worn weapon's at its level (top: its best)
+    void playBattleFx(const std::string& effect, bool atEnemy, int delayMs = 0);
+    void updateBattleFx(int dtMs);                      // Game::update
     std::string previewHeldFile_;                       // setPreviewHeld
     std::shared_ptr<toms::res::AnimRes> previewHeld_;   // its clips
     toms::anim::CharacterRig previewRig_;               // the preview clip with the held clip at its hand
@@ -822,7 +843,7 @@ private:
     std::vector<toms::anim::NodePose> idlePoses_;   // per-frame scratch (drawClipInRect)
     toms::anim::DrawList idleDraws_;
     double idleClockMs_ = 0;
-    // Objects' looks (docs/19_STAGE_EDITOR.md): an object's own "look" over its type's ("look" in enemies.json /
+    // Objects' looks (docs/gameplay/02_STAGE_EDITOR.md): an object's own "look" over its type's ("look" in enemies.json /
     // items.json / its NPC file), field by field -- read once per floor, when its objects are made (map_objects.cpp).
     // typeSprite: the sprite a type is drawn with (its look, else the old table).
     nlohmann::json lookOf(const Entity& e) const;
@@ -863,7 +884,9 @@ private:
     // data/stats.json: the attributes and the level-up numbers.
     struct AttrDef { std::string id, shortName, nameKey, descKey; int base = 5, perLevel = 1;
                      std::vector<std::pair<std::string, float>> effects; };   // (stat, per point above base)
-    struct LevelUpRule { int expPerLevel = 30, atk = 2, def = 1, maxhp = 10, freePoints = 0; };
+    // maxLevel: the top level; points: the attribute points each level gives (by level reached), freePoints below them.
+    struct LevelUpRule { int expPerLevel = 30, atk = 2, def = 1, maxhp = 10, freePoints = 0, maxLevel = 99;
+                         std::vector<toms::LevelPoints> points; };
     std::vector<AttrDef> attrDefs_;
     LevelUpRule levelUp_;
     // The weapons / armor / talents the player owns (bought or forged), in the order they were got.
@@ -872,6 +895,10 @@ private:
     // ---- the player menu's state (inGameMenuOpen_ = it is open) ----
     MenuTab menuTab_ = MenuTab::Status;
     int attrSel_ = -1;          // Status: the attribute whose description shows (-1 none)
+    // Status: points placed with + / - but not confirmed yet, by attribute id (the owner 2026-10-24: the points count
+    // only after Confirm, which also saves). Closing the menu drops them.
+    std::map<std::string, int> attrDraft_;
+    int attrDraftTotal() const { int n = 0; for (const auto& [id, k] : attrDraft_) n += k; return n; }
     int gearSlot_ = 0;          // Equipment: 0 weapon, 1 armor
     int gearSel_ = 0;
     int itemFilter_ = 0;        // Items: 0 all, 1 consumables, 2 gear, 3 keys
@@ -893,7 +920,7 @@ private:
     // "Something new inside" dots on ≡ and on a tab.
     bool newsStore_ = false, newsGear_ = false, newsEvents_ = false;
     size_t eventLogSeen_ = 0;      // the event log's last count (+1; 0 = take it without news), update()
-    // The event pools (data/events/pool_*.json), for the player's event log (docs/event_editor/06_EVENT_LOGIC.md
+    // The event pools (data/events/pool_*.json), for the player's event log (docs/gameplay/event_editor/06_EVENT_LOGIC.md
     // section 7): titles, descriptions, links, and whether the event is listed (its kind's "inLog" in
     // events/kinds.json, or its own). Floor events with no pool record still fire; they are just not listed.
     struct EventDef {
@@ -914,7 +941,7 @@ private:
     void bumpGate(Entity& gate);
     std::map<std::string, EventDef> eventDefs_;
     std::map<std::string, std::vector<std::string>> chapterEvents_;   // chapter id -> its story events (beats)
-    void loadEventDefs(const std::string& assetDir);
+    void loadEventDefs();
     // Q7: stairs locked by an event. stairUnlocks_: event id -> the stairs it opens (floor, target), from every
     // floor spec's `stairs`; loadStairLocks also adds the "go to the stairs" events. finishEvent is every
     // finished event (the run flag, the log, `next`, and the stairs it opens with their dialog).
@@ -950,7 +977,7 @@ private:
     std::string dlgNode = "root";
     nlohmann::json dlgData;
     std::vector<DialogueChoice> dlgChoices;
-    // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md, talk_system.h): the NPC files, the events bound
+    // NPCs and their events (docs/gameplay/event_editor/08_NPC_DIALOGUE.md, talk_system.h): the NPC files, the events bound
     // to each NPC (in menu order), and what the open dialogue is for: a plain dialogue, an NPC's chat line, an
     // event's topic, a finished event's after-dialogue, or the topic menu.
     enum class DlgMode { Plain, Chat, Topic, After, Menu };
@@ -962,7 +989,7 @@ private:
     std::map<std::string, toms::talk::NpcDef> npcDefs_;
     std::map<std::string, std::vector<toms::talk::Topic>> npcTopics_;
     std::mt19937 talkRng_{20261016u};   // "random" chat lines (fixed seed: scripted test runs repeat)
-    void loadNpcs(const std::string& assetDir);
+    void loadNpcs();
     bool holds(const nlohmann::json& condition) const;   // a `requires` against the run, with the current stage
     const toms::talk::NpcDef& npcDef(const std::string& npcId);
     nlohmann::json readDialogue(const std::string& id) const;
@@ -977,7 +1004,7 @@ private:
     void wakeEvent(const std::string& eventId, int depth = 0);
     // Every story action in the game goes through here (story_actions.h): events, chat lines, dialogue choices.
     void runStoryActions(const nlohmann::json& actions);
-    // One run of an event (docs/event_editor/08_NPC_DIALOGUE.md section 11.1): its record's actions, counted; the first
+    // One run of an event (docs/gameplay/event_editor/08_NPC_DIALOGUE.md section 11.1): its record's actions, counted; the first
     // time it is also finished (flag, log, `next`, stairs). A finished one-off does nothing (false); a repeatable one
     // ("once": false) runs again until "maxTimes".
     bool completeEvent(const std::string& eventId, int depth = 0);
@@ -1204,7 +1231,7 @@ private:
     toms::GameSettings settings_;
     toms::Locale locale_;
     int activeSlot_ = 0;      // 0 = none chosen yet; set by newGame()/continueFromSlot()
-    bool slotReadOnly_ = false;   // the active slot holds a newer game's save: played, never written (docs/28)
+    bool slotReadOnly_ = false;   // the active slot holds a newer game's save: played, never written (docs/gameplay/05)
     int playTimeSec_ = 0;     // this run's accumulated play time (shown in the Continue list)
     bool saveDirty_ = false;  // progress changed since the last slot write
     int saveFlushMs_ = 0;     // countdown used to throttle autosave (see update())
@@ -1218,7 +1245,7 @@ private:
     void migrateStatusKeys();
 public:
     // Writes the run now if it has unsaved changes -- the host calls it when the window closes or the app goes to
-    // the background, so the autosave's last few seconds are not lost (docs/28_SAVE_SYSTEM.md).
+    // the background, so the autosave's last few seconds are not lost (docs/gameplay/05_SAVE_SYSTEM.md).
     void flushSave() { if (saveDirty_ && !title_.isOpen()) saveCurrentRun(); }
 private:
     // Performs whatever the title phase asked for (see title_screen.h's TitleAction).
@@ -1233,7 +1260,7 @@ private:
     nlohmann::json scenarioExpect_;
     int scenarioTestFrames_ = 0;
     std::string scenarioTestKeys_;
-    // The weapon test arena (scene "arena", toms_game --arena; docs/30_GAMEPLAY_PLAN.md phase 0): fight after fight
+    // The weapon test arena (scene "arena", toms_game --arena; docs/gameplay/07_GAMEPLAY_PLAN.md phase 0): fight after fight
     // against the listed enemies in turn, full HP each time, no rewards and no story effects (no deaths counted).
     struct Arena {
         bool on = false;
@@ -1241,16 +1268,16 @@ private:
         nlohmann::json overrides;     // "battle"'s hp / atk / def / atk_interval_ms, for every fight
         size_t next = 0;
         int fights = 0, wins = 0, losses = 0;
-        bool trial = false;           // the start story's weapon trial (docs/30 phase 3): one fight, then back to the master
+        bool trial = false;           // the start story's weapon trial (docs/gameplay/07 phase 3): one fight, then back to the master
     };
     Arena arena_;
 public:
-    // The start story (docs/30 phase 3): the weapon master lets the player try the weapons (dialogue/weapon_master.json),
+    // The start story (docs/gameplay/07 phase 3): the weapon master lets the player try the weapons (dialogue/weapon_master.json),
     // a trial fight each, until one is chosen; the run then begins on stage 1. Opened by the title's New Game.
     void startWeaponTrial();
     // --skip-start-story (the screenshot tests): New Game goes straight to stage 1, as before the start story.
     void setSkipStartStory(bool on) { skipStartStory_ = on; }
-    // Reward events (docs/30 phase 6, data/minigames.json): opened by the dialogue action {"type": "miniGame", "id": ...}.
+    // Reward events (docs/gameplay/07 phase 6, data/minigames.json): opened by the dialogue action {"type": "miniGame", "id": ...}.
     // Enter / a tap: start, then tap the points, then close; Esc closes when not playing.
     bool miniGameOpen() const { return miniGame_.open; }
     void openMiniGame(const std::string& id);

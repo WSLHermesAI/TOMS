@@ -169,7 +169,7 @@ int headlessMeshes(const std::vector<std::string>& args) {
         std::fputs("usage: anim_editor --headless meshes <file.anim>... [--atlas [<id>=]<file.atlas>]... [--default-atlas ...]\n"
                    "       [--map <from.atlas>=<to.atlas>]... [--bin|--text] [--check] [--prune]\n"
                    "  adds the meshes of the clips' skinned and deformed nodes (their sprites on their mesh grids) to the mesh\n"
-                   "  file of each atlas they use, <atlas>.mesh.json (docs/34_MESH_ANIMATION.md). --atlas: those atlases instead\n"
+                   "  file of each atlas they use, <atlas>.mesh.json (docs/engine/16_MESH_ANIMATION.md). --atlas: those atlases instead\n"
                    "  of each file's own; --default-atlas: for a file that names none; --map: an atlas swapped for another (an art\n"
                    "  style's copy). --bin / --text: the file's form (default: as it is; a new one\n"
                    "  binary). --prune: only what these clip files need stays. --check: write nothing, exit 1 when out of date\n",

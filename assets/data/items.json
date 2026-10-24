@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "Every item in the game, one record each (docs/20_PLAYER_MENU.md section 5): map items, keys, consumables,",
+    "Every item in the game, one record each (docs/gameplay/03_PLAYER_MENU.md section 5): map items, keys, consumables,",
     "weapons, armor, talents. type: consumable | key | weapon | armor | talent | story. name/desc are text.json keys.",
     "stats: what it gives (a consumable when used, gear while worn); any attribute id of stats.json works.",
     "price: its value in gold, also what the store charges. important: true = it cannot be dropped.",

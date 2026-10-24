@@ -35,7 +35,7 @@ of them.
 
 Each section is the short version; the linked document has every detail.
 
-### Atlas editor — sprites into one texture ([docs/14](../docs/14_ATLAS_TOOL.md))
+### Atlas editor — sprites into one texture ([docs/engine/04](../docs/engine/04_ATLAS_TOOL.md))
 
 1. **File → New**, then **Add Images…** (PNGs or whole folders; or drop them on the window).
 2. Set the packing on the right: max page size, **padding** (empty pixels between sprites), **extrude** (edge pixels
@@ -51,7 +51,7 @@ Each section is the short version; the linked document has every detail.
 - **Bring in an old atlas:** **Import Atlas** reads `.pi`, `.atlas`, TexturePacker `.json` and Cocos `.plist`.
 - The game's own atlas is `assets\media\atlas\game.atlasproj`.
 
-### Anim editor — node animations ([docs/15](../docs/15_ANIMATION.md), recipes: [docs/16](../docs/16_ANIMATION_RECIPES.md))
+### Anim editor — node animations ([docs/engine/05](../docs/engine/05_ANIMATION.md), recipes: [docs/engine/06](../docs/engine/06_ANIMATION_RECIPES.md))
 
 1. **File → New**, then **Add Atlas…** for each atlas the sprites come from.
 2. **Add Sprite Node** (or drag a sprite from the Sprites dock into the view) to make a node. Nodes form a tree; a child moves with its parent.
@@ -65,7 +65,7 @@ Each section is the short version; the linked document has every detail.
 - **Convert → MPDI Folder to .anim…** brings in the old engine's `.mpdi` animations.
 - The **Problems / Log** dock lists missing sprites and keys past the clip's end.
 
-### Particle editor — effects ([docs/17](../docs/17_PARTICLES.md))
+### Particle editor — effects ([docs/engine/07](../docs/engine/07_PARTICLES.md))
 
 1. **File → New**, or open `docs\examples\fx_recipes.particle` (11 ready effects: torch fire, hit sparks, heal, snow…)
    and change one.
@@ -78,7 +78,7 @@ Each section is the short version; the linked document has every detail.
 
 The default sprites are the fx atlas (`assets\media\atlas\fx.atlas`: dot, glow, spark, star, ring, smoke, flame).
 
-### Font editor — picture fonts ([docs/23](../docs/23_FONT_TOOL_GUIDE.md))
+### Font editor — picture fonts ([docs/engine/10](../docs/engine/10_FONT_TOOL_GUIDE.md))
 
 1. **Add pictures…** (one PNG per character, or drop them on the window). Files named `0.png`, `K.png`, `dot.png`,
    `comma.png`, `space.png` get their character by themselves.
@@ -90,7 +90,7 @@ The default sprites are the fx atlas (`assets\media\atlas\fx.atlas`: dot, glow, 
    start on *auto*).
 5. **Save font as…** writes `NAME.fnt` + `NAME.png`. **Open font** loads an existing font to change it.
 
-### glTF viewer — 3D models ([docs/18](../docs/18_GLTF.md))
+### glTF viewer — 3D models ([docs/engine/08](../docs/engine/08_GLTF.md))
 
 Drop a `.gltf` / `.glb` on the window (or on `GltfViewer.cmd`).
 
@@ -110,16 +110,16 @@ light rig, shadows, and physics.
 The game running in an editor window, with the event flow and the old stage list beside it. It reads this repo's
 `assets` (the launcher points it there).
 
-### UI editor — the game's screens ([docs/08](../docs/08_RMLUI.md) "The UI editor")
+### UI editor — the game's screens ([docs/gameplay/01](../docs/gameplay/01_RMLUI.md) "The UI editor")
 
 The UI files on the left, the text in the middle, the real game on the right. Type, pause, and the game shows the
 change; nothing on disk changes until **Ctrl+S**. **Preview** picks the screen (the title, or a test scenario: a battle,
 a dialogue, the store, ...), **Language** checks long text, **Inspect** (Ctrl+I) + a click in the game opens the
 element's line and lists the style rules that reach it. Needs a Direct3D 11 graphics card, like TomsEditor.
-New to it? **Help > UI Editor Tutorial** (F1, [docs/37](../docs/37_UI_EDITOR.md)) walks through it on a practice screen
+New to it? **Help > UI Editor Tutorial** (F1, [docs/gameplay/10](../docs/gameplay/10_UI_EDITOR.md)) walks through it on a practice screen
 (**Help > Open Practice Screen**).
 
-### Stage & event editor — floors and events, as a Windows app ([docs/19](../docs/19_STAGE_EDITOR.md) section 6)
+### Stage & event editor — floors and events, as a Windows app ([docs/gameplay/02](../docs/gameplay/02_STAGE_EDITOR.md) section 6)
 
 The web stage editor, native: the map is drawn by the game's renderer (animations play), on the live files in
 `assets\data` (no folder to pick).
@@ -131,7 +131,7 @@ The web stage editor, native: the map is drawn by the game's renderer (animation
 - The **Events** tab is the event editor, native too: events, their logic and text, floors and stairs, variables,
   kinds, NPCs with the talk preview, and dialogues. The two editors open each other's items directly.
 
-### Web editors — floors and events ([docs/19](../docs/19_STAGE_EDITOR.md), [event editor](../docs/event_editor/README.md))
+### Web editors — floors and events ([docs/gameplay/02](../docs/gameplay/02_STAGE_EDITOR.md), [event editor](../docs/gameplay/event_editor/README.md))
 
 `WebEditors.cmd` refreshes the editors' data from `assets\data`, opens the browser on `http://localhost:8000`, and
 keeps a server running in its window (close the window, or press Ctrl+C, to stop it).
@@ -142,7 +142,7 @@ keeps a server running in its window (close the window, or press Ctrl+C, to stop
   bottom catch unreachable objects, missing keys and broken stairs.
 - **Event editor:** events, their text in every language, and how they link (*Active only when*, *Then fire*,
   *Then do → give*). The **NPCs** tab edits NPCs (name, greeting, chat lines, topic order) and has a **talk preview**;
-  the **Dialogues** tab edits dialogues as cards ([docs/event_editor/08](../docs/event_editor/08_NPC_DIALOGUE.md)).
+  the **Dialogues** tab edits dialogues as cards ([docs/gameplay/event_editor/08](../docs/gameplay/event_editor/08_NPC_DIALOGUE.md)).
 
 ## 3. When something goes wrong
 

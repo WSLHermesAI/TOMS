@@ -1,4 +1,4 @@
-// talk_system.h -- what an NPC does when the player talks to it (docs/event_editor/08_NPC_DIALOGUE.md).
+// talk_system.h -- what an NPC does when the player talks to it (docs/gameplay/event_editor/08_NPC_DIALOGUE.md).
 //
 //   NPC file (data/npcs/<id>.json)   its name, greeting, chat lines (rotating with a talk index) and menu rule
 //   topics                           events bound to the NPC ("trigger": {"on": "talk", "npc": id}), offered

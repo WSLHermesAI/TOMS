@@ -2,7 +2,7 @@
 #include "editor_window.h"
 #include "Language.h"
 #include "leak_check.h"
-#include "singletons.h"   // Windows Debug builds: what is still allocated at exit (docs/33_LEAK_CHECK.md)
+#include "singletons.h"   // Windows Debug builds: what is still allocated at exit (docs/engine/15_LEAK_CHECK.md)
 #include "object.h"
 
 #include <QApplication>
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
         }
         if (frames > 0 && !png.isEmpty()) w.runSmokeTest(frames, png);
         w.show();
-        if (!scenario.isEmpty()) w.playScenario(scenario);   // test scenarios (docs/31_TEST_SCENARIOS.md)
+        if (!scenario.isEmpty()) w.playScenario(scenario);   // test scenarios (docs/gameplay/08_TEST_SCENARIOS.md)
         rc = app.exec();
         Language::shutdown();   // the translators and tables, while QApplication is still there
     }

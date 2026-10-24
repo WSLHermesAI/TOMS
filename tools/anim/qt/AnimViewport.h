@@ -23,7 +23,7 @@ class AnimViewport : public GameCanvasView
 
 public:
     enum class Tool { Move, Rotate, Scale };
-    // What a click in the viewport picks (docs/34_MESH_ANIMATION.md): Object = sprites (the node moves, and with it
+    // What a click in the viewport picks (docs/engine/16_MESH_ANIMATION.md): Object = sprites (the node moves, and with it
     // the bones under it); Bones = the bones of skinned nodes (their joints and segments), never sprites -- the skin
     // is shown, and the gizmo poses the bone (Auto-Key on) or places it in the sprite (Auto-Key off: its rest pose).
     // Lattice: the selected sprite's deform lattice is shown; dragging a point keys the deform at the playhead (always a
@@ -49,7 +49,7 @@ public:
     void setSnap(bool on) { m_snap = on; }
     bool snap() const { return m_snap; }
     // View > Show Skin: over every skinned node, its mesh (lines), its points coloured by the bones they follow, and
-    // its bones; with a bone selected, the points shade by how much they follow that bone (docs/34_MESH_ANIMATION.md).
+    // its bones; with a bone selected, the points shade by how much they follow that bone (docs/engine/16_MESH_ANIMATION.md).
     void setShowSkin(bool on) { m_showSkin = on; update(); }
     bool showSkin() const { return m_showSkin; }
     void setEditMode(EditMode m);

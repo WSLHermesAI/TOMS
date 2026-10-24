@@ -198,7 +198,7 @@ void AnimViewport::paintGameScene(const GameScene& s)
                 atlases.emplace_back(m_doc->atlasId(i).toStdString(), m_doc->atlasAt(i).path.toStdString(), &m_doc->atlasAt(i).atlas);
         m_tex.setAtlases(atlases);
     }
-    for (int i = 0; i < m_doc->atlasCount(); i++)   // skinned and deformed nodes bend these (docs/34_MESH_ANIMATION.md)
+    for (int i = 0; i < m_doc->atlasCount(); i++)   // skinned and deformed nodes bend these (docs/engine/16_MESH_ANIMATION.md)
         if (m_doc->atlasAt(i).ok)
             m_tex.setMeshes(m_doc->atlasId(i).toStdString(), m_doc->atlasMeshes(i).meshes.empty() ? nullptr : &m_doc->atlasMeshes(i));
     const QPointF o = toWidget(QPointF(0, 0));   // origin cross: where the game places the clip

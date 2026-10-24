@@ -16,7 +16,7 @@ namespace animed {
 using toms::anim::Ease;
 using toms::anim::Node;
 
-// Deform: the lattice's offsets (anim_clip.h; docs/34_MESH_ANIMATION.md). Interpolated (eased) but not one of
+// Deform: the lattice's offsets (anim_clip.h; docs/engine/16_MESH_ANIMATION.md). Interpolated (eased) but not one of
 // kInterpolated: "key all channels together" keys the transform and colour only.
 enum class Channel { Pos, Rot, Scale, Color, Sprite, Visible, Event, Deform };
 constexpr int kChannelCount = 8;

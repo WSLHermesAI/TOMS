@@ -310,7 +310,7 @@ std::vector<std::string> chainOrder(Project& p) {
 
 namespace {
 
-// event logic (docs/event_editor/06_EVENT_LOGIC.md): what an event needs must be possible on its floor or before
+// event logic (docs/gameplay/event_editor/06_EVENT_LOGIC.md): what an event needs must be possible on its floor or before
 void logicOrderIssues(Project& p, std::vector<StoryRow>& rows) {
     std::map<std::string, int> idxOf;
     auto at = [&](const std::string& id, int i) {

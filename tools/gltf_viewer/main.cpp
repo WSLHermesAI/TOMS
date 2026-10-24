@@ -1,4 +1,4 @@
-// gltf_viewer -- a glTF 2.0 model viewer on the engine's renderer (docs/18_GLTF.md), in the spirit of
+// gltf_viewer -- a glTF 2.0 model viewer on the engine's renderer (docs/engine/08_GLTF.md), in the spirit of
 // https://gltf-viewer.donmccurdy.com/: drop a .gltf / .glb on the window (or File > Open), orbit it,
 // play its animations, scrub, change the morph weights, check skins and instancing, light it.
 //

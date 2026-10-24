@@ -1,5 +1,5 @@
 // render_mesh_test.cpp -- which triangle meshes IRenderer::drawMesh accepts (validMesh, render_iface.h;
-// docs/34_MESH_ANIMATION.md): whole triangles, every index naming a vertex, at most 65536 vertices. The drawing
+// docs/engine/16_MESH_ANIMATION.md): whole triangles, every index naming a vertex, at most 65536 vertices. The drawing
 // itself is checked on the GPU by smoke.mesh (tests/CMakeLists.txt). No GPU here.
 #include "render_iface.h"
 

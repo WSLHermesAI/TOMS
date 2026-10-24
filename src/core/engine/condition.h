@@ -57,7 +57,7 @@ public:
     // instead and had no leaf able to read them back at all until a dialogue choice (ss_04) needed
     // to gate on one. Defaulted like the S3/M7 leaves above.
     virtual bool runFlagSet(const std::string& /*flag*/) const { return false; }
-    // NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md): event variables (story/vars.json; a bool is
+    // NPCs and their events (docs/gameplay/event_editor/08_NPC_DIALOGUE.md): event variables (story/vars.json; a bool is
     // 0 / 1), how many times the player has talked to an NPC this run, and the stage the player is on.
     // Defaulted like the leaves above.
     virtual int varValue(const std::string& /*var*/) const { return 0; }

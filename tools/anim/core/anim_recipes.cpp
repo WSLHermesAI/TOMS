@@ -201,7 +201,7 @@ int headlessRecipe(const std::vector<std::string>& args) {
         std::fputs("usage: anim_editor --headless recipe <file.anim> --node <name> --recipe <id> [--clip <name>] [--start s]\n"
                    "       [--period s] [--strength k] [--out <file.anim>]\n"
                    "       anim_editor --headless recipe --list\n"
-                   "  writes a motion recipe's keys on the node (docs/16_ANIMATION_RECIPES.md section 7)\n",
+                   "  writes a motion recipe's keys on the node (docs/engine/06_ANIMATION_RECIPES.md section 7)\n",
                    stderr);
         return 3;
     }

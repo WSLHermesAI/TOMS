@@ -1,5 +1,5 @@
 // anim_skin_test.cpp -- skinned nodes (anim_clip.h "skin", anim_player.h makeSkinnedMesh / appendDraws;
-// docs/34_MESH_ANIMATION.md): the skin in the .anim file (version 3 only when used), a mesh at rest lying exactly where
+// docs/engine/16_MESH_ANIMATION.md): the skin in the .anim file (version 3 only when used), a mesh at rest lying exactly where
 // the sprite's quad does, a turning bone moving the vertices near it and not the far ones, the automatic weights, and
 // the fallbacks (no mesh, a rotated region: the quad). No GPU: a renderer that records quads and meshes.
 #include "anim_player.h"
@@ -257,7 +257,7 @@ void testPlayer() {
     CHECK(moved, "the mesh is bent again as the bones move");
 }
 void testMeshKeys() {
-    // An atlas's mesh file (docs/34_MESH_ANIMATION.md): keyed by sprite and the node's grid, shared by every clip using
+    // An atlas's mesh file (docs/engine/16_MESH_ANIMATION.md): keyed by sprite and the node's grid, shared by every clip using
     // the atlas; what a clip file needs; cut from alpha on the node's grid.
     CHECK(meshKey("golem") == "golem" && meshKey("golem", 6, 8) == "golem@6x8", "meshKey");
     Fixture fx;

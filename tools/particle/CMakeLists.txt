@@ -1,4 +1,4 @@
-# tools/particle -- particle effect tooling (docs/17_PARTICLES.md).
+# tools/particle -- particle effect tooling (docs/engine/07_PARTICLES.md).
 #
 #   toms_fx           the runtime (src/core/engine/particle_fx.cpp) on its own, without the game:
 #                     what the editor simulates and draws effects with, so it matches the game

@@ -1,4 +1,4 @@
-// card_collection.h -- monster cards: a collection (docs/30_GAMEPLAY_PLAN.md §3, the owner's decision 2026-10-20).
+// card_collection.h -- monster cards: a collection (docs/gameplay/07_GAMEPLAY_PLAN.md §3, the owner's decision 2026-10-20).
 //
 // For now cards are only a collection. Per monster the player has a record: how many times they defeated it, how
 // many times it defeated them, and how many copies of its card they hold. Defeating a monster may give its card:

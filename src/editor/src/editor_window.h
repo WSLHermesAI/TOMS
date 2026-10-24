@@ -3,7 +3,7 @@
 //   Tab "Play (bgfx)"          BgfxViewport running the real game code on bgfx
 //   Tab "Stage editor"          the existing Qt stage editor (src/editor/stage), embedded unmodified
 //   Dock "Stages"               double-click loads a stage into the running game
-//   Dock "Scenarios"            double-click starts a test scenario in the Play tab (tests/scenarios/, docs/31)
+//   Dock "Scenarios"            double-click starts a test scenario in the Play tab (tests/scenarios/, docs/gameplay/08)
 //   Dock "Session"              renderer, asset folder, fps, quads, draw calls, toggles
 #pragma once
 #include <QMainWindow>

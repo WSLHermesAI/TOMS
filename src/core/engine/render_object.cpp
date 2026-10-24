@@ -59,8 +59,13 @@ void RenderObject::update(float dt) {
     for (const auto& c : owned_) c->update(dt);
 }
 
+void RenderObject::setView(const glm::mat3& view) {
+    view_ = view;
+    for (const auto& c : owned_) c->setView(view);
+}
+
 void RenderObject::Render(IRenderer* ren) {
-    if (ren) draw(ren, GetWorldTransform());
+    if (ren) draw(ren, view_ * GetWorldTransform());
 }
 
 void RenderObject::copyCommonTo(RenderObject& o) const {
@@ -196,6 +201,7 @@ std::shared_ptr<RenderObject> SpriteObject::fromJson(const nlohmann::json& j, Bu
     if (!o->atlas_->ok()) { error = "cannot load the atlas " + o->atlas_->path() + " (" + o->atlas_->error() + ")"; return nullptr; }
     if (!o->atlas_->find(o->name_)) { error = "no sprite '" + o->name_ + "' in " + o->atlas_->path(); return nullptr; }
     o->additive = str(j, "blend") == "add";
+    if (auto s = j.find("solid"); s != j.end() && s->is_boolean()) o->solid = s->get<bool>();
     return o;
 }
 
@@ -205,6 +211,7 @@ std::shared_ptr<RenderObject> SpriteObject::clone() const {
     o->name_ = name_;
     o->atlasPath_ = atlasPath_;
     o->additive = additive;
+    o->solid = solid;
     copyCommonTo(*o);
     return o;
 }
@@ -214,6 +221,7 @@ nlohmann::json SpriteObject::toJson() const {
     if (!atlasPath_.empty()) j["atlas"] = atlasPath_;
     j["name"] = name_;
     if (additive) j["blend"] = "add";
+    if (solid) j["solid"] = true;
     return j;
 }
 
@@ -243,6 +251,7 @@ void SpriteObject::draw(IRenderer* ren, const glm::mat3& world) {
             std::copy(r->uv, r->uv + 4, q.uv);
             std::copy(tint, tint + 4, q.tint);
             q.additive = additive;
+            q.solid = solid;
             const std::vector<uint16_t>& pages = atlas_->pageTextures();
             q.texture = r->page >= 0 && r->page < (int)pages.size() ? pages[(size_t)r->page] : kSpriteAtlasTexture;
             quad_ = q;
@@ -310,6 +319,16 @@ void ClipObject::update(float dt) {
     player_.takeEvents();
     if (loop && player_.finished()) player_.play(anim_->find(clip_));
     RenderObject::update(dt);
+}
+
+void ClipObject::setTime(float seconds) {
+    if (anim_->version() != seenVersion_) start();
+    player_.seek(seconds);
+}
+
+float ClipObject::duration() const {
+    const anim::Clip* c = anim_ ? anim_->find(clip_) : nullptr;
+    return c ? c->duration() : 0.0f;
 }
 
 void ClipObject::draw(IRenderer* ren, const glm::mat3& world) {
@@ -381,10 +400,12 @@ void ParticleObject::update(float dt) {
 }
 
 void ParticleObject::draw(IRenderer* ren, const glm::mat3& world) {
-    if (!placed_) start(ren, world);
+    // the particles live under the view (on the map), and are drawn through it (the camera)
+    const glm::mat3 placed = view() == glm::mat3(1.0f) ? world : glm::inverse(view()) * world;
+    if (!placed_) start(ren, placed);
     if (!fx_.effect()) return;
-    fx_.setTransform(world);
-    fx_.draw(ren, file_->atlases(), glm::mat3(1.0f), isWhite(tint) ? nullptr : tint);
+    fx_.setTransform(placed);
+    fx_.draw(ren, file_->atlases(), view(), isWhite(tint) ? nullptr : tint);
 }
 
 // ---- text ----------------------------------------------------------------------------------------------------------

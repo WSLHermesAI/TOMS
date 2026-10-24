@@ -1,4 +1,4 @@
-# run_scenario.cmake -- one scenario test (run by CTest; see tests/CMakeLists.txt and docs/31_TEST_SCENARIOS.md).
+# run_scenario.cmake -- one scenario test (run by CTest; see tests/CMakeLists.txt and docs/gameplay/08_TEST_SCENARIOS.md).
 #
 #   cmake -DGAME=<toms_game> -DNAME=<scenario> -DSCENARIO=<its folder> -DWORK=<scratch dir> -P run_scenario.cmake
 #

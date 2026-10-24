@@ -21,7 +21,7 @@
  ", loops": "，循環",
  "-90 = up, 0 = right, 90 = down": "-90 = 上，0 = 右，90 = 下",
  "0 = endless (until stopped). A one-shot stops making particles at its end.": "0 = 無限（直到停止）。單次效果在結束時停止產生粒子。",
- "<pre>particle_editor [file.particle]\nparticle_editor --headless check file.particle\nparticle_editor --headless render file.particle#effect out.png [frames] [every]\nparticle_editor --selftest file.particle outdir</pre>In the game: <code>toms_game --fx=file.particle#effect</code>. See docs/17_PARTICLES.md.": "<pre>particle_editor [file.particle]\nparticle_editor --headless check file.particle\nparticle_editor --headless render file.particle#effect out.png [frames] [every]\nparticle_editor --selftest file.particle outdir</pre>在遊戲中：<code>toms_game --fx=file.particle#effect</code>。請參考 docs/17_PARTICLES.md。",
+ "<pre>particle_editor [file.particle]\nparticle_editor --headless check file.particle\nparticle_editor --headless render file.particle#effect out.png [frames] [every]\nparticle_editor --selftest file.particle outdir</pre>In the game: <code>toms_game --fx=file.particle#effect</code>. See docs/engine/07_PARTICLES.md.": "<pre>particle_editor [file.particle]\nparticle_editor --headless check file.particle\nparticle_editor --headless render file.particle#effect out.png [frames] [every]\nparticle_editor --selftest file.particle outdir</pre>在遊戲中：<code>toms_game --fx=file.particle#effect</code>。請參考 docs/engine/07_PARTICLES.md。",
  "A burst fires 'min..max' particles at emitter time t, then 'repeat' more times every 'every' seconds (-1 = while active)": "爆發在發射器時間 t 射出「最小..最大」個粒子，之後每隔「間隔」秒再重複「重複」次（-1 = 啟用期間一直重複）",
  "A one-shot effect plays again 0.5 s after it ends": "單次效果在結束 0.5 秒後再次播放",
  "Add &Effect": "加入效果(&E)",

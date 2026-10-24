@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """make_monster_battle_anims.py -- writes assets/media/anim/monster_battle.anim: how a monster moves on the battle screen,
-one set of clips for every monster (docs/15_ANIMATION.md "Monsters in battle"). The game plays them by the battle's
+one set of clips for every monster (docs/engine/05_ANIMATION.md "Monsters in battle"). The game plays them by the battle's
 status (Game::updateMonsterRig):
 
     idle     looping: breathing, while nothing happens

@@ -14,7 +14,8 @@ using namespace toms::game_detail;
 // Sprites keep their own sizes; the .atlas carries child sprites, pivots, 9-slices and tags (spriteAtlas_). Every
 // sprite in SPRITE_ORDER must be in it, on its first page.
 bool Game::loadPrebuiltSpriteAtlas(int style) {
-    const std::string dir = style > 0 ? dataDir + "/styles/" + artStyles_[style].id + "/atlas/" : dataDir + "/atlas/";
+    const std::string dir = toms::res::ResourceManager::dirOf(style > 0 ? pathFor(toms::pattern::kStyleAtlas, artStyles_[style].id)
+                                                                   : pathOf(toms::key::kAtlasGame));
     std::string text;
     if (!toms::vfsReadAll(dir + "game.atlas", text)) return false;
     toms::AtlasFile atlas;
@@ -60,7 +61,7 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
         idToLayer[SPRITE_ORDER[i]] = i;
     }
     // Every sprite's visible box (its pixels with alpha): how character clips are fitted to a character
-    // (anim_clip.h fitCharacter, docs/15_ANIMATION.md "Characters").
+    // (anim_clip.h fitCharacter, docs/engine/05_ANIMATION.md "Characters").
     spriteBoxes_.clear();
     for (const toms::AtlasRegion& r : atlas.regions) {
         if (r.page != 0 || r.child || r.rotated || r.x < 0 || r.y < 0 || r.x + r.w > w || r.y + r.h > h) continue;
@@ -68,7 +69,7 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
                                                 r.origW, r.origH);
     }
     // Every other sprite on the page (the new monsters, NPCs, items, doors, floor themes ...) is drawable by its name
-    // too: a type's or an object's "sprite" can be any of them (docs/27_AI_SPRITES.md). Only the first page is the
+    // too: a type's or an object's "sprite" can be any of them (docs/engine/14_AI_SPRITES.md). Only the first page is the
     // renderer's sprite texture, so sprites on a further page are not.
     for (const toms::AtlasRegion& r : atlas.regions) {
         if (r.page != 0 || idToLayer.count(r.name)) continue;
@@ -82,10 +83,10 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
     std::fprintf(stderr, "[assets] sprites: prebuilt atlas %sgame.atlas, %dx%d, %zu region(s), art style '%s'\n", dir.c_str(),
                  w, h, atlas.regions.size(), artStyles_[style].id.empty() ? "original" : artStyles_[style].id.c_str());
     spriteAtlas_ = std::move(atlas);
-    {   // its meshes (docs/34_MESH_ANIMATION.md): beside the style's atlas, else the original art's (cut from the same
+    {   // its meshes (docs/engine/16_MESH_ANIMATION.md): beside the style's atlas, else the original art's (cut from the same
         // sprites; drawn inside each region, so a different packing only changes how closely they follow the shape)
         std::string meshError;
-        const std::string base = dataDir + "/atlas/game.atlas";
+        const std::string base = pathOf(toms::key::kAtlasGame);
         const std::string own = dir + "game.atlas";
         if (!toms::res::readMeshFile(toms::spriteMeshPath(own), spriteMeshes_, meshError))
             std::fprintf(stderr, "[assets] %s\n", meshError.c_str());
@@ -131,7 +132,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     // (GameSession) owns the window and frees the renderer.
     ren = new Renderer();
     ren->init(1280, 720);   // size ignored by the bgfx renderer: the host sets the backbuffer size
-    // The resource cache (docs/25_RESOURCE_MANAGER.md). Any ".../atlas/game.atlas" a clip or effect names -- the
+    // The resource cache (docs/engine/12_RESOURCE_MANAGER.md). Any ".../atlas/game.atlas" a clip or effect names -- the
     // original art's or a style's -- is the sprite atlas loaded now (provideSpriteAtlas), so they follow the art style.
     res_ = std::make_unique<toms::res::ResourceManager>(ren);
     // Every file the game needs by key (assets/media/resources.json); a key or a path under assets/media is how code
@@ -139,6 +140,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     res_->setRoot(assetDir);
     res_->setOnMissing([this](const std::string& name, const std::string& path, const std::string& error) { resourceMissing(name, path, error); });
     res_->loadManifest("resources.json");
+    toms::registerBuiltinRenderObjects(renderFactory_);   // sprite, clip, particle, text, group (the floor's looks)
     res_->setPathMapper([](const std::string& path) {
         const size_t slash = path.find_last_of("/\\");
         const std::string name = path.substr(slash == std::string::npos ? 0 : slash + 1);
@@ -148,9 +150,9 @@ bool Game::loadAssets(const std::string& assetDir) {
         return path;
     });
     // Art styles (Settings > art style; art_styles.h): start with the one settings.json names.
-    artStyles_ = toms::artStylesFromJson(readJsonFile(assetDir + "/styles/styles.json"));
+    artStyles_ = toms::artStylesFromJson(readJsonFile(pathOf(toms::key::kStylesIndex)));
     if (!loadSpriteAtlas(toms::artStyleIndex(artStyles_,
-            toms::loadGameSettings(toms::defaultSaveDir() + "/settings.json").artStyle)))
+            toms::loadGameSettings(toms::settingsPath()).artStyle)))
         return false;
     // (Text is RmlUi's: see assets/media/fonts/NotoSansCJKtc-TOMS.otf and tools/make_ui_font.py.)
     // The manifest's "preload" entries (the map's clips and their atlases), now that the sprite atlas is provided.
@@ -159,7 +161,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     // S1: character-level 佔格 table (docs/design/ART_AND_ABILITY_DESIGN.md F8). An absent file leaves
     // every entity at 1x1, i.e. exactly the pre-S1 behavior -- the table is purely additive.
     {
-        nlohmann::json fpj = readJsonFile(assetDir + "/../data/footprints.json");
+        nlohmann::json fpj = readJsonFile(pathOf(toms::key::kDataFootprints));
         if (fpj.is_object()) {
             int n = 0;
             for (auto it = fpj.begin(); it != fpj.end(); ++it) {
@@ -172,7 +174,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     }
     // the battle scene's tuning (data/battle.json): bar speed and the wait after a tap
     {
-        nlohmann::json bj = readJsonFile(assetDir + "/../data/battle.json");
+        nlohmann::json bj = readJsonFile(pathOf(toms::key::kDataBattle));
         if (bj.is_object()) {
             barSlowScale_ = std::max(0.0f, bj.value("bar_slow_speed_scale", 1.0f));
             barFastScale_ = std::max(0.05f, bj.value("bar_fast_speed_scale", 1.0f));
@@ -183,16 +185,16 @@ bool Game::loadAssets(const std::string& assetDir) {
                     barFastScale_, barCooldownMs_);
         }
     }
-    weaponPlay_ = toms::loadWeaponPlay(assetDir + "/../data/weapon_play.json");   // docs/30_GAMEPLAY_PLAN.md §5.6
-    miniGames_ = toms::loadMiniGames(assetDir + "/../data/minigames.json");      // docs/30 phase 6
-    characterFit_ = readJsonFile(assetDir + "/../data/character_fit.json");      // character clips' nudges (docs/15)
+    weaponPlay_ = toms::loadWeaponPlay(pathOf(toms::key::kDataWeaponPlay));   // docs/gameplay/07_GAMEPLAY_PLAN.md §5.6
+    miniGames_ = toms::loadMiniGames(pathOf(toms::key::kDataMinigames));      // docs/gameplay/07 phase 6
+    characterFit_ = readJsonFile(pathOf(toms::key::kDataCharacterFit));      // character clips' nudges (docs/engine/05)
     fprintf(stderr, "[assets] weapon_play.json: %d weapon(s)\n", (int)weaponPlay_.weapons.size());
     // load enemy templates
-    nlohmann::json ej = readJsonFile(assetDir+"/../data/enemies.json");
+    nlohmann::json ej = readJsonFile(pathOf(toms::key::kDataEnemies));
     for (auto& [k,v] : ej.items()) enemyTpl[k] = v;
     // data/items.json: every item in the game, one record each ("_comment" and other "_" keys are notes).
     // Its weapons, armor and talents are also the Equipment System's content (equipment_system.h).
-    nlohmann::json ij = readJsonFile(assetDir+"/../data/items.json");
+    nlohmann::json ij = readJsonFile(pathOf(toms::key::kDataItems));
     for (auto& [k,v] : ij.items()) {
         if (k.empty() || k[0] == '_' || !v.is_object()) continue;
         itemDefs[k] = v;
@@ -205,18 +207,18 @@ bool Game::loadAssets(const std::string& assetDir) {
     // data/story/counters.json: the story counters' state words, shown on the Status tab once a
     // counter reaches its displayAt (the run state keeps the numbers).
     {
-        nlohmann::json cj = readJsonFile(assetDir + "/../data/story/counters.json");
+        nlohmann::json cj = readJsonFile(pathOf(toms::key::kDataStoryCounters));
         if (cj.is_object())
             for (auto& [k, v] : cj.items())
                 if (!k.empty() && k[0] != '_' && v.is_object() && v.contains("label")) counterLabels_[k] = v["label"];
     }
-    loadEventDefs(assetDir);
-    loadNpcs(assetDir);   // NPC files and event variables (docs/event_editor/08_NPC_DIALOGUE.md)
+    loadEventDefs();
+    loadNpcs();   // NPC files and event variables (docs/gameplay/event_editor/08_NPC_DIALOGUE.md)
     // data/store.json: which of those items the store sells, and how prices grow
-    loadStore(assetDir);
-    // data/stats.json: the player's attributes and the level-up numbers (docs/20_PLAYER_MENU.md section 3).
+    loadStore();
+    // data/stats.json: the player's attributes and the level-up numbers (docs/gameplay/03_PLAYER_MENU.md section 3).
     {
-        nlohmann::json sj = readJsonFile(assetDir + "/../data/stats.json");
+        nlohmann::json sj = readJsonFile(pathOf(toms::key::kDataStats));
         if (sj.contains("attributes") && sj["attributes"].is_array())
             for (const auto& a : sj["attributes"]) {
                 AttrDef d;
@@ -239,29 +241,33 @@ bool Game::loadAssets(const std::string& assetDir) {
             levelUp_.def = l.value("def", levelUp_.def);
             levelUp_.maxhp = l.value("maxhp", levelUp_.maxhp);
             levelUp_.freePoints = l.value("freePoints", levelUp_.freePoints);
+            levelUp_.maxLevel = std::max(1, l.value("maxLevel", levelUp_.maxLevel));
+            if (l.contains("points") && l["points"].is_array())
+                for (const auto& r : l["points"])
+                    if (r.is_object()) levelUp_.points.push_back({std::max(2, r.value("from", 2)), r.value("points", 0)});
         }
     }
     // Milestone 8: load the Mission System's content (schema/logic built in Milestone 4 --
     // mission_system.h -- but missionDefs_ stayed empty until this content-authoring pass).
     {
-        nlohmann::json mj = readJsonFile(assetDir + "/../data/missions.json");
+        nlohmann::json mj = readJsonFile(pathOf(toms::key::kDataMissions));
         for (auto& [k, v] : mj.items()) missionDefs_[k] = toms::missionDefinitionFromJson(v);
     }
     // S4: the skill tree's content (data/skills.json) -- same "load once at boot" shape as
     // equipment/missions above.
-    skillDefs_ = toms::loadSkillDefs(assetDir + "/../data/skills.json");
+    skillDefs_ = toms::loadSkillDefs(pathOf(toms::key::kDataSkills));
     // S5: the forge's content (data/forge.json) -- same "load once at boot" shape as skillDefs_.
-    forgeDefs_ = toms::loadForgeRecipes(assetDir + "/../data/forge.json");
+    forgeDefs_ = toms::loadForgeRecipes(pathOf(toms::key::kDataForge));
     // S6: the village hub's content (data/hub.json) -- same "load once at boot" shape as skillDefs_/
     // forgeDefs_ above.
-    hubDefs_ = toms::loadHubLocations(assetDir + "/../data/hub.json");
+    hubDefs_ = toms::loadHubLocations(pathOf(toms::key::kDataHub));
     // S7 (equipment actives, first slice): same "load once at boot" shape as skillDefs_/forgeDefs_/
     // hubDefs_ above.
-    activeDefs_ = toms::loadActiveDefinitions(assetDir + "/../data/actives.json");
+    activeDefs_ = toms::loadActiveDefinitions(pathOf(toms::key::kDataActives));
     // M7 (first slice): the 15-ending table, same "load once at boot" shape as the above.
-    endingsTable_ = toms::loadEndings(assetDir + "/../data/story/endings.json");
+    endingsTable_ = toms::loadEndings(pathOf(toms::key::kDataStoryEndings));
     // M8 (first slice): the rebirth config, same "load once at boot" shape as the above.
-    cyclesConfig_ = toms::loadCyclesConfig(assetDir + "/../data/story/cycles.json");
+    cyclesConfig_ = toms::loadCyclesConfig(pathOf(toms::key::kDataStoryCycles));
     // init player
     pl.maxhp = kStartingHp; pl.hp = kStartingHp; pl.atk = kStartingAtk; pl.def = kStartingDef; pl.gold = 0; pl.exp = 0; pl.lv = 1;
     pl.inv = {"potion_red", "potion_blue", "exp_up"};
@@ -270,7 +276,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     // S3.5: the 70-floor tower (data/story/floors/*.json) as the run's progression source. Loaded
     // once here; empty when the data is absent, and every use is guarded, so such a checkout plays
     // the eleven hand-authored stages exactly as before.
-    floors_ = toms::FloorTable::loadFromDirectory(dataDir + "/../data/story/floors");
+    floors_ = toms::FloorTable::loadFromDirectory(pathOf(toms::key::kFolderFloors));
     loadStairLocks();   // Q7: the stairs the floors lock behind events (needs the event pools, loaded above)
     if (floors_.empty()) {
         fprintf(stderr, "[assets] floor table: absent -- playing the hand-authored stages only\n");
@@ -289,8 +295,8 @@ bool Game::loadAssets(const std::string& assetDir) {
     {
         toms::ensureSaveDir(toms::defaultSaveDir());
         bool haveSettings = false;
-        settings_ = toms::loadGameSettings(toms::defaultSaveDir() + "/settings.json", &haveSettings);
-        locale_.loadFromFile(dataDir + "/../data/text.json");
+        settings_ = toms::loadGameSettings(toms::settingsPath(), &haveSettings);
+        locale_.loadFromFile(pathOf(toms::key::kDataText));
         locale_.setLanguage(settings_.language);
         cam_.setMode(toms::Camera::modeFromIndex(settings_.cameraMode));
         cam_.setViewCols(settings_.viewCols);
@@ -304,7 +310,7 @@ bool Game::loadAssets(const std::string& assetDir) {
         if (!haveSettings) applyLanguage();   // write defaults once, so the file exists
     }
     // init SFX subsystem (no-op if no audio device/context; headless-safe).
-    audio.init(assetDir + "/sfx");
+    audio.init(pathOf(toms::key::kFolderSfx));
     wireMissionEvents(); // Milestone 4: subscribe mission-progress handlers once per session
     rollDailyMissions(); // Milestone 5: daily-mission reset check, once per session start
     return true;
@@ -368,11 +374,11 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     // initial load uses "stage01". Normalize so both forms resolve instead of
     // opening a non-existent path (which makes ifstream fail -> parse throw -> crash
     // when the player steps on stairs / a warp tile).
-    std::string path = dataDir + "/../data/stages/" + id + ".json";
+    std::string path = pathFor(toms::pattern::kStage, id);
     if (!toms::vfsExists(path)) {
         std::string noUs = id;
         noUs.erase(std::remove(noUs.begin(), noUs.end(), '_'), noUs.end());
-        std::string alt = dataDir + "/../data/stages/" + noUs + ".json";
+        std::string alt = pathFor(toms::pattern::kStage, noUs);
         if (toms::vfsExists(alt)) path = alt;
     }
     // a stage file by its path (tests: toms_game --stage=tests/stage/objects.stage.json)
@@ -385,7 +391,7 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     bool isFloor = (floor != nullptr);
     if (isFloor) {
         std::string rel = floors_.mapRelPath(id);
-        std::string candidate = dataDir + "/../" + rel;
+        std::string candidate = pathOf(toms::key::kFolderAssets) + "/" + rel;   // rel is under assets/
         if (toms::vfsExists(candidate)) path = candidate;
     }
     if (!isFloor) {
@@ -393,7 +399,7 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
         // layout docs/story/STORY_DATA_SCHEMA.md section 1.2 asks for); tried last so the hand-authored
         // data/stages/*.json files always win.
         if (!toms::vfsExists(path)) {
-            std::string floorPath = dataDir + "/../data/story/floors/" + id + ".stage.json";
+            std::string floorPath = pathFor(toms::pattern::kFloorStage, id);
             if (toms::vfsExists(floorPath)) path = floorPath;
         }
     }
@@ -544,7 +550,7 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
         totalStages = floors_.size();
     } else {
     totalStages = 1;
-    std::string dir = dataDir + "/../data/stages/";
+    std::string dir = pathOf(toms::key::kFolderStages) + "/";
     {
         for (const std::string& name : toms::vfsListDir(dir)) {
             try {

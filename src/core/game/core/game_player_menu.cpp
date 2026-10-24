@@ -1,4 +1,4 @@
-// game_player_menu.cpp — the player menu (docs/20_PLAYER_MENU.md): the walking scene's one button (≡,
+// game_player_menu.cpp — the player menu (docs/gameplay/03_PLAYER_MENU.md): the walking scene's one button (≡,
 // Esc) opens five tabs -- Status, Equipment, Items, Events, System. This file keeps its state, its
 // keyboard and mouse handling, and builds its part of the UI (UiPlayer; the System tab's rows are
 // UiMenu, built by buildMenuUi in game_ui.cpp). The screen itself is assets/media/ui/player.rml.
@@ -36,6 +36,7 @@ void Game::closePlayerMenu() {
     inGameMenuPage_ = InGameMenuPage::Main;
     inGameLangConfirmOpen_ = false;
     dropConfirmOpen_ = false;
+    attrDraft_.clear();   // points not confirmed are not kept
     audio.play("close_ui");
 }
 
@@ -315,11 +316,11 @@ std::vector<std::string> Game::connectedEvents(const std::string& eventId) const
     return out;
 }
 
-void Game::loadEventDefs(const std::string& assetDir) {
-    const std::string dir = assetDir + "/../data/events/";
+void Game::loadEventDefs() {
+    const std::string dir = pathOf(toms::key::kFolderEvents) + "/";
     // kinds.json (written by the event editor's Kinds tab): "inLog": false keeps a kind out of the log.
     std::map<std::string, bool> kindInLog;
-    nlohmann::json kinds = readJsonFile(dir + "kinds.json");
+    nlohmann::json kinds = readJsonFile(pathOf(toms::key::kDataEventKinds));
     if (kinds.is_object())
         for (auto& [k, v] : kinds.items())
             if (v.is_object() && v.contains("inLog")) kindInLog[k] = v.value("inLog", true);
@@ -354,10 +355,10 @@ void Game::loadEventDefs(const std::string& assetDir) {
             eventDefs_[id] = d;
         }
     }
-    // The events bound to NPCs (trigger "talk"), in menu order (docs/event_editor/08_NPC_DIALOGUE.md).
+    // The events bound to NPCs (trigger "talk"), in menu order (docs/gameplay/event_editor/08_NPC_DIALOGUE.md).
     npcTopics_ = toms::talk::collectTopics(poolEvents);
     // The chapters' story events (beats of kind "event"): a chapter's connected events in the log.
-    const std::string chDir = assetDir + "/../data/story/chapters/";
+    const std::string chDir = pathOf(toms::key::kFolderChapters) + "/";
     for (const std::string& name : toms::vfsListDir(chDir)) {
         if (name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
         nlohmann::json ch = readJsonFile(chDir + name);
@@ -383,7 +384,8 @@ void Game::playerMenuMove(int dx, int dy) {
     if (dropConfirmOpen_) { if (dx != 0 || dy != 0) dropConfirmYes_ = !dropConfirmYes_; return; }
     switch (menuTab_) {
         case MenuTab::Status: {
-            const int n = (int)attrDefs_.size();
+            // the attributes, then (with a draft) Confirm and Reset as two more stops, so a keyboard can reach them
+            const int n = (int)attrDefs_.size() + (attrDraft_.empty() ? 0 : 2);
             if (dy != 0 && n > 0) attrSel_ = attrSel_ < 0 ? 0 : ((attrSel_ + dy) % n + n) % n;
             break;
         }
@@ -423,8 +425,11 @@ void Game::playerMenuActivate() {
     if (saveLoadOpen_) { if (saveLoadConfirm_) saveLoadAnswer(saveLoadConfirmYes_); else saveLoadAsk(saveLoadSel_); return; }
     if (dropConfirmOpen_) { playerMenuEvent("pm_confirm", dropConfirmYes_ ? 1 : 0); return; }
     switch (menuTab_) {
-        case MenuTab::Status:   // Enter places a free attribute point on the selected attribute
-            if (pl.attrPoints > 0 && attrSel_ >= 0) spendAttrPoint(attrSel_);
+        case MenuTab::Status:   // Enter places a point on the selected attribute (in the draft: Confirm keeps it)
+            if (attrSel_ == (int)attrDefs_.size() && !attrDraft_.empty()) confirmAttrPoints();
+            else if (attrSel_ == (int)attrDefs_.size() + 1 && !attrDraft_.empty()) resetAttrDraft();
+            else if (pl.attrPoints - attrDraftTotal() > 0 && attrSel_ >= 0) spendAttrPoint(attrSel_);
+            if (attrSel_ >= (int)attrDefs_.size() && attrDraft_.empty()) attrSel_ = (int)attrDefs_.size() - 1;   // the stops went
             return;
         case MenuTab::Gear: {
             const auto cells = gearCells();
@@ -502,6 +507,9 @@ void Game::playerMenuEvent(const std::string& name, int arg) {
     }
     if (name == "pm_attr") { if (arg >= 0 && arg < (int)attrDefs_.size()) attrSel_ = arg; return; }
     if (name == "pm_attr_add") { if (arg >= 0 && arg < (int)attrDefs_.size()) { attrSel_ = arg; spendAttrPoint(arg); } return; }
+    if (name == "pm_attr_sub") { if (arg >= 0 && arg < (int)attrDefs_.size()) { attrSel_ = arg; unspendAttrPoint(arg); } return; }
+    if (name == "pm_attr_confirm") { confirmAttrPoints(); return; }
+    if (name == "pm_attr_reset") { resetAttrDraft(); return; }
     if (name == "pm_slot") { if ((arg == 0 || arg == 1) && arg != gearSlot_) { gearSlot_ = arg; gearSel_ = 0; } return; }
     if (name == "pm_filter") {
         if (menuTab_ == MenuTab::Items && arg >= 0 && arg < 4 && arg != itemFilter_) { itemFilter_ = arg; itemSel_ = 0; }
@@ -671,9 +679,12 @@ void Game::buildPlayerUi(toms::UiState& u) const {
             for (size_t i = 0; i < attrDefs_.size(); i++) {
                 const AttrDef& a = attrDefs_[i];
                 const int base = pl.attrs.count(a.id) ? pl.attrs.at(a.id) : 0, v = attrValue(a.id);
+                const int draft = attrDraft_.count(a.id) ? attrDraft_.at(a.id) : 0;
                 toms::UiRow r;
                 r.label = a.shortName + "   " + L.tr(a.nameKey);
-                r.sub = std::to_string(v) + (v != base ? "  (" + signedNum(v - base) + ")" : "");
+                r.sub = std::to_string(v) + (v != base ? "  (" + signedNum(v - base) + ")" : "") +
+                        (draft > 0 ? "  → " + std::to_string(v + draft) : "");   // what Confirm makes it
+                r.extra = draft > 0;   // its - button
                 r.selected = (int)i == attrSel_;
                 p.attrs.push_back(r);
             }
@@ -692,16 +703,23 @@ void Game::buildPlayerUi(toms::UiState& u) const {
                 for (const auto& [stat, k] : a.effects) {
                     if (k == 0.0f) continue;
                     per += (per.empty() ? "" : " · ") + fmt(stat, k, false);
-                    now += (now.empty() ? "" : " · ") + fmt(stat, (float)(attrValue(a.id) - a.base) * k, true);
+                    const int draft = attrDraft_.count(a.id) ? attrDraft_.at(a.id) : 0;   // as it will be after Confirm
+                    now += (now.empty() ? "" : " · ") + fmt(stat, (float)(attrValue(a.id) + draft - a.base) * k, true);
                 }
                 p.attr_per = per.empty() ? L.tr("status.attr_none") : trParam(L.tr("status.attr_per"), "x", per);
                 p.attr_now = per.empty() ? "" : trParam(L.tr("status.attr_now"), "x", now);
             }
+            const int left = pl.attrPoints - attrDraftTotal();
             if (pl.attrPoints > 0) {
-                p.attr_can_add = true;
-                p.attr_points = trParam(L.tr("status.points"), "n", std::to_string(pl.attrPoints));
-                p.attr_points_hint = L.tr("status.points_hint");
+                p.attr_can_add = left > 0;
+                p.attr_points = trParam(L.tr("status.points"), "n", std::to_string(left));
+                p.attr_points_hint = L.tr(attrDraft_.empty() ? "status.points_hint" : "status.points_confirm_hint");
             }
+            p.attr_draft = !attrDraft_.empty();
+            p.attr_confirm_sel = p.attr_draft && attrSel_ == (int)attrDefs_.size();
+            p.attr_reset_sel = p.attr_draft && attrSel_ == (int)attrDefs_.size() + 1;
+            p.attr_confirm = L.tr("status.confirm");
+            p.attr_reset = L.tr("status.reset");
         }
         {
             auto kindKey = [](int k) { return k == 0 ? "events.kind.chapter" : k == 1 ? "events.kind.mission" : "events.kind.event"; };
@@ -784,7 +802,7 @@ void Game::buildPlayerUi(toms::UiState& u) const {
             }
             break;
         }
-        case MenuTab::Cards: {   // monster cards (docs/30_GAMEPLAY_PLAN.md §3): a grid of the monsters met | the record
+        case MenuTab::Cards: {   // monster cards (docs/gameplay/07_GAMEPLAY_PLAN.md §3): a grid of the monsters met | the record
             const auto cells = cardCells();
             const int sel = clampSel(cardSel_, (int)cells.size());
             int held = 0;

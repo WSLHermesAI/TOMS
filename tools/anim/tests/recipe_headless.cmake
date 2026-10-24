@@ -1,5 +1,5 @@
 # anim.recipe_headless -- `anim_editor --headless recipe` writes motion recipes into a copy of a clip file (the sprite size
-# from its atlas), and the result passes `--headless check` (docs/16_ANIMATION_RECIPES.md section 7). Run with
+# from its atlas), and the result passes `--headless check` (docs/engine/06_ANIMATION_RECIPES.md section 7). Run with
 #   cmake -DANIM_EDITOR=<anim_editor> -DROOT=<TOMS> -DOUT=<scratch folder> -P recipe_headless.cmake
 
 file(REMOVE_RECURSE "${OUT}")

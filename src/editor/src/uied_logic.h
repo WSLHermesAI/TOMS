@@ -1,4 +1,4 @@
-// uied_logic.h -- the UI editor's text work, without widgets (docs/08_RMLUI.md "The UI editor"): which files a
+// uied_logic.h -- the UI editor's text work, without widgets (docs/gameplay/01_RMLUI.md "The UI editor"): which files a
 // screen is made of, where an element is written, which style rules reach it, and where an RmlUi message points.
 #pragma once
 

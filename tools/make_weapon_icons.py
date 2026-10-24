@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""make_weapon_icons.py -- draws the sword and staff item icons (docs/30 phase 4): 32 x 32 pixel art in the game's style
+"""make_weapon_icons.py -- draws the sword and staff item icons (docs/gameplay/07 phase 4): 32 x 32 pixel art in the game's style
 (flat colours, a near-black outline), into art_raw/sprites/item_sword.png and item_staff.png.
 
     python tools/make_weapon_icons.py
 
-Then bring them into the atlas (docs/14_ATLAS_TOOL.md, docs/27_AI_SPRITES.md):
+Then bring them into the atlas (docs/engine/04_ATLAS_TOOL.md, docs/engine/14_AI_SPRITES.md):
     Build\\windows-release\\bin\\atlaspack.exe refs art_raw\\atlas\\game.atlasproj --import new
     Build\\windows-release\\bin\\atlaspack.exe build art_raw\\atlas\\game.atlasproj --all-variants
     python tools/refresh_meshes.py

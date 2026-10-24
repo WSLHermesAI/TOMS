@@ -1,4 +1,4 @@
-// sprite_mesh.h -- triangle meshes of sprites (docs/34_MESH_ANIMATION.md): what a skinned or deformed sprite is bent
+// sprite_mesh.h -- triangle meshes of sprites (docs/engine/16_MESH_ANIMATION.md): what a skinned or deformed sprite is bent
 // with. Each atlas has one mesh file beside it, "game.atlas" -> "game.mesh.json" (spriteMeshPath), keyed by
 // anim_player.h meshKey ("golem", "golem@6x8" for a node's grid) and shared by every clip using the atlas. Only the anim
 // tools write it (the editor merges a clip's meshes in on save; `anim_editor --headless meshes`); the atlas tool never

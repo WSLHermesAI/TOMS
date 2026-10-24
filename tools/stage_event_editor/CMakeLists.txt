@@ -1,5 +1,5 @@
 # tools/stage_event_editor -- the stage and event editors as one Windows app, on the game's stack (Qt 6 + C++ + bgfx).
-# docs/19_STAGE_EDITOR.md section 6; the HTML editors in tools/web_editors stay, on the same files.
+# docs/gameplay/02_STAGE_EDITOR.md section 6; the HTML editors in tools/web_editors stay, on the same files.
 #
 #   stage_core          the editors' rules without Qt (core/): floors, cells, undo, checks, story check,
 #                       auto-place, save, the floor index; the event editor's state, validator and save

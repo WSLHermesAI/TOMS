@@ -1,4 +1,4 @@
-// render_object_test.cpp -- render objects made from JSON (render_object.h, docs/25_RESOURCE_MANAGER.md §4.7):
+// render_object_test.cpp -- render objects made from JSON (render_object.h, docs/engine/12_RESOURCE_MANAGER.md §4.7):
 // each built-in type, the errors (unknown type, missing file or sprite, where in the tree), the red "missing" box,
 // clones sharing resources, prototypes, toJson round trips, the tree's visibility rule and the stage editor's look.
 // Runs in assets/ on the shipped atlas and clips; the particle file is written to a temp folder. No GPU: a renderer
@@ -6,6 +6,7 @@
 #include "render_object.h"
 #include "vfs.h"
 
+#include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -123,6 +124,49 @@ int main() {
         ren.quads.clear();
         p->RenderTree(&ren);
         CHECK(!ren.quads.empty(), "an effect draws its particles");
+    }
+    // ---- the view (a camera): everything draws through it; an effect's particles stay under it ----
+    {
+        auto v = f.make({{"type", "sprite"}, {"atlas", "media/atlas/fx.atlas"}, {"name", "dot"}, {"pos", {100, 50}}}, rm, &err);
+        auto e = f.make({{"type", "particle"}, {"file", prt}, {"effect", "spark"}, {"pos", {200, 200}}}, rm, &err);
+        if (v && e) {
+            ren.quads.clear();
+            v->RenderTree(&ren);
+            const float x0 = ren.quads.empty() ? 0 : ren.quads[0].rect[0];
+            v->setView(anim::placement(30, 0));
+            ren.quads.clear();
+            v->RenderTree(&ren);
+            CHECK(!ren.quads.empty() && std::fabs(ren.quads[0].rect[0] - (x0 + 30)) < 0.01f, "a sprite draws through its view");
+            e->setView(anim::placement(0, 0));
+            e->RenderTree(&ren);   // born at (200, 200) on the "map"
+            e->update(0.2f);
+            e->setView(anim::placement(500, 0));   // the camera moves: the particles come with it
+            ren.quads.clear();
+            e->RenderTree(&ren);
+            bool allMoved = !ren.quads.empty();
+            for (const Quad& q : ren.quads) allMoved = allMoved && q.rect[0] > 600;
+            CHECK(allMoved, "an effect's particles move with the view (they live on the map, not on the screen)");
+        }
+    }
+    // ---- a solid sprite, and a clip set to a time from outside ----
+    {
+        auto so = f.make({{"type", "sprite"}, {"atlas", "media/atlas/fx.atlas"}, {"name", "dot"}, {"solid", true}}, rm, &err);
+        CHECK(so && so->toJson().value("solid", false) && std::static_pointer_cast<SpriteObject>(so->clone())->solid,
+              "\"solid\" is read, written and cloned");
+        if (so) {
+            ren.quads.clear();
+            so->RenderTree(&ren);
+            CHECK(!ren.quads.empty() && ren.quads[0].solid, "a solid sprite draws one flat colour");
+        }
+        auto ct = std::static_pointer_cast<ClipObject>(f.make({{"type", "clip"}, {"anim", "media/anim/door_open.anim#door_open_yellow"}}, rm, &err));
+        if (ct) {
+            const float len = ct->duration();
+            CHECK(len > 0, "a clip's duration");
+            ct->setTime(len * 0.5f);
+            CHECK(std::fabs(ct->player().time() - len * 0.5f) < 0.001f, "setTime: the clip shows that time");
+            ct->setTime(0.0f);
+            CHECK(ct->player().time() == 0.0f, "setTime: back to the start (no update needed)");
+        }
     }
     CHECK(rm.get<res::ParticleRes>(prt)->atlases().entries.size() == 1 &&
               rm.get<res::ParticleRes>(prt)->atlases().entries[0].atlas == &rm.get<res::AtlasRes>("media/atlas/fx.atlas")->atlas(),

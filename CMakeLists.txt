@@ -56,7 +56,7 @@ function(toms_target_defaults target)
     endif()
 endfunction()
 
-# CTest: unit tests, screenshot smoke tests, the web smoke test (tests/CMakeLists.txt, docs/09_TESTS.md).
+# CTest: unit tests, screenshot smoke tests, the web smoke test (tests/CMakeLists.txt, docs/project/08_TESTS.md).
 # Declared before any subdirectory: src/editor brings in tools/studio_common, whose tests need it.
 option(TOMS_BUILD_TESTS "Build the tests (CTest / Visual Studio Test Explorer)" ON)
 if(TOMS_BUILD_TESTS AND NOT WEB AND NOT ANDROID)
@@ -74,7 +74,7 @@ if(TOMS_BUILD_TESTS AND NOT WEB AND NOT ANDROID)
     add_subdirectory(tests)
 endif()
 
-# The sprite atlas tool (tools/atlas, docs/14_ATLAS_TOOL.md): atlaspack and atlas_editor (Qt).
+# The sprite atlas tool (tools/atlas, docs/engine/04_ATLAS_TOOL.md): atlaspack and atlas_editor (Qt).
 # The game's atlas project, art_raw/atlas/game.atlasproj, keeps its images inside the cooked atlas it
 # writes to assets/media/atlas (game.atlas + game.png, one more per art style), so there is nothing to
 # generate at build time: the editor writes those files when the project is saved, and they are committed.
@@ -85,19 +85,19 @@ if(NOT WEB AND NOT ANDROID)
         set(ATLAS_BUILD_EDITOR OFF)   # TomsPrerequisites found no usable Qt kit
     endif()
     add_subdirectory(tools/atlas)
-    # The node animation tooling (docs/15_ANIMATION.md): toms_anim (the runtime without the game)
+    # The node animation tooling (docs/engine/05_ANIMATION.md): toms_anim (the runtime without the game)
     # and, with Qt, anim_editor. Shares tools/studio_common with the atlas editor.
     add_subdirectory(tools/anim)
-    # Particle effects (docs/17_PARTICLES.md): toms_fx (the runtime without the game) and, with
+    # Particle effects (docs/engine/07_PARTICLES.md): toms_fx (the runtime without the game) and, with
     # Qt, particle_editor. Shares tools/studio_common too.
     add_subdirectory(tools/particle)
-    # 3D models (docs/18_GLTF.md): gltf_viewer, glTF 2.0 on the engine's renderer (skins, morph
+    # 3D models (docs/engine/08_GLTF.md): gltf_viewer, glTF 2.0 on the engine's renderer (skins, morph
     # targets, EXT_mesh_gpu_instancing, PBR), checked by the smoke.gltf_* tests.
     add_subdirectory(tools/gltf_viewer)
-    # Picture fonts (docs/22_FONT_TOOL.md): fontpack and, with Qt, font_editor -- .fnt + .png from
+    # Picture fonts (docs/engine/09_FONT_TOOL.md): fontpack and, with Qt, font_editor -- .fnt + .png from
     # one picture per character; the runtime is src/core/engine/bitmap_font.cpp.
     add_subdirectory(tools/font)
-    # The stage and event editors as a Windows app (docs/19_STAGE_EDITOR.md section 6): stage_core (the
+    # The stage and event editors as a Windows app (docs/gameplay/02_STAGE_EDITOR.md section 6): stage_core (the
     # rules, no Qt, unit.stage_core_test) and, with Qt, stage_event_editor on the game's renderer.
     add_subdirectory(tools/stage_event_editor)
     if(TOMS_BUILD_TESTS)
@@ -105,7 +105,7 @@ if(NOT WEB AND NOT ANDROID)
         add_test(NAME atlas.assets_up_to_date
                  COMMAND atlaspack build "${CMAKE_SOURCE_DIR}/art_raw/atlas/game.atlasproj" --all-variants --check --quiet)
         set_tests_properties(atlas.assets_up_to_date PROPERTIES LABELS "unit;atlas" TIMEOUT 60)
-        # The particle sprites (tools/atlas/make_fx_sprites.py, docs/17_PARTICLES.md), the same way.
+        # The particle sprites (tools/atlas/make_fx_sprites.py, docs/engine/07_PARTICLES.md), the same way.
         add_test(NAME atlas.fx_up_to_date
                  COMMAND atlaspack build "${CMAKE_SOURCE_DIR}/art_raw/atlas/fx.atlasproj" --check --quiet)
         set_tests_properties(atlas.fx_up_to_date PROPERTIES LABELS "unit;atlas" TIMEOUT 60)

@@ -1,4 +1,4 @@
-# tools/atlas -- the sprite atlas tool (docs/14_ATLAS_TOOL.md).
+# tools/atlas -- the sprite atlas tool (docs/engine/04_ATLAS_TOOL.md).
 #
 #   atlas_core     C++17 library: project file, packing, exporters/importers. No Qt, no engine.
 #   atlaspack      command line front end (headless builds, CI, the asset pipeline)
@@ -52,7 +52,7 @@ target_include_directories(atlas_core
 
 if(NOT EMSCRIPTEN)
     # The command line lives in a library: atlaspack and `atlas_editor --headless` share it. (Sprite meshes are the anim
-    # tools' business, not the atlas's: docs/34_MESH_ANIMATION.md.)
+    # tools' business, not the atlas's: docs/engine/16_MESH_ANIMATION.md.)
     add_library(atlas_cli STATIC cli/atlas_cli.h cli/atlas_cli.cpp)
     target_include_directories(atlas_cli PRIVATE "${TOMS_THIRD_PARTY_DIR}/json")
     atlas_defaults(atlas_cli)

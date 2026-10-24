@@ -46,7 +46,25 @@ WeaponPlay weaponPlayFromJson(const std::string& id, const nlohmann::json& j) {
     w.chargeSpeedUp = std::max(0.0f, j.value("chargeSpeedUp", w.chargeSpeedUp));
     w.chargeDamage = std::max(0.0f, j.value("chargeDamage", w.chargeDamage));
     w.hitWindow = std::clamp(j.value("hitWindow", w.hitWindow), 0.01f, 0.25f);
+    if (j.contains("fx") && j["fx"].is_array()) {
+        for (const auto& f : j["fx"]) {
+            if (!f.is_object()) continue;
+            WeaponFx fx;
+            fx.lv = std::max(1, f.value("lv", 1));
+            fx.release = f.value("release", std::string());
+            fx.hit = f.value("hit", std::string());
+            w.fx.push_back(fx);
+        }
+        std::stable_sort(w.fx.begin(), w.fx.end(), [](const WeaponFx& a, const WeaponFx& b) { return a.lv < b.lv; });
+    }
     return w;
+}
+
+const WeaponFx* weaponFxEntry(const WeaponPlay& w, int weaponLevel) {
+    const WeaponFx* best = nullptr;
+    for (const WeaponFx& f : w.fx)
+        if (f.lv <= weaponLevel) best = &f;
+    return best ? best : (w.fx.empty() ? nullptr : &w.fx.front());
 }
 
 const WeaponLevel& weaponLevelEntry(const WeaponPlay& w, int weaponLevel) {

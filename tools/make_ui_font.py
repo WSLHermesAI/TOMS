@@ -3,7 +3,7 @@
 
 On desktop RmlUi draws the game's text from font files; this one,
 assets/media/fonts/NotoSansCJKtc-TOMS.otf, is the default and the fallback for every language (a
-language can name its own font in data/text.json, see docs/08_RMLUI.md). The web build does not use
+language can name its own font in data/text.json, see docs/gameplay/01_RMLUI.md). The web build does not use
 it: the browser draws the text there. Shipping the full Noto Sans CJK TC (16 MB) would be wasteful,
 so this keeps only the characters that appear in the game's text:
 every string in assets/data/**/*.json and assets/media/styles/styles.json (art style names), every

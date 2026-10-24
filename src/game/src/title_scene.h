@@ -1,4 +1,4 @@
-// title_scene.h -- a glTF scene behind the title screen (docs/18_GLTF.md, "In the game").
+// title_scene.h -- a glTF scene behind the title screen (docs/engine/08_GLTF.md, "In the game").
 //
 // Loads a model (assets/media/models/VirtualCity.glb by default), plays its first animation in a loop
 // and looks through the file's own cameras, cutting to the next every few seconds. Each camera keeps

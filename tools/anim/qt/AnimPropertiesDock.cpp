@@ -119,7 +119,7 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
                               "Loop: plays first..last key again, forever, also after the clip has ended."));
     m_skin = new QLineEdit(m_nodeBox);
     m_skin->setPlaceholderText(tr("(not skinned)"));
-    m_skin->setToolTip(tr("Bones that bend this sprite's mesh: node names of this clip, comma separated. Empty = not skinned (drawn as a quad). The weights are made from the rest pose; its mesh is cut from the sprite and saved with the .anim (<name>.mesh.json). docs/34_MESH_ANIMATION.md"));
+    m_skin->setToolTip(tr("Bones that bend this sprite's mesh: node names of this clip, comma separated. Empty = not skinned (drawn as a quad). The weights are made from the rest pose; its mesh is cut from the sprite and saved with the .anim (<name>.mesh.json). docs/engine/16_MESH_ANIMATION.md"));
     nf->addRow(tr("Name"), m_name);
     nf->addRow(tr("Sprite"), m_sprite);
     nf->addRow(tr("Playback"), m_playback);

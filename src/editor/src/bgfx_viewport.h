@@ -26,7 +26,7 @@ public:
 
     bool restartGame(const QString& stage = QStringLiteral("stage01"));
     void loadStage(const QString& id);
-    // A test scenario (docs/31_TEST_SCENARIOS.md): a fresh game, straight in the scenario's scene. When the view is not
+    // A test scenario (docs/gameplay/08_TEST_SCENARIOS.md): a fresh game, straight in the scenario's scene. When the view is not
     // up yet the scenario waits and starts with the game. False (with the reason) when the scenario cannot start.
     bool startScenario(const QString& path, QString& error);
     void setShowStats(bool on);

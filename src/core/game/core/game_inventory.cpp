@@ -73,7 +73,7 @@ void Game::applyStats(const std::string& id, const nlohmann::json& eff) {
     if (eff.contains("warp")) {
         const nlohmann::json* d = itemDef(id);
         std::string dst = d ? d->value("warp_to", std::string("")) : std::string("");
-        if (!dst.empty() && toms::vfsExists(dataDir + "/../data/stages/" + dst + ".json"))
+        if (!dst.empty() && toms::vfsExists(pathFor(toms::pattern::kStage, dst)))
             loadStage(dst);
     }
 }
@@ -105,13 +105,14 @@ void Game::debugGive(const std::string& id) {
 
 void Game::gainExp(int exp) {
     pl.exp += exp;
-    const int gained = toms::levelUps(pl.exp, pl.lv, levelUp_.expPerLevel);
+    const int gained = toms::levelUps(pl.exp, pl.lv, levelUp_.expPerLevel, levelUp_.maxLevel);
     for (int i = 0; i < gained; i++) {
+        const int reached = pl.lv - gained + 1 + i;
         pl.atk += levelUp_.atk;
         pl.def += levelUp_.def;
         pl.maxhp += levelUp_.maxhp;
         for (const AttrDef& a : attrDefs_) pl.attrs[a.id] += a.perLevel;
-        pl.attrPoints += std::max(0, levelUp_.freePoints);
+        pl.attrPoints += toms::pointsForLevel(levelUp_.points, reached, levelUp_.freePoints);   // placed on the Status tab
     }
     if (gained > 0) pushNotification(locale_.tr("battle.levelup") + std::to_string(pl.lv));
 }
@@ -139,12 +140,38 @@ int Game::barCooldownMs() const {
     return std::max(200, barCooldownMs_ + (int)std::lround(attrEffect("cooldownMs")));   // AGI (per is negative)
 }
 
+// The Status tab's points (the owner 2026-10-24): + and - only move points in a draft, which the screen shows; Confirm
+// makes them the attributes and saves the run at once, Reset (or closing the menu) drops them.
 void Game::spendAttrPoint(int index) {
-    if (pl.attrPoints <= 0 || index < 0 || index >= (int)attrDefs_.size()) { audio.play("deny"); return; }
-    pl.attrs[attrDefs_[index].id] += 1;
-    pl.attrPoints--;
+    if (pl.attrPoints - attrDraftTotal() <= 0 || index < 0 || index >= (int)attrDefs_.size()) { audio.play("deny"); return; }
+    attrDraft_[attrDefs_[index].id] += 1;
     audio.play("confirm_click");
+}
+
+void Game::unspendAttrPoint(int index) {
+    if (index < 0 || index >= (int)attrDefs_.size()) return;
+    auto it = attrDraft_.find(attrDefs_[index].id);
+    if (it == attrDraft_.end()) { audio.play("deny"); return; }   // only a point placed in this draft comes back
+    if (--it->second <= 0) attrDraft_.erase(it);
+    audio.play("confirm_click");
+}
+
+void Game::confirmAttrPoints() {
+    const int n = std::min(attrDraftTotal(), pl.attrPoints);
+    if (n <= 0) { audio.play("deny"); return; }
+    for (const auto& [id, k] : attrDraft_) pl.attrs[id] += k;
+    pl.attrPoints -= n;
+    attrDraft_.clear();
     markProgressDirty();
+    saveCurrentRun();   // kept now, not at the next autosave
+    pushNotification(locale_.tr("status.points_saved"));
+    audio.play("get_item");
+}
+
+void Game::resetAttrDraft() {
+    if (attrDraft_.empty()) return;
+    attrDraft_.clear();
+    audio.play("close_ui");
 }
 
 int Game::attrValue(const std::string& id) const {
@@ -156,7 +183,7 @@ int Game::attrValue(const std::string& id) const {
         auto s = e->second.stats.find(id);
         if (s != e->second.stats.end()) v += s->second;
     }
-    // The equipped weapon's level (docs/30 phase 1, data/weapon_play.json "levels"): its bonuses at that level.
+    // The equipped weapon's level (docs/gameplay/07 phase 1, data/weapon_play.json "levels"): its bonuses at that level.
     const std::string key = weaponKey();
     const auto& lvStats = toms::weaponLevelEntry(weaponPlayOf(key), weaponLevel(key)).stats;
     if (auto s = lvStats.find(id); s != lvStats.end()) v += s->second;

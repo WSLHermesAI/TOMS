@@ -1,5 +1,5 @@
 # anim.check_skin_meshes -- `anim_editor --headless check` reports a skinned sprite that has no mesh in its atlas's mesh
-# file (it would be drawn as a flat quad; docs/34_MESH_ANIMATION.md), and passes with it. Run with
+# file (it would be drawn as a flat quad; docs/engine/16_MESH_ANIMATION.md), and passes with it. Run with
 #   cmake -DANIM_EDITOR=<anim_editor> -DROOT=<TOMS> -DOUT=<scratch folder> -P check_skin_meshes.cmake
 
 file(REMOVE_RECURSE "${OUT}")

@@ -579,7 +579,7 @@ function putSem(d, x, y, sem, quiet) {
   return true;
 }
 
-// ---------------- types, looks and per-object settings (docs/19_STAGE_EDITOR.md) ----------------
+// ---------------- types, looks and per-object settings (docs/gameplay/02_STAGE_EDITOR.md) ----------------
 // A palette entry of a monster / item / NPC is a TYPE: its record in enemies.json / items.json / npcs/<id>.json, with a
 // default look (sprite; "look": { anim, tint }). Its detail window (double-click it, or + to add one) edits that record.
 // A placed object can have settings of its own: the stage file's "objects", keyed "x,y" ({ look, events }), edited with
@@ -809,7 +809,7 @@ $('owApply').onclick = () => {
     const look = S2.w.look, events = S2.w.events, o = {};
     if (Object.keys(look).length) o.look = look; if (events.length) o.events = events;
     edit(t('hObj', nameOf(S2.sem)), dd => { dd.st.objects = dd.st.objects || {}; const k = objKey(S2.x, S2.y);
-      const old = dd.st.objects[k]; if (old && old.uid) o.uid = old.uid;   // its save id stays (docs/28_SAVE_SYSTEM.md)
+      const old = dd.st.objects[k]; if (old && old.uid) o.uid = old.uid;   // its save id stays (docs/gameplay/05_SAVE_SYSTEM.md)
       if (Object.keys(o).length) dd.st.objects[k] = o; else delete dd.st.objects[k];
       if (!Object.keys(dd.st.objects).length) delete dd.st.objects; });
     owClose(); return;
@@ -1175,7 +1175,7 @@ function setBrush(sem) {
 function setTool(tl) { tool = tl; document.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === tl)); cv.style.cursor = tl === 'select' || tl === 'edit' ? 'default' : 'crosshair'; }
 document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => setTool(b.dataset.tool));
 
-// ---------------- an NPC's panel (docs/event_editor/08_NPC_DIALOGUE.md) ----------------
+// ---------------- an NPC's panel (docs/gameplay/event_editor/08_NPC_DIALOGUE.md) ----------------
 // Its topics (talk events) in the game's menu order, marked by where they can be talked about: every floor the NPC
 // stands on, or only one (an "onStage" condition, the event editor's "Talked to on").
 const onStageOf = c => !c ? null : c.type === 'onStage' ? c.stageId : Array.isArray(c.all) ? (c.all.map(onStageOf).find(Boolean) || null) : null;

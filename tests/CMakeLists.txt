@@ -1,4 +1,4 @@
-# tests/ -- everything CTest runs (docs/09_TESTS.md).
+# tests/ -- everything CTest runs (docs/project/08_TESTS.md).
 #
 #   unit   the core game code's own *_test.cpp programs (next to the code they test, in src/core).
 #          Pure logic plus checks on the shipped data; no window, no GPU. Seconds.
@@ -34,7 +34,7 @@ set(TOMS_UNIT_TESTS
     engine/state_machine_test
     engine/resource_test            engine/render_object_test      engine/render_mesh_test
     engine/safe_timer_test          engine/tween_test              engine/timed_hits_test
-    game/core/atlas_sprites_test
+    game/core/atlas_sprites_test   game/core/res_keys_test
     game/save/save_test
     game/systems/camera_test        game/systems/cycle_system_test     game/systems/ending_system_test
     game/systems/equipment_actives_test game/systems/equipment_test    game/systems/floor_table_test
@@ -141,7 +141,7 @@ endfunction()
 #                name        reference   backend tolerance  scene
 toms_smoke_test(title        title       d3d11   0.1  --frames=60)
 toms_smoke_test(stage        stage       d3d11   0.1  --frames=120 --keys=enter@30)
-# The player menu (docs/20_PLAYER_MENU.md): one test per tab. --give hands the player items and gear
+# The player menu (docs/gameplay/03_PLAYER_MENU.md): one test per tab. --give hands the player items and gear
 # when the title closes, so the grids, the gear comparison and the scrolling have something to show.
 set(_pm_give "--give=potion_red,potion_red,gem_atk,gem_atk,scroll,exp_up,potion_blue,gem_def,key_yellow,key_blue,wand,twin_daggers,war_hammer,cloth_robe,guardian_plate,focus_talisman,gold:100")
 toms_smoke_test(player_status player_status d3d11 0.1 --frames=130 --keys=enter@30,esc@80,down@100 ${_pm_give})
@@ -153,11 +153,11 @@ toms_smoke_test(player_system player_system d3d11 0.1 --frames=150 --keys=enter@
 # the player to it (the padlock, and the hint on bumping it); stairs_unlock finishes the event (the dialog).
 toms_smoke_test(stairs_locked stairs_locked d3d11 0.1 --frames=270 --keys=enter@30,up@60,right@66,right@72,right@78,right@84,right@90,up@96,up@102,up@108,up@114,up@120,up@126,right@132,right@138,right@144,right@150,right@156,right@162,up@168,up@174,up@180,up@186,up@192,up@198,left@204,left@210,left@216,down@222,down@228,down@234,down@240,right@246 --stair-lock=F01:ev_village_well)
 toms_smoke_test(stairs_unlock stairs_unlock d3d11 0.1 --frames=120 --keys=enter@30 --stair-lock=F01:ev_village_well --events-done=ev_village_well)
-# A key gate (docs/event_editor/07_KEY_GATES.md): on F04 with the bell-carved key, the player walks to the bell gate,
+# A key gate (docs/gameplay/event_editor/07_KEY_GATES.md): on F04 with the bell-carved key, the player walks to the bell gate,
 # opens it (the key goes), walks into the bell-ringer's room and fires ev_bell_ringer_room (its chain is done up to it).
 toms_smoke_test(bell_gate bell_gate d3d11 0.1 --frames=300 --keys=enter@30,down@60,down@66,down@72,down@78,down@84,down@90,down@96,down@102,right@108,right@114,right@120,right@126,right@132,right@138,up@144,up@150,right@156,right@162,down@168,right@174,down@180,right@186,right@192,right@198,up@204,up@210,right@216,right@222,down@228,down@234,down@240,right@246,down@252 --goto=F04 --give=key_bellward --events-done=ev_bell_cracked,ev_bell_ringer_key)
 toms_smoke_test(dialogue     dialogue    d3d11   0.1  --frames=190 --keys=enter@30,esc@80,q@85,down@90,down@95,enter@110,enter@130)
-# NPCs and their events (docs/event_editor/08_NPC_DIALOGUE.md): on F02 the player steps onto the village elder. talk_menu: his
+# NPCs and their events (docs/gameplay/event_editor/08_NPC_DIALOGUE.md): on F02 the player steps onto the village elder. talk_menu: his
 # two open topics, the menu with his name and greeting. talk_chain: "The Well at Night", "I'll climb down" (ATK +2), then
 # Enter on his tile again: the well is done (listed for its after-dialogue) and it woke "The Missing Ledger".
 toms_smoke_test(talk_menu    talk_menu   d3d11   0.1  --frames=110 --keys=enter@30,up@60,left@66,left@72 --goto=F02)
@@ -165,7 +165,7 @@ toms_smoke_test(talk_chain   talk_chain  d3d11   0.1  --frames=175 --keys=enter@
 # talk_trusted: the road, the well and the ledger bring elder_trust to 3, and the "varChanged" event ev_elder_trusted fires
 # (its title as a notice). talk_repeat: with the story done and 100 gold, the repeatable potion trade ("once": false,
 # maxTimes 3) is bought three times; the fourth talk no longer lists it.
-# The stage editor's per-object settings (docs/19_STAGE_EDITOR.md): tests/stage/objects.stage.json -- a tinted slime, a bat
+# The stage editor's per-object settings (docs/gameplay/02_STAGE_EDITOR.md): tests/stage/objects.stage.json -- a tinted slime, a bat
 # playing another clip, a villager drawn with another sprite at half opacity; picking up the potion fires its linked event.
 toms_smoke_test(stage_objects stage_objects d3d11 0.1 --frames=100 --keys=enter@30,right@70
                 "--goto=${CMAKE_CURRENT_SOURCE_DIR}/stage/objects.stage.json")
@@ -181,12 +181,12 @@ toms_smoke_test(store        store       d3d11   0.1  --stage=stage02 --frames=1
 # rotation, easing, draw order and additive blending through the real sprite batch.
 toms_smoke_test(anim         anim        d3d11   0.1  --frames=110 --keys=enter@30
                 "--anim=${CMAKE_CURRENT_SOURCE_DIR}/smoke/anim_preview.anim#orbit")
-# A triangle mesh (IRenderer::drawMesh, docs/34_MESH_ANIMATION.md) over the map: the golem as an 8 x 8 grid
+# A triangle mesh (IRenderer::drawMesh, docs/engine/16_MESH_ANIMATION.md) over the map: the golem as an 8 x 8 grid
 # swaying in a sine wave, the plain golem beside it -- a mesh drawn between quads, from the sprite atlas.
 toms_smoke_test(mesh         mesh        d3d11   0.1  --frames=110 --keys=enter@30 --mesh-test=golem)
 # ... and between quads of the CPU path: the same image.
 toms_smoke_test(mesh_cpu     mesh        d3d11   0.1  --frames=110 --keys=enter@30 --mesh-test=golem --sprite-path=cpu)
-# A skinned clip (tests/smoke/anim_skin.anim, docs/34_MESH_ANIMATION.md): the golem's mesh (game.mesh.json) bent by three
+# A skinned clip (tests/smoke/anim_skin.anim, docs/engine/16_MESH_ANIMATION.md): the golem's mesh (game.mesh.json) bent by three
 # bones, hip / chest / head, the chest and head swaying -- the feet stay, the top leans.
 toms_smoke_test(anim_skin    anim_skin   d3d11   0.1  --frames=110 --keys=enter@30
                 "--anim=${CMAKE_CURRENT_SOURCE_DIR}/smoke/anim_skin.anim#bend")
@@ -213,7 +213,7 @@ toms_smoke_test(stage_d3d12  stage       d3d12   0.5  --frames=120 --keys=enter@
 toms_smoke_test(stage_vulkan stage       vulkan  0.5  --frames=120 --keys=enter@30)
 toms_smoke_test(stage_opengl stage       opengl  0.5  --frames=120 --keys=enter@30)
 
-# ---- test scenarios (docs/31_TEST_SCENARIOS.md) ----------------------------------------------------
+# ---- test scenarios (docs/gameplay/08_TEST_SCENARIOS.md) ----------------------------------------------------
 # Each folder tests/scenarios/<name>/ with a scenario.json is one test, scenario.<name>: the game starts straight in
 # that scene from the setting files (--scenario), runs the scenario's own "test" frames and keys (--scenario-test), and
 # fails when the scene it expects is not showing (exit 3). A screenshot is kept in test-run/scenario/<name>/ to look
@@ -230,7 +230,7 @@ foreach(_s IN LISTS _scenarios)
     set_tests_properties(scenario.${_name} PROPERTIES LABELS scenario RUN_SERIAL TRUE TIMEOUT 120)
 endforeach()
 
-# glTF models (docs/18_GLTF.md) in tools/gltf_viewer, on the test models of tests/gltf/
+# glTF models (docs/engine/08_GLTF.md) in tools/gltf_viewer, on the test models of tests/gltf/
 # (tools/gltf_viewer/make_test_models.py): GPU skinning (linear and cubic spline), morph targets,
 # EXT_mesh_gpu_instancing, PBR materials (metal / roughness, texture + KHR_texture_transform, emissive,
 # alpha mask / blend, unlit). The animation time is frozen (--time), the panel hidden (--no-ui).
@@ -297,7 +297,7 @@ toms_gltf_test(gltf_shadow_all_opengl gltf_shadow_all   instancing     opengl   
 #   web.page_gpu         the packaged page on the REAL GPU (ANGLE -> Direct3D 11 on Windows), not the
 #                        SwiftShader software GPU the others use: stricter about shaders (2026-10-05:
 #                        the glTF shader linked on SwiftShader and failed on the GPU, stopping the game)
-# docs/10_THREADS.md
+# docs/engine/02_THREADS.md
 find_program(TOMS_NODE node)
 set(TOMS_WEB_BUILD_DIR    "${CMAKE_SOURCE_DIR}/Build/web-release-windows/bin"    CACHE PATH "Single-threaded web build tested by the 'web' label")
 set(TOMS_WEB_MT_BUILD_DIR "${CMAKE_SOURCE_DIR}/Build/web-release-mt-windows/bin" CACHE PATH "Multithreaded web build tested by the 'web' label")

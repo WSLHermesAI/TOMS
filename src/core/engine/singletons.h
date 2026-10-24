@@ -1,4 +1,4 @@
-// singletons.h -- releasing the program-wide singletons before the program ends (docs/33_LEAK_CHECK.md).
+// singletons.h -- releasing the program-wide singletons before the program ends (docs/engine/15_LEAK_CHECK.md).
 //
 // A singleton that owns memory or threads (the job system's pool, a cache kept for the whole run) registers how to
 // release it when it is created; main() calls releaseSingletons() once the game and its assets are gone, just before

@@ -31,7 +31,7 @@ if("$ENV{TOMS_UPDATE_GOLDEN}" STREQUAL "1" AND _golden_name STREQUAL NAME)
     return()
 endif()
 if(NOT EXISTS "${GOLDEN}")
-    message(FATAL_ERROR "no reference image ${GOLDEN} yet; create it with TOMS_UPDATE_GOLDEN=1 (see docs/09_TESTS.md)")
+    message(FATAL_ERROR "no reference image ${GOLDEN} yet; create it with TOMS_UPDATE_GOLDEN=1 (see docs/project/08_TESTS.md)")
 endif()
 
 execute_process(COMMAND "${DIFF}" "${_shot}" "${GOLDEN}" "${TOLERANCE}" "${WORK}/${NAME}.diff.png"

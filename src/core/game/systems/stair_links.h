@@ -1,4 +1,4 @@
-// stair_links.h -- a floor's stairs as a list, some locked by an event (docs/event_editor/05_FLOOR_LINKS.md).
+// stair_links.h -- a floor's stairs as a list, some locked by an event (docs/gameplay/event_editor/05_FLOOR_LINKS.md).
 //
 // A floor spec may carry `"stairs": [ { "dir": "up", "to": "F51" }, { "dir": "up", "to": "F96",
 // "unlock": { "eventDone": "ev_x" } } ]`. Without it a floor keeps the old chain: up to `nextFloor`, down to the

@@ -1,4 +1,4 @@
-// font_editor -- the Qt window of the font tool (docs/22_FONT_TOOL.md, docs/23_FONT_TOOL_GUIDE.md):
+// font_editor -- the Qt window of the font tool (docs/engine/09_FONT_TOOL.md, docs/engine/10_FONT_TOOL_GUIDE.md):
 //
 //   font_editor                                 the window
 //   font_editor <a.png b.png ... | font.fnt>    the window with those pictures added (or that font opened)

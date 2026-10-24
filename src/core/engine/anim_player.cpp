@@ -489,6 +489,13 @@ float AnimPlayer::poseTime() const {
     return (float)(elapsed_ - (double)(clip_->playCount - 1) * d);   // into the last play, past its end
 }
 
+void AnimPlayer::seek(double seconds) {
+    if (!clip_) return;
+    elapsed_ = std::max(0.0, seconds);
+    started_ = true;
+    events_.clear();
+}
+
 void AnimPlayer::update(int dtMs) {
     if (!clip_) return;
     const double d = clip_->duration();

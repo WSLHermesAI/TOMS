@@ -1,6 +1,6 @@
 // gltf_model.h -- glTF 2.0 models (.gltf / .glb) for the engine: loading (cgltf) into plain CPU
 // data, and posing (node transforms, animations, skins, morph weights). No GPU code here: the bgfx
-// side is src/engine/src/gltf_renderer.* (it uploads a Model and draws a Pose). docs/18_GLTF.md.
+// side is src/engine/src/gltf_renderer.* (it uploads a Model and draws a Pose). docs/engine/08_GLTF.md.
 //
 // Supported: meshes (triangles, lines, points), every accessor type (normalized / quantized ints
 // read as floats, sparse accessors), PBR metallic-roughness materials (base colour, metal/rough,
@@ -179,7 +179,7 @@ struct Scene {
     std::vector<int> roots;
 };
 
-// ---- Physics: KHR_implicit_shapes + KHR_physics_rigid_bodies (Khronos drafts; docs/18_GLTF.md §7) ----
+// ---- Physics: KHR_implicit_shapes + KHR_physics_rigid_bodies (Khronos drafts; docs/engine/08_GLTF.md §7) ----
 // Data only, as the file says it (defaults from the extensions' schemas). The simulation is gltf_physics.h.
 
 // KHR_implicit_shapes: a shape centred on its node's origin; capsules and cylinders run along +Y.

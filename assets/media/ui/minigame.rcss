@@ -1,4 +1,4 @@
-/* minigame.rml: a reward event (docs/30 phase 6). The design screen is 1024 x 768 (common.rcss). */
+/* minigame.rml: a reward event (docs/gameplay/07 phase 6). The design screen is 1024 x 768 (common.rcss). */
 body { z-index: 40; width: 100%; height: 100%; }
 #panel  { position: absolute; left: 212px; top: 150px; width: 600px; padding: 28px 32px; background-color: #2e3346;
           word-break: break-word;   /* Chinese has no spaces: lines break anywhere */

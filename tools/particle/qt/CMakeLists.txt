@@ -1,4 +1,4 @@
-# tools/particle/qt -- particle_editor: the Qt 6 editor for .particle effects (docs/17_PARTICLES.md).
+# tools/particle/qt -- particle_editor: the Qt 6 editor for .particle effects (docs/engine/07_PARTICLES.md).
 #
 # Added by tools/particle/CMakeLists.txt when Qt6::Widgets is there. Shares tools/studio_common
 # (theme, icons, canvas) with the atlas and anim editors; ParticleEditor is the unit the studio
@@ -58,4 +58,8 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME particle.check_recipes
              COMMAND particle_editor --headless check "${CMAKE_SOURCE_DIR}/docs/examples/fx_recipes.particle")
     set_tests_properties(particle.check_recipes PROPERTIES LABELS "unit;particle" TIMEOUT 30)
+    # The battle's weapon effects (assets/media/fx/battle.particle, weapon_play.json "fx") check clean too.
+    add_test(NAME particle.check_battle
+             COMMAND particle_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/fx/battle.particle")
+    set_tests_properties(particle.check_battle PROPERTIES LABELS "unit;particle" TIMEOUT 30)
 endif()

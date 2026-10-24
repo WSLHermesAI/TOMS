@@ -456,9 +456,9 @@ void UiEditorWindow::openPracticeScreen() {
 
 void UiEditorWindow::openTutorial() {
     const QString doc = QDir(docsDir_).filePath(Language::current() == Language::Lang::Chinese ? QStringLiteral("zh_TW/37_UI_EDITOR.md")
-                                                                                                : QStringLiteral("37_UI_EDITOR.md"));
+                                                                                                : QStringLiteral("10_UI_EDITOR.md"));
     if (!QFileInfo::exists(doc) || !QDesktopServices::openUrl(QUrl::fromLocalFile(doc))) {
-        const QString msg = tr("The tutorial is docs/37_UI_EDITOR.md in the TOMS repo; it could not be opened from here.");
+        const QString msg = tr("The tutorial is docs/gameplay/10_UI_EDITOR.md in the TOMS repo; it could not be opened from here.");
         if (quiet_) statusBar()->showMessage(msg);
         else QMessageBox::information(this, tr("UI Editor Tutorial"), msg);
     }

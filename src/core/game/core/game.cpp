@@ -57,7 +57,7 @@ void Game::setCameraModeIndex(int m) {
     cam_.setMode(toms::Camera::modeFromIndex(m));
     settings_.cameraMode = cam_.modeIndex();
     toms::ensureSaveDir(toms::defaultSaveDir());
-    toms::saveGameSettings(toms::defaultSaveDir() + "/settings.json", settings_);
+    toms::saveGameSettings(toms::settingsPath(), settings_);
     // Re-target immediately so the effect is visible right away instead of waiting for the
     // player to take a step; ease into it rather than snapping (consistent with "Rooms" mode's
     // own slide, and it's a nicer transition than a hard cut for "Follow" too).
@@ -148,7 +148,7 @@ void Game::newGame(int slot) {
     playTimeSec_ = 0;
     slotReadOnly_ = false;
     if (slot < 0) {
-        // A test scenario (docs/31_TEST_SCENARIOS.md): no slot, and nothing is ever written.
+        // A test scenario (docs/gameplay/08_TEST_SCENARIOS.md): no slot, and nothing is ever written.
         activeSlot_ = 0;
         slotReadOnly_ = true;
     } else if (slot > 0) {
@@ -194,6 +194,7 @@ void Game::update(int dtMs) {
     if (!previewMeshSprite_.empty()) previewMeshMs_ += dtMs;   // --mesh-test: the wave's clock
     updateBattleRig(dtMs);   // the bow and the player's character on the battle screen (battleRigState)
     updateMonsterRig(dtMs);  // the monster: idle, attack, hurt, die (monster_battle.anim)
+    updateBattleFx(dtMs);    // the weapon's particles (battle.particle)
     if (previewRig_.character() || previewRig_.held()) {   // --anim with --held: both clips, one clock
         previewRig_.update(dtMs);
         for (const std::string& e : previewRig_.takeEvents()) std::fprintf(stderr, "[anim] event %s\n", e.c_str());
@@ -247,11 +248,11 @@ void Game::update(int dtMs) {
     for (auto& p : cs.popups) { p.ageMs += dtMs; p.rise.update(dtMs); }
     cs.popups.erase(std::remove_if(cs.popups.begin(), cs.popups.end(),
                                    [](const CombatState::Popup& p) { return p.rise.done(); }), cs.popups.end());
-    if (miniGame_.open && miniGame_.phase == 1) {   // a reward event's play (docs/30 phase 6)
+    if (miniGame_.open && miniGame_.phase == 1) {   // a reward event's play (docs/gameplay/07 phase 6)
         miniGame_.play.update(dtMs);
         if (miniGame_.play.done()) finishMiniGame();
     }
-    // An attack is playing (docs/30_GAMEPLAY_PLAN.md §4): both sides' clocks wait for it.
+    // An attack is playing (docs/gameplay/07_GAMEPLAY_PLAN.md §4): both sides' clocks wait for it.
     const bool attackPlaying = cs.active && cs.attackPauseMs > 0;
     if (attackPlaying) cs.attackPauseMs = std::max(0, cs.attackPauseMs - dtMs);
     if (cs.active && !attackPlaying) {
@@ -271,7 +272,7 @@ void Game::update(int dtMs) {
             if (bar.pos > span) { bar.pos = span; bar.dir = -1; bar.legMs = 0.0f; }
             if (bar.pos < 0.0f)  { bar.pos = 0.0f;  bar.dir = 1;  bar.legMs = 0.0f; }
         };
-        // Battle v3 (docs/30 phase 1): the attack side is the point play. Cooling after an attack; then charge builds up
+        // Battle v3 (docs/gameplay/07 phase 1): the attack side is the point play. Cooling after an attack; then charge builds up
         // while it waits; a running combo moves its marker, and the enemy waits for it (the owner's rule, §4).
         if (cs.atkBar.cooling) {
             cs.atkBar.cooldownMs -= dtMs;
