@@ -81,6 +81,8 @@ public:
     bool frame(int dtMs, const InputState& in, uint32_t deviceW, uint32_t deviceH);
 
     Game* game() { return game_.get(); }
+    RmlUi* rml() { return rml_.get(); }   // the UI layer (the UI editor: unsaved files, the element under the mouse)
+    void reloadUi();                      // every .rml / .rcss again (F5; the UI editor after each edit)
     BgfxRenderer* renderer() { return renderer_; }
     const std::string& assetDir() const { return assetDir_; }
 
@@ -107,6 +109,8 @@ private:
     int hudFrames_ = 0;
     void drawHud();
     std::string assetDir_;
+    bool watchUi_ = false;   // hot reload: the UI files are watched and reloaded when saved (GameUi::reloadIfChanged)
+    int uiWatchMs_ = 0;
     std::array<bool, (size_t)Key::Count> keyWas_{};
     bool mouseWasDown_ = false;
     bool mousePressFree_ = false;                // the current press hit no UI element (map click)

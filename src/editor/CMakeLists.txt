@@ -33,6 +33,31 @@ set_target_properties(toms_editor PROPERTIES
     FOLDER "toms"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+# ui_editor: the game's UI files (.rml / .rcss) beside the running game, every edit shown as it is typed
+# (docs/08_RMLUI.md "The UI editor"). It shares toms_editor's game viewport.
+add_executable(ui_editor
+    src/uied_main.cpp
+    src/uied_window.h src/uied_window.cpp
+    src/uied_logic.h src/uied_logic.cpp
+    src/uied_code_edit.h src/uied_code_edit.cpp
+    src/bgfx_viewport.h src/bgfx_viewport.cpp)
+toms_target_defaults(ui_editor)
+set_source_files_properties(src/uied_main.cpp src/uied_window.cpp
+    TARGET_DIRECTORY ui_editor PROPERTIES COMPILE_DEFINITIONS QT_NO_EMIT)
+target_include_directories(ui_editor PRIVATE src ${CMAKE_SOURCE_DIR}/src/engine/src)
+target_link_libraries(ui_editor PRIVATE Qt6::Widgets toms_game_host studio_common)
+set_target_properties(ui_editor PROPERTIES
+    FOLDER "toms"
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+if(TOMS_BUILD_TESTS)
+    # the text logic and file handling, no GPU
+    add_test(NAME ui_editor.selftest COMMAND ui_editor -platform offscreen --selftest)
+    set_tests_properties(ui_editor.selftest PROPERTIES LABELS "unit;studio" TIMEOUT 60)
+    # with a GPU: typed text shows in the game before saving, the file stays, inspecting finds the element
+    add_test(NAME smoke.ui_editor COMMAND ui_editor "--smoke=${CMAKE_BINARY_DIR}/test-run/ui_editor_smoke.png")
+    set_tests_properties(smoke.ui_editor PROPERTIES LABELS "smoke" TIMEOUT 120)
+endif()
+
 # Copy the Qt DLLs and plugins next to the exe, so F5 and double-click both work.
 if(WIN32)
     if(TARGET Qt6::windeployqt)

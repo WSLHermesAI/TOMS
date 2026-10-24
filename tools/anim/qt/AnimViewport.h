@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnimDocument.h"
+#include "anim_weights.h"
 #include "GameCanvasView.h"
 #include "render_iface.h"
 
@@ -27,7 +28,9 @@ public:
     // is shown, and the gizmo poses the bone (Auto-Key on) or places it in the sprite (Auto-Key off: its rest pose).
     // Lattice: the selected sprite's deform lattice is shown; dragging a point keys the deform at the playhead (always a
     // key: a deform has no rest). A click away from the points picks a sprite, as Object mode.
-    enum class EditMode { Object, Bones, Lattice };
+    // Weights: the skins that the selected bone is in, coloured by how much each point follows it (blue = not, red =
+    // fully); dragging paints that bone's weights (Ctrl subtracts, Shift smooths), a click on a joint picks that bone.
+    enum class EditMode { Object, Bones, Lattice, Weights };
 
     // One sprite quad as drawn, and where it came from.
     struct DrawItem {
@@ -53,7 +56,19 @@ public:
     EditMode editMode() const { return m_mode; }
     // The bone (node name) whose joint or segment is under widget point w, nearest first; "" = none. Bones of
     // skinned nodes that are drawn (visible, solo) only.
-    QString boneAt(const QPointF& w) const;
+    QString boneAt(const QPointF& w, bool jointsOnly = false) const;
+    // Weights mode: the brush, in widget pixels (its size on screen) and its strength (0..1, how far one dab moves a
+    // point at its centre).
+    void setBrushRadius(double r);
+    double brushRadius() const { return m_brushRadius; }
+    void setBrushStrength(double s);
+    double brushStrength() const { return m_brushStrength; }
+    // One dab of the weight brush at widget point w on every drawn skin the selected bone is in (one undo step per
+    // stroke: `stroke` names it). False when no skin has the selected bone or no point is under the brush. Public for
+    // the selftest.
+    bool paintWeightsAt(const QPointF& w, animed::WeightBrush mode, int stroke);
+    // The heat colour of a weight (0 blue .. 1 red), as the Weights mode shows it.
+    static QColor weightColor(double w);
     // Lattice mode: the selected node's lattice point under widget point w, -1 = none.
     int latticePointAt(const QPointF& w) const;
     // The colour the skin view gives bone b of a skin (a fixed palette, repeating).
@@ -74,6 +89,7 @@ public slots:
 signals:
     void toolChanged(AnimViewport::Tool t);
     void dragStarted();   // a gizmo / sprite / bone drag begins (the editor pauses playback)
+    void brushChanged();  // the weight brush's size or strength
 
 protected:
     QSize contentSize() const override;
@@ -84,6 +100,7 @@ protected:
     void mousePressEvent(QMouseEvent* e) override;
     void mouseMoveEvent(QMouseEvent* e) override;
     void mouseReleaseEvent(QMouseEvent* e) override;
+    void leaveEvent(QEvent* e) override;
     void dragEnterEvent(QDragEnterEvent* e) override;
     void dragMoveEvent(QDragMoveEvent* e) override;
     void dropEvent(QDropEvent* e) override;
@@ -109,6 +126,8 @@ private:
     void drawGizmo(QPainter& p, const Gizmo& g) const;
     void drawSkins(QPainter& p, const QTransform& view) const;
     void drawLattice(QPainter& p, const QTransform& view) const;
+    void drawBrush(QPainter& p) const;
+    QString weightsUnderCursor() const;   // Weights mode: the point nearest the cursor and the bones it follows
     bool selectedLattice(toms::anim::LatticeView& out) const;   // the selected node's, placed in content space
 
     AnimDocument* m_doc;
@@ -118,6 +137,11 @@ private:
     EditMode m_mode = EditMode::Object;
     QString m_hoverBone;   // Bones mode: the bone under the cursor
     int m_hoverPoint = -1;   // Lattice mode: the point under the cursor
+    double m_brushRadius = 40, m_brushStrength = 0.5;   // Weights mode
+    QPointF m_cursor{-1e9, -1e9};    // widget; far away = the cursor is not over the view
+    bool m_painting = false;         // a weight stroke is under way
+    animed::WeightBrush m_paintMode = animed::WeightBrush::Add;
+    QPointF m_lastDab;               // widget: where the stroke last painted
     int m_dragPoint = -1;    // ... being dragged
     toms::anim::Deform m_dragStartDeform;   // the deform at the playhead when the drag began
     glm::mat2 m_dragToSprite{1.0f};         // content -> sprite pixels (the drag's direction and scale)

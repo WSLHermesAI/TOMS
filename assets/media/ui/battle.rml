@@ -9,10 +9,10 @@
      level's points, each tap on a point hits it. Battle v2's defence bar: tap to guard at the marker's zone. Super and the equipment active appear only when usable.
      After a win, a tap anywhere continues. Data: battle.* (UiBattle). -->
 <body data-model="game" data-event-click="act('battle_continue')">
-    <div class="fill focus"></div>
+    <!-- no backdrop here: the game draws it (Game::drawBattleRig), under the player and the monster it draws -->
     <div id="title">{{battle.title}}</div>
     <img id="player" data-if="!battle.player_anim" data-attr-sprite="battle.player_sprite"/>
-    <img id="enemy" data-attr-sprite="battle.enemy_sprite"/>
+    <img id="enemy" data-if="!battle.enemy_anim" data-attr-sprite="battle.enemy_sprite"/>
     <!-- damage numbers: they rise over the fighter that was hit (UiPopup) -->
     <div class="popup" data-for="p : battle.popups" data-class-big="p.kind == 1" data-class-guard="p.kind == 2"
          data-style-left="p.x + 'px'" data-style-top="p.y + 'px'" data-style-opacity="p.opacity">{{p.text}}</div>

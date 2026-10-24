@@ -606,3 +606,19 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - UI font regenerated (2483 characters). Docs 30 §13-16, 15, 31 (EN + zh_TW); mesh docs 34 part 3 "waits".
   - Tests: changed-only 32 of 184 pass; the affected switched-off scenarios by name pass; references `mesh`, `anim_skin`,
     `anim_deform` refreshed. Full suite / web in a browser not run.
+
+- **2026-10-23** — **Weight painting, the skinning tutorial, the web publish** ([DAILY_2026-10-23.md](DAILY_2026-10-23.md)):
+  - 10-22 night: committed and pushed `5ec6566`; AIGamestyle's `add_toms_types.py` commit is local only (push 403).
+  - Web: no code change for "no bow" (old IndexedDB saves keep their gear); rebuilt + published `5ec6566-20261022220534`
+    with `tools/publish_pages.ps1 -Yes` (gh-pages `17677eb`); "all tests" before it: 37 of 37 (147 switched off).
+  - Vulkan run: clean exit; RmlUi `battle.combo.points[N]` warnings and missing `data/events/kinds.json` noted, not fixed.
+  - Weights: `tools/anim/core/anim_weights.h/.cpp` + `tools/anim/tests/anim_weights_test.cpp` (`anim.weights`);
+    `AnimViewport` `EditMode::Weights`, `paintWeightsAt`, `weightColor`, `drawBrush`, `weightsUnderCursor`, `boneAt(w, jointsOnly)`;
+    `AnimEditor` Weights mode (P), Brush Smaller / Larger (`[` `]`), toolbar Brush / Strength, Reset to Automatic Weights;
+    icon `Icons::Id::Brush`; selftest weights part (`skin_weights.png`).
+  - Tutorial: `docs/35_SKINNING_TUTORIAL.md` + zh_TW; `docs/examples/tutorial/golem_start.anim`, `golem_done.anim` (painted
+    weights for the golem's 23-point default mesh); Help items + `AnimEditor::repoFile`; tests `anim.check_tutorial_*`;
+    selftest tutorial part; `test_select.py` rule.
+  - `Editor/bin` repackaged twice (`tools/package_editors.py`; `save/` and `toms.log` moved aside and back).
+  - i18n: 26 strings in `tools/studio_common/i18n/zh_TW/anim.json`. Docs 34 (part 3), 09 (`anim.weights`, anim count 20).
+  - Tests: changed-only 18 of 187 pass; `anim.editor_selftest`, `studio.i18n_complete` by name pass.

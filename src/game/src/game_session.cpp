@@ -12,6 +12,7 @@
 #include "job_system.h"
 #include "vfs.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
@@ -82,6 +83,7 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     }
     renderer_ = dynamic_cast<BgfxRenderer*>(game_->renderer());
     game_->setHotReload(opts.hotReload);
+    watchUi_ = opts.hotReload;
     if (!renderer_) {
         error = "internal: Game did not create a BgfxRenderer (is game/compat first on the include path?)";
         stop();
@@ -153,6 +155,10 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     return true;
 }
 
+void GameSession::reloadUi() {
+    if (ui_) ui_->reload();
+}
+
 // The UI font follows the game's language (text.json: "font" on desktop, "web_font" on the web).
 void GameSession::applyLanguageFont() {
     const toms::Locale& L = game_->locale();
@@ -215,6 +221,11 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
     const bool escPressed   = keyPressed(in, Key::Escape);
 
     if (keyPressed(in, Key::F5)) ui_->reload();              // re-read assets/media/ui/*.rml/.rcss
+    if (watchUi_ && (uiWatchMs_ += std::max(dtMs, 1)) >= 500) {   // hot reload: a saved .rml / .rcss shows at once
+        uiWatchMs_ = 0;
+        const std::string changed = ui_->reloadIfChanged();
+        if (!changed.empty()) g.showNotice("UI reloaded: " + changed);
+    }
     if (keyPressed(in, Key::F8)) rml_->toggleDebugger();     // RmlUi's element/style inspector
     if (g.titleOpen()) {
         if (upPressed)    g.titleMove(0, -1);

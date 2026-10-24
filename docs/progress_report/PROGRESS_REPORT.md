@@ -15,6 +15,17 @@
 
 ## ▶ Next Step
 
+**Weight painting, a skinning tutorial with its own files, the web version published** (2026-10-23; not committed;
+[DAILY_2026-10-23.md](DAILY_2026-10-23.md), [../35_SKINNING_TUTORIAL.md](../35_SKINNING_TUTORIAL.md)):
+- Mesh step 5 part 3: the anim editor's Weights mode (P), a heat map and a brush (add / subtract / smooth), Reset to
+  Automatic Weights; `tools/anim/core/anim_weights.*`, test `anim.weights`.
+- The tutorial (EN + zh_TW), `docs/examples/tutorial/golem_start.anim` / `golem_done.anim`, and Help > Skinning
+  Tutorial (F1) / Open Tutorial Start File / Open Tutorial Finished File.
+- `Editor/bin` refreshed (stage_event_editor added); web `5ec6566` live on GitHub Pages; `5ec6566` pushed.
+- Changed-only 18 of 187 pass; `anim.editor_selftest`, `studio.i18n_complete` by name pass.
+  **Owner:** commit (Editor/bin ~116 MB LFS); push AIGamestyle from an account with access; decide the old web saves
+  without a weapon and the attack track's RmlUi warnings.
+
 **Gameplay phases 1-6, the bow as the starting weapon, the web build fixed** (2026-10-22 evening;
 [DAILY_2026-10-22.md](DAILY_2026-10-22.md) rows 21-28, [../30_GAMEPLAY_PLAN.md](../30_GAMEPLAY_PLAN.md) §13-16):
 - Battle v3: the point play (charge, marker, points from the weapon level), weapon levels in `weapon_play.json`.

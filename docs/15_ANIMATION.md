@@ -342,6 +342,35 @@ archer
 - **Tested:** `unit.anim_character_test` (fitting every `player*` sprite; the held clip drawn at the hand and following
   its keys); CTest `anim.check_archer`; the editor self test previews the knight girl; the three scenarios.
 
+### Monsters in battle
+
+The monster on the battle screen moves with the fight: it breathes while it waits, lunges when it attacks, flinches when
+it is hit and fades out when it is beaten. One file for every monster: `assets/media/anim/monster_battle.anim`, written
+by `tools/make_monster_battle_anims.py` (change the script, then run it).
+
+- **The clips** (made with the slime; the game puts each monster's own sprite into the `body` node, `fitCharacter`):
+
+  | Clip | Plays when | Length |
+  |---|---|---|
+  | `idle` | nothing happens (loops) | 1.4 s |
+  | `attack` | the enemy's clock fires: a wind-up, the lunge at the player at 0.2 s (as its damage number appears), back | 0.55 s |
+  | `hurt` | the player's hit lands (as the number over it appears): knocked back, a red flash, a shake | 0.4 s |
+  | `die` | the fight is won, after the last `hurt`: a flash, it slumps and fades out, and stays gone | 0.7 s |
+
+  An attack or a hit starts its clip from the beginning (a hit during an attack cuts it short); when a clip ends the
+  fight decides what is next (`die` once won, else `idle`). (`Game::updateMonsterRig`, `drawBattleRig`,
+  game_combat.cpp.)
+- **Size and place:** where the battle screen's monster picture was (`battle.rcss #enemy`, 134 × 134), feet at its
+  bottom centre, the sprite's longer side filling the box (a 2-wide golem as wide as the box). The picture is hidden
+  while the game draws the monster (`battle.enemy_anim`); without the file the picture stays.
+- **One monster's own move:** add a clip named `<status>_<enemy id>` to the file (for example `attack_golem`, made in
+  the anim editor with the golem in `body`); it plays instead of the shared clip for that monster. Keep the `body` node.
+- **The backdrop** is drawn by the game under both fighters (`drawBattleRig`); `battle.rml` has none (an RmlUi backdrop
+  would darken everything the game draws under it).
+- **Tested:** CTest `anim.check_monster_battle`; scenarios `battle_enemy_attack` (`enemyAnim`: `attack` mid-lunge),
+  `battle_enemy_hurt` (`hurt` after the bow's shot), `battle_enemy_die` (`die` after the win),
+  [31](31_TEST_SCENARIOS.md).
+
 ## Editor
 
 `anim_editor` (tools/anim/qt, built with the Qt editors) opens and saves `.anim` files. Its preview

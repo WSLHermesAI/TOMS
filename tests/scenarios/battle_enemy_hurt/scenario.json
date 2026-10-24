@@ -1,0 +1,21 @@
+{
+  "_comment": "The player's hit makes the monster flinch (monster_battle.anim \"hurt\"): the bow battle of battle_bow -- the tap at 40 starts the combo, the taps at 61, 81 and 102 hit its three points, the shot lands -- and the slime plays hurt (0.4 s) as the damage number appears.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000
+  },
+  "test": {
+    "frames": 122,
+    "keys": "enter@40,enter@61,enter@81,enter@102"
+  },
+  "expect": {
+    "enemyAnim": "hurt"
+  }
+}

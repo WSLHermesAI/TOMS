@@ -50,6 +50,39 @@ Game::uiEvent(name, arg)         calls the same Game functions the keyboard uses
 
 ## Editing the UI
 
+**The UI editor** (`Editor\UiEditor.cmd`, `ui_editor.exe`) is the easiest way: the file and the running game side by
+side, every change shown as you type. Without it, any text editor works: run the game, edit, save (see *Live reload*).
+
+### The UI editor
+
+A step-by-step tutorial with a practice screen: [37_UI_EDITOR.md](37_UI_EDITOR.md) (in the editor: Help > UI Editor
+Tutorial, F1; Help > Open Practice Screen).
+
+- **Files** (left): every `.rml` and `.rcss` of `assets/media/ui`. ● = changed here, not saved yet.
+- **The text** (middle): colours for tags, attributes, bindings (`{{...}}`), selectors, properties and values; a colour
+  (`#ffcaa8`) is shown on its own colour; line numbers.
+- **The game** (right): the real game. A pause in typing (0.3 s) shows the change: the changed files are handed to
+  RmlUi from memory and the screens reload. **Nothing on disk changes until Save (Ctrl+S)**; Revert File drops the
+  changes. A file changed on disk by someone else is reloaded when it has no changes here.
+- **Preview**: what the game shows: the title screen, or any test scenario (`tests/scenarios`, listed as
+  *scene — name*: a battle, a dialogue, the store, a menu page, a mini-game ...). **Restart Preview** (F5) starts it again.
+- **Language**: the game's text in another language, to check long text, here only (the game's setting is not changed).
+- **Inspect** (Ctrl+I): a click in the game picks the element under the mouse instead of pressing it. Its line in the
+  `.rml` opens, and the **Inspector** lists the style rules (in the sheets the document links) that name its id, its
+  classes or its tag; double-click one to open it.
+- **Problems**: RmlUi's warnings and errors since the last change; double-click one that names a file and line.
+- **RmlUi Debugger** (F8): RmlUi's own inspector over the game.
+- `ui_editor -platform offscreen --selftest` and `ui_editor --smoke=<png>` are its tests (`ui_editor.selftest`,
+  `smoke.ui_editor`).
+
+### Live reload
+
+With hot reload on (`TomsEditor`, the UI editor, a debug build, or `toms_game --hot-reload`), the game watches the UI
+folder: a saved `.rml` or `.rcss` shows within half a second, with "UI reloaded: <file>" at the top
+(`GameUi::reloadIfChanged`). **F5** still reloads by hand.
+
+### In any editor
+
 Run the game, edit a `.rml`/`.rcss` file, and press **F5**: every document reloads from disk. **F8** opens RmlUi's
 debugger (element tree, computed styles, layout boxes). A yellow "!" beacon at the top right means RmlUi logged a
 warning; the debugger shows which.

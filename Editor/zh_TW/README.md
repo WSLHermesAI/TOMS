@@ -12,6 +12,7 @@
 | `FontEditor.cmd` | `bin\font_editor.exe` | 圖片字型（`.fnt` + `.png`），每個字元一張圖片 |
 | `GltfViewer.cmd` | `bin\gltf_viewer.exe` | 檢視 3D 模型（`.gltf` / `.glb`）：動畫、燈光、鏡頭、物理 |
 | `TomsEditor.cmd` | `bin\toms_editor.exe` | 在編輯器視窗中執行遊戲，使用本 repo 的 `assets` |
+| `UiEditor.cmd` | `bin\ui_editor.exe` | 遊戲畫面（`.rml`／`.rcss`）與執行中的遊戲並排，輸入時就顯示每個修改 |
 | `StageEventEditor.cmd` | `bin\stage_event_editor.exe` | 關卡（樓層地圖）與事件編輯器合成的 Windows 程式，使用本 repo 的 `assets\data` |
 | `WebEditors.cmd` | `..\tools\web_editors\serve.cmd` | 關卡（樓層地圖）與事件編輯器，在瀏覽器中使用 |
 | `Tools.cmd` | | 開啟命令提示字元，`atlaspack`、`fontpack` 與各編輯器都在 PATH 上 |
@@ -98,6 +99,13 @@
 ### Toms 編輯器：在視窗中執行遊戲
 
 在編輯器視窗中執行遊戲，旁邊有事件流程與舊的關卡清單。它讀取本 repo 的 `assets`（啟動檔會設定好路徑）。
+
+### UI 編輯器：遊戲的畫面（[docs/08](../../docs/zh_TW/08_RMLUI.md)「UI 編輯器」）
+
+左邊是 UI 檔案，中間是文字，右邊是真正的遊戲。輸入、停頓，遊戲就會顯示修改；在 **Ctrl+S** 之前磁碟上的檔案不會改變。
+**預覽**選擇畫面（標題，或一個測試情境：戰鬥、對話、商店…），**語言**用來檢查長文字，**檢查**（Ctrl+I）+ 在遊戲中點擊會開啟
+那個元素的那一行，並列出套用到它的樣式規則。和 TomsEditor 一樣需要支援 Direct3D 11 的顯示卡。
+第一次用？**說明 > UI 編輯器教學**（F1，[docs/37](../../docs/zh_TW/37_UI_EDITOR.md)）會在練習畫面上一步一步帶你操作（**說明 > 開啟練習畫面**）。
 
 ### 關卡與事件編輯器：樓層與事件的 Windows 程式（[docs/19](../../docs/zh_TW/19_STAGE_EDITOR.md) 第 6 節）
 

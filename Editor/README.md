@@ -12,6 +12,7 @@ Ready-to-run editors for TOMS. Nothing has to be built or installed: double-clic
 | `FontEditor.cmd` | `bin\font_editor.exe` | picture fonts (`.fnt` + `.png`) from one picture per character |
 | `GltfViewer.cmd` | `bin\gltf_viewer.exe` | views 3D models (`.gltf` / `.glb`): animations, lights, cameras, physics |
 | `TomsEditor.cmd` | `bin\toms_editor.exe` | the game in an editor window, on this repo's `assets` |
+| `UiEditor.cmd` | `bin\ui_editor.exe` | the game's screens (`.rml` / `.rcss`) beside the running game, every change shown as you type |
 | `StageEventEditor.cmd` | `bin\stage_event_editor.exe` | the stage (floor map) and event editors as one Windows app, on this repo's `assets\data` |
 | `WebEditors.cmd` | `..\tools\web_editors\serve.cmd` | the stage (floor map) and event editors, in the browser |
 | `Tools.cmd` | | a command prompt with `atlaspack`, `fontpack` and the editors on PATH |
@@ -108,6 +109,15 @@ light rig, shadows, and physics.
 
 The game running in an editor window, with the event flow and the old stage list beside it. It reads this repo's
 `assets` (the launcher points it there).
+
+### UI editor — the game's screens ([docs/08](../docs/08_RMLUI.md) "The UI editor")
+
+The UI files on the left, the text in the middle, the real game on the right. Type, pause, and the game shows the
+change; nothing on disk changes until **Ctrl+S**. **Preview** picks the screen (the title, or a test scenario: a battle,
+a dialogue, the store, ...), **Language** checks long text, **Inspect** (Ctrl+I) + a click in the game opens the
+element's line and lists the style rules that reach it. Needs a Direct3D 11 graphics card, like TomsEditor.
+New to it? **Help > UI Editor Tutorial** (F1, [docs/37](../docs/37_UI_EDITOR.md)) walks through it on a practice screen
+(**Help > Open Practice Screen**).
 
 ### Stage & event editor — floors and events, as a Windows app ([docs/19](../docs/19_STAGE_EDITOR.md) section 6)
 

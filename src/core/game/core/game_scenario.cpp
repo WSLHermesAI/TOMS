@@ -329,6 +329,10 @@ bool Game::scenarioCheck(std::string& report) const {
                      std::to_string(it.value().get<int>()));
     if (scenarioExpect_.contains("battleClip") && battleRigClip_ != scenarioExpect_["battleClip"].get<std::string>())
         fail("the battle picture plays the clip \"" + battleRigClip_ + "\", expected \"" + scenarioExpect_["battleClip"].get<std::string>() + "\"");
+    if (scenarioExpect_.contains("enemyAnim") && monsterRigState_ != scenarioExpect_["enemyAnim"].get<std::string>())
+        fail("the monster shows \"" + monsterRigState_ + "\", expected \"" + scenarioExpect_["enemyAnim"].get<std::string>() + "\"");
+    if (scenarioExpect_.contains("enemyClip") && monsterRigClip_ != scenarioExpect_["enemyClip"].get<std::string>())
+        fail("the monster plays the clip \"" + monsterRigClip_ + "\", expected \"" + scenarioExpect_["enemyClip"].get<std::string>() + "\"");
     if (scenarioExpect_.contains("battleAnim") && battleRigState_ != scenarioExpect_["battleAnim"].get<std::string>())
         fail("the battle picture shows \"" + battleRigState_ + "\", expected \"" + scenarioExpect_["battleAnim"].get<std::string>() + "\"");
     if (scenarioExpect_.contains("condition") && !holds(scenarioExpect_["condition"]))

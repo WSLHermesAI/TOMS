@@ -219,6 +219,15 @@ QPixmap render(Id id)
         p.setPen(ink(kInk, 3));
         drawArrow(p, QPointF(6, 16), QPointF(26, 16));
         break;
+    case Id::Brush: {   // a paint brush: weight painting
+        p.setPen(Qt::NoPen);
+        p.setBrush(kOrange);
+        p.drawEllipse(QPointF(9, 23), 6, 6);
+        p.drawPolygon(QPolygonF({QPointF(4, 25), QPointF(9, 29), QPointF(3, 30)}));
+        p.setPen(ink(kInk, 4));
+        p.drawLine(QPointF(13, 19), QPointF(27, 5));
+        break;
+    }
     case Id::Solo:   // a target: show only this
         p.setPen(ink(kOrange, 2.5));
         p.setBrush(Qt::NoBrush);

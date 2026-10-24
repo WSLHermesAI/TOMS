@@ -317,6 +317,30 @@ archer
 - **測試：** `unit.anim_character_test`（套用到每個 `player*` sprite；手持片段畫在手上並跟著它的關鍵影格）；CTest
   `anim.check_archer`；編輯器自我測試預覽 knight girl；三個情境。
 
+### 戰鬥中的怪物
+
+戰鬥畫面上的怪物會隨戰鬥而動：等待時呼吸，攻擊時撲向玩家，被打中時退縮，被擊敗時淡出。所有怪物共用一個檔案：
+`assets/media/anim/monster_battle.anim`，由 `tools/make_monster_battle_anims.py` 產生（修改腳本後再執行它）。
+
+- **片段**（用史萊姆做的；遊戲會把每隻怪物自己的 sprite 放進 `body` 節點，`fitCharacter`）：
+
+  | 片段 | 何時播放 | 長度 |
+  |---|---|---|
+  | `idle` | 沒有事發生時（循環） | 1.4 秒 |
+  | `attack` | 敵人的時鐘觸發：蓄力、在 0.2 秒撲向玩家（傷害數字出現時）、回位 | 0.55 秒 |
+  | `hurt` | 玩家的攻擊命中時（它頭上的數字出現時）：被擊退、紅色閃光、晃動 | 0.4 秒 |
+  | `die` | 贏得戰鬥後，在最後一次 `hurt` 之後：閃光、癱倒並淡出，之後不再出現 | 0.7 秒 |
+
+  攻擊或被擊中都會從頭播放它的片段（攻擊中被打中會中斷攻擊）；片段結束後由戰鬥決定接下來播什麼（贏了就 `die`，否則 `idle`）。
+  （`Game::updateMonsterRig`、`drawBattleRig`，game_combat.cpp。）
+- **大小與位置：** 在戰鬥畫面原本怪物圖片的位置（`battle.rcss #enemy`，134 × 134），腳在底部中央，sprite 較長的一邊填滿方框
+  （兩格寬的石像和方框一樣寬）。遊戲畫怪物時圖片會隱藏（`battle.enemy_anim`）；沒有這個檔案時仍顯示圖片。
+- **某隻怪物自己的動作：** 在檔案中加入名為 `<狀態>_<敵人 id>` 的片段（例如 `attack_golem`，在動畫編輯器中把石像放進 `body` 來做）；
+  對那隻怪物它會取代共用的片段。請保留 `body` 節點。
+- **背景遮罩**由遊戲畫在兩邊角色底下（`drawBattleRig`）；`battle.rml` 沒有遮罩（RmlUi 的遮罩會讓遊戲畫在它下面的一切變暗）。
+- **測試：** CTest `anim.check_monster_battle`；情境 `battle_enemy_attack`（撲擊中 `enemyAnim` 為 `attack`）、`battle_enemy_hurt`
+  （弓射中後為 `hurt`）、`battle_enemy_die`（勝利後為 `die`），[31](31_TEST_SCENARIOS.md)。
+
 ## 編輯器
 
 `anim_editor`（tools/anim/qt，和 Qt 編輯器一起建置）開啟和儲存 `.anim` 檔。它的預覽

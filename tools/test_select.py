@@ -136,6 +136,9 @@ RULES = [
     # files other rules would take for the wrong area
     (['docs/examples/fx_*'], named('particle.check_recipes'), 'particle recipes'),
     (['docs/examples/anim_*'], named('anim.check_recipes'), 'anim recipes'),
+    (['docs/examples/tutorial/*', 'docs/35_SKINNING_TUTORIAL.md', 'docs/zh_TW/35_SKINNING_TUTORIAL.md'],
+     named('anim.check_tutorial_*', 'anim.editor_selftest', 'anim.meshes_up_to_date'),
+     'the skinning tutorial and its golem files (the editor opens them from Help)'),
     # picture fonts: toms_core builds the runtime, but no game screen draws with it yet, so the font tool's
     # tests (which test the runtime too); add the game's screenshots here once a screen uses FontText
     (['tools/font/*', 'src/core/engine/bitmap_font*'], FONTS,
@@ -179,6 +182,9 @@ RULES = [
      named('anim.check_weapon_*', 'anim.check_fighter_sword', 'anim.check_caster_staff', 'scenario.battle_sword', 'scenario.battle_staff'),
      'the sword and staff clips (make_weapon_anims.py writes them): their checks and battles'),
     (['tools/make_weapon_icons.py'], named('atlas.*', 'unit.atlas_sprites_test'), 'the weapon icons: the atlas checks'),
+    (['assets/media/anim/monster_battle.anim', 'tools/make_monster_battle_anims.py'],
+     named('anim.check_monster_battle', 'scenario.battle_*'),
+     'the monsters on the battle screen (make_monster_battle_anims.py writes them): their check and the battles'),
     (['assets/media/anim/weapon_bow.anim', 'tools/make_bow_anim.py'], named('anim.check_bow', 'anim.check_archer', 'unit.anim_character_test'),
      'the bow clips (make_bow_anim.py writes them; the archer clips are built on them): their checks'),
     (['assets/media/anim/archer_bow.anim', 'tools/make_archer_anim.py', 'assets/data/character_fit.json'],
@@ -193,6 +199,10 @@ RULES = [
     (['tools/art/*'], None, 'the AI reskin scripts (art_raw/ in, art_raw/ out): no test'),
     (['art_raw/*'], ATLAS, 'raw art (sprite PNGs): the atlas checks'),
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),
+    (['docs/examples/ui_tutorial/*', 'docs/37_UI_EDITOR.md', 'docs/zh_TW/37_UI_EDITOR.md'], named('ui_editor.selftest', 'smoke.ui_editor'),
+     "the UI editor's tutorial and its practice screen (the editor opens them from Help)"),
+    (['src/editor/src/uied_*', 'src/editor/src/bgfx_viewport*'], named('ui_editor.selftest', 'smoke.ui_editor'),
+     'the UI editor (ui_editor) and the game viewport it shares with toms_editor'),
     (['src/editor/*'], None, 'toms_editor (Qt + the game viewport): no automated test; the desktop build compiles it'),
     (['tools/studio_common/*'], named('atlas.core', 'anim.*', 'particle.*', 'font.*', 'studio.*', 'stage_editor.*'),
      'the Qt editors: their checks'),

@@ -16,6 +16,7 @@
 #include "AnimTransport.h"
 #include "AnimViewport.h"
 #include "Icons.h"
+#include "Language.h"
 #include "anim_recipes.h"
 #include "mpdi_convert.h"
 
@@ -27,6 +28,9 @@
 #include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QCoreApplication>
+#include <QDateTime>
+#include <QDesktopServices>
 #include <QDir>
 #include <QDockWidget>
 #include <QDoubleSpinBox>
@@ -41,13 +45,18 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSignalBlocker>
+#include <QSpinBox>
 #include <QStatusBar>
 #include <QTableWidget>
 #include <QToolBar>
 #include <QUndoStack>
+#include <QUrl>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <cmath>
+#include <functional>
 
 using toms::anim::Node;
 
@@ -232,9 +241,21 @@ void AnimEditor::createActions()
     m_latticeModeAct = makeAction(this, tr("&Lattice Mode"), QKeySequence(Qt::Key_L), int(Id::Grid));
     m_latticeModeAct->setToolTip(tr("Lattice mode (L): the selected sprite's deform lattice; drag a point to key the deform at "
                                     "the playhead (squash, stretch, breathe). Properties > Lattice sets its size"));
+    m_weightModeAct = makeAction(this, tr("&Weights Mode"), QKeySequence(Qt::Key_P), int(Id::Brush));
+    m_weightModeAct->setToolTip(tr("Weights mode (P): the skins the selected bone is in, coloured by how much each point "
+                                   "follows it (blue = not, red = fully). Drag to paint it on, Ctrl+drag to take it off, "
+                                   "Shift+drag to smooth; [ ] change the brush size; a click on a joint picks that bone"));
+    m_brushSmallerAct = makeAction(this, tr("Brush S&maller"), QKeySequence(Qt::Key_BracketLeft));
+    m_brushLargerAct = makeAction(this, tr("Brush &Larger"), QKeySequence(Qt::Key_BracketRight));
+    connect(m_brushSmallerAct, &QAction::triggered, this, [this] { m_viewport->setBrushRadius(m_viewport->brushRadius() / 1.25); });
+    connect(m_brushLargerAct, &QAction::triggered, this, [this] { m_viewport->setBrushRadius(m_viewport->brushRadius() * 1.25); });
+    m_autoWeightsAct = makeAction(this, tr("Reset to &Automatic Weights"));
+    m_autoWeightsAct->setToolTip(tr("Drop the painted weights of the selected skinned sprite (or of the skins the selected "
+                                    "bone is in): the weights are made from the bones' rest positions again"));
+    connect(m_autoWeightsAct, &QAction::triggered, this, &AnimEditor::resetWeights);
     {
         auto* group = new QActionGroup(this);
-        for (QAction* a : {m_objectModeAct, m_boneModeAct, m_latticeModeAct}) {
+        for (QAction* a : {m_objectModeAct, m_boneModeAct, m_latticeModeAct, m_weightModeAct}) {
             a->setCheckable(true);
             group->addAction(a);
         }
@@ -247,6 +268,10 @@ void AnimEditor::createActions()
         });
         connect(m_latticeModeAct, &QAction::toggled, this, [this](bool on) {
             if (on) m_viewport->setEditMode(AnimViewport::EditMode::Lattice);
+        });
+        connect(m_weightModeAct, &QAction::toggled, this, [this](bool on) {
+            if (on) m_viewport->setEditMode(AnimViewport::EditMode::Weights);
+            for (QAction* a : m_brushBarActions) a->setVisible(on);
         });
     }
     m_insertKeyAct = makeAction(this, tr("&Insert Key at Playhead"), QKeySequence(Qt::Key_K), int(Id::KeyOn));
@@ -267,6 +292,35 @@ void AnimEditor::createActions()
 
     m_helpCliAct = makeAction(this, tr("&Command Line"));
     m_aboutAct = makeAction(this, tr("&About Anim Editor"));
+    m_tutorialAct = makeAction(this, tr("&Skinning Tutorial"), QKeySequence(Qt::Key_F1));
+    m_tutorialAct->setToolTip(tr("Step by step: bones, skin, weight painting and the lattice on the golem (opens the "
+                                 "tutorial in the program that shows .md files)"));
+    m_tutorialStartAct = makeAction(this, tr("Open Tutorial &Start File"));
+    m_tutorialStartAct->setToolTip(tr("The golem the tutorial starts from: the sprite only. Save it under another "
+                                      "name first (File > Save As), so the start file stays as it is"));
+    m_tutorialDoneAct = makeAction(this, tr("Open Tutorial &Finished File"));
+    m_tutorialDoneAct->setToolTip(tr("The golem as the tutorial ends: bones, skin, painted weights, sway, nod and breath"));
+    connect(m_tutorialAct, &QAction::triggered, this, [this] {
+        const QString doc = repoFile(Language::current() == Language::Lang::Chinese ? QStringLiteral("docs/zh_TW/35_SKINNING_TUTORIAL.md")
+                                                                                     : QStringLiteral("docs/35_SKINNING_TUTORIAL.md"));
+        if (doc.isEmpty() || !QDesktopServices::openUrl(QUrl::fromLocalFile(doc)))
+            QMessageBox::information(m_host, tr("Skinning Tutorial"),
+                                     tr("The tutorial is docs/35_SKINNING_TUTORIAL.md in the TOMS repo. This editor runs "
+                                        "outside the repo, so it cannot open it."));
+    });
+    for (auto [act, name] : {std::pair{m_tutorialStartAct, QStringLiteral("golem_start.anim")},
+                             std::pair{m_tutorialDoneAct, QStringLiteral("golem_done.anim")}}) {
+        connect(act, &QAction::triggered, this, [this, name = name] {
+            const QString file = repoFile(QStringLiteral("docs/examples/tutorial/") + name);
+            if (file.isEmpty()) {
+                QMessageBox::information(m_host, tr("Skinning Tutorial"),
+                                         tr("The tutorial's files are in docs/examples/tutorial of the TOMS repo. This "
+                                            "editor runs outside the repo, so it cannot find them."));
+                return;
+            }
+            openFile(file, false);
+        });
+    }
     connect(m_helpCliAct, &QAction::triggered, this, [this] {
         QMessageBox::information(m_host, tr("Command Line"),
                                  tr("anim_editor [file.anim]\n"
@@ -375,6 +429,11 @@ void AnimEditor::createMenus()
     edit->addAction(m_objectModeAct);
     edit->addAction(m_boneModeAct);
     edit->addAction(m_latticeModeAct);
+    edit->addAction(m_weightModeAct);
+    edit->addSeparator();
+    edit->addAction(m_brushSmallerAct);
+    edit->addAction(m_brushLargerAct);
+    edit->addAction(m_autoWeightsAct);
     edit->addSeparator();
     edit->addAction(m_moveAct);
     edit->addAction(m_rotateAct);
@@ -472,6 +531,10 @@ void AnimEditor::createMenus()
     }
 
     QMenu* help = new QMenu(tr("&Help"), m_host);
+    help->addAction(m_tutorialAct);
+    help->addAction(m_tutorialStartAct);
+    help->addAction(m_tutorialDoneAct);
+    help->addSeparator();
     help->addAction(m_helpCliAct);
     help->addAction(m_aboutAct);
     m_menus = {file, edit, node, key, play, m_viewMenu, convert, help};
@@ -493,8 +556,35 @@ void AnimEditor::createToolBars()
     m_mainBar->addAction(m_objectModeAct);   // shown with text: the mode is the first thing to know
     m_mainBar->addAction(m_boneModeAct);
     m_mainBar->addAction(m_latticeModeAct);
-    for (QAction* a : {m_objectModeAct, m_boneModeAct, m_latticeModeAct})
+    m_mainBar->addAction(m_weightModeAct);
+    for (QAction* a : {m_objectModeAct, m_boneModeAct, m_latticeModeAct, m_weightModeAct})
         if (auto* b = qobject_cast<QToolButton*>(m_mainBar->widgetForAction(a))) b->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    {   // Weights mode: the brush
+        auto* radius = new QSpinBox(m_mainBar);
+        radius->setRange(4, 400);
+        radius->setSuffix(tr(" px"));
+        radius->setToolTip(tr("Brush size on screen ([ and ] change it)"));
+        radius->setValue(int(std::lround(m_viewport->brushRadius())));
+        auto* strength = new QDoubleSpinBox(m_mainBar);
+        strength->setRange(0.01, 1.0);
+        strength->setSingleStep(0.05);
+        strength->setDecimals(2);
+        strength->setToolTip(tr("How far one dab moves a point at the brush's centre towards fully (or not) following the bone"));
+        strength->setValue(m_viewport->brushStrength());
+        connect(radius, qOverload<int>(&QSpinBox::valueChanged), this, [this](int v) { m_viewport->setBrushRadius(v); });
+        connect(strength, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double v) { m_viewport->setBrushStrength(v); });
+        connect(m_viewport, &AnimViewport::brushChanged, this, [this, radius, strength] {
+            const QSignalBlocker b1(radius), b2(strength);
+            radius->setValue(int(std::lround(m_viewport->brushRadius())));
+            strength->setValue(m_viewport->brushStrength());
+        });
+        m_brushBarActions << m_mainBar->addSeparator();
+        m_brushBarActions << m_mainBar->addWidget(new QLabel(tr(" Brush "), m_mainBar));
+        m_brushBarActions << m_mainBar->addWidget(radius);
+        m_brushBarActions << m_mainBar->addWidget(new QLabel(tr(" Strength "), m_mainBar));
+        m_brushBarActions << m_mainBar->addWidget(strength);
+        for (QAction* a : m_brushBarActions) a->setVisible(false);
+    }
     m_mainBar->addSeparator();
     m_mainBar->addAction(m_moveAct);
     m_mainBar->addAction(m_rotateAct);
@@ -547,12 +637,53 @@ void AnimEditor::readSettings()
     m_autoKeyAct->setChecked(m_doc->autoKey());
     m_snapAct->setChecked(s.value(QStringLiteral("snap"), false).toBool());
     m_showSkinAct->setChecked(s.value(QStringLiteral("showSkin"), false).toBool());
+    m_viewport->setBrushRadius(s.value(QStringLiteral("brushRadius"), 40.0).toDouble());
+    m_viewport->setBrushStrength(s.value(QStringLiteral("brushStrength"), 0.5).toDouble());
     {
         const QString mode = s.value(QStringLiteral("editMode")).toString();
         (mode == QLatin1String("bones") || s.value(QStringLiteral("boneMode"), false).toBool() ? m_boneModeAct
-         : mode == QLatin1String("lattice") ? m_latticeModeAct : m_objectModeAct)->setChecked(true);
+         : mode == QLatin1String("lattice") ? m_latticeModeAct
+         : mode == QLatin1String("weights") ? m_weightModeAct : m_objectModeAct)->setChecked(true);
     }
     m_transport->loopAction()->setChecked(s.value(QStringLiteral("loopPreview"), false).toBool());
+}
+
+QString AnimEditor::repoFile(const QString& relative)
+{
+    QDir dir(QCoreApplication::applicationDirPath());
+    for (int up = 0; up < 6; up++) {   // Build/<preset>/bin -> the repo is 3 up; Editor/bin -> 2 up
+        const QString path = dir.filePath(relative);
+        if (QFileInfo::exists(path)) return QFileInfo(path).absoluteFilePath();
+        if (!dir.cdUp()) break;
+    }
+    return QString();
+}
+
+// Edit > Reset to Automatic Weights: the selected skinned node, and every skin the selected node is a bone of.
+void AnimEditor::resetWeights()
+{
+    const toms::anim::Clip* clip = m_doc->clip();
+    const toms::anim::Node* sel = m_doc->selectedNode();
+    if (!clip || !sel) return;
+    std::vector<NodePath> paths;
+    NodePath path;
+    std::function<void(const toms::anim::Node&)> walk = [&](const toms::anim::Node& n) {
+        const bool mine = &n == sel || std::find(n.skinBones.begin(), n.skinBones.end(), sel->name) != n.skinBones.end();
+        if (n.skinned() && !n.skinWeights.empty() && mine) paths.push_back(path);
+        for (size_t i = 0; i < n.children.size(); i++) {
+            path.push_back(int(i));
+            walk(n.children[i]);
+            path.pop_back();
+        }
+    };
+    walk(clip->root);
+    if (paths.empty()) {
+        emit m_doc->message(tr("No painted weights here: select a skinned sprite or one of its bones."));
+        return;
+    }
+    const QString key = QStringLiteral("autoWeights%1").arg(QDateTime::currentMSecsSinceEpoch());   // one undo step
+    for (const NodePath& p : paths)
+        m_doc->editNode(p, tr("Automatic Weights"), [](toms::anim::Node& n) { n.skinWeights.clear(); }, key);
 }
 
 void AnimEditor::writeSettings() const
@@ -562,7 +693,10 @@ void AnimEditor::writeSettings() const
     s.setValue(QStringLiteral("snap"), m_snapAct->isChecked());
     s.setValue(QStringLiteral("showSkin"), m_showSkinAct->isChecked());
     s.setValue(QStringLiteral("editMode"), m_boneModeAct->isChecked() ? QStringLiteral("bones")
-                                           : m_latticeModeAct->isChecked() ? QStringLiteral("lattice") : QStringLiteral("object"));
+                                           : m_latticeModeAct->isChecked() ? QStringLiteral("lattice")
+                                           : m_weightModeAct->isChecked() ? QStringLiteral("weights") : QStringLiteral("object"));
+    s.setValue(QStringLiteral("brushRadius"), m_viewport->brushRadius());
+    s.setValue(QStringLiteral("brushStrength"), m_viewport->brushStrength());
     s.remove(QStringLiteral("boneMode"));
     s.setValue(QStringLiteral("loopPreview"), m_transport->loopAction()->isChecked());
 }

@@ -33,6 +33,10 @@ public:
     // Smoke test: after `frames` frames, save the viewport (bgfx screenshot) to `png` and emit smokeTestDone.
     void runSmokeTest(int frames, const QString& png);
     void setDebugOverlay(bool on);
+    // Inspect (the UI editor): a left click is not passed to the game; inspectClicked() says where it was.
+    void setInspectMode(bool on) { inspectMode_ = on; }
+    bool inspectMode() const { return inspectMode_; }
+    int frameCount() const { return frameCount_; }   // frames drawn since the window opened (smoke tests)
     QString rendererName() const;
     QString assetDir() const;
     toms::next::GameSession& session() { return session_; }
@@ -42,6 +46,7 @@ signals:
     void frameInfo(double fps, int quads, int drawCalls);
     void startFailed(const QString& title, const QString& text);
     void smokeTestDone();
+    void inspectClicked();   // inspect mode: a left click; the UI's hover element is the one under it
 
 protected:
     void showEvent(QShowEvent* e) override;
@@ -72,6 +77,7 @@ private:
     QString pendingStage_ = QStringLiteral("stage01");
     QString pendingScenario_;   // startScenario before bgfx was up: started by showEvent
     bool bgfxReady_ = false;
+    bool inspectMode_ = false;
     bool failed_ = false;
     int framesSinceReport_ = 0;
     qint64 msSinceReport_ = 0;

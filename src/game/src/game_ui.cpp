@@ -140,6 +140,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("title", &UiBattle::title);
         s.RegisterMember("player_sprite", &UiBattle::player_sprite);
         s.RegisterMember("player_anim", &UiBattle::player_anim);
+        s.RegisterMember("enemy_anim", &UiBattle::enemy_anim);
         s.RegisterMember("enemy_sprite", &UiBattle::enemy_sprite);
         s.RegisterMember("player_hp_pct", &UiBattle::player_hp_pct);
         s.RegisterMember("enemy_hp_pct", &UiBattle::enemy_hp_pct);
@@ -450,6 +451,27 @@ void GameUi::reload() {
     Rml::Factory::ClearTemplateCache();
     std::string error;
     if (!loadDocuments(error)) Rml::Log::Message(Rml::Log::LT_ERROR, "%s", error.c_str());
+}
+
+std::string GameUi::reloadIfChanged() {
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    std::string changed;
+    std::map<std::string, fs::file_time_type> now;
+    for (const fs::directory_entry& e : fs::directory_iterator(fs::u8path(dir_), ec)) {
+        const std::string ext = e.path().extension().string();
+        if (ext != ".rml" && ext != ".rcss") continue;
+        const fs::file_time_type t = e.last_write_time(ec);
+        if (ec) continue;
+        const std::string name = e.path().filename().u8string();
+        now[name] = t;
+        if (stamped_ && (!stamps_.count(name) || stamps_[name] != t)) changed = name;
+    }
+    if (stamped_ && changed.empty() && now.size() != stamps_.size()) changed = "(a file removed)";
+    stamps_ = std::move(now);
+    stamped_ = true;
+    if (!changed.empty()) reload();
+    return changed;
 }
 
 void GameUi::sync() {

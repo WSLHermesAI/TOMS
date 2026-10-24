@@ -1166,9 +1166,108 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
             ok &= check(!doc->applyMotionRecipe("swing", 0.0f, 0.0f, 1.0f) && doc->undoStack()->index() == recipeAt + 2,
                         "recipe: a bone recipe on a node without a skin is refused");
             while (doc->undoStack()->index() > recipeAt) doc->undoStack()->undo();
+
+            // Weights mode (docs/34 step 5 part 3): a click on a joint picks the bone; a stroke paints its weights (one
+            // undo step); Ctrl+stroke takes them off; Reset to Automatic Weights drops them.
+            ed->weightModeAction()->setChecked(true);
+            processEvents();
+            ok &= check(view->editMode() == AnimViewport::EditMode::Weights, "weights mode: P / the toolbar switch");
+            doc->selectNodeByName(QStringLiteral("golem"));
+            processEvents();
+            click(bonePoint("chest"));
+            ok &= check(doc->selectedNode() && doc->selectedNode()->name == "chest", "weights mode: a click on a joint picks that bone");
+            // The chest's weight on the point nearest widget point w, and every point's weights summing to 1.
+            auto chestWeight = [&](const QPointF& w, bool* sumsOk) {
+                std::vector<toms::anim::NodePose> poses;
+                toms::anim::evaluate(*doc->clip(), doc->previewTime(), poses);
+                for (size_t i = 0; i < poses.size(); i++) {
+                    toms::anim::SkinView sv;
+                    if (toms::anim::skinView(*doc->clip(), poses, i, doc->atlasSet(), toms::anim::placement(0, 0), &sv) != toms::anim::SkinState::Ok)
+                        continue;
+                    const int chest = int(std::find(sv.bones.begin(), sv.bones.end(), "chest") - sv.bones.begin());
+                    size_t best = 0;
+                    double bestD = 1e30;
+                    for (size_t v = 0; v < sv.vertices.size(); v++) {
+                        const QPointF p = view->widgetPos(QPointF(sv.vertices[v].x, sv.vertices[v].y));
+                        const double d = std::hypot(p.x() - w.x(), p.y() - w.y());
+                        if (d < bestD) { bestD = d; best = v; }
+                        float sum = 0;
+                        for (int k = 0; k < toms::anim::kSkinInfluences; k++) sum += sv.weights[v * 2 * toms::anim::kSkinInfluences + 2 * size_t(k) + 1];
+                        if (sumsOk && std::fabs(sum - 1.0f) > 1e-3f) *sumsOk = false;
+                    }
+                    return animed::boneWeight(sv.weights, best, chest);
+                }
+                return -1.0f;
+            };
+            auto stroke = [&](const QPointF& from, Qt::KeyboardModifiers mods) {   // press, three moves, release
+                QMouseEvent press(QEvent::MouseButtonPress, from, view->mapToGlobal(from), Qt::LeftButton, Qt::LeftButton, mods);
+                QApplication::sendEvent(view, &press);
+                for (int i = 1; i <= 3; i++) {
+                    const QPointF to = from + QPointF(0, 4.0 * i);
+                    QMouseEvent move(QEvent::MouseMove, to, view->mapToGlobal(to), Qt::NoButton, Qt::LeftButton, mods);
+                    QApplication::sendEvent(view, &move);
+                }
+                const QPointF end = from + QPointF(0, 12);
+                QMouseEvent release(QEvent::MouseButtonRelease, end, view->mapToGlobal(end), Qt::LeftButton, Qt::NoButton, mods);
+                QApplication::sendEvent(view, &release);
+                processEvents();
+            };
+            // Paint beside the hip, away from every joint: the chest's share there grows.
+            const QPointF paintAt = bonePoint("hip") + QPointF(14, 0);
+            const float chestBefore = chestWeight(paintAt, nullptr);
+            const int weightsAt = doc->undoStack()->index();
+            view->setBrushStrength(0.8);
+            stroke(paintAt, Qt::NoModifier);
+            const Node* golem = toms::anim::findNode(doc->clip()->root, "golem");
+            bool sums = true;
+            const float chestAfter = chestWeight(paintAt, &sums);
+            ok &= check(golem && !golem->skinWeights.empty() && golem->skinWeights.size() % (2 * toms::anim::kSkinInfluences) == 0,
+                        "weights: the stroke wrote the golem's weights (no longer automatic)");
+            ok &= check(chestAfter > chestBefore + 0.1f, "weights: the chest's share grew under the brush");
+            ok &= check(sums, "weights: every point still sums to 1");
+            ok &= check(doc->undoStack()->index() == weightsAt + 1, "weights: the whole stroke is one undo step");
+            ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("skin_weights.png"))), "skin_weights.png (the chest's weights)");
+            stroke(paintAt, Qt::ControlModifier);
+            ok &= check(chestWeight(paintAt, nullptr) < chestAfter - 0.1f && doc->undoStack()->index() == weightsAt + 2,
+                        "weights: Ctrl+stroke takes the chest's share off");
+            ed->autoWeightsAction()->trigger();   // the chest is selected: the skin it is in
+            golem = toms::anim::findNode(doc->clip()->root, "golem");
+            ok &= check(golem && golem->skinWeights.empty() && doc->undoStack()->index() == weightsAt + 3,
+                        "weights: Reset to Automatic Weights drops them (one undo step)");
+            while (doc->undoStack()->index() > weightsAt) doc->undoStack()->undo();
+            view->setBrushStrength(0.5);
+            ed->objectModeAction()->setChecked(true);
+            processEvents();
         } else {
             ok &= check(false, "skin: open tests/smoke/anim_skin.anim");
         }
+    }
+    {   // Help > Skinning Tutorial (docs/35): the tutorial and its two files are found from the editor's folder and open.
+        ok &= check(!AnimEditor::repoFile(QStringLiteral("docs/35_SKINNING_TUTORIAL.md")).isEmpty() &&
+                        !AnimEditor::repoFile(QStringLiteral("docs/zh_TW/35_SKINNING_TUTORIAL.md")).isEmpty(),
+                    "tutorial: docs/35 (both languages) found from the editor's folder");
+        ed->tutorialActions()[1]->trigger();   // the start file: the golem only
+        processEvents();
+        const Node* g = doc->clip() ? toms::anim::findNode(doc->clip()->root, "golem") : nullptr;
+        ok &= check(doc->filePath().endsWith(QStringLiteral("golem_start.anim")) && g && !g->skinned() && g->children.empty(),
+                    "tutorial: Open Tutorial Start File opens the golem with no bones");
+        ed->tutorialActions()[2]->trigger();   // the finished file: bones, painted weights, keys, lattice
+        processEvents();
+        g = doc->clip() ? toms::anim::findNode(doc->clip()->root, "golem") : nullptr;
+        bool painted = false;
+        if (g && doc->clip()) {
+            std::vector<toms::anim::NodePose> poses;
+            toms::anim::evaluate(*doc->clip(), 0.0f, poses);
+            for (size_t i = 0; i < poses.size(); i++) {
+                toms::anim::SkinView sv;
+                if (poses[i].node == g &&
+                    toms::anim::skinView(*doc->clip(), poses, i, doc->atlasSet(), toms::anim::placement(0, 0), &sv) == toms::anim::SkinState::Ok)
+                    painted = !sv.autoWeights;
+            }
+        }
+        ok &= check(doc->filePath().endsWith(QStringLiteral("golem_done.anim")) && g && g->skinBones.size() == 3 && painted &&
+                        !g->deformKeys.empty() && toms::anim::findNode(doc->clip()->root, "chest")->rotKeys.size() == 3,
+                    "tutorial: Open Tutorial Finished File: 3 bones, painted weights that fit the mesh, a breath, a sway");
     }
     {   // Preview as Character (docs/15 "Characters"): assets/media/anim/archer_bow.anim shown as other characters.
         const QString archerFile = QFileInfo(file).dir().filePath(QStringLiteral("../../assets/media/anim/archer_bow.anim"));

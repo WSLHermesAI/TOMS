@@ -261,7 +261,8 @@ void AnimViewport::paintContent(QPainter& p)
         }
     drawSkins(p, view);
     drawLattice(p, view);
-    drawGizmo(p, gizmo());
+    if (m_mode != EditMode::Weights) drawGizmo(p, gizmo());   // Weights mode: the bones are painted, not moved
+    drawBrush(p);
 
     // Status text over the view.
     p.setRenderHint(QPainter::Antialiasing, false);
@@ -276,11 +277,21 @@ void AnimViewport::paintContent(QPainter& p)
         info += tr("   (ended: looping nodes play on, +%1 s)").arg(m_doc->previewTime() - m_doc->time(), 0, 'f', 1);
     if (m_mode == EditMode::Bones) info += tr("   BONES: click a bone (Auto-Key on: pose it; off: place it in the sprite)");
     if (m_mode == EditMode::Lattice) info += tr("   LATTICE: drag a point to key the deform at the playhead");
+    if (m_mode == EditMode::Weights) {
+        const Node* sel = m_doc->selectedNode();
+        info += sel ? tr("   WEIGHTS of %1: drag to add, Ctrl subtract, Shift smooth; [ ] brush size; click a joint for another bone")
+                          .arg(QString::fromStdString(sel->name))
+                    : tr("   WEIGHTS: click a bone's joint to paint its weights");
+    }
     if (!m_doc->previewCharacter().isEmpty()) info += tr("   AS: %1").arg(m_doc->previewCharacter());
     if (m_doc->atlasCount() == 0) info += tr("   (no atlas: add one under Properties > Atlases)");
     else if (!m_doc->atlasLoaded()) info += tr("   (an atlas did not load: see Problems)");
     drawLabel(p, QPointF(8, 8), info);
     if (!m_missing.isEmpty()) drawLabel(p, QPointF(8, 32), tr("missing sprites: %1").arg(m_missing.join(QStringLiteral(", "))));
+    if (m_mode == EditMode::Weights) {
+        const QString under = weightsUnderCursor();
+        if (!under.isEmpty()) drawLabel(p, QPointF(8, m_missing.isEmpty() ? 32 : 56), under);
+    }
 }
 
 void AnimViewport::setEditMode(EditMode m)
@@ -290,6 +301,8 @@ void AnimViewport::setEditMode(EditMode m)
     m_hover = -1;
     m_hoverBone.clear();
     m_hoverPoint = -1;
+    m_painting = false;
+    if (m != EditMode::Weights) unsetCursor();
     update();
 }
 
@@ -340,7 +353,7 @@ void AnimViewport::drawLattice(QPainter& p, const QTransform& view) const
         }
 }
 
-QString AnimViewport::boneAt(const QPointF& w) const
+QString AnimViewport::boneAt(const QPointF& w, bool jointsOnly) const
 {
     const toms::anim::Clip* clip = m_doc->drawClip();
     if (!clip) return QString();
@@ -362,7 +375,7 @@ QString AnimViewport::boneAt(const QPointF& w) const
             const double len2 = se.x() * se.x() + se.y() * se.y();
             const double t = len2 > 1e-9 ? std::clamp(((w.x() - s.x()) * se.x() + (w.y() - s.y()) * se.y()) / len2, 0.0, 1.0) : 0.0;
             const double seg = std::hypot(w.x() - (s.x() + t * se.x()), w.y() - (s.y() + t * se.y()));
-            const double d = std::min(joint, seg);
+            const double d = jointsOnly ? joint : std::min(joint, seg);
             if (d < bestD) {
                 bestD = d;
                 best = QString::fromStdString(sv.bones[b]);
@@ -383,7 +396,8 @@ QColor AnimViewport::boneColor(int b)
 void AnimViewport::drawSkins(QPainter& p, const QTransform& view) const
 {
     const toms::anim::Clip* clip = m_doc->drawClip();
-    if ((!m_showSkin && m_mode != EditMode::Bones) || !clip) return;
+    if ((!m_showSkin && m_mode != EditMode::Bones && m_mode != EditMode::Weights) || !clip) return;
+    const bool heat = m_mode == EditMode::Weights;   // the selected bone's weights as colours (blue 0 .. red 1)
     const Node* sel = m_doc->selectedNode();
     const glm::mat3 place = toms::anim::placement(0, 0);   // content = clip space, as buildFrame
     auto at = [&](const glm::vec2& c) { return view.map(QPointF(c.x, c.y)); };
@@ -398,6 +412,19 @@ void AnimViewport::drawSkins(QPainter& p, const QTransform& view) const
         for (int b = 0; b < bones && sel; b++)
             if (sv.boneFound[size_t(b)] && sv.bones[size_t(b)] == sel->name) selBone = b;
 
+        if (heat && selBone < 0) continue;   // Weights mode: only the skins the selected bone is in
+        if (heat) {   // every triangle filled with its points' mean weight for the selected bone
+            p.setPen(Qt::NoPen);
+            for (size_t t = 0; t + 2 < sv.triangles.size(); t += 3) {
+                double w = 0;
+                for (int c = 0; c < 3; c++) w += animed::boneWeight(sv.weights, sv.triangles[t + size_t(c)], selBone);
+                QColor col = weightColor(w / 3);
+                col.setAlpha(150);
+                p.setBrush(col);
+                p.drawPolygon(QPolygonF({at(sv.vertices[sv.triangles[t]]), at(sv.vertices[sv.triangles[t + 1]]),
+                                         at(sv.vertices[sv.triangles[t + 2]])}));
+            }
+        }
         // The mesh: every triangle's edges.
         p.setPen(QPen(QColor(255, 255, 255, 80), 1));
         p.setBrush(Qt::NoBrush);
@@ -420,7 +447,9 @@ void AnimViewport::drawSkins(QPainter& p, const QTransform& view) const
                 if (b == selBone) mine += w;
             }
             QColor col;
-            if (selBone >= 0) {
+            if (heat) {
+                col = weightColor(sum > 0 ? mine / sum : 0);
+            } else if (selBone >= 0) {
                 const double f = sum > 0 ? mine / sum : 0, dim = 0.18;
                 const QColor c = boneColor(selBone);
                 col = QColor::fromRgbF(float(dim + (c.redF() - dim) * f), float(dim + (c.greenF() - dim) * f), float(dim + (c.blueF() - dim) * f));
@@ -429,13 +458,13 @@ void AnimViewport::drawSkins(QPainter& p, const QTransform& view) const
             }
             p.setPen(QPen(QColor(0, 0, 0, 200), 1));
             p.setBrush(col);
-            p.drawEllipse(at(sv.vertices[v]), 3.5, 3.5);
+            p.drawEllipse(at(sv.vertices[v]), heat ? 2.5 : 3.5, heat ? 2.5 : 3.5);
         }
         // The bones: the segment each one's weights are measured against, where the bone has carried it now.
         for (int b = 0; b < bones; b++) {
             const QPointF s = at(sv.boneStart[size_t(b)]), e = at(sv.boneEnd[size_t(b)]);
             const bool picked = b == selBone;
-            const bool hovered = m_mode == EditMode::Bones && !picked && sv.boneFound[size_t(b)] &&
+            const bool hovered = (m_mode == EditMode::Bones || m_mode == EditMode::Weights) && !picked && sv.boneFound[size_t(b)] &&
                                  QString::fromStdString(sv.bones[size_t(b)]) == m_hoverBone;
             const QColor c = hovered ? boneColor(b).lighter(135) : boneColor(b);
             if (hovered) {
@@ -456,6 +485,144 @@ void AnimViewport::drawSkins(QPainter& p, const QTransform& view) const
                                                                       : tr("%1 (no such node)").arg(QString::fromStdString(sv.bones[size_t(b)])));
         }
     }
+}
+
+QColor AnimViewport::weightColor(double w)
+{
+    // blue -> cyan -> green -> yellow -> red, as most weight painters show it
+    static const QColor kStops[] = {QColor(30, 50, 170), QColor(0, 190, 230), QColor(40, 200, 70), QColor(250, 220, 40),
+                                    QColor(235, 50, 40)};
+    const double x = std::clamp(w, 0.0, 1.0) * 4.0;
+    const int i = std::min(3, int(x));
+    const double f = x - i;
+    const QColor &a = kStops[i], &b = kStops[i + 1];
+    return QColor::fromRgbF(float(a.redF() + (b.redF() - a.redF()) * f), float(a.greenF() + (b.greenF() - a.greenF()) * f),
+                            float(a.blueF() + (b.blueF() - a.blueF()) * f));
+}
+
+void AnimViewport::setBrushRadius(double r)
+{
+    r = std::clamp(r, 4.0, 400.0);
+    if (r == m_brushRadius) return;
+    m_brushRadius = r;
+    update();
+    emit brushChanged();
+}
+
+void AnimViewport::setBrushStrength(double s)
+{
+    s = std::clamp(s, 0.01, 1.0);
+    if (s == m_brushStrength) return;
+    m_brushStrength = s;
+    update();
+    emit brushChanged();
+}
+
+void AnimViewport::drawBrush(QPainter& p) const
+{
+    if (m_mode != EditMode::Weights || m_cursor.x() < -1e8 || !rect().contains(m_cursor.toPoint())) return;
+    const QColor c = m_paintMode == animed::WeightBrush::Subtract ? QColor(120, 170, 255)
+                     : m_paintMode == animed::WeightBrush::Smooth ? QColor(200, 200, 200) : QColor(255, 140, 90);
+    p.setBrush(Qt::NoBrush);
+    p.setPen(QPen(QColor(0, 0, 0, 160), 3));
+    p.drawEllipse(m_cursor, m_brushRadius, m_brushRadius);
+    p.setPen(QPen(c, 1.5));
+    p.drawEllipse(m_cursor, m_brushRadius, m_brushRadius);
+    // the strength: an inner ring
+    p.setPen(QPen(c, 1, Qt::DotLine));
+    p.drawEllipse(m_cursor, m_brushRadius * m_brushStrength, m_brushRadius * m_brushStrength);
+}
+
+QString AnimViewport::weightsUnderCursor() const
+{
+    const toms::anim::Clip* clip = m_doc->drawClip();
+    if (!clip || m_cursor.x() < -1e8) return QString();
+    const glm::mat3 place = toms::anim::placement(0, 0);
+    const QTransform view = viewTransform();
+    const Node* sel = m_doc->selectedNode();
+    QString best;
+    double bestD = 10.0;   // widget pixels
+    for (size_t i = 0; i < m_poses.size(); i++) {
+        const NodePose& pose = m_poses[i];
+        if (!pose.node || !pose.node->skinned() || !pose.visible || !m_doc->soloShows(pose.node)) continue;
+        toms::anim::SkinView sv;
+        if (toms::anim::skinView(*clip, m_poses, i, m_doc->atlasSet(), place, &sv) != toms::anim::SkinState::Ok) continue;
+        if (!sel || std::find(sv.bones.begin(), sv.bones.end(), sel->name) == sv.bones.end()) continue;
+        for (size_t v = 0; v < sv.vertices.size(); v++) {
+            const QPointF pt = view.map(QPointF(sv.vertices[v].x, sv.vertices[v].y));
+            const double d = std::hypot(m_cursor.x() - pt.x(), m_cursor.y() - pt.y());
+            if (d >= bestD) continue;
+            bestD = d;
+            QStringList parts;
+            for (int k = 0; k < toms::anim::kSkinInfluences; k++) {
+                const float w = sv.weights[v * 2 * toms::anim::kSkinInfluences + 2 * size_t(k) + 1];
+                const int b = int(sv.weights[v * 2 * toms::anim::kSkinInfluences + 2 * size_t(k)]);
+                if (w > 0 && b >= 0 && b < int(sv.bones.size()))
+                    parts << QStringLiteral("%1 %2").arg(QString::fromStdString(sv.bones[size_t(b)])).arg(w, 0, 'f', 2);
+            }
+            best = tr("%1 point %2: %3%4").arg(QString::fromStdString(pose.node->name)).arg(v).arg(parts.join(QStringLiteral(", ")))
+                       .arg(sv.autoWeights ? tr("  (automatic weights)") : QString());
+        }
+    }
+    return best;
+}
+
+bool AnimViewport::paintWeightsAt(const QPointF& w, animed::WeightBrush mode, int stroke)
+{
+    const toms::anim::Clip* clip = m_doc->drawClip();
+    const Node* sel = m_doc->selectedNode();
+    if (!clip || !sel) return false;
+    rebuild();
+    const glm::mat3 place = toms::anim::placement(0, 0);
+    const QTransform view = viewTransform();
+    const double scale = std::max(1e-9, std::sqrt(std::fabs(view.determinant())));   // widget pixels per clip pixel
+    const QPointF c = view.inverted().map(w);
+    const float radius = float(m_brushRadius / scale);
+    struct Paint { NodePath path; std::vector<float> weights; };
+    std::vector<Paint> paints;
+    for (size_t i = 0; i < m_poses.size(); i++) {
+        const NodePose& pose = m_poses[i];
+        if (!pose.node || !pose.node->skinned() || !pose.visible || !m_doc->soloShows(pose.node)) continue;
+        toms::anim::SkinView sv;
+        if (toms::anim::skinView(*clip, m_poses, i, m_doc->atlasSet(), place, &sv) != toms::anim::SkinState::Ok) continue;
+        int bone = -1;
+        for (size_t b = 0; b < sv.bones.size(); b++)
+            if (sv.boneFound[b] && sv.bones[b] == sel->name) bone = int(b);
+        if (bone < 0) continue;
+        std::vector<float> amount(sv.vertices.size(), 0.0f);
+        bool any = false;
+        for (size_t v = 0; v < sv.vertices.size(); v++) {
+            const float d = std::hypot(sv.vertices[v].x - float(c.x()), sv.vertices[v].y - float(c.y()));
+            amount[v] = float(m_brushStrength) * animed::brushFalloff(d, radius);
+            any = any || amount[v] > 0;
+        }
+        if (!any) continue;
+        // Subtract on a point only this bone moves: the nearest other bone (its segment, as drawn now) takes the share.
+        std::vector<float> fallback(sv.vertices.size() * 2 * toms::anim::kSkinInfluences, 0.0f);
+        for (size_t v = 0; v < sv.vertices.size(); v++) {
+            int nearest = -1;
+            double nearD = 1e30;
+            for (size_t b = 0; b < sv.bones.size(); b++) {
+                if (int(b) == bone || !sv.boneFound[b]) continue;
+                const double d = distToSegment(QPointF(sv.vertices[v].x, sv.vertices[v].y), QPointF(sv.boneStart[b].x, sv.boneStart[b].y),
+                                               QPointF(sv.boneEnd[b].x, sv.boneEnd[b].y));
+                if (d < nearD) { nearD = d; nearest = int(b); }
+            }
+            fallback[v * 2 * toms::anim::kSkinInfluences] = float(std::max(0, nearest));
+            fallback[v * 2 * toms::anim::kSkinInfluences + 1] = nearest >= 0 ? 1.0f : 0.0f;
+        }
+        Paint pt;
+        pt.weights = sv.weights;   // automatic until the first stroke: painting starts from them
+        animed::paintWeights(pt.weights, int(sv.bones.size()), bone, mode, amount, sv.triangles, &fallback);
+        if (pt.weights == sv.weights) continue;   // nothing moved (Subtract on a point no other bone can take)
+        if (!findPath(clip->root, pose.node, pt.path)) continue;
+        paints.push_back(std::move(pt));
+    }
+    bool changed = false;
+    const QString key = QStringLiteral("#weights%1").arg(stroke);   // '#': the whole stroke is one undo step
+    for (const Paint& pt : paints)
+        changed |= m_doc->editNode(pt.path, tr("Paint Weights"), [&pt](Node& n) { n.skinWeights = pt.weights; }, key);
+    return changed;
 }
 
 AnimViewport::Gizmo AnimViewport::gizmo() const
@@ -599,6 +766,22 @@ void AnimViewport::mousePressEvent(QMouseEvent* e)
     if (e->button() != Qt::LeftButton) return;
     setFocus();
     rebuild();
+    if (m_mode == EditMode::Weights) {   // a joint picks its bone; anywhere else paints the selected bone
+        const QString joint = boneAt(e->position(), true);
+        if (!joint.isEmpty()) {
+            m_doc->selectNodeByName(joint);
+            return;
+        }
+        m_paintMode = (e->modifiers() & Qt::ShiftModifier) ? animed::WeightBrush::Smooth
+                      : (e->modifiers() & Qt::ControlModifier) ? animed::WeightBrush::Subtract : animed::WeightBrush::Add;
+        m_painting = true;
+        m_dragSerial++;
+        emit dragStarted();
+        m_lastDab = e->position();
+        paintWeightsAt(e->position(), m_paintMode, m_dragSerial);
+        update();
+        return;
+    }
     Gizmo g = gizmo();
     Drag d = handleAt(e->position(), g);
     if (d == Drag::None && m_mode == EditMode::Lattice) {   // Lattice mode: a point of the selected node's lattice
@@ -655,6 +838,26 @@ void AnimViewport::mousePressEvent(QMouseEvent* e)
 void AnimViewport::mouseMoveEvent(QMouseEvent* e)
 {
     if (panMove(e)) return;
+    m_cursor = e->position();
+    if (m_mode == EditMode::Weights) {
+        if (m_painting) {   // a dab every fifth of the brush along the way
+            const double step = std::max(2.0, m_brushRadius * 0.2);
+            const QPointF d = e->position() - m_lastDab;
+            if (std::hypot(d.x(), d.y()) >= step) {
+                m_lastDab = e->position();
+                paintWeightsAt(e->position(), m_paintMode, m_dragSerial);
+            }
+        } else {
+            m_paintMode = (e->modifiers() & Qt::ShiftModifier) ? animed::WeightBrush::Smooth
+                          : (e->modifiers() & Qt::ControlModifier) ? animed::WeightBrush::Subtract : animed::WeightBrush::Add;
+            rebuild();
+            const QString joint = boneAt(e->position(), true);
+            m_hoverBone = joint;
+            setCursor(joint.isEmpty() ? Qt::CrossCursor : Qt::PointingHandCursor);
+        }
+        update();
+        return;
+    }
     if (m_dragPoint >= 0) {   // Lattice mode: the point follows the mouse; a key at the playhead
         const QTransform inv = viewTransform().inverted();
         const QPointF c0 = inv.map(m_dragStart), c1 = inv.map(e->position());
@@ -704,6 +907,11 @@ void AnimViewport::mouseMoveEvent(QMouseEvent* e)
 void AnimViewport::mouseReleaseEvent(QMouseEvent* e)
 {
     if (panRelease(e)) return;
+    if (e->button() == Qt::LeftButton && m_painting) {
+        m_painting = false;
+        update();
+        return;
+    }
     if (e->button() == Qt::LeftButton && m_dragPoint >= 0) {
         m_dragPoint = -1;
         update();
@@ -713,6 +921,13 @@ void AnimViewport::mouseReleaseEvent(QMouseEvent* e)
         m_drag = Drag::None;
         update();
     }
+}
+
+void AnimViewport::leaveEvent(QEvent* e)
+{
+    m_cursor = QPointF(-1e9, -1e9);   // the brush and the point readout go with the cursor
+    if (m_mode == EditMode::Weights) update();
+    GameCanvasView::leaveEvent(e);
 }
 
 void AnimViewport::applyDrag(const QPointF& w, Qt::KeyboardModifiers mods)

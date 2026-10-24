@@ -193,6 +193,7 @@ void Game::update(int dtMs) {
     }
     if (!previewMeshSprite_.empty()) previewMeshMs_ += dtMs;   // --mesh-test: the wave's clock
     updateBattleRig(dtMs);   // the bow and the player's character on the battle screen (battleRigState)
+    updateMonsterRig(dtMs);  // the monster: idle, attack, hurt, die (monster_battle.anim)
     if (previewRig_.character() || previewRig_.held()) {   // --anim with --held: both clips, one clock
         previewRig_.update(dtMs);
         for (const std::string& e : previewRig_.takeEvents()) std::fprintf(stderr, "[anim] event %s\n", e.c_str());

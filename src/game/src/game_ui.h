@@ -8,6 +8,8 @@
 #pragma once
 #include "ui_state.h"
 
+#include <filesystem>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -27,6 +29,9 @@ public:
     // Call once per frame before RmlUi::update().
     void sync();
     void reload();   // re-read every .rml/.rcss from disk (F5)
+    // Live UI editing (hot reload): when an .rml or .rcss in the UI folder changed on disk since the last call, reload
+    // and return its name ("" = nothing changed; the first call only takes note of the files).
+    std::string reloadIfChanged();
     // The font family for every document (RmlUi::languageFont): overrides the RCSS "toms".
     void setFontFamily(const std::string& family);
     // A 3D scene is drawn behind the title (title.scene: the title's body turns see-through).
@@ -47,6 +52,8 @@ private:
     bool model_ = false;
     std::string family_ = "toms";
     int spriteRevision_ = -1;   // Game::spriteAtlasRevision() the documents were loaded with
+    std::map<std::string, std::filesystem::file_time_type> stamps_;   // reloadIfChanged: each UI file's last write
+    bool stamped_ = false;
     std::string playerSelKey_;  // the player menu's selection last frame (scroll a new one into view)
     int scrollFrames_ = 0;      // frames left to bring it into view (it is laid out a frame later)
 };

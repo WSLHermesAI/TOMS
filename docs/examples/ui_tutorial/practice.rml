@@ -1,0 +1,19 @@
+<rml>
+<head>
+    <title>Practice</title>
+    <link type="text/rcss" href="../../../assets/media/ui/common.rcss"/>
+    <link type="text/rcss" href="../../../assets/media/ui/_atlas.rcss"/>
+    <link type="text/rcss" href="practice.rcss"/>
+</head>
+<!-- The UI editor tutorial's practice screen (docs/37_UI_EDITOR.md). The game itself never shows it: the UI editor
+     does (Help > Open Practice Screen), over the map of a new game. Change anything; File > Revert File puts it back. -->
+<body data-model="game">
+    <div id="card" class="panel">
+        <div id="card-title">Traveller's Notice</div>
+        <div class="line"><img sprite="coin"/><span class="label">Gold reward</span><span class="value">50</span></div>
+        <div class="line"><img sprite="potion_red"/><span class="label">Red potion</span><span class="value">x 2</span></div>
+        <div id="you">{{hud.res_line}}</div>
+        <div id="accept" class="btn btn-yes">Accept</div>
+    </div>
+</body>
+</rml>

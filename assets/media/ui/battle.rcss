@@ -17,14 +17,15 @@ body { z-index: 30; }
 #player-hp-text { left: 262px; }
 #enemy-hp-text  { left: 652px; }
 
-#log { position: absolute; left: 262px; right: 24px; top: 294px; font-size: 22px; color: #ffffff; }
-#continue { position: absolute; left: 262px; top: 340px; font-size: 24px; color: #ffffca; }
+/* the message: two lines (a long one, or another language, wraps); everything below starts under them */
+#log { position: absolute; left: 262px; right: 24px; top: 294px; height: 56px; line-height: 28px; font-size: 22px; color: #ffffff; }
+#continue { position: absolute; left: 262px; top: 368px; font-size: 24px; color: #ffffca; }
 
-#clock-label { position: absolute; left: 262px; top: 324px; font-size: 19px; color: #f3e0ba; }
-#clock { position: absolute; left: 262px; top: 348px; width: 700px; height: 14px; background-color: #7b7b88; }
+#clock-label { position: absolute; left: 262px; top: 352px; font-size: 19px; color: #f3e0ba; }
+#clock { position: absolute; left: 262px; top: 376px; width: 700px; height: 14px; background-color: #7b7b88; }
 
 /* Attack / defence columns: prompt, the five-zone timing bar with its marker, the action button. */
-.column { position: absolute; top: 372px; width: 322px; }
+.column { position: absolute; top: 400px; width: 322px; }
 #attack  { left: 262px; }
 #defense { left: 640px; }
 .prompt  { font-size: 20px; color: #f3f3ff; height: 30px; }
@@ -56,16 +57,16 @@ body { z-index: 30; }
 .note.shield { color: #c2e0ff; }
 .note.crit   { color: #ffed94; }
 
-#super { position: absolute; left: 262px; top: 550px; height: 24px; }   /* below the weapon level line (Battle v3) */
+#super { position: absolute; left: 262px; top: 578px; height: 24px; }   /* below the weapon level line (Battle v3) */
 #super-label { font-size: 19px; color: #f3f3ff; margin-right: 18px; }
 .dot-slot { display: inline-block; }
 .dot { width: 17px; height: 17px; margin-right: 8px; background-color: #7b7b88; }
 .dot.on { background-color: #ffca88; }
 
 .wide { position: absolute; left: 262px; width: 700px; height: 50px; line-height: 50px; font-size: 22px; color: #ffffff; }
-#super-btn  { top: 582px; background-color: #d9887b; }
+#super-btn  { top: 610px; background-color: #d9887b; }
 #super-btn:hover  { background-color: #e89a8d; }
-#active-btn { top: 644px; background-color: #88c2d2; }
+#active-btn { top: 672px; background-color: #88c2d2; }
 #active-btn:hover { background-color: #9ad2e2; }
 
 /* damage numbers (UiPopup): a 100 px box over the fighter, rising and fading */

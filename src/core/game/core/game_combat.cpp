@@ -22,6 +22,10 @@ void Game::startCombat(const EnemyInst& e) {
     cs.attackPauseMs = 0;
     cs.popups.clear();
     battleTimers_.reset();   // a number still waiting from the last fight never lands in this one
+    monsterRig_.stop();      // the new monster starts idle (updateMonsterRig)
+    monsterRigState_.clear();
+    monsterRigClip_.clear();
+    monsterRigRequest_.clear();
     cs.log = locale_.tr("battle.start");
 }
 
@@ -80,14 +84,78 @@ void Game::updateBattleRig(int dtMs) {
 }
 
 void Game::drawBattleRig() {
-    if (!battleRigReady() || battleRigState_.empty()) return;
+    static const toms::anim::AtlasSet kNone;
+    // The battle screen's backdrop (common.rcss .focus: black at 80%). The UI draws over the game, so with the backdrop
+    // in battle.rml the player and the monster would sit under it, drawn at a fifth of their brightness; it is drawn
+    // here instead, under them (battle.rml has none).
+    Quad backdrop;
+    backdrop.rect[0] = -4096.0f; backdrop.rect[1] = -4096.0f; backdrop.rect[2] = 16384.0f; backdrop.rect[3] = 16384.0f;
+    backdrop.uv[0] = 0; backdrop.uv[1] = 0; backdrop.uv[2] = 1; backdrop.uv[3] = 1;
+    backdrop.solid = true;
+    backdrop.tint[0] = backdrop.tint[1] = backdrop.tint[2] = 0.0f;
+    backdrop.tint[3] = 0xcc / 255.0f;
+    if (ren) ren->drawSprite(backdrop);
+    const float size = 134.0f;
     // The player's place on the battle screen (battle.rcss #player: 262, 84, 134 x 134): the feet at its bottom centre,
     // the 32-pixel character filling its height.
-    static const toms::anim::AtlasSet kNone;
-    const float size = 134.0f;
-    battleRig_.draw(ren, battleCharacterAnim_ ? battleCharacterAnim_->atlases() : kNone,
-                    battleHeldAnim_ ? battleHeldAnim_->atlases() : kNone,
-                    toms::anim::placement(262.0f + size / 2.0f, 84.0f + size, size / 32.0f));
+    if (battleRigReady() && !battleRigState_.empty())
+        battleRig_.draw(ren, battleCharacterAnim_ ? battleCharacterAnim_->atlases() : kNone,
+                        battleHeldAnim_ ? battleHeldAnim_->atlases() : kNone,
+                        toms::anim::placement(262.0f + size / 2.0f, 84.0f + size, size / 32.0f));
+    // The monster's (#enemy: 652, 84, 134 x 134): its sprite's longer side fills the box (a 2-wide golem as wide as the
+    // box), feet at the bottom centre, as the picture it replaces.
+    if (monsterRigReady() && !monsterRigState_.empty()) {
+        const toms::AtlasRegion* r = spriteAtlas_.find(monsterSprite());
+        const float longer = r ? (float)std::max(std::max(r->origW, r->origH), 1) : 32.0f;
+        monsterRig_.draw(ren, monsterAnim_->atlases(), kNone, toms::anim::placement(652.0f + size / 2.0f, 84.0f + size, size / longer));
+    }
+}
+
+// ---- the monster on the battle screen (Game::monsterRigState) ----
+
+std::string Game::monsterSprite() const {
+    return cs.enemy.boss ? std::string("boss_demonlord") : typeSprite("monster", cs.enemy.id);
+}
+
+void Game::setMonsterRigState(const std::string& state) {
+    monsterRigState_ = state;
+    // the monster's own clip for this status, else the shared one
+    const toms::anim::Clip* c = monsterAnim_->find(state + "_" + cs.enemy.id);
+    if (!c) c = monsterAnim_->find(state);
+    monsterRigClip_ = c ? c->name : std::string();
+    if (!c) { monsterRig_.stop(); return; }
+    monsterFitted_ = fitClipToCharacter(*c, monsterSprite());
+    monsterRig_.play(&monsterFitted_, nullptr);
+}
+
+void Game::updateMonsterRig(int dtMs) {
+    const bool shown = cs.active || cs.won || cs.resultPauseMs > 0;
+    if (!shown) {
+        if (!monsterRigState_.empty()) { monsterRig_.stop(); monsterRigState_.clear(); monsterRigClip_.clear(); }
+        monsterRigRequest_.clear();
+        return;
+    }
+    if (!monsterAnim_ && !monsterAnimTried_ && res_) {   // once: without the file the UI's picture stays
+        monsterAnimTried_ = true;
+        auto a = res_->get<toms::res::AnimRes>(kMonsterBattleAnim);
+        if (a->ok()) monsterAnim_ = a;
+        else std::fprintf(stderr, "[battle] %s: %s\n", kMonsterBattleAnim, a->error().c_str());
+    }
+    if (!monsterRigReady()) return;
+    if (!monsterRigRequest_.empty() && monsterRigState_ != "die") {   // an attack or a hit: from the start
+        setMonsterRigState(monsterRigRequest_);
+        monsterRigRequest_.clear();
+    } else {
+        monsterRigRequest_.clear();
+        // attack, hurt and die play to their end; then the fight decides: won = die (it stays gone), else idle
+        const bool oneShot = monsterRigState_ == "attack" || monsterRigState_ == "hurt" || monsterRigState_ == "die";
+        if (monsterRigState_ != "die" && !(oneShot && !monsterRig_.finished())) {
+            const std::string next = cs.won ? "die" : "idle";
+            if (next != monsterRigState_) setMonsterRigState(next);
+        }
+    }
+    monsterRig_.update(dtMs);
+    monsterRig_.takeEvents();   // (hit: the battle's own timers place the numbers)
 }
 
 // The owner's rule (docs/30_GAMEPLAY_PLAN.md §4): an attack pauses both sides' clocks until it is over.
@@ -102,6 +170,7 @@ void Game::popDamage(int dmg, bool overEnemy, int kind) {
         p.kind = dmg > 0 ? kind : 2;
         p.rise = toms::Tween(0.0f, 1.0f, 900, toms::Ease::OutCubic);
         cs.popups.push_back(p);
+        if (overEnemy && dmg > 0) monsterRigRequest_ = "hurt";   // the monster flinches as the number appears
     });
 }
 
@@ -242,6 +311,7 @@ void Game::resolveEnemyClockFire() {
 
     cs.playerHP -= dmg;
     if (dmg > 0) audio.play("enemy_attack");
+    monsterRigRequest_ = "attack";   // the lunge lands as the number appears (monster_battle.anim)
     startAttackPause();
     popDamage(dmg, /*overEnemy=*/false, 0);
 

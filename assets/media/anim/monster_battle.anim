@@ -1,0 +1,549 @@
+{
+  "version": 2,
+  "atlases": [
+    "../atlas/game.atlas"
+  ],
+  "clips": [
+    {
+      "name": "idle",
+      "length": 1.4,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "motion",
+            "children": [
+              {
+                "name": "body",
+                "sprite": "game:slime",
+                "pivot": [
+                  0.5,
+                  1.0
+                ]
+              }
+            ],
+            "tracks": {
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.7,
+                  "v": [
+                    1.03,
+                    0.97,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.4,
+                  "v": [
+                    1,
+                    1,
+                    1
+                  ]
+                }
+              ],
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.7,
+                  "v": [
+                    0,
+                    -0.6,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 1.4,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "playCount": -1
+    },
+    {
+      "name": "attack",
+      "length": 0.55,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "motion",
+            "children": [
+              {
+                "name": "body",
+                "sprite": "game:slime",
+                "pivot": [
+                  0.5,
+                  1.0
+                ]
+              }
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.12,
+                  "v": [
+                    4,
+                    0.5,
+                    0
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.2,
+                  "v": [
+                    -14,
+                    -2,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.32,
+                  "v": [
+                    -10,
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.55,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "rot": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.12,
+                  "v": [
+                    0,
+                    0,
+                    6
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.2,
+                  "v": [
+                    0,
+                    0,
+                    -10
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.55,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.12,
+                  "v": [
+                    0.95,
+                    1.06,
+                    1
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.2,
+                  "v": [
+                    1.12,
+                    0.92,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.36,
+                  "v": [
+                    1,
+                    1,
+                    1
+                  ]
+                }
+              ],
+              "event": [
+                {
+                  "t": 0.2,
+                  "v": "hit"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "hurt",
+      "length": 0.4,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "motion",
+            "children": [
+              {
+                "name": "body",
+                "sprite": "game:slime",
+                "pivot": [
+                  0.5,
+                  1.0
+                ],
+                "tracks": {
+                  "color": [
+                    {
+                      "t": 0,
+                      "v": [
+                        1,
+                        1,
+                        1,
+                        1
+                      ]
+                    },
+                    {
+                      "t": 0.03,
+                      "v": [
+                        1,
+                        0.32,
+                        0.32,
+                        1
+                      ]
+                    },
+                    {
+                      "t": 0.2,
+                      "v": [
+                        1,
+                        0.55,
+                        0.55,
+                        1
+                      ],
+                      "ease": "sinusoidalInOut"
+                    },
+                    {
+                      "t": 0.4,
+                      "v": [
+                        1,
+                        1,
+                        1,
+                        1
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.05,
+                  "v": [
+                    5,
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.1,
+                  "v": [
+                    2,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.15,
+                  "v": [
+                    4,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.24,
+                  "v": [
+                    1,
+                    0,
+                    0
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.4,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "rot": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.05,
+                  "v": [
+                    0,
+                    0,
+                    8
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.4,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 0.05,
+                  "v": [
+                    1.08,
+                    0.9,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.22,
+                  "v": [
+                    1,
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "die",
+      "length": 0.7,
+      "root": {
+        "name": "monster",
+        "children": [
+          {
+            "name": "motion",
+            "children": [
+              {
+                "name": "body",
+                "sprite": "game:slime",
+                "pivot": [
+                  0.5,
+                  1.0
+                ],
+                "tracks": {
+                  "color": [
+                    {
+                      "t": 0,
+                      "v": [
+                        1,
+                        0.32,
+                        0.32,
+                        1
+                      ]
+                    },
+                    {
+                      "t": 0.15,
+                      "v": [
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "ease": "sinusoidalInOut"
+                    },
+                    {
+                      "t": 0.7,
+                      "v": [
+                        1,
+                        1,
+                        1,
+                        0
+                      ],
+                      "ease": "quadraticIn"
+                    }
+                  ]
+                }
+              }
+            ],
+            "tracks": {
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.1,
+                  "v": [
+                    4,
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.7,
+                  "v": [
+                    8,
+                    3,
+                    0
+                  ]
+                }
+              ],
+              "rot": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.1,
+                  "v": [
+                    0,
+                    0,
+                    10
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.7,
+                  "v": [
+                    0,
+                    0,
+                    24
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0,
+                  "v": [
+                    1,
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "t": 0.1,
+                  "v": [
+                    1.08,
+                    0.92,
+                    1
+                  ]
+                },
+                {
+                  "t": 0.7,
+                  "v": [
+                    1.25,
+                    0.35,
+                    1
+                  ],
+                  "ease": "quadraticIn"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "stayAtLastFrame": true
+    }
+  ]
+}

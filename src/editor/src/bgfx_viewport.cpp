@@ -203,9 +203,21 @@ void BgfxViewport::updateMouse(const QPointF& p, Qt::MouseButtons buttons) {
     input_.hasMouse = true;
 }
 
-void BgfxViewport::mousePressEvent(QMouseEvent* e)   { setFocus(); updateMouse(e->position(), e->buttons()); }
-void BgfxViewport::mouseReleaseEvent(QMouseEvent* e) { updateMouse(e->position(), e->buttons()); }
-void BgfxViewport::mouseMoveEvent(QMouseEvent* e)    { updateMouse(e->position(), e->buttons()); }
+void BgfxViewport::mousePressEvent(QMouseEvent* e) {
+    setFocus();
+    if (inspectMode_ && e->button() == Qt::LeftButton) {   // the UI editor picks the element; the game sees no click
+        updateMouse(e->position(), e->buttons() & ~Qt::LeftButton);
+        Q_EMIT inspectClicked();
+        return;
+    }
+    updateMouse(e->position(), e->buttons());
+}
+void BgfxViewport::mouseReleaseEvent(QMouseEvent* e) {
+    updateMouse(e->position(), inspectMode_ ? (e->buttons() & ~Qt::LeftButton) : e->buttons());
+}
+void BgfxViewport::mouseMoveEvent(QMouseEvent* e) {
+    updateMouse(e->position(), inspectMode_ ? (e->buttons() & ~Qt::LeftButton) : e->buttons());
+}
 void BgfxViewport::wheelEvent(QWheelEvent* e)        { input_.wheel += e->angleDelta().y() / 120.0f; }
 
 void BgfxViewport::focusOutEvent(QFocusEvent* e) {

@@ -122,6 +122,8 @@ tests/scenarios/
   | `menuTab` | 玩家選單所在的分頁 |
   | `gold`、`hp`、`lv` | 玩家的數值 |
   | `arenaFights`、`arenaWins` | 測試場中開始的場數／勝利的場數 |
+  | `enemyAnim` | 戰鬥畫面上怪物的狀態：`idle`、`attack`、`hurt`、`die`（[15](15_ANIMATION.md)「戰鬥中的怪物」） |
+  | `enemyClip` | 它為那個狀態播放的片段（`attack`，或某隻怪物自己的 `attack_<id>`） |
   | `battleAnim` | 有戰鬥片段的武器，戰鬥畫面顯示的片段：`charge`、`attack`、`miss` 或 `idle`（[15](15_ANIMATION.md)〈角色〉） |
   | `crystals` | 玩家擁有的水晶（[30](30_GAMEPLAY_PLAN.md) 第 16 節；`give` 也接受 `crystals:<n>`） |
   | `equipped` | 裝備中武器的 id（沒有則為 ""） |

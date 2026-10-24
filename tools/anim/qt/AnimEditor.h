@@ -49,6 +49,12 @@ public:
     QAction* objectModeAction() const { return m_objectModeAct; }
     QAction* boneModeAction() const { return m_boneModeAct; }
     QAction* latticeModeAction() const { return m_latticeModeAct; }
+    QAction* weightModeAction() const { return m_weightModeAct; }
+    QAction* autoWeightsAction() const { return m_autoWeightsAct; }
+    QList<QAction*> tutorialActions() const { return {m_tutorialAct, m_tutorialStartAct, m_tutorialDoneAct}; }
+    // A file of the TOMS repo the editor runs from (Build/<preset>/bin or Editor/bin, a few folders up), "" = not
+    // found (this copy of the editor is outside the repo).
+    static QString repoFile(const QString& relative);
     AnimNodesDock* nodesDock() const { return m_nodes; }
     AnimSpritesDock* spritesDock() const { return m_sprites; }
     AnimPropertiesDock* propertiesDock() const { return m_props; }
@@ -117,6 +123,11 @@ private:
     QAction *m_undoAct, *m_redoAct;
     QAction* m_showSkinAct = nullptr;   // View > Show Skin (AnimViewport::setShowSkin)
     QAction *m_objectModeAct = nullptr, *m_boneModeAct = nullptr, *m_latticeModeAct = nullptr;   // AnimViewport::EditMode
+    QAction* m_weightModeAct = nullptr;
+    // Weights mode: the brush ([ ] size; the tool bar's Brush / Strength), and back to automatic weights.
+    QAction *m_brushSmallerAct = nullptr, *m_brushLargerAct = nullptr, *m_autoWeightsAct = nullptr;
+    QList<QAction*> m_brushBarActions;   // the tool bar's brush controls: shown in Weights mode only
+    void resetWeights();
     QAction *m_cutAct = nullptr, *m_copyAct = nullptr, *m_pasteAct = nullptr, *m_pasteSiblingAct = nullptr;   // nodes
     void copyNode(bool cut);
     void pasteNode(bool sibling);
@@ -124,4 +135,6 @@ private:
     QAction *m_moveAct, *m_rotateAct, *m_scaleAct, *m_autoKeyAct, *m_snapAct;
     QAction *m_insertKeyAct, *m_qualifyAct, *m_fitAct, *m_zoomInAct, *m_zoomOutAct, *m_frameAct;
     QAction *m_helpCliAct, *m_aboutAct;
+    // Help > Skinning Tutorial (docs/35_SKINNING_TUTORIAL.md) and its example files (docs/examples/tutorial/).
+    QAction *m_tutorialAct = nullptr, *m_tutorialStartAct = nullptr, *m_tutorialDoneAct = nullptr;
 };

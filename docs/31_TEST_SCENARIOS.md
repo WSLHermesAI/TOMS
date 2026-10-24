@@ -123,6 +123,8 @@ At the end of the `test` frames:
   | `menuTab` | the tab the player menu is on |
   | `gold`, `hp`, `lv` | the player's value |
   | `arenaFights`, `arenaWins` | fights started / won in the arena |
+  | `enemyAnim` | the monster's status on the battle screen: `idle`, `attack`, `hurt`, `die` ([15](15_ANIMATION.md) "Monsters in battle") |
+  | `enemyClip` | the clip it plays for that status (`attack`, or a monster's own `attack_<id>`) |
   | `battleAnim` | the clip the battle picture shows for a weapon with battle clips: `charge`, `attack`, `miss` or `idle` ([15](15_ANIMATION.md), "Characters") |
   | `crystals` | the crystals the player has ([30](30_GAMEPLAY_PLAN.md) §16; `give` also takes `crystals:<n>`) |
   | `equipped` | the worn weapon's id ("" for none) |

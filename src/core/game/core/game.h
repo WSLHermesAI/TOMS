@@ -383,6 +383,9 @@ public:
     // again about once a second -- the editors and debug builds turn it on; a shipped game never looks.
     toms::res::ResourceManager* resources() { return res_.get(); }
     void setHotReload(bool on) { hotReload_ = on; }
+    void showNotice(const std::string& msg) { pushNotification(msg); }   // a few seconds at the top (live UI reload)
+    // The UI editor's language switch: the text in another language, without touching settings.json.
+    void previewLanguage(const std::string& code) { locale_.setLanguage(code); title_.setLanguageIndex(locale_.languageIndex()); }
 
     // ---- Title phase (Boot screen: New Game / Continue / Settings) ----
     // The title phase is the game's boot screen: Game::loadAssets() opens it, and nothing in
@@ -782,7 +785,22 @@ private:
     void loadBattleRig();                               // (re)loads the clips when the weapon changes
     void setBattleRigState(const std::string& state, bool restart = false);
     void updateBattleRig(int dtMs);                     // picks the status; Game::update
-    void drawBattleRig();                               // over the player's place on the battle screen; Game::draw
+    void drawBattleRig();                               // the backdrop, the player and the monster; Game::draw
+    // The monster on the battle screen (assets/media/anim/monster_battle.anim, tools/make_monster_battle_anims.py): the
+    // clip for the battle's status -- idle; attack (its clock fired); hurt (the player's hit landed); die (the fight is
+    // won) -- with the enemy's own sprite in its `body` (fitCharacter). "<status>_<enemy id>" in the file wins over the
+    // shared clip. monsterRigState(): the status shown ("" = none: the file did not load, the UI's picture is drawn).
+    static constexpr const char* kMonsterBattleAnim = "anim/monster_battle.anim";
+    std::shared_ptr<toms::res::AnimRes> monsterAnim_;
+    bool monsterAnimTried_ = false;
+    toms::anim::Clip monsterFitted_;
+    toms::anim::CharacterRig monsterRig_;
+    std::string monsterRigState_, monsterRigClip_;
+    std::string monsterRigRequest_;                     // attack / hurt: played from the start on the next update
+    bool monsterRigReady() const { return monsterAnim_ != nullptr; }
+    std::string monsterSprite() const;                  // the enemy's sprite (the boss's own; else its type's)
+    void setMonsterRigState(const std::string& state);
+    void updateMonsterRig(int dtMs);                    // Game::update
     std::string previewHeldFile_;                       // setPreviewHeld
     std::shared_ptr<toms::res::AnimRes> previewHeld_;   // its clips
     toms::anim::CharacterRig previewRig_;               // the preview clip with the held clip at its hand

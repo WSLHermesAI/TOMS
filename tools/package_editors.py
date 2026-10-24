@@ -24,7 +24,7 @@ SRC = os.path.join(ROOT, 'Build', PRESET, 'bin')
 DST = os.path.join(ROOT, 'Editor', 'bin')
 
 PROGRAMS = ['atlas_editor.exe', 'anim_editor.exe', 'particle_editor.exe', 'font_editor.exe', 'gltf_viewer.exe',
-            'toms_editor.exe', 'stage_event_editor.exe', 'atlaspack.exe', 'fontpack.exe']
+            'toms_editor.exe', 'stage_event_editor.exe', 'ui_editor.exe', 'atlaspack.exe', 'fontpack.exe']
 DLLS = ['Qt6Core.dll', 'Qt6Gui.dll', 'Qt6Widgets.dll', 'Qt6Svg.dll',   # Svg: the SVG icon engine plugin
         'Qt6Network.dll',                                              # stage_event_editor: is the HTML editors' server up
         'dxcompiler.dll', 'dxil.dll']                                  # bgfx's Direct3D 12 shader compiler

@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "atlases": [
+    "../../../assets/media/atlas/game.atlas"
+  ],
+  "clips": [
+    {
+      "name": "idle",
+      "length": 1.0,
+      "playCount": -1,
+      "root": {
+        "name": "stage",
+        "pos": [
+          0,
+          170
+        ],
+        "scale": [
+          4,
+          4
+        ],
+        "children": [
+          {
+            "name": "golem",
+            "sprite": "golem",
+            "pivot": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

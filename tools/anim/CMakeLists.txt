@@ -26,6 +26,7 @@ add_library(anim_tools STATIC
     core/anim_check.h core/anim_check.cpp
     core/anim_meshes.h core/anim_meshes.cpp      # the atlases' sprite meshes the clips need (docs/34_MESH_ANIMATION.md)
     core/anim_recipes.h core/anim_recipes.cpp    # motion recipes for lattices and bones (docs/16 section 7)
+    core/anim_weights.h core/anim_weights.cpp    # weight painting: the editor's Weights mode (docs/34 step 5 part 3)
     core/mpdi_convert.h core/mpdi_convert.cpp)   # the old engine's .mpdi (+ .pi) -> .anim (+ atlas)
 toms_target_defaults(anim_tools)
 target_include_directories(anim_tools PUBLIC core)
@@ -51,6 +52,16 @@ set_target_properties(anim_recipes_test PROPERTIES FOLDER "tools/anim")
 if(TOMS_BUILD_TESTS)
     add_test(NAME anim.recipes COMMAND anim_recipes_test)
     set_tests_properties(anim.recipes PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+endif()
+
+# Weight painting (core/anim_weights.h; docs/34_MESH_ANIMATION.md step 5 part 3).
+add_executable(anim_weights_test tests/anim_weights_test.cpp)
+toms_target_defaults(anim_weights_test)
+target_link_libraries(anim_weights_test PRIVATE anim_tools)
+set_target_properties(anim_weights_test PROPERTIES FOLDER "tools/anim")
+if(TOMS_BUILD_TESTS)
+    add_test(NAME anim.weights COMMAND anim_weights_test)
+    set_tests_properties(anim.weights PROPERTIES LABELS "unit;anim" TIMEOUT 30)
 endif()
 
 if(ATLAS_BUILD_EDITOR AND TARGET Qt6::Widgets AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/qt/CMakeLists.txt")

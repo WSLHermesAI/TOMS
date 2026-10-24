@@ -1,0 +1,21 @@
+{
+  "_comment": "The monster on the battle screen (monster_battle.anim, docs/15_ANIMATION.md \"Monsters in battle\"): a slime whose clock fires every 500 ms (the shortest) attacks at frame ~31 at --fixed-dt=16; its 0.55 s attack clip (a wind-up, the lunge at 0.2 s) still plays at frame 45.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 500
+  },
+  "test": {
+    "frames": 45
+  },
+  "expect": {
+    "enemyAnim": "attack",
+    "enemyClip": "attack"
+  }
+}

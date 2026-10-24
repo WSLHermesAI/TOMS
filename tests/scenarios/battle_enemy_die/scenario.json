@@ -1,0 +1,22 @@
+{
+  "_comment": "Winning: the same shot kills a 1-HP slime; it flinches (hurt), then plays die -- a flash, it slumps and fades out -- and stays gone while the win is shown.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 1,
+    "atk_interval_ms": 60000
+  },
+  "test": {
+    "frames": 165,
+    "keys": "enter@40,enter@61,enter@81,enter@102"
+  },
+  "expect": {
+    "scene": "battleWon",
+    "enemyAnim": "die"
+  }
+}

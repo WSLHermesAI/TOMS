@@ -189,6 +189,12 @@ private:
     float transform[16] = {};
 };
 
+// RmlUi::setLogListener: the UI editor's Problems list.
+std::function<void(int, const std::string&)>& logListener() {
+    static std::function<void(int, const std::string&)> listener;
+    return listener;
+}
+
 // Documents made in memory (RmlUi::setVirtualFile), by file name.
 std::map<std::string, std::string>& virtualFiles() {
     static std::map<std::string, std::string> files;
@@ -241,6 +247,8 @@ public:
         const char* tag = type == Rml::Log::LT_ERROR || type == Rml::Log::LT_ASSERT ? "error"
                         : type == Rml::Log::LT_WARNING ? "warning" : "info";
         std::fprintf(stderr, "[rmlui %s] %s\n", tag, message.c_str());
+        if (logListener())
+            logListener()(type == Rml::Log::LT_ERROR || type == Rml::Log::LT_ASSERT ? 2 : type == Rml::Log::LT_WARNING ? 1 : 0, message);
         return true;
     }
 };
@@ -442,6 +450,8 @@ void RmlUi::render(uint16_t viewId) {
 }
 
 void RmlUi::setVirtualFile(const std::string& fileName, const std::string& text) { virtualFiles()[fileName] = text; }
+void RmlUi::clearVirtualFile(const std::string& fileName) { virtualFiles().erase(fileName); }
+void RmlUi::setLogListener(std::function<void(int, const std::string&)> listener) { logListener() = std::move(listener); }
 
 void RmlUi::toggleDebugger() {
     if (!ready()) return;

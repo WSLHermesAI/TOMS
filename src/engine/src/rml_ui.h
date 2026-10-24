@@ -9,6 +9,7 @@
 #include <RmlUi/Core.h>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -44,6 +45,11 @@ public:
     // folder it is linked from) reads `text` instead of a file. The game serves its sprite sheet
     // this way (GameUi, "_atlas.rcss"). Takes effect for documents loaded afterwards.
     static void setVirtualFile(const std::string& fileName, const std::string& text);
+    // The file is read from disk again (the UI editor: the text was saved, or its changes dropped).
+    static void clearVirtualFile(const std::string& fileName);
+    // Every RmlUi log message (level: 0 info, 1 warning, 2 error) also goes here, besides stderr; nullptr = none.
+    // The UI editor lists the warnings and errors of the documents it previews.
+    static void setLogListener(std::function<void(int level, const std::string& message)> listener);
 
     void toggleDebugger();               // RmlUi's element/style inspector
     bool debuggerVisible() const;

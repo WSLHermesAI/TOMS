@@ -13,10 +13,10 @@ the renderer draws triangle meshes, sprites have meshes cut from their alpha, cl
 deform lattice. Step 5 is under way: the anim tools add the meshes a clip needs to the mesh file beside its atlas, and
 a skinned sprite without a mesh is reported; part 1, `tools/refresh_meshes.py`, refreshes every atlas's meshes (art
 styles included) after the atlases change, and part 2, motion recipes, writes breathing, swaying or nodding keys for a
-node (both built 2026-10-22). Part 3, weight painting in the editor, **waits for the owner's decision** (2026-10-22): no character is skinned
-yet, and automatic weights, Show Skin (which already shades a selected bone's pull), the mesh grid and moving the bones
-cover today's needs. It is done when a real skinned character bends badly. Step 6 is skipped for now.
-The owner's decisions are in section 8.
+node (both built 2026-10-22), and part 3, the editor's Weights mode, shows a bone's weights as a heat map and paints
+them (built 2026-10-23). Step 6 is skipped for now.
+The owner's decisions are in section 8. A step-by-step tutorial for the editor (skinning, the lattice, weight
+painting) is [35_SKINNING_TUTORIAL.md](35_SKINNING_TUTORIAL.md).
 
 ## 1. Why
 
@@ -223,7 +223,7 @@ For one character with 10 nodes and 3 meshed parts, a 1 s idle with 5 keys:
 | 2 | Meshes cut from alpha: `sprite_mesh.h`, text or `.bin`, one mesh file beside each atlas, written by the anim tools; loaded with the atlas by the game, the resource cache and the anim editor | `assets/media/atlas/game.mesh.json` with the golem and the slime | **built 2026-10-21 – 22** |
 | 3 | Skinning: `skin` in `.anim` version 3, automatic weights, `appendDraws`, the editor's **Skin** field | `tests/smoke/anim_skin.anim`: the golem bent by hip / chest / head, its feet planted; `smoke.anim_skin` | **built 2026-10-21** |
 | 4 | Lattice deform: `lattice` (default 4 × 4, adjustable per node) + `tracks.deform`; a lattice mode in the anim editor's viewport and a Deform column in the key list | breathing / squash / sway on any sprite: `tests/smoke/anim_deform.anim` (`smoke.anim_deform`) | **built 2026-10-22** |
-| 5 | AI hooks: part 1, the meshes remade from the rebuilt or restyled atlases (`tools/refresh_meshes.py` in the pipeline); part 2, motion recipes (docs/16 §7) for lattices and bones that the editor, a script or AI can apply; part 3, a weight view and painting in the editor; a check that every skinned sprite has a mesh | a restyled or reshaped character plays its old clips | the editor's mesh cutting, `--headless meshes`, the mesh check, part 1 and part 2 **built 2026-10-22**; part 3 **waits for the owner's decision** (when a real skinned character needs it) |
+| 5 | AI hooks: part 1, the meshes remade from the rebuilt or restyled atlases (`tools/refresh_meshes.py` in the pipeline); part 2, motion recipes (docs/16 §7) for lattices and bones that the editor, a script or AI can apply; part 3, a weight view and painting in the editor; a check that every skinned sprite has a mesh | a restyled or reshaped character plays its old clips | the editor's mesh cutting, `--headless meshes`, the mesh check, part 1 and part 2 **built 2026-10-22**; part 3 **built 2026-10-23** |
 | 6 | Later: a Spine JSON → `.anim` importer; an old `.mx` importer; a binary `.anim` for release; batching skinned meshes | existing Spine art runs in TOMS without Spine | skipped for now (section 8) |
 
 ## 7. What was built
@@ -368,12 +368,45 @@ For one character with 10 nodes and 3 meshed parts, a 1 s idle with 5 keys:
 | `anim.editor_selftest` (its mesh grid part) | the golem's key in the atlas's mesh file is `golem`; setting 8 × 8 is one undo step, stored in the node, and adds `golem@8x8` beside it |
 | `unit.anim_skin_test` | `meshKey("golem")` / `meshKey("golem", 6, 8)`, `meshesNeeded`, `cutMesh`, `findMesh` through the atlas entry's meshes; `skinnedWithoutMesh`: the node and the sprite; none when the mesh is there; a sprite in no atlas left to the other check |
 
+*Part 3 — the weight view and weight painting (built 2026-10-23)*
+
+- `tools/anim/core/anim_weights.h/.cpp` (no Qt): `paintWeights(weights, boneCount, bone, mode, amount, triangles,
+  fallback)` for one dab, `brushFalloff(dist, radius)` ((1 - (d/r)²)²), `boneWeight(weights, vertex, bone)`. Modes:
+  - **Add**: the bone's share grows towards 1, the others shrink in proportion;
+  - **Subtract**: it shrinks towards 0, the others grow in proportion. On a point only this bone moves, the nearest
+    other bone (its segment as drawn) takes the share;
+  - **Smooth**: every share moves towards the average of the point's neighbours in the mesh.
+
+  Every painted point still sums to 1 and keeps its strongest 4 bones.
+- **Weights mode (P)** (toolbar, Edit menu, remembered with the other modes):
+  - **The view**: only the skins the selected bone is in are shown. Each triangle is filled with its points' mean
+    weight for that bone, from blue (0) through cyan, green and yellow to red (1). The point nearest the cursor is named
+    with its bones and weights, and "(automatic weights)" while nothing is painted yet.
+  - **Painting**: drag to add, Ctrl+drag to subtract, Shift+drag to smooth. A dab goes every fifth of the brush along the
+    way, and the whole stroke is one undo step. The first stroke starts from the automatic weights and writes them all
+    into the node (`skin.weights` in the `.anim`, which the game already reads).
+  - **Picking a bone**: a click on a bone's joint picks that bone; the segments do not pick, so you can paint across
+    them. The Nodes dock picks bones too.
+  - **The brush**: its size in screen pixels (Brush on the toolbar, or `[` and `]`) and its strength (0.01 – 1).
+    Both are remembered. The circle shows the size and the dotted inner ring the strength, coloured orange for add,
+    blue for subtract and grey for smooth.
+- **Edit > Reset to Automatic Weights**: drops the painted weights of the selected skinned sprite, or of every skin
+  the selected bone is in (one undo step).
+- Painting works at any frame: the brush meets the points where they are drawn now. The weights belong to the mesh:
+  a re-cut mesh with another number of points (a new Mesh grid, a reshaped sprite) goes back to automatic weights.
+
+| Test | What it checks |
+|---|---|
+| `anim.weights` | `tools/anim/tests/anim_weights_test.cpp`: the falloff; Add, Subtract (with and without a fallback) and Smooth move the shares as promised; every point sums to 1; never more than 4 bones, the newest kept |
+| `anim.editor_selftest` (its weights part) | on `anim_skin.anim`: P switches the mode, a click on the chest's joint picks it; a stroke beside the hip raises the chest's share there, writes the golem's weights, keeps the sums at 1 and is one undo step (`skin_weights.png`); Ctrl+stroke lowers it; Reset to Automatic Weights drops them |
+
 **Known limits**
 
 - The editor shows a skinned node's sprite bent only in its game-renderer view. Its selection outline and the
   QPainter fallback (no GPU) show the unbent rest quad; Show Skin's lines and points are bent in both.
-- Weights are automatic or written in the file; the editor cannot paint them (step 5, part 3, waiting for the owner's
-  decision). To improve a bend: a finer mesh grid, or move the bones at rest (the automatic weights follow them).
+- Painted weights are kept only while the mesh keeps its number of points; after a re-cut they go back to automatic
+  (paint again, or Reset to Automatic Weights first). The brush cannot paint one sprite's weights while another skinned
+  sprite lies on top: it paints every skin under it that the bone is in.
 - The mesh's points cannot be dragged by hand yet; the Mesh grid only makes it coarser or finer. Shape changes go
   through the lattice.
 - The lattice is shown and dragged in the node's own frame. On a skinned node its bones are not applied there, so drag

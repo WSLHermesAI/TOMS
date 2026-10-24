@@ -96,6 +96,16 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
     add_test(NAME anim.check_recipes
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/docs/examples/anim_recipes.anim")
     set_tests_properties(anim.check_recipes PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # The monsters on the battle screen (tools/make_monster_battle_anims.py; docs/15 "Monsters in battle").
+    add_test(NAME anim.check_monster_battle
+             COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/monster_battle.anim")
+    set_tests_properties(anim.check_monster_battle PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    # The skinning tutorial's files (docs/35_SKINNING_TUTORIAL.md): the start and the finished golem stay valid.
+    foreach(_tut golem_start golem_done)
+        add_test(NAME anim.check_tutorial_${_tut}
+                 COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/docs/examples/tutorial/${_tut}.anim")
+        set_tests_properties(anim.check_tutorial_${_tut} PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    endforeach()
     # the monsters' idle animations the game plays on the map (assets/media/anim/monster_idle.anim)
     add_test(NAME anim.check_monster_idle
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/monster_idle.anim")
