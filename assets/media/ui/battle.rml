@@ -33,7 +33,7 @@
             <div class="combo">
                 <div class="charge"><div class="charge-fill" data-style-height="battle.combo.charge_pct + '%'"></div></div>
                 <div class="track" data-class-waiting="battle.combo.waiting">
-                    <div class="pt" data-for="q : battle.combo.points" data-class-hit="q.hit" data-style-left="q.pos + '%'"></div>
+                    <div class="pt" data-for="q : battle.combo.points" data-class-hit="q.hit" data-class-near="q.near" data-style-left="q.pos + '%'"></div>
                     <div class="bar-dim" data-visible="battle.combo.cooling"></div>
                     <div class="marker" data-visible="battle.combo.running" data-style-left="battle.combo.marker + '%'"></div>
                 </div>

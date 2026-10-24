@@ -376,3 +376,34 @@ Traditional Chinese (to see Chinese working). Phase 5 (the card collection) was 
 the staff's own plays (§5.2, §5.3), named moves (§5.4), mastery and advancement (§6), the other modes (§8); or the
 download steps that need no decision
 ([09](09_DOWNLOADS_AND_DLC.md) §6, steps 1-2).
+
+## 17. Timing help on the attack track (2026-10-24)
+
+The owner (2026-10-24): the timing for the points is hard to get right; add a particle and a sound as a hint, or make
+the accepted range bigger. Both were done.
+
+**Why it was hard.** A point took a tap within 0.07 of the track on each side. With the bow (1.7 s a sweep) that is
+about 240 ms, and with a full charge, which doubles the marker's speed, only about 120 ms. Touch and display delay on
+a phone use up 50–80 ms of that.
+
+**The window** (`combo_play.h`, `weapon_play.json`):
+- `hitWindowMs` (default 140): the window is never shorter than this in time, so a charged marker keeps it;
+- `lateMs` (default 80): a tap this long after the marker passed a point still counts (only late taps, not early ones);
+- never more than 45% of the gap between two points, so a tap still has to aim at one;
+- `hitWindow` stays the smallest window in track units. Each weapon can set its own values.
+
+The bow at Lv 1 (3 points): about 360 ms with no charge (was 240), about 270 ms with a full charge (was 120). With five points
+the gap caps it: about 210 ms with a full charge.
+
+**The hint** (`Game::comboHint`):
+- when the marker enters a point's window: the sound `combo_ready` (`tools/make_combo_sfx.py`), a gold ring and star
+  on the point (`combo_ready` in `media/fx/battle.particle`), and the point grows and turns gold (`.pt.near` in
+  `battle.rcss`) while a tap would hit it. The highlight comes from the same window the tap uses;
+- when a point is hit: a green burst on it (`combo_point_hit`).
+
+The particles are drawn **over the UI**: a new sprite layer (`IRenderer::setLayer(1)`, bgfx view `kViewTop` = 3,
+ImGui moved to view 4). The UI tells the game where it drew the points (`GameUi::sync` reads the layout,
+`Game::setComboPointsOnScreen`), so the particles sit on them whatever the screen size.
+
+Tests: `combo_play_test` (the time window, the cap, late but not early taps, the hint); the battle, arena, trial and
+reward-event scenarios pass. `arena_restart` taps twice to miss; its taps moved earlier, before the first window.

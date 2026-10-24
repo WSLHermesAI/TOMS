@@ -116,9 +116,9 @@ sequenceDiagram
     S->>S: ImGui new frame; F1/F2 developer windows
     S->>G: draw() (the world)
     G->>R: begin / drawSprite / end
-    R->>B: view 0 clear, view 1 letterboxed sprites
+    R->>B: view 0 clear, view 1 letterboxed sprites, view 3 sprites over the UI (setLayer 1)
     S->>G: buildUiState() -> RmlUi documents (game_ui.cpp)
-    S->>B: view 2 RmlUi (all UI), view 3 ImGui
+    S->>B: view 2 RmlUi (all UI), view 4 ImGui
     Host->>B: bgfx::frame()
 ```
 

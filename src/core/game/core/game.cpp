@@ -279,6 +279,7 @@ void Game::update(int dtMs) {
             if (cs.atkBar.cooldownMs <= 0) { cs.atkBar.cooling = false; cs.chargeMs = 0; }
         } else if (cs.combo.running()) {
             cs.combo.update(dtMs);
+            for (int p : cs.combo.takeEntered()) comboHint(p, /*hit=*/false);   // "tap now"
             if (cs.combo.done()) resolveCombo();
         } else {
             cs.chargeMs = std::min(cs.chargeMs + dtMs, std::max(1, weaponPlayOf(weaponKey()).chargeMs));

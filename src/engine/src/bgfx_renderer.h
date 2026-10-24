@@ -35,7 +35,8 @@ public:
     static constexpr uint16_t kViewClear   = 0;   // full backbuffer, clears to the background colour
     static constexpr uint16_t kViewGame    = 1;   // letterboxed design-space view (the world's sprites)
     static constexpr uint16_t kViewUi      = 2;   // RmlUi documents (letterboxed like the game view)
-    static constexpr uint16_t kViewOverlay = 3;   // first free view for the host (ImGui dev windows)
+    static constexpr uint16_t kViewTop     = 3;   // sprites over the UI (setLayer(1)), letterboxed like the game view
+    static constexpr uint16_t kViewOverlay = 4;   // first free view for the host (ImGui dev windows)
 
     // A 3D scene behind everything (GltfRenderer, e.g. the title's TitleScene) in views
     // first .. first + count - 1: from the next end() on they run after kViewClear and before
@@ -55,6 +56,7 @@ public:
     void drawSprite(const Quad& q) override;
     void drawMesh(const Mesh& m) override;     // the CPU path's program, from one vertex / index buffer per frame
     void setNode(uint8_t n) override;
+    void setLayer(int layer) override { layer_ = layer; }
     void setNodeFilter(uint8_t n) override;
     void end() override;                          // submits to kViewClear/kViewGame; host calls bgfx::frame()
     uint32_t width()  const override { return kDesignW; }
@@ -161,6 +163,9 @@ private:
     size_t   lastQuadCount_ = 0;
     size_t   lastDrawnQuads_ = 0;
     std::vector<Quad> sprites_;
+    std::vector<Quad> topSprites_;   // setLayer(1): drawn in kViewTop, over the UI
+    int layer_ = 0;
+    void submitTop();                // topSprites_ in transient buffers (the shared CPU buffer holds sprites_)
 };
 
 }  // namespace toms::next

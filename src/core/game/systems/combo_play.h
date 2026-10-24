@@ -7,6 +7,12 @@
 // after the sweeps run out (a weapon whose marker does not turn back has one sweep), or on a fail; its result is the
 // hits, the points and the charge, from which the battle computes the damage.
 //
+// How close a tap must be (the owner 2026-10-24: "hard to get the timing right"): within the point's window, which is
+// hitWindow of the track but never shorter than hitWindowMs of the marker's travel (so a full charge's faster marker
+// does not halve it), and never more than 45% of the gap between two points (a tap still has to aim). A tap up to
+// lateMs after the marker passed a point still counts (touch and display delay). nearPoint() / takeEntered() say when
+// the marker is in a window, for the screen's hint.
+//
 // Pure logic, no Game dependency (systems/*). Times in ms; positions are fractions of the track (0 .. 1).
 #pragma once
 #include "weapon_play.h"
@@ -22,6 +28,8 @@ struct ComboSettings {
     int maxSweeps = 3;
     float speedUp = 1.0f;        // a full charge: this much faster
     float hitWindow = 0.07f;
+    int hitWindowMs = 0;         // the window is at least this long in time (0: hitWindow only)
+    int lateMs = 0;              // a tap this long after passing a point still hits it
     int missBack = -1;           // points a miss takes back; -1: to the start
     int missWaitMs = 0;
 };
@@ -56,6 +64,9 @@ public:
     int hits() const;
     int missesInRow() const { return missesInRow_; }
     bool waiting() const { return waitMs_ > 0; }   // after a miss: taps do not count yet
+    float window() const;                          // a point's window now (each side, a fraction of the track)
+    int nearPoint() const;                         // the point not hit yet whose window the marker is in (-1: none)
+    std::vector<int> takeEntered();                // the points whose window the marker entered since the last call
 
 private:
     void finish(bool failed);
@@ -67,6 +78,8 @@ private:
     std::vector<float> at_;
     std::vector<bool> hit_;
     std::vector<int> order_;                       // the points hit, oldest first (a miss takes back the newest)
+    int lastNear_ = -1;
+    std::vector<int> entered_;
     ComboResult result_;
 };
 

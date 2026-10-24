@@ -1,5 +1,5 @@
 {
-  "_comment": "The arena goes on: a 1-HP slime. Enter starts the combo and two quick taps (a key is held 2 frames, so 6 apart) miss twice: a fail, which is still a plain attack, so the slime falls (a win); Enter continues, the next fight starts, and again.",
+  "_comment": "The arena goes on: a 1-HP slime. Enter starts the combo and two quick taps (a key is held 2 frames, so 3 apart) miss twice, before the marker reaches the first point's window (the windows grew on 2026-10-24: hitWindowMs, lateMs): a fail, which is still a plain attack, so the slime falls (a win); Enter continues, the next fight starts, and again.",
   "scene": "arena",
   "battle": {
     "enemies": [
@@ -9,7 +9,7 @@
   },
   "test": {
     "frames": 170,
-    "keys": "enter@10,enter@16,enter@22,enter@60,enter@100,enter@106,enter@112,enter@150"
+    "keys": "enter@10,enter@13,enter@16,enter@60,enter@100,enter@103,enter@106,enter@150"
   },
   "expect": {
     "arenaFights": 3,

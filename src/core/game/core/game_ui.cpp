@@ -342,8 +342,9 @@ void Game::buildUiState(toms::UiState& u) const {
                 if (c.running) {
                     c.charge_pct = 0;   // spent on this combo
                     c.marker = 100.0f * cs.combo.marker();
+                    const int near = cs.combo.nearPoint();
                     for (size_t i = 0; i < cs.combo.pointsAt().size(); i++)
-                        c.points.push_back({100.0f * cs.combo.pointsAt()[i], (bool)cs.combo.pointsHit()[i]});
+                        c.points.push_back({100.0f * cs.combo.pointsAt()[i], (bool)cs.combo.pointsHit()[i], (int)i == near});
                 } else {   // the points this combo will have, before it starts
                     const int n = toms::weaponLevelEntry(wp, lv).points;
                     for (int i = 0; i < n; i++) c.points.push_back({100.0f * float(i + 1) / float(n + 1), false});

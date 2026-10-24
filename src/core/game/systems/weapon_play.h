@@ -50,6 +50,8 @@ struct WeaponPlay {
     float chargeSpeedUp = 1.0f;           // a full charge makes the marker this much faster (1: twice as fast)
     float chargeDamage = 1.0f;            // a full charge adds this much damage (1: twice the damage)
     float hitWindow = 0.07f;              // how close (a fraction of the track) a tap must be to a point
+    int hitWindowMs = 140;                // ...but never shorter than this in time (the marker's speed; combo_play.h)
+    int lateMs = 80;                      // a tap this long after the marker passed a point still hits it
     std::vector<WeaponFx> fx;             // sorted by lv; empty: the "default" entry's
 };
 

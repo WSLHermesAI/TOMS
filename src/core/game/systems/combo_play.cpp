@@ -14,6 +14,8 @@ ComboSettings comboSettings(const WeaponPlay& w, int weaponLevel) {
     s.maxSweeps = w.maxSweeps;
     s.speedUp = w.chargeSpeedUp;
     s.hitWindow = w.hitWindow;
+    s.hitWindowMs = w.hitWindowMs;
+    s.lateMs = w.lateMs;
     s.missBack = missBackPoints(w, weaponLevel);
     s.missWaitMs = w.missWaitMs;
     return s;
@@ -33,6 +35,8 @@ void ComboPlay::start(const ComboSettings& s, float charge) {
     hit_.assign((size_t)s_.points, false);
     for (int i = 0; i < s_.points; i++) at_.push_back(float(i + 1) / float(s_.points + 1));   // evenly, off the ends
     order_.clear();
+    lastNear_ = -1;
+    entered_.clear();
     result_ = ComboResult();
     running_ = true;
     done_ = false;
@@ -62,17 +66,45 @@ void ComboPlay::update(int dtMs) {
         }
         dir_ = -dir_;
     }
+    const int near = nearPoint();   // a window entered: the hint
+    if (near >= 0 && near != lastNear_) entered_.push_back(near);
+    lastNear_ = near;
+}
+
+float ComboPlay::window() const {
+    const float gap = 1.0f / float(s_.points + 1);   // between two points (and from an end to the first)
+    return std::min(std::max(s_.hitWindow, speed_ * float(s_.hitWindowMs)), 0.45f * gap);
+}
+
+int ComboPlay::nearPoint() const {
+    if (!running_) return -1;
+    const float w = window();
+    int best = -1;
+    float bestD = w;
+    for (size_t i = 0; i < at_.size(); i++) {
+        const float d = std::fabs(at_[i] - pos_);
+        if (!hit_[i] && d <= bestD) { bestD = d; best = (int)i; }
+    }
+    return best;
+}
+
+std::vector<int> ComboPlay::takeEntered() {
+    std::vector<int> out;
+    out.swap(entered_);
+    return out;
 }
 
 ComboPlay::Tap ComboPlay::tap() {
     if (!running_ || waitMs_ > 0) return Tap::Ignored;
-    // The nearest point not hit yet, within the window.
+    // The nearest point not hit yet, within its window -- or passed a moment ago (lateMs).
+    const float w = window(), late = w + speed_ * float(s_.lateMs);
     int best = -1;
-    float bestD = s_.hitWindow;
+    float bestD = 2.0f;
     for (size_t i = 0; i < at_.size(); i++) {
         if (hit_[i]) continue;
         const float d = std::fabs(at_[i] - pos_);
-        if (d <= bestD) {
+        const bool passed = (pos_ - at_[i]) * float(dir_) > 0;   // the marker went past it
+        if ((d <= w || (passed && d <= late)) && d < bestD) {
             bestD = d;
             best = (int)i;
         }

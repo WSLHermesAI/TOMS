@@ -46,6 +46,9 @@ body { z-index: 30; }
 .pt      { position: absolute; top: 4px; width: 20px; height: 20px; margin-left: -10px; border-radius: 10px;
            background-color: #94b1ed; }
 .pt.hit  { background-color: #94e6a8; }
+/* the marker is in its window: a tap now hits it (the hint, with a sound and a flash; the same window the tap uses) */
+.pt.near { top: -2px; width: 32px; height: 32px; margin-left: -16px; border-radius: 16px;
+           background-color: #ffe27a; border-width: 3px; border-color: #ffffff; }
 .action {
     margin-top: 18px; height: 62px; line-height: 62px; font-size: 21px; color: #ffffff;
     background-color: #8598b3; text-align: left; padding-left: 18px;

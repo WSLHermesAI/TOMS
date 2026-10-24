@@ -102,6 +102,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
     if (auto s = c.RegisterStruct<UiComboPoint>()) {
         s.RegisterMember("pos", &UiComboPoint::pos);
         s.RegisterMember("hit", &UiComboPoint::hit);
+        s.RegisterMember("near", &UiComboPoint::near);
     }
     c.RegisterArray<std::vector<UiComboPoint>>();
     if (auto s = c.RegisterStruct<UiCombo>()) {
@@ -496,6 +497,19 @@ void GameUi::sync() {
     state_.title.scene = titleScene_;
     take(state_.hud, next.hud);
     take(state_.battle, next.battle);
+    // Where the battle screen drew the attack track's points (last frame's layout), for the track's hint particles,
+    // which the game draws over the UI (Game::comboHint).
+    for (size_t i = 0; i < docs_.size() && i < std::size(kDocs); i++) {
+        if (std::strcmp(kDocs[i].key, toms::key::kUiBattle) != 0 || !docs_[i].doc || !docs_[i].shown) continue;
+        Rml::ElementList pts;
+        docs_[i].doc->QuerySelectorAll(pts, ".track .pt");
+        std::vector<glm::vec2> at;
+        for (Rml::Element* e : pts) {
+            const Rml::Vector2f o = e->GetAbsoluteOffset(Rml::BoxArea::Border), sz = e->GetBox().GetSize(Rml::BoxArea::Border);
+            at.push_back({o.x + sz.x * 0.5f, o.y + sz.y * 0.5f});
+        }
+        game_->setComboPointsOnScreen(std::move(at));
+    }
     take(state_.dialogue, next.dialogue);
     take(state_.player, next.player);
     take(state_.saveload, next.saveload);

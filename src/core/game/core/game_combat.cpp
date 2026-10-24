@@ -112,8 +112,14 @@ void Game::drawBattleRig() {
         const float longer = r ? (float)std::max(std::max(r->origW, r->origH), 1) : 32.0f;
         monsterRig_.draw(ren, monsterAnim_->atlases(), kNone, toms::anim::placement(652.0f + size / 2.0f, 84.0f + size, size / longer));
     }
-    if (battleFxFile_)
-        for (toms::fx::EffectInstance& fx : battleFx_) fx.draw(ren, battleFxFile_->atlases(), glm::mat3(1.0f), nullptr);
+    if (battleFxFile_) {
+        for (BattleFx& b : battleFx_)
+            if (!b.overUi) b.fx.draw(ren, battleFxFile_->atlases(), glm::mat3(1.0f), nullptr);
+        ren->setLayer(1);   // the track's hints: over the battle screen's UI
+        for (BattleFx& b : battleFx_)
+            if (b.overUi) b.fx.draw(ren, battleFxFile_->atlases(), glm::mat3(1.0f), nullptr);
+        ren->setLayer(0);
+    }
 }
 
 // ---- the battle's particles (Game::battleFx_) ----
@@ -127,6 +133,11 @@ const toms::WeaponFx* Game::battleWeaponFx(bool top) const {
 
 // One-shot, at the player's weapon (#player's box, a little ahead of the character) or the monster's middle (#enemy's).
 void Game::playBattleFx(const std::string& effect, bool atEnemy, int delayMs) {
+    if (atEnemy) playBattleFxAt(effect, 719.0f, 151.0f, false, delayMs);
+    else playBattleFxAt(effect, 360.0f, 150.0f, false, delayMs);
+}
+
+void Game::playBattleFxAt(const std::string& effect, float x, float y, bool overUi, int delayMs) {
     if (effect.empty()) return;
     if (!battleFxFile_ && !battleFxTried_ && res_) {   // once: without the file the battle has no particles
         battleFxTried_ = true;
@@ -137,12 +148,13 @@ void Game::playBattleFx(const std::string& effect, bool atEnemy, int delayMs) {
     if (!battleFxFile_) return;
     const toms::fx::Effect* e = battleFxFile_->find(effect);
     if (!e) { std::fprintf(stderr, "[battle] %s has no effect '%s'\n", kBattleFxFile, effect.c_str()); return; }
-    auto start = [this, e, atEnemy] {
-        toms::fx::EffectInstance fx;
-        fx.setTransform(atEnemy ? toms::anim::placement(719.0f, 151.0f) : toms::anim::placement(360.0f, 150.0f));
-        fx.setGpuSimulation(ren, particleGpuThreshold());
-        fx.play(e);
-        battleFx_.push_back(std::move(fx));
+    auto start = [this, e, x, y, overUi] {
+        BattleFx b;
+        b.overUi = overUi;
+        b.fx.setTransform(toms::anim::placement(x, y));
+        if (!overUi) b.fx.setGpuSimulation(ren, particleGpuThreshold());   // the top layer draws quads only
+        b.fx.play(e);
+        battleFx_.push_back(std::move(b));
     };
     if (delayMs > 0) timers_.after(battleTimers_, delayMs, start);   // dies with the battle, as the damage numbers
     else start();
@@ -150,9 +162,18 @@ void Game::playBattleFx(const std::string& effect, bool atEnemy, int delayMs) {
 
 void Game::updateBattleFx(int dtMs) {
     if (!(cs.active || cs.won || cs.resultPauseMs > 0)) { battleFx_.clear(); return; }
-    for (toms::fx::EffectInstance& fx : battleFx_) fx.update(dtMs / 1000.0f);
-    battleFx_.erase(std::remove_if(battleFx_.begin(), battleFx_.end(), [](const toms::fx::EffectInstance& fx) { return fx.finished(); }),
+    for (BattleFx& b : battleFx_) b.fx.update(dtMs / 1000.0f);
+    battleFx_.erase(std::remove_if(battleFx_.begin(), battleFx_.end(), [](const BattleFx& b) { return b.fx.finished(); }),
                     battleFx_.end());
+}
+
+// The marker came into a point's window (hit = false): a sound and a flash on the point, "tap now". A point hit: a
+// burst on it. On the track's points as the UI laid them out (setComboPointsOnScreen).
+void Game::comboHint(int point, bool hit) {
+    if (!hit) audio.play("combo_ready");
+    if (point < 0 || point >= (int)comboPointsOnScreen_.size()) return;
+    const glm::vec2 p = comboPointsOnScreen_[(size_t)point];
+    playBattleFxAt(hit ? "combo_point_hit" : "combo_ready", p.x, p.y, /*overUi=*/true);
 }
 
 // ---- the monster on the battle screen (Game::monsterRigState) ----
@@ -383,8 +404,13 @@ void Game::battleTapAttack() {
         audio.play("confirm_click");
         return;
     }
+    const std::vector<bool> before = cs.combo.pointsHit();
     switch (cs.combo.tap()) {
-    case toms::ComboPlay::Tap::Hit: audio.play("confirm_click"); break;
+    case toms::ComboPlay::Tap::Hit:
+        audio.play("confirm_click");
+        for (size_t i = 0; i < before.size() && i < cs.combo.pointsHit().size(); i++)
+            if (!before[i] && cs.combo.pointsHit()[i]) comboHint((int)i, /*hit=*/true);
+        break;
     case toms::ComboPlay::Tap::Miss: audio.play("deny"); break;
     case toms::ComboPlay::Tap::Ignored: break;
     }

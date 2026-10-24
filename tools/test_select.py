@@ -152,6 +152,7 @@ RULES = [
     (['tools/stage_event_editor/*'], named('unit.stage_core_test', 'stage_editor.*'),
      'the stage / event editor app: its rules test and its window self test'),
     (['tools/make_ui_font.py', 'assets/media/fonts/*'], named('data.ui_font_covers_text'), 'the UI font subset: it covers the text'),
+    (['tools/make_combo_sfx.py'], None, 'writes a sound (assets/media/sfx/combo_ready.wav): no automated test, listen to it'),
     # nothing
     (['docs/*', '*.md', 'tools/web_editors/*', 'android/*', '.claude/*', '.gitignore', '.gitattributes', 'AIGamestyle*'],
      None, 'docs / HTML editors / Android: no test'),

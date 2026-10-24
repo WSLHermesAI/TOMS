@@ -4882,6 +4882,294 @@
      }
     }
    ]
+  },
+  {
+   "name": "combo_ready",
+   "duration": 0.4,
+   "emitters": [
+    {
+     "name": "ring",
+     "maxParticles": 2,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1,
+        "repeat": 1,
+        "interval": 0.12
+       }
+      ]
+     },
+     "life": 0.35,
+     "speed": 0,
+     "size": 26,
+     "color": [
+      1,
+      0.9,
+      0.45,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.7,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 2.0
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 1
+     }
+    },
+    {
+     "name": "star",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.25,
+     "speed": 0,
+     "size": 34,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1,
+      0.97,
+      0.75,
+      1
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ],
+        "ease": "quadraticIn"
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.5,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    }
+   ]
+  },
+  {
+   "name": "combo_point_hit",
+   "duration": 0.5,
+   "emitters": [
+    {
+     "name": "sparks",
+     "maxParticles": 14,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         8,
+         10
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.2,
+      0.35
+     ],
+     "speed": [
+      90,
+      160
+     ],
+     "size": [
+      8,
+      12
+     ],
+     "color": [
+      [
+       0.75,
+       1,
+       0.8,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 4
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.18,
+     "speed": 0,
+     "size": 30,
+     "color": [
+      0.8,
+      1,
+      0.85,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.4
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    }
+   ]
   }
  ]
 }

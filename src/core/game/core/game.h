@@ -479,6 +479,9 @@ public:
     void useDefaultBattleTuning() { barSlowScale_ = 1.0f; barFastScale_ = 1.0f; barCooldownMs_ = CombatState::kBarCooldownMs;
                                     attackPauseMs_ = 450; hitNumberDelayMs_ = 180; }
     const toms::WeaponPlayTable& weaponPlay() const { return weaponPlay_; }
+    // Where the battle screen's attack track shows its points, in design pixels (GameUi reads its layout each frame), so
+    // the track's hint particles land on them.
+    void setComboPointsOnScreen(std::vector<glm::vec2> pts) { comboPointsOnScreen_ = std::move(pts); }
     // Files by key, never by path (assets/media/resources.json; the keys: res_keys.h, made by tools/make_res_keys.py).
     // pathOf: a key's path, for what reads the file itself (a loader, RmlUi, the sound folder). pathFor: one file of a
     // family ("stage", "stage01"). Both are paths under assets/media's folder, as the resource manager reads them.
@@ -818,9 +821,15 @@ private:
     static constexpr const char* kBattleFxFile = toms::key::kFxBattle;
     std::shared_ptr<toms::res::ParticleRes> battleFxFile_;
     bool battleFxTried_ = false;
-    std::vector<toms::fx::EffectInstance> battleFx_;
+    struct BattleFx { toms::fx::EffectInstance fx; bool overUi = false; };   // overUi: drawn over the UI (a track hint)
+    std::vector<BattleFx> battleFx_;
     const toms::WeaponFx* battleWeaponFx(bool top = false) const;   // the worn weapon's at its level (top: its best)
     void playBattleFx(const std::string& effect, bool atEnemy, int delayMs = 0);
+    // At a point of the screen (design pixels); overUi: over the battle screen's UI (the attack track).
+    void playBattleFxAt(const std::string& effect, float x, float y, bool overUi, int delayMs = 0);
+    // The attack track's hint (the owner 2026-10-24: the timing was hard): a point's window entered, or a point hit.
+    void comboHint(int point, bool hit);
+    std::vector<glm::vec2> comboPointsOnScreen_;   // where the UI drew the track's points (GameUi, a frame late)
     void updateBattleFx(int dtMs);                      // Game::update
     std::string previewHeldFile_;                       // setPreviewHeld
     std::shared_ptr<toms::res::AnimRes> previewHeld_;   // its clips

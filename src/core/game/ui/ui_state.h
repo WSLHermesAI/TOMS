@@ -72,6 +72,7 @@ struct UiPowerBar {                    // a Battle v2 timing bar; zones and mark
 struct UiComboPoint {                  // one point of the combo track
     float pos = 0;                     // 0..100
     bool hit = false;
+    bool near = false;                 // the marker is in its window: a tap now hits it (the hint)
 };
 
 struct UiCombo {                       // Battle v3's point play (docs/gameplay/07 phase 1): the charge, the track, its points

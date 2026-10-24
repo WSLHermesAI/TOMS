@@ -156,6 +156,9 @@ public:
     // Diagnostic: tag subsequent quads with a "node" id (for the 4-way split-screen
     // render). No-op by default; BgfxRenderer stamps it onto each quad.
     virtual void setNode(uint8_t n) { (void)n; }
+    // Where the next sprites go: 0 = the game layer (under the UI, the default after begin()), 1 = the top layer, drawn
+    // over the UI (a hint on a battle button). Only quads: meshes and GPU particles stay in the game layer.
+    virtual void setLayer(int layer) { (void)layer; }
     // Diagnostic: if n!=0, only emit quads whose node==n (isolate one subsystem).
     virtual void setNodeFilter(uint8_t n) { (void)n; }
     virtual void end() = 0;                       // present to target (offscreen/canvas)

@@ -14,7 +14,10 @@
     "hitWindow: how close a tap must be to a point (a fraction of the track). The values are first guesses (made up for now).",
     "fx: the battle's particles by weapon level (media/fx/battle.particle): the entry with the highest lv at or",
     "below the level plays; release at the player as the attack goes off, hit at the monster with the damage number.",
-    "A weapon without fx uses the default entry's."
+    "A weapon without fx uses the default entry's.",
+    "hitWindowMs: the window is never shorter than this in time, so a faster (charged) marker keeps it; lateMs: a tap",
+    "this long after the marker passed a point still counts (touch delay). Both default to 140 / 80 (the owner 2026-10-24:",
+    "the timing was too hard); a window is never more than 45% of the gap between two points."
   ],
   "default": {
     "missBack": [
@@ -114,7 +117,9 @@
         "release": "default_release_3",
         "hit": "default_hit_3"
       }
-    ]
+    ],
+    "hitWindowMs": 140,
+    "lateMs": 80
   },
   "unarmed": {
     "missBack": [

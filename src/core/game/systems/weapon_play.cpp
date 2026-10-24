@@ -46,6 +46,8 @@ WeaponPlay weaponPlayFromJson(const std::string& id, const nlohmann::json& j) {
     w.chargeSpeedUp = std::max(0.0f, j.value("chargeSpeedUp", w.chargeSpeedUp));
     w.chargeDamage = std::max(0.0f, j.value("chargeDamage", w.chargeDamage));
     w.hitWindow = std::clamp(j.value("hitWindow", w.hitWindow), 0.01f, 0.25f);
+    w.hitWindowMs = std::clamp(j.value("hitWindowMs", w.hitWindowMs), 0, 1000);
+    w.lateMs = std::clamp(j.value("lateMs", w.lateMs), 0, 500);
     if (j.contains("fx") && j["fx"].is_array()) {
         for (const auto& f : j["fx"]) {
             if (!f.is_object()) continue;

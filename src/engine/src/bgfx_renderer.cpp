@@ -314,6 +314,8 @@ void BgfxRenderer::releaseTexture(uint16_t texture) {
 
 void BgfxRenderer::begin() {
     sprites_.clear();
+    topSprites_.clear();
+    layer_ = 0;
     gpuDraws_.clear();
     meshVerts_.clear();
     meshIdx_.clear();
@@ -323,8 +325,9 @@ void BgfxRenderer::setNodeFilter(uint8_t n) { nodeFilter_ = n; }
 
 void BgfxRenderer::drawSprite(const Quad& q) {
     if (nodeFilter_ && node_ != nodeFilter_) return;
-    sprites_.push_back(q);
-    sprites_.back().node = node_;
+    std::vector<Quad>& list = layer_ == 1 ? topSprites_ : sprites_;
+    list.push_back(q);
+    list.back().node = node_;
 }
 
 void BgfxRenderer::drawMesh(const Mesh& m) {
@@ -404,8 +407,14 @@ void BgfxRenderer::end() {
     bx::mtxOrtho(proj, 0.0f, (float)kDesignW, (float)kDesignH, 0.0f, 0.0f, 100.0f, 0.0f,
                  bgfx::getCaps()->homogeneousDepth);
     bgfx::setViewTransform(kViewGame, nullptr, proj);
+    // The top layer: the same space, a view after kViewUi, so its sprites are drawn over the UI.
+    bgfx::setViewRect(kViewTop, (uint16_t)std::lround(fit.x), (uint16_t)std::lround(fit.y),
+                      (uint16_t)std::lround(fit.width), (uint16_t)std::lround(fit.height));
+    bgfx::setViewMode(kViewTop, bgfx::ViewMode::Sequential);
+    bgfx::setViewTransform(kViewTop, nullptr, proj);
 
     if (program_ == kInvalid) return;
+    submitTop();
     uploadMeshes();
     // text and UI are RmlUi's, in view kViewUi
     if (sprites_.empty()) {   // only GPU particles and meshes (if any)
@@ -579,6 +588,46 @@ void BgfxRenderer::submitQuads(const std::vector<Quad>& quads, uint16_t texture)
         first = runEnd;
     }
     drawGpuAt(SIZE_MAX, nextGpu, texture);   // GPU particles after the last quad
+}
+
+void BgfxRenderer::submitTop() {
+    const uint32_t total = (uint32_t)topSprites_.size();
+    if (total == 0) return;
+    for (size_t first = 0; first < total;) {
+        // one draw per run of quads with the same texture and blending, at most kChunk quads (the shared index buffer)
+        const bool additive = topSprites_[first].additive;
+        const uint16_t tex = topSprites_[first].texture;
+        size_t runEnd = first + 1;
+        while (runEnd < total && runEnd - first < kChunk && topSprites_[runEnd].additive == additive &&
+               topSprites_[runEnd].texture == tex)
+            ++runEnd;
+        const uint32_t count = (uint32_t)(runEnd - first);
+        if (bgfx::getAvailTransientVertexBuffer(count * 4, spriteLayout()) < count * 4) return;
+        bgfx::TransientVertexBuffer tvb;
+        bgfx::allocTransientVertexBuffer(&tvb, count * 4, spriteLayout());
+        auto* v = reinterpret_cast<SpriteVertex*>(tvb.data);
+        for (uint32_t i = 0; i < count; ++i) {
+            const Quad& q = topSprites_[first + i];
+            const float x0 = q.rect[0], y0 = q.rect[1], x1 = q.rect[0] + q.rect[2], y1 = q.rect[1] + q.rect[3];
+            const float rectCorners[8] = {x0, y0, x1, y0, x1, y1, x0, y1};
+            const float* c = q.hasCorners ? q.corners : rectCorners;
+            const float s = q.solid ? 1.0f : 0.0f;
+            const float* t = q.tint;
+            v[i * 4 + 0] = {c[0], c[1], q.uv[0], q.uv[1], t[0], t[1], t[2], t[3], s};
+            v[i * 4 + 1] = {c[2], c[3], q.uv[2], q.uv[1], t[0], t[1], t[2], t[3], s};
+            v[i * 4 + 2] = {c[4], c[5], q.uv[2], q.uv[3], t[0], t[1], t[2], t[3], s};
+            v[i * 4 + 3] = {c[6], c[7], q.uv[0], q.uv[3], t[0], t[1], t[2], t[3], s};
+        }
+        bgfx::setVertexBuffer(0, &tvb);
+        bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
+        const uint16_t use = tex == kSpriteAtlasTexture ? spriteTex_ : tex;
+        if (use != kInvalid) bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{use});
+        bgfx::setState(blendState(additive));
+        bgfx::submit(kViewTop, bgfx::ProgramHandle{program_});
+        ++lastDrawCalls_;
+        lastDrawnQuads_ += count;
+        first = runEnd;
+    }
 }
 
 // ---- GPU-simulated particles --------------------------------------------------------------------

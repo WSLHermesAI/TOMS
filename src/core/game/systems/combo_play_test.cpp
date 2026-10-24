@@ -130,6 +130,59 @@ int main() {
         CHECK(cs.points == 3 && cs.sweepMs == bow.sweepMs, "comboSettings from the weapon");
     }
 
+    // 9. The timing help (the owner 2026-10-24): a window at least hitWindowMs long, a late tap still counting, never
+    //    more than 45% of the gap, and the hint when the marker enters a window.
+    {
+        ComboSettings t = s;   // 3 points at 1/4, 2/4, 3/4; 1000 ms a sweep: the marker moves 0.001 a ms
+        t.hitWindow = 0.02f;
+        t.hitWindowMs = 100;
+        ComboPlay c;
+        c.start(t, 0.0f);
+        CHECK(std::fabs(c.window() - 0.1f) < 1e-4f, "hitWindowMs: 100 ms of travel is 0.1 of the track");
+        runTo(c, 0.16f, 0.0005f);
+        CHECK(c.tap() == ComboPlay::Tap::Hit, "a tap 0.09 before a point hits it with the time window");
+        ComboPlay full;
+        full.start(t, 1.0f);   // twice as fast: 100 ms is 0.2, but the cap is 45% of the 0.25 gap
+        CHECK(std::fabs(full.window() - 0.1125f) < 1e-4f, "the window is capped at 45% of the gap between points");
+        t.hitWindowMs = 0;
+        ComboPlay plain;
+        plain.start(t, 0.0f);
+        runTo(plain, 0.16f, 0.0005f);
+        CHECK(plain.tap() == ComboPlay::Tap::Miss, "without it the same tap misses");
+
+        ComboSettings l = s;
+        l.hitWindow = 0.05f;
+        l.lateMs = 100;   // 0.1 of the track at this speed
+        ComboPlay late;
+        late.start(l, 0.0f);
+        runTo(late, 0.37f, 0.0005f);   // 0.12 past the first point
+        CHECK(late.tap() == ComboPlay::Tap::Hit, "lateMs: a tap just after the marker passed a point hits it");
+        ComboPlay early;
+        early.start(l, 0.0f);
+        runTo(early, 0.13f, 0.0005f);  // 0.12 before it: the grace is only for late taps
+        CHECK(early.tap() == ComboPlay::Tap::Miss, "lateMs does not make early taps count");
+
+        ComboSettings five = s;
+        five.points = 5;
+        five.hitWindow = 0.2f;
+        ComboPlay f;
+        f.start(five, 0.0f);
+        CHECK(std::fabs(f.window() - 0.45f / 6.0f) < 1e-4f, "five points: the window stays inside the gap");
+
+        ComboPlay h;
+        h.start(s, 0.0f);   // hitWindow 0.05
+        runTo(h, 0.25f, 0.001f);
+        CHECK(h.nearPoint() == 0, "nearPoint: the marker is in the first point's window");
+        std::vector<int> in = h.takeEntered();
+        CHECK(in.size() == 1 && in[0] == 0, "takeEntered: the first point's window, once");
+        runTo(h, 0.35f, 0.001f);
+        CHECK(h.nearPoint() == -1 && h.takeEntered().empty(), "out of it: nothing near, nothing entered");
+        h.tap();   // a miss here (nothing near) -- then the second point
+        runTo(h, 0.5f, 0.001f);
+        in = h.takeEntered();
+        CHECK(in.size() == 1 && in[0] == 1, "the next window entered: the second point");
+    }
+
     if (g_fail) { std::printf("combo_play_test: %d failure(s)\n", g_fail); return 1; }
     std::printf("combo_play_test: OK\n");
     return 0;
