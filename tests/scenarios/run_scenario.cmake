@@ -8,7 +8,7 @@
 file(REMOVE_RECURSE "${WORK}")
 file(MAKE_DIRECTORY "${WORK}/save")
 set(ENV{TOMS_SAVE_DIR} "${WORK}/save")
-execute_process(COMMAND "${GAME}" "--scenario=${SCENARIO}" --scenario-test --fixed-dt=16 "--screenshot=${WORK}/${NAME}.png"
+execute_process(COMMAND "${GAME}" "--scenario=${SCENARIO}" --scenario-test --fixed-dt=16 --design=1024x768 "--screenshot=${WORK}/${NAME}.png"
                 WORKING_DIRECTORY "${WORK}" RESULT_VARIABLE _rc OUTPUT_VARIABLE _out ERROR_VARIABLE _out TIMEOUT 90)
 string(REGEX MATCHALL "\\[scenario\\][^\n]*(\n  [^\n]*)*" _lines "${_out}")
 string(JOIN "\n" _report ${_lines})

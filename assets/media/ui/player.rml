@@ -22,7 +22,7 @@
         </div>
 
         <!-- ===== Status ===== -->
-        <div class="page" data-if="player.tab == 0">
+        <div class="page status" data-if="player.tab == 0">
             <div id="st-left">
                 <div id="st-level">{{player.level}}</div>
                 <div class="bar"><div class="fill-hp" data-style-width="player.hp_pct + '%'"></div></div>
@@ -59,7 +59,7 @@
                 <div class="chips">
                     <div class="slot" data-for="f, i : player.filters"><div class="chip" data-class-active="f.active" data-event-click="act('pm_filter', i)">{{f.label}}</div></div>
                 </div>
-                <div id="grid" data-class-short="player.tab == 1">
+                <div id="grid">
                     <div class="slot" data-for="c, i : player.cells"><div class="cell" data-class-selected="c.selected" data-event-click="act('pm_cell', i)">
                         <img class="cell-icon" data-attr-sprite="c.icon"/>
                         <div class="cell-name">{{c.name}}</div>

@@ -1,5 +1,6 @@
 // bgfx_host.cpp -- see bgfx_host.h.
 #include "bgfx_host.h"
+#include "color_space.h"   // TOMS_GAMMA_SPACE: web and Android blend in gamma space
 
 #include <cstring>
 #include <bgfx/bgfx.h>
@@ -109,9 +110,9 @@ uint32_t bgfxHostResetFlags() {
     return f;
 }
 
-// sRGB backbuffer, like the Vulkan swapchain (VK_FORMAT_B8G8R8A8_SRGB) the old renderer used.
-// WebGL has no sRGB backbuffer; the web build renders in gamma space like the old WebGL renderer.
-#ifdef __EMSCRIPTEN__
+// sRGB backbuffer, like the Vulkan swapchain (VK_FORMAT_B8G8R8A8_SRGB) the old renderer used. The web and Android
+// render in gamma space (color_space.h): WebGL has no sRGB backbuffer, and Android's GL ES may not give one.
+#if TOMS_GAMMA_SPACE
 constexpr uint32_t kSwapChainFlags = BGFX_SWAP_CHAIN_NONE;
 #else
 constexpr uint32_t kSwapChainFlags = BGFX_SWAP_CHAIN_SRGB_BACKBUFFER;

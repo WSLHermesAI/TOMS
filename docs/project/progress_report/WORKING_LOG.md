@@ -644,3 +644,22 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - Tests: changed-only 18 of 195 pass; by name `unit.render_object_test`, `unit.resource_test`, `unit.anim_clip_test`,
     `unit.player_menu_test`, `unit.save_test`, `data.ui_font_covers_text`, `anim.editor_selftest` pass; 9 floor scenes
     compared with the build before (`image_diff` 0 %), all identical. All tests / web not run.
+
+- **2026-10-24 evening / 2026-10-25** — **Timing help, landscape and portrait, Android** ([DAILY_2026-10-25.md](DAILY_2026-10-25.md)):
+  - Timing (`4951cbd`): `ComboSettings::hitWindowMs` / `lateMs`, `ComboPlay::window` / `nearPoint` / `takeEntered`;
+    `WeaponPlay` defaults 140 / 80; `Game::comboHint`, `playBattleFxAt`, `BattleFx::overUi`; `IRenderer::setLayer`,
+    `BgfxRenderer::kViewTop` (3) + `submitTop` (transient buffers), `kViewOverlay` 4; `GameUi::sync` reads `.track .pt`;
+    `.pt.near`; `combo_ready` / `combo_point_hit` effects; `tools/make_combo_sfx.py`; `arena_restart` taps earlier.
+  - Canvas: `src/core/engine/canvas.h` + `canvas_test`; `GameSession::fitCanvas`, `SessionOptions::designW/H`;
+    `RmlUi::setDesignSize`; `Game::canvasChanged`; `main_sdl` `--design`, `--window`, `--resize`; tests pin
+    `--design=1024x768` (`tests/CMakeLists.txt`, `run_scenario.cmake`); Android `fullSensor`.
+  - Map: `Camera::kZoomWidth`, fractional visible width in `retarget`; `camera_test` cases.
+  - Layout: `battle.rcss` (centre-anchored landscape, two portrait blocks), `.fighter` boxes in `battle.rml`,
+    `Game::setBattleBoxes` (rigs, particles, popups); `battleFxSeed_`; `hud.rcss`, `overlay.rcss`, `player.rcss` /
+    `.rml` (flex lists, stacked portrait, centred confirms); `common.rcss` `word-break: break-word`.
+  - Android: `leak_check.cpp` in the Android library; `color_space.h` (`TOMS_GAMMA_SPACE` for the web and Android) in
+    `bgfx_host.cpp`, `bgfx_renderer.cpp` (2), `rml_ui.cpp` (2), `title_scene.cpp`. Emulator: Pixel Tablet API 35.
+  - Web: `shell.html` rotate hint removed.
+  - Docs: gameplay/12 (new), gameplay/07 §17 (EN + zh_TW), engine/01 (views).
+  - Tests: changed-only 15 of 196 pass; by name `unit.camera_test` and 34 scenarios pass. All tests / web not run.
+

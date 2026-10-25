@@ -82,7 +82,8 @@ set_target_properties(toms_game_host PROPERTIES FOLDER "toms")
 if(ANDROID)
     # SDLActivity loads libmain.so and calls SDL_main (main() renamed by SDL_main.h). SDL3 is static, so
     # its JNI code lives in this library too; keep JNI_OnLoad (it registers SDL's native methods).
-    add_library(toms_game SHARED src/main_sdl.cpp)
+    add_library(toms_game SHARED src/main_sdl.cpp
+        src/leak_check.h src/leak_check.cpp)   # (Android: the empty versions; main_sdl.cpp calls them on every platform)
     set_target_properties(toms_game PROPERTIES OUTPUT_NAME main)
     target_link_options(toms_game PRIVATE "-Wl,--undefined=JNI_OnLoad" "-Wl,-z,max-page-size=16384")
 else()

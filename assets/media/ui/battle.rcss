@@ -1,33 +1,45 @@
 /* battle.rcss -- the battle screen (battle.rml). Laid out 1.4x larger than the map UI so it
-   reads well on phones (the old screen's "battle scale"). */
+   reads well on phones (the old screen's "battle scale").
+
+   Landscape and portrait (docs/gameplay/12_UI_LAYOUT.md; the owner 2026-10-25). The canvas's short side is always
+   768 px and the long side follows the screen (canvas.h), so:
+   - landscape: one 700 px block, its left edge 250 px left of the centre (on the 1024 canvas: x 262, as it always was);
+     a wider screen keeps it in the middle;
+   - portrait: full-width rows, 40 px from the edges; the fighters at the top, the controls anchored to the bottom (for
+     thumbs). A tall phone (16:9 and longer, the canvas 1300+ high) stacks the monster above the player; a shorter
+     portrait screen keeps them side by side.
+   The game draws the animated fighters in #player / #enemy and reads where they are (GameUi::sync), so these rules are
+   the only place a fighter's position is written. */
 body { z-index: 30; }
 
-#title  { position: absolute; left: 262px; top: 14px; font-size: 38px; color: #ffcaa8; }
-#player { position: absolute; left: 262px; top: 84px; width: 134px; height: 134px; }
-#enemy  { position: absolute; left: 652px; top: 84px; width: 134px; height: 134px; }
+#title  { position: absolute; left: 50%; margin-left: -250px; top: 14px; font-size: 38px; color: #ffcaa8; }
+.fighter { position: absolute; top: 84px; width: 134px; height: 134px; }
+.fighter img { width: 100%; height: 100%; }
+#player { left: 50%; margin-left: -250px; }
+#enemy  { left: 50%; margin-left: 140px; }
 
 .hp      { position: absolute; top: 238px; width: 280px; height: 22px; background-color: #7b7b88; }
-#player-hp { left: 262px; }
-#enemy-hp  { left: 652px; }
+#player-hp { left: 50%; margin-left: -250px; }
+#enemy-hp  { left: 50%; margin-left: 140px; }
 .fill-bar { height: 100%; }
 .fill-bar.good  { background-color: #94f3a8; }
 .fill-bar.bad   { background-color: #f39494; }
 .fill-bar.clock { background-color: #edb17b; }
 .hp-text { position: absolute; top: 262px; font-size: 22px; color: #ffffff; white-space: nowrap; }
-#player-hp-text { left: 262px; }
-#enemy-hp-text  { left: 652px; }
+#player-hp-text { left: 50%; margin-left: -250px; }
+#enemy-hp-text  { left: 50%; margin-left: 140px; }
 
 /* the message: two lines (a long one, or another language, wraps); everything below starts under them */
-#log { position: absolute; left: 262px; right: 24px; top: 294px; height: 56px; line-height: 28px; font-size: 22px; color: #ffffff; }
-#continue { position: absolute; left: 262px; top: 368px; font-size: 24px; color: #ffffca; }
+#log { position: absolute; left: 50%; margin-left: -250px; width: 738px; top: 294px; height: 56px; line-height: 28px; font-size: 22px; color: #ffffff; }
+#continue { position: absolute; left: 50%; margin-left: -250px; top: 368px; font-size: 24px; color: #ffffca; }
 
-#clock-label { position: absolute; left: 262px; top: 352px; font-size: 19px; color: #f3e0ba; }
-#clock { position: absolute; left: 262px; top: 376px; width: 700px; height: 14px; background-color: #7b7b88; }
+#clock-label { position: absolute; left: 50%; margin-left: -250px; top: 352px; font-size: 19px; color: #f3e0ba; }
+#clock { position: absolute; left: 50%; margin-left: -250px; top: 376px; width: 700px; height: 14px; background-color: #7b7b88; }
 
 /* Attack / defence columns: prompt, the five-zone timing bar with its marker, the action button. */
 .column { position: absolute; top: 400px; width: 322px; }
-#attack  { left: 262px; }
-#defense { left: 640px; }
+#attack  { left: 50%; margin-left: -250px; }
+#defense { left: 50%; margin-left: 128px; }
 .prompt  { font-size: 20px; color: #f3f3ff; height: 30px; }
 .power   { position: relative; height: 28px; }
 .zones   { display: flex; height: 100%; }
@@ -60,19 +72,61 @@ body { z-index: 30; }
 .note.shield { color: #c2e0ff; }
 .note.crit   { color: #ffed94; }
 
-#super { position: absolute; left: 262px; top: 578px; height: 24px; }   /* below the weapon level line (Battle v3) */
+#super { position: absolute; left: 50%; margin-left: -250px; top: 578px; height: 24px; }   /* below the weapon level line (Battle v3) */
 #super-label { font-size: 19px; color: #f3f3ff; margin-right: 18px; }
 .dot-slot { display: inline-block; }
 .dot { width: 17px; height: 17px; margin-right: 8px; background-color: #7b7b88; }
 .dot.on { background-color: #ffca88; }
 
-.wide { position: absolute; left: 262px; width: 700px; height: 50px; line-height: 50px; font-size: 22px; color: #ffffff; }
+.wide { position: absolute; left: 50%; margin-left: -250px; width: 700px; height: 50px; line-height: 50px; font-size: 22px; color: #ffffff; }
 #super-btn  { top: 610px; background-color: #d9887b; }
 #super-btn:hover  { background-color: #e89a8d; }
 #active-btn { top: 672px; background-color: #88c2d2; }
 #active-btn:hover { background-color: #9ad2e2; }
 
-/* damage numbers (UiPopup): a 100 px box over the fighter, rising and fading */
+/* damage numbers (UiPopup): a 100 px box over the fighter, rising and fading (placed from #player / #enemy) */
 .popup { position: absolute; width: 100px; text-align: center; font-size: 34px; color: #ffffff; font-effect: outline(2px #401010); }
 .popup.big { font-size: 46px; color: #ffe066; }
 .popup.guard { font-size: 28px; color: #9fd8ff; }
+
+/* ---- portrait: rows across the 768 px width; the controls on the bottom, for thumbs ---- */
+@media (orientation: portrait) {
+    #title { left: 40px; margin-left: 0; top: 20px; }
+    /* side by side (a short portrait screen; a tall phone stacks them below) */
+    .fighter    { top: 80px; }
+    #player     { left: 118px; margin-left: 0; }
+    #enemy      { left: 516px; margin-left: 0; }
+    .hp         { top: 230px; width: 330px; }
+    #player-hp  { left: 40px; margin-left: 0; }
+    #enemy-hp   { left: 398px; margin-left: 0; }
+    .hp-text    { top: 256px; }
+    #player-hp-text { left: 40px; margin-left: 0; }
+    #enemy-hp-text  { left: 398px; margin-left: 0; }
+    #log        { left: 40px; margin-left: 0; width: 688px; top: 294px; }
+    #continue   { left: 40px; margin-left: 0; top: 370px; }
+
+    /* the controls, from the bottom up */
+    #clock-label { left: 40px; margin-left: 0; top: auto; bottom: 620px; }
+    #clock       { left: 40px; margin-left: 0; width: 688px; top: auto; bottom: 600px; }
+    .column      { left: 40px; margin-left: 0; width: 688px; top: auto; }
+    #attack      { left: 40px; margin-left: 0; bottom: 390px; }
+    #defense     { left: 40px; margin-left: 0; bottom: 200px; }
+    #super       { left: 40px; margin-left: 0; top: auto; bottom: 160px; }
+    .wide        { left: 40px; margin-left: 0; width: 688px; top: auto; }
+    #super-btn   { top: auto; bottom: 92px; }
+    #active-btn  { top: auto; bottom: 30px; }
+}
+
+/* a tall phone: the monster above, the player below it, each with its HP under it */
+@media (orientation: portrait) and (min-height: 1300px) {
+    .fighter    { width: 180px; height: 180px; }
+    #enemy      { left: 294px; top: 88px; }
+    #player     { left: 294px; top: 352px; }
+    .hp         { width: 688px; }
+    #enemy-hp   { left: 40px; top: 280px; }
+    #enemy-hp-text { left: 40px; top: 306px; }
+    #player-hp  { left: 40px; top: 544px; }
+    #player-hp-text { left: 40px; top: 570px; }
+    #log        { top: 614px; }
+    #continue   { top: 692px; }
+}

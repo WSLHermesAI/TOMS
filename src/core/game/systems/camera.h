@@ -32,6 +32,9 @@ public:
     static constexpr float kTopMarginPx    = 60.0f;
     static constexpr float kBottomMarginPx = 50.0f;
     static constexpr int   kMinViewCols    = 4;      // guard against a corrupt persisted value
+    // The canvas width the zoom (viewCols) is measured on: tiles are kZoomWidth / viewCols big on any canvas, so a wide
+    // or tall screen (canvas.h) shows more tiles, not bigger ones (the owner 2026-10-25: fill the screen).
+    static constexpr float kZoomWidth      = 1024.0f;
     static constexpr float kSmoothingMs    = 120.0f; // ease: deviation shrinks this fast per frame
     static constexpr float kSettleEps      = 0.01f;  // snap the last fraction so it really settles
 

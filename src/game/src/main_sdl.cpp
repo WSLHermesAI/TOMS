@@ -26,6 +26,10 @@
 //   --anim=<file>#<clip>  play one clip of an .anim file over the screen (anim_clip.h; tests)
 //   --ui-scale=<x>        the small-screen UI scale (the web build uses 1.5 on phones), to test it on desktop
 //   --battle-tuning=default  the battle bars' built-in values instead of data/battle.json (tests: smoke.battle)
+//   --window=<W>x<H>      the window's size (default 1280x720; e.g. 540x1200 to see the portrait layout on desktop)
+//   --resize=<frame>:<W>x<H>  resize the window at that frame (tests: the layout switches while the game runs)
+//   --design=<W>x<H>      a fixed design canvas, letterboxed (canvas.h; the screenshot tests pin 1024x768). Without it
+//                         the canvas follows the window's shape, landscape or portrait
 //   --fx=<file>#<effect>  play one particle effect of a .particle file over the screen (particle_fx.h)
 //   --mesh-test=<sprite>  draw that game-atlas sprite as a waving triangle mesh beside the plain sprite (IRenderer::drawMesh)
 //   --character=<sprite>  with --anim: play a character clip (body / hand nodes) as this character (fitCharacter)
@@ -101,6 +105,9 @@ struct Args {
     bool defaultBattleTuning = false;  // --battle-tuning=default
     std::string titleScene;            // --title-scene=<file|none>
     float uiScale = 0.0f;              // --ui-scale=<x>: the phone UI scale on desktop (testing the web build's small-screen layout)
+    int windowW = 1280, windowH = 720;   // --window=WxH
+    int resizeFrame = -1, resizeW = 0, resizeH = 0;   // --resize=frame:WxH
+    uint32_t designW = 0, designH = 0;   // --design=WxH (0: follow the window)
     int fixedDtMs = 0;       // > 0: deterministic frame time (tests)
     struct Press { Key key; int frame; };
     std::vector<Press> presses;
@@ -183,6 +190,9 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--fx-gpu-threshold=")) a.fxGpuThreshold = std::max(0, std::atoi(v));
         else if (const char* v = value(s, "--title-scene=")) a.titleScene = v;
         else if (const char* v = value(s, "--ui-scale=")) a.uiScale = (float)std::atof(v);
+        else if (const char* v = value(s, "--resize=")) { int f = 0, w = 0, h = 0; if (std::sscanf(v, "%d:%dx%d", &f, &w, &h) == 3 && w >= 200 && h >= 200) { a.resizeFrame = f; a.resizeW = w; a.resizeH = h; } }
+        else if (const char* v = value(s, "--window=")) { int w = 0, h = 0; if (std::sscanf(v, "%dx%d", &w, &h) == 2 && w >= 200 && h >= 200) { a.windowW = w; a.windowH = h; } }
+        else if (const char* v = value(s, "--design=")) { unsigned w = 0, h = 0; if (std::sscanf(v, "%ux%u", &w, &h) == 2 && w >= 320 && h >= 320) { a.designW = w; a.designH = h; } }
         else if (const char* v = value(s, "--battle-tuning=")) a.defaultBattleTuning = std::string(v) == "default";
         else if (const char* v = value(s, "--stair-lock=")) a.stairLock = v;
         else if (const char* v = value(s, "--goto=")) a.gotoFloor = v;
@@ -305,7 +315,7 @@ bool appInit(App& app) {
     // follows that; fill-document mode depended on a probe that fails at fractional display scaling
     // (the canvas stayed 1x1) and it also hid the page's own buttons.
     const SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-    app.window = SDL_CreateWindow("Tower of the Sorcerer (bgfx)", 1280, 720, flags);
+    app.window = SDL_CreateWindow("Tower of the Sorcerer (bgfx)", args.windowW, args.windowH, flags);
     if (!app.window) {
         fatalBox(nullptr, "TOMS: no window", SDL_GetError());
         return false;
@@ -397,6 +407,8 @@ bool appInit(App& app) {
     opts.defaultBattleTuning = args.defaultBattleTuning;
     opts.titleScene = args.titleScene;
     if (args.uiScale > 0.0f) opts.uiScale = args.uiScale;
+    opts.designW = args.designW;
+    opts.designH = args.designH;
 #ifdef __EMSCRIPTEN__
     opts.enableDebugUi = true;
     // Small screens (phones): grow the UI objects, keep the game resolution -- same thresholds and
@@ -469,6 +481,7 @@ bool appFrame(App& app) {
 
     float mx = 0, my = 0;
     const SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mx, &my);
+    if (app.frameNo == args.resizeFrame) SDL_SetWindowSize(app.window, args.resizeW, args.resizeH);   // --resize (tests)
     int ww = 1, wh = 1, pw = 1, ph = 1;
     SDL_GetWindowSize(app.window, &ww, &wh);
     SDL_GetWindowSizeInPixels(app.window, &pw, &ph);

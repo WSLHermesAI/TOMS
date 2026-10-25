@@ -7,12 +7,15 @@
 </head>
 <!-- Battle v3 attack (docs/gameplay/07 phase 1): charge while it waits, the first tap starts the marker over the weapon
      level's points, each tap on a point hits it. Battle v2's defence bar: tap to guard at the marker's zone. Super and the equipment active appear only when usable.
-     After a win, a tap anywhere continues. Data: battle.* (UiBattle). -->
+     After a win, a tap anywhere continues. Data: battle.* (UiBattle).
+     Landscape and portrait (docs/gameplay/12_UI_LAYOUT.md): the same elements, placed by battle.rcss's @media rules. -->
 <body data-model="game" data-event-click="act('battle_continue')">
     <!-- no backdrop here: the game draws it (Game::drawBattleRig), under the player and the monster it draws -->
     <div id="title">{{battle.title}}</div>
-    <img id="player" data-if="!battle.player_anim" data-attr-sprite="battle.player_sprite"/>
-    <img id="enemy" data-if="!battle.enemy_anim" data-attr-sprite="battle.enemy_sprite"/>
+    <!-- the fighters' boxes: always there, the game places the animated player and monster in them (GameUi reads
+         their layout each frame), or their still pictures fill them -->
+    <div id="player" class="fighter"><img data-if="!battle.player_anim" data-attr-sprite="battle.player_sprite"/></div>
+    <div id="enemy" class="fighter"><img data-if="!battle.enemy_anim" data-attr-sprite="battle.enemy_sprite"/></div>
     <!-- damage numbers: they rise over the fighter that was hit (UiPopup) -->
     <div class="popup" data-for="p : battle.popups" data-class-big="p.kind == 1" data-class-guard="p.kind == 2"
          data-style-left="p.x + 'px'" data-style-top="p.y + 'px'" data-style-opacity="p.opacity">{{p.text}}</div>

@@ -1,5 +1,6 @@
 // title_scene.cpp -- see title_scene.h.
 #include "title_scene.h"
+#include "color_space.h"   // TOMS_GAMMA_SPACE: web and Android blend in gamma space
 
 #include "vfs.h"
 
@@ -90,10 +91,10 @@ void TitleScene::draw(double dtSeconds, uint32_t width, uint32_t height) {
     }
     f.boundsMin = boundsMin_;
     f.boundsMax = boundsMax_;
-#if defined(__EMSCRIPTEN__)
-    f.srgbOut = true;     // WebGL has no sRGB backbuffer: the shader encodes
+#if TOMS_GAMMA_SPACE
+    f.srgbOut = true;     // no sRGB backbuffer (the web, Android: color_space.h): the shader encodes
 #else
-    f.srgbOut = false;    // the desktop / Android backbuffer is sRGB
+    f.srgbOut = false;    // the desktop backbuffer is sRGB
 #endif
 #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
     f.shadows = false;    // phones and the browser: keep the title cheap

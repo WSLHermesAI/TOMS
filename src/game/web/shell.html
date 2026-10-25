@@ -17,16 +17,12 @@
     #toms-error { display: none; position: fixed; left: 8%; right: 8%; top: 20%; padding: 20px; z-index: 100;
                   background: #1b1020; color: #ffd9d9; border: 1px solid #a05; border-radius: 8px;
                   font: 15px/1.6 system-ui, sans-serif; white-space: pre-wrap; }
-    #toms-rotate { display: none; position: fixed; inset: 0; z-index: 99; background: #0b0e16; color: #f2e6c8;
-                   align-items: center; justify-content: center; text-align: center; padding: 24px;
-                   font: 600 20px/1.6 system-ui, -apple-system, sans-serif; }
   </style>
 </head>
 <body>
   <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
   <div id="toms-status">Loading…</div>
   <div id="toms-error"></div>
-  <div id="toms-rotate">請把裝置轉為橫向 · Rotate your device</div>
   <script>
     function tomsShowError(title, text) {
       var e = document.getElementById('toms-error');
@@ -52,14 +48,8 @@
     };
     window.onerror = function (msg) { tomsShowError('Script error', String(msg)); };
 
-    // Portrait phones: ask for landscape (the game is 4:3).
-    function tomsRotateHint() {
-      var portrait = window.innerHeight > window.innerWidth && ('ontouchstart' in window);
-      document.getElementById('toms-rotate').style.display = portrait ? 'flex' : 'none';
-    }
-    window.addEventListener('resize', tomsRotateHint);
-    window.addEventListener('orientationchange', tomsRotateHint);
-    tomsRotateHint();
+    // Portrait or landscape: the game lays itself out for either and switches when the device turns
+    // (docs/gameplay/12_UI_LAYOUT.md), so there is no "rotate your device" hint any more.
 
     // The game has no buttons on this page: everything is in its own menu (≡ / Esc), including
     // Fullscreen (System tab). The game calls this a frame after the click; the click's user

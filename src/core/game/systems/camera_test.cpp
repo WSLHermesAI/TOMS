@@ -30,6 +30,22 @@ int main() {
               "rows come from the usable height (top/bottom HUD margins removed)");
     }
 
+    // 1b. Other canvases (canvas.h): the same tile size, more columns on a wide one, fewer and more rows in portrait.
+    {
+        Camera cam;
+        cam.setViewCols(16);
+        float ts; int cols, rows;
+        cam.viewportTiles(1365.0f, 768.0f, ts, cols, rows);
+        CHECK(near(ts, 64.0f) && cols == 21, "16:9: the same tiles, 21 columns");
+        float ts2; int cols2, rows2;
+        cam.viewportTiles(768.0f, 1707.0f, ts2, cols2, rows2);
+        CHECK(near(ts2, 64.0f) && cols2 == 12 && rows2 > 20, "portrait: 12 columns, many rows");
+        Camera z;   // the default zoom: 13 across 1024, so a 768 canvas holds 9.75 tiles
+        z.setViewCols(13);
+        z.retarget(18, 5, 19, 30, 768.0f, 1707.0f);   // at the grid's right edge
+        CHECK(near(z.targetX(), 19.0f - 9.75f), "portrait: the view stops at the grid's real right edge (part of a tile shows)");
+    }
+
     // 2. A corrupt/absurd persisted zoom can never produce a degenerate viewport.
     {
         Camera cam;

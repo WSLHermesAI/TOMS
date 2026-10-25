@@ -25,6 +25,7 @@ void Game::startCombat(const EnemyInst& e) {
     cs.popups.clear();
     battleTimers_.reset();   // a number still waiting from the last fight never lands in this one
     battleFx_.clear();
+    battleFxSeed_ = 0;
     monsterRig_.stop();      // the new monster starts idle (updateMonsterRig)
     monsterRigState_.clear();
     monsterRigClip_.clear();
@@ -98,19 +99,20 @@ void Game::drawBattleRig() {
     backdrop.tint[0] = backdrop.tint[1] = backdrop.tint[2] = 0.0f;
     backdrop.tint[3] = 0xcc / 255.0f;
     if (ren) ren->drawSprite(backdrop);
-    const float size = 134.0f;
-    // The player's place on the battle screen (battle.rcss #player: 262, 84, 134 x 134): the feet at its bottom centre,
-    // the 32-pixel character filling its height.
+    // The player's place on the battle screen (battle.rcss #player, wherever the layout put it: battleBox_[0]): the feet
+    // at its bottom centre, the 32-pixel character filling its height.
+    const glm::vec4 pb = battleBox_[0], eb = battleBox_[1];
     if (battleRigReady() && !battleRigState_.empty())
         battleRig_.draw(ren, battleCharacterAnim_ ? battleCharacterAnim_->atlases() : kNone,
                         battleHeldAnim_ ? battleHeldAnim_->atlases() : kNone,
-                        toms::anim::placement(262.0f + size / 2.0f, 84.0f + size, size / 32.0f));
-    // The monster's (#enemy: 652, 84, 134 x 134): its sprite's longer side fills the box (a 2-wide golem as wide as the
-    // box), feet at the bottom centre, as the picture it replaces.
+                        toms::anim::placement(pb.x + pb.z / 2.0f, pb.y + pb.w, pb.w / 32.0f));
+    // The monster's (#enemy): its sprite's longer side fills the box (a 2-wide golem as wide as the box), feet at the
+    // bottom centre, as the picture it replaces.
     if (monsterRigReady() && !monsterRigState_.empty()) {
         const toms::AtlasRegion* r = spriteAtlas_.find(monsterSprite());
         const float longer = r ? (float)std::max(std::max(r->origW, r->origH), 1) : 32.0f;
-        monsterRig_.draw(ren, monsterAnim_->atlases(), kNone, toms::anim::placement(652.0f + size / 2.0f, 84.0f + size, size / longer));
+        monsterRig_.draw(ren, monsterAnim_->atlases(), kNone,
+                         toms::anim::placement(eb.x + eb.z / 2.0f, eb.y + eb.w, std::min(eb.z, eb.w) / longer));
     }
     if (battleFxFile_) {
         for (BattleFx& b : battleFx_)
@@ -132,9 +134,11 @@ const toms::WeaponFx* Game::battleWeaponFx(bool top) const {
 }
 
 // One-shot, at the player's weapon (#player's box, a little ahead of the character) or the monster's middle (#enemy's).
+// At the player's weapon (a little ahead of the character, in its box) or the monster's middle.
 void Game::playBattleFx(const std::string& effect, bool atEnemy, int delayMs) {
-    if (atEnemy) playBattleFxAt(effect, 719.0f, 151.0f, false, delayMs);
-    else playBattleFxAt(effect, 360.0f, 150.0f, false, delayMs);
+    const glm::vec4 b = battleBox_[atEnemy ? 1 : 0];
+    if (atEnemy) playBattleFxAt(effect, b.x + b.z * 0.5f, b.y + b.w * 0.5f, false, delayMs);
+    else playBattleFxAt(effect, b.x + b.z * 0.731f, b.y + b.w * 0.493f, false, delayMs);
 }
 
 void Game::playBattleFxAt(const std::string& effect, float x, float y, bool overUi, int delayMs) {
@@ -153,7 +157,7 @@ void Game::playBattleFxAt(const std::string& effect, float x, float y, bool over
         b.overUi = overUi;
         b.fx.setTransform(toms::anim::placement(x, y));
         if (!overUi) b.fx.setGpuSimulation(ren, particleGpuThreshold());   // the top layer draws quads only
-        b.fx.play(e);
+        b.fx.play(e, ++battleFxSeed_);
         battleFx_.push_back(std::move(b));
     };
     if (delayMs > 0) timers_.after(battleTimers_, delayMs, start);   // dies with the battle, as the damage numbers

@@ -1,5 +1,6 @@
 // rml_ui.cpp -- see rml_ui.h. RmlUi's render and system interfaces implemented on bgfx.
 #include "rml_ui.h"
+#include "color_space.h"   // TOMS_GAMMA_SPACE: web and Android blend in gamma space
 #include "embedded_shaders.h"
 
 #include "../../core/engine/vfs.h"   // vfsReadAll: APK entries on Android, stdio elsewhere
@@ -102,8 +103,8 @@ public:
         bgfx::TextureHandle tex = texture ? bgfx::TextureHandle{(uint16_t)(texture - 1)} : white;
         bgfx::setTexture(0, sampler, tex);
         // The desktop backbuffer is sRGB (bgfx_host.cpp) and RCSS colours are sRGB, so the shader
-        // linearizes them; the web backbuffer is not sRGB, so they pass through.
-#ifdef __EMSCRIPTEN__
+        // linearizes them; the web's and Android's are not (color_space.h), so they pass through.
+#if TOMS_GAMMA_SPACE
         float p[4] = {0, 0, 0, 0};
 #else
         float p[4] = {1, 0, 0, 0};
@@ -154,7 +155,7 @@ public:
         // Images are the game's pixel art: point sampling keeps them crisp when scaled up. sRGB like
         // the game's own atlases (bgfx_renderer.cpp), so icons look the same in both UIs.
         uint64_t flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
-#ifndef __EMSCRIPTEN__
+#if !TOMS_GAMMA_SPACE
         flags |= BGFX_TEXTURE_SRGB;
 #endif
         bgfx::TextureHandle t = bgfx::createTexture2D((uint16_t)w, (uint16_t)h, false, 1, bgfx::TextureFormat::RGBA8,
@@ -420,6 +421,14 @@ void RmlUi::setViewport(float x, float y, float w, float h) {
 #ifdef __EMSCRIPTEN__
     if (impl_->render.designW > 0) impl_->canvasFont.setPixelScale(w / impl_->render.designW);
 #endif
+}
+
+void RmlUi::setDesignSize(int designW, int designH) {
+    if (!impl_ || designW <= 0 || designH <= 0) return;
+    if ((float)designW == impl_->render.designW && (float)designH == impl_->render.designH) return;
+    impl_->render.designW = (float)designW;
+    impl_->render.designH = (float)designH;
+    if (impl_->context) impl_->context->SetDimensions(Rml::Vector2i(designW, designH));
 }
 
 void RmlUi::update(double timeSeconds) {

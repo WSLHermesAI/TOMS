@@ -39,6 +39,10 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     stop();
     debugUi_ = opts.enableDebugUi;
     assetDir_ = opts.assetDir.empty() ? defaultAssetDir() : opts.assetDir;
+    pinW_ = opts.designW;
+    pinH_ = opts.designH;
+    canvas_ = pinW_ && pinH_ ? toms::Canvas{pinW_, pinH_} : toms::Canvas{};   // the screen's own on the first frame
+    BgfxRenderer::setDesignSizeExact(canvas_.w, canvas_.h);
 
     // vfs, not std::filesystem: on Android these are entries inside the APK (folders via vfsListDir).
     if (toms::vfsListDir(assetDir_ + "/atlas").empty()) {
@@ -204,10 +208,23 @@ bool GameSession::keyPressed(const InputState& in, Key k) {
     return fired;
 }
 
+// The design canvas for the screen (canvas.h): when the screen turns or the window changes shape, the renderer, the UI
+// (its documents lay out again and match their @media rules) and the game (the camera) move to the new one at once.
+void GameSession::fitCanvas(uint32_t deviceW, uint32_t deviceH) {
+    const toms::Canvas want = pinW_ && pinH_ ? toms::Canvas{pinW_, pinH_} : toms::canvasFor(deviceW, deviceH);
+    if (want == canvas_) return;
+    canvas_ = want;
+    BgfxRenderer::setDesignSizeExact(want.w, want.h);
+    if (rml_) rml_->setDesignSize((int)want.w, (int)want.h);
+    if (game_) game_->canvasChanged();
+    std::fprintf(stderr, "[toms] canvas %ux%u (%s)\n", want.w, want.h, want.portrait() ? "portrait" : "landscape");
+}
+
 bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32_t deviceH) {
     if (!game_) return true;
     Game& g = *game_;
     renderer_->setDeviceSize(deviceW, deviceH);
+    fitCanvas(deviceW, deviceH);
     if (dtMs > 0) g.update(dtMs);
 
     bool keepRunning = true;

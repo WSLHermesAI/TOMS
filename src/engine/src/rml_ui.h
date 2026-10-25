@@ -38,6 +38,9 @@ public:
 
     // Letterboxed game rectangle in backbuffer pixels (BgfxRenderer::computeAspectFitViewport).
     void setViewport(float x, float y, float w, float h);
+    // The design canvas changed (canvas.h: the screen turned or was resized). The documents lay out again at the new
+    // size, and their @media rules (orientation: portrait, ...) are matched again.
+    void setDesignSize(int designW, int designH);
     void update(double timeSeconds);     // animations, data bindings, layout
     void render(uint16_t viewId);        // submits the UI to this bgfx view
 

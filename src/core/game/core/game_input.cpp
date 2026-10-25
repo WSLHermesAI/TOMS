@@ -8,7 +8,7 @@ void Game::handleTouch(float px, float py, int phase) {
     // Only clicks that no UI element took arrive here (the RmlUi documents handle every button),
     // so the one thing left is the map: click-to-move, or interact on the player's own tile.
     if (!(px == px) || !(py == py)) return;             // NaN (zero-size canvas)
-    if (px < 0 || px > 1024 || py < 0 || py > 768) return;
+    if (px < 0 || py < 0 || (ren && (px > (float)ren->width() || py > (float)ren->height()))) return;   // on the canvas
     if (phase != 0 || modalActive()) return;
     int tx, ty;
     if (!screenToTile(px, py, tx, ty)) return;

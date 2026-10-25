@@ -317,13 +317,14 @@ void Game::buildUiState(toms::UiState& u) const {
         b.enemy_hp_text = cs.enemy.name + " HP " + std::to_string(std::max(0, cs.enemyHP));
         b.log = cs.log;
         b.continue_hint = L.tr("battle.continue_hint");
-        for (const auto& p : cs.popups) {   // over the fighter's picture (battle.rcss: #player 262, #enemy 652, top 84)
+        for (const auto& p : cs.popups) {   // over the fighter's box (battle.rcss #player / #enemy, battleBox_)
             toms::UiPopup q;
             q.text = p.text;
             q.kind = p.kind;
             const float r = p.rise.value();            // 0 -> 1 as it rises
-            q.x = (p.overEnemy ? 652.0f : 262.0f) + 17.0f;
-            q.y = 110.0f - 70.0f * r;
+            const glm::vec4 box = battleBox_[p.overEnemy ? 1 : 0];
+            q.x = box.x + box.z * 0.5f - 50.0f;        // the 100 px number, centred over it
+            q.y = box.y + 26.0f - 70.0f * r;
             q.opacity = r < 0.6f ? 1.0f : std::max(0.0f, 1.0f - (r - 0.6f) / 0.4f);
             b.popups.push_back(q);
         }
@@ -417,9 +418,10 @@ void Game::buildUiState(toms::UiState& u) const {
         toms::UiDialogue& d = u.dialogue;
         d.visible = true;
         d.scale = uiScale_;
-        // The box spans the 1024-px design width minus 40 px a side and scales about its bottom centre; scaled up
-        // (phones) it is narrowed first, so it keeps that width on screen instead of running off both edges.
-        d.side = (1024.0f - 944.0f / std::max(1.0f, uiScale_)) * 0.5f;
+        // The box spans the canvas width minus 40 px a side and scales about its bottom centre; scaled up (phones) it is
+        // narrowed first, so it keeps that width on screen instead of running off both edges.
+        const float cw = ren ? (float)ren->width() : 1024.0f;
+        d.side = (cw - (cw - 80.0f) / std::max(1.0f, uiScale_)) * 0.5f;
         d.speaker = dlgSpeaker_;
         if (dlgData.contains("nodes") && dlgData["nodes"].contains(dlgNode) && dlgData["nodes"][dlgNode].contains("text"))
             d.text = L.field(dlgData["nodes"][dlgNode]["text"]);

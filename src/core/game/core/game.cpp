@@ -66,6 +66,11 @@ void Game::setCameraModeIndex(int m) {
 }
 
 
+void Game::canvasChanged() {
+    cam_.retarget(pl.x, pl.y, st.width, st.height, ren ? (float)ren->width() : 1024.0f, ren ? (float)ren->height() : 768.0f);
+    cam_.snap();
+}
+
 std::vector<int> Game::storeTabIndices() const {
     // The tab is the item's type (data/items.json): 0 consumables, 1 weapons, 2 armor, 3 talents.
     std::vector<int> out;

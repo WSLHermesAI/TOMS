@@ -15,6 +15,17 @@
 
 ## ▶ Next Step
 
+**Landscape and portrait, live; the attack track's timing help; Android on the emulator** (2026-10-25; rows 2–9 not
+committed; [DAILY_2026-10-25.md](DAILY_2026-10-25.md), [../../gameplay/12_UI_LAYOUT.md](../../gameplay/12_UI_LAYOUT.md)):
+- Timing help (`4951cbd`): `hitWindowMs` 140 / `lateMs` 80, a "tap now" sound, particle and highlight; a sprite layer
+  over the UI.
+- The canvas follows the screen (`canvas.h`, `GameSession::fitCanvas`), switching live; the map shows more tiles, not
+  bigger ones; battle, HUD, notices and the player menu have portrait layouts; dialogue text wraps (`word-break`).
+- Android: the link error fixed; runs and rotates on the emulator; colours fixed (gamma space, `color_space.h`).
+- Web: the rotate hint removed (not rebuilt).
+- Changed-only 15 of 196 pass; 34 switched-off scenarios and `camera_test` by name pass.
+  **Owner:** commit; review the layouts; next the other 8 screens; "build web" to try it in a browser.
+
 **Battle particles, files by key, attribute points, the docs in three folders, the floor on render objects**
 (2026-10-24; not committed; [DAILY_2026-10-24.md](DAILY_2026-10-24.md)):
 - Battle: `media/fx/battle.particle` (22 effects), picked per weapon and level in `weapon_play.json` `"fx"`.
@@ -413,7 +424,8 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 [DAILY_2026-10-16.md](DAILY_2026-10-16.md), [DAILY_2026-10-17.md](DAILY_2026-10-17.md),
 [DAILY_2026-10-18.md](DAILY_2026-10-18.md), [DAILY_2026-10-19.md](DAILY_2026-10-19.md),
 [DAILY_2026-10-21.md](DAILY_2026-10-21.md), [DAILY_2026-10-22.md](DAILY_2026-10-22.md),
-[DAILY_2026-10-23.md](DAILY_2026-10-23.md), [DAILY_2026-10-24.md](DAILY_2026-10-24.md).
+[DAILY_2026-10-23.md](DAILY_2026-10-23.md), [DAILY_2026-10-24.md](DAILY_2026-10-24.md),
+[DAILY_2026-10-25.md](DAILY_2026-10-25.md).
 
 ---
 

@@ -1,4 +1,4 @@
-/* overlay.rcss -- toasts and notifications (overlay.rml). */
+/* overlay.rcss -- toasts and notifications (overlay.rml). Portrait rules at the end (docs/gameplay/12_UI_LAYOUT.md). */
 body { z-index: 90; pointer-events: none; }
 
 #notifications { position: absolute; right: 16px; top: 132px; width: 300px; }   /* below the HUD buttons */
@@ -11,4 +11,11 @@ body { z-index: 90; pointer-events: none; }
 #toast {
     display: inline-block; min-width: 236px; padding: 12px 24px;
     font-size: 21px; color: #ffe6e6; background-color: #a85a5af2; border-radius: 6px;
+}
+
+/* ---- portrait: the notes across the width, in the middle (the top holds the monster in a battle, the bottom its
+   controls); the toast a little lower ---- */
+@media (orientation: portrait) {
+    #notifications { left: 40px; right: 40px; width: auto; top: 45%; }
+    #toast-row     { top: 60%; }
 }

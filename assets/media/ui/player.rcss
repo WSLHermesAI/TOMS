@@ -1,7 +1,10 @@
-/* player.rcss -- the player menu (player.rml). Design space 1024x768, see common.rcss. */
+/* player.rcss -- the player menu (player.rml). Landscape and portrait (docs/gameplay/12_UI_LAYOUT.md): landscape is a
+   992 x 744 panel in the middle of the canvas (on the 1024 canvas at x 16, as it always was); portrait fills the
+   screen less a 12 px edge and stacks each page's two columns. The lists (grid, events, system rows) take the height
+   left under their filters, so they never run out of the panel. Rules for portrait are at the end. */
 body { z-index: 45; }
 
-#panel { position: absolute; left: 16px; top: 12px; width: 992px; height: 744px; background-color: #5a6175f8; }
+#panel { position: absolute; left: 50%; margin-left: -496px; top: 12px; width: 992px; height: 744px; background-color: #5a6175f8; }
 /* Chinese and Japanese have no spaces to break lines at: break a too-long run where it overflows. */
 #panel, .confirm { word-break: break-word; }
 
@@ -65,7 +68,10 @@ body { z-index: 45; }
 }
 
 /* ---- the split layout: list | detail ---- */
-.left  { position: absolute; left: 0; top: 0; width: 548px; bottom: 0; }
+/* a column: headings and filters, then the list filling the rest */
+.left  { position: absolute; left: 0; top: 0; width: 548px; bottom: 0; display: flex; flex-direction: column; }
+.left .heading, .left #worn, .left .chips { flex: 0 0 auto; }
+#grid, #events, #sys-rows { flex: 1 1 0; height: auto; min-height: 0; }
 .right {
     position: absolute; left: 564px; right: 0; top: 0; bottom: 0; padding: 14px 16px;
     background-color: #555d75; border-radius: 6px;
@@ -84,8 +90,7 @@ body { z-index: 45; }
 .worn-line.current { background-color: #73809e; }
 
 /* the 3-per-row grid (scrolls) */
-#grid { height: 586px; padding: 8px 0 8px 8px; background-color: #4d5466; border-radius: 6px; overflow-y: auto; }
-#grid.short { height: 470px; }
+#grid { padding: 8px 0 8px 8px; background-color: #4d5466; border-radius: 6px; overflow-y: auto; }
 .cell {
     position: relative; display: inline-block; width: 164px; height: 128px; margin: 0 8px 8px 0;
     background-color: #686f85; border: 2px #00000000; border-radius: 6px; text-align: center; cursor: pointer;
@@ -120,7 +125,7 @@ body { z-index: 45; }
 .dbtn.off { background-color: #7a7e92; color: #b4b8c6; }
 
 /* ---- Events ---- */
-#events { height: 586px; padding: 8px; background-color: #4d5466; border-radius: 6px; overflow-y: auto; }
+#events { padding: 8px; background-color: #4d5466; border-radius: 6px; overflow-y: auto; }
 .evrow { height: 46px; line-height: 46px; margin-bottom: 6px; padding: 0 14px; font-size: 19px; color: #ffffff; white-space: nowrap; overflow: hidden; }
 .evrow.done { color: #a9adbd; }
 .ev-sub { float: right; font-size: 15px; color: #cad0e1; }
@@ -130,7 +135,7 @@ body { z-index: 45; }
 .ev-link  { font-size: 18px; color: #e9eef9; margin-left: 10px; }
 
 /* ---- System ---- */
-#sys-rows { height: 630px; overflow-y: auto; }
+#sys-rows { overflow-y: auto; }
 .sysrow { height: 52px; line-height: 52px; margin-bottom: 8px; padding: 0 18px; font-size: 21px; color: #ffffff; }
 .rsub { float: right; font-size: 16px; color: #cad0e1; }
 #sys-header { font-size: 26px; color: #f9e9b1; }
@@ -142,10 +147,36 @@ body { z-index: 45; }
 #sys-back { position: absolute; right: 16px; bottom: 14px; width: 120px; height: 42px; line-height: 42px; font-size: 18px; }
 
 /* ---- confirm dialogs ---- */
-.confirm  { position: absolute; left: 232px; top: 279px; width: 560px; height: 210px; text-align: center; }
-.confirm.with-body { top: 254px; height: 260px; }
+/* in the middle of the canvas, whatever its shape (on the 1024 x 768 canvas: x 232, y 279) */
+.confirm  { position: absolute; left: 50%; top: 50%; margin-left: -280px; margin-top: -105px; width: 560px; height: 210px; text-align: center; }
+.confirm.with-body { margin-top: -130px; height: 260px; }
 .question { margin-top: 50px; padding: 0 20px; font-size: 25px; color: #f9e9b1; }
 .confirm.with-body .question { margin-top: 30px; }
 .body     { margin-top: 10px; font-size: 18px; color: #cad0e1; }
 .answers  { position: absolute; left: 0; right: 0; bottom: 26px; }
 .answer   { display: inline-block; width: 160px; height: 52px; line-height: 52px; margin: 0 20px; text-align: center; font-size: 20px; color: #ffffff; }
+
+/* ---- portrait: the panel fills the screen; each page's two columns are stacked (the list above, the detail below) ---- */
+@media (orientation: portrait) {
+    #panel  { left: 12px; right: 12px; margin-left: 0; width: auto; top: 12px; bottom: 12px; height: auto; }
+    .tab    { padding: 0 14px; margin-right: 6px; font-size: 20px; }
+    /* Status: one column. The stats take the height they need; the attributes the rest: their heading, the list
+       (scrolling when it must), Confirm / Reset, the description. */
+    .page.status { display: flex; flex-direction: column; }
+    #st-left  { position: relative; left: auto; top: auto; bottom: auto; width: auto; flex: 0 0 auto; padding: 0 8px 12px 8px; }
+    #st-right { position: relative; left: auto; right: auto; top: auto; bottom: auto; flex: 1 1 0; min-height: 0;
+                padding: 0 8px; display: flex; flex-direction: column; }
+    #st-right .heading, #attr-actions { flex: 0 0 auto; }
+    #attrs    { flex: 1 1 0; min-height: 0; max-height: none; overflow-y: auto; }
+    #attr-desc { position: relative; left: auto; right: auto; bottom: auto; flex: 0 0 auto; height: 140px; margin-top: 10px; }
+    /* the lists over their detail */
+    .left   { width: auto; right: 0; bottom: 47%; }
+    .right  { left: 0; top: 55%; }
+    .cell   { width: 152px; }
+    .confirm { width: 600px; margin-left: -300px; }
+}
+
+/* a short portrait screen (3:4): the stats scroll in a fixed share, so the six attributes still show */
+@media (orientation: portrait) and (max-height: 1299px) {
+    #st-left { flex: 0 0 auto; height: 360px; overflow-y: auto; }
+}

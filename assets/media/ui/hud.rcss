@@ -1,4 +1,5 @@
-/* hud.rcss -- the walking-scene HUD (hud.rml). */
+/* hud.rcss -- the walking-scene HUD (hud.rml). Landscape and portrait (docs/gameplay/12_UI_LAYOUT.md): a landscape
+   canvas is always 768 high (only its width grows), so the top-anchored lines stay; portrait rules are at the end. */
 body { z-index: 10; pointer-events: none; }     /* clicks go through to the map ... */
 .click { pointer-events: auto; cursor: pointer; } /* ... except on these */
 
@@ -30,7 +31,7 @@ body { z-index: 10; pointer-events: none; }     /* clicks go through to the map 
 
 /* The act card, shown for a moment when a new act begins. */
 #chapter {
-    position: absolute; left: 202px; top: 230px; width: 620px; height: 116px;
+    position: absolute; left: 50%; margin-left: -310px; top: 230px; width: 620px; height: 116px;   /* centred */
     background-color: #475168e0;
 }
 #chapter-title { position: absolute; left: 28px; top: 16px; font-size: 30px; color: #fff8d9; }
@@ -38,3 +39,10 @@ body { z-index: 10; pointer-events: none; }     /* clicks go through to the map 
 #chapter-rule  { position: absolute; left: 24px; right: 24px; bottom: 14px; height: 2px; background-color: #eddc9ee6; }
 
 #footer { position: absolute; left: 16px; right: 16px; top: 736px; font-size: 18px; color: #e6edff; white-space: nowrap; }
+
+/* ---- portrait: the lines wrap clear of the menu button; the story line sits on the bottom edge ---- */
+@media (orientation: portrait) {
+    #title-line { right: 90px; font-size: 23px; }
+    #footer     { top: auto; bottom: 16px; white-space: normal; }
+    #chapter    { left: 40px; margin-left: 0; width: 688px; top: 40%; }
+}

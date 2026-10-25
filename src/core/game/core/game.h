@@ -482,6 +482,11 @@ public:
     // Where the battle screen's attack track shows its points, in design pixels (GameUi reads its layout each frame), so
     // the track's hint particles land on them.
     void setComboPointsOnScreen(std::vector<glm::vec2> pts) { comboPointsOnScreen_ = std::move(pts); }
+    // Where the battle screen laid out the player's and the monster's boxes (battle.rcss #player / #enemy: x, y, w, h in
+    // design pixels; GameUi reads them each frame): the fighters, their particles and damage numbers are placed in them.
+    void setBattleBoxes(const glm::vec4& player, const glm::vec4& enemy) { battleBox_[0] = player; battleBox_[1] = enemy; }
+    // The design canvas changed (the screen turned, canvas.h): the camera fits the new one at once, without easing.
+    void canvasChanged();
     // Files by key, never by path (assets/media/resources.json; the keys: res_keys.h, made by tools/make_res_keys.py).
     // pathOf: a key's path, for what reads the file itself (a loader, RmlUi, the sound folder). pathFor: one file of a
     // family ("stage", "stage01"). Both are paths under assets/media's folder, as the resource manager reads them.
@@ -823,6 +828,7 @@ private:
     bool battleFxTried_ = false;
     struct BattleFx { toms::fx::EffectInstance fx; bool overUi = false; };   // overUi: drawn over the UI (a track hint)
     std::vector<BattleFx> battleFx_;
+    uint32_t battleFxSeed_ = 0;   // each effect of a battle its own seed, from 1 again each battle (the same fight looks the same)
     const toms::WeaponFx* battleWeaponFx(bool top = false) const;   // the worn weapon's at its level (top: its best)
     void playBattleFx(const std::string& effect, bool atEnemy, int delayMs = 0);
     // At a point of the screen (design pixels); overUi: over the battle screen's UI (the attack track).
@@ -830,6 +836,7 @@ private:
     // The attack track's hint (the owner 2026-10-24: the timing was hard): a point's window entered, or a point hit.
     void comboHint(int point, bool hit);
     std::vector<glm::vec2> comboPointsOnScreen_;   // where the UI drew the track's points (GameUi, a frame late)
+    glm::vec4 battleBox_[2] = {{262, 84, 134, 134}, {652, 84, 134, 134}};   // setBattleBoxes; the 1024 x 768 layout until told
     void updateBattleFx(int dtMs);                      // Game::update
     std::string previewHeldFile_;                       // setPreviewHeld
     std::shared_ptr<toms::res::AnimRes> previewHeld_;   // its clips

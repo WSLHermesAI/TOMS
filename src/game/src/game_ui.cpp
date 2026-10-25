@@ -509,6 +509,14 @@ void GameUi::sync() {
             at.push_back({o.x + sz.x * 0.5f, o.y + sz.y * 0.5f});
         }
         game_->setComboPointsOnScreen(std::move(at));
+        auto box = [&](const char* id) {   // the fighters' boxes (battle.rcss #player / #enemy)
+            Rml::Element* e = docs_[i].doc->GetElementById(id);
+            if (!e) return glm::vec4(0.0f);
+            const Rml::Vector2f o = e->GetAbsoluteOffset(Rml::BoxArea::Border), sz = e->GetBox().GetSize(Rml::BoxArea::Border);
+            return glm::vec4(o.x, o.y, sz.x, sz.y);
+        };
+        const glm::vec4 pb = box("player"), eb = box("enemy");
+        if (pb.z > 0 && eb.z > 0) game_->setBattleBoxes(pb, eb);
     }
     take(state_.dialogue, next.dialogue);
     take(state_.player, next.player);

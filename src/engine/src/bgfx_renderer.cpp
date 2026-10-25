@@ -1,5 +1,6 @@
 // bgfx_renderer.cpp -- see bgfx_renderer.h.
 #include "bgfx_renderer.h"
+#include "color_space.h"   // TOMS_GAMMA_SPACE: web and Android blend in gamma space
 #include "embedded_shaders.h"
 #include "shared_textures.h"
 
@@ -248,9 +249,9 @@ uint16_t BgfxRenderer::createAtlas(const std::vector<uint8_t>& px, uint32_t w, u
         std::fprintf(stderr, "[toms] atlas %ux%u exceeds the GPU limit %u -- not uploaded\n", w, h, maxSize);
         return kInvalid;
     }
-#ifdef __EMSCRIPTEN__
-    // WebGL has no sRGB backbuffer, so sampling sRGB textures would darken everything. Same as the
-    // old WebGL renderer: plain RGBA8, blending in gamma space.
+#if TOMS_GAMMA_SPACE
+    // No sRGB backbuffer (the web, Android: color_space.h), so sampling sRGB textures would darken everything. Same
+    // as the old WebGL renderer: plain RGBA8, blending in gamma space.
     const uint64_t flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #else
     const uint64_t flags = BGFX_TEXTURE_SRGB | BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
@@ -288,7 +289,7 @@ uint16_t BgfxRenderer::loadTexture(const std::vector<uint8_t>& rgba, uint32_t w,
 
 uint16_t BgfxRenderer::createDynamicTexture(uint32_t w, uint32_t h) {
     if (w == 0 || h == 0) return kSpriteAtlasTexture;
-#ifdef __EMSCRIPTEN__
+#if TOMS_GAMMA_SPACE
     const uint64_t flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #else
     const uint64_t flags = BGFX_TEXTURE_SRGB | BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;

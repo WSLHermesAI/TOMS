@@ -5,6 +5,7 @@
 // platform-neutral input into Game calls. The input rules are a line-by-line port of the loop in
 // the old GLFW main (removed 2026-09-27), so the game plays exactly as before.
 #pragma once
+#include "canvas.h"   // toms::Canvas -- the design canvas for the screen
 #include "imgui_bgfx.h"
 
 #include <array>
@@ -52,9 +53,11 @@ struct SessionOptions {
     std::string previewCharacter;      // --character: the character a --anim character clip is played by
     std::string previewHeld;           // --held: a held thing's .anim, its clip of the same name at the hand
     bool        enableDebugUi = true;  // ImGui windows (F1 / F2 / Tab stage select / toasts)
-    // Mobile: grow the UI objects, keep the 1024x768 game resolution (Game::setUiScale,
-    // the owner's rule). 1.0 = unchanged. The web host sets these on small screens.
+    // Mobile: grow the UI objects (Game::setUiScale). 1.0 = unchanged. The web host sets these on small screens.
     float       uiScale  = 1.0f;
+    // The design canvas (canvas.h): 0 x 0 = follow the screen's shape (landscape or portrait, live; the owner
+    // 2026-10-25); a size = always that one, letterboxed (--design=WxH; the screenshot tests pin 1024 x 768).
+    uint32_t    designW = 0, designH = 0;
     // The 3D scene behind the title (title_scene.h): a .glb / .gltf path, "" = the default
     // (<assets>/models/VirtualCity.glb, when it exists), "none" = the plain title (--title-scene).
     std::string titleScene;
@@ -119,6 +122,9 @@ private:
     std::unique_ptr<TitleScene> titleScene_;     // the 3D scene behind the title (title_scene.h)
     double uiTime_ = 0;
     std::string uiLanguage_;                     // language the UI font was last chosen for
+    uint32_t pinW_ = 0, pinH_ = 0;               // SessionOptions::designW / H
+    toms::Canvas canvas_;                        // the canvas now (BgfxRenderer::kDesignW / H, the UI's size)
+    void fitCanvas(uint32_t deviceW, uint32_t deviceH);   // the canvas for the screen; on a change, everyone is told
 };
 
 }  // namespace toms::next

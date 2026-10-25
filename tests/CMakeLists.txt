@@ -34,6 +34,7 @@ set(TOMS_UNIT_TESTS
     engine/state_machine_test
     engine/resource_test            engine/render_object_test      engine/render_mesh_test
     engine/safe_timer_test          engine/tween_test              engine/timed_hits_test
+    engine/canvas_test
     game/core/atlas_sprites_test   game/core/res_keys_test
     game/save/save_test
     game/systems/camera_test        game/systems/cycle_system_test     game/systems/ending_system_test
@@ -125,8 +126,10 @@ set(TOMS_GOLDEN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/golden")
 function(toms_smoke_test name golden renderer tolerance)
     # The game's arguments travel as one "a|b|c" string; run_smoke.cmake splits it again.
     list(JOIN ARGN "|" _scene)
-    # --skip-start-story: Enter on the title's New Game goes straight to stage 1, as when these references were made
-    set(_args "--renderer=${renderer}|--fixed-dt=16|--skip-start-story|${_scene}")
+    # --skip-start-story: Enter on the title's New Game goes straight to stage 1, as when these references were made;
+    # --design=1024x768: the canvas they were made on (without it the canvas follows the window's shape, canvas.h). A
+    # test that wants another canvas passes its own --design (or --window) after these: the last one wins.
+    set(_args "--renderer=${renderer}|--fixed-dt=16|--skip-start-story|--design=1024x768|${_scene}")
     add_test(NAME smoke.${name}
              COMMAND ${CMAKE_COMMAND}
                      -DGAME=$<TARGET_FILE:toms_game> -DDIFF=$<TARGET_FILE:image_diff>
