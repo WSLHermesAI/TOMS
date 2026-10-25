@@ -43,7 +43,7 @@ set(TOMS_UNIT_TESTS
     game/systems/mission_test       game/systems/run_state_test        game/systems/skill_system_test
     game/systems/player_menu_test   game/systems/stair_links_test  game/systems/floor_index_test
     game/systems/story_controller_test   game/systems/event_chain_test   game/systems/talk_system_test
-    game/systems/weapon_play_test   game/systems/card_collection_test   game/systems/combo_play_test   game/systems/mini_game_test
+    game/systems/weapon_play_test   game/systems/card_collection_test   game/systems/combo_play_test   game/systems/mini_game_test   game/systems/battle_party_test
     game/ui/title_screen_test)
 
 get_filename_component(_data_parent "${TOMS_DATA_DIR}" DIRECTORY)

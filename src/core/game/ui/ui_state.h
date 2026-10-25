@@ -98,6 +98,16 @@ struct UiPopup {                       // a damage number rising over a fighter 
     int kind = 0;                      // 0 a hit, 1 a big hit (super), 2 a guarded hit
 };
 
+struct UiFoe {                         // one monster of the battle (docs/gameplay/13 §4.6)
+    std::string sprite;                // its still picture (_atlas.rcss), when the game does not draw it
+    bool anim = false;                 // the game draws it (monster_battle.anim): no picture
+    float hp_pct = 0;
+    std::string hp_text;               // "Slime HP 24" (one monster: one line)
+    std::string name, hp_line;         // "Slime" / "HP 24" (two or three: two lines, the slots are narrow)
+    bool target = false;               // the player's attacks go to it (shown only with two or more)
+    bool down = false;
+};
+
 struct UiBattle {
     bool visible = false;
     bool active = false;               // fighting (false: won, showing "tap to continue")
@@ -121,6 +131,7 @@ struct UiBattle {
     bool active_ready = false;
     std::string active_button;
     std::vector<UiPopup> popups;
+    std::vector<UiFoe> foes;           // 1..3; foes[0] is enemy_* above
 };
 
 struct UiDialogue {

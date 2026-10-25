@@ -137,6 +137,17 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("kind", &UiPopup::kind);
     }
     c.RegisterArray<std::vector<UiPopup>>();
+    if (auto s = c.RegisterStruct<UiFoe>()) {
+        s.RegisterMember("sprite", &UiFoe::sprite);
+        s.RegisterMember("anim", &UiFoe::anim);
+        s.RegisterMember("hp_pct", &UiFoe::hp_pct);
+        s.RegisterMember("hp_text", &UiFoe::hp_text);
+        s.RegisterMember("name", &UiFoe::name);
+        s.RegisterMember("hp_line", &UiFoe::hp_line);
+        s.RegisterMember("target", &UiFoe::target);
+        s.RegisterMember("down", &UiFoe::down);
+    }
+    c.RegisterArray<std::vector<UiFoe>>();
     if (auto s = c.RegisterStruct<UiBattle>()) {
         s.RegisterMember("visible", &UiBattle::visible);
         s.RegisterMember("active", &UiBattle::active);
@@ -167,6 +178,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("active_ready", &UiBattle::active_ready);
         s.RegisterMember("active_button", &UiBattle::active_button);
         s.RegisterMember("popups", &UiBattle::popups);
+        s.RegisterMember("foes", &UiBattle::foes);
     }
     if (auto s = c.RegisterStruct<UiDialogue>()) {
         s.RegisterMember("visible", &UiDialogue::visible);
@@ -509,14 +521,17 @@ void GameUi::sync() {
             at.push_back({o.x + sz.x * 0.5f, o.y + sz.y * 0.5f});
         }
         game_->setComboPointsOnScreen(std::move(at));
-        auto box = [&](const char* id) {   // the fighters' boxes (battle.rcss #player / #enemy)
-            Rml::Element* e = docs_[i].doc->GetElementById(id);
+        auto box = [](Rml::Element* e) {   // the fighters' boxes (battle.rcss #player / .foe .fbox)
             if (!e) return glm::vec4(0.0f);
             const Rml::Vector2f o = e->GetAbsoluteOffset(Rml::BoxArea::Border), sz = e->GetBox().GetSize(Rml::BoxArea::Border);
             return glm::vec4(o.x, o.y, sz.x, sz.y);
         };
-        const glm::vec4 pb = box("player"), eb = box("enemy");
-        if (pb.z > 0 && eb.z > 0) game_->setBattleBoxes(pb, eb);
+        Rml::ElementList fb;
+        docs_[i].doc->QuerySelectorAll(fb, ".foe .fbox");
+        std::vector<glm::vec4> foes;
+        for (Rml::Element* e : fb) foes.push_back(box(e));
+        const glm::vec4 pb = box(docs_[i].doc->GetElementById("player"));
+        if (pb.z > 0 && !foes.empty() && foes[0].z > 0) game_->setBattleBoxes(pb, foes);
     }
     take(state_.dialogue, next.dialogue);
     take(state_.player, next.player);

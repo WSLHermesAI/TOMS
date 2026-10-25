@@ -649,6 +649,14 @@
       "ko": "{dmg}의 피해를 입혔습니다!",
       "es": "¡Causaste {dmg} de daño!"
     },
+    "battle.foe_down": {
+      "zh_TW": "{name} 倒下了！",
+      "en": "{name} is down!",
+      "zh_CN": "{name} 倒下了！",
+      "ja": "{name} を倒した！",
+      "ko": "{name}을(를) 쓰러뜨렸습니다!",
+      "es": "¡{name} ha caído!"
+    },
     "battle.player_down": {
       "zh_TW": "你倒下了……返回本層起點。",
       "en": "You have fallen... returning to the start of this floor.",

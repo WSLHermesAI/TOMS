@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battle editor mockup</title>
+<!-- A mockup of the battle editor of docs/gameplay/13_BATTLE_EDITOR.md: how the window looks and what each panel holds.
+     Local file, no network. The data are samples from assets/data; nothing is saved. The Player tab's growth
+     calculator is real (the formula of §4.3); the battle preview only animates the attack track. -->
+<style>
+  :root {
+    --bg: #23262f; --panel: #2e323e; --panel2: #383d4b; --line: #4a5062; --text: #e9eef9; --dim: #a9b0c3;
+    --gold: #f9e9b1; --accent: #8594b0; --good: #94e6a8; --bad: #f39494; --warn: #ffd28f; --track: #5b6275;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, "Microsoft JhengHei", sans-serif; }
+  header { height: 40px; display: flex; align-items: center; gap: 16px; padding: 0 14px; background: #1b1d24; border-bottom: 1px solid var(--line); }
+  header b { color: var(--gold); }
+  header .menu span { color: var(--dim); margin-right: 14px; }
+  .note { margin-left: auto; color: var(--warn); font-size: 12px; }
+  main { display: grid; grid-template-columns: 220px minmax(0, 1fr) 380px; height: calc(100vh - 40px - 54px); }
+  aside, section { overflow: auto; }
+  main > * { min-height: 0; }   /* the columns scroll inside; they never stretch the row */
+  aside { background: var(--panel); border-right: 1px solid var(--line); padding: 10px; }
+  h3 { margin: 4px 0 8px; font-size: 12px; letter-spacing: .08em; color: var(--dim); text-transform: uppercase; }
+  input, select { background: #1f222b; color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; font: inherit; }
+  input[type=number] { width: 72px; }
+  .mon { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 5px; cursor: pointer; }
+  .mon:hover { background: var(--panel2); }
+  .mon.sel { background: var(--accent); color: #fff; }
+  .mon .ico { width: 22px; height: 22px; border-radius: 50%; flex: none; }
+  .mon small { color: var(--dim); margin-left: auto; }
+  .mon.sel small { color: #eef; }
+  .btnrow { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+  button { white-space: nowrap; background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 5px 10px; font: inherit; cursor: pointer; }
+  button:hover { background: #46506a; }
+  button.primary { background: #3f7f58; border-color: #5aa077; }
+  button.primary:hover { background: #4d9a6b; }
+  button.on { background: var(--accent); color: #fff; }
+
+  /* the viewport: the game's battle screen */
+  .center { display: flex; flex-direction: column; background: #15171d; }
+  .bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .bar .sp { margin-left: auto; color: var(--dim); }
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 14px; }
+  .screen { position: relative; background: #1c1f27; border: 1px solid #3a3f4e; box-shadow: 0 0 0 6px #0f1014; overflow: hidden; }
+  .screen.land { width: min(100%, 720px); aspect-ratio: 16/9; }
+  .screen.port { height: min(100%, 640px); aspect-ratio: 9/16; }
+  .scr-title { position: absolute; left: 6%; top: 4%; color: #ffcaa8; font-size: 22px; }
+  .fighter { position: absolute; width: 18%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+  .fighter .blob { width: 70%; height: 70%; border-radius: 45% 45% 40% 40%; box-shadow: inset -6px -8px 0 rgba(0,0,0,.25); }
+  .land .pl { left: 12%; top: 16%; }
+  .port .pl { left: 36%; top: 30%; width: 28%; }
+  .fighter.en { cursor: pointer; }
+  .fighter.en.target::after { content: '▼ target'; position: absolute; top: -18px; font-size: 11px; color: var(--warn); }
+  .fighter.en.target .blob { outline: 3px solid var(--warn); outline-offset: 3px; }
+  .eintent { position: absolute; left: 50%; transform: translateX(-50%); bottom: -24px; display: flex; align-items: center; gap: 4px;
+             font-size: 11px; color: #fff; background: #00000088; padding: 2px 6px; border-radius: 10px; white-space: nowrap; }
+  .eintent .ring { width: 12px; height: 12px; }
+  .ehp { position: absolute; left: 10%; right: 10%; bottom: -34px; height: 6px; background: #50535f; }
+  .ehp i { display: block; height: 100%; background: var(--bad); }
+  .mon input { margin: 0 2px 0 0; }
+  .hp { position: absolute; height: 10px; background: #50535f; }
+  .hp i { display: block; height: 100%; }
+  .land .hp.p { left: 10%; top: 46%; width: 24%; }
+  .port .hp.p { left: 8%; top: 48%; width: 84%; }
+  .intent { position: absolute; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #fff;
+            background: #00000088; padding: 3px 8px; border-radius: 12px; white-space: nowrap; }
+  .intent { display: none; }
+  .ring { width: 18px; height: 18px; border-radius: 50%; background: conic-gradient(var(--warn) var(--p,30%), #555 0); }
+  .ctrl { position: absolute; left: 6%; right: 6%; }
+  .land .ctrl { top: 56%; } .port .ctrl { bottom: 6%; }
+  .track { position: relative; height: 22px; background: var(--track); margin: 6px 0 10px 16px; }
+  .pt { position: absolute; top: 3px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: #94b1ed; }
+  .pt.near { top: -2px; width: 26px; height: 26px; margin-left: -13px; background: #ffe27a; border: 2px solid #fff; }
+  .pt.hit { background: var(--good); }
+  .marker { position: absolute; top: -6px; width: 4px; height: 34px; background: #fff; }
+  .tap { background: #8598b3; height: 40px; line-height: 40px; padding-left: 12px; color: #fff; border-radius: 4px; }
+  .lbl { color: #f3f3ff; font-size: 13px; }
+
+  /* the right side: tabs */
+  .side { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; }
+  .tabs { display: flex; border-bottom: 1px solid var(--line); }
+  .tabs div { padding: 9px 12px; cursor: pointer; color: var(--dim); }
+  .tabs div.on { color: var(--gold); border-bottom: 2px solid var(--gold); }
+  .pane { display: none; padding: 12px; overflow: auto; flex: 1; }
+  .pane.on { display: block; }
+  .grid { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; align-items: center; margin-bottom: 12px; }
+  .grid label { color: var(--dim); }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--dim); font-weight: 500; font-size: 12px; }
+  .missing { color: var(--bad); }
+  .card { background: var(--panel2); border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; border-left: 3px solid var(--warn); }
+  .card .t { color: var(--warn); font-weight: 600; }
+  .card ul { margin: 4px 0 6px 18px; padding: 0; }
+  .readout { background: #262a35; border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; color: var(--dim); }
+  .readout b { color: var(--text); }
+  canvas { width: 100%; height: 170px; background: #1f222b; border-radius: 6px; }
+  .log { font: 12px/1.6 Consolas, monospace; color: #cfd6e6; white-space: pre-wrap; }
+  footer { height: 54px; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--panel); border-top: 1px solid var(--line); }
+  .chip { padding: 5px 12px; border-radius: 14px; background: var(--panel2); cursor: pointer; }
+  .chip.on { background: #ead98f; color: #2e3140; }
+  .hint { color: var(--dim); font-size: 12px; margin: -4px 0 10px; }
+</style>
+</head>
+<body>
+<header>
+  <b>battle_editor</b>
+  <span class="menu"><span>File</span><span>Edit</span><span>View</span><span>Help</span></span>
+  <span class="note">Mockup (docs/gameplay/13_BATTLE_EDITOR.md) — sample data, nothing is saved</span>
+</header>
+
+<main>
+  <!-- the monster list -->
+  <aside>
+    <h3>Monsters <span id="inb" style="float:right;color:var(--warn);text-transform:none">In battle: 1</span></h3>
+    <p class="hint" style="margin:0 0 6px">☑ = in the battle (up to 3, in order). Click a name to edit it.</p>
+    <input id="q" placeholder="search…" style="width:100%;margin-bottom:6px" oninput="drawList()">
+    <select style="width:100%;margin-bottom:8px"><option>All chapters</option><option>Ch. 1 Village</option><option>Ch. 2 Forest</option></select>
+    <div id="list"></div>
+    <div class="btnrow"><button>New</button><button>Duplicate</button><button>Delete</button></div>
+  </aside>
+
+  <!-- the viewport -->
+  <div class="center">
+    <div class="bar">
+      <button class="primary" onclick="battle()">▶ Battle</button>
+      <button onclick="battle()">⟲ Restart</button>
+      <button onclick="running=!running">⏸ Pause</button>
+      <button>×0.5</button><button class="on">×1</button><button>×2</button>
+      <button onclick="logLine('win now')">Win now</button><button onclick="logLine('lose now')">Lose now</button>
+      <span class="sp">pace</span>
+      <button id="pcool" class="on" onclick="pace('cooldown')">Cooldown</button>
+      <button id="pstam" onclick="pace('stamina')">Stamina</button>
+      <span style="color:var(--dim)">view</span>
+      <button id="vland" class="on" onclick="view('land')">Landscape</button>
+      <button id="vport" onclick="view('port')">Portrait</button>
+    </div>
+    <div class="stage">
+      <div id="screen" class="screen land">
+        <div class="scr-title" id="stitle">Battle! Slime</div>
+        <div class="intent"><span class="ring" id="ring"></span><span id="itext">Heavy blow in 2.4 s</span></div>
+        <div id="enemies"></div>
+        <div class="fighter pl"><div class="blob" style="background:#3c5ea8"></div></div>
+        <div class="hp p"><i style="width:100%;background:var(--good)"></i></div>
+        <div class="ctrl">
+          <div class="lbl" id="stamline" style="display:none">Stamina <span style="display:inline-block;width:40%;height:8px;background:#50535f;vertical-align:middle"><i style="display:block;width:70%;height:100%;background:#94b1ed"></i></span></div>
+          <div class="lbl">Tap on the points!</div>
+          <div class="track" id="track"><div class="marker" id="marker" style="left:0"></div></div>
+          <div class="tap">Tap!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- the settings -->
+  <div class="side">
+    <div class="tabs" id="tabs">
+      <div class="on" data-p="mon">Monster</div><div data-p="wep">Weapon</div><div data-p="ply">Player</div>
+      <div data-p="evt">Events</div><div data-p="log">Log</div>
+    </div>
+
+    <div class="pane on" id="mon">
+      <div class="readout" id="readout"></div>
+      <div class="grid">
+        <label>Id</label><input id="m-id" disabled>
+        <label>Name (en)</label><input id="m-name">
+        <label>Name (zh_TW)</label><input id="m-zh">
+        <label>Sprite</label><input id="m-sprite">
+      </div>
+      <h3>Stats</h3>
+      <div class="grid" id="m-stats"></div>
+      <h3>Battle</h3>
+      <div class="grid">
+        <label>Attack every</label><span><input type="number" id="m-int"> ms</span>
+        <label>Weapon</label><select><option>claw (quick jabs)</option><option>slam (heavy blow)</option><option>spell (charging)</option></select>
+        <label>Moves</label><span>heavy_blow, quick_jabs <button>+</button></span>
+      </div>
+      <h3>Look (status → clip, sound, particle)</h3>
+      <table>
+        <tr><th>Status</th><th>Clip</th><th>Sound</th><th>Particle</th></tr>
+        <tr><td>idle</td><td>idle</td><td>—</td><td>—</td></tr>
+        <tr><td>attack</td><td>attack</td><td>enemy_attack</td><td>—</td></tr>
+        <tr><td>hurt</td><td>hurt</td><td>hurt_soft</td><td>hit_sparks</td></tr>
+        <tr><td>special</td><td class="missing">special (missing)</td><td>roar</td><td class="missing">rune_blaze (missing)</td></tr>
+        <tr><td>die</td><td>die</td><td>monster_down</td><td>smoke_puff</td></tr>
+      </table>
+      <h3>Rewards</h3>
+      <div class="grid"><label>EXP / gold</label><span><input type="number" id="m-exp"> <input type="number" id="m-gold"></span>
+        <label>Card chance</label><span><input type="number" value="25"> %</span></div>
+      <div class="btnrow"><button class="primary">Save</button><button>Revert</button></div>
+    </div>
+
+    <div class="pane" id="wep">
+      <div class="btnrow" id="weplist"></div>
+      <h3>Play</h3>
+      <div class="grid">
+        <label>Sweep</label><span><input type="number" value="1700"> ms, turn back ☑, 3 sweeps</span>
+        <label>Charge</label><span><input type="number" value="2200"> ms → speed ×2, damage ×2.2</span>
+        <label>Timing window</label><span><input type="number" value="0.07" step="0.01"> of the track, ≥ <input type="number" value="140"> ms</span>
+        <label>Late taps</label><span><input type="number" value="80"> ms</span>
+        <label>A miss</label><span>back to the start (Lv 1–9), 5 points (Lv 10+)</span>
+      </div>
+      <h3>By level</h3>
+      <table>
+        <tr><th>Lv</th><th>Points</th><th>Bonus</th><th>Wins to next</th><th>Particles</th></tr>
+        <tr><td>1</td><td>3</td><td>STR 10</td><td>3</td><td>bow_release_1 / bow_hit_1</td></tr>
+        <tr><td>2</td><td>3</td><td>STR 12, AGI 5</td><td>5</td><td>″</td></tr>
+        <tr><td>3</td><td>4</td><td>STR 14, AGI 10</td><td>8</td><td>bow_release_2 / bow_hit_2</td></tr>
+        <tr><td>4</td><td>4</td><td>STR 16, AGI 12</td><td>12</td><td>″</td></tr>
+        <tr><td>5</td><td>5</td><td>STR 20, AGI 15</td><td>—</td><td>bow_release_3 / bow_hit_3</td></tr>
+      </table>
+      <h3>Special results (by points matched)</h3>
+      <p class="hint">The highest row the combo reaches applies. "all" = every point of the weapon's level.</p>
+      <table>
+        <tr><th>Matched</th><th>Name</th><th>Damage</th><th>Extra</th><th>Particle / clip / sound</th><th></th></tr>
+        <tr><td>all</td><td>perfect</td><td>×1.5</td><td>stagger 1.5 s</td><td class="missing">bow_perfect (missing) / attack_big / perfect</td><td><button>Preview</button></td></tr>
+        <tr><td>3+</td><td>great</td><td>×1.2</td><td>break +20</td><td>bow_hit_3 / attack / hit_big</td><td><button>Preview</button></td></tr>
+        <tr><td>1+</td><td>hit</td><td>×1.0</td><td>—</td><td>bow_hit_1 / attack / player_attack</td><td><button>Preview</button></td></tr>
+        <tr><td>0</td><td>miss</td><td>—</td><td>—</td><td>miss_puff / miss / deny</td><td><button>Preview</button></td></tr>
+      </table>
+      <div class="btnrow"><button>+ Row</button><button class="primary">Save</button><button>Use for the next battle</button></div>
+    </div>
+
+    <div class="pane" id="ply">
+      <h3>Test player</h3>
+      <div class="grid">
+        <label>Level</label><input type="number" id="p-lv" value="20" oninput="calc()">
+        <label>HP / max</label><span><input type="number" value="320"> / <input type="number" value="320"></span>
+        <label>Weapon</label><span>Hunter's Bow, Lv <input type="number" value="3" style="width:50px"> (wins 11)</span>
+      </div>
+      <h3>Attributes</h3>
+      <div class="grid" id="p-attrs"></div>
+      <h3>Growth calculator</h3>
+      <p class="hint">"By level L the player has gained T points": the points each level gives, on a curve, adding up to T exactly. Shape 1 = even, above 1 = more later, below 1 = more early.</p>
+      <div class="grid">
+        <label>Total points T</label><input type="number" id="c-t" value="100" oninput="calc()">
+        <label>By level L</label><input type="number" id="c-l" value="20" oninput="calc()">
+        <label>Shape k</label><span><input type="range" id="c-k" min="0.4" max="2.5" step="0.05" value="1.3" oninput="calc()"> <b id="c-kv">1.30</b></span>
+      </div>
+      <canvas id="chart" width="700" height="320"></canvas>
+      <div id="c-out" class="hint" style="margin-top:8px"></div>
+      <div class="btnrow"><button onclick="applyCalc()">Apply to the test player</button><button>Save as the game's table (stats.json)</button></div>
+      <div id="c-table"></div>
+      <div class="btnrow"><button class="primary">Save setup</button><button>Load setup…</button></div>
+    </div>
+
+    <div class="pane" id="evt">
+      <p class="hint">Bound to the monster (enemies.json "events"). Each card: a trigger, actions, how often. "Fire now" tries it in the running battle.</p>
+      <div class="card"><div class="t">Before the battle</div><ul><li>Dialogue: golem_wakes</li></ul><button>Fire now</button> <button>Edit</button></div>
+      <div class="card"><div class="t">HP below 50% · once</div><ul><li>Say: "The golem's runes blaze!"</li><li>STR × 1.3 (for good)</li><li>Clip: special · particle: rune_blaze</li></ul><button>Fire now</button> <button>Edit</button></div>
+      <div class="card"><div class="t">HP below 20% · once</div><ul><li>Transform into: Golem Core (HP keeps its share)</li><li>Particle: transform_burst · shake 0.4 s</li></ul><button>Fire now</button> <button>Edit</button></div>
+      <div class="card" style="border-left-color:var(--accent)"><div class="t" style="color:var(--accent)">Every 6th attack</div><ul><li>Next move: heavy_blow (shown as its intent)</li></ul><button>Fire now</button> <button>Edit</button></div>
+      <div class="btnrow"><button>+ Event</button><button class="primary">Save</button></div>
+    </div>
+
+    <div class="pane" id="log"><div class="log" id="logtext"></div></div>
+  </div>
+</main>
+
+<footer>
+  <span style="color:var(--dim)">Test setups</span>
+  <span class="chip on">slime · Lv1 · bow</span><span class="chip">3 bats · Lv5 · sword</span><span class="chip">vorkath · Lv20 · staff</span>
+  <button>+ Save current</button>
+  <span style="margin-left:auto;color:var(--dim)">tools/battle_editor/setups/&lt;name&gt;.json</span>
+</footer>
+
+<script>
+// sample data (assets/data/enemies.json; the six stats are proposed, docs/gameplay/11 §2)
+const MONS = [
+  {id:'slime', en:'Slime', zh:'史萊姆', hp:24, atk:8, def:2, int:4000, exp:6, gold:4, c:'#5fbf62'},
+  {id:'bat', en:'Shadow Bat', zh:'暗影蝙蝠', hp:18, atk:11, def:1, int:3200, exp:7, gold:5, c:'#7d5aa8'},
+  {id:'skeleton', en:'Skeleton Soldier', zh:'骷髏兵', hp:40, atk:16, def:4, int:3600, exp:14, gold:9, c:'#d8d3c0'},
+  {id:'golem', en:'Stone Golem', zh:'石巨人', hp:70, atk:14, def:8, int:4500, exp:20, gold:12, c:'#8a8f99'},
+  {id:'wraith', en:'Wraith', zh:'怨靈', hp:55, atk:20, def:3, int:3000, exp:22, gold:14, c:'#6fb0c8'},
+  {id:'demon', en:'Imp', zh:'小惡魔', hp:90, atk:24, def:9, int:3400, exp:40, gold:22, c:'#c8524a'},
+  {id:'demonlord_vorkath', en:'Vorkath', zh:'沃卡司', hp:400, atk:34, def:14, int:3000, exp:0, gold:0, c:'#4a2a5a', boss:true},
+];
+let sel = 0, running = false, t0 = 0, party = [0], target = 0;
+const MOVES = [['🔨', 'Heavy blow', 4.0], ['👊', 'Quick jabs', 2.6], ['✨', 'Spell', 5.0]];
+const $ = id => document.getElementById(id);
+
+function drawList() {
+  const q = $('q').value.toLowerCase();
+  $('list').innerHTML = MONS.map((m, i) => (m.en + m.zh + m.id).toLowerCase().includes(q) ?
+    `<div class="mon ${i == sel ? 'sel' : ''}" onclick="pick(${i})"><input type="checkbox" title="+ Battle" ${party.includes(i) ? 'checked' : ''} onclick="event.stopPropagation();toggleParty(${i})"><span class="ico" style="background:${m.c}"></span>${m.en}${m.boss ? ' ★' : ''}<small>${m.hp}</small></div>` : '').join('');
+}
+function pick(i) {
+  sel = i; const m = MONS[i]; drawList();
+  $('m-id').value = m.id; $('m-name').value = m.en; $('m-zh').value = m.zh; $('m-sprite').value = m.id + '.png';
+  $('m-int').value = m.int; $('m-exp').value = m.exp; $('m-gold').value = m.gold;
+  const st = {HP: m.hp, STR: m.atk, DEF: m.def, DEX: Math.round(m.atk / 3), AGI: Math.round(m.atk / 4), VIT: Math.round(m.hp / 8), INT: 3, LUK: 2};
+  $('m-stats').innerHTML = Object.entries(st).map(([k, v]) => `<label>${k}</label><input type="number" value="${v}">`).join('');
+  drawEnemies();
+  // the difficulty readout, against the test player (ATK 38, DEF 18, HP 320)
+  const hit = Math.max(1, 38 - m.def), taken = Math.max(1, m.atk - 18);
+  $('readout').innerHTML = `Against the test player: <b>${Math.ceil(m.hp / hit)}</b> plain hits to win, <b>${taken}</b> damage per attack, ` +
+    `about <b>${(Math.ceil(m.hp / hit) * 2.4).toFixed(0)} s</b>. Simulated 200 fights: player wins <b>${Math.min(99, Math.round(100 - taken * 1.6))}%</b>.`;
+  logLine('selected ' + m.id);
+}
+function toggleParty(i) {
+  const k = party.indexOf(i);
+  if (k >= 0) { if (party.length > 1) party.splice(k, 1); } else if (party.length < 3) party.push(i); else logLine('a battle has at most 3 monsters');
+  target = Math.min(target, party.length - 1); drawList(); drawEnemies();
+}
+// the monsters of the battle: in a row on the right (landscape) or at the top (portrait), each with its intent and HP
+function drawEnemies() {
+  const n = party.length, port = $('screen').classList.contains('port');
+  $('inb').textContent = 'In battle: ' + n;
+  $('stitle').textContent = 'Battle! ' + party.map(i => MONS[i].en).join(', ');
+  $('enemies').innerHTML = party.map((i, k) => {
+    const w = port ? (n == 1 ? 28 : 24) : (n == 1 ? 20 : 15), gap = port ? 4 : 2;
+    const left = port ? (50 - (n * w + (n - 1) * gap) / 2 + k * (w + gap)) : (46 + k * (w + gap));
+    const top = port ? 9 : 20;
+    return `<div class="fighter en ${k == target ? 'target' : ''}" style="left:${left}%;top:${top}%;width:${w}%" onclick="target=${k};drawEnemies();logLine('target: ' + MONS[${i}].id)">
+      <div class="blob" style="background:${MONS[i].c}"></div>
+      <div class="eintent"><span class="ring" id="ring${k}"></span><span id="it${k}"></span></div>
+      <div class="ehp"><i style="width:100%"></i></div></div>`;
+  }).join('');
+}
+function pace(p) { $('pcool').className = p == 'cooldown' ? 'on' : ''; $('pstam').className = p == 'stamina' ? 'on' : ''; $('stamline').style.display = p == 'stamina' ? 'block' : 'none'; logLine('pace: ' + p); }
+function view(v) { $('screen').className = 'screen ' + v; $('vland').className = v == 'land' ? 'on' : ''; $('vport').className = v == 'port' ? 'on' : ''; drawEnemies(); }
+
+// the attack track: 4 points (the bow at Lv 3); the marker sweeps, a point lights up while it is in its window
+const PTS = [0.2, 0.4, 0.6, 0.8];
+function buildTrack() { $('track').querySelectorAll('.pt').forEach(e => e.remove()); PTS.forEach(p => { const d = document.createElement('div'); d.className = 'pt'; d.style.left = p * 100 + '%'; $('track').appendChild(d); }); }
+function battle() { running = true; t0 = performance.now(); drawEnemies(); logLine('battle: ' + party.map(i => MONS[i].id).join(' + ') + ' vs player Lv ' + $('p-lv').value + ' (bow Lv 3)'); }
+function frame(now) {
+  if (running) {
+    const t = ((now - t0) / 1700) % 2, pos = t < 1 ? t : 2 - t;
+    $('marker').style.left = pos * 100 + '%';
+    $('track').querySelectorAll('.pt').forEach((e, i) => e.classList.toggle('near', Math.abs(PTS[i] - pos) < 0.07));
+    party.forEach((i, k) => {   // each monster its own clock and next move
+      const mv = MOVES[(k + i) % MOVES.length], dur = mv[2] + k * 0.7, f = (((now - t0) / 1000) / dur) % 1;
+      const r = $('ring' + k), t = $('it' + k);
+      if (r) r.style.setProperty('--p', (f * 100).toFixed(0) + '%');
+      if (t) t.textContent = mv[0] + ' ' + mv[1] + ' ' + (dur * (1 - f)).toFixed(1) + ' s';
+    });
+  }
+  requestAnimationFrame(frame);
+}
+function logLine(s) { const ms = running ? ((performance.now() - t0) / 1000).toFixed(2) : '—'; $('logtext').textContent = `[${ms}] ${s}\n` + $('logtext').textContent; }
+
+// the growth calculator (docs/gameplay/13 §4.3): points by level n = T((n-1)^k - (n-2)^k)/(L-1)^k, rounded to sum to T
+function curve(T, L, k) {
+  const raw = []; for (let n = 2; n <= L; n++) raw.push(T * (Math.pow(n - 1, k) - Math.pow(n - 2, k)) / Math.pow(L - 1, k));
+  const base = raw.map(Math.floor); let rest = T - base.reduce((a, b) => a + b, 0);
+  raw.map((r, i) => [r - base[i], i]).sort((a, b) => b[0] - a[0]).slice(0, rest).forEach(([, i]) => base[i]++);
+  return base;   // index 0 = level 2
+}
+function calc() {
+  const T = Math.max(0, +$('c-t').value | 0), L = Math.max(2, +$('c-l').value | 0), k = +$('c-k').value;
+  $('c-kv').textContent = k.toFixed(2);
+  const pts = curve(T, L, k), cv = $('chart'), g = cv.getContext('2d'), W = cv.width, H = cv.height, pad = 28;
+  g.clearRect(0, 0, W, H);
+  const max = Math.max(...pts, 1), bw = (W - 2 * pad) / pts.length;
+  g.fillStyle = '#8594b0';
+  pts.forEach((p, i) => { const h = (H - 2 * pad) * p / max * 0.85; g.fillRect(pad + i * bw + 2, H - pad - h, bw - 4, h); });
+  g.strokeStyle = '#f9e9b1'; g.lineWidth = 3; g.beginPath(); let sum = 0;
+  pts.forEach((p, i) => { sum += p; const x = pad + i * bw + bw / 2, y = H - pad - (H - 2 * pad) * sum / Math.max(T, 1); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+  g.stroke();
+  g.fillStyle = '#a9b0c3'; g.font = '20px system-ui';
+  g.fillText('Lv 2', pad, H - 6); g.fillText('Lv ' + L, W - pad - 50, H - 6); g.fillText('bars: points that level · line: total', pad, 22);
+  $('c-out').innerHTML = 'Lv 2–' + L + ': ' + pts.join(', ') + ' &nbsp;→ total <b>' + pts.reduce((a, b) => a + b, 0) + '</b>';
+  // the table the game reads (stats.json levelUp.points): neighbouring levels with the same points merged
+  const rows = []; pts.forEach((p, i) => { if (!rows.length || rows[rows.length - 1].points != p) rows.push({from: i + 2, points: p}); });
+  $('c-table').innerHTML = '<table><tr><th>from Lv</th><th>points a level</th></tr>' + rows.map(r => `<tr><td>${r.from}</td><td>${r.points}</td></tr>`).join('') + '</table>';
+}
+function applyCalc() {
+  const T = +$('c-t').value | 0, base = [5, 5, 5, 5, 5, 5], share = [0.3, 0.2, 0.15, 0.15, 0.1, 0.1];
+  $('p-lv').value = $('c-l').value;
+  drawAttrs(base.map((b, i) => b + Math.round(T * share[i])));
+  logLine('player: Lv ' + $('c-l').value + ', ' + T + ' points placed');
+}
+function drawAttrs(v) { $('p-attrs').innerHTML = ['STR', 'DEX', 'AGI', 'VIT', 'INT', 'LUK'].map((k, i) => `<label>${k}</label><input type="number" value="${v[i]}">`).join(''); }
+document.querySelectorAll('#tabs div').forEach(t => t.onclick = () => {
+  document.querySelectorAll('#tabs div').forEach(x => x.classList.toggle('on', x == t));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id == t.dataset.p));
+});
+$('weplist').innerHTML = ['Hunter\'s Bow', 'Iron Sword', 'Oak Staff', 'Apprentice\'s Wand', 'Twin Daggers', 'War Hammer', 'Unarmed']
+  .map((w, i) => `<button class="${i ? '' : 'on'}">${w}</button>`).join('');
+drawList(); pick(0); buildTrack(); drawAttrs([15, 11, 8, 8, 6, 6]); calc(); requestAnimationFrame(frame);
+// ?demo=1: start a battle and open the Player tab (for a screenshot of both)
+if (location.search.includes('demo')) { party = [1, 1, 3]; drawList(); battle(); document.querySelector('#tabs div[data-p=ply]').click(); }
+</script>
+</body>
+</html>

@@ -98,6 +98,7 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     showHud = opts.showFps;
     if (opts.fxGpuThreshold >= 0) game_->overrideParticleGpuThreshold(opts.fxGpuThreshold);
     if (opts.defaultBattleTuning) game_->useDefaultBattleTuning();
+    if (opts.battleLog) game_->setBattleLogToStderr(true);
     if (opts.titleScene != "none") {   // the 3D scene behind the title; without it the title is plain
         const std::string path = opts.titleScene.empty() ? assetDir_ + "/models/VirtualCity.glb" : opts.titleScene;
         if (!opts.titleScene.empty() || toms::vfsExists(path)) {
@@ -309,6 +310,7 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
             else g.interact();
         }
         if (keyPressed(in, Key::F) && g.combatActive()) g.battleTapDefense();
+        if (g.combatActive() && (leftPressed || rightPressed)) g.battleCycleTarget(leftPressed ? -1 : 1);   // the target
         if (keyPressed(in, Key::G) && g.combatActive()) g.battleTapSuper();
         if (keyPressed(in, Key::H) && g.combatActive()) g.battleTapActive();
         if (keyPressed(in, Key::I)) g.toggleInventory();

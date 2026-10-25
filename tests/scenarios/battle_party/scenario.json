@@ -1,0 +1,28 @@
+{
+  "_comment": "Three monsters (docs/gameplay/13 §4.6): the first shot fells the 1-HP slime in front; the battle goes on and the target moves to the bat beside it.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 1,
+    "atk_interval_ms": 60000,
+    "party": [
+      { "enemy": "bat", "atk_interval_ms": 60000 },
+      { "enemy": "skeleton", "atk_interval_ms": 60000 }
+    ]
+  },
+  "test": {
+    "frames": 165,
+    "keys": "enter@40,enter@61,enter@81,enter@102"
+  },
+  "expect": {
+    "scene": "battle",
+    "foesDown": 1,
+    "target": 1,
+    "enemyAnim": "die"
+  }
+}

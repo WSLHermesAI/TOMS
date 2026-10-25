@@ -8,26 +8,52 @@
    - portrait: full-width rows, 40 px from the edges; the fighters at the top, the controls anchored to the bottom (for
      thumbs). A tall phone (16:9 and longer, the canvas 1300+ high) stacks the monster above the player; a shorter
      portrait screen keeps them side by side.
-   The game draws the animated fighters in #player / #enemy and reads where they are (GameUi::sync), so these rules are
-   the only place a fighter's position is written. */
+   The game draws the animated fighters in #player / .foe .fbox and reads where they are (GameUi::sync), so these rules
+   are the only place a fighter's position is written.
+   One to three monsters (.foe; docs/gameplay/13 §4.6): .n1/.n2/.n3 is how many, .f1/.f2 which one. One monster is
+   placed as the single monster always was. */
 body { z-index: 30; }
 
 #title  { position: absolute; left: 50%; margin-left: -250px; top: 14px; font-size: 38px; color: #ffcaa8; }
 .fighter { position: absolute; top: 84px; width: 134px; height: 134px; }
 .fighter img { width: 100%; height: 100%; }
 #player { left: 50%; margin-left: -250px; }
-#enemy  { left: 50%; margin-left: 140px; }
 
 .hp      { position: absolute; top: 238px; width: 280px; height: 22px; background-color: #7b7b88; }
 #player-hp { left: 50%; margin-left: -250px; }
-#enemy-hp  { left: 50%; margin-left: 140px; }
 .fill-bar { height: 100%; }
 .fill-bar.good  { background-color: #94f3a8; }
 .fill-bar.bad   { background-color: #f39494; }
 .fill-bar.clock { background-color: #edb17b; }
 .hp-text { position: absolute; top: 262px; font-size: 22px; color: #ffffff; white-space: nowrap; }
 #player-hp-text { left: 50%; margin-left: -250px; }
-#enemy-hp-text  { left: 50%; margin-left: 140px; }
+
+/* the monsters: each a slot with its box, the target mark over it, its HP bar and text under it */
+.foe      { position: absolute; left: 50%; margin-left: 140px; top: 84px; width: 280px; height: 200px; }
+.foe.down { opacity: 0.45; }
+.fbox     { position: absolute; left: 0; top: 0; width: 134px; height: 134px; }
+.fbox img { width: 100%; height: 100%; }
+.mark     { position: absolute; left: 0; top: -14px; width: 134px; height: 6px; background-color: #ffe27a; }
+.fhp      { position: absolute; left: 0; top: 154px; width: 280px; height: 22px; background-color: #7b7b88; }
+.ftext    { position: absolute; left: 0; top: 178px; width: 280px; font-size: 22px; color: #ffffff; white-space: nowrap; overflow: hidden; }
+/* one monster: "Slime HP 24" on one line; two or three: the name, and the HP under it (narrow slots) */
+.ftext.two { display: none; }
+.foe.n2 .ftext.one, .foe.n3 .ftext.one { display: none; }
+.foe.n2 .ftext.two, .foe.n3 .ftext.two { display: block; white-space: normal; }   /* a long name wraps too */
+/* two or three share the 390 px right of the player's HP bar */
+.foe.n2 { margin-left: 60px; width: 190px; }
+.foe.n2.f1 { margin-left: 260px; }
+.foe.n2 .fbox, .foe.n2 .mark { width: 120px; }
+.foe.n2 .fbox { height: 120px; }
+.foe.n2 .fhp  { top: 136px; width: 190px; height: 18px; }
+.foe.n2 .ftext { top: 158px; width: 190px; font-size: 18px; }
+.foe.n3 { margin-left: 60px; width: 125px; }
+.foe.n3.f1 { margin-left: 192px; }
+.foe.n3.f2 { margin-left: 324px; }
+.foe.n3 .fbox, .foe.n3 .mark { width: 100px; }
+.foe.n3 .fbox { height: 100px; }
+.foe.n3 .fhp  { top: 114px; width: 125px; height: 16px; }
+.foe.n3 .ftext { top: 134px; width: 125px; font-size: 16px; }
 
 /* the message: two lines (a long one, or another language, wraps); everything below starts under them */
 #log { position: absolute; left: 50%; margin-left: -250px; width: 738px; top: 294px; height: 56px; line-height: 28px; font-size: 22px; color: #ffffff; }
@@ -84,7 +110,7 @@ body { z-index: 30; }
 #active-btn { top: 672px; background-color: #88c2d2; }
 #active-btn:hover { background-color: #9ad2e2; }
 
-/* damage numbers (UiPopup): a 100 px box over the fighter, rising and fading (placed from #player / #enemy) */
+/* damage numbers (UiPopup): a 100 px box over the fighter, rising and fading (placed from #player / .foe .fbox) */
 .popup { position: absolute; width: 100px; text-align: center; font-size: 34px; color: #ffffff; font-effect: outline(2px #401010); }
 .popup.big { font-size: 46px; color: #ffe066; }
 .popup.guard { font-size: 28px; color: #9fd8ff; }
@@ -95,13 +121,27 @@ body { z-index: 30; }
     /* side by side (a short portrait screen; a tall phone stacks them below) */
     .fighter    { top: 80px; }
     #player     { left: 118px; margin-left: 0; }
-    #enemy      { left: 516px; margin-left: 0; }
     .hp         { top: 230px; width: 330px; }
     #player-hp  { left: 40px; margin-left: 0; }
-    #enemy-hp   { left: 398px; margin-left: 0; }
     .hp-text    { top: 256px; }
     #player-hp-text { left: 40px; margin-left: 0; }
-    #enemy-hp-text  { left: 398px; margin-left: 0; }
+    /* the monsters: the right half, 330 px from x 398 */
+    .foe.n1, .foe.n2, .foe.n3 { margin-left: 0; top: 80px; }
+    .foe.n1 { left: 398px; width: 330px; }
+    .foe.n1 .fbox, .foe.n1 .mark { left: 118px; }
+    .foe.n1 .fhp  { top: 150px; width: 330px; }
+    .foe.n1 .ftext { top: 176px; width: 330px; }
+    .foe.n2 { left: 398px; width: 160px; }
+    .foe.n2.f1 { left: 568px; margin-left: 0; }
+    .foe.n2 .fbox, .foe.n2 .mark { left: 25px; }
+    .foe.n2 .fhp  { top: 126px; width: 160px; }
+    .foe.n2 .ftext { top: 146px; width: 160px; }
+    .foe.n3 { left: 398px; width: 105px; }
+    .foe.n3.f1 { left: 510px; margin-left: 0; }
+    .foe.n3.f2 { left: 622px; margin-left: 0; }
+    .foe.n3 .fbox, .foe.n3 .mark { left: 7px; }
+    .foe.n3 .fhp  { top: 104px; width: 105px; }
+    .foe.n3 .ftext { top: 122px; width: 105px; }
     #log        { left: 40px; margin-left: 0; width: 688px; top: 294px; }
     #continue   { left: 40px; margin-left: 0; top: 370px; }
 
@@ -120,11 +160,28 @@ body { z-index: 30; }
 /* a tall phone: the monster above, the player below it, each with its HP under it */
 @media (orientation: portrait) and (min-height: 1300px) {
     .fighter    { width: 180px; height: 180px; }
-    #enemy      { left: 294px; top: 88px; }
     #player     { left: 294px; top: 352px; }
     .hp         { width: 688px; }
-    #enemy-hp   { left: 40px; top: 280px; }
-    #enemy-hp-text { left: 40px; top: 306px; }
+    /* the monsters across the width, 688 px from x 40 */
+    .foe.n1, .foe.n2, .foe.n3 { top: 88px; }
+    .foe.n1 { left: 40px; width: 688px; }
+    .foe.n1 .fbox, .foe.n1 .mark { left: 254px; width: 180px; }
+    .foe.n1 .fbox { height: 180px; }
+    .foe.n1 .fhp  { top: 192px; width: 688px; }
+    .foe.n1 .ftext { top: 218px; width: 688px; }
+    .foe.n2 { left: 40px; width: 334px; }
+    .foe.n2.f1 { left: 394px; }
+    .foe.n2 .fbox, .foe.n2 .mark { left: 87px; width: 160px; }
+    .foe.n2 .fbox { height: 160px; }
+    .foe.n2 .fhp  { top: 172px; width: 334px; height: 22px; }
+    .foe.n2 .ftext { top: 198px; width: 334px; font-size: 22px; }
+    .foe.n3 { left: 40px; width: 220px; }
+    .foe.n3.f1 { left: 274px; }
+    .foe.n3.f2 { left: 508px; }
+    .foe.n3 .fbox, .foe.n3 .mark { left: 35px; width: 150px; }
+    .foe.n3 .fbox { height: 150px; }
+    .foe.n3 .fhp  { top: 162px; width: 220px; height: 20px; }
+    .foe.n3 .ftext { top: 188px; width: 220px; font-size: 19px; }
     #player-hp  { left: 40px; top: 544px; }
     #player-hp-text { left: 40px; top: 570px; }
     #log        { top: 614px; }

@@ -663,3 +663,19 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - Docs: gameplay/12 (new), gameplay/07 §17 (EN + zh_TW), engine/01 (views).
   - Tests: changed-only 15 of 196 pass; by name `unit.camera_test` and 34 scenarios pass. All tests / web not run.
 
+- **2026-10-25 (later)** — **The battle editor design, one to three monsters, the battle log** ([DAILY_2026-10-25.md](DAILY_2026-10-25.md) rows 10–13; not committed):
+  - Design: `docs/gameplay/13_BATTLE_EDITOR.md` (+ zh_TW), `docs/gameplay/battle_editor/editor_mockup.html`,
+    `battle_demo.html`; the owner's B1–B5 in §8.
+  - Foes: `systems/battle_party.h/.cpp` (`kMaxFoes` 3, `nextStanding`, `allDown`, `BattleEvent`, `battleEventLine`)
+    + `battle_party_test`; `CombatState::Foe` / `foes` / `target` / `events` / `clockMs` (removed `enemy`, `enemyHP`,
+    `enemyClockMs`); `Game::startCombat(e, party)`, `partyOf` (`enemies.json` `"party"`), `afterPlayerHit`, `foeDown`,
+    `battleSetTarget`, `battleCycleTarget`, `battleEvent`; `FoeRig` / `foeRigs_` (replaced `monsterRig_*`),
+    `setFoeRigState`, `monsterSprite(foe)`; `playerBox_` / `foeBox_[3]` / `fighterBox(who)` (replaced `battleBox_`);
+    `playBattleFx(effect, who)`, `popDamage(dmg, who, kind)`, `Popup::who`; a clock per foe in `Game::update`.
+  - UI: `UiFoe` (sprite, anim, hp_pct, hp_text, name, hp_line, target, down) in `UiBattle::foes`; `battle.rml` `.foe`
+    (`.fbox`, `.mark`, `.fhp`, `.ftext.one` / `.two`), `battle.rcss` `.n1`–`.n3` / `.f1` `.f2` in three layouts;
+    `GameUi::sync` reads `.foe .fbox`; `act('battle_target', i)`; ←/→ in `GameSession`; `text.json` `battle.foe_down`.
+  - Scenarios: `"party"`, `expect` `"foesDown"` / `"target"`; `enemyAnim` / `enemyClip` read `foeRigs_[0]`; new
+    `battle_party`, `battle_party_target`. `toms_game --battle-log`.
+  - Tests: changed-only 12 of 199 pass; 19 switched-off battle / arena / trial / card scenarios by name pass. All tests,
+    web and Android not run.

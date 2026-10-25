@@ -1,0 +1,26 @@
+{
+  "_comment": "Choosing the target with the keys (docs/gameplay/13 §4.6): left from the first of three wraps to the last.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "atk_interval_ms": 60000,
+    "party": [
+      { "enemy": "bat", "atk_interval_ms": 60000 },
+      { "enemy": "skeleton", "atk_interval_ms": 60000 }
+    ]
+  },
+  "test": {
+    "frames": 60,
+    "keys": "left@20"
+  },
+  "expect": {
+    "scene": "battle",
+    "foesDown": 0,
+    "target": 2
+  }
+}

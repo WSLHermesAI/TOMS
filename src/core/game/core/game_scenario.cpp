@@ -184,7 +184,16 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
         const std::string id = b.value("enemy", std::string());
         EnemyInst en;
         if (!enemyFromData(id, b, en)) return bad("no enemy \"" + id + "\" in data/enemies.json");
-        startCombat(en);
+        // "party": the monsters beside it (ids, or {"enemy": id, ...overrides}; docs/gameplay/13 §4.6)
+        std::vector<EnemyInst> party;
+        for (const auto& m : b.value("party", nlohmann::json::array())) {
+            const nlohmann::json o = m.is_object() ? m : nlohmann::json::object();
+            const std::string mid = m.is_string() ? m.get<std::string>() : o.value("enemy", std::string());
+            EnemyInst pm;
+            if (!enemyFromData(mid, o, pm)) return bad("no enemy \"" + mid + "\" in data/enemies.json");
+            party.push_back(pm);
+        }
+        startCombat(en, party);
         if (s == "battleWon") finishCombatWin();
     } else if (s == "arena") {
         // the weapon test arena: "battle": { "enemies": [...] } (or "enemy"), fought in turn; the weapon is the
@@ -330,10 +339,20 @@ bool Game::scenarioCheck(std::string& report) const {
                      std::to_string(it.value().get<int>()));
     if (scenarioExpect_.contains("battleClip") && battleRigClip_ != scenarioExpect_["battleClip"].get<std::string>())
         fail("the battle picture plays the clip \"" + battleRigClip_ + "\", expected \"" + scenarioExpect_["battleClip"].get<std::string>() + "\"");
-    if (scenarioExpect_.contains("enemyAnim") && monsterRigState_ != scenarioExpect_["enemyAnim"].get<std::string>())
-        fail("the monster shows \"" + monsterRigState_ + "\", expected \"" + scenarioExpect_["enemyAnim"].get<std::string>() + "\"");
-    if (scenarioExpect_.contains("enemyClip") && monsterRigClip_ != scenarioExpect_["enemyClip"].get<std::string>())
-        fail("the monster plays the clip \"" + monsterRigClip_ + "\", expected \"" + scenarioExpect_["enemyClip"].get<std::string>() + "\"");
+    const std::string leadState = foeRigs_.empty() ? std::string() : foeRigs_[0].state;
+    const std::string leadClip = foeRigs_.empty() ? std::string() : foeRigs_[0].clip;
+    if (scenarioExpect_.contains("enemyAnim") && leadState != scenarioExpect_["enemyAnim"].get<std::string>())
+        fail("the monster shows \"" + leadState + "\", expected \"" + scenarioExpect_["enemyAnim"].get<std::string>() + "\"");
+    if (scenarioExpect_.contains("enemyClip") && leadClip != scenarioExpect_["enemyClip"].get<std::string>())
+        fail("the monster plays the clip \"" + leadClip + "\", expected \"" + scenarioExpect_["enemyClip"].get<std::string>() + "\"");
+    if (scenarioExpect_.contains("foesDown")) {   // how many of the battle's monsters have fallen
+        int down = 0;
+        for (const CombatState::Foe& f : cs.foes) down += f.down() ? 1 : 0;
+        if (down != scenarioExpect_["foesDown"].get<int>())
+            fail(std::to_string(down) + " monsters down, expected " + std::to_string(scenarioExpect_["foesDown"].get<int>()));
+    }
+    if (scenarioExpect_.contains("target") && cs.target != scenarioExpect_["target"].get<int>())
+        fail("the target is monster " + std::to_string(cs.target) + ", expected " + std::to_string(scenarioExpect_["target"].get<int>()));
     if (scenarioExpect_.contains("battleAnim") && battleRigState_ != scenarioExpect_["battleAnim"].get<std::string>())
         fail("the battle picture shows \"" + battleRigState_ + "\", expected \"" + scenarioExpect_["battleAnim"].get<std::string>() + "\"");
     if (scenarioExpect_.contains("condition") && !holds(scenarioExpect_["condition"]))

@@ -306,23 +306,38 @@ void Game::buildUiState(toms::UiState& u) const {
         toms::UiBattle& b = u.battle;
         b.visible = true;
         b.active = cs.active;
-        b.title = L.tr("battle.title") + " " + cs.enemy.name;
+        // "Slime", or "Slime +2" with a party (each name is under its monster)
+        b.title = L.tr("battle.title") + " " + (cs.foes.empty() ? std::string() : cs.foes[0].enemy.name) +
+                  (cs.foes.size() > 1 ? " +" + std::to_string(cs.foes.size() - 1) : std::string());
         b.player_sprite = uiSprite(playerSprite());
         b.player_anim = battleRigReady() && !battleRigState_.empty();   // drawBattleRig draws the player instead
-        b.enemy_sprite = uiSprite(monsterSprite());
-        b.enemy_anim = monsterRigReady() && !monsterRigState_.empty();   // drawBattleRig draws the monster instead
+        for (size_t i = 0; i < cs.foes.size(); i++) {   // the monsters (battle.rml .foe)
+            const CombatState::Foe& f = cs.foes[i];
+            toms::UiFoe uf;
+            uf.sprite = uiSprite(monsterSprite((int)i));
+            uf.anim = monsterRigReady() && i < foeRigs_.size() && !foeRigs_[i].state.empty();   // drawBattleRig draws it
+            uf.hp_pct = pct((float)std::max(0, f.hp), (float)f.enemy.hp);
+            uf.name = f.enemy.name;
+            uf.hp_line = "HP " + std::to_string(std::max(0, f.hp));
+            uf.hp_text = uf.name + " " + uf.hp_line;
+            uf.target = cs.active && cs.foes.size() > 1 && (int)i == cs.target && !f.down();
+            uf.down = f.down();
+            b.foes.push_back(uf);
+        }
+        b.enemy_sprite = b.foes.empty() ? std::string() : b.foes[0].sprite;
+        b.enemy_anim = !b.foes.empty() && b.foes[0].anim;
         b.player_hp_pct = pct((float)cs.playerHP, (float)effectiveMaxHp());
-        b.enemy_hp_pct = pct((float)std::max(0, cs.enemyHP), (float)cs.enemy.hp);
+        b.enemy_hp_pct = b.foes.empty() ? 0.0f : b.foes[0].hp_pct;
         b.player_hp_text = L.tr("battle.you") + " HP " + std::to_string(cs.playerHP);
-        b.enemy_hp_text = cs.enemy.name + " HP " + std::to_string(std::max(0, cs.enemyHP));
+        b.enemy_hp_text = b.foes.empty() ? std::string() : b.foes[0].hp_text;
         b.log = cs.log;
         b.continue_hint = L.tr("battle.continue_hint");
-        for (const auto& p : cs.popups) {   // over the fighter's box (battle.rcss #player / #enemy, battleBox_)
+        for (const auto& p : cs.popups) {   // over the fighter's box (battle.rcss #player / .foe .fbox: fighterBox)
             toms::UiPopup q;
             q.text = p.text;
             q.kind = p.kind;
             const float r = p.rise.value();            // 0 -> 1 as it rises
-            const glm::vec4 box = battleBox_[p.overEnemy ? 1 : 0];
+            const glm::vec4 box = fighterBox(p.who);
             q.x = box.x + box.z * 0.5f - 50.0f;        // the 100 px number, centred over it
             q.y = box.y + 26.0f - 70.0f * r;
             q.opacity = r < 0.6f ? 1.0f : std::max(0.0f, 1.0f - (r - 0.6f) / 0.4f);
@@ -330,7 +345,11 @@ void Game::buildUiState(toms::UiState& u) const {
         }
         if (cs.active) {
             b.clock_label = L.tr("battle.enemy_clock");
-            b.clock_pct = pct((float)cs.enemyClockMs, (float)std::max(500, cs.enemy.atkIntervalMs));
+            // the clock of the monster that attacks next (the nearest to its attack)
+            float best = 0.0f;
+            for (const CombatState::Foe& f : cs.foes)
+                if (!f.down()) best = std::max(best, pct((float)std::max(0, f.clockMs), (float)std::max(500, f.enemy.atkIntervalMs)));
+            b.clock_pct = best;
             {   // Battle v3 (docs/gameplay/07 phase 1): the charge, the track with the weapon level's points, the marker
                 toms::UiCombo& c = b.combo;
                 const std::string key = weaponKey();
@@ -628,6 +647,7 @@ void Game::uiEvent(const std::string& name, int arg) {
     if (name == "battle_defend")   { battleTapDefense(); return; }
     if (name == "battle_super")    { battleTapSuper(); return; }
     if (name == "battle_active")   { battleTapActive(); return; }
+    if (name == "battle_target")   { battleSetTarget(arg); return; }
     if (name == "battle_continue") { if (cs.won) dismissVictory(); return; }
     // ---- dialogue ----
     if (name == "dlg_choose")  { if (inDialogue && arg >= 0 && arg < (int)dlgChoices.size()) { dlgSel = arg; chooseDialogue(arg); } return; }

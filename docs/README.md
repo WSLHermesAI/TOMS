@@ -27,6 +27,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [10_UI_EDITOR.md](gameplay/10_UI_EDITOR.md) | tutorial: the UI editor | [zh_TW](gameplay/zh_TW/10_UI_EDITOR.md) |
 | [11_BATTLE_DATA.md](gameplay/11_BATTLE_DATA.md) | battle data: shared stats, fighters, statuses → looks, battle events, who fights whom, formulas (design; points by level built) | [zh_TW](gameplay/zh_TW/11_BATTLE_DATA.md) |
 | [12_UI_LAYOUT.md](gameplay/12_UI_LAYOUT.md) | UI layout for landscape and portrait: the canvas that follows the screen, the map, each screen's portrait rules | [zh_TW](gameplay/zh_TW/12_UI_LAYOUT.md) |
+| [13_BATTLE_EDITOR.md](gameplay/13_BATTLE_EDITOR.md) | the battle editor (monsters, weapons and their result tiers, the test player and the growth calculator, monster events, one-click battle) and ideas for a real-time strategic battle; HTML mockup and playable demo in [gameplay/battle_editor/](gameplay/battle_editor/) | [zh_TW](gameplay/zh_TW/13_BATTLE_EDITOR.md) |
 | [event_editor/](gameplay/event_editor/README.md) | the event editor: data model, design, user guide, tutorial, floor links, logic, key gates, NPC dialogue | [zh_TW](gameplay/zh_TW/event_editor/README.md) |
 
 ## engine

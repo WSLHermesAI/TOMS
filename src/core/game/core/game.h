@@ -38,6 +38,7 @@
 #include "res_keys.h"        // toms::key / toms::pattern -- every file by key (assets/media/resources.json)
 #include "weapon_play.h"     // toms::WeaponPlayTable -- data/weapon_play.json (docs/gameplay/07_GAMEPLAY_PLAN.md §5.6)
 #include "combo_play.h"      // toms::ComboPlay -- Battle v3's point play (docs/gameplay/07 §4, §5.1)
+#include "battle_party.h"    // toms::nextStanding, BattleEvent -- 1-3 monsters, the battle log (docs/gameplay/13 §4.6)
 #include "mini_game.h"       // toms::MiniGameTable -- reusable reward events (docs/gameplay/07 phase 6)
 #include "art_styles.h"      // toms::ArtStyle — the selectable art styles (assets/media/styles)
 #include "atlas_file.h"      // toms::AtlasFile — the prebuilt sprite atlas (tools/atlas)
@@ -118,8 +119,23 @@ struct CombatState : public Trackable {
     };
     static constexpr int kBarCooldownMs = 1500;   // default for data/battle.json "bar_cooldown_ms"
 
-    EnemyInst enemy;
-    int playerHP, enemyHP;
+    // The battle's monsters (docs/gameplay/13 §4.6; the owner 2026-10-25: one to three): [0] the lead (the map's
+    // monster, whose tile a win clears), then its party. Each has its own HP and its own attack clock.
+    struct Foe {
+        EnemyInst enemy;
+        int hp = 0;
+        int clockMs = 0;       // counts up to enemy.atkIntervalMs, then it attacks and starts again
+        bool down() const { return hp <= 0; }
+    };
+    std::vector<Foe> foes;
+    int target = 0;            // the foe the player's attacks go to (tap a monster, or Left / Right)
+    int playerHP = 0;
+    Foe& lead() { return foes.front(); }
+    const Foe& lead() const { return foes.front(); }
+    std::vector<int> foeHp() const { std::vector<int> v; for (const Foe& f : foes) v.push_back(f.hp); return v; }
+    // What happened, in order (battle_party.h): the battle editor's log, and what monster events will listen to.
+    std::vector<toms::BattleEvent> events;
+    int clockMs = 0;           // battle time (while it is active)
     bool active = false;
     std::string log;          // last exchange text
     bool won = false;
@@ -131,7 +147,6 @@ struct CombatState : public Trackable {
     int chargeMs = 0;
     bool shieldBanked = false;
     float shieldPower = 0.0f;
-    int enemyClockMs = 0;      // counts up to enemy.atkIntervalMs, then fires and resets to 0
 
     // Super-Attack Gauge: +1 per successful Attack tap, unlocks a guaranteed strong hit
     // (battleTapSuper()) at RunStoryState::superMax() (M8: per-run, halved by rebirth() -- no
@@ -164,7 +179,7 @@ struct CombatState : public Trackable {
     // attack is over. Set by an attack (data/battle.json "attack_pause_ms"), counted down by Game::update.
     int attackPauseMs = 0;
     // Damage numbers rising over a fighter: added when the hit lands (a safe timer after the attack starts).
-    struct Popup { std::string text; bool overEnemy = true; int kind = 0; int ageMs = 0; toms::Tween rise; };   // kind 0 hit, 1 big, 2 guard
+    struct Popup { std::string text; int who = 0; int kind = 0; int ageMs = 0; toms::Tween rise; };   // who: -1 the player, 0.. a foe; kind 0 hit, 1 big, 2 guard
     std::vector<Popup> popups;
     TOMS_OBJECT(CombatState)
 };
@@ -254,7 +269,7 @@ public:
     void talkTo(const std::string& npcId);
     std::string dialogueSpeaker() const { return dlgSpeaker_; }
     void enterNode(const std::string& node);      // jump to a dialogue node (public for tests)
-    void startCombat(const EnemyInst& e);
+    void startCombat(const EnemyInst& e, const std::vector<EnemyInst>& party = {});   // party: up to 2 more (kMaxFoes)
     // Verification hooks (debugStartNearestBattle .. debugWarpPlayer): the old web entry exposed
     // them to a page test harness. No host calls them now; a future test harness can re-expose them.
     // Start a fight with the nearest monster, to exercise the battle scene without walking the maze.
@@ -291,6 +306,11 @@ public:
     // S7 (equipment actives, first slice): the 4th battle action -- a no-op unless the currently
     // equipped gear grants one (equippedActives()) and it hasn't been spent this battle already.
     void battleTapActive();
+    // Several monsters (docs/gameplay/13 §4.6): the target is the next (+1) / previous (-1) monster standing, or that one.
+    void battleCycleTarget(int dir);
+    void battleSetTarget(int foe);
+    const std::vector<toms::BattleEvent>& battleEvents() const { return cs.events; }
+    void setBattleLogToStderr(bool on) { battleLogToStderr_ = on; }   // --battle-log: every battle event as it happens
     // ---- the player menu (docs/gameplay/03_PLAYER_MENU.md): the walking scene's one button (≡, Esc) ----
     // Five tabs: Status, Equipment, Items, Events, System. Everything that was a button of its own
     // (the backpack, the store button, the old ≡ list, the web page's fullscreen button) is in here.
@@ -482,9 +502,12 @@ public:
     // Where the battle screen's attack track shows its points, in design pixels (GameUi reads its layout each frame), so
     // the track's hint particles land on them.
     void setComboPointsOnScreen(std::vector<glm::vec2> pts) { comboPointsOnScreen_ = std::move(pts); }
-    // Where the battle screen laid out the player's and the monster's boxes (battle.rcss #player / #enemy: x, y, w, h in
+    // Where the battle screen laid out the player's and the monsters' boxes (battle.rcss #player / .foe .fbox: x, y, w, h in
     // design pixels; GameUi reads them each frame): the fighters, their particles and damage numbers are placed in them.
-    void setBattleBoxes(const glm::vec4& player, const glm::vec4& enemy) { battleBox_[0] = player; battleBox_[1] = enemy; }
+    void setBattleBoxes(const glm::vec4& player, const std::vector<glm::vec4>& foes) {
+        playerBox_ = player;
+        for (size_t i = 0; i < foes.size() && i < (size_t)toms::kMaxFoes; i++) foeBox_[i] = foes[i];
+    }
     // The design canvas changed (the screen turned, canvas.h): the camera fits the new one at once, without easing.
     void canvasChanged();
     // Files by key, never by path (assets/media/resources.json; the keys: res_keys.h, made by tools/make_res_keys.py).
@@ -557,7 +580,13 @@ private:
     const toms::WeaponPlay& weaponPlayOf(const std::string& key) const;
     float comboCharge() const;                      // 0 .. 1, the charge built while the attack waits
     void resolveDefenseTap();
-    void resolveEnemyClockFire();
+    void resolveEnemyClockFire(int foe);
+    // A foe fell (its HP reached 0): its die clip, the log; the target moves on; the last one wins the battle.
+    void foeDown(int foe);
+    std::vector<EnemyInst> partyOf(const EnemyInst& lead);
+    bool afterPlayerHit(const std::string& hitLog, const std::string& winLog);   // true: the battle was won
+    void battleEvent(const std::string& type, int who, int whom, int value = 0, const std::string& note = std::string());
+    bool battleLogToStderr_ = false;
     // Builds the EnemyInst for a monster tile and starts the fight (or its dialogue gate); shared
     // by the bump-to-fight path in movePlayer() and the harness hook debugStartNearestBattle().
     void engageMonster(const Entity& e);
@@ -813,13 +842,17 @@ private:
     static constexpr const char* kMonsterBattleAnim = toms::key::kAnimMonsterBattle;
     std::shared_ptr<toms::res::AnimRes> monsterAnim_;
     bool monsterAnimTried_ = false;
-    toms::anim::Clip monsterFitted_;
-    toms::anim::CharacterRig monsterRig_;
-    std::string monsterRigState_, monsterRigClip_;
-    std::string monsterRigRequest_;                     // attack / hurt: played from the start on the next update
+    // One rig a foe (cs.foes, the same order).
+    struct FoeRig {
+        toms::anim::Clip fitted;
+        toms::anim::CharacterRig rig;
+        std::string state, clip;
+        std::string request;                            // attack / hurt / die: played from the start on the next update
+    };
+    std::vector<FoeRig> foeRigs_;
     bool monsterRigReady() const { return monsterAnim_ != nullptr; }
-    std::string monsterSprite() const;                  // the enemy's sprite (the boss's own; else its type's)
-    void setMonsterRigState(const std::string& state);
+    std::string monsterSprite(int foe) const;           // the foe's sprite (the boss's own; else its type's)
+    void setFoeRigState(int foe, const std::string& state);
     void updateMonsterRig(int dtMs);                    // Game::update
     // The battle's particles (media/fx/battle.particle; weapon_play.json "fx" picks them by weapon level): one-shot
     // effects at the player's weapon or the monster, drawn over both. Cleared when a battle starts or the screen closes.
@@ -830,13 +863,16 @@ private:
     std::vector<BattleFx> battleFx_;
     uint32_t battleFxSeed_ = 0;   // each effect of a battle its own seed, from 1 again each battle (the same fight looks the same)
     const toms::WeaponFx* battleWeaponFx(bool top = false) const;   // the worn weapon's at its level (top: its best)
-    void playBattleFx(const std::string& effect, bool atEnemy, int delayMs = 0);
+    void playBattleFx(const std::string& effect, int who, int delayMs = 0);   // who: -1 the player's weapon, 0.. a foe
     // At a point of the screen (design pixels); overUi: over the battle screen's UI (the attack track).
     void playBattleFxAt(const std::string& effect, float x, float y, bool overUi, int delayMs = 0);
     // The attack track's hint (the owner 2026-10-24: the timing was hard): a point's window entered, or a point hit.
     void comboHint(int point, bool hit);
     std::vector<glm::vec2> comboPointsOnScreen_;   // where the UI drew the track's points (GameUi, a frame late)
-    glm::vec4 battleBox_[2] = {{262, 84, 134, 134}, {652, 84, 134, 134}};   // setBattleBoxes; the 1024 x 768 layout until told
+    // setBattleBoxes; the 1024 x 768 layout with one monster until told
+    glm::vec4 playerBox_{262, 84, 134, 134};
+    glm::vec4 foeBox_[toms::kMaxFoes] = {{652, 84, 134, 134}, {652, 84, 134, 134}, {652, 84, 134, 134}};
+    glm::vec4 fighterBox(int who) const { return who < 0 ? playerBox_ : foeBox_[std::min(who, toms::kMaxFoes - 1)]; }
     void updateBattleFx(int dtMs);                      // Game::update
     std::string previewHeldFile_;                       // setPreviewHeld
     std::shared_ptr<toms::res::AnimRes> previewHeld_;   // its clips
@@ -1045,7 +1081,7 @@ private:
     toms::TimerOwner battleTimers_;
     toms::WeaponPlayTable weaponPlay_;   // data/weapon_play.json
     void startAttackPause();
-    void popDamage(int dmg, bool overEnemy, int kind);   // a damage number, hitNumberDelayMs_ from now
+    void popDamage(int dmg, int who, int kind);   // a damage number over who (-1 the player, 0.. a foe), hitNumberDelayMs_ from now
     // current stage id
     std::string curStage;
     std::string dataDir;

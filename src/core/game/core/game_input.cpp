@@ -369,8 +369,21 @@ void Game::engageMonster(const Entity& e) {
         dlgNpc = "enemy_" + e.id;   // so ChoiceMade{dlgNpc,...} carries the right id
         startDialogue(dlgNpc);
     } else {
-        startCombat(en);
+        startCombat(en, partyOf(en));
     }
+}
+
+// The monsters fighting beside a map monster (enemies.json "party": up to two ids; docs/gameplay/13 §4.6).
+std::vector<EnemyInst> Game::partyOf(const EnemyInst& lead) {
+    std::vector<EnemyInst> party;
+    auto t = enemyTpl.find(lead.id);
+    if (t == enemyTpl.end() || !t->second.contains("party") || !t->second["party"].is_array()) return party;
+    for (const auto& id : t->second["party"]) {
+        EnemyInst m;
+        if (id.is_string() && enemyFromData(id.get<std::string>(), nlohmann::json::object(), m)) party.push_back(m);
+        if ((int)party.size() + 1 >= toms::kMaxFoes) break;
+    }
+    return party;
 }
 
 // Verification hook (see game.h; no host calls it at the moment): start a fight with the nearest un-consumed monster so the battle scene and
@@ -396,6 +409,6 @@ bool Game::debugEquip(const std::string& equipmentId) {
 }
 
 void Game::debugForceLose() {
-    cs.enemy.boss = false;   // a non-boss death is what deathsNonBoss (e_13) actually counts
+    for (CombatState::Foe& f : cs.foes) f.enemy.boss = false;   // a non-boss death is what deathsNonBoss (e_13) actually counts
     finishCombatLose();
 }

@@ -15,8 +15,17 @@
 
 ## ▶ Next Step
 
-**Landscape and portrait, live; the attack track's timing help; Android on the emulator** (2026-10-25; rows 2–9 not
-committed; [DAILY_2026-10-25.md](DAILY_2026-10-25.md), [../../gameplay/12_UI_LAYOUT.md](../../gameplay/12_UI_LAYOUT.md)):
+**The battle editor design; one to three monsters; the battle log** (2026-10-25; not committed;
+[DAILY_2026-10-25.md](DAILY_2026-10-25.md) rows 10–13, [../../gameplay/13_BATTLE_EDITOR.md](../../gameplay/13_BATTLE_EDITOR.md)):
+- Design: its own `battle_editor.exe`; intent, answers and break first; a switchable pace (cooldown / stamina); two
+  offline HTML pages (`docs/gameplay/battle_editor/`).
+- Built: 1–3 monsters per battle with targeting (tap, ←/→), `enemies.json` `"party"`, the layouts for one, two and
+  three; the event log (`--battle-log`).
+- Changed-only 12 of 199 pass; the 19 battle / arena / trial scenarios by name pass (one monster pixel-identical).
+  **Owner:** commit; next the status map and the monsters' HP events (13 §7 step 1, second half).
+
+**Landscape and portrait, live; the attack track's timing help; Android on the emulator** (2026-10-25; rows 2–9 committed
+`e4c9b7d`; [DAILY_2026-10-25.md](DAILY_2026-10-25.md), [../../gameplay/12_UI_LAYOUT.md](../../gameplay/12_UI_LAYOUT.md)):
 - Timing help (`4951cbd`): `hitWindowMs` 140 / `lateMs` 80, a "tap now" sound, particle and highlight; a sprite layer
   over the UI.
 - The canvas follows the screen (`canvas.h`, `GameSession::fitCanvas`), switching live; the map shows more tiles, not
@@ -24,7 +33,7 @@ committed; [DAILY_2026-10-25.md](DAILY_2026-10-25.md), [../../gameplay/12_UI_LAY
 - Android: the link error fixed; runs and rotates on the emulator; colours fixed (gamma space, `color_space.h`).
 - Web: the rotate hint removed (not rebuilt).
 - Changed-only 15 of 196 pass; 34 switched-off scenarios and `camera_test` by name pass.
-  **Owner:** commit; review the layouts; next the other 8 screens; "build web" to try it in a browser.
+  **Owner:** review the layouts; the other 8 screens; "build web" to try it in a browser.
 
 **Battle particles, files by key, attribute points, the docs in three folders, the floor on render objects**
 (2026-10-24; not committed; [DAILY_2026-10-24.md](DAILY_2026-10-24.md)):

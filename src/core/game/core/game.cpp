@@ -277,6 +277,7 @@ void Game::update(int dtMs) {
             if (bar.pos > span) { bar.pos = span; bar.dir = -1; bar.legMs = 0.0f; }
             if (bar.pos < 0.0f)  { bar.pos = 0.0f;  bar.dir = 1;  bar.legMs = 0.0f; }
         };
+        if (cs.active) cs.clockMs += dtMs;   // the battle's own time (its event log)
         // Battle v3 (docs/gameplay/07 phase 1): the attack side is the point play. Cooling after an attack; then charge builds up
         // while it waits; a running combo moves its marker, and the enemy waits for it (the owner's rule, §4).
         if (cs.atkBar.cooling) {
@@ -291,12 +292,16 @@ void Game::update(int dtMs) {
         }
         stepBar(cs.defBar, toms::effectiveDefenseBar(equipped_, equipmentDefs_));
 
+        // each monster standing keeps its own clock (docs/gameplay/13 §4.6); all wait for a running combo
         if (cs.active && !cs.combo.running()) {
-            cs.enemyClockMs += dtMs;
-            int interval = std::max(500, cs.enemy.atkIntervalMs);
-            if (cs.enemyClockMs >= interval) {
-                cs.enemyClockMs = 0;
-                resolveEnemyClockFire();
+            for (size_t i = 0; i < cs.foes.size() && cs.active; i++) {
+                CombatState::Foe& f = cs.foes[i];
+                if (f.down()) continue;
+                f.clockMs += dtMs;
+                if (f.clockMs >= std::max(500, f.enemy.atkIntervalMs)) {
+                    f.clockMs = 0;
+                    resolveEnemyClockFire((int)i);
+                }
             }
         }
     }

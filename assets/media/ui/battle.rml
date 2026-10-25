@@ -15,15 +15,22 @@
     <!-- the fighters' boxes: always there, the game places the animated player and monster in them (GameUi reads
          their layout each frame), or their still pictures fill them -->
     <div id="player" class="fighter"><img data-if="!battle.player_anim" data-attr-sprite="battle.player_sprite"/></div>
-    <div id="enemy" class="fighter"><img data-if="!battle.enemy_anim" data-attr-sprite="battle.enemy_sprite"/></div>
     <!-- damage numbers: they rise over the fighter that was hit (UiPopup) -->
     <div class="popup" data-for="p : battle.popups" data-class-big="p.kind == 1" data-class-guard="p.kind == 2"
          data-style-left="p.x + 'px'" data-style-top="p.y + 'px'" data-style-opacity="p.opacity">{{p.text}}</div>
 
     <div id="player-hp" class="hp"><div class="fill-bar good" data-style-width="battle.player_hp_pct + '%'"></div></div>
     <div id="player-hp-text" class="hp-text">{{battle.player_hp_text}}</div>
-    <div id="enemy-hp" class="hp"><div class="fill-bar bad" data-style-width="battle.enemy_hp_pct + '%'"></div></div>
-    <div id="enemy-hp-text" class="hp-text">{{battle.enemy_hp_text}}</div>
+    <!-- the monsters, one to three (docs/gameplay/13 §4.6): each its box, HP and name; a tap makes it the target -->
+    <div class="foe" data-for="f, i : battle.foes" data-class-f1="i == 1" data-class-f2="i == 2"
+         data-class-n1="battle.foes.size == 1" data-class-n2="battle.foes.size == 2" data-class-n3="battle.foes.size == 3"
+         data-class-down="f.down" data-event-click="act('battle_target', i)">
+        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/></div>
+        <div class="mark" data-if="f.target"></div>
+        <div class="fhp"><div class="fill-bar bad" data-style-width="f.hp_pct + '%'"></div></div>
+        <div class="ftext one">{{f.hp_text}}</div>
+        <div class="ftext two">{{f.name}}<br/>{{f.hp_line}}</div>
+    </div>
     <div id="log">{{battle.log}}</div>
 
     <div data-if="battle.active">

@@ -496,7 +496,7 @@ void Game::runDialogueAction(const nlohmann::json& action) {
         if (hasPendingEncounter_) {
             inDialogue = false;
             hasPendingEncounter_ = false;
-            startCombat(pendingEncounterEnemy_);
+            startCombat(pendingEncounterEnemy_, partyOf(pendingEncounterEnemy_));
         }
     } else if (type == "startMission") {
         std::string missionId = action.value("missionId", std::string());

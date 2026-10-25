@@ -26,6 +26,7 @@
 //   --anim=<file>#<clip>  play one clip of an .anim file over the screen (anim_clip.h; tests)
 //   --ui-scale=<x>        the small-screen UI scale (the web build uses 1.5 on phones), to test it on desktop
 //   --battle-tuning=default  the battle bars' built-in values instead of data/battle.json (tests: smoke.battle)
+//   --battle-log          each battle event (hits, falls, the target, the win) as a line on stderr
 //   --window=<W>x<H>      the window's size (default 1280x720; e.g. 540x1200 to see the portrait layout on desktop)
 //   --resize=<frame>:<W>x<H>  resize the window at that frame (tests: the layout switches while the game runs)
 //   --design=<W>x<H>      a fixed design canvas, letterboxed (canvas.h; the screenshot tests pin 1024x768). Without it
@@ -103,6 +104,7 @@ struct Args {
     std::string spritePath = "auto";
     int fxGpuThreshold = -1;
     bool defaultBattleTuning = false;  // --battle-tuning=default
+    bool battleLog = false;            // --battle-log
     std::string titleScene;            // --title-scene=<file|none>
     float uiScale = 0.0f;              // --ui-scale=<x>: the phone UI scale on desktop (testing the web build's small-screen layout)
     int windowW = 1280, windowH = 720;   // --window=WxH
@@ -194,6 +196,7 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--window=")) { int w = 0, h = 0; if (std::sscanf(v, "%dx%d", &w, &h) == 2 && w >= 200 && h >= 200) { a.windowW = w; a.windowH = h; } }
         else if (const char* v = value(s, "--design=")) { unsigned w = 0, h = 0; if (std::sscanf(v, "%ux%u", &w, &h) == 2 && w >= 320 && h >= 320) { a.designW = w; a.designH = h; } }
         else if (const char* v = value(s, "--battle-tuning=")) a.defaultBattleTuning = std::string(v) == "default";
+        else if (s == "--battle-log") a.battleLog = true;
         else if (const char* v = value(s, "--stair-lock=")) a.stairLock = v;
         else if (const char* v = value(s, "--goto=")) a.gotoFloor = v;
         else if (const char* v = value(s, "--scenario=")) a.scenario = v;
@@ -405,6 +408,7 @@ bool appInit(App& app) {
 #endif
     opts.fxGpuThreshold = args.fxGpuThreshold;
     opts.defaultBattleTuning = args.defaultBattleTuning;
+    opts.battleLog = args.battleLog;
     opts.titleScene = args.titleScene;
     if (args.uiScale > 0.0f) opts.uiScale = args.uiScale;
     opts.designW = args.designW;
