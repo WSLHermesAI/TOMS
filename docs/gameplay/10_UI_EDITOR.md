@@ -47,7 +47,20 @@ Keys you will use:
    the game's folder: the game itself never shows them.
 
 The window: **files** on the left, **the text** in the middle, **the game** on the right, **Problems** and
-**Inspector** at the bottom. The toolbar's **Preview** says what the game shows (now *Practice screen (tutorial)*).
+**Inspector** at the bottom. The toolbar's **Preview** says what the game shows (now *Practice screen (tutorial)*). Its
+list names each screen and keeps them in the game's order, with the test scenario's folder in brackets: *Title
+screen*, *Map and HUD*, the player menu's tabs one by one (*Player menu: Status*, *Equipment*, *Items*, *Events*,
+*Cards*, *System*), *Save / Load*, *Store*, *Battle*, *Victory*, *Mini-game*, and so on.
+The top of the file list, **In this preview**, names the files of what the game shows now: each screen (`.rml`) on
+it, then the style sheets (`.rcss`) those link. It follows the game (a battle, then its victory dialog), and picking a
+new preview opens its screen file.
+
+**What you are about to change glows in the game.** Put the text cursor in an element's tag in an `.rml` file (for
+example in `<div id="title">`), or anywhere in a rule of an `.rcss` file (its selector or its block). Each element
+it is, on the screen now, gets a pulsing gold frame. An `.rml` tag is found by its `id`, or by its tag and classes
+(a `data-for` row lights every copy); an `.rcss` rule lights everything its selectors match. The status line says
+what glows, or that nothing on screen matches (hidden now, or on another screen). **Preview > Glow What the Cursor
+Is On** (Ctrl+G) turns it off.
 
 ---
 
@@ -198,7 +211,7 @@ If you saved them by mistake, ask the programmer, or in Git: `git checkout -- do
 
 ## 11. Now a real screen: the battle
 
-1. **Preview**: pick `battle — battle_bow`. The game opens a battle with the bow.
+1. **Preview**: pick *Battle  (battle_bow)*. The game opens a battle with the bow.
 2. Open `battle.rcss`. The battle's title is:
    ```css
    #title  { position: absolute; left: 262px; top: 14px; font-size: 38px; color: #ffcaa8; }

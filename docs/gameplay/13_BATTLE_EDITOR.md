@@ -2,8 +2,8 @@
 
 > 中文版：[zh_TW/13_BATTLE_EDITOR.md](zh_TW/13_BATTLE_EDITOR.md)
 
-**Status:** design, 2026-10-25; the owner's answers are in §8. Built so far: §4.6 (one to three monsters, targeting)
-and the battle's event log (§4.5), see §4.6's **Built**. Two pages show it (open them in a browser, they work offline):
+**Status:** 2026-10-25: the order of work's steps 1–3 (§7) are **built** (§9); step 4 (the art) is open. The owner's
+answers are in §8. Two pages show it (open them in a browser, they work offline):
 
 - [battle_editor/editor_mockup.html](battle_editor/editor_mockup.html): how the editor looks, every panel; the level
   growth calculator (§4.3) works.
@@ -208,7 +208,7 @@ What it changes in the game:
   `scenario.battle_party_target`).
 - The log: `CombatState::events` (`toms::BattleEvent`: start, combo, hit, down, target, super, active, win, lose) with
   the battle's time; `toms_game --battle-log` prints each as it happens, e.g. `  2.40  player -> foe 1 (bat): hit 12`.
-- Next: the status map, the monsters' HP events (§4.4), then one `Combatant` for every side (11 §4.1).
+- Then (the same day): the status map and the monster events, §9.
 
 ## 5. Data: what changes
 
@@ -274,6 +274,8 @@ with the weapons, then 7–9 with the cards and bosses. 10 alongside everything.
 
 ## 7. Order of work
 
+Steps 1–3 are built (2026-10-25, §9), except one `Combatant` for every side (11 §4.1), which stays open.
+
 1. **The battle core:** the battle events and the status map ([11 §6](11_BATTLE_DATA.md) step 1), one `Combatant`
    for the player and every monster (11 §4.1), and **one to three monsters** with targeting (§4.6).
 2. **Intent, answers, break** (§6.1, 6.2, 6.4) and the **pace switch** (cooldown / stamina, §6.3), with their UI in
@@ -292,3 +294,77 @@ with the weapons, then 7–9 with the cards and bosses. 10 alongside everything.
 | B3 | Stamina, or today's cooldowns? | **Both, switchable** (the pace, §6.3) |
 | B4 | Several monsters in one battle? | **Now** (§4.6) |
 | B5 | Test setups as automated tests? | **No**: editor files (`tools/battle_editor/setups/`, §2) |
+
+## 9. Built (2026-10-25)
+
+### 9.1 Step 1: the battle core
+
+- **One to three monsters, targeting, the event log**: §4.6's **Built**.
+- **The status map** (`data/looks.json`, [11 §4.2](11_BATTLE_DATA.md)): per look, each status's clip, sound and particle;
+  `base` inherits another look. A monster names its look in `enemies.json` `"look"` (none: `monster`); the player's is
+  `player`. Statuses used: idle, attack, hurt, die, special, transform, parry, broken. The game no longer names the
+  monster's attack sound or the player's attack sound in code; they come from this file.
+- **Monster events** (§4.4) run as written there. Built triggers: `beforeBattle` (its `say` is the battle's first
+  line, with a short pause to read it), `battleStart`, `hpBelow`, `playerHpBelow`, `attacks`, `everyMs`, `perfectHit`,
+  `falls`. Built actions: `say`, `stat` (`atk` / `def` / `interval`, `mul` / `add`), `transformInto` (`hp`:
+  `keepShare` / `full`), `heal`, `summon`, `flee` (no reward for it), `anim` (a look status), `fx`, `sound`, `flag`.
+  Not yet: `dialogue` (a dialogue in the middle of a battle; use `say`). The golem and Vorkath have an example
+  (`hpBelow` 50).
+- The pure rules are `src/core/game/systems/battle_rules.h` (tested by `unit.battle_rules_test`); `Game` runs them
+  (`game_combat.cpp`: `stepFoes`, `damageFoe`, `runFoeEvents`, `runFoeActions`, `foeLook`).
+
+### 9.2 Step 2: intent, answers, break, the pace
+
+- **Moves and intent** (§6.1): `data/moves.json` (`strike`, `heavy`, `jabs`, `spell`, `guard`: kind, damage, hits,
+  wind-up time, `breakHits`, `reduce`). A monster lists its moves in `enemies.json` `"moves"` (`["strike", {"id":
+  "heavy", "weight": 2}]`); without a list it only strikes, exactly as before. Over each monster: its next move and the
+  seconds left, with a bar, coloured by what answers it (heavy red, jabs yellow, spell purple, guard blue). Given moves
+  now: bat (jabs), golem (heavy, guard), skeleton (heavy), wraith (spell), imp (heavy, spell), Vorkath (all).
+- **Answers** (§6.2): a guard of `break.parryPower` (85) or more **parries** a heavy blow (no damage; it staggers
+  1.5 s and takes ×2); **jabs** cut a running combo short (guard instead); since 2026-10-26 every monster keeps charging during a combo
+  (the owner; `battle.json` `combo_holds_monsters: true` for the old wait); a combo matching
+  `breakHits` (2) points **breaks a spell**, and a guard only halves a spell; a monster **guarding** takes 30% unless a
+  full charge breaks the guard; a guard move deals no damage.
+- **Break** (§6.4): matched points fill the monster's gauge (a thin yellow bar along its HP bar; `enemies.json`
+  `"break"` or `battle.json` `break.points`, 8); full, it is **broken**: stunned 3 s, ×1.5 damage ("Broken!" over it).
+- **Results by points matched** (§4.2): `weapon_play.json` `"results"`; the default entry has one row now (all points:
+  "Perfect!", ×1.2, a 0.5 s stun, +1 break). Rows can stun, push the clock back, add to the break gauge, change the hit
+  particle, the sound and the clip.
+- **The pace** (§6.3): `battle.json` `"pace"`: `cooldown` (as before) or `stamina` (no waits; starting an attack costs
+  40, a guard tap 20, of 100; it refills 30 a second while no attack runs). A weapon (`weapon_play.json` `"pace"`), a
+  battle setup (`"pace"`) or the editor's switch overrides it. In the stamina pace the clock row shows the stamina, and
+  a button greys when there is not enough.
+- All of it is in `battle.json`'s `"stamina"` and `"break"` numbers, which a scenario's `"rules"` can change for one
+  battle. The scenarios `battle_parry`, `battle_jabs`, `battle_spell_break`, `battle_break`, `battle_transform`,
+  `battle_stamina`, `battle_stamina_short` check each rule ([08](08_TEST_SCENARIOS.md)).
+
+### 9.3 Step 3: `battle_editor.exe`
+
+`Build/<preset>/bin/battle_editor.exe` (packaged to `Editor/bin` by `tools/package_editors.py`). As §3:
+
+- **Monsters** (left): search; the tick is **+ Battle** (up to three, in the order ticked; **+ Again** adds the
+  selected one once more, for three bats); New, Duplicate, Delete (it names the floors that place the monster);
+  **Save monsters** writes `data/enemies.json` in its own layout, **Revert** reads it again. Edits not saved are used
+  by the next battle anyway (they go into the setup as overrides), and they reach the **running** battle at once:
+  every monster of that kind in it takes the new HP (its HP keeps its share), ATK, DEF, attack interval (the
+  wind-up under way keeps how far along it is), moves, look, break points and events.
+- **The battle bar**: **▶ Battle** (again: restart), Pause, ×0.5 / ×1 / ×2, the pace (from the data / cooldown /
+  stamina; it switches the running battle too), **Win now**, **Lose now**, **auto restart** (on: a battle that ends,
+  won or lost, starts again 1.5 s later, with the edits made so far), and the view's shape (fill, 4:3, 16:9, 3:4
+  portrait, phone portrait) to try both layouts.
+- **Monster** tab: name, sprite, HP, ATK, DEF, attack interval, break points, EXP, gold, moves (`strike, heavy:2`),
+  look, party, boss; **last battle**: the hits each side made and their average, and how long it lasted.
+- **Weapon** tab: the `weapon_play.json` entries; **Use this weapon in the battle**; sweep, charge, window and late
+  times, its pace; the **results** table (a particle not in `battle.particle` is red); **Save weapons**.
+- **Player** tab: the test player (level, HP, weapon, its wins, the attributes placed, points to place) and the
+  **growth calculator** (§4.3): T, L, k, the table by level with a bar and the running total; **Apply to the test
+  player**; **Save as the game's table** (only `stats.json`'s `levelUp.points` is rewritten, after asking).
+- **Events** tab: the selected monster's events as JSON with **Apply** (checked) and an example; the list with **Fire
+  now** to try one in the running battle.
+- **Log** tab: the running battle's events with their times.
+- **Test setups** (bottom): Load (and start), **Save current as…** to `tools/battle_editor/setups/<name>.json` (a
+  scenario with the editor's own `_editor` part). Two to start with: `slime Lv1 bow`, `3 bats Lv5 sword`.
+- Not yet: the difficulty simulation (the readout is from the last battle), the results' Preview button, pickers for
+  particles and clips (typed for now), the chapter filter.
+- Tests: `battle_editor.selftest` (the calculator, setups, files written back unchanged, the lists) and
+  `smoke.battle_editor` (three monsters, ▶ Battle, the log, Win now).

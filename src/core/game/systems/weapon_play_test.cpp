@@ -81,6 +81,23 @@ int main() {
                     }
     }
 
+    {   // the result rows by points matched (docs/gameplay/13 §4.2)
+        const WeaponPlay w = weaponPlayFromJson("bow", nlohmann::json::parse(R"({ "results": [
+            { "hits": "all", "name": "perfect", "damage": 1.5, "stunMs": 800 },
+            { "hits": 2, "name": "great", "damage": 1.2 },
+            { "hits": 0, "name": "miss" } ], "pace": "stamina" })"));
+        const WeaponResult* r = weaponResultFor(w, 3, 3, false);
+        CHECK(r && r->name == "perfect" && r->stunMs == 800, "all points: perfect");
+        r = weaponResultFor(w, 2, 3, false);
+        CHECK(r && r->name == "great", "2 of 3: great");
+        r = weaponResultFor(w, 3, 5, false);
+        CHECK(r && r->name == "great", "3 of 5: great (perfect needs all 5)");
+        r = weaponResultFor(w, 3, 3, true);
+        CHECK(r && r->name == "miss", "a failed combo: the 0 row");
+        CHECK(weaponResultFor(WeaponPlay{}, 3, 3, false) == nullptr, "no rows: none");
+        CHECK(w.pace == "stamina", "a weapon's pace");
+    }
+
     if (g_fail) { std::printf("weapon_play_test: %d failure(s)\n", g_fail); return 1; }
     std::printf("weapon_play_test: all passed\n");
     return 0;

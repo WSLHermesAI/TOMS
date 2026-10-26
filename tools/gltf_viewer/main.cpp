@@ -12,6 +12,9 @@
 //     --no-ui                   hide the panel (screenshots); H toggles it
 //     --debug=<0..5>            lit, normals, base colour, metal/rough, uv, shadow of the first light
 //     --light=default|point|spot|all|file   the light rig (file = the model's KHR_lights_punctual)
+//     --light-hints=1,0,...                 each light's hint (its shapes and markers) shown or not, in the panel's order
+//     --spot-aim=<yaw>,<pitch>              the rig's spot lights shine that way (degrees) instead of at the model
+//     --light-spin=<deg/s>                  every rig light rotates round the model at that speed
 //     --shadows=0|1 --ground=0|1            shadow maps (default on), the floor that catches them
 //     --shadow-bias=<x>                     scales the shadow offsets (acne vs. detached shadows)
 //     --camera=<index|name>                 look through one of the file's cameras (C cycles them)
@@ -76,6 +79,10 @@ struct Args {
     float time = -1.0f, yaw = 35.0f, pitch = 20.0f, zoom = 1.0f;
     bool ui = true, shadows = true, ground = true;
     std::string light = "default";
+    std::vector<char> lightHints;   // --light-hints
+    float lightSpin = 0.0f;         // --light-spin (0 = off)
+    bool spotAim = false;           // --spot-aim
+    float spotAimYaw = 0.0f, spotAimPitch = -45.0f;
     float shadowBias = 1.0f;
     std::string camera;
     float lookYaw = 0.0f, lookPitch = 0.0f;
@@ -108,6 +115,12 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--size=")) std::sscanf(v, "%dx%d", &a.w, &a.h);
         else if (s == "--no-ui") a.ui = false;
         else if (const char* v = value(s, "--light=")) a.light = v;
+        else if (const char* v = value(s, "--light-spin=")) a.lightSpin = (float)std::atof(v);
+        else if (const char* v = value(s, "--spot-aim=")) a.spotAim = std::sscanf(v, "%f,%f", &a.spotAimYaw, &a.spotAimPitch) == 2;
+        else if (const char* v = value(s, "--light-hints=")) {
+            for (const char* c = v; *c; c++)
+                if (*c == '0' || *c == '1') a.lightHints.push_back(*c == '1' ? 1 : 0);
+        }
         else if (const char* v = value(s, "--shadows=")) a.shadows = std::atoi(v) != 0;
         else if (const char* v = value(s, "--ground=")) a.ground = std::atoi(v) != 0;
         else if (const char* v = value(s, "--shadow-bias=")) a.shadowBias = (float)std::atof(v);
@@ -169,6 +182,15 @@ struct Viewer {
     struct RigLight {
         GltfRenderer::Light l;
         float yaw = -35.0f, pitch = 45.0f;
+        bool hint = true;                 // its shapes and markers in the view (the panel's "show hint")
+        // A spot light shines at the model's middle, or (aimAtModel off) where its own aim says: a yaw round the up
+        // axis and a pitch above (+) or below (-) the horizon, as fromAngles.
+        bool aimAtModel = true;
+        float aimYaw = 0.0f, aimPitch = -45.0f;
+        // "rotate": it circles the model round the up axis (a directional light turns its yaw), speed in degrees a
+        // second (below 0: the other way). A spot light with its own aim turns its aim with it.
+        bool spin = false;
+        float spinSpeed = 30.0f;
     };
     std::vector<RigLight> rig;
     std::string rigKind = "default";
@@ -182,6 +204,21 @@ struct Viewer {
     gltf::Model groundModel;
     gltf::Pose groundPose;
     std::shared_ptr<GltfRenderer::GpuModel> groundGpu;
+    // The lights' gizmos, solid shapes in each light's colour (with the panel only: never in --no-ui screenshots):
+    // a glowing ball at a point / spot light with a line down to a mark on the floor under it; a spot light's cones
+    // (outer and inner) reaching the floor, their base the lit spot; a directional light's sun and arrow at the
+    // model. Unit shapes built in code, placed and coloured per light each frame.
+    struct GizmoShape {
+        gltf::Model model;
+        gltf::Pose pose;
+        std::shared_ptr<GltfRenderer::GpuModel> gpu;
+    };
+    GizmoShape gizmoSphere, gizmoCone, gizmoCylinder, gizmoDisc;
+    std::vector<char> fileLightHint;      // per light of the file (Model::lights), 1 = shown
+    std::vector<char> frameLightHint;     // per light of frame.lights (frameLights fills it)
+    bool hintsGiven = false;              // --light-hints applied (once, to the first lights shown)
+    bool spotAimGiven = false;            // --spot-aim applied
+    bool lightSpinGiven = false;          // --light-spin applied
     bool grid = true, axes = false, skeleton = false, boundsBox = false, wireframe = false, autoRotate = false;
     bool showUi = true;
 
@@ -681,6 +718,7 @@ struct Viewer {
         error.clear();
         pose.bind(model.get());
         gpu = renderer.upload(*model);
+        fileLightHint.assign(model->lights.size(), 1);   // a new model: every light's hint shown
         playing.assign(model->animations.size(), 0);
         manualWeights.clear();
         time = 0.0;
@@ -779,6 +817,25 @@ struct Viewer {
         return glm::vec3(std::cos(p) * std::sin(y), std::sin(p), std::cos(p) * std::cos(y));
     }
 
+    // The rig's rotating lights (RigLight::spin): round the up axis through the model's middle.
+    void spinLights(float dt) {
+        if (args.lightSpin != 0.0f && !lightSpinGiven && model) {   // --light-spin: every rig light, once
+            lightSpinGiven = true;
+            for (RigLight& r : rig) { r.spin = true; r.spinSpeed = args.lightSpin; }
+        }
+        auto wrap = [](float deg) { return std::remainder(deg, 360.0f); };   // -180 .. 180
+        const glm::vec3 c = (sceneMin + sceneMax) * 0.5f;
+        for (RigLight& r : rig) {
+            if (!r.spin || r.spinSpeed == 0.0f) continue;
+            const float a = r.spinSpeed * dt;
+            r.yaw = wrap(r.yaw + a);
+            if (r.l.type == GltfRenderer::Light::Type::Directional) continue;
+            r.l.position = c + glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(a), glm::vec3(0, 1, 0)) *
+                                         glm::vec4(r.l.position - c, 0.0f));
+            if (!r.aimAtModel) r.aimYaw = wrap(r.aimYaw + a);
+        }
+    }
+
     // A rig around the model's bounds: "default" (key + fill directional), "point", "spot", "all".
     void buildRig(const std::string& kind) {
         rigKind = kind;
@@ -826,7 +883,27 @@ struct Viewer {
     // This frame's lights: the model's own (KHR_lights_punctual) or the rig.
     std::vector<GltfRenderer::Light> frameLights() {
         std::vector<GltfRenderer::Light> out;
+        frameLightHint.clear();
+        if (!hintsGiven && model && !args.lightHints.empty()) {   // --light-hints, in the panel's order
+            hintsGiven = true;
+            const bool file = useFileLights && !model->lights.empty();
+            if (file) fileLightHint.resize(model->lights.size(), 1);
+            for (size_t i = 0; i < args.lightHints.size(); i++) {
+                if (file && i < fileLightHint.size()) fileLightHint[i] = args.lightHints[i];
+                if (!file && i < rig.size()) rig[i].hint = args.lightHints[i] != 0;
+            }
+        }
+        if (args.spotAim && !spotAimGiven && model) {   // --spot-aim: the rig's spot lights, once
+            spotAimGiven = true;
+            for (RigLight& r : rig)
+                if (r.l.type == GltfRenderer::Light::Type::Spot) {
+                    r.aimAtModel = false;
+                    r.aimYaw = args.spotAimYaw;
+                    r.aimPitch = args.spotAimPitch;
+                }
+        }
         if (useFileLights && model && !model->lights.empty()) {
+            fileLightHint.resize(model->lights.size(), 1);
             for (const gltf::PlacedLight& p : pose.lights()) {
                 const gltf::Light& s = model->lights[(size_t)p.light];
                 GltfRenderer::Light l;
@@ -840,6 +917,7 @@ struct Viewer {
                 l.innerCone = s.innerCone;
                 l.outerCone = s.outerCone;
                 out.push_back(l);
+                frameLightHint.push_back(fileLightHint[(size_t)p.light]);
                 if ((int)out.size() == GltfRenderer::kMaxLights) break;
             }
             return out;
@@ -847,12 +925,15 @@ struct Viewer {
         for (RigLight& r : rig) {
             if (r.l.type != GltfRenderer::Light::Type::Point) {   // aim: from (yaw, pitch) at the model
                 if (r.l.type == GltfRenderer::Light::Type::Directional) r.l.direction = -fromAngles(r.yaw, r.pitch);
+                else if (!r.aimAtModel) r.l.direction = fromAngles(r.aimYaw, r.aimPitch);   // its own aim
                 else r.l.direction = glm::normalize((sceneMin + sceneMax) * 0.5f - r.l.position);
             }
             out.push_back(r.l);
+            frameLightHint.push_back(r.hint ? 1 : 0);
         }
         return out;
     }
+    bool lightHintShown(size_t i) const { return i >= frameLightHint.size() || frameLightHint[i] != 0; }
 
     void makeGround() {   // a unit quad, scaled under the model each frame
         gltf::Model& g = groundModel;
@@ -881,6 +962,154 @@ struct Viewer {
         g.scenes.push_back({"ground", {0}});
         groundPose.bind(&groundModel);
         groundGpu = renderer.upload(groundModel);
+    }
+
+    // The gizmos' unit shapes: a sphere (radius 1), a cone and a cylinder along +Y from 0 to 1 (radius 1 at y = 1; the
+    // cone's tip at 0), a disc on y = 0. All closed, two-sided, unlit; drawLightGizmos colours and places them.
+    void makeGizmos() {
+        const int seg = 24, rings = 12;
+        auto finish = [this](GizmoShape& s, gltf::Primitive p, const char* name) {
+            p.material = 0;
+            p.boundsMin = glm::vec3(FLT_MAX);
+            p.boundsMax = glm::vec3(-FLT_MAX);
+            for (const glm::vec3& v : p.position) { p.boundsMin = glm::min(p.boundsMin, v); p.boundsMax = glm::max(p.boundsMax, v); }
+            gltf::Mesh mesh;
+            mesh.name = name;
+            mesh.primitives.push_back(std::move(p));
+            s.model.meshes.push_back(std::move(mesh));
+            gltf::Material mat;
+            mat.name = name;
+            mat.unlit = true;
+            mat.doubleSided = true;
+            mat.metallic = 0.0f;
+            s.model.materials.push_back(mat);
+            gltf::Node node;
+            node.mesh = 0;
+            s.model.nodes.push_back(node);
+            s.model.scenes.push_back({name, {0}});
+            s.pose.bind(&s.model);
+            s.gpu = renderer.upload(s.model);
+        };
+        auto ring = [seg](float a) { return glm::vec2(std::cos(a * 6.2831853f / seg), std::sin(a * 6.2831853f / seg)); };
+        {   // sphere
+            gltf::Primitive p;
+            for (int r = 0; r <= rings; r++) {
+                const float t = 3.14159265f * r / rings;
+                for (int k = 0; k <= seg; k++) {
+                    const glm::vec2 c = ring((float)k);
+                    const glm::vec3 v(std::sin(t) * c.x, std::cos(t), std::sin(t) * c.y);
+                    p.position.push_back(v);
+                    p.normal.push_back(v);
+                }
+            }
+            for (int r = 0; r < rings; r++)
+                for (int k = 0; k < seg; k++) {
+                    const uint32_t a = (uint32_t)(r * (seg + 1) + k), b = a + seg + 1;
+                    p.indices.insert(p.indices.end(), {a, b, a + 1, a + 1, b, b + 1});
+                }
+            finish(gizmoSphere, p, "gizmo_sphere");
+        }
+        auto tube = [&](GizmoShape& s, float bottomRadius, const char* name) {   // y 0 (bottomRadius) .. 1 (radius 1), capped
+            gltf::Primitive p;
+            for (int k = 0; k <= seg; k++) {
+                const glm::vec2 c = ring((float)k);
+                p.position.push_back(glm::vec3(c.x * bottomRadius, 0.0f, c.y * bottomRadius));
+                p.position.push_back(glm::vec3(c.x, 1.0f, c.y));
+                p.normal.push_back(glm::vec3(c.x, 0.0f, c.y));
+                p.normal.push_back(glm::vec3(c.x, 0.0f, c.y));
+            }
+            for (int k = 0; k < seg; k++) {
+                const uint32_t a = (uint32_t)(k * 2);
+                p.indices.insert(p.indices.end(), {a, a + 1, a + 2, a + 2, a + 1, a + 3});
+            }
+            for (float y : {0.0f, 1.0f}) {   // the caps
+                if (y == 0.0f && bottomRadius <= 0.0f) continue;
+                const float rr = y == 0.0f ? bottomRadius : 1.0f;
+                const uint32_t centre = (uint32_t)p.position.size();
+                p.position.push_back(glm::vec3(0.0f, y, 0.0f));
+                p.normal.push_back(glm::vec3(0.0f, y == 0.0f ? -1.0f : 1.0f, 0.0f));
+                for (int k = 0; k <= seg; k++) {
+                    const glm::vec2 c = ring((float)k);
+                    p.position.push_back(glm::vec3(c.x * rr, y, c.y * rr));
+                    p.normal.push_back(glm::vec3(0.0f, y == 0.0f ? -1.0f : 1.0f, 0.0f));
+                }
+                for (int k = 0; k < seg; k++) p.indices.insert(p.indices.end(), {centre, centre + 1 + k, centre + 2 + k});
+            }
+            finish(s, p, name);
+        };
+        tube(gizmoCone, 0.0f, "gizmo_cone");
+        tube(gizmoCylinder, 1.0f, "gizmo_cylinder");
+        {   // disc
+            gltf::Primitive p;
+            p.position.push_back(glm::vec3(0.0f));
+            p.normal.push_back(glm::vec3(0, 1, 0));
+            for (int k = 0; k <= seg; k++) {
+                const glm::vec2 c = ring((float)k);
+                p.position.push_back(glm::vec3(c.x, 0.0f, c.y));
+                p.normal.push_back(glm::vec3(0, 1, 0));
+            }
+            for (int k = 0; k < seg; k++) p.indices.insert(p.indices.end(), {0u, (uint32_t)(1 + k), (uint32_t)(2 + k)});
+            finish(gizmoDisc, p, "gizmo_disc");
+        }
+    }
+
+    // Each light as solid shapes (see gizmoSphere): where it is, which way it shines and where its light lands.
+    void drawLightGizmos() {
+        if (!showUi || !gizmoSphere.gpu) return;
+        const float groundY = sceneMin.y;
+        // a matrix that takes +Y to `d` (any roll), scaled (xz, y), at `at`
+        auto along = [](const glm::vec3& at, glm::vec3 d, float widthScale, float lengthScale) {
+            d = glm::normalize(d);
+            const glm::vec3 ref = std::fabs(d.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0);
+            const glm::vec3 x = glm::normalize(glm::cross(d, ref)), z = glm::cross(x, d);
+            glm::mat4 m(1.0f);
+            m[0] = glm::vec4(x * widthScale, 0.0f);
+            m[1] = glm::vec4(d * lengthScale, 0.0f);
+            m[2] = glm::vec4(z * widthScale, 0.0f);
+            m[3] = glm::vec4(at, 1.0f);
+            return m;
+        };
+        auto put = [this](GizmoShape& s, const glm::mat4& m, const glm::vec3& colour, float alpha) {
+            gltf::Material& mat = s.model.materials[0];   // read by draw() as it submits: one shape, any colour
+            mat.baseColor = glm::vec4(colour, alpha);
+            mat.alphaMode = alpha < 1.0f ? gltf::AlphaMode::Blend : gltf::AlphaMode::Opaque;
+            renderer.draw(*s.gpu, s.pose, m, false);
+        };
+        auto ball = [](const glm::vec3& at, float r) { return glm::scale(glm::translate(glm::mat4(1.0f), at), glm::vec3(r)); };
+        for (size_t li = 0; li < frame.lights.size(); li++) {
+            const GltfRenderer::Light& l = frame.lights[li];
+            if (!lightHintShown(li)) continue;   // this light's hint is off (its "show hint")
+            // its colour at full brightness (a dim or very bright light still shows its hue)
+            const float top = std::max({l.color.r, l.color.g, l.color.b, 1e-3f});
+            const glm::vec3 col = l.color / top;
+            const float s = radius * 0.05f;
+            if (l.type == GltfRenderer::Light::Type::Directional) {
+                // the sun up where the light comes from, and a solid arrow from it towards the model
+                const glm::vec3 d = glm::normalize(l.direction);
+                const glm::vec3 tail = target - d * radius * 1.7f;
+                const float shaft = radius * 0.55f, head = radius * 0.2f;
+                put(gizmoSphere, ball(tail, s * 1.3f), col, 1.0f);
+                put(gizmoSphere, ball(tail, s * 2.6f), col, 0.18f);
+                put(gizmoCylinder, along(tail, d, radius * 0.02f, shaft), col, 1.0f);
+                put(gizmoCone, along(tail + d * (shaft + head), -d, radius * 0.065f, head), col, 1.0f);
+                continue;
+            }
+            // a point or spot light: the glowing ball, and a mark on the floor under it
+            put(gizmoSphere, ball(l.position, s), col, 1.0f);
+            put(gizmoSphere, ball(l.position, s * 2.4f), col, 0.2f);
+            if (l.position.y > groundY) put(gizmoDisc, ball(glm::vec3(l.position.x, groundY + radius * 0.004f, l.position.z), s * 1.6f), col, 0.45f);
+            if (l.type == GltfRenderer::Light::Type::Point) {
+                if (l.range > 0.0f) put(gizmoSphere, ball(l.position, l.range), col, 0.035f);   // how far it reaches
+                continue;
+            }
+            // a spot light's cones, to the floor (or its range): the outer one faint, the inner one brighter
+            const glm::vec3 d = glm::normalize(l.direction);
+            float len = d.y < -0.05f ? (l.position.y - groundY) / -d.y : radius * 2.0f;
+            if (l.range > 0.0f) len = std::min(len, l.range);
+            len = std::clamp(len, radius * 0.3f, radius * 6.0f);
+            put(gizmoCone, along(l.position, d, len * std::tan(std::min(l.outerCone, 1.45f)), len), col, 0.12f);
+            put(gizmoCone, along(l.position, d, len * std::tan(std::min(l.innerCone, 1.45f)), len), col, 0.14f);
+        }
     }
 
     // ---- input -----------------------------------------------------------------------------------
@@ -1120,9 +1349,15 @@ struct Viewer {
                         if (!(k & bit)) line(c[k], c[k | bit], col);
             }
         }
-        // The lights: a directional light's arrow, a point light's star, a spot light's cone.
+        // The lights: a directional light's arrow, a point light's star, a spot light's cone (the solid shapes are
+        // drawLightGizmos'); a point or spot light's line down to the floor.
         if (showUi)
-            for (const GltfRenderer::Light& l : frame.lights) {
+            for (size_t li = 0; li < frame.lights.size(); li++) {
+                const GltfRenderer::Light& l = frame.lights[li];
+                if (!lightHintShown(li)) continue;   // this light's hint is off: no markers either
+                if (l.type != GltfRenderer::Light::Type::Directional && l.position.y > sceneMin.y)
+                    line(l.position, glm::vec3(l.position.x, sceneMin.y, l.position.z),
+                         abgr(std::min(l.color.r, 1.0f), std::min(l.color.g, 1.0f), std::min(l.color.b, 1.0f), 0.5f));
                 const uint32_t col = abgr(std::min(l.color.r, 1.0f), std::min(l.color.g, 1.0f), std::min(l.color.b, 1.0f), 0.9f);
                 const float s = radius * 0.12f;
                 if (l.type == GltfRenderer::Light::Type::Directional) {
@@ -1360,6 +1595,20 @@ struct Viewer {
                 ImGui::Checkbox(("the file's lights (" + std::to_string(model->lights.size()) + ", KHR_lights_punctual)").c_str(),
                                 &useFileLights);
             const bool fileLights = useFileLights && model && !model->lights.empty();
+            if (fileLights) {   // the file's lights: each one's hint
+                fileLightHint.resize(model->lights.size(), 1);
+                static const char* kinds[] = {"directional", "point", "spot"};
+                for (size_t i = 0; i < model->lights.size(); i++) {
+                    const gltf::Light& fl = model->lights[i];
+                    bool on = fileLightHint[i] != 0;
+                    const std::string label = std::to_string(i + 1) + ". " + (fl.name.empty() ? std::string("light") : fl.name) + "  (" +
+                                              kinds[(int)fl.type] + ")  show hint##filelight" + std::to_string(i);
+                    ImGui::ColorButton(("##col" + std::to_string(i)).c_str(), ImVec4(fl.color.r, fl.color.g, fl.color.b, 1.0f),
+                                       ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
+                    ImGui::SameLine();
+                    if (ImGui::Checkbox(label.c_str(), &on)) fileLightHint[i] = on ? 1 : 0;
+                }
+            }
             if (!fileLights) {
                 static const char* rigs[] = {"default", "point", "spot", "all"};
                 int ri = 0;
@@ -1378,6 +1627,21 @@ struct Viewer {
                         ImGui::ColorEdit3("colour", &r.l.color.x, ImGuiColorEditFlags_NoInputs);
                         ImGui::SameLine();
                         ImGui::Checkbox("cast shadows", &r.l.castShadows);
+                        ImGui::SameLine();
+                        ImGui::Checkbox("show hint", &r.hint);
+                        ImGui::Checkbox("rotate", &r.spin);
+                        if (ImGui::IsItemHovered())
+                            ImGui::SetTooltip("It circles the model round the up axis (a directional light turns its yaw).");
+                        if (r.spin) {
+                            ImGui::SameLine();
+                            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.6f);
+                            ImGui::SliderFloat("speed", &r.spinSpeed, -180.0f, 180.0f, "%.0f deg/s");
+                            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Degrees a second; below 0 the other way round.");
+                        }
+                        if (ImGui::IsItemHovered())
+                            ImGui::SetTooltip("This light's hint in the view, in its colour: a ball at a point or spot light, with a\n"
+                                              "line down to a mark on the floor; a spot light's outer and inner cones, reaching the\n"
+                                              "floor where it shines; a directional light's sun and an arrow towards the model.");
                         if (r.l.type == GltfRenderer::Light::Type::Directional) {
                             ImGui::SliderFloat("intensity", &r.l.intensity, 0.0f, 10.0f);
                             ImGui::SliderFloat("yaw", &r.yaw, -180.0f, 180.0f, "%.0f deg");
@@ -1390,7 +1654,20 @@ struct Viewer {
                                 float inner = glm::degrees(r.l.innerCone), outer = glm::degrees(r.l.outerCone);
                                 if (ImGui::SliderFloat("inner cone", &inner, 0.0f, 89.0f, "%.0f deg")) r.l.innerCone = glm::radians(inner);
                                 if (ImGui::SliderFloat("outer cone", &outer, 1.0f, 89.0f, "%.0f deg")) r.l.outerCone = glm::radians(outer);
-                                ImGui::TextDisabled("(aims at the model)");
+                                if (ImGui::Checkbox("aim at the model", &r.aimAtModel) && !r.aimAtModel) {
+                                    // its own aim starts where it shines now (no jump)
+                                    const glm::vec3 d = glm::normalize(r.l.direction);
+                                    r.aimPitch = glm::degrees(std::asin(std::clamp(d.y, -1.0f, 1.0f)));
+                                    r.aimYaw = glm::degrees(std::atan2(d.x, d.z));
+                                }
+                                if (ImGui::IsItemHovered())
+                                    ImGui::SetTooltip("On: it always shines at the model's middle.\n"
+                                                      "Off: it shines where its aim yaw and pitch say.");
+                                if (!r.aimAtModel) {
+                                    ImGui::SliderFloat("aim yaw", &r.aimYaw, -180.0f, 180.0f, "%.0f deg");
+                                    ImGui::SliderFloat("aim pitch", &r.aimPitch, -90.0f, 90.0f, "%.0f deg");
+                                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Below 0: down towards the floor; above 0: up.");
+                                }
                             }
                         }
                         if (ImGui::SmallButton("remove")) remove = (int)i;
@@ -1512,6 +1789,7 @@ struct Viewer {
             crowd.update(dt * speed);
         }
         if (autoRotate) yaw += dt * 20.0f;
+        spinLights(dt);
         moveWithKeys(dt);
 
         // UI first (it decides whether the mouse belongs to it).
@@ -1582,6 +1860,7 @@ struct Viewer {
                                                glm::vec3(radius * 6.0f));
             renderer.draw(*groundGpu, groundPose, place, false);
         }
+        drawLightGizmos();
         drawLines();
         bgfx::setDebug(wireframe ? BGFX_DEBUG_WIREFRAME : BGFX_DEBUG_NONE);
         gui.render(GltfRenderer::kViews + 4);
@@ -1686,6 +1965,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     v.makeGround();
+    v.makeGizmos();
     v.uiScale = std::max(1.0f, SDL_GetWindowDisplayScale(v.window) * 0.8f);
     ImGui::GetIO().FontGlobalScale = v.uiScale;
     ImGui::GetStyle().ScaleAllSizes(v.uiScale);
@@ -1711,6 +1991,7 @@ int main(int argc, char** argv) {
     v.gpu.reset();
     v.animGpu.reset();   // the crowd's texture: before bgfx goes
     v.groundGpu.reset();
+    for (auto* g : {&v.gizmoSphere, &v.gizmoCone, &v.gizmoCylinder, &v.gizmoDisc}) g->gpu.reset();
     v.renderer.shutdown();
     v.gui.shutdown();
     next::bgfxHostShutdown();

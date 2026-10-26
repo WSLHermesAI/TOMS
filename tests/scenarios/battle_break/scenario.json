@@ -1,0 +1,6 @@
+{
+  "_comment": "The break gauge (docs/gameplay/13 §6.4): a slime that breaks at 3 points; battle_bow's combo matches all 3, so it is broken (stunned, takes more).",
+  "include": ["../battle_bow/scenario.json"],
+  "battle": { "enemy": "slime", "hp": 9999, "atk_interval_ms": 60000, "break": 3 },
+  "expect": { "battleAnim": "attack", "battleEvents": { "break": 1 } }
+}

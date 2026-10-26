@@ -8,7 +8,7 @@
      and the notification stack (level up, floor events, ...). Data: overlay.* (UiOverlay). -->
 <body data-model="game">
     <div id="notifications">
-        <div class="note" data-for="n : overlay.notifications">{{n}}</div>
+        <div data-for="n : overlay.notifications"><div class="note">{{n}}</div></div>
     </div>
     <div id="toast-row" data-if="overlay.toast"><span id="toast">{{overlay.toast_text}}</span></div>
 </body>

@@ -9,11 +9,25 @@
     "Read when the game starts; without this file the game uses 1, 1 and 1500.",
     "attack_pause_ms: while the player or the enemy attacks, BOTH sides' clocks pause this long (the bars do not",
     "move or cool down, the enemy's clock waits) -- the owner's rule, docs/gameplay/07_GAMEPLAY_PLAN.md §4. 0 turns it off.",
-    "hit_number_delay_ms: the damage number appears this long after the attack starts (when the swing lands)."
+    "hit_number_delay_ms: the damage number appears this long after the attack starts (when the swing lands).",
+    "pace (docs/gameplay/13_BATTLE_EDITOR.md §6.3, the owner 2026-10-25: both, switchable): \"cooldown\" = each bar waits",
+    "bar_cooldown_ms after a tap (as before); \"stamina\" = no waits, but starting an attack and each guard tap cost stamina,",
+    "which refills while no attack runs (stamina: max, regenPerS, attack, guard). A weapon (weapon_play.json \"pace\") or a",
+    "battle setup can override it.",
+    "break (§6.4): points = matched points that fill a monster's gauge (enemies.json \"break\" overrides it); a full gauge",
+    "stuns it brokenMs and its hits take brokenDamage times. A heavy blow (data/moves.json) guarded with parryPower or more",
+    "is parried: it staggers parryMs, takes parryDamage times, and parryBreak goes on its gauge; breaking a guard adds guardBreak.",
+    "combo_holds_monsters: false (the owner 2026-10-26) = the monsters keep charging while the player's combo runs, and their",
+    "attack lands in the middle of it; true = their clocks wait for the combo (as before). Quick jabs never wait."
   ],
   "bar_slow_speed_scale": 0.5,
   "bar_fast_speed_scale": 10,
   "bar_cooldown_ms": 1000,
   "attack_pause_ms": 450,
-  "hit_number_delay_ms": 180
+  "hit_number_delay_ms": 180,
+  "combo_holds_monsters": false,
+  "pace": "cooldown",
+  "stamina": { "max": 100, "regenPerS": 30, "attack": 40, "guard": 20 },
+  "break": { "points": 8, "brokenMs": 3000, "brokenDamage": 1.5, "parryMs": 1500, "parryDamage": 2.0, "parryPower": 85,
+             "parryBreak": 3, "guardBreak": 2 }
 }

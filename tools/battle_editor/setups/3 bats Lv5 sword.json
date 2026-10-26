@@ -1,0 +1,23 @@
+{
+  "_comment": "battle_editor's test setup \"3 bats Lv5 sword\" (docs/gameplay/13_BATTLE_EDITOR.md §2): not a test, an editor file.",
+  "scene": "battle",
+  "player": {
+    "give": ["sword"],
+    "equip": ["sword"],
+    "weaponUses": { "sword": 4 },
+    "lv": 5,
+    "maxhp": 160,
+    "hp": 160,
+    "attrs": { "str": 6, "agi": 4 }
+  },
+  "battle": {
+    "enemy": "bat",
+    "party": [{ "enemy": "bat" }, { "enemy": "bat" }]
+  },
+  "_editor": {
+    "name": "3 bats Lv5 sword",
+    "pace": "",
+    "foes": ["bat", "bat", "bat"],
+    "player": { "lv": 5, "hp": 160, "maxhp": 160, "weapon": "sword", "weaponWins": 4, "attrs": { "str": 6, "agi": 4 }, "attrPoints": 0 }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "_comment": [
+    "The status map (docs/gameplay/11_BATTLE_DATA.md §4.2; src/core/game/systems/battle_rules.h): for each fighter's look,",
+    "what each status shows: clip (its name in the fighter's .anim; empty: the status's own name), sound (a sound id in",
+    "media/sfx) and fx (an effect in media/fx/battle.particle). base: another look whose states this one starts from.",
+    "A monster names its look in enemies.json \"look\" (none: \"monster\"); the player's is \"player\".",
+    "Statuses: idle, attack, hurt, die, special, transform, parry, broken. A monster's clip is looked up as",
+    "<clip>_<monster id> first (its own), then <clip> (monster_battle.anim)."
+  ],
+  "monster": {
+    "states": {
+      "idle": {},
+      "attack": { "sound": "enemy_attack" },
+      "hurt": {},
+      "die": {},
+      "special": { "clip": "attack", "fx": "staff_release_2" },
+      "transform": { "clip": "hurt", "fx": "staff_hit_3" },
+      "parry": { "clip": "hurt", "fx": "sword_hit_2" },
+      "broken": { "clip": "hurt", "fx": "staff_hit_3" }
+    }
+  },
+  "player": {
+    "states": {
+      "attack": { "sound": "player_attack" },
+      "parry": { "sound": "confirm_click", "fx": "sword_release_2" }
+    }
+  }
+}

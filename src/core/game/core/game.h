@@ -39,6 +39,7 @@
 #include "weapon_play.h"     // toms::WeaponPlayTable -- data/weapon_play.json (docs/gameplay/07_GAMEPLAY_PLAN.md §5.6)
 #include "combo_play.h"      // toms::ComboPlay -- Battle v3's point play (docs/gameplay/07 §4, §5.1)
 #include "battle_party.h"    // toms::nextStanding, BattleEvent -- 1-3 monsters, the battle log (docs/gameplay/13 §4.6)
+#include "battle_rules.h"    // toms::LooksTable, MonsterEvent, MovesTable, PaceSettings, BreakSettings (docs/gameplay/13)
 #include "mini_game.h"       // toms::MiniGameTable -- reusable reward events (docs/gameplay/07 phase 6)
 #include "art_styles.h"      // toms::ArtStyle — the selectable art styles (assets/media/styles)
 #include "atlas_file.h"      // toms::AtlasFile — the prebuilt sprite atlas (tools/atlas)
@@ -72,6 +73,12 @@ struct EnemyInst : public Trackable {
     // on its own real-time clock -- independent of anything the player does. Read from
     // data/enemies.json's "atk_interval_ms" (engageMonster()); defaults to 4000 when absent.
     int atkIntervalMs = 4000;
+    // The battle's rules for it (docs/gameplay/13; enemies.json, a scenario's "battle" can override each):
+    std::string mapId;                       // the map monster's id (a transformed monster keeps it: its tile is cleared)
+    std::string look = "monster";            // "look": its status map in data/looks.json
+    std::vector<toms::MoveChoice> moves;     // "moves": what it may do next (data/moves.json); none: a plain strike
+    int breakPoints = 0;                     // "break": matched points that break it (0: data/battle.json's)
+    nlohmann::json events = nlohmann::json::array();   // "events": its monster events (13 §4.4)
     TOMS_OBJECT(EnemyInst)
 };
 
@@ -124,7 +131,18 @@ struct CombatState : public Trackable {
     struct Foe {
         EnemyInst enemy;
         int hp = 0;
-        int clockMs = 0;       // counts up to enemy.atkIntervalMs, then it attacks and starts again
+        int clockMs = 0;       // counts up to moveMs, then it does its move and starts again
+        // Its next move (docs/gameplay/13 §6.1): shown over it with the time left (its intent).
+        std::string move = "strike";
+        int moveMs = 4000;
+        int staggerMs = 0;            // stunned (a parry, a break, a result's stun): its clock stops...
+        float staggerDamage = 1.0f;   // ...and hits on it do this much more
+        bool broken = false;          // the stun came from its break gauge (the intent shows "Broken!")
+        float breakGauge = 0.0f;      // matched points so far (13 §6.4)
+        float atkMul = 1.0f, defMul = 1.0f, intervalMul = 1.0f;   // monster events' stat changes
+        int attacks = 0;              // its attacks so far (the "attacks" event)
+        bool fled = false;            // left the battle (no reward for it)
+        std::vector<toms::MonsterEvent> events;
         bool down() const { return hp <= 0; }
     };
     std::vector<Foe> foes;
@@ -136,6 +154,9 @@ struct CombatState : public Trackable {
     // What happened, in order (battle_party.h): the battle editor's log, and what monster events will listen to.
     std::vector<toms::BattleEvent> events;
     int clockMs = 0;           // battle time (while it is active)
+    // The pace (docs/gameplay/13 §6.3): cooldowns after a tap (as before), or stamina that both actions spend.
+    toms::Pace pace = toms::Pace::Cooldown;
+    float stamina = 0.0f;
     bool active = false;
     std::string log;          // last exchange text
     bool won = false;
@@ -310,6 +331,27 @@ public:
     void battleCycleTarget(int dir);
     void battleSetTarget(int foe);
     const std::vector<toms::BattleEvent>& battleEvents() const { return cs.events; }
+    // The pace (docs/gameplay/13 §6.3): "cooldown" / "stamina" for the battles from now on (and the one running); ""
+    // goes back to the weapon's or data/battle.json's. The battle editor's switch; a scenario's "battle": {"pace"}.
+    void setBattlePace(const std::string& pace);
+    std::string battlePace() const { return toms::paceName(cs.pace); }
+    // The battle editor: end the battle as won (every monster falls) / fire a monster's event now (its index in
+    // enemies.json "events"). Both no-ops without a battle.
+    void debugForceWin();
+    void debugFireFoeEvent(int foe, int event);
+    int battleFoeCount() const { return cs.active ? (int)cs.foes.size() : 0; }
+    // The battle editor: a monster's enemies.json record, edited while it fights. Every foe of that id in the running
+    // battle takes the new numbers at once: HP (its current HP keeps its share), ATK, DEF, the attack interval (the
+    // wind-up under way keeps how far along it is), moves, look, break points and events. No battle: nothing.
+    void debugUpdateMonster(const std::string& id, const nlohmann::json& record);
+    int battleFoeMoveMs(int foe) const {   // the wait before its next move (the editor's check)
+        return cs.active && foe >= 0 && foe < (int)cs.foes.size() ? cs.foes[(size_t)foe].moveMs : 0;
+    }
+    std::vector<std::string> battleFoeIds() const {   // the log's names (battleEventLine)
+        std::vector<std::string> v;
+        for (const CombatState::Foe& f : cs.foes) v.push_back(f.enemy.id);
+        return v;
+    }
     void setBattleLogToStderr(bool on) { battleLogToStderr_ = on; }   // --battle-log: every battle event as it happens
     // ---- the player menu (docs/gameplay/03_PLAYER_MENU.md): the walking scene's one button (≡, Esc) ----
     // Five tabs: Status, Equipment, Items, Events, System. Everything that was a button of its own
@@ -581,6 +623,21 @@ private:
     float comboCharge() const;                      // 0 .. 1, the charge built while the attack waits
     void resolveDefenseTap();
     void resolveEnemyClockFire(int foe);
+    // ---- the battle's rules (docs/gameplay/13; battle_rules.h) ----
+    void chooseFoeMove(int foe);                     // its next move (its intent) and the wait before it
+    void stepFoes(int dtMs);                         // Game::update: the monsters' clocks, stuns and timed events
+    // The player's hit of `dmg` on a foe: its HP, then its HP events (hpBelow, falls). The caller then checks the fall.
+    void damageFoe(int foe, int dmg);
+    void runFoeEvents(int foe, const toms::EventCheck& check);
+    void runFoeActions(int foe, const nlohmann::json& actions);
+    void stunFoe(int foe, int ms, float damage, bool broken);
+    void foeLook(int foe, const std::string& state);  // its look's sound and particle for a status, and its clip
+    void playerLook(const std::string& state);         // the player's ("player" in looks.json)
+    void interruptCombo(int foe);                      // quick jabs cut a running combo short
+    std::string foeLogName(int foe) const;
+    toms::Pace effectivePace() const;   // the override, else the weapon's, else data/battle.json's
+    int foeBreakPoints(int foe) const;
+    float playerHpPct() const;
     // A foe fell (its HP reached 0): its die clip, the log; the target moves on; the last one wins the battle.
     void foeDown(int foe);
     std::vector<EnemyInst> partyOf(const EnemyInst& lead);
@@ -1080,6 +1137,14 @@ private:
     toms::TimerQueue timers_;
     toms::TimerOwner battleTimers_;
     toms::WeaponPlayTable weaponPlay_;   // data/weapon_play.json
+    toms::LooksTable looks_;             // data/looks.json: the status map (docs/gameplay/11 §4.2)
+    toms::MovesTable moves_;             // data/moves.json: the monsters' moves (docs/gameplay/13 §6.1)
+    toms::PaceSettings paceSettings_;    // data/battle.json "pace", "stamina"
+    toms::BreakSettings breakSettings_;  // data/battle.json "break"
+    std::string paceOverride_;           // setBattlePace / a scenario's "pace" ("" = the weapon's or the file's)
+    bool comboHoldsMonsters_ = false;    // data/battle.json "combo_holds_monsters": their clocks wait for a running combo
+    nlohmann::json battleJson_ = nlohmann::json::object();   // data/battle.json as read (a scenario's "rules" patch it)
+    std::mt19937 moveRng_{20261025u};    // the monsters' next moves (reseeded each battle: the same fight goes the same way)
     void startAttackPause();
     void popDamage(int dmg, int who, int kind);   // a damage number over who (-1 the player, 0.. a foe), hitNumberDelayMs_ from now
     // current stage id

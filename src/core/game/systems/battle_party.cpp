@@ -32,7 +32,8 @@ std::string battleEventLine(const BattleEvent& e, const std::vector<std::string>
     char t[16];
     std::snprintf(t, sizeof t, "%6.2f", e.ms / 1000.0);
     std::string s = std::string(t) + "  " + name(e.who);
-    if (e.whom != e.who && (e.type == "hit" || e.type == "combo" || e.type == "super" || e.type == "target"))
+    if (e.whom != e.who && (e.type == "hit" || e.type == "combo" || e.type == "super" || e.type == "target" ||
+                             e.type == "parry" || e.type == "guardBreak" || e.type == "spellBreak" || e.type == "summon"))
         s += " -> " + name(e.whom);
     s += ": " + e.type;
     if (e.type == "hit" || e.type == "guard" || e.type == "combo" || e.type == "super") s += " " + std::to_string(e.value);

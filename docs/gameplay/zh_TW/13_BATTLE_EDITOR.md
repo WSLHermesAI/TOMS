@@ -2,7 +2,7 @@
 
 # 13 — 戰鬥編輯器，以及即時策略戰鬥（設計）
 
-**狀態：** 設計，2026-10-25；擁有者的回答在 §8。已實作：§4.6（一到三隻怪物、選擇目標）與戰鬥事件紀錄（§4.5），見 §4.6 的**已實作**。兩個頁面示範（用瀏覽器開啟，離線可用）：
+**狀態：** 2026-10-25：工作順序（§7）的第 1–3 步**已實作**（§9）；第 4 步（美術）未完成。擁有者的回答在 §8。兩個頁面示範（用瀏覽器開啟，離線可用）：
 
 - [battle_editor/editor_mockup.html](../battle_editor/editor_mockup.html)：編輯器的樣子與每個面板；等級成長計算器（§4.3）可以實際操作。
 - [battle_editor/battle_demo.html](../battle_editor/battle_demo.html)：§6 即時策略戰鬥的小型可玩示範（怪物顯示下一招，由你決定怎麼應對）。
@@ -176,7 +176,7 @@
   `scenario.battle_party_target`）。
 - 紀錄：`CombatState::events`（`toms::BattleEvent`：start、combo、hit、down、target、super、active、win、lose）附戰鬥時間；
   `toms_game --battle-log` 即時印出每一筆，例如 `  2.40  player -> foe 1 (bat): hit 12`。
-- 下一步：狀態對應表、怪物的 HP 事件（§4.4），然後各方共用的 `Combatant`（11 §4.1）。
+- 之後（同一天）：狀態對應表與怪物事件，見 §9。
 
 ## 5. 資料：改變的地方
 
@@ -229,6 +229,8 @@
 
 ## 7. 工作順序
 
+第 1–3 步已實作（2026-10-25，§9），只有各方共用的 `Combatant`（11 §4.1）還沒做。
+
 1. **戰鬥核心：** 戰鬥事件與狀態對應表（[11 §6](11_BATTLE_DATA.md) 第 1 步）、玩家與每隻怪物共用的 `Combatant`（11 §4.1），以及含選擇目標的
    **一到三隻怪物**（§4.6）。
 2. **意圖、應對、破防**（§6.1、6.2、6.4）與**節奏開關**（冷卻 / 體力，§6.3），以及它們在兩種方向下的 UI。
@@ -245,3 +247,61 @@
 | B3 | 體力，還是現在的冷卻？ | **兩者都有、可以切換**（節奏，§6.3） |
 | B4 | 一場戰鬥多隻怪物？ | **現在做**（§4.6） |
 | B5 | 測試設定也當自動測試？ | **不要**：只是編輯器的檔案（`tools/battle_editor/setups/`，§2） |
+
+## 9. 已實作（2026-10-25）
+
+### 9.1 第 1 步：戰鬥核心
+
+- **一到三隻怪物、選擇目標、事件紀錄**：見 §4.6 的**已實作**。
+- **狀態對應表**（`data/looks.json`，[11 §4.2](11_BATTLE_DATA.md)）：每個外觀中每種狀態的動畫、音效與粒子；`base` 繼承另一個外觀。
+  怪物在 `enemies.json` 的 `"look"` 指定外觀（沒有：`monster`）；玩家的是 `player`。使用的狀態：idle、attack、hurt、die、special、
+  transform、parry、broken。遊戲程式不再寫死怪物和玩家的攻擊音效；它們來自這個檔案。
+- **怪物事件**（§4.4）照該節的寫法執行。已做的觸發：`beforeBattle`（它的 `say` 是戰鬥的第一句，並稍停讓玩家閱讀）、`battleStart`、
+  `hpBelow`、`playerHpBelow`、`attacks`、`everyMs`、`perfectHit`、`falls`。已做的動作：`say`、`stat`（`atk` / `def` / `interval`，
+  `mul` / `add`）、`transformInto`（`hp`：`keepShare` / `full`）、`heal`、`summon`、`flee`（逃走的沒有獎勵）、`anim`（外觀的狀態）、
+  `fx`、`sound`、`flag`。還沒做：`dialogue`（戰鬥中途的對話；請用 `say`）。石巨人和 Vorkath 有範例（`hpBelow` 50）。
+- 純規則在 `src/core/game/systems/battle_rules.h`（由 `unit.battle_rules_test` 測試）；由 `Game` 執行（`game_combat.cpp`：
+  `stepFoes`、`damageFoe`、`runFoeEvents`、`runFoeActions`、`foeLook`）。
+
+### 9.2 第 2 步：意圖、應對、破防、節奏
+
+- **招式與意圖**（§6.1）：`data/moves.json`（`strike`、`heavy`、`jabs`、`spell`、`guard`：種類、傷害、次數、蓄力時間、`breakHits`、
+  `reduce`）。怪物在 `enemies.json` 的 `"moves"` 列出招式（`["strike", {"id": "heavy", "weight": 2}]`）；沒有列出的只會普通攻擊，
+  和以前完全一樣。每隻怪物上方：下一招和剩下的秒數與進度條，顏色表示該怎麼應對（重擊紅、連打黃、法術紫、防禦藍）。目前給了招式的：
+  蝙蝠（連打）、石巨人（重擊、防禦）、骷髏兵（重擊）、怨靈（法術）、小惡魔（重擊、法術）、Vorkath（全部）。
+- **應對**（§6.2）：防禦力量達 `break.parryPower`（85）以上會**招架**重擊（沒有傷害；它踉蹌 1.5 秒並受到 ×2 傷害）；**連打**會打斷進行中的
+  連擊（請改用防禦）；2026-10-26 起每隻怪物在連擊時都會繼續蓄力（負責人；`battle.json` 的 `combo_holds_monsters: true` 恢復舊的等待）；連擊命中 `breakHits`（2）個點會**打斷法術**，防禦對法術只能減半；**防禦中**的怪物只受 30% 傷害，
+  除非滿集氣打破防禦；防禦招式本身不造成傷害。
+- **破防**（§6.4）：命中的點會累積怪物的量表（HP 條底部的細黃條；`enemies.json` 的 `"break"` 或 `battle.json` 的 `break.points`，8）；
+  滿了就**破防**：暈眩 3 秒，受到 ×1.5 傷害（上方顯示「破防！」）。
+- **依命中點數的結果**（§4.2）：`weapon_play.json` 的 `"results"`；default 目前有一列（全中：「完美！」，×1.2、暈眩 0.5 秒、破防量表 +1）。
+  每列可以暈眩、讓時鐘倒退、增加破防量表，並換掉命中粒子、音效與動畫。
+- **節奏**（§6.3）：`battle.json` 的 `"pace"`：`cooldown`（和以前一樣）或 `stamina`（不用等待；開始攻擊花 40、每次防禦花 20，滿值 100；
+  沒有攻擊進行時每秒回 30）。武器（`weapon_play.json` 的 `"pace"`）、戰鬥設定（`"pace"`）或編輯器的切換可以覆寫。體力節奏時時鐘列改顯示體力，
+  體力不夠時按鈕變灰。
+- 全部數值在 `battle.json` 的 `"stamina"` 與 `"break"`，情境的 `"rules"` 可以只為一場戰鬥修改。測試情境 `battle_parry`、`battle_jabs`、
+  `battle_spell_break`、`battle_break`、`battle_transform`、`battle_stamina`、`battle_stamina_short` 各檢查一條規則
+  （[08](08_TEST_SCENARIOS.md)）。
+
+### 9.3 第 3 步：`battle_editor.exe`
+
+`Build/<preset>/bin/battle_editor.exe`（由 `tools/package_editors.py` 打包到 `Editor/bin`）。如 §3：
+
+- **怪物**（左側）：搜尋；勾選就是 **+ 參戰**（最多三隻，依勾選順序；**+ Again** 再加一隻選取的怪物，例如三隻蝙蝠）；新增、複製、刪除
+  （會列出放置這隻怪物的樓層）；**Save monsters** 以原本的格式寫入 `data/enemies.json`，**Revert** 重新讀取。沒存檔的修改下一場戰鬥也會用到
+  （它們以覆寫的形式寫進設定），而且會立刻用在**進行中**的戰鬥：戰鬥中每隻同種怪物都換成新的 HP（目前 HP 維持比例）、ATK、DEF、
+  攻擊間隔（進行中的蓄力維持已進行的比例）、招式、外觀、破防點數與事件。
+- **戰鬥列**：**▶ Battle**（再按一次：重來）、暫停、×0.5 / ×1 / ×2、節奏（來自資料 / 冷卻 / 體力；也會切換進行中的戰鬥）、**Win now**、
+  **Lose now**、**auto restart**（開啟：戰鬥結束時，不論勝負，1.5 秒後用目前的修改重新開始），以及畫面形狀（填滿、4:3、16:9、3:4 直向、手機直向），兩種版面都能試。
+- **怪物**分頁：名稱、圖片、HP、ATK、DEF、攻擊間隔、破防點數、經驗、金幣、招式（`strike, heavy:2`）、外觀、同伴、頭目；**上一場戰鬥**：
+  雙方命中次數與平均、戰鬥時間。
+- **武器**分頁：`weapon_play.json` 的項目；**Use this weapon in the battle**；掃過、集氣、判定範圍與延遲時間、它的節奏；**結果**表
+  （不在 `battle.particle` 裡的粒子顯示紅色）；**Save weapons**。
+- **玩家**分頁：測試玩家（等級、HP、武器、勝場、已分配屬性、待分配點數）與**成長計算器**（§4.3）：T、L、k，逐級的表格附長條與累計；
+  **Apply to the test player**；**Save as the game's table**（確認後只改寫 `stats.json` 的 `levelUp.points`）。
+- **事件**分頁：選取怪物的事件 JSON，**Apply**（會檢查）與範例；事件清單，**Fire now** 在進行中的戰鬥裡試。
+- **紀錄**分頁：進行中戰鬥的事件與時間。
+- **測試設定**（下方）：Load（並開始）、**Save current as…** 存到 `tools/battle_editor/setups/<名稱>.json`（含編輯器自己的 `_editor`
+  部分的情境）。先附兩個：`slime Lv1 bow`、`3 bats Lv5 sword`。
+- 還沒做：難度模擬（目前的數據來自上一場戰鬥）、結果的預覽按鈕、粒子與動畫的選擇器（目前用輸入）、章節篩選。
+- 測試：`battle_editor.selftest`（計算器、設定、寫回後檔案不變、清單）與 `smoke.battle_editor`（三隻怪物、▶ Battle、紀錄、Win now）。

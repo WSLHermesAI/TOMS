@@ -31,6 +31,12 @@
     {
       "type": "default",
       "project": "CMakeLists.txt",
+      "projectTarget": "battle_editor.exe (bin\\battle_editor.exe)",
+      "name": "battle_editor (monsters, weapons, test battles)"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
       "projectTarget": "atlas_editor.exe (bin\\atlas_editor.exe)",
       "name": "atlas_editor (game atlas)",
       "args": [ "${workspaceRoot}\\assets\\media\\atlas\\game.atlasproj" ]

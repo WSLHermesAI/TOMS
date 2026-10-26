@@ -2,6 +2,7 @@
 // screen is made of, where an element is written, which style rules reach it, and where an RmlUi message points.
 #pragma once
 
+#include <QJsonObject>
 #include <QList>
 #include <QString>
 #include <QStringList>
@@ -28,6 +29,24 @@ struct RuleHit {
 };
 QList<RuleHit> rulesFor(const QString& file, const QString& rcssText, const QString& id, const QStringList& classes,
                         const QString& tag);
+
+// What the text cursor is on, as RmlUi selectors for the elements to glow in the game (the editor's hint):
+//  - in an .rml: the element whose start tag the cursor is in (from its "<" to its ">"): "#id", else "tag.class..."
+//    (the classes written in class="..."; data-class-* ones change at run time and are left out). The document's
+//    frame (rml, head, body, ...) gives nothing.
+//  - in an .rcss: the rule the cursor is in (its selector or its block), one selector per comma, pseudo-classes
+//    (:hover, :active, ...) dropped; an @media block's own line gives nothing.
+// `pos` is a character offset in the text. Empty = nothing to glow.
+QStringList selectorsAtRml(const QString& rmlText, int pos);
+QStringList selectorsAtRcss(const QString& rcssText, int pos);
+
+// The Preview list (the test scenarios, tests/scenarios/<folder>/scenario.json):
+//  - readScenario: the file with what it includes ("include": [...], relative to it) under it, as the game reads it:
+//    objects merged key by key, the file's own fields on top (enough for its scene and the scene's fields);
+//  - previewLabel: what the list shows, by screen, e.g. "Player menu: Status  (menu_status)", "Battle  (battle_bow)";
+//    `order` sorts the list: the screens in the game's order, the player menu's tabs in their own.
+QJsonObject readScenario(const QString& file);
+QString previewLabel(const QJsonObject& scenario, const QString& folder, int* order = nullptr);
 
 // What an RmlUi log message points at: a .rml / .rcss file name and a line, when it says them.
 struct Problem {

@@ -322,6 +322,22 @@ void Game::buildUiState(toms::UiState& u) const {
             uf.hp_text = uf.name + " " + uf.hp_line;
             uf.target = cs.active && cs.foes.size() > 1 && (int)i == cs.target && !f.down();
             uf.down = f.down();
+            if (cs.active && !f.down()) {   // its intent (docs/gameplay/13 §6.1)
+                const toms::MoveDef& m = moves_.get(f.move);
+                if (f.staggerMs > 0) {
+                    uf.intent_kind = f.broken ? "broken" : "stagger";
+                    uf.intent = L.tr(f.broken ? "battle.intent.broken" : "battle.intent.stagger");
+                    uf.intent_pct = 0.0f;
+                } else {
+                    uf.intent_kind = toms::moveKindName(m.kind);
+                    const int left = std::max(0, f.moveMs - std::max(0, f.clockMs));
+                    char secs[16];
+                    std::snprintf(secs, sizeof secs, " %.1fs", left / 1000.0);
+                    uf.intent = (L.has(m.text) ? L.tr(m.text) : m.text) + secs;
+                    uf.intent_pct = pct((float)std::max(0, f.clockMs), (float)std::max(1, f.moveMs));
+                }
+                uf.break_pct = pct(f.breakGauge, (float)foeBreakPoints((int)i));
+            }
             b.foes.push_back(uf);
         }
         b.enemy_sprite = b.foes.empty() ? std::string() : b.foes[0].sprite;
@@ -345,11 +361,18 @@ void Game::buildUiState(toms::UiState& u) const {
         }
         if (cs.active) {
             b.clock_label = L.tr("battle.enemy_clock");
-            // the clock of the monster that attacks next (the nearest to its attack)
+            // the clock of the monster that attacks next (the nearest to its move); the stamina pace shows the stamina
             float best = 0.0f;
             for (const CombatState::Foe& f : cs.foes)
-                if (!f.down()) best = std::max(best, pct((float)std::max(0, f.clockMs), (float)std::max(500, f.enemy.atkIntervalMs)));
+                if (!f.down()) best = std::max(best, pct((float)std::max(0, f.clockMs), (float)std::max(1, f.moveMs)));
             b.clock_pct = best;
+            b.stamina_pace = cs.pace == toms::Pace::Stamina;
+            if (b.stamina_pace) {
+                b.clock_label = L.tr("battle.stamina");
+                b.clock_pct = pct(cs.stamina, (float)paceSettings_.staminaMax);
+                b.attack_short = !cs.combo.running() && cs.stamina < (float)paceSettings_.attackCost;
+                b.guard_short = cs.stamina < (float)paceSettings_.guardCost;
+            }
             {   // Battle v3 (docs/gameplay/07 phase 1): the charge, the track with the weapon level's points, the marker
                 toms::UiCombo& c = b.combo;
                 const std::string key = weaponKey();

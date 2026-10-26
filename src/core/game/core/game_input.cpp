@@ -355,10 +355,8 @@ void Game::advanceRoamers() {
 // harnesses): builds the EnemyInst from the entity and starts the fight -- or its dialogue gate.
 void Game::engageMonster(const Entity& e) {
     EnemyInst en;
-    auto& t = enemyTpl[e.id];
-    en.id=e.id; en.name=locale_.field(t["name"]); en.hp=t["hp"]; en.atk=t["atk"]; en.def=t["def"];
-    en.exp=t["exp"]; en.gold=t["gold"]; en.x=e.x; en.y=e.y; en.boss=t.value("boss",false);
-    en.atkIntervalMs = t.value("atk_interval_ms", 4000);
+    if (!enemyFromData(e.id, nlohmann::json::object(), en)) return;   // enemies.json, with its moves, look and events
+    en.x = e.x; en.y = e.y;
     // Milestone 4 (Encounter Resolution): resolveEncounterKind returns DirectBattle for every
     // monster tile in every shipped stage today (no stage sets encounter_overrides yet), so this is
     // byte-for-byte the same behavior as before unless/until a stage opts a tile into dialogue_gate.

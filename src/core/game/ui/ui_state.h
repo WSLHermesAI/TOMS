@@ -106,6 +106,11 @@ struct UiFoe {                         // one monster of the battle (docs/gamepl
     std::string name, hp_line;         // "Slime" / "HP 24" (two or three: two lines, the slots are narrow)
     bool target = false;               // the player's attacks go to it (shown only with two or more)
     bool down = false;
+    // its next move (docs/gameplay/13 §6.1): the words and the time left, and how far its wind-up is
+    std::string intent;
+    std::string intent_kind;           // strike, heavy, jabs, spell, guard; stagger / broken while stunned
+    float intent_pct = 0;
+    float break_pct = 0;               // its break gauge (§6.4)
 };
 
 struct UiBattle {
@@ -132,6 +137,8 @@ struct UiBattle {
     std::string active_button;
     std::vector<UiPopup> popups;
     std::vector<UiFoe> foes;           // 1..3; foes[0] is enemy_* above
+    bool stamina_pace = false;         // the stamina pace (13 §6.3): the clock row shows the stamina
+    bool attack_short = false, guard_short = false;   // not enough stamina for it
 };
 
 struct UiDialogue {

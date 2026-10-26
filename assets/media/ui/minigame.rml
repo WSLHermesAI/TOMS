@@ -12,7 +12,7 @@
         <div id="text">{{minigame.text}}</div>
         <div id="prompt">{{minigame.prompt}}</div>
         <div id="track">
-            <div class="pt" data-for="q : minigame.points" data-class-hit="q.hit" data-style-left="q.pos + '%'"></div>
+            <div data-for="q : minigame.points"><div class="pt" data-class-hit="q.hit" data-style-left="q.pos + '%'"></div></div>
             <div class="marker" data-visible="minigame.running" data-style-left="minigame.marker + '%'"></div>
         </div>
         <div id="result" data-if="minigame.done">{{minigame.result}}</div>

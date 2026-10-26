@@ -24,8 +24,10 @@ inline constexpr const char kDataFootprints[]    = "data.footprints";         //
 inline constexpr const char kDataForge[]         = "data.forge";              // json ../data/forge.json
 inline constexpr const char kDataHub[]           = "data.hub";                // json ../data/hub.json
 inline constexpr const char kDataItems[]         = "data.items";              // json ../data/items.json
+inline constexpr const char kDataLooks[]         = "data.looks";              // json ../data/looks.json
 inline constexpr const char kDataMinigames[]     = "data.minigames";          // json ../data/minigames.json
 inline constexpr const char kDataMissions[]      = "data.missions";           // json ../data/missions.json
+inline constexpr const char kDataMoves[]         = "data.moves";              // json ../data/moves.json
 inline constexpr const char kDataSkills[]        = "data.skills";             // json ../data/skills.json
 inline constexpr const char kDataStats[]         = "data.stats";              // json ../data/stats.json
 inline constexpr const char kDataStore[]         = "data.store";              // json ../data/store.json
@@ -73,8 +75,10 @@ inline constexpr const char* kAll[] = {
     kDataForge,
     kDataHub,
     kDataItems,
+    kDataLooks,
     kDataMinigames,
     kDataMissions,
+    kDataMoves,
     kDataSkills,
     kDataStats,
     kDataStore,

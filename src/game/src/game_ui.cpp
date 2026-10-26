@@ -146,6 +146,10 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("hp_line", &UiFoe::hp_line);
         s.RegisterMember("target", &UiFoe::target);
         s.RegisterMember("down", &UiFoe::down);
+        s.RegisterMember("intent", &UiFoe::intent);
+        s.RegisterMember("intent_kind", &UiFoe::intent_kind);
+        s.RegisterMember("intent_pct", &UiFoe::intent_pct);
+        s.RegisterMember("break_pct", &UiFoe::break_pct);
     }
     c.RegisterArray<std::vector<UiFoe>>();
     if (auto s = c.RegisterStruct<UiBattle>()) {
@@ -179,6 +183,9 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("active_button", &UiBattle::active_button);
         s.RegisterMember("popups", &UiBattle::popups);
         s.RegisterMember("foes", &UiBattle::foes);
+        s.RegisterMember("stamina_pace", &UiBattle::stamina_pace);
+        s.RegisterMember("attack_short", &UiBattle::attack_short);
+        s.RegisterMember("guard_short", &UiBattle::guard_short);
     }
     if (auto s = c.RegisterStruct<UiDialogue>()) {
         s.RegisterMember("visible", &UiDialogue::visible);

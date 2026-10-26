@@ -1,0 +1,15 @@
+{
+  "_comment": "A heavy blow parried (docs/gameplay/13 §6.2): a golem that only uses heavy blows; the guard tapped before it lands (\"rules\" lets any guard power parry, so the timing of the guard bar does not matter). It staggers.",
+  "scene": "battle",
+  "player": { "equip": ["bow"] },
+  "battle": {
+    "enemy": "golem",
+    "hp": 9999,
+    "atk_interval_ms": 800,
+    "moves": ["heavy"],
+    "events": [],
+    "rules": { "break": { "parryPower": 0 } }
+  },
+  "test": { "frames": 75, "keys": "f@20" },
+  "expect": { "scene": "battle", "battleEvents": { "parry": 1, "stagger": 1, "hit": 0 } }
+}

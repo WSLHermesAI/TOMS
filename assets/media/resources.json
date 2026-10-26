@@ -39,6 +39,8 @@
     "data.stats":          { "type": "json",     "path": "../data/stats.json" },
     "data.battle":         { "type": "json",     "path": "../data/battle.json" },
     "data.weapon_play":    { "type": "json",     "path": "../data/weapon_play.json" },
+    "data.looks":          { "type": "json",     "path": "../data/looks.json" },
+    "data.moves":          { "type": "json",     "path": "../data/moves.json" },
     "data.minigames":      { "type": "json",     "path": "../data/minigames.json" },
     "data.character_fit":  { "type": "json",     "path": "../data/character_fit.json" },
     "data.footprints":     { "type": "json",     "path": "../data/footprints.json" },

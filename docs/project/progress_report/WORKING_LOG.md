@@ -679,3 +679,24 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     `battle_party`, `battle_party_target`. `toms_game --battle-log`.
   - Tests: changed-only 12 of 199 pass; 19 switched-off battle / arena / trial / card scenarios by name pass. All tests,
     web and Android not run.
+- **2026-10-25 (late) / 2026-10-26** — **The battle editor built, monsters charging during a combo, the UI editor's glow, the glTF viewer's lights** ([DAILY_2026-10-26.md](DAILY_2026-10-26.md); not committed):
+  - Rules: `systems/battle_rules.h/.cpp` (+ `battle_rules_test`): `LooksTable` (`data/looks.json`), `MonsterEvent` /
+    `fireMonsterEvents`, `MovesTable` / `pickMove` (`data/moves.json`), `PaceSettings`, `BreakSettings` / `addBreak`;
+    `resources.json` `data.looks`, `data.moves`. `weapon_play.h` `WeaponResult` / `weaponResultFor`, `"pace"`.
+  - Game: `EnemyInst` look / moves / breakPoints / events / mapId; `CombatState::Foe` move, moveMs, stagger, break
+    gauge, muls, attacks, fled, events; `cs.pace`, `cs.stamina`; `Game::stepFoes`, `chooseFoeMove`, `damageFoe`,
+    `runFoeEvents`, `runFoeActions`, `stunFoe`, `foeLook`, `playerLook`, `interruptCombo`, `setBattlePace`,
+    `debugForceWin`, `debugFireFoeEvent`, `debugUpdateMonster`; `comboHoldsMonsters_` (`battle.json`). Scenario
+    `"rules"`, `"moves"`/`"events"`/`"look"`/`"break"`/`"pace"` overrides, `expect` `battleEvents` / `pace`; keys
+    `f` `g` `h`. UI: `UiFoe` intent / break, `UiBattle` stamina; `battle.rml` `.intent`, `.fbreak`, the mark in
+    `.fbox`. `text.json` 21 battle keys; the UI font rebuilt.
+  - Editor: `src/editor/src/bed_logic.*` (levelPoints, pointsRows, setupToScenario, dumpCompact, replaceLevelPoints),
+    `bed_window.*`, `bed_main.cpp`; `BgfxViewport::setTimeScale`; windeployqt + the offscreen plugin per Qt editor;
+    `tools/battle_editor/setups/`; `launch.vs.json`; `package_editors.py`.
+  - RmlUi lists: the wrapper rule in `battle.rml` (popups, foes, points), `minigame.rml`, `overlay.rml`.
+  - UI editor: `updateRelated` (*In this preview*), `uied::selectorsAtRml` / `selectorsAtRcss` + `updateHint` (a
+    document of its own, `pointer-events: none`), `uied::readScenario` / `previewLabel`.
+  - glTF viewer: `makeGizmos` / `drawLightGizmos`, `RigLight::hint` / `aimAtModel` / `spin`, `fileLightHint`,
+    `spinLights`; `--light-hints`, `--spot-aim`, `--light-spin`.
+  - Tests: changed-only 14 of 211 pass; by name 32 scenarios, `data.ui_font_covers_text`, 3 glTF unit tests pass;
+    the 24 glTF screenshot tests have no references. All tests, web and Android not run.

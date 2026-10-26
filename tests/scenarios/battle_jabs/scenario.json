@@ -1,0 +1,8 @@
+{
+  "_comment": "Quick jabs cut a combo short (docs/gameplay/13 §6.2): the bat's jabs do not wait for the running combo (started at frame 20 and never finished); they land and interrupt it.",
+  "scene": "battle",
+  "player": { "equip": ["bow"] },
+  "battle": { "enemy": "bat", "hp": 9999, "atk_interval_ms": 1000, "moves": ["jabs"] },
+  "test": { "frames": 75, "keys": "enter@20" },
+  "expect": { "scene": "battle", "battleEvents": { "interrupt": 1, "hit": 1, "combo": 0 } }
+}

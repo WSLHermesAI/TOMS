@@ -10,6 +10,9 @@
 
 #include <RmlUi/Core.h>
 
+#include <algorithm>
+#include <QFont>
+
 #include <QAction>
 #include <QCloseEvent>
 #include <QComboBox>
@@ -65,6 +68,14 @@ UiEditorWindow::UiEditorWindow(QWidget* parent) : QMainWindow(parent) {
     langTimer_.setInterval(500);
     connect(&langTimer_, &QTimer::timeout, this, &UiEditorWindow::fillLanguages);
     langTimer_.start();
+    // The hint: what the text cursor is on glows in the game (updateHint), re-placed as things move.
+    hintTimer_.setInterval(60);
+    connect(&hintTimer_, &QTimer::timeout, this, &UiEditorWindow::updateHint);
+    connect(edit_, &QPlainTextEdit::cursorPositionChanged, this, &UiEditorWindow::cursorMoved);
+    // What the preview shows: its documents and their style sheets, at the top of the file list.
+    relatedTimer_.setInterval(500);
+    connect(&relatedTimer_, &QTimer::timeout, this, &UiEditorWindow::updateRelated);
+    relatedTimer_.start();
     const QStringList all = uied::uiFiles(uiDir_);
     if (all.contains(QStringLiteral("battle.rml"))) openFile(QStringLiteral("battle.rml"));
     else if (!all.isEmpty()) openFile(all.first());
@@ -162,6 +173,17 @@ void UiEditorWindow::buildUi() {
     QMenu* viewMenu = menuBar()->addMenu(tr("&Preview"));
     viewMenu->addAction(restartAct);
     viewMenu->addAction(inspectAct);
+    auto* hintAct = new QAction(tr("&Glow What the Cursor Is On"), this);
+    hintAct->setCheckable(true);
+    hintAct->setChecked(true);
+    hintAct->setShortcut(QKeySequence(tr("Ctrl+G")));
+    hintAct->setToolTip(tr("The element (in an .rml) or the rule's elements (in an .rcss) under the text cursor glow in the game (Ctrl+G)"));
+    connect(hintAct, &QAction::toggled, this, [this](bool on) {
+        hintOn_ = on;
+        if (on) cursorMoved();
+        else { dropHint(); hintTimer_.stop(); }
+    });
+    viewMenu->addAction(hintAct);
     viewMenu->addAction(debuggerAct);
     viewMenu->addSeparator();
     viewMenu->addAction(problemsDock->toggleViewAction());
@@ -218,12 +240,33 @@ void UiEditorWindow::refreshFileList() {
     const QSignalBlocker block(files_);
     const QStringList all = uied::uiFiles(uiDir_);
     files_->clear();
-    for (const QString& f : all) {
+    auto header = [this](const QString& title) {   // a group's title: not a file, not selectable
+        auto* it = new QListWidgetItem(title);
+        it->setFlags(Qt::NoItemFlags);
+        QFont f = it->font();
+        f.setBold(true);
+        it->setFont(f);
+        files_->addItem(it);
+    };
+    auto addFile = [this](const QString& f) {
         auto* it = new QListWidgetItem((isModified(f) ? QStringLiteral("● ") : QStringLiteral("   ")) + f);
         it->setData(Qt::UserRole, f);
+        const QString why = relatedWhy_.value(f);
+        if (why == QStringLiteral("shown")) it->setToolTip(tr("The game shows this document now"));
+        else if (!why.isEmpty()) it->setToolTip(tr("A style sheet %1 links").arg(why));
         files_->addItem(it);
         if (f == current_) files_->setCurrentItem(it);
+    };
+    QStringList shown;
+    for (const QString& f : related_)
+        if (all.contains(f)) shown << f;
+    if (!shown.isEmpty()) {
+        header(tr("In this preview"));
+        for (const QString& f : shown) addFile(f);
+        header(tr("Other files"));
     }
+    for (const QString& f : all)
+        if (!shown.contains(f)) addFile(f);
     for (const QString& f : tutorialFiles_) {   // the tutorial's practice screen, after the game's own files
         auto* it = new QListWidgetItem((isModified(f) ? QStringLiteral("● ") : QStringLiteral("   ")) + f + tr("  (tutorial)"));
         it->setData(Qt::UserRole, f);
@@ -288,6 +331,7 @@ void UiEditorWindow::previewNow() {
     }
     problems_->clear();
     problemTargets_.clear();
+    dropHint();   // ours, not the game's: made again over the reloaded documents
     view_->session().reloadUi();
     if (practiceOn_) {   // the game reloads its own documents; the practice screen is ours
         RmlUi* r = view_->session().rml();
@@ -393,13 +437,21 @@ void UiEditorWindow::fillPreviewList() {
         preview_->addItem(tr("Practice screen (tutorial)"));
         previewPaths_ << QStringLiteral("practice");
     }
+    // the test scenarios by screen (the player menu's tabs each their own), in the game's order
     QDir d(scenariosDir_);
+    struct Entry { int order; QString label, path; };
+    QList<Entry> entries;
     for (const QString& name : d.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
-        QFile f(d.filePath(name + QStringLiteral("/scenario.json")));
-        if (!f.open(QIODevice::ReadOnly)) continue;
-        const QString scene = QJsonDocument::fromJson(f.readAll()).object().value(QStringLiteral("scene")).toString();
-        preview_->addItem(tr("%1 — %2").arg(scene.isEmpty() ? tr("game") : scene, name));
-        previewPaths_ << d.filePath(name);
+        const QString file = d.filePath(name + QStringLiteral("/scenario.json"));
+        if (!QFileInfo::exists(file)) continue;
+        int order = 0;
+        const QString label = uied::previewLabel(uied::readScenario(file), name, &order);
+        entries.push_back({order, label, d.filePath(name)});
+    }
+    std::stable_sort(entries.begin(), entries.end(), [](const Entry& a, const Entry& b) { return a.order < b.order; });
+    for (const Entry& e : entries) {
+        preview_->addItem(e.label);
+        previewPaths_ << e.path;
     }
 }
 
@@ -410,6 +462,7 @@ void UiEditorWindow::startPreviewAt(int index) {
 
 void UiEditorWindow::startPreview(int index) {
     if (index < 0 || index >= previewPaths_.size()) return;
+    openRelated_ = true;   // its first document opens once the game shows it (updateRelated)
     practiceOn_ = previewPaths_[index] == QStringLiteral("practice");
     practiceDoc_ = nullptr;   // a restarted game has a new UI context: the old document went with the old one
     practiceCtx_ = nullptr;
@@ -556,4 +609,129 @@ void UiEditorWindow::inspectNow() {
 }
 
 QString UiEditorWindow::inspectSummary() const { return inspectLabel_->text(); }
+
+void UiEditorWindow::placeCursor(int pos) {
+    QTextCursor c = edit_->textCursor();
+    c.setPosition(std::clamp(pos, 0, edit_->document()->characterCount() - 1));
+    edit_->setTextCursor(c);
+}
+
+// ---- the hint: what the text cursor is on, glowing in the game ----
+
+void UiEditorWindow::cursorMoved() {
+    if (!hintOn_ || current_.isEmpty()) return;
+    const QString t = edit_->toPlainText();
+    const int pos = edit_->textCursor().position();
+    QStringList sel;
+    if (current_.endsWith(QStringLiteral(".rml"))) sel = uied::selectorsAtRml(t, pos);
+    else if (current_.endsWith(QStringLiteral(".rcss"))) sel = uied::selectorsAtRcss(t, pos);
+    hintFile_ = current_.endsWith(QStringLiteral(".rml")) ? current_ : QString();
+    if (sel == hintSelectors_) return;
+    hintSelectors_ = sel;
+    updateHint();
+    if (sel.isEmpty()) hintTimer_.stop();
+    else hintTimer_.start();
+}
+
+void UiEditorWindow::dropHint() {
+    RmlUi* r = view_->session().rml();
+    if (hintDoc_ && r && r->context() == hintCtx_) hintDoc_->Close();
+    hintDoc_ = nullptr;
+    hintCtx_ = nullptr;
+}
+
+void UiEditorWindow::updateHint() {
+    RmlUi* r = view_->session().rml();
+    Rml::Context* ctx = r && r->ready() ? r->context() : nullptr;
+    if (!ctx) return;
+    if (ctx != hintCtx_) { hintDoc_ = nullptr; hintCtx_ = ctx; }   // a restarted game: its old document went with it
+    // the elements: in the shown documents (an .rml's hint only in its own), each selector of the cursor's
+    std::vector<Rml::Element*> found;
+    for (int i = 0; i < ctx->GetNumDocuments() && !hintSelectors_.isEmpty(); i++) {
+        Rml::ElementDocument* d = ctx->GetDocument(i);
+        if (!d || d == hintDoc_ || !d->IsVisible()) continue;
+        if (!hintFile_.isEmpty() && QFileInfo(QString::fromStdString(d->GetSourceURL())).fileName() != hintFile_) continue;
+        for (const QString& s : hintSelectors_) {
+            Rml::ElementList els;
+            d->QuerySelectorAll(els, s.toStdString());
+            for (Rml::Element* e : els)
+                if (e->IsVisible() && found.size() < 64 && std::find(found.begin(), found.end(), e) == found.end()) found.push_back(e);
+        }
+    }
+    hintCount_ = (int)found.size();
+    if (found.empty()) {   // nothing on screen: no frame (the status says why)
+        if (hintDoc_) while (hintDoc_->GetNumChildren() > 0) hintDoc_->RemoveChild(hintDoc_->GetChild(0));
+        if (!hintSelectors_.isEmpty())
+            statusBar()->showMessage(tr("%1: nothing on screen now (hidden, or another screen)").arg(hintSelectors_.join(QStringLiteral(", "))), 2000);
+        return;
+    }
+    if (!hintDoc_) {
+        hintDoc_ = ctx->LoadDocumentFromMemory(R"RML(<rml><head><style>
+body { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; pointer-events: none; }
+.uied-hint { position: absolute; border-width: 3px; border-color: #ffd54a; background-color: #ffd54a2c;
+             pointer-events: none; animation: 0.7s cubic-in-out infinite alternate uied-pulse; }
+@keyframes uied-pulse { from { opacity: 0.25; } to { opacity: 1; } }
+</style></head><body></body></rml>)RML", "[ui_editor hint]");
+        if (!hintDoc_) return;
+        hintDoc_->Show(Rml::ModalFlag::None, Rml::FocusFlag::None);
+        statusBar()->showMessage(tr("Glowing %1 (%2 on screen)").arg(hintSelectors_.join(QStringLiteral(", "))).arg(found.size()), 3000);
+    }
+    hintDoc_->PullToFront();
+    // one frame per element, where it is now (things move: a damage number, a rotated screen)
+    while (hintDoc_->GetNumChildren() > (int)found.size()) hintDoc_->RemoveChild(hintDoc_->GetChild(hintDoc_->GetNumChildren() - 1));
+    while (hintDoc_->GetNumChildren() < (int)found.size()) {
+        Rml::ElementPtr box = hintDoc_->CreateElement("div");
+        box->SetClass("uied-hint", true);
+        hintDoc_->AppendChild(std::move(box));
+    }
+    for (size_t k = 0; k < found.size(); k++) {
+        const Rml::Vector2f o = found[k]->GetAbsoluteOffset(Rml::BoxArea::Border);
+        const Rml::Vector2f sz = found[k]->GetBox().GetSize(Rml::BoxArea::Border);
+        Rml::Element* box = hintDoc_->GetChild((int)k);
+        box->SetProperty("left", std::to_string(o.x - 3.0f) + "px");
+        box->SetProperty("top", std::to_string(o.y - 3.0f) + "px");
+        box->SetProperty("width", std::to_string(std::max(sz.x, 2.0f)) + "px");
+        box->SetProperty("height", std::to_string(std::max(sz.y, 2.0f)) + "px");
+    }
+}
+
+// The documents the game's UI shows now (each .rml), then the style sheets each links, in that order without repeats.
+void UiEditorWindow::updateRelated() {
+    RmlUi* r = view_->session().rml();
+    Rml::Context* ctx = r && r->ready() ? r->context() : nullptr;
+    if (!ctx) return;
+    QStringList files;
+    QMap<QString, QString> why;
+    for (int i = 0; i < ctx->GetNumDocuments(); i++) {
+        Rml::ElementDocument* d = ctx->GetDocument(i);
+        if (!d || !d->IsVisible() || d == hintDoc_) continue;   // (the hint is ours, not a screen of the game)
+        const QString rml = QFileInfo(QString::fromStdString(d->GetSourceURL())).fileName();
+        if (rml.isEmpty() || files.contains(rml)) continue;
+        files << rml;
+        why[rml] = QStringLiteral("shown");
+        const QString src = buffers_.contains(rml) ? text(rml) : readDisk(rml);
+        for (const QString& href : uied::linkedStyleSheets(src)) {
+            const QString sheet = QFileInfo(href).fileName();
+            if (files.contains(sheet)) continue;
+            files << sheet;
+            why[sheet] = rml;
+        }
+    }
+    // the .rml files first (what is on screen), then the sheets
+    std::stable_partition(files.begin(), files.end(), [](const QString& f) { return f.endsWith(QStringLiteral(".rml")); });
+    if (files == related_) return;
+    related_ = files;
+    relatedWhy_ = why;
+    refreshFileList();
+    QStringList rmls;
+    for (const QString& f : files)
+        if (f.endsWith(QStringLiteral(".rml"))) rmls << f;
+    if (!rmls.isEmpty())
+        statusBar()->showMessage(tr("This preview shows %1 (its files are at the top of the list)").arg(rmls.join(QStringLiteral(", "))), 6000);
+    // a new preview: open its document, unless the file being edited is already one of its files
+    if (openRelated_ && !rmls.isEmpty()) {
+        openRelated_ = false;
+        if (!related_.contains(current_)) openFile(rmls.last());   // the last shown is the one on top
+    }
+}
 int UiEditorWindow::inspectRuleCount() const { return ruleTargets_.size(); }

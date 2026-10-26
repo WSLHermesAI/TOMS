@@ -6,7 +6,8 @@
     "atk": 8,
     "def": 2,
     "exp": 6,
-    "gold": 4
+    "gold": 4,
+    "atk_interval_ms": 1000
   },
   "bat": {
     "name": { "zh_TW": "暗影蝙蝠", "en": "Shadow Bat", "zh_CN": "暗影蝙蝠", "ja": "影のコウモリ", "ko": "그림자 박쥐", "es": "Murciélago Sombrío" },
@@ -15,7 +16,8 @@
     "atk": 11,
     "def": 1,
     "exp": 7,
-    "gold": 5
+    "gold": 5,
+    "moves": ["strike", "jabs"]
   },
   "golem": {
     "name": { "zh_TW": "石巨人", "en": "Stone Golem", "zh_CN": "石巨人", "ja": "石の巨人", "ko": "돌 거인", "es": "Gólem de Piedra" },
@@ -24,7 +26,10 @@
     "atk": 14,
     "def": 8,
     "exp": 20,
-    "gold": 12
+    "gold": 12,
+    "moves": [{ "id": "strike", "weight": 2 }, "heavy", "guard"],
+    "break": 10,
+    "events": [{ "on": "hpBelow", "value": 50, "do": [{ "say": "battle.event.golem_runes" }, { "stat": "atk", "mul": 1.3 }, { "anim": "special" }] }]
   },
   "skeleton": {
     "name": { "zh_TW": "骷髏兵", "en": "Skeleton Soldier", "zh_CN": "骷髅兵", "ja": "骸骨兵", "ko": "해골 병사", "es": "Soldado Esqueleto" },
@@ -33,7 +38,8 @@
     "atk": 16,
     "def": 4,
     "exp": 14,
-    "gold": 9
+    "gold": 9,
+    "moves": [{ "id": "strike", "weight": 2 }, "heavy"]
   },
   "wraith": {
     "name": { "zh_TW": "怨靈", "en": "Wraith", "zh_CN": "怨灵", "ja": "怨霊", "ko": "원령", "es": "Espectro" },
@@ -42,7 +48,8 @@
     "atk": 20,
     "def": 3,
     "exp": 22,
-    "gold": 14
+    "gold": 14,
+    "moves": ["strike", "spell"]
   },
   "demon": {
     "name": { "zh_TW": "小惡魔", "en": "Imp", "zh_CN": "小恶魔", "ja": "小悪魔", "ko": "임프", "es": "Diablillo" },
@@ -51,7 +58,8 @@
     "atk": 24,
     "def": 9,
     "exp": 40,
-    "gold": 22
+    "gold": 22,
+    "moves": ["strike", "heavy", "spell"]
   },
   "demonlord_vorkath": {
     "name": { "zh_TW": "Vorkath 沃卡司", "en": "Vorkath", "zh_CN": "Vorkath 沃卡司", "ja": "Vorkath", "ko": "Vorkath", "es": "Vorkath" },
@@ -62,7 +70,10 @@
     "exp": 0,
     "gold": 0,
     "boss": true,
-    "atk_interval_ms": 3000
+    "atk_interval_ms": 3000,
+    "moves": [{ "id": "strike", "weight": 2 }, "heavy", "jabs", "spell", "guard"],
+    "break": 16,
+    "events": [{ "on": "hpBelow", "value": 50, "do": [{ "say": "battle.event.boss_rage" }, { "stat": "interval", "mul": 0.8 }, { "anim": "special" }] }]
   },
   "mossling": {
     "name": { "zh_TW": "苔蘚球", "en": "Mossling" },

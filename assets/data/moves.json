@@ -1,0 +1,19 @@
+{
+  "_comment": [
+    "The monsters' moves (docs/gameplay/13_BATTLE_EDITOR.md §6.1, 6.2; src/core/game/systems/battle_rules.h). A monster",
+    "lists the ones it may use in enemies.json \"moves\" (an id, or {\"id\", \"weight\"}); without a list it only strikes.",
+    "Its next move shows over it with the time left (its intent), so the player can answer it:",
+    "  kind strike: a plain attack; guard to soften it.",
+    "  kind heavy: a perfect guard (the guard bar's power at data/battle.json break.parryPower or more) parries it: no",
+    "    damage, the monster staggers and takes more damage for a while.",
+    "  kind jabs: hits quick hits; they do not wait for a running combo and cut it short. Guard instead.",
+    "  kind spell: a combo matching breakHits points or more breaks it; a guard only halves it.",
+    "  kind guard: it deals no damage; hits on it do reduce of their damage, but a fully charged attack breaks the guard.",
+    "damage: times its attack; time: its wind-up, times its attack interval; text: the intent's words (text.json key)."
+  ],
+  "strike": { "kind": "strike", "damage": 1.0, "time": 1.0 },
+  "heavy":  { "kind": "heavy", "damage": 1.8, "time": 1.3 },
+  "jabs":   { "kind": "jabs", "damage": 0.45, "hits": 3, "time": 0.8 },
+  "spell":  { "kind": "spell", "damage": 1.6, "time": 1.5, "breakHits": 2 },
+  "guard":  { "kind": "guard", "time": 1.0, "reduce": 0.3 }
+}

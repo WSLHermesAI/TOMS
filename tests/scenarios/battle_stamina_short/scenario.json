@@ -1,0 +1,6 @@
+{
+  "_comment": "The stamina pace (docs/gameplay/13 §6.3): an attack costing more stamina than there is does not start (no combo).",
+  "include": ["../battle_bow/scenario.json"],
+  "battle": { "enemy": "slime", "hp": 9999, "atk_interval_ms": 60000, "pace": "stamina", "rules": { "stamina": { "attack": 150 } } },
+  "expect": { "battleAnim": "charge", "pace": "stamina", "battleEvents": { "combo": 0 } }
+}

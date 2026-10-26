@@ -84,7 +84,7 @@ tests/scenarios/
 |---|---|---|---|
 | `title` | 遊戲啟動時的標題畫面 | — | `title` |
 | `stage` | 行走場景：玩家在樓層中，處於存檔或給定的時刻 | — | `stage_new_game`、`stage_from_save`、`stage_from_events` |
-| `battle` | 與 `enemies.json` 中某個敵人的戰鬥（敵人不在地圖上） | `battle`：`enemy`，可選擇覆寫 `hp`、`atk`、`def`、`atk_interval_ms` | `battle_slime`、`battle_strong_player`、`battle_bow`（弓的戰鬥片段；另有 `battle_bow_charge`、`battle_bow_idle`） |
+| `battle` | 與 `enemies.json` 中某個敵人的戰鬥（敵人不在地圖上） | `battle`：`enemy`，可選擇覆寫 `hp`、`atk`、`def`、`atk_interval_ms`、`moves`、`look`、`break`、`events`；`party`：最多再兩隻（id，或 `{ "enemy": id, ...覆寫 }`）；`pace`：`cooldown` / `stamina`；`rules`：這場戰鬥用的 `data/battle.json` 數值（`{ "stamina": {...}, "break": {...} }`）（[13](13_BATTLE_EDITOR.md)） | `battle_slime`、`battle_strong_player`、`battle_bow`（弓的戰鬥片段；另有 `battle_bow_charge`、`battle_bow_idle`）；`battle_party`、`battle_party_target`（三隻怪物）；`battle_parry`、`battle_jabs`、`battle_spell_break`、`battle_break`、`battle_transform`、`battle_stamina`、`battle_stamina_short`、`battle_attack_in_combo`、`battle_combo_holds`（戰鬥規則） |
 | `battleWon` | 那場戰鬥之後的勝利畫面 | 同 `battle` | `battle_won` |
 | `arena` | **武器測試場**（[07](07_GAMEPLAY_PLAN.md) 第 0 階段）：依序和列出的敵人一場接一場地戰鬥，每場都是滿血，沒有獎勵，也不影響故事。勝利後按 Enter 開始下一場；落敗後自動開始。武器是玩家的：初始的弓，用 `player.equip` 換別的，用 `player.unarmed` 則空手。`toms_game --arena=<敵人,...>[:<武器>]` 不用檔案也能開啟（沒寫武器：空手） | `battle`：`enemies`（或 `enemy`），以及和 `battle` 相同的覆寫值，套用到每一場 | `arena_unarmed`、`arena_wand`、`arena_restart` |
 | `weaponTrial` | **開場故事**（[07](07_GAMEPLAY_PLAN.md) 第 15 節）：老武師的對話（`dialogue/weapon_master.json`），就像標題畫面的新遊戲開啟它一樣；它的選項在試用戰鬥（武器測試場）中試用武器並留下一把 | — | `trial_start`、`trial_try_sword`、`trial_choose_staff` |
@@ -123,6 +123,9 @@ tests/scenarios/
   | `gold`、`hp`、`lv` | 玩家的數值 |
   | `arenaFights`、`arenaWins` | 測試場中開始的場數／勝利的場數 |
   | `enemyAnim` | 戰鬥畫面上怪物的狀態：`idle`、`attack`、`hurt`、`die`（[05](../../engine/zh_TW/05_ANIMATION.md)「戰鬥中的怪物」） |
+  | `foesDown`、`target` | 戰鬥中倒下的怪物數；攻擊打向的怪物（0 = 第一隻） |
+  | `battleEvents` | `{ "parry": 1, "hit": 0 }`：紀錄中每種戰鬥事件的數量（`toms_game --battle-log` 會印出） |
+  | `pace` | 戰鬥的節奏：`cooldown` 或 `stamina` |
   | `enemyClip` | 它為那個狀態播放的片段（`attack`，或某隻怪物自己的 `attack_<id>`） |
   | `battleAnim` | 有戰鬥片段的武器，戰鬥畫面顯示的片段：`charge`、`attack`、`miss` 或 `idle`（[05](../../engine/zh_TW/05_ANIMATION.md)〈角色〉） |
   | `crystals` | 玩家擁有的水晶（[07](07_GAMEPLAY_PLAN.md) 第 16 節；`give` 也接受 `crystals:<n>`） |

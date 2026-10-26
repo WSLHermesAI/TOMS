@@ -15,14 +15,27 @@
 
 ## ▶ Next Step
 
-**The battle editor design; one to three monsters; the battle log** (2026-10-25; not committed;
+**The battle editor built (steps 1–3); monsters keep charging during a combo; the UI editor's glow; the glTF
+viewer's lights** (2026-10-25 late / 10-26; not committed; [DAILY_2026-10-26.md](DAILY_2026-10-26.md),
+[../../gameplay/13_BATTLE_EDITOR.md](../../gameplay/13_BATTLE_EDITOR.md) §9):
+- Battle: looks (`looks.json`), monster events, moves with intents (`moves.json`), parry / spell / guard breaks, the
+  break gauge, results by points matched, the cooldown / stamina pace; monsters keep charging during a combo
+  (`combo_holds_monsters`).
+- `battle_editor.exe`: monsters (+ Battle), ▶ Battle, the tabs (Monster, Weapon, Player with the growth calculator,
+  Events, Log), test setups; edits change the running battle; auto restart.
+- UI editor: *In this preview* files, the glow under the text cursor, named previews (each player-menu tab).
+- glTF viewer: light shapes, a hint per light, a spot light's aim, rotating lights. RmlUi list warnings fixed.
+- Changed-only 14 of 211 pass; 32 switched-off scenarios, the font check and the glTF unit tests by name pass.
+  **Owner:** commit; the four DLC decisions; the attack pause during a combo; step 4 (the art).
+
+**The battle editor design; one to three monsters; the battle log** (2026-10-25; committed `a187299`;
 [DAILY_2026-10-25.md](DAILY_2026-10-25.md) rows 10–13, [../../gameplay/13_BATTLE_EDITOR.md](../../gameplay/13_BATTLE_EDITOR.md)):
 - Design: its own `battle_editor.exe`; intent, answers and break first; a switchable pace (cooldown / stamina); two
   offline HTML pages (`docs/gameplay/battle_editor/`).
 - Built: 1–3 monsters per battle with targeting (tap, ←/→), `enemies.json` `"party"`, the layouts for one, two and
   three; the event log (`--battle-log`).
 - Changed-only 12 of 199 pass; the 19 battle / arena / trial scenarios by name pass (one monster pixel-identical).
-  **Owner:** commit; next the status map and the monsters' HP events (13 §7 step 1, second half).
+  Then: the status map and the monsters' HP events (13 §7 step 1, second half): done 10-25 late, see above.
 
 **Landscape and portrait, live; the attack track's timing help; Android on the emulator** (2026-10-25; rows 2–9 committed
 `e4c9b7d`; [DAILY_2026-10-25.md](DAILY_2026-10-25.md), [../../gameplay/12_UI_LAYOUT.md](../../gameplay/12_UI_LAYOUT.md)):
@@ -434,7 +447,7 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 [DAILY_2026-10-18.md](DAILY_2026-10-18.md), [DAILY_2026-10-19.md](DAILY_2026-10-19.md),
 [DAILY_2026-10-21.md](DAILY_2026-10-21.md), [DAILY_2026-10-22.md](DAILY_2026-10-22.md),
 [DAILY_2026-10-23.md](DAILY_2026-10-23.md), [DAILY_2026-10-24.md](DAILY_2026-10-24.md),
-[DAILY_2026-10-25.md](DAILY_2026-10-25.md).
+[DAILY_2026-10-25.md](DAILY_2026-10-25.md), [DAILY_2026-10-26.md](DAILY_2026-10-26.md).
 
 ---
 

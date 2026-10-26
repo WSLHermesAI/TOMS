@@ -131,7 +131,10 @@ void BgfxViewport::resizeEvent(QResizeEvent* e) {
 void BgfxViewport::tick() {
     if (!bgfxReady_ || !session_.running() || !isVisible()) return;
     const qint64 dt = clock_.restart();
-    const bool keep = session_.frame((int)dt, input_, pixelWidth(), pixelHeight());
+    const double scaled = dt * timeScale_ + timeCarry_;   // setTimeScale (1: as is)
+    const int gameDt = (int)scaled;
+    timeCarry_ = scaled - gameDt;
+    const bool keep = session_.frame(gameDt, input_, pixelWidth(), pixelHeight());
     input_.wheel = 0;
     ++frameCount_;
     if (smokeFrames_ > 0 && frameCount_ == smokeFrames_ && session_.renderer())

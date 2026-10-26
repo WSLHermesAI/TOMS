@@ -85,7 +85,7 @@ A file name in a setting file is relative to **that** file. A shared file's save
 |---|---|---|---|
 | `title` | the title screen, as the game starts | — | `title` |
 | `stage` | the walking scene: the floor with the player, at the saved or given moment | — | `stage_new_game`, `stage_from_save`, `stage_from_events` |
-| `battle` | a battle with an enemy from `enemies.json` (not on the map) | `battle`: `enemy`, and optional `hp`, `atk`, `def`, `atk_interval_ms` overrides | `battle_slime`, `battle_strong_player`, `battle_bow` (the bow's battle clips; also `battle_bow_charge`, `battle_bow_idle`) |
+| `battle` | a battle with an enemy from `enemies.json` (not on the map) | `battle`: `enemy`, and optional `hp`, `atk`, `def`, `atk_interval_ms`, `moves`, `look`, `break`, `events` overrides; `party`: up to two more (ids, or `{ "enemy": id, ...overrides }`); `pace`: `cooldown` / `stamina`; `rules`: `data/battle.json` values for this battle (`{ "stamina": {...}, "break": {...} }`) ([13](13_BATTLE_EDITOR.md)) | `battle_slime`, `battle_strong_player`, `battle_bow` (the bow's battle clips; also `battle_bow_charge`, `battle_bow_idle`); `battle_party`, `battle_party_target` (three monsters); `battle_parry`, `battle_jabs`, `battle_spell_break`, `battle_break`, `battle_transform`, `battle_stamina`, `battle_stamina_short`, `battle_attack_in_combo`, `battle_combo_holds` (the battle's rules) |
 | `battleWon` | the victory screen after that battle | as `battle` | `battle_won` |
 | `arena` | **the weapon test arena** ([07](07_GAMEPLAY_PLAN.md) phase 0): fight after fight against the listed enemies in turn, full HP each time, no rewards and no story effects. After a win, Enter starts the next fight; after a loss it starts by itself. The weapon is the player's: the starting bow, another with `player.equip`, none with `player.unarmed`. `toms_game --arena=<enemy,...>[:<weapon>]` is the same without a file (no weapon given: unarmed) | `battle`: `enemies` (or `enemy`), and the same overrides as `battle`, for every fight | `arena_unarmed`, `arena_wand`, `arena_restart` |
 | `weaponTrial` | **the start story** ([07](07_GAMEPLAY_PLAN.md) §15): the weapon master's dialogue (`dialogue/weapon_master.json`), as the title's New Game opens it; its choices try a weapon in a trial fight (the arena) and keep one | — | `trial_start`, `trial_try_sword`, `trial_choose_staff` |
@@ -116,7 +116,7 @@ Each phase of the plan ends with its scenarios.
 At the end of the `test` frames:
 - **The scene** in `expect.scene` (default: `scene`) must be showing. For example, `battle` means a battle is still
   running, and `stage` means the floor with no window over it.
-- **Optional values:**
+- **Optional values** (the battle's are in the table too; the keys `f`, `g`, `h` guard, super and use the active):
 
   | Field | Check |
   |---|---|
@@ -126,6 +126,9 @@ At the end of the `test` frames:
   | `enemyAnim` | the monster's status on the battle screen: `idle`, `attack`, `hurt`, `die` ([05](../engine/05_ANIMATION.md) "Monsters in battle") |
   | `enemyClip` | the clip it plays for that status (`attack`, or a monster's own `attack_<id>`) |
   | `battleAnim` | the clip the battle picture shows for a weapon with battle clips: `charge`, `attack`, `miss` or `idle` ([05](../engine/05_ANIMATION.md), "Characters") |
+  | `foesDown`, `target` | how many of the battle's monsters have fallen; the monster the attacks go to (0 = the first) |
+  | `battleEvents` | `{ "parry": 1, "hit": 0 }`: how many battle events of each type the log has (`toms_game --battle-log` prints them) |
+  | `pace` | the battle's pace: `cooldown` or `stamina` |
   | `crystals` | the crystals the player has ([07](07_GAMEPLAY_PLAN.md) §16; `give` also takes `crystals:<n>`) |
   | `equipped` | the worn weapon's id ("" for none) |
   | `gearOwned` | `["<id>", ...]`: exactly the gear owned, in any order |

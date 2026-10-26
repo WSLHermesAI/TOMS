@@ -130,6 +130,7 @@ bool keyFromName(const std::string& n, Key& out) {
         {"enter", Key::Enter}, {"space", Key::Space}, {"esc", Key::Escape}, {"tab", Key::Tab},
         {"f1", Key::F1}, {"f2", Key::F2}, {"f5", Key::F5}, {"f8", Key::F8},
         {"i", Key::I}, {"b", Key::B}, {"c", Key::C}, {"q", Key::Q}, {"e", Key::E},
+        {"f", Key::F}, {"g", Key::G}, {"h", Key::H},   // the battle: guard, super, the active
         {"1", Key::Num1}, {"2", Key::Num2}, {"3", Key::Num3},
     };
     for (auto& e : table) if (n == e.name) { out = e.key; return true; }

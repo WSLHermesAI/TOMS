@@ -33,6 +33,8 @@ public:
     // Smoke test: after `frames` frames, save the viewport (bgfx screenshot) to `png` and emit smokeTestDone.
     void runSmokeTest(int frames, const QString& png);
     void setDebugOverlay(bool on);
+    // The game's speed (the battle editor): 0 pauses it (it still draws), 2 runs it twice as fast.
+    void setTimeScale(double s) { timeScale_ = s < 0.0 ? 0.0 : s; }
     // Inspect (the UI editor): a left click is not passed to the game; inspectClicked() says where it was.
     void setInspectMode(bool on) { inspectMode_ = on; }
     bool inspectMode() const { return inspectMode_; }
@@ -78,6 +80,8 @@ private:
     QString pendingScenario_;   // startScenario before bgfx was up: started by showEvent
     bool bgfxReady_ = false;
     bool inspectMode_ = false;
+    double timeScale_ = 1.0;
+    double timeCarry_ = 0.0;   // the part of a millisecond a scaled frame left over
     bool failed_ = false;
     int framesSinceReport_ = 0;
     qint64 msSinceReport_ = 0;

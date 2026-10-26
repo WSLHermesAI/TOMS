@@ -77,7 +77,7 @@ GAME_SMOKE_BY_NAME = [
     (re.compile(r'scenario'), is_scenario),
     (re.compile(r'player|saveload|inventory|equipment|items?\.json|stats\.json'),
      named('smoke.player_*', 'scenario.menu_*', 'scenario.save_load')),
-    (re.compile(r'battle|combat|enemies\.json'), named('smoke.battle', 'scenario.battle_*')),
+    (re.compile(r'battle|combat|enemies\.json|looks\.json|moves\.json'), named('smoke.battle', 'scenario.battle_*')),
     (re.compile(r'store'), named('smoke.store', 'scenario.store_*')),
     (re.compile(r'dialog'), named('smoke.dialogue', 'smoke.stairs_unlock', 'scenario.dialogue_*', 'scenario.talk_*')),
     (re.compile(r'talk|npc'), named('smoke.talk_*', 'scenario.talk_*')),
@@ -154,7 +154,7 @@ RULES = [
     (['tools/make_ui_font.py', 'assets/media/fonts/*'], named('data.ui_font_covers_text'), 'the UI font subset: it covers the text'),
     (['tools/make_combo_sfx.py'], None, 'writes a sound (assets/media/sfx/combo_ready.wav): no automated test, listen to it'),
     # nothing
-    (['docs/*', '*.md', 'tools/web_editors/*', 'android/*', '.claude/*', '.gitignore', '.gitattributes', 'AIGamestyle*'],
+    (['docs/*', '*.md', 'tools/web_editors/*', 'android/*', '.claude/*', '.gitignore', '.gitattributes', 'AIGamestyle*', 'launch.vs.json'],
      None, 'docs / HTML editors / Android: no test'),
     (['build_web.bat', 'publish_web.bat', 'setup_new_pc.bat', 'tools/build_android.cmd', 'tools/run_android.cmd',
       'tools/check_env.ps1', 'tools/check_git_ssh.*', 'tools/package.ps1'], None,
@@ -208,8 +208,12 @@ RULES = [
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),
     (['docs/examples/ui_tutorial/*', 'docs/gameplay/10_UI_EDITOR.md', 'docs/gameplay/zh_TW/10_UI_EDITOR.md'], named('ui_editor.selftest', 'smoke.ui_editor'),
      "the UI editor's tutorial and its practice screen (the editor opens them from Help)"),
-    (['src/editor/src/uied_*', 'src/editor/src/bgfx_viewport*'], named('ui_editor.selftest', 'smoke.ui_editor'),
-     'the UI editor (ui_editor) and the game viewport it shares with toms_editor'),
+    (['src/editor/src/uied_*'], named('ui_editor.selftest', 'smoke.ui_editor'), 'the UI editor (ui_editor)'),
+    (['src/editor/src/bed_*', 'tools/battle_editor/*'], named('battle_editor.selftest', 'smoke.battle_editor'),
+     'the battle editor (battle_editor, docs/gameplay/13) and its test setups'),
+    (['src/editor/src/bgfx_viewport*'],
+     named('ui_editor.selftest', 'smoke.ui_editor', 'battle_editor.selftest', 'smoke.battle_editor'),
+     'the game viewport toms_editor, ui_editor and battle_editor share'),
     (['src/editor/*'], None, 'toms_editor (Qt + the game viewport): no automated test; the desktop build compiles it'),
     (['tools/studio_common/*'], named('atlas.core', 'anim.*', 'particle.*', 'font.*', 'studio.*', 'stage_editor.*'),
      'the Qt editors: their checks'),
@@ -304,6 +308,8 @@ def select(files, tests, since):
             take(named('data.ui_font_covers_text'), why)
         if f.startswith('assets/data/'):   # the native stage editor reads every floor, type and event (and the index)
             take(named('unit.stage_core_test'), why)
+        if f in ('assets/data/enemies.json', 'assets/data/weapon_play.json', 'assets/data/stats.json'):
+            take(named('battle_editor.selftest'), why)   # the battle editor writes these back in their own layout
         base = os.path.basename(f).lower()
         narrowed = [p for rx, p in GAME_SMOKE_BY_NAME if rx.search(base)]
         take(any_of(*narrowed) if narrowed else any_of(is_game_smoke_d3d11, is_scenario), why)

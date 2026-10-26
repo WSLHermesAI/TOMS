@@ -59,7 +59,36 @@ WeaponPlay weaponPlayFromJson(const std::string& id, const nlohmann::json& j) {
         }
         std::stable_sort(w.fx.begin(), w.fx.end(), [](const WeaponFx& a, const WeaponFx& b) { return a.lv < b.lv; });
     }
+    if (j.contains("results") && j["results"].is_array()) {
+        for (const auto& r : j["results"]) {
+            if (!r.is_object()) continue;
+            WeaponResult x;
+            const nlohmann::json h = r.value("hits", nlohmann::json(0));
+            x.hits = h.is_string() ? (h.get<std::string>() == "all" ? -1 : 0) : std::max(0, h.get<int>());
+            x.name = r.value("name", std::string());
+            x.damage = std::max(0.0f, r.value("damage", 1.0f));
+            x.fx = r.value("fx", std::string());
+            x.anim = r.value("anim", std::string());
+            x.sound = r.value("sound", std::string());
+            x.stunMs = std::max(0, r.value("stunMs", 0));
+            x.pushMs = std::max(0, r.value("pushMs", 0));
+            x.breakAdd = std::max(0.0f, r.value("breakAdd", 0.0f));
+            w.results.push_back(x);
+        }
+    }
+    w.pace = j.value("pace", std::string());
     return w;
+}
+
+const WeaponResult* weaponResultFor(const WeaponPlay& w, int hits, int points, bool failed) {
+    if (failed) hits = 0;
+    const WeaponResult* best = nullptr;
+    int bestNeed = -1;
+    for (const WeaponResult& r : w.results) {
+        const int need = r.hits < 0 ? std::max(1, points) : r.hits;   // "all": every point
+        if (hits >= need && need > bestNeed) { best = &r; bestNeed = need; }
+    }
+    return best;
 }
 
 const WeaponFx* weaponFxEntry(const WeaponPlay& w, int weaponLevel) {

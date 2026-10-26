@@ -1,0 +1,21 @@
+{
+  "_comment": "battle_editor's test setup \"slime Lv1 bow\" (docs/gameplay/13_BATTLE_EDITOR.md §2): not a test, an editor file.",
+  "scene": "battle",
+  "player": {
+    "give": ["bow"],
+    "equip": ["bow"],
+    "weaponUses": { "bow": 0 },
+    "lv": 1,
+    "maxhp": 120,
+    "hp": 120
+  },
+  "battle": {
+    "enemy": "slime"
+  },
+  "_editor": {
+    "name": "slime Lv1 bow",
+    "pace": "",
+    "foes": ["slime"],
+    "player": { "lv": 1, "hp": 120, "maxhp": 120, "weapon": "bow", "weaponWins": 0, "attrs": {}, "attrPoints": 0 }
+  }
+}

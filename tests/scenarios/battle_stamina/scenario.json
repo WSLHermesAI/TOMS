@@ -1,0 +1,6 @@
+{
+  "_comment": "The stamina pace (docs/gameplay/13 §6.3): battle_bow's combo with stamina instead of cooldowns; starting it spends 40 of 100.",
+  "include": ["../battle_bow/scenario.json"],
+  "battle": { "enemy": "slime", "hp": 9999, "atk_interval_ms": 60000, "pace": "stamina" },
+  "expect": { "battleAnim": "attack", "pace": "stamina", "battleEvents": { "combo": 1 } }
+}

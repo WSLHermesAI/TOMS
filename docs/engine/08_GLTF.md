@@ -188,11 +188,25 @@ default (`src/game/src/title_scene.*`, owned by `GameSession`).
     unticking *the file's lights* goes back to the rig and its ambient (0.7);
   - otherwise a rig: *default* (key + fill), *point*, *spot*, *all*, or your own. Each light has
     a type, colour, intensity, cast shadows, then direction (yaw / pitch), or position, range and
-    cones. Up to 4; `+ directional` / `+ point` / `+ spot` add one;
+    cones. A spot light shines at the model's middle until you untick *aim at the model*; then *aim yaw* and
+    *aim pitch* (below 0 = down) point it anywhere (`--spot-aim=<yaw>,<pitch>` at start). **rotate** makes a rig light circle the model round the up axis
+    (a directional light turns its yaw; a spot light with its own aim turns it along), at **speed** degrees a second
+    (below 0 the other way; `--light-spin=<deg/s>` turns it on for every rig light). A file's lights take
+    their direction from their node (turn it with the rotate handles). Up to 4; `+ directional` / `+ point` /
+    `+ spot` add one;
   - exposure, ambient, sky and ground colours, tone mapping.
 
   The lights are drawn in the view: an arrow for a directional light, a star for a point light, a
-  cone for a spot light.
+  cone for a spot light. Each light's **hint** adds solid shapes in its colour, so you
+  see where a light is and where it shines:
+  - a point or spot light: a glowing ball, a line down to a mark on the floor under it, and (with a
+    `range`) a faint shell as far as it reaches;
+  - a spot light: its outer and inner cones, reaching the floor (or its range); their base is the lit spot;
+  - a directional light: a sun where the light comes from and a solid arrow towards the model.
+
+  They are drawn with the panel only, never in `--no-ui` screenshots. Each light's **show hint** (in its section of
+  the rig; with the file's lights, a list of them with their colours) hides that light's shapes and markers while it
+  still lights the scene. `--light-hints=1,0,1` sets them at start, in the panel's order.
 - **Performance:** fps, backend, draw calls, instances, skinned draws, morph uploads, shadow tiles
   and shadow draws.
 

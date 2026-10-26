@@ -83,6 +83,13 @@ bool Game::enemyFromData(const std::string& id, const nlohmann::json& b, EnemyIn
     en.x = en.y = -1;   // not on the map: winning removes nothing
     en.boss = t->second.value("boss", false);
     en.atkIntervalMs = b.value("atk_interval_ms", t->second.value("atk_interval_ms", 4000));
+    // the battle's rules for it (docs/gameplay/13), each overridable by the battle setup
+    const nlohmann::json& tp = t->second;
+    en.mapId = id;
+    en.look = b.value("look", tp.value("look", std::string("monster")));
+    en.moves = toms::moveChoicesFromJson(b.contains("moves") ? b["moves"] : tp.value("moves", nlohmann::json::array()));
+    en.breakPoints = b.value("break", tp.value("break", 0));
+    en.events = b.contains("events") ? b["events"] : tp.value("events", nlohmann::json::array());
     return true;
 }
 
@@ -192,6 +199,14 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
             EnemyInst pm;
             if (!enemyFromData(mid, o, pm)) return bad("no enemy \"" + mid + "\" in data/enemies.json");
             party.push_back(pm);
+        }
+        paceOverride_ = b.value("pace", std::string());   // "cooldown" / "stamina" (docs/gameplay/13 §6.3)
+        {   // "rules": data/battle.json's values for this battle ({"stamina": {...}, "break": {...}}), as the battle editor tries them
+            nlohmann::json rules = battleJson_;
+            if (b.contains("rules") && b["rules"].is_object()) rules.merge_patch(b["rules"]);
+            paceSettings_ = toms::paceFromJson(rules);
+            breakSettings_ = toms::breakFromJson(rules);
+            comboHoldsMonsters_ = rules.value("combo_holds_monsters", false);
         }
         startCombat(en, party);
         if (s == "battleWon") finishCombatWin();
@@ -351,6 +366,15 @@ bool Game::scenarioCheck(std::string& report) const {
         if (down != scenarioExpect_["foesDown"].get<int>())
             fail(std::to_string(down) + " monsters down, expected " + std::to_string(scenarioExpect_["foesDown"].get<int>()));
     }
+    if (scenarioExpect_.contains("battleEvents") && scenarioExpect_["battleEvents"].is_object())   // type -> how many
+        for (auto it = scenarioExpect_["battleEvents"].begin(); it != scenarioExpect_["battleEvents"].end(); ++it) {
+            int n = 0;
+            for (const toms::BattleEvent& e : cs.events) n += e.type == it.key() ? 1 : 0;
+            if (n != it.value().get<int>())
+                fail(std::to_string(n) + " battle events \"" + it.key() + "\", expected " + std::to_string(it.value().get<int>()));
+        }
+    if (scenarioExpect_.contains("pace") && battlePace() != scenarioExpect_["pace"].get<std::string>())
+        fail("the pace is " + battlePace() + ", expected " + scenarioExpect_["pace"].get<std::string>());
     if (scenarioExpect_.contains("target") && cs.target != scenarioExpect_["target"].get<int>())
         fail("the target is monster " + std::to_string(cs.target) + ", expected " + std::to_string(scenarioExpect_["target"].get<int>()));
     if (scenarioExpect_.contains("battleAnim") && battleRigState_ != scenarioExpect_["battleAnim"].get<std::string>())

@@ -181,11 +181,17 @@ bool Game::loadAssets(const std::string& assetDir) {
             barCooldownMs_ = std::max(0, bj.value("bar_cooldown_ms", (int)CombatState::kBarCooldownMs));
             attackPauseMs_ = std::max(0, bj.value("attack_pause_ms", attackPauseMs_));
             hitNumberDelayMs_ = std::max(0, bj.value("hit_number_delay_ms", hitNumberDelayMs_));
+            battleJson_ = bj;
+            paceSettings_ = toms::paceFromJson(bj);     // docs/gameplay/13 §6.3
+            comboHoldsMonsters_ = bj.value("combo_holds_monsters", false);
+            breakSettings_ = toms::breakFromJson(bj);   // §6.4
             fprintf(stderr, "[assets] battle.json: bars start x%.2f, top speed x%.2f, %d ms after a tap\n", barSlowScale_,
                     barFastScale_, barCooldownMs_);
         }
     }
     weaponPlay_ = toms::loadWeaponPlay(pathOf(toms::key::kDataWeaponPlay));   // docs/gameplay/07_GAMEPLAY_PLAN.md §5.6
+    looks_ = toms::looksFromJson(readJsonFile(pathOf(toms::key::kDataLooks)));   // the status map (docs/gameplay/11 §4.2)
+    moves_ = toms::movesFromJson(readJsonFile(pathOf(toms::key::kDataMoves)));   // the monsters' moves (docs/gameplay/13 §6.1)
     miniGames_ = toms::loadMiniGames(pathOf(toms::key::kDataMinigames));      // docs/gameplay/07 phase 6
     characterFit_ = readJsonFile(pathOf(toms::key::kDataCharacterFit));      // character clips' nudges (docs/engine/05)
     fprintf(stderr, "[assets] weapon_play.json: %d weapon(s)\n", (int)weaponPlay_.weapons.size());

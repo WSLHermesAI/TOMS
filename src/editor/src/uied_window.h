@@ -1,7 +1,8 @@
 // uied_window.h -- ui_editor: the game's UI files (assets/media/ui/*.rml, *.rcss) beside the running game, which
 // shows every edit as it is typed (docs/gameplay/01_RMLUI.md "The UI editor").
 //
-//   * Files (left): the UI folder's documents; ● = changed, not saved.
+//   * Files (left): the UI folder's documents; ● = changed, not saved. "In this preview" lists the documents the game
+//     shows now and the style sheets they link (followed live: a battle, then its victory dialog, ...).
 //   * The text (middle): colours, line numbers. A pause in typing (0.3 s) previews it: the changed files are handed to
 //     RmlUi from memory (RmlUi::setVirtualFile) and the documents reload. Disk changes only on Save.
 //   * The game (right): BgfxViewport, the real game. Preview picks what it shows (the title, or any test scenario:
@@ -9,6 +10,8 @@
 //   * Problems (bottom): RmlUi's warnings and errors since the last preview; double-click opens the place it names.
 //   * Inspect (Ctrl+I): a click in the game picks the UI element under it instead of pressing it: its .rml line opens,
 //     and the Inspector lists the style rules that name its id, classes or tag.
+//   * The hint: what the text cursor is on (an .rml element, an .rcss rule) glows in the game, a pulsing gold frame
+//     over each element it is, so you see what an edit there changes (Preview > Glow What the Cursor Is On).
 #pragma once
 
 #include <QMainWindow>
@@ -58,6 +61,14 @@ public:
     void openTutorial();
     void openPracticeScreen();
     bool practiceShown() const { return practiceDoc_ != nullptr; }
+    // The hint: the selectors the text cursor is on, and how many elements on screen glow for them.
+    QStringList hintSelectors() const { return hintSelectors_; }
+    int hintCount() const { return hintCount_; }
+    void updateHint();                                  // places the glow (a timer does it while the cursor is on something)
+    void placeCursor(int pos);                          // the text cursor at this offset of the open file (as a click there)
+    // The files of what the game shows now: each shown .rml, then the .rcss files it links (the file list's top group).
+    QStringList relatedFiles() const { return related_; }
+    void updateRelated();                               // asks the game's UI which documents are shown (a timer does it)
 
 protected:
     void closeEvent(QCloseEvent* e) override;
@@ -99,6 +110,20 @@ private:
     QTimer previewTimer_;
     QTimer langTimer_;
     QStringList previewPaths_;  // the Preview list's scenarios ("" = the title)
+    QStringList related_;       // relatedFiles()
+    QMap<QString, QString> relatedWhy_;   // file -> "shown" or the .rml that links it (the tooltip)
+    QTimer relatedTimer_;
+    // the hint (updateHint): a document of our own over the game's, a frame per element
+    void cursorMoved();
+    void dropHint();                                    // closes it (before a reload; a new context)
+    QStringList hintSelectors_;
+    QString hintFile_;                                  // an .rml hint looks only in documents loaded from this file
+    bool hintOn_ = true;
+    int hintCount_ = 0;
+    Rml::ElementDocument* hintDoc_ = nullptr;
+    Rml::Context* hintCtx_ = nullptr;
+    QTimer hintTimer_;
+    bool openRelated_ = false;  // a new preview: open its first document once it shows
     QStringList ruleTargets_;   // the Inspector rows: "file:line"
     QStringList problemTargets_;
 

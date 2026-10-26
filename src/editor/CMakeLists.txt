@@ -49,6 +49,30 @@ target_link_libraries(ui_editor PRIVATE Qt6::Widgets toms_game_host studio_commo
 set_target_properties(ui_editor PROPERTIES
     FOLDER "toms"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+# battle_editor: tune the battle beside the running game (docs/gameplay/13_BATTLE_EDITOR.md). Its own program (the
+# owner 2026-10-25: not more put into toms_editor); it shares the game viewport like ui_editor.
+add_executable(battle_editor
+    src/bed_main.cpp
+    src/bed_window.h src/bed_window.cpp
+    src/bed_logic.h src/bed_logic.cpp
+    src/bgfx_viewport.h src/bgfx_viewport.cpp)
+toms_target_defaults(battle_editor)
+set_source_files_properties(src/bed_main.cpp src/bed_window.cpp
+    TARGET_DIRECTORY battle_editor PROPERTIES COMPILE_DEFINITIONS QT_NO_EMIT)
+target_include_directories(battle_editor PRIVATE src ${CMAKE_SOURCE_DIR}/src/engine/src ${TOMS_THIRD_PARTY_DIR}/json)
+target_link_libraries(battle_editor PRIVATE Qt6::Widgets toms_game_host studio_common)
+set_target_properties(battle_editor PROPERTIES
+    FOLDER "toms"
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+if(TOMS_BUILD_TESTS)
+    # the calculator, the setups, the files written back, the window's lists -- no GPU
+    add_test(NAME battle_editor.selftest COMMAND battle_editor -platform offscreen --selftest)
+    set_tests_properties(battle_editor.selftest PROPERTIES LABELS "unit;studio" TIMEOUT 60)
+    # with a GPU: three monsters, ▶ Battle, the log, Win now
+    add_test(NAME smoke.battle_editor COMMAND battle_editor "--smoke=${CMAKE_BINARY_DIR}/test-run/battle_editor_smoke.png")
+    set_tests_properties(smoke.battle_editor PROPERTIES LABELS "smoke" TIMEOUT 120)
+endif()
+
 if(TOMS_BUILD_TESTS)
     # the text logic and file handling, no GPU
     add_test(NAME ui_editor.selftest COMMAND ui_editor -platform offscreen --selftest)
@@ -67,12 +91,25 @@ if(WIN32)
         set(_windeployqt "${_windeployqt_exe}")
     endif()
     if(_windeployqt)
-        add_custom_command(TARGET toms_editor POST_BUILD
-            COMMAND "${_windeployqt}" --no-translations --no-compiler-runtime --no-system-d3d-compiler
-                    --no-opengl-sw "$<TARGET_FILE:toms_editor>"
-            COMMENT "windeployqt: copying Qt runtime next to toms_editor.exe"
-            VERBATIM)
+        # each editor copies them itself, so building only one of them (F5 on ui_editor or battle_editor after
+        # Delete Cache) still gives a program that starts
+        foreach(_qt_editor toms_editor ui_editor battle_editor)
+            add_custom_command(TARGET ${_qt_editor} POST_BUILD
+                COMMAND "${_windeployqt}" --no-translations --no-compiler-runtime --no-system-d3d-compiler
+                        --no-opengl-sw "$<TARGET_FILE:${_qt_editor}>"
+                COMMENT "windeployqt: copying Qt runtime next to ${_qt_editor}.exe"
+                VERBATIM)
+        endforeach()
+        # windeployqt copies only the windows platform plugin; the --selftest runs use -platform offscreen.
+        if(TARGET Qt6::QOffscreenIntegrationPlugin)
+            foreach(_qt_editor ui_editor battle_editor)
+                add_custom_command(TARGET ${_qt_editor} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${_qt_editor}>/platforms"
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:Qt6::QOffscreenIntegrationPlugin>"
+                            "$<TARGET_FILE_DIR:${_qt_editor}>/platforms/")
+            endforeach()
+        endif()
     else()
-        message(WARNING "[toms] windeployqt not found: copy the Qt DLLs next to toms_editor.exe or add <Qt>/bin to PATH")
+        message(WARNING "[toms] windeployqt not found: copy the Qt DLLs next to the editors or add <Qt>/bin to PATH")
     endif()
 endif()

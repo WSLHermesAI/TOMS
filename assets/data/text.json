@@ -649,6 +649,174 @@
       "ko": "{dmg}의 피해를 입혔습니다!",
       "es": "¡Causaste {dmg} de daño!"
     },
+    "battle.intent.strike": {
+      "zh_TW": "攻擊",
+      "en": "Attack",
+      "zh_CN": "攻击",
+      "ja": "攻撃",
+      "ko": "공격",
+      "es": "Ataque"
+    },
+    "battle.intent.heavy": {
+      "zh_TW": "重擊",
+      "en": "Heavy blow",
+      "zh_CN": "重击",
+      "ja": "強撃",
+      "ko": "강타",
+      "es": "Golpe fuerte"
+    },
+    "battle.intent.jabs": {
+      "zh_TW": "連打",
+      "en": "Quick jabs",
+      "zh_CN": "连打",
+      "ja": "連撃",
+      "ko": "연타",
+      "es": "Golpes rápidos"
+    },
+    "battle.intent.spell": {
+      "zh_TW": "詠唱法術",
+      "en": "Charging a spell",
+      "zh_CN": "咏唱法术",
+      "ja": "呪文詠唱",
+      "ko": "주문 영창",
+      "es": "Cargando un hechizo"
+    },
+    "battle.intent.guard": {
+      "zh_TW": "防禦中",
+      "en": "Guarding",
+      "zh_CN": "防御中",
+      "ja": "防御中",
+      "ko": "방어 중",
+      "es": "En guardia"
+    },
+    "battle.intent.stagger": {
+      "zh_TW": "踉蹌",
+      "en": "Staggered",
+      "zh_CN": "踉跄",
+      "ja": "よろめき",
+      "ko": "비틀거림",
+      "es": "Aturdido"
+    },
+    "battle.intent.broken": {
+      "zh_TW": "破防！",
+      "en": "Broken!",
+      "zh_CN": "破防！",
+      "ja": "ブレイク！",
+      "ko": "브레이크!",
+      "es": "¡Roto!"
+    },
+    "battle.parry": {
+      "zh_TW": "招架！{name} 踉蹌了。",
+      "en": "Parried! {name} staggers.",
+      "zh_CN": "招架！{name} 踉跄了。",
+      "ja": "パリィ！{name} がよろめいた。",
+      "ko": "패링! {name}이(가) 비틀거린다.",
+      "es": "¡Desviado! {name} se tambalea."
+    },
+    "battle.break": {
+      "zh_TW": "{name} 破防了！趁現在攻擊！",
+      "en": "{name} is broken! Hit it now!",
+      "zh_CN": "{name} 破防了！趁现在攻击！",
+      "ja": "{name} をブレイク！今が攻め時！",
+      "ko": "{name} 브레이크! 지금 공격하세요!",
+      "es": "¡{name} está roto! ¡Ataca ahora!"
+    },
+    "battle.guard_broken": {
+      "zh_TW": "你打破了 {name} 的防禦！",
+      "en": "You broke {name}'s guard!",
+      "zh_CN": "你打破了 {name} 的防御！",
+      "ja": "{name} の防御を崩した！",
+      "ko": "{name}의 방어를 깨뜨렸다!",
+      "es": "¡Rompiste la guardia de {name}!"
+    },
+    "battle.spell_broken": {
+      "zh_TW": "你打斷了 {name} 的法術！",
+      "en": "You broke {name}'s spell!",
+      "zh_CN": "你打断了 {name} 的法术！",
+      "ja": "{name} の呪文を打ち消した！",
+      "ko": "{name}의 주문을 끊었다!",
+      "es": "¡Rompiste el hechizo de {name}!"
+    },
+    "battle.guarding": {
+      "zh_TW": "{name} 正在防禦：只造成 {dmg} 點傷害。",
+      "en": "{name} is guarding: only {dmg} damage.",
+      "zh_CN": "{name} 正在防御：只造成 {dmg} 点伤害。",
+      "ja": "{name} は防御中：{dmg} のダメージしか通らない。",
+      "ko": "{name}이(가) 방어 중: {dmg}의 피해만 들어갔다.",
+      "es": "{name} está en guardia: solo {dmg} de daño."
+    },
+    "battle.interrupted": {
+      "zh_TW": "{name} 的連打打斷了你的攻擊！",
+      "en": "{name}'s jabs cut your attack short!",
+      "zh_CN": "{name} 的连打打断了你的攻击！",
+      "ja": "{name} の連撃で攻撃が中断された！",
+      "ko": "{name}의 연타에 공격이 끊겼다!",
+      "es": "¡Los golpes de {name} cortan tu ataque!"
+    },
+    "battle.transform": {
+      "zh_TW": "{name} 變成了 {to}！",
+      "en": "{name} turns into {to}!",
+      "zh_CN": "{name} 变成了 {to}！",
+      "ja": "{name} は {to} に変わった！",
+      "ko": "{name}이(가) {to}(으)로 변했다!",
+      "es": "¡{name} se convierte en {to}!"
+    },
+    "battle.summon": {
+      "zh_TW": "{name} 加入了戰鬥！",
+      "en": "{name} joins the fight!",
+      "zh_CN": "{name} 加入了战斗！",
+      "ja": "{name} が戦いに加わった！",
+      "ko": "{name}이(가) 전투에 합류했다!",
+      "es": "¡{name} se une a la pelea!"
+    },
+    "battle.flee": {
+      "zh_TW": "{name} 逃走了！",
+      "en": "{name} fled!",
+      "zh_CN": "{name} 逃走了！",
+      "ja": "{name} は逃げ出した！",
+      "ko": "{name}이(가) 도망쳤다!",
+      "es": "¡{name} huyó!"
+    },
+    "battle.stamina": {
+      "zh_TW": "體力",
+      "en": "Stamina",
+      "zh_CN": "体力",
+      "ja": "スタミナ",
+      "ko": "스태미나",
+      "es": "Aguante"
+    },
+    "battle.no_stamina": {
+      "zh_TW": "體力不足",
+      "en": "Not enough stamina",
+      "zh_CN": "体力不足",
+      "ja": "スタミナが足りない",
+      "ko": "스태미나 부족",
+      "es": "No tienes aguante"
+    },
+    "battle.result.perfect": {
+      "zh_TW": "完美！",
+      "en": "Perfect!",
+      "zh_CN": "完美！",
+      "ja": "パーフェクト！",
+      "ko": "퍼펙트!",
+      "es": "¡Perfecto!"
+    },
+    "battle.event.golem_runes": {
+      "zh_TW": "石巨人的符文燃起光芒！",
+      "en": "The golem's runes blaze!",
+      "zh_CN": "石巨人的符文燃起光芒！",
+      "ja": "石の巨人のルーンが燃え上がる！",
+      "ko": "돌 거인의 룬이 타오른다!",
+      "es": "¡Las runas del gólem arden!"
+    },
+    "battle.event.boss_rage": {
+      "zh_TW": "沃卡司怒吼，攻勢加快了！",
+      "en": "Vorkath roars and speeds up!",
+      "zh_CN": "沃卡司怒吼，攻势加快了！",
+      "ja": "Vorkath が咆哮し、攻撃が速くなった！",
+      "ko": "Vorkath가 포효하며 공격이 빨라졌다!",
+      "es": "¡Vorkath ruge y acelera!"
+    },
     "battle.foe_down": {
       "zh_TW": "{name} 倒下了！",
       "en": "{name} is down!",

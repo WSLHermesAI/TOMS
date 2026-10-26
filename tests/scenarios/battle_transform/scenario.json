@@ -1,0 +1,9 @@
+{
+  "_comment": "A monster event (docs/gameplay/13 §4.4): a golem whose HP falls below 50% turns into a slime at full HP; battle_bow's combo takes it there, and the battle goes on against the slime.",
+  "include": ["../battle_bow/scenario.json"],
+  "battle": {
+    "enemy": "golem", "hp": 40, "atk_interval_ms": 60000, "moves": [],
+    "events": [ { "on": "hpBelow", "value": 50, "do": [ { "say": "battle.event.golem_runes" }, { "transformInto": "slime", "hp": "full" } ] } ]
+  },
+  "expect": { "scene": "battle", "battleEvents": { "event": 1, "say": 1, "transform": 1, "down": 0 } }
+}

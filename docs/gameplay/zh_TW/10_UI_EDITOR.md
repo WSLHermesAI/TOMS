@@ -45,7 +45,16 @@
    它們在 `docs\examples\ui_tutorial`，不在遊戲的資料夾裡：遊戲本身從不顯示它們。
 
 視窗：左邊是**檔案**，中間是**文字**，右邊是**遊戲**，下方是**問題**與**檢視器**。工具列的**預覽**說明遊戲正在顯示什麼
-（現在是*練習畫面（教學）*）。
+（現在是*練習畫面（教學）*）。清單依遊戲的順序列出每個畫面的名稱，括號內是測試情境的資料夾：*Title screen*、*Map and HUD*、
+玩家選單的每個分頁（*Player menu: Status*、*Equipment*、*Items*、*Events*、*Cards*、*System*）、*Save / Load*、*Store*、*Battle*、
+*Victory*、*Mini-game* 等等。
+檔案清單最上面的 **In this preview** 列出遊戲現在顯示的東西用到的檔案：畫面上的每個畫面（`.rml`），以及它們連結的樣式表（`.rcss`）。
+它會跟著遊戲變化（戰鬥，接著勝利對話框），選擇新的預覽時也會開啟它的畫面檔案。
+
+**你即將修改的東西會在遊戲中發光。** 把文字游標放在 `.rml` 檔中某個元素的標籤裡（例如 `<div id="title">`），或放在 `.rcss`
+檔中某條規則的任何地方（選擇器或區塊）。它所指的、目前畫面上的每個元素都會加上一個閃爍的金色外框。`.rml` 標籤依它的 `id`，
+或依標籤與 class 找到（`data-for` 的一列會讓每個複本都發光）；`.rcss` 規則會讓它的選擇器符合的所有元素發光。狀態列會說明哪些
+在發光，或畫面上沒有符合的（目前隱藏，或在另一個畫面）。**Preview > Glow What the Cursor Is On**（Ctrl+G）可以關閉。
 
 ---
 
@@ -186,7 +195,7 @@
 
 ## 11. 換成真正的畫面：戰鬥
 
-1. **預覽**：選擇 `battle — battle_bow`。遊戲會開啟一場用弓的戰鬥。
+1. **預覽**：選擇 *Battle  (battle_bow)*。遊戲會開啟一場用弓的戰鬥。
 2. 開啟 `battle.rcss`。戰鬥的標題是：
    ```css
    #title  { position: absolute; left: 262px; top: 14px; font-size: 38px; color: #ffcaa8; }

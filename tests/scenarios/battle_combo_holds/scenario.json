@@ -1,0 +1,7 @@
+{
+  "_comment": "The old rule, kept as a switch (data/battle.json combo_holds_monsters: true): the slime's clock waits while the bow's combo runs, so battle_bow's taps hit all three points and the slime strikes only after the combo.",
+  "include": ["../battle_bow/scenario.json"],
+  "battle": { "enemy": "slime", "hp": 9999, "atk_interval_ms": 700, "rules": { "combo_holds_monsters": true } },
+  "test": { "frames": 110 },
+  "expect": { "battleAnim": "attack", "battleEvents": { "combo": 1, "hit": 1 } }
+}

@@ -36,6 +36,20 @@ struct WeaponFx {
     std::string hit;       // at the monster when the hit lands (with the damage number)
 };
 
+// What an attack does by how many points it matched (docs/gameplay/13 §4.2, the owner 2026-10-25): the highest row the
+// result reaches applies. hits: the points matched (-1 = all of them).
+struct WeaponResult {
+    int hits = 0;
+    std::string name;            // "perfect", "great", ... (the log and the editor)
+    float damage = 1.0f;         // times the hit's damage
+    std::string fx;              // replaces the level's hit effect ("" = the level's)
+    std::string anim;            // the player's clip for it ("" = attack)
+    std::string sound;           // "" = the usual
+    int stunMs = 0;              // the monster stops this long
+    int pushMs = 0;              // its attack clock goes back this much
+    float breakAdd = 0.0f;       // more on its break gauge (13 §6.4)
+};
+
 struct WeaponPlay {
     std::string id;                       // an items.json weapon id, "unarmed", or "default"
     std::vector<MissBackRule> missBack;   // sorted by lv
@@ -53,6 +67,8 @@ struct WeaponPlay {
     int hitWindowMs = 140;                // ...but never shorter than this in time (the marker's speed; combo_play.h)
     int lateMs = 80;                      // a tap this long after the marker passed a point still hits it
     std::vector<WeaponFx> fx;             // sorted by lv; empty: the "default" entry's
+    std::vector<WeaponResult> results;    // by points matched (13 §4.2); empty: the "default" entry's, else none
+    std::string pace;                     // "cooldown" / "stamina": this weapon's pace ("" = the battle's; 13 §6.3)
 };
 
 struct WeaponPlayTable {
@@ -76,6 +92,9 @@ int weaponMaxLevel(const WeaponPlay& w);
 
 // The battle particles for a weapon level: the highest fx entry at or below it (null: none; below every entry: the first).
 const WeaponFx* weaponFxEntry(const WeaponPlay& w, int weaponLevel);
+
+// The result row for a combo that matched `hits` of `points` (failed: none); null when no row is reached.
+const WeaponResult* weaponResultFor(const WeaponPlay& w, int hits, int points, bool failed);
 
 // The rule for a weapon level: how many points a miss goes back (-1: to the start).
 int missBackPoints(const WeaponPlay& w, int weaponLevel);

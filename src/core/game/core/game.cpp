@@ -292,18 +292,11 @@ void Game::update(int dtMs) {
         }
         stepBar(cs.defBar, toms::effectiveDefenseBar(equipped_, equipmentDefs_));
 
-        // each monster standing keeps its own clock (docs/gameplay/13 §4.6); all wait for a running combo
-        if (cs.active && !cs.combo.running()) {
-            for (size_t i = 0; i < cs.foes.size() && cs.active; i++) {
-                CombatState::Foe& f = cs.foes[i];
-                if (f.down()) continue;
-                f.clockMs += dtMs;
-                if (f.clockMs >= std::max(500, f.enemy.atkIntervalMs)) {
-                    f.clockMs = 0;
-                    resolveEnemyClockFire((int)i);
-                }
-            }
-        }
+        // stamina refills while no attack runs (the stamina pace, docs/gameplay/13 §6.3)
+        if (cs.pace == toms::Pace::Stamina && !cs.combo.running())
+            cs.stamina = std::min((float)paceSettings_.staminaMax, cs.stamina + paceSettings_.staminaRegenPerS * dtMs / 1000.0f);
+        // each monster standing keeps its own clock to its next move (docs/gameplay/13 §4.6, §6.1)
+        if (cs.active) stepFoes(dtMs);
     }
     // The weapon test arena: when a fight is over (a win dismissed, a loss shown), the next one starts.
     if (arena_.on && !cs.active && !cs.won && cs.resultPauseMs <= 0 && !title_.isOpen()) {

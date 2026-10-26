@@ -17,7 +17,12 @@
     "A weapon without fx uses the default entry's.",
     "hitWindowMs: the window is never shorter than this in time, so a faster (charged) marker keeps it; lateMs: a tap",
     "this long after the marker passed a point still counts (touch delay). Both default to 140 / 80 (the owner 2026-10-24:",
-    "the timing was too hard); a window is never more than 45% of the gap between two points."
+    "the timing was too hard); a window is never more than 45% of the gap between two points.",
+    "results (docs/gameplay/13 §4.2, the owner 2026-10-25): what an attack does by how many points it matched; the highest",
+    "row reached applies (hits: a number, or \"all\" = every point of the level). damage: times the hit; fx: replaces the",
+    "level's hit effect; anim: the player's clip; sound; stunMs: the monster stops; pushMs: its attack clock goes back;",
+    "breakAdd: more on its break gauge. A weapon without results uses the default entry's.",
+    "pace: \"cooldown\" or \"stamina\" for this weapon (empty: data/battle.json's; 13 §6.3)."
   ],
   "default": {
     "missBack": [
@@ -119,7 +124,16 @@
       }
     ],
     "hitWindowMs": 140,
-    "lateMs": 80
+    "lateMs": 80,
+    "results": [
+      {
+        "hits": "all",
+        "name": "perfect",
+        "damage": 1.2,
+        "stunMs": 500,
+        "breakAdd": 1
+      }
+    ]
   },
   "unarmed": {
     "missBack": [

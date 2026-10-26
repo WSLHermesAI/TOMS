@@ -16,26 +16,37 @@
          their layout each frame), or their still pictures fill them -->
     <div id="player" class="fighter"><img data-if="!battle.player_anim" data-attr-sprite="battle.player_sprite"/></div>
     <!-- damage numbers: they rise over the fighter that was hit (UiPopup) -->
-    <div class="popup" data-for="p : battle.popups" data-class-big="p.kind == 1" data-class-guard="p.kind == 2"
-         data-style-left="p.x + 'px'" data-style-top="p.y + 'px'" data-style-opacity="p.opacity">{{p.text}}</div>
+    <!-- (each data-for sits on a wrapper, its bindings on the element inside: when a list shrinks, RmlUi removes the
+         extra rows before it reads them -- see player.rml) -->
+    <div data-for="p : battle.popups"><div class="popup" data-class-big="p.kind == 1" data-class-guard="p.kind == 2"
+         data-style-left="p.x + 'px'" data-style-top="p.y + 'px'" data-style-opacity="p.opacity">{{p.text}}</div></div>
 
     <div id="player-hp" class="hp"><div class="fill-bar good" data-style-width="battle.player_hp_pct + '%'"></div></div>
     <div id="player-hp-text" class="hp-text">{{battle.player_hp_text}}</div>
     <!-- the monsters, one to three (docs/gameplay/13 §4.6): each its box, HP and name; a tap makes it the target -->
-    <div class="foe" data-for="f, i : battle.foes" data-class-f1="i == 1" data-class-f2="i == 2"
+    <div data-for="f, i : battle.foes"><div class="foe" data-class-f1="i == 1" data-class-f2="i == 2"
          data-class-n1="battle.foes.size == 1" data-class-n2="battle.foes.size == 2" data-class-n3="battle.foes.size == 3"
          data-class-down="f.down" data-event-click="act('battle_target', i)">
-        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/></div>
-        <div class="mark" data-if="f.target"></div>
-        <div class="fhp"><div class="fill-bar bad" data-style-width="f.hp_pct + '%'"></div></div>
+        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/><div class="mark" data-if="f.target"></div></div>
+        <!-- its next move and the time left (docs/gameplay/13 §6.1) -->
+        <div class="intent" data-if="f.intent != ''" data-class-heavy="f.intent_kind == 'heavy'"
+             data-class-jabs="f.intent_kind == 'jabs'" data-class-spell="f.intent_kind == 'spell'"
+             data-class-guard="f.intent_kind == 'guard'" data-class-stagger="f.intent_kind == 'stagger'"
+             data-class-broken="f.intent_kind == 'broken'">
+            <div class="itext">{{f.intent}}</div>
+            <div class="ibar"><div class="ifill" data-style-width="f.intent_pct + '%'"></div></div>
+        </div>
+        <div class="fhp"><div class="fill-bar bad" data-style-width="f.hp_pct + '%'"></div>
+            <div class="fbreak" data-style-width="f.break_pct + '%'"></div></div>
         <div class="ftext one">{{f.hp_text}}</div>
         <div class="ftext two">{{f.name}}<br/>{{f.hp_line}}</div>
-    </div>
+    </div></div>
     <div id="log">{{battle.log}}</div>
 
     <div data-if="battle.active">
         <div id="clock-label">{{battle.clock_label}}</div>
-        <div id="clock"><div class="fill-bar clock" data-style-width="battle.clock_pct + '%'"></div></div>
+        <div id="clock"><div class="fill-bar clock" data-class-stamina="battle.stamina_pace"
+             data-style-width="battle.clock_pct + '%'"></div></div>
 
         <div id="attack" class="column">
             <!-- Battle v3 (docs/gameplay/07 phase 1): the charge, then the track with the weapon level's points -->
@@ -43,12 +54,12 @@
             <div class="combo">
                 <div class="charge"><div class="charge-fill" data-style-height="battle.combo.charge_pct + '%'"></div></div>
                 <div class="track" data-class-waiting="battle.combo.waiting">
-                    <div class="pt" data-for="q : battle.combo.points" data-class-hit="q.hit" data-class-near="q.near" data-style-left="q.pos + '%'"></div>
+                    <div data-for="q : battle.combo.points"><div class="pt" data-class-hit="q.hit" data-class-near="q.near" data-style-left="q.pos + '%'"></div></div>
                     <div class="bar-dim" data-visible="battle.combo.cooling"></div>
                     <div class="marker" data-visible="battle.combo.running" data-style-left="battle.combo.marker + '%'"></div>
                 </div>
             </div>
-            <div class="action btn" data-class-cooling="battle.combo.cooling"
+            <div class="action btn" data-class-cooling="battle.combo.cooling || battle.attack_short"
                  data-event-click="act('battle_attack')">{{battle.combo.button_label}}</div>
             <div class="note">{{battle.combo.level_text}}</div>
             <div class="note crit" data-if="battle.crit_armed">{{battle.crit_hint}}</div>
@@ -67,7 +78,7 @@
                 <div class="bar-dim" data-visible="battle.defense.cooling"></div>
                 <div class="marker" data-style-left="battle.defense.marker + '%'"></div>
             </div>
-            <div class="action btn" data-class-cooling="battle.defense.cooling"
+            <div class="action btn" data-class-cooling="battle.defense.cooling || battle.guard_short"
                  data-event-click="act('battle_defend')">{{battle.defense.button_label}}</div>
             <div class="note" data-class-shield="battle.shield_armed">{{battle.shield_text}}</div>
         </div>

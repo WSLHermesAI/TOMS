@@ -1,0 +1,6 @@
+{
+  "_comment": "A spell broken (docs/gameplay/13 §6.2): the wraith charges a spell; battle_bow's three taps match 3 points (2 needed), which breaks it and it chooses its next move.",
+  "include": ["../battle_bow/scenario.json"],
+  "battle": { "enemy": "wraith", "hp": 9999, "atk_interval_ms": 60000, "moves": ["spell"] },
+  "expect": { "battleAnim": "attack", "battleEvents": { "spellBreak": 1, "combo": 1 } }
+}
