@@ -1,0 +1,61 @@
+{
+  "_comment": [
+    "Event kinds: names and editor colours (edited in the event editor's Kinds tab)."
+  ],
+  "relic": {
+    "name": {
+      "zh_TW": "遺物",
+      "en": "Relic"
+    },
+    "color": "#e0b44c"
+  },
+  "whisper": {
+    "name": {
+      "zh_TW": "低語",
+      "en": "Whisper"
+    },
+    "color": "#a98bff"
+  },
+  "cache": {
+    "name": {
+      "zh_TW": "補給",
+      "en": "Cache"
+    },
+    "color": "#3fc2b5"
+  },
+  "trap": {
+    "name": {
+      "zh_TW": "陷阱",
+      "en": "Trap"
+    },
+    "color": "#ff6b6b"
+  },
+  "rescue": {
+    "name": {
+      "zh_TW": "救援",
+      "en": "Rescue"
+    },
+    "color": "#7bd86a"
+  },
+  "merchant_echo": {
+    "name": {
+      "zh_TW": "商人殘影",
+      "en": "Merchant echo"
+    },
+    "color": "#ff8fc7"
+  },
+  "memory_shard": {
+    "name": {
+      "zh_TW": "記憶碎片",
+      "en": "Memory shard"
+    },
+    "color": "#74c6ff"
+  },
+  "打倒指定怪獸": {
+    "name": {
+      "zh_TW": "打倒指定怪獸",
+      "en": "Defeat Monster"
+    },
+    "color": "#8b929c"
+  }
+}

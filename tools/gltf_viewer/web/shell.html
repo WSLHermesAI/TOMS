@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>TOMS glTF Viewer</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #05050a; }
+    /* The page sizes the canvas (full viewport) and SDL follows it (as src/game/web/shell.html). */
+    #canvas { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh;
+              display: block; touch-action: none; outline: none; }
+    #toms-status { position: fixed; left: 0; right: 0; top: 45%; text-align: center; color: #e8e8f0;
+                   font: 600 18px/1.6 system-ui, -apple-system, sans-serif; pointer-events: none; }
+    #toms-error { display: none; position: fixed; left: 8%; right: 8%; top: 20%; padding: 20px; z-index: 100;
+                  background: #1b1020; color: #ffd9d9; border: 1px solid #a05; border-radius: 8px;
+                  font: 15px/1.6 system-ui, sans-serif; white-space: pre-wrap; }
+    #toms-drop { display: none; position: fixed; inset: 12px; z-index: 50; border: 3px dashed #8ab4ff; border-radius: 12px;
+                 background: rgba(40, 70, 130, 0.25); pointer-events: none; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+  <div id="toms-status">Loading…</div>
+  <div id="toms-error"></div>
+  <div id="toms-drop"></div>
+  <script>
+    function tomsShowError(title, text) {
+      var e = document.getElementById('toms-error');
+      e.textContent = title + '\n\n' + text + '\n\nOpen the browser console (F12) for details.';
+      e.style.display = 'block';
+      document.getElementById('toms-status').style.display = 'none';
+    }
+    var Module = {
+      canvas: document.getElementById('canvas'),
+      print: function (t) { console.log(t); },
+      printErr: function (t) { console.warn(t); },
+      setStatus: function (t) {
+        var s = document.getElementById('toms-status');
+        if (!t) { s.style.display = 'none'; return; }
+        var m = t.match(/\((\d+(\.\d+)?)\/(\d+)\)/);
+        s.textContent = m ? 'Loading… ' + Math.round(100 * m[1] / m[3]) + '%' : t;
+      },
+      onRuntimeInitialized: function () { window.tomsReady = true; document.getElementById('toms-status').style.display = 'none'; },
+      onAbort: function (what) { tomsShowError('The glTF viewer stopped', String(what || 'unknown error')); }
+    };
+    window.onerror = function (msg) { tomsShowError('Script error', String(msg)); };
+
+    // Opening files. A .gltf usually comes with a .bin and images next to it, so every file of one pick (or one
+    // drop) goes into the same new folder, /upload/<n>/, and the viewer opens the .gltf (else the .glb, else an .hdr:
+    // the environment picture) among them.
+    // Files in sub-folders of the .gltf (textures/a.png) are not found: pick or drop them, they land flat.
+    var tomsUploads = 0;
+    function tomsOpenFiles(files) {
+      files = Array.prototype.slice.call(files || []);
+      if (!files.length || !window.tomsReady) return;
+      var main = files.find(function (f) { return /\.gltf$/i.test(f.name); }) ||
+                 files.find(function (f) { return /\.glb$/i.test(f.name); }) ||
+                 files.find(function (f) { return /\.hdr$/i.test(f.name); });
+      if (!main) {
+        tomsShowError('Not a glTF file', 'Pick or drop a .gltf (with its .bin and images), a .glb, or an .hdr environment.');
+        return;
+      }
+      document.getElementById('toms-error').style.display = 'none';
+      var dir = '/upload/' + (tomsUploads++);
+      Promise.all(files.map(function (f) { return f.arrayBuffer(); })).then(function (bufs) {
+        FS.mkdirTree(dir);
+        files.forEach(function (f, i) { FS.writeFile(dir + '/' + f.name, new Uint8Array(bufs[i])); });
+        Module.ccall('jsOpenFile', null, ['string'], [dir + '/' + main.name]);
+      }).catch(function (e) { tomsShowError('The files could not be read', String(e)); });
+    }
+    // The panel's Open... button (tools/gltf_viewer/main.cpp).
+    window.tomsPickFiles = function () {
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.multiple = true;
+      input.accept = '.gltf,.glb,.bin,.png,.jpg,.jpeg,.webp,.ktx2,.hdr';
+      input.onchange = function () { tomsOpenFiles(input.files); };
+      input.click();
+    };
+    // Drag and drop: caught here, before SDL's own handler on the canvas (that one puts each file in a folder
+    // of its own, so a .gltf would not find its .bin).
+    var tomsDrop = document.getElementById('toms-drop');
+    document.addEventListener('dragover', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      tomsDrop.style.display = 'block';
+    }, true);
+    document.addEventListener('dragleave', function (e) {
+      if (!e.relatedTarget) tomsDrop.style.display = 'none';
+    }, true);
+    document.addEventListener('drop', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      tomsDrop.style.display = 'none';
+      if (e.dataTransfer) tomsOpenFiles(e.dataTransfer.files);
+    }, true);
+  </script>
+  {{{ SCRIPT }}}
+</body>
+</html>

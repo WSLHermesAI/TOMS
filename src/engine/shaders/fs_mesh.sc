@@ -3,17 +3,21 @@ $input v_worldPos, v_normal, v_tangent, v_texcoord0, v_color0
 // glTF metallic-roughness PBR (gltf_renderer.cpp, docs/engine/08_GLTF.md):
 //   base colour x vertex colour x texture, metal/rough texture (B = metal, G = rough), normal map
 //   (with the file's tangents, else a tangent frame from screen-space derivatives), occlusion (R),
-//   emissive; alpha mask (discard) / blend; double-sided back faces lit from behind; unlit.
+//   emissive; alpha mask (discard) / blend; double-sided back faces lit from behind; unlit;
+//   KHR_materials_specular / _ior (a dielectric's F0 and F90).
 //   Light: up to 4 directional / point / spot lights (GGX, Smith, Schlick; point and spot fall off
 //   with 1/d^2 and their range, spots between their cones), each with an optional shadow map in the
 //   shadow atlas (3x3 hardware PCF; a point light has 6 tiles, one per cube face). A hemisphere
-//   ambient (sky / ground) with an analytic environment BRDF. Then exposure, ACES tone mapping, sRGB.
+//   ambient (sky / ground) with an analytic environment BRDF -- or, with an environment picture (image-based lighting,
+//   gltf_environment.h), its prefiltered cubemap reflected and its 9 harmonics as the diffuse light. Then exposure,
+//   ACES tone mapping, sRGB.
 //
 //   OpenGL ES / WebGL2 (BGFX_SHADER_LANGUAGE_ESSL): no shadow lookups. WebGL on Windows runs through
 //   ANGLE -> Direct3D, which cannot link this shader with them (the dynamically indexed shadow matrix
 //   array): the link fails with an empty log and the game stopped (2026-10-05). GltfRenderer reports
 //   no shadow support on that backend, so nothing asks for them there.
 #include <bgfx_shader.sh>
+#include "env_common.sh"
 
 SAMPLER2D(s_baseColor, 0);
 SAMPLER2D(s_metalRough, 1);
@@ -21,6 +25,8 @@ SAMPLER2D(s_normalMap, 2);
 SAMPLER2D(s_occlusion, 3);
 SAMPLER2D(s_emissive, 4);
 SAMPLER2DSHADOW(s_shadowMap, 5);
+SAMPLER2D(s_specular, 7);        // (6: vs_mesh_animtex's s_animTex)
+SAMPLER2D(s_specularColor, 8);
 
 uniform vec4 u_baseColor;        // factor (linear)
 uniform vec4 u_pbr;              // metallic, roughness, normal scale, occlusion strength
@@ -39,7 +45,9 @@ uniform mat4 u_shadowMtx[24];    // world -> shadow atlas (uv, depth) per tile
 uniform vec4 u_shadowRect[24];   // the tile's uv rectangle (u0, v0, u1, v1)
 uniform vec4 u_skyColor;         // hemisphere top rgb, 1 = write sRGB
 uniform vec4 u_groundColor;      // hemisphere bottom rgb, 1 = ACES tone mapping
-uniform vec4 u_matParams;        // double-sided, transmission, -, -
+uniform vec4 u_matParams;        // double-sided, transmission, specular texture, specular colour texture (0 / 1 / 2)
+uniform vec4 u_envSH[9];         // the environment's diffuse light (gltf_environment.h evalSH)
+uniform vec4 u_specular;         // KHR_materials_specular: dielectric F0 colour (ior's F0 x colour factor), specular factor
 
 #define PI 3.14159265
 
@@ -70,17 +78,17 @@ float V_SmithGGX(float NoV, float NoL, float a)
     return 0.5 / (gv + gl + 1e-5);
 }
 
-vec3 F_Schlick(vec3 f0, float VoH) { return f0 + (vec3_splat(1.0) - f0) * pow(1.0 - VoH, 5.0); }
+vec3 F_Schlick(vec3 f0, vec3 f90, float VoH) { return f0 + (f90 - f0) * pow(1.0 - VoH, 5.0); }
 
 // Karis' analytic approximation of the split-sum environment BRDF (mobile UE4).
-vec3 envBRDF(vec3 f0, float rough, float NoV)
+vec3 envBRDF(vec3 f0, vec3 f90, float rough, float NoV)
 {
     vec4 c0 = vec4(-1.0, -0.0275, -0.572, 0.022);
     vec4 c1 = vec4(1.0, 0.0425, 1.04, -0.04);
     vec4 r = rough * c0 + c1;
     float a004 = min(r.x * r.x, exp2(-9.28 * NoV)) * r.x + r.y;
     vec2 ab = vec2(-1.04, 1.04) * a004 + r.zw;
-    return f0 * ab.x + ab.y;
+    return f0 * ab.x + f90 * ab.y;
 }
 
 vec3 hemisphere(vec3 dir) { return mix(u_groundColor.rgb, u_skyColor.rgb, dir.y * 0.5 + 0.5); }
@@ -96,16 +104,16 @@ vec3 environment(vec3 dir, float rough)
     return mix(sharp, hemisphere(dir), rough);
 }
 
-vec3 directLight(vec3 L, vec3 radiance, vec3 N, vec3 V, vec3 diffuse, vec3 f0, float a)
+vec3 directLight(vec3 L, vec3 radiance, vec3 N, vec3 V, vec3 diffuse, vec3 f0, vec3 f90, float a)
 {
     vec3 H = normalize(L + V);
     float NoL = clamp(dot(N, L), 0.0, 1.0);
     float NoV = clamp(abs(dot(N, V)), 1e-4, 1.0);
     float NoH = clamp(dot(N, H), 0.0, 1.0);
     float VoH = clamp(dot(V, H), 0.0, 1.0);
-    vec3 F = F_Schlick(f0, VoH);
+    vec3 F = F_Schlick(f0, f90, VoH);
     vec3 spec = D_GGX(NoH, a) * V_SmithGGX(NoV, NoL, a) * F;
-    vec3 diff = (vec3_splat(1.0) - F) * diffuse / PI;
+    vec3 diff = (1.0 - max(max(F.r, F.g), F.b)) * diffuse / PI;   // KHR_materials_specular: the strongest channel
     return (diff + spec) * radiance * NoL;
 }
 
@@ -133,7 +141,7 @@ float shadowAt(vec3 worldPos, int tile, float bias)
 
 // One light's light at this point, with its shadow. Called once per light with constant array indices
 // (main()), which keeps the program simple for the WebGL path too.
-vec3 shadeLight(vec4 lp, vec4 ld, vec4 lc, vec4 ls, vec3 worldPos, vec3 Ng, vec3 N, vec3 V, vec3 diffuse, vec3 f0, float a,
+vec3 shadeLight(vec4 lp, vec4 ld, vec4 lc, vec4 ls, vec3 worldPos, vec3 Ng, vec3 N, vec3 V, vec3 diffuse, vec3 f0, vec3 f90, float a,
                 inout float firstShadow)
 {
     vec3 L = -ld.xyz;
@@ -185,7 +193,7 @@ vec3 shadeLight(vec4 lp, vec4 ld, vec4 lc, vec4 ls, vec3 worldPos, vec3 Ng, vec3
         if (firstShadow > 1.5) firstShadow = lit;
     }
 #endif
-    return directLight(L, lc.rgb * (att * lit), N, V, diffuse, f0, a);
+    return directLight(L, lc.rgb * (att * lit), N, V, diffuse, f0, f90, a);
 }
 
 vec3 aces(vec3 x)
@@ -259,25 +267,49 @@ void main()
 
     float transmission = u_matParams.y;
     vec3 diffuse = base.rgb * (1.0 - metallic) * (1.0 - transmission);   // glass: light goes through
-    vec3 f0 = mix(vec3_splat(0.04), base.rgb, metallic);
+    // KHR_materials_specular: a dielectric reflects min(F0 colour x texture rgb, 1) x specular at normal incidence and
+    // specular at grazing angles (without the extension: 0.04 and 1); metal reflects its base colour, then white.
+    float specular = u_specular.w;
+    if (u_matParams.z > 0.5) specular *= texture2D(s_specular, uvFor(v_texcoord0, u_matParams.z)).a;
+    vec3 specColor = u_specular.rgb;
+    if (u_matParams.w > 0.5) specColor *= texture2D(s_specularColor, uvFor(v_texcoord0, u_matParams.w)).rgb;   // sRGB: linear
+    vec3 f0 = mix(min(specColor, vec3_splat(1.0)) * specular, base.rgb, metallic);
+    vec3 f90 = vec3_splat(mix(specular, 1.0, metallic));
 
     // The lights (up to 4; unrolled, see shadeLight()).
     vec3 color = vec3_splat(0.0);
     float firstShadow = 2.0;   // the first shadowed light's term (debug view 5)
     vec3 Ng = normalize(v_normal);   // the surface (not the normal map) for the shadow offset
     if (u_lightCount.x > 0.5)
-        color += shadeLight(u_lightPos[0], u_lightDirs[0], u_lightColors[0], u_lightSpot[0], v_worldPos, Ng, N, V, diffuse, f0, a, firstShadow);
+        color += shadeLight(u_lightPos[0], u_lightDirs[0], u_lightColors[0], u_lightSpot[0], v_worldPos, Ng, N, V, diffuse, f0, f90, a, firstShadow);
     if (u_lightCount.x > 1.5)
-        color += shadeLight(u_lightPos[1], u_lightDirs[1], u_lightColors[1], u_lightSpot[1], v_worldPos, Ng, N, V, diffuse, f0, a, firstShadow);
+        color += shadeLight(u_lightPos[1], u_lightDirs[1], u_lightColors[1], u_lightSpot[1], v_worldPos, Ng, N, V, diffuse, f0, f90, a, firstShadow);
     if (u_lightCount.x > 2.5)
-        color += shadeLight(u_lightPos[2], u_lightDirs[2], u_lightColors[2], u_lightSpot[2], v_worldPos, Ng, N, V, diffuse, f0, a, firstShadow);
+        color += shadeLight(u_lightPos[2], u_lightDirs[2], u_lightColors[2], u_lightSpot[2], v_worldPos, Ng, N, V, diffuse, f0, f90, a, firstShadow);
     if (u_lightCount.x > 3.5)
-        color += shadeLight(u_lightPos[3], u_lightDirs[3], u_lightColors[3], u_lightSpot[3], v_worldPos, Ng, N, V, diffuse, f0, a, firstShadow);
+        color += shadeLight(u_lightPos[3], u_lightDirs[3], u_lightColors[3], u_lightSpot[3], v_worldPos, Ng, N, V, diffuse, f0, f90, a, firstShadow);
 
-    // Ambient: hemisphere irradiance + a reflection of the same hemisphere.
+    // Ambient: hemisphere irradiance + a reflection of the same hemisphere; or the environment picture's.
     float NoV = clamp(abs(dot(N, V)), 1e-4, 1.0);
     vec3 R = reflect(-V, N);
-    vec3 ambient = diffuse * hemisphere(N) + envBRDF(f0, rough, NoV) * environment(R, rough);
+    vec3 irradiance;
+    vec3 reflected;
+    if (u_envParams.x > 0.5)
+    {
+        vec3 n = envDir(N);
+        irradiance = u_envSH[0].rgb * 0.282095
+                   + (u_envSH[1].rgb * n.y + u_envSH[2].rgb * n.z + u_envSH[3].rgb * n.x) * 0.488603
+                   + (u_envSH[4].rgb * (n.x * n.y) + u_envSH[5].rgb * (n.y * n.z) + u_envSH[7].rgb * (n.x * n.z)) * 1.092548
+                   + u_envSH[6].rgb * (0.315392 * (3.0 * n.z * n.z - 1.0)) + u_envSH[8].rgb * (0.546274 * (n.x * n.x - n.y * n.y));
+        irradiance = max(irradiance, vec3_splat(0.0)) * u_envParams.w;
+        reflected = envSample(R, rough * u_envParams.y);
+    }
+    else
+    {
+        irradiance = hemisphere(N);
+        reflected = environment(R, rough);
+    }
+    vec3 ambient = diffuse * irradiance + envBRDF(f0, f90, rough, NoV) * reflected;
     float ao = 1.0;
     if (u_texSet.w > 0.5) ao = mix(1.0, texture2D(s_occlusion, uvFor(v_texcoord0, u_texSet.w)).r, u_pbr.w);
     color += ambient * u_lightCount.y * ao;

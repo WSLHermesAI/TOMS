@@ -30,6 +30,10 @@
 //     --pick=<x>,<y>                        click-pick at that pixel of the window after the first frame (tests)
 //     --drag=<x0>,<y0>,<x1>,<y1>            then press on a handle at x0,y0, drag to x1,y1, release; pixels from the
 //                                           selected node's origin on screen (tests)
+//     --env=<file.hdr|none>                 the environment picture the models reflect and are lit by (image-based
+//                                           lighting, gltf_environment.h); default: env.default in resources.json
+//     --env-rotation=<deg> --env-intensity=<x>   turn it about +Y, scale it
+//     --background=0|1 --background-blur=<0..1>  show it behind the model (default 1, blurred 0.3)
 //
 // Mouse: left drag orbits, right / middle drag pans, wheel zooms. Keys: Space play/pause, F frame,
 // G grid, K skeleton, B bounds, W wireframe, R auto-rotate, H panel, 1..9 solo an animation, Esc quit;
@@ -40,11 +44,19 @@
 // Node inspector edits its translation, rotation (degrees) and scale; in the view, drag the handles: T move (axis
 // arrows, the centre square moves in the view plane), E rotate (the rings), S scale (axis boxes; the centre square
 // scales evenly). Delete resets the selected node. Edits replace the node's animation and restart the physics.
+//
+// The web build (tools\build_gltf_web.cmd, WebGL2): the options come from the page's URL (?file=morph_cube.gltf&anim=breathe,
+// a bare name is one of the test models in /models = tests/gltf); Open... and drag-and-drop go through web/shell.html,
+// which writes the chosen files (a .gltf with its .bin and images) into one folder of the in-memory file system.
 #include "bgfx_host.h"
+#include "color_space.h"   // TOMS_GAMMA_SPACE: the web has no sRGB backbuffer
+#include "gltf_environment.h"
 #include "gltf_model.h"
 #include "gltf_physics.h"
 #include "gltf_renderer.h"
 #include "imgui_bgfx.h"
+#include "res_keys.h"   // toms::key::kEnvDefault: the default environment, by its key
+#include "resource.h"
 
 #include <SDL3/SDL.h>
 #include <bgfx/bgfx.h>
@@ -52,7 +64,9 @@
 #include <imgui.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cfloat>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -66,6 +80,10 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <shellapi.h>   // CommandLineToArgvW (utf8Args)
+#endif
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <filesystem>
 #endif
 
 using namespace toms;
@@ -92,6 +110,9 @@ struct Args {
     std::string select, tool;
     float pickX = -1.0f, pickY = -1.0f;
     glm::vec4 drag{-1.0f};
+    std::string env;                     // --env: an .hdr, "none", or "" = the default
+    float envRotation = 0.0f, envIntensity = 1.0f, backgroundBlur = 0.3f;
+    int background = 1;
 };
 
 const char* value(const std::string& s, const char* key) {
@@ -133,6 +154,11 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--tool=")) a.tool = v;
         else if (const char* v = value(s, "--pick=")) std::sscanf(v, "%f,%f", &a.pickX, &a.pickY);
         else if (const char* v = value(s, "--drag=")) std::sscanf(v, "%f,%f,%f,%f", &a.drag.x, &a.drag.y, &a.drag.z, &a.drag.w);
+        else if (const char* v = value(s, "--env=")) a.env = v;
+        else if (const char* v = value(s, "--env-rotation=")) a.envRotation = (float)std::atof(v);
+        else if (const char* v = value(s, "--env-intensity=")) a.envIntensity = (float)std::atof(v);
+        else if (const char* v = value(s, "--background=")) a.background = std::atoi(v);
+        else if (const char* v = value(s, "--background-blur=")) a.backgroundBlur = (float)std::atof(v);
         else if (!s.empty() && s[0] != '-') a.file = s;
     }
     return a;
@@ -161,6 +187,7 @@ struct Viewer {
     std::string path, error;
     std::mutex pendingLock;
     std::string pending;   // a file chosen in the open dialog (its callback may run on another thread)
+    std::vector<std::string> testModels;   // web: the names in /models (tests/gltf), for the panel's list
 
     // Camera (orbit around target).
     glm::vec3 target{0.0f};
@@ -204,6 +231,15 @@ struct Viewer {
     gltf::Model groundModel;
     gltf::Pose groundPose;
     std::shared_ptr<GltfRenderer::GpuModel> groundGpu;
+    // Image-based lighting (gltf_environment.h): an HDR picture of a room that the models reflect and are lit by,
+    // instead of the plain sky / ground.
+    bool envOn = true;
+    std::string envName, envError;       // the picture's file name; why the last one did not load
+    float envRotation = 0.0f;            // degrees about +Y
+    float envIntensity = 1.0f;
+    bool envBackground = true;
+    float envBlur = 0.3f;
+    bool envActive() const { return envOn && renderer.hasEnvironment(); }
     // The lights' gizmos, solid shapes in each light's colour (with the panel only: never in --no-ui screenshots):
     // a glowing ball at a point / spot light with a line down to a mark on the floor under it; a spot light's cones
     // (outer and inner) reaching the floor, their base the lit spot; a directional light's sun and arrow at the
@@ -697,6 +733,40 @@ struct Viewer {
         return d;
     }
 
+    // An .hdr: prefiltered on the CPU (about a second for the 1K default), then on the GPU.
+    bool loadEnvironment(const std::string& file) {
+        const auto t0 = std::chrono::steady_clock::now();
+        gltf::Equirect picture;
+        std::string err;
+        if (!gltf::loadEquirect(file, picture, &err)) {
+            envError = file + ": " + err;
+            std::fprintf(stderr, "[gltf] %s\n", envError.c_str());
+            return false;
+        }
+        if (!renderer.setEnvironment(gltf::prefilterEnvironment(picture, 256, 48), &err)) {
+            envError = err;
+            return false;
+        }
+        const size_t slash = file.find_last_of("/\\");
+        envName = slash == std::string::npos ? file : file.substr(slash + 1);
+        envError.clear();
+        std::fprintf(stderr, "[gltf] environment %s: %d x %d, prefiltered in %.0f ms\n", envName.c_str(), picture.width,
+                     picture.height, std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count());
+        return true;
+    }
+
+    // A file from Open..., a drop or the web page: an .hdr is the environment, anything else a model.
+    void openFile(const std::string& file) {
+        const size_t dot = file.find_last_of('.');
+        std::string ext = dot == std::string::npos ? std::string() : file.substr(dot + 1);
+        for (char& c : ext) c = (char)std::tolower((unsigned char)c);
+        if (ext == "hdr") {
+            if (loadEnvironment(file)) envOn = true;
+        } else {
+            load(file);
+        }
+    }
+
     bool load(const std::string& file) {
         auto m = std::make_unique<gltf::Model>();
         std::string err;
@@ -1118,7 +1188,7 @@ struct Viewer {
         switch (e.type) {
         case SDL_EVENT_QUIT: quit = true; break;
         case SDL_EVENT_DROP_FILE:
-            if (e.drop.data) load(e.drop.data);
+            if (e.drop.data) openFile(e.drop.data);
             break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
             if (uiMouse) break;
@@ -1429,8 +1499,20 @@ struct Viewer {
         ImGui::SetNextWindowBgAlpha(0.88f);
         ImGui::Begin("glTF Viewer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
+#ifdef __EMSCRIPTEN__
+        if (ImGui::Button("Open...")) EM_ASM({ if (window.tomsPickFiles) tomsPickFiles(); });   // web/shell.html
+        if (!testModels.empty()) {
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.5f);
+            if (ImGui::BeginCombo("##test", "Test models")) {
+                for (const std::string& f : testModels)
+                    if (ImGui::Selectable(f.c_str(), path == "/models/" + f)) load("/models/" + f);
+                ImGui::EndCombo();
+            }
+        }
+#else
         if (ImGui::Button("Open...")) {
-            static const SDL_DialogFileFilter filters[] = {{"glTF 2.0", "gltf;glb"}};
+            static const SDL_DialogFileFilter filters[] = {{"glTF 2.0 / HDR environment", "gltf;glb;hdr"}};
             SDL_ShowOpenFileDialog(
                 [](void* user, const char* const* list, int) {
                     if (!list || !list[0]) return;
@@ -1440,9 +1522,10 @@ struct Viewer {
                 },
                 this, window, filters, 1, nullptr, false);
         }
+#endif
         ImGui::SameLine();
         if (ImGui::Button("Frame (F)")) frameScene();
-        ImGui::TextDisabled("or drop a .gltf / .glb on the window");
+        ImGui::TextDisabled("or drop a .gltf / .glb (or an .hdr environment)");
         if (!error.empty()) ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "%s", error.c_str());
         if (!model) {
             ImGui::TextWrapped("No model. Drop a .gltf or .glb on the window.");
@@ -1693,6 +1776,7 @@ struct Viewer {
             }
             ImGui::Separator();
             ImGui::SliderFloat("exposure", &frame.exposure, 0.1f, 4.0f);
+            ImGui::BeginDisabled(envActive());   // the environment lights the scene instead (its intensity: Environment)
             ImGui::SliderFloat(fileLightsOn() ? "ambient (file lights)" : "ambient", fileLightsOn() ? &ambientFile : &ambientRig,
                                0.0f, 3.0f);
             if (ImGui::IsItemHovered())
@@ -1701,7 +1785,29 @@ struct Viewer {
             ImGui::ColorEdit3("sky", &frame.sky.x, ImGuiColorEditFlags_NoInputs);
             ImGui::SameLine();
             ImGui::ColorEdit3("ground", &frame.ground.x, ImGuiColorEditFlags_NoInputs);
+            ImGui::EndDisabled();
             ImGui::Checkbox("ACES tone mapping", &frame.tonemap);
+        }
+
+        if (ImGui::CollapsingHeader("Environment", ImGuiTreeNodeFlags_DefaultOpen)) {
+            if (renderer.hasEnvironment()) {
+                ImGui::Checkbox("image-based lighting", &envOn);
+                ImGui::SameLine();
+                ImGui::TextDisabled("%s", envName.c_str());
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Open... or drop another .hdr to change it");
+                ImGui::BeginDisabled(!envOn);
+                ImGui::SliderFloat("intensity##env", &envIntensity, 0.0f, 4.0f);
+                ImGui::SliderFloat("rotation##env", &envRotation, -180.0f, 180.0f, "%.0f deg");
+                ImGui::Checkbox("background##env", &envBackground);
+                ImGui::SameLine();
+                ImGui::BeginDisabled(!envBackground);
+                ImGui::SliderFloat("blur##env", &envBlur, 0.0f, 1.0f);
+                ImGui::EndDisabled();
+                ImGui::EndDisabled();
+            } else {
+                ImGui::TextDisabled("None: the plain sky / ground lights the model.");
+            }
+            if (!envError.empty()) ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "%s", envError.c_str());
         }
 
         if (model->physics.any() && ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -1773,7 +1879,7 @@ struct Viewer {
                 std::lock_guard<std::mutex> g(pendingLock);
                 next.swap(pending);
             }
-            if (!next.empty()) load(next);
+            if (!next.empty()) openFile(next);
         }
         int w = 0, h = 0;
         SDL_GetWindowSizeInPixels(window, &w, &h);
@@ -1813,7 +1919,12 @@ struct Viewer {
             simulate(dt);
         }
         frame.lights = frameLights();
-        frame.ambient = fileLightsOn() ? ambientFile : ambientRig;
+        frame.ambient = envActive() ? 1.0f : fileLightsOn() ? ambientFile : ambientRig;   // an environment: its own intensity
+        frame.environment = envOn;
+        frame.environmentIntensity = envIntensity;
+        frame.environmentYaw = glm::radians(envRotation);
+        frame.background = envBackground;
+        frame.backgroundBlur = envBlur;
         // Shadows cover the model and the floor around it (where its shadow falls).
         frame.boundsMin = glm::vec3(sceneMin.x - radius, sceneMin.y, sceneMin.z - radius);
         frame.boundsMax = glm::vec3(sceneMax.x + radius, sceneMax.y, sceneMax.z + radius);
@@ -1842,12 +1953,20 @@ struct Viewer {
             const float zn = std::max(distance - radius * 4.0f, distance * 0.002f);
             frame.proj = GltfRenderer::projection(fov, aspect, zn, distance + radius * 50.0f);
         }
+#if TOMS_GAMMA_SPACE
+        // No sRGB backbuffer (the web: color_space.h): the shader encodes, and so does the clear colour here, which the
+        // desktop's sRGB backbuffer encodes by itself -- otherwise everything is drawn too dark.
+        frame.srgbOut = true;
+        const glm::vec3 clear = glm::pow(glm::max(background, glm::vec3(0.0f)), glm::vec3(1.0f / 2.2f));
+#else
         frame.srgbOut = false;   // the host's backbuffer is sRGB: the GPU encodes
+        const glm::vec3 clear = background;
+#endif
         if (showUi && fbW > 0) {   // centre the model in the part the panel leaves free
             const float panel = std::min(380.0f * uiScale, float(fbW) * 0.34f) + 16.0f * uiScale;
             frame.proj = glm::translate(glm::mat4(1.0f), glm::vec3(-panel / float(fbW), 0.0f, 0.0f)) * frame.proj;
         }
-        renderer.begin(0, frame, (uint32_t)fbW, (uint32_t)fbH, rgbaHex(background));   // views 0 .. kViews - 1
+        renderer.begin(0, frame, (uint32_t)fbW, (uint32_t)fbH, rgbaHex(clear));   // views 0 .. kViews - 1
         if (model && gpu && crowdCount > 0 && animGpu && crowd.size() > 0) {
             if (args.time >= 0.0f && frameNo == 0) crowd.update(args.time);   // --time: freeze the crowd there too
             renderer.drawCrowd(*gpu, *animGpu, crowd);
@@ -1900,6 +2019,18 @@ struct Viewer {
 
 }  // namespace
 
+// assets/media (resources.json): env ASSET_DIR, else the folder baked in at build time; the web page's /assets.
+std::string assetDir() {
+    if (const char* env = std::getenv("ASSET_DIR")) return env;
+#if defined(__EMSCRIPTEN__)
+    return "/assets";
+#elif defined(TOMS_DEFAULT_ASSET_DIR)
+    return TOMS_DEFAULT_ASSET_DIR;
+#else
+    return "assets/media";
+#endif
+}
+
 // The command line as UTF-8. On Windows argv is in the ANSI code page, so a file like "Unicode❤♻Test.glb" came in
 // as "Unicode??Test.glb" and could not be found: read the wide command line instead.
 std::vector<std::string> utf8Args(int argc, char** argv) {
@@ -1918,12 +2049,63 @@ std::vector<std::string> utf8Args(int argc, char** argv) {
     }
 #endif
     for (int i = 0; i < argc; i++) out.push_back(argv[i]);
+#ifdef __EMSCRIPTEN__
+    // The page's URL: ?file=skin_tube.gltf&anim=bend&no-ui -> {"skin_tube.gltf", "--anim=bend", "--no-ui"}
+    // (as src/game/src/main_sdl.cpp urlArgs; the values are taken as they are, not %-decoded).
+    char* q = (char*)EM_ASM_PTR({
+        var s = (typeof location !== 'undefined' && location.search) ? location.search.substring(1) : "";
+        return stringToNewUTF8(s);
+    });
+    const std::string query = q ? q : "";
+    free(q);
+    for (size_t pos = 0; pos < query.size();) {
+        const size_t amp = query.find('&', pos);
+        const std::string kv = query.substr(pos, amp == std::string::npos ? std::string::npos : amp - pos);
+        if (kv.compare(0, 5, "file=") == 0) out.push_back(kv.substr(5));
+        else if (!kv.empty()) out.push_back("--" + kv);
+        if (amp == std::string::npos) break;
+        pos = amp + 1;
+    }
+#endif
     return out;
 }
 
+#ifdef __EMSCRIPTEN__
+Viewer* g_viewer = nullptr;   // for the page's hooks below
+
+void webFrame(void*) {
+    SDL_Event e;
+    bool quit = false;   // a web page stays: Esc and closing the tab do nothing here
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_EVENT_MOUSE_WHEEL) g_viewer->wheel += e.wheel.y;
+        g_viewer->onEvent(e, quit);
+    }
+    g_viewer->tick();
+}
+
+extern "C" {
+// web/shell.html wrote the picked or dropped files into the in-memory file system: open this one.
+EMSCRIPTEN_KEEPALIVE void jsOpenFile(const char* path) {
+    if (!g_viewer || !path) return;
+    std::lock_guard<std::mutex> g(g_viewer->pendingLock);
+    g_viewer->pending = path;
+}
+}
+#endif
+
 int main(int argc, char** argv) {
-    Viewer v;
+    // On the heap: on the web, main returns while the browser keeps calling webFrame.
+    Viewer& v = *new Viewer;
     v.args = parseArgs(utf8Args(argc, argv));
+#ifdef __EMSCRIPTEN__
+    std::error_code ec;
+    for (const auto& f : std::filesystem::directory_iterator("/models", ec)) v.testModels.push_back(f.path().filename().string());
+    std::sort(v.testModels.begin(), v.testModels.end());
+    if (v.args.file.empty() && !v.testModels.empty())
+        v.args.file = std::find(v.testModels.begin(), v.testModels.end(), "skin_tube.gltf") != v.testModels.end() ? "skin_tube.gltf"
+                                                                                                                  : v.testModels[0];
+    if (!v.args.file.empty() && v.args.file[0] != '/') v.args.file = "/models/" + v.args.file;
+#endif
     v.showUi = v.args.ui;
     v.yaw = v.args.yaw;
     v.pitch = v.args.pitch;
@@ -1943,7 +2125,13 @@ int main(int argc, char** argv) {
         return 1;
     }
     next::BgfxHostConfig cfg;
-#if defined(_WIN32)
+#if defined(__EMSCRIPTEN__)
+    // bgfx's WebGL backend takes the canvas CSS selector as its "window handle" (as src/game/src/main_sdl.cpp).
+    static std::string canvas;
+    const char* id = SDL_GetStringProperty(SDL_GetWindowProperties(v.window), SDL_PROP_WINDOW_EMSCRIPTEN_CANVAS_ID_STRING, "#canvas");
+    canvas = (id && id[0] == '#') ? id : std::string("#") + (id ? id : "canvas");
+    cfg.nativeWindow = (void*)canvas.c_str();
+#elif defined(_WIN32)
     cfg.nativeWindow = SDL_GetPointerProperty(SDL_GetWindowProperties(v.window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 #elif defined(__linux__)
     cfg.nativeWindow = (void*)(uintptr_t)SDL_GetNumberProperty(SDL_GetWindowProperties(v.window), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
@@ -1953,10 +2141,18 @@ int main(int argc, char** argv) {
     cfg.width = (uint32_t)v.fbW;
     cfg.height = (uint32_t)v.fbH;
     cfg.renderer = v.args.renderer;
+#ifdef __EMSCRIPTEN__
+    cfg.msaa = 0;   // bgfx's MSAA back buffer on WebGL calls glFramebufferTexture2DMultisampleEXT, which WebGL lacks
+#else
     cfg.msaa = 4;
+#endif
     std::string err;
     if (!next::bgfxHostInit(cfg, err)) {
+#ifdef __EMSCRIPTEN__
+        EM_ASM({ if (typeof tomsShowError === 'function') tomsShowError('The glTF viewer could not start', UTF8ToString($0)); }, err.c_str());
+#else
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "glTF Viewer", err.c_str(), v.window);
+#endif
         return 1;
     }
     if (!v.renderer.init() || !v.gui.init()) {
@@ -1966,6 +2162,22 @@ int main(int argc, char** argv) {
     }
     v.makeGround();
     v.makeGizmos();
+    v.envRotation = v.args.envRotation;
+    v.envIntensity = v.args.envIntensity;
+    v.envBackground = v.args.background != 0;
+    v.envBlur = v.args.backgroundBlur;
+    if (v.args.env == "none") {
+        v.envOn = false;
+    } else {
+        std::string envFile = v.args.env;
+        if (envFile.empty()) {   // the default, by its key in the resource manifest
+            res::ResourceManager res;
+            res.setRoot(assetDir());
+            if (res.loadManifest("resources.json")) envFile = res.resolve(key::kEnvDefault);
+            else v.envError = "no resources.json in " + assetDir();
+        }
+        if (envFile.empty() || !v.loadEnvironment(envFile)) v.envOn = false;
+    }
     v.uiScale = std::max(1.0f, SDL_GetWindowDisplayScale(v.window) * 0.8f);
     ImGui::GetIO().FontGlobalScale = v.uiScale;
     ImGui::GetStyle().ScaleAllSizes(v.uiScale);
@@ -1975,6 +2187,11 @@ int main(int argc, char** argv) {
         return 2;   // a test asked for a model that does not load
     }
 
+#ifdef __EMSCRIPTEN__
+    g_viewer = &v;
+    emscripten_set_main_loop_arg(webFrame, nullptr, 0, false);   // every animation frame; main returns, the page runs on
+    return 0;
+#endif
     bool quit = false;
     while (!quit) {
         SDL_Event e;
@@ -1997,5 +2214,6 @@ int main(int argc, char** argv) {
     next::bgfxHostShutdown();
     SDL_DestroyWindow(v.window);
     SDL_Quit();
+    delete &v;
     return 0;
 }

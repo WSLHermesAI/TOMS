@@ -700,3 +700,23 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     `spinLights`; `--light-hints`, `--spot-aim`, `--light-spin`.
   - Tests: changed-only 14 of 211 pass; by name 32 scenarios, `data.ui_font_covers_text`, 3 glTF unit tests pass;
     the 24 glTF screenshot tests have no references. All tests, web and Android not run.
+- **2026-10-28** — **The glTF viewer on the web, `KHR_materials_specular`, environment lighting** ([DAILY_2026-10-28.md](DAILY_2026-10-28.md); not committed; the 10-26 work is committed as `be97906`):
+  - Web viewer: `tools/gltf_viewer/web/shell.html` (picker + drop into `/upload/<n>/`, `jsOpenFile`), `main.cpp`
+    `__EMSCRIPTEN__` parts (URL options, `webFrame`, canvas handle, `/models` list, `msaa = 0`, `TOMS_GAMMA_SPACE`
+    output + clear colour), `tools/gltf_viewer/CMakeLists.txt` (web link options, preloads, `EXCLUDE_FROM_ALL`),
+    root `CMakeLists.txt` (`add_subdirectory` on Emscripten), `tools/build_gltf_web.cmd`, `build_web.cmd [kind]
+    [target]`, `serve_web.cmd gltf|gltf-debug`; `toms_physics` `-fno-rtti` off MSVC (`typeinfo for JPH::GroupFilter`).
+  - emsdk: `D:\Work\emsdk` first in `build_web.cmd`, `build_atlas_web.cmd`, `serve_web.cmd`, `check_env.ps1`;
+    `:noemsdk` skips the popup with `TOMS_NO_POPUPS=1`.
+  - `KHR_materials_specular` / `_ior`: `gltf::Material` `specular`, `specularColor`, `ior`, `specularTex`,
+    `specularColorTex` (sRGB); `fs_mesh.sc` F0 / F90, `F_Schlick` and `envBRDF` with F90, diffuse × (1 − max F);
+    samplers 7, 8; `u_specular`, `u_matParams.zw`.
+  - IBL: `assets/media/env/artist_workshop_1k.hdr` (Poly Haven CC0), `resources.json` `env.default`
+    (`make_res_keys.py`); `src/core/engine/gltf_environment.*` (`loadEquirect`, `prefilterEnvironment`: 256 px
+    cube, GGX filtered importance sampling, SH9; the Khronos orientation); `GltfRenderer::setEnvironment` /
+    `clearEnvironment` / `Frame::environment*`, `background*`; `env_common.sh`, `vs_sky.sc`, `fs_sky.sc`
+    (`ShaderProgram::Sky`); viewer Environment section, `openFile` (.hdr), `--env*`, `--background*`, `assetDir()`;
+    the game's web preload excludes `env/`; `.gitattributes` `*.hdr binary`.
+  - Tests: changed-only 23 of 212 pass; new `unit.gltf_environment_test`; `unit.gltf_model_test` by name passes;
+    headless Chrome (SwiftShader + GPU) and D3D11 / D3D12 / Vulkan / OpenGL by hand. All tests, Android, the
+    game's web rebuild not run; the 24 glTF screenshot tests have no references.

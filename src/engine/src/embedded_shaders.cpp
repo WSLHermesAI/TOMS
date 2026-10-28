@@ -48,6 +48,10 @@
 #if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/fs_shadow.sc.bin.h"
 #endif
+#if defined(TOMS_SHADER_HAS_DXBC)
+#include "dxbc/vs_sky.sc.bin.h"
+#include "dxbc/fs_sky.sc.bin.h"
+#endif
 #include "glsl/vs_mesh.sc.bin.h"
 #include "glsl/vs_mesh_inst.sc.bin.h"
 #include "glsl/vs_mesh_animtex.sc.bin.h"
@@ -55,6 +59,8 @@
 #include "glsl/vs_line.sc.bin.h"
 #include "glsl/fs_line.sc.bin.h"
 #include "glsl/fs_shadow.sc.bin.h"
+#include "glsl/vs_sky.sc.bin.h"
+#include "glsl/fs_sky.sc.bin.h"
 #include "glsl/vs_sprite.sc.bin.h"
 #include "glsl/vs_sprite_inst.sc.bin.h"
 #include "glsl/fs_sprite.sc.bin.h"
@@ -71,6 +77,8 @@
 #include "spirv/vs_line.sc.bin.h"
 #include "spirv/fs_line.sc.bin.h"
 #include "spirv/fs_shadow.sc.bin.h"
+#include "spirv/vs_sky.sc.bin.h"
+#include "spirv/fs_sky.sc.bin.h"
 #include "spirv/vs_sprite.sc.bin.h"
 #include "spirv/vs_sprite_inst.sc.bin.h"
 #include "spirv/fs_sprite.sc.bin.h"
@@ -86,6 +94,8 @@
 #include "essl/vs_line.sc.bin.h"
 #include "essl/fs_line.sc.bin.h"
 #include "essl/fs_shadow.sc.bin.h"
+#include "essl/vs_sky.sc.bin.h"
+#include "essl/fs_sky.sc.bin.h"
 #include "essl/vs_sprite.sc.bin.h"
 #include "essl/vs_sprite_inst.sc.bin.h"
 #include "essl/fs_sprite.sc.bin.h"
@@ -139,6 +149,7 @@ struct ProgramBlobs { Blob vs, fs; };
     case ShaderProgram::MeshShadowInstanced: out = { TOMS_BLOB(vs_mesh_inst_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
     case ShaderProgram::MeshAnimTex: out = { TOMS_BLOB(vs_mesh_animtex_##ext), TOMS_BLOB(fs_mesh_##ext) }; break;\
     case ShaderProgram::MeshShadowAnimTex: out = { TOMS_BLOB(vs_mesh_animtex_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
+    case ShaderProgram::Sky:    out = { TOMS_BLOB(vs_sky_##ext),    TOMS_BLOB(fs_sky_##ext) };    break;\
     default: return false;                                                                         \
     }                                                                                               \
     return true

@@ -10,7 +10,7 @@ add_library(toms_core STATIC
     ${L_ENGINE}/encounter.cpp ${L_ENGINE}/power_bar.cpp
     ${L_ENGINE}/safe_timer.cpp ${L_ENGINE}/tween.cpp ${L_ENGINE}/timed_hits.cpp   # docs/gameplay/07_GAMEPLAY_PLAN.md phase 0
     ${L_ENGINE}/singletons.cpp   # releaseSingletons() at the end of main (docs/engine/15_LEAK_CHECK.md)
-    ${L_ENGINE}/anim_clip.cpp ${L_ENGINE}/anim_player.cpp ${L_ENGINE}/sprite_mesh.cpp ${L_ENGINE}/particle_fx.cpp ${L_ENGINE}/gltf_model.cpp ${L_ENGINE}/gltf_anim_texture.cpp ${L_ENGINE}/stb_image_impl.cpp
+    ${L_ENGINE}/anim_clip.cpp ${L_ENGINE}/anim_player.cpp ${L_ENGINE}/sprite_mesh.cpp ${L_ENGINE}/particle_fx.cpp ${L_ENGINE}/gltf_model.cpp ${L_ENGINE}/gltf_anim_texture.cpp ${L_ENGINE}/gltf_environment.cpp ${L_ENGINE}/stb_image_impl.cpp
     ${L_ENGINE}/bitmap_font.cpp   # picture fonts: FontText (docs/engine/09_FONT_TOOL.md)
     ${L_ENGINE}/resource.cpp ${L_ENGINE}/resource_types.cpp ${L_ENGINE}/render_object.cpp   # docs/engine/12_RESOURCE_MANAGER.md
     ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp
@@ -60,6 +60,11 @@ target_include_directories(toms_core PRIVATE ${cgltf_SOURCE_DIR})
 add_library(toms_physics STATIC ${L_ENGINE}/gltf_physics.cpp ${L_ENGINE}/gltf_physics.h)
 toms_target_defaults(toms_physics)
 target_link_libraries(toms_physics PUBLIC toms_core PRIVATE Jolt)
+# Jolt is built without RTTI; with clang / GCC (the web) a class derived from one of its classes then needs a typeinfo
+# Jolt never made ("undefined symbol: typeinfo for JPH::GroupFilter"). MSVC makes it where it is used.
+if(NOT MSVC)
+    target_compile_options(toms_physics PRIVATE -fno-rtti)
+endif()
 set_target_properties(toms_physics PROPERTIES FOLDER "toms")
 
 # ---- toms_game_host: GameSession, shared by the SDL game and the Qt editor ----
@@ -121,10 +126,12 @@ if(EMSCRIPTEN)
         "-sEXPORTED_FUNCTIONS=['_main','_malloc','_free']"
         "-sSTACK_SIZE=1048576"
         # Game content, including the UI documents (assets/media/ui). The fonts are left out:
-        # on the web the browser draws the text (src/engine/src/rml_canvas_font.*).
+        # on the web the browser draws the text (src/engine/src/rml_canvas_font.*). So are the environment
+        # pictures (assets/media/env, 1.7 MB): only the glTF viewer lights with them so far.
         "--preload-file=${TOMS_ASSET_DIR}@/assets"
         "--preload-file=${TOMS_DATA_DIR}@/data"
-        "--exclude-file=${TOMS_ASSET_DIR}/fonts/*")
+        "--exclude-file=${TOMS_ASSET_DIR}/fonts/*"
+        "--exclude-file=${TOMS_ASSET_DIR}/env/*")
     # The multithreaded web build (preset web-release-mt-windows, docs/engine/02_THREADS.md): Web Workers
     # started before main(), so the job system never has to wait for one to be created. One spare
     # beyond the job system's 4 for anything else that starts a thread.

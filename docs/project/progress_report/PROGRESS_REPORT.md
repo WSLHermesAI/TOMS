@@ -15,8 +15,20 @@
 
 ## ▶ Next Step
 
+**The glTF viewer on the web; `KHR_materials_specular`; environment lighting** (2026-10-28; not committed;
+[DAILY_2026-10-28.md](DAILY_2026-10-28.md), [../../engine/08_GLTF.md](../../engine/08_GLTF.md) §4, §8):
+- `tools\build_gltf_web.cmd` + `serve_web.cmd gltf`: the viewer in the browser (WebGL2, single-threaded, the test
+  models, URL options, open / drop files). Colours fixed (no sRGB back buffer on WebGL); no MSAA there;
+  `toms_physics` `-fno-rtti` off MSVC. emsdk looked for at `D:\Work\emsdk` first; no popup with `TOMS_NO_POPUPS`.
+- `KHR_materials_specular` + `KHR_materials_ior` in the loader and `fs_mesh.sc`.
+- Image-based lighting: `assets/media/env/artist_workshop_1k.hdr` (CC0, key `env.default`), `gltf_environment.*`
+  (CPU prefilter), `setEnvironment`, the sky shaders, the viewer's Environment section; on by default in the viewer,
+  unused by the game. `SpecularTest` now matches its Khronos reference.
+- Changed-only 23 of 212 pass; `unit.gltf_model_test` by name passes; checked on every backend and WebGL.
+  **Owner:** commit; keep the HDRI out of the APK / package?; the glTF screenshot references (with the environment?).
+
 **The battle editor built (steps 1–3); monsters keep charging during a combo; the UI editor's glow; the glTF
-viewer's lights** (2026-10-25 late / 10-26; not committed; [DAILY_2026-10-26.md](DAILY_2026-10-26.md),
+viewer's lights** (2026-10-25 late / 10-26; committed `be97906`; [DAILY_2026-10-26.md](DAILY_2026-10-26.md),
 [../../gameplay/13_BATTLE_EDITOR.md](../../gameplay/13_BATTLE_EDITOR.md) §9):
 - Battle: looks (`looks.json`), monster events, moves with intents (`moves.json`), parry / spell / guard breaks, the
   break gauge, results by points matched, the cooldown / stamina pace; monsters keep charging during a combo
@@ -447,7 +459,8 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 [DAILY_2026-10-18.md](DAILY_2026-10-18.md), [DAILY_2026-10-19.md](DAILY_2026-10-19.md),
 [DAILY_2026-10-21.md](DAILY_2026-10-21.md), [DAILY_2026-10-22.md](DAILY_2026-10-22.md),
 [DAILY_2026-10-23.md](DAILY_2026-10-23.md), [DAILY_2026-10-24.md](DAILY_2026-10-24.md),
-[DAILY_2026-10-25.md](DAILY_2026-10-25.md), [DAILY_2026-10-26.md](DAILY_2026-10-26.md).
+[DAILY_2026-10-25.md](DAILY_2026-10-25.md), [DAILY_2026-10-26.md](DAILY_2026-10-26.md),
+[DAILY_2026-10-28.md](DAILY_2026-10-28.md).
 
 ---
 

@@ -19,7 +19,9 @@ cd /d "%~dp0.."
 
 rem ---- 1. Emscripten SDK ----
 set "EMSDK_DIR="
-if defined EMSDK if exist "%EMSDK%\emsdk_env.bat" set "EMSDK_DIR=%EMSDK%"
+rem The owner's emsdk is D:\Work\emsdk (2026-10-28): looked at first.
+if exist "D:\Work\emsdk\emsdk_env.bat" set "EMSDK_DIR=D:\Work\emsdk"
+if not defined EMSDK_DIR if defined EMSDK if exist "%EMSDK%\emsdk_env.bat" set "EMSDK_DIR=%EMSDK%"
 if not defined EMSDK_DIR if exist "%~dp0..\..\..\emsdk\emsdk_env.bat" set "EMSDK_DIR=%~dp0..\..\..\emsdk"
 if not defined EMSDK_DIR if exist "%USERPROFILE%\emsdk\emsdk_env.bat" set "EMSDK_DIR=%USERPROFILE%\emsdk"
 if not defined EMSDK_DIR if exist "C:\emsdk\emsdk_env.bat" set "EMSDK_DIR=C:\emsdk"

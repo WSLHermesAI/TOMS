@@ -201,7 +201,7 @@ Add-Result "Qt 6.5+ (MSVC 2022 64-bit kit) - editor only" ([bool]$qtKit) $false 
 # 14. Web build only (optional): Emscripten SDK and a host shaderc
 # ---------------------------------------------------------------------------------------------
 $emsdk = $null
-foreach ($c in @($env:EMSDK, (Join-Path $root '..\..\emsdk'), (Join-Path $env:USERPROFILE 'emsdk'), 'C:\emsdk', 'D:\emsdk')) {
+foreach ($c in @('D:\Work\emsdk', $env:EMSDK, (Join-Path $root '..\..\emsdk'), (Join-Path $env:USERPROFILE 'emsdk'), 'C:\emsdk', 'D:\emsdk')) {
     if ($c -and (Test-Path (Join-Path $c 'emsdk_env.bat'))) { $emsdk = (Resolve-Path $c).Path; break }
 }
 $emVer = $null

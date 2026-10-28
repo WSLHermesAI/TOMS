@@ -111,5 +111,9 @@ if(NOT WEB AND NOT ANDROID)
         set_tests_properties(atlas.fx_up_to_date PROPERTIES LABELS "unit;atlas" TIMEOUT 60)
     endif()
 endif()
+# The glTF viewer in the browser (tools\build_gltf_web.cmd): built only when asked for, not with the game.
+if(EMSCRIPTEN)
+    add_subdirectory(tools/gltf_viewer)
+endif()
 
 toms_prerequisites_report()   # prints the summary and shows the popup if anything is missing

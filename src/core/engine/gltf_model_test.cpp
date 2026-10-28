@@ -172,6 +172,23 @@ void testErrors() {
     CHECK(loadModelFromMemory(glass, std::strlen(glass), ".", m) && m.ignoredExtensions.empty() && m.materials.size() == 1 &&
               near(m.materials[0].transmission, 1.0f) && near3(m.materials[0].attenuationColor, {0.8f, 0.7f, 0.6f}),
           "glass: KHR_materials_transmission + volume read (drawn, not ignored)");
+    // KHR_materials_specular + _ior: the factors, the two textures (the colour one is sRGB, the other is not), the defaults.
+    const char* spec = R"({"asset":{"version":"2.0"},"extensionsUsed":["KHR_materials_specular","KHR_materials_ior"],
+        "textures":[{},{}],
+        "materials":[{"extensions":{"KHR_materials_specular":{"specularFactor":0.5,"specularColorFactor":[2,1,0],
+                                                              "specularTexture":{"index":0},"specularColorTexture":{"index":1}},
+                                    "KHR_materials_ior":{"ior":1.8}}},{}]})";
+    CHECK(loadModelFromMemory(spec, std::strlen(spec), ".", m) && m.ignoredExtensions.empty() && m.materials.size() == 2,
+          "KHR_materials_specular + _ior read (drawn, not ignored)");
+    if (m.materials.size() == 2 && m.textures.size() == 2) {
+        const Material& s = m.materials[0];
+        CHECK(near(s.specular, 0.5f) && near3(s.specularColor, {2.0f, 1.0f, 0.0f}) && near(s.ior, 1.8f), "specular factors and ior");
+        CHECK(s.specularTex.texture == 0 && s.specularColorTex.texture == 1 && !m.textures[0].srgb && m.textures[1].srgb,
+              "specular textures: the colour texture is sRGB, the factor texture (alpha) is not");
+        const Material& d = m.materials[1];
+        CHECK(near(d.specular, 1.0f) && near3(d.specularColor, {1.0f, 1.0f, 1.0f}) && near(d.ior, 1.5f) && !d.specularTex.valid(),
+              "without the extensions: specular 1, colour white, ior 1.5 (F0 0.04)");
+    }
     // KHR_lights_punctual: a spot on a node turned to look down -Y (rotation -90 deg about X).
     const char* lights = R"({"asset":{"version":"2.0"},"extensionsUsed":["KHR_lights_punctual"],
         "extensions":{"KHR_lights_punctual":{"lights":[{"type":"spot","color":[1,0.5,0.25],"intensity":40,"range":12,

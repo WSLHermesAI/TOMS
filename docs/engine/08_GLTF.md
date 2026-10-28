@@ -24,7 +24,7 @@ In Visual Studio: the launch targets *gltf_viewer (skinned test model)* and *glt
 | Animation | translation, rotation, scale, morph weights; `LINEAR` (rotation: slerp), `STEP`, `CUBICSPLINE`; several animations at once |
 | Scenes | node hierarchy (TRS or matrix), the default scene, mirrored nodes (negative scale) |
 | Files | `.glb`, `.gltf` + `.bin`, data URIs, external PNG / JPEG / BMP / TGA images |
-| Extensions | `EXT_mesh_gpu_instancing`, `KHR_materials_unlit`, `KHR_texture_transform`, `KHR_materials_emissive_strength`, `KHR_mesh_quantization`, `KHR_materials_pbrSpecularGlossiness` (as base colour + roughness), `KHR_materials_transmission` + `KHR_materials_volume` (glass, approximated: see-through with its reflections, no refraction of what is behind), `KHR_physics_rigid_bodies` + `KHR_implicit_shapes` (simulated on Jolt: §7) |
+| Extensions | `EXT_mesh_gpu_instancing`, `KHR_materials_unlit`, `KHR_texture_transform`, `KHR_materials_emissive_strength`, `KHR_mesh_quantization`, `KHR_materials_pbrSpecularGlossiness` (as base colour + roughness), `KHR_materials_transmission` + `KHR_materials_volume` (glass, approximated: see-through with its reflections, no refraction of what is behind), `KHR_materials_specular` + `KHR_materials_ior` (a dielectric's F0 / F90, fs_mesh.sc; added 2026-10-28), `KHR_physics_rigid_bodies` + `KHR_implicit_shapes` (simulated on Jolt: §7) |
 
 **Not yet supported:**
 - **No shadows on OpenGL ES / WebGL** (the web build, Android's GLES path).
@@ -241,6 +241,28 @@ default (`src/game/src/title_scene.*`, owned by `GameSession`).
   drops the edits. They are not saved to the file.
 - Test options: `--select=<node>`, `--tool=move|rotate|scale`, `--pick=<x>,<y>`, and `--drag=<x0>,<y0>,<x1>,<y1>`
   (pixels from the selected node's origin on screen).
+
+### The viewer in the browser (2026-10-28)
+
+`tools\build_gltf_web.cmd [release|debug]` builds the same viewer with Emscripten (WebGL2, single-threaded) into
+`Build\web-<release|debug>-windows\bin\gltf_viewer.html` (+ `.js`, `.wasm`, `.data`); `tools\serve_web.cmd gltf` (or
+`gltf-debug`) serves and opens it. It shares the game's web build folder and setup (`tools\build_web.cmd <kind>
+gltf_viewer`), but the game's web build does not build it. emsdk is looked for at `D:\Work\emsdk` first.
+
+- **Models:** the test models of `tests/gltf/` are packed in at `/models`; the panel's *Test models* list opens them.
+  Without `?file=` the page opens `skin_tube.gltf`.
+- **Options from the URL:** `?file=morph_cube.gltf&anim=breathe&yaw=30&no-ui`. Each `name=value` is the desktop
+  `--name=value`, and a bare name in `file=` is one of the test models.
+- **Your own files:** *Open...* (a file picker) or drag-and-drop; an `.hdr` replaces the environment (§8). All the files of one pick or drop go into one
+  folder (`/upload/<n>/`), so pick or drop a `.gltf` **together with** its `.bin` and images (or a single `.glb`).
+  Files that the `.gltf` keeps in sub-folders (`textures/a.png`) are not found. The page handles the drop itself:
+  SDL's own handler puts each file in a folder of its own. Code: `tools/gltf_viewer/web/shell.html` and the
+  `__EMSCRIPTEN__` parts of `main.cpp`.
+- **Differences from the desktop:** no shadow maps (the WebGL `fs_mesh` has no shadow lookups, §2), no MSAA
+  (bgfx's MSAA back buffer needs `glFramebufferTexture2DMultisampleEXT`, which WebGL lacks), and no screenshot
+  options. Esc does not close the page.
+- `toms_physics` is compiled with `-fno-rtti` outside MSVC, like Jolt; otherwise its `JPH::GroupFilter` subclass does
+  not link with clang.
 
 ## 5. Tests
 
@@ -476,3 +498,55 @@ The only warning is ShapeTypes' dynamic triangle mesh, which becomes its hull.
   - `simulateTo` equals single steps bit for bit;
   - a model without physics refuses to build.
 - **`smoke.gltf_physics`:** the scene at 2.5 s on D3D11.
+
+## 8. Environment lighting (image-based lighting, 2026-10-28)
+
+### 8.1 What it is
+
+An HDR picture of a room (equirectangular, a Radiance `.hdr`) that the models **reflect** and are **lit by**, instead
+of the plain sky / ground colours. A black, shiny material shows little but the room reflected in it, so files such
+as the Khronos `SpecularTest` only look like their reference screenshots with it.
+
+- **The default picture:** `assets/media/env/artist_workshop_1k.hdr` (1024 x 512, 1.7 MB): "Artist Workshop" by
+  Oliksiy Yakovlyev, from Poly Haven (https://polyhaven.com/a/artist_workshop), **CC0** (no credit required). The same
+  room the Khronos glTF Sample Viewer screenshots use. Code names it by its key, `env.default` in
+  `resources.json` (`toms::key::kEnvDefault`).
+- **Which way round:** the picture's middle column looks down +Z, as in the Khronos viewer, so a model seen from the
+  front shows the same part of the room as their screenshots.
+- **The game:** nothing uses it yet. The title scene keeps the plain sky (it never sets an environment), and the
+  game's web build leaves `assets/media/env/` out of its download.
+
+### 8.2 Code
+
+- **`src/core/engine/gltf_environment.*`** (CPU only, so the web does the same work and a test checks it):
+  `loadEquirect` reads the `.hdr` through the vfs; `prefilterEnvironment` turns it into:
+  - a cubemap (256 px faces) whose mip levels are the picture blurred for rougher surfaces: GGX importance sampling,
+    48 samples a texel, reading a box-filtered halving of the picture sized to each sample (no sparkles). Mip 0 is
+    the sharp picture, mip 5 roughness 1;
+  - 9 spherical-harmonic terms of the light reaching a surface from all sides (cosine-convolved and / pi).
+
+  About 0.25 s on the desktop for the 1K picture, 0.3–0.5 s in the browser.
+- **`GltfRenderer::setEnvironment`** uploads it as an RGBA16F cubemap (filterable on every backend, WebGL2 too);
+  `Frame::environment`, `environmentIntensity`, `environmentYaw`, `background`, `backgroundBlur` use it.
+- **`fs_mesh.sc`:** with an environment, the ambient light is the harmonics (diffuse) plus the cubemap at
+  `roughness x 5` (reflections) through the same Fresnel / environment-BRDF terms as before
+  (`KHR_materials_specular` included). Without one, the plain sky / ground as before.
+- **`vs_sky.sc` / `fs_sky.sc`** (`ShaderProgram::Sky`): the picture behind the models, one screen triangle at depth
+  1, drawn with depth test LEQUAL so it only shows where nothing else is.
+- **`env_common.sh`:** the sampler (stage 9) and the turn about +Y, shared by both shaders.
+
+### 8.3 In the viewer
+
+- **On by default** with the default picture. The panel's **Environment** section: on / off, intensity, rotation,
+  background (on) and its blur (0.3). While it is on, the ambient slider and sky / ground colours are not used.
+- **Another picture:** *Open...* or drop an `.hdr` (desktop and web). Options: `--env=<file.hdr|none>`,
+  `--env-rotation=<deg>`, `--env-intensity=<x>`, `--background=0|1`, `--background-blur=<0..1>`.
+- **The web page** packs `assets/media/env/` and `resources.json` at `/assets` (about 2 MB of data in all).
+
+### 8.4 Tests
+
+- **`unit.gltf_environment_test`:** a uniform picture stays uniform at every blur level and its diffuse light is that
+  value from every side; a two-coloured picture lands on the expected cube faces and lights from the expected side;
+  the face convention; the shipped `.hdr` loads and prefilters.
+- The `smoke.gltf_*` screenshots change with it (the room behind and in the reflections): their reference images
+  need `TOMS_UPDATE_GOLDEN=1` when they are made again.

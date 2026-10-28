@@ -52,7 +52,13 @@ struct Material {
     // approximation -- see through it (blended), keep its reflections; no refraction of the scene.
     float transmission = 0.0f;
     glm::vec3 attenuationColor{1.0f};
+    // KHR_materials_specular: a dielectric's reflection -- specular x texture alpha scales both F0 and F90, the colour
+    // (x texture rgb, sRGB) only F0. KHR_materials_ior sets F0's base, ((ior - 1) / (ior + 1))^2 (0.04 at 1.5).
+    float specular = 1.0f;
+    glm::vec3 specularColor{1.0f};
+    float ior = 1.5f;
     TextureRef baseColorTex, metalRoughTex, normalTex, occlusionTex, emissiveTex;
+    TextureRef specularTex, specularColorTex;
 };
 
 struct Image {

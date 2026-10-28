@@ -55,6 +55,7 @@
     "data.story.cycles":   { "type": "json",     "path": "../data/story/cycles.json" },
     "data.story.vars":     { "type": "json",     "path": "../data/story/vars.json" },
     "data.event_kinds":    { "type": "json",     "path": "../data/events/kinds.json", "optional": true },
+    "env.default":         { "type": "file",     "path": "env/artist_workshop_1k.hdr" },
 
     "folder.assets":       { "type": "folder",   "path": ".." },
     "folder.events":       { "type": "folder",   "path": "../data/events" },

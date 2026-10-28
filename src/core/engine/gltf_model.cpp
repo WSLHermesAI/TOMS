@@ -28,6 +28,7 @@ bool contains(const std::vector<std::string>& v, const std::string& s) { return 
 const char* const kSupported[] = {"KHR_materials_unlit", "KHR_texture_transform", "KHR_materials_emissive_strength",
                                   "KHR_mesh_quantization", "EXT_mesh_gpu_instancing", "KHR_materials_pbrSpecularGlossiness",
                                   "KHR_materials_transmission", "KHR_materials_volume", "KHR_lights_punctual",
+                                  "KHR_materials_specular", "KHR_materials_ior",
                                   "KHR_implicit_shapes", "KHR_physics_rigid_bodies"};
 bool supported(const std::string& e) {
     for (const char* s : kSupported)
@@ -488,7 +489,14 @@ bool convert(const cgltf_data* d, const std::string& baseDir, Model& m, std::str
         o.unlit = s.unlit;
         if (s.has_transmission) o.transmission = s.transmission.transmission_factor;
         if (s.has_volume) o.attenuationColor = glm::make_vec3(s.volume.attenuation_color);
-        for (const TextureRef* r : {&o.baseColorTex, &o.emissiveTex})   // colour data: sRGB
+        if (s.has_specular) {
+            o.specular = s.specular.specular_factor;
+            o.specularColor = glm::make_vec3(s.specular.specular_color_factor);
+            o.specularTex = textureRef(d, s.specular.specular_texture);
+            o.specularColorTex = textureRef(d, s.specular.specular_color_texture);
+        }
+        if (s.has_ior) o.ior = s.ior.ior;
+        for (const TextureRef* r : {&o.baseColorTex, &o.emissiveTex, &o.specularColorTex})   // colour data: sRGB
             if (r->valid()) m.textures[(size_t)r->texture].srgb = true;
     }
 

@@ -37,6 +37,7 @@ inline constexpr const char kDataStoryEndings[]  = "data.story.endings";      //
 inline constexpr const char kDataStoryVars[]     = "data.story.vars";         // json ../data/story/vars.json
 inline constexpr const char kDataText[]          = "data.text";               // json ../data/text.json
 inline constexpr const char kDataWeaponPlay[]    = "data.weapon_play";        // json ../data/weapon_play.json
+inline constexpr const char kEnvDefault[]        = "env.default";             // file env/artist_workshop_1k.hdr
 inline constexpr const char kFolderAssets[]      = "folder.assets";           // folder ..
 inline constexpr const char kFolderChapters[]    = "folder.chapters";         // folder ../data/story/chapters
 inline constexpr const char kFolderEvents[]      = "folder.events";           // folder ../data/events
@@ -88,6 +89,7 @@ inline constexpr const char* kAll[] = {
     kDataStoryVars,
     kDataText,
     kDataWeaponPlay,
+    kEnvDefault,
     kFolderAssets,
     kFolderChapters,
     kFolderEvents,

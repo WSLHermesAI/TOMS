@@ -1,5 +1,6 @@
 @echo off
-rem build_web.cmd [release|debug|mt] -- build the browser version of toms_game on Windows.
+rem build_web.cmd [release|debug|mt] [target] -- build the browser version of toms_game on Windows.
+rem   target: build only that target (gltf_viewer: tools\build_gltf_web.cmd); default: the game.
 rem   Output: Build\web-<release|debug>-windows\bin\toms_game.html (+ .js .wasm .data)
 rem   mt = the multithreaded release: Build\web-release-mt-windows (docs\engine\02_THREADS.md)
 rem   Then run tools\serve_web.cmd to play it in the browser.
@@ -8,8 +9,9 @@ rem shaderc (built automatically from the desktop shipping preset if there is no
 setlocal EnableExtensions
 set "KIND=%~1"
 if "%KIND%"=="" set "KIND=release"
+set "TARGET=%~2"
 if /i not "%KIND%"=="release" if /i not "%KIND%"=="debug" if /i not "%KIND%"=="mt" (
-  echo usage: build_web.cmd [release^|debug^|mt]
+  echo usage: build_web.cmd [release^|debug^|mt] [target]
   exit /b 2
 )
 set "PRESET=web-%KIND%-windows"
@@ -20,7 +22,9 @@ cd /d "%~dp0.."
 
 rem ---- 1. Emscripten SDK ----
 set "EMSDK_DIR="
-if defined EMSDK if exist "%EMSDK%\emsdk_env.bat" set "EMSDK_DIR=%EMSDK%"
+rem The owner's emsdk is D:\Work\emsdk (2026-10-28): looked at first.
+if exist "D:\Work\emsdk\emsdk_env.bat" set "EMSDK_DIR=D:\Work\emsdk"
+if not defined EMSDK_DIR if defined EMSDK if exist "%EMSDK%\emsdk_env.bat" set "EMSDK_DIR=%EMSDK%"
 if not defined EMSDK_DIR if exist "%~dp0..\..\..\emsdk\emsdk_env.bat" set "EMSDK_DIR=%~dp0..\..\..\emsdk"
 if not defined EMSDK_DIR if exist "%USERPROFILE%\emsdk\emsdk_env.bat" set "EMSDK_DIR=%USERPROFILE%\emsdk"
 if not defined EMSDK_DIR if exist "C:\emsdk\emsdk_env.bat" set "EMSDK_DIR=C:\emsdk"
@@ -53,15 +57,25 @@ set "POPUPS=ON"
 if "%TOMS_NO_POPUPS%"=="1" set "POPUPS=OFF"
 cmake --preset "%PRESET%" -DTOMS_HOST_SHADERC="%HOST_SHADERC%" -DTOMS_POPUP_WARNINGS=%POPUPS%
 if errorlevel 1 exit /b 1
-cmake --build --preset "%PRESET%"
+if defined TARGET (
+  cmake --build --preset "%PRESET%" --target "%TARGET%"
+) else (
+  cmake --build --preset "%PRESET%"
+)
 if errorlevel 1 exit /b 1
+if defined TARGET (
+  echo.
+  echo [toms] done: %CD%\%OUTDIR%\bin\%TARGET%.html
+  exit /b 0
+)
 echo.
 echo [toms] done: %CD%\%OUTDIR%\bin\toms_game.html
 echo [toms] play it: tools\serve_web.cmd %KIND%
 exit /b 0
 
 :noemsdk
-echo [toms] Emscripten SDK (emsdk) not found. Install it, or set EMSDK to its folder.
+echo [toms] Emscripten SDK (emsdk) not found at D:\Work\emsdk. Install it, or set EMSDK to its folder.
+if "%TOMS_NO_POPUPS%"=="1" exit /b 1
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0show_message.ps1" -Title "TOMS: Emscripten SDK not found" -Message "The web build needs the Emscripten SDK (emsdk). Install: git clone https://github.com/emscripten-core/emsdk.git, then in that folder run: emsdk install latest, then: emsdk activate latest. Then set EMSDK to that folder (or put it at %USERPROFILE%\emsdk or C:\emsdk)." -Links "https://emscripten.org/docs/getting_started/downloads.html"
 exit /b 1
 :nocmake

@@ -26,7 +26,7 @@ set(TOMS_UNIT_TESTS
     engine/anim_clip_test           engine/particle_fx_test        engine/gltf_model_test
     engine/anim_skin_test           engine/sprite_mesh_test        engine/anim_character_test
     engine/anim_lattice_test
-    engine/gltf_anim_texture_test   engine/gltf_physics_test
+    engine/gltf_anim_texture_test   engine/gltf_physics_test       engine/gltf_environment_test
     engine/condition_eval_test      engine/encounter_resolve_test  engine/entity_status_test
     engine/job_system_test
     engine/event_bus_test           engine/log_test                engine/node_test

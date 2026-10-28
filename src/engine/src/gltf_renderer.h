@@ -16,16 +16,22 @@
 // light 6 (one 90-degree face each). At most kMaxShadowTiles tiles; the tiles shrink as more lights
 // cast. Sampled with 3x3 hardware PCF, with a normal offset and a small depth bias against acne.
 //
+// Image-based lighting (gltf_environment.h): setEnvironment() uploads an HDR picture prefiltered on the CPU (a cubemap
+// blurred per roughness, 9 harmonics of its diffuse light); while Frame::environment it replaces the plain sky / ground
+// as what the models reflect and are lit by, and Frame::background draws it behind them.
+//
 // Crowds (gltf_anim_texture.h): a skin's animations baked into one texture (uploadAnimTexture, shared by every
 // crowd of that model), and drawCrowd() draws every instance in one instanced draw per primitive -- each with
 // its own clip, time, and a second clip to blend or cross-fade to. No posing on the CPU per instance.
 #pragma once
 #include "gltf_anim_texture.h"
+#include "gltf_environment.h"
 #include "gltf_model.h"
 
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace bgfx { struct ProgramHandle; }
@@ -66,6 +72,12 @@ public:
         int shadowMapSize = 4096;            // the atlas (square)
         glm::vec3 boundsMin{-1.0f}, boundsMax{1.0f};   // what directional shadows cover; infinite ranges end here
         float shadowBias = 1.0f;             // x the built-in depth bias / normal offset
+        // Image-based lighting (setEnvironment): used while one is set.
+        bool environment = true;
+        float environmentIntensity = 1.0f;
+        float environmentYaw = 0.0f;         // radians: turns the picture about +Y
+        bool background = false;             // the picture behind the models (else the clear colour)
+        float backgroundBlur = 0.0f;         // 0 sharp .. 1 as blurred as roughness 1
     };
     static std::vector<Light> defaultLights();
 
@@ -95,6 +107,11 @@ public:
     // Null (and a log line) when this backend cannot sample RGBA32F textures or the texture is too big.
     std::shared_ptr<AnimTextureGpu> uploadAnimTexture(std::shared_ptr<const gltf::AnimTexture> anim);
     bool crowdsSupported() const;           // the crowd program exists and RGBA32F textures can be sampled
+    // The environment for image-based lighting (an RGBA16F cubemap and the diffuse terms). False (and why) when the
+    // backend cannot sample RGBA16F cubemaps; the plain sky / ground stays then.
+    bool setEnvironment(const gltf::Environment& env, std::string* error = nullptr);
+    void clearEnvironment();
+    bool hasEnvironment() const;
 
     // Perspective matrix for this backend (depth 0..1 on D3D/Vulkan, -1..1 on OpenGL).
     static glm::mat4 projection(float fovYDegrees, float aspect, float zNear, float zFar);

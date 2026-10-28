@@ -27,7 +27,7 @@ Build\windows-release\bin\gltf_viewer.exe Build\gltf_samples\Fox.glb
 | 動畫 | translation、rotation、scale、morph 權重；`LINEAR`（旋轉：slerp）、`STEP`、`CUBICSPLINE`；可同時播放多個動畫 |
 | 場景 | 節點階層（TRS 或矩陣）、預設場景、鏡像的節點（負縮放） |
 | 檔案 | `.glb`、`.gltf` + `.bin`、data URI、外部的 PNG / JPEG / BMP / TGA 圖片 |
-| 擴充 | `EXT_mesh_gpu_instancing`、`KHR_materials_unlit`、`KHR_texture_transform`、`KHR_materials_emissive_strength`、`KHR_mesh_quantization`、`KHR_materials_pbrSpecularGlossiness`（當作 base colour + roughness）、`KHR_materials_transmission` + `KHR_materials_volume`（玻璃，近似：可以看穿並有反射，但後方的東西不會折射）、`KHR_physics_rigid_bodies` + `KHR_implicit_shapes`（在 Jolt 上模擬：§7） |
+| 擴充 | `EXT_mesh_gpu_instancing`、`KHR_materials_unlit`、`KHR_texture_transform`、`KHR_materials_emissive_strength`、`KHR_mesh_quantization`、`KHR_materials_pbrSpecularGlossiness`（當作 base colour + roughness）、`KHR_materials_transmission` + `KHR_materials_volume`（玻璃，近似：可以看穿並有反射，但後方的東西不會折射）、`KHR_materials_specular` + `KHR_materials_ior`（非金屬的 F0 / F90，fs_mesh.sc；2026-10-28 加入）、`KHR_physics_rigid_bodies` + `KHR_implicit_shapes`（在 Jolt 上模擬：§7） |
 
 **尚未支援：**
 - **OpenGL ES / WebGL 上沒有陰影**（web 版、Android 的 GLES 路徑）。
@@ -234,6 +234,25 @@ renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
   所以移動過的剛體會從新位置落下。開啟其他檔案會捨棄編輯；編輯不會存回檔案。
 - 測試用參數：`--select=<節點>`、`--tool=move|rotate|scale`、`--pick=<x>,<y>`、`--drag=<x0>,<y0>,<x1>,<y1>`
   （以選取節點在畫面上的原點為基準的像素）。
+
+### 瀏覽器版檢視器（2026-10-28）
+
+`tools\build_gltf_web.cmd [release|debug]` 用 Emscripten（WebGL2、單執行緒）建出同一個檢視器，輸出到
+`Build\web-<release|debug>-windows\bin\gltf_viewer.html`（加上 `.js`、`.wasm`、`.data`）；`tools\serve_web.cmd gltf`
+（或 `gltf-debug`）會啟動伺服器並開啟它。它和遊戲的 web 版共用建置資料夾與設定（`tools\build_web.cmd <kind>
+gltf_viewer`），但遊戲的 web 建置不會建它。emsdk 會先找 `D:\Work\emsdk`。
+
+- **模型：**`tests/gltf/` 的測試模型打包在 `/models`，面板的 *Test models* 清單可以開啟它們。網址沒有 `?file=` 時，
+  頁面會開 `skin_tube.gltf`。
+- **網址參數：**`?file=morph_cube.gltf&anim=breathe&yaw=30&no-ui`。每個 `name=value` 就是桌面版的
+  `--name=value`；`file=` 只寫檔名時，指的是測試模型。
+- **自己的檔案：***Open...*（選檔視窗）或拖放；`.hdr` 會取代環境（§8）。同一次選取或拖放的所有檔案會放進同一個資料夾（`/upload/<n>/`），
+  所以 `.gltf` 要**和**它的 `.bin`、圖片一起選或一起拖（或單一個 `.glb`）。`.gltf` 放在子資料夾裡的檔案
+  （`textures/a.png`）找不到。拖放由頁面自己處理：SDL 內建的處理會把每個檔案放進各自的資料夾。程式碼：
+  `tools/gltf_viewer/web/shell.html` 和 `main.cpp` 裡的 `__EMSCRIPTEN__` 部分。
+- **和桌面版的差異：**沒有陰影貼圖（WebGL 的 `fs_mesh` 沒有陰影查詢，見 §2）、沒有 MSAA（bgfx 的 MSAA 後緩衝需要
+  `glFramebufferTexture2DMultisampleEXT`，WebGL 沒有），也沒有截圖參數。按 Esc 不會關閉頁面。
+- 在 MSVC 以外，`toms_physics` 和 Jolt 一樣用 `-fno-rtti` 編譯；不然它的 `JPH::GroupFilter` 子類別在 clang 下連結不起來。
 
 ## 5. 測試
 
@@ -446,3 +465,47 @@ Materials_Restitution、Materials_Friction 都能載入、建置與模擬；唯�
   - `simulateTo` 與逐步模擬逐位元相同；
   - 沒有物理的模型拒絕建置。
 - **`smoke.gltf_physics`：** D3D11 上 2.5 秒時的場景。
+
+## 8. 環境光照（image-based lighting，2026-10-28）
+
+### 8.1 是什麼
+
+一張房間的 HDR 照片（等距柱狀投影，Radiance `.hdr`），模型會**反射**它、也被它**照亮**，取代原本單純的天空 / 地面顏色。
+黑色、光滑的材質幾乎只看得到反射出的房間，所以像 Khronos 的 `SpecularTest` 這類檔案，要有它才會和參考截圖一樣。
+
+- **預設照片：**`assets/media/env/artist_workshop_1k.hdr`（1024 x 512，1.7 MB）：Poly Haven 上 Oliksiy Yakovlyev 的
+  「Artist Workshop」（https://polyhaven.com/a/artist_workshop），**CC0**（不需要署名）。和 Khronos glTF Sample Viewer
+  截圖用的是同一個房間。程式用 `resources.json` 裡的鍵 `env.default`（`toms::key::kEnvDefault`）指名它。
+- **方向：**照片的中間一欄朝 +Z，和 Khronos 檢視器一樣，所以從正面看模型時，看到的房間部分和他們的截圖相同。
+- **遊戲：**目前還沒有用到。標題場景維持原本的天空（它不設定環境），遊戲的 web 版下載也不包含 `assets/media/env/`。
+
+### 8.2 程式碼
+
+- **`src/core/engine/gltf_environment.*`**（只用 CPU，所以 web 做一樣的事，測試也能檢查）：`loadEquirect` 透過 vfs 讀取
+  `.hdr`；`prefilterEnvironment` 把它變成：
+  - 一張 cubemap（每面 256 px），各個 mip 層是為越來越粗糙的表面模糊過的照片：GGX importance sampling，每個 texel 48 個樣本，
+    依每個樣本的大小讀取照片的縮小版本（不會有閃爍的雜點）。mip 0 是清晰的照片，mip 5 是粗糙度 1；
+  - 從各方向照到表面的光的 9 個球諧項（cosine 卷積後除以 pi）。
+
+  1K 的照片在桌面上約 0.25 秒，在瀏覽器裡 0.3–0.5 秒。
+- **`GltfRenderer::setEnvironment`** 把它上傳成 RGBA16F cubemap（每個後端都能線性過濾，WebGL2 也可以）；
+  `Frame::environment`、`environmentIntensity`、`environmentYaw`、`background`、`backgroundBlur` 使用它。
+- **`fs_mesh.sc`：**有環境時，環境光是球諧項（漫射）加上 `粗糙度 x 5` 層的 cubemap（反射），經過和之前相同的 Fresnel /
+  environment-BRDF（包含 `KHR_materials_specular`）。沒有環境時維持原本的天空 / 地面。
+- **`vs_sky.sc` / `fs_sky.sc`**（`ShaderProgram::Sky`）：模型後面的照片，一個深度為 1 的全螢幕三角形，用 LEQUAL 深度測試，
+  所以只出現在沒有其他東西的地方。
+- **`env_common.sh`：**兩個 shader 共用的取樣器（stage 9）和繞 +Y 的旋轉。
+
+### 8.3 在檢視器中
+
+- **預設開啟**，使用預設照片。面板的 **Environment** 區：開 / 關、強度、旋轉、背景（開）和它的模糊度（0.3）。開啟時，
+  ambient 滑桿和天空 / 地面顏色不會使用。
+- **換一張照片：***Open...* 或拖放一個 `.hdr`（桌面和 web 都可以）。參數：`--env=<file.hdr|none>`、
+  `--env-rotation=<deg>`、`--env-intensity=<x>`、`--background=0|1`、`--background-blur=<0..1>`。
+- **web 頁面**把 `assets/media/env/` 和 `resources.json` 打包在 `/assets`（資料共約 2 MB）。
+
+### 8.4 測試
+
+- **`unit.gltf_environment_test`：**均勻的照片在每個模糊層都保持均勻，它的漫射光從各方向都是那個值；雙色照片落在預期的
+  cubemap 面上、從預期的方向照亮；面的慣例；隨附的 `.hdr` 能讀取並預先過濾。
+- `smoke.gltf_*` 截圖會因此改變（背後和反射中的房間）：重新產生時，它們的參考圖需要 `TOMS_UPDATE_GOLDEN=1`。

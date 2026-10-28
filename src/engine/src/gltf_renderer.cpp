@@ -4,6 +4,7 @@
 #include "embedded_shaders.h"
 
 #include <bgfx/bgfx.h>
+#include <bx/math.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -157,14 +158,23 @@ struct GltfRenderer::AnimTextureGpu {
 struct GltfRenderer::Impl {
     bgfx::ProgramHandle mesh = BGFX_INVALID_HANDLE, meshInst = BGFX_INVALID_HANDLE, line = BGFX_INVALID_HANDLE;
     bgfx::ProgramHandle meshAnimTex = BGFX_INVALID_HANDLE, shadowAnimTex = BGFX_INVALID_HANDLE;   // crowds
+    // Image-based lighting: the prefiltered cubemap (or a black 1 x 1 one, so the sampler is always bound), its
+    // diffuse terms, and the background (one screen triangle).
+    bgfx::ProgramHandle sky = BGFX_INVALID_HANDLE;
+    bgfx::VertexBufferHandle skyVb = BGFX_INVALID_HANDLE;
+    bgfx::TextureHandle envTex = BGFX_INVALID_HANDLE, envDummy = BGFX_INVALID_HANDLE;
+    bgfx::UniformHandle sEnv = BGFX_INVALID_HANDLE, uEnvParams = BGFX_INVALID_HANDLE, uEnvSH = BGFX_INVALID_HANDLE,
+                        uEnvSky = BGFX_INVALID_HANDLE, uSkyMtx = BGFX_INVALID_HANDLE;
+    glm::vec4 envSH[9];
+    glm::vec4 envParams{0.0f};               // this frame: on, roughest mip, yaw, intensity
     bgfx::UniformHandle sAnimTex = BGFX_INVALID_HANDLE;
     bool crowdCaps = false;
     std::vector<gltf::CrowdGpuInstance> crowdScratch;
     bgfx::ProgramHandle shadow = BGFX_INVALID_HANDLE, shadowInst = BGFX_INVALID_HANDLE;
     bgfx::VertexLayout layout, lineLay;
-    bgfx::UniformHandle sBase, sMR, sNormal, sOcc, sEmissive, sShadow;
+    bgfx::UniformHandle sBase, sMR, sNormal, sOcc, sEmissive, sShadow, sSpecular, sSpecularColor;
     bgfx::UniformHandle uBaseColor, uPbr, uEmissiveCutoff, uTexSet, uTexSet2, uUvTransform, uUvRotation;
-    bgfx::UniformHandle uCamPos, uSky, uGround, uJoints, uMeshFlags, uMatParams;
+    bgfx::UniformHandle uCamPos, uSky, uGround, uJoints, uMeshFlags, uMatParams, uSpecular;
     bgfx::UniformHandle uLightPos, uLightDirs, uLightColors, uLightSpot, uLightCount, uShadowMtx, uShadowRect;
     bgfx::TextureHandle white = BGFX_INVALID_HANDLE, flatNormal = BGFX_INVALID_HANDLE;
     bool ready = false;
@@ -230,6 +240,7 @@ bool GltfRenderer::init() {
     r.shadowInst = createEmbeddedProgram(ShaderProgram::MeshShadowInstanced);
     r.meshAnimTex = createEmbeddedProgram(ShaderProgram::MeshAnimTex);
     r.shadowAnimTex = createEmbeddedProgram(ShaderProgram::MeshShadowAnimTex);
+    r.sky = createEmbeddedProgram(ShaderProgram::Sky);
     if (!bgfx::isValid(r.mesh) || !bgfx::isValid(r.line)) {
         std::fprintf(stderr, "[gltf] no mesh shaders for this backend\n");
         return false;
@@ -241,6 +252,8 @@ bool GltfRenderer::init() {
     r.sNormal = bgfx::createUniform("s_normalMap", bgfx::UniformType::Sampler);
     r.sOcc = bgfx::createUniform("s_occlusion", bgfx::UniformType::Sampler);
     r.sEmissive = bgfx::createUniform("s_emissive", bgfx::UniformType::Sampler);
+    r.sSpecular = bgfx::createUniform("s_specular", bgfx::UniformType::Sampler);
+    r.sSpecularColor = bgfx::createUniform("s_specularColor", bgfx::UniformType::Sampler);
     r.sShadow = bgfx::createUniform("s_shadowMap", bgfx::UniformType::Sampler);
     r.sAnimTex = bgfx::createUniform("s_animTex", bgfx::UniformType::Sampler);
     r.uBaseColor = bgfx::createUniform("u_baseColor", bgfx::UniformType::Vec4);
@@ -256,6 +269,21 @@ bool GltfRenderer::init() {
     r.uJoints = bgfx::createUniform("u_joints", bgfx::UniformType::Mat4, gltf::kMaxJoints);
     r.uMeshFlags = bgfx::createUniform("u_meshFlags", bgfx::UniformType::Vec4);
     r.uMatParams = bgfx::createUniform("u_matParams", bgfx::UniformType::Vec4);
+    r.uSpecular = bgfx::createUniform("u_specular", bgfx::UniformType::Vec4);
+    r.sEnv = bgfx::createUniform("s_envMap", bgfx::UniformType::Sampler);
+    r.uEnvParams = bgfx::createUniform("u_envParams", bgfx::UniformType::Vec4);
+    r.uEnvSH = bgfx::createUniform("u_envSH", bgfx::UniformType::Vec4, 9);
+    r.uEnvSky = bgfx::createUniform("u_envSky", bgfx::UniformType::Vec4);
+    r.uSkyMtx = bgfx::createUniform("u_skyMtx", bgfx::UniformType::Mat4);
+    {
+        static const uint32_t black[6] = {0xff000000u, 0xff000000u, 0xff000000u, 0xff000000u, 0xff000000u, 0xff000000u};
+        r.envDummy = bgfx::createTextureCube(1, false, 1, bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_UVW_CLAMP,
+                                             bgfx::copy(black, sizeof(black)));
+        bgfx::VertexLayout skyLay;
+        skyLay.begin().add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float).end();
+        static const float tri[9] = {-1.0f, -1.0f, 0.0f, 3.0f, -1.0f, 0.0f, -1.0f, 3.0f, 0.0f};   // covers the screen
+        r.skyVb = bgfx::createVertexBuffer(bgfx::copy(tri, sizeof(tri)), skyLay);
+    }
     r.uLightPos = bgfx::createUniform("u_lightPos", bgfx::UniformType::Vec4, kMaxLights);
     r.uLightDirs = bgfx::createUniform("u_lightDirs", bgfx::UniformType::Vec4, kMaxLights);
     r.uLightColors = bgfx::createUniform("u_lightColors", bgfx::UniformType::Vec4, kMaxLights);
@@ -292,16 +320,22 @@ void GltfRenderer::shutdown() {
     Impl& r = *impl_;
     if (!r.ready) return;
     r.releaseAtlas();
-    for (bgfx::ProgramHandle p : {r.mesh, r.meshInst, r.line, r.shadow, r.shadowInst, r.meshAnimTex, r.shadowAnimTex})
+    clearEnvironment();
+    for (bgfx::ProgramHandle p : {r.mesh, r.meshInst, r.line, r.shadow, r.shadowInst, r.meshAnimTex, r.shadowAnimTex, r.sky})
         if (bgfx::isValid(p)) bgfx::destroy(p);
     for (bgfx::UniformHandle u : {r.sBase, r.sMR, r.sNormal, r.sOcc, r.sEmissive, r.sShadow, r.uBaseColor, r.uPbr, r.uEmissiveCutoff,
                                   r.uTexSet, r.uTexSet2, r.uUvTransform, r.uUvRotation, r.uCamPos, r.uSky, r.uGround, r.uJoints,
                                   r.uMeshFlags, r.uMatParams, r.uLightPos, r.uLightDirs, r.uLightColors, r.uLightSpot, r.uLightCount,
-                                  r.uShadowMtx, r.uShadowRect, r.sAnimTex})
+                                  r.uShadowMtx, r.uShadowRect, r.sAnimTex, r.sSpecular, r.sSpecularColor, r.uSpecular, r.sEnv,
+                                  r.uEnvParams, r.uEnvSH, r.uEnvSky, r.uSkyMtx})
         bgfx::destroy(u);
     bgfx::destroy(r.white);
     bgfx::destroy(r.flatNormal);
     if (bgfx::isValid(r.dummyShadow)) bgfx::destroy(r.dummyShadow);
+    if (bgfx::isValid(r.envDummy)) bgfx::destroy(r.envDummy);
+    if (bgfx::isValid(r.skyVb)) bgfx::destroy(r.skyVb);
+    r.envDummy = BGFX_INVALID_HANDLE;
+    r.skyVb = BGFX_INVALID_HANDLE;
     r.ready = false;
 }
 
@@ -492,7 +526,71 @@ void GltfRenderer::begin(uint16_t viewId, const Frame& frame, uint32_t width, ui
     }
     bgfx::setViewMode(uint16_t(r.view + 1), bgfx::ViewMode::DepthDescending);   // blended: far to near
     bgfx::touch(r.view);
+
+    // ---- the environment: this frame's settings, and the picture behind everything ----
+    const bool env = frame.environment && bgfx::isValid(r.envTex);
+    r.envParams = glm::vec4(env ? 1.0f : 0.0f, float(gltf::Environment::kRoughLevels - 1), frame.environmentYaw,
+                            frame.environmentIntensity);
+    if (env && frame.background && bgfx::isValid(r.sky)) {
+        const glm::mat4 inv = glm::inverse(frame.proj * frame.view);
+        const glm::vec4 cam(frame.eye, frame.exposure), skyBlur(std::clamp(frame.backgroundBlur, 0.0f, 1.0f) * r.envParams.y, 0, 0, 0);
+        const glm::vec4 sky(frame.sky, frame.srgbOut ? 1.0f : 0.0f), ground(frame.ground, frame.tonemap ? 1.0f : 0.0f);
+        bgfx::setUniform(r.uSkyMtx, glm::value_ptr(inv));
+        bgfx::setUniform(r.uCamPos, &cam);
+        bgfx::setUniform(r.uSky, &sky);
+        bgfx::setUniform(r.uGround, &ground);
+        bgfx::setUniform(r.uEnvParams, &r.envParams);
+        bgfx::setUniform(r.uEnvSky, &skyBlur);
+        bgfx::setTexture(9, r.sEnv, r.envTex);
+        bgfx::setVertexBuffer(0, r.skyVb);
+        bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_LEQUAL);   // at depth 1: only where nothing is drawn
+        bgfx::submit(r.view, r.sky);
+        stats_.drawCalls++;
+    }
 }
+
+bool GltfRenderer::setEnvironment(const gltf::Environment& env, std::string* error) {
+    Impl& r = *impl_;
+    auto fail = [&](const char* why) {
+        if (error) *error = why;
+        std::fprintf(stderr, "[gltf] environment: %s\n", why);
+        return false;
+    };
+    if (!r.ready) return fail("the renderer is not started");
+    if (!env.valid() || env.faceSize > 4096) return fail("an empty environment");
+    if ((bgfx::getCaps()->formats[bgfx::TextureFormat::RGBA16F] & BGFX_CAPS_FORMAT_TEXTURE_CUBE) == 0)
+        return fail("this backend cannot sample RGBA16F cubemaps");
+    clearEnvironment();
+    const uint16_t size = (uint16_t)env.faceSize;
+    r.envTex = bgfx::createTextureCube(size, env.mips() > 1, 1, bgfx::TextureFormat::RGBA16F, BGFX_SAMPLER_UVW_CLAMP);
+    if (!bgfx::isValid(r.envTex)) return fail("the cubemap could not be made");
+    const uint16_t one = bx::halfFromFloat(1.0f);
+    for (int mip = 0; mip < env.mips(); mip++)
+        for (int face = 0; face < 6; face++) {
+            const uint16_t s = uint16_t(std::max(size >> mip, 1));
+            const std::vector<float>& px = env.faces[(size_t)(mip * 6 + face)];
+            const bgfx::Memory* mem = bgfx::alloc(uint32_t(s) * s * 8);
+            uint16_t* o = (uint16_t*)mem->data;
+            for (size_t i = 0; i < (size_t)s * s; i++) {
+                for (int c = 0; c < 3; c++) {
+                    const float v = px[i * 3 + (size_t)c];
+                    o[i * 4 + (size_t)c] = bx::halfFromFloat(v > 0.0f ? std::min(v, 60000.0f) : 0.0f);   // (NaN -> 0)
+                }
+                o[i * 4 + 3] = one;
+            }
+            bgfx::updateTextureCube(r.envTex, 0, (uint8_t)face, (uint8_t)mip, 0, 0, s, s, mem);
+        }
+    for (int i = 0; i < 9; i++) r.envSH[i] = glm::vec4(env.sh[i], 0.0f);
+    return true;
+}
+
+void GltfRenderer::clearEnvironment() {
+    Impl& r = *impl_;
+    if (bgfx::isValid(r.envTex)) bgfx::destroy(r.envTex);
+    r.envTex = BGFX_INVALID_HANDLE;
+}
+
+bool GltfRenderer::hasEnvironment() const { return bgfx::isValid(impl_->envTex); }
 
 void GltfRenderer::draw(GpuModel& gpu, const gltf::Pose& pose, const glm::mat4& placement, bool castShadows) {
     Impl& r = *impl_;
@@ -621,8 +719,17 @@ void GltfRenderer::submitPrimitive(GpuModel& gpu, const gltf::Primitive& p, cons
     bgfx::setUniform(r.uTexSet2, &texSet2);
     bgfx::setUniform(r.uUvTransform, &uvT);
     bgfx::setUniform(r.uUvRotation, &uvR);
-    const glm::vec4 matParams(mat.doubleSided ? 1.0f : 0.0f, mat.transmission, 0.0f, 0.0f);
+    // KHR_materials_specular / _ior (stages 7, 8: 6 is the crowd's animation texture): the dielectric F0 colour before
+    // its texture, ((ior - 1) / (ior + 1))^2 x specularColorFactor, and the specular factor.
+    const glm::vec4 matParams(mat.doubleSided ? 1.0f : 0.0f, mat.transmission, slot(mat.specularTex, 7, r.sSpecular, r.white),
+                              slot(mat.specularColorTex, 8, r.sSpecularColor, r.white));
     bgfx::setUniform(r.uMatParams, &matParams);
+    const float f0Ior = (mat.ior - 1.0f) / (mat.ior + 1.0f);
+    const glm::vec4 specular(mat.specularColor * (f0Ior * f0Ior), mat.specular);
+    bgfx::setUniform(r.uSpecular, &specular);
+    bgfx::setTexture(9, r.sEnv, r.envParams.x > 0.5f ? r.envTex : r.envDummy);
+    bgfx::setUniform(r.uEnvParams, &r.envParams);
+    bgfx::setUniform(r.uEnvSH, r.envSH, 9);
     const glm::vec4 cam(f.eye, f.exposure);
     const glm::vec4 sky(f.sky, f.srgbOut ? 1.0f : 0.0f), ground(f.ground, f.tonemap ? 1.0f : 0.0f);
     bgfx::setUniform(r.uCamPos, &cam);

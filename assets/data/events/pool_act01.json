@@ -190,11 +190,11 @@
         "on": "talk",
         "npc": "villager"
       },
-      "dialogue": "elder_well_night",
-      "afterDialogue": "elder_well_night_after",
       "next": [
         "ev_elder_ledger"
-      ]
+      ],
+      "dialogue": "elder_well_night",
+      "afterDialogue": "elder_well_night_after"
     },
     {
       "eventId": "ev_elder_ledger",
@@ -312,6 +312,17 @@
           "delta": 1
         }
       ]
+    },
+    {
+      "eventId": "ev_打到第一層Boss",
+      "kind": "打倒指定怪獸",
+      "text": "ev_打到第一層Boss.text",
+      "title": "ev_打到第一層Boss.title",
+      "desc": "ev_打到第一層Boss.desc",
+      "trigger": {
+        "on": "talk",
+        "npc": "advisor"
+      }
     }
   ]
 }

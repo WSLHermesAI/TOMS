@@ -15,7 +15,8 @@ namespace toms::next {
 // pass, depth only. Every backend has them.
 enum class ShaderProgram { Sprite, ImGui, RmlUi, SpriteInstanced, SpriteCompute, SpriteFromCompute, FxSpawn, FxUpdate,
                            Mesh, MeshInstanced, Line, MeshShadow, MeshShadowInstanced,
-                           MeshAnimTex, MeshShadowAnimTex };   // crowds: vs_mesh_animtex.sc + fs_mesh.sc / fs_shadow.sc
+                           MeshAnimTex, MeshShadowAnimTex,   // crowds: vs_mesh_animtex.sc + fs_mesh.sc / fs_shadow.sc
+                           Sky };   // vs_sky.sc + fs_sky.sc: the environment picture behind the models
 
 // Creates the program for the active renderer. Returns an invalid handle (and logs) if the
 // renderer type has no embedded binary (e.g. Metal on Windows builds).

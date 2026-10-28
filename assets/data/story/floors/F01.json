@@ -36,7 +36,8 @@
   "events": [
     "ev_village_well",
     "ev_common_cache_wall",
-    "ev_village_ledger"
+    "ev_village_ledger",
+    "ev_打到第一層Boss"
   ],
   "sideStoryHooks": [],
   "story": {
