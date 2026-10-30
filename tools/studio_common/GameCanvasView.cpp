@@ -169,6 +169,7 @@ void GameTextures::setAtlases(const std::vector<std::tuple<std::string, std::str
         for (toms::AtlasPage& pg : atlas->pages) {
             const QImage img(dir.filePath(QString::fromStdString(pg.file)));
             const uint16_t t = upload(img);
+            if (pg.filter.rfind("Linear", 0) == 0) m_ren->setTextureFilter(t, true);
             if (!img.isNull()) {
                 pg.w = img.width();
                 pg.h = img.height();
@@ -229,6 +230,33 @@ bool GameCanvasView::saveGameRendererShot(const QString& path)
     m_shotPath = path;
     update();
     return true;
+}
+
+QImage GameCanvasView::renderOffscreen(int w, int h, const std::function<void(const GameScene&)>& draw)
+{
+    if (!attach() || w <= 0 || h <= 0 || w > 4096 || h > 4096) return QImage();
+    BgfxRenderer& ren = *host().ren;
+    ren.setCapture(uint16_t(w), uint16_t(h));
+    BgfxRenderer::setDesignSizeExact(uint32_t(w), uint32_t(h));
+    ren.setDeviceSize(uint32_t(w), uint32_t(h));
+    ren.begin();
+    draw(GameScene{ren, double(w), double(h)});
+    ren.end();
+    const uint32_t ready = ren.captureFrame();
+    QImage out;
+    if (ready) {
+        uint32_t frame = 0;
+        for (int i = 0; i < 16 && frame < ready; i++) frame = toms::next::bgfxHostFrame();
+        if (frame >= ready) {
+            out = QImage(w, h, QImage::Format_RGBA8888_Premultiplied);
+            const std::vector<uint8_t>& px = ren.capturePixels();
+            for (int y = 0; y < h; y++) std::memcpy(out.scanLine(y), px.data() + size_t(y) * size_t(w) * 4, size_t(w) * 4);
+            out = out.convertToFormat(QImage::Format_RGBA8888);   // straight alpha
+        }
+    }
+    ren.setCapture(0, 0);
+    update();   // the window's own picture again
+    return out;
 }
 
 bool GameCanvasView::event(QEvent* e)

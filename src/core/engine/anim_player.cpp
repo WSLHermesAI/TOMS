@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdio>
 #include <map>
+#include <unordered_map>
 
 namespace toms::anim {
 
@@ -105,18 +106,70 @@ std::vector<MeshNeed> meshesNeeded(const AnimFile& file, const AtlasSet& atlases
 
 void DrawList::submit(IRenderer* ren) const {
     if (!ren) return;
-    for (const Item& it : order) {
-        if (!it.mesh) { ren->drawSprite(quads[it.index]); continue; }
-        const MeshItem& m = meshes[it.index];
-        Mesh mesh;
-        mesh.vertices = vertices.data() + m.firstVertex;
-        mesh.vertexCount = m.vertexCount;
-        mesh.indices = indices.data() + m.firstIndex;
-        mesh.indexCount = m.indexCount;
-        std::copy(m.tint, m.tint + 4, mesh.tint);
-        mesh.additive = m.additive;
-        mesh.texture = m.texture;
-        ren->drawMesh(mesh);
+    // the batched run's vertices, reused from call to call
+    static thread_local std::vector<MeshVertex> runVerts;
+    static thread_local std::vector<float> runColors;
+    static thread_local std::vector<uint16_t> runIdx;
+    auto texOf = [&](const Item& it) { return it.kind == QuadItem ? quads[it.index].texture : meshes[it.index].texture; };
+    auto addOf = [&](const Item& it) { return it.kind == QuadItem ? quads[it.index].additive : meshes[it.index].additive; };
+    auto vertsOf = [&](const Item& it) { return it.kind == QuadItem ? 4u : meshes[it.index].vertexCount; };
+    size_t i = 0;
+    while (i < order.size()) {
+        const Item& it = order[i];
+        if (it.kind == BeginLayer) { ren->beginLayer(layers[it.index]); i++; continue; }
+        if (it.kind == EndLayer) { ren->endLayer(); i++; continue; }
+        if (it.kind == QuadItem && quads[it.index].solid) { ren->drawSprite(quads[it.index]); i++; continue; }
+        // the run: quads (not solid) and meshes with this texture and blending, at most 65536 vertices (16-bit indices)
+        const uint16_t tex = texOf(it);
+        const bool add = addOf(it);
+        size_t j = i;
+        uint32_t verts = 0;
+        bool mesh = false;
+        while (j < order.size()) {
+            const Item& o = order[j];
+            if (o.kind == BeginLayer || o.kind == EndLayer || (o.kind == QuadItem && quads[o.index].solid)) break;
+            if (texOf(o) != tex || addOf(o) != add || verts + vertsOf(o) > 65536u) break;
+            verts += vertsOf(o);
+            mesh = mesh || o.kind == MeshItemKind;
+            j++;
+        }
+        if (!mesh) {   // quads only: the sprite batch
+            for (; i < j; i++) ren->drawSprite(quads[order[i].index]);
+            continue;
+        }
+        runVerts.clear();
+        runColors.clear();
+        runIdx.clear();
+        for (; i < j; i++) {
+            const Item& o = order[i];
+            const uint16_t base = uint16_t(runVerts.size());
+            if (o.kind == QuadItem) {
+                const Quad& q = quads[o.index];
+                const float x0 = q.rect[0], y0 = q.rect[1], x1 = q.rect[0] + q.rect[2], y1 = q.rect[1] + q.rect[3];
+                const float rc[8] = {x0, y0, x1, y0, x1, y1, x0, y1};
+                const float* c = q.hasCorners ? q.corners : rc;
+                runVerts.push_back({c[0], c[1], q.uv[0], q.uv[1]});
+                runVerts.push_back({c[2], c[3], q.uv[2], q.uv[1]});
+                runVerts.push_back({c[4], c[5], q.uv[2], q.uv[3]});
+                runVerts.push_back({c[6], c[7], q.uv[0], q.uv[3]});
+                for (int k = 0; k < 4; k++) runColors.insert(runColors.end(), q.tint, q.tint + 4);
+                for (uint16_t k : {0, 1, 2, 0, 2, 3}) runIdx.push_back(uint16_t(base + k));
+            } else {
+                const MeshItem& m = meshes[o.index];
+                runVerts.insert(runVerts.end(), vertices.begin() + m.firstVertex, vertices.begin() + m.firstVertex + m.vertexCount);
+                for (uint32_t k = 0; k < m.vertexCount; k++) runColors.insert(runColors.end(), m.tint, m.tint + 4);
+                for (uint32_t k = 0; k < m.indexCount; k++) runIdx.push_back(uint16_t(base + indices[m.firstIndex + k]));
+            }
+        }
+        Mesh batch;
+        batch.vertices = runVerts.data();
+        batch.vertexCount = uint32_t(runVerts.size());
+        batch.indices = runIdx.data();
+        batch.indexCount = uint32_t(runIdx.size());
+        batch.colors = runColors.data();
+        batch.additive = add;
+        batch.texture = tex;
+        ren->drawMesh(batch);
     }
 }
 
@@ -179,6 +232,11 @@ struct Bent {
     const toms::SpriteMesh* mesh = nullptr;
     toms::SpriteMesh own;              // a deformed sprite without a mesh file: a plain grid over it
     SkinView view;                     // placed vertices, weights, bones
+    // what a SkinRig keeps (a skinned node): the mesh at rest in clip space, each bone's rest transform and pose (-1: none)
+    std::vector<float> restV;
+    std::vector<glm::mat4> boneRest;
+    std::vector<int> bonePose;
+    std::vector<const Node*> boneNode;
 };
 
 // A plain grid of cols x rows cells over a region's packed pixels (every cell, transparent or not), in original pixels.
@@ -208,6 +266,30 @@ glm::vec2 latticeOffset(const std::vector<glm::vec2>& offsets, int cols, int row
 }
 
 namespace {
+
+// Automatic weights depend only on what they are made from -- the mesh at rest and the bones' rest segments -- so they
+// are made once and kept by a hash of exactly that (an edit of the rest pose, another mesh: other weights). Without
+// this, every skinned node made them again every frame.
+const std::vector<float>& cachedAutoWeights(const std::vector<float>& restV, const std::vector<glm::mat4>& boneRest,
+                                            const std::vector<glm::vec2>& boneEnd) {
+    uint64_t h = 1469598103934665603ull;
+    auto mix = [&](const void* p, size_t n) {
+        const auto* b = static_cast<const unsigned char*>(p);
+        for (size_t i = 0; i < n; i++) h = (h ^ b[i]) * 1099511628211ull;
+    };
+    mix(restV.data(), restV.size() * sizeof(float));
+    for (const glm::mat4& m : boneRest) mix(&m[3][0], 2 * sizeof(float));
+    mix(boneEnd.data(), boneEnd.size() * sizeof(glm::vec2));
+    const size_t n = boneRest.size();
+    mix(&n, sizeof n);
+    static thread_local std::unordered_map<uint64_t, std::vector<float>> cache;
+    auto it = cache.find(h);
+    if (it != cache.end()) return it->second;
+    if (cache.size() > 512) cache.clear();   // an editor dragging bones at rest makes new ones: keep it bounded
+    std::vector<float>& w = cache[h];
+    autoSkinWeights(restV, boneRest, boneEnd, w);
+    return w;
+}
 
 SkinState bend(const std::vector<NodePose>& poses, size_t i, const std::vector<std::pair<const Node*, glm::mat4>>& rest,
                const AtlasSet& atlases, const glm::mat3& place, Bent& out) {
@@ -259,7 +341,11 @@ SkinState bend(const std::vector<NodePose>& poses, size_t i, const std::vector<s
         const Node* bn = named ? named->first : &n;
         boneRest[b] = named ? named->second : *nodeRest;
         glm::mat4 now = boneRest[b];
-        for (const NodePose& q : poses) if (q.node == bn) { now = q.world; break; }
+        int at = -1;
+        for (size_t qi = 0; qi < poses.size(); qi++)
+            if (poses[qi].node == bn) { now = poses[qi].world; at = (int)qi; break; }
+        out.bonePose.push_back(at);
+        out.boneNode.push_back(bn);
         boneSkin[b] = std::fabs(glm::determinant(boneRest[b])) > 1e-12f ? now * glm::inverse(boneRest[b]) : glm::mat4(1.0f);
         // A bone reaches to its first child that is a bone; a last bone (a head, a hand) reaches on past its origin as
         // far as from its parent bone to it, so what lies beyond it follows it.
@@ -287,8 +373,9 @@ SkinState bend(const std::vector<NodePose>& poses, size_t i, const std::vector<s
         restV[2 * k] = c.x;
         restV[2 * k + 1] = c.y;
     }
+    out.boneRest = boneRest;
     v.autoWeights = n.skinWeights.size() != (size_t)verts * 2 * kSkinInfluences;   // automatic, or painted for another mesh
-    if (v.autoWeights) autoSkinWeights(restV, boneRest, boneEnd, v.weights);
+    if (v.autoWeights) v.weights = cachedAutoWeights(restV, boneRest, boneEnd);
     else v.weights = n.skinWeights;
 
     v.vertices.resize(verts);
@@ -307,14 +394,89 @@ SkinState bend(const std::vector<NodePose>& poses, size_t i, const std::vector<s
         v.vertices[k] = placed(glm::vec2(acc));
     }
     v.triangles = mesh->triangles;
+    out.restV = std::move(restV);
     return SkinState::Ok;
 }
 }  // namespace
 
+struct SkinRigCache {
+    struct Rig {
+        std::string sprite;                       // the sprite it was made for (sprite keys switch meshes)
+        const toms::SpriteMesh* mesh = nullptr;
+        uint16_t texture = kSpriteAtlasTexture;
+        std::vector<float> restV, uv, weights;    // per vertex: at rest (clip space), texture, kSkinInfluences pairs
+        std::vector<int> bonePose;                // per bone: its pose, -1 = stays at rest
+        std::vector<const Node*> boneNode;
+        std::vector<glm::mat4> restInv;           // per bone: its rest transform inverted (identity when degenerate)
+    };
+    std::unordered_map<const Node*, std::vector<Rig>> rigs;
+};
+
+namespace {
+// The shared caches, by clip and atlas set, held weakly: the players keep them alive. fresh: a new one replaces the
+// shared one (the atlases were reloaded under the same AtlasSet; players still on the old one keep it until they ask
+// again).
+std::shared_ptr<SkinRigCache> sharedRigs(const Clip* clip, const AtlasSet* atlases, bool fresh) {
+    static std::map<std::pair<const Clip*, const AtlasSet*>, std::weak_ptr<SkinRigCache>> shared;
+    static int calls = 0;
+    if (++calls % 256 == 0)   // now and then: forget the ones nobody plays any more
+        for (auto it = shared.begin(); it != shared.end();) it = it->second.expired() ? shared.erase(it) : std::next(it);
+    std::weak_ptr<SkinRigCache>& slot = shared[{clip, atlases}];
+    std::shared_ptr<SkinRigCache> c = fresh ? nullptr : slot.lock();
+    if (!c) {
+        c = std::make_shared<SkinRigCache>();
+        slot = c;
+    }
+    return c;
+}
+}  // namespace
+
 bool makeSkinnedMesh(const std::vector<NodePose>& poses, size_t i, const std::vector<std::pair<const Node*, glm::mat4>>& rest,
-                     const AtlasSet& atlases, const glm::mat3& place, const glm::vec4& t, DrawList& out) {
+                     const AtlasSet& atlases, const glm::mat3& place, const glm::vec4& t, DrawList& out, SkinRigCache* rigs) {
     const NodePose& p = poses[i];
     if (!p.visible || p.color.a <= 0.0f) return false;
+    // A skinned node without a lattice, its rig made: only its bones are new this frame.
+    const bool cachable = rigs && p.node->skinned() && !p.node->deformed();
+    if (cachable) {
+        for (const SkinRigCache::Rig& g : rigs->rigs[p.node]) {
+            if (g.sprite != p.sprite) continue;
+            const size_t bones = g.bonePose.size();
+            glm::mat4 skin[16];
+            for (size_t b = 0; b < bones && b < 16; b++) {
+                const int at = g.bonePose[b];
+                skin[b] = at >= 0 && (size_t)at < poses.size() && poses[(size_t)at].node == g.boneNode[b] ? poses[(size_t)at].world * g.restInv[b]
+                                                                                                          : glm::mat4(1.0f);
+            }
+            DrawList::MeshItem item;
+            item.firstVertex = (uint32_t)out.vertices.size();
+            item.vertexCount = g.mesh->vertexCount();
+            item.firstIndex = (uint32_t)out.indices.size();
+            item.indexCount = (uint32_t)g.mesh->triangles.size();
+            for (uint32_t v = 0; v < item.vertexCount; v++) {
+                const glm::vec4 restPos(g.restV[2 * v], g.restV[2 * v + 1], 0, 1);
+                glm::vec4 acc(0.0f);
+                float sum = 0;
+                for (int j = 0; j < kSkinInfluences; j++) {
+                    const float w = g.weights[(size_t)v * 2 * kSkinInfluences + 2 * j + 1];
+                    const int b = (int)g.weights[(size_t)v * 2 * kSkinInfluences + 2 * j];
+                    if (w == 0.0f || b < 0 || b >= (int)bones || b >= 16) continue;
+                    acc += w * (skin[b] * restPos);
+                    sum += w;
+                }
+                acc = sum > 0 ? acc / sum : restPos;
+                const glm::vec3 s = place * glm::vec3(acc.x, acc.y, 1.0f);
+                out.vertices.push_back({s.x, s.y, g.uv[2 * v], g.uv[2 * v + 1]});
+            }
+            out.indices.insert(out.indices.end(), g.mesh->triangles.begin(), g.mesh->triangles.end());
+            const glm::vec4 col = p.color * t;
+            item.tint[0] = col.r; item.tint[1] = col.g; item.tint[2] = col.b; item.tint[3] = col.a;
+            item.additive = p.node->blend == Blend::Add;
+            item.texture = g.texture;
+            out.order.push_back({DrawList::MeshItemKind, (uint32_t)out.meshes.size()});
+            out.meshes.push_back(item);
+            return true;
+        }
+    }
     Bent b;
     if (bend(poses, i, rest, atlases, place, b) != SkinState::Ok) return false;
     const toms::AtlasRegion* r = b.region;
@@ -327,17 +489,32 @@ bool makeSkinnedMesh(const std::vector<NodePose>& poses, size_t i, const std::ve
     // The UVs stay inside the region: a mesh cut from another packing or art style (the game's sprite atlas follows the
     // chosen style, a clip file has one mesh file) must not sample the neighbouring sprites.
     const float du = (r->uv[2] - r->uv[0]) / r->w, dv = (r->uv[3] - r->uv[1]) / r->h;
+    SkinRigCache::Rig* rig = nullptr;
+    if (cachable && b.boneRest.size() <= 16) {   // keep what the next frames need
+        rigs->rigs[p.node].push_back(SkinRigCache::Rig());
+        rig = &rigs->rigs[p.node].back();
+        rig->sprite = p.sprite;
+        rig->mesh = mesh;
+        rig->texture = b.texture;
+        rig->restV = b.restV;
+        rig->weights = b.view.weights;
+        rig->bonePose = b.bonePose;
+        rig->boneNode = b.boneNode;
+        for (const glm::mat4& m : b.boneRest)
+            rig->restInv.push_back(std::fabs(glm::determinant(m)) > 1e-12f ? glm::inverse(m) : glm::mat4(1.0f));
+    }
     for (uint32_t v = 0; v < item.vertexCount; v++) {
         const float px = std::clamp(mesh->vertices[2 * v] - r->offX, 0.0f, (float)r->w);
         const float py = std::clamp(mesh->vertices[2 * v + 1] - r->offY, 0.0f, (float)r->h);
         out.vertices.push_back({b.view.vertices[v].x, b.view.vertices[v].y, r->uv[0] + px * du, r->uv[1] + py * dv});
+        if (rig) { rig->uv.push_back(r->uv[0] + px * du); rig->uv.push_back(r->uv[1] + py * dv); }
     }
     out.indices.insert(out.indices.end(), mesh->triangles.begin(), mesh->triangles.end());
     const glm::vec4 col = p.color * t;
     item.tint[0] = col.r; item.tint[1] = col.g; item.tint[2] = col.b; item.tint[3] = col.a;
     item.additive = p.node->blend == Blend::Add;
     item.texture = b.texture;
-    out.order.push_back({true, (uint32_t)out.meshes.size()});
+    out.order.push_back({DrawList::MeshItemKind, (uint32_t)out.meshes.size()});
     out.meshes.push_back(item);
     return true;
 }
@@ -379,17 +556,166 @@ std::vector<MissingMesh> skinnedWithoutMesh(const Clip& clip, const AtlasSet& at
     return out;
 }
 
+// ---- effects (docs/engine/18_NODE_EFFECTS.md) ---------------------------------------------------
+
+namespace {
+void drawPose(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases, const glm::mat3& place,
+              const glm::vec4& t, std::vector<std::pair<const Node*, glm::mat4>>& rest, bool& restMade, DrawList& out,
+              std::vector<std::string>* missing);
+
+float placementScale(const glm::mat3& m) { return std::sqrt(std::fabs(m[0][0] * m[1][1] - m[1][0] * m[0][1])); }
+
+// Effects around subtrees: before pose j, the afterimages and layers of every node whose subtree starts at j (outer
+// nodes first); after pose j, the layers whose subtree ends there (inner first). A subtree's poses are contiguous
+// (NodePose::first / end), so its layer holds exactly it.
+struct EffectWalk {
+    const Clip& clip;
+    const std::vector<NodePose>& poses;
+    bool any = false;
+    std::vector<size_t> nodes;      // poses with an effect or a trail that shows, by first pose, outer first
+    size_t next = 0;
+    std::vector<uint32_t> open;     // the open layers' ends
+
+    EffectWalk(const Clip& c, const std::vector<NodePose>& p, bool effects) : clip(c), poses(p) {
+        if (!effects) return;
+        for (size_t i = 0; i < p.size(); i++) {
+            const NodePose& q = p[i];
+            if (!q.node || !q.visible || q.color.a <= 0.0f) continue;   // hidden: so is its subtree
+            if (q.node->hasFx() || (q.node->hasTrail() && trailAt(*q.node, q.time) > 0.0f)) nodes.push_back(i);
+        }
+        std::stable_sort(nodes.begin(), nodes.end(), [&](size_t a, size_t b) {
+            return p[a].first != p[b].first ? p[a].first < p[b].first : p[a].depth < p[b].depth;
+        });
+        any = !nodes.empty();
+    }
+    void before(size_t j, const AtlasSet& atlases, const std::vector<std::pair<const Node*, glm::mat4>>& rest,
+                const glm::mat3& place, const glm::vec4& t, DrawList& out) {
+        for (; next < nodes.size() && poses[nodes[next]].first == j; next++) {
+            const size_t i = nodes[next];
+            const Node& n = *poses[i].node;
+            if (n.hasTrail()) appendTrail(clip, poses, i, atlases, rest, place, t, out);   // behind it, outside its layer
+            LayerEffect fx;
+            if (n.hasFx() && nodeLayerEffect(clip, poses, i, place, fx)) {
+                out.beginLayer(fx);
+                open.push_back(poses[i].end);
+            }
+        }
+    }
+    void after(size_t j, DrawList& out) {
+        while (!open.empty() && open.back() <= j + 1) {
+            out.endLayer();
+            open.pop_back();
+        }
+    }
+};
+}  // namespace
+
+bool nodeLayerEffect(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const glm::mat3& place, LayerEffect& out) {
+    if (i >= poses.size() || !poses[i].node || !poses[i].node->hasFx()) return false;
+    const NodePose& p = poses[i];
+    if (!p.visible || p.color.a <= 0.0f) return false;
+    const Node& n = *p.node;
+    const glm::vec4 v = fxParamsAt(n, p.time);
+    const float scale = placementScale(place);
+    out = LayerEffect();
+    for (int k = 0; k < 4; k++) out.color[k] = n.fx.color[k];
+    switch (n.fx.shader) {
+    case FxShader::None: return false;
+    case FxShader::Group: out.kind = LayerEffect::None; break;
+    case FxShader::MotionBlur: {
+        out.kind = LayerEffect::MotionBlur;
+        glm::vec2 d(place * glm::vec3(v.x, v.y, 0.0f));   // a vector: the placement's turn and scale, not its move
+        if (v.z > 0.0f) {   // + its own movement over the last 1/30 s
+            static thread_local std::vector<NodePose> was;   // reused: no allocation a frame
+            evaluate(clip, std::max(0.0f, p.clipTime - 1.0f / 30.0f), was);
+            if (i < was.size() && was[i].node == p.node) {
+                const glm::vec2 a(place * flatten(was[i].world) * glm::vec3(0, 0, 1)), b(place * flatten(p.world) * glm::vec3(0, 0, 1));
+                d += v.z * (b - a);
+            }
+        }
+        if (glm::length(d) < 0.5f) return false;   // nothing to smear: drawn as it is
+        out.params[0] = d.x;
+        out.params[1] = d.y;
+        break;
+    }
+    case FxShader::Glow:
+        out.kind = LayerEffect::Glow;
+        out.params[0] = v.x;
+        out.params[1] = v.y * scale;
+        out.params[2] = v.z;
+        out.params[3] = v.w;
+        break;
+    case FxShader::Flash:
+        if (v.x <= 0.0f) return false;
+        out.kind = LayerEffect::Flash;
+        out.params[0] = v.x;
+        break;
+    case FxShader::Outline:
+        if (v.x <= 0.0f || n.fx.color.a <= 0.0f) return false;
+        out.kind = LayerEffect::Outline;
+        out.params[0] = v.x * scale;
+        out.params[1] = v.y;
+        break;
+    }
+    return true;
+}
+
+void appendTrail(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases,
+                 const std::vector<std::pair<const Node*, glm::mat4>>& rest, const glm::mat3& place, const glm::vec4& t,
+                 DrawList& out) {
+    if (i >= poses.size() || !poses[i].node) return;
+    const NodePose& p = poses[i];
+    const NodeTrail& tr = p.node->trail;
+    const float strength = trailAt(*p.node, p.time);
+    if (tr.count <= 0 || tr.gap <= 0.0f || strength <= 0.0f) return;
+    static thread_local std::vector<NodePose> ghost;   // reused for every afterimage: no allocation a frame
+    for (int k = std::min(tr.count, kMaxTrail); k >= 1; k--) {   // the oldest first: the newer ones over it
+        const float when = p.clipTime - (float)k * tr.gap;
+        if (when < 0.0f) continue;
+        evaluate(clip, when, ghost);
+        if (i >= ghost.size() || ghost[i].node != p.node) continue;
+        const float fade = (float)(tr.count - k + 1) / (float)tr.count;
+        const glm::vec4 tint = t * glm::vec4(tr.color.r, tr.color.g, tr.color.b, tr.color.a * strength * fade);
+        for (uint32_t g = ghost[i].first; g < ghost[i].end && g < ghost.size(); g++) {
+            const size_t quads = out.quads.size(), meshes = out.meshes.size();
+            if (!(ghost[g].node && ghost[g].node->usesMesh() && makeSkinnedMesh(ghost, g, rest, atlases, place, tint, out))) {
+                Quad q;
+                if (makeQuad(ghost[g], atlases, place, tint, q)) out.addQuad(q);
+            }
+            if (tr.additive) {
+                for (size_t k2 = quads; k2 < out.quads.size(); k2++) out.quads[k2].additive = true;
+                for (size_t k2 = meshes; k2 < out.meshes.size(); k2++) out.meshes[k2].additive = true;
+            }
+        }
+    }
+}
+
 void appendDraws(const Clip& clip, const std::vector<NodePose>& poses, const AtlasSet& atlases, const glm::mat3& place,
                  const float tint[4], DrawList& out, std::vector<std::string>* missing) {
     const glm::vec4 t = tint ? glm::vec4(tint[0], tint[1], tint[2], tint[3]) : glm::vec4(1.0f);
     std::vector<std::pair<const Node*, glm::mat4>> rest;
     bool restMade = false;
-    Quad q;
+    EffectWalk fx(clip, poses, hasEffects(clip));
     for (size_t i = 0; i < poses.size(); i++) {
+        if (fx.any) {
+            if (!restMade) { restWorlds(clip, rest); restMade = true; }
+            fx.before(i, atlases, rest, place, t, out);
+        }
+        drawPose(clip, poses, i, atlases, place, t, rest, restMade, out, missing);
+        if (fx.any) fx.after(i, out);
+    }
+}
+
+namespace {
+void drawPose(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases, const glm::mat3& place,
+              const glm::vec4& t, std::vector<std::pair<const Node*, glm::mat4>>& rest, bool& restMade, DrawList& out,
+              std::vector<std::string>* missing) {
+    Quad q;
+    {
         const NodePose& p = poses[i];
         if (p.node && p.node->usesMesh()) {
             if (!restMade) { restWorlds(clip, rest); restMade = true; }
-            if (makeSkinnedMesh(poses, i, rest, atlases, place, t, out)) continue;
+            if (makeSkinnedMesh(poses, i, rest, atlases, place, t, out)) return;
         }
         const toms::AtlasRegion* r = nullptr;
         if (makeQuad(p, atlases, place, t, q, &r)) {
@@ -400,6 +726,7 @@ void appendDraws(const Clip& clip, const std::vector<NodePose>& poses, const Atl
         }
     }
 }
+}  // namespace
 
 bool makeQuad(const NodePose& p, const AtlasSet& atlases, const glm::mat3& place, const glm::vec4& t, Quad& q,
               const toms::AtlasRegion** region) {
@@ -457,6 +784,10 @@ void AnimPlayer::play(const Clip* clip) {
     rest_.clear();
     if (clip) restWorlds(*clip, rest_);
     loops_ = clip && hasLoopingNodes(*clip);
+    effects_ = clip && hasEffects(*clip);
+    rigs_.reset();   // the shared one is asked for at the first draw (it needs the atlas set)
+    rigAtlases_ = nullptr;
+    rigsStale_ = false;
     quadAtlases_ = nullptr;
     elapsed_ = 0;
     started_ = false;
@@ -538,17 +869,28 @@ void AnimPlayer::draw(IRenderer* ren, const AtlasSet& atlases, const glm::mat3& 
         quadPlace_ = place;
         quadTint_ = t;
     }
-    for (size_t i = 0; i < poses.size(); i++) {
-        if (poses[i].node && poses[i].node->usesMesh()) {   // bent again every frame: its bones / lattice may move
-            meshScratch_.clear();
-            if (makeSkinnedMesh(poses, i, rest_, atlases, place, t, meshScratch_)) {
-                meshScratch_.submit(ren);
-                continue;
-            }
-        }
-        if (all || cache_.changed(i)) hasQuad_[i] = makeQuad(poses[i], atlases, place, t, quads_[i]);
-        if (hasQuad_[i]) ren->drawSprite(quads_[i]);
+    // The frame's draws in order -- the cached quads, the bent meshes, effect layers and afterimages -- then submitted
+    // together, so the parts of one texture go as one batch.
+    DrawList& frame = meshScratch_;
+    frame.clear();
+    if (rigAtlases_ != &atlases || !rigs_) {   // the clip's shared cache for these atlases (a reload: a new one)
+        rigs_ = sharedRigs(clip_, &atlases, rigsStale_);
+        rigAtlases_ = &atlases;
+        rigsStale_ = false;
     }
+    EffectWalk fx(*clip_, poses, effects_);
+    for (size_t i = 0; i < poses.size(); i++) {
+        if (fx.any) fx.before(i, atlases, rest_, place, t, frame);   // afterimages and effect layers that start here
+        bool drawn = false;
+        if (poses[i].node && poses[i].node->usesMesh())   // bent again every frame: its bones / lattice may move
+            drawn = makeSkinnedMesh(poses, i, rest_, atlases, place, t, frame, rigs_.get());
+        if (!drawn) {
+            if (all || cache_.changed(i)) hasQuad_[i] = makeQuad(poses[i], atlases, place, t, quads_[i]);
+            if (hasQuad_[i]) frame.addQuad(quads_[i]);
+        }
+        if (fx.any) fx.after(i, frame);
+    }
+    frame.submit(ren);
 }
 
 // ---- the lattice --------------------------------------------------------------------------------

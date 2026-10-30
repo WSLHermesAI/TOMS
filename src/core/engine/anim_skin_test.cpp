@@ -86,7 +86,7 @@ void testFile() {
     CHECK(!parseAnim(R"({"version":3,"clips":[{"name":"c","root":{"name":"n","skin":{"bones":[]}}}]})", back, &err), "a skin without bones");
     CHECK(!parseAnim(R"({"version":3,"clips":[{"name":"c","root":{"name":"n","skin":{"bones":["a"],"weights":[[1,1]]}}}]})", back, &err),
           "a weight naming a bone the skin does not have");
-    CHECK(!parseAnim(R"({"version":4,"clips":[]})", back, &err), "a newer version");
+    CHECK(!parseAnim(R"({"version":5,"clips":[]})", back, &err), "a newer version");
 }
 
 void testRest() {
@@ -246,12 +246,37 @@ void testPlayer() {
     p.play(&c);
     Recorder r;
     p.draw(&r, fx.set, glm::mat3(1.0f));
-    CHECK(r.order == std::vector<char>({'m', 'q'}), "the mesh, then the plain sprite's quad, in draw order");
+    // one texture, one blending: the skin and the plain sprite's quad (4 more vertices, after it) go as ONE mesh
+    CHECK(r.order == std::vector<char>({'m'}), "the mesh and the plain sprite's quad batched into one draw");
     const std::vector<MeshVertex> atRest = r.lastMesh;
     p.update(1000);
     r.order.clear();
     p.draw(&r, fx.set, glm::mat3(1.0f));
-    CHECK(r.order == std::vector<char>({'m', 'q'}) && r.lastMesh.size() == atRest.size(), "drawn again the next frame");
+    CHECK(r.order == std::vector<char>({'m'}) && r.lastMesh.size() == atRest.size(), "drawn again the next frame");
+    {   // a second player of the clip shares its skin cache: the same picture at the same time, its own at another
+        AnimPlayer twin;
+        twin.play(&c);
+        Recorder rt, r0;
+        twin.draw(&rt, fx.set, glm::mat3(1.0f));
+        AnimPlayer fresh;
+        fresh.play(&c);
+        fresh.update(1000);
+        fresh.draw(&r0, fx.set, glm::mat3(1.0f));
+        bool same = rt.lastMesh.size() == atRest.size() && r0.lastMesh.size() == r.lastMesh.size();
+        for (size_t i = 0; same && i < atRest.size(); i++) same = near(rt.lastMesh[i].x, atRest[i].x) && near(rt.lastMesh[i].y, atRest[i].y);
+        for (size_t i = 0; same && i < r.lastMesh.size(); i++) same = near(r0.lastMesh[i].x, r.lastMesh[i].x) && near(r0.lastMesh[i].y, r.lastMesh[i].y);
+        CHECK(same, "players of one clip share its skin cache, each drawn at its own time");
+    }
+    {   // a clip of quads only stays quads (the sprite batch joins those)
+        Clip q;
+        q.root.name = "root";
+        q.root.children = {plain, plain};
+        AnimPlayer qp;
+        qp.play(&q);
+        Recorder rq;
+        qp.draw(&rq, fx.set, glm::mat3(1.0f));
+        CHECK(rq.order == std::vector<char>({'q', 'q'}), "quads only: drawSprite each");
+    }
     bool moved = false;
     for (size_t i = 0; i < atRest.size() && i < r.lastMesh.size(); i++) moved = moved || !near(atRest[i].x, r.lastMesh[i].x);
     CHECK(moved, "the mesh is bent again as the bones move");

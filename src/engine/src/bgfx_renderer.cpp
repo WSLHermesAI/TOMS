@@ -174,8 +174,17 @@ void BgfxRenderer::init(uint32_t, uint32_t) {
             }
         }
     }
-    std::fprintf(stderr, "[toms] sprite batch: %s (compute %s, instancing %s, GPU particles %s)\n", spritePathName(spritePath()),
-                 hasComputePath() ? "yes" : "no", hasInstancingPath() ? "yes" : "no", supportsGpuParticles() ? "yes" : "no");
+    // Layers (beginLayer): the composite program and its uniforms.
+    layerProgram_ = createEmbeddedProgram(ShaderProgram::Layer).idx;
+    if (layerProgram_ != kInvalid) {
+        uLayerMode_ = bgfx::createUniform("u_layerMode", bgfx::UniformType::Vec4).idx;
+        uLayerParams_ = bgfx::createUniform("u_layerParams", bgfx::UniformType::Vec4).idx;
+        uLayerColor_ = bgfx::createUniform("u_layerColor", bgfx::UniformType::Vec4).idx;
+        uLayerTexel_ = bgfx::createUniform("u_layerTexel", bgfx::UniformType::Vec4).idx;
+    }
+    std::fprintf(stderr, "[toms] sprite batch: %s (compute %s, instancing %s, GPU particles %s, layers %s)\n", spritePathName(spritePath()),
+                 hasComputePath() ? "yes" : "no", hasInstancingPath() ? "yes" : "no", supportsGpuParticles() ? "yes" : "no",
+                 supportsLayers() ? "yes" : "no");
 }
 
 BgfxRenderer::SpritePath BgfxRenderer::spritePath() const {
@@ -236,6 +245,61 @@ void BgfxRenderer::destroy() {
     if (meshIb_ != kInvalid) { bgfx::destroy(bgfx::DynamicIndexBufferHandle{meshIb_}); meshIb_ = kInvalid; }
     csCapacity_ = csOutCap_ = cpuCap_ = instCap_ = meshVbCap_ = meshIbCap_ = 0;
     if (sampler_ != kInvalid) { bgfx::destroy(bgfx::UniformHandle{sampler_}); sampler_ = kInvalid; }
+    for (uint16_t fb : layerFb_) bgfx::destroy(bgfx::FrameBufferHandle{fb});
+    layerFb_.clear();
+    layerW_ = layerH_ = 0;
+    if (layerProgram_ != kInvalid) { bgfx::destroy(bgfx::ProgramHandle{layerProgram_}); layerProgram_ = kInvalid; }
+    for (uint16_t* u : {&uLayerMode_, &uLayerParams_, &uLayerColor_, &uLayerTexel_})
+        if (*u != kInvalid) { bgfx::destroy(bgfx::UniformHandle{*u}); *u = kInvalid; }
+    linearTex_.clear();
+    for (uint16_t* t : {&captureRead_})
+        if (*t != kInvalid) { bgfx::destroy(bgfx::TextureHandle{*t}); *t = kInvalid; }
+    if (captureFb_ != kInvalid) { bgfx::destroy(bgfx::FrameBufferHandle{captureFb_}); captureFb_ = kInvalid; }
+    captureFbW_ = captureFbH_ = 0;
+}
+
+void BgfxRenderer::setCapture(uint16_t w, uint16_t h) {
+    captureW_ = w && h ? w : 0;
+    captureH_ = w && h ? h : 0;
+}
+
+void BgfxRenderer::prepareCapture() {
+    captureFrame_ = 0;
+    if (!captureW_) {
+        bgfx::setViewFrameBuffer(kViewGame, BGFX_INVALID_HANDLE);   // the window again (kViewClear clears it)
+        bgfx::setViewClear(kViewGame, BGFX_CLEAR_NONE);
+        return;
+    }
+    if (captureFbW_ != captureW_ || captureFbH_ != captureH_ || captureFb_ == kInvalid) {
+        if (captureFb_ != kInvalid) bgfx::destroy(bgfx::FrameBufferHandle{captureFb_});
+        if (captureRead_ != kInvalid) bgfx::destroy(bgfx::TextureHandle{captureRead_});
+#if TOMS_GAMMA_SPACE
+        const uint64_t srgb = 0;
+#else
+        const uint64_t srgb = BGFX_TEXTURE_SRGB;   // written as the sRGB backbuffer would show it
+#endif
+        const bgfx::TextureHandle t = bgfx::createTexture2D(captureW_, captureH_, false, 1, bgfx::TextureFormat::RGBA8,
+                                                            BGFX_TEXTURE_RT | srgb | BGFX_SAMPLER_UVW_CLAMP);
+        captureFb_ = bgfx::createFrameBuffer(1, &t, true).idx;
+        captureRead_ = bgfx::createTexture2D(captureW_, captureH_, false, 1, bgfx::TextureFormat::RGBA8,
+                                             BGFX_TEXTURE_BLIT_DST | BGFX_TEXTURE_READ_BACK | srgb).idx;
+        captureFbW_ = captureW_;
+        captureFbH_ = captureH_;
+    }
+    if (captureFb_ == kInvalid || captureRead_ == kInvalid) return;
+    bgfx::setViewFrameBuffer(kViewGame, bgfx::FrameBufferHandle{captureFb_});
+    bgfx::setViewRect(kViewGame, 0, 0, captureW_, captureH_);
+    bgfx::setViewClear(kViewGame, BGFX_CLEAR_COLOR, 0x00000000, 1.0f, 0);
+    bgfx::touch(kViewGame);
+    capturePx_.resize((size_t)captureW_ * captureH_ * 4);
+    bgfx::touch(kViewCapture);
+    bgfx::TextureRegion dst, src;
+    dst.init(bgfx::TextureHandle{captureRead_});
+    src.init(bgfx::getTexture(bgfx::FrameBufferHandle{captureFb_}));
+    bgfx::blit(kViewCapture, dst, src);
+    bgfx::TextureRegion all;
+    all.init(bgfx::TextureHandle{captureRead_});
+    captureFrame_ = bgfx::read(all, capturePx_.data());
 }
 
 void BgfxRenderer::destroyTexture(uint16_t& handle) {
@@ -309,8 +373,22 @@ void BgfxRenderer::updateTexture(uint16_t texture, const uint8_t* rgba, uint32_t
 void BgfxRenderer::releaseTexture(uint16_t texture) {
     auto it = std::find(extraTex_.begin(), extraTex_.end(), texture);
     if (it == extraTex_.end()) return;   // not ours (or the sprite atlas): nothing to free
+    linearTex_.erase(std::remove(linearTex_.begin(), linearTex_.end(), texture), linearTex_.end());
     destroyTexture(*it);
     extraTex_.erase(it);
+}
+
+void BgfxRenderer::setTextureFilter(uint16_t texture, bool linear) {
+    if (texture == kInvalid) return;
+    linearTex_.erase(std::remove(linearTex_.begin(), linearTex_.end(), texture), linearTex_.end());
+    if (linear) linearTex_.push_back(texture);
+}
+
+void BgfxRenderer::bindTexture(uint16_t texture) {
+    if (texture == kInvalid) return;
+    // A linear texture: this draw's sampler flags replace the texture's point sampling (sRGB belongs to the texture).
+    const bool linear = std::find(linearTex_.begin(), linearTex_.end(), texture) != linearTex_.end();
+    bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{texture}, linear ? BGFX_SAMPLER_UVW_CLAMP : UINT32_MAX);
 }
 
 void BgfxRenderer::begin() {
@@ -320,13 +398,16 @@ void BgfxRenderer::begin() {
     gpuDraws_.clear();
     meshVerts_.clear();
     meshIdx_.clear();
+    layers_.clear();
+    layerStack_.clear();
+    layerClosed_.clear();
 }
 void BgfxRenderer::setNode(uint8_t n) { node_ = n; }
 void BgfxRenderer::setNodeFilter(uint8_t n) { nodeFilter_ = n; }
 
 void BgfxRenderer::drawSprite(const Quad& q) {
     if (nodeFilter_ && node_ != nodeFilter_) return;
-    std::vector<Quad>& list = layer_ == 1 ? topSprites_ : sprites_;
+    std::vector<Quad>& list = layer_ == 1 ? topSprites_ : currentQuads();
     list.push_back(q);
     list.back().node = node_;
 }
@@ -334,18 +415,36 @@ void BgfxRenderer::drawSprite(const Quad& q) {
 void BgfxRenderer::drawMesh(const Mesh& m) {
     if (nodeFilter_ && node_ != nodeFilter_) return;
     if (!validMesh(m)) return;
-    GpuDraw d{sprites_.size(), 0, m.texture, m.additive};
-    d.firstVertex = (uint32_t)(meshVerts_.size() / 9);
+    const uint32_t first = (uint32_t)(meshVerts_.size() / 9);
+    // The CPU path's vertex (SpriteVertex): position, uv, the mesh's tint (times the vertex's colour), not solid.
+    for (uint32_t i = 0; i < m.vertexCount; i++) {
+        const MeshVertex& v = m.vertices[i];
+        const float* c = m.colors ? m.colors + 4 * i : nullptr;
+        meshVerts_.insert(meshVerts_.end(), {v.x, v.y, v.u, v.v, m.tint[0] * (c ? c[0] : 1.0f), m.tint[1] * (c ? c[1] : 1.0f),
+                                             m.tint[2] * (c ? c[2] : 1.0f), m.tint[3] * (c ? c[3] : 1.0f), 0.0f});
+    }
+    // Right after another mesh with the same texture and blending (no quad, particles or layer between): one draw for
+    // both -- its indices then count from that mesh's first vertex. A crowd of skinned characters is a few draws.
+    std::vector<GpuDraw>& draws = currentDraws();
+    if (!draws.empty()) {
+        GpuDraw& prev = draws.back();
+        if (prev.emitter == 0 && prev.layer < 0 && prev.at == currentQuads().size() && prev.texture == m.texture &&
+            prev.additive == m.additive && prev.firstIndex + prev.indexCount == meshIdx_.size() &&
+            (first - prev.firstVertex) + m.vertexCount <= 65536u) {
+            const uint16_t base = uint16_t(first - prev.firstVertex);
+            for (uint32_t i = 0; i < m.indexCount; i++) meshIdx_.push_back(uint16_t(m.indices[i] + base));
+            prev.vertexCount += m.vertexCount;
+            prev.indexCount += m.indexCount;
+            return;
+        }
+    }
+    GpuDraw d{currentQuads().size(), 0, m.texture, m.additive};
+    d.firstVertex = first;
     d.vertexCount = m.vertexCount;
     d.firstIndex = (uint32_t)meshIdx_.size();
     d.indexCount = m.indexCount;
-    // The CPU path's vertex (SpriteVertex): position, uv, the mesh's tint, not solid.
-    for (uint32_t i = 0; i < m.vertexCount; i++) {
-        const MeshVertex& v = m.vertices[i];
-        meshVerts_.insert(meshVerts_.end(), {v.x, v.y, v.u, v.v, m.tint[0], m.tint[1], m.tint[2], m.tint[3], 0.0f});
-    }
     meshIdx_.insert(meshIdx_.end(), m.indices, m.indices + m.indexCount);
-    gpuDraws_.push_back(d);
+    draws.push_back(d);
 }
 
 // This frame's meshes into their buffers, once (end(), before any path draws).
@@ -378,21 +477,8 @@ void BgfxRenderer::end() {
     lastGpuEmitters_ = 0;
     lastMeshCount_ = 0;
     lastQuadCount_ = sprites_.size();
-
-    // A 3D scene behind the sprites (setSceneViews): run its views right after the clear.
-    if (sceneCount_ != appliedSceneCount_ || sceneCount_ > 0) {
-        if (sceneCount_ > 0 && sceneFirst_ > kViewOverlay) {
-            std::vector<bgfx::ViewId> order;
-            const uint16_t end = uint16_t(sceneFirst_ + sceneCount_);
-            order.push_back(kViewClear);
-            for (uint16_t v = sceneFirst_; v < end; v++) order.push_back(v);
-            for (uint16_t v = 1; v < sceneFirst_; v++) order.push_back(v);
-            bgfx::setViewOrder(0, (uint16_t)order.size(), order.data());
-        } else {
-            bgfx::setViewOrder(0, UINT16_MAX, nullptr);   // back to the plain id order
-        }
-        appliedSceneCount_ = sceneCount_;
-    }
+    while (!layerStack_.empty()) endLayer();   // a layer left open ends with the frame
+    for (const LayerDraw& l : layers_) lastQuadCount_ += l.quads.size();
 
     // View 0: clear the whole backbuffer (letterbox bars included) to the background colour.
     bgfx::setViewRect(kViewClear, 0, 0, (uint16_t)devW_, (uint16_t)devH_);
@@ -408,6 +494,7 @@ void BgfxRenderer::end() {
     bx::mtxOrtho(proj, 0.0f, (float)kDesignW, (float)kDesignH, 0.0f, 0.0f, 100.0f, 0.0f,
                  bgfx::getCaps()->homogeneousDepth);
     bgfx::setViewTransform(kViewGame, nullptr, proj);
+    prepareCapture();
     // The top layer: the same space, a view after kViewUi, so its sprites are drawn over the UI.
     bgfx::setViewRect(kViewTop, (uint16_t)std::lround(fit.x), (uint16_t)std::lround(fit.y),
                       (uint16_t)std::lround(fit.width), (uint16_t)std::lround(fit.height));
@@ -417,6 +504,8 @@ void BgfxRenderer::end() {
     if (program_ == kInvalid) return;
     submitTop();
     uploadMeshes();
+    prepareLayers();
+    applyViewOrder();
     // text and UI are RmlUi's, in view kViewUi
     if (sprites_.empty()) {   // only GPU particles and meshes (if any)
         size_t next = 0;
@@ -482,7 +571,7 @@ bool BgfxRenderer::submitQuadsCompute(const std::vector<Quad>& quads, uint16_t t
             bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{csOut_}, (uint32_t)at * 4, count * 4);
             bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
             const uint16_t use = tex == kSpriteAtlasTexture ? texture : tex;
-            if (use != kInvalid) bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{use});
+            bindTexture(use);
             bgfx::setState(blendState(additive));
             bgfx::submit(kViewGame, bgfx::ProgramHandle{csDrawProgram_});
             ++lastDrawCalls_;
@@ -495,6 +584,7 @@ bool BgfxRenderer::submitQuadsCompute(const std::vector<Quad>& quads, uint16_t t
 }
 
 uint64_t BgfxRenderer::blendState(bool additive) const {
+    if (captureW_) return layerBlendState(additive);   // a capture keeps its alpha: premultiplied, as a layer
     // Straight alpha: additive scales the colour by its alpha and adds it.
     return BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
            (additive ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE) : BGFX_STATE_BLEND_ALPHA);
@@ -531,7 +621,7 @@ bool BgfxRenderer::submitQuadsInstanced(const std::vector<Quad>& quads, uint16_t
         bgfx::setIndexBuffer(bgfx::IndexBufferHandle{quadIb_});
         bgfx::setInstanceDataBuffer(bgfx::DynamicVertexBufferHandle{instVb_}, (uint32_t)first, (uint32_t)(runEnd - first));
         const uint16_t use = tex == kSpriteAtlasTexture ? texture : tex;
-        if (use != kInvalid) bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{use});
+        bindTexture(use);
         bgfx::setState(blendState(additive));
         bgfx::submit(kViewGame, bgfx::ProgramHandle{instProgram_});
         ++lastDrawCalls_;
@@ -580,7 +670,7 @@ void BgfxRenderer::submitQuads(const std::vector<Quad>& quads, uint16_t texture)
             bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{cpuVb_}, (uint32_t)at * 4, count * 4);
             bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
             const uint16_t use = tex == kSpriteAtlasTexture ? texture : tex;   // the sprite atlas, or a loadTexture one
-            if (use != kInvalid) bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{use});
+            bindTexture(use);
             bgfx::setState(blendState(additive));
             bgfx::submit(kViewGame, bgfx::ProgramHandle{program_});
             ++lastDrawCalls_;
@@ -622,7 +712,7 @@ void BgfxRenderer::submitTop() {
         bgfx::setVertexBuffer(0, &tvb);
         bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
         const uint16_t use = tex == kSpriteAtlasTexture ? spriteTex_ : tex;
-        if (use != kInvalid) bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{use});
+        bindTexture(use);
         bgfx::setState(blendState(additive));
         bgfx::submit(kViewTop, bgfx::ProgramHandle{program_});
         ++lastDrawCalls_;
@@ -698,20 +788,23 @@ void BgfxRenderer::drawGpuParticles(const GpuParticleFrame& f) {
     bgfx::setBuffer(0, bgfx::DynamicVertexBufferHandle{b.state}, bgfx::Access::ReadWrite);
     bgfx::setBuffer(1, bgfx::DynamicVertexBufferHandle{b.out}, bgfx::Access::Write);
     bgfx::dispatch(kViewClear, bgfx::ProgramHandle{fxUpdate_}, (b.capacity + 63) / 64, 1, 1);
-    gpuDraws_.push_back({sprites_.size(), f.emitter, f.texture, f.additive});
+    currentDraws().push_back({currentQuads().size(), f.emitter, f.texture, f.additive});
 }
 
-size_t BgfxRenderer::drawGpuAt(size_t at, size_t& next, uint16_t texture) {
-    for (; next < gpuDraws_.size() && gpuDraws_[next].at <= at; next++) {
-        const GpuDraw& d = gpuDraws_[next];
+size_t BgfxRenderer::drawMarkers(uint16_t view, const std::vector<GpuDraw>& draws, bool inLayer, size_t at, size_t& next,
+                                 uint16_t texture) {
+    for (; next < draws.size() && draws[next].at <= at; next++) {
+        const GpuDraw& d = draws[next];
+        if (d.layer >= 0) { submitComposite(d.layer, view); continue; }
         const uint16_t use = d.texture == kSpriteAtlasTexture ? texture : d.texture;
+        const uint64_t state = inLayer ? layerBlendState(d.additive) : blendState(d.additive);
         if (d.emitter == 0) {   // a mesh (drawMesh): the CPU path's program, its own part of the frame's buffers
             if (meshVb_ == kInvalid || meshIb_ == kInvalid) continue;
             bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{meshVb_}, d.firstVertex, d.vertexCount);
             bgfx::setIndexBuffer(bgfx::DynamicIndexBufferHandle{meshIb_}, d.firstIndex, d.indexCount);
-            if (use != kInvalid) bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{use});
-            bgfx::setState(blendState(d.additive));
-            bgfx::submit(kViewGame, bgfx::ProgramHandle{program_});
+            bindTexture(use);
+            bgfx::setState(state);
+            bgfx::submit(view, bgfx::ProgramHandle{program_});
             ++lastDrawCalls_;
             ++lastMeshCount_;
             continue;
@@ -723,14 +816,232 @@ size_t BgfxRenderer::drawGpuAt(size_t at, size_t& next, uint16_t texture) {
             const uint32_t count = std::min(kChunk, b.capacity - first);
             bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{b.out}, first * 4, count * 4);
             bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
-            if (use != kInvalid) bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{use});
-            bgfx::setState(blendState(d.additive));
-            bgfx::submit(kViewGame, bgfx::ProgramHandle{csDrawProgram_});
+            bindTexture(use);
+            bgfx::setState(state);
+            bgfx::submit(view, bgfx::ProgramHandle{csDrawProgram_});
             ++lastDrawCalls_;
         }
         ++lastGpuEmitters_;
     }
-    return nextGpuAt(next);
+    return next < draws.size() ? draws[next].at : SIZE_MAX;
+}
+
+// ---- layers -------------------------------------------------------------------------------------
+
+uint64_t BgfxRenderer::layerBlendState(bool additive) const {
+    // Into a layer's premultiplied picture: the colour blends as on screen, the alpha accumulates coverage (an additive
+    // sprite adds light, no coverage).
+    return BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+           (additive ? BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ZERO,
+                                                      BGFX_STATE_BLEND_ONE)
+                     : BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA,
+                                                      BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA));
+}
+
+bool BgfxRenderer::supportsLayers() const {
+    if (layerProgram_ == kInvalid || program_ == kInvalid || chunkIb_ == kInvalid) return false;
+    const auto* caps = bgfx::getCaps();
+    return (caps->formats[bgfx::TextureFormat::RGBA16F] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0 ||
+           (caps->formats[bgfx::TextureFormat::RGBA8] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0;
+}
+
+void BgfxRenderer::beginLayer(const LayerEffect& fx) {
+    // Drawn straight through: the top layer, no support, too many this frame, or inside a layer drawn straight through.
+    if (layer_ == 1 || !supportsLayers() || layers_.size() >= kMaxLayers || (!layerStack_.empty() && layerStack_.back() < 0)) {
+        layerStack_.push_back(-1);
+        return;
+    }
+    LayerDraw l;
+    l.fx = fx;
+    layers_.push_back(std::move(l));
+    layerStack_.push_back(int(layers_.size() - 1));
+}
+
+void BgfxRenderer::endLayer() {
+    if (layerStack_.empty()) return;
+    const int idx = layerStack_.back();
+    layerStack_.pop_back();
+    if (idx < 0) return;
+    layerClosed_.push_back(idx);
+    // Its picture goes where the layer began, among what is around it.
+    GpuDraw d{currentQuads().size(), 0, kSpriteAtlasTexture, false};
+    d.layer = idx;
+    currentDraws().push_back(d);
+}
+
+void BgfxRenderer::prepareLayers() {
+    lastLayerCount_ = 0;
+    if (layerClosed_.empty()) return;
+    // One picture per layer this frame, the game view's size in device pixels (a texel per screen pixel).
+    const ViewportRect fit = computeAspectFitViewport(devW_, devH_, kDesignW, kDesignH);
+    const uint16_t w = (uint16_t)std::max(1L, std::lround(fit.width)), h = (uint16_t)std::max(1L, std::lround(fit.height));
+    if (w != layerW_ || h != layerH_) {
+        for (uint16_t fb : layerFb_) bgfx::destroy(bgfx::FrameBufferHandle{fb});
+        layerFb_.clear();
+        layerW_ = w;
+        layerH_ = h;
+    }
+    const bool hdr = (bgfx::getCaps()->formats[bgfx::TextureFormat::RGBA16F] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0;
+    while (layerFb_.size() < layerClosed_.size()) {
+        const bgfx::TextureHandle t = bgfx::createTexture2D(w, h, false, 1, hdr ? bgfx::TextureFormat::RGBA16F : bgfx::TextureFormat::RGBA8,
+                                                            BGFX_TEXTURE_RT | BGFX_SAMPLER_UVW_CLAMP);
+        const bgfx::FrameBufferHandle fb = bgfx::createFrameBuffer(1, &t, true);
+        if (!bgfx::isValid(fb)) break;
+        layerFb_.push_back(fb.idx);
+    }
+    const float W = (float)kDesignW, H = (float)kDesignH, sx = float(w) / W, sy = float(h) / H;
+    // Inner layers close first: in closing order, every picture is drawn before the layer that uses it (and its bounds
+    // are known when the layer around it is measured).
+    for (size_t k = 0; k < layerClosed_.size() && k < layerFb_.size(); k++) {
+        LayerDraw& l = layers_[(size_t)layerClosed_[k]];
+        // What it draws: its quads, its meshes' vertices, its inner layers' pictures; particles: anywhere
+        l.any = false;
+        auto grow = [&](float x0, float y0, float x1, float y1) {
+            if (!l.any) { l.x0 = x0; l.y0 = y0; l.x1 = x1; l.y1 = y1; l.any = true; return; }
+            l.x0 = std::min(l.x0, x0); l.y0 = std::min(l.y0, y0); l.x1 = std::max(l.x1, x1); l.y1 = std::max(l.y1, y1);
+        };
+        for (const Quad& q : l.quads) grow(q.rect[0], q.rect[1], q.rect[0] + q.rect[2], q.rect[1] + q.rect[3]);
+        for (const GpuDraw& d : l.draws) {
+            if (d.layer >= 0) {
+                const LayerDraw& in = layers_[(size_t)d.layer];
+                if (in.any) grow(in.x0 - in.reach, in.y0 - in.reach, in.x1 + in.reach, in.y1 + in.reach);
+            } else if (d.emitter == 0) {
+                for (uint32_t v = d.firstVertex; v < d.firstVertex + d.vertexCount; v++)
+                    grow(meshVerts_[size_t(v) * 9], meshVerts_[size_t(v) * 9 + 1], meshVerts_[size_t(v) * 9], meshVerts_[size_t(v) * 9 + 1]);
+            } else {
+                grow(0, 0, W, H);
+            }
+        }
+        const float* p = l.fx.params;
+        l.reach = 2.0f + (l.fx.kind == LayerEffect::MotionBlur ? 0.5f * std::max(std::fabs(p[0]), std::fabs(p[1]))
+                         : l.fx.kind == LayerEffect::Glow    ? std::fabs(p[1])
+                         : l.fx.kind == LayerEffect::Outline ? std::fabs(p[0]) : 0.0f);
+        if (!l.any) continue;   // nothing drawn: no picture, no composite
+        // the picture's part used: the content and twice the reach (a blur tap at the composite's edge reads cleared
+        // pixels), whole device pixels, in the picture
+        const float cx0 = std::max(0.0f, l.x0 - 2 * l.reach), cy0 = std::max(0.0f, l.y0 - 2 * l.reach);
+        const float cx1 = std::min(W, l.x1 + 2 * l.reach), cy1 = std::min(H, l.y1 + 2 * l.reach);
+        if (cx1 <= cx0 || cy1 <= cy0) { l.any = false; continue; }
+        const int px0 = std::max(0, (int)std::floor(cx0 * sx)), py0 = std::max(0, (int)std::floor(cy0 * sy));
+        const int px1 = std::min((int)w, (int)std::ceil(cx1 * sx)), py1 = std::min((int)h, (int)std::ceil(cy1 * sy));
+        l.slot = (int)k;
+        const uint16_t view = uint16_t(kViewLayerFirst + k);
+        bgfx::setViewFrameBuffer(view, bgfx::FrameBufferHandle{layerFb_[k]});
+        bgfx::setViewRect(view, uint16_t(px0), uint16_t(py0), uint16_t(px1 - px0), uint16_t(py1 - py0));
+        bgfx::setViewClear(view, BGFX_CLEAR_COLOR, 0x00000000, 1.0f, 0);
+        bgfx::setViewMode(view, bgfx::ViewMode::Sequential);
+        float proj[16];   // that part of the design space onto that part of the picture
+        bx::mtxOrtho(proj, float(px0) / sx, float(px1) / sx, float(py1) / sy, float(py0) / sy, 0.0f, 100.0f, 0.0f,
+                     bgfx::getCaps()->homogeneousDepth);
+        bgfx::setViewTransform(view, nullptr, proj);
+        bgfx::touch(view);
+        lastLayerCount_++;
+    }
+    for (size_t k = 0; k < layerClosed_.size() && k < layerFb_.size(); k++)
+        if (layers_[(size_t)layerClosed_[k]].slot >= 0) submitLayer(layers_[(size_t)layerClosed_[k]], uint16_t(kViewLayerFirst + k));
+}
+
+void BgfxRenderer::submitLayer(const LayerDraw& l, uint16_t view) {
+    // Its quads in transient buffers, one draw per run of texture and blending; its markers (meshes, particles, inner
+    // layers' pictures) in their places.
+    const size_t total = l.quads.size();
+    size_t first = 0, next = 0;
+    while (first < total) {
+        const size_t limit = drawMarkers(view, l.draws, true, first, next, spriteTex_);
+        const bool additive = l.quads[first].additive;
+        const uint16_t tex = l.quads[first].texture;
+        size_t runEnd = first + 1;
+        while (runEnd < total && runEnd < limit && runEnd - first < kChunk && l.quads[runEnd].additive == additive &&
+               l.quads[runEnd].texture == tex)
+            ++runEnd;
+        const uint32_t count = (uint32_t)(runEnd - first);
+        if (bgfx::getAvailTransientVertexBuffer(count * 4, spriteLayout()) < count * 4) break;
+        bgfx::TransientVertexBuffer tvb;
+        bgfx::allocTransientVertexBuffer(&tvb, count * 4, spriteLayout());
+        auto* v = reinterpret_cast<SpriteVertex*>(tvb.data);
+        for (uint32_t i = 0; i < count; ++i) {
+            const Quad& q = l.quads[first + i];
+            const float x0 = q.rect[0], y0 = q.rect[1], x1 = q.rect[0] + q.rect[2], y1 = q.rect[1] + q.rect[3];
+            const float rectCorners[8] = {x0, y0, x1, y0, x1, y1, x0, y1};
+            const float* c = q.hasCorners ? q.corners : rectCorners;
+            const float s = q.solid ? 1.0f : 0.0f;
+            const float* t = q.tint;
+            v[i * 4 + 0] = {c[0], c[1], q.uv[0], q.uv[1], t[0], t[1], t[2], t[3], s};
+            v[i * 4 + 1] = {c[2], c[3], q.uv[2], q.uv[1], t[0], t[1], t[2], t[3], s};
+            v[i * 4 + 2] = {c[4], c[5], q.uv[2], q.uv[3], t[0], t[1], t[2], t[3], s};
+            v[i * 4 + 3] = {c[6], c[7], q.uv[0], q.uv[3], t[0], t[1], t[2], t[3], s};
+        }
+        bgfx::setVertexBuffer(0, &tvb);
+        bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
+        bindTexture(tex == kSpriteAtlasTexture ? spriteTex_ : tex);
+        bgfx::setState(layerBlendState(additive));
+        bgfx::submit(view, bgfx::ProgramHandle{program_});
+        ++lastDrawCalls_;
+        lastDrawnQuads_ += count;
+        first = runEnd;
+    }
+    drawMarkers(view, l.draws, true, SIZE_MAX, next, spriteTex_);   // what was drawn after its last quad
+}
+
+void BgfxRenderer::submitComposite(int layer, uint16_t view) {
+    if (layer < 0 || (size_t)layer >= layers_.size()) return;
+    const LayerDraw& l = layers_[(size_t)layer];
+    if (l.slot < 0 || (size_t)l.slot >= layerFb_.size()) return;
+    if (bgfx::getAvailTransientVertexBuffer(4, spriteLayout()) < 4) return;
+    if (!l.any) return;
+    // The picture's content and its effect's reach (the rest of the picture is not cleared this frame); a
+    // bottom-left-origin backend (OpenGL) stored it upside down.
+    const float W = (float)kDesignW, H = (float)kDesignH;
+    const float x0 = std::max(0.0f, l.x0 - l.reach), y0 = std::max(0.0f, l.y0 - l.reach);
+    const float x1 = std::min(W, l.x1 + l.reach), y1 = std::min(H, l.y1 + l.reach);
+    if (x1 <= x0 || y1 <= y0) return;
+    const bool flip = bgfx::getCaps()->originBottomLeft;
+    auto vOf = [&](float y) { return flip ? 1.0f - y / H : y / H; };
+    bgfx::TransientVertexBuffer tvb;
+    bgfx::allocTransientVertexBuffer(&tvb, 4, spriteLayout());
+    auto* v = reinterpret_cast<SpriteVertex*>(tvb.data);
+    v[0] = {x0, y0, x0 / W, vOf(y0), 1, 1, 1, 1, 0};
+    v[1] = {x1, y0, x1 / W, vOf(y0), 1, 1, 1, 1, 0};
+    v[2] = {x1, y1, x1 / W, vOf(y1), 1, 1, 1, 1, 0};
+    v[3] = {x0, y1, x0 / W, vOf(y1), 1, 1, 1, 1, 0};
+    bgfx::setVertexBuffer(0, &tvb);
+    bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, 6);
+    // Lengths are design pixels; the shader takes them in texture units (y turned for a flipped picture).
+    const float mode[4] = {(float)l.fx.kind, std::clamp(l.fx.opacity, 0.0f, 1.0f), 0, 0};
+    const float texel[4] = {1.0f / W, (flip ? -1.0f : 1.0f) / H, W, H};
+    bgfx::setUniform(bgfx::UniformHandle{uLayerMode_}, mode);
+    bgfx::setUniform(bgfx::UniformHandle{uLayerParams_}, l.fx.params);
+    bgfx::setUniform(bgfx::UniformHandle{uLayerColor_}, l.fx.color);
+    bgfx::setUniform(bgfx::UniformHandle{uLayerTexel_}, texel);
+    bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::getTexture(bgfx::FrameBufferHandle{layerFb_[(size_t)l.slot]}),
+                     BGFX_SAMPLER_UVW_CLAMP);
+    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA));
+    bgfx::submit(view, bgfx::ProgramHandle{layerProgram_});
+    ++lastDrawCalls_;
+}
+
+void BgfxRenderer::applyViewOrder() {
+    // Plain id order, unless a 3D scene (setSceneViews) or layer pictures must run right after the clear: then the clear,
+    // the scene's views, the layers' views (inner first), and every other view in id order.
+    const bool scene = sceneCount_ > 0 && sceneFirst_ > kViewOverlay;
+    if (!scene && lastLayerCount_ == 0) {
+        if (orderApplied_) bgfx::setViewOrder(0, UINT16_MAX, nullptr);   // back to the plain id order
+        orderApplied_ = false;
+        return;
+    }
+    const uint16_t maxViews = (uint16_t)bgfx::getCaps()->limits.maxViews;
+    std::vector<bgfx::ViewId> order;
+    std::vector<unsigned char> placed(maxViews, 0);
+    auto put = [&](uint16_t v) {
+        if (v < maxViews && !placed[v]) { placed[v] = 1; order.push_back(v); }
+    };
+    put(kViewClear);
+    if (scene)
+        for (uint16_t v = sceneFirst_; v < uint16_t(sceneFirst_ + sceneCount_); v++) put(v);
+    for (size_t k = 0; k < std::min(layerClosed_.size(), layerFb_.size()); k++) put(uint16_t(kViewLayerFirst + k));   // an empty one: untouched, a no-op
+    for (uint16_t v = 0; v < maxViews; v++) put(v);
+    bgfx::setViewOrder(0, (uint16_t)order.size(), order.data());
+    orderApplied_ = true;
 }
 
 void BgfxRenderer::savePNG(const std::string& path) {

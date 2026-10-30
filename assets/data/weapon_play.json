@@ -131,7 +131,19 @@
         "name": "perfect",
         "damage": 1.2,
         "stunMs": 500,
-        "breakAdd": 1
+        "breakAdd": 1,
+        "fx": "default_perfect",
+        "anim": "attack_big"
+      },
+      {
+        "hits": 2,
+        "name": "great",
+        "fx": "default_great"
+      },
+      {
+        "hits": 0,
+        "name": "miss",
+        "fx": "miss_puff"
       }
     ]
   },
@@ -542,6 +554,27 @@
         "release": "bow_release_3",
         "hit": "bow_hit_3"
       }
+    ],
+    "results": [
+      {
+        "hits": "all",
+        "name": "perfect",
+        "damage": 1.2,
+        "stunMs": 500,
+        "breakAdd": 1,
+        "fx": "bow_perfect",
+        "anim": "attack_big"
+      },
+      {
+        "hits": 2,
+        "name": "great",
+        "fx": "bow_great"
+      },
+      {
+        "hits": 0,
+        "name": "miss",
+        "fx": "miss_puff"
+      }
     ]
   },
   "sword": {
@@ -629,6 +662,27 @@
         "release": "sword_release_3",
         "hit": "sword_hit_3"
       }
+    ],
+    "results": [
+      {
+        "hits": "all",
+        "name": "perfect",
+        "damage": 1.2,
+        "stunMs": 500,
+        "breakAdd": 1,
+        "fx": "sword_perfect",
+        "anim": "attack_big"
+      },
+      {
+        "hits": 2,
+        "name": "great",
+        "fx": "sword_great"
+      },
+      {
+        "hits": 0,
+        "name": "miss",
+        "fx": "miss_puff"
+      }
     ]
   },
   "staff": {
@@ -712,6 +766,27 @@
         "lv": 5,
         "release": "staff_release_3",
         "hit": "staff_hit_3"
+      }
+    ],
+    "results": [
+      {
+        "hits": "all",
+        "name": "perfect",
+        "damage": 1.2,
+        "stunMs": 500,
+        "breakAdd": 1,
+        "fx": "staff_perfect",
+        "anim": "attack_big"
+      },
+      {
+        "hits": 2,
+        "name": "great",
+        "fx": "staff_great"
+      },
+      {
+        "hits": 0,
+        "name": "miss",
+        "fx": "miss_puff"
       }
     ]
   }

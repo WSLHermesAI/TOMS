@@ -6,7 +6,7 @@ drawn at this clip's `hand` node, every frame).
 
     python tools/make_archer_anim.py
 
-The clips are named and timed like the bow's (weapon_bow.anim): idle, charge, attack, miss. Each is
+The clips are named and timed like the bow's (weapon_bow.anim): idle, charge, attack, miss, attack_big (a perfect result). Each is
 
     archer
       lean                  the body's own motion (pivot at the feet): breathing, leaning back, recoil, flinch
@@ -97,8 +97,19 @@ def miss():
     return archer(bow.miss(), lean)
 
 
+def attack_big():
+    # A perfect result: the same release, the body thrown back further and landing with a squash.
+    lean = {'rot': [key(0, [0, 0, -4]), key(0.06, [0, 0, -4], 'quadraticOut'), key(0.14, [0, 0, 6], 'quadraticInOut'),
+                    key(0.55, [0, 0, 0])],
+            'pos': [key(0, [-1, 0, 0]), key(0.06, [-1, 0, 0], 'quadraticOut'), key(0.14, [-5, -1, 0], 'quadraticInOut'),
+                    key(0.3, [-4, 0, 0], 'quadraticIn'), key(0.55, [0, 0, 0])],
+            'scale': [key(0.06, [1, 1, 1], 'quadraticOut'), key(0.12, [1.07, 0.93, 1], 'quadraticInOut'),
+                      key(0.3, [0.97, 1.04, 1], 'sinusoidalInOut'), key(0.45, [1, 1, 1])]}
+    return archer(bow.attack_big(), lean)
+
+
 def main():
-    data = {'version': 2, 'atlases': ['../atlas/game.atlas'], 'clips': [idle(), charge(), attack(), miss()]}
+    data = {'version': 2, 'atlases': ['../atlas/game.atlas'], 'clips': [idle(), charge(), attack(), miss(), attack_big()]}
     with open(OUT, 'w', encoding='utf-8', newline='\n') as f:
         f.write(json.dumps(data, indent=2) + '\n')
     print(f'{os.path.relpath(OUT, ROOT)}: clips {", ".join(c["name"] for c in data["clips"])}')

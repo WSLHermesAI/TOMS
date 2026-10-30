@@ -29,7 +29,7 @@ bgfx_compile_shaders(TYPE VERTEX
     AS_HEADERS)
 bgfx_compile_shaders(TYPE FRAGMENT
     SHADERS      ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_sprite.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_imgui.sc
-                 ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_rml.sc
+                 ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_rml.sc ${CMAKE_CURRENT_SOURCE_DIR}/shaders/fs_layer.sc
     VARYING_DEF  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/varying.def.sc
     OUTPUT_DIR   ${TOMS_SHADER_OUT}
     OUT_FILES_VAR TOMS_FS_FILES
@@ -106,7 +106,7 @@ add_library(toms_bgfx STATIC
     shaders/vs_mesh.sc shaders/vs_mesh_inst.sc shaders/vs_mesh_animtex.sc shaders/fs_mesh.sc shaders/vs_line.sc shaders/fs_line.sc shaders/fs_shadow.sc
     shaders/env_common.sh shaders/vs_sky.sc shaders/fs_sky.sc
     shaders/cs_sprite.sc shaders/vs_sprite_cs.sc shaders/cs_fx_spawn.sc shaders/cs_fx_update.sc
-    shaders/vs_sprite.sc shaders/fs_sprite.sc shaders/vs_sprite_inst.sc
+    shaders/vs_sprite.sc shaders/fs_sprite.sc shaders/vs_sprite_inst.sc shaders/fs_layer.sc
     shaders/vs_imgui.sc  shaders/fs_imgui.sc
     shaders/vs_rml.sc    shaders/fs_rml.sc)
 toms_target_defaults(toms_bgfx)

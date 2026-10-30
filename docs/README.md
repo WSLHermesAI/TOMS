@@ -28,6 +28,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [11_BATTLE_DATA.md](gameplay/11_BATTLE_DATA.md) | battle data: shared stats, fighters, statuses → looks, battle events, who fights whom, formulas (design; points by level built) | [zh_TW](gameplay/zh_TW/11_BATTLE_DATA.md) |
 | [12_UI_LAYOUT.md](gameplay/12_UI_LAYOUT.md) | UI layout for landscape and portrait: the canvas that follows the screen, the map, each screen's portrait rules | [zh_TW](gameplay/zh_TW/12_UI_LAYOUT.md) |
 | [13_BATTLE_EDITOR.md](gameplay/13_BATTLE_EDITOR.md) | the battle editor (monsters, weapons and their result tiers, the test player and the growth calculator, monster events, one-click battle) and ideas for a real-time strategic battle; HTML mockup and playable demo in [gameplay/battle_editor/](gameplay/battle_editor/) | [zh_TW](gameplay/zh_TW/13_BATTLE_EDITOR.md) |
+| [14_WEAPON_PLAY_AND_LOOT.md](gameplay/14_WEAPON_PLAY_AND_LOOT.md) | weapon plays v2 (bow: draw and hit targets; sword: slicing and memory combos; staff: timed circles and magic circles) and the loot grind (farm monsters, chests, go deeper, gear bonuses); the owner's ideas 2026-10-30, questions Q27–Q33 | [zh_TW](gameplay/zh_TW/14_WEAPON_PLAY_AND_LOOT.md) |
 | [event_editor/](gameplay/event_editor/README.md) | the event editor: data model, design, user guide, tutorial, floor links, logic, key gates, NPC dialogue | [zh_TW](gameplay/zh_TW/event_editor/README.md) |
 
 ## engine
@@ -51,6 +52,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [15_LEAK_CHECK.md](engine/15_LEAK_CHECK.md) | the memory leak check (Windows) | [zh_TW](engine/zh_TW/15_LEAK_CHECK.md) |
 | [16_MESH_ANIMATION.md](engine/16_MESH_ANIMATION.md) | mesh animation: replacing Spine | [zh_TW](engine/zh_TW/16_MESH_ANIMATION.md) |
 | [17_SKINNING_TUTORIAL.md](engine/17_SKINNING_TUTORIAL.md) | tutorial: skinning, deforming and weight painting | [zh_TW](engine/zh_TW/17_SKINNING_TUTORIAL.md) |
+| [18_NODE_EFFECTS.md](engine/18_NODE_EFFECTS.md) | node effects (shaders by hierarchy, afterimages) and the brawler showcase: the anim editor vs Spine | [zh_TW](engine/zh_TW/18_NODE_EFFECTS.md) |
 
 ## project
 

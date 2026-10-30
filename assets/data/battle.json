@@ -18,7 +18,9 @@
     "stuns it brokenMs and its hits take brokenDamage times. A heavy blow (data/moves.json) guarded with parryPower or more",
     "is parried: it staggers parryMs, takes parryDamage times, and parryBreak goes on its gauge; breaking a guard adds guardBreak.",
     "combo_holds_monsters: false (the owner 2026-10-26) = the monsters keep charging while the player's combo runs, and their",
-    "attack lands in the middle of it; true = their clocks wait for the combo (as before). Quick jabs never wait."
+    "attack lands in the middle of it; true = their clocks wait for the combo (as before). Quick jabs never wait.",
+    "combo_runs_through_attacks: true (the owner 2026-10-30) = a running combo's marker keeps moving through attack_pause_ms",
+    "when a monster attacks in the middle of it; false = the marker stops for that pause (as before)."
   ],
   "bar_slow_speed_scale": 0.5,
   "bar_fast_speed_scale": 10,
@@ -26,6 +28,7 @@
   "attack_pause_ms": 450,
   "hit_number_delay_ms": 180,
   "combo_holds_monsters": false,
+  "combo_runs_through_attacks": true,
   "pace": "cooldown",
   "stamina": { "max": 100, "regenPerS": 30, "attack": 40, "guard": 20 },
   "break": { "points": 8, "brokenMs": 3000, "brokenDamage": 1.5, "parryMs": 1500, "parryDamage": 2.0, "parryPower": 85,

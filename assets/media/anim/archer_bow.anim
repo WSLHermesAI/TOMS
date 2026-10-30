@@ -587,6 +587,162 @@
           }
         ]
       }
+    },
+    {
+      "name": "attack_big",
+      "length": 0.8,
+      "root": {
+        "name": "archer",
+        "children": [
+          {
+            "name": "lean",
+            "children": [
+              {
+                "name": "body",
+                "pivot": [
+                  0.5,
+                  1.0
+                ],
+                "sprite": "game:player"
+              },
+              {
+                "name": "hand",
+                "pos": [
+                  9.0,
+                  -14.0,
+                  0.0
+                ],
+                "scale": [
+                  0.32,
+                  0.32,
+                  1.0
+                ],
+                "order": 1
+              }
+            ],
+            "tracks": {
+              "rot": [
+                {
+                  "t": 0,
+                  "v": [
+                    0,
+                    0,
+                    -4
+                  ]
+                },
+                {
+                  "t": 0.06,
+                  "v": [
+                    0,
+                    0,
+                    -4
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.14,
+                  "v": [
+                    0,
+                    0,
+                    6
+                  ],
+                  "ease": "quadraticInOut"
+                },
+                {
+                  "t": 0.55,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "pos": [
+                {
+                  "t": 0,
+                  "v": [
+                    -1,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "t": 0.06,
+                  "v": [
+                    -1,
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.14,
+                  "v": [
+                    -5,
+                    -1,
+                    0
+                  ],
+                  "ease": "quadraticInOut"
+                },
+                {
+                  "t": 0.3,
+                  "v": [
+                    -4,
+                    0,
+                    0
+                  ],
+                  "ease": "quadraticIn"
+                },
+                {
+                  "t": 0.55,
+                  "v": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ],
+              "scale": [
+                {
+                  "t": 0.06,
+                  "v": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "ease": "quadraticOut"
+                },
+                {
+                  "t": 0.12,
+                  "v": [
+                    1.07,
+                    0.93,
+                    1
+                  ],
+                  "ease": "quadraticInOut"
+                },
+                {
+                  "t": 0.3,
+                  "v": [
+                    0.97,
+                    1.04,
+                    1
+                  ],
+                  "ease": "sinusoidalInOut"
+                },
+                {
+                  "t": 0.45,
+                  "v": [
+                    1,
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
     }
   ]
 }

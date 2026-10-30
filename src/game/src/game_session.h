@@ -53,6 +53,7 @@ struct SessionOptions {
     std::string previewMesh;           // a game-atlas sprite drawn as a waving triangle mesh (--mesh-test)
     std::string previewCharacter;      // --character: the character a --anim character clip is played by
     std::string previewHeld;           // --held: a held thing's .anim, its clip of the same name at the hand
+    int previewCrowd = 0;              // --anim-crowd=N: the --anim clip N times in a grid (AnimPlayer each; a benchmark)
     bool        enableDebugUi = true;  // ImGui windows (F1 / F2 / Tab stage select / toasts)
     // Mobile: grow the UI objects (Game::setUiScale). 1.0 = unchanged. The web host sets these on small screens.
     float       uiScale  = 1.0f;

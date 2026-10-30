@@ -1,0 +1,30 @@
+brawler.png
+size: 496, 492
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+back_arm
+  bounds: 287, 1, 134, 155
+  offsets: 0, 0, 134, 156
+back_fist
+  bounds: 425, 72, 56, 61
+  offsets: 0, 0, 56, 62
+back_leg
+  bounds: 1, 249, 134, 242
+front_arm
+  bounds: 139, 350, 122, 136
+front_fist
+  bounds: 425, 1, 58, 67
+front_leg
+  bounds: 1, 1, 141, 244
+head
+  bounds: 279, 192, 108, 156
+pelvis
+  bounds: 383, 352, 112, 70
+ponytail
+  bounds: 146, 192, 129, 154
+  offsets: 0, 0, 130, 154
+sash_tail
+  bounds: 265, 352, 114, 106
+torso
+  bounds: 146, 1, 137, 187

@@ -270,7 +270,7 @@
   和以前完全一樣。每隻怪物上方：下一招和剩下的秒數與進度條，顏色表示該怎麼應對（重擊紅、連打黃、法術紫、防禦藍）。目前給了招式的：
   蝙蝠（連打）、石巨人（重擊、防禦）、骷髏兵（重擊）、怨靈（法術）、小惡魔（重擊、法術）、Vorkath（全部）。
 - **應對**（§6.2）：防禦力量達 `break.parryPower`（85）以上會**招架**重擊（沒有傷害；它踉蹌 1.5 秒並受到 ×2 傷害）；**連打**會打斷進行中的
-  連擊（請改用防禦）；2026-10-26 起每隻怪物在連擊時都會繼續蓄力（負責人；`battle.json` 的 `combo_holds_monsters: true` 恢復舊的等待）；連擊命中 `breakHits`（2）個點會**打斷法術**，防禦對法術只能減半；**防禦中**的怪物只受 30% 傷害，
+  連擊（請改用防禦）；2026-10-26 起每隻怪物在連擊時都會繼續蓄力（負責人；`battle.json` 的 `combo_holds_monsters: true` 恢復舊的等待）；2026-10-30 起連擊的標記在牠們攻擊的暫停中也會繼續移動（`combo_runs_through_attacks: false` 恢復停下）；連擊命中 `breakHits`（2）個點會**打斷法術**，防禦對法術只能減半；**防禦中**的怪物只受 30% 傷害，
   除非滿集氣打破防禦；防禦招式本身不造成傷害。
 - **破防**（§6.4）：命中的點會累積怪物的量表（HP 條底部的細黃條；`enemies.json` 的 `"break"` 或 `battle.json` 的 `break.points`，8）；
   滿了就**破防**：暈眩 3 秒，受到 ×1.5 傷害（上方顯示「破防！」）。
@@ -305,3 +305,19 @@
   部分的情境）。先附兩個：`slime Lv1 bow`、`3 bats Lv5 sword`。
 - 還沒做：難度模擬（目前的數據來自上一場戰鬥）、結果的預覽按鈕、粒子與動畫的選擇器（目前用輸入）、章節篩選。
 - 測試：`battle_editor.selftest`（計算器、設定、寫回後檔案不變、清單）與 `smoke.battle_editor`（三隻怪物、▶ Battle、紀錄、Win now）。
+
+## 10. 第 4 步，美術：第一部分（2026-10-30）
+
+負責人說「開始做」。全部由腳本產生，可以重新產生與調整：
+
+- **粒子**（`tools/make_battle_fx.py` 加進 `media/fx/battle.particle`，其他效果保留）：弓、劍、杖與 default 各有
+  `<武器>_perfect`（該武器最高階的命中，放大，加上衝擊環與星星）、`<武器>_great`（中階命中加一圈環）；`miss_puff`；
+  怪物的 `monster_special`、`monster_transform`、`monster_parried`、`monster_broken`。
+- **動畫：** 完美結果的 `attack_big`：`archer_bow` / `weapon_bow`（三支箭齊射）、`fighter_sword` / `weapon_sword`
+  （一斬再回砍）、`caster_staff` / `weapon_staff`（兩道閃光、大光彈、火花）；`monster_battle.anim` 的 `special` 與
+  `transform`。
+- **資料：** 弓、劍、杖與 default 的 `results` 有 perfect（全部命中：×1.2、暈眩 0.5 秒、破防 +1，與原本 default
+  相同；公式仍待決定）、great（2 點）與 miss（0 點）；`looks.json` 改用怪物自己的新動畫與效果。
+- **修正：** 結果的 `anim` 以前會取代角色的狀態，下一格就回到 idle，大招動畫從未顯示。現在狀態維持 `attack`，只換動畫
+  （`setBattleRigState(state, restart, clip)`）。miss 列的 `fx` 在玩家身上播放。
+- **還要做：** 意圖圖示（§6.1，目前是彩色文字），以及玩家必殺技的 `special` 動畫。

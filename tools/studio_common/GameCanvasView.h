@@ -8,6 +8,7 @@
 
 #include <glm/glm.hpp>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -96,6 +97,10 @@ public:
     // Tests: draw no frame while on (a capture of the window, which asks it to paint, then sees what was shown).
     void holdFrames(bool on) { m_hold = on; }
     toms::next::BgfxRenderer* gameRenderer() const;   // while usingGameRenderer()
+    // One picture of w x h drawn by `draw` through the game renderer, offscreen: a transparent background, the design
+    // space 0..w x 0..h, nothing of the editor (BgfxRenderer::setCapture). Waits for the GPU. Format_RGBA8888 with
+    // straight alpha; a null image without the game renderer.
+    QImage renderOffscreen(int w, int h, const std::function<void(const GameScene&)>& draw);
 
 signals:
     void rendererChanged();                       // the game renderer started, or failed (QPainter)

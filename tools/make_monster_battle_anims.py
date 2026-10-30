@@ -8,6 +8,8 @@ status (Game::updateMonsterRig):
              appears (battle.json hitNumberDelayMs) -- and back
     hurt     the player's hit lands on it: knocked back, a red flash, a shake
     die      the fight is won: a last flash, it slumps and fades out, and stays gone
+    special  a monster event's "anim": "special" (docs/gameplay/13 §4.6): it crouches, rears up glowing and shakes
+    transform its HP-below change of form: it shakes, flashes white, swells and settles back
 
     python tools/make_monster_battle_anims.py
 
@@ -84,7 +86,23 @@ die = monster('die', 0.7, stay=True, motion={
     'scale': [key(0, [1, 1, 1]), key(0.1, [1.08, 0.92, 1]), key(0.7, [1.25, 0.35, 1], 'quadraticIn')],
 }, colour=[key(0, RED), key(0.15, WHITE, EASE), key(0.7, [1, 1, 1, 0], 'quadraticIn')])
 
-doc = {'version': 2, 'atlases': ['../atlas/game.atlas'], 'clips': [idle, attack, hurt, die]}
+GLOW = [1, 0.75, 1, 1]
+special = monster('special', 0.9, motion={
+    'pos': [key(0, [0, 0, 0], EASE), key(0.2, [0, 2, 0], 'quadraticOut'), key(0.4, [0, -8, 0], 'quadraticOut'),
+            key(0.62, [0, -6, 0], EASE), key(0.9, [0, 0, 0])],
+    'scale': [key(0, [1, 1, 1], EASE), key(0.2, [1.12, 0.86, 1], 'quadraticOut'), key(0.4, [0.9, 1.18, 1], 'quadraticOut'),
+              key(0.5, [1.06, 1.06, 1], EASE), key(0.9, [1, 1, 1])],
+    'rot': [key(0.4, [0, 0, 0]), key(0.46, [0, 0, -4]), key(0.52, [0, 0, 4]), key(0.58, [0, 0, -3]), key(0.64, [0, 0, 0])],
+}, colour=[key(0, WHITE), key(0.2, WHITE, EASE), key(0.4, GLOW, EASE), key(0.6, GLOW, EASE), key(0.9, WHITE)])
+
+transform = monster('transform', 1.0, motion={
+    'pos': [key(0, [0, 0, 0])] + [key(0.04 * (i + 1), [(-1) ** i * 2.5, 0, 0]) for i in range(10)] + [key(0.44, [0, 0, 0])],
+    'scale': [key(0, [1, 1, 1]), key(0.44, [0.92, 0.92, 1], 'quadraticIn'), key(0.56, [1.35, 1.35, 1], 'quadraticOut'),
+              key(0.8, [1.15, 1.15, 1], EASE), key(1.0, [1, 1, 1])],
+}, colour=[key(0, WHITE), key(0.4, [1, 0.6, 0.6, 1], 'quadraticIn'), key(0.48, [1, 1, 1, 1], 'quadraticOut'),
+           key(0.7, WHITE, EASE), key(1.0, WHITE)])
+
+doc = {'version': 2, 'atlases': ['../atlas/game.atlas'], 'clips': [idle, attack, hurt, die, special, transform]}
 with open(OUT, 'w', encoding='utf-8', newline='\n') as f:
     f.write(json.dumps(doc, indent=2) + '\n')
 print('wrote', os.path.relpath(OUT, ROOT), '-', ', '.join(c['name'] for c in doc['clips']))

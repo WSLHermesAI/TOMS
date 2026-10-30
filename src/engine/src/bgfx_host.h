@@ -39,9 +39,10 @@ bool bgfxHostInit(const BgfxHostConfig& cfg, std::string& error);
 void bgfxHostReset(uint32_t width, uint32_t height);
 // The window's surface was recreated (Android, back from the background): draw on `nativeWindow` now.
 void bgfxHostSetWindow(void* nativeWindow, uint32_t width, uint32_t height);
-void bgfxHostFrame();                      // bgfx::frame(): submit everything queued this frame
+uint32_t bgfxHostFrame();                  // bgfx::frame(): submit everything queued this frame; its frame number
 void bgfxHostShutdown();
 bool bgfxHostReady();
+double bgfxHostGpuMs();                    // the GPU's time for the last frame bgfx measured (ms; 0 = unknown)
 std::string bgfxHostRendererName();       // e.g. "Direct3D 11"; "(not started)" before init
 
 void bgfxHostSetDebugText(bool on);

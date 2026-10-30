@@ -25,7 +25,7 @@ set(_core "${TOMS_CORE_SRC}")
 set(TOMS_UNIT_TESTS
     engine/anim_clip_test           engine/particle_fx_test        engine/gltf_model_test
     engine/anim_skin_test           engine/sprite_mesh_test        engine/anim_character_test
-    engine/anim_lattice_test
+    engine/anim_lattice_test        engine/anim_fx_test
     engine/gltf_anim_texture_test   engine/gltf_physics_test       engine/gltf_environment_test
     engine/condition_eval_test      engine/encounter_resolve_test  engine/entity_status_test
     engine/job_system_test
@@ -196,6 +196,11 @@ toms_smoke_test(anim_skin    anim_skin   d3d11   0.1  --frames=110 --keys=enter@
 # A deform lattice (tests/smoke/anim_deform.anim): the slime squashed by its 4 x 4 lattice, the plain slime beside it.
 toms_smoke_test(anim_deform  anim_deform d3d11   0.1  --frames=31 --scenario=${CMAKE_CURRENT_SOURCE_DIR}/scenarios/stage_new_game
                 "--anim=${CMAKE_CURRENT_SOURCE_DIR}/smoke/anim_deform.anim#squash")
+# Node effects (docs/engine/18_NODE_EFFECTS.md): the brawler's super move as it dashes in (assets/media/anim/brawler.anim)
+# -- each effect a layer of its subtree through fs_layer.sc: the body's HDR outline aura, the dash's additive afterimages
+# fading behind it, the dimmed screen -- through the real renderer.
+toms_smoke_test(anim_fx      anim_fx     d3d11   0.1  --frames=40 --scenario=${CMAKE_CURRENT_SOURCE_DIR}/scenarios/stage_new_game
+                "--anim=${CMAKE_SOURCE_DIR}/assets/media/anim/brawler.anim#super_combo")
 # A particle effect (docs/examples/fx_recipes.particle, particle_fx.h) over the map: a prewarmed
 # fire from the fx atlas -- flipbook frames, additive and normal emitters, colour/size curves, seed 1.
 toms_smoke_test(fx           fx          d3d11   0.1  --frames=110 --keys=enter@30

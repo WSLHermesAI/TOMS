@@ -111,6 +111,8 @@
 
 ## 5. 武器
 
+負責人對弓、劍、杖較新的想法（2026-10-30）在 [14](14_WEAPON_PLAY_AND_LOOT.md) 第 2 節。
+
 **負責人（2026-10-20）：**戰鬥的玩法取決於武器；每種武器有自己的玩法。
 
 ### 5.1 空手：移動條上的五個點
@@ -219,6 +221,8 @@
 
 ## 8. 其他模式（之後再做）
 
+第三種：刷怪打寶（刷怪、開寶箱、往深處去；2026-10-30），在 [14](14_WEAPON_PLAY_AND_LOOT.md) 第 3 節。
+
 **負責人（2026-10-20）：**它們是 **TOMS 的一部分**，但每個都做成**獨立的模組**，讓其他遊戲可以重複使用：有自己的程式
 資料夾與資料，只透過一個小介面和 TOMS 溝通（開始、結果、傳入玩家的能力值），不碰 `Game` 的內部。
 
@@ -318,7 +322,7 @@
 |---|---|---|
 | **武器等級**：`assets/data/weapon_play.json` 每把武器的 `levels`（每級的點數 1-5 與屬性加成，例如弓 Lv 1 STR +10／3 點 …… Lv 5 STR +20、AGI +15／5 點）、`usesToLevel`（每級需要的勝場：3、5、8、12）。用裝備中的武器獲勝才算（武器測試場不算）；升級時顯示「獵弓 升到 Lv 2：3 個點！」。等級加成加到屬性上（`Game::attrValue`）。存在進度中（`player.weaponUses`）；新遊戲與輪迴時每把武器回到 Lv 1 | `weapon_play.h`、`Game::weaponLevel` | `unit.combo_play_test`、`scenario.battle_weapon_level` |
 | **點擊玩法**（第 4 節、5.1）：攻擊等待時累積**集氣**（`chargeMs`）；第一次點擊讓標記開始在該等級的點上移動，集氣越多越快（`chargeSpeedUp`）；在點附近點擊即命中，順序不限；點不到任何點是**失誤**（連擊依 `missBack` 退回，之後等待 `missWaitMs`）；連續兩次失誤是**失敗**（一次普通攻擊）。所有點都命中、掃過次數用完（`maxSweeps`；`turnBack: false` 只掃一次）或失敗時，連擊結束 | `systems/combo_play.h`（不依賴遊戲） | `unit.combo_play_test` |
-| **傷害**：命中點數的比例就是原有傷害公式的力量（0-100），再乘上集氣（`chargeDamage`：滿集氣傷害加倍）。失敗是力量 0（仍是一次普通攻擊）。連擊進行中敵人的計時會繼續（負責人 2026-10-26：怪物繼續蓄力；之前會等待，第 4 節）：攻擊會在連擊中途打到玩家，連擊繼續（連打會打斷它）。`battle.json` 的 `combo_holds_monsters: true` 恢復等待。全部命中時顯示大號數字 | `Game::resolveCombo` | 戰鬥與武器測試場情境 |
+| **傷害**：命中點數的比例就是原有傷害公式的力量（0-100），再乘上集氣（`chargeDamage`：滿集氣傷害加倍）。失敗是力量 0（仍是一次普通攻擊）。連擊進行中敵人的計時會繼續（負責人 2026-10-26：怪物繼續蓄力；之前會等待，第 4 節）：攻擊會在連擊中途打到玩家，連擊繼續（連打會打斷它）。`battle.json` 的 `combo_holds_monsters: true` 恢復等待。2026-10-30 起（負責人）連擊的標記在攻擊的暫停（`attack_pause_ms`）中也會繼續移動；`combo_runs_through_attacks: false` 恢復停下。全部命中時顯示大號數字 | `Game::resolveCombo` | 戰鬥與武器測試場情境 |
 | **畫面**：攻擊欄顯示集氣（黃色直條）、帶點的軌道（命中變綠）與標記，以及「獵弓 Lv 1 0/3」（等級與到下一級的勝場）；防禦條不變 | `battle.rml`／`.rcss`、`UiCombo` | 截圖 |
 | **情境**：`player.weaponUses` 設定每把武器的勝場；`expect.weaponLevel` 檢查等級；`battle_bow` 點中弓的三個點 | [08](08_TEST_SCENARIOS.md) | `battle_bow`、`battle_bow_idle`、`arena_restart`、`battle_weapon_level` |
 

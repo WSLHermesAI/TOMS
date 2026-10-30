@@ -124,6 +124,7 @@ bool GameSession::start(const SessionOptions& opts, std::string& error) {
     keyWas_.fill(false);
     game_->setPreviewCharacter(opts.previewCharacter);   // --character (before the clip starts: it is fitted then)
     game_->setPreviewHeld(opts.previewHeld);             // --held (bound when the clip starts)
+    game_->setPreviewCrowd(opts.previewCrowd);           // --anim-crowd
     if (!opts.previewAnim.empty()) {   // --anim=<file>#<clip> (a developer/test option)
         const size_t hash = opts.previewAnim.rfind('#');
         std::string animError;

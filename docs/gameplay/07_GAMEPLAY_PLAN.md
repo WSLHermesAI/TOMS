@@ -113,6 +113,7 @@ The trade-off is the core: more charge means more damage, but a faster marker an
 ## 5. The weapons
 
 **Owner (2026-10-20):** the battle's play depends on the weapon; each weapon type has its own way to play.
+The owner's newer ideas for the bow, the sword and the staff (2026-10-30) are in [14](14_WEAPON_PLAY_AND_LOOT.md) §2.
 
 ### 5.1 Unarmed (空手): a moving bar, five points
 
@@ -225,6 +226,8 @@ It is set per weapon in a **settings file**, so each weapon's values can be chan
 
 ## 8. Other modes (for later)
 
+A third one, the loot grind (farm monsters, open chests, go deeper; 2026-10-30), is in [14](14_WEAPON_PLAY_AND_LOOT.md) §3.
+
 **Owner (2026-10-20):** these are **part of TOMS**, but each is built as an **independent module** that another
 game can reuse: its own code folder and data, talking to TOMS only through a small interface (start, the result,
 the player's stats in), not through `Game` internals.
@@ -332,7 +335,7 @@ level (for example Lv 1: STR +10, 3 points; values made up for now).
 |---|---|---|
 | **Weapon levels**: `assets/data/weapon_play.json` per weapon: `levels` (per level the points, 1-5, and the attribute bonuses, e.g. bow Lv 1 STR +10 / 3 points ... Lv 5 STR +20, AGI +15 / 5 points), `usesToLevel` (wins per level: 3, 5, 8, 12). A win with the equipped weapon counts (not in the arena); a level-up shows "Bow reached Lv 2: 3 points!". The level's bonuses add to the attributes (`Game::attrValue`). Saved in the run (`player.weaponUses`); a new game and a rebirth start every weapon at Lv 1 | `weapon_play.h`, `Game::weaponLevel` | `unit.combo_play_test`, `scenario.battle_weapon_level` |
 | **The point play** (§4, §5.1): while the attack waits, **charge** builds up (`chargeMs`); the first tap starts the marker over the level's points, faster with more charge (`chargeSpeedUp`); a tap near a point hits it, in any order; a tap on nothing is a **miss** (the combo goes back by `missBack`, then `missWaitMs`); two misses in a row are a **fail** (a plain attack). The combo ends when every point is hit, when the sweeps run out (`maxSweeps`; `turnBack: false` is one sweep), or on a fail | `systems/combo_play.h` (no game dependency) | `unit.combo_play_test` |
-| **The damage**: the share of points hit is the power (0-100) of the existing damage formula, times the charge (`chargeDamage`: a full charge doubles it). A fail is power 0 (still a plain hit). The enemies' clocks keep running while a combo runs (the owner 2026-10-26: they keep charging; before, they waited, §4): an attack lands in the middle of the combo, and the combo goes on (quick jabs cut it short). `battle.json` `combo_holds_monsters: true` brings back the wait. All points hit shows a big number | `Game::resolveCombo` | the battle and arena scenarios |
+| **The damage**: the share of points hit is the power (0-100) of the existing damage formula, times the charge (`chargeDamage`: a full charge doubles it). A fail is power 0 (still a plain hit). The enemies' clocks keep running while a combo runs (the owner 2026-10-26: they keep charging; before, they waited, §4): an attack lands in the middle of the combo, and the combo goes on (quick jabs cut it short). `battle.json` `combo_holds_monsters: true` brings back the wait. Since 2026-10-30 (the owner) the combo's marker also keeps moving through the attack's pause (`attack_pause_ms`); `combo_runs_through_attacks: false` stops it, as before. All points hit shows a big number | `Game::resolveCombo` | the battle and arena scenarios |
 | **The screen**: the attack column shows the charge (a yellow column), the track with its points (green when hit) and the marker, and "Bow Lv 1 0/3" (the level and the wins toward the next); the defence bar is unchanged | `battle.rml` / `.rcss`, `UiCombo` | screenshots |
 | **Scenarios**: `player.weaponUses` sets wins per weapon; `expect.weaponLevel` checks levels; `battle_bow` taps the bow's three points | [08](08_TEST_SCENARIOS.md) | `battle_bow`, `battle_bow_idle`, `arena_restart`, `battle_weapon_level` |
 

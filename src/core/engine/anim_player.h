@@ -17,10 +17,17 @@
 #include "render_iface.h"
 #include "sprite_mesh.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace toms::anim {
+
+// What a playing clip's skinned nodes need every frame but which does not change while it plays: per node and sprite,
+// the region, texture, mesh, the mesh at rest with its UVs and weights, each bone's pose index and inverse rest transform.
+// A frame then only multiplies bones and sums weights. One per clip and atlas set, shared by every AnimPlayer playing that
+// clip (a crowd of 64 holds one copy); it goes when the last of them stops. Defined in anim_player.cpp.
+struct SkinRigCache;
 
 // Clip space -> screen: the clip's origin at (x, y), uniformly scaled (and optionally rotated).
 glm::mat3 placement(float x, float y, float scale = 1.0f, float rotationDegrees = 0.0f);
@@ -74,7 +81,8 @@ std::vector<MeshNeed> meshesNeeded(const Clip& clip, const AtlasSet& atlases);
 // gives an empty mesh (the node draws as a quad, or a deform on a plain grid).
 toms::SpriteMesh cutMesh(const MeshNeed& need, const uint8_t* rgba, int stride);
 
-// What a clip draws, in draw order: quads, and the meshes of skinned nodes (docs/engine/16_MESH_ANIMATION.md).
+// What a clip draws, in draw order: quads, the meshes of skinned nodes (docs/engine/16_MESH_ANIMATION.md), and where a
+// node's effect layer begins and ends (docs/engine/18_NODE_EFFECTS.md: IRenderer::beginLayer / endLayer).
 struct DrawList {
     std::vector<Quad> quads;
     struct MeshItem {
@@ -86,13 +94,20 @@ struct DrawList {
     std::vector<MeshItem> meshes;
     std::vector<MeshVertex> vertices;       // every mesh's, in turn
     std::vector<uint16_t> indices;          // local to each mesh's first vertex
-    struct Item { bool mesh; uint32_t index; };
+    std::vector<LayerEffect> layers;        // BeginLayer items' effects
+    enum Kind : uint8_t { QuadItem, MeshItemKind, BeginLayer, EndLayer };
+    struct Item { Kind kind; uint32_t index; };   // index into quads, meshes or layers
     std::vector<Item> order;
 
-    void clear() { quads.clear(); meshes.clear(); vertices.clear(); indices.clear(); order.clear(); }
+    void clear() { quads.clear(); meshes.clear(); vertices.clear(); indices.clear(); layers.clear(); order.clear(); }
     bool empty() const { return order.empty(); }
-    void addQuad(const Quad& q) { order.push_back({false, (uint32_t)quads.size()}); quads.push_back(q); }
-    void submit(IRenderer* ren) const;      // drawSprite / drawMesh each, in order
+    void addQuad(const Quad& q) { order.push_back({QuadItem, (uint32_t)quads.size()}); quads.push_back(q); }
+    void beginLayer(const LayerEffect& fx) { order.push_back({BeginLayer, (uint32_t)layers.size()}); layers.push_back(fx); }
+    void endLayer() { order.push_back({EndLayer, 0}); }
+    // To the renderer, in order. A run of quads and meshes with one texture and blending that has a mesh in it goes as
+    // ONE mesh (each quad two triangles with its own colour): a skinned character is a draw or two, not one per part. A
+    // run of quads only stays quads (the sprite batch already joins those, also across clips).
+    void submit(IRenderer* ren) const;
 };
 
 // The skin weights a skinned pose's mesh uses (kSkinInfluences (bone, weight) pairs per vertex): the node's own
@@ -105,6 +120,16 @@ void autoSkinWeights(const std::vector<float>& restVerts, const std::vector<glm:
 // Every node's rest world transform (rest pos / rot / scale, keys ignored), by node.
 void restWorlds(const Clip& clip, std::vector<std::pair<const Node*, glm::mat4>>& out);
 
+
+// The layer effect of pose i's node at its time (its fx, its fx keys), lengths placed (times the placement's scale, the
+// blur vector through it). `clip` (the poses' clip) gives a motion blur's automatic part: the node's movement over the
+// last 1/30 s. False: no effect, or nothing of it shows (hidden, transparent).
+bool nodeLayerEffect(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const glm::mat3& placement, LayerEffect& out);
+// The afterimages of pose i's node (its trail) into `out`: its subtree evaluated gap, 2 gap, ... seconds earlier, oldest
+// first, tinted. `rest`: the clip's rest worlds (skinned nodes).
+void appendTrail(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases,
+                 const std::vector<std::pair<const Node*, glm::mat4>>& rest, const glm::mat3& placement, const glm::vec4& tint,
+                 DrawList& out);
 
 // The quads for one evaluated pose list (anim_clip.h evaluate), in draw order. tint multiplies
 // every colour (nullptr = white). Sprites no atlas has are skipped and, with `missing`, reported
@@ -144,8 +169,10 @@ enum class SkinState { NotSkinned, NoSprite, Rotated, NoMesh, Ok };
 SkinState skinView(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases,
                    const glm::mat3& placement, SkinView* out);
 // The bent mesh of pose i (skinned, with a mesh); false = draw its quad instead.
+// rigs (optional): a clip's cache -- poses from that clip, in its order (PoseCache / evaluate), the atlases the same.
 bool makeSkinnedMesh(const std::vector<NodePose>& poses, size_t i, const std::vector<std::pair<const Node*, glm::mat4>>& rest,
-                     const AtlasSet& atlases, const glm::mat3& placement, const glm::vec4& tint, DrawList& out);
+                     const AtlasSet& atlases, const glm::mat3& placement, const glm::vec4& tint, DrawList& out,
+                     SkinRigCache* rigs = nullptr);
 
 class AnimPlayer {
 public:
@@ -173,7 +200,7 @@ public:
     void draw(IRenderer* ren, const AtlasSet& atlases, const glm::mat3& placement,
               const float tint[4] = nullptr) const;
     // The atlases' contents changed under the same AtlasSet (a reload): rebuild every quad.
-    void refreshQuads() { quadAtlases_ = nullptr; }
+    void refreshQuads() { quadAtlases_ = nullptr; rigAtlases_ = nullptr; rigsStale_ = true; }
     const PoseCache& poses() const { return cache_; }
 
 private:
@@ -189,7 +216,11 @@ private:
     mutable glm::mat3 quadPlace_{1.0f};
     mutable glm::vec4 quadTint_{1.0f};
     mutable std::vector<std::pair<const Node*, glm::mat4>> rest_;   // the clip's rest pose (skins)
-    mutable DrawList meshScratch_;
+    mutable DrawList meshScratch_;     // this frame's draws (the cached quads and the bent meshes), submitted batched
+    mutable std::shared_ptr<SkinRigCache> rigs_;   // the clip's skinned nodes at rest: shared per clip and atlas set
+    mutable const AtlasSet* rigAtlases_ = nullptr;
+    mutable bool rigsStale_ = false;   // refreshQuads: the atlases' contents changed -- a new shared cache, not the old one
+    bool effects_ = false;             // the clip has effects or trails (hasEffects): layers and afterimages around subtrees
 
     double total() const;              // playCount * duration; < 0 = forever
 };

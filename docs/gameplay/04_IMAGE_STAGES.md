@@ -125,6 +125,10 @@ The `tiles` and `legend` keys are replaced by one key:
 
 ## 6. Open questions for the owner
 
+**Answered 2026-10-30 (question 1):** a binary format, not PNG: the ids packed in the pixels of an **uncompressed
+BMP** (24-bit, so 16.7 million ids), read straight with no decoder. Wherever this document says PNG, read BMP.
+Questions 2 and 3 are still open (the proposals stand until the owner answers).
+
 1. **Packed RGB ids (this design) or an indexed palette PNG?** A palette PNG is easier to
    paint in an ordinary editor (pick colour 37 = slime), but it holds at most 256 values per
    image. Packed RGB has no limit, but you need the stage editor (or the debug colouring) to see

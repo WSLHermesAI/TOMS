@@ -1,5 +1,5 @@
 {
-  "_comment": "The staff (docs/gameplay/07 phase 2): Enter at frame 40 starts the combo (charge 640 of 3000 ms, sweep 1900 ms, chargeSpeedUp 0.6: a sweep takes about 1684 ms), and the taps at its three points (about 26, 53 and 79 frames later) all hit: the attack plays the staff's \"cast\" clip.",
+  "_comment": "The staff (docs/gameplay/07 phase 2): Enter at frame 40 starts the combo (charge 640 of 3000 ms, sweep 1900 ms, chargeSpeedUp 0.6: a sweep takes about 1684 ms), and the taps at its three points (about 26, 53 and 79 frames later) all hit: a perfect result (weapon_play.json \"results\"), so the attack plays its \"attack_big\" clip, not the staff's \"cast\".",
   "scene": "battle",
   "player": {
     "equip": [
@@ -17,6 +17,6 @@
   },
   "expect": {
     "battleAnim": "attack",
-    "battleClip": "cast"
+    "battleClip": "attack_big"
   }
 }

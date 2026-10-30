@@ -16,12 +16,14 @@ namespace animed {
 using toms::anim::Ease;
 using toms::anim::Node;
 
-// Deform: the lattice's offsets (anim_clip.h; docs/engine/16_MESH_ANIMATION.md). Interpolated (eased) but not one of
-// kInterpolated: "key all channels together" keys the transform and colour only.
-enum class Channel { Pos, Rot, Scale, Color, Sprite, Visible, Event, Deform };
-constexpr int kChannelCount = 8;
+// Deform: the lattice's offsets (anim_clip.h; docs/engine/16_MESH_ANIMATION.md). Fx: an effect's four params; Trail: the
+// afterimages' strength in v.x (docs/engine/18_NODE_EFFECTS.md). Interpolated (eased) but not one of kInterpolated:
+// "key all channels together" keys the transform and colour only.
+enum class Channel { Pos, Rot, Scale, Color, Sprite, Visible, Event, Deform, Fx, Trail };
+constexpr int kChannelCount = 10;
 constexpr Channel kAllChannels[kChannelCount] = {Channel::Pos,    Channel::Rot,     Channel::Scale, Channel::Color,
-                                                 Channel::Sprite, Channel::Visible, Channel::Event, Channel::Deform};
+                                                 Channel::Sprite, Channel::Visible, Channel::Event, Channel::Deform,
+                                                 Channel::Fx,     Channel::Trail};
 constexpr Channel kInterpolated[4] = {Channel::Pos, Channel::Rot, Channel::Scale, Channel::Color};
 
 constexpr float kTimeEps = 1e-4f;

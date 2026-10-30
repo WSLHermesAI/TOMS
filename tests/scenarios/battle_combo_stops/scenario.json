@@ -1,0 +1,8 @@
+{
+  "_comment": "The old rule, kept as a switch (data/battle.json combo_runs_through_attacks: false): a slime attacking every 0.7 s strikes in the middle of the bow's combo (started at frame 40), and the attack's 450 ms pause (07 §4) stops the combo's marker too, so the taps on the three points come that much later; the combo goes on and hits all three.",
+  "scene": "battle",
+  "player": { "equip": ["bow"] },
+  "battle": { "enemy": "slime", "hp": 9999, "atk_interval_ms": 700, "rules": { "combo_runs_through_attacks": false } },
+  "test": { "frames": 200, "keys": "enter@40,enter@89,enter@109,enter@158" },
+  "expect": { "scene": "battle", "battleEvents": { "combo": 1, "hit": 3, "interrupt": 0 } }
+}

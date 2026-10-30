@@ -184,6 +184,7 @@ bool Game::loadAssets(const std::string& assetDir) {
             battleJson_ = bj;
             paceSettings_ = toms::paceFromJson(bj);     // docs/gameplay/13 §6.3
             comboHoldsMonsters_ = bj.value("combo_holds_monsters", false);
+            comboRunsThroughAttacks_ = bj.value("combo_runs_through_attacks", true);
             breakSettings_ = toms::breakFromJson(bj);   // §6.4
             fprintf(stderr, "[assets] battle.json: bars start x%.2f, top speed x%.2f, %d ms after a tap\n", barSlowScale_,
                     barFastScale_, barCooldownMs_);

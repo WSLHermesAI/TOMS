@@ -720,3 +720,27 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - Tests: changed-only 23 of 212 pass; new `unit.gltf_environment_test`; `unit.gltf_model_test` by name passes;
     headless Chrome (SwiftShader + GPU) and D3D11 / D3D12 / Vulkan / OpenGL by hand. All tests, Android, the
     game's web rebuild not run; the 24 glTF screenshot tests have no references.
+- **2026-10-30** — **Node effects, the brawler showcase, clip export, faster clip drawing** ([DAILY_2026-10-30.md](DAILY_2026-10-30.md); not committed):
+  - Effects: `anim_clip.*` `NodeFx` / `FxShader` / `NodeTrail`, `fxKeys`, `trailKeys`, `fxParamsAt`, `trailAt`,
+    `hasEffects`, `NodePose::first / end / clipTime`, version 4; `anim_player.*` `EffectWalk`, `nodeLayerEffect`,
+    `appendTrail`, `DrawList` begin / end layer items; `render_iface.h` `LayerEffect`, `beginLayer / endLayer`,
+    `setTextureFilter`; `bgfx_renderer.*` layers (RGBA16F frame buffers, views 200+, `applyViewOrder`,
+    `submitLayer`, `submitComposite`, `layerBlendState`), `fs_layer.sc` (`ShaderProgram::Layer`); linear atlas pages
+    (`resource_types.cpp`, `GameCanvasView`).
+  - Showcase: `tools/art/make_brawler_art.py` (`pose`, `concept`, `parts`; OpenPose skeleton, Juggernaut XL +
+    ControlNet union, Inspyrenet; nearest-bone cut, capsules, parent-only overlap, Telea fill under the sash, edge
+    colour fix; arms and legs merged), `tools/art/brawler_rig.json`, `assets/media/atlas/brawler.*` (11 parts, linear,
+    6 meshes), `tools/make_brawler_anim.py` (two-bone IK, `MIN_REACH`), `assets/media/anim/brawler*.anim`.
+  - Editor: `AnimPropertiesDock` Effect box, `AnimKeyListDock` Fx / Trail columns, `anim_keys` `Channel::Fx / Trail`;
+    `AnimDocument::setHeldFile`, View > Held Clip; `--render`, `--export`; `AnimExport.*` (median-cut GIF + LZW,
+    APNG, PNG frames, the dialog), `BgfxRenderer::setCapture`, `GameCanvasView::renderOffscreen`,
+    `bgfxHostFrame()` returns the frame number; the skin overlay batched (`vertexDot`); zh_TW strings.
+  - Speed: `DrawList::submit` batches mesh runs (`Mesh::colors`), `BgfxRenderer::drawMesh` merges consecutive meshes,
+    `SkinRigCache` (shared per clip + atlas set), `cachedAutoWeights`, layer bounds, reused pose buffers, `walk`
+    without allocation; `toms_game --anim-crowd=N --bench`, `bgfxHostGpuMs`.
+  - Docs: `docs/engine/18_NODE_EFFECTS.md` (+ zh_TW), 05 "Exporting clips" and the version 4 pointer (+ zh_TW),
+    `docs/README.md`.
+  - Tests: changed-only 30 of 220 pass; new `unit.anim_fx_test`, `anim.check_brawler*`, `anim.export_gif`,
+    `smoke.anim_fx`; by name `unit.anim_clip_test`, `smoke.anim_skin / anim_deform / mesh / mesh_cpu` pass;
+    `anim.editor_selftest` fails two checks on HEAD too; `smoke.anim`, `smoke.battle` have no references. All tests,
+    web and Android not run.

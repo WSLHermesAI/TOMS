@@ -64,7 +64,7 @@ ENGINE_UNIT = lambda t: unit_in('engine/')(t) and not ENGINE_SPECIFIC.match(t['n
 GLTF = any_of(named('unit.gltf_*'), is_gltf)
 PARTICLES = named('unit.particle_fx_test', 'particle.*', 'smoke.fx*')
 ANIMS = named('unit.anim_clip_test', 'unit.anim_skin_test', 'unit.anim_character_test', 'unit.anim_lattice_test', 'anim.*',
-              'smoke.anim', 'smoke.anim_skin', 'smoke.anim_deform')
+              'unit.anim_fx_test', 'smoke.anim', 'smoke.anim_skin', 'smoke.anim_deform', 'smoke.anim_fx')
 # sprite meshes (docs/engine/16_MESH_ANIMATION.md): the mesh file and cutter, the skinning that bends them, `atlaspack meshes`
 MESHES = named('unit.sprite_mesh_test', 'unit.anim_skin_test', 'unit.anim_lattice_test', 'smoke.anim_skin',
                'smoke.anim_deform', 'anim.check_skin', 'anim.check_skin_meshes', 'anim.meshes_up_to_date')
@@ -175,7 +175,7 @@ RULES = [
     # particles, node animations, atlases, the Qt editors' shared code
     (['src/core/engine/particle*', 'tools/particle/*', 'src/engine/shaders/cs_fx_*'], PARTICLES,
      'particles: checks, unit test, fx screenshots'),
-    (['assets/media/fx/battle.particle'], named('particle.check_battle', 'unit.weapon_play_test'),
+    (['assets/media/fx/battle.particle', 'tools/make_battle_fx.py'], named('particle.check_battle', 'unit.weapon_play_test'),
      "the battle's weapon effects: their check + weapon_play.json's names in them"),
     (['assets/media/particle*', 'assets/media/fx/*'], any_of(PARTICLES), 'particle files'),
     (['src/core/engine/sprite_mesh*'], MESHES, 'sprite meshes: their unit tests, the skinned and deformed clips'),
@@ -199,6 +199,10 @@ RULES = [
     (['assets/media/anim/archer_bow.anim', 'tools/make_archer_anim.py', 'assets/data/character_fit.json'],
      named('anim.check_archer', 'unit.anim_character_test', 'anim.editor_selftest'),
      'the archer clips and the character nudges: their check, the fitting test, the editor preview'),
+    (['assets/media/anim/brawler*.anim', 'tools/make_brawler_anim.py', 'tools/art/brawler_rig.json',
+      'assets/media/atlas/brawler.*'],
+     named('anim.check_brawler*', 'unit.anim_fx_test', 'smoke.anim_fx'),
+     'the brawler showcase (make_brawler_anim.py writes it; docs/engine/18): its checks, the effects test and screenshot'),
     (['assets/media/anim/*', 'tools/make_idle_clips.py'], any_of(ANIMS, is_game_smoke_d3d11),
      '.anim files (make_idle_clips.py writes the idle ones): anim checks + game screenshots'),
     (['tools/atlas/*', 'src/core/engine/atlas*'], ATLAS, 'the atlas tool: atlas checks'),

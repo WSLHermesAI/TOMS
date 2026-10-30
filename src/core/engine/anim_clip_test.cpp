@@ -570,7 +570,7 @@ void testXyz() {
     AnimFile back;
     CHECK(v2.find("\"version\": 2") != std::string::npos && parseAnim(v2, back, &err) && back == v1 && back.version == 2,
           "saved as version 2, reads back the same");
-    CHECK(!parseAnim(R"({"version":4,"clips":[]})", back, &err) && err.find("newer") != std::string::npos,   // 3 = skins
+    CHECK(!parseAnim(R"({"version":5,"clips":[]})", back, &err) && err.find("newer") != std::string::npos,   // 3 = skins, 4 = effects
           "a newer version is refused: %s", err.c_str());
     // == (the editor's undo compares with it)
     AnimFile changed = v1;

@@ -20,6 +20,18 @@
 - **When a new test is added,** make sure a rule in `tools/test_select.py` selects it for the files it covers.
 - **Report what was run:** say "changed-only: N of M tests" or "all tests", with the result, never just "tests pass".
 
+### Platforms: Windows first
+
+- **New code or new data is built and tested on the Windows desktop version only** (the owner, 2026-10-30). Web,
+  Android and other versions are tested and updated only when the owner asks for that version. `tools\test.cmd` picks
+  desktop tests only, so don't add web tests to a run. The exception is "test all", which the owner asks for directly.
+
+### Git: never commit the AIGamestyle submodule
+
+- **Don't commit anything in `AIGamestyle`**: no commits inside the submodule, and no staging of its pointer in TOMS
+  (`git add AIGamestyle`, `git add -A`, `git commit -a`). Stage TOMS files by name. The owner commits it by hand
+  (2026-10-30) until they ask me to.
+
 ### Files: by key, never a path in code
 
 - **Game code names a file by its key** in `assets/media/resources.json` (`toms::key::k…` / `toms::pattern::k…` from

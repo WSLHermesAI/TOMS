@@ -207,6 +207,7 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
             paceSettings_ = toms::paceFromJson(rules);
             breakSettings_ = toms::breakFromJson(rules);
             comboHoldsMonsters_ = rules.value("combo_holds_monsters", false);
+            comboRunsThroughAttacks_ = rules.value("combo_runs_through_attacks", true);
         }
         startCombat(en, party);
         if (s == "battleWon") finishCombatWin();

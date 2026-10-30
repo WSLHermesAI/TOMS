@@ -16,7 +16,8 @@ namespace toms::next {
 enum class ShaderProgram { Sprite, ImGui, RmlUi, SpriteInstanced, SpriteCompute, SpriteFromCompute, FxSpawn, FxUpdate,
                            Mesh, MeshInstanced, Line, MeshShadow, MeshShadowInstanced,
                            MeshAnimTex, MeshShadowAnimTex,   // crowds: vs_mesh_animtex.sc + fs_mesh.sc / fs_shadow.sc
-                           Sky };   // vs_sky.sc + fs_sky.sc: the environment picture behind the models
+                           Sky,     // vs_sky.sc + fs_sky.sc: the environment picture behind the models
+                           Layer }; // vs_sprite.sc + fs_layer.sc: a layer's picture drawn with its effect (beginLayer)
 
 // Creates the program for the active renderer. Returns an invalid handle (and logs) if the
 // renderer type has no embedded binary (e.g. Metal on Windows builds).

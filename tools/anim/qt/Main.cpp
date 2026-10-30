@@ -5,11 +5,17 @@
 //   anim_editor --headless check file.anim        parse + check (sprites vs atlas, keys); exit 0 / 2
 //   anim_editor --selftest file.anim outdir       automated check (-platform offscreen); outdir must be
 //                                                 on the atlas's drive (atlas paths are stored relative)
+//   anim_editor --render file.anim clip outdir t1,t2,... [held.anim]
+//                                                 the clip at those times through the game renderer, PNGs
+//                                                 (with a held file: its clip of the same name at `hand`)
+//   anim_editor --export file.anim outdir [gif|apng|png] [clip,clip,...] [held.anim]
+//                                                 clips as animated pictures (File > Export Clips as Animation)
 #include "AnimAtlasesPanel.h"
 #include "AnimDocument.h"
 #include "AnimClipsDock.h"
 #include "AutoBackup.h"
 #include "AnimEditor.h"
+#include "AnimExport.h"
 #include "AnimKeyListDock.h"
 #include "AnimMainWindow.h"
 #include "AnimNodesDock.h"
@@ -36,6 +42,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
+#include <QImageReader>
 #include <QScrollBar>
 #include <QScrollArea>
 #include <QWheelEvent>
@@ -1507,6 +1514,96 @@ int runGpuSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir
     return ok ? 0 : 1;
 }
 
+// anim_editor --render file.anim clip outdir t1,t2,... [held.anim]: the clip at those times through the game renderer,
+// framed once for the whole clip, as outdir/<clip>_<ms>.png (a held file: its clip of the same name at `hand`).
+int runRender(AnimMainWindow& w, const QStringList& a)
+{
+    qApp->setProperty("toms.selftest", true);
+    QDir().mkpath(a[2]);
+    AnimEditor* ed = w.editor();
+    auto pump = [](int ms) {
+        QElapsedTimer t;
+        t.start();
+        while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    };
+    if (!ed->openFile(a[0], false)) { std::fprintf(stderr, "render: cannot open %s\n", qPrintable(a[0])); return 2; }
+    AnimDocument* doc = ed->document();
+    int index = -1;
+    for (size_t i = 0; i < doc->file().clips.size(); i++)
+        if (QString::fromStdString(doc->file().clips[i].name) == a[1]) index = int(i);
+    if (index < 0) { std::fprintf(stderr, "render: no clip %s\n", qPrintable(a[1])); return 2; }
+    doc->setClipIndex(index);
+    QString err;
+    if (a.size() > 4 && !doc->setHeldFile(a[4], &err)) { std::fprintf(stderr, "render: %s\n", qPrintable(err)); return 2; }
+    for (QDockWidget* d : w.findChildren<QDockWidget*>()) d->hide();   // the viewport alone
+    pump(500);
+    AnimViewport* view = ed->viewport();
+    if (!view->usingGameRenderer()) { std::fprintf(stderr, "render: no game renderer\n"); return 1; }
+    view->frameClip();
+    // TOMS_RENDER_ZOOM: times the framed zoom, around the view's centre (a clip with a screen-sized node frames far out)
+    if (const double z = qEnvironmentVariable("TOMS_RENDER_ZOOM").toDouble(); z > 0) view->setZoom(view->zoom() * z);
+    int failed = 0;
+    for (const QString& ts : a[3].split(QLatin1Char(','))) {
+        const float t = ts.toFloat();
+        doc->setTime(t);
+        pump(250);
+        const int n = toms::next::bgfxHostScreenshotsWritten();
+        const QString png = QDir(a[2]).filePath(QStringLiteral("%1_%2.png").arg(a[1]).arg(int(std::lround(t * 1000)), 5, 10, QLatin1Char('0')));
+        view->saveGameRendererShot(png);
+        QElapsedTimer st;
+        st.start();
+        while (toms::next::bgfxHostScreenshotsWritten() == n && st.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+        if (toms::next::bgfxHostScreenshotsWritten() == n) failed++;
+        else std::printf("%s\n", qPrintable(png));
+    }
+    return failed ? 1 : 0;
+}
+
+// anim_editor --export file.anim outdir [gif|apng|png] [clip,clip,...] [held.anim]: those clips (default: all) as
+// animated pictures through the game renderer (File > Export Clips as Animation), 30 fps, half size, transparent. Each
+// GIF is read back with Qt's GIF reader: it must decode with one picture per frame.
+int runExport(AnimMainWindow& w, const QStringList& a)
+{
+    qApp->setProperty("toms.selftest", true);
+    AnimEditor* ed = w.editor();
+    auto pump = [](int ms) {
+        QElapsedTimer t;
+        t.start();
+        while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    };
+    if (!ed->openFile(a[0], false)) { std::fprintf(stderr, "export: cannot open %s\n", qPrintable(a[0])); return 2; }
+    AnimDocument* doc = ed->document();
+    animexport::Options opt;
+    const QString format = a.size() > 2 ? a[2] : QStringLiteral("gif");
+    opt.format = format == QLatin1String("apng") ? animexport::Format::Apng
+               : format == QLatin1String("png")  ? animexport::Format::PngFrames : animexport::Format::Gif;
+    QString err;
+    if (a.size() > 4 && !doc->setHeldFile(a[4], &err)) { std::fprintf(stderr, "export: %s\n", qPrintable(err)); return 2; }
+    pump(500);
+    AnimViewport* view = ed->viewport();
+    if (!view->usingGameRenderer()) { std::fprintf(stderr, "export: no game renderer\n"); return 1; }
+    const QStringList only = a.size() > 3 && !a[3].isEmpty() ? a[3].split(QLatin1Char(',')) : QStringList();
+    int failed = 0;
+    for (const toms::anim::Clip& c : doc->file().clips) {
+        if (!only.isEmpty() && !only.contains(QString::fromStdString(c.name))) continue;
+        const QString p = animexport::exportClip(view, *doc, c, opt, a[1], &err);
+        if (p.isEmpty()) { std::fprintf(stderr, "export: %s: %s\n", c.name.c_str(), qPrintable(err)); failed++; continue; }
+        if (opt.format == animexport::Format::Gif) {   // it must read back: as many pictures as frames
+            QImageReader r(p);
+            int frames = 0;
+            while (r.canRead() && !r.read().isNull()) frames++;
+            const int want = int(std::lround(c.duration() * opt.fps)) + (c.playCount >= 0 ? 1 : 0);
+            if (frames != std::max(1, want)) {
+                std::fprintf(stderr, "export: %s: %d picture(s) read back, %d expected\n", qPrintable(p), frames, want);
+                failed++;
+                continue;
+            }
+        }
+        std::printf("%s\n", qPrintable(QDir::toNativeSeparators(p)));
+    }
+    return failed ? 1 : 0;
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -1547,6 +1644,28 @@ int main(int argc, char** argv)
         w.resize(1440, 900);
         w.show();
         const int code = runGpuSelfTest(w, qargs[1], qargs[2]);
+        std::fflush(stdout);
+        return code;
+    }
+    if (qargs.size() >= 3 && qargs[0] == QLatin1String("--export")) {   // on screen: the game renderer
+        Console::attachParent();
+        qApp->setProperty("toms.selftest", true);
+        AnimMainWindow w;
+        w.setDarkTheme(true);
+        w.resize(900, 700);
+        w.show();
+        const int code = runExport(w, qargs.mid(1));
+        std::fflush(stdout);
+        return code;
+    }
+    if (qargs.size() >= 5 && qargs[0] == QLatin1String("--render")) {   // on screen: the game renderer
+        Console::attachParent();
+        qApp->setProperty("toms.selftest", true);
+        AnimMainWindow w;
+        w.setDarkTheme(true);
+        w.resize(1100, 1000);
+        w.show();
+        const int code = runRender(w, qargs.mid(1));
         std::fflush(stdout);
         return code;
     }

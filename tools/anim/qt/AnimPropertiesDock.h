@@ -65,6 +65,16 @@ private:
     QSpinBox *m_meshCols, *m_meshRows;   // the node's mesh grid, cells across and down (re-cuts its mesh)
     QWidget* m_meshGridRow;
     QSpinBox *m_latticeCols, *m_latticeRows;   // the deform lattice's points across and down (docs/engine/16 step 4)
+    // Effect and trail (docs/engine/18_NODE_EFFECTS.md): the shader its subtree is drawn through, its params at the
+    // playhead (keyed like the other channels), its colour; the afterimages' count, gap, colour, blending, strength.
+    QGroupBox* m_fxBox;
+    QComboBox* m_fxShader;
+    QDoubleSpinBox *m_fxParam[4], *m_fxColor[4];
+    QLabel* m_fxParamNames[4];
+    QSpinBox* m_trailCount;
+    QDoubleSpinBox *m_trailGap, *m_trailColor[4], *m_trailStrength;
+    QCheckBox* m_trailAdd;
+    void refreshEffect(const toms::anim::Node* n);
     QLabel* m_playLabel;
     QDoubleSpinBox *m_pos[3], *m_rot[3], *m_scale[3], *m_color[4];   // x, y, z
     QLabel* m_spriteHere;

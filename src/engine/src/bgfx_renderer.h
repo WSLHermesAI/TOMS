@@ -52,6 +52,27 @@ public:
     void loadSpriteAtlas(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, const std::string& file) override;
     uint16_t loadTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h) override;
     void releaseTexture(uint16_t texture) override;
+    void setTextureFilter(uint16_t texture, bool linear) override;
+    // Layers (render_iface.h LayerEffect, docs/engine/18_NODE_EFFECTS.md): each layer is drawn into an RGBA16F picture
+    // of the game view's size in a view of its own (kViewLayerFirst + n, run after the clear and before kViewGame, inner
+    // layers before the layers around them), then drawn with fs_layer.sc where beginLayer was called. Pictures are
+    // premultiplied: the sprites inside a layer blend into it keeping its alpha, and the picture is drawn with
+    // (ONE, 1 - alpha). Not available: everything is drawn straight through.
+    void beginLayer(const LayerEffect& fx) override;
+    void endLayer() override;
+    bool supportsLayers() const;
+    // Offscreen capture (an editor's "export as GIF"): from the next end() on, the game view draws into a w x h picture
+    // of its own instead of the window -- cleared transparent, design space 0..w x 0..h, blended premultiplied so the
+    // alpha is right -- and that picture is read back. 0 x 0 = off (the window again). After end(), the pixels are in
+    // capturePixels() once bgfx::frame() has returned captureFrame() or later: RGBA8, premultiplied alpha, the colours
+    // as the screen shows them (sRGB on desktop).
+    void setCapture(uint16_t w, uint16_t h);
+    uint32_t captureFrame() const { return captureFrame_; }
+    const std::vector<uint8_t>& capturePixels() const { return capturePx_; }
+    static constexpr uint16_t kViewCapture = 199;   // the read back: after the game view, before the layers' views (200+)
+    size_t lastLayerCount() const { return lastLayerCount_; }    // layers drawn last frame
+    static constexpr uint16_t kViewLayerFirst = 200;
+    static constexpr uint32_t kMaxLayers = 48;                    // per frame; more are drawn straight through
     void begin() override;
     void drawSprite(const Quad& q) override;
     void drawMesh(const Mesh& m) override;     // the CPU path's program, from one vertex / index buffer per frame
@@ -105,22 +126,59 @@ public:
 
 private:
     uint16_t sceneFirst_ = 0, sceneCount_ = 0;     // setSceneViews()
-    uint16_t appliedSceneCount_ = 0;
+    bool orderApplied_ = false;                     // a view order is set (applyViewOrder)
     void submitQuads(const std::vector<Quad>& quads, uint16_t texture);
     // The GPU paths; false = they could not take these quads (no buffer space): use the next path.
     bool submitQuadsInstanced(const std::vector<Quad>& quads, uint16_t texture);
     bool submitQuadsCompute(const std::vector<Quad>& quads, uint16_t texture);
     uint64_t blendState(bool additive) const;
+    uint64_t layerBlendState(bool additive) const;   // into a layer's premultiplied picture
     // GPU particle and mesh draws are placed among the sprites: before quad `at` (sprites_ index).
     // emitter 0 = a mesh: its vertices and indices in meshVerts_ / meshIdx_ (indices local to its first vertex).
     struct GpuDraw {
         size_t at; uint32_t emitter; uint16_t texture; bool additive;
         uint32_t firstVertex = 0, vertexCount = 0, firstIndex = 0, indexCount = 0;
+        int layer = -1;   // >= 0: not a mesh or emitter but layer `layer`'s picture, drawn with its effect
     };
-    // Draws the GPU emitters and meshes placed at quad index `at` (markers from `next` on); returns
-    // where the next marker is (the quads up to it can go in one run).
-    size_t drawGpuAt(size_t at, size_t& next, uint16_t texture);
+    // Draws the GPU emitters, meshes and layer pictures placed at quad index `at` (markers from `next` on) into the game
+    // view; returns where the next marker is (the quads up to it can go in one run).
+    size_t drawGpuAt(size_t at, size_t& next, uint16_t texture) { return drawMarkers(kViewGame, gpuDraws_, false, at, next, texture); }
     size_t nextGpuAt(size_t next) const { return next < gpuDraws_.size() ? gpuDraws_[next].at : SIZE_MAX; }
+    // The same for any view and marker list; inLayer: blend into a layer's premultiplied picture.
+    size_t drawMarkers(uint16_t view, const std::vector<GpuDraw>& draws, bool inLayer, size_t at, size_t& next, uint16_t texture);
+    void bindTexture(uint16_t texture);   // stage 0, with its filter (setTextureFilter)
+    std::vector<uint16_t> linearTex_;
+    // Layers: this frame's, by beginLayer order; each its own quads and markers.
+    struct LayerDraw {
+        LayerEffect fx;
+        std::vector<Quad> quads;
+        std::vector<GpuDraw> draws;
+        int slot = -1;    // its picture: layerFb_[slot], drawn in view kViewLayerFirst + slot
+        // What it draws, design space (prepareLayers), and how far its effect reaches past that: only the content plus
+        // twice the reach is cleared and drawn into, only the content plus the reach composited -- a small arm's blur
+        // costs its size in pixels, not the screen's.
+        bool any = false;
+        float x0 = 0, y0 = 0, x1 = 0, y1 = 0, reach = 0;
+    };
+    std::vector<LayerDraw> layers_;
+    std::vector<int> layerStack_;     // the open layers (innermost last); -1 = one drawn straight through
+    std::vector<int> layerClosed_;    // in the order they closed: inner layers first (their views run in this order)
+    std::vector<uint16_t> layerFb_;   // the pictures (frame buffers, RGBA16F), reused from frame to frame
+    uint16_t layerW_ = 0, layerH_ = 0;
+    uint16_t layerProgram_ = kInvalid, uLayerMode_ = kInvalid, uLayerParams_ = kInvalid, uLayerColor_ = kInvalid,
+             uLayerTexel_ = kInvalid;
+    size_t lastLayerCount_ = 0;
+    std::vector<Quad>& currentQuads() { return layerStack_.empty() || layerStack_.back() < 0 ? sprites_ : layers_[(size_t)layerStack_.back()].quads; }
+    std::vector<GpuDraw>& currentDraws() { return layerStack_.empty() || layerStack_.back() < 0 ? gpuDraws_ : layers_[(size_t)layerStack_.back()].draws; }
+    void prepareLayers();                                 // end(): pictures, views and the view order
+    void submitLayer(const LayerDraw& l, uint16_t view);  // a layer's contents into its picture
+    void submitComposite(int layer, uint16_t view);       // a layer's picture, with its effect, into `view`
+    void applyViewOrder();
+    uint16_t captureW_ = 0, captureH_ = 0;          // setCapture
+    uint16_t captureFb_ = kInvalid, captureRead_ = kInvalid, captureFbW_ = 0, captureFbH_ = 0;
+    uint32_t captureFrame_ = 0;
+    std::vector<uint8_t> capturePx_;
+    void prepareCapture();                          // end(): the game view into the capture picture, its read back
     uint16_t createAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h);
     static void destroyTexture(uint16_t& handle);
 

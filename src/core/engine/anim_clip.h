@@ -56,6 +56,11 @@
 // position in the list), then its own sprite, then the children with order >= 0. Colour multiplies
 // down the tree unless a node sets inheritColor false; an invisible node hides its subtree.
 //
+// Effects (version 4, docs/engine/18_NODE_EFFECTS.md): a node's `fx` draws it and its whole subtree into a picture of
+// their own (IRenderer::beginLayer) and that picture through a shader -- motion blur, glow (HDR + bloom), flash,
+// outline -- so nodes outside the subtree are not touched; effects nest. Its `fx` keys animate the shader's params. A
+// node's `trail` draws afterimages of its subtree: the same nodes as they were a little earlier, fading.
+//
 // The game plays clips with AnimPlayer (anim_player.h); the editor evaluates them with the same
 // code, so its preview is what the game draws.
 #pragma once
@@ -100,6 +105,36 @@ template <class T> struct Key {
 
 enum class Blend { Normal, Add };
 
+// A node's effect (see the top). params by shader, lengths in clip pixels:
+//   group       -                                   the subtree drawn as one picture (one alpha over what is under it)
+//   motionBlur  dx, dy, auto, -                     smeared along (dx, dy); auto > 0 adds the node's own movement over
+//                                                   the last 1/30 s, times auto
+//   glow        intensity, radius, threshold, bloom colours x intensity (> 1 = HDR); light above the threshold blooms
+//                                                   `radius` past the outline, `bloom` strong, in `color`
+//   flash       amount, -, -, -                     towards `color` (0..1), the alpha kept
+//   outline     width, intensity, -, -              a band of `color` around the subtree's alpha
+enum class FxShader { None, Group, MotionBlur, Glow, Flash, Outline };
+const char* fxShaderName(FxShader s);           // "" for None
+bool parseFxShader(const std::string& name, FxShader& out);
+struct NodeFx {
+    FxShader shader = FxShader::None;            // None: no picture of its own
+    glm::vec4 params{0, 0, 0, 0};                // at rest (fx keys animate them)
+    glm::vec4 color{1, 1, 1, 1};
+    bool operator==(const NodeFx& o) const { return shader == o.shader && params == o.params && color == o.color; }
+    bool operator!=(const NodeFx& o) const { return !(*this == o); }
+};
+// A node's afterimages (see the top): `count` copies of its subtree as it was gap, 2 gap, ... seconds earlier, tinted by
+// `color` (the nearest with color.a, fading to the oldest), drawn behind it; trail keys (0..1) scale them, no keys = 1.
+struct NodeTrail {
+    int count = 0;                               // 0 = none
+    float gap = 0.04f;
+    glm::vec4 color{1, 1, 1, 0.5f};
+    bool additive = false;
+    bool operator==(const NodeTrail& o) const { return count == o.count && gap == o.gap && color == o.color && additive == o.additive; }
+    bool operator!=(const NodeTrail& o) const { return !(*this == o); }
+};
+constexpr int kMaxTrail = 16;
+
 // One deform key's value: lattice point index (row major: row * cols + col) -> its offset, sprite pixels.
 using Deform = std::map<int, glm::vec2>;
 constexpr int kDefaultLattice = 4;   // points across and down when a node does not set its lattice
@@ -138,6 +173,13 @@ struct Node {
     bool hasMeshGrid() const { return meshGrid[0] > 0 && meshGrid[1] > 0; }
     // Drawn as a bent mesh (a skin or a deform), not a quad.
     bool usesMesh() const { return skinned() || deformed(); }
+
+    NodeFx fx;                         // see the top: effects
+    std::vector<Key<glm::vec4>> fxKeys;
+    NodeTrail trail;
+    std::vector<Key<float>> trailKeys;
+    bool hasFx() const { return fx.shader != FxShader::None; }
+    bool hasTrail() const { return trail.count > 0; }
 
     std::vector<Key<glm::vec3>> posKeys, rotKeys, scaleKeys;
     std::vector<Key<glm::vec4>> colorKeys;
@@ -192,11 +234,11 @@ struct SpriteRef {
 SpriteRef parseSpriteRef(const std::string& ref);
 std::string spriteRef(const std::string& atlasId, const std::string& name);   // "id:name", or "name" when id is ""
 
-constexpr int kAnimVersion = 3;       // the newest this build reads: 3 = skins (written only when used)
+constexpr int kAnimVersion = 4;       // the newest this build reads: 3 = skins, 4 = effects (each written only when used)
 constexpr int kSkinInfluences = 4;    // bones per skinned vertex
 
 struct AnimFile {
-    int version = kAnimVersion;        // as read; saving writes 3 with a skin, else 2
+    int version = kAnimVersion;        // as read; saving writes 4 with an effect, 3 with a skin, else 2
     // The .atlas files its sprites come from (anim_player.h AtlasSet), in lookup order. JSON:
     // "atlases": ["path", {"id": "...", "path": "..."}, ...] -- a plain path's id is its file name
     // without ".atlas"; an older file's single "atlas": "path" reads as a one-entry list.
@@ -244,6 +286,8 @@ struct NodePose {
     std::string sprite;                // "" = nothing to draw
     bool visible = true;               // false: hidden (itself or a parent)
     float time = 0;                    // the time its own tracks see (a looping ancestor's wraps it): deformAt
+    float clipTime = 0;                // the clip's time these poses are for
+    uint32_t first = 0, end = 0;       // its subtree's poses: [first, end), itself among them (effects draw them)
 };
 
 // The time a node's tracks (and its children) see when its parent's time is t, with its key range
@@ -321,6 +365,11 @@ glm::vec3 scaleAt(const Node& n, float t);
 glm::vec4 colorAt(const Node& n, float t);
 std::string spriteAt(const Node& n, float t);
 bool visibleAt(const Node& n, float t);
+// An effect's params at time t (fx keys; the rest params without keys) and a trail's strength (0..1; 1 without keys).
+glm::vec4 fxParamsAt(const Node& n, float t);
+float trailAt(const Node& n, float t);
+// Any node of the clip has an effect or a trail.
+bool hasEffects(const Clip& c);
 // The lattice's offsets at time t: every point (latticeCols() * latticeRows(), row major), eased between keys.
 std::vector<glm::vec2> deformAt(const Node& n, float t);
 

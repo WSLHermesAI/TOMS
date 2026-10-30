@@ -512,6 +512,11 @@ public:
     // A held thing's clips (an .anim file, e.g. media/anim/weapon_bow.anim; toms_game --held=): its clip of the preview
     // clip's name is drawn at the character clip's `hand` (CharacterRig). "" = none. Set before playPreviewAnim.
     void setPreviewHeld(const std::string& file) { previewHeldFile_ = file; }
+    // A benchmark (toms_game --anim-crowd=N): the preview clip N times in a grid, each its own AnimPlayer started a little
+    // later than the one before, drawn the way the game draws clips (AnimPlayer::draw). Set before playPreviewAnim.
+    void setPreviewCrowd(int n) { previewCrowdN_ = n; }
+    // The CPU time of the last frame's preview drawing (the crowd or the one clip), milliseconds.
+    double previewDrawMs() const { return previewDrawMs_; }
     // The battle picture of a weapon with a "battleAnim" (equipment_system.h; docs/engine/05_ANIMATION.md "Characters"): the
     // player's character clip with the weapon's clip at its hand, both on the clip the battle's status picks --
     //   charge   the attack bar waits for the tap (held, shaking, for as long as it waits)
@@ -889,7 +894,8 @@ private:
     std::string battleRigState_;
     int lastAttackDamage_ = 0;                          // the last attack tap's damage (attack or miss)
     void loadBattleRig();                               // (re)loads the clips when the weapon changes
-    void setBattleRigState(const std::string& state, bool restart = false);
+    // clip: plays that clip of the character's .anim for the status (a result's "anim"), else the weapon's for it
+    void setBattleRigState(const std::string& state, bool restart = false, const std::string& clip = std::string());
     void updateBattleRig(int dtMs);                     // picks the status; Game::update
     void drawBattleRig();                               // the backdrop, the player and the monster; Game::draw
     // The monster on the battle screen (assets/media/anim/monster_battle.anim, tools/make_monster_battle_anims.py): the
@@ -938,6 +944,9 @@ private:
     void startPreviewClip();                            // (re)starts the preview clip, fitted when a character is set
     int previewAnimVer_ = -1;                           // previewAnim_'s version when the clip was started
     toms::anim::AnimPlayer previewPlayer_;
+    int previewCrowdN_ = 0;                             // setPreviewCrowd
+    std::vector<toms::anim::AnimPlayer> previewCrowd_;
+    double previewDrawMs_ = 0;
     std::vector<toms::anim::NodePose> previewPoses_;   // per-frame scratch
     toms::anim::DrawList previewDraws_;
     std::vector<std::string> previewMissing_;          // sprites already reported missing
@@ -1143,6 +1152,7 @@ private:
     toms::BreakSettings breakSettings_;  // data/battle.json "break"
     std::string paceOverride_;           // setBattlePace / a scenario's "pace" ("" = the weapon's or the file's)
     bool comboHoldsMonsters_ = false;    // data/battle.json "combo_holds_monsters": their clocks wait for a running combo
+    bool comboRunsThroughAttacks_ = true;   // "combo_runs_through_attacks": a combo's marker keeps moving in an attack pause
     nlohmann::json battleJson_ = nlohmann::json::object();   // data/battle.json as read (a scenario's "rules" patch it)
     std::mt19937 moveRng_{20261025u};    // the monsters' next moves (reseeded each battle: the same fight goes the same way)
     void startAttackPause();

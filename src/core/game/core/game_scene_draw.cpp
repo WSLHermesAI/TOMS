@@ -5,6 +5,7 @@
 
 #include <stb_image.h>   // declarations only (game_assets.cpp has the implementation)
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <memory>
 
@@ -202,6 +203,11 @@ void Game::startPreviewClip() {
         return;
     }
     previewPlayer_.play(c);
+    previewCrowd_.assign(size_t(std::max(0, previewCrowdN_)), toms::anim::AnimPlayer());
+    for (size_t i = 0; i < previewCrowd_.size(); i++) {   // each a little later: the crowd is not in step
+        previewCrowd_[i].play(c);
+        previewCrowd_[i].update(int(i * 37));
+    }
 }
 
 toms::anim::Clip Game::fitClipToCharacter(const toms::anim::Clip& clip, const std::string& sprite) const {
@@ -375,6 +381,18 @@ void Game::drawPreviewAnim() {
         static const toms::anim::AtlasSet kNone;
         previewRig_.draw(ren, previewAnim_->atlases(), previewHeld_ && previewHeld_->ok() ? previewHeld_->atlases() : kNone,
                          toms::anim::placement(ren->width() / 2.0f, ren->height() / 2.0f));
+        return;
+    }
+    if (!previewCrowd_.empty() && previewAnim_) {   // --anim-crowd: every one as the game draws a clip
+        const auto t0 = std::chrono::steady_clock::now();
+        const int n = int(previewCrowd_.size()), cols = std::max(1, int(std::ceil(std::sqrt(double(n)))));
+        const int rows = (n + cols - 1) / cols;
+        const float cw = float(ren->width()) / float(cols), ch = float(ren->height()) / float(rows);
+        const float s = std::min(cw / 420.0f, ch / 640.0f);
+        for (int i = 0; i < n; i++)
+            previewCrowd_[size_t(i)].draw(ren, previewAnim_->atlases(),
+                                          toms::anim::placement(cw * (float(i % cols) + 0.5f), ch * float(i / cols + 1) - 8.0f, s));
+        previewDrawMs_ = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
         return;
     }
     if (!previewPlayer_.showing() || !previewAnim_) return;

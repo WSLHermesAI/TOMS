@@ -27,6 +27,8 @@ template <class NodeT, class F> auto visit(NodeT& n, Channel c, F&& f) {
     case Channel::Sprite: return f(n.spriteKeys);
     case Channel::Visible: return f(n.visibleKeys);
     case Channel::Deform: return f(n.deformKeys);
+    case Channel::Fx: return f(n.fxKeys);
+    case Channel::Trail: return f(n.trailKeys);
     case Channel::Event: break;
     }
     return f(n.eventKeys);
@@ -48,6 +50,10 @@ template <> struct Conv<std::string> {
 template <> struct Conv<bool> {
     static bool from(const Value& v) { return v.b; }
     static Value to(bool x) { Value v; v.b = x; return v; }
+};
+template <> struct Conv<float> {
+    static float from(const Value& v) { return v.v.x; }
+    static Value to(float x) { Value v; v.v = {x, 0, 0, 0}; return v; }
 };
 template <> struct Conv<toms::anim::Deform> {
     static toms::anim::Deform from(const Value& v) { return v.d; }
@@ -100,7 +106,8 @@ bool parseNumbers(const std::string& text, std::vector<float>& out) {
 }  // namespace
 
 bool isInterpolated(Channel c) {
-    return c == Channel::Pos || c == Channel::Rot || c == Channel::Scale || c == Channel::Color || c == Channel::Deform;
+    return c == Channel::Pos || c == Channel::Rot || c == Channel::Scale || c == Channel::Color || c == Channel::Deform ||
+           c == Channel::Fx || c == Channel::Trail;
 }
 
 const char* channelName(Channel c) {
@@ -112,6 +119,8 @@ const char* channelName(Channel c) {
     case Channel::Sprite: return "sprite";
     case Channel::Visible: return "visible";
     case Channel::Deform: return "deform";
+    case Channel::Fx: return "fx";
+    case Channel::Trail: return "trail";
     case Channel::Event: break;
     }
     return "event";
@@ -164,6 +173,8 @@ Value restValue(const Node& n, Channel c) {
     case Channel::Color: return Conv<glm::vec4>::to(n.color);
     case Channel::Sprite: return Conv<std::string>::to(n.sprite);
     case Channel::Visible: return Conv<bool>::to(n.visible);
+    case Channel::Fx: return Conv<glm::vec4>::to(n.fx.params);
+    case Channel::Trail: return Conv<float>::to(1.0f);   // no keys: full strength
     case Channel::Deform:   // no rest: the lattice's points sit on the image
     case Channel::Event: break;
     }
@@ -182,6 +193,8 @@ Value valueAt(const Node& n, Channel c, float t) {
     }
     case Channel::Sprite: return Conv<std::string>::to(spriteAt(n, t));
     case Channel::Visible: return Conv<bool>::to(visibleAt(n, t));
+    case Channel::Fx: return Conv<glm::vec4>::to(fxParamsAt(n, t));
+    case Channel::Trail: return Conv<float>::to(trailAt(n, t));
     case Channel::Deform: {   // the points that are off their place at t
         Value v;
         const std::vector<glm::vec2> all = deformAt(n, t);
@@ -265,6 +278,8 @@ void setRest(Node& n, Channel c, const Value& v) {
     case Channel::Color: n.color = v.v; break;
     case Channel::Sprite: n.sprite = v.s; break;
     case Channel::Visible: n.visible = v.b; break;
+    case Channel::Fx: n.fx.params = v.v; break;
+    case Channel::Trail:    // keys only (no keys = 1)
     case Channel::Deform:   // keys only
     case Channel::Event: break;
     }
@@ -329,7 +344,9 @@ std::string formatValue(Channel c, const Value& v) {
     case Channel::Pos:
     case Channel::Rot:
     case Channel::Scale: return num(v.v.x) + ", " + num(v.v.y) + ", " + num(v.v.z);
-    case Channel::Color: return num(v.v.x) + ", " + num(v.v.y) + ", " + num(v.v.z) + ", " + num(v.v.w);
+    case Channel::Color:
+    case Channel::Fx: return num(v.v.x) + ", " + num(v.v.y) + ", " + num(v.v.z) + ", " + num(v.v.w);
+    case Channel::Trail: return num(v.v.x);
     case Channel::Sprite: return v.s.empty() ? std::string("(none)") : v.s;
     case Channel::Visible: return v.b ? "true" : "false";
     case Channel::Deform: {   // "5: 0, -2; 6: 0, -2"
@@ -369,6 +386,15 @@ bool parseValue(Channel c, const std::string& text, Value& out, std::string* err
     case Channel::Color:
         if (!parseNumbers(t, f) || (f.size() != 3 && f.size() != 4)) return fail("expected r, g, b[, a] (0..1)");
         out.v = {f[0], f[1], f[2], f.size() == 4 ? f[3] : 1.0f};
+        return true;
+    case Channel::Fx:
+        if (!parseNumbers(t, f) || f.empty() || f.size() > 4) return fail("expected up to four numbers (the effect's params)");
+        f.resize(4, 0.0f);
+        out.v = {f[0], f[1], f[2], f[3]};
+        return true;
+    case Channel::Trail:
+        if (!parseNumbers(t, f) || f.size() != 1) return fail("expected one number, 0..1 (the afterimages' strength)");
+        out.v = {std::clamp(f[0], 0.0f, 1.0f), 0, 0, 0};
         return true;
     case Channel::Sprite:
         out.s = t == "(none)" ? std::string() : t;

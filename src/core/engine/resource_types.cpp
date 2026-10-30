@@ -65,6 +65,7 @@ bool AtlasRes::load(ResourceManager& rm, std::string& error) {
     for (toms::AtlasPage& pg : atlas.pages) {
         std::shared_ptr<TextureRes> t = rm.get<TextureRes>(dir + pg.file);
         if (t->ok()) { pg.w = t->width(); pg.h = t->height(); }   // the image wins; UVs follow it
+        if (IRenderer* ren = rm.renderer(); ren && pg.filter.rfind("Linear", 0) == 0) ren->setTextureFilter(t->texture(), true);
         pageTex.push_back(t->texture());
         pages.push_back(std::move(t));
     }

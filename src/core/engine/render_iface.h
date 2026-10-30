@@ -49,6 +49,7 @@ struct Mesh {
     const uint16_t* indices = nullptr;     // three per triangle, into vertices
     uint32_t indexCount = 0;
     float tint[4] = {1, 1, 1, 1};          // rgba, the whole mesh
+    const float* colors = nullptr;         // optional: rgba per vertex (times tint) -- quads batched into a mesh keep theirs
     bool additive = false;
     uint16_t texture = kSpriteAtlasTexture;   // as Quad::texture
 };
@@ -60,6 +61,25 @@ inline bool validMesh(const Mesh& m) {
         if (m.indices[i] >= m.vertexCount) return false;
     return true;
 }
+
+// A layer's effect (IRenderer::beginLayer, docs/engine/18_NODE_EFFECTS.md): everything drawn between beginLayer and
+// endLayer -- an .anim node and its whole subtree -- is drawn into a picture of its own (HDR: values above 1 are kept),
+// and that picture is drawn into what is under it through the effect's shader. Lengths are design pixels.
+struct LayerEffect {
+    enum Kind : uint8_t {
+        None,         // the picture as it is (a group drawn as one: its own alpha over what is under it)
+        MotionBlur,   // params: blur vector x, y (the picture smeared along it, centred)
+        Glow,         // params: intensity (x the colours, > 1 = HDR), bloom radius, bloom threshold, bloom amount;
+                      // color: the bloom's colour
+        Flash,        // params: amount 0..1 the picture turns to `color` (its alpha kept)
+        Outline,      // params: width, intensity (> 1 = HDR); color: the outline's colour, drawn around the alpha
+        Count
+    };
+    Kind kind = None;
+    float params[4] = {0, 0, 0, 0};
+    float color[4] = {1, 1, 1, 1};
+    float opacity = 1;   // the whole picture's alpha
+};
 
 // Node tags (keep in sync with Quad::node comments above).
 enum RenderNode : uint8_t { NODE_UNSPEC=0, NODE_STAGE=1, NODE_CHAR=2, NODE_TALK=3, NODE_BATTLE=4, NODE_STORE=5 };
@@ -147,6 +167,9 @@ public:
     // made (the quads then draw from the sprite atlas). releaseTexture frees it.
     virtual uint16_t loadTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h) { (void)rgba; (void)w; (void)h; return kSpriteAtlasTexture; }
     virtual void releaseTexture(uint16_t texture) { (void)texture; }
+    // How a loadTexture texture is sampled: point (the default, pixel art) or linear (painted art that turns and scales:
+    // an atlas page with "filter: Linear").
+    virtual void setTextureFilter(uint16_t texture, bool linear) { (void)texture; (void)linear; }
     virtual void begin() = 0;
     virtual void drawSprite(const Quad& q) = 0;
     // A triangle mesh (Mesh above), between the quads drawn before and after it. The data is copied.
@@ -159,6 +182,12 @@ public:
     // Where the next sprites go: 0 = the game layer (under the UI, the default after begin()), 1 = the top layer, drawn
     // over the UI (a hint on a battle button). Only quads: meshes and GPU particles stay in the game layer.
     virtual void setLayer(int layer) { (void)layer; }
+    // A layer with an effect (LayerEffect above): the quads, meshes and GPU particles drawn until the matching endLayer
+    // go into a picture of their own, drawn with the effect where beginLayer was called. Layers nest (a layer's picture is
+    // drawn into the layer around it). Without layer support (the default) everything is drawn straight through, as if
+    // there were no layer. Only in the game layer (setLayer(0)).
+    virtual void beginLayer(const LayerEffect& fx) { (void)fx; }
+    virtual void endLayer() {}
     // Diagnostic: if n!=0, only emit quads whose node==n (isolate one subsystem).
     virtual void setNodeFilter(uint8_t n) { (void)n; }
     virtual void end() = 0;                       // present to target (offscreen/canvas)

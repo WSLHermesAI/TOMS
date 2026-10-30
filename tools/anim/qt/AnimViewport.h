@@ -3,6 +3,9 @@
 #include "AnimDocument.h"
 #include "anim_weights.h"
 #include "GameCanvasView.h"
+
+#include <QHash>
+#include <QPixmap>
 #include "render_iface.h"
 
 #include <QTransform>
@@ -85,6 +88,12 @@ public:
 
 public slots:
     void frameClip();   // fit the stage (all poses of the clip) into the view
+    // A clip (and a held clip of the same time at its `hand`) at time t through the game renderer, offscreen: w x h, the
+    // clip placed by `place`, over `background` (alpha 0: transparent). What File > Export Clips writes. Null without the
+    // game renderer.
+    QImage renderClipFrame(const toms::anim::Clip& clip, const toms::anim::Clip* held, float t, int w, int h,
+                           const glm::mat3& place, const QColor& background);
+    const toms::anim::AtlasSet& atlasSetForExport() const { return m_tex.atlasSet(); }   // as renderClipFrame draws
 
 signals:
     void toolChanged(AnimViewport::Tool t);
@@ -157,6 +166,9 @@ private:
     animed::Value m_startPos, m_startRot, m_startScale;
     double m_lastAngle = 0, m_angleSum = 0;
     int m_dragSerial = 0;
+    void prepareAtlases();             // the document's atlases (and meshes) as the renderer's textures, when changed
+    const QPixmap& vertexDot(const QColor& col, double radius, double dpr) const;   // drawSkins' cached point
+    mutable QHash<quint64, QPixmap> m_dots;
     GameTextures m_tex;                // the document's atlases as GPU textures (game renderer)
     bool m_atlasDirty = true;
 };

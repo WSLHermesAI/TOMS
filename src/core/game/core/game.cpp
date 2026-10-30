@@ -204,6 +204,7 @@ void Game::update(int dtMs) {
         previewRig_.update(dtMs);
         for (const std::string& e : previewRig_.takeEvents()) std::fprintf(stderr, "[anim] event %s\n", e.c_str());
     }
+    for (toms::anim::AnimPlayer& p : previewCrowd_) { p.update(dtMs); p.takeEvents(); }   // --anim-crowd
     if (previewPlayer_.clip()) {   // --anim preview: advances with the game clock, logs its events
         previewPlayer_.update(dtMs);
         for (const std::string& e : previewPlayer_.takeEvents()) std::fprintf(stderr, "[anim] event %s\n", e.c_str());
@@ -260,6 +261,14 @@ void Game::update(int dtMs) {
     // An attack is playing (docs/gameplay/07_GAMEPLAY_PLAN.md §4): both sides' clocks wait for it.
     const bool attackPlaying = cs.active && cs.attackPauseMs > 0;
     if (attackPlaying) cs.attackPauseMs = std::max(0, cs.attackPauseMs - dtMs);
+    // a running combo's marker; the owner 2026-10-30: it runs through a monster's attack pause too
+    // (data/battle.json "combo_runs_through_attacks": false brings back the stop)
+    auto stepCombo = [&] {
+        cs.combo.update(dtMs);
+        for (int p : cs.combo.takeEntered()) comboHint(p, /*hit=*/false);   // "tap now"
+        if (cs.combo.done()) resolveCombo();
+    };
+    if (attackPlaying && comboRunsThroughAttacks_ && !cs.atkBar.cooling && cs.combo.running()) stepCombo();
     if (cs.active && !attackPlaying) {
         auto stepBar = [&](CombatState::AutoBar& bar, const toms::PowerBarParams& z) {
             if (bar.cooling) {
@@ -284,9 +293,7 @@ void Game::update(int dtMs) {
             cs.atkBar.cooldownMs -= dtMs;
             if (cs.atkBar.cooldownMs <= 0) { cs.atkBar.cooling = false; cs.chargeMs = 0; }
         } else if (cs.combo.running()) {
-            cs.combo.update(dtMs);
-            for (int p : cs.combo.takeEntered()) comboHint(p, /*hit=*/false);   // "tap now"
-            if (cs.combo.done()) resolveCombo();
+            stepCombo();
         } else {
             cs.chargeMs = std::min(cs.chargeMs + dtMs, std::max(1, weaponPlayOf(weaponKey()).chargeMs));
         }

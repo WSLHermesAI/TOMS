@@ -155,6 +155,13 @@ public:
     // ("player" -> "player", "player_mage", ...). Empty: the clip has no `body` / `hand` nodes.
     QStringList characterChoices() const;
     const toms::anim::Clip* drawClip() const;           // clip(), or it fitted to previewCharacter()
+    // ---- a held thing (View > Held Clip; docs/engine/05_ANIMATION.md "Characters", anim_player.h CharacterRig): another
+    // .anim file (a weapon) whose clip named like clip() is drawn at the `hand` node, at the same time. The view only;
+    // its sprites are looked up in this file's atlases (by id, else by name).
+    bool setHeldFile(const QString& path, QString* error = nullptr);   // "" = none
+    QString heldFile() const { return m_heldPath; }
+    const toms::anim::AnimFile& heldFileData() const { return m_held; }
+    const toms::anim::Clip* heldClip() const;           // nullptr: no held file, or it has no clip of this name
     // The node of drawClip() at the same place as `n` of clip() (the same node when not previewing).
     const toms::anim::Node* drawNode(const toms::anim::Node* n) const;
     void setClipIndex(int index);
@@ -300,6 +307,8 @@ private:
     float m_preview = -1;   // see previewTime()
     std::optional<NodePath> m_solo;
     QString m_previewCharacter;                       // setPreviewCharacter
+    QString m_heldPath;                               // setHeldFile
+    toms::anim::AnimFile m_held;
     mutable toms::anim::Clip m_fitSource, m_fitted;   // drawClip's cache: the clip it was made from, and the copy
     mutable QString m_fitFor;
     mutable bool m_fitValid = false;

@@ -397,12 +397,12 @@ void Game::loadBattleRig() {
 
 bool Game::battleRigReady() const { return battleCharacterAnim_ || battleHeldAnim_; }
 
-void Game::setBattleRigState(const std::string& state, bool restart) {
+void Game::setBattleRigState(const std::string& state, bool restart, const std::string& clip) {
     if (state == battleRigState_ && !restart) return;
     battleRigState_ = state;
     // The weapon's clip for this status (items.json "battleAnim" "clips"; docs/gameplay/07 phase 2), else the status's own name.
     auto def = equipmentDefs_.find(equipped_.weaponId);
-    const std::string clipName = def != equipmentDefs_.end() ? def->second.battleClip(state) : state;
+    const std::string clipName = !clip.empty() ? clip : def != equipmentDefs_.end() ? def->second.battleClip(state) : state;
     const toms::anim::Clip* body = battleCharacterAnim_ ? battleCharacterAnim_->find(clipName) : nullptr;
     if (body) {   // the player's character in the clip made with another
         battleFitted_ = fitClipToCharacter(*body, playerSprite());
@@ -909,15 +909,18 @@ void Game::resolveCombo() {
     else playerLook("attack");
     startAttackPause();
     popDamage(dmg, t, r.hits == r.points && !r.failed ? 1 : 0);
-    if (lastAttackDamage_ > 0)   // the weapon's particles for its level (or the result's): off it now, on the monster with the number
+    if (lastAttackDamage_ > 0) {   // the weapon's particles for its level (or the result's): off it now, on the monster with the number
         if (const toms::WeaponFx* fx = battleWeaponFx()) {
             playBattleFx(fx->release, -1);
             playBattleFx(res && !res->fx.empty() ? res->fx : fx->hit, t, hitNumberDelayMs_);
         }
+    } else if (res && !res->fx.empty()) {
+        playBattleFx(res->fx, -1);   // a miss: the result's effect at the player (weapon_play.json "miss_puff")
+    }
     if (battleRigReady()) {
         const bool big = lastAttackDamage_ > 0 && res && !res->anim.empty() && battleCharacterAnim_ &&
                          battleCharacterAnim_->find(res->anim);
-        setBattleRigState(big ? res->anim : lastAttackDamage_ > 0 ? "attack" : "miss", true);
+        setBattleRigState(lastAttackDamage_ > 0 ? "attack" : "miss", true, big ? res->anim : std::string());
     }
     damageFoe(t, dmg);
     const std::string combo = trParam(trParam(locale_.tr(r.failed ? "battle.combo_fail" : "battle.combo_hits"), "hits",

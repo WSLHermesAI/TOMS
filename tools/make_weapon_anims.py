@@ -5,8 +5,10 @@ CharacterRig: the weapon clip of the same name is drawn at the character clip's 
 
     python tools/make_weapon_anims.py
 
-    assets/media/anim/weapon_sword.anim   + fighter_sword.anim   clips ready, raise, slash, fumble
-    assets/media/anim/weapon_staff.anim   + caster_staff.anim    clips hold, focus, cast, fizzle
+    assets/media/anim/weapon_sword.anim   + fighter_sword.anim   clips ready, raise, slash, fumble, attack_big
+    assets/media/anim/weapon_staff.anim   + caster_staff.anim    clips hold, focus, cast, fizzle, attack_big
+
+attack_big is a perfect result's clip (weapon_play.json "results" anim, docs/gameplay/13 §4.2), named the same for every weapon.
 
 The clips have their own names: items.json "battleAnim": {"clips": {"idle": "ready", "charge": "raise", ...}} tells the
 game which clip plays for which battle status (idle, charge, attack, miss). There is no weapon art yet, so the weapons
@@ -14,6 +16,7 @@ are built from the fx atlas's plain shapes, tinted (as the bow, tools/make_bow_a
 charge clips hold a looping node: the raised sword trembles, the staff's orb glows, for as long as the attack waits.
 """
 import json
+import math
 import os
 import sys
 
@@ -111,7 +114,23 @@ def sword_clips():
                                                       key(0.35, [0, 0, 15], 'sinusoidalInOut'), key(0.5, [0, 0, 45], 'sinusoidalInOut'),
                                                       key(0.8, [0, 0, 60])],
                                               'event': [key(0.2, 'miss')]}))
-    return [ready, raise_, slash, fumble]
+    # attack_big (a perfect result, weapon_play.json "results" anim): the slash, then a second arc back up, both with a wide
+    # bright trail and a ring where the blade turns; the hit lands as in slash (0.18)
+    wide = node('trail', 'spark', blend='add', pivot=[0.5, 1.0], pos=[0.0, -10.0, 0.0], color=[0.85, 0.95, 1, 0],
+                scale=[4.0, 8.6, 1], order=-1,
+                tracks={'color': [key(0.06, [0.85, 0.95, 1, 0]), key(0.1, [0.85, 0.95, 1, 0.95]), key(0.26, [0.85, 0.95, 1, 0.2]),
+                                  key(0.32, [0.85, 0.95, 1, 0.9]), key(0.5, [0.85, 0.95, 1, 0])]})
+    turn = node('turn_ring', 'ring', blend='add', pos=[0.0, -60.0, 0.0], color=[0.8, 0.92, 1, 0], scale=[0.2, 0.2, 1], order=2,
+                tracks={'color': [key(0.16, [0.8, 0.92, 1, 0]), key(0.19, [0.8, 0.92, 1, 1]), key(0.45, [0.8, 0.92, 1, 0])],
+                        'scale': [key(0.17, [0.2, 0.2, 1], 'quadraticOut'), key(0.45, [1.4, 1.4, 1])]})
+    big = clip('attack_big', 0.8, node('sword', children=sword_parts(wide) + [turn],
+                                       tracks={'rot': [key(0, [0, 0, -70], 'quadraticIn'), key(0.06, [0, 0, -80], 'quadraticOut'),
+                                                       key(0.18, [0, 0, 95], 'quadraticOut'), key(0.26, [0, 0, 100], 'quadraticIn'),
+                                                       key(0.38, [0, 0, -40], 'quadraticOut'), key(0.8, [0, 0, 0])],
+                                               'pos': [key(0, [-4, -4, 0], 'quadraticOut'), key(0.18, [8, 2, 0], 'sinusoidalInOut'),
+                                                       key(0.38, [4, -4, 0], 'sinusoidalInOut'), key(0.8, [0, 0, 0])],
+                                               'event': [key(0.08, 'release'), key(0.18, 'hit')]}))
+    return [ready, raise_, slash, fumble, big]
 
 
 # ---- the staff: grip at the origin, the orb on top (~90 px) -----------------------------------------------------------
@@ -182,7 +201,30 @@ def staff_clips():
                                                       key(0.8, [0, 0, 14])],
                                               'pos': [key(0, [0, -6, 0], 'quadraticOut'), key(0.8, [0, 2, 0])],
                                               'event': [key(0.25, 'miss')]}))
-    return [hold, focus, cast, fizzle]
+    # attack_big (a perfect result): the cast with two flashes, a bigger bolt and six sparks thrown off the orb
+    flash2 = node('flash_2', 'ring', blend='add', color=[0.7, 0.9, 1, 0], scale=[0.3, 0.3, 1],
+                  tracks={'color': [key(0.14, [0.7, 0.9, 1, 0]), key(0.16, [0.7, 0.9, 1, 1]), key(0.5, [0.7, 0.9, 1, 0])],
+                          'scale': [key(0.14, [0.3, 0.3, 1], 'quadraticOut'), key(0.5, [2.0, 2.0, 1])]})
+    big_bolt = node('bolt', 'glow', blend='add', color=[0.65, 0.88, 1, 0], scale=[1.1, 1.1, 1],
+                    tracks={'pos': [key(0.1, [0, 0, 0], 'quadraticIn'), key(0.45, [400, 30, 0])],
+                            'color': [key(0.08, [0.65, 0.88, 1, 0]), key(0.1, [0.65, 0.88, 1, 1]), key(0.45, [0.65, 0.88, 1, 1]),
+                                      key(0.47, [0.65, 0.88, 1, 0])],
+                            'scale': [key(0.1, [0.6, 0.6, 1], 'quadraticOut'), key(0.25, [1.3, 1.3, 1])]})
+    thrown = []
+    for i in range(6):
+        a = math.radians(60 * i)
+        x, y = round(math.cos(a) * 30, 1), round(math.sin(a) * 30, 1)
+        thrown.append(node(f'spark_{i}', 'star', blend='add', color=[0.85, 0.95, 1, 0], scale=[0.14, 0.14, 1],
+                           tracks={'pos': [key(0.1, [0, 0, 0], 'quadraticOut'), key(0.45, [x, y, 0])],
+                                   'color': [key(0.09, [0.85, 0.95, 1, 0]), key(0.11, [0.85, 0.95, 1, 1]), key(0.45, [0.85, 0.95, 1, 0])],
+                                   'rot': [key(0.1, [0, 0, 0]), key(0.45, [0, 0, 180])]}))
+    big = clip('attack_big', 0.8, node('staff', children=staff_parts([flash, flash2, big_bolt] + thrown, 0.62),
+                                       tracks={'rot': [key(0, [0, 0, -6], 'quadraticIn'), key(0.1, [0, 0, 34], 'quadraticOut'),
+                                                       key(0.8, [0, 0, 0])],
+                                               'pos': [key(0, [0, -6, 0], 'quadraticIn'), key(0.1, [9, -2, 0], 'quadraticOut'),
+                                                       key(0.8, [0, 0, 0])],
+                                               'event': [key(0.1, 'release'), key(0.45, 'hit')]}))
+    return [hold, focus, cast, fizzle, big]
 
 
 # ---- the characters: body + hand, timed like their weapon's clips -----------------------------------------------------
@@ -220,6 +262,13 @@ def fighter_clips():
         character('fumble', 0.8, hand, {'rot': [key(0, [0, 0, -5]), key(0.2, [0, 0, 8], 'sinusoidalInOut'), key(0.8, [0, 0, 4])],
                                         'scale': [key(0.2, [1, 1, 1], 'sinusoidalInOut'), key(0.5, [1.03, 0.95, 1], 'sinusoidalInOut'),
                                                   key(0.8, [1.02, 0.97, 1])]}),
+        character('attack_big', 0.8, hand, {'rot': [key(0, [0, 0, -5]), key(0.06, [0, 0, -7], 'quadraticOut'),
+                                                    key(0.18, [0, 0, 10], 'sinusoidalInOut'), key(0.38, [0, 0, -3], 'sinusoidalInOut'),
+                                                    key(0.8, [0, 0, 0])],
+                                            'pos': [key(0, [-1, 0, 0]), key(0.06, [-2, 0, 0], 'quadraticOut'),
+                                                    key(0.18, [8, 0, 0], 'sinusoidalInOut'), key(0.38, [6, 0, 0], 'sinusoidalInOut'),
+                                                    key(0.8, [0, 0, 0])],
+                                            'scale': [key(0.06, [1, 1, 1]), key(0.18, [1.06, 0.94, 1], 'quadraticOut'), key(0.4, [1, 1, 1])]}),
     ]
 
 
@@ -232,6 +281,9 @@ def caster_clips():
                                       'pos': [key(0, [0, -1, 0]), key(0.1, [2, 0, 0], 'quadraticOut'), key(0.7, [0, 0, 0])]}),
         character('fizzle', 0.8, hand, {'rot': [key(0, [0, 0, 0]), key(0.3, [0, 0, 6], 'sinusoidalInOut'), key(0.8, [0, 0, 4])],
                                         'scale': [key(0.3, [1, 1, 1], 'sinusoidalInOut'), key(0.8, [1.02, 0.96, 1])]}),
+        character('attack_big', 0.8, hand, {'rot': [key(0, [0, 0, 0]), key(0.1, [0, 0, 8], 'quadraticOut'), key(0.8, [0, 0, 0])],
+                                            'pos': [key(0, [0, -1, 0]), key(0.1, [4, -1, 0], 'quadraticOut'), key(0.8, [0, 0, 0])],
+                                            'scale': [key(0.1, [1, 1, 1]), key(0.16, [1.05, 0.95, 1], 'quadraticOut'), key(0.4, [1, 1, 1])]}),
     ]
 
 

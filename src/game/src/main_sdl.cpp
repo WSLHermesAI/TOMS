@@ -33,6 +33,8 @@
 //                         the canvas follows the window's shape, landscape or portrait
 //   --fx=<file>#<effect>  play one particle effect of a .particle file over the screen (particle_fx.h)
 //   --mesh-test=<sprite>  draw that game-atlas sprite as a waving triangle mesh beside the plain sprite (IRenderer::drawMesh)
+//   --anim-crowd=<N>      with --anim: the clip N times in a grid, each its own AnimPlayer (a benchmark)
+//   --bench               every 120 frames, the average frame CPU time, the clips' draw time and the draw calls (stderr)
 //   --character=<sprite>  with --anim: play a character clip (body / hand nodes) as this character (fitCharacter)
 //   --held=<file.anim>    with --anim: draw that file's clip of the same name at the character clip's hand (CharacterRig)
 //   --hot-reload          read changed art, clips and effects again while playing (on by default in debug builds)
@@ -98,6 +100,8 @@ namespace {
 struct Args {
     std::string renderer = "auto", assets, stage = "stage01", screenshot, anim, fx, meshTest, character, held;
     int frames = 0;
+    int animCrowd = 0;                 // --anim-crowd=N
+    bool bench = false;                // --bench
     bool vsync = true, stats = false, fps = false;
     bool hotReload = false;   // --hot-reload
     bool skipStartStory = false;   // --skip-start-story: New Game goes straight to stage 1 (the screenshot tests)
@@ -179,6 +183,8 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--clicks=")) parseClicks(v, a);
         else if (const char* v = value(s, "--fixed-dt=")) a.fixedDtMs = std::atoi(v);
         else if (const char* v = value(s, "--anim=")) a.anim = v;
+        else if (const char* v = value(s, "--anim-crowd=")) a.animCrowd = std::atoi(v);
+        else if (s == "--bench") a.bench = true;
         else if (const char* v = value(s, "--fx=")) a.fx = v;
         else if (const char* v = value(s, "--mesh-test=")) a.meshTest = v;
         else if (const char* v = value(s, "--character=")) a.character = v;
@@ -400,6 +406,7 @@ bool appInit(App& app) {
     opts.previewMesh = args.meshTest;
     opts.previewCharacter = args.character;
     opts.previewHeld = args.held;
+    opts.previewCrowd = args.animCrowd;
     opts.spritePath = args.spritePath;
     opts.showFps = args.fps;
 #if !defined(NDEBUG) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
@@ -596,7 +603,9 @@ bool appFrame(App& app) {
     const uint64_t now = SDL_GetTicks();
     const int dtMs = args.fixedDtMs > 0 ? args.fixedDtMs : (int)(now - app.lastTicks);
     app.lastTicks = now;
-    if (!app.session.frame(dtMs, in, (uint32_t)pw, (uint32_t)ph)) {
+    const uint64_t benchT0 = SDL_GetPerformanceCounter();
+    const bool more = app.session.frame(dtMs, in, (uint32_t)pw, (uint32_t)ph);
+    if (!more) {
 #ifndef __EMSCRIPTEN__
         quit = true;   // Esc on the title menu; a web page just stays on the title
 #endif
@@ -605,6 +614,20 @@ bool appFrame(App& app) {
     if (args.frames > 0 && !args.screenshot.empty() && app.frameNo == args.frames)
         app.session.renderer()->savePNG(args.screenshot);
     bgfxHostFrame();
+    if (args.bench && app.session.renderer()) {   // every 120 frames: the averages (stderr)
+        static double sumFrame = 0, sumAnim = 0, sumCalls = 0, sumGpu = 0;
+        static int count = 0;
+        sumFrame += double(SDL_GetPerformanceCounter() - benchT0) * 1000.0 / double(SDL_GetPerformanceFrequency());
+        sumAnim += app.session.game() ? app.session.game()->previewDrawMs() : 0.0;
+        sumCalls += app.session.renderer()->lastDrawCalls();
+        sumGpu += bgfxHostGpuMs();
+        if (++count == 120) {
+            std::fprintf(stderr, "[bench] frame (update + draw + bgfx::frame) %.2f ms, clips' draw %.2f ms, draw calls %.0f, GPU %.2f ms\n",
+                         sumFrame / count, sumAnim / count, sumCalls / count, sumGpu / count);
+            sumFrame = sumAnim = sumCalls = sumGpu = 0;
+            count = 0;
+        }
+    }
     ++app.frameNo;
     if (args.frames > 0 && app.frameNo > args.frames + (args.screenshot.empty() ? 0 : 3)) quit = true;
     if (quit && args.scenarioTest && app.exitCode == 0 && app.scenarioStarted && app.session.game()) {

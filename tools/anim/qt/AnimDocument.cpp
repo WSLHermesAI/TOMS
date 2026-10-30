@@ -787,6 +787,29 @@ void AnimDocument::setPreviewCharacter(const QString& sprite)
     emit fileChanged();   // every view redraws
 }
 
+bool AnimDocument::setHeldFile(const QString& path, QString* error)
+{
+    toms::anim::AnimFile held;
+    if (!path.isEmpty()) {
+        QFile f(path);
+        std::string err;
+        if (!f.open(QIODevice::ReadOnly) || !toms::anim::parseAnim(f.readAll().toStdString(), held, &err)) {
+            if (error) *error = err.empty() ? tr("cannot read %1").arg(path) : qs(err);
+            return false;
+        }
+    }
+    m_heldPath = path;
+    m_held = std::move(held);
+    emit fileChanged();   // every view redraws
+    return true;
+}
+
+const Clip* AnimDocument::heldClip() const
+{
+    const Clip* c = clip();
+    return c && !m_heldPath.isEmpty() ? m_held.find(c->name) : nullptr;
+}
+
 QStringList AnimDocument::characterChoices() const
 {
     const Clip* c = clip();
@@ -948,7 +971,8 @@ bool AnimDocument::setChannel(Channel c, const Value& v, const QString& mergeKey
     if (!sel) return false;
     emit aboutToEdit();   // playback stops before the key's time is taken
     const float t = m_time;
-    const bool keyed = m_autoKey || c == Channel::Event || c == Channel::Deform || hasKeyAt(*sel, c, t);   // no rest deform
+    const bool keyed = m_autoKey || c == Channel::Event || c == Channel::Deform || c == Channel::Trail ||
+                       hasKeyAt(*sel, c, t);   // no rest deform or trail strength
     const bool ok = editSelected(keyed ? tr("Key %1").arg(QLatin1String(channelName(c))) : tr("Set %1").arg(QLatin1String(channelName(c))),
                                  [&](Node& n) {
                                      if (keyed) setKey(n, c, t, v);

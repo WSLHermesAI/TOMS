@@ -1,4 +1,5 @@
 #include "AnimEditor.h"
+#include "AnimExport.h"
 #include <QMimeData>
 #include <QGuiApplication>
 #include <QClipboard>
@@ -412,6 +413,18 @@ void AnimEditor::createMenus()
     connect(m_recentMenu, &QMenu::aboutToShow, this, &AnimEditor::rebuildRecentMenu);
     file->addAction(m_saveAct);
     file->addAction(m_saveAsAct);
+    {   // clips as GIF / animated PNG / PNG frames, drawn by the game renderer (AnimExport.h)
+        QAction* exp = file->addAction(tr("&Export Clips as Animation..."));
+        exp->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E));
+        connect(exp, &QAction::triggered, this, [this] {
+            if (m_doc->file().clips.empty()) {
+                QMessageBox::information(m_host, tr("Export Clips as Animation"), tr("This file has no clips."));
+                return;
+            }
+            animexport::ExportDialog dlg(m_doc, m_viewport, m_host);
+            dlg.exec();
+        });
+    }
     file->addSeparator();
     file->addAction(m_addAtlasAct);
     file->addAction(m_reloadAtlasAct);
@@ -509,6 +522,32 @@ void AnimEditor::createMenus()
             add(tr("As Made"), QString());
             who->addSeparator();
             for (const QString& s : choices) add(s, s);
+        });
+    }
+    {   // A held thing's clips drawn at the `hand` node (CharacterRig): a weapon file beside a character file.
+        QMenu* held = m_viewMenu->addMenu(tr("&Held Clip"));
+        held->setToolTipsVisible(true);
+        connect(held, &QMenu::aboutToShow, this, [this, held] {
+            held->clear();
+            QAction* none = held->addAction(tr("None"));
+            none->setCheckable(true);
+            none->setChecked(m_doc->heldFile().isEmpty());
+            connect(none, &QAction::triggered, this, [this] { m_doc->setHeldFile(QString()); });
+            QAction* pick = held->addAction(tr("Choose File..."));
+            pick->setToolTip(tr("A weapon's .anim: its clip named like this clip is drawn at the node named 'hand'"));
+            connect(pick, &QAction::triggered, this, [this] {
+                const QString dir = m_doc->filePath().isEmpty() ? QString() : QFileInfo(m_doc->filePath()).absolutePath();
+                const QString path = QFileDialog::getOpenFileName(m_host, tr("Held Clip"), dir, tr("Animations (*.anim)"));
+                QString err;
+                if (!path.isEmpty() && !m_doc->setHeldFile(path, &err))
+                    QMessageBox::warning(m_host, tr("Held Clip"), err);
+            });
+            if (!m_doc->heldFile().isEmpty()) {
+                QAction* cur = held->addAction(QFileInfo(m_doc->heldFile()).fileName());
+                cur->setCheckable(true);
+                cur->setChecked(true);
+                cur->setEnabled(false);
+            }
         });
     }
     m_viewMenu->addSeparator();

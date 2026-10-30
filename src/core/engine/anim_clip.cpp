@@ -140,6 +140,8 @@ void firstKey(const Node& n, float& m, bool& any) {
     firstTime(n.eventKeys, m, any);
     firstTime(n.visibleKeys, m, any);
     firstTime(n.deformKeys, m, any);
+    firstTime(n.fxKeys, m, any);
+    firstTime(n.trailKeys, m, any);
     for (const Node& c : n.children) firstKey(c, m, any);
 }
 
@@ -151,10 +153,40 @@ glm::vec3 scaleAt(const Node& n, float t) { return sample(n.scaleKeys, t, n.scal
 glm::vec4 colorAt(const Node& n, float t) { return glm::clamp(sample(n.colorKeys, t, n.color), 0.0f, 1.0f); }
 std::string spriteAt(const Node& n, float t) { return sampleStep(n.spriteKeys, t, n.sprite); }
 bool visibleAt(const Node& n, float t) { return sampleStep(n.visibleKeys, t, n.visible); }
+glm::vec4 fxParamsAt(const Node& n, float t) { return sample(n.fxKeys, t, n.fx.params); }
+float trailAt(const Node& n, float t) { return std::clamp(sample(n.trailKeys, t, 1.0f), 0.0f, 1.0f); }
+
+namespace {
+bool anyEffect(const Node& n) {
+    if (n.hasFx() || n.hasTrail()) return true;
+    for (const Node& c : n.children) if (anyEffect(c)) return true;
+    return false;
+}
+}  // namespace
+bool hasEffects(const Clip& c) { return anyEffect(c.root); }
+
+const char* fxShaderName(FxShader s) {
+    switch (s) {
+    case FxShader::Group: return "group";
+    case FxShader::MotionBlur: return "motionBlur";
+    case FxShader::Glow: return "glow";
+    case FxShader::Flash: return "flash";
+    case FxShader::Outline: return "outline";
+    case FxShader::None: break;
+    }
+    return "";
+}
+
+bool parseFxShader(const std::string& name, FxShader& out) {
+    for (FxShader s : {FxShader::None, FxShader::Group, FxShader::MotionBlur, FxShader::Glow, FxShader::Flash, FxShader::Outline})
+        if (name == fxShaderName(s)) { out = s; return true; }
+    return false;
+}
 
 float Node::lastKeyTime() const {
     float m = std::max({lastTime(posKeys), lastTime(scaleKeys), lastTime(rotKeys), lastTime(colorKeys),
-                        lastTime(spriteKeys), lastTime(eventKeys), lastTime(visibleKeys), lastTime(deformKeys)});
+                        lastTime(spriteKeys), lastTime(eventKeys), lastTime(visibleKeys), lastTime(deformKeys),
+                        lastTime(fxKeys), lastTime(trailKeys)});
     for (const Node& c : children) m = std::max(m, c.lastKeyTime());
     return m;
 }
@@ -179,7 +211,7 @@ bool Node::operator==(const Node& o) const {
            inheritColor == o.inheritColor && loop == o.loop && stayAtLastFrame == o.stayAtLastFrame &&
            skinBones == o.skinBones && skinWeights == o.skinWeights && lattice[0] == o.lattice[0] &&
            lattice[1] == o.lattice[1] && deformKeys == o.deformKeys && meshGrid[0] == o.meshGrid[0] &&
-           meshGrid[1] == o.meshGrid[1] &&
+           meshGrid[1] == o.meshGrid[1] && fx == o.fx && fxKeys == o.fxKeys && trail == o.trail && trailKeys == o.trailKeys &&
            posKeys == o.posKeys && rotKeys == o.rotKeys && scaleKeys == o.scaleKeys && colorKeys == o.colorKeys &&
            spriteKeys == o.spriteKeys && eventKeys == o.eventKeys && visibleKeys == o.visibleKeys && children == o.children;
 }
@@ -292,7 +324,8 @@ glm::mat4 localTransform(const Node& n, float t) { return compose(positionAt(n, 
 namespace {
 
 void walk(const Node& n, float t, const glm::mat4& parentWorld, const glm::vec4& parentColor, bool parentVisible,
-          int depth, std::vector<NodePose>& out) {
+          int depth, float clipTime, std::vector<NodePose>& out) {
+    const size_t first = out.size();
     bool ended = false;
     if (n.timed()) t = nodeTime(n, t, n.firstKeyTime(), n.lastKeyTime(), &ended);
     NodePose me;
@@ -304,14 +337,24 @@ void walk(const Node& n, float t, const glm::mat4& parentWorld, const glm::vec4&
     me.visible = parentVisible && visibleAt(n, t) && !ended;
     me.sprite = spriteAt(n, t);
     me.time = t;
-    // Children in order (stable: equal orders keep their list order).
+    me.clipTime = clipTime;
+    // Children in order (stable: equal orders keep their list order). Most nodes' children all have order 0: in list
+    // order, with no sorting (and no allocation -- evaluate runs for every afterimage, every frame).
+    const bool ordered = std::all_of(n.children.begin(), n.children.end(), [](const Node& c) { return c.order == 0; });
     std::vector<const Node*> kids;
-    for (const Node& c : n.children) kids.push_back(&c);
-    std::stable_sort(kids.begin(), kids.end(), [](const Node* a, const Node* b) { return a->order < b->order; });
+    if (!ordered) {
+        for (const Node& c : n.children) kids.push_back(&c);
+        std::stable_sort(kids.begin(), kids.end(), [](const Node* a, const Node* b) { return a->order < b->order; });
+    }
+    const size_t count = n.children.size();
+    auto kid = [&](size_t i) -> const Node& { return ordered ? n.children[i] : *kids[i]; };
     size_t k = 0;
-    for (; k < kids.size() && kids[k]->order < 0; k++) walk(*kids[k], t, me.world, me.color, me.visible, depth + 1, out);
+    for (; k < count && kid(k).order < 0; k++) walk(kid(k), t, me.world, me.color, me.visible, depth + 1, clipTime, out);
+    const size_t at = out.size();
     out.push_back(me);
-    for (; k < kids.size(); k++) walk(*kids[k], t, me.world, me.color, me.visible, depth + 1, out);
+    for (; k < count; k++) walk(kid(k), t, me.world, me.color, me.visible, depth + 1, clipTime, out);
+    out[at].first = (uint32_t)first;
+    out[at].end = (uint32_t)out.size();
 }
 
 void collectEvents(const Node& n, float t0, float t1, std::vector<std::pair<float, std::string>>& out) {
@@ -324,7 +367,7 @@ void collectEvents(const Node& n, float t0, float t1, std::vector<std::pair<floa
 
 void evaluate(const Clip& c, float t, std::vector<NodePose>& out) {
     out.clear();
-    walk(c.root, t, glm::mat4(1.0f), glm::vec4(1.0f), true, 0, out);
+    walk(c.root, t, glm::mat4(1.0f), glm::vec4(1.0f), true, 0, t, out);
 }
 
 // ---- PoseCache ---------------------------------------------------------------------------------
@@ -398,6 +441,7 @@ void PoseCache::bind(const Clip* clip) {
 
 int PoseCache::addItems(const Node& n, int parent, int depth) {
     const int me = (int)items_.size();
+    const size_t first = poses_.size();
     Item it;
     it.node = &n;
     it.parent = parent;
@@ -432,6 +476,9 @@ int PoseCache::addItems(const Node& n, int parent, int depth) {
     p.sprite = n.sprite;
     poses_.push_back(p);
     for (; k < kids.size(); k++) addItems(*kids[k], me, depth + 1);
+    NodePose& mine = poses_[items_[(size_t)me].pose];
+    mine.first = (uint32_t)first;
+    mine.end = (uint32_t)poses_.size();
     return me;
 }
 
@@ -452,6 +499,7 @@ void PoseCache::seek(float t) {
             it.ended = ended;
         }
         p.time = it.time;
+        p.clipTime = t;
         if (it.animated) {   // only the tracks that have keys; a node without keys skips all of this
             const Node& n = *it.node;
             const float nt = it.time;
@@ -525,6 +573,17 @@ json nodeToJson(const Node& n) {
     if (!n.stayAtLastFrame) j["stayAtLastFrame"] = false;
     if (n.lattice[0] >= 2 || n.lattice[1] >= 2) j["lattice"] = {n.latticeCols(), n.latticeRows()};
     if (n.hasMeshGrid()) j["meshGrid"] = {n.meshGrid[0], n.meshGrid[1]};
+    if (n.hasFx()) {
+        json fx{{"shader", fxShaderName(n.fx.shader)}};
+        if (n.fx.params != glm::vec4(0)) fx["params"] = vec(n.fx.params);
+        if (n.fx.color != glm::vec4(1)) fx["color"] = vec(n.fx.color);
+        j["fx"] = fx;
+    }
+    if (n.hasTrail()) {
+        json tr{{"count", n.trail.count}, {"gap", n.trail.gap}, {"color", vec(n.trail.color)}};
+        if (n.trail.additive) tr["blend"] = "add";
+        j["trail"] = tr;
+    }
     if (n.skinned()) {
         json skin{{"bones", n.skinBones}};
         if (n.skinWeights.empty()) {
@@ -553,6 +612,8 @@ json nodeToJson(const Node& n) {
     if (!n.spriteKeys.empty()) tr["sprite"] = keysToJson(n.spriteKeys, s, false);
     if (!n.visibleKeys.empty()) tr["visible"] = keysToJson(n.visibleKeys, b, false);
     if (!n.eventKeys.empty()) tr["event"] = keysToJson(n.eventKeys, s, false);
+    if (!n.fxKeys.empty()) tr["fx"] = keysToJson(n.fxKeys, v4, true);
+    if (!n.trailKeys.empty()) tr["trail"] = keysToJson(n.trailKeys, [](float v) { return json(v); }, true);
     if (!n.deformKeys.empty()) {   // only the points that move: {"5": [0, -2], ...}
         auto d = [](const Deform& v) {
             json o = json::object();
@@ -637,6 +698,26 @@ void nodeFromJson(const json& j, Node& n, const std::string& where) {
         n.meshGrid[0] = g[0].get<int>();
         n.meshGrid[1] = g[1].get<int>();
     }
+    if (j.contains("fx")) {
+        const json& fx = j["fx"];
+        const std::string name = fx.value("shader", std::string());
+        if (!parseFxShader(name, n.fx.shader) || n.fx.shader == FxShader::None)
+            throw std::runtime_error(here + ": fx shader must be group, motionBlur, glow, flash or outline");
+        if (fx.contains("params")) n.fx.params = toVec4(fx["params"]);
+        if (fx.contains("color")) n.fx.color = toVec4(fx["color"]);
+    }
+    if (j.contains("trail")) {
+        const json& tr = j["trail"];
+        n.trail.count = tr.value("count", 0);
+        if (n.trail.count < 0 || n.trail.count > kMaxTrail)
+            throw std::runtime_error(here + ": trail count must be 0 to " + std::to_string(kMaxTrail));
+        n.trail.gap = tr.value("gap", 0.04f);
+        if (!(n.trail.gap > 0)) throw std::runtime_error(here + ": trail gap must be above 0");
+        if (tr.contains("color")) n.trail.color = toVec4(tr["color"]);
+        const std::string blend = tr.value("blend", std::string("normal"));
+        if (blend != "normal" && blend != "add") throw std::runtime_error(here + ": trail blend must be normal or add");
+        n.trail.additive = blend == "add";
+    }
     if (j.contains("skin")) {
         const json& skin = j["skin"];
         n.skinBones = skin.value("bones", std::vector<std::string>());
@@ -668,6 +749,8 @@ void nodeFromJson(const json& j, Node& n, const std::string& where) {
         keysFromJson(tr, "sprite", n.spriteKeys, [](const json& v) { return v.get<std::string>(); }, here);
         keysFromJson(tr, "visible", n.visibleKeys, [](const json& v) { return v.get<bool>(); }, here);
         keysFromJson(tr, "event", n.eventKeys, [](const json& v) { return v.get<std::string>(); }, here);
+        keysFromJson(tr, "fx", n.fxKeys, toVec4, here);
+        keysFromJson(tr, "trail", n.trailKeys, [](const json& v) { return v.get<float>(); }, here);
         const int points = n.latticeCols() * n.latticeRows();
         keysFromJson(tr, "deform", n.deformKeys, [&](const json& v) {
             if (!v.is_object()) throw std::runtime_error(here + ".deform: a key's value is {\"point\": [dx, dy], ...}");
@@ -810,7 +893,8 @@ bool anySkin(const Node& n) {   // version 3's fields: a skin or a lattice
 
 std::string animToJson(const AnimFile& f) {
     json j;
-    j["version"] = std::any_of(f.clips.begin(), f.clips.end(), [](const Clip& c) { return anySkin(c.root); }) ? 3 : 2;
+    const bool effects = std::any_of(f.clips.begin(), f.clips.end(), [](const Clip& c) { return hasEffects(c); });
+    j["version"] = effects ? 4 : std::any_of(f.clips.begin(), f.clips.end(), [](const Clip& c) { return anySkin(c.root); }) ? 3 : 2;
     if (!f.atlases.empty()) {
         json a = json::array();
         for (const AtlasRef& r : f.atlases) {   // the short form when the id is the default one

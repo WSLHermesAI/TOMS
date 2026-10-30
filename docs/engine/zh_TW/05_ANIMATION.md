@@ -113,7 +113,8 @@
 - **節點：** `name`、`sprite`（沒有 = 只移動它的子節點的群組）、靜止值 `pos`
   `rot` `scale` `color` `visible`、`pivot`（sprite 的 0..1，左上 = 0,0；沒有 =
   atlas 的 `x_pivot`，再沒有就是中心）、`order`、`blend`（`normal` / `add`）、`inheritColor`、`loop`、`stayAtLastFrame`、`children`；
-  版本 3 另有 `skin`、`lattice` 與 `meshGrid`（見下文與 [16_MESH_ANIMATION.md](16_MESH_ANIMATION.md)）。
+  版本 3 另有 `skin`、`lattice` 與 `meshGrid`（見下文與 [16_MESH_ANIMATION.md](16_MESH_ANIMATION.md)）；
+  版本 4 有 `fx`（它的子樹透過著色器畫出：動態模糊、發光、閃白、外框）與 `trail`（殘影），見 [18_NODE_EFFECTS.md](18_NODE_EFFECTS.md)。
 - **節點如何播放**（每個節點各自獨立；它的範圍是它子樹的第一個..最後一個 key）：
 
   | 設定 | 節點最後一個 key 之後 | 用途 |
@@ -479,6 +480,21 @@ Pos、Rot、Scale、Color、Sprite（`name (id)`，無法解析時為紅色）�
 有未儲存的變更。編輯器的 `AnimEditor` 物件為宿主視窗建立文件、viewport、面板、選單和
 工具列，這正是第 2 階段的 studio 應用程式會以外掛方式載入的東西；主題、
 圖示和畫布基底來自 `tools/studio_common`，和 atlas 編輯器共用。
+
+### 將片段匯出為 GIF 或動態 PNG
+
+**檔案 > 匯出片段為動畫**（Ctrl+Shift+E）：
+- **片段：**列出檔案中的所有片段，每個有勾選框（預設勾選目前開啟的片段；可按「全部／無」）。每個勾選的片段寫成一個檔案：
+  `<檔名>_<片段>.gif`、`<檔名>_<片段>.png`（APNG），或 `<檔名>_<片段>_000.png`、`_001.png`……，放在選擇的資料夾。
+- **格式：**GIF（256 色，每個像素只有透明或不透明：柔和邊緣和影子會變硬）、動態 PNG（全彩與柔和透明；瀏覽器和大多數看圖軟體
+  都能播放），或 PNG 影格（每格一張圖）。
+- **影格速率**（GIF 最多 50）、**縮放**（片段像素的倍數）、**透明背景**或指定顏色、**無限循環**或只播一次，以及**包含手持片段**
+  （檢視 > 手持片段：畫在 `hand` 的武器）。
+
+影格由遊戲繪製器在離屏畫出（`BgfxRenderer::setCapture`、`GameCanvasView::renderOffscreen`）：蒙皮、晶格與效果圖層都與遊戲畫的
+一樣，不含編輯器的任何東西。每張圖都以整個片段取景一次，所以角色不會跳動；大於 1500 像素的節點（整個畫面大小的背景）不列入取景。
+循環的片段輸出一個循環；只播一次的片段也包含最後一格。腳本中可用：
+`anim_editor --export file.anim outdir [gif|apng|png] [clip,clip,...] [held.anim]`（測試：`anim.export_gif`）。
 
 ## 轉換 MPDI（舊引擎的動畫）
 

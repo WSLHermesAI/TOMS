@@ -12,7 +12,7 @@ add_executable(anim_editor WIN32
     AnimDocument.h        AnimDocument.cpp
     AnimEditor.h          AnimEditor.cpp
     AnimMainWindow.h      AnimMainWindow.cpp
-    AnimViewport.h        AnimViewport.cpp
+    AnimViewport.h        AnimViewport.cpp AnimExport.h AnimExport.cpp
     AnimClipsDock.h       AnimClipsDock.cpp
     AnimNodesDock.h       AnimNodesDock.cpp
     AnimSpritesDock.h     AnimSpritesDock.cpp
@@ -131,6 +131,16 @@ if(DEFINED TOMS_BUILD_TESTS AND TOMS_BUILD_TESTS)
         add_test(NAME anim.check_${_clip} COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/${_clip}.anim")
         set_tests_properties(anim.check_${_clip} PROPERTIES LABELS "unit;anim" TIMEOUT 30)
     endforeach()
+    # The brawler showcase (tools/make_brawler_anim.py; docs/engine/18_NODE_EFFECTS.md): effects, trails, skins, lattices.
+    foreach(_clip brawler brawler_sword brawler_staff brawler_bow)
+        add_test(NAME anim.check_${_clip} COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/assets/media/anim/${_clip}.anim")
+        set_tests_properties(anim.check_${_clip} PROPERTIES LABELS "unit;anim" TIMEOUT 30)
+    endforeach()
+    # File > Export Clips as Animation (AnimExport.h; on screen: the game renderer draws the frames offscreen): two clips
+    # as GIFs, each read back with one picture per frame.
+    add_test(NAME anim.export_gif
+             COMMAND anim_editor --export "${CMAKE_SOURCE_DIR}/assets/media/anim/brawler.anim" "${CMAKE_BINARY_DIR}/export_test" gif idle,punch)
+    set_tests_properties(anim.export_gif PROPERTIES LABELS "anim" TIMEOUT 120)
     add_test(NAME anim.check_deform   # the deform lattice's demo (docs/engine/16 step 4)
              COMMAND anim_editor --headless check "${CMAKE_SOURCE_DIR}/tests/smoke/anim_deform.anim")
     set_tests_properties(anim.check_deform PROPERTIES LABELS "unit;anim" TIMEOUT 30)

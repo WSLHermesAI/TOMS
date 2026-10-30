@@ -322,7 +322,8 @@ Steps 1–3 are built (2026-10-25, §9), except one `Combatant` for every side (
   now: bat (jabs), golem (heavy, guard), skeleton (heavy), wraith (spell), imp (heavy, spell), Vorkath (all).
 - **Answers** (§6.2): a guard of `break.parryPower` (85) or more **parries** a heavy blow (no damage; it staggers
   1.5 s and takes ×2); **jabs** cut a running combo short (guard instead); since 2026-10-26 every monster keeps charging during a combo
-  (the owner; `battle.json` `combo_holds_monsters: true` for the old wait); a combo matching
+  (the owner; `battle.json` `combo_holds_monsters: true` for the old wait), and since 2026-10-30 the combo's marker keeps moving
+  through their attack's pause (`combo_runs_through_attacks: false` stops it, as before); a combo matching
   `breakHits` (2) points **breaks a spell**, and a guard only halves a spell; a monster **guarding** takes 30% unless a
   full charge breaks the guard; a guard move deals no damage.
 - **Break** (§6.4): matched points fill the monster's gauge (a thin yellow bar along its HP bar; `enemies.json`
@@ -368,3 +369,24 @@ Steps 1–3 are built (2026-10-25, §9), except one `Combatant` for every side (
   particles and clips (typed for now), the chapter filter.
 - Tests: `battle_editor.selftest` (the calculator, setups, files written back unchanged, the lists) and
   `smoke.battle_editor` (three monsters, ▶ Battle, the log, Win now).
+
+## 10. Step 4, the art: first part (2026-10-30)
+
+The owner said "start it". Made by scripts, so they can be made again and tuned:
+
+- **Particles** (`tools/make_battle_fx.py` adds them to `media/fx/battle.particle`; the other effects are kept):
+  `<weapon>_perfect` (the weapon's top hit, bigger, with a shock ring and stars), `<weapon>_great` (its middle hit with a
+  ring) for bow, sword, staff and default; `miss_puff`; the monsters' `monster_special`, `monster_transform`,
+  `monster_parried`, `monster_broken`.
+- **Clips:** `attack_big` (a perfect result) in `archer_bow` / `weapon_bow` (a volley of three arrows),
+  `fighter_sword` / `weapon_sword` (a slash and a second arc back), `caster_staff` / `weapon_staff` (two flashes, a big
+  bolt, sparks); `special` and `transform` in `monster_battle.anim` (`make_bow_anim.py`, `make_archer_anim.py`,
+  `make_weapon_anims.py`, `make_monster_battle_anims.py`).
+- **Data:** bow, sword, staff and default have `results` rows perfect (all points: ×1.2, stun 0.5 s, +1 break, as the
+  default's were: the formulas are still open), great (2 points) and miss (0); `looks.json` uses the monsters' new clips
+  and effects instead of borrowed ones.
+- **Fixed:** a result's `anim` used to replace the rig's status, so the next frame went back to idle and the big clip
+  never showed. Now the status stays `attack` and only the clip changes (`setBattleRigState(state, restart, clip)`).
+  A miss row's `fx` plays at the player.
+- **Still to make:** the intents' icons (§6.1; they are coloured words now) and a `special` clip for the player's super
+  attack.

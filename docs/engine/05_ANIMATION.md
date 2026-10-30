@@ -113,7 +113,9 @@ see [06_ANIMATION_RECIPES.md](06_ANIMATION_RECIPES.md).
 - **Node:** `name`, `sprite` (absent = a group that only moves its children), rest values `pos`
   `rot` `scale` `color` `visible`, `pivot` (0..1 of the sprite, top-left = 0,0; absent = the
   atlas's `x_pivot`, else the centre), `order`, `blend` (`normal` / `add`), `inheritColor`, `loop`, `stayAtLastFrame`, `children`;
-  in version 3 also `skin`, `lattice` and `meshGrid` (below, and [16_MESH_ANIMATION.md](16_MESH_ANIMATION.md)).
+  in version 3 also `skin`, `lattice` and `meshGrid` (below, and [16_MESH_ANIMATION.md](16_MESH_ANIMATION.md));
+  in version 4 `fx` (its subtree drawn through a shader: motion blur, glow, flash, outline) and `trail` (afterimages),
+  [18_NODE_EFFECTS.md](18_NODE_EFFECTS.md).
 - **How a node plays** (each node on its own; its range is first..last key of its subtree):
 
   | Setting | After the node's last key | Use |
@@ -505,6 +507,22 @@ Every edit is one undo step (drags and spin box edits fold into one); `*` in the
 unsaved changes. The editor's `AnimEditor` object creates the document, viewport, docks, menus and
 toolbars for a host window, which is what the phase 2 studio app will load as a plugin; the theme,
 icons and canvas base come from `tools/studio_common`, shared with the atlas editor.
+
+### Exporting clips as GIF or animated PNG
+
+**File > Export Clips as Animation** (Ctrl+Shift+E):
+- **Clips:** a list of the file's clips with checkboxes (the open one checked; All / None). Each checked clip becomes one
+  file: `<file>_<clip>.gif`, `<file>_<clip>.png` (APNG) or `<file>_<clip>_000.png`, `_001.png`, … in the folder chosen.
+- **Format:** GIF (256 colours, each pixel transparent or not: soft edges and shadows go hard), animated PNG (full colour
+  and soft transparency; browsers and most viewers play it) or PNG frames (one picture per frame).
+- **Frame rate** (GIF at most 50), **scale** (times the clip's pixels), a **transparent background** or a colour,
+  **play forever** or once, and **with the held clip** (View > Held Clip: the weapon at `hand`).
+
+The frames are drawn by the game renderer offscreen (`BgfxRenderer::setCapture`, `GameCanvasView::renderOffscreen`):
+skins, lattices and effect layers come out as the game draws them, with nothing of the editor. Each picture frames the
+whole clip once, so the character does not jump; a node bigger than 1500 px (a screen-sized backdrop) is left out of the
+framing. A looping clip gives one loop; a clip that plays once also gets its last frame. The same from a script:
+`anim_editor --export file.anim outdir [gif|apng|png] [clip,clip,...] [held.anim]` (test: `anim.export_gif`).
 
 ## Converting MPDI (the old engine's animations)
 

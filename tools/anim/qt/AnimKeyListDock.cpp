@@ -55,6 +55,8 @@ int columnChannel(int col)
     case AnimKeyListDock::ColVisible: return int(Channel::Visible);
     case AnimKeyListDock::ColEvent: return int(Channel::Event);
     case AnimKeyListDock::ColDeform: return int(Channel::Deform);
+    case AnimKeyListDock::ColFx: return int(Channel::Fx);
+    case AnimKeyListDock::ColTrail: return int(Channel::Trail);
     default: return -1;
     }
 }
@@ -155,7 +157,7 @@ AnimKeyListDock::AnimKeyListDock(AnimDocument* doc, QWidget* parent)
 {
     setObjectName(QStringLiteral("AnimKeyListDock"));
     m_table->setHorizontalHeaderLabels({tr("#"), tr("Time"), tr("Pos"), tr("Rot"), tr("Scale"), tr("Color"), tr("Sprite"),
-                                        tr("Visible"), tr("Event"), tr("Deform"), tr("Ease")});
+                                        tr("Visible"), tr("Event"), tr("Deform"), tr("Fx"), tr("Trail"), tr("Ease")});
     m_table->verticalHeader()->hide();
     m_table->verticalHeader()->setDefaultSectionSize(22);
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
@@ -287,7 +289,7 @@ void AnimKeyListDock::rebuild()
         auto* time = new QTableWidgetItem(QString::number(double(t), 'f', 3));
         time->setData(kEditRole, time->text());
         m_table->setItem(r, ColTime, time);
-        for (int col = ColPos; col <= ColDeform; col++) {
+        for (int col = ColPos; col <= ColTrail; col++) {
             const Channel c = Channel(columnChannel(col));
             Value v;
             QTableWidgetItem* it;

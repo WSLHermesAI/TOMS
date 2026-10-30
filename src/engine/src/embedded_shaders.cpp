@@ -11,6 +11,7 @@
 #endif
 #if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/fs_sprite.sc.bin.h"
+#include "dxbc/fs_layer.sc.bin.h"
 #endif
 #if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/vs_sprite_inst.sc.bin.h"
@@ -64,6 +65,7 @@
 #include "glsl/vs_sprite.sc.bin.h"
 #include "glsl/vs_sprite_inst.sc.bin.h"
 #include "glsl/fs_sprite.sc.bin.h"
+#include "glsl/fs_layer.sc.bin.h"
 #include "glsl/vs_imgui.sc.bin.h"
 #include "glsl/fs_imgui.sc.bin.h"
 #include "glsl/vs_rml.sc.bin.h"
@@ -82,6 +84,7 @@
 #include "spirv/vs_sprite.sc.bin.h"
 #include "spirv/vs_sprite_inst.sc.bin.h"
 #include "spirv/fs_sprite.sc.bin.h"
+#include "spirv/fs_layer.sc.bin.h"
 #include "spirv/vs_imgui.sc.bin.h"
 #include "spirv/fs_imgui.sc.bin.h"
 #include "spirv/vs_rml.sc.bin.h"
@@ -99,6 +102,7 @@
 #include "essl/vs_sprite.sc.bin.h"
 #include "essl/vs_sprite_inst.sc.bin.h"
 #include "essl/fs_sprite.sc.bin.h"
+#include "essl/fs_layer.sc.bin.h"
 #include "essl/vs_imgui.sc.bin.h"
 #include "essl/fs_imgui.sc.bin.h"
 #include "essl/vs_rml.sc.bin.h"
@@ -140,6 +144,7 @@ struct ProgramBlobs { Blob vs, fs; };
     switch (which) {                                                                                \
     case ShaderProgram::Sprite: out = { TOMS_BLOB(vs_sprite_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
     case ShaderProgram::SpriteInstanced: out = { TOMS_BLOB(vs_sprite_inst_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
+    case ShaderProgram::Layer:  out = { TOMS_BLOB(vs_sprite_##ext),  TOMS_BLOB(fs_layer_##ext) };  break; \
     case ShaderProgram::ImGui:  out = { TOMS_BLOB(vs_imgui_##ext),  TOMS_BLOB(fs_imgui_##ext) };  break; \
     case ShaderProgram::RmlUi:  out = { TOMS_BLOB(vs_rml_##ext),    TOMS_BLOB(fs_rml_##ext) };    break;\
     case ShaderProgram::Mesh:   out = { TOMS_BLOB(vs_mesh_##ext),   TOMS_BLOB(fs_mesh_##ext) };   break;\

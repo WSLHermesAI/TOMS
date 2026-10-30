@@ -185,8 +185,14 @@ void bgfxHostShutdown() {
 
 bool bgfxHostReady() { return g_ready; }
 
-void bgfxHostFrame() {
-    if (g_ready) bgfx::frame();
+uint32_t bgfxHostFrame() {
+    return g_ready ? bgfx::frame() : 0;
+}
+
+double bgfxHostGpuMs() {
+    if (!g_ready) return 0;
+    const bgfx::Stats* s = bgfx::getStats();
+    return s && s->gpuTimerFreq > 0 ? double(s->gpuTimeEnd - s->gpuTimeBegin) * 1000.0 / double(s->gpuTimerFreq) : 0;
 }
 
 std::string bgfxHostRendererName() {

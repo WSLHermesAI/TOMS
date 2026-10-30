@@ -13,10 +13,10 @@
       "attack": { "sound": "enemy_attack" },
       "hurt": {},
       "die": {},
-      "special": { "clip": "attack", "fx": "staff_release_2" },
-      "transform": { "clip": "hurt", "fx": "staff_hit_3" },
-      "parry": { "clip": "hurt", "fx": "sword_hit_2" },
-      "broken": { "clip": "hurt", "fx": "staff_hit_3" }
+      "special": { "fx": "monster_special" },
+      "transform": { "fx": "monster_transform" },
+      "parry": { "clip": "hurt", "fx": "monster_parried" },
+      "broken": { "clip": "hurt", "fx": "monster_broken" }
     }
   },
   "player": {

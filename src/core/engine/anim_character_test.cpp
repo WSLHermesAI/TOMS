@@ -168,8 +168,9 @@ int main() {
             out = it->second;
             return true;
         };
-        CHECK(archer.clips.size() == 4 && archer.find("idle") && archer.find("charge") && archer.find("attack") && archer.find("miss"),
-              "archer_bow.anim: idle, charge, attack, miss");
+        CHECK(archer.clips.size() == 5 && archer.find("idle") && archer.find("charge") && archer.find("attack") && archer.find("miss") &&
+                  archer.find("attack_big"),
+              "archer_bow.anim: idle, charge, attack, miss, attack_big");
         CHECK(game.size() >= 11, "the game atlas has the player sprites");
         const Clip* charge = archer.find("charge");
         const Node* madeHand = charge ? findNode(charge->root, "hand") : nullptr;

@@ -1,8 +1,8 @@
 {
-  "_comment": "The monsters keep charging while the player's combo runs (the owner 2026-10-26; data/battle.json combo_holds_monsters): a slime attacking every 0.7 s strikes in the middle of the bow's combo (started at frame 40). Each attack pauses both sides 450 ms (07 §4), so the taps on the three points come that much later; the combo goes on and hits all three.",
+  "_comment": "The monsters keep charging while the player's combo runs (the owner 2026-10-26; data/battle.json combo_holds_monsters): a slime attacking every 0.7 s strikes in the middle of the bow's combo (started at frame 40). The combo's marker runs through the attack's 450 ms pause (the owner 2026-10-30, combo_runs_through_attacks), so the taps land at battle_bow's frames; the combo goes on and hits all three.",
   "scene": "battle",
   "player": { "equip": ["bow"] },
   "battle": { "enemy": "slime", "hp": 9999, "atk_interval_ms": 700 },
-  "test": { "frames": 200, "keys": "enter@40,enter@89,enter@109,enter@158" },
+  "test": { "frames": 200, "keys": "enter@40,enter@61,enter@81,enter@102" },
   "expect": { "scene": "battle", "battleEvents": { "combo": 1, "hit": 3, "interrupt": 0 } }
 }

@@ -282,8 +282,37 @@ def miss():
     return clip('miss', 1.0, 1, parts, droop)
 
 
+def attack_big():
+    """A perfect result (weapon_play.json "results" anim, docs/gameplay/13 §4.2): the release of attack(), with a volley
+    of three arrows, a bigger gold flash and a burst of light off the bow. Same timing: release 0.06, hit 0.42."""
+    c = attack()
+    c['name'] = 'attack_big'
+    parts = c['root']['children']
+    for i, dy in enumerate((-9.0, 9.0)):
+        fly = {'pos': [key(0, [DRAWN_NOCK, dy * 0.3, 0], 'quadraticIn'), key(0.06 + 0.02 * (i + 1), [REST_X, dy, 0]),
+                       key(0.47, [420, dy * 3 - 6, 0])],
+               'color': [key(0, [1, 1, 1, 0]), key(0.06, [1, 1, 1, 0]), key(0.09, [1, 0.95, 0.75, 1]), key(0.32, [1, 0.95, 0.75, 1]),
+                         key(0.47, [1, 0.95, 0.75, 0])],
+               'visible': [key(0, True), key(0.48, False)]}
+        trail = node('trail', 'spark', blend='add', pivot=[1.0, 0.5], color=[1, 0.8, 0.35, 0], scale=[1.5, 0.6, 1],
+                     tracks={'color': [key(0.07, [1, 0.8, 0.35, 0]), key(0.1, [1, 0.8, 0.35, 0.9]), key(0.42, [1, 0.8, 0.35, 0.2])],
+                             'scale': [key(0.08, [0.5, 0.6, 1], 'quadraticOut'), key(0.22, [2.4, 0.6, 1])]})
+        parts.append(arrow([DRAWN_NOCK, 0.0, 0.0], fly, [trail]))
+        parts[-1]['name'] = f'arrow_{i + 2}'
+    burst = node('burst', 'glow', blend='add', pos=[REST_X, 0.0, 0.0], color=[1, 0.8, 0.3, 0], scale=[0.4, 0.4, 1], order=-1,
+                 tracks={'color': [key(0.04, [1, 0.8, 0.3, 0]), key(0.08, [1, 0.8, 0.3, 0.9], 'quadraticOut'), key(0.5, [1, 0.8, 0.3, 0])],
+                         'scale': [key(0.06, [0.4, 0.4, 1], 'quadraticOut'), key(0.5, [1.8, 1.8, 1])]})
+    ring = node('ring_big', 'ring', blend='add', pos=[REST_X, 0.0, 0.0], color=[1, 0.9, 0.6, 0], scale=[0.2, 0.2, 1], order=2,
+                tracks={'color': [key(0.08, [1, 0.9, 0.6, 0]), key(0.1, [1, 0.9, 0.6, 1]), key(0.45, [1, 0.9, 0.6, 0])],
+                        'scale': [key(0.08, [0.2, 0.2, 1], 'quadraticOut'), key(0.45, [1.6, 1.6, 1])]})
+    parts += [burst, ring]
+    c['root']['tracks']['pos'] = [key(0.06, [0, 0, 0], 'quadraticOut'), key(0.12, [-10, 0, 0], 'quadraticInOut'), key(0.5, [0, 0, 0])]
+    c['length'] = 0.8
+    return c
+
+
 def main():
-    data = {'version': 2, 'atlases': ['../atlas/fx.atlas'], 'clips': [idle(), charge(), attack(), miss()]}
+    data = {'version': 2, 'atlases': ['../atlas/fx.atlas'], 'clips': [idle(), charge(), attack(), miss(), attack_big()]}
     with open(OUT, 'w', encoding='utf-8', newline='\n') as f:
         f.write(json.dumps(data, indent=2) + '\n')
     print(f'{os.path.relpath(OUT, ROOT)}: clips {", ".join(c["name"] for c in data["clips"])}')

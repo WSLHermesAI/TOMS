@@ -15,6 +15,18 @@
 
 ## ▶ Next Step
 
+**Node effects; the brawler showcase; clip export; faster clip drawing** (2026-10-30; not committed;
+[DAILY_2026-10-30.md](DAILY_2026-10-30.md), [../../engine/18_NODE_EFFECTS.md](../../engine/18_NODE_EFFECTS.md)):
+- `.anim` version 4: a node's `fx` draws its subtree into a picture of its own and through `fs_layer.sc` (motion blur,
+  HDR glow, flash, outline; nested; keyed); `trail` afterimages. `IRenderer::beginLayer / endLayer`; linear atlases.
+- The brawler: ComfyUI (OpenPose-controlled) art cut into 11 parts, skinned arms and legs, 23 clips with IK
+  (`make_brawler_art.py`, `make_brawler_anim.py`); the anim editor's Effect box, Fx / Trail keys, View > Held Clip,
+  `--render`. The verdict: enough without Spine for painted 2D fighters; it lacks editor IK, pose tools, order keys.
+- File > Export Clips as Animation (GIF / APNG / PNG frames, `--export`); Bone / Lattice modes fast again.
+- Batching, skin caches (shared per clip), layers sized to their content: 64 idle brawlers 705 → 129 draw calls;
+  100 characters fit 60 fps except `run`. Further options kept in 18 §4.1.
+- Changed-only 30 of 220 pass. **Owner:** commit; ComfyUI still running; the `smoke.anim` / `smoke.battle` references.
+
 **The glTF viewer on the web; `KHR_materials_specular`; environment lighting** (2026-10-28; not committed;
 [DAILY_2026-10-28.md](DAILY_2026-10-28.md), [../../engine/08_GLTF.md](../../engine/08_GLTF.md) §4, §8):
 - `tools\build_gltf_web.cmd` + `serve_web.cmd gltf`: the viewer in the browser (WebGL2, single-threaded, the test
@@ -460,7 +472,7 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 [DAILY_2026-10-21.md](DAILY_2026-10-21.md), [DAILY_2026-10-22.md](DAILY_2026-10-22.md),
 [DAILY_2026-10-23.md](DAILY_2026-10-23.md), [DAILY_2026-10-24.md](DAILY_2026-10-24.md),
 [DAILY_2026-10-25.md](DAILY_2026-10-25.md), [DAILY_2026-10-26.md](DAILY_2026-10-26.md),
-[DAILY_2026-10-28.md](DAILY_2026-10-28.md).
+[DAILY_2026-10-28.md](DAILY_2026-10-28.md), [DAILY_2026-10-30.md](DAILY_2026-10-30.md).
 
 ---
 
@@ -475,7 +487,7 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 | Q6 | ~~A generated floor edited by hand~~ Answered 2026-10-12: first a dialog before the generator replaced hand-edited floors; then the owner chose to **edit floors only in the stage editor**, and the generator was removed ([02](../../gameplay/02_STAGE_EDITOR.md) §3) | — |
 | Q7 | ~~Locked stairs: invisible or visible?~~ Answered 2026-10-12: **visible, with a lock icon**. When the unlocking event finishes, a **dialog says which floor's stairs are now open**, and the event's description says it too; a **follow-up event "go to F<n>'s stairs"** is started so the player is led there (and finished on reaching them). **Built 2026-10-12** ([05](../../gameplay/event_editor/05_FLOOR_LINKS.md) §3.2, §5); no shipped floor has a lock yet (W34) | — |
 | Q8 | ~~Rebirth and stair locks?~~ Answered 2026-10-21: finished events **reset on rebirth** (`run` scope); a stair can **wait for several events** (W38) | — |
-| Q9 | ~~The `@` player start~~ Replaced 2026-10-12 by the owner's proposal: **stage maps as a 2D image** instead of characters -- each pixel an integer id (tile, monster, item, event, start, stairs ...), so there are far more ids than characters; a parser reads the pixels into the stage. **Design written 2026-10-12: [04_IMAGE_STAGES.md](../../gameplay/04_IMAGE_STAGES.md)**; three questions there (§6): packed RGB ids or a palette PNG; one id per event; convert all floors at once | keep the character maps until the owner confirms the design |
+| Q9 | ~~The `@` player start~~ Replaced 2026-10-12 by the owner's proposal: **stage maps as a 2D image** instead of characters -- each pixel an integer id (tile, monster, item, event, start, stairs ...), so there are far more ids than characters; a parser reads the pixels into the stage. **Design written 2026-10-12: [04_IMAGE_STAGES.md](../../gameplay/04_IMAGE_STAGES.md)**; three questions there (§6): ~~packed RGB ids or a palette PNG~~ (answered 2026-10-30: a binary format, an uncompressed 24-bit BMP); one id per event; convert all floors at once | keep the character maps until the owner confirms the design |
 | Q10 | ~~Event lists, `_v2`.. ids, languages~~ Answered 2026-10-12: a **per-floor event index** (metadata built from the floor files, for quick search of what happens on a floor); `_v2`..`_v5` explained (variant ids the floor generator made so a floor never repeats an id; most have no pool record, W22) -- owner's call (2026-10-12): **(a) each becomes a real event**, built; **languages: English only for now**, every text still through its key and the language setting, translations when the owner asks -- English is the default since 2026-10-12. **The per-floor index is built** (`assets/data/events/floor_index.json`) | — |
 | Q11 | ~~Player menu: STR / DEX / AGI?~~ Answered 2026-10-10: extend the status like a common RPG (STR, DEX, AGI, VIT, INT, LUK in a settings file `stats.json`); the gameplay that uses them comes later ([03](../../gameplay/03_PLAYER_MENU.md) §3) | — |
 | Q12 | ~~Item prices and ids?~~ Answered 2026-10-10: one all-item file (`items.json`) with each item's id, type, stats, price and text keys; `equipment.json` merges in, the store lists ids only ([03](../../gameplay/03_PLAYER_MENU.md) §5) | — |
@@ -494,3 +506,4 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 | Q24 | **DLC packs**: may a pack change existing content, or only add new things? | add only |
 | Q25 | **DLC packs**: players get them in the game from our storage, or through the stores' DLC (Steam, Google Play asset packs)? Paid or free? | our storage, free packs first |
 | Q26 | **Two new collaborators: a game designer and an artist** (owner, 2026-10-21; the owner is the programmer). *Undecided: the owner will describe it next time.* Topics named so far: how to **change the UI without a programmer**; how to **add or change events and stage data**; how **every developer gets the same data for testing** (the test scenarios, [08](../../gameplay/08_TEST_SCENARIOS.md), and their sharing, [09](../../gameplay/09_DOWNLOADS_AND_DLC.md) Q22-Q23). Likely also: who edits which files with which tool (the stage / event editors, the anim / particle / atlas / font editors, the AI art pipeline), getting the repository and the tools on their PCs ([09](../09_NEW_MACHINE_SETUP.md)), and how their changes are checked and merged | wait for the owner's description |
+| Q27–Q33 | **Weapon plays v2 and the loot grind** ([14](../../gameplay/14_WEAPON_PLAY_AND_LOOT.md) §5, the owner's ideas 2026-10-30): replace or add to the point track; the bow's draw; the sword's memory combo; magic circles for the staff or the hammer; the loot grind as its own mode, idle or not; what opens chests; per-piece or set bonuses | the proposals in 14 §5 |

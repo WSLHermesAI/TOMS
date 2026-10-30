@@ -1,0 +1,7728 @@
+{
+ "version": 4,
+ "atlases": [
+  "../atlas/brawler.atlas",
+  "../atlas/fx.atlas"
+ ],
+ "clips": [
+  {
+   "name": "hold",
+   "length": 1.8,
+   "root": {
+    "name": "brawler",
+    "children": [
+     {
+      "name": "shadow",
+      "sprite": "fx:dot",
+      "pos": [
+       0,
+       -2,
+       0
+      ],
+      "scale": [
+       7.5,
+       1.2,
+       1
+      ],
+      "color": [
+       0,
+       0,
+       0,
+       0.35
+      ],
+      "order": -10
+     },
+     {
+      "name": "body",
+      "pos": [
+       -2.5,
+       -242.5,
+       0
+      ],
+      "children": [
+       {
+        "name": "back_hip",
+        "pos": [
+         -29.0,
+         12.5,
+         0
+        ],
+        "order": -4,
+        "children": [
+         {
+          "name": "back_knee",
+          "pos": [
+           -31.0,
+           107.5,
+           0
+          ],
+          "children": [
+           {
+            "name": "back_ankle",
+            "pos": [
+             -19.0,
+             85.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "back_toe",
+              "pos": [
+               -41.0,
+               30.0,
+               0
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                12.61
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                0,
+                0,
+                18.86
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.8,
+               "v": [
+                0,
+                0,
+                12.61
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -31.75
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.9,
+             "v": [
+              0,
+              0,
+              -44.17
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.8,
+             "v": [
+              0,
+              0,
+              -31.75
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "back_leg",
+          "sprite": "brawler:back_leg",
+          "pivot": [
+           0.7266,
+           0.031
+          ],
+          "skin": {
+           "bones": [
+            "back_hip",
+            "back_knee",
+            "back_ankle",
+            "back_toe"
+           ],
+           "weights": "auto"
+          },
+          "meshGrid": [
+           8,
+           16
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            19.13
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            25.32
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 1.8,
+           "v": [
+            0,
+            0,
+            19.13
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "front_hip",
+        "pos": [
+         31.0,
+         12.5,
+         0
+        ],
+        "order": -3,
+        "children": [
+         {
+          "name": "front_knee",
+          "pos": [
+           29.0,
+           107.5,
+           0
+          ],
+          "children": [
+           {
+            "name": "front_ankle",
+            "pos": [
+             26.0,
+             85.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "front_toe",
+              "pos": [
+               44.0,
+               30.0,
+               0
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                23.28
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                0,
+                0,
+                31.23
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.8,
+               "v": [
+                0,
+                0,
+                23.28
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -32.17
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.9,
+             "v": [
+              0,
+              0,
+              -44.68
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.8,
+             "v": [
+              0,
+              0,
+              -32.17
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "front_leg",
+          "sprite": "brawler:front_leg",
+          "pivot": [
+           0.2518,
+           0.0349
+          ],
+          "skin": {
+           "bones": [
+            "front_hip",
+            "front_knee",
+            "front_ankle",
+            "front_toe"
+           ],
+           "weights": "auto"
+          },
+          "meshGrid": [
+           8,
+           16
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            8.9
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            13.45
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 1.8,
+           "v": [
+            0,
+            0,
+            8.9
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "pelvis",
+        "sprite": "brawler:pelvis",
+        "pivot": [
+         0.5134,
+         0.2837
+        ]
+       },
+       {
+        "name": "sash_tail",
+        "pos": [
+         -10.0,
+         -20.0,
+         0
+        ],
+        "order": 1,
+        "children": [
+         {
+          "name": "sash_cloth",
+          "sprite": "brawler:sash_tail",
+          "pivot": [
+           0.9736,
+           -0.061
+          ],
+          "lattice": [
+           3,
+           4
+          ],
+          "tracks": {
+           "deform": [
+            {
+             "t": 0.0,
+             "v": {
+              "6": [
+               0.0,
+               -0.0
+              ],
+              "7": [
+               0.0,
+               -0.0
+              ],
+              "8": [
+               0.0,
+               -0.0
+              ],
+              "9": [
+               0.0,
+               -0.0
+              ],
+              "10": [
+               0.0,
+               -0.0
+              ],
+              "11": [
+               0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.45,
+             "v": {
+              "6": [
+               2.67,
+               -0.8
+              ],
+              "7": [
+               2.67,
+               -0.8
+              ],
+              "8": [
+               2.67,
+               -0.8
+              ],
+              "9": [
+               4.0,
+               -1.2
+              ],
+              "10": [
+               4.0,
+               -1.2
+              ],
+              "11": [
+               4.0,
+               -1.2
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.9,
+             "v": {
+              "6": [
+               0.0,
+               -0.0
+              ],
+              "7": [
+               0.0,
+               -0.0
+              ],
+              "8": [
+               0.0,
+               -0.0
+              ],
+              "9": [
+               0.0,
+               -0.0
+              ],
+              "10": [
+               0.0,
+               -0.0
+              ],
+              "11": [
+               0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.35,
+             "v": {
+              "6": [
+               -2.67,
+               -0.8
+              ],
+              "7": [
+               -2.67,
+               -0.8
+              ],
+              "8": [
+               -2.67,
+               -0.8
+              ],
+              "9": [
+               -4.0,
+               -1.2
+              ],
+              "10": [
+               -4.0,
+               -1.2
+              ],
+              "11": [
+               -4.0,
+               -1.2
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.8,
+             "v": {
+              "6": [
+               -0.0,
+               -0.0
+              ],
+              "7": [
+               -0.0,
+               -0.0
+              ],
+              "8": [
+               -0.0,
+               -0.0
+              ],
+              "9": [
+               -0.0,
+               -0.0
+              ],
+              "10": [
+               -0.0,
+               -0.0
+              ],
+              "11": [
+               -0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 1.8,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "waist",
+        "pos": [
+         2.5,
+         -30.0,
+         0
+        ],
+        "order": 2,
+        "children": [
+         {
+          "name": "back_arm_fx",
+          "order": -1,
+          "children": [
+           {
+            "name": "back_shoulder",
+            "pos": [
+             -60.0,
+             -100.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "back_arm",
+              "sprite": "brawler:back_arm",
+              "pivot": [
+               0.8321,
+               0.2701
+              ],
+              "skin": {
+               "bones": [
+                "back_shoulder",
+                "back_elbow",
+                "back_wrist"
+               ],
+               "weights": "auto"
+              },
+              "meshGrid": [
+               12,
+               12
+              ]
+             },
+             {
+              "name": "back_elbow",
+              "pos": [
+               -45.0,
+               50.0,
+               0
+              ],
+              "order": 1,
+              "children": [
+               {
+                "name": "back_wrist",
+                "pos": [
+                 -37.5,
+                 60.0,
+                 0
+                ],
+                "children": [
+                 {
+                  "name": "back_fist",
+                  "sprite": "brawler:back_fist",
+                  "pivot": [
+                   0.5315,
+                   0.096
+                  ]
+                 }
+                ],
+                "tracks": {
+                 "rot": [
+                  {
+                   "t": 0,
+                   "v": [
+                    0,
+                    0,
+                    -151.02
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.9,
+                   "v": [
+                    0,
+                    0,
+                    -146.96
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 1.8,
+                   "v": [
+                    0,
+                    0,
+                    -151.02
+                   ],
+                   "ease": "sinusoidalInOut"
+                  }
+                 ]
+                }
+               }
+              ],
+              "tracks": {
+               "rot": [
+                {
+                 "t": 0,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.9,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 1.8,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "sinusoidalInOut"
+                }
+               ]
+              }
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                -104.01
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                0,
+                0,
+                -108.07
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.8,
+               "v": [
+                0,
+                0,
+                -104.01
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ],
+             "pos": [
+              {
+               "t": 0,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.8,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ]
+         },
+         {
+          "name": "torso",
+          "sprite": "brawler:torso",
+          "pivot": [
+           0.4672,
+           0.8396
+          ],
+          "lattice": [
+           4,
+           4
+          ],
+          "tracks": {
+           "deform": [
+            {
+             "t": 0.0,
+             "v": {},
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.9,
+             "v": {
+              "0": [
+               -1,
+               -3
+              ],
+              "1": [
+               0,
+               -3.5
+              ],
+              "2": [
+               0,
+               -3.5
+              ],
+              "3": [
+               1,
+               -3
+              ],
+              "4": [
+               -2.5,
+               -1.5
+              ],
+              "7": [
+               2.5,
+               -1.5
+              ],
+              "5": [
+               0,
+               -1
+              ],
+              "6": [
+               0,
+               -1
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.8,
+             "v": {},
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "neck",
+          "pos": [
+           7.5,
+           -125.0,
+           0
+          ],
+          "order": 1,
+          "children": [
+           {
+            "name": "tie",
+            "pos": [
+             -20.0,
+             -122.5,
+             0
+            ],
+            "order": -1,
+            "children": [
+             {
+              "name": "ponytail",
+              "sprite": "brawler:ponytail",
+              "pivot": [
+               0.9693,
+               0.289
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                0.0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                0,
+                0,
+                5
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.8,
+               "v": [
+                0,
+                0,
+                0.0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           },
+           {
+            "name": "head",
+            "sprite": "brawler:head",
+            "pivot": [
+             0.412,
+             1.0224
+            ]
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.9,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.8,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "front_arm_fx",
+          "order": 2,
+          "children": [
+           {
+            "name": "front_shoulder",
+            "pos": [
+             61.5,
+             -100.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "front_arm",
+              "sprite": "brawler:front_arm",
+              "pivot": [
+               0.1311,
+               0.1838
+              ],
+              "skin": {
+               "bones": [
+                "front_shoulder",
+                "front_elbow",
+                "front_wrist"
+               ],
+               "weights": "auto"
+              },
+              "meshGrid": [
+               12,
+               12
+              ]
+             },
+             {
+              "name": "front_elbow",
+              "pos": [
+               51.0,
+               46.0,
+               0
+              ],
+              "order": 1,
+              "children": [
+               {
+                "name": "front_wrist",
+                "pos": [
+                 31.0,
+                 60.0,
+                 0
+                ],
+                "children": [
+                 {
+                  "name": "front_fist",
+                  "sprite": "brawler:front_fist",
+                  "pivot": [
+                   0.5517,
+                   0.1045
+                  ]
+                 },
+                 {
+                  "name": "hand",
+                  "pos": [
+                   1.0,
+                   30.0,
+                   0
+                  ],
+                  "scale": [
+                   3.2,
+                   3.2,
+                   1
+                  ],
+                  "order": 1,
+                  "tracks": {
+                   "rot": [
+                    {
+                     "t": 0,
+                     "v": [
+                      0,
+                      0,
+                      180.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 0.9,
+                     "v": [
+                      0,
+                      0,
+                      180.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 1.8,
+                     "v": [
+                      0,
+                      0,
+                      180.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    }
+                   ]
+                  }
+                 }
+                ],
+                "tracks": {
+                 "rot": [
+                  {
+                   "t": 0,
+                   "v": [
+                    0,
+                    0,
+                    -223.04
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.9,
+                   "v": [
+                    0,
+                    0,
+                    -220.19
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 1.8,
+                   "v": [
+                    0,
+                    0,
+                    -223.04
+                   ],
+                   "ease": "sinusoidalInOut"
+                  }
+                 ]
+                }
+               }
+              ],
+              "tracks": {
+               "rot": [
+                {
+                 "t": 0,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.9,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 1.8,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                }
+               ]
+              }
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                -29.9
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                0,
+                0,
+                -32.75
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.8,
+               "v": [
+                0,
+                0,
+                -29.9
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ],
+             "pos": [
+              {
+               "t": 0,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.8,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 1.8,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 1.8,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          -2.5,
+          -228.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          -2.5,
+          -220.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 1.8,
+         "v": [
+          -2.5,
+          -228.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 1.8,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "playCount": -1
+  },
+  {
+   "name": "focus",
+   "length": 1.0,
+   "root": {
+    "name": "brawler",
+    "children": [
+     {
+      "name": "shadow",
+      "sprite": "fx:dot",
+      "pos": [
+       0,
+       -2,
+       0
+      ],
+      "scale": [
+       7.5,
+       1.2,
+       1
+      ],
+      "color": [
+       0,
+       0,
+       0,
+       0.35
+      ],
+      "order": -10
+     },
+     {
+      "name": "body",
+      "pos": [
+       -2.5,
+       -242.5,
+       0
+      ],
+      "children": [
+       {
+        "name": "back_hip",
+        "pos": [
+         -29.0,
+         12.5,
+         0
+        ],
+        "order": -4,
+        "children": [
+         {
+          "name": "back_knee",
+          "pos": [
+           -31.0,
+           107.5,
+           0
+          ],
+          "children": [
+           {
+            "name": "back_ankle",
+            "pos": [
+             -19.0,
+             85.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "back_toe",
+              "pos": [
+               -41.0,
+               30.0,
+               0
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                12.61
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.5,
+               "v": [
+                0,
+                0,
+                16.84
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.6,
+               "v": [
+                0,
+                0,
+                17.74
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                0,
+                0,
+                15.94
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                17.74
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                0,
+                0,
+                15.94
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.0,
+               "v": [
+                0,
+                0,
+                17.74
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -31.75
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.5,
+             "v": [
+              0,
+              0,
+              -37.51
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.6,
+             "v": [
+              0,
+              0,
+              -38.31
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.7,
+             "v": [
+              0,
+              0,
+              -36.68
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.8,
+             "v": [
+              0,
+              0,
+              -38.31
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.9,
+             "v": [
+              0,
+              0,
+              -36.68
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.0,
+             "v": [
+              0,
+              0,
+              -38.31
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "back_leg",
+          "sprite": "brawler:back_leg",
+          "pivot": [
+           0.7266,
+           0.031
+          ],
+          "skin": {
+           "bones": [
+            "back_hip",
+            "back_knee",
+            "back_ankle",
+            "back_toe"
+           ],
+           "weights": "auto"
+          },
+          "meshGrid": [
+           8,
+           16
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            19.13
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.5,
+           "v": [
+            0,
+            0,
+            20.67
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.6,
+           "v": [
+            0,
+            0,
+            20.57
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            20.74
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            20.57
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            20.74
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            0,
+            0,
+            20.57
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "front_hip",
+        "pos": [
+         31.0,
+         12.5,
+         0
+        ],
+        "order": -3,
+        "children": [
+         {
+          "name": "front_knee",
+          "pos": [
+           29.0,
+           107.5,
+           0
+          ],
+          "children": [
+           {
+            "name": "front_ankle",
+            "pos": [
+             26.0,
+             85.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "front_toe",
+              "pos": [
+               44.0,
+               30.0,
+               0
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                23.28
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.5,
+               "v": [
+                0,
+                0,
+                25.01
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.6,
+               "v": [
+                0,
+                0,
+                24.78
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                0,
+                0,
+                25.2
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                24.78
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                0,
+                0,
+                25.2
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.0,
+               "v": [
+                0,
+                0,
+                24.78
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -32.17
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.5,
+             "v": [
+              0,
+              0,
+              -32.88
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.6,
+             "v": [
+              0,
+              0,
+              -31.73
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.7,
+             "v": [
+              0,
+              0,
+              -33.97
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.8,
+             "v": [
+              0,
+              0,
+              -31.73
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.9,
+             "v": [
+              0,
+              0,
+              -33.97
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.0,
+             "v": [
+              0,
+              0,
+              -31.73
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "front_leg",
+          "sprite": "brawler:front_leg",
+          "pivot": [
+           0.2518,
+           0.0349
+          ],
+          "skin": {
+           "bones": [
+            "front_hip",
+            "front_knee",
+            "front_ankle",
+            "front_toe"
+           ],
+           "weights": "auto"
+          },
+          "meshGrid": [
+           8,
+           16
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            8.9
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.5,
+           "v": [
+            0,
+            0,
+            7.87
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.6,
+           "v": [
+            0,
+            0,
+            6.95
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            8.77
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            6.95
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            8.77
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            0,
+            0,
+            6.95
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "pelvis",
+        "sprite": "brawler:pelvis",
+        "pivot": [
+         0.5134,
+         0.2837
+        ]
+       },
+       {
+        "name": "sash_tail",
+        "pos": [
+         -10.0,
+         -20.0,
+         0
+        ],
+        "order": 1,
+        "children": [
+         {
+          "name": "sash_cloth",
+          "sprite": "brawler:sash_tail",
+          "pivot": [
+           0.9736,
+           -0.061
+          ],
+          "lattice": [
+           3,
+           4
+          ],
+          "tracks": {
+           "deform": [
+            {
+             "t": 0.0,
+             "v": {
+              "6": [
+               0.0,
+               -0.0
+              ],
+              "7": [
+               0.0,
+               -0.0
+              ],
+              "8": [
+               0.0,
+               -0.0
+              ],
+              "9": [
+               0.0,
+               -0.0
+              ],
+              "10": [
+               0.0,
+               -0.0
+              ],
+              "11": [
+               0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.25,
+             "v": {
+              "6": [
+               2.67,
+               -0.8
+              ],
+              "7": [
+               2.67,
+               -0.8
+              ],
+              "8": [
+               2.67,
+               -0.8
+              ],
+              "9": [
+               4.0,
+               -1.2
+              ],
+              "10": [
+               4.0,
+               -1.2
+              ],
+              "11": [
+               4.0,
+               -1.2
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.5,
+             "v": {
+              "6": [
+               0.0,
+               -0.0
+              ],
+              "7": [
+               0.0,
+               -0.0
+              ],
+              "8": [
+               0.0,
+               -0.0
+              ],
+              "9": [
+               0.0,
+               -0.0
+              ],
+              "10": [
+               0.0,
+               -0.0
+              ],
+              "11": [
+               0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.75,
+             "v": {
+              "6": [
+               -2.67,
+               -0.8
+              ],
+              "7": [
+               -2.67,
+               -0.8
+              ],
+              "8": [
+               -2.67,
+               -0.8
+              ],
+              "9": [
+               -4.0,
+               -1.2
+              ],
+              "10": [
+               -4.0,
+               -1.2
+              ],
+              "11": [
+               -4.0,
+               -1.2
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.0,
+             "v": {
+              "6": [
+               -0.0,
+               -0.0
+              ],
+              "7": [
+               -0.0,
+               -0.0
+              ],
+              "8": [
+               -0.0,
+               -0.0
+              ],
+              "9": [
+               -0.0,
+               -0.0
+              ],
+              "10": [
+               -0.0,
+               -0.0
+              ],
+              "11": [
+               -0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.5,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.6,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "waist",
+        "pos": [
+         2.5,
+         -30.0,
+         0
+        ],
+        "order": 2,
+        "children": [
+         {
+          "name": "back_arm_fx",
+          "order": -1,
+          "children": [
+           {
+            "name": "back_shoulder",
+            "pos": [
+             -60.0,
+             -100.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "back_arm",
+              "sprite": "brawler:back_arm",
+              "pivot": [
+               0.8321,
+               0.2701
+              ],
+              "skin": {
+               "bones": [
+                "back_shoulder",
+                "back_elbow",
+                "back_wrist"
+               ],
+               "weights": "auto"
+              },
+              "meshGrid": [
+               12,
+               12
+              ]
+             },
+             {
+              "name": "back_elbow",
+              "pos": [
+               -45.0,
+               50.0,
+               0
+              ],
+              "order": 1,
+              "children": [
+               {
+                "name": "back_wrist",
+                "pos": [
+                 -37.5,
+                 60.0,
+                 0
+                ],
+                "children": [
+                 {
+                  "name": "back_fist",
+                  "sprite": "brawler:back_fist",
+                  "pivot": [
+                   0.5315,
+                   0.096
+                  ]
+                 }
+                ],
+                "tracks": {
+                 "rot": [
+                  {
+                   "t": 0,
+                   "v": [
+                    0,
+                    0,
+                    -151.02
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.5,
+                   "v": [
+                    0,
+                    0,
+                    -79.7
+                   ],
+                   "ease": "quadraticOut"
+                  },
+                  {
+                   "t": 0.6,
+                   "v": [
+                    0,
+                    0,
+                    -78.5
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.7,
+                   "v": [
+                    0,
+                    0,
+                    -80.83
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.8,
+                   "v": [
+                    0,
+                    0,
+                    -78.5
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.9,
+                   "v": [
+                    0,
+                    0,
+                    -80.83
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 1.0,
+                   "v": [
+                    0,
+                    0,
+                    -78.5
+                   ],
+                   "ease": "sinusoidalInOut"
+                  }
+                 ]
+                }
+               }
+              ],
+              "tracks": {
+               "rot": [
+                {
+                 "t": 0,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.5,
+                 "v": [
+                  0,
+                  0,
+                  65.1
+                 ],
+                 "ease": "quadraticOut"
+                },
+                {
+                 "t": 0.6,
+                 "v": [
+                  0,
+                  0,
+                  62.39
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.7,
+                 "v": [
+                  0,
+                  0,
+                  67.7
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.8,
+                 "v": [
+                  0,
+                  0,
+                  62.39
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.9,
+                 "v": [
+                  0,
+                  0,
+                  67.7
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 1.0,
+                 "v": [
+                  0,
+                  0,
+                  62.39
+                 ],
+                 "ease": "sinusoidalInOut"
+                }
+               ]
+              }
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                -104.01
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.5,
+               "v": [
+                0,
+                0,
+                -172.41
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.6,
+               "v": [
+                0,
+                0,
+                -170.88
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                0,
+                0,
+                -173.87
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                -170.88
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                0,
+                0,
+                -173.87
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.0,
+               "v": [
+                0,
+                0,
+                -170.88
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ],
+             "pos": [
+              {
+               "t": 0,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.5,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.6,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.0,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ]
+         },
+         {
+          "name": "torso",
+          "sprite": "brawler:torso",
+          "pivot": [
+           0.4672,
+           0.8396
+          ],
+          "lattice": [
+           4,
+           4
+          ],
+          "tracks": {
+           "deform": [
+            {
+             "t": 0.0,
+             "v": {},
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.5,
+             "v": {
+              "0": [
+               -1,
+               -3
+              ],
+              "1": [
+               0,
+               -3.5
+              ],
+              "2": [
+               0,
+               -3.5
+              ],
+              "3": [
+               1,
+               -3
+              ],
+              "4": [
+               -2.5,
+               -1.5
+              ],
+              "7": [
+               2.5,
+               -1.5
+              ],
+              "5": [
+               0,
+               -1
+              ],
+              "6": [
+               0,
+               -1
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.0,
+             "v": {},
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "neck",
+          "pos": [
+           7.5,
+           -125.0,
+           0
+          ],
+          "order": 1,
+          "children": [
+           {
+            "name": "tie",
+            "pos": [
+             -20.0,
+             -122.5,
+             0
+            ],
+            "order": -1,
+            "children": [
+             {
+              "name": "ponytail",
+              "sprite": "brawler:ponytail",
+              "pivot": [
+               0.9693,
+               0.289
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                0.0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.5,
+               "v": [
+                0,
+                0,
+                10
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.6,
+               "v": [
+                0,
+                0,
+                10
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                0,
+                0,
+                10
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                10
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                0,
+                0,
+                10
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.0,
+               "v": [
+                0,
+                0,
+                10
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           },
+           {
+            "name": "head",
+            "sprite": "brawler:head",
+            "pivot": [
+             0.412,
+             1.0224
+            ]
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.5,
+             "v": [
+              0,
+              0,
+              -8
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.6,
+             "v": [
+              0,
+              0,
+              -8
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.7,
+             "v": [
+              0,
+              0,
+              -8
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.8,
+             "v": [
+              0,
+              0,
+              -8
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.9,
+             "v": [
+              0,
+              0,
+              -8
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 1.0,
+             "v": [
+              0,
+              0,
+              -8
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "front_arm_fx",
+          "order": 2,
+          "children": [
+           {
+            "name": "front_shoulder",
+            "pos": [
+             61.5,
+             -100.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "front_arm",
+              "sprite": "brawler:front_arm",
+              "pivot": [
+               0.1311,
+               0.1838
+              ],
+              "skin": {
+               "bones": [
+                "front_shoulder",
+                "front_elbow",
+                "front_wrist"
+               ],
+               "weights": "auto"
+              },
+              "meshGrid": [
+               12,
+               12
+              ]
+             },
+             {
+              "name": "front_elbow",
+              "pos": [
+               51.0,
+               46.0,
+               0
+              ],
+              "order": 1,
+              "children": [
+               {
+                "name": "front_wrist",
+                "pos": [
+                 31.0,
+                 60.0,
+                 0
+                ],
+                "children": [
+                 {
+                  "name": "front_fist",
+                  "sprite": "brawler:front_fist",
+                  "pivot": [
+                   0.5517,
+                   0.1045
+                  ]
+                 },
+                 {
+                  "name": "hand",
+                  "pos": [
+                   1.0,
+                   30.0,
+                   0
+                  ],
+                  "scale": [
+                   3.2,
+                   3.2,
+                   1
+                  ],
+                  "order": 1,
+                  "tracks": {
+                   "rot": [
+                    {
+                     "t": 0,
+                     "v": [
+                      0,
+                      0,
+                      180.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 0.5,
+                     "v": [
+                      0,
+                      0,
+                      144.0
+                     ],
+                     "ease": "quadraticOut"
+                    },
+                    {
+                     "t": 0.6,
+                     "v": [
+                      0,
+                      0,
+                      144.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 0.7,
+                     "v": [
+                      0,
+                      0,
+                      144.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 0.8,
+                     "v": [
+                      0,
+                      0,
+                      144.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 0.9,
+                     "v": [
+                      0,
+                      0,
+                      144.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 1.0,
+                     "v": [
+                      0,
+                      0,
+                      144.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    }
+                   ]
+                  }
+                 }
+                ],
+                "tracks": {
+                 "rot": [
+                  {
+                   "t": 0,
+                   "v": [
+                    0,
+                    0,
+                    -223.04
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.5,
+                   "v": [
+                    0,
+                    0,
+                    -153.7
+                   ],
+                   "ease": "quadraticOut"
+                  },
+                  {
+                   "t": 0.6,
+                   "v": [
+                    0,
+                    0,
+                    -153.02
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.7,
+                   "v": [
+                    0,
+                    0,
+                    -154.44
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.8,
+                   "v": [
+                    0,
+                    0,
+                    -153.02
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.9,
+                   "v": [
+                    0,
+                    0,
+                    -154.44
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 1.0,
+                   "v": [
+                    0,
+                    0,
+                    -153.02
+                   ],
+                   "ease": "sinusoidalInOut"
+                  }
+                 ]
+                }
+               }
+              ],
+              "tracks": {
+               "rot": [
+                {
+                 "t": 0,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.5,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "quadraticOut"
+                },
+                {
+                 "t": 0.6,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.7,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.8,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.9,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 1.0,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                }
+               ]
+              }
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                -29.9
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.5,
+               "v": [
+                0,
+                0,
+                -69.23
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.6,
+               "v": [
+                0,
+                0,
+                -69.92
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                0,
+                0,
+                -68.5
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                -69.92
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                0,
+                0,
+                -68.5
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.0,
+               "v": [
+                0,
+                0,
+                -69.92
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ],
+             "pos": [
+              {
+               "t": 0,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.5,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.6,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.9,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 1.0,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "fx": {
+           "shader": "glow",
+           "color": [
+            0.6,
+            0.85,
+            1,
+            1
+           ]
+          },
+          "tracks": {
+           "fx": [
+            {
+             "t": 0,
+             "v": [
+              1,
+              0,
+              1,
+              0
+             ]
+            },
+            {
+             "t": 0.5,
+             "v": [
+              1.5,
+              20,
+              0.6,
+              1.2
+             ]
+            },
+            {
+             "t": 1.0,
+             "v": [
+              1.5,
+              24,
+              0.55,
+              1.4
+             ]
+            }
+           ]
+          }
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.5,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.6,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.5,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.6,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          -2.5,
+          -228.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.5,
+         "v": [
+          -6.5,
+          -226.5,
+          0
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.6,
+         "v": [
+          -8.0,
+          -226.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          -5.0,
+          -226.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          -8.0,
+          -226.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          -5.0,
+          -226.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          -8.0,
+          -226.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.5,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.6,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "cast",
+   "length": 0.7,
+   "root": {
+    "name": "brawler",
+    "children": [
+     {
+      "name": "shadow",
+      "sprite": "fx:dot",
+      "pos": [
+       0,
+       -2,
+       0
+      ],
+      "scale": [
+       7.5,
+       1.2,
+       1
+      ],
+      "color": [
+       0,
+       0,
+       0,
+       0.35
+      ],
+      "order": -10
+     },
+     {
+      "name": "body",
+      "pos": [
+       -2.5,
+       -242.5,
+       0
+      ],
+      "children": [
+       {
+        "name": "back_hip",
+        "pos": [
+         -29.0,
+         12.5,
+         0
+        ],
+        "order": -4,
+        "children": [
+         {
+          "name": "back_knee",
+          "pos": [
+           -31.0,
+           107.5,
+           0
+          ],
+          "children": [
+           {
+            "name": "back_ankle",
+            "pos": [
+             -19.0,
+             85.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "back_toe",
+              "pos": [
+               -41.0,
+               30.0,
+               0
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                16.84
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                0,
+                0,
+                -0.03
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                0,
+                0,
+                -0.03
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                0,
+                0,
+                12.61
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -37.51
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.1,
+             "v": [
+              0,
+              0,
+              -21.51
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.25,
+             "v": [
+              0,
+              0,
+              -21.51
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.7,
+             "v": [
+              0,
+              0,
+              -31.75
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "back_leg",
+          "sprite": "brawler:back_leg",
+          "pivot": [
+           0.7266,
+           0.031
+          ],
+          "skin": {
+           "bones": [
+            "back_hip",
+            "back_knee",
+            "back_ankle",
+            "back_toe"
+           ],
+           "weights": "auto"
+          },
+          "meshGrid": [
+           8,
+           16
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            20.67
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.1,
+           "v": [
+            0,
+            0,
+            15.54
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            0,
+            0,
+            15.54
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            19.13
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "front_hip",
+        "pos": [
+         31.0,
+         12.5,
+         0
+        ],
+        "order": -3,
+        "children": [
+         {
+          "name": "front_knee",
+          "pos": [
+           29.0,
+           107.5,
+           0
+          ],
+          "children": [
+           {
+            "name": "front_ankle",
+            "pos": [
+             26.0,
+             85.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "front_toe",
+              "pos": [
+               44.0,
+               30.0,
+               0
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                25.01
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                0,
+                0,
+                32.36
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                0,
+                0,
+                32.36
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                0,
+                0,
+                23.28
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -32.88
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.1,
+             "v": [
+              0,
+              0,
+              -58.06
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.25,
+             "v": [
+              0,
+              0,
+              -58.06
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.7,
+             "v": [
+              0,
+              0,
+              -32.17
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "front_leg",
+          "sprite": "brawler:front_leg",
+          "pivot": [
+           0.2518,
+           0.0349
+          ],
+          "skin": {
+           "bones": [
+            "front_hip",
+            "front_knee",
+            "front_ankle",
+            "front_toe"
+           ],
+           "weights": "auto"
+          },
+          "meshGrid": [
+           8,
+           16
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            7.87
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.1,
+           "v": [
+            0,
+            0,
+            19.7
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            0,
+            0,
+            19.7
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            8.9
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "pelvis",
+        "sprite": "brawler:pelvis",
+        "pivot": [
+         0.5134,
+         0.2837
+        ]
+       },
+       {
+        "name": "sash_tail",
+        "pos": [
+         -10.0,
+         -20.0,
+         0
+        ],
+        "order": 1,
+        "children": [
+         {
+          "name": "sash_cloth",
+          "sprite": "brawler:sash_tail",
+          "pivot": [
+           0.9736,
+           -0.061
+          ],
+          "lattice": [
+           3,
+           4
+          ],
+          "tracks": {
+           "deform": [
+            {
+             "t": 0.0,
+             "v": {
+              "6": [
+               0.0,
+               -0.0
+              ],
+              "7": [
+               0.0,
+               -0.0
+              ],
+              "8": [
+               0.0,
+               -0.0
+              ],
+              "9": [
+               0.0,
+               -0.0
+              ],
+              "10": [
+               0.0,
+               -0.0
+              ],
+              "11": [
+               0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.175,
+             "v": {
+              "6": [
+               2.67,
+               -0.8
+              ],
+              "7": [
+               2.67,
+               -0.8
+              ],
+              "8": [
+               2.67,
+               -0.8
+              ],
+              "9": [
+               4.0,
+               -1.2
+              ],
+              "10": [
+               4.0,
+               -1.2
+              ],
+              "11": [
+               4.0,
+               -1.2
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.35,
+             "v": {
+              "6": [
+               0.0,
+               -0.0
+              ],
+              "7": [
+               0.0,
+               -0.0
+              ],
+              "8": [
+               0.0,
+               -0.0
+              ],
+              "9": [
+               0.0,
+               -0.0
+              ],
+              "10": [
+               0.0,
+               -0.0
+              ],
+              "11": [
+               0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.525,
+             "v": {
+              "6": [
+               -2.67,
+               -0.8
+              ],
+              "7": [
+               -2.67,
+               -0.8
+              ],
+              "8": [
+               -2.67,
+               -0.8
+              ],
+              "9": [
+               -4.0,
+               -1.2
+              ],
+              "10": [
+               -4.0,
+               -1.2
+              ],
+              "11": [
+               -4.0,
+               -1.2
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.7,
+             "v": {
+              "6": [
+               -0.0,
+               -0.0
+              ],
+              "7": [
+               -0.0,
+               -0.0
+              ],
+              "8": [
+               -0.0,
+               -0.0
+              ],
+              "9": [
+               -0.0,
+               -0.0
+              ],
+              "10": [
+               -0.0,
+               -0.0
+              ],
+              "11": [
+               -0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.1,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "waist",
+        "pos": [
+         2.5,
+         -30.0,
+         0
+        ],
+        "order": 2,
+        "children": [
+         {
+          "name": "back_arm_fx",
+          "order": -1,
+          "children": [
+           {
+            "name": "back_shoulder",
+            "pos": [
+             -60.0,
+             -100.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "back_arm",
+              "sprite": "brawler:back_arm",
+              "pivot": [
+               0.8321,
+               0.2701
+              ],
+              "skin": {
+               "bones": [
+                "back_shoulder",
+                "back_elbow",
+                "back_wrist"
+               ],
+               "weights": "auto"
+              },
+              "meshGrid": [
+               12,
+               12
+              ]
+             },
+             {
+              "name": "back_elbow",
+              "pos": [
+               -45.0,
+               50.0,
+               0
+              ],
+              "order": 1,
+              "children": [
+               {
+                "name": "back_wrist",
+                "pos": [
+                 -37.5,
+                 60.0,
+                 0
+                ],
+                "children": [
+                 {
+                  "name": "back_fist",
+                  "sprite": "brawler:back_fist",
+                  "pivot": [
+                   0.5315,
+                   0.096
+                  ]
+                 }
+                ],
+                "tracks": {
+                 "rot": [
+                  {
+                   "t": 0,
+                   "v": [
+                    0,
+                    0,
+                    -79.7
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.1,
+                   "v": [
+                    0,
+                    0,
+                    96.02
+                   ],
+                   "ease": "quadraticOut"
+                  },
+                  {
+                   "t": 0.25,
+                   "v": [
+                    0,
+                    0,
+                    96.02
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.7,
+                   "v": [
+                    0,
+                    0,
+                    208.98
+                   ],
+                   "ease": "sinusoidalInOut"
+                  }
+                 ]
+                }
+               }
+              ],
+              "tracks": {
+               "rot": [
+                {
+                 "t": 0,
+                 "v": [
+                  0,
+                  0,
+                  65.1
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.1,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "quadraticOut"
+                },
+                {
+                 "t": 0.25,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.7,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "sinusoidalInOut"
+                }
+               ]
+              }
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                -172.41
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                0,
+                0,
+                -32.05
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                0,
+                0,
+                -32.05
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                0,
+                0,
+                -104.01
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ],
+             "pos": [
+              {
+               "t": 0,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ]
+         },
+         {
+          "name": "torso",
+          "sprite": "brawler:torso",
+          "pivot": [
+           0.4672,
+           0.8396
+          ],
+          "lattice": [
+           4,
+           4
+          ],
+          "tracks": {
+           "deform": [
+            {
+             "t": 0.0,
+             "v": {},
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.35,
+             "v": {
+              "0": [
+               -1,
+               -3
+              ],
+              "1": [
+               0,
+               -3.5
+              ],
+              "2": [
+               0,
+               -3.5
+              ],
+              "3": [
+               1,
+               -3
+              ],
+              "4": [
+               -2.5,
+               -1.5
+              ],
+              "7": [
+               2.5,
+               -1.5
+              ],
+              "5": [
+               0,
+               -1
+              ],
+              "6": [
+               0,
+               -1
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.7,
+             "v": {},
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "neck",
+          "pos": [
+           7.5,
+           -125.0,
+           0
+          ],
+          "order": 1,
+          "children": [
+           {
+            "name": "tie",
+            "pos": [
+             -20.0,
+             -122.5,
+             0
+            ],
+            "order": -1,
+            "children": [
+             {
+              "name": "ponytail",
+              "sprite": "brawler:ponytail",
+              "pivot": [
+               0.9693,
+               0.289
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                10
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                0,
+                0,
+                -10
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                0,
+                0,
+                -10
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                0,
+                0,
+                0.0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           },
+           {
+            "name": "head",
+            "sprite": "brawler:head",
+            "pivot": [
+             0.412,
+             1.0224
+            ]
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -8
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.1,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.25,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.7,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "front_arm_fx",
+          "order": 2,
+          "children": [
+           {
+            "name": "front_shoulder",
+            "pos": [
+             61.5,
+             -100.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "front_arm",
+              "sprite": "brawler:front_arm",
+              "pivot": [
+               0.1311,
+               0.1838
+              ],
+              "skin": {
+               "bones": [
+                "front_shoulder",
+                "front_elbow",
+                "front_wrist"
+               ],
+               "weights": "auto"
+              },
+              "meshGrid": [
+               12,
+               12
+              ]
+             },
+             {
+              "name": "front_elbow",
+              "pos": [
+               51.0,
+               46.0,
+               0
+              ],
+              "order": 1,
+              "children": [
+               {
+                "name": "front_wrist",
+                "pos": [
+                 31.0,
+                 60.0,
+                 0
+                ],
+                "children": [
+                 {
+                  "name": "front_fist",
+                  "sprite": "brawler:front_fist",
+                  "pivot": [
+                   0.5517,
+                   0.1045
+                  ]
+                 },
+                 {
+                  "name": "hand",
+                  "pos": [
+                   1.0,
+                   30.0,
+                   0
+                  ],
+                  "scale": [
+                   3.2,
+                   3.2,
+                   1
+                  ],
+                  "order": 1,
+                  "tracks": {
+                   "rot": [
+                    {
+                     "t": 0,
+                     "v": [
+                      0,
+                      0,
+                      144.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 0.1,
+                     "v": [
+                      0,
+                      0,
+                      148.0
+                     ],
+                     "ease": "quadraticOut"
+                    },
+                    {
+                     "t": 0.25,
+                     "v": [
+                      0,
+                      0,
+                      148.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 0.7,
+                     "v": [
+                      0,
+                      0,
+                      180.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    }
+                   ]
+                  }
+                 }
+                ],
+                "tracks": {
+                 "rot": [
+                  {
+                   "t": 0,
+                   "v": [
+                    0,
+                    0,
+                    -153.7
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.1,
+                   "v": [
+                    0,
+                    0,
+                    -87.79
+                   ],
+                   "ease": "quadraticOut"
+                  },
+                  {
+                   "t": 0.25,
+                   "v": [
+                    0,
+                    0,
+                    -87.79
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.7,
+                   "v": [
+                    0,
+                    0,
+                    -223.04
+                   ],
+                   "ease": "sinusoidalInOut"
+                  }
+                 ]
+                }
+               }
+              ],
+              "tracks": {
+               "rot": [
+                {
+                 "t": 0,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.1,
+                 "v": [
+                  0,
+                  0,
+                  39.22
+                 ],
+                 "ease": "quadraticOut"
+                },
+                {
+                 "t": 0.25,
+                 "v": [
+                  0,
+                  0,
+                  39.22
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.7,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                }
+               ]
+              }
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                -69.23
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                0,
+                0,
+                -79.43
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                0,
+                0,
+                -79.43
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                0,
+                0,
+                -29.9
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ],
+             "pos": [
+              {
+               "t": 0,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.7,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "fx": {
+           "shader": "motionBlur"
+          },
+          "tracks": {
+           "fx": [
+            {
+             "t": 0.04,
+             "v": [
+              0,
+              0,
+              0,
+              0
+             ]
+            },
+            {
+             "t": 0.08,
+             "v": [
+              0,
+              0,
+              1.3,
+              0
+             ]
+            },
+            {
+             "t": 0.16,
+             "v": [
+              0,
+              0,
+              0,
+              0
+             ]
+            }
+           ]
+          }
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.1,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.1,
+         "v": [
+          0,
+          0,
+          6
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.25,
+         "v": [
+          0,
+          0,
+          6
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          -6.5,
+          -226.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.1,
+         "v": [
+          21.5,
+          -220.5,
+          0
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.25,
+         "v": [
+          21.5,
+          -220.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          -2.5,
+          -228.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.1,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.25,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "fizzle",
+   "length": 0.8,
+   "root": {
+    "name": "brawler",
+    "children": [
+     {
+      "name": "shadow",
+      "sprite": "fx:dot",
+      "pos": [
+       0,
+       -2,
+       0
+      ],
+      "scale": [
+       7.5,
+       1.2,
+       1
+      ],
+      "color": [
+       0,
+       0,
+       0,
+       0.35
+      ],
+      "order": -10
+     },
+     {
+      "name": "body",
+      "pos": [
+       -2.5,
+       -242.5,
+       0
+      ],
+      "children": [
+       {
+        "name": "back_hip",
+        "pos": [
+         -29.0,
+         12.5,
+         0
+        ],
+        "order": -4,
+        "children": [
+         {
+          "name": "back_knee",
+          "pos": [
+           -31.0,
+           107.5,
+           0
+          ],
+          "children": [
+           {
+            "name": "back_ankle",
+            "pos": [
+             -19.0,
+             85.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "back_toe",
+              "pos": [
+               -41.0,
+               30.0,
+               0
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                16.84
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                0,
+                0,
+                -0.03
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                28.23
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -37.51
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.25,
+             "v": [
+              0,
+              0,
+              -21.51
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.8,
+             "v": [
+              0,
+              0,
+              -58.51
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "back_leg",
+          "sprite": "brawler:back_leg",
+          "pivot": [
+           0.7266,
+           0.031
+          ],
+          "skin": {
+           "bones": [
+            "back_hip",
+            "back_knee",
+            "back_ankle",
+            "back_toe"
+           ],
+           "weights": "auto"
+          },
+          "meshGrid": [
+           8,
+           16
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            20.67
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            0,
+            0,
+            15.54
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            25.28
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "front_hip",
+        "pos": [
+         31.0,
+         12.5,
+         0
+        ],
+        "order": -3,
+        "children": [
+         {
+          "name": "front_knee",
+          "pos": [
+           29.0,
+           107.5,
+           0
+          ],
+          "children": [
+           {
+            "name": "front_ankle",
+            "pos": [
+             26.0,
+             85.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "front_toe",
+              "pos": [
+               44.0,
+               30.0,
+               0
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                25.01
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                0,
+                0,
+                32.36
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                42.95
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -32.88
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.25,
+             "v": [
+              0,
+              0,
+              -58.06
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.8,
+             "v": [
+              0,
+              0,
+              -58.17
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "front_leg",
+          "sprite": "brawler:front_leg",
+          "pivot": [
+           0.2518,
+           0.0349
+          ],
+          "skin": {
+           "bones": [
+            "front_hip",
+            "front_knee",
+            "front_ankle",
+            "front_toe"
+           ],
+           "weights": "auto"
+          },
+          "meshGrid": [
+           8,
+           16
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            7.87
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            0,
+            0,
+            19.7
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            10.22
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "pelvis",
+        "sprite": "brawler:pelvis",
+        "pivot": [
+         0.5134,
+         0.2837
+        ]
+       },
+       {
+        "name": "sash_tail",
+        "pos": [
+         -10.0,
+         -20.0,
+         0
+        ],
+        "order": 1,
+        "children": [
+         {
+          "name": "sash_cloth",
+          "sprite": "brawler:sash_tail",
+          "pivot": [
+           0.9736,
+           -0.061
+          ],
+          "lattice": [
+           3,
+           4
+          ],
+          "tracks": {
+           "deform": [
+            {
+             "t": 0.0,
+             "v": {
+              "6": [
+               0.0,
+               -0.0
+              ],
+              "7": [
+               0.0,
+               -0.0
+              ],
+              "8": [
+               0.0,
+               -0.0
+              ],
+              "9": [
+               0.0,
+               -0.0
+              ],
+              "10": [
+               0.0,
+               -0.0
+              ],
+              "11": [
+               0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.2,
+             "v": {
+              "6": [
+               2.67,
+               -0.8
+              ],
+              "7": [
+               2.67,
+               -0.8
+              ],
+              "8": [
+               2.67,
+               -0.8
+              ],
+              "9": [
+               4.0,
+               -1.2
+              ],
+              "10": [
+               4.0,
+               -1.2
+              ],
+              "11": [
+               4.0,
+               -1.2
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.4,
+             "v": {
+              "6": [
+               0.0,
+               -0.0
+              ],
+              "7": [
+               0.0,
+               -0.0
+              ],
+              "8": [
+               0.0,
+               -0.0
+              ],
+              "9": [
+               0.0,
+               -0.0
+              ],
+              "10": [
+               0.0,
+               -0.0
+              ],
+              "11": [
+               0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.6,
+             "v": {
+              "6": [
+               -2.67,
+               -0.8
+              ],
+              "7": [
+               -2.67,
+               -0.8
+              ],
+              "8": [
+               -2.67,
+               -0.8
+              ],
+              "9": [
+               -4.0,
+               -1.2
+              ],
+              "10": [
+               -4.0,
+               -1.2
+              ],
+              "11": [
+               -4.0,
+               -1.2
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.8,
+             "v": {
+              "6": [
+               -0.0,
+               -0.0
+              ],
+              "7": [
+               -0.0,
+               -0.0
+              ],
+              "8": [
+               -0.0,
+               -0.0
+              ],
+              "9": [
+               -0.0,
+               -0.0
+              ],
+              "10": [
+               -0.0,
+               -0.0
+              ],
+              "11": [
+               -0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "waist",
+        "pos": [
+         2.5,
+         -30.0,
+         0
+        ],
+        "order": 2,
+        "children": [
+         {
+          "name": "back_arm_fx",
+          "order": -1,
+          "children": [
+           {
+            "name": "back_shoulder",
+            "pos": [
+             -60.0,
+             -100.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "back_arm",
+              "sprite": "brawler:back_arm",
+              "pivot": [
+               0.8321,
+               0.2701
+              ],
+              "skin": {
+               "bones": [
+                "back_shoulder",
+                "back_elbow",
+                "back_wrist"
+               ],
+               "weights": "auto"
+              },
+              "meshGrid": [
+               12,
+               12
+              ]
+             },
+             {
+              "name": "back_elbow",
+              "pos": [
+               -45.0,
+               50.0,
+               0
+              ],
+              "order": 1,
+              "children": [
+               {
+                "name": "back_wrist",
+                "pos": [
+                 -37.5,
+                 60.0,
+                 0
+                ],
+                "children": [
+                 {
+                  "name": "back_fist",
+                  "sprite": "brawler:back_fist",
+                  "pivot": [
+                   0.5315,
+                   0.096
+                  ]
+                 }
+                ],
+                "tracks": {
+                 "rot": [
+                  {
+                   "t": 0,
+                   "v": [
+                    0,
+                    0,
+                    -79.7
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.25,
+                   "v": [
+                    0,
+                    0,
+                    96.02
+                   ],
+                   "ease": "quadraticOut"
+                  },
+                  {
+                   "t": 0.8,
+                   "v": [
+                    0,
+                    0,
+                    -71.12
+                   ],
+                   "ease": "sinusoidalInOut"
+                  }
+                 ]
+                }
+               }
+              ],
+              "tracks": {
+               "rot": [
+                {
+                 "t": 0,
+                 "v": [
+                  0,
+                  0,
+                  65.1
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.25,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "quadraticOut"
+                },
+                {
+                 "t": 0.8,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "sinusoidalInOut"
+                }
+               ]
+              }
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                -172.41
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                0,
+                0,
+                -32.05
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                -88.91
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ],
+             "pos": [
+              {
+               "t": 0,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ]
+         },
+         {
+          "name": "torso",
+          "sprite": "brawler:torso",
+          "pivot": [
+           0.4672,
+           0.8396
+          ],
+          "lattice": [
+           4,
+           4
+          ],
+          "tracks": {
+           "deform": [
+            {
+             "t": 0.0,
+             "v": {},
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.4,
+             "v": {
+              "0": [
+               -1,
+               -3
+              ],
+              "1": [
+               0,
+               -3.5
+              ],
+              "2": [
+               0,
+               -3.5
+              ],
+              "3": [
+               1,
+               -3
+              ],
+              "4": [
+               -2.5,
+               -1.5
+              ],
+              "7": [
+               2.5,
+               -1.5
+              ],
+              "5": [
+               0,
+               -1
+              ],
+              "6": [
+               0,
+               -1
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.8,
+             "v": {},
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "neck",
+          "pos": [
+           7.5,
+           -125.0,
+           0
+          ],
+          "order": 1,
+          "children": [
+           {
+            "name": "tie",
+            "pos": [
+             -20.0,
+             -122.5,
+             0
+            ],
+            "order": -1,
+            "children": [
+             {
+              "name": "ponytail",
+              "sprite": "brawler:ponytail",
+              "pivot": [
+               0.9693,
+               0.289
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                10
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                0,
+                0,
+                -10
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                18
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           },
+           {
+            "name": "head",
+            "sprite": "brawler:head",
+            "pivot": [
+             0.412,
+             1.0224
+            ]
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -8
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.25,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.8,
+             "v": [
+              0,
+              0,
+              14
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "front_arm_fx",
+          "order": 2,
+          "children": [
+           {
+            "name": "front_shoulder",
+            "pos": [
+             61.5,
+             -100.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "front_arm",
+              "sprite": "brawler:front_arm",
+              "pivot": [
+               0.1311,
+               0.1838
+              ],
+              "skin": {
+               "bones": [
+                "front_shoulder",
+                "front_elbow",
+                "front_wrist"
+               ],
+               "weights": "auto"
+              },
+              "meshGrid": [
+               12,
+               12
+              ]
+             },
+             {
+              "name": "front_elbow",
+              "pos": [
+               51.0,
+               46.0,
+               0
+              ],
+              "order": 1,
+              "children": [
+               {
+                "name": "front_wrist",
+                "pos": [
+                 31.0,
+                 60.0,
+                 0
+                ],
+                "children": [
+                 {
+                  "name": "front_fist",
+                  "sprite": "brawler:front_fist",
+                  "pivot": [
+                   0.5517,
+                   0.1045
+                  ]
+                 },
+                 {
+                  "name": "hand",
+                  "pos": [
+                   1.0,
+                   30.0,
+                   0
+                  ],
+                  "scale": [
+                   3.2,
+                   3.2,
+                   1
+                  ],
+                  "order": 1,
+                  "tracks": {
+                   "rot": [
+                    {
+                     "t": 0,
+                     "v": [
+                      0,
+                      0,
+                      144.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 0.25,
+                     "v": [
+                      0,
+                      0,
+                      150.0
+                     ],
+                     "ease": "quadraticOut"
+                    },
+                    {
+                     "t": 0.8,
+                     "v": [
+                      0,
+                      0,
+                      180.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    }
+                   ]
+                  }
+                 }
+                ],
+                "tracks": {
+                 "rot": [
+                  {
+                   "t": 0,
+                   "v": [
+                    0,
+                    0,
+                    -153.7
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.25,
+                   "v": [
+                    0,
+                    0,
+                    -87.79
+                   ],
+                   "ease": "quadraticOut"
+                  },
+                  {
+                   "t": 0.8,
+                   "v": [
+                    0,
+                    0,
+                    -182.92
+                   ],
+                   "ease": "sinusoidalInOut"
+                  }
+                 ]
+                }
+               }
+              ],
+              "tracks": {
+               "rot": [
+                {
+                 "t": 0,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.25,
+                 "v": [
+                  0,
+                  0,
+                  39.22
+                 ],
+                 "ease": "quadraticOut"
+                },
+                {
+                 "t": 0.8,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                }
+               ]
+              }
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                -69.23
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                0,
+                0,
+                -79.43
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                -25.01
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ],
+             "pos": [
+              {
+               "t": 0,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.25,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.25,
+         "v": [
+          0,
+          0,
+          6
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          0,
+          0,
+          5
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          -6.5,
+          -226.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.25,
+         "v": [
+          21.5,
+          -220.5,
+          0
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          -8.5,
+          -208.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.25,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "attack_big",
+   "length": 0.8,
+   "root": {
+    "name": "brawler",
+    "children": [
+     {
+      "name": "shadow",
+      "sprite": "fx:dot",
+      "pos": [
+       0,
+       -2,
+       0
+      ],
+      "scale": [
+       7.5,
+       1.2,
+       1
+      ],
+      "color": [
+       0,
+       0,
+       0,
+       0.35
+      ],
+      "order": -10
+     },
+     {
+      "name": "body",
+      "pos": [
+       -2.5,
+       -242.5,
+       0
+      ],
+      "children": [
+       {
+        "name": "back_hip",
+        "pos": [
+         -29.0,
+         12.5,
+         0
+        ],
+        "order": -4,
+        "children": [
+         {
+          "name": "back_knee",
+          "pos": [
+           -31.0,
+           107.5,
+           0
+          ],
+          "children": [
+           {
+            "name": "back_ankle",
+            "pos": [
+             -19.0,
+             85.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "back_toe",
+              "pos": [
+               -41.0,
+               30.0,
+               0
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                16.84
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                0,
+                0,
+                -17.47
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.3,
+               "v": [
+                0,
+                0,
+                3.42
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                12.61
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -37.51
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.1,
+             "v": [
+              0,
+              0,
+              3.12
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.3,
+             "v": [
+              0,
+              0,
+              -29.8
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.8,
+             "v": [
+              0,
+              0,
+              -31.75
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "back_leg",
+          "sprite": "brawler:back_leg",
+          "pivot": [
+           0.7266,
+           0.031
+          ],
+          "skin": {
+           "bones": [
+            "back_hip",
+            "back_knee",
+            "back_ankle",
+            "back_toe"
+           ],
+           "weights": "auto"
+          },
+          "meshGrid": [
+           8,
+           16
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            20.67
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.1,
+           "v": [
+            0,
+            0,
+            8.35
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.3,
+           "v": [
+            0,
+            0,
+            30.38
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            19.13
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "front_hip",
+        "pos": [
+         31.0,
+         12.5,
+         0
+        ],
+        "order": -3,
+        "children": [
+         {
+          "name": "front_knee",
+          "pos": [
+           29.0,
+           107.5,
+           0
+          ],
+          "children": [
+           {
+            "name": "front_ankle",
+            "pos": [
+             26.0,
+             85.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "front_toe",
+              "pos": [
+               44.0,
+               30.0,
+               0
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                25.01
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                0,
+                0,
+                29.94
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.3,
+               "v": [
+                0,
+                0,
+                28.0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                23.28
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -32.88
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.1,
+             "v": [
+              0,
+              0,
+              -61.73
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.3,
+             "v": [
+              0,
+              0,
+              -52.49
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.8,
+             "v": [
+              0,
+              0,
+              -32.17
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "front_leg",
+          "sprite": "brawler:front_leg",
+          "pivot": [
+           0.2518,
+           0.0349
+          ],
+          "skin": {
+           "bones": [
+            "front_hip",
+            "front_knee",
+            "front_ankle",
+            "front_toe"
+           ],
+           "weights": "auto"
+          },
+          "meshGrid": [
+           8,
+           16
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            7.87
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.1,
+           "v": [
+            0,
+            0,
+            25.79
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.3,
+           "v": [
+            0,
+            0,
+            28.48
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            8.9
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "pelvis",
+        "sprite": "brawler:pelvis",
+        "pivot": [
+         0.5134,
+         0.2837
+        ]
+       },
+       {
+        "name": "sash_tail",
+        "pos": [
+         -10.0,
+         -20.0,
+         0
+        ],
+        "order": 1,
+        "children": [
+         {
+          "name": "sash_cloth",
+          "sprite": "brawler:sash_tail",
+          "pivot": [
+           0.9736,
+           -0.061
+          ],
+          "lattice": [
+           3,
+           4
+          ],
+          "tracks": {
+           "deform": [
+            {
+             "t": 0.0,
+             "v": {
+              "6": [
+               0.0,
+               -0.0
+              ],
+              "7": [
+               0.0,
+               -0.0
+              ],
+              "8": [
+               0.0,
+               -0.0
+              ],
+              "9": [
+               0.0,
+               -0.0
+              ],
+              "10": [
+               0.0,
+               -0.0
+              ],
+              "11": [
+               0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.2,
+             "v": {
+              "6": [
+               2.67,
+               -0.8
+              ],
+              "7": [
+               2.67,
+               -0.8
+              ],
+              "8": [
+               2.67,
+               -0.8
+              ],
+              "9": [
+               4.0,
+               -1.2
+              ],
+              "10": [
+               4.0,
+               -1.2
+              ],
+              "11": [
+               4.0,
+               -1.2
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.4,
+             "v": {
+              "6": [
+               0.0,
+               -0.0
+              ],
+              "7": [
+               0.0,
+               -0.0
+              ],
+              "8": [
+               0.0,
+               -0.0
+              ],
+              "9": [
+               0.0,
+               -0.0
+              ],
+              "10": [
+               0.0,
+               -0.0
+              ],
+              "11": [
+               0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.6,
+             "v": {
+              "6": [
+               -2.67,
+               -0.8
+              ],
+              "7": [
+               -2.67,
+               -0.8
+              ],
+              "8": [
+               -2.67,
+               -0.8
+              ],
+              "9": [
+               -4.0,
+               -1.2
+              ],
+              "10": [
+               -4.0,
+               -1.2
+              ],
+              "11": [
+               -4.0,
+               -1.2
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.8,
+             "v": {
+              "6": [
+               -0.0,
+               -0.0
+              ],
+              "7": [
+               -0.0,
+               -0.0
+              ],
+              "8": [
+               -0.0,
+               -0.0
+              ],
+              "9": [
+               -0.0,
+               -0.0
+              ],
+              "10": [
+               -0.0,
+               -0.0
+              ],
+              "11": [
+               -0.0,
+               -0.0
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.1,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.3,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            0.0
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "waist",
+        "pos": [
+         2.5,
+         -30.0,
+         0
+        ],
+        "order": 2,
+        "children": [
+         {
+          "name": "back_arm_fx",
+          "order": -1,
+          "children": [
+           {
+            "name": "back_shoulder",
+            "pos": [
+             -60.0,
+             -100.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "back_arm",
+              "sprite": "brawler:back_arm",
+              "pivot": [
+               0.8321,
+               0.2701
+              ],
+              "skin": {
+               "bones": [
+                "back_shoulder",
+                "back_elbow",
+                "back_wrist"
+               ],
+               "weights": "auto"
+              },
+              "meshGrid": [
+               12,
+               12
+              ]
+             },
+             {
+              "name": "back_elbow",
+              "pos": [
+               -45.0,
+               50.0,
+               0
+              ],
+              "order": 1,
+              "children": [
+               {
+                "name": "back_wrist",
+                "pos": [
+                 -37.5,
+                 60.0,
+                 0
+                ],
+                "children": [
+                 {
+                  "name": "back_fist",
+                  "sprite": "brawler:back_fist",
+                  "pivot": [
+                   0.5315,
+                   0.096
+                  ]
+                 }
+                ],
+                "tracks": {
+                 "rot": [
+                  {
+                   "t": 0,
+                   "v": [
+                    0,
+                    0,
+                    -79.7
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.1,
+                   "v": [
+                    0,
+                    0,
+                    91.96
+                   ],
+                   "ease": "quadraticOut"
+                  },
+                  {
+                   "t": 0.3,
+                   "v": [
+                    0,
+                    0,
+                    108.5
+                   ],
+                   "ease": "quadraticOut"
+                  },
+                  {
+                   "t": 0.8,
+                   "v": [
+                    0,
+                    0,
+                    208.98
+                   ],
+                   "ease": "sinusoidalInOut"
+                  }
+                 ]
+                }
+               }
+              ],
+              "tracks": {
+               "rot": [
+                {
+                 "t": 0,
+                 "v": [
+                  0,
+                  0,
+                  65.1
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.1,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "quadraticOut"
+                },
+                {
+                 "t": 0.3,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "quadraticOut"
+                },
+                {
+                 "t": 0.8,
+                 "v": [
+                  0,
+                  0,
+                  103.03
+                 ],
+                 "ease": "sinusoidalInOut"
+                }
+               ]
+              }
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                -172.41
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                0,
+                0,
+                -27.99
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.3,
+               "v": [
+                0,
+                0,
+                -34.53
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                -104.01
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ],
+             "pos": [
+              {
+               "t": 0,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.3,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                -60.0,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ]
+         },
+         {
+          "name": "torso",
+          "sprite": "brawler:torso",
+          "pivot": [
+           0.4672,
+           0.8396
+          ],
+          "lattice": [
+           4,
+           4
+          ],
+          "tracks": {
+           "deform": [
+            {
+             "t": 0.0,
+             "v": {},
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.4,
+             "v": {
+              "0": [
+               -1,
+               -3
+              ],
+              "1": [
+               0,
+               -3.5
+              ],
+              "2": [
+               0,
+               -3.5
+              ],
+              "3": [
+               1,
+               -3
+              ],
+              "4": [
+               -2.5,
+               -1.5
+              ],
+              "7": [
+               2.5,
+               -1.5
+              ],
+              "5": [
+               0,
+               -1
+              ],
+              "6": [
+               0,
+               -1
+              ]
+             },
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.8,
+             "v": {},
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "neck",
+          "pos": [
+           7.5,
+           -125.0,
+           0
+          ],
+          "order": 1,
+          "children": [
+           {
+            "name": "tie",
+            "pos": [
+             -20.0,
+             -122.5,
+             0
+            ],
+            "order": -1,
+            "children": [
+             {
+              "name": "ponytail",
+              "sprite": "brawler:ponytail",
+              "pivot": [
+               0.9693,
+               0.289
+              ]
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                10
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                0,
+                0,
+                -10
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.3,
+               "v": [
+                0,
+                0,
+                -10
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                0.0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           },
+           {
+            "name": "head",
+            "sprite": "brawler:head",
+            "pivot": [
+             0.412,
+             1.0224
+            ]
+           }
+          ],
+          "tracks": {
+           "rot": [
+            {
+             "t": 0,
+             "v": [
+              0,
+              0,
+              -8
+             ],
+             "ease": "sinusoidalInOut"
+            },
+            {
+             "t": 0.1,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.3,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "quadraticOut"
+            },
+            {
+             "t": 0.8,
+             "v": [
+              0,
+              0,
+              -3
+             ],
+             "ease": "sinusoidalInOut"
+            }
+           ]
+          }
+         },
+         {
+          "name": "front_arm_fx",
+          "order": 2,
+          "children": [
+           {
+            "name": "front_shoulder",
+            "pos": [
+             61.5,
+             -100.0,
+             0
+            ],
+            "children": [
+             {
+              "name": "front_arm",
+              "sprite": "brawler:front_arm",
+              "pivot": [
+               0.1311,
+               0.1838
+              ],
+              "skin": {
+               "bones": [
+                "front_shoulder",
+                "front_elbow",
+                "front_wrist"
+               ],
+               "weights": "auto"
+              },
+              "meshGrid": [
+               12,
+               12
+              ]
+             },
+             {
+              "name": "front_elbow",
+              "pos": [
+               51.0,
+               46.0,
+               0
+              ],
+              "order": 1,
+              "children": [
+               {
+                "name": "front_wrist",
+                "pos": [
+                 31.0,
+                 60.0,
+                 0
+                ],
+                "children": [
+                 {
+                  "name": "front_fist",
+                  "sprite": "brawler:front_fist",
+                  "pivot": [
+                   0.5517,
+                   0.1045
+                  ]
+                 },
+                 {
+                  "name": "hand",
+                  "pos": [
+                   1.0,
+                   30.0,
+                   0
+                  ],
+                  "scale": [
+                   3.2,
+                   3.2,
+                   1
+                  ],
+                  "order": 1,
+                  "tracks": {
+                   "rot": [
+                    {
+                     "t": 0,
+                     "v": [
+                      0,
+                      0,
+                      144.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    },
+                    {
+                     "t": 0.1,
+                     "v": [
+                      0,
+                      0,
+                      148.0
+                     ],
+                     "ease": "quadraticOut"
+                    },
+                    {
+                     "t": 0.3,
+                     "v": [
+                      0,
+                      0,
+                      80.0
+                     ],
+                     "ease": "quadraticOut"
+                    },
+                    {
+                     "t": 0.8,
+                     "v": [
+                      0,
+                      0,
+                      180.0
+                     ],
+                     "ease": "sinusoidalInOut"
+                    }
+                   ]
+                  }
+                 }
+                ],
+                "tracks": {
+                 "rot": [
+                  {
+                   "t": 0,
+                   "v": [
+                    0,
+                    0,
+                    -153.7
+                   ],
+                   "ease": "sinusoidalInOut"
+                  },
+                  {
+                   "t": 0.1,
+                   "v": [
+                    0,
+                    0,
+                    -98.22
+                   ],
+                   "ease": "quadraticOut"
+                  },
+                  {
+                   "t": 0.3,
+                   "v": [
+                    0,
+                    0,
+                    -28.28
+                   ],
+                   "ease": "quadraticOut"
+                  },
+                  {
+                   "t": 0.8,
+                   "v": [
+                    0,
+                    0,
+                    136.96
+                   ],
+                   "ease": "sinusoidalInOut"
+                  }
+                 ]
+                }
+               }
+              ],
+              "tracks": {
+               "rot": [
+                {
+                 "t": 0,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                },
+                {
+                 "t": 0.1,
+                 "v": [
+                  0,
+                  0,
+                  59.75
+                 ],
+                 "ease": "quadraticOut"
+                },
+                {
+                 "t": 0.3,
+                 "v": [
+                  0,
+                  0,
+                  -20.19
+                 ],
+                 "ease": "quadraticOut"
+                },
+                {
+                 "t": 0.8,
+                 "v": [
+                  0,
+                  0,
+                  70.94
+                 ],
+                 "ease": "sinusoidalInOut"
+                }
+               ]
+              }
+             }
+            ],
+            "tracks": {
+             "rot": [
+              {
+               "t": 0,
+               "v": [
+                0,
+                0,
+                -69.23
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                0,
+                0,
+                -89.53
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.3,
+               "v": [
+                0,
+                0,
+                -69.53
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                0,
+                0,
+                -29.9
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ],
+             "pos": [
+              {
+               "t": 0,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              },
+              {
+               "t": 0.1,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.3,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "quadraticOut"
+              },
+              {
+               "t": 0.8,
+               "v": [
+                61.5,
+                -100.0,
+                0
+               ],
+               "ease": "sinusoidalInOut"
+              }
+             ]
+            }
+           }
+          ]
+         }
+        ],
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          },
+          {
+           "t": 0.1,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.3,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "quadraticOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            2
+           ],
+           "ease": "sinusoidalInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.1,
+         "v": [
+          0,
+          0,
+          6
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.3,
+         "v": [
+          0,
+          0,
+          -4
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          -6.5,
+          -226.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.1,
+         "v": [
+          35.5,
+          -220.5,
+          0
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.3,
+         "v": [
+          21.5,
+          -220.5,
+          0
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          -2.5,
+          -228.5,
+          0
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        },
+        {
+         "t": 0.1,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.3,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "sinusoidalInOut"
+        }
+       ],
+       "fx": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          1,
+          0,
+          0
+         ]
+        },
+        {
+         "t": 0.1,
+         "v": [
+          8,
+          3,
+          0,
+          0
+         ]
+        },
+        {
+         "t": 0.3,
+         "v": [
+          6,
+          2.5,
+          0,
+          0
+         ]
+        },
+        {
+         "t": 0.8,
+         "v": [
+          0,
+          1,
+          0,
+          0
+         ]
+        }
+       ],
+       "trail": [
+        {
+         "t": 0,
+         "v": 0.0
+        },
+        {
+         "t": 0.07,
+         "v": 1.0
+        },
+        {
+         "t": 0.35,
+         "v": 1.0
+        },
+        {
+         "t": 0.45,
+         "v": 0.0
+        }
+       ]
+      },
+      "fx": {
+       "shader": "outline",
+       "color": [
+        0.6,
+        0.85,
+        1,
+        1
+       ]
+      },
+      "trail": {
+       "count": 4,
+       "gap": 0.03,
+       "color": [
+        0.6,
+        0.85,
+        1,
+        0.5
+       ],
+       "blend": "add"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -187,9 +187,28 @@ void AnimViewport::gameRendererChanged(toms::next::BgfxRenderer* ren)
     m_atlasDirty = true;
 }
 
-void AnimViewport::paintGameScene(const GameScene& s)
+QImage AnimViewport::renderClipFrame(const toms::anim::Clip& clip, const toms::anim::Clip* held, float t, int w, int h,
+                                     const glm::mat3& place, const QColor& background)
 {
-    const Theme::Colors& tc = Theme::colors();
+    return renderOffscreen(w, h, [&](const GameScene& s) {
+        prepareAtlases();
+        if (background.alpha() > 0) s.rect(QRectF(0, 0, w, h), background);
+        std::vector<NodePose> poses;
+        toms::anim::evaluate(clip, t, poses);
+        toms::anim::DrawList draws;
+        toms::anim::appendDraws(clip, poses, m_tex.atlasSet(), place, nullptr, draws);
+        glm::mat3 hand;
+        if (held && toms::anim::attachPlacement(poses, "hand", place, hand)) {
+            std::vector<NodePose> heldPoses;
+            toms::anim::evaluate(*held, std::min(t, held->duration()), heldPoses);
+            toms::anim::appendDraws(*held, heldPoses, m_tex.atlasSet(), hand, nullptr, draws);
+        }
+        draws.submit(&s.ren);
+    });
+}
+
+void AnimViewport::prepareAtlases()
+{
     if (m_atlasDirty) {
         m_atlasDirty = false;
         std::vector<std::tuple<std::string, std::string, const toms::AtlasFile*>> atlases;
@@ -201,6 +220,12 @@ void AnimViewport::paintGameScene(const GameScene& s)
     for (int i = 0; i < m_doc->atlasCount(); i++)   // skinned and deformed nodes bend these (docs/engine/16_MESH_ANIMATION.md)
         if (m_doc->atlasAt(i).ok)
             m_tex.setMeshes(m_doc->atlasId(i).toStdString(), m_doc->atlasMeshes(i).meshes.empty() ? nullptr : &m_doc->atlasMeshes(i));
+}
+
+void AnimViewport::paintGameScene(const GameScene& s)
+{
+    const Theme::Colors& tc = Theme::colors();
+    prepareAtlases();
     const QPointF o = toWidget(QPointF(0, 0));   // origin cross: where the game places the clip
     s.line(QPointF(std::round(o.x()) + 0.5, 0), QPointF(std::round(o.x()) + 0.5, height()), 1, tc.gridAxis);
     s.line(QPointF(0, std::round(o.y()) + 0.5), QPointF(width(), std::round(o.y()) + 0.5), 1, tc.gridAxis);
@@ -213,7 +238,15 @@ void AnimViewport::paintGameScene(const GameScene& s)
         poses.erase(std::remove_if(poses.begin(), poses.end(), [this](const NodePose& p) { return !m_doc->soloShows(p.node); }),
                     poses.end());
     toms::anim::DrawList draws;
-    toms::anim::appendDraws(*clip, poses, m_tex.atlasSet(), GameScene::placement(viewTransform()), nullptr, draws);
+    const glm::mat3 place = GameScene::placement(viewTransform());
+    toms::anim::appendDraws(*clip, poses, m_tex.atlasSet(), place, nullptr, draws);
+    // View > Held Clip: the weapon's clip of the same name at the `hand` node, in front (as CharacterRig draws it)
+    glm::mat3 hand;
+    if (const toms::anim::Clip* held = m_doc->heldClip(); held && toms::anim::attachPlacement(poses, "hand", place, hand)) {
+        std::vector<NodePose> heldPoses;
+        toms::anim::evaluate(*held, std::min(m_doc->previewTime(), held->duration()), heldPoses);
+        toms::anim::appendDraws(*held, heldPoses, m_tex.atlasSet(), hand, nullptr, draws);
+    }
     draws.submit(&s.ren);
 }
 
@@ -425,15 +458,28 @@ void AnimViewport::drawSkins(QPainter& p, const QTransform& view) const
                                          at(sv.vertices[sv.triangles[t + 2]])}));
             }
         }
-        // The mesh: every triangle's edges.
-        p.setPen(QPen(QColor(255, 255, 255, 80), 1));
-        p.setBrush(Qt::NoBrush);
-        for (size_t t = 0; t + 2 < sv.triangles.size(); t += 3) {
-            const QPointF a = at(sv.vertices[sv.triangles[t]]), b = at(sv.vertices[sv.triangles[t + 1]]),
-                          c = at(sv.vertices[sv.triangles[t + 2]]);
-            p.drawLine(a, b);
-            p.drawLine(b, c);
-            p.drawLine(c, a);
+        // The mesh: every edge once (two triangles share most of them), in one call, without antialiasing -- a mesh has
+        // hundreds of edges, and thin lines drawn one by one, smoothed, made each repaint of a skinned clip cost tens of ms.
+        {
+            std::vector<uint32_t> seen;
+            seen.reserve(sv.triangles.size());
+            QVector<QLineF> lines;
+            lines.reserve(int(sv.triangles.size()));
+            std::vector<QPointF> pts(sv.vertices.size());
+            for (size_t v = 0; v < sv.vertices.size(); v++) pts[v] = at(sv.vertices[v]);
+            for (size_t t = 0; t + 2 < sv.triangles.size(); t += 3)
+                for (int k = 0; k < 3; k++) {
+                    const uint16_t a = sv.triangles[t + size_t(k)], b = sv.triangles[t + size_t((k + 1) % 3)];
+                    seen.push_back(uint32_t(std::min(a, b)) << 16 | std::max(a, b));
+                }
+            std::sort(seen.begin(), seen.end());
+            seen.erase(std::unique(seen.begin(), seen.end()), seen.end());
+            for (uint32_t e : seen) lines.push_back(QLineF(pts[e >> 16], pts[e & 0xffff]));
+            p.save();
+            p.setRenderHint(QPainter::Antialiasing, false);
+            p.setPen(QPen(QColor(255, 255, 255, 80), 1));
+            p.drawLines(lines);
+            p.restore();
         }
         // The points: the colours of the bones they follow, mixed by weight; or how much they follow the selected bone.
         for (size_t v = 0; v < sv.vertices.size(); v++) {
@@ -456,9 +502,9 @@ void AnimViewport::drawSkins(QPainter& p, const QTransform& view) const
             } else {
                 col = sum > 0 ? QColor::fromRgbF(float(r / sum), float(g / sum), float(bl / sum)) : QColor(128, 128, 128);
             }
-            p.setPen(QPen(QColor(0, 0, 0, 200), 1));
-            p.setBrush(col);
-            p.drawEllipse(at(sv.vertices[v]), heat ? 2.5 : 3.5, heat ? 2.5 : 3.5);
+            const QPixmap& dot = vertexDot(col, heat ? 2.5 : 3.5, p.device() ? p.device()->devicePixelRatioF() : 1.0);
+            const QPointF c = at(sv.vertices[v]);
+            p.drawPixmap(c - QPointF(dot.width(), dot.height()) / (2.0 * dot.devicePixelRatio()), dot);
         }
         // The bones: the segment each one's weights are measured against, where the bone has carried it now.
         for (int b = 0; b < bones; b++) {
@@ -485,6 +531,28 @@ void AnimViewport::drawSkins(QPainter& p, const QTransform& view) const
                                                                       : tr("%1 (no such node)").arg(QString::fromStdString(sv.bones[size_t(b)])));
         }
     }
+}
+
+// A point of a skin's mesh: a dot in `col` with a dark rim, made once per colour (to 5 bits a channel) and size, then
+// stamped -- hundreds of points a repaint, each an antialiased ellipse with its own pen and brush, were most of its cost.
+const QPixmap& AnimViewport::vertexDot(const QColor& col, double radius, double dpr) const
+{
+    const QColor q((col.red() & 0xf8) | 4, (col.green() & 0xf8) | 4, (col.blue() & 0xf8) | 4);
+    const quint64 key = quint64(q.rgb() & 0xffffff) | quint64(radius * 2) << 24 | quint64(dpr * 4) << 32;
+    auto it = m_dots.find(key);
+    if (it != m_dots.end()) return it.value();
+    const double size = 2 * radius + 2;
+    QPixmap pm(int(std::ceil(size * dpr)), int(std::ceil(size * dpr)));
+    pm.setDevicePixelRatio(dpr);
+    pm.fill(Qt::transparent);
+    QPainter d(&pm);
+    d.setRenderHint(QPainter::Antialiasing, true);
+    d.setPen(QPen(QColor(0, 0, 0, 200), 1));
+    d.setBrush(q);
+    d.drawEllipse(QPointF(size / 2, size / 2), radius, radius);
+    d.end();
+    if (m_dots.size() > 4096) m_dots.clear();
+    return m_dots.insert(key, pm).value();
 }
 
 QColor AnimViewport::weightColor(double w)

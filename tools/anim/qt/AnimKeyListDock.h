@@ -21,7 +21,7 @@ class AnimKeyListDock : public QDockWidget
     Q_OBJECT
 
 public:
-    enum Column { ColIndex, ColTime, ColPos, ColRot, ColScale, ColColor, ColSprite, ColVisible, ColEvent, ColDeform, ColEase, ColCount };
+    enum Column { ColIndex, ColTime, ColPos, ColRot, ColScale, ColColor, ColSprite, ColVisible, ColEvent, ColDeform, ColFx, ColTrail, ColEase, ColCount };
 
     explicit AnimKeyListDock(AnimDocument* doc, QWidget* parent = nullptr);
 

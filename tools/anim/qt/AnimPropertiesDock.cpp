@@ -178,6 +178,83 @@ AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
     nf->addRow(tr("Lattice"), row(m_nodeBox, {{QStringLiteral("x"), m_latticeCols}, {QStringLiteral("y"), m_latticeRows}}));
     layout->addWidget(m_nodeBox);
 
+    // ---- effect and trail (docs/engine/18_NODE_EFFECTS.md) ----
+    m_fxBox = new QGroupBox(tr("Effect"), body);
+    auto* ff = new QFormLayout(m_fxBox);
+    m_fxShader = new QComboBox(m_fxBox);
+    m_fxShader->addItems({tr("(none)"), tr("Group"), tr("Motion blur"), tr("Glow (HDR)"), tr("Flash"), tr("Outline")});
+    m_fxShader->setToolTip(tr("This node and its whole subtree are drawn into a picture of their own, then drawn through "
+                              "this shader. Nodes outside the subtree are not touched; effects nest. "
+                              "docs/engine/18_NODE_EFFECTS.md"));
+    connect(m_fxShader, &QComboBox::currentIndexChanged, this, [this](int i) {
+        if (!m_updating) m_doc->editSelected(tr("Effect"), [i](Node& n) { n.fx.shader = toms::anim::FxShader(i); });
+    });
+    ff->addRow(tr("Shader"), m_fxShader);
+    QWidget* params = new QWidget(m_fxBox);
+    auto* pg = new QGridLayout(params);
+    pg->setContentsMargins(0, 0, 0, 0);
+    for (int i = 0; i < 4; i++) {
+        m_fxParamNames[i] = new QLabel(params);
+        m_fxParam[i] = dspin(-9999, 9999, 3, 0.1, params);
+        pg->addWidget(m_fxParamNames[i], i / 2, (i % 2) * 2);
+        pg->addWidget(m_fxParam[i], i / 2, (i % 2) * 2 + 1);
+        connect(m_fxParam[i], &QDoubleSpinBox::valueChanged, this, [this] {
+            if (m_updating || !m_doc->selectedNode()) return;
+            Value v;
+            v.v = {float(m_fxParam[0]->value()), float(m_fxParam[1]->value()), float(m_fxParam[2]->value()), float(m_fxParam[3]->value())};
+            m_doc->setChannel(Channel::Fx, v, QStringLiteral("prop.fx.") + pathToString(m_doc->selectedPath()));
+        });
+    }
+    ff->addRow(tr("Params"), row(m_fxBox, {{QString(), params}}, makeKeyButton(Channel::Fx, m_fxBox)));
+    for (int i = 0; i < 4; i++) {
+        m_fxColor[i] = dspin(0, 8, 3, 0.05, m_fxBox);
+        connect(m_fxColor[i], &QDoubleSpinBox::valueChanged, this, [this] {
+            if (m_updating) return;
+            const glm::vec4 c(float(m_fxColor[0]->value()), float(m_fxColor[1]->value()), float(m_fxColor[2]->value()), float(m_fxColor[3]->value()));
+            m_doc->editSelected(tr("Effect colour"), [c](Node& n) { n.fx.color = c; },
+                                QStringLiteral("prop.fxcolor") + pathToString(m_doc->selectedPath()));
+        });
+    }
+    ff->addRow(tr("Colour"), row(m_fxBox, {{QStringLiteral("r"), m_fxColor[0]}, {QStringLiteral("g"), m_fxColor[1]},
+                                           {QStringLiteral("b"), m_fxColor[2]}, {QStringLiteral("a"), m_fxColor[3]}}));
+    m_trailCount = new QSpinBox(m_fxBox);
+    m_trailCount->setRange(0, toms::anim::kMaxTrail);
+    m_trailCount->setKeyboardTracking(false);
+    m_trailCount->setToolTip(tr("Afterimages: copies of this subtree as it was a little earlier, fading, drawn behind it. 0 = none"));
+    m_trailGap = dspin(0.005, 1, 3, 0.005, m_fxBox);
+    m_trailGap->setToolTip(tr("Seconds between two afterimages"));
+    m_trailAdd = new QCheckBox(tr("Add"), m_fxBox);
+    m_trailAdd->setToolTip(tr("Additive afterimages (light) instead of normal blending"));
+    auto trailEdit = [this] {
+        if (m_updating) return;
+        toms::anim::NodeTrail t;
+        t.count = m_trailCount->value();
+        t.gap = float(m_trailGap->value());
+        t.color = {float(m_trailColor[0]->value()), float(m_trailColor[1]->value()), float(m_trailColor[2]->value()), float(m_trailColor[3]->value())};
+        t.additive = m_trailAdd->isChecked();
+        m_doc->editSelected(tr("Trail"), [t](Node& n) { n.trail = t; }, QStringLiteral("prop.trail") + pathToString(m_doc->selectedPath()));
+    };
+    for (int i = 0; i < 4; i++) {
+        m_trailColor[i] = dspin(0, 1, 3, 0.05, m_fxBox);
+        connect(m_trailColor[i], &QDoubleSpinBox::valueChanged, this, trailEdit);
+    }
+    connect(m_trailCount, &QSpinBox::valueChanged, this, trailEdit);
+    connect(m_trailGap, &QDoubleSpinBox::valueChanged, this, trailEdit);
+    connect(m_trailAdd, &QCheckBox::toggled, this, trailEdit);
+    ff->addRow(tr("Trail"), row(m_fxBox, {{tr("count"), m_trailCount}, {tr("gap"), m_trailGap}}, m_trailAdd));
+    ff->addRow(QString(), row(m_fxBox, {{QStringLiteral("r"), m_trailColor[0]}, {QStringLiteral("g"), m_trailColor[1]},
+                                         {QStringLiteral("b"), m_trailColor[2]}, {QStringLiteral("a"), m_trailColor[3]}}));
+    m_trailStrength = dspin(0, 1, 3, 0.05, m_fxBox);
+    m_trailStrength->setToolTip(tr("The afterimages' strength at the playhead (0..1; keyed like the other channels)"));
+    connect(m_trailStrength, &QDoubleSpinBox::valueChanged, this, [this] {
+        if (m_updating || !m_doc->selectedNode()) return;
+        Value v;
+        v.v = {float(m_trailStrength->value()), 0, 0, 0};
+        m_doc->setChannel(Channel::Trail, v, QStringLiteral("prop.trailkey.") + pathToString(m_doc->selectedPath()));
+    });
+    ff->addRow(tr("Strength"), row(m_fxBox, {{QString(), m_trailStrength}}, makeKeyButton(Channel::Trail, m_fxBox)));
+    layout->addWidget(m_fxBox);
+
     // ---- at the playhead ----
     m_playBox = new QGroupBox(tr("At playhead"), body);
     auto* pf = new QFormLayout(m_playBox);
@@ -365,6 +442,33 @@ void AnimPropertiesDock::commitChannel(Channel c)
     m_doc->setChannel(c, v, QStringLiteral("prop.%1.%2").arg(QLatin1String(channelName(c)), pathToString(m_doc->selectedPath())));
 }
 
+// The effect's params and the trail's strength at the playhead; the params' names follow the shader.
+void AnimPropertiesDock::refreshEffect(const Node* n)
+{
+    m_fxBox->setEnabled(n != nullptr);
+    const int shader = n ? int(n->fx.shader) : 0;
+    static const char* kNames[6][4] = {{"", "", "", ""},
+                                       {"", "", "", ""},
+                                       {QT_TR_NOOP("dx"), QT_TR_NOOP("dy"), QT_TR_NOOP("auto"), ""},
+                                       {QT_TR_NOOP("intensity"), QT_TR_NOOP("radius"), QT_TR_NOOP("threshold"), QT_TR_NOOP("bloom")},
+                                       {QT_TR_NOOP("amount"), "", "", ""},
+                                       {QT_TR_NOOP("width"), QT_TR_NOOP("intensity"), "", ""}};
+    for (int i = 0; i < 4; i++) {
+        const bool used = kNames[shader][i][0] != 0;
+        m_fxParamNames[i]->setText(used ? tr(kNames[shader][i]) : QString());
+        m_fxParamNames[i]->setVisible(used);
+        m_fxParam[i]->setVisible(used);
+    }
+    if (!n) return;
+    const glm::vec4 p = toms::anim::fxParamsAt(*n, m_doc->time());
+    for (int i = 0; i < 4; i++) {
+        const QSignalBlocker b(m_fxParam[i]);
+        m_fxParam[i]->setValue(p[i]);
+    }
+    const QSignalBlocker b(m_trailStrength);
+    m_trailStrength->setValue(toms::anim::trailAt(*n, m_doc->time()));
+}
+
 bool AnimPropertiesDock::bonesOutsideShown() const { return m_bonesOutside->isVisibleTo(m_nodeBox); }
 
 QString AnimPropertiesDock::skinInfoText() const { return m_skinInfo->isVisibleTo(m_nodeBox) ? m_skinInfo->text() : QString(); }
@@ -447,6 +551,12 @@ void AnimPropertiesDock::refresh()
         }
         m_latticeCols->setValue(n->latticeCols());
         m_latticeRows->setValue(n->latticeRows());
+        m_fxShader->setCurrentIndex(int(n->fx.shader));
+        for (int i = 0; i < 4; i++) m_fxColor[i]->setValue(n->fx.color[i]);
+        m_trailCount->setValue(n->trail.count);
+        m_trailGap->setValue(n->trail.gap);
+        for (int i = 0; i < 4; i++) m_trailColor[i]->setValue(n->trail.color[i]);
+        m_trailAdd->setChecked(n->trail.additive);
     } else {
         m_nodeBox->setTitle(tr("Node"));
     }
@@ -462,6 +572,7 @@ void AnimPropertiesDock::refreshPlayhead()
     m_playBox->setEnabled(n != nullptr);
     m_easeBox->setEnabled(n != nullptr);
     m_playLabel->setText(tr("t = %1 s   auto-key %2").arg(t, 0, 'f', 3).arg(m_doc->autoKey() ? tr("ON (edits write keys)") : tr("off (edits change rest values)")));
+    refreshEffect(n);
     if (n) {
         const glm::vec3 p = toms::anim::positionAt(*n, t), r = toms::anim::rotationAt(*n, t), s = toms::anim::scaleAt(*n, t);
         const glm::vec4 c = toms::anim::colorAt(*n, t);
