@@ -50,6 +50,9 @@ struct GameSettings {
     std::string playerLook;
     // See kDefaultParticleGpuThreshold. Read whenever a particle effect starts.
     int particleGpuThreshold = kDefaultParticleGpuThreshold;
+    // Settings > "Reduce shaking and flashes" (docs/gameplay/15 §3.8): the battle's hit stops and shakes a quarter as
+    // strong, no flashes, no slow motion.
+    bool reduceEffects = false;
 };
 
 nlohmann::json toJson(const GameSettings& s);

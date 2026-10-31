@@ -338,6 +338,13 @@ bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32
         float bx = 0, by = 0;
         const bool onGame = in.hasMouse && renderer_->deviceToDesign(in.mouseX, in.mouseY, bx, by);
         if (onGame) ctx->ProcessMouseMove((int)bx, (int)by, 0);
+        if (onGame) {   // the battle's own plays read the pointer themselves (touch_play.h), but not a press on a button
+            int phase = in.mouseLeft ? (mouseWasDown_ ? 1 : 0) : (mouseWasDown_ ? 2 : -1);
+            if (phase == 0)
+                for (Rml::Element* e = ctx->GetHoverElement(); e; e = e->GetParentNode())
+                    if (e->IsClassSet("btn")) { phase = -1; break; }
+            if (phase >= 0) g.battlePointer(phase, bx, by);
+        }
         if (in.mouseLeft && !mouseWasDown_) {
             const bool free = ctx->ProcessMouseButtonDown(0, 0);
             mousePressFree_ = free && onGame;

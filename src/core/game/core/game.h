@@ -38,6 +38,7 @@
 #include "res_keys.h"        // toms::key / toms::pattern -- every file by key (assets/media/resources.json)
 #include "weapon_play.h"     // toms::WeaponPlayTable -- data/weapon_play.json (docs/gameplay/07_GAMEPLAY_PLAN.md §5.6)
 #include "combo_play.h"      // toms::ComboPlay -- Battle v3's point play (docs/gameplay/07 §4, §5.1)
+#include "touch_play.h"      // toms::TouchPlay -- each weapon's own play: bow, slice, circles (docs/gameplay/15 §3.3)
 #include "battle_party.h"    // toms::nextStanding, BattleEvent -- 1-3 monsters, the battle log (docs/gameplay/13 §4.6)
 #include "battle_rules.h"    // toms::LooksTable, MonsterEvent, MovesTable, PaceSettings, BreakSettings (docs/gameplay/13)
 #include "mini_game.h"       // toms::MiniGameTable -- reusable reward events (docs/gameplay/07 phase 6)
@@ -165,6 +166,11 @@ struct CombatState : public Trackable {
     // Battle v3 (docs/gameplay/07 phase 1): the attack is the point play. While the attack waits (not cooling, no combo), charge
     // builds up (chargeMs); the first tap starts the combo with it.
     toms::ComboPlay combo;
+    // each weapon's own play (touch_play.h; weapon_play.json "play"): armed over the target when the attack is ready,
+    // started by its first touch, which takes the charge so far (touchCharge) and the stamina (touchPaid)
+    toms::TouchPlay touch;
+    float touchCharge = 0.0f;
+    bool touchPaid = false;
     int chargeMs = 0;
     bool shieldBanked = false;
     float shieldPower = 0.0f;
@@ -200,8 +206,37 @@ struct CombatState : public Trackable {
     // attack is over. Set by an attack (data/battle.json "attack_pause_ms"), counted down by Game::update.
     int attackPauseMs = 0;
     // Damage numbers rising over a fighter: added when the hit lands (a safe timer after the attack starts).
-    struct Popup { std::string text; int who = 0; int kind = 0; int ageMs = 0; toms::Tween rise; };   // who: -1 the player, 0.. a foe; kind 0 hit, 1 big, 2 guard
+    // A damage number or a word rising over a fighter. who: -1 the player, 0.. a foe. style: battle.rcss's .popup.<style>
+    // (hit, great, perfect, miss, guard; the words parry, block, early, chain, move-<tier>); lift: words sit higher.
+    struct Popup { std::string text; int who = 0; std::string style = "hit"; int lift = 0; int ageMs = 0; toms::Tween rise; };
     std::vector<Popup> popups;
+    // ---- the revamp (docs/gameplay/15_BATTLE_REVAMP.md) ----
+    int frameDt = 0;               // the battle's time this frame: 0 in a hit stop, slower in the last hit's slow motion
+    int hitStopMs = 0;             // both sides freeze (15 §3.8)
+    int slowMs = 0;                // the last hit in slow motion, then the win
+    float slowScale = 1.0f, slowCarry = 0.0f;
+    bool winPending = false;       // won, the slow motion still running (finishCombatWin follows)
+    float shakePx = 0.0f;          // the screen shakes this far, fading over shakeMsMax
+    int shakeMs = 0, shakeMsMax = 1;
+    int dimMs = 0;                 // a break dims the screen a moment
+    std::string banner, bannerKind;   // across the screen: "BREAK!" (break), a monster's line (line), the ultimate (ultimate)
+    int bannerMs = 0, bannerMsMax = 1;
+    int chain = 0, bestChain = 0;  // perfects in a row (15 §3.4); a miss resets it
+    int perfects = 0, attacksDone = 0, damageTaken = 0;   // for the grade
+    int guardAtMs = -1;            // the timed guard: when it was pressed (battle time), -1 none
+    int guardCdMs = 0;
+    bool ultimate = false;         // the running combo is the ultimate
+    // The result screen of a win (15 §3.6): filled by finishCombatWin.
+    struct Result {
+        bool valid = false;
+        std::string grade;         // S / A / B / C
+        int score = 0;
+        float seconds = 0.0f;
+        int gold = 0, exp = 0;
+        std::string card;          // its line ("New card: Slime"), or ""
+        std::string weapon;        // the weapon's key in weapon_play.json
+        int lvBefore = 1, lvAfter = 1, uses = 0;
+    } result;
     TOMS_OBJECT(CombatState)
 };
 
@@ -324,6 +359,9 @@ public:
     void battleTapAttack();
     void battleTapDefense();
     void battleTapSuper();
+    // The pointer over the battle (design pixels; 0 down, 1 held, 2 up), every frame: the weapon's own play
+    // (touch_play.h) reads it. The session leaves out a press that lands on a button (battle.rml .btn).
+    void battlePointer(int phase, float x, float y);
     // S7 (equipment actives, first slice): the 4th battle action -- a no-op unless the currently
     // equipped gear grants one (equippedActives()) and it hasn't been spent this battle already.
     void battleTapActive();
@@ -338,6 +376,10 @@ public:
     // The battle editor: end the battle as won (every monster falls) / fire a monster's event now (its index in
     // enemies.json "events"). Both no-ops without a battle.
     void debugForceWin();
+    // Settings > "Reduce shaking and flashes" (docs/gameplay/15 §3.8): hit stops, shakes and flashes a quarter as
+    // strong, no slow motion. Saved in the settings file.
+    bool reduceEffects() const { return settings_.reduceEffects; }
+    void setReduceEffects(bool on);
     void debugFireFoeEvent(int foe, int event);
     int battleFoeCount() const { return cs.active ? (int)cs.foes.size() : 0; }
     // The battle editor: a monster's enemies.json record, edited while it fights. Every foe of that id in the running
@@ -482,6 +524,7 @@ public:
     // The scenario's "test" block: frames to run and scripted keys (toms_game --scenario-test), or 0 / "".
     int scenarioTestFrames() const { return scenarioTestFrames_; }
     const std::string& scenarioTestKeys() const { return scenarioTestKeys_; }
+    const std::string& scenarioTestClicks() const { return scenarioTestClicks_; }
     // Resumes slot N (1-based). Returns false (and leaves the title open) when that slot has no
     // save, so the caller can show "no save here" instead of dropping the player into nothing.
     bool continueFromSlot(int slot);
@@ -619,7 +662,15 @@ private:
     // damage if none is, and calls finishCombatLose on a kill. The UI shows either bar at its live
     // auto-moving position (frozen while cooling down after a tap).
     void resolveAttackTap();
-    void resolveCombo();                            // Battle v3: the combo ended -- its damage, then the cooldown
+    // Battle v3: the combo ended -- its damage, then the cooldown. played: a touch play's result (else the track's)
+    void resolveCombo(const toms::ComboResult* played = nullptr);
+    toms::PlayKind battlePlayKind() const;          // the worn weapon's play; a scenario's "play" (scenarios: the track)
+    bool attackRunning() const { return cs.combo.running() || (cs.touch.running() && cs.touch.started()); }
+    glm::vec4 touchArea() const;                    // where a touch play's targets go: around the target monster
+    void armTouchPlay(bool ultimate, int points);   // a new touch play over the target (waits for its first touch)
+    void stepTouchPlay(int dtMs);                   // its time, while it runs
+    void touchPlayed(int indexBefore, int hitsBefore);   // after its pointer or time: a sound per arrow, resolve when done
+    bool touchHeld_ = false;                        // the press that is held began on the play (not on a button)
     // Weapon levels (docs/gameplay/07 phase 1): the equipped weapon's key in weapon_play.json ("unarmed" for none), its level
     // from the wins with it, and its play settings.
     std::string weaponKey() const;
@@ -647,6 +698,13 @@ private:
     void foeDown(int foe);
     std::vector<EnemyInst> partyOf(const EnemyInst& lead);
     bool afterPlayerHit(const std::string& hitLog, const std::string& winLog);   // true: the battle was won
+    // ---- the revamp (docs/gameplay/15) ----
+    int battleFrame(int dtMs);                       // the battle's time this frame (hit stop, slow motion) and its effects
+    void feelMoment(const std::string& moment);      // a moment's hit stop, shake and sound (data/battle.json "feel")
+    void popWord(const std::string& text, int who, const std::string& style);   // a word over a fighter, now
+    void touchPlayUi(toms::UiBattle& b) const;      // the weapon's own play, drawn (GameUi: battle.rml .tp)
+    void showBanner(const std::string& text, const std::string& kind, int ms);
+    void startWinMoment();                           // the last one fell: slow motion, then finishCombatWin
     void battleEvent(const std::string& type, int who, int whom, int value = 0, const std::string& note = std::string());
     bool battleLogToStderr_ = false;
     // Builds the EnemyInst for a monster tile and starts the fight (or its dialogue gate); shared
@@ -1150,13 +1208,18 @@ private:
     toms::MovesTable moves_;             // data/moves.json: the monsters' moves (docs/gameplay/13 §6.1)
     toms::PaceSettings paceSettings_;    // data/battle.json "pace", "stamina"
     toms::BreakSettings breakSettings_;  // data/battle.json "break"
+    toms::FeelSettings feel_;            // data/battle.json "feel" (docs/gameplay/15 §3.8)
+    toms::GradeSettings grade_;          // "grade" (§3.6)
+    toms::GuardSettings guard_;          // "guard" (§3.2): the timed button, or the bar
+    std::mt19937 shakeRng_{20261031u};
+    std::string playOverride_;           // a scenario's battle "play" ("" = the weapon's; scenarios: "track" unless set)
     std::string paceOverride_;           // setBattlePace / a scenario's "pace" ("" = the weapon's or the file's)
     bool comboHoldsMonsters_ = false;    // data/battle.json "combo_holds_monsters": their clocks wait for a running combo
     bool comboRunsThroughAttacks_ = true;   // "combo_runs_through_attacks": a combo's marker keeps moving in an attack pause
     nlohmann::json battleJson_ = nlohmann::json::object();   // data/battle.json as read (a scenario's "rules" patch it)
     std::mt19937 moveRng_{20261025u};    // the monsters' next moves (reseeded each battle: the same fight goes the same way)
     void startAttackPause();
-    void popDamage(int dmg, int who, int kind);   // a damage number over who (-1 the player, 0.. a foe), hitNumberDelayMs_ from now
+    void popDamage(int dmg, int who, const std::string& style);   // a damage number over who (-1 the player, 0.. a foe), hitNumberDelayMs_ from now
     // current stage id
     std::string curStage;
     std::string dataDir;
@@ -1387,6 +1450,7 @@ private:
     nlohmann::json scenarioExpect_;
     int scenarioTestFrames_ = 0;
     std::string scenarioTestKeys_;
+    std::string scenarioTestClicks_;
     // The weapon test arena (scene "arena", toms_game --arena; docs/gameplay/07_GAMEPLAY_PLAN.md phase 0): fight after fight
     // against the listed enemies in turn, full HP each time, no rewards and no story effects (no deaths counted).
     struct Arena {

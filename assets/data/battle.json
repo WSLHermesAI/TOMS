@@ -20,7 +20,15 @@
     "combo_holds_monsters: false (the owner 2026-10-26) = the monsters keep charging while the player's combo runs, and their",
     "attack lands in the middle of it; true = their clocks wait for the combo (as before). Quick jabs never wait.",
     "combo_runs_through_attacks: true (the owner 2026-10-30) = a running combo's marker keeps moving through attack_pause_ms",
-    "when a monster attacks in the middle of it; false = the marker stops for that pause (as before)."
+    "when a monster attacks in the middle of it; false = the marker stops for that pause (as before).",
+    "The revamp (docs/gameplay/15_BATTLE_REVAMP.md): feel = the moments' hit stop (stopMs: both sides freeze), screen",
+    "shake (shakePx, over shakeMs) and sound per moment (hit, great, perfect, miss, parry, block, break, hurt, heavyHurt,",
+    "ultimate, phase, win); strength scales them all (Q34); slowMoMs / slowMoScale: the last hit in slow motion;",
+    "reducedScale: the player's 'Reduce shaking and flashes'; chainStep: each perfect in a row adds this much damage.",
+    "grade = the win's S / A / B / C (Q35): 100 - seconds over par x timePenalty - HP lost share x damagePenalty +",
+    "perfect rate x perfectBonus + best chain x chainBonus; s / a / b the lowest score of each; an S gives sGold more gold",
+    "and a card sCard likelier. guard: mode 'timing' = one button pressed just before a hit (parryMs: a parry, blockMs:",
+    "blocked at blockPower, earlyMs: too early), cooldownMs between presses; 'bar' = the five-zone bar of Battle v2."
   ],
   "bar_slow_speed_scale": 0.5,
   "bar_fast_speed_scale": 10,
@@ -32,5 +40,18 @@
   "pace": "cooldown",
   "stamina": { "max": 100, "regenPerS": 30, "attack": 40, "guard": 20 },
   "break": { "points": 8, "brokenMs": 3000, "brokenDamage": 1.5, "parryMs": 1500, "parryDamage": 2.0, "parryPower": 85,
-             "parryBreak": 3, "guardBreak": 2 }
+             "parryBreak": 3, "guardBreak": 2 },
+  "feel": {
+    "strength": 1.0,
+    "stopMs": { "hit": 25, "great": 50, "perfect": 80, "parry": 90, "break": 120, "hurt": 30, "heavyHurt": 60, "ultimate": 120 },
+    "shakePx": { "hit": 2, "great": 4, "perfect": 7, "parry": 4, "break": 9, "hurt": 4, "heavyHurt": 8, "ultimate": 10, "phase": 6 },
+    "shakeMs": 250,
+    "sounds": { "hit": "battle_hit", "great": "battle_great", "perfect": "battle_perfect", "miss": "battle_miss",
+                "parry": "battle_parry", "block": "battle_block", "break": "battle_break", "ultimate": "battle_ultimate",
+                "phase": "battle_phase", "win": "battle_win" },
+    "slowMoMs": 450, "slowMoScale": 0.3, "reducedScale": 0.25, "chainStep": 0.1, "chainMax": 10
+  },
+  "grade": { "parSeconds": 25, "timePenalty": 1.5, "damagePenalty": 60, "perfectBonus": 30, "chainBonus": 3,
+             "s": 95, "a": 75, "b": 55, "sGold": 0.2, "sCard": 0.25 },
+  "guard": { "mode": "timing", "parryMs": 160, "blockMs": 550, "earlyMs": 1200, "blockPower": 70, "cooldownMs": 700 }
 }

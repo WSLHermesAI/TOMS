@@ -100,6 +100,7 @@ ojson setupToScenario(const Setup& s) {
         if (!party.empty()) b["party"] = party;
     }
     if (!s.pace.empty()) b["pace"] = s.pace;
+    b["play"] = "weapon";   // the weapon's own play (bow, sword, staff), as in the game
     j["battle"] = b;
     ojson ed = ojson::object();   // the setup as the editor holds it
     ed["name"] = s.name;

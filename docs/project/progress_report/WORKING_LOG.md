@@ -744,3 +744,14 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     `smoke.anim_fx`; by name `unit.anim_clip_test`, `smoke.anim_skin / anim_deform / mesh / mesh_cpu` pass;
     `anim.editor_selftest` fails two checks on HEAD too; `smoke.anim`, `smoke.battle` have no references. All tests,
     web and Android not run.
+- **2026-10-31** — **The battle revamp: design, prototype, R1–R5 in the game** ([DAILY_2026-10-31.md](DAILY_2026-10-31.md); design committed `e07043a`, game work not committed):
+  - Design `docs/gameplay/15_BATTLE_REVAMP.md` (+ zh_TW) and `battle_editor/revamp_prototype.html`; the owner: the
+    attack is the play (no Attack button, the panel a status).
+  - Rules: `battle_rules.h` FeelSettings / GradeSettings / GuardSettings (`battle.json` `"feel"`, `"grade"`,
+    `"guard"`); `touch_play.h` (bow, slice, circles) on combo_play's ComboResult; `weapon_play.json` `"play"` and
+    `"move"`. Game: `battleFrame` (hit stop, slow motion), `feelMoment`, banners, the result, the timed guard, the
+    chain, the ultimate, `battlePointer` from the session (not on `.btn`), `armTouchPlay`, `touchPlayUi`.
+  - Screen: battle.rml / .rcss rewritten (guard + attack panels, banner, result, `.tp` play pieces); 38 text keys;
+    the UI font rebuilt; `tools/make_battle_sfx.py` (10 wavs); settings "Reduce shaking and flashes".
+  - Tests: changed-only 20 of 227 pass; new `unit.touch_play_test` and 6 scenarios pass; 41 of 42 switched-off
+    battle tests by name pass (`smoke.battle` has no reference). All tests, web and Android not run.

@@ -238,3 +238,29 @@ R1 and R2 first: in a few days the battle feels and pays off, with nothing else 
 | Q38 | **Order:** start with R1 + R2 (feel and reward), or with the bow's own play (R5)? | R1 + R2 first |
 
 The open questions of 14 (Q27–Q33: the weapon plays and the loot grind) are needed before R5 and R7.
+
+## 10. Built (2026-10-31)
+
+R1 to R5 are in the game, with the proposals of Q34 to Q38 as the answers until the owner says otherwise, and the
+attack as the play (§4: the play waits over the monster, its first touch starts it, the attack panel only shows ready
+or recovering). The prototype `battle_editor/revamp_prototype.html` was the model.
+
+| Step | In the game | Where |
+|---|---|---|
+| R1 feel | hit stop, shake and sound per moment; numbers and words by tier; the last hit in slow motion; "Reduce shaking and flashes" in the settings | `battle.json` `"feel"`; `battle_rules.h` FeelSettings; `Game::battleFrame`, `feelMoment` |
+| R2 reward | the result screen: grade S / A / B / C, time, best chain, perfects, the weapon's progress and its next level, gold, the card; an S gives +20 % gold and a likelier card | `battle.json` `"grade"`; `battleGrade`; `finishCombatWin`; battle.rml `#result` |
+| R3 screen | one GUARD button pressed just before a hit (parry ≤ 160 ms, block ≤ 550 ms, too early ≤ 1200 ms; the five-zone bar is `"guard": {"mode": "bar"}`); the attack's state panel; no global clock; landscape and portrait | `battle.json` `"guard"`; `guardTiming`; battle.rml / battle.rcss |
+| R4 break and burst | the BREAK! banner and dim; a monster's line as a banner; the perfect chain (+10 % damage per step, up to 10); the ultimate: a cut-in, then a harder play (2 more points, full charge), ×2 damage, ×4 in a break, the big clip | `stunFoe`, `resolveCombo`, `battleTapSuper` |
+| R5 each weapon's play | the bow: drag back and let go, the crosshair goes the other way (one target per arrow, 3 s each); the sword: swipe each arrow's way (1.6 s per cut; the ultimate shows the arrows, then hides them, and a wrong way ends it); the staff: tap each circle as its ring closes (perfect within 80 ms, a hit within 200 ms). Each counts its points like the track, so the result rows, named moves, fx, clips, break and grade stay the same. Named moves per result row | `touch_play.h` (unit test `touch_play_test`); `weapon_play.json` `"play"` and each row's `"move"`; `Game::battlePointer`, `armTouchPlay` |
+
+**Sounds:** `tools/make_battle_sfx.py` writes the ten moment sounds (`assets/media/sfx/battle_*.wav`); better ones can
+replace them under the same names.
+
+**Tests:** scenarios play the old track unless their battle sets `"play"` ([08](08_TEST_SCENARIOS.md)), so the
+existing battle tests keep their keys. New: `battle_guard_early`, `battle_guard_bar`, `battle_result` (grade S),
+`battle_play_bow`, `battle_play_slice`, `battle_play_circles` (a click starts each play; the test runs with
+`"test": {"clicks": ...}`). The battle editor's setups use the weapon's own play (`"play": "weapon"`).
+
+**Not yet:** R6 (skills loadout, weaknesses) and R7 (boss phases, the loot grind); a keyboard way to play the touch
+plays (a desktop player uses the mouse); the plays' numbers (`TouchPlaySettings`) are code defaults, not yet in
+`battle.json`.

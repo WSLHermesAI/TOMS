@@ -5,25 +5,23 @@
     <link type="text/rcss" href="_atlas.rcss"/>
     <link type="text/rcss" href="battle.rcss"/>
 </head>
-<!-- Battle v3 attack (docs/gameplay/07 phase 1): charge while it waits, the first tap starts the marker over the weapon
-     level's points, each tap on a point hits it. Battle v2's defence bar: tap to guard at the marker's zone. Super and the equipment active appear only when usable.
-     After a win, a tap anywhere continues. Data: battle.* (UiBattle).
-     Landscape and portrait (docs/gameplay/12_UI_LAYOUT.md): the same elements, placed by battle.rcss's @media rules. -->
+<!-- The battle screen, revamped (docs/gameplay/15_BATTLE_REVAMP.md): the monsters show their next move; the attack IS the
+     play (the weapon's track, under the fighters: tap it in time; no button starts it); one guard button for the thumbs,
+     pressed just before a hit; the ATTACK panel only says ready / recovering. Moments (BREAK!, a monster's line, the
+     ultimate) cross the screen; a win ends on the result screen (grade, the weapon's progress, the rewards).
+     Data: battle.* (UiBattle). Landscape and portrait (docs/gameplay/12_UI_LAYOUT.md): placed by battle.rcss. -->
 <body data-model="game" data-event-click="act('battle_continue')">
     <!-- no backdrop here: the game draws it (Game::drawBattleRig), under the player and the monster it draws -->
     <div id="title">{{battle.title}}</div>
     <!-- the fighters' boxes: always there, the game places the animated player and monster in them (GameUi reads
          their layout each frame), or their still pictures fill them -->
     <div id="player" class="fighter"><img data-if="!battle.player_anim" data-attr-sprite="battle.player_sprite"/></div>
-    <!-- damage numbers: they rise over the fighter that was hit (UiPopup) -->
-    <!-- (each data-for sits on a wrapper, its bindings on the element inside: when a list shrinks, RmlUi removes the
-         extra rows before it reads them -- see player.rml) -->
-    <div data-for="p : battle.popups"><div class="popup" data-class-big="p.kind == 1" data-class-guard="p.kind == 2"
-         data-style-left="p.x + 'px'" data-style-top="p.y + 'px'" data-style-opacity="p.opacity">{{p.text}}</div></div>
 
     <div id="player-hp" class="hp"><div class="fill-bar good" data-style-width="battle.player_hp_pct + '%'"></div></div>
     <div id="player-hp-text" class="hp-text">{{battle.player_hp_text}}</div>
     <!-- the monsters, one to three (docs/gameplay/13 §4.6): each its box, HP and name; a tap makes it the target -->
+    <!-- (each data-for sits on a wrapper, its bindings on the element inside: when a list shrinks, RmlUi removes the
+         extra rows before it reads them -- see player.rml) -->
     <div data-for="f, i : battle.foes"><div class="foe" data-class-f1="i == 1" data-class-f2="i == 2"
          data-class-n1="battle.foes.size == 1" data-class-n2="battle.foes.size == 2" data-class-n3="battle.foes.size == 3"
          data-class-down="f.down" data-event-click="act('battle_target', i)">
@@ -41,15 +39,22 @@
         <div class="ftext one">{{f.hp_text}}</div>
         <div class="ftext two">{{f.name}}<br/>{{f.hp_line}}</div>
     </div></div>
-    <div id="log">{{battle.log}}</div>
+    <!-- (the message line is gone: short words rise where things happen; cs.log stays for the editor's log) -->
 
     <div data-if="battle.active">
-        <div id="clock-label">{{battle.clock_label}}</div>
-        <div id="clock"><div class="fill-bar clock" data-class-stamina="battle.stamina_pace"
-             data-style-width="battle.clock_pct + '%'"></div></div>
+        <!-- the stamina pace only: its bar (the global enemy clock is gone: each monster shows its own) -->
+        <div data-if="battle.show_clock">
+            <div id="clock-label">{{battle.clock_label}}</div>
+            <div id="clock"><div class="fill-bar clock stamina" data-style-width="battle.clock_pct + '%'"></div></div>
+        </div>
 
-        <div id="attack" class="column">
-            <!-- Battle v3 (docs/gameplay/07 phase 1): the charge, then the track with the weapon level's points -->
+        <!-- the play: the weapon level's points on the track; tap it to start (the charge so far), then on each point -->
+        <!-- or the weapon's own play over the monster (bow, slice, circles; touch_play.h): the game reads the pointer itself
+             (Game::battlePointer), so these boxes only draw it -->
+        <div data-for="t : battle.touch"><div data-attr-class="'tp ' + t.cls" data-style-left="t.x + 'px'" data-style-top="t.y + 'px'"
+             data-style-width="t.w + 'px'" data-style-height="t.h + 'px'" data-style-border-radius="t.radius + 'px'"
+             data-style-transform="'rotate(' + t.rot + 'deg)'" data-style-opacity="t.opacity">{{t.text}}</div></div>
+        <div id="play" data-if="battle.touch_kind == ''" data-class-cooling="battle.combo.cooling" data-event-click="act('battle_attack')">
             <div class="prompt">{{battle.combo.prompt}}</div>
             <div class="combo">
                 <div class="charge"><div class="charge-fill" data-style-height="battle.combo.charge_pct + '%'"></div></div>
@@ -59,14 +64,27 @@
                     <div class="marker" data-visible="battle.combo.running" data-style-left="battle.combo.marker + '%'"></div>
                 </div>
             </div>
-            <div class="action btn" data-class-cooling="battle.combo.cooling || battle.attack_short"
-                 data-event-click="act('battle_attack')">{{battle.combo.button_label}}</div>
             <div class="note">{{battle.combo.level_text}}</div>
-            <div class="note crit" data-if="battle.crit_armed">{{battle.crit_hint}}</div>
         </div>
+        <div id="chain" data-if="battle.chain_text != ''">{{battle.chain_text}}</div>
 
-        <div id="defense" class="column">
-            <div class="prompt">{{battle.defense.prompt}}</div>
+        <div id="super">
+            <span id="super-label">{{battle.super_label}}</span>
+            <div class="dot-slot" data-for="d : battle.super_dots"><div class="dot" data-class-on="d == 1"></div></div>
+        </div>
+        <div id="super-btn" class="btn" data-if="battle.super_ready"
+             data-event-click="act('battle_super')">{{battle.super_button}}</div>
+        <div id="active-btn" class="btn" data-if="battle.active_ready"
+             data-event-click="act('battle_active')">{{battle.active_button}}</div>
+        <div id="crit" data-if="battle.crit_armed">{{battle.crit_hint}}</div>
+
+        <!-- the thumbs: GUARD (one button, just before a hit) and the attack's state (not a button) -->
+        <div id="guard" class="panel btn" data-class-lit="battle.guard_lit" data-class-cooling="battle.guard_cooling"
+             data-if="battle.guard_timing" data-event-click="act('battle_defend')">
+            <div class="plabel">{{battle.guard_label}}</div>
+            <div class="phint">{{battle.guard_hint}}</div>
+        </div>
+        <div id="guard-bar" data-if="!battle.guard_timing">
             <div class="power">
                 <div class="zones">
                     <div class="zone red" data-style-width="battle.defense.red_l + '%'"></div>
@@ -78,20 +96,43 @@
                 <div class="bar-dim" data-visible="battle.defense.cooling"></div>
                 <div class="marker" data-style-left="battle.defense.marker + '%'"></div>
             </div>
-            <div class="action btn" data-class-cooling="battle.defense.cooling || battle.guard_short"
-                 data-event-click="act('battle_defend')">{{battle.defense.button_label}}</div>
-            <div class="note" data-class-shield="battle.shield_armed">{{battle.shield_text}}</div>
+            <div class="panel btn" data-class-cooling="battle.defense.cooling || battle.guard_short"
+                 data-event-click="act('battle_defend')"><div class="plabel">{{battle.defense.button_label}}</div></div>
         </div>
-
-        <div id="super">
-            <span id="super-label">{{battle.super_label}}</span>
-            <div class="dot-slot" data-for="d : battle.super_dots"><div class="dot" data-class-on="d == 1"></div></div>
+        <div id="attack-state" class="panel" data-class-ready="battle.attack_state == 'ready'"
+             data-class-running="battle.attack_state == 'running'" data-class-recovering="battle.attack_state == 'recovering'"
+             data-class-short="battle.attack_state == 'short'">
+            <div class="pfill" data-if="battle.attack_state == 'recovering'" data-style-width="battle.attack_pct + '%'"></div>
+            <div class="plabel">{{battle.attack_label}}</div>
+            <div class="phint">{{battle.attack_hint}}</div>
         </div>
-        <div id="super-btn" class="wide btn" data-if="battle.super_ready"
-             data-event-click="act('battle_super')">{{battle.super_button}}</div>
-        <div id="active-btn" class="wide btn" data-if="battle.active_ready"
-             data-event-click="act('battle_active')">{{battle.active_button}}</div>
     </div>
-    <div id="continue" data-if="!battle.active">{{battle.continue_hint}}</div>
+
+    <!-- damage numbers and words: they rise over the fighter (UiPopup) -->
+    <div data-for="p : battle.popups"><div data-attr-class="'popup ' + p.style"
+         data-style-left="p.x + 'px'" data-style-top="p.y + 'px'" data-style-opacity="p.opacity">{{p.text}}</div></div>
+
+    <!-- a moment across the screen: BREAK!, a monster's line, the ultimate's cut-in (docs/gameplay/15 §3.4) -->
+    <div id="banner" data-if="battle.banner != ''" data-attr-class="battle.banner_kind" data-style-opacity="battle.banner_opacity">
+        <div id="banner-text" data-style-margin-left="battle.banner_shift + 'px'">{{battle.banner}}</div>
+    </div>
+
+    <!-- the result of a win (§3.6): the grade, the weapon's progress and what its next level adds, the rewards -->
+    <div id="result" data-if="battle.result_shown">
+        <div id="result-box">
+            <div id="result-title">{{battle.result_title}}</div>
+            <div id="grade" data-class-s="battle.grade_s">{{battle.grade}}</div>
+            <div class="rline dim">{{battle.result_stats}}</div>
+            <div class="rline weapon">{{battle.result_weapon}}</div>
+            <div id="wbar"><div id="wfill" data-style-width="battle.result_pct + '%'"></div></div>
+            <div class="rline dim">{{battle.result_progress}}</div>
+            <div class="rline up" data-if="battle.result_levelup != ''">{{battle.result_levelup}}</div>
+            <div class="rline next" data-if="battle.result_next != ''">{{battle.result_next}}</div>
+            <div class="rline gold">{{battle.result_gold}}</div>
+            <div class="rline card" data-if="battle.result_card != ''">{{battle.result_card}}</div>
+            <div class="rline dim tap">{{battle.continue_hint}}</div>
+        </div>
+    </div>
+    <div id="continue" data-if="!battle.active && !battle.result_shown">{{battle.continue_hint}}</div>
 </body>
 </rml>

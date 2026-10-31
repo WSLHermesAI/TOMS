@@ -95,7 +95,17 @@ struct UiPopup {                       // a damage number rising over a fighter 
     std::string text;
     float x = 0, y = 0;                // design px: its box's left / top
     float opacity = 1;
-    int kind = 0;                      // 0 a hit, 1 a big hit (super), 2 a guarded hit
+    std::string style = "hit";         // battle.rcss .popup.<style>: hit great perfect miss guard hurt, and the words
+                                       // parry block early chain move-<tier> (docs/gameplay/15 §3.8)
+};
+
+struct UiTouchItem {                   // one piece of a weapon's own play (touch_play.h): a target, the aim, an arrow, a circle
+    std::string cls;                   // battle.rcss .tp.<cls>
+    float x = 0, y = 0, w = 0, h = 0;  // design px: its box (it turns about its middle)
+    float rot = 0;                     // degrees, clockwise
+    float radius = 0;                  // px: round corners (a ring: half its size)
+    float opacity = 1;
+    std::string text;
 };
 
 struct UiFoe {                         // one monster of the battle (docs/gameplay/13 §4.6)
@@ -136,7 +146,24 @@ struct UiBattle {
     bool active_ready = false;
     std::string active_button;
     std::vector<UiPopup> popups;
+    std::string touch_kind;            // the weapon's own play: bow, slice, circles ("" = the track; docs/gameplay/15 §3.3)
+    std::vector<UiTouchItem> touch;    // what it draws over the monster
     std::vector<UiFoe> foes;           // 1..3; foes[0] is enemy_* above
+    // ---- the revamp (docs/gameplay/15_BATTLE_REVAMP.md) ----
+    std::string banner, banner_kind;   // across the screen: break / line / ultimate
+    float banner_opacity = 0, banner_shift = 0;   // its slide in and out (px)
+    std::string chain_text;            // "Chain ×3" (§3.4)
+    bool guard_timing = true;          // one guard button (§3.2); false: the five-zone bar (an option)
+    bool guard_lit = false, guard_cooling = false;
+    std::string guard_label, guard_hint;
+    std::string attack_state;          // ready / running / recovering / short: the attack is the play, this only shows it
+    std::string attack_label, attack_hint;
+    float attack_pct = 0;              // recovering: how far
+    bool show_clock = false;           // the stamina pace's bar (the global enemy clock is gone: §4)
+    bool result_shown = false, grade_s = false;   // the result screen (§3.6)
+    std::string grade, result_title, result_stats, result_weapon, result_progress, result_next, result_gold, result_card,
+                result_levelup;
+    float result_pct = 0;
     bool stamina_pace = false;         // the stamina pace (13 §6.3): the clock row shows the stamina
     bool attack_short = false, guard_short = false;   // not enough stamina for it
 };

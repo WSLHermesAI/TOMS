@@ -70,6 +70,7 @@ WeaponPlay weaponPlayFromJson(const std::string& id, const nlohmann::json& j) {
             x.fx = r.value("fx", std::string());
             x.anim = r.value("anim", std::string());
             x.sound = r.value("sound", std::string());
+            x.move = r.value("move", std::string());
             x.stunMs = std::max(0, r.value("stunMs", 0));
             x.pushMs = std::max(0, r.value("pushMs", 0));
             x.breakAdd = std::max(0.0f, r.value("breakAdd", 0.0f));
@@ -77,6 +78,7 @@ WeaponPlay weaponPlayFromJson(const std::string& id, const nlohmann::json& j) {
         }
     }
     w.pace = j.value("pace", std::string());
+    w.play = j.value("play", std::string("track"));
     return w;
 }
 

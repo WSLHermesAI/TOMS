@@ -151,4 +151,53 @@ BreakSettings breakFromJson(const nlohmann::json& battleJson);
 // The gauge after adding `add` points: true when it filled (the gauge is then emptied).
 bool addBreak(float& gauge, float add, int points);
 
+// ---- the revamp (docs/gameplay/15_BATTLE_REVAMP.md) ----
+
+// The feel (15 §3.8; data/battle.json "feel"): what a moment does to the screen. Moments: "hit", "great", "perfect",
+// "miss", "parry", "block", "break", "hurt", "heavyHurt", "ultimate", "phase". Unknown moments do nothing.
+struct FeelSettings {
+    float strength = 1.0f;                     // scales every stop and shake (Q34: the owner's "how strong")
+    std::map<std::string, int> stopMs;         // hit stop: both sides freeze this long
+    std::map<std::string, float> shakePx;      // screen shake: this far
+    int shakeMs = 250;                         // and this long
+    std::map<std::string, std::string> sounds; // a sound id per moment
+    int slowMoMs = 450;                        // the last hit of a battle: this long...
+    float slowMoScale = 0.3f;                  // ...at this speed
+    float reducedScale = 0.25f;                // "Reduce shaking and flashes": stops and shakes times this, no slow motion
+    float chainStep = 0.1f;                    // each perfect in a row: +10 % damage...
+    int chainMax = 10;                         // ...up to this many
+    int stop(const std::string& moment, bool reduced) const;
+    float shake(const std::string& moment, bool reduced) const;
+    std::string sound(const std::string& moment) const;
+};
+FeelSettings feelFromJson(const nlohmann::json& battleJson);
+
+// The grade of a won battle (15 §3.6, Q35; data/battle.json "grade"): S / A / B / C from its time, the HP lost and the
+// perfects. score = 100 - over par s x timePenalty - lost share x damagePenalty + perfect rate x perfectBonus
+//                   + best chain x chainBonus.
+struct GradeSettings {
+    float parSeconds = 25.0f, timePenalty = 1.5f, damagePenalty = 60.0f, perfectBonus = 30.0f, chainBonus = 3.0f;
+    float s = 95.0f, a = 75.0f, b = 55.0f;     // the lowest score of each grade
+    float sGold = 0.2f;                        // an S: +20 % gold...
+    float sCard = 0.25f;                       // ...and a card a quarter likelier
+};
+struct GradeInput { float seconds = 0, lostShare = 0, perfectRate = 0; int bestChain = 0; };
+GradeSettings gradeFromJson(const nlohmann::json& battleJson);
+std::string battleGrade(const GradeInput& in, const GradeSettings& g, int* score = nullptr);
+
+// The guard (15 §3.2; data/battle.json "guard"): "timing" = one button, pressed just before a hit; "bar" = the
+// five-zone bar (Battle v2) kept as an option.
+struct GuardSettings {
+    std::string mode = "timing";
+    int parryMs = 160;      // pressed at most this long before the hit: a parry (no damage; a heavy blow staggers)
+    int blockMs = 550;      // ...this long: blocked (blockPower)
+    int earlyMs = 1200;     // ...this long: too early (full damage, and the player is told)
+    float blockPower = 70.0f;
+    int cooldownMs = 700;   // between two presses (no parrying by tapping all the time)
+};
+enum class GuardTiming { None, Parry, Block, Early };
+GuardSettings guardFromJson(const nlohmann::json& battleJson);
+// What a guard pressed `sinceMs` before a hit does (sinceMs < 0: not pressed).
+GuardTiming guardTiming(int sinceMs, const GuardSettings& g);
+
 } // namespace toms

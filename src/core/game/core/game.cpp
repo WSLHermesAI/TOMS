@@ -197,8 +197,9 @@ void Game::update(int dtMs) {
         resourceMessages_.clear();
     }
     if (!previewMeshSprite_.empty()) previewMeshMs_ += dtMs;   // --mesh-test: the wave's clock
-    updateBattleRig(dtMs);   // the bow and the player's character on the battle screen (battleRigState)
-    updateMonsterRig(dtMs);  // the monster: idle, attack, hurt, die (monster_battle.anim)
+    const int battleDt = battleFrame(dtMs);   // the battle's time: 0 in a hit stop, slower in slow motion (docs/gameplay/15)
+    updateBattleRig(battleDt);   // the bow and the player's character on the battle screen (battleRigState)
+    updateMonsterRig(battleDt);  // the monster: idle, attack, hurt, die (monster_battle.anim)
     updateBattleFx(dtMs);    // the weapon's particles (battle.particle)
     if (previewRig_.character() || previewRig_.held()) {   // --anim with --held: both clips, one clock
         previewRig_.update(dtMs);
@@ -258,17 +259,20 @@ void Game::update(int dtMs) {
         miniGame_.play.update(dtMs);
         if (miniGame_.play.done()) finishMiniGame();
     }
+  {   // the battle runs on its own time this frame (Game::battleFrame: hit stop, slow motion)
+    const int dtMs = cs.frameDt;
     // An attack is playing (docs/gameplay/07_GAMEPLAY_PLAN.md §4): both sides' clocks wait for it.
     const bool attackPlaying = cs.active && cs.attackPauseMs > 0;
     if (attackPlaying) cs.attackPauseMs = std::max(0, cs.attackPauseMs - dtMs);
     // a running combo's marker; the owner 2026-10-30: it runs through a monster's attack pause too
     // (data/battle.json "combo_runs_through_attacks": false brings back the stop)
     auto stepCombo = [&] {
+        if (cs.touch.running() && cs.touch.started()) { stepTouchPlay(dtMs); return; }   // the weapon's own play
         cs.combo.update(dtMs);
         for (int p : cs.combo.takeEntered()) comboHint(p, /*hit=*/false);   // "tap now"
         if (cs.combo.done()) resolveCombo();
     };
-    if (attackPlaying && comboRunsThroughAttacks_ && !cs.atkBar.cooling && cs.combo.running()) stepCombo();
+    if (attackPlaying && comboRunsThroughAttacks_ && !cs.atkBar.cooling && attackRunning()) stepCombo();
     if (cs.active && !attackPlaying) {
         auto stepBar = [&](CombatState::AutoBar& bar, const toms::PowerBarParams& z) {
             if (bar.cooling) {
@@ -292,19 +296,26 @@ void Game::update(int dtMs) {
         if (cs.atkBar.cooling) {
             cs.atkBar.cooldownMs -= dtMs;
             if (cs.atkBar.cooldownMs <= 0) { cs.atkBar.cooling = false; cs.chargeMs = 0; }
-        } else if (cs.combo.running()) {
+            if (!cs.touch.running()) cs.touch.update(dtMs);   // the last play's marks fade
+        } else if (attackRunning()) {
             stepCombo();
         } else {
-            cs.chargeMs = std::min(cs.chargeMs + dtMs, std::max(1, weaponPlayOf(weaponKey()).chargeMs));
+            const std::string key = weaponKey();
+            cs.chargeMs = std::min(cs.chargeMs + dtMs, std::max(1, weaponPlayOf(key).chargeMs));
+            // the weapon's own play waits over the target for its first touch; until then it follows the target and
+            // the layout (the same seed, the same places)
+            if (cs.active && !cs.winPending && battlePlayKind() != toms::PlayKind::Track)
+                armTouchPlay(false, toms::comboSettings(weaponPlayOf(key), weaponLevel(key)).points);
         }
         stepBar(cs.defBar, toms::effectiveDefenseBar(equipped_, equipmentDefs_));
 
         // stamina refills while no attack runs (the stamina pace, docs/gameplay/13 §6.3)
-        if (cs.pace == toms::Pace::Stamina && !cs.combo.running())
+        if (cs.pace == toms::Pace::Stamina && !attackRunning())
             cs.stamina = std::min((float)paceSettings_.staminaMax, cs.stamina + paceSettings_.staminaRegenPerS * dtMs / 1000.0f);
         // each monster standing keeps its own clock to its next move (docs/gameplay/13 §4.6, §6.1)
         if (cs.active) stepFoes(dtMs);
     }
+  }
     // The weapon test arena: when a fight is over (a win dismissed, a loss shown), the next one starts.
     if (arena_.on && !cs.active && !cs.won && cs.resultPauseMs <= 0 && !title_.isOpen()) {
         if (arena_.trial) endWeaponTrialFight();   // the start story: back to the weapon master

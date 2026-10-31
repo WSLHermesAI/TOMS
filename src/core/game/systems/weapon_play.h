@@ -45,6 +45,7 @@ struct WeaponResult {
     std::string fx;              // replaces the level's hit effect ("" = the level's)
     std::string anim;            // the player's clip for it ("" = attack)
     std::string sound;           // "" = the usual
+    std::string move;            // its named move (a text.json key, docs/gameplay/07 §5.4, 15 §3.3): "Tiger Wind" ...
     int stunMs = 0;              // the monster stops this long
     int pushMs = 0;              // its attack clock goes back this much
     float breakAdd = 0.0f;       // more on its break gauge (13 §6.4)
@@ -69,6 +70,7 @@ struct WeaponPlay {
     std::vector<WeaponFx> fx;             // sorted by lv; empty: the "default" entry's
     std::vector<WeaponResult> results;    // by points matched (13 §4.2); empty: the "default" entry's, else none
     std::string pace;                     // "cooldown" / "stamina": this weapon's pace ("" = the battle's; 13 §6.3)
+    std::string play = "track";           // its attack (touch_play.h, docs/gameplay/15 §3.3): track, bow, slice, circles
 };
 
 struct WeaponPlayTable {

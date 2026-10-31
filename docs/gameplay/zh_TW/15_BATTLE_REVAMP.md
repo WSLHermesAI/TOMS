@@ -211,3 +211,26 @@
 | Q38 | **順序：** 先做 R1 + R2（手感與獎勵），還是先做弓自己的玩法（R5）？ | 先做 R1 + R2 |
 
 14 的未決問題（Q27–Q33：武器玩法與刷寶）在 R5 與 R7 之前需要回答。
+
+## 10. 已完成（2026-10-31）
+
+R1 到 R5 已做進遊戲。在擁有者另有決定之前，Q34 到 Q38 都採用提案作為答案；攻擊就是玩法（§4：玩法在怪物上方等待，
+第一次觸碰就開始，攻擊面板只顯示準備好或恢復中）。以原型 `battle_editor/revamp_prototype.html` 為範本。
+
+| 步驟 | 遊戲中 | 位置 |
+|---|---|---|
+| R1 手感 | 每個時刻的頓幀、震動與音效；依等級的數字與文字；最後一擊慢動作；設定中的「減少震動與閃光」 | `battle.json` 的 `"feel"`；`battle_rules.h` FeelSettings；`Game::battleFrame`、`feelMoment` |
+| R2 獎勵 | 結算畫面：評等 S / A / B / C、時間、最佳連鎖、完美次數、武器進度與下一級、金幣、卡片；S 多 20 % 金幣、卡片機率較高 | `battle.json` 的 `"grade"`；`battleGrade`；`finishCombatWin`；battle.rml `#result` |
+| R3 畫面 | 一個在攻擊打到前按下的防禦按鈕（招架 ≤ 160 ms、擋下 ≤ 550 ms、太早 ≤ 1200 ms；五段式防禦條是 `"guard": {"mode": "bar"}`）；攻擊狀態面板；沒有全域時鐘；橫向與直向 | `battle.json` 的 `"guard"`；`guardTiming`；battle.rml / battle.rcss |
+| R4 破防與爆發 | BREAK! 橫幅與變暗；怪物的台詞成為橫幅；完美連鎖（每段 +10 % 傷害，最多 10）；絕招：切入畫面，然後更難的玩法（多 2 個點、滿蓄力），傷害 ×2，破防時 ×4，大動作片段 | `stunFoe`、`resolveCombo`、`battleTapSuper` |
+| R5 每把武器的玩法 | 弓：往後拉再放開，準心往反方向（每支箭一個靶，各 3 秒）；劍：照每個箭頭的方向劃過（每刀 1.6 秒；絕招先顯示箭頭再隱藏，方向錯就結束）；法杖：光圈收合時點圓圈（80 ms 內完美、200 ms 內命中）。每種都像量條一樣計點，所以結果列、招式名、特效、片段、破防與評等都不變。每個結果列有招式名 | `touch_play.h`（單元測試 `touch_play_test`）；`weapon_play.json` 的 `"play"` 與每列的 `"move"`；`Game::battlePointer`、`armTouchPlay` |
+
+**音效：** `tools/make_battle_sfx.py` 產生十個時刻音效（`assets/media/sfx/battle_*.wav`）；之後可用同名的更好音效取代。
+
+**測試：** 情境除非在 battle 設定 `"play"`，否則仍用舊的量條（[08](08_TEST_SCENARIOS.md)），所以既有的戰鬥測試保留
+它們的按鍵。新增：`battle_guard_early`、`battle_guard_bar`、`battle_result`（評等 S）、`battle_play_bow`、
+`battle_play_slice`、`battle_play_circles`（一次點擊開始各玩法；測試用 `"test": {"clicks": ...}`）。戰鬥編輯器的
+設定使用武器自己的玩法（`"play": "weapon"`）。
+
+**尚未：** R6（技能配置、弱點）與 R7（頭目階段、刷寶）；用鍵盤玩觸控玩法的方式（桌面玩家用滑鼠）；玩法的數值
+（`TouchPlaySettings`）目前是程式預設值，尚未放進 `battle.json`。

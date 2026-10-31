@@ -134,9 +134,21 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("x", &UiPopup::x);
         s.RegisterMember("y", &UiPopup::y);
         s.RegisterMember("opacity", &UiPopup::opacity);
-        s.RegisterMember("kind", &UiPopup::kind);
+        s.RegisterMember("style", &UiPopup::style);
     }
     c.RegisterArray<std::vector<UiPopup>>();
+    if (auto s = c.RegisterStruct<UiTouchItem>()) {
+        s.RegisterMember("cls", &UiTouchItem::cls);
+        s.RegisterMember("x", &UiTouchItem::x);
+        s.RegisterMember("y", &UiTouchItem::y);
+        s.RegisterMember("w", &UiTouchItem::w);
+        s.RegisterMember("h", &UiTouchItem::h);
+        s.RegisterMember("rot", &UiTouchItem::rot);
+        s.RegisterMember("radius", &UiTouchItem::radius);
+        s.RegisterMember("opacity", &UiTouchItem::opacity);
+        s.RegisterMember("text", &UiTouchItem::text);
+    }
+    c.RegisterArray<std::vector<UiTouchItem>>();
     if (auto s = c.RegisterStruct<UiFoe>()) {
         s.RegisterMember("sprite", &UiFoe::sprite);
         s.RegisterMember("anim", &UiFoe::anim);
@@ -182,8 +194,30 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("active_ready", &UiBattle::active_ready);
         s.RegisterMember("active_button", &UiBattle::active_button);
         s.RegisterMember("popups", &UiBattle::popups);
+        s.RegisterMember("touch_kind", &UiBattle::touch_kind);
+        s.RegisterMember("touch", &UiBattle::touch);
         s.RegisterMember("foes", &UiBattle::foes);
         s.RegisterMember("stamina_pace", &UiBattle::stamina_pace);
+        for (auto [name, member] : std::initializer_list<std::pair<const char*, std::string UiBattle::*>>{
+                 {"banner", &UiBattle::banner}, {"banner_kind", &UiBattle::banner_kind}, {"chain_text", &UiBattle::chain_text},
+                 {"guard_label", &UiBattle::guard_label}, {"guard_hint", &UiBattle::guard_hint},
+                 {"attack_state", &UiBattle::attack_state}, {"attack_label", &UiBattle::attack_label},
+                 {"attack_hint", &UiBattle::attack_hint}, {"grade", &UiBattle::grade}, {"result_title", &UiBattle::result_title},
+                 {"result_stats", &UiBattle::result_stats}, {"result_weapon", &UiBattle::result_weapon},
+                 {"result_progress", &UiBattle::result_progress}, {"result_next", &UiBattle::result_next},
+                 {"result_gold", &UiBattle::result_gold}, {"result_card", &UiBattle::result_card},
+                 {"result_levelup", &UiBattle::result_levelup}})
+            s.RegisterMember(name, member);
+        s.RegisterMember("banner_opacity", &UiBattle::banner_opacity);
+        s.RegisterMember("banner_shift", &UiBattle::banner_shift);
+        s.RegisterMember("attack_pct", &UiBattle::attack_pct);
+        s.RegisterMember("result_pct", &UiBattle::result_pct);
+        s.RegisterMember("guard_timing", &UiBattle::guard_timing);
+        s.RegisterMember("guard_lit", &UiBattle::guard_lit);
+        s.RegisterMember("guard_cooling", &UiBattle::guard_cooling);
+        s.RegisterMember("show_clock", &UiBattle::show_clock);
+        s.RegisterMember("result_shown", &UiBattle::result_shown);
+        s.RegisterMember("grade_s", &UiBattle::grade_s);
         s.RegisterMember("attack_short", &UiBattle::attack_short);
         s.RegisterMember("guard_short", &UiBattle::guard_short);
     }

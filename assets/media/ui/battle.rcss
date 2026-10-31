@@ -8,6 +8,8 @@
    - portrait: full-width rows, 40 px from the edges; the fighters at the top, the controls anchored to the bottom (for
      thumbs). A tall phone (16:9 and longer, the canvas 1300+ high) stacks the monster above the player; a shorter
      portrait screen keeps them side by side.
+   The revamp (docs/gameplay/15_BATTLE_REVAMP.md §4): the play (#play) under the fighters, the two thumb panels (#guard,
+   #attack-state) at the bottom, the banner and the result over everything.
    The game draws the animated fighters in #player / .foe .fbox and reads where they are (GameUi::sync), so these rules
    are the only place a fighter's position is written.
    One to three monsters (.foe; docs/gameplay/13 §4.6): .n1/.n2/.n3 is how many, .f1/.f2 which one. One monster is
@@ -68,65 +70,140 @@ body { z-index: 30; }
 .foe.n3 .fhp  { top: 114px; width: 125px; height: 16px; }
 .foe.n3 .ftext { top: 134px; width: 125px; font-size: 16px; }
 
-/* the message: two lines (a long one, or another language, wraps); everything below starts under them */
-#log { position: absolute; left: 50%; margin-left: -250px; width: 738px; top: 294px; height: 56px; line-height: 28px; font-size: 22px; color: #ffffff; }
+/* ---- the revamp (docs/gameplay/15_BATTLE_REVAMP.md): the play under the fighters, the thumbs at the bottom ---- */
 #continue { position: absolute; left: 50%; margin-left: -250px; top: 368px; font-size: 24px; color: #ffffca; }
 
-#clock-label { position: absolute; left: 50%; margin-left: -250px; top: 352px; font-size: 19px; color: #f3e0ba; }
-#clock { position: absolute; left: 50%; margin-left: -250px; top: 376px; width: 700px; height: 14px; background-color: #7b7b88; }
+/* the stamina pace's bar (only then: each monster shows its own clock) */
+#clock-label { position: absolute; left: 50%; margin-left: -250px; top: 498px; font-size: 18px; color: #f3e0ba; }
+#clock { position: absolute; left: 50%; margin-left: -250px; top: 522px; width: 700px; height: 12px; background-color: #7b7b88; }
 
-/* Attack / defence columns: prompt, the five-zone timing bar with its marker, the action button. */
-.column { position: absolute; top: 400px; width: 322px; }
-#attack  { left: 50%; margin-left: -250px; }
-#defense { left: 50%; margin-left: 128px; }
-.prompt  { font-size: 20px; color: #f3f3ff; height: 30px; }
+/* the play: the attack IS the play (15 §4): tap the track; the charge column on its left */
+#play    { position: absolute; left: 50%; margin-left: -250px; top: 296px; width: 700px; height: 104px; }
+.prompt  { font-size: 18px; color: #f3f3ff; height: 26px; }
+.combo   { position: relative; height: 44px; }
+.charge  { position: absolute; left: 0; top: 0; width: 14px; height: 44px; background-color: #41414c; }
+.charge-fill { position: absolute; left: 0; bottom: 0; width: 100%; background-color: #ffc861; }
+.track   { position: absolute; left: 24px; right: 0; top: 0; height: 44px; background-color: #5b6275; border-radius: 22px; }
+.track.waiting { background-color: #6e4b52; }
+.pt      { position: absolute; top: 7px; width: 30px; height: 30px; margin-left: -15px; border-radius: 15px; background-color: #94b1ed; }
+.pt.hit  { background-color: #94e6a8; }
+/* the marker is in its window: a tap now hits it (the hint, with a sound and a flash; the same window the tap uses) */
+.pt.near { top: -1px; width: 46px; height: 46px; margin-left: -23px; border-radius: 23px;
+           background-color: #ffe27a; border-width: 3px; border-color: #ffffff; }
+.bar-dim { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: #41414c8c; border-radius: 22px; }
+.marker  { position: absolute; top: -8px; width: 6px; height: 60px; margin-left: -3px; background-color: #ffffff; }
+.note    { margin-top: 8px; font-size: 16px; color: #cacfd9; }
+#chain   { position: absolute; left: 50%; margin-left: -250px; top: 404px; font-size: 24px; color: #ffd54a;
+           font-effect: outline(2px #3a2a00); }
+
+/* the super charge, the ultimate (the weapon's finisher) and the equipment's active */
+#super { position: absolute; left: 50%; margin-left: -250px; top: 452px; height: 24px; }
+#super-label { font-size: 17px; color: #f3f3ff; margin-right: 14px; }
+.dot-slot { display: inline-block; }
+.dot { width: 16px; height: 16px; margin-right: 7px; background-color: #7b7b88; border-radius: 8px; }
+.dot.on { background-color: #ffca88; }
+#super-btn  { position: absolute; left: 50%; margin-left: 100px; top: 438px; width: 210px; height: 50px; line-height: 50px;
+              font-size: 21px; color: #2a1d00; text-align: center; background-color: #ffd54a; border-radius: 10px; }
+#super-btn:hover  { background-color: #ffe27a; }
+#active-btn { position: absolute; left: 50%; margin-left: 320px; top: 438px; width: 130px; height: 50px; line-height: 50px;
+              font-size: 17px; color: #ffffff; text-align: center; background-color: #88c2d2; border-radius: 10px; overflow: hidden; }
+#active-btn:hover { background-color: #9ad2e2; }
+#crit { position: absolute; left: 50%; margin-left: -250px; top: 478px; font-size: 16px; color: #ffed94; }
+
+/* the thumbs: GUARD is a button, the attack's panel only says how it is */
+.panel   { position: absolute; top: 556px; width: 340px; height: 130px; border-radius: 16px; text-align: center; }
+.plabel  { margin-top: 34px; font-size: 30px; color: #ffffff; font-effect: outline(2px #00000080); }
+.phint   { margin-top: 6px; font-size: 15px; color: #ffffffb0; }
+#guard   { left: 50%; margin-left: -250px; background-color: #3e5580; }
+#guard:hover  { background-color: #4b6595; }
+#guard:active, #guard.lit { background-color: #6a9be0; }
+#guard.cooling { background-color: #2c3548; }
+#guard-bar { position: absolute; left: 50%; margin-left: -250px; top: 520px; width: 340px; }
+#guard-bar .panel { position: relative; top: 8px; height: 110px; background-color: #3e5580; }
+#guard-bar .panel.cooling { background-color: #2c3548; }
+#guard-bar .plabel { margin-top: 30px; font-size: 22px; }
 .power   { position: relative; height: 28px; }
 .zones   { display: flex; height: 100%; }
 .zone        { height: 100%; }
 .zone.red    { background-color: #e08888; }
 .zone.blue   { background-color: #94b1ed; }
 .zone.green  { background-color: #94e6a8; }
-.bar-dim { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: #41414c8c; }
-.marker  { position: absolute; top: -8px; width: 5px; height: 44px; margin-left: -2px; background-color: #ffffff; }
-/* Battle v3's point play (docs/gameplay/07 phase 1): a charge column, then the track with its points */
-.combo   { position: relative; height: 28px; }
-.charge  { position: absolute; left: 0; top: -8px; width: 12px; height: 44px; background-color: #41414c; }
-.charge-fill { position: absolute; left: 0; bottom: 0; width: 100%; background-color: #ffc861; }
-.track   { position: absolute; left: 22px; right: 0; top: 0; height: 28px; background-color: #5b6275; }
-.track.waiting { background-color: #6e4b52; }
-.pt      { position: absolute; top: 4px; width: 20px; height: 20px; margin-left: -10px; border-radius: 10px;
-           background-color: #94b1ed; }
-.pt.hit  { background-color: #94e6a8; }
-/* the marker is in its window: a tap now hits it (the hint, with a sound and a flash; the same window the tap uses) */
-.pt.near { top: -2px; width: 32px; height: 32px; margin-left: -16px; border-radius: 16px;
-           background-color: #ffe27a; border-width: 3px; border-color: #ffffff; }
-.action {
-    margin-top: 18px; height: 62px; line-height: 62px; font-size: 21px; color: #ffffff;
-    background-color: #8598b3; text-align: left; padding-left: 18px;
-}
-.action:hover   { background-color: #97aac5; }
-.action:active  { background-color: #a9bcd6; }
-.action.cooling { background-color: #6f7580; }
-.note        { margin-top: 8px; font-size: 19px; color: #cacfd9; }
-.note.shield { color: #c2e0ff; }
-.note.crit   { color: #ffed94; }
+#attack-state { left: 50%; margin-left: 110px; background-color: #3a3326; overflow: hidden; }
+#attack-state.ready   { background-color: #b0663a; }
+#attack-state.running { background-color: #c4733f; }
+#attack-state.short   { background-color: #3a3326; }
+#attack-state .pfill  { position: absolute; left: 0; top: 0; bottom: 0; background-color: #6a5434; }
+#attack-state.recovering .plabel { color: #9a8a70; }
+#attack-state .plabel, #attack-state .phint { position: relative; }
 
-#super { position: absolute; left: 50%; margin-left: -250px; top: 578px; height: 24px; }   /* below the weapon level line (Battle v3) */
-#super-label { font-size: 19px; color: #f3f3ff; margin-right: 18px; }
-.dot-slot { display: inline-block; }
-.dot { width: 17px; height: 17px; margin-right: 8px; background-color: #7b7b88; }
-.dot.on { background-color: #ffca88; }
+/* damage numbers and words (UiPopup): a 300 px box over the fighter, rising and fading; the style by the result (15 §3.8) */
+/* each weapon's own play (touch_play.h, docs/gameplay/15 §3.3): plain boxes the game places, sizes and turns (.tp) */
+.tp { position: absolute; pointer-events: none; z-index: 2; text-align: center; font-size: 22px; color: #ffffff;
+      font-effect: outline(2px #202020); }
+.tp.target  { border-width: 4px; border-color: #ff5a5a; background-color: #ff5a5a33; }
+.tp.target.idle { border-color: #ff9a9a; }
+.tp.bull    { background-color: #ffd54a; }
+.tp.count   { font-size: 20px; color: #ffe8a0; }
+.tp.time    { background-color: #ffd54a; }
+.tp.pull    { background-color: #ffffffb0; }
+.tp.shot    { background-color: #ffd54a80; }
+.tp.anchor  { background-color: #ffffff; }
+.tp.cross   { border-width: 3px; border-color: #ffd54a; }
+.tp.arrow   { background-color: #9aa1b3; }
+.tp.arrow.head { background-color: transparent; border-top-width: 6px; border-right-width: 6px; border-color: #9aa1b3; }
+.tp.arrow.now   { background-color: #ffffff; }
+.tp.arrow.now.head { background-color: transparent; border-color: #ffffff; }
+.tp.arrow.cut   { background-color: #6fe08a; }
+.tp.arrow.cut.head { background-color: transparent; border-color: #6fe08a; }
+.tp.arrow.missed { background-color: #ff6a6a; }
+.tp.arrow.missed.head { background-color: transparent; border-color: #ff6a6a; }
+.tp.arrow.hidden { background-color: #c8a0ff; }
+.tp.swipe   { background-color: #e0f4ffc0; }
+.tp.circle  { border-width: 4px; border-color: #ffffff; background-color: #7f5affb0; font-size: 30px; line-height: 60px; }
+.tp.circle.idle { background-color: #7f5aff70; }
+.tp.ring    { border-width: 3px; border-color: #ffd54a; }
+.tp.mark.ok { border-width: 4px; border-color: #ffe066; }
+.tp.mark.bad { background-color: #ff6a6a; }
 
-.wide { position: absolute; left: 50%; margin-left: -250px; width: 700px; height: 50px; line-height: 50px; font-size: 22px; color: #ffffff; }
-#super-btn  { top: 610px; background-color: #d9887b; }
-#super-btn:hover  { background-color: #e89a8d; }
-#active-btn { top: 672px; background-color: #88c2d2; }
-#active-btn:hover { background-color: #9ad2e2; }
+.popup { position: absolute; width: 300px; text-align: center; font-size: 32px; color: #ffffff; font-effect: outline(2px #401010); }
+.popup.great   { font-size: 38px; color: #7fe0ff; }
+.popup.perfect { font-size: 50px; color: #ffe066; }
+.popup.miss    { font-size: 26px; color: #9aa1b3; }
+.popup.guard   { font-size: 28px; color: #9fd8ff; }
+.popup.hurt    { font-size: 32px; color: #ff8a8a; }
+.popup.parry   { font-size: 34px; color: #ffd54a; font-effect: outline(2px #3a2a00); }
+.popup.block   { font-size: 28px; color: #9fd8ff; }
+.popup.early   { font-size: 26px; color: #ffb070; }
+.popup.chain   { font-size: 26px; color: #ffd54a; }
+.popup.move-hit, .popup.move-great, .popup.move-perfect, .popup.move-miss { font-size: 26px; }
+.popup.move-perfect { color: #ffe066; font-size: 30px; }
+.popup.move-great   { color: #7fe0ff; }
+.popup.move-miss    { color: #9aa1b3; }
 
-/* damage numbers (UiPopup): a 100 px box over the fighter, rising and fading (placed from #player / .foe .fbox) */
-.popup { position: absolute; width: 100px; text-align: center; font-size: 34px; color: #ffffff; font-effect: outline(2px #401010); }
-.popup.big { font-size: 46px; color: #ffe066; }
-.popup.guard { font-size: 28px; color: #9fd8ff; }
+/* a moment across the screen (15 §3.4): BREAK!, a monster's line, the ultimate's cut-in */
+#banner { position: absolute; left: 0; right: 0; top: 330px; height: 96px; background-color: #000000a0; text-align: center; }
+#banner-text { font-size: 64px; line-height: 96px; color: #ffd54a; font-effect: outline(3px #3a2a00); white-space: nowrap; }
+#banner.line { height: 70px; }
+#banner.line #banner-text { font-size: 28px; line-height: 70px; color: #ff9a7a; font-effect: outline(2px #300000); }
+#banner.ultimate { background-color: #ffd54a; }
+#banner.ultimate #banner-text { font-size: 40px; color: #2a1d00; font-effect: none; }
+
+/* the result (15 §3.6) */
+#result { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: #080a10; z-index: 5; }   /* opaque: linear blending lets even 4 % show */
+#result-box { position: absolute; left: 50%; margin-left: -300px; top: 40px; width: 600px; text-align: center; }
+#result-title { font-size: 46px; color: #ffd54a; font-effect: outline(3px #3a2a00); }
+#grade   { font-size: 130px; line-height: 150px; color: #e8eaf0; font-effect: outline(4px #00000080); }
+#grade.s { color: #ffd54a; }
+.rline   { margin-top: 8px; font-size: 24px; color: #e8eaf0; }
+.rline.dim    { font-size: 18px; color: #9aa1b3; }
+.rline.weapon { margin-top: 18px; font-size: 26px; }
+.rline.up     { color: #8fe0a0; }
+.rline.next   { color: #7fe0ff; }
+.rline.gold   { margin-top: 18px; }
+.rline.card   { color: #ffca88; }
+.rline.tap    { margin-top: 24px; }
+#wbar  { width: 420px; height: 16px; margin: 10px auto 0 auto; background-color: #3a3f50; border-radius: 8px; }
+#wfill { height: 100%; background-color: #ffd54a; border-radius: 8px; }
 
 /* ---- portrait: rows across the 768 px width; the controls on the bottom, for thumbs ---- */
 @media (orientation: portrait) {
@@ -156,19 +233,25 @@ body { z-index: 30; }
     .foe.n3 .fhp  { top: 104px; width: 105px; }
     .foe.n3 .ftext { top: 122px; width: 105px; }
     .foe.n3 .itext { font-size: 14px; }
-    #log        { left: 40px; margin-left: 0; width: 688px; top: 294px; }
     #continue   { left: 40px; margin-left: 0; top: 370px; }
-
-    /* the controls, from the bottom up */
-    #clock-label { left: 40px; margin-left: 0; top: auto; bottom: 620px; }
-    #clock       { left: 40px; margin-left: 0; width: 688px; top: auto; bottom: 600px; }
-    .column      { left: 40px; margin-left: 0; width: 688px; top: auto; }
-    #attack      { left: 40px; margin-left: 0; bottom: 390px; }
-    #defense     { left: 40px; margin-left: 0; bottom: 200px; }
-    #super       { left: 40px; margin-left: 0; top: auto; bottom: 160px; }
-    .wide        { left: 40px; margin-left: 0; width: 688px; top: auto; }
-    #super-btn   { top: auto; bottom: 92px; }
-    #active-btn  { top: auto; bottom: 30px; }
+    /* the play under the fighters; the rest from the bottom up (for thumbs) */
+    /* the play just above the thumbs' row (a phone in one hand: within reach) */
+    #play        { left: 40px; margin-left: 0; width: 688px; top: auto; bottom: 282px; }
+    #chain       { left: 40px; margin-left: 0; top: auto; bottom: 392px; }
+    #clock-label { left: 40px; margin-left: 0; top: auto; bottom: 330px; }
+    #clock       { left: 40px; margin-left: 0; width: 688px; top: auto; bottom: 310px; }
+    #super       { left: 40px; margin-left: 0; top: auto; bottom: 238px; }
+    #super-btn   { left: 330px; margin-left: 0; top: auto; bottom: 226px; width: 230px; }
+    #active-btn  { left: 578px; margin-left: 0; top: auto; bottom: 226px; width: 150px; }
+    #crit        { left: 40px; margin-left: 0; top: auto; bottom: 200px; }
+    .panel       { top: auto; bottom: 30px; height: 160px; width: 334px; }
+    .plabel      { margin-top: 48px; }
+    #guard       { left: 40px; margin-left: 0; }
+    #guard-bar   { left: 40px; margin-left: 0; top: auto; bottom: 30px; width: 334px; }
+    #guard-bar .panel { bottom: auto; height: 124px; }
+    #attack-state { left: 394px; margin-left: 0; }
+    #banner      { top: 440px; }
+    #result-box  { margin-left: -330px; width: 660px; top: 80px; }
 }
 
 /* a tall phone: the monster above, the player below it, each with its HP under it */
@@ -198,6 +281,6 @@ body { z-index: 30; }
     .foe.n3 .ftext { top: 188px; width: 220px; font-size: 19px; }
     #player-hp  { left: 40px; top: 544px; }
     #player-hp-text { left: 40px; top: 570px; }
-    #log        { top: 614px; }
     #continue   { top: 692px; }
+    #banner     { top: 700px; }
 }

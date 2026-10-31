@@ -198,4 +198,94 @@ bool addBreak(float& gauge, float add, int points) {
     return true;
 }
 
+// ---- the revamp ----
+
+int FeelSettings::stop(const std::string& m, bool reduced) const {
+    auto it = stopMs.find(m);
+    if (it == stopMs.end()) return 0;
+    return std::max(0, (int)std::lround(it->second * strength * (reduced ? reducedScale : 1.0f)));
+}
+
+float FeelSettings::shake(const std::string& m, bool reduced) const {
+    auto it = shakePx.find(m);
+    if (it == shakePx.end()) return 0.0f;
+    return std::max(0.0f, it->second * strength * (reduced ? reducedScale : 1.0f));
+}
+
+std::string FeelSettings::sound(const std::string& m) const {
+    auto it = sounds.find(m);
+    return it != sounds.end() ? it->second : std::string();
+}
+
+FeelSettings feelFromJson(const nlohmann::json& b) {
+    FeelSettings f;
+    f.stopMs = {{"hit", 25}, {"great", 50}, {"perfect", 80}, {"parry", 90}, {"break", 120}, {"hurt", 30},
+                {"heavyHurt", 60}, {"ultimate", 120}};
+    f.shakePx = {{"hit", 2}, {"great", 4}, {"perfect", 7}, {"parry", 4}, {"break", 9}, {"hurt", 4},
+                 {"heavyHurt", 8}, {"ultimate", 10}, {"phase", 6}};
+    if (!b.is_object() || !b.contains("feel") || !b["feel"].is_object()) return f;
+    const nlohmann::json& j = b["feel"];
+    f.strength = std::max(0.0f, j.value("strength", f.strength));
+    for (const char* k : {"stopMs", "shakePx", "sounds"})
+        if (j.contains(k) && j[k].is_object())
+            for (auto it = j[k].begin(); it != j[k].end(); ++it) {
+                if (std::string(k) == "stopMs" && it.value().is_number()) f.stopMs[it.key()] = it.value().get<int>();
+                if (std::string(k) == "shakePx" && it.value().is_number()) f.shakePx[it.key()] = it.value().get<float>();
+                if (std::string(k) == "sounds" && it.value().is_string()) f.sounds[it.key()] = it.value().get<std::string>();
+            }
+    f.shakeMs = std::max(0, j.value("shakeMs", f.shakeMs));
+    f.slowMoMs = std::max(0, j.value("slowMoMs", f.slowMoMs));
+    f.slowMoScale = std::clamp(j.value("slowMoScale", f.slowMoScale), 0.05f, 1.0f);
+    f.reducedScale = std::clamp(j.value("reducedScale", f.reducedScale), 0.0f, 1.0f);
+    f.chainStep = std::max(0.0f, j.value("chainStep", f.chainStep));
+    f.chainMax = std::max(1, j.value("chainMax", f.chainMax));
+    return f;
+}
+
+GradeSettings gradeFromJson(const nlohmann::json& b) {
+    GradeSettings g;
+    if (!b.is_object() || !b.contains("grade") || !b["grade"].is_object()) return g;
+    const nlohmann::json& j = b["grade"];
+    g.parSeconds = j.value("parSeconds", g.parSeconds);
+    g.timePenalty = j.value("timePenalty", g.timePenalty);
+    g.damagePenalty = j.value("damagePenalty", g.damagePenalty);
+    g.perfectBonus = j.value("perfectBonus", g.perfectBonus);
+    g.chainBonus = j.value("chainBonus", g.chainBonus);
+    g.s = j.value("s", g.s);
+    g.a = j.value("a", g.a);
+    g.b = j.value("b", g.b);
+    g.sGold = std::max(0.0f, j.value("sGold", g.sGold));
+    g.sCard = std::clamp(j.value("sCard", g.sCard), 0.0f, 1.0f);
+    return g;
+}
+
+std::string battleGrade(const GradeInput& in, const GradeSettings& g, int* score) {
+    const float sc = 100.0f - std::max(0.0f, in.seconds - g.parSeconds) * g.timePenalty -
+                     std::clamp(in.lostShare, 0.0f, 1.0f) * g.damagePenalty +
+                     std::clamp(in.perfectRate, 0.0f, 1.0f) * g.perfectBonus + (float)std::max(0, in.bestChain) * g.chainBonus;
+    if (score) *score = (int)std::lround(sc);
+    return sc >= g.s ? "S" : sc >= g.a ? "A" : sc >= g.b ? "B" : "C";
+}
+
+GuardSettings guardFromJson(const nlohmann::json& b) {
+    GuardSettings g;
+    if (!b.is_object() || !b.contains("guard") || !b["guard"].is_object()) return g;
+    const nlohmann::json& j = b["guard"];
+    g.mode = j.value("mode", g.mode) == "bar" ? "bar" : "timing";
+    g.parryMs = std::max(0, j.value("parryMs", g.parryMs));
+    g.blockMs = std::max(g.parryMs, j.value("blockMs", g.blockMs));
+    g.earlyMs = std::max(g.blockMs, j.value("earlyMs", g.earlyMs));
+    g.blockPower = std::clamp(j.value("blockPower", g.blockPower), 0.0f, 100.0f);
+    g.cooldownMs = std::max(0, j.value("cooldownMs", g.cooldownMs));
+    return g;
+}
+
+GuardTiming guardTiming(int sinceMs, const GuardSettings& g) {
+    if (sinceMs < 0) return GuardTiming::None;
+    if (sinceMs <= g.parryMs) return GuardTiming::Parry;
+    if (sinceMs <= g.blockMs) return GuardTiming::Block;
+    if (sinceMs <= g.earlyMs) return GuardTiming::Early;
+    return GuardTiming::None;
+}
+
 } // namespace toms

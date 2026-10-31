@@ -82,6 +82,29 @@ int main() {
     CHECK(!addBreak(g, 3, 5) && g == 3.0f, "3 of 5");
     CHECK(addBreak(g, 2, 5) && g == 0.0f, "5 of 5: broken, the gauge empties");
 
+    // 6. The revamp (docs/gameplay/15): the feel, the grade, the timed guard.
+    const FeelSettings fl = feelFromJson(json::parse(R"({ "feel": { "strength": 2, "stopMs": { "perfect": 50, "new": 10 },
+        "sounds": { "perfect": "battle_perfect" }, "slowMoMs": 300 } })"));
+    CHECK(fl.stop("perfect", false) == 100 && fl.stop("new", false) == 20 && fl.stop("hit", false) == 50,
+          "stops: the file's, the built-in ones, times the strength");
+    CHECK(fl.stop("perfect", true) == 25 && fl.stop("nothing", false) == 0, "reduced: a quarter; an unknown moment: none");
+    CHECK(fl.shake("break", false) == 18.0f && fl.sound("perfect") == "battle_perfect" && fl.sound("hit").empty() &&
+              fl.slowMoMs == 300, "shake, sounds, slow motion");
+    const GradeSettings gs = gradeFromJson(json::object());
+    GradeInput gi;
+    gi.seconds = 20; gi.lostShare = 0.0f; gi.perfectRate = 0.5f; gi.bestChain = 2;
+    int sc = 0;
+    CHECK(battleGrade(gi, gs, &sc) == "S" && sc == 121, "quick, untouched, half perfect: S");
+    gi.seconds = 45; gi.lostShare = 0.5f; gi.perfectRate = 0.0f; gi.bestChain = 0;
+    CHECK(battleGrade(gi, gs, &sc) == "C" && sc == 40, "slow and hurt: C (100 - 30 - 30)");
+    gi.seconds = 30; gi.lostShare = 0.2f; gi.perfectRate = 0.2f;
+    CHECK(battleGrade(gi, gs) == "A", "in between: A (100 - 7.5 - 12 + 6 = 86.5)");
+    const GuardSettings gd = guardFromJson(json::object());
+    CHECK(gd.mode == "timing" && guardTiming(-1, gd) == GuardTiming::None && guardTiming(100, gd) == GuardTiming::Parry &&
+              guardTiming(400, gd) == GuardTiming::Block && guardTiming(900, gd) == GuardTiming::Early &&
+              guardTiming(3000, gd) == GuardTiming::None, "the guard by how long before the hit");
+    CHECK(guardFromJson(json::parse(R"({ "guard": { "mode": "bar" } })")).mode == "bar", "the bar kept as an option");
+
     if (g_fail) { std::printf("battle_rules_test: %d failure(s)\n", g_fail); return 1; }
     std::printf("battle_rules_test: all passed\n");
     return 0;

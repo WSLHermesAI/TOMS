@@ -22,7 +22,9 @@
     "row reached applies (hits: a number, or \"all\" = every point of the level). damage: times the hit; fx: replaces the",
     "level's hit effect; anim: the player's clip; sound; stunMs: the monster stops; pushMs: its attack clock goes back;",
     "breakAdd: more on its break gauge. A weapon without results uses the default entry's.",
-    "pace: \"cooldown\" or \"stamina\" for this weapon (empty: data/battle.json's; 13 §6.3)."
+    "pace: \"cooldown\" or \"stamina\" for this weapon (empty: data/battle.json's; 13 §6.3).",
+    "move: a result row's named move (a text.json key, docs/gameplay/07 §5.4 and 15 §3.3), shown over the monster.",
+    "play: the weapon's own attack (docs/gameplay/15 §3.3, touch_play.h): track (the point track), bow (drag back and let go at the target), slice (swipe the arrows' ways), circles (tap each circle as its ring closes). Each counts its points like the track, so the results, fx and clips stay the same. Scenarios play the track unless their battle sets \"play\"."
   ],
   "default": {
     "missBack": [
@@ -133,17 +135,20 @@
         "stunMs": 500,
         "breakAdd": 1,
         "fx": "default_perfect",
-        "anim": "attack_big"
+        "anim": "attack_big",
+        "move": "battle.move.default.perfect"
       },
       {
         "hits": 2,
         "name": "great",
-        "fx": "default_great"
+        "fx": "default_great",
+        "move": "battle.move.default.great"
       },
       {
         "hits": 0,
         "name": "miss",
-        "fx": "miss_puff"
+        "fx": "miss_puff",
+        "move": "battle.move.default.miss"
       }
     ]
   },
@@ -563,19 +568,23 @@
         "stunMs": 500,
         "breakAdd": 1,
         "fx": "bow_perfect",
-        "anim": "attack_big"
+        "anim": "attack_big",
+        "move": "battle.move.bow.perfect"
       },
       {
         "hits": 2,
         "name": "great",
-        "fx": "bow_great"
+        "fx": "bow_great",
+        "move": "battle.move.bow.great"
       },
       {
         "hits": 0,
         "name": "miss",
-        "fx": "miss_puff"
+        "fx": "miss_puff",
+        "move": "battle.move.bow.miss"
       }
-    ]
+    ],
+    "play": "bow"
   },
   "sword": {
     "missBack": [
@@ -671,19 +680,23 @@
         "stunMs": 500,
         "breakAdd": 1,
         "fx": "sword_perfect",
-        "anim": "attack_big"
+        "anim": "attack_big",
+        "move": "battle.move.sword.perfect"
       },
       {
         "hits": 2,
         "name": "great",
-        "fx": "sword_great"
+        "fx": "sword_great",
+        "move": "battle.move.sword.great"
       },
       {
         "hits": 0,
         "name": "miss",
-        "fx": "miss_puff"
+        "fx": "miss_puff",
+        "move": "battle.move.sword.miss"
       }
-    ]
+    ],
+    "play": "slice"
   },
   "staff": {
     "missBack": [
@@ -776,18 +789,22 @@
         "stunMs": 500,
         "breakAdd": 1,
         "fx": "staff_perfect",
-        "anim": "attack_big"
+        "anim": "attack_big",
+        "move": "battle.move.staff.perfect"
       },
       {
         "hits": 2,
         "name": "great",
-        "fx": "staff_great"
+        "fx": "staff_great",
+        "move": "battle.move.staff.great"
       },
       {
         "hits": 0,
         "name": "miss",
-        "fx": "miss_puff"
+        "fx": "miss_puff",
+        "move": "battle.move.staff.miss"
       }
-    ]
+    ],
+    "play": "circles"
   }
 }

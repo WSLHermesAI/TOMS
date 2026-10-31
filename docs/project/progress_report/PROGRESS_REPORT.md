@@ -15,6 +15,16 @@
 
 ## ▶ Next Step
 
+**The battle revamp, R1–R5, built into the game** (2026-10-31; design + prototype committed `e07043a`, the game work
+not committed; [DAILY_2026-10-31.md](DAILY_2026-10-31.md), [../../gameplay/15_BATTLE_REVAMP.md](../../gameplay/15_BATTLE_REVAMP.md) §10):
+- R1 feel (hit stop, shake, tier sounds and words, slow last hit, "Reduce shaking and flashes"); R2 the result screen
+  (grade S/A/B/C, the weapon's progress and next level); R3 one timed GUARD button, the attack panel only a status;
+  R4 BREAK! banner, perfect chain, the ultimate (×2, ×4 in a break).
+- R5 each weapon's own touch play (`touch_play.h`): bow slingshot, sword slices, staff circles; named moves per result.
+- Q34–Q38 unanswered: the doc's proposals used. Scenarios keep the track unless `"play"`; scenario `"clicks"`.
+- Changed-only 20 of 227 pass; 41 of 42 switched-off battle tests pass by name (`smoke.battle`: no reference).
+  **Owner:** try the plays; Q34–Q38 if a default is wrong; commit; no keyboard way to play the touch plays yet.
+
 **Node effects; the brawler showcase; clip export; faster clip drawing** (2026-10-30; not committed;
 [DAILY_2026-10-30.md](DAILY_2026-10-30.md), [../../engine/18_NODE_EFFECTS.md](../../engine/18_NODE_EFFECTS.md)):
 - `.anim` version 4: a node's `fx` draws its subtree into a picture of its own and through `fs_layer.sc` (motion blur,

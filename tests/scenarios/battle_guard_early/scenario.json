@@ -1,0 +1,29 @@
+{
+  "_comment": "The timed guard pressed too early (docs/gameplay/15 §3.2): the golem's heavy blow lands at frame 65, the guard was pressed at frame 20 (0.7 s before, past guard.blockMs): full damage, and the player is told 'Too early'.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "golem",
+    "hp": 9999,
+    "atk_interval_ms": 800,
+    "moves": [
+      "heavy"
+    ],
+    "events": []
+  },
+  "test": {
+    "frames": 75,
+    "keys": "f@20"
+  },
+  "expect": {
+    "scene": "battle",
+    "battleEvents": {
+      "parry": 0,
+      "hit": 1
+    }
+  }
+}

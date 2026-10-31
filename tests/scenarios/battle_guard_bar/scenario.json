@@ -1,0 +1,38 @@
+{
+  "_comment": "The five-zone guard bar kept as an option (data/battle.json guard.mode \"bar\", docs/gameplay/15 §3.2): a guard tapped early still counts, and with any power parrying (break.parryPower 0) the heavy blow is parried.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "golem",
+    "hp": 9999,
+    "atk_interval_ms": 800,
+    "moves": [
+      "heavy"
+    ],
+    "events": [],
+    "rules": {
+      "guard": {
+        "mode": "bar"
+      },
+      "break": {
+        "parryPower": 0
+      }
+    }
+  },
+  "test": {
+    "frames": 75,
+    "keys": "f@20"
+  },
+  "expect": {
+    "scene": "battle",
+    "battleEvents": {
+      "parry": 1,
+      "stagger": 1,
+      "hit": 0
+    }
+  }
+}

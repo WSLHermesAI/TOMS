@@ -14,6 +14,7 @@ nlohmann::json toJson(const GameSettings& s) {
     j["artStyle"] = s.artStyle;
     if (!s.playerLook.empty()) j["playerLook"] = s.playerLook;
     j["particleGpuThreshold"] = s.particleGpuThreshold;
+    j["reduceEffects"] = s.reduceEffects;
     return j;
 }
 
@@ -40,6 +41,7 @@ GameSettings gameSettingsFromJson(const nlohmann::json& j) {
     s.artStyle = j.value("artStyle", std::string());
     s.playerLook = j.value("playerLook", std::string());
     s.particleGpuThreshold = std::max(0, j.value("particleGpuThreshold", kDefaultParticleGpuThreshold));
+    s.reduceEffects = j.value("reduceEffects", false);
     return s;
 }
 

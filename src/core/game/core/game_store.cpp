@@ -127,8 +127,8 @@ void Game::inGameMenuMove(int delta) {
         int n = std::max(1, (int)hubMenuOrder().size());
         inGameMenuSel_ = ((inGameMenuSel_ + delta) % n + n) % n;
     } else {
-        // languages, the art style rows (none when only the original exists), the camera toggle row
-        int n = std::max(1, locale_.languageCount() + settingsStyleRowCount() + 1);
+        // languages, the art style rows (none when only the original exists), the camera row, the reduce-effects row
+        int n = std::max(1, locale_.languageCount() + settingsStyleRowCount() + 2);
         inGameMenuSel_ = ((inGameMenuSel_ + delta) % n + n) % n;
     }
 }
@@ -225,10 +225,13 @@ void Game::inGameMenuActivate() {
         inGameLangConfirmYes_ = true;
         audio.play("confirm_click");
     } else if (inGameMenuSel_ == locale_.languageCount() + settingsStyleRowCount()) {
-        // The camera row (always last): cycles instantly, no confirm dialog needed -- unlike
+        // The camera row (after the art styles): cycles instantly, no confirm dialog needed -- unlike
         // language, this is a low-stakes preference whose effect the player already sees behind
         // this very menu (the maze keeps scrolling/paging under the scrim).
         setCameraModeIndex(1 - cameraModeIndex());
+        audio.play("confirm_click");
+    } else if (inGameMenuSel_ == locale_.languageCount() + settingsStyleRowCount() + 1) {
+        setReduceEffects(!settings_.reduceEffects);   // "Reduce shaking and flashes" (docs/gameplay/15 §3.8)
         audio.play("confirm_click");
     }
 }

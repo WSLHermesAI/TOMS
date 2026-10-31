@@ -183,6 +183,9 @@ bool Game::loadAssets(const std::string& assetDir) {
             hitNumberDelayMs_ = std::max(0, bj.value("hit_number_delay_ms", hitNumberDelayMs_));
             battleJson_ = bj;
             paceSettings_ = toms::paceFromJson(bj);     // docs/gameplay/13 §6.3
+            feel_ = toms::feelFromJson(bj);             // docs/gameplay/15 §3.8
+            grade_ = toms::gradeFromJson(bj);           // §3.6
+            guard_ = toms::guardFromJson(bj);           // §3.2
             comboHoldsMonsters_ = bj.value("combo_holds_monsters", false);
             comboRunsThroughAttacks_ = bj.value("combo_runs_through_attacks", true);
             breakSettings_ = toms::breakFromJson(bj);   // §6.4

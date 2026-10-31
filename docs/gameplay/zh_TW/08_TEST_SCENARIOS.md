@@ -73,7 +73,7 @@ tests/scenarios/
 | `flags` | 要設定的流程旗標（例如 `hub.village` 解鎖村莊）。 |
 | `eventsDone` | 像玩家一樣完成的事件。它們的獎勵、解鎖與通知都會發生。 |
 | `player` | 新遊戲開始時裝備著弓（初始武器）；`"unarmed": true` 會卸下它。接著 `give` 與 `equip`（依 `items.json` 的 id 給道具與裝備；`give` 中也可以用 `gold:<n>`、`exp:<n>`、`points:<n>`），再套用給定的數值。`inventory` 會取代背包內容。`weaponUses`（`{ "<武器 id>": <勝場> }`）設定每把武器的勝場，也就是它的等級（[07](07_GAMEPLAY_PLAN.md) 第 13 節）。 |
-| `test` | 自動測試用：場景開啟後執行幾個畫格，以及要按的鍵（`鍵@畫格`，從場景的第一個畫格算起；鍵名和 `--keys` 相同）。 |
+| `test` | 自動測試用：場景開啟後執行幾個畫格，以及要按的鍵（`鍵@畫格`，從場景的第一個畫格算起；鍵名和 `--keys` 相同），以及 `clicks`：在設計座標上按滑鼠左鍵（`x:y@畫格`，1024 x 768，同 `--clicks`；一次點擊先懸停 2 畫格、按下 2 畫格，再放開）。 |
 | `expect` | 測試結束時檢查什麼（第 4 節）。沒有的話只檢查場景是否正在顯示。 |
 
 設定檔中的檔名是相對於**該檔案**本身。共用檔案指定的存檔，會在共用檔案旁邊尋找。
@@ -84,7 +84,7 @@ tests/scenarios/
 |---|---|---|---|
 | `title` | 遊戲啟動時的標題畫面 | — | `title` |
 | `stage` | 行走場景：玩家在樓層中，處於存檔或給定的時刻 | — | `stage_new_game`、`stage_from_save`、`stage_from_events` |
-| `battle` | 與 `enemies.json` 中某個敵人的戰鬥（敵人不在地圖上） | `battle`：`enemy`，可選擇覆寫 `hp`、`atk`、`def`、`atk_interval_ms`、`moves`、`look`、`break`、`events`；`party`：最多再兩隻（id，或 `{ "enemy": id, ...覆寫 }`）；`pace`：`cooldown` / `stamina`；`rules`：這場戰鬥用的 `data/battle.json` 數值（`{ "stamina": {...}, "break": {...} }`）（[13](13_BATTLE_EDITOR.md)） | `battle_slime`、`battle_strong_player`、`battle_bow`（弓的戰鬥片段；另有 `battle_bow_charge`、`battle_bow_idle`）；`battle_party`、`battle_party_target`（三隻怪物）；`battle_parry`、`battle_jabs`、`battle_spell_break`、`battle_break`、`battle_transform`、`battle_stamina`、`battle_stamina_short`、`battle_attack_in_combo`、`battle_combo_holds`（戰鬥規則） |
+| `battle` | 與 `enemies.json` 中某個敵人的戰鬥（敵人不在地圖上） | `battle`：`enemy`，可選擇覆寫 `hp`、`atk`、`def`、`atk_interval_ms`、`moves`、`look`、`break`、`events`；`party`：最多再兩隻（id，或 `{ "enemy": id, ...覆寫 }`）；`pace`：`cooldown` / `stamina`；`play`：攻擊的玩法，`track`（情境中的預設）、`bow`、`slice`、`circles` 或 `weapon`（身上武器自己的玩法，`weapon_play.json` 的 `"play"`；[15](15_BATTLE_REVAMP.md) §3.3）；`rules`：這場戰鬥用的 `data/battle.json` 數值（`{ "stamina": {...}, "break": {...} }`）（[13](13_BATTLE_EDITOR.md)） | `battle_slime`、`battle_strong_player`、`battle_bow`（弓的戰鬥片段；另有 `battle_bow_charge`、`battle_bow_idle`）；`battle_party`、`battle_party_target`（三隻怪物）；`battle_parry`、`battle_jabs`、`battle_spell_break`、`battle_break`、`battle_transform`、`battle_stamina`、`battle_stamina_short`、`battle_attack_in_combo`、`battle_combo_holds`（戰鬥規則）；`battle_guard_early`、`battle_guard_bar`、`battle_result`（改版：防禦的時機、結算的評等）；`battle_play_bow`、`battle_play_slice`、`battle_play_circles`（每把武器自己的玩法，由一次點擊開始） |
 | `battleWon` | 那場戰鬥之後的勝利畫面 | 同 `battle` | `battle_won` |
 | `arena` | **武器測試場**（[07](07_GAMEPLAY_PLAN.md) 第 0 階段）：依序和列出的敵人一場接一場地戰鬥，每場都是滿血，沒有獎勵，也不影響故事。勝利後按 Enter 開始下一場；落敗後自動開始。武器是玩家的：初始的弓，用 `player.equip` 換別的，用 `player.unarmed` 則空手。`toms_game --arena=<敵人,...>[:<武器>]` 不用檔案也能開啟（沒寫武器：空手） | `battle`：`enemies`（或 `enemy`），以及和 `battle` 相同的覆寫值，套用到每一場 | `arena_unarmed`、`arena_wand`、`arena_restart` |
 | `weaponTrial` | **開場故事**（[07](07_GAMEPLAY_PLAN.md) 第 15 節）：老武師的對話（`dialogue/weapon_master.json`），就像標題畫面的新遊戲開啟它一樣；它的選項在試用戰鬥（武器測試場）中試用武器並留下一把 | — | `trial_start`、`trial_try_sword`、`trial_choose_staff` |
@@ -126,6 +126,7 @@ tests/scenarios/
   | `foesDown`、`target` | 戰鬥中倒下的怪物數；攻擊打向的怪物（0 = 第一隻） |
   | `battleEvents` | `{ "parry": 1, "hit": 0 }`：紀錄中每種戰鬥事件的數量（`toms_game --battle-log` 會印出） |
   | `pace` | 戰鬥的節奏：`cooldown` 或 `stamina` |
+  | `grade` | 勝利後結算畫面的評等：`S`、`A`、`B` 或 `C`（[15](15_BATTLE_REVAMP.md) §3.6） |
   | `enemyClip` | 它為那個狀態播放的片段（`attack`，或某隻怪物自己的 `attack_<id>`） |
   | `battleAnim` | 有戰鬥片段的武器，戰鬥畫面顯示的片段：`charge`、`attack`、`miss` 或 `idle`（[05](../../engine/zh_TW/05_ANIMATION.md)〈角色〉） |
   | `crystals` | 玩家擁有的水晶（[07](07_GAMEPLAY_PLAN.md) 第 16 節；`give` 也接受 `crystals:<n>`） |

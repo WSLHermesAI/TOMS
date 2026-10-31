@@ -817,6 +817,310 @@
       "ko": "Vorkath가 포효하며 공격이 빨라졌다!",
       "es": "¡Vorkath ruge y acelera!"
     },
+    "battle.move.default.perfect": {
+      "zh_TW": "會心一擊",
+      "en": "Critical Strike",
+      "zh_CN": "会心一击",
+      "ja": "会心の一撃",
+      "ko": "회심의 일격",
+      "es": "Golpe crítico"
+    },
+    "battle.move.default.great": {
+      "zh_TW": "重擊",
+      "en": "Strong Hit",
+      "zh_CN": "重击",
+      "ja": "強打",
+      "ko": "강타",
+      "es": "Golpe fuerte"
+    },
+    "battle.move.default.miss": {
+      "zh_TW": "失手",
+      "en": "Fumble",
+      "zh_CN": "失手",
+      "ja": "しくじり",
+      "ko": "헛손질",
+      "es": "Torpeza"
+    },
+    "battle.move.bow.perfect": {
+      "zh_TW": "鷹之雨",
+      "en": "Falcon Rain",
+      "zh_CN": "鹰之雨",
+      "ja": "鷹の雨",
+      "ko": "매의 비",
+      "es": "Lluvia de halcón"
+    },
+    "battle.move.bow.great": {
+      "zh_TW": "雙牙",
+      "en": "Twin Fang",
+      "zh_CN": "双牙",
+      "ja": "双牙",
+      "ko": "쌍아",
+      "es": "Doble colmillo"
+    },
+    "battle.move.bow.miss": {
+      "zh_TW": "亂射",
+      "en": "Wild Shot",
+      "zh_CN": "乱射",
+      "ja": "乱れ撃ち",
+      "ko": "난사",
+      "es": "Tiro errado"
+    },
+    "battle.move.sword.perfect": {
+      "zh_TW": "虎虎生風四連擊",
+      "en": "Tiger Wind, four hits",
+      "zh_CN": "虎虎生风四连击",
+      "ja": "虎虎生風四連撃",
+      "ko": "호호생풍 4연격",
+      "es": "Viento del tigre, cuatro golpes"
+    },
+    "battle.move.sword.great": {
+      "zh_TW": "十字斬",
+      "en": "Crossing Cut",
+      "zh_CN": "十字斩",
+      "ja": "十字斬り",
+      "ko": "십자베기",
+      "es": "Corte cruzado"
+    },
+    "battle.move.sword.miss": {
+      "zh_TW": "虎頭蛇尾",
+      "en": "Tiger's head, snake's tail",
+      "zh_CN": "虎头蛇尾",
+      "ja": "竜頭蛇尾",
+      "ko": "용두사미",
+      "es": "Cabeza de tigre, cola de serpiente"
+    },
+    "battle.move.staff.perfect": {
+      "zh_TW": "星之印",
+      "en": "Star Seal",
+      "zh_CN": "星之印",
+      "ja": "星の印",
+      "ko": "별의 인",
+      "es": "Sello estelar"
+    },
+    "battle.move.staff.great": {
+      "zh_TW": "雙雷",
+      "en": "Twin Bolt",
+      "zh_CN": "双雷",
+      "ja": "双雷",
+      "ko": "쌍뢰",
+      "es": "Doble rayo"
+    },
+    "battle.move.staff.miss": {
+      "zh_TW": "啞火",
+      "en": "Fizzle",
+      "zh_CN": "哑火",
+      "ja": "不発",
+      "ko": "불발",
+      "es": "Chispazo"
+    },
+    "battle.word_parry": {
+      "zh_TW": "招架！",
+      "en": "Parry!",
+      "zh_CN": "招架！",
+      "ja": "パリィ！",
+      "ko": "패링!",
+      "es": "¡Desviado!"
+    },
+    "battle.word_block": {
+      "zh_TW": "擋下",
+      "en": "Blocked",
+      "zh_CN": "挡下",
+      "ja": "ガード",
+      "ko": "막음",
+      "es": "Bloqueado"
+    },
+    "battle.word_early": {
+      "zh_TW": "太早",
+      "en": "Too early",
+      "zh_CN": "太早",
+      "ja": "早すぎ",
+      "ko": "너무 빨라",
+      "es": "Demasiado pronto"
+    },
+    "battle.word_chain": {
+      "zh_TW": "連鎖 ×{n}",
+      "en": "Chain ×{n}",
+      "zh_CN": "连锁 ×{n}",
+      "ja": "チェイン ×{n}",
+      "ko": "체인 ×{n}",
+      "es": "Cadena ×{n}"
+    },
+    "battle.word_break": {
+      "zh_TW": "破防！",
+      "en": "BREAK!",
+      "zh_CN": "破防！",
+      "ja": "ブレイク！",
+      "ko": "브레이크!",
+      "es": "¡ROTO!"
+    },
+    "battle.word_ultimate": {
+      "zh_TW": "{name} — 絕招",
+      "en": "{name} — ULTIMATE",
+      "zh_CN": "{name} — 绝招",
+      "ja": "{name} — 奥義",
+      "ko": "{name} — 필살기",
+      "es": "{name} — DEFINITIVO"
+    },
+    "battle.guard_button": {
+      "zh_TW": "防禦",
+      "en": "GUARD",
+      "zh_CN": "防御",
+      "ja": "ガード",
+      "ko": "방어",
+      "es": "GUARDIA"
+    },
+    "battle.guard_hint": {
+      "zh_TW": "在攻擊打到前按下",
+      "en": "just before a hit lands",
+      "zh_CN": "在攻击打到前按下",
+      "ja": "攻撃が当たる直前に",
+      "ko": "공격이 닿기 직전에",
+      "es": "justo antes del golpe"
+    },
+    "battle.attack_ready": {
+      "zh_TW": "準備好",
+      "en": "READY",
+      "zh_CN": "准备好",
+      "ja": "準備OK",
+      "ko": "준비 완료",
+      "es": "LISTO"
+    },
+    "battle.attack_ready_hint": {
+      "zh_TW": "在量條上點擊來攻擊",
+      "en": "tap the track to attack",
+      "zh_CN": "在量条上点击来攻击",
+      "ja": "トラックをタップして攻撃",
+      "ko": "트랙을 탭해 공격",
+      "es": "toca la pista para atacar"
+    },
+    "battle.attack_running": {
+      "zh_TW": "攻擊中",
+      "en": "Attacking",
+      "zh_CN": "攻击中",
+      "ja": "攻撃中",
+      "ko": "공격 중",
+      "es": "Atacando"
+    },
+    "battle.attack_recovering": {
+      "zh_TW": "恢復中",
+      "en": "Recovering",
+      "zh_CN": "恢复中",
+      "ja": "回復中",
+      "ko": "회복 중",
+      "es": "Recuperando"
+    },
+    "battle.result_title": {
+      "zh_TW": "勝利",
+      "en": "VICTORY",
+      "zh_CN": "胜利",
+      "ja": "勝利",
+      "ko": "승리",
+      "es": "VICTORIA"
+    },
+    "battle.result_stats": {
+      "zh_TW": "{t} 秒 · 最佳連鎖 {c} · 完美 {p} 次",
+      "en": "{t} s · best chain {c} · {p} perfect",
+      "zh_CN": "{t} 秒 · 最佳连锁 {c} · 完美 {p} 次",
+      "ja": "{t} 秒 · 最高チェイン {c} · パーフェクト {p}",
+      "ko": "{t}초 · 최고 체인 {c} · 퍼펙트 {p}",
+      "es": "{t} s · mejor cadena {c} · {p} perfectos"
+    },
+    "battle.result_weapon": {
+      "zh_TW": "{name}  Lv {lv}",
+      "en": "{name}  Lv {lv}",
+      "zh_CN": "{name}  Lv {lv}",
+      "ja": "{name}  Lv {lv}",
+      "ko": "{name}  Lv {lv}",
+      "es": "{name}  Nv {lv}"
+    },
+    "battle.result_progress": {
+      "zh_TW": "再 {n} / {m} 勝升到下一級",
+      "en": "{n} / {m} wins to the next level",
+      "zh_CN": "再 {n} / {m} 胜升到下一级",
+      "ja": "次のレベルまで {n} / {m} 勝",
+      "ko": "다음 레벨까지 {n} / {m}승",
+      "es": "{n} / {m} victorias para el siguiente nivel"
+    },
+    "battle.result_top": {
+      "zh_TW": "已達最高等級",
+      "en": "Top level",
+      "zh_CN": "已达最高等级",
+      "ja": "最高レベル",
+      "ko": "최고 레벨",
+      "es": "Nivel máximo"
+    },
+    "battle.result_next": {
+      "zh_TW": "下一級：{what}",
+      "en": "Next level: {what}",
+      "zh_CN": "下一级：{what}",
+      "ja": "次のレベル：{what}",
+      "ko": "다음 레벨: {what}",
+      "es": "Siguiente nivel: {what}"
+    },
+    "battle.result_points": {
+      "zh_TW": "{n} 個點",
+      "en": "{n} points",
+      "zh_CN": "{n} 个点",
+      "ja": "ポイント {n} 個",
+      "ko": "포인트 {n}개",
+      "es": "{n} puntos"
+    },
+    "battle.result_levelup": {
+      "zh_TW": "{name} 升到 Lv {lv}！",
+      "en": "{name} reached Lv {lv}!",
+      "zh_CN": "{name} 升到 Lv {lv}！",
+      "ja": "{name} が Lv {lv} に！",
+      "ko": "{name}이(가) Lv {lv}에 도달!",
+      "es": "¡{name} alcanzó el Nv {lv}!"
+    },
+    "battle.result_gold": {
+      "zh_TW": "+{gold} 金幣 · +{exp} 經驗",
+      "en": "+{gold} gold · +{exp} EXP",
+      "zh_CN": "+{gold} 金币 · +{exp} 经验",
+      "ja": "+{gold} ゴールド · +{exp} EXP",
+      "ko": "+{gold} 골드 · +{exp} EXP",
+      "es": "+{gold} oro · +{exp} EXP"
+    },
+    "settings.reduce_effects_off": {
+      "zh_TW": "[ ] 減少震動與閃光",
+      "en": "[ ] Reduce shaking and flashes",
+      "zh_CN": "[ ] 减少震动与闪光",
+      "ja": "[ ] 揺れと閃光を減らす",
+      "ko": "[ ] 흔들림과 섬광 줄이기",
+      "es": "[ ] Reducir sacudidas y destellos"
+    },
+    "settings.reduce_effects_on": {
+      "zh_TW": "[x] 減少震動與閃光",
+      "en": "[x] Reduce shaking and flashes",
+      "zh_CN": "[x] 减少震动与闪光",
+      "ja": "[x] 揺れと閃光を減らす",
+      "ko": "[x] 흔들림과 섬광 줄이기",
+      "es": "[x] Reducir sacudidas y destellos"
+    },
+    "battle.play_hint_bow": {
+      "zh_TW": "往後拉再放開，瞄準靶心",
+      "en": "drag back and let go at the target",
+      "zh_CN": "往后拉再放开，瞄准靶心",
+      "ja": "引いて離し、的を狙う",
+      "ko": "뒤로 당겼다 놓아 과녁을 노려라",
+      "es": "tira hacia atrás y suelta hacia la diana"
+    },
+    "battle.play_hint_slice": {
+      "zh_TW": "照箭頭方向劃過",
+      "en": "swipe the way each arrow points",
+      "zh_CN": "照箭头方向划过",
+      "ja": "矢印の向きにスワイプ",
+      "ko": "화살표 방향으로 긋기",
+      "es": "desliza hacia donde apunta cada flecha"
+    },
+    "battle.play_hint_circles": {
+      "zh_TW": "光圈收合時點圓圈",
+      "en": "tap each circle as its ring closes",
+      "zh_CN": "光圈收合时点圆圈",
+      "ja": "輪が閉じる時に円をタップ",
+      "ko": "고리가 닫힐 때 원을 탭",
+      "es": "toca cada círculo cuando su anillo se cierra"
+    },
     "battle.foe_down": {
       "zh_TW": "{name} 倒下了！",
       "en": "{name} is down!",

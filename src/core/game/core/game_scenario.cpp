@@ -120,9 +120,12 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
     arena_ = Arena{};
     scenarioScene_ = sc.value("scene", std::string("stage"));
     scenarioExpect_ = sc.value("expect", nlohmann::json::object());
+    // the attack's play (touch_play.h): scenarios play the track unless their battle sets "play" ("weapon": the weapon's)
+    playOverride_ = sc.value("battle", nlohmann::json::object()).value("play", std::string("track"));
     const nlohmann::json test = sc.value("test", nlohmann::json::object());
     scenarioTestFrames_ = test.value("frames", 0);
     scenarioTestKeys_ = test.value("keys", std::string());
+    scenarioTestClicks_ = test.value("clicks", std::string());   // "x:y@frame,..." (design px), like --clicks
     auto bad = [&](const std::string& what) { error = scenarioName_ + ": " + what; return false; };
 
     // 1. The run: from a save file in the scenario's folder, or a new game. Neither is ever written.
@@ -206,6 +209,9 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
             if (b.contains("rules") && b["rules"].is_object()) rules.merge_patch(b["rules"]);
             paceSettings_ = toms::paceFromJson(rules);
             breakSettings_ = toms::breakFromJson(rules);
+            feel_ = toms::feelFromJson(rules);
+            grade_ = toms::gradeFromJson(rules);
+            guard_ = toms::guardFromJson(rules);
             comboHoldsMonsters_ = rules.value("combo_holds_monsters", false);
             comboRunsThroughAttacks_ = rules.value("combo_runs_through_attacks", true);
         }
@@ -374,6 +380,9 @@ bool Game::scenarioCheck(std::string& report) const {
             if (n != it.value().get<int>())
                 fail(std::to_string(n) + " battle events \"" + it.key() + "\", expected " + std::to_string(it.value().get<int>()));
         }
+    if (scenarioExpect_.contains("grade") && (!cs.result.valid || cs.result.grade != scenarioExpect_["grade"].get<std::string>()))
+        fail("the result's grade is " + (cs.result.valid ? cs.result.grade : std::string("(no result)")) + ", expected " +
+             scenarioExpect_["grade"].get<std::string>());   // docs/gameplay/15 §3.6
     if (scenarioExpect_.contains("pace") && battlePace() != scenarioExpect_["pace"].get<std::string>())
         fail("the pace is " + battlePace() + ", expected " + scenarioExpect_["pace"].get<std::string>());
     if (scenarioExpect_.contains("target") && cs.target != scenarioExpect_["target"].get<int>())

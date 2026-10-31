@@ -351,11 +351,11 @@ void Game::buildUiState(toms::UiState& u) const {
         for (const auto& p : cs.popups) {   // over the fighter's box (battle.rcss #player / .foe .fbox: fighterBox)
             toms::UiPopup q;
             q.text = p.text;
-            q.kind = p.kind;
+            q.style = p.style;
             const float r = p.rise.value();            // 0 -> 1 as it rises
             const glm::vec4 box = fighterBox(p.who);
-            q.x = box.x + box.z * 0.5f - 50.0f;        // the 100 px number, centred over it
-            q.y = box.y + 26.0f - 70.0f * r;
+            q.x = box.x + box.z * 0.5f - 150.0f;       // the 300 px box (a word is wider than a number), centred over it
+            q.y = box.y + 26.0f - (float)p.lift - 70.0f * r;
             q.opacity = r < 0.6f ? 1.0f : std::max(0.0f, 1.0f - (r - 0.6f) / 0.4f);
             b.popups.push_back(q);
         }
@@ -370,7 +370,7 @@ void Game::buildUiState(toms::UiState& u) const {
             if (b.stamina_pace) {
                 b.clock_label = L.tr("battle.stamina");
                 b.clock_pct = pct(cs.stamina, (float)paceSettings_.staminaMax);
-                b.attack_short = !cs.combo.running() && cs.stamina < (float)paceSettings_.attackCost;
+                b.attack_short = !attackRunning() && cs.stamina < (float)paceSettings_.attackCost;
                 b.guard_short = cs.stamina < (float)paceSettings_.guardCost;
             }
             {   // Battle v3 (docs/gameplay/07 phase 1): the charge, the track with the weapon level's points, the marker
@@ -414,13 +414,89 @@ void Game::buildUiState(toms::UiState& u) const {
             b.crit_hint = L.tr("battle.active_armed_hint");
             b.super_label = L.tr("battle.super_label");
             for (int i = 0; i < run_.superMax(); i++) b.super_dots.push_back(i < cs.superCharge ? 1 : 0);
-            b.super_ready = cs.superCharge >= run_.superMax();
+            b.super_ready = cs.superCharge >= run_.superMax() && !attackRunning() && !cs.winPending;
             b.super_button = L.tr("battle.super_ready");
+            // the revamp (docs/gameplay/15): the attack is the play, its panel only says how it is; one guard button
+            b.show_clock = cs.pace == toms::Pace::Stamina;
+            b.guard_timing = guard_.mode == "timing";
+            b.guard_lit = cs.guardAtMs >= 0 && cs.clockMs - cs.guardAtMs <= guard_.blockMs;
+            b.guard_cooling = cs.guardCdMs > 0 || b.guard_short;
+            b.guard_label = L.tr("battle.guard_button");
+            b.guard_hint = L.tr("battle.guard_hint");
+            const toms::PlayKind play = battlePlayKind();
+            if (attackRunning()) { b.attack_state = "running"; b.attack_label = L.tr("battle.attack_running"); }
+            else if (cs.pace == toms::Pace::Cooldown && cs.atkBar.cooling) {
+                b.attack_state = "recovering";
+                b.attack_label = L.tr("battle.attack_recovering");
+                b.attack_pct = 100.0f * (1.0f - (float)cs.atkBar.cooldownMs / (float)std::max(1, barCooldownMs()));
+            } else if (b.attack_short) { b.attack_state = "short"; b.attack_label = L.tr("battle.no_stamina"); }
+            else {
+                b.attack_state = "ready";
+                b.attack_label = L.tr("battle.attack_ready");
+                b.attack_hint = L.tr(play == toms::PlayKind::Track ? "battle.attack_ready_hint"
+                                     : std::string("battle.play_hint_") + toms::playKindName(play));
+            }
+            if (play != toms::PlayKind::Track) touchPlayUi(b);
+            if (cs.chain > 1) b.chain_text = trParam(L.tr("battle.word_chain"), "n", std::to_string(cs.chain));
             auto activeIds = toms::equippedActives(equipped_, equipmentDefs_);
             if (!activeIds.empty() && toms::canUseActive(activeIds[0], activeDefs_, cs.activeRuntime, cs.activeStatus)) {
                 b.active_ready = true;   // (ActiveDefinition has no display name yet: the id is shown)
                 b.active_button = trParam(L.tr("battle.active_ready"), "name", activeIds[0]);
             }
+        }
+    }
+
+    // ---- the battle's moments and its result (docs/gameplay/15 §3.4, §3.6) ----
+    if (showBattle) {
+        toms::UiBattle& b = u.battle;
+        if (cs.bannerMs > 0 && !cs.banner.empty()) {   // across the screen: slides in, holds, slides out
+            const float t = 1.0f - (float)cs.bannerMs / (float)cs.bannerMsMax;
+            b.banner = cs.banner;
+            b.banner_kind = cs.bannerKind;
+            b.banner_opacity = t < 0.12f ? t / 0.12f : t > 0.85f ? (1.0f - t) / 0.15f : 1.0f;
+            b.banner_shift = t < 0.12f ? (1.0f - t / 0.12f) * 500.0f : t > 0.85f ? -(t - 0.85f) / 0.15f * 500.0f : 0.0f;
+        }
+        if (cs.won && cs.result.valid) {
+            const CombatState::Result& r = cs.result;
+            b.result_shown = true;
+            b.grade = r.grade;
+            b.grade_s = r.grade == "S";
+            b.result_title = L.tr("battle.result_title");
+            char secs[16];
+            std::snprintf(secs, sizeof secs, "%.1f", r.seconds);
+            b.result_stats = trParam(trParam(trParam(L.tr("battle.result_stats"), "t", secs), "c", std::to_string(cs.bestChain)),
+                                     "p", std::to_string(cs.perfects));
+            const toms::WeaponPlay& wp = weaponPlayOf(r.weapon);
+            const std::string name = equipmentDefs_.count(r.weapon) ? itemName(r.weapon) : L.tr("battle.unarmed");
+            b.result_weapon = trParam(trParam(L.tr("battle.result_weapon"), "name", name), "lv", std::to_string(r.lvAfter));
+            const int need = toms::usesToNextLevel(wp, r.lvAfter);
+            int done = r.uses;
+            for (int l = 1; l < r.lvAfter; l++) done -= toms::usesToNextLevel(wp, l);
+            if (need > 0) {   // the wins to the next level, and what that level adds (07 pillar 2: the reason to go on)
+                b.result_pct = pct((float)std::max(0, done), (float)need);
+                b.result_progress = trParam(trParam(L.tr("battle.result_progress"), "n", std::to_string(std::max(0, done))), "m",
+                                            std::to_string(need));
+                const toms::WeaponLevel& cur = toms::weaponLevelEntry(wp, r.lvAfter);
+                const toms::WeaponLevel& nxt = toms::weaponLevelEntry(wp, r.lvAfter + 1);
+                std::string what;
+                if (nxt.points > cur.points) what = trParam(L.tr("battle.result_points"), "n", std::to_string(nxt.points));
+                for (const auto& [stat, v] : nxt.stats) {
+                    const int was = cur.stats.count(stat) ? cur.stats.at(stat) : 0;
+                    if (v > was) {
+                        std::string up = stat;
+                        for (char& ch : up) ch = (char)std::toupper((unsigned char)ch);
+                        what += (what.empty() ? "" : ", ") + up + " +" + std::to_string(v - was);
+                    }
+                }
+                if (!what.empty()) b.result_next = trParam(L.tr("battle.result_next"), "what", what);
+            } else {
+                b.result_pct = 100.0f;
+                b.result_progress = L.tr("battle.result_top");
+            }
+            if (r.lvAfter > r.lvBefore)
+                b.result_levelup = trParam(trParam(L.tr("battle.result_levelup"), "name", name), "lv", std::to_string(r.lvAfter));
+            b.result_gold = trParam(trParam(L.tr("battle.result_gold"), "gold", std::to_string(r.gold)), "exp", std::to_string(r.exp));
+            b.result_card = r.card;
         }
     }
 
@@ -586,6 +662,8 @@ void Game::buildMenuUi(toms::UiMenu& m) const {
             m.rows.push_back({L.tr(cam_.mode() == toms::Camera::Mode::Rooms ? "settings.camera_rooms" : "settings.camera_follow"),
                               "", sel(cam), true});
             m.rows[cam].section = L.tr("settings.other_section");
+            m.rows.push_back({L.tr(settings_.reduceEffects ? "settings.reduce_effects_on" : "settings.reduce_effects_off"),
+                              "", sel(cam + 1), true});   // docs/gameplay/15 §3.8
             break;
         }
         case InGameMenuPage::Skills: {
@@ -711,4 +789,76 @@ void Game::uiEvent(const std::string& name, int arg) {
         return;
     }
     if (name == "stage_close") { if (stageSelectOpen_) closeStageSelect(); return; }
+}
+
+// Each weapon's own play (touch_play.h; docs/gameplay/15 §3.3), drawn over the monster as plain boxes (battle.rcss .tp):
+// the bow's target, its pull and the crosshair; the sword's arrows (a bar and a chevron head) and the swipe; the staff's
+// circles and their closing rings; and where each one landed (a ring, or a cross), fading.
+void Game::touchPlayUi(toms::UiBattle& b) const {
+    const toms::TouchPlay& p = cs.touch;
+    b.touch_kind = toms::playKindName(battlePlayKind());
+    auto add = [&](const std::string& cls, float cx, float cy, float w, float h, float rot = 0.0f, float radius = 0.0f,
+                   float opacity = 1.0f, std::string text = {}) {
+        b.touch.push_back({cls, cx - w * 0.5f, cy - h * 0.5f, w, h, rot, radius, opacity, std::move(text)});
+    };
+    auto line = [&](const std::string& cls, glm::vec2 a, glm::vec2 c, float thick) {
+        const glm::vec2 d = c - a;
+        const float len = std::sqrt(d.x * d.x + d.y * d.y);
+        if (len >= 2.0f) add(cls, (a.x + c.x) * 0.5f, (a.y + c.y) * 0.5f, len, thick, std::atan2(d.y, d.x) * 57.29578f, thick * 0.5f);
+    };
+    for (const toms::TouchPlay::Mark& m : p.marks()) {
+        if (m.ageMs >= 500) continue;
+        const float k = (float)m.ageMs / 500.0f, s = 34.0f + 30.0f * k;
+        if (m.ok) add("mark ok", m.x, m.y, s, s, 0.0f, s * 0.5f, 1.0f - k);
+        else { add("mark bad", m.x, m.y, 40, 7, 45.0f, 3.5f, 1.0f - k); add("mark bad", m.x, m.y, 40, 7, -45.0f, 3.5f, 1.0f - k); }
+    }
+    if (!p.running()) return;
+    const std::string count = std::to_string(std::min(p.index() + 1, p.points())) + "/" + std::to_string(p.points());
+    if (p.kind() == toms::PlayKind::Bow) {
+        const toms::TouchPlay::Target& t = p.target();
+        add(p.started() ? "target" : "target idle", t.x, t.y, 2 * t.r, 2 * t.r, 0.0f, t.r);
+        add("bull", t.x, t.y, 0.8f * t.r, 0.8f * t.r, 0.0f, 0.4f * t.r);
+        add("count", t.x, t.y - t.r - 18.0f, 80, 24, 0.0f, 0.0f, 1.0f, count);
+        if (p.started()) add("time", t.x, t.y + t.r + 10.0f, 2 * t.r * p.timeLeft(), 5, 0.0f, 2.5f);
+        if (p.aiming()) {
+            const glm::vec2 c = p.crosshair();
+            line("pull", p.aimFrom(), p.aimTo(), 5);
+            line("shot", p.aimFrom(), c, 2);
+            add("anchor", p.aimFrom().x, p.aimFrom().y, 14, 14, 0.0f, 7);
+            add("cross", c.x, c.y, 28, 28, 0.0f, 14);
+        }
+    } else if (p.kind() == toms::PlayKind::Slice) {
+        const glm::vec4 a = touchArea();
+        const float cx = a.x + a.z * 0.5f, cy = a.y + a.w - 80.0f;   // under the monster and its HP
+        const auto& arrows = p.arrows();
+        const float gap = 84.0f, x0 = cx - gap * 0.5f * (float)(arrows.size() - 1);
+        for (size_t k = 0; k < arrows.size(); k++) {
+            const toms::TouchPlay::Arrow& ar = arrows[k];
+            const float x = x0 + gap * (float)k;
+            if (ar.state == 0 && !p.arrowsShown()) { add("arrow hidden", x, cy, 18, 18, 0.0f, 9); continue; }
+            const std::string cls = ar.state == 1 ? "arrow cut" : ar.state == 2 ? "arrow missed"
+                                  : (int)k == p.index() ? "arrow now" : "arrow";
+            const float ang = (float)ar.dir * 45.0f, rad = ang / 57.29578f;
+            const glm::vec2 dir(std::cos(rad), std::sin(rad));
+            add(cls, x - dir.x * 6.0f, cy - dir.y * 6.0f, 46, 10, ang, 5);
+            add(cls + " head", x + dir.x * 12.0f, cy + dir.y * 12.0f, 22, 22, ang + 45.0f);
+        }
+        add("count", cx, cy - 44.0f, 80, 24, 0.0f, 0.0f, 1.0f, count);
+        if (p.started()) add("time", cx, cy + 40.0f, 160.0f * p.timeLeft(), 5, 0.0f, 2.5f);
+        if (p.swiping()) line("swipe", p.aimFrom(), p.aimTo(), 8);
+    } else if (p.kind() == toms::PlayKind::Circles) {
+        const auto& circles = p.circles();
+        const float r = 34.0f;
+        for (size_t k = 0; k < circles.size(); k++) {
+            const toms::TouchPlay::Circle& c = circles[k];
+            if (c.state != 0) continue;
+            // the ring closes on the circle over the last 900 ms (before the first tap: every circle waits, no ring)
+            const float lead = p.started() ? (float)(c.atMs - p.clockMs()) / 900.0f : 2.0f;
+            add(p.started() ? "circle" : "circle idle", c.x, c.y, 2 * r, 2 * r, 0.0f, r, 1.0f, std::to_string(k + 1));
+            if (lead <= 1.0f) {
+                const float s = 2 * r * (1.0f + 1.6f * std::max(0.0f, lead));
+                add("ring", c.x, c.y, s, s, 0.0f, s * 0.5f, std::clamp(1.2f - lead, 0.3f, 1.0f));
+            }
+        }
+    }
 }

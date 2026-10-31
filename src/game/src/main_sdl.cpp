@@ -569,6 +569,9 @@ bool appFrame(App& app) {
             const size_t before = app.args.presses.size();
             parseKeys(g->scenarioTestKeys(), app.args);
             for (size_t i = before; i < app.args.presses.size(); ++i) app.args.presses[i].frame += app.frameNo;
+            const size_t clicksBefore = app.args.clicks.size();   // and its clicks ("test": { "clicks": "x:y@f,..." })
+            parseClicks(g->scenarioTestClicks(), app.args);
+            for (size_t i = clicksBefore; i < app.args.clicks.size(); ++i) app.args.clicks[i].frame += app.frameNo;
         }
     }
     if (!app.gave && (!args.give.empty() || !args.stairLock.empty() || !args.eventsDone.empty() || !args.gotoFloor.empty()) &&

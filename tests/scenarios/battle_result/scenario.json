@@ -1,0 +1,8 @@
+{
+  "_comment": "The result screen (docs/gameplay/15 §3.6): the bow's combo (battle_bow's taps) hits all three points of a 1-HP slime; the last hit plays in slow motion, then the win: quick, untouched, all perfect, so the grade is S.",
+  "scene": "battle",
+  "player": { "equip": ["bow"] },
+  "battle": { "enemy": "slime", "hp": 1, "atk_interval_ms": 60000 },
+  "test": { "frames": 170, "keys": "enter@40,enter@61,enter@81,enter@102" },
+  "expect": { "scene": "battleWon", "grade": "S" }
+}
