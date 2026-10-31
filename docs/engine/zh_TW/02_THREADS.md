@@ -51,7 +51,7 @@ self.crossOriginIsolated」。所以有兩個 web 版，由頁面挑選其中一
 | 單執行緒 | `tools\build_web.cmd`（`web-release-windows`） | `Build\web-release-windows\bin` |
 | 多執行緒 | `tools\build_web.cmd mt`（`web-release-mt-windows`：`-pthread`、預先啟動 5 個 worker，工作系統用其中 4 個） | `Build\web-release-mt-windows\bin` |
 
-`build_web.bat` 兩個都建置，`tools\package.ps1` 把兩個都放進 `Build\dist\TOMS-web`（`toms_game.<stamp>.*` 和
+`tools\release_web.cmd` 兩個都建置，`tools\package.ps1` 把兩個都放進 `Build\dist\TOMS-web`（`toms_game.<stamp>.*` 和
 `toms_game_mt.<stamp>.*`）。玩家只會下載其中一個。`index.html` 在載入時決定：
 
 ```js
@@ -77,7 +77,7 @@ worker 被建立，因為 worker 要等主執行緒返回之後才會啟動。�
 ```bat
 tools\build_web.cmd mt          :: the threaded build
 tools\serve_web.cmd mt          :: serves it cross-origin isolated (tools\serve_web.py) and opens it
-build_web.bat                   :: both builds + the package
+tools\release_web.cmd                   :: both builds + the package
 tools\serve_web.cmd dist        :: the package, as a player gets it
 ```
 
@@ -95,7 +95,7 @@ tools\serve_web.cmd dist        :: the package, as a player gets it
 
 ## 成本和限制
 
-- **兩個版本：** `build_web.bat` 大約多花一倍時間。上傳量加倍（兩個加起來約 10 MB），但
+- **兩個版本：** `tools\release_web.cmd` 大約多花一倍時間。上傳量加倍（兩個加起來約 10 MB），但
   下載量不變：每個玩家只抓一個。
 - 多執行緒版會警告：`-pthread` 加上可成長的記憶體，會讓 JavaScript 存取 wasm 記憶體稍微
   慢一點。在這裡沒有影響。

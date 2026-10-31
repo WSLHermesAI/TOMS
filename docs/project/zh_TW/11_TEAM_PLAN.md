@@ -188,7 +188,7 @@ AI 美術流程在它自己的儲存庫（`AIGamestyle/`）。先在那裡提交
   `python tools\refresh_meshes.py --check`、`python tools\make_ui_font.py --check`。
 - **編輯器：** 程式碼修改到編輯器時，用 `tools\package_editors.cmd` 更新 `Editor\bin`；把它單獨提交（「Editor：為 … 重新建置」），並通知
   其他人 pull。它會刪除 `Editor\bin` 中不屬於發行內容的檔案（例如執行遊戲產生的 `save\`）；先把它們移開。
-- **網頁版：** `build_web.bat`，然後 `publish_web.bat`（GitHub Pages，[07_PUBLISH_GITHUB_PAGES.md](07_PUBLISH_GITHUB_PAGES.md)）。
+- **網頁版：** `tools\release_web.cmd`，然後 `tools\publish_web.cmd`（GitHub Pages，[07_PUBLISH_GITHUB_PAGES.md](07_PUBLISH_GITHUB_PAGES.md)）。
   從所有人都已 pull 的提交發佈，並先執行 `tools\test.cmd all`。
 - **發佈節奏：** 每週一次，由程式從 `main` 建置 `Editor\bin` 與網頁版並貼出連結，讓企劃與美術測試的永遠是玩家看到的同一個版本。
 

@@ -11,15 +11,22 @@ All game content is in `assets/`, all source code in `src/`. The original game c
 (`src/core`) is compiled **without edits**; the old Vulkan build itself was removed on 2026-09-27
 and is in git history before commit `979bcf3`.
 
-## Make a release (two double-clicks)
+## Make a release: double-click `TOMS_Launcher.bat`
+
+One window (English or 繁體中文, the box at its top right) lists every build, deploy, test and setup action by group
+(Windows, Web, Android, Tests, Setup and checks), says what each does and where its result goes, and runs the one you
+pick in its own console window. The list at its bottom shows what ran and whether it finished OK.
+
+The release actions are these scripts in `tools\`; they also run on their own (double-click or a command prompt):
 
 | File | Builds | Result |
 |---|---|---|
-| **`build_windows.bat`** | the shipping Windows game (Release, no editor, no Qt, no console window) | `Build\dist\TOMS-windows\` (+ `.zip`): `toms_game.exe`, `assets\`, the MSVC runtime DLLs. Copy the folder anywhere and double-click `toms_game.exe`. |
-| **`build_web.bat`** | the web game (Release, WebGL2) | `Build\dist\TOMS-web\` (+ `.zip`): `index.html`, `toms_game.<stamp>.js/.wasm/.data`, `.htaccess`, `web.config`. Copy the files to any web server and open its URL. |
-| **`publish_web.bat`** | `build_web.bat` + publish to GitHub Pages (asks before pushing) | live at https://wslhermesai.github.io/TOMS/ ([docs/project/07](docs/project/07_PUBLISH_GITHUB_PAGES.md)) |
+| **`tools\release_windows.cmd`** | the shipping Windows game (Release, no editor, no Qt, no console window) | `Build\dist\TOMS-windows\` (+ `.zip`): `toms_game.exe`, `assets\`, the MSVC runtime DLLs. Copy the folder anywhere and double-click `toms_game.exe`. |
+| **`tools\release_editors.cmd`** | every editor (`windows-release`: MSVC, Qt 6) | `Editor\bin\`: all editor `.exe`s, `atlaspack`/`fontpack`, Qt and runtime DLLs; `Editor\BUILD_INFO.md`. Start them with the launchers in `Editor\`. (`tools\release_editors.cmd nobuild` only copies the last build.) |
+| **`tools\release_web.cmd`** | the web game (Release, WebGL2) | `Build\dist\TOMS-web\` (+ `.zip`): `index.html`, `toms_game.<stamp>.js/.wasm/.data`, `.htaccess`, `web.config`. Copy the files to any web server and open its URL. |
+| **`tools\publish_web.cmd`** | `tools\release_web.cmd` + publish to GitHub Pages (asks before pushing) | live at https://wslhermesai.github.io/TOMS/ ([docs/project/07](docs/project/07_PUBLISH_GITHUB_PAGES.md)) |
 
-Both check the prerequisites first (popups with download links) and print where the result is.
+They check the prerequisites first (popups with download links) and print where the result is.
 
 ## Quick start for development (Windows)
 

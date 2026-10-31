@@ -24,17 +24,18 @@ Git Credential Manager 會請你登入一次）。
 
 ## 2. 發佈（一般做法）
 
-雙擊 repository 根目錄的 **`publish_web.bat`**，或在命令提示字元中執行：
+雙擊 repository 根目錄的 **`TOMS_Launcher.bat`**，選「網頁版」>「發佈網頁版到 GitHub Pages」
+（或「發佈網頁版：試跑」），或在命令提示字元中執行 **`tools\publish_web.cmd`**：
 
 | 指令 | 做什麼 |
 |---|---|
-| `publish_web.bat` | 建置 web release（`build_web.bat`）、準備網站、**詢問**，然後 push |
-| `publish_web.bat dryrun` | 建置並準備，顯示會改變什麼，**不** push 任何東西 |
-| `publish_web.bat nobuild` | 不重新建置，直接發佈現有的 `Build\dist\TOMS-web` |
+| `tools\publish_web.cmd` | 建置 web release（`tools\release_web.cmd`）、準備網站、**詢問**，然後 push |
+| `tools\publish_web.cmd dryrun` | 建置並準備，顯示會改變什麼，**不** push 任何東西 |
+| `tools\publish_web.cmd nobuild` | 不重新建置，直接發佈現有的 `Build\dist\TOMS-web` |
 
 會發生什麼：
 
-1. `build_web.bat` 建置 web release，並以**加上版本戳記的檔名**打包到 `Build\dist\TOMS-web\`：
+1. `tools\release_web.cmd` 建置 web release，並以**加上版本戳記的檔名**打包到 `Build\dist\TOMS-web\`：
    `toms_game.<commit>-<time>.js/.wasm/.data`（戳記也寫在
    `version.txt`）。只有 `index.html` 保留原檔名。
 2. `tools\publish_pages.ps1` 把 `gh-pages` checkout 到 `%TEMP%` 底下的暫時 git worktree，
@@ -76,7 +77,7 @@ GitHub Pages 送出檔案時的快取時間大約 10 分鐘，瀏覽器也會保
 ## 5. 手動發佈（不用腳本）
 
 ```bat
-build_web.bat
+tools\release_web.cmd
 git fetch origin gh-pages
 git worktree add --detach ..\TOMS-pages FETCH_HEAD
 cd ..\TOMS-pages
@@ -113,5 +114,5 @@ git push --force origin <good-commit>:refs/heads/gh-pages
 | Push 被拒 / 要求輸入密碼 | 沒有 push 權限，或 git 還沒登入 | 透過 Git Credential Manager 登入；檢查 repository 權限 |
 | 仍然顯示舊版 | 頁面被快取（最多約 10 分鐘） | 等一下，或 Ctrl+F5 |
 | 黑頁面 | 見 [06 §7](../05_BUILD_WEB.md#7-troubleshooting)；在主控台檢查 `canvas.width` | |
-| `No packaged web build in Build\dist\TOMS-web` | 還沒建置任何東西 | 執行 `build_web.bat`（或不加 `nobuild` 的 `publish_web.bat`） |
+| `No packaged web build in Build\dist\TOMS-web` | 還沒建置任何東西 | 執行 `tools\release_web.cmd`（或不加 `nobuild` 的 `tools\publish_web.cmd`） |
 | 打包時出現 `Versioning: expected '...' exactly once` | 新版 Emscripten 改了載入器命名檔案的方式 | 更新 `tools\package.ps1` 中的三處取代 |

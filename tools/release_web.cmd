@@ -1,12 +1,12 @@
 @echo off
-rem build_web.bat -- build the web game and package it for a web server.
+rem release_web.cmd -- build the web game and package it for a web server.
 rem   Result: Build\dist\TOMS-web\ (index.html, the single- and multithreaded game files,
 rem           coi-serviceworker.js, .htaccess, web.config)
 rem           and Build\dist\TOMS-web.zip
 rem   Copy the files of Build\dist\TOMS-web to any web server and open its URL.
 rem Needs the Emscripten SDK (emsdk). Missing tools pop up with download links.
 setlocal EnableExtensions
-cd /d "%~dp0"
+cd /d "%~dp0.."
 echo [toms] building the web game (preset web-release-windows)...
 call tools\build_web.cmd release
 if errorlevel 1 goto :failed

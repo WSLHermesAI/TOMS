@@ -70,7 +70,7 @@ tools\test.cmd
    tools\test.cmd windows-release -L unit   （只跑單元測試，不到 1 秒）
    → 驗收：貼出 ctest 的 pass/fail 統計
 6. 執行遊戲
-   跑 Build\windows-release\bin\toms_game.exe（或 build_windows.bat 產出的 Build\dist\TOMS-windows\toms_game.exe）
+   跑 Build\windows-release\bin\toms_game.exe（或 tools\release_windows.cmd 產出的 Build\dist\TOMS-windows\toms_game.exe）
    → 驗收：視窗開啟、看得到標題畫面。若失敗，貼出完整錯誤，不要猜。
 
 回報時請明確區分三件事，不要混在一起講：
@@ -192,8 +192,8 @@ ssh -T git@github.com
 | `tools\check_env.cmd` | 環境檢查（`-NoGui` 為純文字） |
 | `tools\build.cmd windows-release` | `Build\windows-release\bin\`（`toms_game.exe`） |
 | `tools\build.cmd windows-debug` | 同上，Debug |
-| `build_windows.bat` | 出貨包 `Build\dist\TOMS-windows\`（含 `assets\` 與 MSVC runtime，可整個資料夾複製走） |
-| `build_web.bat` / `publish_web.bat` | `Build\dist\TOMS-web\` / 發佈到 GitHub Pages |
+| `tools\release_windows.cmd` | 出貨包 `Build\dist\TOMS-windows\`（含 `assets\` 與 MSVC runtime，可整個資料夾複製走） |
+| `tools\release_web.cmd` / `tools\publish_web.cmd` | `Build\dist\TOMS-web\` / 發佈到 GitHub Pages |
 | `tools\test.cmd [preset] [-L unit]` | CTest（VS 的 Test Explorer 也看得到同一批測試） |
 
 CMake preset 名稱（`CMakePresets.json`）：

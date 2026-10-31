@@ -36,7 +36,7 @@ save/settings.json  "artStyle": "<id>"      玩家的選擇（"" = 原版）
   texture 裡，`styles/<id>/sprites/` 只是匯入用的參考資料夾。有它時遊戲直接用它（每張圖維持原本尺寸）；
   沒有它時才在啟動時組上面那種格狀 atlas。
 - 地圖、戰鬥畫面、道具／商店圖示（玩家選單的格子、商店卡片）都跟著風格。
-- 因為放在 `assets/media/` 底下，Windows 打包（`build_windows.bat`）、網頁版、Android 都會自動帶上。
+- 因為放在 `assets/media/` 底下，Windows 打包（`tools\release_windows.cmd`）、網頁版、Android 都會自動帶上。
 
 ## 3. 做一個新風格（ComfyUI）
 

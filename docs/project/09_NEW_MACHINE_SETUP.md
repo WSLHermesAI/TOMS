@@ -76,7 +76,7 @@ Do these in order. Actually run every step and paste the real output; never writ
    tools\test.cmd windows-release -L unit   (unit tests only, under a second)
    → accept when: you paste ctest's pass/fail summary
 6. run the game
-   run Build\windows-release\bin\toms_game.exe (or Build\dist\TOMS-windows\toms_game.exe made by build_windows.bat)
+   run Build\windows-release\bin\toms_game.exe (or Build\dist\TOMS-windows\toms_game.exe made by tools\release_windows.cmd)
    → accept when: a window opens and shows the title screen. If it fails, paste the full error; do not guess.
 
 When reporting, keep these three apart; do not blur them:
@@ -201,8 +201,8 @@ Disk: about **5 GB** free.
 | `tools\check_env.cmd` | environment check (`-NoGui` for plain text) |
 | `tools\build.cmd windows-release` | `Build\windows-release\bin\` (`toms_game.exe`) |
 | `tools\build.cmd windows-debug` | the same, Debug |
-| `build_windows.bat` | the shipping package `Build\dist\TOMS-windows\` (with `assets\` and the MSVC runtime; the whole folder can be copied anywhere) |
-| `build_web.bat` / `publish_web.bat` | `Build\dist\TOMS-web\` / publish to GitHub Pages |
+| `tools\release_windows.cmd` | the shipping package `Build\dist\TOMS-windows\` (with `assets\` and the MSVC runtime; the whole folder can be copied anywhere) |
+| `tools\release_web.cmd` / `tools\publish_web.cmd` | `Build\dist\TOMS-web\` / publish to GitHub Pages |
 | `tools\test.cmd [preset] [-L unit]` | CTest (Visual Studio's Test Explorer shows the same tests) |
 
 CMake preset names (`CMakePresets.json`):

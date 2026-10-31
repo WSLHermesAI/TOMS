@@ -390,7 +390,7 @@ bool appInit(App& app) {
     SessionOptions opts;
     opts.assetDir = args.assets.empty() ? GameSession::defaultAssetDir() : args.assets;
 #if !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
-    // A packaged game (build_windows.bat) carries its content next to the exe: <exe dir>/assets/media
+    // A packaged game (tools\release_windows.cmd) carries its content next to the exe: <exe dir>/assets/media
     // (+ assets/data). That wins over the path baked in at build time, unless --assets / ASSET_DIR
     // say otherwise.
     if (args.assets.empty() && !std::getenv("ASSET_DIR")) {

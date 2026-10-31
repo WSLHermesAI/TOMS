@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Publishes Build\dist\TOMS-web (made by build_web.bat) to GitHub Pages: the gh-pages branch of origin.
+  Publishes Build\dist\TOMS-web (made by tools\release_web.cmd) to GitHub Pages: the gh-pages branch of origin.
   Site: https://<owner>.github.io/<repo>/  (for WSLHermesAI/TOMS: https://wslhermesai.github.io/TOMS/)
 
   1. checks out gh-pages in a temporary git worktree (your working copy is not touched)
@@ -18,7 +18,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $pkg  = Join-Path $root 'Build\dist\TOMS-web'
 $versionFile = Join-Path $pkg 'version.txt'
-if (-not (Test-Path $versionFile)) { throw "No packaged web build in $pkg. Run build_web.bat first." }
+if (-not (Test-Path $versionFile)) { throw "No packaged web build in $pkg. Run tools\release_web.cmd first." }
 $stamp = (Get-Content $versionFile -Raw).Trim()
 
 function Invoke-PagesGit { & git.exe -C $script:wt @args; if ($LASTEXITCODE) { throw "git $($args -join ' ') failed ($LASTEXITCODE)" } }

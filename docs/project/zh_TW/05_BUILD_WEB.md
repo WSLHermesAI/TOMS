@@ -8,7 +8,8 @@ Web 版和桌機版是同一個 `toms_game`：SDL3 + bgfx + 未修改的 TOMS �
 
 ## 發行套件
 
-雙擊 repository 根目錄的 **`build_web.bat`**。它會執行 `tools\build_web.cmd release` 和
+雙擊 repository 根目錄的 **`TOMS_Launcher.bat`**，選「網頁版」>「建置網頁版遊戲」（或執行
+**`tools\release_web.cmd`**）。它會執行 `tools\build_web.cmd release` 和
 `tools\build_web.cmd mt`（多執行緒版，[02](../../engine/zh_TW/02_THREADS.md)），然後執行 `tools\package.ps1 -Target web`，
 寫出 **`Build\dist\TOMS-web\`**（以及 `Build\dist\TOMS-web.zip`）：
 `index.html`（頁面；瀏覽器允許執行緒時載入多執行緒版，否則載入單執行緒版）、
@@ -16,7 +17,7 @@ Web 版和桌機版是同一個 `toms_game`：SDL3 + bgfx + 未修改的 TOMS �
 讓快取永遠不會混用不同版本；戳記寫在 `version.txt`）、`coi-serviceworker.js`（讓 GitHub Pages 這類主機
 提供執行緒需要的標頭），再加上 `.htaccess`
 （Apache）和 `web.config`（IIS），讓 `.wasm` 以 `application/wasm` 提供。把這些檔案上傳到任何靜態網頁伺服器的
-同一個資料夾，再開啟該資料夾的網址即可。GitHub Pages 請用 `publish_web.bat`
+同一個資料夾，再開啟該資料夾的網址即可。GitHub Pages 請用 `tools\publish_web.cmd`
 （[07](07_PUBLISH_GITHUB_PAGES.md)）。2026-09-27 已驗證：用一般的靜態伺服器提供這個資料夾的副本，
 再對 `/` 執行 `tools/web_smoke_test.mjs`。
 
@@ -98,7 +99,7 @@ emsdk 的 Python 跑本機網頁伺服器。
 tools\serve_web.cmd              :: release build, port 8099
 tools\serve_web.cmd debug 8100   :: debug build on another port
 tools\serve_web.cmd mt           :: the multithreaded build (tools\build_web.cmd mt)
-tools\serve_web.cmd dist         :: the package of build_web.bat, as a player gets it
+tools\serve_web.cmd dist         :: the package of tools\release_web.cmd, as a player gets it
 ```
 
 伺服器（`tools\serve_web.py`）會送出兩個跨來源隔離標頭，所以在本機也能使用執行緒。

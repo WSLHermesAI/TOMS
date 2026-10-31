@@ -299,7 +299,7 @@ toms_gltf_test(gltf_shadow_all_opengl gltf_shadow_all   instancing     opengl   
 # skipped -- not failed -- when its folder, Node 22+ or Chrome/Edge is missing.
 #   web.smoke            the single-threaded build (tools\build_web.cmd)
 #   web.smoke_mt         the multithreaded build (tools\build_web.cmd mt), served with COOP/COEP
-#   web.page_coi         the packaged page (build_web.bat) on a server WITHOUT the headers, like
+#   web.page_coi         the packaged page (tools\release_web.cmd) on a server WITHOUT the headers, like
 #                        GitHub Pages: coi-serviceworker must make it isolated -> threaded build
 #   web.page_nothreads   the packaged page with ?nothreads: the single-threaded fallback
 #   web.page_gpu         the packaged page on the REAL GPU (ANGLE -> Direct3D 11 on Windows), not the

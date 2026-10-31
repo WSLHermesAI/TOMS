@@ -5,7 +5,7 @@
                       Copy the folder anywhere and double-click toms_game.exe.
     -Target web     : Build\dist\TOMS-web\      index.html + toms_game.js/.wasm/.data (+ server MIME config).
                       Copy the folder's files to any web server.
-  Called by build_windows.bat / build_web.bat after the build.
+  Called by tools\release_windows.cmd / tools\release_web.cmd after the build.
 #>
 param([Parameter(Mandatory = $true)][ValidateSet('windows', 'web')][string]$Target)
 

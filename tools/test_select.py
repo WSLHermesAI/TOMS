@@ -156,8 +156,9 @@ RULES = [
     # nothing
     (['docs/*', '*.md', 'tools/web_editors/*', 'android/*', '.claude/*', '.gitignore', '.gitattributes', 'AIGamestyle*', 'launch.vs.json'],
      None, 'docs / HTML editors / Android: no test'),
-    (['build_web.bat', 'publish_web.bat', 'setup_new_pc.bat', 'tools/build_android.cmd', 'tools/run_android.cmd',
-      'tools/check_env.ps1', 'tools/check_git_ssh.*', 'tools/package.ps1'], None,
+    (['tools/release_*.cmd', 'tools/publish_web.cmd', 'setup_new_pc.bat', 'TOMS_Launcher.bat',
+      'tools/launcher*', 'tools/build_android.cmd', 'tools/run_android.cmd',
+      'tools/check_env.ps1', 'tools/check_git_ssh.*', 'tools/package.ps1', 'tools/publish_pages.ps1'], None,
      'setup, web publish, Android and packaging scripts: no automated test (run them by hand)'),
     (['tools/build_gltf_web.cmd', 'tools/build_atlas_web.cmd'], None,
      'the web glTF viewer / web atlas tool builds: no automated test (build and open them by hand)'),

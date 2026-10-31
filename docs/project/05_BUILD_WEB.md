@@ -6,7 +6,8 @@ plugin or install is needed; it runs in current Chrome, Edge, Firefox and Safari
 
 ## Release package
 
-Double-click **`build_web.bat`** in the repository root. It runs `tools\build_web.cmd release` and
+Double-click **`TOMS_Launcher.bat`** in the repository root and pick Web > "Build the web game" (or run
+**`tools\release_web.cmd`**). It runs `tools\build_web.cmd release` and
 `tools\build_web.cmd mt` (the multithreaded variant, [02](../engine/02_THREADS.md)), then `tools\package.ps1 -Target web`,
 which writes **`Build\dist\TOMS-web\`** (and `Build\dist\TOMS-web.zip`):
 `index.html` (the page; it loads the threaded build where the browser allows threads and the single-threaded
@@ -14,7 +15,7 @@ one otherwise), `toms_game.<stamp>.js/.wasm/.data` and `toms_game_mt.<stamp>.js/
 caches never mix releases; the stamp is in `version.txt`), `coi-serviceworker.js` (gives hosts like GitHub Pages
 the headers threads need), plus `.htaccess`
 (Apache) and `web.config` (IIS) that serve `.wasm` as `application/wasm`. Upload those files to one
-folder of any static web server and open the folder's URL. For GitHub Pages use `publish_web.bat`
+folder of any static web server and open the folder's URL. For GitHub Pages use `tools\publish_web.cmd`
 ([07](07_PUBLISH_GITHUB_PAGES.md)). Verified 2026-09-27 by serving a copy of
 the folder with a plain static server and running `tools/web_smoke_test.mjs` against `/`.
 
@@ -96,7 +97,7 @@ These four files are the whole game. Copy them to any static web host.
 tools\serve_web.cmd              :: release build, port 8099
 tools\serve_web.cmd debug 8100   :: debug build on another port
 tools\serve_web.cmd mt           :: the multithreaded build (tools\build_web.cmd mt)
-tools\serve_web.cmd dist         :: the package of build_web.bat, as a player gets it
+tools\serve_web.cmd dist         :: the package of tools\release_web.cmd, as a player gets it
 ```
 
 The server (`tools\serve_web.py`) sends the two cross-origin-isolation headers, so threads work locally.

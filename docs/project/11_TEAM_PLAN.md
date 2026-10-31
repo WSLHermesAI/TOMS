@@ -203,7 +203,7 @@ pointer in TOMS. Everyone who pushes to it needs write access to that repository
 - **Editors:** when code changes an editor, `tools\package_editors.cmd` refreshes `Editor\bin`; commit it as its own
   commit ("Editor: rebuilt for …") and tell the others to pull. It deletes files it does not ship from `Editor\bin`
   (for example a game run's `save\`); move those aside first.
-- **The web version:** `build_web.bat`, then `publish_web.bat` (GitHub Pages, [07_PUBLISH_GITHUB_PAGES.md](07_PUBLISH_GITHUB_PAGES.md)).
+- **The web version:** `tools\release_web.cmd`, then `tools\publish_web.cmd` (GitHub Pages, [07_PUBLISH_GITHUB_PAGES.md](07_PUBLISH_GITHUB_PAGES.md)).
   Publish from a commit everyone has pulled, after `tools\test.cmd all`.
 - **Release rhythm:** once a week, the programmer builds `Editor\bin` and the web version from `main` and posts the link,
   so the designer and artist always test the same build players see.

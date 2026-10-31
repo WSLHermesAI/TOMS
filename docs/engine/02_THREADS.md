@@ -47,7 +47,7 @@ self.crossOriginIsolated". So there are two web builds, and the page picks one:
 | single-threaded | `tools\build_web.cmd` (`web-release-windows`) | `Build\web-release-windows\bin` |
 | multithreaded | `tools\build_web.cmd mt` (`web-release-mt-windows`: `-pthread`, 5 pre-started workers, the job system uses 4) | `Build\web-release-mt-windows\bin` |
 
-`build_web.bat` builds both and `tools\package.ps1` puts both in `Build\dist\TOMS-web` (`toms_game.<stamp>.*` and
+`tools\release_web.cmd` builds both and `tools\package.ps1` puts both in `Build\dist\TOMS-web` (`toms_game.<stamp>.*` and
 `toms_game_mt.<stamp>.*`). A player downloads only one. `index.html` decides at load time:
 
 ```js
@@ -73,7 +73,7 @@ block the main thread on anything but `parallelFor`.
 ```bat
 tools\build_web.cmd mt          :: the threaded build
 tools\serve_web.cmd mt          :: serves it cross-origin isolated (tools\serve_web.py) and opens it
-build_web.bat                   :: both builds + the package
+tools\release_web.cmd                   :: both builds + the package
 tools\serve_web.cmd dist        :: the package, as a player gets it
 ```
 
@@ -91,7 +91,7 @@ and `Module.ccall('jsWorkerCount','number',[],[])` (4 in the threaded build, 0 o
 
 ## Costs and limits
 
-- **Two builds:** `build_web.bat` takes about twice as long. The upload doubles (about 10 MB for both), but the
+- **Two builds:** `tools\release_web.cmd` takes about twice as long. The upload doubles (about 10 MB for both), but the
   download doesn't: each player fetches one.
 - The threaded build warns that `-pthread` with a growing memory makes JavaScript's access to wasm memory a little
   slower. It doesn't matter here.

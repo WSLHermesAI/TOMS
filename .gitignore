@@ -22,7 +22,7 @@ toms.log
 # runtime logs / ImGui layout
 *.log
 imgui.ini
-# packaged builds (build_windows.bat / build_web.bat)
+# packaged builds (tools\release_windows.cmd / tools\release_web.cmd)
 /dist/
 
 # rootless dependency drops: apt-get download writes .deb files into the CWD (the repo root)
