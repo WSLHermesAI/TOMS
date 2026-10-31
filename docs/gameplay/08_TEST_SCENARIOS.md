@@ -12,7 +12,10 @@ tools\test.cmd -L scenario                                  # every scenario tes
 tools\test.cmd -R scenario.store_buy                        # one
 ```
 
-Scenarios run in `toms_game` (`--scenario=<folder>`, above).
+Scenarios run in `toms_game` (`--scenario=<folder>`, above), or from the **battle editor's Scenarios tab**
+([13](13_BATTLE_EDITOR.md)): every scenario of `tests/scenarios/` (and `_cloud/`) with its scene, its `_comment` as the
+tooltip; double-click to play it in the editor's game view; right-click to open its folder or edit its `scenario.json`;
+**Open scenario folder...** for another folder of them. (Until 2026-10-31 this was toms_editor's Scenarios dock.)
 
 A scenario **never writes a save**. Its run has no save slot, and a save it starts from is read from the scenario's
 folder.

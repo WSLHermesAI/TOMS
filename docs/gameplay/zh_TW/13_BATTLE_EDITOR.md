@@ -301,6 +301,8 @@
   **Apply to the test player**；**Save as the game's table**（確認後只改寫 `stats.json` 的 `levelUp.points`）。
 - **事件**分頁：選取怪物的事件 JSON，**Apply**（會檢查）與範例；事件清單，**Fire now** 在進行中的戰鬥裡試。
 - **紀錄**分頁：進行中戰鬥的事件與時間。
+- **情境**分頁：`tests/scenarios/` 的每個測試情境（[08](08_TEST_SCENARIOS.md)）；按兩下（或 **Play**）在遊戲畫面中遊玩。情境遊玩時
+  會關閉自動重新開始；**▶ Battle** 回到測試戰鬥。
 - **測試設定**（下方）：Load（並開始）、**Save current as…** 存到 `tools/battle_editor/setups/<名稱>.json`（含編輯器自己的 `_editor`
   部分的情境）。先附兩個：`slime Lv1 bow`、`3 bats Lv5 sword`。
 - 還沒做：難度模擬（目前的數據來自上一場戰鬥）、結果的預覽按鈕、粒子與動畫的選擇器（目前用輸入）、章節篩選。

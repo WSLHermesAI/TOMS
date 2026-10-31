@@ -1,7 +1,8 @@
 // bed_window.h -- battle_editor: tune the battle beside the running game (docs/gameplay/13_BATTLE_EDITOR.md).
 //   left:   the monsters (search; tick "+ Battle" for up to three; New, Duplicate, Delete)
 //   middle: the battle bar (Battle / Restart, Pause, speed, the pace, Win / Lose now, the view's shape) over the game
-//   right:  Monster | Weapon | Player (with the growth calculator) | Events | Log
+//   right:  Monster | Weapon | Player (with the growth calculator) | Events | Log | Scenarios (every test scenario,
+//           double-click to play it in the game view; docs/gameplay/08)
 //   bottom: the test setups (tools/battle_editor/setups/<name>.json: editor files, not tests)
 // Saving writes the game's own files: data/enemies.json, data/weapon_play.json, data/stats.json.
 #pragma once
@@ -25,6 +26,7 @@ class QPushButton;
 class QSpinBox;
 class QTableWidget;
 class QTabWidget;
+class QTreeWidget;
 class AspectBox;
 
 class BattleEditorWindow : public QMainWindow {
@@ -55,6 +57,9 @@ public:
     void setPace(const QString& pace);              // "", "cooldown", "stamina"
     // the growth calculator's table for (total, level, k), as shown
     std::vector<int> calculate(int total, int level, double k);
+    // the Scenarios tab: start a scenario (a folder with scenario.json, or the file) in the game view; how many are listed
+    bool playScenario(const QString& path);
+    int scenarioCount() const;
 
 protected:
     void closeEvent(class QCloseEvent* e) override;
@@ -68,6 +73,9 @@ private:
     QWidget* buildPlayerTab();
     QWidget* buildEventsTab();
     QWidget* buildLogTab();
+    QWidget* buildScenariosTab();
+    void fillScenarioList();
+    QString scenarioRoot() const;   // the repo's tests/scenarios
     QWidget* buildSetupsBar();
 
     // the data files
@@ -108,6 +116,8 @@ private:
     QListWidget* monsters_ = nullptr;
     QLabel* inBattleLabel_ = nullptr;
     QTabWidget* tabs_ = nullptr;
+    QTreeWidget* scenarioList_ = nullptr;
+    QString extraScenarioDir_;           // "Open scenario folder...": a folder of scenarios outside tests/
     QComboBox* speed_ = nullptr;
     QComboBox* pace_ = nullptr;
     QComboBox* shape_ = nullptr;

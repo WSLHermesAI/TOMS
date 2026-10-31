@@ -13,7 +13,9 @@ tools\test.cmd -L scenario                                  # 所有情境測試
 tools\test.cmd -R scenario.store_buy                        # 單一個
 ```
 
-情境在 `toms_game` 中執行（`--scenario=<資料夾>`，見上方）。
+情境在 `toms_game` 中執行（`--scenario=<資料夾>`，見上方），或從**戰鬥編輯器的「情境」分頁**執行（[13](13_BATTLE_EDITOR.md)）：
+列出 `tests/scenarios/`（與 `_cloud/`）的每個情境與它的場景，`_comment` 是提示文字；按兩下在編輯器的遊戲畫面中遊玩；按右鍵開啟它的
+資料夾或編輯它的 `scenario.json`；**Open scenario folder...** 加入另一個情境資料夾。（2026-10-31 以前這是 toms_editor 的情境面板。）
 
 情境**從不寫入存檔**：它的遊戲沒有存檔欄位，作為起點的存檔是從情境資料夾讀取的。
 

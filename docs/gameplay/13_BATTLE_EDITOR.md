@@ -363,6 +363,8 @@ Steps 1–3 are built (2026-10-25, §9), except one `Combatant` for every side (
 - **Events** tab: the selected monster's events as JSON with **Apply** (checked) and an example; the list with **Fire
   now** to try one in the running battle.
 - **Log** tab: the running battle's events with their times.
+- **Scenarios** tab: every test scenario of `tests/scenarios/` ([08](08_TEST_SCENARIOS.md)); double-click (or **Play**) to
+  play one in the game view. Auto restart is switched off while a scenario plays; **▶ Battle** goes back to the test battle.
 - **Test setups** (bottom): Load (and start), **Save current as…** to `tools/battle_editor/setups/<name>.json` (a
   scenario with the editor's own `_editor` part). Two to start with: `slime Lv1 bow`, `3 bats Lv5 sword`.
 - Not yet: the difficulty simulation (the readout is from the last battle), the results' Preview button, pickers for

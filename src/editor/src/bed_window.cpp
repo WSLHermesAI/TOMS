@@ -11,8 +11,10 @@
 #include <QComboBox>
 #include <QDir>
 #include <QDirIterator>
+#include <QDesktopServices>
 #include <QDoubleSpinBox>
 #include <QFile>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QRegularExpression>
 #include <QFormLayout>
@@ -20,10 +22,13 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QInputDialog>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
 #include <QMap>
+#include <QMenu>
 #include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QPushButton>
@@ -34,6 +39,8 @@
 #include <QStatusBar>
 #include <QTabWidget>
 #include <QTableWidget>
+#include <QTreeWidget>
+#include <QUrl>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -115,6 +122,7 @@ BattleEditorWindow::BattleEditorWindow() {
     tabs_->addTab(buildPlayerTab(), tr("Player"));
     tabs_->addTab(buildEventsTab(), tr("Events"));
     tabs_->addTab(buildLogTab(), tr("Log"));
+    tabs_->addTab(buildScenariosTab(), tr("Scenarios"));
     split->addWidget(tabs_);
     split->setStretchFactor(0, 0);
     split->setStretchFactor(1, 1);
@@ -927,6 +935,130 @@ QWidget* BattleEditorWindow::buildLogTab() {
     log_->setFont(QFont(QStringLiteral("Consolas"), 10));
     v->addWidget(new QLabel(tr("Every event of the running battle, with its time (13 §4.5).")));
     v->addWidget(log_, 1);
+    return w;
+}
+
+// ---- the Scenarios tab (it was toms_editor's Scenarios dock until 2026-10-31; docs/gameplay/08_TEST_SCENARIOS.md) ----
+
+// tests/scenarios/ of the repository: the assets folder is <repo>/assets/media.
+QString BattleEditorWindow::scenarioRoot() const {
+    return QDir::cleanPath(QDir(view_->assetDir()).filePath(QStringLiteral("../../tests/scenarios")));
+}
+
+int BattleEditorWindow::scenarioCount() const {
+    int n = 0;
+    for (int g = 0; scenarioList_ && g < scenarioList_->topLevelItemCount(); g++) n += scenarioList_->topLevelItem(g)->childCount();
+    return n;
+}
+
+// One row per scenario folder (a folder holding scenario.json): its name, its scene, and its _comment as the tooltip.
+// "_shared" and other folders starting with "_" hold shared files, not scenarios; "_cloud" (downloaded ones, docs/gameplay/09)
+// is listed as a group of its own when it is there.
+void BattleEditorWindow::fillScenarioList() {
+    scenarioList_->clear();
+    auto addRoot = [this](const QString& dir, const QString& title) {
+        const QDir root(dir);
+        if (!root.exists()) return;
+        auto* group = new QTreeWidgetItem(scenarioList_, {title});
+        group->setToolTip(0, QDir::toNativeSeparators(root.absolutePath()));
+        group->setFirstColumnSpanned(true);
+        for (const QFileInfo& f : root.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
+            const QString file = QDir(f.absoluteFilePath()).filePath(QStringLiteral("scenario.json"));
+            if (f.fileName().startsWith(QLatin1Char('_')) || !QFileInfo::exists(file)) continue;
+            QFile in(file);
+            QJsonObject j;
+            if (in.open(QIODevice::ReadOnly)) j = QJsonDocument::fromJson(in.readAll()).object();
+            auto* it = new QTreeWidgetItem(group, {f.fileName(), j.value(QStringLiteral("scene")).toString(QStringLiteral("stage"))});
+            it->setData(0, Qt::UserRole, f.absoluteFilePath());
+            QString tip = j.value(QStringLiteral("_comment")).toString();
+            if (j.isEmpty()) tip = tr("scenario.json cannot be read");
+            it->setToolTip(0, tip.isEmpty() ? QDir::toNativeSeparators(f.absoluteFilePath()) : tip);
+            it->setToolTip(1, it->toolTip(0));
+        }
+        group->setExpanded(true);
+        if (group->childCount() == 0) delete group;
+    };
+    addRoot(scenarioRoot(), tr("tests/scenarios"));
+    addRoot(QDir(scenarioRoot()).filePath(QStringLiteral("_cloud")), tr("downloaded (_cloud)"));
+    if (!extraScenarioDir_.isEmpty()) addRoot(extraScenarioDir_, QFileInfo(extraScenarioDir_).fileName());
+    if (scenarioList_->topLevelItemCount() == 0) {
+        auto* none = new QTreeWidgetItem(scenarioList_, {tr("No scenarios in %1").arg(QDir::toNativeSeparators(scenarioRoot()))});
+        none->setFirstColumnSpanned(true);
+        none->setFlags(Qt::NoItemFlags);
+    }
+}
+
+bool BattleEditorWindow::playScenario(const QString& path) {
+    // the test battle's auto restart would replace the scenario when its battle ends: off while a scenario plays
+    if (autoRestart_) autoRestart_->setChecked(false);
+    restartPending_ = false;
+    QString err;
+    if (!view_->startScenario(path, err)) {
+        warn(tr("The scenario could not start"), err + tr("\n\nSee docs/gameplay/08_TEST_SCENARIOS.md"));
+        return false;
+    }
+    say(tr("Scenario %1: playing (auto restart off). ▶ Battle goes back to the test battle.").arg(QFileInfo(path).fileName()));
+    view_->setFocus();
+    return true;
+}
+
+QWidget* BattleEditorWindow::buildScenariosTab() {
+    auto* w = new QWidget();
+    auto* v = new QVBoxLayout(w);
+    auto* note = new QLabel(tr("Every test scenario of tests/scenarios (docs/gameplay/08). Double-click one to play it in the "
+                               "game view; ▶ Battle goes back to the test battle."));
+    note->setWordWrap(true);
+    v->addWidget(note);
+    scenarioList_ = new QTreeWidget();
+    scenarioList_->setColumnCount(2);
+    scenarioList_->setHeaderLabels({tr("Scenario (double-click to play)"), tr("Scene")});
+    scenarioList_->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    scenarioList_->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    scenarioList_->header()->setStretchLastSection(false);
+    scenarioList_->setRootIsDecorated(true);
+    scenarioList_->setContextMenuPolicy(Qt::CustomContextMenu);
+    v->addWidget(scenarioList_, 1);
+    auto* row = new QHBoxLayout();
+    auto* play = new QPushButton(tr("Play"));
+    auto* reload = new QPushButton(tr("Reload the list"));
+    auto* open = new QPushButton(tr("Open scenario folder..."));
+    row->addWidget(play);
+    row->addWidget(reload);
+    row->addWidget(open);
+    row->addStretch(1);
+    v->addLayout(row);
+    fillScenarioList();
+    auto pathOf = [](QTreeWidgetItem* it) { return it ? it->data(0, Qt::UserRole).toString() : QString(); };
+    connect(scenarioList_, &QTreeWidget::itemDoubleClicked, this, [this, pathOf](QTreeWidgetItem* it, int) {
+        const QString path = pathOf(it);
+        if (!path.isEmpty()) playScenario(path);
+    });
+    connect(play, &QPushButton::clicked, this, [this, pathOf] {
+        const QString path = pathOf(scenarioList_->currentItem());
+        if (!path.isEmpty()) playScenario(path);
+    });
+    connect(reload, &QPushButton::clicked, this, [this] { fillScenarioList(); });
+    connect(open, &QPushButton::clicked, this, [this] {
+        const QString dir = QFileDialog::getExistingDirectory(this, tr("A folder of scenario folders, or one scenario"), scenarioRoot());
+        if (dir.isEmpty()) return;
+        if (QFileInfo::exists(QDir(dir).filePath(QStringLiteral("scenario.json")))) { playScenario(dir); return; }   // one scenario
+        extraScenarioDir_ = dir;
+        fillScenarioList();
+    });
+    connect(scenarioList_, &QWidget::customContextMenuRequested, this, [this, pathOf](const QPoint& pos) {
+        const QString path = pathOf(scenarioList_->itemAt(pos));
+        QMenu m(this);
+        if (!path.isEmpty()) {
+            m.addAction(tr("Play"), this, [this, path] { playScenario(path); });
+            m.addAction(tr("Open its folder"), this, [path] { QDesktopServices::openUrl(QUrl::fromLocalFile(path)); });
+            m.addAction(tr("Edit scenario.json"), this, [path] {
+                QDesktopServices::openUrl(QUrl::fromLocalFile(QDir(path).filePath(QStringLiteral("scenario.json"))));
+            });
+            m.addSeparator();
+        }
+        m.addAction(tr("Reload the list"), this, [this] { fillScenarioList(); });
+        m.exec(scenarioList_->viewport()->mapToGlobal(pos));
+    });
     return w;
 }
 

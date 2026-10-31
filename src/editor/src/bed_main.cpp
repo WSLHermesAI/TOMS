@@ -121,6 +121,7 @@ int main(int argc, char** argv) {
                       w.currentSetup().player.weapon == "sword" && w.currentSetup().player.lv == 5,
                   "a saved setup loads (three of the same monster, the sword, Lv 5)");
             check(w.setInBattle(QStringLiteral("bat"), false) && w.inBattle().isEmpty(), "untick: every copy leaves");
+            check(w.scenarioCount() >= 20, "the Scenarios tab lists tests/scenarios");
             std::printf(g_failed ? "battle_editor selftest: %d failed\n" : "battle_editor selftest: all passed\n", g_failed);
             rc = g_failed ? 1 : 0;
         } else if (!smoke.isEmpty()) {
