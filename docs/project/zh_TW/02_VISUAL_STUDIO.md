@@ -25,7 +25,7 @@ TOMS 是 CMake 專案。Visual Studio 用 **開啟資料夾** 就能直接打開
 
 | Preset | 建置 | 用途 |
 |---|---|---|
-| **Windows x64 Debug（遊戲 + 編輯器）** | `toms_game`、`toms_editor` | 逐步執行程式碼 |
+| **Windows x64 Debug（遊戲 + 編輯器）** | `toms_game` 與 Qt 編輯器 | 逐步執行程式碼 |
 | **Windows x64 Release（遊戲 + 編輯器）** | 同上，最佳化並含除錯資訊 | 一般的試玩 |
 | **Windows x64 Shipping（只有遊戲，不含 Qt）** | 只有 `toms_game`；不搜尋 Qt | 要發行的版本；沒有 Qt 的機器也能用 |
 | CI（無對話框） | 和 Release 一樣，但永遠不跳對話框 | 建置伺服器 |
@@ -38,15 +38,15 @@ TOMS 是 CMake 專案。Visual Studio 用 **開啟資料夾** 就能直接打開
 
 | 啟動項目 | 執行什麼 |
 |---|---|
-| **toms_game (auto renderer)** | 遊戲；bgfx 選最好的後端（Windows 上是 Direct3D 11/12） |
-| **toms_game (Direct3D 11)** | 強制 `--renderer=d3d11` |
-| **toms_game (Vulkan)** | 強制 `--renderer=vulkan` |
-| **toms_editor (Qt + bgfx)** | 編輯器；它的 *Play (bgfx)* 分頁執行同一份遊戲程式碼 |
-| **atlas_editor (game atlas)** | 開啟 `assets\media\atlas\game.atlasproj` 的 sprite atlas 編輯器（[04](../../engine/zh_TW/04_ATLAS_TOOL.md)） |
-| **atlaspack (rebuild game atlas)** | `atlaspack build assets\media\atlas\game.atlasproj --all-variants`，沒有視窗 |
+| **toms_game.exe** | 遊戲；bgfx 選擇後端（Windows 上是 Direct3D 11）。要用別的後端：在它的參數加上 `--renderer=d3d12`、`vulkan` 或 `opengl` |
+| **battle_editor (monsters, weapons, test battles)** | 戰鬥編輯器；中間執行真正的遊戲（[13](../../gameplay/zh_TW/13_BATTLE_EDITOR.md)） |
+| **atlas_editor (game atlas)** | 開啟 `art_raw\atlas\game.atlasproj` 的 sprite atlas 編輯器（[04](../../engine/zh_TW/04_ATLAS_TOOL.md)） |
+| **atlaspack (rebuild game atlas)** | `atlaspack build art_raw\atlas\game.atlasproj --all-variants`，沒有視窗 |
+| **anim_editor (preview clip)** | 開啟 `tests\smoke\anim_preview.anim` 的動畫編輯器 |
+| **gltf_viewer (skinned test model)** / **(Fox sample)** | 用測試模型開啟 glTF 檢視器；Fox 需要先執行 `tools/gltf_viewer/fetch_samples.py` |
 
-這些來自 `launch.vs.json`。如果下拉選單只顯示 `toms_game.exe` / `toms_editor.exe`，
-也可以用（使用預設參數）。
+有名字的項目來自 `launch.vs.json`；每個 `名稱.exe (bin\名稱.exe)` 項目是 Visual Studio 為建置產生的每個程式自動加上的，
+不帶參數執行。
 
 舊遊戲程式碼（`src\core\game\...`）中的中斷點在**兩個**執行檔中都會命中，因為兩者
 都連結同一個 `toms_core` 函式庫。
@@ -99,12 +99,11 @@ Studio 附帶的 CMake 和 Ninja。
 
 測試：`tools\test.cmd` 會執行全部（單元測試、截圖 smoke 測試、web），Visual Studio 的
 **測試 → 測試總管** 也列出同樣的測試。單元測試是同一個程式 `toms_tests`
-（用 **「toms_tests (one unit test)」** 目標除錯其中一個）。見 [08_TESTS.md](08_TESTS.md)。
+（用 **toms_tests.exe**、以測試名稱作為參數來除錯其中一個）。見 [08_TESTS.md](08_TESTS.md)。
 
-**粒子效果：** **「particle_editor (recipes)」** 會用 `docs/examples/fx_recipes.particle` 開啟粒子編輯器
-（`bin\particle_editor.exe`）。**「toms_game (particle
-preview: torch_fire)」** 在遊戲上播放一個效果；把它 `args` 中的 `#torch_fire` 換掉就能看
-別的，例如 `#heal` 或 `#hit_sparks`（[07](../../engine/zh_TW/07_PARTICLES.md)）。
+**粒子效果：** **particle_editor.exe** 會開啟粒子編輯器（用 File > Open 開啟 `.particle` 檔，例如
+`assets/media/fx/battle.particle`）。`toms_game --fx=<檔案>#<效果>` 在遊戲上播放一個效果，例如
+`--fx=docs\examples\fx_recipes.particle#heal`（[07](../../engine/zh_TW/07_PARTICLES.md)）。
 
 快速手動截圖（繪製標題畫面，再繪製第 1 關，並寫出 PNG；編輯器另外會寫出
 包含整個視窗的 `<name>_window.png`）：
@@ -113,7 +112,7 @@ preview: torch_fire)」** 在遊戲上播放一個效果；把它 `args` 中的 
 cd Build\windows-release\bin
 toms_game.exe --frames=60 --screenshot=title.png
 toms_game.exe --frames=120 --keys=enter@30 --screenshot=stage.png
-toms_editor.exe --frames=200 --screenshot=editor.png
+ui_editor.exe --smoke=editor.png
 ```
 
 ## 6. 除錯技巧

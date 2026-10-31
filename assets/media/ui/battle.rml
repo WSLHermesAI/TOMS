@@ -25,7 +25,8 @@
     <div data-for="f, i : battle.foes"><div class="foe" data-class-f1="i == 1" data-class-f2="i == 2"
          data-class-n1="battle.foes.size == 1" data-class-n2="battle.foes.size == 2" data-class-n3="battle.foes.size == 3"
          data-class-down="f.down" data-event-click="act('battle_target', i)">
-        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/><div class="mark" data-if="f.target"></div></div>
+        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/><div class="mark" data-if="f.target"></div>
+            <div class="warn" data-if="f.warn">!</div></div>
         <!-- its next move and the time left (docs/gameplay/13 §6.1) -->
         <div class="intent" data-if="f.intent != ''" data-class-heavy="f.intent_kind == 'heavy'"
              data-class-jabs="f.intent_kind == 'jabs'" data-class-spell="f.intent_kind == 'spell'"
@@ -107,6 +108,9 @@
             <div class="phint">{{battle.attack_hint}}</div>
         </div>
     </div>
+
+    <!-- a move's play (docs/gameplay/16 §6): what to do, and the seconds left -->
+    <div id="skill-prompt" data-if="battle.skill_prompt != ''">{{battle.skill_prompt}}<span id="skill-time" data-if="battle.skill_time != ''">  {{battle.skill_time}}</span></div>
 
     <!-- damage numbers and words: they rise over the fighter (UiPopup) -->
     <div data-for="p : battle.popups"><div data-attr-class="'popup ' + p.style"

@@ -11,7 +11,6 @@
 | `ParticleEditor.cmd` | `bin\particle_editor.exe` | 粒子特效（`.particle`）：火焰、火花、煙、魔法 |
 | `FontEditor.cmd` | `bin\font_editor.exe` | 圖片字型（`.fnt` + `.png`），每個字元一張圖片 |
 | `GltfViewer.cmd` | `bin\gltf_viewer.exe` | 檢視 3D 模型（`.gltf` / `.glb`）：動畫、燈光、鏡頭、物理 |
-| `TomsEditor.cmd` | `bin\toms_editor.exe` | 在編輯器視窗中執行遊戲，使用本 repo 的 `assets` |
 | `UiEditor.cmd` | `bin\ui_editor.exe` | 遊戲畫面（`.rml`／`.rcss`）與執行中的遊戲並排，輸入時就顯示每個修改 |
 | `StageEventEditor.cmd` | `bin\stage_event_editor.exe` | 關卡（樓層地圖）與事件編輯器合成的 Windows 程式，使用本 repo 的 `assets\data` |
 | `WebEditors.cmd` | `..\tools\web_editors\serve.cmd` | 關卡（樓層地圖）與事件編輯器，在瀏覽器中使用 |
@@ -25,10 +24,10 @@
 - **repo 必須用 Git LFS 取得。** `bin` 中的程式存放在 Git LFS。請在這台電腦上 clone **之前**先執行一次
   `git lfs install`（或在 clone 之後執行 `git lfs pull`）。沒有這一步，`.exe` 與 `.dll` 只會是很小的文字檔，
   Windows 會顯示「這個應用程式無法在您的電腦上執行」。
-- **請讓這個資料夾留在 repo 內。** `TomsEditor`、`WebEditors` 與粒子編輯器預設的 fx 圖集會用到 `..\assets` 與
+- **請讓這個資料夾留在 repo 內。** `UiEditor`、`StageEventEditor`、`WebEditors` 與粒子編輯器預設的 fx 圖集會用到 `..\assets` 與
   `..\tools`。其他編輯器只需要 `bin`，這個資料夾可以單獨複製到任何地方使用。
 - **WebEditors 需要 Python 3**（在 PATH 上；它會啟動一個本機網頁伺服器）以及 Chrome 或 Edge。
-- **GltfViewer 與 TomsEditor 需要支援 Direct3D 11 的顯示卡**（近十年的電腦都可以）。
+- **GltfViewer 與 UiEditor 需要支援 Direct3D 11 的顯示卡**（近十年的電腦都可以）。
 
 ## 2. 各編輯器
 
@@ -104,7 +103,7 @@
 
 左邊是 UI 檔案，中間是文字，右邊是真正的遊戲。輸入、停頓，遊戲就會顯示修改；在 **Ctrl+S** 之前磁碟上的檔案不會改變。
 **預覽**選擇畫面（標題，或一個測試情境：戰鬥、對話、商店…），**語言**用來檢查長文字，**檢查**（Ctrl+I）+ 在遊戲中點擊會開啟
-那個元素的那一行，並列出套用到它的樣式規則。和 TomsEditor 一樣需要支援 Direct3D 11 的顯示卡。
+那個元素的那一行，並列出套用到它的樣式規則。需要支援 Direct3D 11 的顯示卡。
 第一次用？**說明 > UI 編輯器教學**（F1，[docs/gameplay/10](../../docs/gameplay/zh_TW/10_UI_EDITOR.md)）會在練習畫面上一步一步帶你操作（**說明 > 開啟練習畫面**）。
 
 ### 關卡與事件編輯器：樓層與事件的 Windows 程式（[docs/gameplay/02](../../docs/gameplay/zh_TW/02_STAGE_EDITOR.md) 第 6 節）
@@ -137,7 +136,6 @@
 | 「這個應用程式無法在您的電腦上執行」，或 `.exe` 很小 | LFS 檔案沒有下載：執行 `git lfs install`，然後在 repo 中執行 `git lfs pull` |
 | 「找不到 VCRUNTIME140.dll」 | `bin` 中缺少檔案：執行 `git lfs pull`，或 `git checkout -- Editor/bin` |
 | 「no Qt platform plugin could be initialized」 | 缺少 `bin\platforms\qwindows.dll`：同上 |
-| TomsEditor 的地圖是空的或全黑 | 直接從 `bin` 啟動了；請用 `TomsEditor.cmd`，它會設定 `ASSET_DIR` |
 | WebEditors 一開就關閉 | PATH 上沒有 Python 3；請從 python.org 安裝，並勾選 *Add to PATH* |
 | 粒子編輯器沒有精靈圖 | 在精靈圖面板開啟一個圖集，或讓 `Editor` 留在 repo 內，它才找得到 `assets\media\atlas\fx.atlas` |
 

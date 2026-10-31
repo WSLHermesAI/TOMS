@@ -1,8 +1,23 @@
 {
-  "_comment": "The sword's own play (docs/gameplay/15 §3.3, touch_play.h; weapon_play.json \"play\": \"slice\"): it waits over the monster; the click at frame 30 starts it (a press and a release in place: too short a swipe to cut), so each cut's 1.6 s run out and the play resolves as one combo with no hits.",
+  "_comment": "The sword's own play (docs/gameplay/16 §3.1, touch_play.h): its prompts start by themselves, one at a time, each 1 s with its last 0.5 s taking the answer. None is answered, so each passes and the play resolves as one combo with no hits.",
   "scene": "battle",
-  "player": { "equip": ["sword"] },
-  "battle": { "enemy": "slime", "hp": 9999, "atk_interval_ms": 60000, "play": "weapon" },
-  "test": { "frames": 420, "clicks": "720:150@30" },
-  "expect": { "battleEvents": { "combo": 1 } }
+  "player": {
+    "equip": [
+      "sword"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 260
+  },
+  "expect": {
+    "battleEvents": {
+      "combo": 1
+    }
+  }
 }

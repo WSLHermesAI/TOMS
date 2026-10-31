@@ -379,7 +379,7 @@ res.popStamp(s);                      // 玩家離開 F03：F03 載入的東西�
 「戳記」還有第二個意思，給工具用：檔案自己的時間與大小。
 
 - `checkFiles()` 拿每個已快取檔案的修改時間與大小跟讀取時比較。
-  - 熱重載開啟時，遊戲每秒執行一次：`toms_editor`（Qt 視窗裡的遊戲）永遠開啟，桌面除錯版預設開啟，正式版用
+  - 熱重載開啟時，遊戲每秒執行一次：`ui_editor` 與 `battle_editor`（Qt 視窗裡的遊戲）永遠開啟，桌面除錯版預設開啟，正式版用
     `--hot-reload` 開啟。發行的遊戲從不檢查（擁有者的決定 3）。
   - 有變化時，資源**原地**重新載入：同一個物件、新的內容，`version()` 增加。
 - 保存衍生資料的使用者（動畫播放器的姿勢快取、圖片的區域指標）拿自己看過的版本跟 `version()` 比較，再重新查詢。
@@ -595,7 +595,7 @@ GameBaseObject : Node                 （在樓層的樹裡：階層面板會顯
 **工作順序**（第 6 節的第 5 步）：
 1. 遊戲物件類別、依狀態的算圖系統與樓層樹：畫面相同，黃金截圖不變。
 2. 批次：共用頁面、加色集中、靜態格子層與 draw call 測試。畫面同樣相同，只有 draw call 數改變。
-3. `toms_editor` 裡的階層與細節面板，顯示真正的樹。
+3. 階層與細節面板，顯示真正的樹（原本規劃在 `toms_editor`，它已在 2026-10-31 移除；還沒在其他地方做）。
 
 ## 5. 這樣怎麼讓遊戲更快、更小
 
@@ -628,7 +628,7 @@ GameBaseObject : Node                 （在樓層的樹裡：階層面板會顯
    **2026-10-24 起每個狀態的外觀都由算圖物件組成**（`RenderLook`，§9.1），所以樓層和算圖物件是同一套系統，資料裡的外觀可以是任何
    型別（特效、群組、文字）。`drawObjectAnim` 和 `drawIdleAnim` 已移除。**剩下：**
    - 待機外觀仍由舊欄位建立（`lookOf`、`legacyIdleLook`）：應該改由關卡資料以 `"looks"` 表描述；
-   - `toms_editor` 裡的 Hierarchy 與 Details 面板（擁有者這一步的順序：物件、分批繪製、面板）。`MapObject::details()` 已經有，
+   - Hierarchy 與 Details 面板（原本規劃在 `toms_editor`，它已在 2026-10-31 移除；還沒在其他地方做）（擁有者這一步的順序：物件、分批繪製、面板）。`MapObject::details()` 已經有，
      但還沒有地方顯示它；
    - 戰鬥畫面仍透過 `CharacterRig` 和它自己的 `if` 繪製：會隨戰鬥的狀態對應表一起改用同樣的外觀
      （docs/gameplay/11_BATTLE_DATA.md §4.2）。
@@ -654,7 +654,7 @@ GameBaseObject : Node                 （在樓層的樹裡：階層面板會顯
 1. **JSON 欄位名稱：**`"type"` + `"atlas"` + `"name"`。
 2. **釋放時機：**遊戲還小，所以不每層樓釋放。沒人用的資源留在快取，超過記憶體預算時才從最久沒用的開始釋放（4.4）。
    戳記保留給預覽與編輯器文件。
-3. **重新載入：**編輯器也要。遊戲在 `toms_editor`、除錯版，以及加上 `--hot-reload` 時會重新載入改變的檔案。
+3. **重新載入：**編輯器也要。遊戲在 `ui_editor` 與 `battle_editor`、除錯版，以及加上 `--hot-reload` 時會重新載入改變的檔案。
    Qt 工具（關卡編輯器、動畫編輯器 …）在第 6 步改用管理器。
 4. **順序：**先做第 1、2、3 步。
 
@@ -670,7 +670,7 @@ AddRef 與 Release 必須自動且安全（4.4）；要比 `GetMe` 更好的方�
 | [src/core/engine/render_object.h/.cpp](../../../src/core/engine/render_object.h) | `RenderObject` 與 `RenderObjectFactory`；`sprite`、`clip`、`particle`、`text`、`group`、`missing`；`lookToRenderJson` |
 | [src/core/engine/vfs.h](../../../src/core/engine/vfs.h) | `vfsOpen` / `vfsPath` / `vfsUtf8`：在 Windows 上能開啟 UTF-8 路徑（中文資料夾名稱可用） |
 | `Game`（game.h、game_assets.cpp、game_scene_draw.cpp、game.cpp、game_input.cpp） | 一個 `ResourceManager`。待機動畫、開門動畫、物件動畫與兩種預覽都從它取得；`loadPreviewAtlases` 以及各使用者自己的圖集與貼圖清單都移除了。載入的圖片圖集以 `@sprite-atlas` 提供，所有 `.../atlas/game.atlas` 都對應到它，所以動畫和以前一樣跟著美術風格 |
-| `GameSession`、`main_sdl.cpp`、`toms_editor` | `SessionOptions::hotReload`、`--hot-reload`；`toms_editor` 與除錯版預設開啟 |
+| `GameSession`、`main_sdl.cpp`、`toms_editor`（2026-10-31 移除） | `SessionOptions::hotReload`、`--hot-reload`；`toms_editor` 與除錯版預設開啟（現在：`ui_editor`、`battle_editor` 與除錯版預設開啟） |
 
 玩家看到的變化：畫面上沒有（黃金截圖原封不動通過）。底層的變化：
 - `fx.atlas` 只載入一次，不再是待機動畫一次、開門動畫又一次；

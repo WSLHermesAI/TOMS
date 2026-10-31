@@ -77,7 +77,7 @@ Game::uiEvent(name, arg)         calls the same Game functions the keyboard uses
 
 ### 即時重新載入
 
-開啟熱重載時（`TomsEditor`、UI 編輯器、除錯版，或 `toms_game --hot-reload`），遊戲會監看 UI 資料夾：存檔後的 `.rml` 或 `.rcss`
+開啟熱重載時（UI 編輯器、戰鬥編輯器、除錯版，或 `toms_game --hot-reload`），遊戲會監看 UI 資料夾：存檔後的 `.rml` 或 `.rcss`
 在半秒內就會顯示，上方會出現「UI reloaded: <檔案>」（`GameUi::reloadIfChanged`）。仍可按 **F5** 手動重新載入。
 
 ### 用任何編輯器

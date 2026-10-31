@@ -220,7 +220,7 @@ If you saved them by mistake, ask the programmer, or in Git: `git checkout -- do
 3. **Language**: pick 日本語 or Español. The game's text changes language (only here: the game's own setting stays).
    Check that long lines still fit; a line that runs into the next one needs more room (a taller box, or a smaller
    font).
-4. Happy with it? **Ctrl+S**. Now the file on disk changes, and any running game (TomsEditor, a debug build) shows it
+4. Happy with it? **Ctrl+S**. Now the file on disk changes, and any running game (the battle editor, a debug build) shows it
    too.
 5. Not happy? **Revert File**.
 6. Commit the `.rcss` / `.rml` you changed (see the team plan, [../project/11_TEAM_PLAN.md](../project/11_TEAM_PLAN.md) §4).
@@ -244,6 +244,6 @@ If you saved them by mistake, ask the programmer, or in Git: `git checkout -- do
 | The practice card is not there | Pick *Practice screen (tutorial)* in Preview (or Help > Open Practice Screen); press F5 to start it again |
 | A picture shows as nothing or a white box | The sprite name does not exist in the atlas, or the `.rml` does not link `_atlas.rcss` |
 | Clicks in the game do nothing | Inspect is on (Ctrl+I to turn it off) |
-| The game's window is black | The graphics could not start (the editor needs a Direct3D 11 graphics card, like TomsEditor); the status bar says why |
+| The game's window is black | The graphics could not start (the editor needs a Direct3D 11 graphics card); the status bar says why |
 | My change is in the editor but not in the game I run separately | It is not saved yet (●). Ctrl+S |
 | A file changed on disk while I edited it | The status bar says so. Your text is kept; Revert File takes the one on disk |

@@ -13,7 +13,7 @@ other, and what to do in the first weeks.
 | Role | Owns | Mostly uses | Builds code? |
 |---|---|---|---|
 | **Programmer** | `src/`, `tools/` (code and scripts), `tests/` (C++ and CMake), the build, `Editor/bin`, the web publish | Visual Studio, `tools\build.cmd`, `tools\test.cmd` | yes |
-| **Game designer** | the rules and numbers in `assets/data/` (items, enemies, weapons, store, skills, missions), the floors (`stages/`), the events, dialogue and story, the text (`text.json`), test scenarios (`tests/scenarios/`) | Stage & event editor, web editors, a text editor for JSON, the game (`Editor\TomsEditor.cmd`) | no |
+| **Game designer** | the rules and numbers in `assets/data/` (items, enemies, weapons, store, skills, missions), the floors (`stages/`), the events, dialogue and story, the text (`text.json`), test scenarios (`tests/scenarios/`) | Stage & event editor, web editors, a text editor for JSON, the game beside the UI editor (`Editor\UiEditor.cmd`) | no |
 | **Artist** | the raw art (`art_raw/`), the atlases (`assets/media/atlas`, `styles/`), animations (`assets/media/anim`), effects, fonts, the UI's look (`assets/media/ui/*.rcss`), sounds (`assets/media/sfx`) | Atlas, anim, particle and font editors, the AI pipeline (AIGamestyle), an image editor | no |
 
 "Owns" means: that person decides, and changes to those files go through them. Anyone may *suggest* a change in
@@ -42,8 +42,8 @@ Some work always needs two people. The rule: **the one who needs the change asks
 **Programmer:** the full build: [01_INSTALL_WINDOWS.md](01_INSTALL_WINDOWS.md), [09_NEW_MACHINE_SETUP.md](09_NEW_MACHINE_SETUP.md),
 [02_VISUAL_STUDIO.md](02_VISUAL_STUDIO.md). The web build: [05_BUILD_WEB.md](05_BUILD_WEB.md).
 
-**Designer and artist:** nothing to build. Use the ready-made editors in `Editor\` and run the game with
-`Editor\TomsEditor.cmd`: it plays this repo's `assets`, so what you save is what you see. The programmer refreshes
+**Designer and artist:** nothing to build. Use the ready-made editors in `Editor\` and see the game in
+`Editor\UiEditor.cmd`: it runs the game on this repo's `assets`, so what you save is what you see. The programmer refreshes
 `Editor\bin` when the code changes (§6).
 
 **Artist, for AI art:** ComfyUI and the models in the AIGamestyle guide (`AIGamestyle/Doc/Reskin_Game_Art.md`),

@@ -53,6 +53,7 @@ struct GameSettings {
     // Settings > "Reduce shaking and flashes" (docs/gameplay/15 §3.8): the battle's hit stops and shakes a quarter as
     // strong, no flashes, no slow motion.
     bool reduceEffects = false;
+    bool bowTutorialDone = false;   // the bow's first-pull tutorial was shown and followed (docs/gameplay/16 §3.2)
 };
 
 nlohmann::json toJson(const GameSettings& s);

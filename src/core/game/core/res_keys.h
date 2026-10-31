@@ -29,6 +29,7 @@ inline constexpr const char kDataMinigames[]     = "data.minigames";          //
 inline constexpr const char kDataMissions[]      = "data.missions";           // json ../data/missions.json
 inline constexpr const char kDataMoves[]         = "data.moves";              // json ../data/moves.json
 inline constexpr const char kDataSkills[]        = "data.skills";             // json ../data/skills.json
+inline constexpr const char kDataSpecialMoves[]  = "data.special_moves";      // json ../data/special_moves.json
 inline constexpr const char kDataStats[]         = "data.stats";              // json ../data/stats.json
 inline constexpr const char kDataStore[]         = "data.store";              // json ../data/store.json
 inline constexpr const char kDataStoryCounters[] = "data.story.counters";     // json ../data/story/counters.json
@@ -81,6 +82,7 @@ inline constexpr const char* kAll[] = {
     kDataMissions,
     kDataMoves,
     kDataSkills,
+    kDataSpecialMoves,
     kDataStats,
     kDataStore,
     kDataStoryCounters,

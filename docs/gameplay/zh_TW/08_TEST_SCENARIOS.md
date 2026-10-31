@@ -13,13 +13,7 @@ tools\test.cmd -L scenario                                  # 所有情境測試
 tools\test.cmd -R scenario.store_buy                        # 單一個
 ```
 
-**在 `toms_editor` 中：**「情境」停駐視窗（和「關卡」並列的分頁）列出 `tests/scenarios/` 中的每個情境與它的場景。**按兩下就
-在「遊玩」分頁中開始**：一場新遊戲，直接進入那個場景。`_comment` 是它的提示文字。在情境上按右鍵可以遊玩、開啟它的資料夾或
-編輯它的 `scenario.json`；在任何地方按右鍵可以重新載入清單。
-- **檔案 > 開啟情境資料夾...** 開始單一情境資料夾，或把整個資料夾的情境列成另一組。
-- 下載的情境（`tests/scenarios/_cloud/`，[09](09_DOWNLOADS_AND_DLC.md)）自成一組。
-- `toms_editor --scenario=<資料夾>` 讓編輯器啟動時就進入情境。把情境資料夾（或它的 `scenario.json`）拖到 `toms_editor.exe`
-  上也一樣。
+情境在 `toms_game` 中執行（`--scenario=<資料夾>`，見上方）。
 
 情境**從不寫入存檔**：它的遊戲沒有存檔欄位，作為起點的存檔是從情境資料夾讀取的。
 
@@ -72,6 +66,7 @@ tests/scenarios/
 | `stairLocks` | 把某層第一個上樓梯鎖在事件之後：`{ "floor": "F01", "event": "ev_a" }`，或多個事件用 `"events": [...]`（全部完成才打開，W38）。 |
 | `flags` | 要設定的流程旗標（例如 `hub.village` 解鎖村莊）。 |
 | `eventsDone` | 像玩家一樣完成的事件。它們的獎勵、解鎖與通知都會發生。 |
+| `cards` | 持有的怪物卡片：`{ "slime": 2 }`（練習場，[16](16_SKILLS_AND_PLAYS.md) §5）。 |
 | `player` | 新遊戲開始時裝備著弓（初始武器）；`"unarmed": true` 會卸下它。接著 `give` 與 `equip`（依 `items.json` 的 id 給道具與裝備；`give` 中也可以用 `gold:<n>`、`exp:<n>`、`points:<n>`），再套用給定的數值。`inventory` 會取代背包內容。`weaponUses`（`{ "<武器 id>": <勝場> }`）設定每把武器的勝場，也就是它的等級（[07](07_GAMEPLAY_PLAN.md) 第 13 節）。 |
 | `test` | 自動測試用：場景開啟後執行幾個畫格，以及要按的鍵（`鍵@畫格`，從場景的第一個畫格算起；鍵名和 `--keys` 相同），以及 `clicks`：在設計座標上按滑鼠左鍵（`x:y@畫格`，1024 x 768，同 `--clicks`；一次點擊先懸停 2 畫格、按下 2 畫格，再放開）。 |
 | `expect` | 測試結束時檢查什麼（第 4 節）。沒有的話只檢查場景是否正在顯示。 |
@@ -84,7 +79,7 @@ tests/scenarios/
 |---|---|---|---|
 | `title` | 遊戲啟動時的標題畫面 | — | `title` |
 | `stage` | 行走場景：玩家在樓層中，處於存檔或給定的時刻 | — | `stage_new_game`、`stage_from_save`、`stage_from_events` |
-| `battle` | 與 `enemies.json` 中某個敵人的戰鬥（敵人不在地圖上） | `battle`：`enemy`，可選擇覆寫 `hp`、`atk`、`def`、`atk_interval_ms`、`moves`、`look`、`break`、`events`；`party`：最多再兩隻（id，或 `{ "enemy": id, ...覆寫 }`）；`pace`：`cooldown` / `stamina`；`play`：攻擊的玩法，`track`（情境中的預設）、`bow`、`slice`、`circles` 或 `weapon`（身上武器自己的玩法，`weapon_play.json` 的 `"play"`；[15](15_BATTLE_REVAMP.md) §3.3）；`rules`：這場戰鬥用的 `data/battle.json` 數值（`{ "stamina": {...}, "break": {...} }`）（[13](13_BATTLE_EDITOR.md)） | `battle_slime`、`battle_strong_player`、`battle_bow`（弓的戰鬥片段；另有 `battle_bow_charge`、`battle_bow_idle`）；`battle_party`、`battle_party_target`（三隻怪物）；`battle_parry`、`battle_jabs`、`battle_spell_break`、`battle_break`、`battle_transform`、`battle_stamina`、`battle_stamina_short`、`battle_attack_in_combo`、`battle_combo_holds`（戰鬥規則）；`battle_guard_early`、`battle_guard_bar`、`battle_result`（改版：防禦的時機、結算的評等）；`battle_play_bow`、`battle_play_slice`、`battle_play_circles`（每把武器自己的玩法，由一次點擊開始） |
+| `battle` | 與 `enemies.json` 中某個敵人的戰鬥（敵人不在地圖上） | `battle`：`enemy`，可選擇覆寫 `hp`、`atk`、`def`、`atk_interval_ms`、`moves`、`look`、`break`、`events`；`party`：最多再兩隻（id，或 `{ "enemy": id, ...覆寫 }`）；`pace`：`cooldown` / `stamina`；`super`：`true` 填滿絕招能量（絕招可用；[16](16_SKILLS_AND_PLAYS.md) §6）；`play`：攻擊的玩法，`track`（情境中的預設）、`bow`、`slice`、`circles` 或 `weapon`（身上武器自己的玩法，`weapon_play.json` 的 `"play"`；[15](15_BATTLE_REVAMP.md) §3.3）；`rules`：這場戰鬥用的 `data/battle.json` 數值（`{ "stamina": {...}, "break": {...} }`）（[13](13_BATTLE_EDITOR.md)） | `battle_slime`、`battle_strong_player`、`battle_bow`（弓的戰鬥片段；另有 `battle_bow_charge`、`battle_bow_idle`）；`battle_party`、`battle_party_target`（三隻怪物）；`battle_parry`、`battle_jabs`、`battle_spell_break`、`battle_break`、`battle_transform`、`battle_stamina`、`battle_stamina_short`、`battle_attack_in_combo`、`battle_combo_holds`（戰鬥規則）；`battle_guard_early`、`battle_guard_bar`、`battle_result`（改版：防禦的時機、結算的評等）；`battle_play_bow`、`battle_play_slice`、`battle_play_circles`（每把武器自己的玩法）；`battle_guard_warn`、`battle_guard_warn_early`、`battle_rhythm`、`battle_special_guard`、`battle_ultimate_star`（16：「!」防禦、怪物的節奏、特殊防禦玩法、武器的招式） |
 | `battleWon` | 那場戰鬥之後的勝利畫面 | 同 `battle` | `battle_won` |
 | `arena` | **武器測試場**（[07](07_GAMEPLAY_PLAN.md) 第 0 階段）：依序和列出的敵人一場接一場地戰鬥，每場都是滿血，沒有獎勵，也不影響故事。勝利後按 Enter 開始下一場；落敗後自動開始。武器是玩家的：初始的弓，用 `player.equip` 換別的，用 `player.unarmed` 則空手。`toms_game --arena=<敵人,...>[:<武器>]` 不用檔案也能開啟（沒寫武器：空手） | `battle`：`enemies`（或 `enemy`），以及和 `battle` 相同的覆寫值，套用到每一場 | `arena_unarmed`、`arena_wand`、`arena_restart` |
 | `weaponTrial` | **開場故事**（[07](07_GAMEPLAY_PLAN.md) 第 15 節）：老武師的對話（`dialogue/weapon_master.json`），就像標題畫面的新遊戲開啟它一樣；它的選項在試用戰鬥（武器測試場）中試用武器並留下一把 | — | `trial_start`、`trial_try_sword`、`trial_choose_staff` |
@@ -94,6 +89,7 @@ tests/scenarios/
 | `store` | 商店（情境中直接解鎖） | — | `store_buy`、`store_from_save` |
 | `menu` | 玩家選單的某個分頁 | `menu`：`tab` = `status`、`gear`、`items`、`events`、`cards` 或 `system` | `menu_status` … `menu_system`、`menu_cards`、`events_stairs_where` |
 | `saveLoad` | 存檔／讀檔畫面 | `saveLoad`：`mode` = `save` 或 `load` | `save_load` |
+| `menu` + `cards` | 練習場（[16](16_SKILLS_AND_PLAYS.md) §5）：在卡片分頁按 Enter，用選中的卡片特訓 | — | `training_cards` |
 | `stageSelect` | 關卡選擇（已到過的樓層） | — | `stage_select` |
 | `stairsConfirm` | 樓梯上的「要上樓／下樓嗎？」詢問 | `stairs`：`to`（樓層）、`up`（true／false） | `stairs_confirm` |
 | `notice` | 由設定產生的通知，例如鎖住的樓梯的事件完成後的「樓梯已解鎖」 | — | `notice_stair_unlock` |

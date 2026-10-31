@@ -24,7 +24,7 @@ it and links the download. Web-build problems are in [06 §7](05_BUILD_WEB.md#7-
 | `d3dcompiler_47.dll` not found while compiling shaders | Windows SDK missing | install the Windows 11 SDK |
 | C4819 / garbled CJK strings | a target compiled without `/utf-8` | every toms target calls `toms_target_defaults()`; add it to new targets |
 | `renderer.h: vulkan/vulkan.h not found` | `src/game/compat` is not first on the include path of a new target that includes the core game headers | link `toms_core` (it carries the include order) instead of adding `src/core` include paths by hand |
-| `windeployqt not found` warning | Qt `bin` folder not found | add `<Qt kit>\bin` to `PATH`, or copy the Qt DLLs next to `toms_editor.exe` |
+| `windeployqt not found` warning | Qt `bin` folder not found | add `<Qt kit>\bin` to `PATH`, or copy the Qt DLLs next to the editor's exe (e.g. `ui_editor.exe`) |
 
 ## Runtime problems
 
@@ -36,8 +36,8 @@ it and links the download. Web-build problems are in [06 §7](05_BUILD_WEB.md#7-
 | Popup "The game UI could not start" + an `.rml` name | an RML/RCSS file has an error | the console / `toms.log` has RmlUi's message; fix the file and restart (or press F5 in a running game) |
 | A character shows as nothing (a gap) in the UI | the character is not in the cut-down UI font | `python tools/make_ui_font.py` ([01](../gameplay/01_RMLUI.md#editing-the-ui)) |
 | Yellow "!" at the top right of the game | RmlUi logged a warning | press F8 (RmlUi debugger) to read it |
-| Editor starts, then "toms_editor.exe - Qt6Core.dll was not found" | Qt DLLs not next to the exe | rebuild (windeployqt runs after every link), or add `<Qt kit>\bin` to `PATH` |
-| Editor: keys do nothing | the game view has no keyboard focus | click the *Play (bgfx)* view |
+| Editor starts, then "ui_editor.exe - Qt6Core.dll was not found" | Qt DLLs not next to the exe | rebuild (windeployqt runs after every link), or add `<Qt kit>\bin` to `PATH` |
+| Editor: keys do nothing | the game view has no keyboard focus | click the game view |
 | Editor: black view after undocking or moving the view | the native window was recreated | keep the viewport as the central widget/tab ([01 §5](../engine/01_ARCHITECTURE.md#5-qt--bgfx-in-the-editor)) |
 | Saves are not where the old build put them | the working directory differs | saves go to `save\` in the working directory (`Build\<preset>\bin` under F5) |
 | Screenshot or screen-recording tool shows the editor's game view as white or black | tools that capture a window through GDI cannot read a DXGI flip-model swap chain | capture the screen or desktop region instead (the editor's own `--screenshot` does this), or use `toms_game --screenshot` / RenderDoc |

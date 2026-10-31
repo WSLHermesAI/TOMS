@@ -30,7 +30,7 @@ Builds on [11_BATTLE_DATA.md](11_BATTLE_DATA.md) (shared stats, battle events, t
 
 **Its own program, `battle_editor.exe`** (the owner, 2026-10-25: a new editor, not more put into `toms_editor`). It is
 built like `ui_editor`, which is already a separate program sharing `toms_editor`'s game viewport (`bgfx_viewport`,
-`GameSession`): Qt panels on the sides, the real game in the middle. The battle in the editor is the battle in the game,
+`GameSession`; toms_editor was removed on 2026-10-31, the two editors still share it): Qt panels on the sides, the real game in the middle. The battle in the editor is the battle in the game,
 the same code, so what is tuned there is what the player gets. It is packaged into `Editor/bin` with the other tools.
 
 - **One click to battle** = the editor writes the current setup as a **test scenario** (the scenarios already describe

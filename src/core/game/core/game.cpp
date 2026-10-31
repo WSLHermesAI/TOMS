@@ -272,7 +272,22 @@ void Game::update(int dtMs) {
         for (int p : cs.combo.takeEntered()) comboHint(p, /*hit=*/false);   // "tap now"
         if (cs.combo.done()) resolveCombo();
     };
+    if (cs.active && cs.skill.on) {   // a move or a special guard (docs/gameplay/16 §6): the fight waits for its show
+        cs.clockMs += dtMs;
+        updateSkill(dtMs);
+    } else {
     if (attackPlaying && comboRunsThroughAttacks_ && !cs.atkBar.cooling && attackRunning()) stepCombo();
+    if (cs.active && attackPlaying) {   // a run of hits keeps its rhythm through the attack pause (docs/gameplay/16 §4.1)
+        bool volley = false;
+        for (const CombatState::Foe& f : cs.foes) volley = volley || (f.volleyHit > 0 && !f.down() && f.staggerMs <= 0);
+        if (volley) cs.clockMs += dtMs;   // (its "!" and the guard's timing run on the battle's time)
+        for (size_t i = 0; i < cs.foes.size() && cs.active && volley; i++) {
+            CombatState::Foe& f = cs.foes[i];
+            if (f.volleyHit <= 0 || f.down() || f.staggerMs > 0) continue;
+            f.volleyMs -= dtMs;
+            if (f.volleyMs <= 0) resolveEnemyClockFire((int)i);
+        }
+    }
     if (cs.active && !attackPlaying) {
         auto stepBar = [&](CombatState::AutoBar& bar, const toms::PowerBarParams& z) {
             if (bar.cooling) {
@@ -302,9 +317,13 @@ void Game::update(int dtMs) {
         } else {
             const std::string key = weaponKey();
             cs.chargeMs = std::min(cs.chargeMs + dtMs, std::max(1, weaponPlayOf(key).chargeMs));
-            // the weapon's own play waits over the target for its first touch; until then it follows the target and
-            // the layout (the same seed, the same places)
-            if (cs.active && !cs.winPending && battlePlayKind() != toms::PlayKind::Track)
+            // the weapon's own play: armed when the attack is ready (the bow waits over the target for its pull and
+            // follows the target until then; the sword and the staff start at once, 16 §3)
+            const bool canPay = cs.pace != toms::Pace::Stamina || cs.stamina >= (float)paceSettings_.attackCost;
+            const glm::vec4 area = touchArea();
+            const bool moved = std::fabs(area.x - touchArmedArea_.x) + std::fabs(area.y - touchArmedArea_.y) > 4.0f;
+            if (cs.active && !cs.winPending && canPay && battleBoxesKnown_ && battlePlayKind() != toms::PlayKind::Track &&
+                (!cs.touch.running() || (!cs.touch.started() && moved)))
                 armTouchPlay(false, toms::comboSettings(weaponPlayOf(key), weaponLevel(key)).points);
         }
         stepBar(cs.defBar, toms::effectiveDefenseBar(equipped_, equipmentDefs_));
@@ -315,10 +334,12 @@ void Game::update(int dtMs) {
         // each monster standing keeps its own clock to its next move (docs/gameplay/13 §4.6, §6.1)
         if (cs.active) stepFoes(dtMs);
     }
+    }   // (no skill running)
   }
     // The weapon test arena: when a fight is over (a win dismissed, a loss shown), the next one starts.
     if (arena_.on && !cs.active && !cs.won && cs.resultPauseMs <= 0 && !title_.isOpen()) {
         if (arena_.trial) endWeaponTrialFight();   // the start story: back to the weapon master
+        else if (arena_.training && arena_.fights >= arena_.fightsMax) endTraining();   // the training ground's run is over
         else arenaNextFight();
     }
     // The result-pause countdown must run regardless of cs.active: finishCombatLose() sets

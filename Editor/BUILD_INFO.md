@@ -42,7 +42,6 @@ Written by `tools/package_editors.py`; do not edit.
 | `bin/platforms/qwindows.dll` | 919,688 | `210d8fb2ed1f` |
 | `bin/stage_event_editor.exe` | 9,563,648 | `8f0759638f1a` |
 | `bin/styles/qmodernwindowsstyle.dll` | 217,736 | `061b45ce2294` |
-| `bin/toms_editor.exe` | 14,832,640 | `a70db33925f0` |
 | `bin/ui_editor.exe` | 14,758,912 | `efb92912e8d5` |
 | `bin/vccorlib140.dll` | 350,648 | `09f93d5ff96a` |
 | `bin/vcruntime140.dll` | 178,616 | `d1f4225df2cd` |

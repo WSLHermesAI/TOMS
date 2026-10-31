@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """i18n_check.py -- the Qt editors' Chinese text: every tr("...") must have a translation.
 
-The editors (atlas, anim, particle, font, toms_editor) write their UI in English through tr(); the
+The editors (atlas, anim, particle, font, ui, battle, stage/event) write their UI in English through tr(); the
 Language menu (tools/studio_common/Language.h) swaps it for Traditional Chinese from the JSON files in
 tools/studio_common/i18n/zh_TW/ (English -> 中文, one file per editor, common.json for shared words).
 
@@ -21,7 +21,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 SOURCES = ['tools/atlas/qt', 'tools/anim/qt', 'tools/particle/qt', 'tools/font/qt', 'tools/studio_common',
-           'src/editor/src', 'tools/stage_event_editor/app']   # src/editor/src: toms_editor and ui_editor
+           'src/editor/src', 'tools/stage_event_editor/app']   # src/editor/src: ui_editor and battle_editor
 DICT_DIR = os.path.join(ROOT, 'tools', 'studio_common', 'i18n', 'zh_TW')
 
 ESCAPES = {'n': '\n', 't': '\t', '"': '"', "'": "'", '\\': '\\', 'r': '\r', '0': '\0'}

@@ -34,6 +34,7 @@ HTML 事件編輯器（[tools/web_editors/](../../../../tools/web_editors/index.
 
 ## 2. 在編輯器中（規劃中）
 
+（原本規劃在 `toms_editor`，它已在 2026-10-31 移除；原生的事件編輯器在 `stage_event_editor` 中。）
 開啟 `toms_editor`，選 **事件** 分頁。它會從專案根目錄載入所有事件池、樓層設定和
 `text.json`。
 

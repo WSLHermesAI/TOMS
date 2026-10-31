@@ -99,6 +99,12 @@ struct MoveDef {
     float reduce = 0.3f;      // guard: the share of damage that gets through
     std::string text;         // the intent's words (a text.json key)
     std::string icon;         // the intent's icon (a sprite name; "" = the words only)
+    // Its rhythm (docs/gameplay/16 §4.1): a wind-up, then `hits` hits with gaps, each with an "!" before it.
+    int chargeMs = 0;           // the wind-up in ms (0: `time` x the monster's attack interval)
+    std::vector<int> gapsMs;    // the time before each next hit (one value: every gap); empty: the hits land at once
+    int warnMs = -1;            // the "!" before each hit (-1: battle.json guard.warnMs)
+    std::string guardPlay;      // a skills.json id: a special guard play instead of the button (16 §4.3)
+    int gapBefore(int hit) const;   // hit 1, 2, ...: the gap before it (0 for the first)
 };
 
 struct MovesTable {
@@ -188,7 +194,13 @@ std::string battleGrade(const GradeInput& in, const GradeSettings& g, int* score
 // The guard (15 §3.2; data/battle.json "guard"): "timing" = one button, pressed just before a hit; "bar" = the
 // five-zone bar (Battle v2) kept as an option.
 struct GuardSettings {
+    // "warn" (docs/gameplay/16 §4.2): only while the "!" shows over the monster (warnMs before each hit); the first
+    // parryShare of it is a parry, the rest a block; a press with no "!" locks the guard missLockMs. A press stops the
+    // player's own attack. "timing": pressed just before the hit (15 §3.2). "bar": the five-zone bar.
     std::string mode = "timing";
+    int warnMs = 500;
+    float parryShare = 0.4f;
+    int missLockMs = 400;
     int parryMs = 160;      // pressed at most this long before the hit: a parry (no damage; a heavy blow staggers)
     int blockMs = 550;      // ...this long: blocked (blockPower)
     int earlyMs = 1200;     // ...this long: too early (full damage, and the player is told)
@@ -199,5 +211,8 @@ enum class GuardTiming { None, Parry, Block, Early };
 GuardSettings guardFromJson(const nlohmann::json& battleJson);
 // What a guard pressed `sinceMs` before a hit does (sinceMs < 0: not pressed).
 GuardTiming guardTiming(int sinceMs, const GuardSettings& g);
+// The "warn" mode: a press `sinceMs` before a hit whose "!" showed `warnMs` (pressed while it showed: a parry in its
+// first parryShare, else a block; before it, or not pressed: none).
+GuardTiming guardWarn(int sinceMs, int warnMs, const GuardSettings& g);
 
 } // namespace toms

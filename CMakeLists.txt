@@ -1,11 +1,12 @@
 # TOMS (Tower of the Sorcerer) on Qt6 + bgfx.
 #
 #   toms_game    SDL3 + bgfx game (desktop exe, or html/wasm for the web); what ships, contains no Qt
-#   toms_editor  Qt6 editor with an embedded bgfx viewport (desktop only, never shipped)
+#   the editors  Qt6 tools (ui_editor, battle_editor, stage_event_editor, anim / atlas / particle / font editors,
+#                gltf_viewer): desktop only, never shipped
 #
 # Layout:
-#   src/     all source code: engine/ (bgfx), game/ (entry point, session), editor/ (Qt; stage/ is
-#            the old stage editor), core/ (the core game code, compiled unmodified against a
+#   src/     all source code: engine/ (bgfx), game/ (entry point, session), editor/ (Qt: ui_editor,
+#            battle_editor), core/ (the core game code, compiled unmodified against a
 #            bgfx IRenderer), third_party/ (vendored headers)
 #   assets/  all game content: media/ (sprites, sfx, fonts) and data/ (JSON). The game code reads
 #            data as <media>/../data, so the two stay siblings.
@@ -25,7 +26,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(TOMS_SRC_DIR         "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(TOMS_CORE_SRC        "${TOMS_SRC_DIR}/core")            # the core game code: engine/ + game/
 set(TOMS_THIRD_PARTY_DIR "${TOMS_SRC_DIR}/third_party")     # json, stb, miniaudio headers
-set(TOMS_STAGE_EDITOR    "${TOMS_SRC_DIR}/editor/stage")    # the old Qt stage editor sources
 set(TOMS_ASSET_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/assets/media" CACHE PATH "Game media: sprites, sfx, fonts")
 set(TOMS_DATA_DIR        "${CMAKE_CURRENT_SOURCE_DIR}/assets/data"  CACHE PATH "Game data (JSON); must be the sibling 'data' of the media folder")
 

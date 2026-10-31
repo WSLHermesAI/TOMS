@@ -40,6 +40,7 @@ struct ComboResult {
     int hits = 0, points = 0;
     float charge = 0;            // 0 .. 1
     bool failed = false;         // two misses in a row (a plain attack)
+    int perfects = -1;           // a touch play's perfect answers (touch_play.h); -1: not counted (the track)
     // The attack's power for the damage formula, 0 .. 100: the share of points hit (a fail: 0).
     float power() const { return failed || points <= 0 ? 0.0f : 100.0f * float(hits) / float(points); }
 };

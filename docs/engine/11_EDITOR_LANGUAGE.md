@@ -1,13 +1,13 @@
 # 11 — Editor language (English / 中文)
 
-Every Qt editor (atlas_editor, anim_editor, particle_editor, font_editor, toms_editor) switches between English
+Every Qt editor (atlas_editor, anim_editor, particle_editor, font_editor, ui_editor,
+battle_editor, stage_event_editor) switches between English
 and Traditional Chinese with the **中文 / English** button at the right end of its menu bar. The switch is
 immediate: menus, buttons, labels, tool tips, table headers and list choices change in place; text with numbers
 in it (status lines, counts) changes the next time the editor updates it. The choice is shared by all the
 editors and kept between runs. 中文：[zh_TW/11_EDITOR_LANGUAGE.md](zh_TW/11_EDITOR_LANGUAGE.md).
 
-The web editors (`tools/web_editors`) have their own language setting (`settings.js`, `language`). The old stage
-editor inside toms_editor shows both languages side by side and has no switch.
+The web editors (`tools/web_editors`) have their own language setting (`settings.js`, `language`).
 
 ## How it works
 

@@ -543,13 +543,5 @@ anim_editor --headless convert-mpdi <資料夾> [--out <輸出資料夾>]
 - 唯一失敗的是舊編輯器建置資料夾中、沒有指定 sprite sheet 的測試檔。
 - 47 個結果中有 44 個通過 `--headless check`；其餘 3 個引用的圖片在舊資料的 `.pi` 裡本來就不存在，轉換時已回報。
 
-**測試：** `anim.mpdi_convert`（`tools/anim/tests/mpdi_convert_test.cpp`，24 項檢查）轉換 `tests/mpdi/` 中手寫的檔案，
-並以依引擎規則算出的數值核對 key。涵蓋：
-- 最舊格式與 `<Version>` 標頭；
-- 左上角與置中的位置；
-- 裁切後的縮放與鏡像；
-- Chaikin LOD；
-- 有循環時的開始 gate；
-- 加法混合與聲音提示；
-- `CenterDown` 與 `RotationPosOffset`；
-- `Angles` x, y, z。
+**測試：** 沒有。轉換器的測試（`anim.mpdi_convert`）與它手寫的檔案（`tests/mpdi/`）已於 2026-10-31 移除（擁有者）。
+轉換的結果可以用 `anim_editor --headless check` 檢查。

@@ -1,0 +1,25 @@
+{
+  "_comment": "The staff's ultimate as a special move (docs/gameplay/16 §6; special_moves.json star_seal): the super charge is full, g at frame 10 starts it: the pentagram drawn by particles, then 6 s to trace it. Nothing is traced, so the move ends weak (no hits) and the fight goes on.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "staff"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true
+  },
+  "test": {
+    "frames": 660,
+    "keys": "g@10"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "combo": 0
+    }
+  }
+}

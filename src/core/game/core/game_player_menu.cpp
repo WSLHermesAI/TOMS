@@ -448,6 +448,9 @@ void Game::playerMenuActivate() {
                 if (buttons[i].enabled) { playerMenuEvent("pm_btn", (int)i); return; }
             return;
         }
+        case MenuTab::Cards:   // Enter: Train with the selected card (docs/gameplay/16 §5)
+            playerMenuEvent("pm_btn", 0);
+            return;
         case MenuTab::System:
             inGameMenuActivate();
             return;
@@ -533,6 +536,10 @@ void Game::playerMenuEvent(const std::string& name, int arg) {
             const auto cells = gearCells();
             if (cells.empty()) return;
             c = {ItemCell::Gear, cells[clampSel(gearSel_, (int)cells.size())], 1};
+        } else if (menuTab_ == MenuTab::Cards) {   // Train: the training ground with the selected monster (16 §5)
+            const auto cells = cardCells();
+            if (!cells.empty() && arg == 0) startTraining(cells[(size_t)clampSel(cardSel_, (int)cells.size())]);
+            return;
         } else {
             return;
         }
@@ -830,6 +837,10 @@ void Game::buildPlayerUi(toms::UiState& u) const {
                 p.d_lines.push_back({"HP", std::to_string(t.value("hp", 0)), "", 0});
                 p.d_lines.push_back({"ATK", std::to_string(t.value("atk", 0)), "", 0});
                 p.d_lines.push_back({"DEF", std::to_string(t.value("def", 0)), "", 0});
+                // the training ground (docs/gameplay/16 §5): spend its card for fights in a row, a few runs a day
+                const int left = trainingRunsLeft();
+                p.d_buttons.push_back({trParam(L.tr(left > 0 ? "cards.train" : "cards.train_none"), "n", std::to_string(left)),
+                                       r.copies > 0 && left > 0});
             }
             break;
         }

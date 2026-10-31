@@ -6,6 +6,12 @@
 
 namespace toms {
 
+std::vector<std::string> WeaponPlay::shapeCuesAt(int lv) const {
+    std::vector<std::string> out;
+    for (const ShapeCues& c : shapeCues) if (c.lv <= lv) out = c.cues;
+    return out;
+}
+
 WeaponPlay weaponPlayFromJson(const std::string& id, const nlohmann::json& j) {
     WeaponPlay w;
     w.id = id;
@@ -79,6 +85,17 @@ WeaponPlay weaponPlayFromJson(const std::string& id, const nlohmann::json& j) {
     }
     w.pace = j.value("pace", std::string());
     w.play = j.value("play", std::string("track"));
+    if (j.contains("shapeCues") && j["shapeCues"].is_array()) {
+        for (const auto& e : j["shapeCues"]) {
+            if (!e.is_object()) continue;
+            WeaponPlay::ShapeCues c;
+            c.lv = std::max(1, e.value("lv", 1));
+            if (e.contains("cues") && e["cues"].is_array())
+                for (const auto& s : e["cues"]) if (s.is_string()) c.cues.push_back(s.get<std::string>());
+            w.shapeCues.push_back(c);
+        }
+        std::sort(w.shapeCues.begin(), w.shapeCues.end(), [](const auto& a, const auto& b) { return a.lv < b.lv; });
+    }
     return w;
 }
 

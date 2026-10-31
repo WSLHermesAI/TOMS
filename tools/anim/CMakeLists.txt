@@ -33,17 +33,6 @@ target_include_directories(anim_tools PUBLIC core)
 target_link_libraries(anim_tools PUBLIC toms_anim PRIVATE atlas_core)   # atlas_core: the .pi reader, the atlas writer
 set_target_properties(anim_tools PROPERTIES FOLDER "tools/anim")
 
-# The .mpdi converter on the hand-made files of tests/mpdi (docs/engine/05_ANIMATION.md, "Converting MPDI").
-add_executable(mpdi_convert_test tests/mpdi_convert_test.cpp)
-toms_target_defaults(mpdi_convert_test)
-target_link_libraries(mpdi_convert_test PRIVATE anim_tools)
-set_target_properties(mpdi_convert_test PROPERTIES FOLDER "tools/anim")
-if(TOMS_BUILD_TESTS)
-    add_test(NAME anim.mpdi_convert
-             COMMAND mpdi_convert_test "${CMAKE_SOURCE_DIR}/tests/mpdi" "${CMAKE_BINARY_DIR}/test-run/mpdi_convert")
-    set_tests_properties(anim.mpdi_convert PROPERTIES LABELS "unit;anim" TIMEOUT 60)
-endif()
-
 # The motion recipes (core/anim_recipes.h; docs/engine/06_ANIMATION_RECIPES.md section 7).
 add_executable(anim_recipes_test tests/anim_recipes_test.cpp)
 toms_target_defaults(anim_recipes_test)

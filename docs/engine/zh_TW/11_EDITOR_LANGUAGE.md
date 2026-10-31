@@ -2,11 +2,12 @@
 
 > 英文原文：[11_EDITOR_LANGUAGE.md](../11_EDITOR_LANGUAGE.md)
 
-所有 Qt 編輯器（atlas_editor、anim_editor、particle_editor、font_editor、toms_editor）都可以用選單列最右邊的
+所有 Qt 編輯器（atlas_editor、anim_editor、particle_editor、font_editor、ui_editor、
+battle_editor、stage_event_editor）都可以用選單列最右邊的
 **中文 / English** 按鈕切換英文與繁體中文。切換立即生效：選單、按鈕、標籤、提示、表格標題與清單選項會直接改變；含有數字的文字
 （狀態列、數量）會在編輯器下次更新時改變。所有編輯器共用同一個選擇，並在下次啟動時保留。
 
-網頁編輯器（`tools/web_editors`）有自己的語言設定（`settings.js` 的 `language`）。toms_editor 內的舊關卡編輯器同時顯示兩種語言，沒有切換。
+網頁編輯器（`tools/web_editors`）有自己的語言設定（`settings.js` 的 `language`）。
 
 ## 運作方式
 

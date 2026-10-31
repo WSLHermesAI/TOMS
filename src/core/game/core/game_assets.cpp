@@ -184,6 +184,7 @@ bool Game::loadAssets(const std::string& assetDir) {
             battleJson_ = bj;
             paceSettings_ = toms::paceFromJson(bj);     // docs/gameplay/13 §6.3
             feel_ = toms::feelFromJson(bj);             // docs/gameplay/15 §3.8
+            touchSettings_ = toms::touchPlayFromJson(bj);   // the plays' numbers (docs/gameplay/16 §3)
             grade_ = toms::gradeFromJson(bj);           // §3.6
             guard_ = toms::guardFromJson(bj);           // §3.2
             comboHoldsMonsters_ = bj.value("combo_holds_monsters", false);
@@ -196,6 +197,7 @@ bool Game::loadAssets(const std::string& assetDir) {
     weaponPlay_ = toms::loadWeaponPlay(pathOf(toms::key::kDataWeaponPlay));   // docs/gameplay/07_GAMEPLAY_PLAN.md §5.6
     looks_ = toms::looksFromJson(readJsonFile(pathOf(toms::key::kDataLooks)));   // the status map (docs/gameplay/11 §4.2)
     moves_ = toms::movesFromJson(readJsonFile(pathOf(toms::key::kDataMoves)));   // the monsters' moves (docs/gameplay/13 §6.1)
+    specialMoves_ = toms::specialMovesFromJson(readJsonFile(pathOf(toms::key::kDataSpecialMoves)));   // moves and special guards (docs/gameplay/16 §6)
     miniGames_ = toms::loadMiniGames(pathOf(toms::key::kDataMinigames));      // docs/gameplay/07 phase 6
     characterFit_ = readJsonFile(pathOf(toms::key::kDataCharacterFit));      // character clips' nudges (docs/engine/05)
     fprintf(stderr, "[assets] weapon_play.json: %d weapon(s)\n", (int)weaponPlay_.weapons.size());

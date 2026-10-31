@@ -56,7 +56,7 @@ environment variable) brings it back; `--leak-trace` / `--leak-break` need the `
 ## The new / delete map (Windows Debug only)
 
 In Windows Debug builds `leak_check.cpp` also **replaces the global `operator new` and `operator delete`** (every form:
-arrays, `nothrow`, aligned) for the program it is built into (`toms_game`, `toms_editor`):
+arrays, `nothrow`, aligned) for the program it is built into (`toms_game`):
 
 - every `new` puts the pointer in a map with its size, its number, and **the call stack that made it**. The call
   stack gives the function and `file:line`; there is no `#define new`, which would break placement new and library
@@ -74,7 +74,7 @@ program (the game, the engine, RmlUi, bgfx, the editor's own code).
 
 **Only Windows Debug builds.** Everything (the operators, the map, the hook, the report) is inside
 `#if defined(_WIN32) && defined(_DEBUG)`. Release builds and other platforms get two empty functions; checked on the
-built programs: the report's text is in the Debug `toms_game` and `toms_editor` and in neither Release one.
+built programs: the report's text is in the Debug `toms_game` (and was in the Debug `toms_editor`) and in neither Release one.
 
 `TOMS_LEAK_TRACK=0` (an environment variable) turns the map off. The map captures a call stack per `new`; a
 scenario run took 6 s with it. The map's own memory shows up in the debug-heap part of the report (the second part).
@@ -108,24 +108,8 @@ heap (`HeapCreate`), so holding its lock never needs the C runtime's.
 
 ## toms_editor
 
-`toms_editor` has the same check (the same `leak_check.cpp`, called from `src/editor/src/main.cpp`). Its report is
-**`toms_editor_leaks.log`**, and it takes the same `--leak-trace` / `--leak-break` options:
-
-```
-Build\windows-debug\bin\toms_editor.exe --scenario=tests/scenarios/cards_first_win --frames=90 --screenshot=shot.png
-```
-
-(`--frames` with `--screenshot` closes the editor by itself; without them, close it by hand and the report is written.)
-
-Expect a much longer list than the game's (2026-10-21: 6,674 blocks, 1 MB). Most of it is Qt: its font, style, plugin
-and file caches are freed when its DLLs unload, after `main()`. Qt's own frames show as `?` in a trace unless Qt's
-`.pdb` files are installed. Traced in that run:
-- the game's blocks, the same as in `toms_game` (below);
-- the editor's translation table (`Language.cpp`, a static);
-- Qt caches made while the Stages and Scenarios docks were built.
-
-Look for **your code** in the call stacks (`src/editor`, `src/core`, `src/game`, `tools/studio_common`), and compare a
-short and a long session as below.
+`toms_editor` (which had the same check and wrote `toms_editor_leaks.log`) was removed on 2026-10-31; its section
+is gone. The Qt editors beside the game (`ui_editor`, `battle_editor`) do not run the check.
 
 ## Reading the report
 
@@ -143,7 +127,7 @@ Not every block is a leak:
   with its place. Statics: the sprite index buffer (`bgfx_renderer.cpp:142`), the ease-name table
   (`anim_clip.cpp:67`), the object registry (`object.h:35`), the save folder name (`save_slots.cpp:19`), the job
   system (`job_system.cpp:114`), RmlUi's virtual files (`rml_ui.cpp:443`) and its data-model names.
-- **`toms_editor`** (`cards_first_win`): a **real leak, fixed**. `StageScene` (the stage editor tab) made a
+- **`toms_editor`** (`cards_first_win`; toms_editor was removed on 2026-10-31): a **real leak, fixed**. `StageScene` (the stage editor tab) made a
   `GameObject` with `new` for every wall and floor cell (`stagescene.cpp:65`, 143 of them). A rebuild freed the
   previous set, but nothing freed the last one: it had no destructor. `~StageScene` now frees them; the editor's count
   went from 436 to 293 allocations, the rest statics: the language table (`Language.cpp:70`), the stage editor's

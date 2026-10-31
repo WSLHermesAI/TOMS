@@ -2,12 +2,11 @@
 
 > 英文原文：[README.md](../../event_editor/README.md)
 
-**現況：** 設計階段。資料模型和唯讀的流程圖已經寫在程式碼中
-（`src/editor/src/event_graph.*`、`event_flow_view.*`），但還沒編譯進 `toms_editor`，
-也還不能編輯任何東西。在編輯器推出之前，事件要手動編輯 JSON
-（[03_USER_GUIDE.md](03_USER_GUIDE.md) 第 1 節）。
+**現況：** 原生的事件編輯器在 `stage_event_editor.exe` 中（[02](../02_STAGE_EDITOR.md) 第 6 節；見下方「下一步」）。
+這個資料夾的設計最初規劃成 `toms_editor` 的一個分頁；`toms_editor` 和它唯讀流程圖的程式碼
+（`src/editor/src/event_graph.*`、`event_flow_view.*`）已在 2026-10-31 移除。
 
-事件編輯器是 `toms_editor` 中的一個分頁，處理隨機樓層事件：每層樓可能抽到的遺物、低語、
+事件編輯器處理隨機樓層事件：每層樓可能抽到的遺物、低語、
 補給、陷阱和救援。它會顯示哪些樓層能抽到哪些事件，讓你在同一個地方編輯事件和它的文字，
 並在遊戲碰到之前就列出資料問題。
 

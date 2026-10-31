@@ -1,0 +1,27 @@
+{
+  "_comment": "The \"warn\" guard (docs/gameplay/16 §4.2): guard (f) at frame 20, long before the \"!\": too early, nothing is guarded, and the heavy blow lands.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 1000,
+    "moves": [
+      "heavy"
+    ]
+  },
+  "test": {
+    "frames": 90,
+    "keys": "f@20"
+  },
+  "expect": {
+    "battleEvents": {
+      "parry": 0,
+      "hit": 1
+    }
+  }
+}

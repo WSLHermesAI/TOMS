@@ -32,15 +32,19 @@ void Game::startCombat(const EnemyInst& e, const std::vector<EnemyInst>& party) 
     cs.banner.clear(); cs.bannerKind.clear();
     cs.chain = cs.bestChain = cs.perfects = cs.attacksDone = cs.damageTaken = 0;
     cs.guardAtMs = -1; cs.guardCdMs = 0; cs.ultimate = false;
+    cs.guardLockMs = 0; cs.playDealt = 0; cs.skill = CombatState::SkillRun{};
+    cs.camZoom = 1.0f; cs.camMs = cs.camMsMax = 0; cs.camOn = -1;
     cs.result = CombatState::Result{};
     cs.pace = effectivePace();
     cs.stamina = (float)paceSettings_.staminaMax;
     moveRng_.seed(20261025u);   // the same battle goes the same way
+    playRng_.seed(scenarioTestFrames_ > 0 ? 20261031u : std::random_device{}());   // the plays: different every battle
     cs.playerHP = pl.hp; cs.active = true; cs.won = false;
     cs.atkBar = CombatState::AutoBar{};
     cs.defBar = CombatState::AutoBar{};
     cs.combo = toms::ComboPlay{};
     cs.touch = toms::TouchPlay{};
+    battleBoxesKnown_ = false;   // the plays wait for this battle's layout (the screen reports it a frame later)
     cs.touchCharge = 0.0f;
     cs.touchPaid = false;
     touchHeld_ = false;
@@ -91,6 +95,8 @@ int Game::battleFrame(int dtMs) {
     cs.dimMs = std::max(0, cs.dimMs - dtMs);
     cs.bannerMs = std::max(0, cs.bannerMs - dtMs);
     cs.guardCdMs = std::max(0, cs.guardCdMs - dtMs);
+    cs.guardLockMs = std::max(0, cs.guardLockMs - dtMs);
+    cs.camMs = std::max(0, cs.camMs - dtMs);
     int bdt = dtMs;
     if (cs.hitStopMs > 0) {
         cs.hitStopMs = std::max(0, cs.hitStopMs - dtMs);
@@ -182,7 +188,8 @@ void Game::chooseFoeMove(int foe) {
     const float roll = std::uniform_real_distribution<float>(0.0f, 1.0f)(moveRng_);
     f.move = toms::pickMove(f.enemy.moves, roll);
     const toms::MoveDef& m = moves_.get(f.move);
-    f.moveMs = std::max(300, (int)std::lround(std::max(500, f.enemy.atkIntervalMs) * m.time * f.intervalMul));
+    f.moveMs = m.chargeMs > 0 ? std::max(300, (int)std::lround(m.chargeMs * f.intervalMul))   // its wind-up in ms (16 §4.1)
+                              : std::max(300, (int)std::lround(std::max(500, f.enemy.atkIntervalMs) * m.time * f.intervalMul));
     if (!f.enemy.moves.empty()) battleEvent("intent", foe, -1, f.moveMs, f.move);   // (a plain striker: always the same)
 }
 
@@ -206,6 +213,11 @@ void Game::stepFoes(int dtMs) {
         }
         // the owner 2026-10-26: they keep charging while the player's combo runs (their attack lands in the middle of
         // it; quick jabs also cut it short). data/battle.json "combo_holds_monsters": true brings back the old wait.
+        if (f.volleyHit > 0) {   // a run of hits (16 §4.1): the next one after its gap; the clock waits
+            f.volleyMs -= dtMs;
+            if (f.volleyMs <= 0) resolveEnemyClockFire(foe);
+            continue;
+        }
         if (comboHoldsMonsters_ && attackRunning() && moves_.get(f.move).kind != toms::MoveKind::Jabs) continue;
         f.clockMs += dtMs;
         if (f.clockMs >= f.moveMs) {
@@ -531,9 +543,22 @@ void Game::drawBattleRig() {
         std::uniform_real_distribution<float> u(-amp, amp);
         ox = u(shakeRng_); oy = u(shakeRng_);
     }
+    // the camera's close-up (docs/gameplay/16 §6.1): the fighters and their effects scaled about the one it is on
+    float zoom = 1.0f;
+    glm::vec2 focus(0.0f);
+    if (cs.camMs > 0 && cs.camZoom > 1.0f) {
+        const float in = std::min(1.0f, (float)(cs.camMsMax - cs.camMs) / 200.0f), out = std::min(1.0f, (float)cs.camMs / 300.0f);
+        const float k = std::min(in, out);
+        zoom = 1.0f + (cs.camZoom - 1.0f) * k * (2.0f - k);
+        const glm::vec4 fb = fighterBox(cs.camOn);
+        focus = {fb.x + fb.z * 0.5f, fb.y + fb.w * 0.5f};
+    }
+    auto zoomed = [&](glm::vec4 b) {
+        return glm::vec4(focus.x + (b.x - focus.x) * zoom + ox, focus.y + (b.y - focus.y) * zoom + oy, b.z * zoom, b.w * zoom);
+    };
     // The player's place on the battle screen (battle.rcss #player, wherever the layout put it: playerBox_): the feet
     // at its bottom centre, the 32-pixel character filling its height.
-    const glm::vec4 pb = playerBox_ + glm::vec4(ox, oy, 0.0f, 0.0f);
+    const glm::vec4 pb = zoomed(playerBox_);
     if (battleRigReady() && !battleRigState_.empty())
         battleRig_.draw(ren, battleCharacterAnim_ ? battleCharacterAnim_->atlases() : kNone,
                         battleHeldAnim_ ? battleHeldAnim_->atlases() : kNone,
@@ -543,15 +568,16 @@ void Game::drawBattleRig() {
     for (size_t i = 0; i < foeRigs_.size() && i < cs.foes.size(); i++) {
         const FoeRig& fr = foeRigs_[i];
         if (!monsterRigReady() || fr.state.empty()) continue;
-        const glm::vec4 eb = fighterBox((int)i) + glm::vec4(ox, oy, 0.0f, 0.0f);
+        const glm::vec4 eb = zoomed(fighterBox((int)i));
         const toms::AtlasRegion* r = spriteAtlas_.find(monsterSprite((int)i));
         const float longer = r ? (float)std::max(std::max(r->origW, r->origH), 1) : 32.0f;
         fr.rig.draw(ren, monsterAnim_->atlases(), kNone,
                     toms::anim::placement(eb.x + eb.z / 2.0f, eb.y + eb.w, std::min(eb.z, eb.w) / longer));
     }
     if (battleFxFile_) {
-        glm::mat3 shake(1.0f);
-        shake[2][0] = ox; shake[2][1] = oy;
+        glm::mat3 shake(1.0f);   // (and the close-up's scale)
+        shake[0][0] = shake[1][1] = zoom;
+        shake[2][0] = focus.x * (1.0f - zoom) + ox; shake[2][1] = focus.y * (1.0f - zoom) + oy;
         for (BattleFx& b : battleFx_)
             if (!b.overUi) b.fx.draw(ren, battleFxFile_->atlases(), shake, nullptr);
         ren->setLayer(1);   // the track's hints: over the battle screen's UI
@@ -871,7 +897,11 @@ void Game::resolveDefenseTap() {
 void Game::resolveEnemyClockFire(int foe) {
     CombatState::Foe& f = cs.foes[(size_t)foe];
     const toms::MoveDef& m = moves_.get(f.move);   // its move, shown as its intent (docs/gameplay/13 §6.1, 6.2)
-    f.attacks++;
+    // a special guard play (docs/gameplay/16 §4.3): the hit waits for it; endSkill comes back here with its result
+    if (!m.guardPlay.empty() && f.guardShare < 0.0f && f.volleyHit == 0 && !cs.skill.on)
+        if (const toms::SpecialMove* d = specialMoves_.find(m.guardPlay)) { startSkill(*d, foe); return; }
+    const bool volley = !m.gapsMs.empty() && m.hits > 1;   // its hits one by one, each with its "!" (16 §4.1)
+    if (f.volleyHit == 0) f.attacks++;
     auto afterMove = [this, foe] {   // the next move, then its "attacks" events
         if (!cs.active) return;
         chooseFoeMove(foe);
@@ -893,9 +923,10 @@ void Game::resolveEnemyClockFire(int foe) {
     bool guarded = cs.shieldBanked;
     bool parried = guarded && power >= (float)breakSettings_.parryPower;
     cs.shieldBanked = false; cs.shieldPower = 0.0f;
-    if (guard_.mode == "timing") {   // one button, pressed just before the hit (docs/gameplay/15 §3.2)
+    if (guard_.mode == "timing" || guard_.mode == "warn") {   // one button: just before the hit (15 §3.2), or while its "!" shows (16 §4.2)
         const int since = cs.guardAtMs < 0 ? -1 : cs.clockMs - cs.guardAtMs;
-        const toms::GuardTiming gt = toms::guardTiming(since, guard_);
+        const toms::GuardTiming gt = guard_.mode == "warn" ? toms::guardWarn(since, moveWarnMs(m), guard_)
+                                                           : toms::guardTiming(since, guard_);
         cs.guardAtMs = -1;   // a press answers one move
         guarded = gt == toms::GuardTiming::Parry || gt == toms::GuardTiming::Block;
         parried = gt == toms::GuardTiming::Parry;
@@ -908,7 +939,8 @@ void Game::resolveEnemyClockFire(int foe) {
         // a perfect guard parries a heavy blow: no damage, it staggers and takes more (13 §6.2)
         battleEvent("parry", -1, foe, (int)std::lround(power));
         playerLook("parry");
-        if (guard_.mode != "timing") feelMoment("parry");
+        if (guard_.mode == "bar") feelMoment("parry");
+        f.volleyHit = 0;
         startAttackPause();
         popDamage(0, -1, "guard");
         stunFoe(foe, breakSettings_.parryMs, breakSettings_.parryDamage, false);
@@ -920,8 +952,17 @@ void Game::resolveEnemyClockFire(int foe) {
     }
     if (m.kind == toms::MoveKind::Spell) power *= 0.5f;   // a guard only halves a spell
     int dmg = 0;
-    const int hits = m.kind == toms::MoveKind::Jabs ? m.hits : 1;
+    const int hits = volley ? 1 : m.kind == toms::MoveKind::Jabs ? m.hits : 1;
     for (int k = 0; k < hits; k++) dmg += toms::computeDefenseDamage(incoming, power, floorMitigation);
+    if (f.guardShare >= 0.0f) {   // the special guard play's result: what was done takes that much off (16 §4.3)
+        dmg = (int)std::lround((float)dmg * (1.0f - std::clamp(f.guardShare, 0.0f, 1.0f)));
+        guarded = f.guardShare > 0.0f;
+        if (f.guardShare >= 1.0f) {
+            popWord(locale_.tr("battle.word_parry"), -1, "parry");
+            stunFoe(foe, breakSettings_.parryMs, breakSettings_.parryDamage, false);
+        }
+        f.guardShare = -1.0f;
+    }
     if (m.kind == toms::MoveKind::Jabs) interruptCombo(foe);
 
     const float hpBefore = playerHpPct();
@@ -946,6 +987,12 @@ void Game::resolveEnemyClockFire(int foe) {
         cs.log = dmg == 0 ? locale_.tr("battle.perfect_guard") : trParam(locale_.tr("battle.guard_hit"), "dmg", std::to_string(dmg));
     }
     if (!cs.active) return;
+    if (volley && f.volleyHit + 1 < m.hits) {   // more hits to come: the next after its gap (its "!" before it)
+        f.volleyHit++;
+        f.volleyMs = m.gapBefore(f.volleyHit);
+    } else {
+        f.volleyHit = 0;
+    }
     {
         toms::EventCheck c;   // every monster hears the player's HP fall
         c.on = "playerHpBelow";
@@ -954,7 +1001,7 @@ void Game::resolveEnemyClockFire(int foe) {
         for (size_t i = 0; i < cs.foes.size() && cs.active; i++)
             if (!cs.foes[i].down()) runFoeEvents((int)i, c);
     }
-    afterMove();
+    if (cs.active && cs.foes[(size_t)foe].volleyHit == 0) afterMove();   // its whole move is done
 }
 
 // Battle v3 (docs/gameplay/07 phase 1): the first tap starts the combo with the charge built so far; the next taps hit the
@@ -1028,8 +1075,10 @@ void Game::resolveCombo(const toms::ComboResult* played) {
     // the revamp (docs/gameplay/15 §3.3, §3.4): the result's tier, the perfect chain, the ultimate
     const bool ult = cs.ultimate;
     cs.ultimate = false;
-    const std::string tier = r.failed || r.hits == 0 ? "miss"
-                           : res && (res->name == "perfect" || res->name == "great") ? res->name : "hit";
+    std::string tier = r.failed || r.hits == 0 ? "miss"
+                     : res && (res->name == "perfect" || res->name == "great") ? res->name : "hit";
+    if (r.perfects >= 0 && tier != "miss")   // a touch play (16 §3): perfect when all hit and half were perfect
+        tier = r.hits >= r.points && r.perfects * 2 >= r.points ? "perfect" : r.hits >= r.points || r.hits * 5 >= r.points * 3 ? "great" : "hit";
     if (tier == "perfect") cs.chain = std::min(feel_.chainMax, cs.chain + 1);
     else if (tier == "miss") cs.chain = 0;
     cs.bestChain = std::max(cs.bestChain, cs.chain);
@@ -1039,14 +1088,17 @@ void Game::resolveCombo(const toms::ComboResult* played) {
     if (ult) dmg = (int)std::lround(dmg * (foe.staggerMs > 0 ? 4.0f : 2.0f));   // ×2, ×4 in a break
     battleEvent("combo", -1, t, r.hits, std::to_string(r.hits) + "/" + std::to_string(r.points) + (r.failed ? " failed" : "") +
                                           (res && !res->name.empty() ? " " + res->name : std::string()));
+    const int dealt = cs.playDealt;   // the play's answers already hit (16 §3): this is the rest of the attack
+    cs.playDealt = 0;
+    if (dealt > 0) dmg = std::max(0, dmg - dealt);
     battleEvent("hit", -1, t, dmg);
-    lastAttackDamage_ = r.failed || r.hits == 0 ? 0 : dmg;   // the battle rig: attack, or miss for a fail
+    lastAttackDamage_ = r.failed || r.hits == 0 ? 0 : std::max(dmg, dealt);   // the battle rig: attack, or miss for a fail
     if (dmg > 0 && !r.failed) cs.superCharge = std::min(run_.superMax(), cs.superCharge + 1);
     if (res && !res->sound.empty()) audio.play(res->sound);
     else playerLook("attack");
     startAttackPause();
     feelMoment(ult ? "ultimate" : tier);
-    popDamage(dmg, t, ult ? "perfect" : tier);
+    if (dmg > 0 || dealt == 0) popDamage(dmg, t, ult ? "perfect" : tier);
     // its named move (07 §5.4): the result row's "move", over the monster; the chain by the player
     if (res && !res->move.empty() && locale_.has(res->move)) popWord(locale_.tr(res->move), t, "move-" + tier);
     if (cs.chain > 1) popWord(trParam(locale_.tr("battle.word_chain"), "n", std::to_string(cs.chain)), -1, "chain");
@@ -1113,7 +1165,26 @@ void Game::resolveCombo(const toms::ComboResult* played) {
 }
 
 void Game::battleTapDefense() {
-    if (!cs.active || cs.winPending) return;
+    if (!cs.active || cs.winPending || cs.skill.on) return;
+    if (guard_.mode == "warn") {   // only while an "!" shows over a monster (16 §4.2); it stops the player's attack
+        if (cs.guardLockMs > 0 || cs.guardAtMs >= 0) return;
+        stopOwnAttack();
+        bool warned = false;
+        for (size_t i = 0; i < cs.foes.size(); i++) warned = warned || foeWarning((int)i);
+        if (!warned) {   // no "!": too early; the guard locks a moment
+            popWord(locale_.tr("battle.word_early"), -1, "early");
+            cs.guardLockMs = guard_.missLockMs;
+            audio.play("deny");
+            return;
+        }
+        if (cs.pace == toms::Pace::Stamina) {
+            if (cs.stamina < (float)paceSettings_.guardCost) { cs.log = locale_.tr("battle.no_stamina"); audio.play("deny"); return; }
+            cs.stamina -= (float)paceSettings_.guardCost;
+        }
+        cs.guardAtMs = cs.clockMs;
+        audio.play("confirm_click");
+        return;
+    }
     if (guard_.mode == "timing") {   // one button (docs/gameplay/15 §3.2): it answers the next hit, judged when it lands
         if (cs.guardCdMs > 0) return;
         if (cs.pace == toms::Pace::Stamina) {
@@ -1149,10 +1220,16 @@ void Game::battleTapDefense() {
 // fight a moment, then a harder play starts at once with a full charge (two more points); its hit does ×2, ×4 in a
 // break, with the weapon's best effects and its big clip (resolveCombo).
 void Game::battleTapSuper() {
-    if (!cs.active || cs.winPending || cs.superCharge < run_.superMax() || attackRunning()) return;
+    if (!cs.active || cs.winPending || cs.superCharge < run_.superMax() || cs.combo.running() || cs.skill.on) return;
     cs.superCharge = 0;
     cs.ultimate = true;
     const std::string key = weaponKey();
+    if (const toms::SpecialMove* d = specialMoves_.forWeapon(key, "ultimate")) {   // the weapon's own move (16 §6): it cuts in
+        const std::string s = feel_.sound("ultimate");
+        if (!s.empty()) audio.play(s);
+        startSkill(*d, -1);
+        return;
+    }
     const std::string name = equipmentDefs_.count(key) ? itemName(key) : locale_.tr("battle.unarmed");
     showBanner(trParam(locale_.tr("battle.word_ultimate"), "name", name), "ultimate", 900);
     cs.hitStopMs = std::max(cs.hitStopMs, settings_.reduceEffects ? 200 : 600);   // the cut-in holds the fight
@@ -1161,71 +1238,19 @@ void Game::battleTapSuper() {
     toms::ComboSettings cset = toms::comboSettings(weaponPlayOf(key), weaponLevel(key));
     cset.points = std::min(toms::kMaxComboPoints, cset.points + 2);
     cs.atkBar.cooling = false;
-    if (battlePlayKind() != toms::PlayKind::Track) armTouchPlay(true, cset.points);   // the weapon's own play, harder
-    else cs.combo.start(cset, 1.0f);
+    if (battlePlayKind() != toms::PlayKind::Track) {   // the weapon's own play, harder (it cuts in over the normal one)
+        cs.touch.stop();
+        cs.touchPaid = false;
+        cs.playDealt = 0;
+        armTouchPlay(true, cset.points);
+    } else {
+        cs.combo.start(cset, 1.0f);
+    }
     battleEvent("super", -1, cs.target, cset.points, "ultimate");
     cs.log = locale_.tr("battle.combo_go");
 }
 
-// ---- each weapon's own play (touch_play.h; docs/gameplay/15 §3.3): the bow's slingshot, the sword's cuts, the staff's
-// circles, played by touch over the monster. Each reports on the track's scale, so resolveCombo does the rest.
-
-toms::PlayKind Game::battlePlayKind() const {
-    if (!playOverride_.empty() && playOverride_ != "weapon") return toms::playKindFromString(playOverride_);
-    return toms::playKindFromString(weaponPlayOf(weaponKey()).play);
-}
-
-glm::vec4 Game::touchArea() const {
-    const glm::vec4 b = fighterBox(std::clamp(cs.target, 0, std::max(0, (int)cs.foes.size() - 1)));
-    // the bow's targets on the monster; the circles from it down into the free space under the fighters; the
-    // sword's arrows in a row in that space (touchPlayUi), clear of the monster
-    if (battlePlayKind() == toms::PlayKind::Bow) return {b.x - 30.0f, b.y - 20.0f, b.z + 60.0f, b.w + 40.0f};
-    return {b.x - 120.0f, b.y - 10.0f, b.z + 240.0f, b.w + 210.0f};
-}
-
-void Game::armTouchPlay(bool ultimate, int points) {
-    cs.touch.start(battlePlayKind(), points, ultimate, touchArea(), 1031u + 7919u * (uint32_t)cs.attacksDone);
-    cs.touchPaid = ultimate;   // the ultimate costs no stamina and runs at once with a full charge
-    cs.touchCharge = ultimate ? 1.0f : 0.0f;
-    touchHeld_ = false;
-}
-
-void Game::battlePointer(int phase, float x, float y) {
-    if (!cs.active || cs.winPending || !cs.touch.running()) { touchHeld_ = false; return; }
-    if (phase == 0 && !cs.touch.started() && cs.pace == toms::Pace::Stamina && cs.stamina < (float)paceSettings_.attackCost) {
-        cs.log = locale_.tr("battle.no_stamina");   // the stamina pace: starting an attack costs it (13 §6.3)
-        audio.play("deny");
-        return;
-    }
-    if (phase == 0) touchHeld_ = true;
-    else if (!touchHeld_) return;   // a press that began on a button, or before the play
-    if (phase == 2) touchHeld_ = false;
-    const int index = cs.touch.index(), hits = cs.touch.result().hits;
-    const bool wasStarted = cs.touch.started();
-    cs.touch.pointer(phase, x, y);
-    if (cs.touch.started() && !wasStarted && !cs.touchPaid) {   // the first touch: the attack starts (07 §4)
-        cs.touchPaid = true;
-        cs.touchCharge = comboCharge();
-        if (cs.pace == toms::Pace::Stamina) cs.stamina = std::max(0.0f, cs.stamina - (float)paceSettings_.attackCost);
-        audio.play("confirm_click");
-    }
-    touchPlayed(index, hits);
-}
-
-void Game::stepTouchPlay(int dtMs) {
-    const int index = cs.touch.index(), hits = cs.touch.result().hits;
-    cs.touch.update(dtMs);
-    touchPlayed(index, hits);
-}
-
-void Game::touchPlayed(int indexBefore, int hitsBefore) {
-    if (cs.touch.index() > indexBefore) audio.play(cs.touch.result().hits > hitsBefore ? "confirm_click" : "deny");
-    if (!cs.touch.done() || !cs.touchPaid) return;
-    cs.touchPaid = false;   // resolved once (the done play stays, its marks fading, until the next is armed)
-    toms::ComboResult r = cs.touch.result();
-    r.charge = cs.touchCharge;
-    resolveCombo(&r);
-}
+// (each weapon's own play, skills and the training ground: game_skills.cpp)
 
 // Equipment actives (2026-09-17, rewired onto equipment_actives.h -- see CombatState's own
 // comment for why): a no-op unless the currently equipped gear grants an active

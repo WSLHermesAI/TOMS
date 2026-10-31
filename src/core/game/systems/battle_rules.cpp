@@ -123,6 +123,15 @@ MovesTable movesFromJson(const nlohmann::json& j) {
         m.reduce = std::clamp(v.value("reduce", 0.3f), 0.0f, 1.0f);
         m.text = v.value("text", "battle.intent." + std::string(moveKindName(m.kind)));
         m.icon = v.value("icon", std::string());
+        m.chargeMs = std::max(0, v.value("chargeMs", 0));
+        if (v.contains("gapsMs") && v["gapsMs"].is_array()) {
+            for (const auto& g : v["gapsMs"])
+                if (g.is_number()) m.gapsMs.push_back(std::max(50, g.get<int>()));
+        } else if (v.contains("gapsMs") && v["gapsMs"].is_number()) {
+            m.gapsMs.push_back(std::max(50, v["gapsMs"].get<int>()));
+        }
+        m.warnMs = v.value("warnMs", -1);
+        m.guardPlay = v.value("guardPlay", std::string());
         t.moves[m.id] = m;
     }
     return t;
@@ -271,13 +280,27 @@ GuardSettings guardFromJson(const nlohmann::json& b) {
     GuardSettings g;
     if (!b.is_object() || !b.contains("guard") || !b["guard"].is_object()) return g;
     const nlohmann::json& j = b["guard"];
-    g.mode = j.value("mode", g.mode) == "bar" ? "bar" : "timing";
+    const std::string mode = j.value("mode", g.mode);
+    g.mode = mode == "bar" || mode == "warn" ? mode : "timing";
+    g.warnMs = std::max(100, j.value("warnMs", g.warnMs));
+    g.parryShare = std::clamp(j.value("parryShare", g.parryShare), 0.0f, 1.0f);
+    g.missLockMs = std::max(0, j.value("missLockMs", g.missLockMs));
     g.parryMs = std::max(0, j.value("parryMs", g.parryMs));
     g.blockMs = std::max(g.parryMs, j.value("blockMs", g.blockMs));
     g.earlyMs = std::max(g.blockMs, j.value("earlyMs", g.earlyMs));
     g.blockPower = std::clamp(j.value("blockPower", g.blockPower), 0.0f, 100.0f);
     g.cooldownMs = std::max(0, j.value("cooldownMs", g.cooldownMs));
     return g;
+}
+
+GuardTiming guardWarn(int sinceMs, int warnMs, const GuardSettings& g) {
+    if (sinceMs < 0 || sinceMs > warnMs) return GuardTiming::None;
+    return (float)sinceMs >= (float)warnMs * (1.0f - g.parryShare) ? GuardTiming::Parry : GuardTiming::Block;
+}
+
+int MoveDef::gapBefore(int hit) const {
+    if (hit <= 0 || gapsMs.empty()) return 0;
+    return gapsMs[(size_t)std::min(hit - 1, (int)gapsMs.size() - 1)];
 }
 
 GuardTiming guardTiming(int sinceMs, const GuardSettings& g) {

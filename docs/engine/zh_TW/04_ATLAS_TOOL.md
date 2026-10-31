@@ -47,11 +47,11 @@
 
 ```bat
 :: the editor (Qt): open the game's atlas, edit, Ctrl+S
-Build\windows-release\bin\atlas_editor.exe assets\media\atlas\game.atlasproj
+Build\windows-release\bin\atlas_editor.exe art_raw\atlas\game.atlasproj
 
 :: the same without a window
-Build\windows-release\bin\atlaspack.exe refs  assets\media\atlas\game.atlasproj --import all
-Build\windows-release\bin\atlaspack.exe build assets\media\atlas\game.atlasproj --all-variants
+Build\windows-release\bin\atlaspack.exe refs  art_raw\atlas\game.atlasproj --import all
+Build\windows-release\bin\atlaspack.exe build art_raw\atlas\game.atlasproj --all-variants
 ```
 
 （編輯器（Qt）：開啟遊戲的 atlas、編輯、Ctrl+S；下面兩行是不開視窗的做法。）

@@ -30,6 +30,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [13_BATTLE_EDITOR.md](gameplay/13_BATTLE_EDITOR.md) | the battle editor (monsters, weapons and their result tiers, the test player and the growth calculator, monster events, one-click battle) and ideas for a real-time strategic battle; HTML mockup and playable demo in [gameplay/battle_editor/](gameplay/battle_editor/) | [zh_TW](gameplay/zh_TW/13_BATTLE_EDITOR.md) |
 | [14_WEAPON_PLAY_AND_LOOT.md](gameplay/14_WEAPON_PLAY_AND_LOOT.md) | weapon plays v2 (bow: draw and hit targets; sword: slicing and memory combos; staff: timed circles and magic circles) and the loot grind (farm monsters, chests, go deeper, gear bonuses); the owner's ideas 2026-10-30, questions Q27–Q33 | [zh_TW](gameplay/zh_TW/14_WEAPON_PLAY_AND_LOOT.md) |
 | [15_BATTLE_REVAMP.md](gameplay/15_BATTLE_REVAMP.md) | the battle revamp: the ideas of 07, 11, 13 and 14 put together into one loop (read, answer, play, break, burst, reward), the feel (hit stop, shake, tier sounds), the result screen with the weapon's progress, the screen for thumbs, an order of work R1–R7; questions Q34–Q38; a playable HTML prototype in [gameplay/battle_editor/](gameplay/battle_editor/) | [zh_TW](gameplay/zh_TW/15_BATTLE_REVAMP.md) |
+| [16_SKILLS_AND_PLAYS.md](gameplay/16_SKILLS_AND_PLAYS.md) | skills and plays from five reusable blocks (cue track, gestures and drawn shapes, the "!" warning, the show timeline, `special_moves.json`): the sword, bow and staff reworked, monster attack rhythms and the "!" guard, special guard plays, the card training ground, special moves with their own show (the staff's pentagram); the owner's ideas 2026-10-31, built the same day (§10), questions Q39–Q46 | [zh_TW](gameplay/zh_TW/16_SKILLS_AND_PLAYS.md) |
 | [event_editor/](gameplay/event_editor/README.md) | the event editor: data model, design, user guide, tutorial, floor links, logic, key gates, NPC dialogue | [zh_TW](gameplay/zh_TW/event_editor/README.md) |
 
 ## engine
@@ -54,6 +55,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [16_MESH_ANIMATION.md](engine/16_MESH_ANIMATION.md) | mesh animation: replacing Spine | [zh_TW](engine/zh_TW/16_MESH_ANIMATION.md) |
 | [17_SKINNING_TUTORIAL.md](engine/17_SKINNING_TUTORIAL.md) | tutorial: skinning, deforming and weight painting | [zh_TW](engine/zh_TW/17_SKINNING_TUTORIAL.md) |
 | [18_NODE_EFFECTS.md](engine/18_NODE_EFFECTS.md) | node effects (shaders by hierarchy, afterimages) and the brawler showcase: the anim editor vs Spine | [zh_TW](engine/zh_TW/18_NODE_EFFECTS.md) |
+| [19_DESIGN_MAP.md](engine/19_DESIGN_MAP.md) | the design map: how the game is put together (layers, one frame, screens and switching, drawing order, events, talking, battle) and how extendable it is; an interactive page in [engine/design_map/](engine/design_map/design_map.html) | [zh_TW](engine/zh_TW/19_DESIGN_MAP.md) |
 
 ## project
 

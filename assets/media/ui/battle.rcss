@@ -163,6 +163,26 @@ body { z-index: 30; }
 .tp.circle.idle { background-color: #7f5aff70; }
 .tp.ring    { border-width: 3px; border-color: #ffd54a; }
 .tp.mark.ok { border-width: 4px; border-color: #ffe066; }
+/* docs/gameplay/16: the bow's charge and tutorial, the sword's open window, the staff's "!", a move's shape */
+.tp.charge  { border-width: 3px; border-color: #ffd54a90; }
+.tp.charge.full { border-color: #ff7a3a; border-width: 4px; }
+.tp.ghost   { background-color: #ffffff70; border-width: 2px; border-color: #ffffff; }
+.tp.tutorial { font-size: 20px; color: #ffe8a0; }
+.tp.arrow.now.open { background-color: #ffd54a; }
+.tp.arrow.now.open.head { background-color: transparent; border-color: #ffd54a; }
+.tp.time.open { background-color: #ff9a3a; }
+.tp.warn    { font-size: 34px; color: #ffd54a; font-effect: outline(3px #402800); }
+.tp.star    { background-color: #c8a0ff60; }
+.tp.star.done { background-color: #ffe066; }
+.tp.corner  { border-width: 3px; border-color: #c8a0ff; }
+.tp.corner.next { border-color: #ffffff; background-color: #ffffff40; }
+.tp.corner.done { border-color: #ffe066; background-color: #ffe06690; }
+/* the monster's "!" before its hit (16 §4): guard now */
+.foe .warn { position: absolute; left: 70%; top: -14px; width: 48px; text-align: center; font-size: 60px;
+             color: #ffd54a; font-effect: outline(4px #402800); }
+#skill-prompt { position: absolute; left: 0; right: 0; top: 340px; text-align: center; font-size: 30px; color: #ffffff;
+                font-effect: outline(3px #301848); z-index: 4; }
+#skill-time { color: #ffd54a; }
 .tp.mark.bad { background-color: #ff6a6a; }
 
 .popup { position: absolute; width: 300px; text-align: center; font-size: 32px; color: #ffffff; font-effect: outline(2px #401010); }
@@ -252,6 +272,7 @@ body { z-index: 30; }
     #attack-state { left: 394px; margin-left: 0; }
     #banner      { top: 440px; }
     #result-box  { margin-left: -330px; width: 660px; top: 80px; }
+    #skill-prompt { top: 520px; }
 }
 
 /* a tall phone: the monster above, the player below it, each with its HP under it */

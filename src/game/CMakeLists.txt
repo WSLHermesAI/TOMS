@@ -16,7 +16,7 @@ add_library(toms_core STATIC
     ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp
     ${L_GAME}/core/game_scene_draw.cpp ${L_GAME}/core/game_input.cpp ${L_GAME}/core/game_inventory.cpp
     ${L_GAME}/core/game_player_menu.cpp
-    ${L_GAME}/core/game_store.cpp ${L_GAME}/core/game_combat.cpp ${L_GAME}/core/game_story.cpp
+    ${L_GAME}/core/game_store.cpp ${L_GAME}/core/game_combat.cpp ${L_GAME}/core/game_skills.cpp ${L_GAME}/core/game_story.cpp
     ${L_GAME}/core/game_title_glue.cpp
     ${L_GAME}/core/game_scenario.cpp   # test scenarios: one scene from a setting file (docs/gameplay/08_TEST_SCENARIOS.md)
     ${L_GAME}/core/map_objects.cpp   # the floor's things, a class per kind (docs/engine/12 §4.10)
@@ -32,7 +32,10 @@ add_library(toms_core STATIC
     ${L_GAME}/systems/combo_play.cpp    # Battle v3 point play (docs/gameplay/07 §4, §5.1)
     ${L_GAME}/systems/battle_party.cpp  # 1-3 monsters: targeting, the battle event log (docs/gameplay/13 §4.6)
     ${L_GAME}/systems/battle_rules.cpp  # looks, monster events, moves, the pace, break (docs/gameplay/13)
-    ${L_GAME}/systems/touch_play.cpp    # each weapon's own play: bow, slice, circles (docs/gameplay/14 §2, 15 §3.3)
+    ${L_GAME}/systems/touch_play.cpp    # each weapon's own play, a move's, a special guard's (docs/gameplay/15 §3.3, 16)
+    ${L_GAME}/systems/cue_track.cpp     # the reusable blocks of docs/gameplay/16 §2: cues, drawn shapes, skills
+    ${L_GAME}/systems/gesture.cpp
+    ${L_GAME}/systems/special_moves.cpp
     ${L_GAME}/systems/mini_game.cpp     # reward events, data/minigames.json (docs/gameplay/07 phase 6)
     ${L_GAME}/systems/card_collection.cpp   # monster cards (docs/gameplay/07 §3)
     ${L_GAME}/systems/story_actions.cpp ${L_GAME}/systems/talk_system.cpp   # NPCs and their events (docs/gameplay/event_editor/08)

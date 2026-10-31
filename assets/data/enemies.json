@@ -107,6 +107,7 @@
   },
   "forest_wolf": {
     "name": { "zh_TW": "森林狼", "en": "Forest Wolf" },
+    "moves": ["strike", "triple_bite"],
     "sprite": "m_forest_wolf.png",
     "hp": 22,
     "atk": 10,
@@ -267,6 +268,7 @@
   },
   "ore_golem": {
     "name": { "zh_TW": "礦石魔像", "en": "Ore Golem" },
+    "moves": ["strike", "heavy", "ground_pound"],
     "sprite": "m_ore_golem.png",
     "hp": 77,
     "atk": 24,
@@ -317,6 +319,7 @@
   },
   "vampire_bat": {
     "name": { "zh_TW": "吸血蝙蝠", "en": "Vampire Bat" },
+    "moves": ["strike", "frenzy"],
     "sprite": "m_vampire_bat.png",
     "hp": 53,
     "atk": 18,
@@ -337,6 +340,7 @@
   },
   "lich": {
     "name": { "zh_TW": "巫妖學徒", "en": "Lich Apprentice" },
+    "moves": ["strike", "spell", "doom_seal"],
     "sprite": "m_lich.png",
     "hp": 62,
     "atk": 21,

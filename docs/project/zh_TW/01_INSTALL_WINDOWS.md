@@ -3,7 +3,7 @@
 > 英文原文：[01_INSTALL_WINDOWS.md](../01_INSTALL_WINDOWS.md)
 
 本頁列出 TOMS 需要的所有東西、去哪裡取得，以及如何檢查。標示**必要**的項目
-是遊戲（`toms_game.exe`）需要的。**Qt** 只有編輯器（`toms_editor.exe`）需要。
+是遊戲（`toms_game.exe`）需要的。**Qt** 只有 Qt 編輯器（`ui_editor.exe`、`battle_editor.exe`、`stage_event_editor.exe`、atlas / anim / particle / font 編輯器）需要。
 
 **要設定一台沒用過的電腦？** 請先讀
 [11 — 新電腦上從零開始（AI 執行版）](09_NEW_MACHINE_SETUP.md)：重要的 git 設定
@@ -37,7 +37,7 @@ CMake configure 專案時（在 Visual Studio 中或
 | 6 | **Ninja** | preset 使用的建置工具 | 隨第 3 項附帶；或 https://github.com/ninja-build/ninja/releases | 先找 VS 的副本，再找 `PATH` |
 | 7 | **Git for Windows** | 第一次 configure 會 clone bgfx、SDL3、Dear ImGui 和 glm | https://git-scm.com/download/win | `PATH` 上的 `git` |
 | 8 | **能連到 github.com**（只有第一次 configure 需要） | 同第 7 項 | — | 對 github.com 的 HTTPS 請求 |
-| 9 | 本 repository 的 **`src/` 和 `assets/`** | 遊戲程式碼（`src/core`、`src/third_party`、`src/editor/stage`）會被編譯；`assets/media` + `assets/data` 會被載入 / 打包 | clone 時就有：`git clone --recurse-submodules https://github.com/WSLHermesAI/TOMS` | 檔案存在 |
+| 9 | 本 repository 的 **`src/` 和 `assets/`** | 遊戲程式碼（`src/core`、`src/third_party`）會被編譯；`assets/media` + `assets/data` 會被載入 / 打包 | clone 時就有：`git clone --recurse-submodules https://github.com/WSLHermesAI/TOMS` | 檔案存在 |
 | 10 | **約 5 GB 可用磁碟空間** | bgfx + 工具 + 兩種組態 | — | 磁碟可用空間 |
 
 ### Visual Studio：要勾選什麼
@@ -56,7 +56,7 @@ Visual Studio 2026（v18）也可以：會自動使用它附帶的 CMake 4.x 和
 
 | 項目 | 用途 | 取得方式 | 備註 |
 |---|---|---|---|
-| **Qt 6.5+ — 套件「MSVC 2022 64-bit」**（建議 6.8 LTS） | 只有 `toms_editor.exe` | Qt Online Installer：https://www.qt.io/download-qt-installer-oss | 需要免費的 Qt 帳號。見下方。 |
+| **Qt 6.5+ — 套件「MSVC 2022 64-bit」**（建議 6.8 LTS） | 只有 Qt 編輯器 | Qt Online Installer：https://www.qt.io/download-qt-installer-oss | 需要免費的 Qt 帳號。見下方。 |
 | **Python 3 + fontTools**（`pip install fonttools`） | 只有在加入含新字元的文字後，重建 UI 字型時需要 | https://www.python.org/downloads/ | 字型本身在 repo 中（`assets/media/fonts/NotoSansCJKtc-TOMS.otf`）；見 [01](../../gameplay/01_RMLUI.md#editing-the-ui)。 |
 | **Emscripten SDK（emsdk）** | 只有 web 版需要（[05](05_BUILD_WEB.md)） | https://emscripten.org/docs/getting_started/downloads.html | 先 `git clone`，再 `emsdk install latest` + `emsdk activate latest`。會自動偵測 TOMS 旁邊（`D:\Work\emsdk`）、`%USERPROFILE%\emsdk`、`C:\emsdk`，或透過 `EMSDK`。 |
 | **Vulkan 執行環境** | `--renderer=vulkan` | 隨目前的 NVIDIA/AMD/Intel 驅動程式附帶 | Direct3D 11/12 不需要它。 |

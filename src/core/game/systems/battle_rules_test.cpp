@@ -104,6 +104,22 @@ int main() {
               guardTiming(400, gd) == GuardTiming::Block && guardTiming(900, gd) == GuardTiming::Early &&
               guardTiming(3000, gd) == GuardTiming::None, "the guard by how long before the hit");
     CHECK(guardFromJson(json::parse(R"({ "guard": { "mode": "bar" } })")).mode == "bar", "the bar kept as an option");
+    {   // the "warn" guard (docs/gameplay/16 §4.2): only while the "!" shows; its first 40 % a parry
+        const GuardSettings gw = guardFromJson(json::parse(R"({ "guard": { "mode": "warn", "warnMs": 500 } })"));
+        CHECK(gw.mode == "warn" && guardWarn(450, 500, gw) == GuardTiming::Parry && guardWarn(300, 500, gw) == GuardTiming::Parry &&
+                  guardWarn(250, 500, gw) == GuardTiming::Block && guardWarn(0, 500, gw) == GuardTiming::Block &&
+                  guardWarn(600, 500, gw) == GuardTiming::None && guardWarn(-1, 500, gw) == GuardTiming::None,
+              "the warn guard: parry early in the !, block late, nothing before it");
+        // a move's rhythm: hits with gaps
+        const MovesTable mt = movesFromJson(json::parse(
+            R"({ "bite": { "kind": "jabs", "chargeMs": 1600, "hits": 3, "gapsMs": [500] },
+                 "frenzy": { "kind": "jabs", "hits": 4, "gapsMs": [150, 600] }, "seal": { "kind": "spell", "guardPlay": "g" } })"));
+        CHECK(mt.get("bite").chargeMs == 1600 && mt.get("bite").gapBefore(0) == 0 && mt.get("bite").gapBefore(2) == 500,
+              "one gap for every hit");
+        CHECK(mt.get("frenzy").gapBefore(1) == 150 && mt.get("frenzy").gapBefore(2) == 600 && mt.get("frenzy").gapBefore(3) == 600,
+              "a gap per hit, the last one repeated");
+        CHECK(mt.get("seal").guardPlay == "g" && mt.get("seal").warnMs == -1, "a special guard play");
+    }
 
     if (g_fail) { std::printf("battle_rules_test: %d failure(s)\n", g_fail); return 1; }
     std::printf("battle_rules_test: all passed\n");

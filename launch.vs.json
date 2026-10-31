@@ -5,32 +5,6 @@
     {
       "type": "default",
       "project": "CMakeLists.txt",
-      "projectTarget": "toms_game.exe (bin\\toms_game.exe)",
-      "name": "toms_game (auto renderer)"
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "toms_game.exe (bin\\toms_game.exe)",
-      "name": "toms_game (Direct3D 11)",
-      "args": [ "--renderer=d3d11" ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "toms_game.exe (bin\\toms_game.exe)",
-      "name": "toms_game (Vulkan)",
-      "args": [ "--renderer=vulkan" ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "toms_editor.exe (bin\\toms_editor.exe)",
-      "name": "toms_editor (Qt + bgfx)"
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
       "projectTarget": "battle_editor.exe (bin\\battle_editor.exe)",
       "name": "battle_editor (monsters, weapons, test battles)"
     },
@@ -39,57 +13,47 @@
       "project": "CMakeLists.txt",
       "projectTarget": "atlas_editor.exe (bin\\atlas_editor.exe)",
       "name": "atlas_editor (game atlas)",
-      "args": [ "${workspaceRoot}\\assets\\media\\atlas\\game.atlasproj" ]
+      "args": [
+        "${workspaceRoot}\\art_raw\\atlas\\game.atlasproj"
+      ]
     },
     {
       "type": "default",
       "project": "CMakeLists.txt",
       "projectTarget": "anim_editor.exe (bin\\anim_editor.exe)",
       "name": "anim_editor (preview clip)",
-      "args": [ "${workspaceRoot}\\tests\\smoke\\anim_preview.anim" ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "particle_editor.exe (bin\\particle_editor.exe)",
-      "name": "particle_editor (recipes)",
-      "args": [ "${workspaceRoot}\\docs\\examples\\fx_recipes.particle" ]
+      "args": [
+        "${workspaceRoot}\\tests\\smoke\\anim_preview.anim"
+      ]
     },
     {
       "type": "default",
       "project": "CMakeLists.txt",
       "projectTarget": "gltf_viewer.exe (bin\\gltf_viewer.exe)",
       "name": "gltf_viewer (skinned test model)",
-      "args": [ "${workspaceRoot}\\tests\\gltf\\skin_tube.gltf" ]
+      "args": [
+        "${workspaceRoot}\\tests\\gltf\\skin_tube.gltf"
+      ]
     },
     {
       "type": "default",
       "project": "CMakeLists.txt",
       "projectTarget": "gltf_viewer.exe (bin\\gltf_viewer.exe)",
       "name": "gltf_viewer (Fox sample, after tools/gltf_viewer/fetch_samples.py)",
-      "args": [ "${workspaceRoot}\\Build\\gltf_samples\\Fox.glb" ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "toms_tests.exe (bin\\tests\\toms_tests.exe)",
-      "name": "toms_tests (one unit test)",
-      "args": [ "particle_fx_test" ],
-      "currentDir": "${workspaceRoot}\\assets"
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "toms_game.exe (bin\\toms_game.exe)",
-      "name": "toms_game (particle preview: torch_fire)",
-      "args": [ "--fx=${workspaceRoot}\\docs\\examples\\fx_recipes.particle#torch_fire" ]
+      "args": [
+        "${workspaceRoot}\\Build\\gltf_samples\\Fox.glb"
+      ]
     },
     {
       "type": "default",
       "project": "CMakeLists.txt",
       "projectTarget": "atlaspack.exe (bin\\atlaspack.exe)",
       "name": "atlaspack (rebuild game atlas)",
-      "args": [ "build", "${workspaceRoot}\\assets\\media\\atlas\\game.atlasproj", "--all-variants" ]
+      "args": [
+        "build",
+        "${workspaceRoot}\\art_raw\\atlas\\game.atlasproj",
+        "--all-variants"
+      ]
     }
   ]
 }

@@ -755,3 +755,14 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
     the UI font rebuilt; `tools/make_battle_sfx.py` (10 wavs); settings "Reduce shaking and flashes".
   - Tests: changed-only 20 of 227 pass; new `unit.touch_play_test` and 6 scenarios pass; 41 of 42 switched-off
     battle tests by name pass (`smoke.battle` has no reference). All tests, web and Android not run.
+- **2026-10-31 (later)** — **Skills and plays (doc 16) built; toms_editor removed; test switches; the design map** ([DAILY_2026-10-31.md](DAILY_2026-10-31.md); not committed):
+  - docs/gameplay/16_SKILLS_AND_PLAYS.md (+ zh_TW): five reusable blocks; built: `cue_track.h`, `gesture.h`, `special_moves.h`
+    (`data/special_moves.json`, key `data.special_moves`), `touch_play.h` rebuilt (Bow / Slice / Circles / Shape / Mash),
+    `game_skills.cpp` (plays, moves, training). moves.json rhythm fields + `guardPlay`; battle.json `guard.mode "warn"`,
+    `"plays"`, `"training"`; weapon_play.json `shapeCues`; 6 new battle effects; tests `play_blocks_test`, 9 scenarios.
+  - Removed: toms_editor (src/editor/src main/editor_window/event_*, src/editor/stage, Editor/TomsEditor.cmd, the exe),
+    `mpdi_convert_test`, 7 launch.vs.json shortcuts. Docs updated (EN + zh_TW).
+  - Test runner: switches applied to `-L/-E` filters and the no-Python path; test_switches window: counts, All off, unsaved note.
+  - Plays: per-battle random seed (`playRng_`), area kept on screen, armed after the layout is known.
+  - docs/engine/19_DESIGN_MAP.md (+ zh_TW) and docs/engine/design_map/design_map.html.
+  - Tests: changed-only 0 of 233 selected at the end (owner's switches); earlier 39 of 234 pass. All tests, web, Android not run.

@@ -1,8 +1,23 @@
 {
-  "_comment": "The staff's own play (docs/gameplay/15 §3.3, touch_play.h; weapon_play.json \"play\": \"circles\"): it waits over the monster; the click at frame 30 starts the beat, no circle is tapped, so each passes its window (the last about 2.2 s later) and the play resolves as one combo with no hits.",
+  "_comment": "The staff's own play (docs/gameplay/16 §3.3, touch_play.h): it starts by itself: the circles count in order, hide 0.5 s, come back with an \"!\" for 0.5 s, then wait to be tapped in order. None is tapped, so the time runs out and the play resolves as one combo with no hits.",
   "scene": "battle",
-  "player": { "equip": ["staff"] },
-  "battle": { "enemy": "slime", "hp": 9999, "atk_interval_ms": 60000, "play": "weapon" },
-  "test": { "frames": 200, "clicks": "720:150@30" },
-  "expect": { "battleEvents": { "combo": 1 } }
+  "player": {
+    "equip": [
+      "staff"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 400
+  },
+  "expect": {
+    "battleEvents": {
+      "combo": 1
+    }
+  }
 }

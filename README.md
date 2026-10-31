@@ -5,7 +5,8 @@
 | Executable | Built from | Ships? |
 |---|---|---|
 | **`toms_game.exe`** | SDL3 window + **bgfx** renderer + the existing game code | **yes**: contains no Qt |
-| **`toms_editor.exe`** | **Qt6** editor with an embedded bgfx view that runs the same game, plus the old stage editor | no, internal tool |
+| **`ui_editor.exe`**, **`battle_editor.exe`** | **Qt6** editors with an embedded bgfx view that runs the same game (the UI screens, the battles) | no, internal tools |
+| **`stage_event_editor.exe`** | **Qt6** stage (floor map) and event editors | no, internal tool |
 
 All game content is in `assets/`, all source code in `src/`. The original game code
 (`src/core`) is compiled **without edits**; the old Vulkan build itself was removed on 2026-09-27
@@ -34,7 +35,7 @@ They check the prerequisites first (popups with download links) and print where 
    popup with its download link. Details: [docs/project/01_INSTALL_WINDOWS.md](docs/project/01_INSTALL_WINDOWS.md).
 2. **Open in Visual Studio 2022 or newer:** *File → Open → Folder…* → this `TOMS` folder (the repository root).
    The first configure downloads and builds bgfx, SDL3, Dear ImGui and glm (a few minutes).
-3. Pick **Windows x64 Debug** (or Release), choose **toms_game** or **toms_editor** as the startup
+3. Pick **Windows x64 Debug** (or Release), choose **toms_game** (or an editor) as the startup
    item, and press **F5**. Details: [docs/project/02_VISUAL_STUDIO.md](docs/project/02_VISUAL_STUDIO.md).
 
 Without Visual Studio open: `tools\build.cmd windows-release`.
@@ -70,7 +71,7 @@ TOMS/
   src/            all source code
     engine/       toms_bgfx: BgfxRenderer (IRenderer), bgfx host, ImGui on bgfx, shaders/*.sc
     game/         compat/ (renderer shims), GameSession, main_sdl.cpp -> toms_game (desktop + web), web/
-    editor/       BgfxViewport, EditorWindow -> toms_editor.exe; stage/ = the old stage editor
+    editor/       BgfxViewport -> ui_editor.exe, battle_editor.exe (the Qt editors beside the game)
     core/         the core game code (engine/ + game/): gameplay, story, combat, saves, UI
     third_party/  json, stb, miniaudio headers
 ```

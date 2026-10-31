@@ -168,10 +168,21 @@ function New-Button($text, $action) {
 }
 
 $script:busy = $false
+$script:dirty = $false
 function Update-Status {
     $leaves = @(); foreach ($n in $tv.Nodes) { $leaves += Get-Leaves $n }
     $on = @($leaves | Where-Object { $_.Checked }).Count
-    $status.Text = "On: $on of $($leaves.Count)    Unticked tests never run (tests\test_switches.json)."
+    foreach ($n in $tv.Nodes) { Update-Label $n }
+    $note = if ($script:dirty) { 'NOT SAVED: press Save.' } else { 'Unticked tests never run (tests\test_switches.json).' }
+    $status.Text = "On: $on of $($leaves.Count)    $note"
+}
+# A group or area shows how many of its tests are on: "scenario  (12/70 on)". Its box is ticked only when all are.
+function Update-Label($node) {
+    if ($node.Tag) { return }
+    $leaves = @(Get-Leaves $node)
+    $on = @($leaves | Where-Object { $_.Checked }).Count
+    $node.Text = "{0}  ({1}/{2} on)" -f $node.Name, $on, $leaves.Count
+    foreach ($c in $node.Nodes) { Update-Label $c }
 }
 function Get-Leaves($node) {
     if ($node.Tag) { return ,$node }
@@ -186,21 +197,33 @@ function Sync-Parent($node) {
 }
 function Set-Children($node, $state) { foreach ($c in $node.Nodes) { $c.Checked = $state; Set-Children $c $state } }
 
+$tv.Add_BeforeCheck({
+    param($s, $e)
+    if ($script:busy -or $e.Action -eq 'Unknown' -or $e.Node.Tag) { return }
+    # a group partly on shows unticked: a click on it switches its tests off (not on), as its box suggests
+    $leaves = @(Get-Leaves $e.Node)
+    $on = @($leaves | Where-Object { $_.Checked }).Count
+    if (-not $e.Node.Checked -and $on -gt 0) {
+        $e.Cancel = $true
+        $script:busy = $true
+        try { Set-Children $e.Node $false; Sync-Parent $e.Node; $script:dirty = $true; Update-Status } finally { $script:busy = $false }
+    }
+})
 $tv.Add_AfterCheck({
     param($s, $e)
     if ($script:busy -or $e.Action -eq 'Unknown') { return }
     $script:busy = $true
-    try { Set-Children $e.Node $e.Node.Checked; Sync-Parent $e.Node; Update-Status } finally { $script:busy = $false }
+    try { Set-Children $e.Node $e.Node.Checked; Sync-Parent $e.Node; $script:dirty = $true; Update-Status } finally { $script:busy = $false }
 })
 
 function Build-Tree {
     $script:busy = $true
     $tv.BeginUpdate(); $tv.Nodes.Clear()
     foreach ($g in $tree.Keys) {
-        $gn = $tv.Nodes.Add($g)
+        $gn = $tv.Nodes.Add($g, $g)
         foreach ($a in $tree[$g].Keys) {
             $parent = $gn
-            if ($a) { $parent = $gn.Nodes.Add($a) }
+            if ($a) { $parent = $gn.Nodes.Add($a, $a) }
             foreach ($t in $tree[$g][$a]) {
                 $leaf = $parent.Nodes.Add($t.Name)
                 $leaf.Tag = $t.Name
@@ -224,9 +247,12 @@ $saveButton = (New-Button 'Save' {
     $names = @(); foreach ($n in $tv.Nodes) { foreach ($l in (Get-Leaves $n)) { if (-not $l.Checked) { $names += $l.Tag } } }
     Save-Switches $names
     $off.Clear(); foreach ($x in $names) { [void]$off.Add($x) }
-    $status.Text = "Saved: $($names.Count) test(s) off -> tests\test_switches.json"
+    $script:dirty = $false
+    Update-Status
+    $status.Text = "Saved: $($names.Count) test(s) off, $($tv.Nodes.Count) groups -> tests\test_switches.json"
 })
-[void](New-Button 'All on' { $script:busy = $true; foreach ($n in $tv.Nodes) { $n.Checked = $true; Set-Children $n $true }; $script:busy = $false; Update-Status })
+[void](New-Button 'All off' { $script:busy = $true; foreach ($n in $tv.Nodes) { $n.Checked = $false; Set-Children $n $false }; $script:busy = $false; $script:dirty = $true; Update-Status })
+[void](New-Button 'All on' { $script:busy = $true; foreach ($n in $tv.Nodes) { $n.Checked = $true; Set-Children $n $true }; $script:busy = $false; $script:dirty = $true; Update-Status })
 [void](New-Button 'Expand all' { $tv.ExpandAll() })
 [void](New-Button 'Collapse' { $tv.CollapseAll() })
 

@@ -1,11 +1,10 @@
 # Event editor
 
-**Status:** design. The data model and a read-only flow map exist in code
-(`src/editor/src/event_graph.*`, `event_flow_view.*`) but are not compiled into `toms_editor` yet,
-and nothing can be edited. Until the editor ships, events are edited by hand in JSON
-([03_USER_GUIDE.md](03_USER_GUIDE.md), section 1).
+**Status:** the native event editor is in `stage_event_editor.exe` ([02](../02_STAGE_EDITOR.md) section 6; see
+"Next steps" below). This folder's design was first planned as a tab in `toms_editor`; `toms_editor` and its
+read-only flow map code (`src/editor/src/event_graph.*`, `event_flow_view.*`) were removed on 2026-10-31.
 
-The event editor is a tab in `toms_editor` for the random floor events: the relics, whispers,
+The event editor is for the random floor events: the relics, whispers,
 caches, traps and rescues that each floor can roll. It shows which floors can roll
 which events, lets you edit an event and its text in one place, and lists the data problems before
 the game finds them.

@@ -185,7 +185,7 @@ in a shared folder.
 | For | Needs | Notes |
 |---|---|---|
 | The game (required) | Windows 10/11 x64, Visual Studio 2026 + *Desktop development with C++*, CMake 3.24+, Ninja, Git for Windows | see `docs/project/01_INSTALL_WINDOWS.md` §1 |
-| The editor `toms_editor` | **Qt 6.5+ (6.8 LTS recommended, MSVC 2022 64-bit kit)** | without Qt the game still builds, just not the editor |
+| The Qt editors (`ui_editor`, `battle_editor`, `stage_event_editor`, …) | **Qt 6.5+ (6.8 LTS recommended, MSVC 2022 64-bit kit)** | without Qt the game still builds, just not the editors |
 | Web build | Emscripten SDK | see `docs/project/05_BUILD_WEB.md` |
 | Android | JDK 17 + Android SDK/NDK 27 | see `docs/project/06_BUILD_ANDROID.md` |
 | Renderer | Vulkan runtime or D3D11/12 | the default is fine; `--renderer=vulkan` needs driver support |

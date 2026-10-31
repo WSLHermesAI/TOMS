@@ -77,7 +77,7 @@ Tutorial, F1; Help > Open Practice Screen).
 
 ### Live reload
 
-With hot reload on (`TomsEditor`, the UI editor, a debug build, or `toms_game --hot-reload`), the game watches the UI
+With hot reload on (the UI editor, the battle editor, a debug build, or `toms_game --hot-reload`), the game watches the UI
 folder: a saved `.rml` or `.rcss` shows within half a second, with "UI reloaded: <file>" at the top
 (`GameUi::reloadIfChanged`). **F5** still reloads by hand.
 

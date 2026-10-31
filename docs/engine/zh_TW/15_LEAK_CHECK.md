@@ -54,7 +54,7 @@ Build\windows-debug\bin\toms_game.exe --scenario=tests/scenarios/arena_restart -
 
 ## new / delete 對照表（只限 Windows Debug）
 
-在 Windows Debug 建置中，`leak_check.cpp` 也會為它所在的程式（`toms_game`、`toms_editor`）**取代全域的 `operator new` 與
+在 Windows Debug 建置中，`leak_check.cpp` 也會為它所在的程式（`toms_game`）**取代全域的 `operator new` 與
 `operator delete`**（所有形式：陣列、`nothrow`、對齊）：
 
 - 每次 `new` 都把指標連同大小、編號與**配置它的呼叫堆疊**放進對照表。呼叫堆疊提供函式與 `檔案:行號`；不使用 `#define new`，
@@ -68,7 +68,7 @@ Build\windows-debug\bin\toms_game.exe --scenario=tests/scenarios/arena_restart -
 有自己的 `new`，所以 Qt 的內部不在對照表中，只有程式本身的程式碼（遊戲、引擎、RmlUi、bgfx、編輯器自己的程式碼）。
 
 **只限 Windows Debug 建置。**所有東西（運算子、對照表、掛勾、報告）都在 `#if defined(_WIN32) && defined(_DEBUG)` 之內。
-Release 建置與其他平台只有兩個空函式；已在建置好的程式上確認：報告的文字只存在於 Debug 版的 `toms_game` 與 `toms_editor`，
+Release 建置與其他平台只有兩個空函式；已在建置好的程式上確認：報告的文字只存在於 Debug 版的 `toms_game`（以前也在 Debug 版的 `toms_editor`），
 兩個 Release 版都沒有。
 
 環境變數 `TOMS_LEAK_TRACK=0` 可關閉對照表。對照表會為每次 `new` 擷取呼叫堆疊；開啟時一次情境執行花了 6 秒。對照表本身用的
@@ -98,23 +98,8 @@ Release 建置與其他平台只有兩個空函式；已在建置好的程式上
 
 ## toms_editor
 
-`toms_editor` 也有同樣的檢查（同一個 `leak_check.cpp`，由 `src/editor/src/main.cpp` 呼叫）。它的報告是
-**`toms_editor_leaks.log`**，選項 `--leak-trace` / `--leak-break` 也相同：
-
-```
-Build\windows-debug\bin\toms_editor.exe --scenario=tests/scenarios/cards_first_win --frames=90 --screenshot=shot.png
-```
-
-（`--frames` 加上 `--screenshot` 會自動關閉編輯器；沒有它們時，手動關閉後報告就會寫出。）
-
-清單會比遊戲的長很多（2026-10-21：6,674 個區塊，1 MB）。大部分是 Qt：它的字型、樣式、外掛與檔案快取要到 DLL 卸載時才
-釋放，也就是 `main()` 之後。沒有安裝 Qt 的 `.pdb` 檔時，追蹤中 Qt 自己的堆疊會顯示為 `?`。那次執行的追蹤結果：
-- 遊戲的區塊，和 `toms_game` 相同（見下方）；
-- 編輯器的翻譯表（`Language.cpp`，靜態物件）；
-- 建立「關卡」與「情境」停駐視窗時 Qt 產生的快取。
-
-在呼叫堆疊中找**我們的程式碼**（`src/editor`、`src/core`、`src/game`、`tools/studio_common`），並像下面那樣比較短的與長的
-工作階段。
+`toms_editor`（它有同樣的檢查，並寫出 `toms_editor_leaks.log`）已在 2026-10-31 移除，它的段落也拿掉了。
+遊戲旁的 Qt 編輯器（`ui_editor`、`battle_editor`）不執行這個檢查。
 
 ## 解讀報告
 
@@ -130,7 +115,7 @@ Build\windows-debug\bin\toms_editor.exe --scenario=tests/scenarios/cards_first_w
 - **`toms_game`**（`arena_restart`）：99 個從未刪除的配置，和下方偵錯堆積的區塊相同，現在每個都有位置。都是靜態物件：
   精靈索引緩衝區（`bgfx_renderer.cpp:142`）、緩動名稱表（`anim_clip.cpp:67`）、物件登錄表（`object.h:35`）、存檔資料夾名稱
   （`save_slots.cpp:19`）、工作系統（`job_system.cpp:114`）、RmlUi 的虛擬檔案（`rml_ui.cpp:443`）與資料模型名稱。
-- **`toms_editor`**（`cards_first_win`）：**一個真正的洩漏，已修正**。`StageScene`（關卡編輯器分頁）為每個牆與地板格子用
+- **`toms_editor`**（`cards_first_win`；toms_editor 已在 2026-10-31 移除）：**一個真正的洩漏，已修正**。`StageScene`（關卡編輯器分頁）為每個牆與地板格子用
   `new` 建立一個 `GameObject`（`stagescene.cpp:65`，共 143 個）。重建時會釋放前一組，但最後一組沒有被釋放：它沒有解構子。
   現在 `~StageScene` 會釋放它們；編輯器的數量從 436 降到 293 個配置，其餘是靜態物件：語言表（`Language.cpp:70`）、關卡
   編輯器的物件目錄（`catalog.h:31`）與遊戲的。

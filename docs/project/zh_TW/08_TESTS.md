@@ -29,7 +29,7 @@ tools\test.cmd windows-debug -L unit     :: a ctest filter runs as given (only t
 | 圖片字型 | `tools/font`、`tests/font`、`src/core/engine/bitmap_font*` | `font.tool`、`font.editor_selftest` |
 | 關卡／事件編輯器程式 | `tools/stage_event_editor`（以及任何 `assets/data` 檔案：`unit.stage_core_test`） | `unit.stage_core_test`、`stage_editor.app_selftest` |
 | Qt 編輯器共用程式 | `tools/studio_common`（含 `i18n/` 中文字典） | atlas / anim / particle / font 編輯器的檢查與 `studio.*` |
-| toms_editor | `src/editor` | 沒有自動測試；桌面建置會編譯它 |
+| 遊戲旁的 Qt 編輯器（ui_editor、battle_editor） | `src/editor` | `ui_editor.selftest`、`smoke.ui_editor`、`battle_editor.selftest`、`smoke.battle_editor` |
 | 資源 | `src/core/engine/resource*`、`render_object*`（docs/engine/12） | 引擎的單元測試、動畫與粒子檢查，再加上遊戲區域 |
 | 引擎核心 | `src/core/engine` 的其他部分（條件、節點、事件 …） | 引擎的單元測試，再加上遊戲區域 |
 | 繪圖器 | `src/engine` 的共用檔（`bgfx_*`、內嵌 shader） | 所有截圖，所有後端 |
@@ -46,7 +46,8 @@ data」。新測試要讀某個資料夾時，再把它加進去。
 
 **關閉測試：**`tools/test_switches.cmd` 開啟一個視窗，以樹狀（群組 > 區域 > 測試）列出每個測試，各有一個勾選框；按 Save
 把沒勾的寫進 [tests/test_switches.json](../../../tests/test_switches.json)，`test.cmd` 就不會執行它們（只測變更或 `all`
-都一樣；手動給的 ctest 篩選照原樣執行）。`test_switches.cmd --list` 以文字印出同樣的樹。執行時會列出被略過的已選測試。按兩下開啟時會立刻顯示「Loading the test list」
+都一樣；一個群組（`-L scenario`、`-E ...`）與沒有 Python 時也一樣）。只有以名字指定的測試（`-R`）照指定執行，不論是否
+關閉。新的測試在取消勾選之前都是開啟的。`test_switches.cmd --list` 以文字印出同樣的樹。執行時會列出被略過的已選測試。按兩下開啟時會立刻顯示「Loading the test list」
 小視窗，無法開啟清單時（還沒建置、找不到 Visual Studio）會跳出訊息框。若按兩下 `.cmd` 完全沒有反應，表示主控台根本沒有開啟：
 見 [04](04_TROUBLESHOOTING.md)〈按兩下 .cmd 沒有反應〉。
 
@@ -76,8 +77,8 @@ toms_tests --all          all of them in one go
 toms_game 的渲染器上，在那裡繪製和編輯，並存下 bgfx 截圖以供比對。離螢幕的
 `--selftest` 檢查 QPainter 的後備路徑。
 
-要在 Visual Studio 中除錯某一個，在目標清單中選 **「toms_tests (one unit test)」**，並修改
-`launch.vs.json` 中它的 `args`。因為每個測試都連結進同一個程式，測試自己定義的型別或
+要在 Visual Studio 中除錯某一個，在目標清單中選 **toms_tests.exe**，以測試名稱作為它的參數
+（工作資料夾設為 `assets`）。因為每個測試都連結進同一個程式，測試自己定義的型別或
 輔助函式要放在匿名命名空間中。曾經有兩個測試各自有不同的
 `struct MockContext`，連結在一起時其中一個默默取代了另一個。
 
@@ -88,7 +89,7 @@ toms_game 的渲染器上，在那裡繪製和編輯，並存下 bgfx 截圖以�
 | `unit` | 44 | 遊戲自己放在 `src/core` 程式碼旁邊的 `*_test.cpp` 程式（存檔、標題流程、條件、戰鬥條、鏡頭、裝備、技能、鍛造、據點、結局、輪迴、樓層、佔地、任務、節點動畫、粒子效果、glTF 模型、算圖器接受哪些三角網格、sprite 網格與蒙皮（[16](../../engine/zh_TW/16_MESH_ANIMATION.md)）、…），包括對發行的 `assets/data` 的檢查 | 不需要 |
 | `atlas` | 3 | `atlas.core`：atlas 工具的打包器、子 sprite、每種匯出格式讀回、舊的 `.pi` 檔逐像素重建；`atlas_sprites_test`：程式碼、資料和 UI 用到的每個 sprite 名稱都在遊戲的 atlas 中；`atlas.assets_up_to_date`：`art_raw/atlas/game.atlasproj` 只靠它打包好的 atlas 就能開啟，且其他檔案都是最新的（[04](../../engine/zh_TW/04_ATLAS_TOOL.md)）；`atlas.fx_up_to_date`：粒子 sprite 的 `fx.atlasproj` 同上（[07](../../engine/zh_TW/07_PARTICLES.md)） | 不需要（全部也都在 `unit` 中；`atlas_sprites_test` 只在那裡） |
 | `particle` | 1 | `particle.check_recipes`：對 `docs/examples/fx_recipes.particle` 執行 `particle_editor --headless check`（能解析、每個 sprite 都在它的 atlas 中、曲線 / 池 / 爆發都合理；[07](../../engine/zh_TW/07_PARTICLES.md)） | Qt 編輯器建置（也在 `unit` 中） |
-| `anim` | 20 | `anim.check_*`（12 個）：對 `tests/smoke/anim_preview.anim`、蒙皮的 `tests/smoke/anim_skin.anim`、變形的 `tests/smoke/anim_deform.anim`、範例 `docs/examples/anim_recipes.anim` 以及遊戲的 `monster_idle` / `npc_idle` / `door_open` 與武器和角色片段（弓、弓箭手、劍、劍士、法杖、法師）執行 `anim_editor --headless check`（能解析、每個 sprite 都在遊戲 atlas 中、沒有重疊的 key；[05](../../engine/zh_TW/05_ANIMATION.md)、[06](../../engine/zh_TW/06_ANIMATION_RECIPES.md)）；`anim.check_skin_meshes`：對沒有網格檔的 `game.atlas` 副本執行 `anim_skin.anim` 的 `--headless check` 是錯誤，旁邊有 `game.mesh.*` 則沒有；`anim.meshes_up_to_date`：`python tools/refresh_meshes.py --check`（只在找得到 Python 3 時）：每個圖集的網格檔（包括美術風格的）正好只有片段需要的網格，而且是重新切割的結果（[16](../../engine/zh_TW/16_MESH_ANIMATION.md)）；`anim.recipes`：動作範本的 key 與形狀、拒絕的情況、寫出的檔案讀回相同；`anim.weights`：權重手繪的增加、減少與平滑使每個頂點總和維持 1 且最多 4 根骨頭（[16](../../engine/zh_TW/16_MESH_ANIMATION.md)）；`anim.recipe_headless`：`--headless recipe`（`--list`、在蒙皮 golem 的副本上寫 breathe 與 nod、被拒絕的骨頭範本）的結果通過 `--headless check`（[06](../../engine/zh_TW/06_ANIMATION_RECIPES.md) §7）；`anim.mpdi_convert`：`tests/mpdi/` 中的舊 `.mpdi` → `.anim`；`anim.editor_selftest`：編輯器在 offscreen 下執行（`-platform offscreen`，不開視窗）——選取、Properties 與 key 清單編輯、viewport 拖曳、復原、儲存、網格格數、動作範本、權重手繪 | Qt 編輯器建置（也在 `unit` 中） |
+| `anim` | 19 | `anim.check_*`（12 個）：對 `tests/smoke/anim_preview.anim`、蒙皮的 `tests/smoke/anim_skin.anim`、變形的 `tests/smoke/anim_deform.anim`、範例 `docs/examples/anim_recipes.anim` 以及遊戲的 `monster_idle` / `npc_idle` / `door_open` 與武器和角色片段（弓、弓箭手、劍、劍士、法杖、法師）執行 `anim_editor --headless check`（能解析、每個 sprite 都在遊戲 atlas 中、沒有重疊的 key；[05](../../engine/zh_TW/05_ANIMATION.md)、[06](../../engine/zh_TW/06_ANIMATION_RECIPES.md)）；`anim.check_skin_meshes`：對沒有網格檔的 `game.atlas` 副本執行 `anim_skin.anim` 的 `--headless check` 是錯誤，旁邊有 `game.mesh.*` 則沒有；`anim.meshes_up_to_date`：`python tools/refresh_meshes.py --check`（只在找得到 Python 3 時）：每個圖集的網格檔（包括美術風格的）正好只有片段需要的網格，而且是重新切割的結果（[16](../../engine/zh_TW/16_MESH_ANIMATION.md)）；`anim.recipes`：動作範本的 key 與形狀、拒絕的情況、寫出的檔案讀回相同；`anim.weights`：權重手繪的增加、減少與平滑使每個頂點總和維持 1 且最多 4 根骨頭（[16](../../engine/zh_TW/16_MESH_ANIMATION.md)）；`anim.recipe_headless`：`--headless recipe`（`--list`、在蒙皮 golem 的副本上寫 breathe 與 nod、被拒絕的骨頭範本）的結果通過 `--headless check`（[06](../../engine/zh_TW/06_ANIMATION_RECIPES.md) §7）；`anim.editor_selftest`：編輯器在 offscreen 下執行（`-platform offscreen`，不開視窗）——選取、Properties 與 key 清單編輯、viewport 拖曳、復原、儲存、網格格數、動作範本、權重手繪 | Qt 編輯器建置（也在 `unit` 中） |
 | `font` | 2 | `font.tool`：圖片字型執行期（`.fnt` 解析、排版）與字型工具：`tests/font/connect_score_pictures`（單張圖片）必須逐位元組重建舊專案的 `connect_score.fnt`，用它繪製的測試文字必須與 `tests/font/preview.png` 相符；`font.editor_selftest`：`font_editor` 在 offscreen 下執行（[09](../../engine/zh_TW/09_FONT_TOOL.md)） | 不需要（兩者也在 `unit` 中；selftest 需要 Qt 建置） |
 | `stage_editor` | 2 | `unit.stage_core_test`：原生關卡編輯器的規則，用真實樓層檢查（每個樓層一個位元組不差地寫回、畫格子／復原、檢查與劇情檢查、使用 HTML 編輯器亂數的自動放置、樓層索引與 `floor_index.json` 一個位元組不差）；`stage_editor.app_selftest`：`stage_event_editor` 在 offscreen 下執行，停駐的分頁 ↔ 浮動 ↔ 分割（[02](../../gameplay/zh_TW/02_STAGE_EDITOR.md) 第 6 節） | selftest 需要 Qt 建置（兩者也在 `unit` 中） |
 | `studio` | 3 | `studio.canvas_coordinates`：編輯器畫布基底（座標顯示）；`studio.language`：編輯器的 English / 中文 切換，在 offscreen 的小視窗上檢查（[11](../../engine/zh_TW/11_EDITOR_LANGUAGE.md)）；`studio.i18n_complete`：Qt 編輯器每個 `tr()` 文字在 `tools/studio_common/i18n/zh_TW` 中都有中文 | Qt 建置；`i18n_complete` 需要 Python（也在 `unit` 中） |

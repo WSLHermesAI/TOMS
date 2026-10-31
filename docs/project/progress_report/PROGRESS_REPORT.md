@@ -15,6 +15,18 @@
 
 ## ▶ Next Step
 
+**Skills and plays from reusable blocks; toms_editor removed; test switches; the design map** (2026-10-31, later; not
+committed; [DAILY_2026-10-31.md](DAILY_2026-10-31.md) "Later on 2026-10-31"):
+- Doc 16 written and built (S1–S7): cue track, gestures, special moves as data (`data/special_moves.json`), the sword /
+  bow / staff plays reworked, monster rhythms, the "warn" guard (default), special guards, Star Seal / Tiger Wind / Falcon
+  Rain, the training ground. Q39–Q46 unanswered (proposals used).
+- toms_editor and the mpdi converter test removed; Visual Studio's run list trimmed; test switches apply to every
+  `test.cmd` run, the switch window shows counts and "All off".
+- Plays random every battle, on screen with three monsters. The design map (docs/engine/19 + design_map.html):
+  extendable for content; a screen state machine and handler tables suggested.
+- Last changed-only run: 0 of 233 selected (the owner switched the tests off). **Owner:** commit; try the plays; decide on
+  the design-map cleanups.
+
 **The battle revamp, R1–R5, built into the game** (2026-10-31; design + prototype committed `e07043a`, the game work
 not committed; [DAILY_2026-10-31.md](DAILY_2026-10-31.md), [../../gameplay/15_BATTLE_REVAMP.md](../../gameplay/15_BATTLE_REVAMP.md) §10):
 - R1 feel (hit stop, shake, tier sounds and words, slow last hit, "Reduce shaking and flashes"); R2 the result screen

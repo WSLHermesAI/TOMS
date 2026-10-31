@@ -58,6 +58,7 @@ nlohmann::json toJson(const MetaSaveData& m) {
     // S5: forging blueprints known -- meta-scope, survives rebirth (see the field's own comment).
     j["forgeRecipesKnown"] = m.forgeRecipesKnown;
     if (!m.cards.empty()) j["cards"] = cardBookToJson(m.cards);   // monster cards (optional: an older file has none)
+    if (!m.trainDay.empty()) { j["trainDay"] = m.trainDay; j["trainRuns"] = m.trainRuns; }   // the training ground
     return j;
 }
 
@@ -87,6 +88,8 @@ MetaSaveData metaFromJson(const nlohmann::json& in, bool* versionMismatch) {
     // rule as every other field above.
     m.forgeRecipesKnown = j.value("forgeRecipesKnown", std::vector<std::string>{});
     m.cards = cardBookFromJson(j.value("cards", nlohmann::json::object()));
+    m.trainDay = j.value("trainDay", std::string());
+    m.trainRuns = std::max(0, j.value("trainRuns", 0));
     return m;
 }
 

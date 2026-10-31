@@ -162,6 +162,7 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("intent_kind", &UiFoe::intent_kind);
         s.RegisterMember("intent_pct", &UiFoe::intent_pct);
         s.RegisterMember("break_pct", &UiFoe::break_pct);
+        s.RegisterMember("warn", &UiFoe::warn);
     }
     c.RegisterArray<std::vector<UiFoe>>();
     if (auto s = c.RegisterStruct<UiBattle>()) {
@@ -196,6 +197,8 @@ void registerTypes(Rml::DataModelConstructor& c) {
         s.RegisterMember("popups", &UiBattle::popups);
         s.RegisterMember("touch_kind", &UiBattle::touch_kind);
         s.RegisterMember("touch", &UiBattle::touch);
+        s.RegisterMember("skill_prompt", &UiBattle::skill_prompt);
+        s.RegisterMember("skill_time", &UiBattle::skill_time);
         s.RegisterMember("foes", &UiBattle::foes);
         s.RegisterMember("stamina_pace", &UiBattle::stamina_pace);
         for (auto [name, member] : std::initializer_list<std::pair<const char*, std::string UiBattle::*>>{

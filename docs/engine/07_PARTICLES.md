@@ -396,7 +396,7 @@ into (`ParticleViewportGpu.cpp`), with the gizmo and status line as a QPainter o
     and normal-blend smoke draws in slot order;
   - snow differs on 0.47%: after 300 steps of random swirl, flakes drift by about a pixel.
 
-Visual Studio: the **"particle_editor (recipes)"** target. `--headless render` is the quick way to
+Visual Studio: the **particle_editor.exe** target, then File > Open. `--headless render` is the quick way to
 review an effect someone (or an AI) wrote without opening the editor.
 
 **What is built** (tools/particle/qt; the sketch below was the plan, and the editor follows it):

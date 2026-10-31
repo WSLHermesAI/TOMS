@@ -166,7 +166,7 @@ Add-Result "Free disk space (>= 5 GB on $($drive.Name):)" ($freeGb -ge 5) $true 
     "A full debug + release build with bgfx tools takes about 3-4 GB." "https://support.microsoft.com/windows/free-up-drive-space-in-windows"
 
 # ---------------------------------------------------------------------------------------------
-# 13. Qt 6 MSVC 64-bit kit (optional: only toms_editor needs it)
+# 13. Qt 6 MSVC 64-bit kit (optional: only the Qt editors need it)
 # ---------------------------------------------------------------------------------------------
 $qtCandidates = New-Object System.Collections.Generic.List[string]
 foreach ($e in 'QT_ROOT_DIR', 'QTDIR') {

@@ -1,40 +1,21 @@
-# editor/ -- toms_editor: Qt6 Widgets + the bgfx game viewport + the old stage editor.
-# Only configured when Qt 6 (MSVC 64-bit kit) was found (cmake/TomsPrerequisites.cmake).
+# editor/ -- the Qt editors that run the game beside them: ui_editor and battle_editor (Qt6 Widgets + the bgfx game
+# viewport, src/bgfx_viewport). Only configured when Qt 6 (MSVC 64-bit kit) was found (cmake/TomsPrerequisites.cmake).
+# (toms_editor, the old editor with the old stage editor, was removed on 2026-10-31: stage_event_editor, ui_editor and
+# battle_editor do its jobs.)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(STAGE_EDITOR_DIR ${TOMS_STAGE_EDITOR})
-
-add_executable(toms_editor
-    src/main.cpp
-    src/editor_window.h src/editor_window.cpp
-    src/bgfx_viewport.h src/bgfx_viewport.cpp
-    # Windows Debug: memory still allocated at exit (the game's leak check, docs/engine/15_LEAK_CHECK.md)
-    ${CMAKE_SOURCE_DIR}/src/game/src/leak_check.h ${CMAKE_SOURCE_DIR}/src/game/src/leak_check.cpp
-    # The existing stage editor, compiled as it is (only its main.cpp is left out).
-    ${STAGE_EDITOR_DIR}/mainwindow.h ${STAGE_EDITOR_DIR}/mainwindow.cpp
-    ${STAGE_EDITOR_DIR}/stagescene.h ${STAGE_EDITOR_DIR}/stagescene.cpp
-    ${STAGE_EDITOR_DIR}/stagemodel.h ${STAGE_EDITOR_DIR}/stagemodel.cpp
-    ${STAGE_EDITOR_DIR}/catalog.h)
-toms_target_defaults(toms_editor)
-# Qt #defines `emit`, which breaks the core Logger::emit() (src/engine/log.h) in files that see
-# both Qt and the game headers. Those files use Q_EMIT; the old stage editor keeps `emit`.
-set_source_files_properties(src/main.cpp src/editor_window.cpp src/bgfx_viewport.cpp
-    PROPERTIES COMPILE_DEFINITIONS QT_NO_EMIT)
-target_include_directories(toms_editor PRIVATE src ${STAGE_EDITOR_DIR} ${TOMS_THIRD_PARTY_DIR}/json
-                           ${CMAKE_SOURCE_DIR}/src/game/src)   # leak_check.h
-# studio_common: the editors' shared Qt code -- here the English / 中文 switch (Language.h).
+# studio_common: the editors' shared Qt code (the English / 中文 switch, Language.h).
 if(NOT TARGET studio_common)
     add_subdirectory("${CMAKE_SOURCE_DIR}/tools/studio_common" "${CMAKE_BINARY_DIR}/tools/studio_common")
 endif()
-target_link_libraries(toms_editor PRIVATE Qt6::Widgets toms_game_host studio_common)
-set_target_properties(toms_editor PROPERTIES
-    FOLDER "toms"
-    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+# Qt #defines `emit`, which breaks the core Logger::emit() (src/engine/log.h) in files that see both Qt and the game
+# headers. Those files use Q_EMIT: the shared viewport here, each editor's own below.
+set_source_files_properties(src/bgfx_viewport.cpp PROPERTIES COMPILE_DEFINITIONS QT_NO_EMIT)
 
 # ui_editor: the game's UI files (.rml / .rcss) beside the running game, every edit shown as it is typed
-# (docs/gameplay/01_RMLUI.md "The UI editor"). It shares toms_editor's game viewport.
+# (docs/gameplay/01_RMLUI.md "The UI editor"). It runs the game in its viewport (src/bgfx_viewport).
 add_executable(ui_editor
     src/uied_main.cpp
     src/uied_window.h src/uied_window.cpp
@@ -50,7 +31,7 @@ set_target_properties(ui_editor PROPERTIES
     FOLDER "toms"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # battle_editor: tune the battle beside the running game (docs/gameplay/13_BATTLE_EDITOR.md). Its own program (the
-# owner 2026-10-25: not more put into toms_editor); it shares the game viewport like ui_editor.
+# owner 2026-10-25); it shares the game viewport like ui_editor.
 add_executable(battle_editor
     src/bed_main.cpp
     src/bed_window.h src/bed_window.cpp
@@ -93,7 +74,7 @@ if(WIN32)
     if(_windeployqt)
         # each editor copies them itself, so building only one of them (F5 on ui_editor or battle_editor after
         # Delete Cache) still gives a program that starts
-        foreach(_qt_editor toms_editor ui_editor battle_editor)
+        foreach(_qt_editor ui_editor battle_editor)
             add_custom_command(TARGET ${_qt_editor} POST_BUILD
                 COMMAND "${_windeployqt}" --no-translations --no-compiler-runtime --no-system-d3d-compiler
                         --no-opengl-sw "$<TARGET_FILE:${_qt_editor}>"

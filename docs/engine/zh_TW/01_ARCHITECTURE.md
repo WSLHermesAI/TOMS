@@ -18,7 +18,7 @@ TOMS/                     the repository root
   src/            ALL SOURCE CODE
     engine/       toms_bgfx: BgfxRenderer, bgfx host, ImGui-on-bgfx, shaders (.sc)
     game/         GameSession, main_sdl.cpp (desktop + web), compat/ shims, web/shell.html
-    editor/       toms_editor (Qt6 + bgfx viewport); stage/ = the old Qt stage editor
+    editor/       ui_editor, battle_editor (Qt6 + the shared bgfx viewport, the game beside the panels)
     core/         the core game code (engine/ + game/), compiled unmodified (TOMS_CORE_SRC)
     third_party/  vendored headers: json, stb, miniaudio (TOMS_THIRD_PARTY_DIR)
 ```
@@ -46,7 +46,7 @@ flowchart BT
     LEG["toms_core<br/>src/core/game + src/core/engine (unmodified)"]
     HOST["toms_game_host<br/>GameSession (input + frame)"]
     GAME["toms_game.exe<br/>SDL3 window"]
-    ED["toms_editor.exe<br/>Qt main window"]
+    ED["ui_editor.exe · battle_editor.exe<br/>Qt editors beside the game"]
     BGFX --> ENG
     IMGUI --> ENG
     IMGUI --> LEG
@@ -157,8 +157,8 @@ sequenceDiagram
 - **依序關閉：** 先 `GameSession::stop()`（貼圖、程式），再 `bgfx::shutdown()`，
   而且要在 widget 的視窗還存在時。`~BgfxViewport` 會做這件事。
 
-舊的關卡編輯器（`src/editor/stage`，一個 `QMainWindow`）原封不動編譯進 `toms_editor`，
-並顯示成一個分頁（`setWindowFlags(Qt::Widget)`）。
+舊的關卡編輯器（`src/editor/stage`）原本是 `toms_editor` 的一個分頁；兩者都在 2026-10-31 移除了。
+由 `stage_event_editor` 取代（[gameplay 02](../../gameplay/zh_TW/02_STAGE_EDITOR.md)）。
 
 ## 6. Shader
 

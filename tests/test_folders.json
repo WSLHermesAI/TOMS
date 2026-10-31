@@ -5,7 +5,6 @@
     "smoke": { "tests": ["label:smoke"], "why": "the screenshot runner: every screenshot" },
     "tools": { "tests": ["label:smoke"], "why": "image_diff, which every screenshot test compares with" },
     "gltf": { "tests": ["unit.gltf_*", "label:gltf"], "why": "the glTF test models: the glTF unit tests and screenshots" },
-    "mpdi": { "tests": ["anim.mpdi_convert"], "why": "the .mpdi converter fixtures" },
     "stage": { "tests": ["smoke.stage_objects", "unit.talk_system_test"], "why": "test stage files: per-object settings" },
     "font": { "tests": ["font.*"], "why": "picture-font samples: the font tool tests" },
     "scenarios": { "tests": ["label:scenario"], "why": "test scenarios (docs/gameplay/08_TEST_SCENARIOS.md): a scenario folder runs its own scenario.<name>, shared files every scenario (tools/test_select.py)" }

@@ -47,11 +47,11 @@ canvases with toms_game's own `BgfxRenderer` (`GameCanvasView` in `tools/studio_
 
 ```bat
 :: the editor (Qt): open the game's atlas, edit, Ctrl+S
-Build\windows-release\bin\atlas_editor.exe assets\media\atlas\game.atlasproj
+Build\windows-release\bin\atlas_editor.exe art_raw\atlas\game.atlasproj
 
 :: the same without a window
-Build\windows-release\bin\atlaspack.exe refs  assets\media\atlas\game.atlasproj --import all
-Build\windows-release\bin\atlaspack.exe build assets\media\atlas\game.atlasproj --all-variants
+Build\windows-release\bin\atlaspack.exe refs  art_raw\atlas\game.atlasproj --import all
+Build\windows-release\bin\atlaspack.exe build art_raw\atlas\game.atlasproj --all-variants
 ```
 
 It replaces the old FM79979 `PI.exe` (TextureEditor, C++/CLI WinForms) and works the same way: the

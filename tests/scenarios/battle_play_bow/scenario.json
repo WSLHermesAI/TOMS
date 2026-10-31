@@ -1,8 +1,24 @@
 {
-  "_comment": "The bow's own play (docs/gameplay/15 §3.3, touch_play.h; weapon_play.json \"play\": \"bow\"): it waits over the monster; the click at frame 30 starts it (a press and a release in place: too short a pull to shoot), so each arrow's 3 s run out and the play resolves as one combo with no hits.",
+  "_comment": "The bow's own play (docs/gameplay/16 §3.2, touch_play.h): a normal attack is one arrow; its target moves 0.5 s, then stops. The click at frame 30 starts the pull (a press and a release in place: too short to shoot), so the arrow's 4 s run out and the play resolves as one combo with no hits.",
   "scene": "battle",
-  "player": { "equip": ["bow"] },
-  "battle": { "enemy": "slime", "hp": 9999, "atk_interval_ms": 60000, "play": "weapon" },
-  "test": { "frames": 640, "clicks": "720:150@30" },
-  "expect": { "battleEvents": { "combo": 1 } }
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 320,
+    "clicks": "720:150@30"
+  },
+  "expect": {
+    "battleEvents": {
+      "combo": 1
+    }
+  }
 }

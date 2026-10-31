@@ -1,6 +1,7 @@
 # 02 — Editor design
 
-The event editor is a tab inside `toms_editor` (Qt6 Widgets), built like the anim and particle
+The event editor was planned as a tab inside `toms_editor` (Qt6 Widgets; toms_editor was removed on 2026-10-31,
+the native event editor is in `stage_event_editor`), built like the anim and particle
 editors: docks around a central view, the same dark theme, a History dock, and automatic backups.
 The HTML event editor in [tools/web_editors/](../../../tools/web_editors/index.html) shows each part working.
 

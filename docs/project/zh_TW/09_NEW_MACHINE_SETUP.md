@@ -176,7 +176,7 @@ ssh -T git@github.com
 | 用途 | 需要 | 說明 |
 |---|---|---|
 | 遊戲（必備） | Windows 10/11 x64、Visual Studio 2026 + *Desktop development with C++*、CMake 3.24+、Ninja、Git for Windows | 見 `docs/project/01_INSTALL_WINDOWS.md` §1 |
-| 編輯器 `toms_editor` | **Qt 6.5+（建議 6.8 LTS，MSVC 2022 64-bit kit）** | 沒裝 Qt 也能建置遊戲，只是不會建編輯器 |
+| Qt 編輯器（`ui_editor`、`battle_editor`、`stage_event_editor` …） | **Qt 6.5+（建議 6.8 LTS，MSVC 2022 64-bit kit）** | 沒裝 Qt 也能建置遊戲，只是不會建編輯器 |
 | 網頁版 | Emscripten SDK | 見 `docs/project/05_BUILD_WEB.md` |
 | Android | JDK 17 + Android SDK/NDK 27 | 見 `docs/project/06_BUILD_ANDROID.md` |
 | renderer | Vulkan runtime 或 D3D11/12 | 預設即可；`--renderer=vulkan` 需要驅動支援 |

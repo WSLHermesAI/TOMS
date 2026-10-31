@@ -574,13 +574,5 @@ clips, 3,220 paths), 76 `.pi` turned into atlases, in about 10 s.
 - `--headless check` passes on 44 of the 47 results. The other 3 refer to images that are missing from their `.pi`
   files in the old data too, and the conversion reports them.
 
-**Test:** `anim.mpdi_convert` (`tools/anim/tests/mpdi_convert_test.cpp`, 24 checks) converts the hand-made files
-in `tests/mpdi/` and checks the keys against values worked out from the engine's rules. They cover:
-- the oldest format and the `<Version>` header;
-- top-left versus centred positions;
-- trimmed scale and mirroring;
-- Chaikin LOD;
-- the start gate with a loop;
-- additive blending and a sound hint;
-- `CenterDown` and `RotationPosOffset`;
-- `Angles` x, y, z.
+**Test:** none. The converter's test (`anim.mpdi_convert`) and its hand-made files (`tests/mpdi/`) were removed on
+2026-10-31 (the owner). Check a conversion with `anim_editor --headless check` on its results.

@@ -332,7 +332,7 @@ The ports were compared with the HTML editors on the real data (headless Chrome)
 - Save: after the same three edits (an action, a text, a flag), `--dump-write` writes the same bytes as the HTML
   editor's Save, apart from line endings.
 
-**Why its own program and not a tab in `toms_editor`.** `toms_editor`'s Play tab starts bgfx on its own. The studio
+**Why its own program and not a tab in `toms_editor`.** (toms_editor was removed on 2026-10-31.) `toms_editor`'s Play tab starts bgfx on its own. The studio
 canvases (`GameCanvasView`) share one renderer per process. A separate exe keeps them apart; "Play from here" can
 come back as a game canvas in this app.
 

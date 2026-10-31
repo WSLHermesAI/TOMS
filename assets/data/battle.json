@@ -28,7 +28,13 @@
     "grade = the win's S / A / B / C (Q35): 100 - seconds over par x timePenalty - HP lost share x damagePenalty +",
     "perfect rate x perfectBonus + best chain x chainBonus; s / a / b the lowest score of each; an S gives sGold more gold",
     "and a card sCard likelier. guard: mode 'timing' = one button pressed just before a hit (parryMs: a parry, blockMs:",
-    "blocked at blockPower, earlyMs: too early), cooldownMs between presses; 'bar' = the five-zone bar of Battle v2."
+    "blocked at blockPower, earlyMs: too early), cooldownMs between presses; 'bar' = the five-zone bar of Battle v2.",
+    "docs/gameplay/16: guard mode 'warn' = only while the \"!\" shows over the monster (warnMs before each hit; its first",
+    "parryShare a parry); a press with no \"!\" locks missLockMs, and a press stops the player's own attack.",
+    "plays: the weapons' plays (touch_play.h): the bow's target move (bowMoveMs, bowMoveDist), its charge limit (bowHoldMs",
+    "+ bowHoldPerStr per STR) and shake (bowShakePx / (1 + DEX x bowShakePerDex)); the sword's prompts (cueMs, of which",
+    "inputMs take the answer, at the end when inputAtEnd); the staff's count / hide / warn / tap times.",
+    "training: the training ground (16 §5): cards spent per run, runs per day, fights per run, EXP and weapon wins x."
   ],
   "bar_slow_speed_scale": 0.5,
   "bar_fast_speed_scale": 10,
@@ -53,5 +59,11 @@
   },
   "grade": { "parSeconds": 25, "timePenalty": 1.5, "damagePenalty": 60, "perfectBonus": 30, "chainBonus": 3,
              "s": 95, "a": 75, "b": 55, "sGold": 0.2, "sCard": 0.25 },
-  "guard": { "mode": "timing", "parryMs": 160, "blockMs": 550, "earlyMs": 1200, "blockPower": 70, "cooldownMs": 700 }
+  "guard": { "mode": "warn", "warnMs": 500, "parryShare": 0.4, "missLockMs": 400,
+             "parryMs": 160, "blockMs": 550, "earlyMs": 1200, "blockPower": 70, "cooldownMs": 700 },
+  "plays": { "bowTimeMs": 4000, "bowMoveMs": 500, "bowMoveDist": 90, "bowHoldMs": 1500, "bowHoldPerStr": 40,
+             "bowShakePx": 10, "bowShakePerDex": 0.05,
+             "cueMs": 1000, "inputMs": 500, "inputAtEnd": true, "cueGapMs": 150,
+             "circleCountMs": 450, "circleHideMs": 500, "circleWarnMs": 500, "circleTapMs": 900, "circlePerfectMs": 500 },
+  "training": { "cards": 1, "runsPerDay": 3, "fights": 3, "exp": 2.0, "uses": 2 }
 }

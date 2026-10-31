@@ -207,7 +207,7 @@ if(TOMS_BUILD_EDITOR AND NOT WEB)
         endif()
     else()
         toms_prereq_problem(WARNING
-            "Qt 6 (MSVC 2022 64-bit kit, 6.5 or newer; 6.8 LTS recommended) was not found, so toms_editor is skipped. Install it with the Qt Online Installer to C:/Qt (auto-detected), or set the environment variable QTDIR to the kit folder, e.g. C:/Qt/6.8.3/msvc2022_64."
+            "Qt 6 (MSVC 2022 64-bit kit, 6.5 or newer; 6.8 LTS recommended) was not found, so the Qt editors are skipped. Install it with the Qt Online Installer to C:/Qt (auto-detected), or set the environment variable QTDIR to the kit folder, e.g. C:/Qt/6.8.3/msvc2022_64."
             "https://www.qt.io/download-qt-installer-oss")
     endif()
 endif()

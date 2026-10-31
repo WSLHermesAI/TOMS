@@ -337,6 +337,7 @@ void Game::buildUiState(toms::UiState& u) const {
                     uf.intent_pct = pct((float)std::max(0, f.clockMs), (float)std::max(1, f.moveMs));
                 }
                 uf.break_pct = pct(f.breakGauge, (float)foeBreakPoints((int)i));
+                uf.warn = foeWarning((int)i) && !cs.skill.on;   // the "!" before its hit (docs/gameplay/16 §4)
             }
             b.foes.push_back(uf);
         }
@@ -414,15 +415,29 @@ void Game::buildUiState(toms::UiState& u) const {
             b.crit_hint = L.tr("battle.active_armed_hint");
             b.super_label = L.tr("battle.super_label");
             for (int i = 0; i < run_.superMax(); i++) b.super_dots.push_back(i < cs.superCharge ? 1 : 0);
-            b.super_ready = cs.superCharge >= run_.superMax() && !attackRunning() && !cs.winPending;
+            b.super_ready = cs.superCharge >= run_.superMax() && !cs.combo.running() && !cs.skill.on && !cs.winPending;
             b.super_button = L.tr("battle.super_ready");
             // the revamp (docs/gameplay/15): the attack is the play, its panel only says how it is; one guard button
             b.show_clock = cs.pace == toms::Pace::Stamina;
-            b.guard_timing = guard_.mode == "timing";
+            b.guard_timing = guard_.mode != "bar";   // the one GUARD button ("timing" and "warn"); "bar": the five zones
             b.guard_lit = cs.guardAtMs >= 0 && cs.clockMs - cs.guardAtMs <= guard_.blockMs;
             b.guard_cooling = cs.guardCdMs > 0 || b.guard_short;
+            if (guard_.mode == "warn") {   // lit while an "!" shows: now (16 §4.2)
+                b.guard_lit = false;
+                for (size_t i = 0; i < cs.foes.size(); i++) b.guard_lit = b.guard_lit || foeWarning((int)i);
+                b.guard_cooling = cs.guardLockMs > 0 || b.guard_short || cs.skill.on;
+            }
             b.guard_label = L.tr("battle.guard_button");
-            b.guard_hint = L.tr("battle.guard_hint");
+            b.guard_hint = L.tr(guard_.mode == "warn" ? "battle.guard_hint_warn" : "battle.guard_hint");
+            if (cs.skill.on && cs.skill.phase == CombatState::SkillRun::Phase::Play && cs.skill.def) {   // a move's play (16 §6)
+                const toms::SpecialMove& d = *cs.skill.def;
+                b.skill_prompt = L.has(d.prompt) ? L.tr(d.prompt) : d.prompt;
+                if (d.play.kind == "shape" || d.play.kind == "mash") {
+                    char t[16];
+                    std::snprintf(t, sizeof t, "%.1f", cs.touch.timeLeft() * (float)d.play.timeMs / 1000.0f);
+                    b.skill_time = t;
+                }
+            }
             const toms::PlayKind play = battlePlayKind();
             if (attackRunning()) { b.attack_state = "running"; b.attack_label = L.tr("battle.attack_running"); }
             else if (cs.pace == toms::Pace::Cooldown && cs.atkBar.cooling) {
@@ -436,7 +451,7 @@ void Game::buildUiState(toms::UiState& u) const {
                 b.attack_hint = L.tr(play == toms::PlayKind::Track ? "battle.attack_ready_hint"
                                      : std::string("battle.play_hint_") + toms::playKindName(play));
             }
-            if (play != toms::PlayKind::Track) touchPlayUi(b);
+            if (play != toms::PlayKind::Track || cs.skill.on) touchPlayUi(b);
             if (cs.chain > 1) b.chain_text = trParam(L.tr("battle.word_chain"), "n", std::to_string(cs.chain));
             auto activeIds = toms::equippedActives(equipped_, equipmentDefs_);
             if (!activeIds.empty() && toms::canUseActive(activeIds[0], activeDefs_, cs.activeRuntime, cs.activeStatus)) {
@@ -791,20 +806,21 @@ void Game::uiEvent(const std::string& name, int arg) {
     if (name == "stage_close") { if (stageSelectOpen_) closeStageSelect(); return; }
 }
 
-// Each weapon's own play (touch_play.h; docs/gameplay/15 §3.3), drawn over the monster as plain boxes (battle.rcss .tp):
-// the bow's target, its pull and the crosshair; the sword's arrows (a bar and a chevron head) and the swipe; the staff's
-// circles and their closing rings; and where each one landed (a ring, or a cross), fading.
+// Each weapon's own play and a move's play (touch_play.h; docs/gameplay/15 §3.3, 16 §3, §6), drawn over the fight as
+// plain boxes (battle.rcss .tp): the bow's moving target, its pull, charge and crosshair (and the first-pull tutorial);
+// the sword's prompt popping in (a way, or a shape) and its input window; the staff's circles counting, hiding, the
+// "!" and the taps; a move's shape and its corners; and where each answer landed (a ring, or a cross), fading.
 void Game::touchPlayUi(toms::UiBattle& b) const {
     const toms::TouchPlay& p = cs.touch;
-    b.touch_kind = toms::playKindName(battlePlayKind());
+    b.touch_kind = toms::playKindName(cs.skill.on ? p.kind() : battlePlayKind());
     auto add = [&](const std::string& cls, float cx, float cy, float w, float h, float rot = 0.0f, float radius = 0.0f,
                    float opacity = 1.0f, std::string text = {}) {
         b.touch.push_back({cls, cx - w * 0.5f, cy - h * 0.5f, w, h, rot, radius, opacity, std::move(text)});
     };
-    auto line = [&](const std::string& cls, glm::vec2 a, glm::vec2 c, float thick) {
+    auto line = [&](const std::string& cls, glm::vec2 a, glm::vec2 c, float thick, float opacity = 1.0f) {
         const glm::vec2 d = c - a;
         const float len = std::sqrt(d.x * d.x + d.y * d.y);
-        if (len >= 2.0f) add(cls, (a.x + c.x) * 0.5f, (a.y + c.y) * 0.5f, len, thick, std::atan2(d.y, d.x) * 57.29578f, thick * 0.5f);
+        if (len >= 2.0f) add(cls, (a.x + c.x) * 0.5f, (a.y + c.y) * 0.5f, len, thick, std::atan2(d.y, d.x) * 57.29578f, thick * 0.5f, opacity);
     };
     for (const toms::TouchPlay::Mark& m : p.marks()) {
         if (m.ageMs >= 500) continue;
@@ -812,53 +828,102 @@ void Game::touchPlayUi(toms::UiBattle& b) const {
         if (m.ok) add("mark ok", m.x, m.y, s, s, 0.0f, s * 0.5f, 1.0f - k);
         else { add("mark bad", m.x, m.y, 40, 7, 45.0f, 3.5f, 1.0f - k); add("mark bad", m.x, m.y, 40, 7, -45.0f, 3.5f, 1.0f - k); }
     }
-    if (!p.running()) return;
+    if (!p.running() || (cs.skill.on && cs.skill.phase != CombatState::SkillRun::Phase::Play)) return;
     const std::string count = std::to_string(std::min(p.index() + 1, p.points())) + "/" + std::to_string(p.points());
-    if (p.kind() == toms::PlayKind::Bow) {
+    switch (p.kind()) {
+    case toms::PlayKind::Bow: {
         const toms::TouchPlay::Target& t = p.target();
         add(p.started() ? "target" : "target idle", t.x, t.y, 2 * t.r, 2 * t.r, 0.0f, t.r);
         add("bull", t.x, t.y, 0.8f * t.r, 0.8f * t.r, 0.0f, 0.4f * t.r);
-        add("count", t.x, t.y - t.r - 18.0f, 80, 24, 0.0f, 0.0f, 1.0f, count);
+        if (p.points() > 1) add("count", t.x, t.y - t.r - 18.0f, 80, 24, 0.0f, 0.0f, 1.0f, count);
         if (p.started()) add("time", t.x, t.y + t.r + 10.0f, 2 * t.r * p.timeLeft(), 5, 0.0f, 2.5f);
         if (p.aiming()) {
-            const glm::vec2 c = p.crosshair();
-            line("pull", p.aimFrom(), p.aimTo(), 5);
-            line("shot", p.aimFrom(), c, 2);
-            add("anchor", p.aimFrom().x, p.aimFrom().y, 14, 14, 0.0f, 7);
+            const glm::vec2 c = p.crosshair(), a = p.aimFrom();
+            const float ch = p.charge(), s = 26.0f + 40.0f * ch;
+            line("pull", a, p.aimTo(), 5);
+            line("shot", a, c, 2);
+            add("anchor", a.x, a.y, 14, 14, 0.0f, 7);
+            add(ch >= 1.0f ? "charge full" : "charge", a.x, a.y, s, s, 0.0f, s * 0.5f);   // the pull's charge (16 §3.2)
             add("cross", c.x, c.y, 28, 28, 0.0f, 14);
+        } else if (!settings_.bowTutorialDone && !p.started() && !cs.skill.on) {
+            // the first pull's tutorial: a ghost finger touches under the target, drags back and lets go (16 §3.2)
+            const float k = (float)(cs.clockMs % 1600) / 1600.0f;
+            const float drag = std::clamp((k - 0.25f) / 0.45f, 0.0f, 1.0f);
+            const glm::vec2 from(t.x, t.y + 90.0f), to(t.x, t.y + 150.0f);
+            const glm::vec2 f = from + (to - from) * drag;
+            if (k < 0.85f) {
+                if (drag > 0.0f) line("pull", from, f, 4, 0.6f);
+                add("ghost", f.x, f.y, 34, 34, 0.0f, 17, k < 0.15f ? k / 0.15f : 1.0f);
+            }
+            add("tutorial", t.x, t.y + 190.0f, 360, 28, 0.0f, 0.0f, 1.0f, locale_.tr("battle.play_hint_bow"));
         }
-    } else if (p.kind() == toms::PlayKind::Slice) {
-        const glm::vec4 a = touchArea();
-        const float cx = a.x + a.z * 0.5f, cy = a.y + a.w - 80.0f;   // under the monster and its HP
-        const auto& arrows = p.arrows();
-        const float gap = 84.0f, x0 = cx - gap * 0.5f * (float)(arrows.size() - 1);
-        for (size_t k = 0; k < arrows.size(); k++) {
-            const toms::TouchPlay::Arrow& ar = arrows[k];
-            const float x = x0 + gap * (float)k;
-            if (ar.state == 0 && !p.arrowsShown()) { add("arrow hidden", x, cy, 18, 18, 0.0f, 9); continue; }
-            const std::string cls = ar.state == 1 ? "arrow cut" : ar.state == 2 ? "arrow missed"
-                                  : (int)k == p.index() ? "arrow now" : "arrow";
-            const float ang = (float)ar.dir * 45.0f, rad = ang / 57.29578f;
-            const glm::vec2 dir(std::cos(rad), std::sin(rad));
-            add(cls, x - dir.x * 6.0f, cy - dir.y * 6.0f, 46, 10, ang, 5);
-            add(cls + " head", x + dir.x * 12.0f, cy + dir.y * 12.0f, 22, 22, ang + 45.0f);
+        break;
+    }
+    case toms::PlayKind::Slice: {
+        const toms::CueTrack& cues = p.cues();
+        const glm::vec2 at = p.promptAt();
+        add("count", at.x, at.y - 56.0f, 80, 24, 0.0f, 0.0f, 1.0f, count);
+        const int age = cues.cueAgeMs();
+        if (!cues.done() && age >= 0) {   // the prompt pops in with a little bounce (16 §3.1)
+            const int k = cues.index();
+            const float pop = age < 180 ? 0.5f + 0.7f * std::sin((float)age / 180.0f * 1.5708f) : age < 260 ? 1.2f - 0.2f * (float)(age - 180) / 80.0f : 1.0f;
+            const std::string cls = cues.open() ? "arrow now open" : "arrow now";
+            if (p.cueKind(k) == "way") {
+                const float ang = (float)p.cueDir(k) * 45.0f, rad = ang / 57.29578f;
+                const glm::vec2 dir(std::cos(rad), std::sin(rad));
+                add(cls, at.x - dir.x * 8.0f * pop, at.y - dir.y * 8.0f * pop, 56 * pop, 12 * pop, ang, 6 * pop);
+                add(cls + " head", at.x + dir.x * 16.0f * pop, at.y + dir.y * 16.0f * pop, 26 * pop, 26 * pop, ang + 45.0f);
+            } else {   // a shape to draw: its outline
+                const std::vector<glm::vec2> c = toms::shapeCorners(p.cueKind(k));
+                for (size_t i = 1; i < c.size(); i++)
+                    line(cls, at + (c[i - 1] - glm::vec2(0.5f)) * 70.0f * pop, at + (c[i] - glm::vec2(0.5f)) * 70.0f * pop, 7);
+            }
+            add(cues.open() ? "time open" : "time", at.x, at.y + 46.0f, 160.0f * cues.timeLeft(), 6, 0.0f, 3.0f);
         }
-        add("count", cx, cy - 44.0f, 80, 24, 0.0f, 0.0f, 1.0f, count);
-        if (p.started()) add("time", cx, cy + 40.0f, 160.0f * p.timeLeft(), 5, 0.0f, 2.5f);
-        if (p.swiping()) line("swipe", p.aimFrom(), p.aimTo(), 8);
-    } else if (p.kind() == toms::PlayKind::Circles) {
+        if (p.swiping())
+            for (size_t i = 1; i < p.stroke().size(); i++) line("swipe", p.stroke()[i - 1], p.stroke()[i], 8);
+        break;
+    }
+    case toms::PlayKind::Circles: {
         const auto& circles = p.circles();
         const float r = 34.0f;
+        const auto phase = p.circlePhase();
         for (size_t k = 0; k < circles.size(); k++) {
             const toms::TouchPlay::Circle& c = circles[k];
-            if (c.state != 0) continue;
-            // the ring closes on the circle over the last 900 ms (before the first tap: every circle waits, no ring)
-            const float lead = p.started() ? (float)(c.atMs - p.clockMs()) / 900.0f : 2.0f;
-            add(p.started() ? "circle" : "circle idle", c.x, c.y, 2 * r, 2 * r, 0.0f, r, 1.0f, std::to_string(k + 1));
-            if (lead <= 1.0f) {
-                const float s = 2 * r * (1.0f + 1.6f * std::max(0.0f, lead));
-                add("ring", c.x, c.y, s, s, 0.0f, s * 0.5f, std::clamp(1.2f - lead, 0.3f, 1.0f));
+            if (c.state != 0 || phase == toms::TouchPlay::CirclePhase::Hide) continue;
+            if (phase == toms::TouchPlay::CirclePhase::Count) {   // lit in turn with its number (16 §3.3)
+                const bool lit = (int)k < p.circlesLit();
+                add(lit ? "circle" : "circle idle", c.x, c.y, 2 * r, 2 * r, 0.0f, r, lit ? 1.0f : 0.35f, lit ? std::to_string(k + 1) : std::string());
+                continue;
             }
+            add("circle", c.x, c.y, 2 * r, 2 * r, 0.0f, r);   // back together, without the numbers
+            if (phase == toms::TouchPlay::CirclePhase::Warn) add("warn", c.x, c.y - r - 18.0f, 30, 34, 0.0f, 0.0f, 1.0f, "!");
         }
+        if (phase == toms::TouchPlay::CirclePhase::Tap) {
+            const glm::vec4 a = touchArea();
+            add("time", a.x + a.z * 0.5f, a.y + a.w + 6.0f, 200.0f * p.timeLeft(), 6, 0.0f, 3.0f);
+        }
+        break;
+    }
+    case toms::PlayKind::Shape: {   // a move's shape: its lines, the corners reached, the next one (16 §6.1)
+        const toms::ShapeTrace& tr = p.trace();
+        const auto& pts = tr.points();
+        for (size_t i = 1; i < pts.size(); i++) line((int)i < tr.reached() ? "star done" : "star", pts[i - 1], pts[i], 6);
+        const bool closed = pts.size() > 1 && glm::length(pts.front() - pts.back()) < 0.5f;   // its end is its start
+        for (size_t i = 0; i < pts.size() - (closed ? 1 : 0); i++) {
+            const bool done = (int)i < tr.reached(), next = (int)i == tr.reached();
+            add(done ? "corner done" : next ? "corner next" : "corner", pts[i].x, pts[i].y, 34, 34, 0.0f, 17);
+        }
+        if (tr.drawing()) add("cross", tr.last().x, tr.last().y, 24, 24, 0.0f, 12);
+        break;
+    }
+    case toms::PlayKind::Mash: {
+        const glm::vec4 a = touchArea();
+        const float pulse = 1.0f + 0.08f * std::sin((float)p.clockMs() * 0.025f);
+        add("circle", a.x + a.z * 0.5f, a.y + a.w * 0.5f, 110 * pulse, 110 * pulse, 0.0f, 55 * pulse, 1.0f, count);
+        break;
+    }
+    default:
+        break;
     }
 }

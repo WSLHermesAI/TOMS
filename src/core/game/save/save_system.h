@@ -43,6 +43,9 @@ struct MetaSaveData {
     // Monster cards (card_collection.h; docs/gameplay/07_GAMEPLAY_PLAN.md §3): per monster, wins, losses and copies held.
     // Meta scope: survives rebirth. Optional in the file (an older save has none).
     CardBook cards;
+    // The training ground (docs/gameplay/16 §5): its runs on the day it was last used ("2026-10-31"), for the daily limit.
+    std::string trainDay;
+    int trainRuns = 0;
 };
 
 // Mirrors the fields of Player (src/game/game.h) that need to persist. Kept as its own struct

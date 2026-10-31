@@ -1,0 +1,21 @@
+{
+  "_comment": "The training ground (docs/gameplay/16 §5): on the Cards tab with two slime cards, Enter trains: one card is spent and the first of the run's fights starts.",
+  "scene": "menu",
+  "menu": {
+    "tab": "cards"
+  },
+  "cards": {
+    "slime": 2
+  },
+  "test": {
+    "frames": 40,
+    "keys": "enter@15"
+  },
+  "expect": {
+    "scene": "battle",
+    "arenaFights": 1,
+    "cards": {
+      "slime": 1
+    }
+  }
+}

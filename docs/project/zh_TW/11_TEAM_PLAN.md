@@ -12,7 +12,7 @@
 | 角色 | 負責 | 主要使用 | 要建置程式碼嗎？ |
 |---|---|---|---|
 | **程式** | `src/`、`tools/`（程式碼與腳本）、`tests/`（C++ 與 CMake）、建置、`Editor/bin`、網頁版發佈 | Visual Studio、`tools\build.cmd`、`tools\test.cmd` | 要 |
-| **遊戲企劃** | `assets/data/` 中的規則與數值（道具、敵人、武器、商店、技能、任務）、樓層（`stages/`）、事件、對話與劇情、文字（`text.json`）、測試情境（`tests/scenarios/`） | 關卡與事件編輯器、網頁編輯器、編輯 JSON 的文字編輯器、遊戲本身（`Editor\TomsEditor.cmd`） | 不用 |
+| **遊戲企劃** | `assets/data/` 中的規則與數值（道具、敵人、武器、商店、技能、任務）、樓層（`stages/`）、事件、對話與劇情、文字（`text.json`）、測試情境（`tests/scenarios/`） | 關卡與事件編輯器、網頁編輯器、編輯 JSON 的文字編輯器、UI 編輯器旁的遊戲（`Editor\UiEditor.cmd`） | 不用 |
 | **美術** | 原始美術（`art_raw/`）、圖集（`assets/media/atlas`、`styles/`）、動畫（`assets/media/anim`）、特效、字型、UI 的外觀（`assets/media/ui/*.rcss`）、音效（`assets/media/sfx`） | 圖集、動畫、粒子與字型編輯器、AI 流程（AIGamestyle）、繪圖軟體 | 不用 |
 
 「負責」的意思是：由那個人決定，這些檔案的修改要經過他。任何人都可以*建議*修改別人負責的部分，但由負責人來改或核准。
@@ -40,7 +40,7 @@
 **程式：** 完整建置：[01_INSTALL_WINDOWS.md](01_INSTALL_WINDOWS.md)、[09_NEW_MACHINE_SETUP.md](09_NEW_MACHINE_SETUP.md)、
 [02_VISUAL_STUDIO.md](02_VISUAL_STUDIO.md)。網頁版建置：[05_BUILD_WEB.md](05_BUILD_WEB.md)。
 
-**企劃與美術：** 不需要建置任何東西。使用 `Editor\` 中現成的編輯器，並用 `Editor\TomsEditor.cmd` 執行遊戲：它使用這個儲存庫的
+**企劃與美術：** 不需要建置任何東西。使用 `Editor\` 中現成的編輯器，並在 `Editor\UiEditor.cmd` 中看遊戲：它用這個儲存庫的
 `assets`，所以你存了什麼就看到什麼。程式碼改變時由程式更新 `Editor\bin`（第 6 節）。
 
 **美術，做 AI 美術時：** ComfyUI 以及 AIGamestyle 指南（`AIGamestyle/Doc/Reskin_Game_Art.md`）中的模型、

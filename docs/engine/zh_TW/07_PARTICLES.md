@@ -408,7 +408,7 @@ particle_editor --selftest-gpu file.particle outdir                   the same f
     而 normal 混色的煙依空位順序繪製；
   - 雪有 0.47% 不同：隨機旋轉 300 步之後，雪花大約漂移一個像素。
 
-Visual Studio：**「particle_editor (recipes)」** 目標。`--headless render` 是不開編輯器、
+Visual Studio：**particle_editor.exe** 目標，再用 File > Open 開檔。`--headless render` 是不開編輯器、
 快速檢視某人（或 AI）寫的效果的方法。
 
 **已經做好的東西**（tools/particle/qt；下方草圖是當初的計畫，編輯器照著它做）：

@@ -9,11 +9,18 @@
     "  kind jabs: hits quick hits; they do not wait for a running combo and cut it short. Guard instead.",
     "  kind spell: a combo matching breakHits points or more breaks it; a guard only halves it.",
     "  kind guard: it deals no damage; hits on it do reduce of their damage, but a fully charged attack breaks the guard.",
-    "damage: times its attack; time: its wind-up, times its attack interval; text: the intent's words (text.json key)."
+    "damage: times its attack; time: its wind-up, times its attack interval; text: the intent's words (text.json key).",
+    "Its rhythm (docs/gameplay/16 §4.1): chargeMs (the wind-up in ms, in place of time), hits with gapsMs (one value or one",
+    "per gap: the time before each next hit), warnMs (the \"!\" over it before each hit; default battle.json guard.warnMs);",
+    "guardPlay: a skills.json id: a special guard play (draw a seal, tap fast) in place of the guard button (16 §4.3)."
   ],
   "strike": { "kind": "strike", "damage": 1.0, "time": 1.0 },
   "heavy":  { "kind": "heavy", "damage": 1.8, "time": 1.3 },
   "jabs":   { "kind": "jabs", "damage": 0.45, "hits": 3, "time": 0.8 },
   "spell":  { "kind": "spell", "damage": 1.6, "time": 1.5, "breakHits": 2 },
-  "guard":  { "kind": "guard", "time": 1.0, "reduce": 0.3 }
+  "guard":  { "kind": "guard", "time": 1.0, "reduce": 0.3 },
+  "triple_bite":  { "kind": "jabs", "damage": 0.5, "chargeMs": 1600, "hits": 3, "gapsMs": [500], "text": "battle.intent.triple_bite" },
+  "frenzy":       { "kind": "jabs", "damage": 0.3, "chargeMs": 1400, "hits": 5, "gapsMs": [150, 150, 150, 600], "text": "battle.intent.frenzy" },
+  "doom_seal":    { "kind": "spell", "damage": 2.5, "chargeMs": 2600, "guardPlay": "guard_pentagram", "text": "battle.intent.doom_seal" },
+  "ground_pound": { "kind": "heavy", "damage": 1.6, "chargeMs": 2200, "guardPlay": "guard_mash", "text": "battle.intent.ground_pound" }
 }

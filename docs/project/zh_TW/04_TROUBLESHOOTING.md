@@ -26,7 +26,7 @@
 | 編譯 shader 時找不到 `d3dcompiler_47.dll` | 缺少 Windows SDK | 安裝 Windows 11 SDK |
 | C4819 / CJK 字串亂碼 | 某個目標編譯時沒有 `/utf-8` | 每個 toms 目標都呼叫 `toms_target_defaults()`；新目標也要加上 |
 | `renderer.h: vulkan/vulkan.h not found` | 某個 include 核心遊戲標頭的新目標，include 路徑第一順位不是 `src/game/compat` | 連結 `toms_core`（它帶有 include 順序），而不是手動加入 `src/core` 的 include 路徑 |
-| 警告 `windeployqt not found` | 找不到 Qt 的 `bin` 資料夾 | 把 `<Qt 套件>\bin` 加進 `PATH`，或把 Qt DLL 複製到 `toms_editor.exe` 旁邊 |
+| 警告 `windeployqt not found` | 找不到 Qt 的 `bin` 資料夾 | 把 `<Qt 套件>\bin` 加進 `PATH`，或把 Qt DLL 複製到編輯器的 exe（例如 `ui_editor.exe`）旁邊 |
 
 ## 執行時問題
 
@@ -38,8 +38,8 @@
 | 對話框「The game UI could not start」+ 一個 `.rml` 名稱 | 某個 RML/RCSS 檔有錯 | 主控台 / `toms.log` 中有 RmlUi 的訊息；修正檔案後重新啟動（或在執行中的遊戲按 F5） |
 | UI 中某個字元顯示成空白（一個空隙） | 該字元不在精簡過的 UI 字型中 | `python tools/make_ui_font.py`（[01](../../gameplay/01_RMLUI.md#editing-the-ui)） |
 | 遊戲右上角出現黃色「!」 | RmlUi 記錄了一則警告 | 按 F8（RmlUi 除錯器）閱讀它 |
-| 編輯器啟動後出現「toms_editor.exe - Qt6Core.dll was not found」 | Qt DLL 不在 exe 旁邊 | 重新建置（每次連結後都會執行 windeployqt），或把 `<Qt 套件>\bin` 加進 `PATH` |
-| 編輯器：按鍵沒反應 | 遊戲畫面沒有鍵盤焦點 | 點一下 *Play (bgfx)* 畫面 |
+| 編輯器啟動後出現「ui_editor.exe - Qt6Core.dll was not found」 | Qt DLL 不在 exe 旁邊 | 重新建置（每次連結後都會執行 windeployqt），或把 `<Qt 套件>\bin` 加進 `PATH` |
+| 編輯器：按鍵沒反應 | 遊戲畫面沒有鍵盤焦點 | 點一下遊戲畫面 |
 | 編輯器：把畫面拉出停駐或移動後變黑 | 原生視窗被重建了 | 讓 viewport 保持為中央 widget/分頁（[01 §5](../../engine/01_ARCHITECTURE.md#5-qt--bgfx-in-the-editor)） |
 | 存檔不在舊版放的位置 | 工作目錄不同 | 存檔放在工作目錄的 `save\`（F5 時是 `Build\<preset>\bin`） |
 | 截圖或螢幕錄影工具把編輯器的遊戲畫面錄成白色或黑色 | 透過 GDI 擷取視窗的工具讀不到 DXGI flip-model swap chain | 改成擷取螢幕或桌面區域（編輯器自己的 `--screenshot` 就是這樣做），或使用 `toms_game --screenshot` / RenderDoc |

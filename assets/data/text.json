@@ -1106,20 +1106,188 @@
       "es": "tira hacia atrás y suelta hacia la diana"
     },
     "battle.play_hint_slice": {
-      "zh_TW": "照箭頭方向劃過",
-      "en": "swipe the way each arrow points",
-      "zh_CN": "照箭头方向划过",
-      "ja": "矢印の向きにスワイプ",
-      "ko": "화살표 방향으로 긋기",
-      "es": "desliza hacia donde apunta cada flecha"
+      "zh_TW": "箭頭發光時照方向劃過",
+      "en": "swipe each arrow's way while it glows",
+      "zh_CN": "箭头发光时照方向划过",
+      "ja": "矢印が光る間にその向きへ",
+      "ko": "화살표가 빛날 때 그 방향으로",
+      "es": "desliza hacia la flecha mientras brilla"
     },
     "battle.play_hint_circles": {
-      "zh_TW": "光圈收合時點圓圈",
-      "en": "tap each circle as its ring closes",
-      "zh_CN": "光圈收合时点圆圈",
-      "ja": "輪が閉じる時に円をタップ",
-      "ko": "고리가 닫힐 때 원을 탭",
-      "es": "toca cada círculo cuando su anillo se cierra"
+      "zh_TW": "記住順序，再依序點擊",
+      "en": "watch the order, then tap them in turn",
+      "zh_CN": "记住顺序，再依序点击",
+      "ja": "順番を覚えて順にタップ",
+      "ko": "순서를 기억해 차례로 탭",
+      "es": "mira el orden y tócalos por turno"
+    },
+    "battle.guard_hint_warn": {
+      "zh_TW": "看到「!」時按下",
+      "en": "press when \"!\" shows",
+      "zh_CN": "看到「!」时按下",
+      "ja": "「!」が出たら押す",
+      "ko": "\"!\"가 보이면 누르기",
+      "es": "pulsa cuando salga \"!\""
+    },
+    "skill.star_seal": {
+      "zh_TW": "星之印",
+      "en": "Star Seal",
+      "zh_CN": "星之印",
+      "ja": "星の印",
+      "ko": "별의 인",
+      "es": "Sello estelar"
+    },
+    "skill.tiger_wind": {
+      "zh_TW": "虎虎生風",
+      "en": "Tiger Wind",
+      "zh_CN": "虎虎生风",
+      "ja": "虎虎生風",
+      "ko": "호호생풍",
+      "es": "Viento del tigre"
+    },
+    "skill.falcon_rain": {
+      "zh_TW": "鷹之雨",
+      "en": "Falcon Rain",
+      "zh_CN": "鹰之雨",
+      "ja": "鷹の雨",
+      "ko": "매의 비",
+      "es": "Lluvia de halcón"
+    },
+    "skill.guard_pentagram": {
+      "zh_TW": "滅亡封印",
+      "en": "Doom Seal",
+      "zh_CN": "灭亡封印",
+      "ja": "破滅の封印",
+      "ko": "파멸의 봉인",
+      "es": "Sello de la perdición"
+    },
+    "skill.guard_mash": {
+      "zh_TW": "大地重擊",
+      "en": "Ground Pound",
+      "zh_CN": "大地重击",
+      "ja": "大地の一撃",
+      "ko": "대지 강타",
+      "es": "Golpe sísmico"
+    },
+    "skill.prompt_draw": {
+      "zh_TW": "畫出五角星！",
+      "en": "Draw the pentagram!",
+      "zh_CN": "画出五角星！",
+      "ja": "五芒星を描け！",
+      "ko": "오각별을 그려라!",
+      "es": "¡Dibuja el pentagrama!"
+    },
+    "skill.prompt_cut": {
+      "zh_TW": "照提示出招！",
+      "en": "Cut as shown!",
+      "zh_CN": "照提示出招！",
+      "ja": "合図どおりに斬れ！",
+      "ko": "표시대로 베어라!",
+      "es": "¡Corta como se indica!"
+    },
+    "skill.prompt_aim": {
+      "zh_TW": "射中移動的靶！",
+      "en": "Hit the moving targets!",
+      "zh_CN": "射中移动的靶！",
+      "ja": "動く的を射抜け！",
+      "ko": "움직이는 과녁을 맞혀라!",
+      "es": "¡Acierta a las dianas móviles!"
+    },
+    "skill.prompt_mash": {
+      "zh_TW": "快速連點撐住！",
+      "en": "Tap fast to hold it off!",
+      "zh_CN": "快速连点撑住！",
+      "ja": "連打で耐えろ！",
+      "ko": "연타로 막아라!",
+      "es": "¡Toca rápido para resistir!"
+    },
+    "skill.guard_pentagram_line": {
+      "zh_TW": "滅亡封印來了！畫出封印擋住它",
+      "en": "Doom Seal! Draw the seal to stop it",
+      "zh_CN": "灭亡封印来了！画出封印挡住它",
+      "ja": "破滅の封印！封印を描いて防げ",
+      "ko": "파멸의 봉인! 봉인을 그려 막아라",
+      "es": "¡Sello de la perdición! Dibuja el sello para pararlo"
+    },
+    "skill.guard_mash_line": {
+      "zh_TW": "大地重擊！連點撐住",
+      "en": "Ground Pound! Tap to brace",
+      "zh_CN": "大地重击！连点撑住",
+      "ja": "大地の一撃！連打で踏ん張れ",
+      "ko": "대지 강타! 연타로 버텨라",
+      "es": "¡Golpe sísmico! Toca para aguantar"
+    },
+    "battle.intent.triple_bite": {
+      "zh_TW": "三連咬",
+      "en": "Triple Bite",
+      "zh_CN": "三连咬",
+      "ja": "三連噛み",
+      "ko": "3연속 물기",
+      "es": "Triple mordisco"
+    },
+    "battle.intent.frenzy": {
+      "zh_TW": "狂亂連擊",
+      "en": "Frenzy",
+      "zh_CN": "狂乱连击",
+      "ja": "狂乱",
+      "ko": "광란",
+      "es": "Frenesí"
+    },
+    "battle.intent.doom_seal": {
+      "zh_TW": "滅亡封印",
+      "en": "Doom Seal",
+      "zh_CN": "灭亡封印",
+      "ja": "破滅の封印",
+      "ko": "파멸의 봉인",
+      "es": "Sello de la perdición"
+    },
+    "battle.intent.ground_pound": {
+      "zh_TW": "大地重擊",
+      "en": "Ground Pound",
+      "zh_CN": "大地重击",
+      "ja": "大地の一撃",
+      "ko": "대지 강타",
+      "es": "Golpe sísmico"
+    },
+    "cards.train": {
+      "zh_TW": "特訓（今天還有 {n} 次）",
+      "en": "Train (left today: {n})",
+      "zh_CN": "特训（今天还有 {n} 次）",
+      "ja": "特訓（本日あと {n} 回）",
+      "ko": "특훈 (오늘 {n}회 남음)",
+      "es": "Entrenar (hoy quedan {n})"
+    },
+    "cards.train_none": {
+      "zh_TW": "今天的特訓已用完",
+      "en": "No training left today",
+      "zh_CN": "今天的特训已用完",
+      "ja": "本日の特訓は終了",
+      "ko": "오늘 특훈 끝",
+      "es": "Sin entrenamientos hoy"
+    },
+    "training.start": {
+      "zh_TW": "特訓：{name} 連戰 {n} 場",
+      "en": "Training: {name}, {n} fights in a row",
+      "zh_CN": "特训：{name} 连战 {n} 场",
+      "ja": "特訓：{name}と{n}連戦",
+      "ko": "특훈: {name}와 {n}연전",
+      "es": "Entrenamiento: {name}, {n} combates seguidos"
+    },
+    "training.won": {
+      "zh_TW": "特訓勝利：+{exp} 經驗，武器 +{uses}",
+      "en": "Training win: +{exp} EXP, weapon +{uses}",
+      "zh_CN": "特训胜利：+{exp} 经验，武器 +{uses}",
+      "ja": "特訓勝利：+{exp} EXP、武器 +{uses}",
+      "ko": "특훈 승리: +{exp} EXP, 무기 +{uses}",
+      "es": "Victoria: +{exp} EXP, arma +{uses}"
+    },
+    "training.done": {
+      "zh_TW": "特訓結束：勝 {w} 場，+{exp} 經驗，武器 +{uses}",
+      "en": "Training done: {w} wins, +{exp} EXP, weapon +{uses}",
+      "zh_CN": "特训结束：胜 {w} 场，+{exp} 经验，武器 +{uses}",
+      "ja": "特訓終了：{w}勝、+{exp} EXP、武器 +{uses}",
+      "ko": "특훈 종료: {w}승, +{exp} EXP, 무기 +{uses}",
+      "es": "Entrenamiento terminado: {w} victorias, +{exp} EXP, arma +{uses}"
     },
     "battle.foe_down": {
       "zh_TW": "{name} 倒下了！",

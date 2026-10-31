@@ -38,14 +38,22 @@ if not exist "Build\%PRESET%\CTestTestfile.cmake" (
   exit /b 1
 )
 where python >nul 2>nul
-if errorlevel 1 (
-  echo [toms] Python was not found, so the changed-only selection cannot run: running every test.
-  "%CTEST%" --preset "%PRESET%" -j 4%ARGS%
-  exit /b %ERRORLEVEL%
-)
+if errorlevel 1 goto :nopython
 python "%ROOT%\tools\test_select.py" --ctest "%CTEST%" --preset "%PRESET%"%ARGS%
 exit /b %ERRORLEVEL%
 
+:nopython
+rem No Python: no changed-only selection, so every test runs -- but the ones switched off in tests\test_switches.json stay off.
+set "OFFRX="
+for /f "usebackq delims=" %%r in (`powershell -NoProfile -Command "$f='tests\test_switches.json'; if (Test-Path $f) { $o=@((Get-Content $f -Raw | ConvertFrom-Json).off); if ($o.Count) { '^(' + (($o | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')$' } }"`) do set "OFFRX=%%r"
+if defined OFFRX (
+  echo [toms] Python was not found, so the changed-only selection cannot run: running every test but the switched-off ones.
+  "%CTEST%" --preset "%PRESET%" -j 4 -E "%OFFRX%"%ARGS%
+) else (
+  echo [toms] Python was not found, so the changed-only selection cannot run: running every test.
+  "%CTEST%" --preset "%PRESET%" -j 4%ARGS%
+)
+exit /b %ERRORLEVEL%
 :novs
 echo [toms] Visual Studio's ctest was not found. Run tools\check_env.cmd for details.
 exit /b 1

@@ -221,8 +221,8 @@ RULES = [
      'the battle editor (battle_editor, docs/gameplay/13) and its test setups'),
     (['src/editor/src/bgfx_viewport*'],
      named('ui_editor.selftest', 'smoke.ui_editor', 'battle_editor.selftest', 'smoke.battle_editor'),
-     'the game viewport toms_editor, ui_editor and battle_editor share'),
-    (['src/editor/*'], None, 'toms_editor (Qt + the game viewport): no automated test; the desktop build compiles it'),
+     'the game viewport ui_editor and battle_editor share'),
+    (['src/editor/*'], None, 'the Qt editors beside the game (ui_editor, battle_editor): their tests are selected by their own rules'),
     (['tools/studio_common/*'], named('atlas.core', 'anim.*', 'particle.*', 'font.*', 'studio.*', 'stage_editor.*'),
      'the Qt editors: their checks'),
     # the renderer
@@ -392,8 +392,17 @@ def main():
         i += 1
     base = [opts['ctest'], '--preset', opts['preset'], '-j', '4']
     off = switched_off()
-    if any(a in rest for a in ('-L', '-LE', '-R', '-E', '-I', '--label-regex', '--tests-regex')):
-        print('[toms] running the given ctest filter (switches not applied)')
+    if any(a in rest for a in ('-R', '-I', '--tests-regex')):   # tests asked for by name: run as asked
+        print('[toms] running the tests named (switches not applied: they were asked for by name)')
+        return subprocess.call(base + rest, cwd=ROOT)
+    if any(a in rest for a in ('-L', '-LE', '-E', '--label-regex')):   # a group: its switched-off tests stay off
+        if off:
+            print('[toms] running the given ctest filter but %d switched off in %s' % (len(off), TEST_SWITCHES_FILE))
+            if '-E' in rest:   # one -E only: the owner's and the switches' joined
+                k = rest.index('-E') + 1
+                rest[k] = '(' + rest[k] + ')|^(' + '|'.join(re.escape(n) for n in sorted(off)) + ')$'
+            else:
+                rest = rest + ['-E', '^(' + '|'.join(re.escape(n) for n in sorted(off)) + ')$']
         return subprocess.call(base + rest, cwd=ROOT)
     if opts['mode'] == 'all':
         if off:

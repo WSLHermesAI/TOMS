@@ -398,7 +398,7 @@ res.popStamp(s);                      // the player left F03: what F03 loaded is
 There is a second meaning of "stamp", used by tools: the file's own time and size.
 
 - `checkFiles()` compares each cached file's modification time and size with what was read.
-  - The game runs it once a second when hot reload is on: always in `toms_editor` (the game in a Qt window), by
+  - The game runs it once a second when hot reload is on: always in `ui_editor` and `battle_editor` (the game in a Qt window), by
     default in debug builds on desktop, and with `--hot-reload` in a release build. A shipped game never looks
     (owner's decision 3).
   - On a change, the resource is reloaded **in place**: the same object, new contents. Its `version()` goes up.
@@ -640,7 +640,8 @@ The floor is built to be drawn in as few calls as possible:
 1. The game object classes, the render system by status, and the floor tree: same pixels; the golden screenshots stay.
 2. Batching: the shared page, additive grouping, the static tile layer and the draw-call test. Same pixels again;
    only the draw-call count changes.
-3. The Hierarchy and Details panels in `toms_editor`, over the real tree.
+3. The Hierarchy and Details panels, over the real tree (they were planned for `toms_editor`, removed on 2026-10-31; not built
+   elsewhere yet).
 
 ## 5. How this makes the game faster and smaller
 
@@ -680,7 +681,7 @@ Each step builds on its own, keeps the game drawing the same, and comes with its
    `drawObjectAnim` and `drawIdleAnim` are gone. **Left:**
    - the old fields still build the idle look (`lookOf`, `legacyIdleLook`): the stage data should say it as a
      `"looks"` table instead;
-   - the Hierarchy and Details panels in `toms_editor` (the owner's order for this step: objects, batching, panels).
+   - the Hierarchy and Details panels (planned for `toms_editor`, removed on 2026-10-31; not built elsewhere yet) (the owner's order for this step: objects, batching, panels).
      `MapObject::details()` exists, nothing shows it yet;
    - the battle screen still draws through `CharacterRig` and its own `if`s: it moves onto the same looks with the
      battle's status map (docs/gameplay/11_BATTLE_DATA.md §4.2).
@@ -709,8 +710,8 @@ screenshots in `tools/test_select.py`; `resources.json`, `res_keys.h` and `make_
 1. **JSON field names:** `"type"` + `"atlas"` + `"name"`.
 2. **Release timing:** the game is small, so not a release per floor. Unused resources stay cached until a memory
    budget is passed, then the least recently used go first (4.4). Stamps are kept for previews and editor documents.
-3. **Reloading:** in the editors too. The game reloads changed files in `toms_editor`, in debug builds, and with
-   `--hot-reload`. The Qt tools (stage editor, anim editor, …) move onto the manager in step 6.
+3. **Reloading:** in the editors too. The game reloads changed files in `ui_editor` and `battle_editor`, in debug builds,
+   and with `--hot-reload`. The Qt tools (stage editor, anim editor, …) move onto the manager in step 6.
 4. **Order:** steps 1, 2 and 3 first.
 
 Also from the owner: no `wchar_t` (UTF-8 strings, converted only where the OS needs it: `vfs.h` opens UTF-8 paths on
@@ -726,7 +727,7 @@ JSON instead of XML.
 | [src/core/engine/render_object.h/.cpp](../../src/core/engine/render_object.h) | `RenderObject` and `RenderObjectFactory`; `sprite`, `clip`, `particle`, `text`, `group`, `missing`; `lookToRenderJson` |
 | [src/core/engine/vfs.h](../../src/core/engine/vfs.h) | `vfsOpen` / `vfsPath` / `vfsUtf8`: UTF-8 paths open on Windows (a Chinese folder name works) |
 | `Game` (game.h, game_assets.cpp, game_scene_draw.cpp, game.cpp, game_input.cpp) | One `ResourceManager`. The idle clips, the door clips, object clips and both previews come from it; `loadPreviewAtlases` and its per-user atlas and texture lists are gone. The loaded sprite atlas is provided as `@sprite-atlas`, and every `.../atlas/game.atlas` maps to it, so clips follow the art style as before |
-| `GameSession`, `main_sdl.cpp`, `toms_editor` | `SessionOptions::hotReload`, `--hot-reload`; on in `toms_editor` and in debug builds |
+| `GameSession`, `main_sdl.cpp`, `toms_editor` (removed on 2026-10-31) | `SessionOptions::hotReload`, `--hot-reload`; on in `toms_editor` and in debug builds (today: on in `ui_editor`, `battle_editor` and debug builds) |
 
 What changed for the player: nothing on screen (the golden screenshots pass unchanged). Under the hood:
 - `fx.atlas` is loaded once, not once for the idle clips and again for the door clips;

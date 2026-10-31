@@ -14,6 +14,15 @@ combo hints) are kept as they are; the ones made here are replaced each run, by 
     monster_parried    "parry": blue-white sparks off the parried blow
     monster_broken     "broken": yellow stars bursting out, a dizzy ring
 
+The special moves' effects (docs/gameplay/16 §6, data/special_moves.json):
+
+    star_trail         a sparkle left along the pentagram as it is drawn (many, one after another: a trail)
+    star_burst         a corner of the drawn pentagram: a star flash, a ring, sparks
+    star_burst_big     a corner the player reached: the same, bigger, with a shower of stars
+    seal_trail         a monster's seal drawn (red-violet sparkles)
+    seal_burst         a corner of its seal
+    shield_crack       the player's guard breaking: grey shards and a ring
+
 <weapon> is bow, sword, staff and default (a weapon without its own fx, unarmed). Open the file in particle_editor to
 look at them or tune them.
 """
@@ -134,11 +143,41 @@ def status_effects():
     ]
 
 
+def move_effects():
+    gold, white, violet, red = [1, 0.85, 0.4, 1], [1, 1, 1, 1], [0.75, 0.55, 1, 1], [1, 0.35, 0.55, 1]
+    grey = [0.75, 0.78, 0.85, 1]
+    return [
+        {'name': 'star_trail', 'duration': 0.7, 'emitters': [
+            flash('glint', 'fx:star', gold, 22, life=0.35),
+            sparks('motes', 'fx:spark', [gold, white], [3, 5], (20, 60), (6, 10), life=(0.3, 0.6), gravity=-40)]},
+        {'name': 'star_burst', 'duration': 0.9, 'emitters': [
+            flash('flash', 'fx:star', gold, 60, life=0.25),
+            ring('ring', gold, 26, 3.0, life=0.4),
+            sparks('sparks', 'fx:spark', [gold, white], [10, 14], (120, 240), (8, 14), life=(0.3, 0.6), gravity=100)]},
+        {'name': 'star_burst_big', 'duration': 1.2, 'emitters': [
+            flash('flash', 'fx:glow', white, 120, life=0.3, order=2),
+            ring('ring', gold, 36, 4.5, life=0.5),
+            ring('ring_2', white, 26, 3.5, life=0.45, delay=0.08),
+            sparks('stars', 'fx:star', [gold, white], [12, 16], (160, 300), (12, 20), life=(0.5, 0.9), gravity=220, spin=True)]},
+        {'name': 'seal_trail', 'duration': 0.7, 'emitters': [
+            flash('glint', 'fx:star', violet, 22, life=0.35),
+            sparks('motes', 'fx:spark', [violet, red], [3, 5], (20, 60), (6, 10), life=(0.3, 0.6), gravity=-40)]},
+        {'name': 'seal_burst', 'duration': 0.9, 'emitters': [
+            flash('flash', 'fx:star', red, 60, life=0.25),
+            ring('ring', violet, 26, 3.0, life=0.4),
+            sparks('sparks', 'fx:spark', [violet, red], [10, 14], (120, 240), (8, 14), life=(0.3, 0.6), gravity=100)]},
+        {'name': 'shield_crack', 'duration': 0.9, 'emitters': [
+            flash('flash', 'fx:glow', grey, 90, life=0.2),
+            ring('ring', grey, 30, 3.2, life=0.4),
+            sparks('shards', 'fx:spark', [grey, white], [12, 16], (140, 260), (10, 16), life=(0.3, 0.6), gravity=420)]},
+    ]
+
+
 def main():
     with open(OUT, encoding='utf-8') as f:
         data = json.load(f)
     by_name = {e['name']: e for e in data['effects']}
-    made = result_effects(by_name) + status_effects()
+    made = result_effects(by_name) + status_effects() + move_effects()
     names = {e['name'] for e in made}
     data['effects'] = [e for e in data['effects'] if e['name'] not in names] + made
     with open(OUT, 'w', encoding='utf-8', newline='\n') as f:

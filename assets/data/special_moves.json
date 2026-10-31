@@ -1,0 +1,305 @@
+{
+  "_comment": [
+    "Special moves and special guards as data (docs/gameplay/16_SKILLS_AND_PLAYS.md §6; src/core/game/systems/special_moves.h).",
+    "A new move is a new entry: its name (a text.json key), its play, three shows and its damage.",
+    "use: ultimate (a weapon's, when the super charge is full), guard (a monster's move names it: moves.json guardPlay).",
+    "play.kind: shape (trace the shape shown), slice (the sword's prompts: cues), bow (aim `points` moving targets),",
+    "  mash (tap `points` times); timeMs: a shape's or a mash's time; size / cornerRadius: a shape on the screen.",
+    "demo: before the play; step: at each step done (at the step's place); finish: after the play.",
+    "A beat: at (ms), do: pathFx (particles along the shape, `corner` at each corner) fx (on player / monster, else at the",
+    "  step) dim countdown banner (text) name namePart (the name a step's share at a time) count (3/5) camera (zoom, on",
+    "  player / monster, ms) clip (the player's clip) hits (count x gapMs: the move's damage over them) shake sound.",
+    "damage: times a normal attack (the owner: N = 10 to start), times the share of the play done (Q45)."
+  ],
+  "star_seal": {
+    "name": "skill.star_seal",
+    "weapon": "staff",
+    "use": "ultimate",
+    "prompt": "skill.prompt_draw",
+    "damage": 10,
+    "play": {
+      "kind": "shape",
+      "shape": "pentagram",
+      "timeMs": 6000,
+      "size": 230,
+      "cornerRadius": 44
+    },
+    "demo": [
+      {
+        "at": 0,
+        "do": "pathFx",
+        "shape": "pentagram",
+        "fx": "star_trail",
+        "corner": "star_burst",
+        "ms": 2000
+      },
+      {
+        "at": 2100,
+        "do": "dim"
+      },
+      {
+        "at": 2100,
+        "do": "countdown"
+      }
+    ],
+    "step": [
+      {
+        "do": "fx",
+        "fx": "star_burst_big"
+      },
+      {
+        "do": "count"
+      },
+      {
+        "do": "namePart"
+      }
+    ],
+    "finish": [
+      {
+        "at": 0,
+        "do": "name"
+      },
+      {
+        "at": 0,
+        "do": "camera",
+        "zoom": 1.5,
+        "on": "player",
+        "ms": 1700
+      },
+      {
+        "at": 200,
+        "do": "clip",
+        "clip": "attack_big"
+      },
+      {
+        "at": 400,
+        "do": "hits",
+        "count": 10,
+        "gapMs": 110
+      },
+      {
+        "at": 400,
+        "do": "shake",
+        "value": 6,
+        "ms": 1100
+      }
+    ]
+  },
+  "tiger_wind": {
+    "name": "skill.tiger_wind",
+    "weapon": "sword",
+    "use": "ultimate",
+    "prompt": "skill.prompt_cut",
+    "damage": 4,
+    "play": {
+      "kind": "slice",
+      "cues": [
+        "way",
+        "way",
+        "way",
+        "way",
+        "triangle"
+      ]
+    },
+    "demo": [
+      {
+        "at": 0,
+        "do": "name",
+        "ms": 1000
+      },
+      {
+        "at": 0,
+        "do": "fx",
+        "fx": "sword_great",
+        "on": "player"
+      },
+      {
+        "at": 900,
+        "do": "dim"
+      }
+    ],
+    "step": [
+      {
+        "do": "fx",
+        "fx": "sword_great"
+      },
+      {
+        "do": "count"
+      },
+      {
+        "do": "namePart"
+      }
+    ],
+    "finish": [
+      {
+        "at": 0,
+        "do": "camera",
+        "zoom": 1.4,
+        "on": "monster",
+        "ms": 1400
+      },
+      {
+        "at": 100,
+        "do": "clip",
+        "clip": "attack_big"
+      },
+      {
+        "at": 300,
+        "do": "hits",
+        "count": 4,
+        "gapMs": 160
+      },
+      {
+        "at": 300,
+        "do": "shake",
+        "value": 7,
+        "ms": 700
+      }
+    ]
+  },
+  "falcon_rain": {
+    "name": "skill.falcon_rain",
+    "weapon": "bow",
+    "use": "ultimate",
+    "prompt": "skill.prompt_aim",
+    "damage": 5,
+    "play": {
+      "kind": "bow",
+      "points": 3
+    },
+    "demo": [
+      {
+        "at": 0,
+        "do": "name",
+        "ms": 1000
+      },
+      {
+        "at": 0,
+        "do": "fx",
+        "fx": "bow_great",
+        "on": "player"
+      },
+      {
+        "at": 900,
+        "do": "dim"
+      }
+    ],
+    "step": [
+      {
+        "do": "fx",
+        "fx": "bow_perfect"
+      },
+      {
+        "do": "count"
+      },
+      {
+        "do": "namePart"
+      }
+    ],
+    "finish": [
+      {
+        "at": 0,
+        "do": "camera",
+        "zoom": 1.3,
+        "on": "monster",
+        "ms": 1300
+      },
+      {
+        "at": 100,
+        "do": "clip",
+        "clip": "attack_big"
+      },
+      {
+        "at": 200,
+        "do": "hits",
+        "count": 6,
+        "gapMs": 120
+      }
+    ]
+  },
+  "guard_pentagram": {
+    "name": "skill.guard_pentagram",
+    "use": "guard",
+    "prompt": "skill.prompt_draw",
+    "play": {
+      "kind": "shape",
+      "shape": "pentagram",
+      "timeMs": 5000,
+      "size": 210,
+      "cornerRadius": 46
+    },
+    "demo": [
+      {
+        "at": 0,
+        "do": "banner",
+        "text": "skill.guard_pentagram_line",
+        "ms": 1500
+      },
+      {
+        "at": 0,
+        "do": "pathFx",
+        "shape": "pentagram",
+        "fx": "seal_trail",
+        "corner": "seal_burst",
+        "ms": 1500
+      },
+      {
+        "at": 1600,
+        "do": "dim"
+      }
+    ],
+    "step": [
+      {
+        "do": "fx",
+        "fx": "seal_burst"
+      },
+      {
+        "do": "count"
+      }
+    ],
+    "finish": [
+      {
+        "at": 0,
+        "do": "fx",
+        "fx": "monster_parried",
+        "on": "player"
+      }
+    ]
+  },
+  "guard_mash": {
+    "name": "skill.guard_mash",
+    "use": "guard",
+    "prompt": "skill.prompt_mash",
+    "play": {
+      "kind": "mash",
+      "points": 12,
+      "timeMs": 2200
+    },
+    "demo": [
+      {
+        "at": 0,
+        "do": "banner",
+        "text": "skill.guard_mash_line",
+        "ms": 1200
+      },
+      {
+        "at": 1200,
+        "do": "dim"
+      }
+    ],
+    "step": [
+      {
+        "do": "fx",
+        "fx": "combo_point_hit"
+      }
+    ],
+    "finish": [
+      {
+        "at": 0,
+        "do": "fx",
+        "fx": "shield_crack",
+        "on": "player"
+      }
+    ]
+  }
+}

@@ -112,6 +112,19 @@ bool Game::arenaEndFight(bool won) {
     cs.won = won;   // a win waits for the player's tap; a loss shows briefly
     if (won) { arena_.wins++; cs.log = locale_.tr("arena.won"); }
     else { arena_.losses++; cs.log = locale_.tr("arena.lost"); cs.resultPauseMs = 1200; }
+    if (won && arena_.training) {   // the training ground (docs/gameplay/16 §5): more EXP and weapon wins
+        const nlohmann::json tr = battleJson_.value("training", nlohmann::json::object());
+        int exp = 0;
+        for (const CombatState::Foe& f : cs.foes) exp += f.enemy.exp;
+        exp = (int)std::lround(exp * std::max(0.0f, tr.value("exp", 2.0f)));
+        const int uses = std::max(0, tr.value("uses", 2));
+        gainExp(exp);
+        weaponUses_[weaponKey()] += uses;
+        arena_.expGained += exp;
+        arena_.usesGained += uses;
+        cs.log = trParam(trParam(locale_.tr("training.won"), "exp", std::to_string(exp)), "uses", std::to_string(uses));
+        markProgressDirty();
+    }
     return true;
 }
 
@@ -155,6 +168,9 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
         }
     for (const std::string& f : strings(sc, "flags")) debugSetFlag(f);
     for (const std::string& e : strings(sc, "eventsDone")) debugFinishEvent(e);
+    if (sc.contains("cards") && sc["cards"].is_object())   // monster cards held: { "slime": 2 } (the training ground, 16 §5)
+        for (auto it = sc["cards"].begin(); it != sc["cards"].end(); ++it)
+            if (it.value().is_number_integer()) meta_.cards[it.key()].copies = std::max(0, it.value().get<int>());
 
     // 4. The player: items and gear first (gear can change the stats), then the numbers as given. A new game starts with
     // the starting weapon (the bow) equipped; "unarmed": true takes it off.
@@ -210,12 +226,14 @@ bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaul
             paceSettings_ = toms::paceFromJson(rules);
             breakSettings_ = toms::breakFromJson(rules);
             feel_ = toms::feelFromJson(rules);
+            touchSettings_ = toms::touchPlayFromJson(rules);
             grade_ = toms::gradeFromJson(rules);
             guard_ = toms::guardFromJson(rules);
             comboHoldsMonsters_ = rules.value("combo_holds_monsters", false);
             comboRunsThroughAttacks_ = rules.value("combo_runs_through_attacks", true);
         }
         startCombat(en, party);
+        if (b.value("super", false)) cs.superCharge = run_.superMax();   // the ultimate ready (docs/gameplay/16 §6)
         if (s == "battleWon") finishCombatWin();
     } else if (s == "arena") {
         // the weapon test arena: "battle": { "enemies": [...] } (or "enemy"), fought in turn; the weapon is the

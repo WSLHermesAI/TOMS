@@ -71,6 +71,10 @@ struct WeaponPlay {
     std::vector<WeaponResult> results;    // by points matched (13 §4.2); empty: the "default" entry's, else none
     std::string pace;                     // "cooldown" / "stamina": this weapon's pace ("" = the battle's; 13 §6.3)
     std::string play = "track";           // its attack (touch_play.h, docs/gameplay/15 §3.3): track, bow, slice, circles
+    // the sword's shape prompts by level (docs/gameplay/16 §3.1): from `lv` on, its last prompts ask for these shapes
+    struct ShapeCues { int lv = 1; std::vector<std::string> cues; };
+    std::vector<ShapeCues> shapeCues;     // sorted by lv
+    std::vector<std::string> shapeCuesAt(int lv) const;
 };
 
 struct WeaponPlayTable {

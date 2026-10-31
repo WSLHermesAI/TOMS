@@ -1,0 +1,25 @@
+{
+  "_comment": "A special guard play (docs/gameplay/16 §4.3; moves.json doom_seal, special_moves.json guard_pentagram): after its 2.6 s wind-up the seal is shown, then the player has 5 s to draw it. Nothing is drawn, so the spell lands in full after the play.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "moves": [
+      "doom_seal"
+    ]
+  },
+  "test": {
+    "frames": 640
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "hit": 1
+    }
+  }
+}

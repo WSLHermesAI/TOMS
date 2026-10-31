@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOMS Design Map</title>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1f24; --dim: #5b616e; --line: #d9d6cc;
+  --a: #2f6fb3; --a-bg: #e7f0fa; --b: #8a5a00; --b-bg: #fbf1dc; --c: #2e7d4f; --c-bg: #e3f3ea;
+  --d: #a33a3a; --d-bg: #fbe6e6; --e: #6a4bb0; --e-bg: #efe9fb; --code: #f0eee8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171c; --panel: #1e2128; --ink: #e8e9ec; --dim: #a2a8b4; --line: #343844;
+    --a: #7fb2ec; --a-bg: #1d2a3a; --b: #e6b45c; --b-bg: #33291a; --c: #74c99a; --c-bg: #1a2e24;
+    --d: #ee8a8a; --d-bg: #3a2222; --e: #b9a2f0; --e-bg: #2a2340; --code: #262a33;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171c; --panel: #1e2128; --ink: #e8e9ec; --dim: #a2a8b4; --line: #343844;
+  --a: #7fb2ec; --a-bg: #1d2a3a; --b: #e6b45c; --b-bg: #33291a; --c: #74c99a; --c-bg: #1a2e24;
+  --d: #ee8a8a; --d-bg: #3a2222; --e: #b9a2f0; --e-bg: #2a2340; --code: #262a33;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+header { padding: 20px 16px 8px; max-width: 1180px; margin: 0 auto; }
+h1 { margin: 0 0 4px; font-size: 26px; }
+.sub { color: var(--dim); margin: 0; }
+nav { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+nav .in { max-width: 1180px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 6px; }
+nav button { border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 6px 12px; border-radius: 999px;
+             cursor: pointer; font: inherit; font-size: 14px; }
+nav button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+main { max-width: 1180px; margin: 0 auto; padding: 12px 16px 60px; }
+section { display: none; }
+section.on { display: block; }
+h2 { font-size: 21px; margin: 18px 0 6px; }
+h3 { font-size: 16px; margin: 18px 0 6px; }
+p { margin: 6px 0 10px; max-width: 80ch; }
+a { color: var(--a); }
+code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.tier { border-radius: 10px; padding: 10px 12px; margin: 8px 0; border: 1px solid var(--line); }
+.tier > b { display: block; margin-bottom: 6px; }
+.t-a { background: var(--a-bg); } .t-b { background: var(--b-bg); } .t-c { background: var(--c-bg); }
+.t-d { background: var(--d-bg); } .t-e { background: var(--e-bg); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font-size: 13px; }
+.chip small { color: var(--dim); }
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; margin: 8px 0; }
+.step { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 130px; max-width: 230px;
+        font-size: 13.5px; }
+.step b { display: block; font-size: 14px; }
+.step small { color: var(--dim); display: block; }
+.arrow { align-self: center; padding: 0 6px; color: var(--dim); font-size: 20px; }
+.vflow { display: flex; flex-direction: column; gap: 0; }
+.vflow .arrow { align-self: flex-start; padding: 0 0 0 30px; }
+.stack { display: flex; flex-direction: column-reverse; gap: 4px; margin: 8px 0; }
+.layer { border-radius: 8px; padding: 8px 12px; border: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px;
+         flex-wrap: wrap; }
+.layer span:last-child { color: var(--dim); font-size: 13px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0; }
+th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+th { color: var(--dim); font-weight: 600; }
+.tablewrap { overflow-x: auto; }
+.tag { display: inline-block; font-size: 12px; padding: 1px 7px; border-radius: 999px; margin-right: 4px; }
+.good { background: var(--c-bg); color: var(--c); } .warn { background: var(--b-bg); color: var(--b); } .bad { background: var(--d-bg); color: var(--d); }
+.score { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.score .card { margin: 0; }
+.score .big { font-size: 22px; font-weight: 700; }
+.legend { color: var(--dim); font-size: 13px; }
+.theme { margin-left: auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1>TOMS design map</h1>
+  <p class="sub">How the game is put together on 2026-10-31: the frame, the screens and how they switch, the drawing order,
+  events, talking, battle, and how easy each part is to extend. Read from the code (file:line in the
+  <a href="../19_DESIGN_MAP.md">doc beside this page</a>).</p>
+</header>
+<nav><div class="in" id="tabs">
+  <button data-s="overview" class="on">Overview</button>
+  <button data-s="frame">One frame</button>
+  <button data-s="screens">Screens &amp; switching</button>
+  <button data-s="render">Drawing order</button>
+  <button data-s="events">Events</button>
+  <button data-s="talk">Talking</button>
+  <button data-s="battle">Battle</button>
+  <button data-s="extend">Extendable?</button>
+  <button class="theme" id="theme" title="Light / dark">◐</button>
+</div></nav>
+<main>
+
+<!-- ============================================================ OVERVIEW -->
+<section id="overview" class="on">
+  <h2>The layers, top to bottom</h2>
+  <p>Each layer only calls the one below it. The game rules sit in small pure modules with their own tests; one big
+  <code>Game</code> class holds the state and glues the modules, the data and the screens together.</p>
+
+  <div class="tier t-e"><b>Host: the program (src/game/src)</b>
+    <div class="chips"><span class="chip">main_sdl.cpp <small>SDL window, input, frame loop (desktop + web)</small></span>
+    <span class="chip">GameSession <small>one frame: update → keys → mouse → draw → UI</small></span>
+    <span class="chip">GameUi <small>RmlUi documents, data bindings</small></span>
+    <span class="chip">TitleScene <small>3D title (glTF)</small></span></div></div>
+
+  <div class="tier t-a"><b>Game (src/core/game/core): state + glue — one class over 13 files, ~9,100 lines</b>
+    <div class="chips">
+      <span class="chip">game.h <small>1,544 lines: ~300 functions, ~350 fields</small></span>
+      <span class="chip">game_combat.cpp <small>1,280: battle</small></span>
+      <span class="chip">game_skills.cpp <small>412: plays, moves, training</small></span>
+      <span class="chip">game_story.cpp <small>870: dialogue, events, actions</small></span>
+      <span class="chip">game_input.cpp <small>412: walking, touching, stairs</small></span>
+      <span class="chip">game_player_menu.cpp <small>958: menu, event log</small></span>
+      <span class="chip">game_store.cpp <small>334: store, pause menu</small></span>
+      <span class="chip">game_ui.cpp <small>929: buildUiState / uiEvent</small></span>
+      <span class="chip">game_scene_draw.cpp <small>507: draw()</small></span>
+      <span class="chip">game_assets.cpp <small>612: loading</small></span>
+      <span class="chip">game_scenario.cpp <small>414: test scenarios</small></span>
+      <span class="chip">map_objects.cpp <small>644: one class per map thing</small></span>
+    </div></div>
+
+  <div class="tier t-c"><b>Rules: pure modules (src/core/game/systems) — 28 modules, 21 with their own test</b>
+    <div class="chips">
+      <span class="chip">battle_rules</span><span class="chip">battle_party</span><span class="chip">combo_play</span>
+      <span class="chip">touch_play</span><span class="chip">cue_track</span><span class="chip">gesture</span>
+      <span class="chip">special_moves</span><span class="chip">weapon_play</span><span class="chip">card_collection</span>
+      <span class="chip">talk_system</span><span class="chip">story_actions</span><span class="chip">story_controller</span>
+      <span class="chip">stair_links</span><span class="chip">floor_table</span><span class="chip">run_state</span>
+      <span class="chip">mission_system</span><span class="chip">mini_game</span><span class="chip">skill_system</span>
+      <span class="chip">equipment_system</span><span class="chip">equipment_actives</span><span class="chip">forge_system</span>
+      <span class="chip">hub_system</span><span class="chip">ending_system</span><span class="chip">cycle_system</span>
+      <span class="chip">footprint</span><span class="chip">roamer</span><span class="chip">camera</span><span class="chip">player_menu_rules</span>
+    </div></div>
+
+  <div class="tier t-b"><b>Engine (src/core/engine + src/engine)</b>
+    <div class="chips">
+      <span class="chip">IRenderer → BgfxRenderer <small>sprites, layers, views</small></span>
+      <span class="chip">resource manager <small>files by key (resources.json)</small></span>
+      <span class="chip">anim <small>clips, CharacterRig, node effects</small></span>
+      <span class="chip">particle_fx</span><span class="chip">condition <small>requires evaluator</small></span>
+      <span class="chip">event_bus</span><span class="chip">gltf</span><span class="chip">audio</span><span class="chip">RmlUi</span>
+    </div></div>
+
+  <div class="tier t-d"><b>Content: data (assets/data) — read by key, no code to add an entry</b>
+    <div class="chips">
+      <span class="chip">enemies.json <small>67 monsters</small></span><span class="chip">items.json <small>87</small></span>
+      <span class="chip">moves.json</span><span class="chip">special_moves.json</span><span class="chip">weapon_play.json</span>
+      <span class="chip">battle.json</span><span class="chip">looks.json</span><span class="chip">events/pool_*.json</span>
+      <span class="chip">npcs/ <small>58</small></span><span class="chip">dialogue/ <small>80</small></span>
+      <span class="chip">story/floors/ <small>70 floors</small></span><span class="chip">text.json <small>6 languages, 1,490 strings</small></span>
+      <span class="chip">stats, skills, missions, forge, hub, actives, endings, cycles, minigames, store</span>
+    </div></div>
+
+  <div class="tier t-e"><b>Screens: RmlUi (assets/media/ui) — 12 documents, filled from one plain struct</b>
+    <p style="margin:0">Game never touches RmlUi. Each frame <code>buildUiState()</code> writes a plain <code>UiState</code>
+    (27 <code>Ui*</code> structs in ui_state.h); GameUi copies it into the documents. A button calls back with a name:
+    <code>act('battle_attack')</code> → <code>Game::uiEvent("battle_attack")</code>.</p></div>
+</section>
+
+<!-- ============================================================ FRAME -->
+<section id="frame">
+  <h2>One frame</h2>
+  <p>The same loop runs on the desktop and in the browser. Note that <b>the game updates before this frame's keys are
+  read</b>: a key press acts on the next update.</p>
+  <div class="card vflow">
+    <div class="step"><b>main_sdl.cpp appFrame()</b><small>SDL events, keyboard and mouse → InputState; scripted test keys/clicks; frame time</small></div>
+    <div class="arrow">↓</div>
+    <div class="step"><b>GameSession::frame()</b><small>game_session.cpp:225</small></div>
+    <div class="arrow">↓</div>
+    <div class="flow">
+      <div class="step"><b>1. Game::update(dt)</b><small>battle time, rigs, fx, timers, battle, arena, walking, camera</small></div><div class="arrow">→</div>
+      <div class="step"><b>2. keys</b><small>title keys, then the Esc / Tab / Enter chains (priority order)</small></div><div class="arrow">→</div>
+      <div class="step"><b>3. mouse</b><small>battle plays read the pointer; RmlUi first; free presses go to the map</small></div><div class="arrow">→</div>
+      <div class="step"><b>4. ImGui</b><small>F1 debug only</small></div><div class="arrow">→</div>
+      <div class="step"><b>5. title 3D</b><small>glTF scene views</small></div><div class="arrow">→</div>
+      <div class="step"><b>6. Game::draw()</b><small>map or battle sprites</small></div><div class="arrow">→</div>
+      <div class="step"><b>7. UI</b><small>buildUiState → RmlUi update + render</small></div><div class="arrow">→</div>
+      <div class="step"><b>8. ImGui render, HUD text</b></div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="step"><b>bgfx::frame()</b><small>the GPU draws every view in order (see Drawing order)</small></div>
+  </div>
+
+  <h3>Inside Game::update (game.cpp:177)</h3>
+  <p>No subsystem is switched by a "current scene": each one checks its own flag and does nothing when it is off.</p>
+  <div class="flow">
+    <div class="step"><b>battleFrame</b><small>hit stop, slow motion → the win</small></div><div class="arrow">→</div>
+    <div class="step"><b>rigs + fx</b><small>player, monsters, particles</small></div><div class="arrow">→</div>
+    <div class="step"><b>timers, popups</b></div><div class="arrow">→</div>
+    <div class="step"><b>mini game</b><small>if open</small></div><div class="arrow">→</div>
+    <div class="step"><b>battle block</b><small>a move's show, or: attack pause, plays, guard, monsters' clocks</small></div><div class="arrow">→</div>
+    <div class="step"><b>arena / training</b><small>next fight</small></div><div class="arrow">→</div>
+    <div class="step"><b>walking</b><small>held keys, click-to-move (stopped while a screen is open)</small></div><div class="arrow">→</div>
+    <div class="step"><b>camera</b></div>
+  </div>
+</section>
+
+<!-- ============================================================ SCREENS -->
+<section id="screens">
+  <h2>Screens and how they switch</h2>
+  <p><b>There is no scene enum or state machine.</b> The screen on show follows from a dozen flags in Game. The same
+  priority is written three times: in the key chains (game_session.cpp), in <code>buildUiState</code> (game_ui.cpp:224) and
+  in <code>draw()</code> (game_scene_draw.cpp:35).</p>
+
+  <div class="tablewrap"><table>
+    <tr><th>Screen</th><th>On when</th><th>Opened by</th><th>Closed by</th><th>RmlUi doc (z)</th></tr>
+    <tr><td>Title</td><td><code>title_.isOpen()</code></td><td>start, Back to title</td><td>New game / Continue</td><td>title (60)</td></tr>
+    <tr><td>Ending</td><td><code>activeEndingId_</code> set</td><td>triggerEnding</td><td>Enter: rebirth / dismiss</td><td>ending (70)</td></tr>
+    <tr><td>Store</td><td><code>storeOpen || storeUnlockDlg</code></td><td>B, menu row</td><td>Esc</td><td>store (40)</td></tr>
+    <tr><td>Battle (+ result)</td><td><code>cs.active || cs.won || resultPauseMs</code></td><td>engageMonster → startCombat</td><td>dismissVictory / loss pause</td><td>battle (30)</td></tr>
+    <tr><td>Talking</td><td><code>inDialogue</code></td><td>talkTo / startDialogue</td><td>endDialogue</td><td>dialogue (30)</td></tr>
+    <tr><td>Walking (map + HUD)</td><td>none of the above</td><td>—</td><td>—</td><td>hud (10)</td></tr>
+    <tr><td>&nbsp;&nbsp;Player menu (over the map)</td><td><code>inGameMenuOpen_</code></td><td>Esc, I, C, ≡</td><td>Esc / close</td><td>player (45)</td></tr>
+    <tr><td>&nbsp;&nbsp;Save / Load (in the menu)</td><td><code>saveLoadOpen_</code></td><td>System tab</td><td>menu closes</td><td>saveload (50)</td></tr>
+    <tr><td>&nbsp;&nbsp;Hub (a menu page)</td><td><code>inGameMenuPage_ == Hub</code></td><td>System tab</td><td>back</td><td>player</td></tr>
+    <tr><td>&nbsp;&nbsp;Stage select</td><td><code>stageSelectOpen_</code></td><td>Tab</td><td>Tab / Esc</td><td>stage_select (45)</td></tr>
+    <tr><td>&nbsp;&nbsp;Stairs confirm</td><td><code>stairsConfirmOpen_</code></td><td>stepping on stairs</td><td>yes / no</td><td>dialogs (50)</td></tr>
+    <tr><td>Mini game</td><td><code>miniGame_.open</code></td><td>dialogue action miniGame</td><td>finish / Esc</td><td>minigame (40)</td></tr>
+    <tr><td>Notice</td><td><code>!notices_.empty()</code></td><td>stairs unlocked …</td><td>Enter / OK</td><td>dialogs (50)</td></tr>
+    <tr><td>Toasts</td><td>always</td><td>pushNotification</td><td>time</td><td>overlay (90)</td></tr>
+  </table></div>
+
+  <h3>Who gets the Enter key (first match wins)</h3>
+  <div class="flow">
+    <div class="step"><b>ending</b></div><div class="arrow">›</div><div class="step"><b>notice</b></div><div class="arrow">›</div>
+    <div class="step"><b>player menu</b></div><div class="arrow">›</div><div class="step"><b>stairs confirm</b></div><div class="arrow">›</div>
+    <div class="step"><b>mini game</b></div><div class="arrow">›</div><div class="step"><b>battle won</b><small>dismiss</small></div><div class="arrow">›</div>
+    <div class="step"><b>battle</b><small>attack</small></div><div class="arrow">›</div><div class="step"><b>dialogue</b><small>choose</small></div><div class="arrow">›</div>
+    <div class="step"><b>walking</b><small>interact</small></div>
+  </div>
+  <p class="legend"><code>modalActive()</code> (game.h:449) is the "a screen is open" test that stops walking, touching and talking.</p>
+
+  <h3>Example: a fight from start to map</h3>
+  <div class="flow">
+    <div class="step"><b>movePlayer</b><small>onto the monster's tile</small></div><div class="arrow">→</div>
+    <div class="step"><b>MonsterObject::onTouch</b><small>map_objects.cpp</small></div><div class="arrow">→</div>
+    <div class="step"><b>engageMonster</b><small>or a dialogue gate</small></div><div class="arrow">→</div>
+    <div class="step"><b>startCombat</b><small>cs.active = true → battle screen</small></div><div class="arrow">→</div>
+    <div class="step"><b>… the fight …</b></div><div class="arrow">→</div>
+    <div class="step"><b>afterPlayerHit</b><small>all down → startWinMoment</small></div><div class="arrow">→</div>
+    <div class="step"><b>finishCombatWin</b><small>grade, rewards, cards; cs.won = true → result</small></div><div class="arrow">→</div>
+    <div class="step"><b>dismissVictory</b><small>cs.won = false → map</small></div>
+  </div>
+</section>
+
+<!-- ============================================================ RENDER -->
+<section id="render">
+  <h2>Drawing order</h2>
+  <p>bgfx draws in <b>views</b>, in a fixed order. The list below reads bottom to top: what is lower is covered by what
+  is higher.</p>
+  <div class="stack">
+    <div class="layer t-d"><span><b>0 · kViewClear</b> — clear the screen</span><span>bgfx_renderer.cpp end()</span></div>
+    <div class="layer t-e"><span><b>16+ · title 3D scene</b> — glTF: shadow tiles, opaque, blended</span><span>title only</span></div>
+    <div class="layer t-b"><span><b>200+ · node-effect layers</b> — offscreen pictures (glow, blur, trails), inner first</span><span>drawn back into view 1</span></div>
+    <div class="layer t-a"><span><b>1 · kViewGame</b> — the world: map tiles → map objects → player; or the battle backdrop → fighters → particles</span><span>Game::draw()</span></div>
+    <div class="layer t-c"><span><b>2 · kViewUi</b> — RmlUi documents, stacked by their z-index (HUD 10 … overlay 90)</span><span>GameSession</span></div>
+    <div class="layer t-a"><span><b>3 · kViewTop</b> — sprites over the UI: the battle track's hint particles (<code>setLayer(1)</code>)</span><span>drawBattleRig</span></div>
+    <div class="layer t-e"><span><b>4 · kViewOverlay</b> — ImGui debug windows (F1)</span><span>debug only</span></div>
+  </div>
+  <p class="legend">Reading order: bottom (drawn first) to top (drawn last, on top).</p>
+
+  <h3>Inside view 1</h3>
+  <div class="grid">
+    <div class="card"><b>Walking</b>
+      <div class="vflow"><div class="step">tile layer <small>floor, walls, stair arrows, padlocks</small></div><div class="arrow">↓</div>
+      <div class="step">map objects <small>monsters, items, NPCs, doors, player (MapFloor)</small></div></div></div>
+    <div class="card"><b>Battle</b> <small>(drawBattleRig)</small>
+      <div class="vflow"><div class="step">black backdrop <small>dims with a break / a move</small></div><div class="arrow">↓</div>
+      <div class="step">player rig <small>character + held weapon</small></div><div class="arrow">↓</div>
+      <div class="step">monster rigs</div><div class="arrow">↓</div>
+      <div class="step">battle particles <small>shake and camera close-up move all of these together</small></div></div></div>
+    <div class="card"><b>Talking, store</b><p>No world is drawn: the RmlUi document covers the screen.</p>
+      <b>The UI over the battle</b><p>Panels, the plays' targets and circles, numbers and banners are RmlUi (view 2), placed
+      in design pixels from the boxes the battle screen reports.</p></div>
+  </div>
+  <p><b>Sprites</b> go in one batch per frame (compute, instancing or CPU path). Meshes, GPU particles and layer pictures
+  sit in the same stream as markers, so the order you draw is the order you see.</p>
+</section>
+
+<!-- ============================================================ EVENTS -->
+<section id="events">
+  <h2>Events</h2>
+  <p>An <b>event</b> is a record in <code>assets/data/events/pool_*.json</code>: an id, a kind, texts, a
+  <code>trigger</code>, <code>requires</code> (a condition), <code>actions</code>, and <code>next</code> (events it wakes).
+  Map things link events in the floor's <code>.stage.json</code> (<code>objects."x,y".events</code>).</p>
+
+  <h3>What starts an event</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Trigger</th><th>How</th><th>Code</th></tr>
+    <tr><td>Step on an event tile</td><td>EventObject::onTouch</td><td>map_objects.cpp:294</td></tr>
+    <tr><td>A linked map thing</td><td>item picked up, NPC touched, door / gate opened, <b>its monster defeated</b> → fireLinkedEvents</td><td>game_story.cpp:278</td></tr>
+    <tr><td><code>talk</code></td><td>becomes a topic of that NPC (see Talking)</td><td>talk_system.cpp:52</td></tr>
+    <tr><td><code>chain</code></td><td>woken by <code>next</code>, a choice's <code>fire</code>, or <code>fireEvent</code></td><td>wakeEvent, game_story.cpp:268</td></tr>
+    <tr><td><code>varChanged</code></td><td>a <code>setVar</code> / <code>addVar</code> changed its variable</td><td>varChanged, game_story.cpp:290</td></tr>
+  </table></div>
+
+  <h3>How an event finishes</h3>
+  <div class="flow">
+    <div class="step"><b>requires?</b><small>condition evaluator: 19 leaves + all/any/not</small></div><div class="arrow">→</div>
+    <div class="step"><b>completeEvent</b><small>run its actions; count it</small></div><div class="arrow">→</div>
+    <div class="step"><b>finishEvent</b><small>flag event_&lt;id&gt;, wake <code>next</code></small></div><div class="arrow">→</div>
+    <div class="step"><b>stairs</b><small>last needed event → stairs open + a notice</small></div>
+  </div>
+
+  <h3>One action vocabulary, two levels</h3>
+  <div class="grid">
+    <div class="card"><b>story_actions (pure)</b><p>addStat, setStat, give, take, setVar, addVar, setFlag, setStoryFlag,
+      addCounter, fireEvent, message</p></div>
+    <div class="card"><b>Game::runDialogueAction</b><p>tryWeapon, chooseWeapon, miniGame, enterBattle, startMission,
+      claimMission, makeChoice, unlockSkill, setSideStoryState, …</p></div>
+    <div class="card"><b>Monster events (battle only, separate)</b><p>enemies.json <code>events</code>: on hpBelow, attacks,
+      everyMs, falls … do say, stat, transformInto, heal, summon, flee, anim, fx, sound, flag.</p></div>
+  </div>
+
+  <h3>Notes</h3>
+  <ul>
+    <li><span class="tag warn">code in content</span> Event tiles still do hard-coded effects matched on the event id
+      ("shard", "trap", "cache") in map_objects.cpp:313.</li>
+    <li><span class="tag warn">gap</span> A <code>requires</code> cannot ask "is event X done": there is no
+      <code>eventDone</code> condition leaf (it works only in stair locks).</li>
+    <li><span class="tag warn">gap</span> Chapter beats of kind dialogue / memory / boss are listed in the event log
+      but nothing runs them.</li>
+    <li>The event bus (<code>EnemyDefeated</code>, <code>ChoiceMade</code>) only feeds missions.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ TALK -->
+<section id="talk">
+  <h2>Talking</h2>
+  <p>An NPC is a file in <code>npcs/</code> (chat lines, order, topics menu). A conversation is a file in
+  <code>dialogue/</code> (nodes with text and choices). <b>Topics</b> are pool events with
+  <code>trigger: {on: "talk", npc}</code>. The decision of what to say is pure (talk_system); Game only opens and runs it.</p>
+  <div class="flow">
+    <div class="step"><b>Enter or step on the NPC</b><small>interact / onTouch</small></div><div class="arrow">→</div>
+    <div class="step"><b>fireLinkedEvents</b></div><div class="arrow">→</div>
+    <div class="step"><b>talkTo</b><small>game_story.cpp:166</small></div><div class="arrow">→</div>
+    <div class="step"><b>planTalk</b><small>talk_system: no topic → a chat line; one → that topic; more → a menu</small></div><div class="arrow">→</div>
+    <div class="step"><b>openDialogue</b><small>inDialogue = true → dialogue screen</small></div><div class="arrow">→</div>
+    <div class="step"><b>chooseDialogue</b><small>actions, fire, finish → next node</small></div><div class="arrow">→</div>
+    <div class="step"><b>endDialogue</b><small>inDialogue = false → map</small></div>
+  </div>
+  <div class="grid">
+    <div class="card"><b>A choice can</b><p><code>requires</code> (hidden if false), run <code>actions</code>, <code>fire</code>
+      events, <code>finish</code> its topic's event, go to <code>next</code> (or end).</p></div>
+    <div class="card"><b>Other ways in</b><p>startDialogue(id); a hub place; the weapon master at New Game; a monster that
+      talks first (dialogue gate → <code>enterBattle</code>).</p></div>
+    <div class="card"><b>Not supported</b><p>Talking in the middle of a battle (game_combat.cpp:349). A node with no
+      choices does not close by itself.</p></div>
+  </div>
+</section>
+
+<!-- ============================================================ BATTLE -->
+<section id="battle">
+  <h2>Battle</h2>
+  <p>All of a fight's state is one struct, <code>CombatState cs</code> (game.h:118), reset by <code>startCombat</code>.
+  The rules come from pure modules and data; game_combat.cpp and game_skills.cpp run them each frame.</p>
+
+  <h3>Each frame (battle block in Game::update)</h3>
+  <div class="grid">
+    <div class="card"><b>The player's attack</b>
+      <div class="vflow">
+        <div class="step">cooldown or stamina</div><div class="arrow">↓</div>
+        <div class="step">attack ready → <b>arm the weapon's play</b><small>weapon_play.json "play": track / bow / slice / circles (touch_play)</small></div><div class="arrow">↓</div>
+        <div class="step">answers hit at once <small>playHit (sword cuts, staff spells)</small></div><div class="arrow">↓</div>
+        <div class="step"><b>resolveCombo</b><small>result row, tier, chain, break gauge, stun, damage</small></div>
+      </div></div>
+    <div class="card"><b>The monsters</b>
+      <div class="vflow">
+        <div class="step">each monster's clock <small>stepFoes</small></div><div class="arrow">↓</div>
+        <div class="step">its move <small>moves.json: wind-up, hits, gaps, "!"</small></div><div class="arrow">↓</div>
+        <div class="step"><b>resolveEnemyClockFire</b><small>the guard (warn / timing / bar), damage, a run of hits</small></div><div class="arrow">↓</div>
+        <div class="step">special guard? <small>guardPlay → a special move's play first</small></div><div class="arrow">↓</div>
+        <div class="step">monster events <small>runFoeEvents</small></div>
+      </div></div>
+    <div class="card"><b>Moves (special_moves.json)</b>
+      <div class="vflow">
+        <div class="step">ultimate or special guard → <b>startSkill</b></div><div class="arrow">↓</div>
+        <div class="step">demo show <small>beats: pathFx, dim, banner…</small></div><div class="arrow">↓</div>
+        <div class="step">play <small>a TouchPlay: shape, slice, bow, mash</small></div><div class="arrow">↓</div>
+        <div class="step">finish show <small>name, camera, clip, hits</small></div>
+      </div><p class="legend">The fight's clocks wait while a move runs.</p></div>
+  </div>
+
+  <h3>The end</h3>
+  <div class="flow">
+    <div class="step"><b>afterPlayerHit</b><small>a monster down → next target; all down →</small></div><div class="arrow">→</div>
+    <div class="step"><b>startWinMoment</b><small>slow motion</small></div><div class="arrow">→</div>
+    <div class="step"><b>finishCombatWin</b><small>grade, gold, EXP, card, weapon wins</small></div><div class="arrow">→</div>
+    <div class="step"><b>result screen</b></div><div class="arrow">→</div>
+    <div class="step"><b>dismissVictory</b></div>
+  </div>
+  <p class="legend">The arena, the weapon trial and the training ground reuse the same battle; <code>arenaEndFight</code> takes
+  over the end.</p>
+
+  <h3>What the battle reads</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Data</th><th>Holds</th><th>Module</th></tr>
+    <tr><td>battle.json</td><td>pace, break, feel, grade, guard, plays, training</td><td>battle_rules, touch_play</td></tr>
+    <tr><td>weapon_play.json</td><td>each weapon's play, levels, results, fx, shape prompts</td><td>weapon_play, combo_play</td></tr>
+    <tr><td>moves.json</td><td>monster moves: kind, wind-up, hits, gaps, special guard</td><td>battle_rules</td></tr>
+    <tr><td>special_moves.json</td><td>moves and special guards: play + shows + damage</td><td>special_moves, gesture, cue_track</td></tr>
+    <tr><td>enemies.json, looks.json</td><td>monsters (moves, events, cards); clips, sounds, fx per status</td><td>battle_rules, card_collection</td></tr>
+    <tr><td>fx/battle.particle</td><td>every battle effect</td><td>particle_fx</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ EXTEND -->
+<section id="extend">
+  <h2>Is it extendable?</h2>
+  <p><b>For content, yes. For new kinds of things, it works but costs more than it should.</b></p>
+  <div class="score">
+    <div class="card"><span class="tag good">easy</span><div class="big">New content</div>
+      <p>Monsters, items, moves, special moves, weapons, events, NPCs, dialogues, floors, missions, texts: a JSON entry,
+      no code.</p></div>
+    <div class="card"><span class="tag good">easy</span><div class="big">Rule changes</div>
+      <p>Numbers live in data; rules live in pure modules with tests, so a change is small and checked.</p></div>
+    <div class="card"><span class="tag warn">medium</span><div class="big">New kinds</div>
+      <p>A new event action, play kind, map thing or condition: C++ in 2-3 places (if-chains, no tables).</p></div>
+    <div class="card"><span class="tag bad">costly</span><div class="big">New screens</div>
+      <p>A screen is a new flag + its place in three priority lists + a Ui struct + an .rml file + uiEvent names.</p></div>
+  </div>
+
+  <h3>What holds it back, with what to do</h3>
+  <div class="tablewrap"><table>
+    <tr><th>#</th><th>Issue (fact)</th><th>Cost today</th><th>Suggested fix</th></tr>
+    <tr><td>1</td><td><b>No screen state machine.</b> ~12 flags; the priority is written in game_session.cpp, buildUiState
+      and draw()</td><td>a new screen must be added consistently in 3 places; easy to get two screens open</td>
+      <td>a <code>Screen</code> enum + a small stack (push / pop) with one "which screen is on top" function used by
+      input, UI and draw</td></tr>
+    <tr><td>2</td><td><b>Game is one large class</b> (game.h 1,544 lines, ~300 functions, ~350 fields)</td>
+      <td>every feature touches game.h; builds are slow; ownership is unclear</td>
+      <td>move each area's state into its own object (BattleController, DialogueController, MenuController) that Game
+      holds; keep the pure modules as they are</td></tr>
+    <tr><td>3</td><td><b>If-chains instead of tables</b>: uiEvent (32 + 20 names), story actions (3 chains), monster event
+      actions, play kinds (enum + switch)</td><td>a new verb = edit 2-3 chains; the validator lags (it does not know
+      tryWeapon, chooseWeapon, miniGame)</td><td>name → handler tables, registered once, which the validator reads too</td></tr>
+    <tr><td>4</td><td><b>Three event systems</b>: map events, monster events (own vocabulary), the event bus (missions only)</td>
+      <td>a monster cannot "run a story action"; things learned once must be learned three times</td>
+      <td>let monster events call the shared story actions; let events listen on the bus</td></tr>
+    <tr><td>5</td><td><b>Content in code</b>: event tile effects matched on the id ("shard", "trap", "cache")</td>
+      <td>a designer cannot add a new tile effect</td><td>move them into the events' <code>actions</code></td></tr>
+    <tr><td>6</td><td><b>Gaps</b>: no <code>eventDone</code> condition; chapter beats not run; old unused data
+      (combat.json, story.json)</td><td>small confusions</td><td>add the leaf; decide on beats; delete the old files</td></tr>
+  </table></div>
+  <p class="legend">Fixing 1 and 3 first gives the most: every later screen and every later verb gets cheaper. None of
+  them blocks the current work; they are cleanups to plan, not bugs.</p>
+</section>
+
+</main>
+<script>
+(function () {
+  var tabs = document.querySelectorAll('#tabs button[data-s]');
+  function show(id) {
+    tabs.forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-s') === id); });
+    document.querySelectorAll('main section').forEach(function (s) { s.classList.toggle('on', s.id === id); });
+    try { localStorage.setItem('toms-design-tab', id); } catch (e) {}
+  }
+  tabs.forEach(function (b) { b.addEventListener('click', function () { show(b.getAttribute('data-s')); }); });
+  try { var t = localStorage.getItem('toms-design-tab'); if (t && document.getElementById(t)) show(t); } catch (e) {}
+  var h = location.hash.slice(1);   // design_map.html#battle opens that tab
+  if (h && document.getElementById(h)) show(h);
+  document.getElementById('theme').addEventListener('click', function () {
+    var r = document.documentElement, dark = r.getAttribute('data-theme') === 'dark' ||
+      (!r.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    r.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+})();
+</script>
+</body>
+</html>

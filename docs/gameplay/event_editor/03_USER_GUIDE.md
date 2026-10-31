@@ -32,6 +32,7 @@ There is no checker you can run yet. Check these by hand, or with a short script
 
 ## 2. In the editor (planned)
 
+(Planned for `toms_editor`, which was removed on 2026-10-31; the native event editor is in `stage_event_editor`.)
 Open `toms_editor` and choose the **Events** tab. It loads every pool, floor spec and
 `text.json` from the project root.
 

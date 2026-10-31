@@ -23,7 +23,7 @@ The toolbar's configuration dropdown lists the presets:
 
 | Preset | Builds | Use it for |
 |---|---|---|
-| **Windows x64 Debug (game + editor)** | `toms_game`, `toms_editor` | stepping through code |
+| **Windows x64 Debug (game + editor)** | `toms_game` and the Qt editors | stepping through code |
 | **Windows x64 Release (game + editor)** | same, optimized with debug info | normal play testing |
 | **Windows x64 Shipping (game only, no Qt)** | `toms_game` only; Qt is not searched for | what ships; works on machines without Qt |
 | CI (no popups) | like Release, never shows popups | build servers |
@@ -36,15 +36,15 @@ Choose the startup item in the **Select Startup Item** dropdown (next to the gre
 
 | Startup item | What it runs |
 |---|---|
-| **toms_game (auto renderer)** | the game; bgfx picks the best backend (Direct3D 11/12 on Windows) |
-| **toms_game (Direct3D 11)** | forces `--renderer=d3d11` |
-| **toms_game (Vulkan)** | forces `--renderer=vulkan` |
-| **toms_editor (Qt + bgfx)** | the editor; its *Play (bgfx)* tab runs the same game code |
-| **atlas_editor (game atlas)** | the sprite atlas editor with `assets\media\atlas\game.atlasproj` open ([04](../engine/04_ATLAS_TOOL.md)) |
-| **atlaspack (rebuild game atlas)** | `atlaspack build assets\media\atlas\game.atlasproj --all-variants`, no window |
+| **toms_game.exe** | the game; bgfx picks the backend (Direct3D 11 on Windows). Another backend: add `--renderer=d3d12`, `vulkan` or `opengl` to its arguments |
+| **battle_editor (monsters, weapons, test battles)** | the battle editor; the real game runs in the middle ([13](../gameplay/13_BATTLE_EDITOR.md)) |
+| **atlas_editor (game atlas)** | the sprite atlas editor with `art_raw\atlas\game.atlasproj` open ([04](../engine/04_ATLAS_TOOL.md)) |
+| **atlaspack (rebuild game atlas)** | `atlaspack build art_raw\atlas\game.atlasproj --all-variants`, no window |
+| **anim_editor (preview clip)** | the animation editor with `tests\smoke\anim_preview.anim` open |
+| **gltf_viewer (skinned test model)** / **(Fox sample)** | the glTF viewer on a test model; the Fox needs `tools/gltf_viewer/fetch_samples.py` first |
 
-These come from `launch.vs.json`. If the dropdown only shows `toms_game.exe` / `toms_editor.exe`,
-that works too (default arguments).
+The named items come from `launch.vs.json`; each `name.exe (bin\name.exe)` item is added by Visual Studio for
+every program the build makes and runs it with no arguments.
 
 Breakpoints in the old game code (`src\core\game\...`) hit in **both** executables, because both
 link the same `toms_core` library.
@@ -97,12 +97,11 @@ Studio's bundled CMake and Ninja.
 
 Tests: `tools\test.cmd` runs all of them (unit, screenshot smoke tests, web), and Visual Studio's
 **Test → Test Explorer** lists the same ones. The unit tests are one program, `toms_tests`
-(debug one with the **"toms_tests (one unit test)"** target). See [08_TESTS.md](08_TESTS.md).
+(debug one with **toms_tests.exe** and the test's name as its argument). See [08_TESTS.md](08_TESTS.md).
 
-**Particle effects:** **"particle_editor (recipes)"** opens the particle editor
-(`bin\particle_editor.exe`) with `docs/examples/fx_recipes.particle`. **"toms_game (particle
-preview: torch_fire)"** plays one effect over the game; change `#torch_fire` in its `args` to see
-another, e.g. `#heal` or `#hit_sparks` ([07](../engine/07_PARTICLES.md)).
+**Particle effects:** **particle_editor.exe** opens the particle editor (open a `.particle` file with File >
+Open, e.g. `assets/media/fx/battle.particle`). `toms_game --fx=<file>#<effect>` plays one effect over the
+game, e.g. `--fx=docs\examples\fx_recipes.particle#heal` ([07](../engine/07_PARTICLES.md)).
 
 Quick manual screenshots (render the title screen, then stage 1, and write PNGs; the editor also writes
 `<name>_window.png` with the whole window):
@@ -111,7 +110,7 @@ Quick manual screenshots (render the title screen, then stage 1, and write PNGs;
 cd Build\windows-release\bin
 toms_game.exe --frames=60 --screenshot=title.png
 toms_game.exe --frames=120 --keys=enter@30 --screenshot=stage.png
-toms_editor.exe --frames=200 --screenshot=editor.png
+ui_editor.exe --smoke=editor.png
 ```
 
 ## 6. Debugging tips

@@ -39,6 +39,7 @@
 #include "weapon_play.h"     // toms::WeaponPlayTable -- data/weapon_play.json (docs/gameplay/07_GAMEPLAY_PLAN.md §5.6)
 #include "combo_play.h"      // toms::ComboPlay -- Battle v3's point play (docs/gameplay/07 §4, §5.1)
 #include "touch_play.h"      // toms::TouchPlay -- each weapon's own play: bow, slice, circles (docs/gameplay/15 §3.3)
+#include "special_moves.h"          // toms::SpecialMoveTable -- special moves and special guards as data (docs/gameplay/16 §6)
 #include "battle_party.h"    // toms::nextStanding, BattleEvent -- 1-3 monsters, the battle log (docs/gameplay/13 §4.6)
 #include "battle_rules.h"    // toms::LooksTable, MonsterEvent, MovesTable, PaceSettings, BreakSettings (docs/gameplay/13)
 #include "mini_game.h"       // toms::MiniGameTable -- reusable reward events (docs/gameplay/07 phase 6)
@@ -144,6 +145,9 @@ struct CombatState : public Trackable {
         int attacks = 0;              // its attacks so far (the "attacks" event)
         bool fled = false;            // left the battle (no reward for it)
         std::vector<toms::MonsterEvent> events;
+        // its move's rhythm (docs/gameplay/16 §4.1): the hit of a run of hits (0: none running) and the time to it
+        int volleyHit = 0, volleyMs = 0;
+        float guardShare = -1.0f;     // a special guard play's result for the hit waiting on it (-1: none played)
         bool down() const { return hp <= 0; }
     };
     std::vector<Foe> foes;
@@ -225,7 +229,23 @@ struct CombatState : public Trackable {
     int perfects = 0, attacksDone = 0, damageTaken = 0;   // for the grade
     int guardAtMs = -1;            // the timed guard: when it was pressed (battle time), -1 none
     int guardCdMs = 0;
+    int guardLockMs = 0;           // the "warn" guard pressed with no "!": locked a moment (docs/gameplay/16 §4.2)
     bool ultimate = false;         // the running combo is the ultimate
+    int playDealt = 0;             // what the running play's answers dealt at once (its finish deals the rest; 16 §3)
+    // A skill running (docs/gameplay/16 §6; special_moves.json): the player's move, or a monster's special guard play.
+    struct SkillRun {
+        bool on = false;
+        const toms::SpecialMove* def = nullptr;   // in Game::specialMoves_
+        int owner = -1;                        // -1: the player's move; 0..: the monster whose hit it answers
+        enum class Phase { Demo, Play, Finish } phase = Phase::Demo;
+        int phaseMs = 0;
+        int steps = 0;                         // steps done in the play
+        float share = 0.0f;                    // steps / all, when the play ended
+        int hitsLeft = 0, hitGapMs = 0, hitMs = 0, hitDmg = 0;   // the finish's hits
+    } skill;
+    // the battle camera's close-up (16 §6.1): zoom on a fighter, eased in and out
+    float camZoom = 1.0f;
+    int camMs = 0, camMsMax = 0, camOn = -1;
     // The result screen of a win (15 §3.6): filled by finishCombatWin.
     struct Result {
         bool valid = false;
@@ -595,6 +615,7 @@ public:
     // Where the battle screen laid out the player's and the monsters' boxes (battle.rcss #player / .foe .fbox: x, y, w, h in
     // design pixels; GameUi reads them each frame): the fighters, their particles and damage numbers are placed in them.
     void setBattleBoxes(const glm::vec4& player, const std::vector<glm::vec4>& foes) {
+        battleBoxesKnown_ = cs.active && foes.size() >= cs.foes.size();   // this battle's layout (all its monsters) is in
         playerBox_ = player;
         for (size_t i = 0; i < foes.size() && i < (size_t)toms::kMaxFoes; i++) foeBox_[i] = foes[i];
     }
@@ -668,6 +689,30 @@ private:
     bool attackRunning() const { return cs.combo.running() || (cs.touch.running() && cs.touch.started()); }
     glm::vec4 touchArea() const;                    // where a touch play's targets go: around the target monster
     void armTouchPlay(bool ultimate, int points);   // a new touch play over the target (waits for its first touch)
+    toms::TouchPlaySettings touchSettingsFor(toms::PlayKind kind) const;   // battle.json "plays", the weapon's, STR / DEX
+    toms::TouchPlaySettings touchSettings_;         // battle.json "plays"
+    glm::vec4 touchArmedArea_{0.0f};                // where the waiting play was armed (re-armed if the layout moves)
+    bool battleBoxesKnown_ = false;                 // the battle screen has laid out this battle's fighters (a play waits for it)
+    int normalHitDamage(int foe) const;             // a normal attack's full hit on the monster (the moves' unit)
+    void playHit(const toms::TouchPlay::Hit& h);    // a play's answer that hits at once (the sword's cut, the staff's spell)
+    void stopOwnAttack();                           // the "warn" guard stops the player's attack (16 §4.2)
+    // the monsters' rhythm and the "!" (16 §4): its "!" shows; the "!" length of its move
+    bool foeWarning(int foe) const;
+    int moveWarnMs(const toms::MoveDef& m) const;
+    // skills (16 §6): start one (owner -1: the player's; a monster index: its special guard), its time, a show's beat
+    toms::SpecialMoveTable specialMoves_;                       // data/special_moves.json
+    void startSkill(const toms::SpecialMove& def, int owner);
+    void updateSkill(int dtMs);
+    void skillBeat(const toms::ShowBeat& b, glm::vec2 at);
+    void endSkill();
+    glm::vec2 skillCentre() const;                  // where a move's shape is drawn: between the fighters
+    std::string skillName() const;                  // the running skill's name, in the language
+    // the training ground (16 §5): a monster's card spent for fights in a row with more EXP and weapon wins
+public:
+    int trainingRunsLeft() const;
+    bool startTraining(const std::string& monster);
+private:
+    void endTraining();
     void stepTouchPlay(int dtMs);                   // its time, while it runs
     void touchPlayed(int indexBefore, int hitsBefore);   // after its pointer or time: a sound per arrow, resolve when done
     bool touchHeld_ = false;                        // the press that is held began on the play (not on a button)
@@ -1218,6 +1263,9 @@ private:
     bool comboRunsThroughAttacks_ = true;   // "combo_runs_through_attacks": a combo's marker keeps moving in an attack pause
     nlohmann::json battleJson_ = nlohmann::json::object();   // data/battle.json as read (a scenario's "rules" patch it)
     std::mt19937 moveRng_{20261025u};    // the monsters' next moves (reseeded each battle: the same fight goes the same way)
+    // the plays' places and orders (the staff's circles, the sword's prompts, the bow's targets): new each battle and
+    // each attack; a scenario test (its "test" frames) seeds it the same way every run, so its results repeat
+    std::mt19937 playRng_{20261031u};
     void startAttackPause();
     void popDamage(int dmg, int who, const std::string& style);   // a damage number over who (-1 the player, 0.. a foe), hitNumberDelayMs_ from now
     // current stage id
@@ -1460,6 +1508,8 @@ private:
         size_t next = 0;
         int fights = 0, wins = 0, losses = 0;
         bool trial = false;           // the start story's weapon trial (docs/gameplay/07 phase 3): one fight, then back to the master
+        bool training = false;        // the training ground (docs/gameplay/16 §5): fightsMax fights, EXP and weapon wins x2
+        int fightsMax = 0, hpBefore = 0, expGained = 0, usesGained = 0;
     };
     Arena arena_;
 public:

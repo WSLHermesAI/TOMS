@@ -1,0 +1,26 @@
+{
+  "_comment": "The \"warn\" guard (docs/gameplay/16 §4.2): a heavy blow every 1.3 s; its \"!\" shows 0.5 s before it (about frames 50 to 81). Guard (f) at frame 55 is in the first 40 % of the \"!\": a parry.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 1000,
+    "moves": [
+      "heavy"
+    ]
+  },
+  "test": {
+    "frames": 90,
+    "keys": "f@55"
+  },
+  "expect": {
+    "battleEvents": {
+      "parry": 1
+    }
+  }
+}

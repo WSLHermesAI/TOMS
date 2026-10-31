@@ -11,7 +11,6 @@ Ready-to-run editors for TOMS. Nothing has to be built or installed: double-clic
 | `ParticleEditor.cmd` | `bin\particle_editor.exe` | particle effects (`.particle`): fire, sparks, smoke, magic |
 | `FontEditor.cmd` | `bin\font_editor.exe` | picture fonts (`.fnt` + `.png`) from one picture per character |
 | `GltfViewer.cmd` | `bin\gltf_viewer.exe` | views 3D models (`.gltf` / `.glb`): animations, lights, cameras, physics |
-| `TomsEditor.cmd` | `bin\toms_editor.exe` | the game in an editor window, on this repo's `assets` |
 | `UiEditor.cmd` | `bin\ui_editor.exe` | the game's screens (`.rml` / `.rcss`) beside the running game, every change shown as you type |
 | `StageEventEditor.cmd` | `bin\stage_event_editor.exe` | the stage (floor map) and event editors as one Windows app, on this repo's `assets\data` |
 | `WebEditors.cmd` | `..\tools\web_editors\serve.cmd` | the stage (floor map) and event editors, in the browser |
@@ -26,10 +25,10 @@ of them.
 - **The repo must be cloned with Git LFS.** The programs in `bin` are stored in Git LFS. Run `git lfs install` once
   on the PC **before** cloning (or run `git lfs pull` after). Without it the `.exe` and `.dll` files are small text
   files, and Windows reports *"This app can't run on your PC"*.
-- **Keep the folder inside the repo.** `TomsEditor`, `WebEditors` and the particle editor's default fx atlas use
+- **Keep the folder inside the repo.** `UiEditor`, `StageEventEditor`, `WebEditors` and the particle editor's default fx atlas use
   `..\assets` and `..\tools`. The other editors only need `bin`; that folder can be copied anywhere on its own.
 - **WebEditors needs Python 3** on PATH (it starts a small local web server) and Chrome or Edge.
-- **GltfViewer and TomsEditor need a Direct3D 11 graphics card** (any PC from the last ten years).
+- **GltfViewer and UiEditor need a Direct3D 11 graphics card** (any PC from the last ten years).
 
 ## 2. The editors
 
@@ -115,7 +114,7 @@ The game running in an editor window, with the event flow and the old stage list
 The UI files on the left, the text in the middle, the real game on the right. Type, pause, and the game shows the
 change; nothing on disk changes until **Ctrl+S**. **Preview** picks the screen (the title, or a test scenario: a battle,
 a dialogue, the store, ...), **Language** checks long text, **Inspect** (Ctrl+I) + a click in the game opens the
-element's line and lists the style rules that reach it. Needs a Direct3D 11 graphics card, like TomsEditor.
+element's line and lists the style rules that reach it. Needs a Direct3D 11 graphics card.
 New to it? **Help > UI Editor Tutorial** (F1, [docs/gameplay/10](../docs/gameplay/10_UI_EDITOR.md)) walks through it on a practice screen
 (**Help > Open Practice Screen**).
 
@@ -151,7 +150,6 @@ keeps a server running in its window (close the window, or press Ctrl+C, to stop
 | *"This app can't run on your PC"*, or a tiny `.exe` | The LFS files were not downloaded: `git lfs install`, then `git lfs pull` in the repo |
 | *"VCRUNTIME140.dll was not found"* | A file is missing from `bin`: `git lfs pull`, or `git checkout -- Editor/bin` |
 | *"no Qt platform plugin could be initialized"* | `bin\platforms\qwindows.dll` is missing: the same fix |
-| TomsEditor shows an empty or black map | It was started from `bin` directly; use `TomsEditor.cmd`, which sets `ASSET_DIR` |
 | WebEditors closes at once | Python 3 is not on PATH; install it from python.org with *Add to PATH* ticked |
 | The particle editor has no sprites | Open an atlas in its Sprites dock, or keep `Editor` inside the repo so it finds `assets\media\atlas\fx.atlas` |
 

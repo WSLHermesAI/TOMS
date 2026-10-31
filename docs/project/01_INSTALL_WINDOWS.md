@@ -1,8 +1,8 @@
 # 01 — Install everything (Windows)
 
 This page lists everything TOMS needs, where to get it, and how to check it. Items marked
-**required** are needed for the game (`toms_game.exe`). **Qt** is only needed for the editor
-(`toms_editor.exe`).
+**required** are needed for the game (`toms_game.exe`). **Qt** is only needed for the Qt editors
+(`ui_editor.exe`, `battle_editor.exe`, `stage_event_editor.exe`, the atlas / anim / particle / font editors).
 
 **Setting up a machine you have not used before?** Read
 [11 — 新電腦上從零開始 (AI runbook)](09_NEW_MACHINE_SETUP.md) first: the git settings that matter
@@ -36,7 +36,7 @@ from `tools\build.cmd`). A missing **required** item stops the configure with a 
 | 6 | **Ninja** | build tool used by the presets | bundled with item 3; or https://github.com/ninja-build/ninja/releases | VS copy first, then `PATH` |
 | 7 | **Git for Windows** | the first configure clones bgfx, SDL3, Dear ImGui and glm | https://git-scm.com/download/win | `git` on `PATH` |
 | 8 | **Internet access to github.com** (first configure only) | same as 7 | — | HTTPS request to github.com |
-| 9 | **`src/` and `assets/`** of this repository | the game code (`src/core`, `src/third_party`, `src/editor/stage`) is compiled; `assets/media` + `assets/data` are loaded / packed | part of the clone: `git clone --recurse-submodules https://github.com/WSLHermesAI/TOMS` | files exist |
+| 9 | **`src/` and `assets/`** of this repository | the game code (`src/core`, `src/third_party`) is compiled; `assets/media` + `assets/data` are loaded / packed | part of the clone: `git clone --recurse-submodules https://github.com/WSLHermesAI/TOMS` | files exist |
 | 10 | **~5 GB free disk** | bgfx + tools + two configurations | — | drive free space |
 
 ### Visual Studio: what to tick
@@ -55,7 +55,7 @@ Visual Studio 2026 (v18) also works: its bundled CMake 4.x and Ninja are used au
 
 | What | Needed for | Get it | Notes |
 |---|---|---|---|
-| **Qt 6.5+ — kit "MSVC 2022 64-bit"** (6.8 LTS recommended) | `toms_editor.exe` only | Qt Online Installer: https://www.qt.io/download-qt-installer-oss | Needs a free Qt account. See below. |
+| **Qt 6.5+ — kit "MSVC 2022 64-bit"** (6.8 LTS recommended) | the Qt editors only | Qt Online Installer: https://www.qt.io/download-qt-installer-oss | Needs a free Qt account. See below. |
 | **Python 3 + fontTools** (`pip install fonttools`) | only to rebuild the UI font after adding text with new characters | https://www.python.org/downloads/ | The font itself is in the repo (`assets/media/fonts/NotoSansCJKtc-TOMS.otf`); see [01](../gameplay/01_RMLUI.md#editing-the-ui). |
 | **Emscripten SDK (emsdk)** | the web build only ([05](05_BUILD_WEB.md)) | https://emscripten.org/docs/getting_started/downloads.html | `git clone` it, then `emsdk install latest` + `emsdk activate latest`. Auto-detected next to the TOMS checkout (`D:\Work\emsdk`), in `%USERPROFILE%\emsdk`, `C:\emsdk`, or via `EMSDK`. |
 | **Vulkan runtime** | `--renderer=vulkan` | comes with current NVIDIA/AMD/Intel drivers | Direct3D 11/12 work without it. |

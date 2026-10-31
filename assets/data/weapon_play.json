@@ -24,7 +24,8 @@
     "breakAdd: more on its break gauge. A weapon without results uses the default entry's.",
     "pace: \"cooldown\" or \"stamina\" for this weapon (empty: data/battle.json's; 13 §6.3).",
     "move: a result row's named move (a text.json key, docs/gameplay/07 §5.4 and 15 §3.3), shown over the monster.",
-    "play: the weapon's own attack (docs/gameplay/15 §3.3, touch_play.h): track (the point track), bow (drag back and let go at the target), slice (swipe the arrows' ways), circles (tap each circle as its ring closes). Each counts its points like the track, so the results, fx and clips stay the same. Scenarios play the track unless their battle sets \"play\"."
+    "play: the weapon's own attack (docs/gameplay/15 §3.3, touch_play.h): track (the point track), bow (drag back and let go at the target), slice (swipe the arrows' ways), circles (tap each circle as its ring closes). Each counts its points like the track, so the results, fx and clips stay the same. Scenarios play the track unless their battle sets \"play\".",
+    "shapeCues: the sword's shape prompts by level (docs/gameplay/16 §3.1): from lv on, the last prompts ask for these shapes (triangle, circle) instead of a way."
   ],
   "default": {
     "missBack": [
@@ -696,7 +697,22 @@
         "move": "battle.move.sword.miss"
       }
     ],
-    "play": "slice"
+    "play": "slice",
+    "shapeCues": [
+      {
+        "lv": 3,
+        "cues": [
+          "triangle"
+        ]
+      },
+      {
+        "lv": 5,
+        "cues": [
+          "triangle",
+          "circle"
+        ]
+      }
+    ]
   },
   "staff": {
     "missBack": [

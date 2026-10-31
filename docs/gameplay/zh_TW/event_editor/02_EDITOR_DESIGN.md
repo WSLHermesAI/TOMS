@@ -2,7 +2,7 @@
 
 > 英文原文：[02_EDITOR_DESIGN.md](../../event_editor/02_EDITOR_DESIGN.md)
 
-事件編輯器是 `toms_editor`（Qt6 Widgets）中的一個分頁，做法和動畫、粒子編輯器一樣：
+事件編輯器原本規劃成 `toms_editor`（Qt6 Widgets；toms_editor 已在 2026-10-31 移除，原生的事件編輯器在 `stage_event_editor` 中）中的一個分頁，做法和動畫、粒子編輯器一樣：
 中央視圖周圍放停駐面板、同一套深色主題、一個歷程面板，以及自動備份。
 [tools/web_editors/](../../../../tools/web_editors/index.html) 中的 HTML 事件編輯器可以看到每個部分實際運作。
 

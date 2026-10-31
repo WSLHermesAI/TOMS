@@ -121,6 +121,7 @@ struct UiFoe {                         // one monster of the battle (docs/gamepl
     std::string intent_kind;           // strike, heavy, jabs, spell, guard; stagger / broken while stunned
     float intent_pct = 0;
     float break_pct = 0;               // its break gauge (§6.4)
+    bool warn = false;                 // the "!" over it: its hit comes, guard now (docs/gameplay/16 §4)
 };
 
 struct UiBattle {
@@ -148,6 +149,7 @@ struct UiBattle {
     std::vector<UiPopup> popups;
     std::string touch_kind;            // the weapon's own play: bow, slice, circles ("" = the track; docs/gameplay/15 §3.3)
     std::vector<UiTouchItem> touch;    // what it draws over the monster
+    std::string skill_prompt, skill_time;   // a move's play: "Draw the pentagram!", its seconds left (16 §6)
     std::vector<UiFoe> foes;           // 1..3; foes[0] is enemy_* above
     // ---- the revamp (docs/gameplay/15_BATTLE_REVAMP.md) ----
     std::string banner, banner_kind;   // across the screen: break / line / ultimate

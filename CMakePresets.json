@@ -39,7 +39,7 @@
     {
       "name": "windows-debug",
       "displayName": "Windows x64 Debug (game + editor)",
-      "description": "Debug build of toms_game and toms_editor (the editor needs Qt 6 MSVC 64-bit).",
+      "description": "Debug build of toms_game and the editors (the Qt editors need Qt 6 MSVC 64-bit).",
       "inherits": "windows-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
