@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battle Revamp Prototype</title>
+<!--
+  A fast, throw-away prototype of docs/gameplay/15_BATTLE_REVAMP.md: the loop READ → ANSWER → PLAY → BREAK → BURST →
+  REWARD, the feel (hit stop, shake, tier numbers and sounds, slow motion), the result screen, and each weapon's own
+  play from docs/gameplay/14 §2 (bow: drag back and let go; sword: swipe the arrows; staff: tap the circles in time).
+  Not the game: no game code, every number made up, to try the ideas and answer Q34–Q38. Works offline.
+-->
+<style>
+  :root { --bg: #15171d; --panel: #1f2330; --text: #e8eaf0; --dim: #9aa1b3; --gold: #ffd54a; --line: #343a4c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, "Microsoft JhengHei", sans-serif;
+         display: flex; gap: 16px; justify-content: center; align-items: flex-start; padding: 12px; flex-wrap: wrap; }
+  #stage { position: relative; }
+  canvas { display: block; background: #20232d; border-radius: 10px; touch-action: none; user-select: none;
+           max-width: 100%; height: auto; }
+  aside { width: 300px; background: var(--panel); border-radius: 10px; padding: 12px 14px; }
+  h1 { font-size: 17px; color: var(--gold); margin: 0 0 4px; }
+  h2 { font-size: 13px; color: var(--gold); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+  .row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .row label { flex: 1; color: var(--dim); }
+  select, input[type=range] { flex: 1.3; }
+  select { background: #2a2f3e; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px; }
+  button { background: #3b4560; color: var(--text); border: 0; border-radius: 6px; padding: 7px 10px; cursor: pointer; }
+  button:hover { background: #4a5677; }
+  .hint { color: var(--dim); font-size: 12px; }
+  kbd { background: #2a2f3e; border-radius: 4px; padding: 0 5px; font-size: 12px; }
+  ul { margin: 4px 0; padding-left: 18px; color: var(--dim); font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c" width="440" height="800"></canvas></div>
+<aside>
+  <h1>Battle revamp — prototype</h1>
+  <div class="hint">docs/gameplay/15. Everything here is made up, to feel the ideas, not the final numbers.</div>
+
+  <h2>Fight</h2>
+  <div class="row"><label>Monster</label><select id="mon"></select></div>
+  <div class="row"><label>Weapon</label><select id="wep">
+    <option value="bow">Bow — drag back, let go</option>
+    <option value="sword">Sword — swipe the arrows</option>
+    <option value="staff">Staff — tap circles in time</option></select></div>
+  <div class="row"><label>Weapon level</label><select id="lv"><option>1</option><option selected>2</option><option>3</option></select></div>
+  <div class="row"><button id="restart" style="flex:1">▶ Fight (restart)</button></div>
+
+  <h2>Questions to try</h2>
+  <div class="row"><label>Q34 feel strength</label><input id="feel" type="range" min="0" max="2" step="0.1" value="1"></div>
+  <div class="row"><label>Reduce shaking / flashes</label><input id="reduce" type="checkbox"></div>
+  <div class="row"><label>Q35 grade on the result</label><input id="grade" type="checkbox" checked></div>
+  <div class="row"><label>Words under the intents</label><input id="words" type="checkbox" checked></div>
+  <div class="row"><label>Q37 skill slots</label><select id="skills"><option value="2" selected>two (chosen before)</option><option value="1">one (today)</option></select></div>
+
+  <h2>How to play</h2>
+  <ul>
+    <li><b>Read</b> the icon over the monster: the ring fills to the moment it hits. It glows red just before a heavy blow.</li>
+    <li><b>GUARD</b> (<kbd>F</kbd>) just before a hit: <i>Parry!</i> (a heavy blow staggers it), <i>Blocked</i>, or <i>Too early</i>.</li>
+    <li><b>Attack by playing</b>: when the attack is ready, your weapon's play waits over the monster — just play it
+      (draw, swipe, tap). The ATTACK panel only shows <i>ready</i> / <i>recovering</i>. Bat jabs cut a play short — guard them.</li>
+    <li>Fill the <b>break</b> gauge (yellow under its HP): <b>BREAK!</b> stuns it, every hit ×1.5.</li>
+    <li>Greats and perfects fill the <b>super</b> (◉): <b>ULTIMATE</b> (<kbd>U</kbd>) — ×2, ×4 in a break.</li>
+    <li>Perfects in a row: <b>Chain</b>. A miss resets it.</li>
+    <li>Skills: <kbd>1</kbd> shield (blocks the next hit), <kbd>2</kbd> slow time.</li>
+  </ul>
+  <div class="hint">Weaknesses: the golem is weak to the staff, the wraith to the bow, the bat to the sword.</div>
+</aside>
+
+<script>
+"use strict";
+// ======================================================================= data (all made up)
+const MONSTERS = {
+  slime:  { name: "Slime",        icon: "🟢", hp: 70,  atk: 8,  moves: ["strike"],                  weak: null,    tint: "#6fdc7a" },
+  bat:    { name: "Shadow Bat",   icon: "🦇", hp: 60,  atk: 7,  moves: ["strike", "jabs", "jabs"],  weak: "sword", tint: "#a07ad8" },
+  golem:  { name: "Stone Golem",  icon: "🗿", hp: 180, atk: 12, moves: ["strike", "heavy", "heavy", "guard"], weak: "staff", tint: "#b0a090",
+            phase: { at: 0.5, line: "The golem's runes blaze!", speed: 0.75 } },
+  wraith: { name: "Wraith",       icon: "👻", hp: 120, atk: 10, moves: ["strike", "spell", "spell"], weak: "bow",   tint: "#8fb8ff" },
+  party:  { name: "Slime + Bat",  party: ["slime", "bat"] },
+};
+const MOVES = {
+  strike: { icon: "👊", word: "Attack",       mul: 1.0, time: 2.6, color: "#edb17b" },
+  heavy:  { icon: "🔨", word: "Heavy blow",   mul: 2.2, time: 3.2, color: "#ff7a5a", parry: true },
+  jabs:   { icon: "⚡", word: "Quick jabs",   mul: 0.5, time: 1.9, color: "#ffc04a", hits: 3, interrupts: true },
+  spell:  { icon: "🔮", word: "Spell",        mul: 2.0, time: 3.6, color: "#a77aff", breakable: true },
+  guard:  { icon: "🛡", word: "Guarding",     mul: 0,   time: 2.6, color: "#6fb8ff", guard: true },
+};
+const WEAPONS = {
+  bow:   { name: "Hunter's Bow",  base: 11, points: [1, 2, 3], ult: 5,
+           names: { perfect: "Falcon Rain", great: "Twin Fang", hit: "Arrow", miss: "Wild Shot" } },
+  sword: { name: "Iron Sword",    base: 12, points: [1, 2, 3], ult: 5,
+           names: { perfect: "Tiger Wind, four hits", great: "Crossing Cut", hit: "Slash", miss: "Tiger's head, snake's tail" } },
+  staff: { name: "Oak Staff",     base: 10, points: [2, 3, 5], ult: 7,
+           names: { perfect: "Star Seal", great: "Twin Bolt", hit: "Spark", miss: "Fizzle" } },
+};
+const TIER = { miss: 0.35, hit: 1.0, great: 1.35, perfect: 1.8 };
+const TIER_COLOR = { miss: "#9aa1b3", hit: "#ffffff", great: "#7fe0ff", perfect: "#ffd54a" };
+
+// ======================================================================= canvas, input
+const cv = document.getElementById("c"), g = cv.getContext("2d");
+const W = cv.width, H = cv.height;
+const $ = id => document.getElementById(id);
+for (const [id, m] of Object.entries(MONSTERS)) $("mon").add(new Option(m.name, id));
+$("mon").value = "golem";
+let pointer = { down: false, x: 0, y: 0, sx: 0, sy: 0, t0: 0 };
+function toCanvas(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; }
+
+// ======================================================================= sound (WebAudio, synthesised)
+let ac = null;
+function tone(freq, dur, type = "sine", vol = 0.15, slide = 0) {
+  if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+  const o = ac.createOscillator(), v = ac.createGain(), t = ac.currentTime;
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * slide), t + dur);
+  v.gain.setValueAtTime(vol, t); v.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(v).connect(ac.destination); o.start(t); o.stop(t + dur);
+}
+const SFX = {
+  hit()     { tone(220, 0.12, "triangle", 0.18, 0.6); },
+  great()   { tone(330, 0.14, "triangle", 0.18, 0.7); tone(495, 0.14, "sine", 0.1); },
+  perfect() { tone(523, 0.25, "sine", 0.16); tone(659, 0.25, "sine", 0.12); tone(784, 0.3, "sine", 0.12); },
+  miss()    { tone(140, 0.18, "sawtooth", 0.08, 0.7); },
+  parry()   { tone(1200, 0.18, "square", 0.08, 0.5); tone(1800, 0.1, "square", 0.05); },
+  block()   { tone(300, 0.1, "square", 0.08); },
+  hurt()    { tone(110, 0.22, "sawtooth", 0.14, 0.5); },
+  warn()    { tone(880, 0.07, "square", 0.05); },
+  breakS()  { tone(70, 0.6, "sawtooth", 0.25, 0.4); tone(140, 0.4, "square", 0.08, 0.5); },
+  ult()     { tone(392, 0.15, "square", 0.08); setTimeout(() => tone(523, 0.15, "square", 0.08), 90); setTimeout(() => tone(784, 0.3, "square", 0.1), 180); },
+  tick()    { tone(660, 0.04, "sine", 0.06); },
+  win()     { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.25, "triangle", 0.12), i * 110)); },
+};
+
+// ======================================================================= the battle state
+let S;   // everything about the running fight
+function feel() { return parseFloat($("feel").value) * ($("reduce").checked ? 0.25 : 1); }
+
+function makeFoe(id, i, n) {
+  const m = MONSTERS[id];
+  const x = n === 1 ? W / 2 : W / 2 + (i - (n - 1) / 2) * 170;
+  const f = { id, ...m, x, y: 230, maxHp: m.hp, breakG: 0, breakMax: id === "golem" ? 10 : 6, stun: 0, flash: 0,
+              intent: null, clock: 0, phased: false, speed: 1, dead: false, shake: 0, warned: false };
+  pickIntent(f, true);
+  return f;
+}
+function pickIntent(f, first) {
+  const id = f.moves[Math.floor(Math.random() * f.moves.length)];
+  f.intent = id; f.clock = first ? -0.6 - Math.random() : 0; f.dur = MOVES[id].time * f.speed; f.warned = false;
+}
+function startFight() {
+  const id = $("mon").value, m = MONSTERS[id];
+  const ids = m.party ? m.party : [id];
+  S = {
+    foes: ids.map((x, i) => makeFoe(x, i, ids.length)), target: 0,
+    weapon: $("wep").value, lv: parseInt($("lv").value), hp: 120, maxHp: 120,
+    guardAt: -99, shieldUp: false, super: 0, chain: 0, bestChain: 0,
+    play: null, atkCd: 0.6, atkCdMax: 1.0, time: 0, hitStop: 0, slow: 0, slowScale: 1, shake: 0, dim: 0, banner: null, cutin: null,
+    pops: [], words: [], parts: [], log: [], skills: [{ id: "shield", cd: 0, max: 12 }, { id: "slow", cd: 0, max: 15 }],
+    slowTime: 0, phasePause: 0, over: null, perfects: 0, taken: 0, hits: 0, result: null,
+    wins: (JSON.parse(localStorageGet("wins") || "{}")[$("wep").value]) || 0,
+  };
+}
+function localStorageGet(k) { try { return localStorage.getItem("tomsRevamp." + k); } catch (e) { return null; } }
+function localStorageSet(k, v) { try { localStorage.setItem("tomsRevamp." + k, v); } catch (e) {} }
+
+// ======================================================================= feel helpers
+function hitStop(ms) { S.hitStop = Math.max(S.hitStop, ms / 1000 * Math.min(1.5, feel())); }
+function shake(px) { S.shake = Math.max(S.shake, px * feel()); }
+function pop(x, y, text, color, size) { S.pops.push({ x, y, text, color, size, t: 0 }); }
+function word(text, color, y = 380, size = 30) { S.words.push({ text, color, y, size, t: 0 }); }
+function burst(x, y, color, n = 14, speed = 220) {
+  for (let i = 0; i < n * Math.max(0.3, feel()); i++) {
+    const a = Math.random() * Math.PI * 2, s = speed * (0.4 + Math.random());
+    S.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.5 + Math.random() * 0.3, t: 0, color });
+  }
+}
+
+// ======================================================================= the player: guard, attack, ultimate, skills
+function guard() {   // also while a play waits or runs: the play is always there now
+  if (!S || S.over) return;
+  S.guardAt = S.time;
+  SFX.tick();
+}
+// The play waits over the monster whenever the attack is ready: no button starts it, the first touch does
+// (the owner, 2026-10-31: "click attack, then make the move, is redundant"). The ultimate replaces a waiting play.
+function attack(ultimate) {
+  if (!S || S.over) return;
+  if (S.play && (!ultimate || S.play.started)) return;
+  if (!ultimate && S.atkCd > 0) return;
+  const foe = S.foes[S.target];
+  if (!foe || foe.dead) return;
+  if (ultimate) {
+    if (S.super < 5) return;
+    S.super = 0; SFX.ult();
+    S.cutin = { t: 0, text: WEAPONS[S.weapon].name.toUpperCase() + " — ULTIMATE" };
+    S.hitStop = 0.6;   // the cut-in holds the fight
+  }
+  const w = WEAPONS[S.weapon];
+  const n = ultimate ? w.ult : w.points[S.lv - 1];
+  S.play = makePlay(S.weapon, n, foe, ultimate);
+}
+function useSkill(i) {
+  if (!S || S.over) return;
+  const slots = parseInt($("skills").value);
+  if (i >= slots) return;
+  const s = S.skills[i];
+  if (s.cd > 0) return;
+  s.cd = s.max;
+  if (s.id === "shield") { S.shieldUp = true; word("Shield up", "#7fd4ff"); SFX.block(); }
+  else { S.slowTime = 3; word("Time slows", "#c7a2ff"); tone(300, 0.6, "sine", 0.1, 0.5); }
+}
+
+// ======================================================================= weapon plays (14 §2): each returns hits of n
+function makePlay(kind, n, foe, ult) {
+  const p = { kind, n, i: 0, hits: 0, perfects: 0, foe, ult, t: 0, marks: [], started: ult };   // its timers wait for the first touch
+  if (kind === "bow") nextBowTarget(p);
+  if (kind === "sword") { p.dirs = []; for (let k = 0; k < n; k++) p.dirs.push(Math.floor(Math.random() * 8)); p.cutT = 0;
+    p.memory = ult;    // the ultimate: the directions are shown, then hidden (14 §2.2)
+    p.showFor = ult ? 1.4 : 99; }
+  if (kind === "staff") { p.circles = []; for (let k = 0; k < n; k++) p.circles.push({
+      x: foe.x + (Math.random() - 0.5) * 220, y: 175 + Math.random() * 180, at: 0.9 + k * (ult ? 0.38 : 0.55), done: false }); }
+  return p;
+}
+function nextBowTarget(p) {
+  const f = p.foe;
+  p.target = { x: f.x + (Math.random() - 0.5) * (p.ult ? 260 : 90), y: 180 + Math.random() * (p.ult ? 170 : 90),
+               r: p.ult ? 26 : 32, wob: Math.random() * 6 };
+  p.aim = null; p.tLeft = 3;
+}
+function finishPlay(p) {
+  const tier = p.hits === 0 ? "miss" : p.hits === p.n && p.perfects >= Math.ceil(p.n / 2) ? "perfect"
+             : p.hits === p.n || p.hits / p.n >= 0.6 ? "great" : "hit";
+  S.play = null;
+  S.atkCd = S.atkCdMax;   // the attack recovers, then the next play waits again
+  resolveAttack(p.foe, tier, p.hits, p.ult);
+}
+function playPointer(type, pt) {
+  const p = S.play; if (!p) return;
+  if (p.kind === "bow") {
+    if (type === "down") { p.aim = { sx: pt.x, sy: pt.y, x: pt.x, y: pt.y }; p.started = true; }
+    else if (type === "move" && p.aim) { p.aim.x = pt.x; p.aim.y = pt.y; }
+    else if (type === "up" && p.aim) {
+      const pull = Math.hypot(p.aim.x - p.aim.sx, p.aim.y - p.aim.sy);
+      if (pull < 25) { p.aim = null; return; }
+      const cross = bowCross(p);
+      const d = Math.hypot(cross.x - p.target.x, cross.y - p.target.y);
+      const ok = d <= p.target.r, perfect = d <= p.target.r * 0.4;
+      p.marks.push({ x: cross.x, y: cross.y, ok, t: 0 });
+      if (ok) { p.hits++; if (perfect) p.perfects++; SFX[perfect ? "great" : "hit"](); burst(cross.x, cross.y, perfect ? "#ffd54a" : "#fff", 8, 160); }
+      else SFX.miss();
+      p.i++;
+      if (p.i >= p.n) finishPlay(p); else nextBowTarget(p);
+    }
+  }
+  if (p.kind === "sword") {
+    if (type === "down") { p.swipe = { sx: pt.x, sy: pt.y, x: pt.x, y: pt.y, t: 0 }; p.started = true; }
+    else if (type === "move" && p.swipe) { p.swipe.x = pt.x; p.swipe.y = pt.y; }
+    else if (type === "up" && p.swipe) {
+      const dx = p.swipe.x - p.swipe.sx, dy = p.swipe.y - p.swipe.sy, len = Math.hypot(dx, dy);
+      p.swipe = null;
+      if (len < 70) return;
+      const want = p.dirs[p.i] * Math.PI / 4, got = Math.atan2(dy, dx);
+      let diff = Math.abs(((got - want + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+      const ok = diff < 0.5, perfect = diff < 0.22 && len > 140;
+      p.marks.push({ sx: p.foe.x - dx / 2, sy: p.foe.y - dy / 2, ex: p.foe.x + dx / 2, ey: p.foe.y + dy / 2, ok, t: 0 });
+      if (ok) { p.hits++; if (perfect) p.perfects++; SFX[perfect ? "great" : "hit"](); burst(p.foe.x, p.foe.y, perfect ? "#ffd54a" : "#fff", 10, 200); }
+      else { SFX.miss(); if (p.memory) { p.i = p.n; finishPlay(p); return; } }   // the memory chain: a wrong direction ends it
+      p.i++; p.cutT = 0;
+      if (p.i >= p.n) finishPlay(p);
+    }
+  }
+  if (p.kind === "staff" && type === "down" && !p.started) { p.started = true; p.t = 0; SFX.tick(); return; }   // the first tap starts the beat
+  if (p.kind === "staff" && type === "down") {
+    let best = null;
+    for (const c of p.circles) if (!c.done && Math.hypot(pt.x - c.x, pt.y - c.y) < 40) { best = c; break; }
+    if (!best) return;
+    const off = Math.abs(p.t - best.at);
+    best.done = true; best.ok = off < 0.2; best.perfect = off < 0.08;
+    if (best.ok) { p.hits++; if (best.perfect) p.perfects++; SFX[best.perfect ? "great" : "hit"](); burst(best.x, best.y, best.perfect ? "#ffd54a" : "#bfe0ff", 8, 150); }
+    else SFX.miss();
+    p.marks.push({ x: best.x, y: best.y, ok: best.ok, t: 0 });
+    if (p.circles.every(c => c.done)) finishPlay(p);
+  }
+}
+function bowCross(p) {   // drag back, the crosshair goes the other way (a slingshot)
+  const k = 1.8;
+  return { x: p.aim.sx - (p.aim.x - p.aim.sx) * k, y: p.aim.sy - (p.aim.y - p.aim.sy) * k };
+}
+
+// ======================================================================= resolving hits
+function resolveAttack(foe, tier, hits, ult) {
+  const w = WEAPONS[S.weapon];
+  let dmg = w.base * (1 + 0.25 * (S.lv - 1)) * TIER[tier];
+  const weak = foe.weak === S.weapon;
+  if (weak) dmg *= 1.5;
+  if (foe.stun > 0) dmg *= 1.5;
+  if (ult) dmg *= foe.stun > 0 ? 4 : 2;
+  if (tier === "perfect") { S.chain++; S.perfects++; } else if (tier === "miss") S.chain = 0;
+  S.bestChain = Math.max(S.bestChain, S.chain);
+  dmg *= 1 + 0.1 * Math.max(0, S.chain - 1);
+  if (MOVES[foe.intent].guard && foe.stun <= 0 && !ult && tier !== "perfect") { dmg *= 0.3; word("Guarded", "#6fb8ff", 330, 22); }
+  if (MOVES[foe.intent].breakable && hits >= 2 && foe.stun <= 0) { word("Spell broken!", "#c7a2ff", 330, 26); pickIntent(foe); }
+  dmg = Math.max(1, Math.round(dmg));
+  foe.hp -= dmg; S.hits++;
+  if (tier === "great" || tier === "perfect") S.super = Math.min(5, S.super + 1);
+  // the feel (15 §3.8)
+  const name = w.names[tier];
+  word((ult ? "★ " : "") + name, TIER_COLOR[tier], 120, tier === "perfect" ? 30 : 24);
+  pop(foe.x, foe.y - 70, String(dmg) + (weak ? " Weak!" : ""), TIER_COLOR[tier], tier === "perfect" || ult ? 46 : tier === "great" ? 36 : 28);
+  if (tier !== "miss") { foe.flash = 0.12; foe.shake = 0.25; }
+  SFX[tier === "miss" ? "miss" : tier]();
+  hitStop({ miss: 0, hit: 25, great: 50, perfect: 80 }[tier] + (ult ? 60 : 0));
+  shake({ miss: 0, hit: 2, great: 4, perfect: 7 }[tier] + (ult ? 6 : 0));
+  burst(foe.x, foe.y, TIER_COLOR[tier], tier === "perfect" ? 26 : 12);
+  if (S.chain >= 2) word("Chain ×" + S.chain, "#ffd54a", 520, 22);
+  // break (13 §6.4): the moment
+  if (foe.stun <= 0 && tier !== "miss") {
+    foe.breakG += hits + (tier === "perfect" ? 1 : 0);
+    if (foe.breakG >= foe.breakMax) {
+      foe.breakG = 0; foe.stun = 3; foe.flash = 0.4;
+      S.dim = 0.6; S.banner = { text: "BREAK!", t: 0, color: "#ffd54a" };
+      SFX.breakS(); hitStop(120); shake(9);
+    }
+  }
+  checkPhase(foe);
+  if (foe.hp <= 0) foeDown(foe);
+}
+function checkPhase(foe) {
+  if (!foe.phase || foe.phased || foe.hp > foe.maxHp * foe.phase.at || foe.hp <= 0) return;
+  foe.phased = true; foe.speed *= foe.phase.speed; S.phasePause = 0.8;
+  S.banner = { text: foe.phase.line, t: 0, color: "#ff9a7a", small: true };
+  shake(6); tone(90, 0.8, "sawtooth", 0.15, 0.6);
+}
+function foeDown(foe) {
+  foe.dead = true; foe.hp = 0; burst(foe.x, foe.y, foe.tint, 40, 320);
+  const alive = S.foes.filter(f => !f.dead);
+  if (alive.length === 0) {
+    S.slow = 0.45; S.slowScale = 0.3;   // the last hit in slow motion, then the result
+    S.over = "won";
+  } else S.target = S.foes.indexOf(alive[0]);
+}
+function foeAttacks(foe) {
+  const m = MOVES[foe.intent];
+  if (m.guard) { pickIntent(foe); return; }
+  const since = S.time - S.guardAt;
+  let dmg = Math.round(foe.atk * m.mul * (m.hits || 1));
+  let txt = null, col = "#ff8080";
+  if (S.shieldUp) { S.shieldUp = false; dmg = 0; txt = "Shield!"; col = "#7fd4ff"; SFX.block(); }
+  else if (since >= 0 && since <= 0.16) {
+    dmg = 0; txt = "Parry!"; col = "#ffd54a"; SFX.parry(); hitStop(90); shake(4);
+    if (m.parry) { foe.stun = 1.5; foe.breakG += 3; txt = "Parry! Staggered"; burst(foe.x, foe.y, "#ffd54a", 20); }
+  } else if (since >= 0 && since <= 0.55) {
+    dmg = Math.round(dmg * (m.parry || m.breakable ? 0.5 : 0.3)); txt = "Blocked"; col = "#9fd8ff"; SFX.block();
+  } else {
+    if (since > 0.55 && since < 1.2) { txt = "Too early"; col = "#ffb070"; }
+    SFX.hurt(); shake(m.parry ? 8 : 4); hitStop(m.parry ? 60 : 30);
+  }
+  if (m.interrupts && S.play && S.play.started) { S.play = null; S.atkCd = S.atkCdMax; word("Interrupted!", "#ffc04a", 330, 24); }
+  S.hp -= dmg; S.taken += dmg;
+  if (dmg > 0) pop(W / 2, 470, "-" + dmg, "#ff8080", 30);
+  if (txt) word(txt, col, 560, 26);
+  foe.lunge = 0.25;
+  if (S.hp <= 0) { S.hp = 0; S.over = "lost"; S.slow = 0.3; S.slowScale = 0.3; }
+  pickIntent(foe);
+}
+
+// ======================================================================= the result (15 §3.6)
+function makeResult() {
+  const won = S.over === "won";
+  const t = S.time, perfectRate = S.hits ? S.perfects / S.hits : 0, lost = S.taken / S.maxHp;
+  let score = 100 - Math.max(0, t - 25) * 1.5 - lost * 60 + perfectRate * 30 + S.bestChain * 3;
+  const grade = !won ? "—" : score >= 95 ? "S" : score >= 75 ? "A" : score >= 55 ? "B" : "C";
+  let wins = S.wins + (won ? 1 : 0);
+  const winsAll = JSON.parse(localStorageGet("wins") || "{}"); winsAll[S.weapon] = wins; localStorageSet("wins", JSON.stringify(winsAll));
+  const need = 10, lv = 1 + Math.floor(wins / need);
+  const teaser = { bow: "a double shot", sword: "a third cut", staff: "a magic circle to draw" }[S.weapon];
+  const gold = won ? Math.round((8 + S.foes.length * 6) * (grade === "S" ? 1.2 : 1)) : 0;
+  const card = won && Math.random() < (grade === "S" ? 0.6 : 0.35);
+  S.result = { won, grade, score: Math.round(score), t, wins, lv, prog: wins % need, need, teaser, gold, exp: won ? 7 * S.foes.length : 0,
+               card, key: won && Math.random() < 0.25, t0: 0 };
+  if (won) SFX.win();
+}
+
+// ======================================================================= update
+let last = performance.now();
+function update(dt) {
+  if (!S) return;
+  // effects that run on real time
+  for (const p of S.pops) p.t += dt;
+  for (const w of S.words) w.t += dt;
+  for (const p of S.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; }
+  S.pops = S.pops.filter(p => p.t < 1); S.words = S.words.filter(w => w.t < 1.1); S.parts = S.parts.filter(p => p.t < p.life);
+  S.shake = Math.max(0, S.shake - dt * 30); S.dim = Math.max(0, S.dim - dt * 0.6);
+  if (S.banner) { S.banner.t += dt; if (S.banner.t > 1.3) S.banner = null; }
+  if (S.cutin) { S.cutin.t += dt; if (S.cutin.t > 0.8) S.cutin = null; }
+  if (S.result) { S.result.t0 += dt; return; }
+  if (S.hitStop > 0) { S.hitStop -= dt; return; }          // hit stop: the fight freezes, the effects don't
+  if (S.phasePause > 0) { S.phasePause -= dt; return; }
+  if (S.slow > 0) { S.slow -= dt; dt *= S.slowScale; if (S.slow <= 0) makeResult(); }
+  if (S.over && S.slow <= 0) return;
+  S.time += dt;
+  for (const s of S.skills) s.cd = Math.max(0, s.cd - dt);
+  if (S.slowTime > 0) S.slowTime -= dt;
+  const monsterDt = S.slowTime > 0 ? dt * 0.4 : dt;
+  for (const f of S.foes) {
+    f.flash = Math.max(0, f.flash - dt); f.shake = Math.max(0, f.shake - dt); f.lunge = Math.max(0, (f.lunge || 0) - dt);
+    if (f.dead || S.over) continue;
+    if (f.stun > 0) { f.stun -= dt; continue; }
+    f.clock += monsterDt;
+    const left = f.dur - f.clock;
+    if (left < 0.5 && !f.warned && (MOVES[f.intent].parry || MOVES[f.intent].breakable)) { f.warned = true; SFX.warn(); }
+    if (f.clock >= f.dur) foeAttacks(f);
+  }
+  S.atkCd = Math.max(0, S.atkCd - dt);
+  if (!S.play && S.atkCd <= 0 && !S.over) attack(false);   // ready: the next play waits over the target
+  const p = S.play;
+  if (p && p.started) {
+    p.t += dt;
+    for (const m of p.marks) m.t += dt;
+    if (p.kind === "bow") { p.tLeft -= dt; if (p.tLeft <= 0) { p.marks.push({ x: p.target.x, y: p.target.y, ok: false, t: 0 }); SFX.miss(); p.i++; if (p.i >= p.n) finishPlay(p); else nextBowTarget(p); } }
+    if (p.kind === "sword") { p.cutT += dt; if (p.cutT > (p.memory ? 2.2 : 1.6)) { SFX.miss(); p.i++; p.cutT = 0; if (p.i >= p.n) finishPlay(p); } }
+    if (p.kind === "staff") {
+      for (const c of p.circles) if (!c.done && p.t > c.at + 0.25) { c.done = true; c.ok = false; p.marks.push({ x: c.x, y: c.y, ok: false, t: 0 }); SFX.miss(); }
+      if (p.circles.every(c => c.done) && S.play) finishPlay(p);
+    }
+  }
+}
+
+// ======================================================================= drawing
+const BTN = {
+  guard:  { x: 20,  y: 700, w: 190, h: 80, label: "GUARD" },
+  attack: { x: 230, y: 700, w: 190, h: 80, label: "ATTACK" },
+  ult:    { x: 300, y: 640, w: 120, h: 46, label: "ULTIMATE" },
+  s0:     { x: 20,  y: 640, w: 64,  h: 46 },
+  s1:     { x: 92,  y: 640, w: 64,  h: 46 },
+};
+function inBtn(b, pt) { return pt.x >= b.x && pt.x <= b.x + b.w && pt.y >= b.y && pt.y <= b.y + b.h; }
+function rr(x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
+function text(t, x, y, size, color, align = "center", weight = "600") {
+  g.font = `${weight} ${size}px system-ui, "Microsoft JhengHei", sans-serif`; g.textAlign = align; g.textBaseline = "middle";
+  g.lineWidth = Math.max(3, size / 8); g.strokeStyle = "rgba(0,0,0,.65)"; g.strokeText(t, x, y); g.fillStyle = color; g.fillText(t, x, y);
+}
+function bar(x, y, w, h, frac, color, back = "#3a3f50") {
+  g.fillStyle = back; rr(x, y, w, h, h / 2); g.fill();
+  g.fillStyle = color; rr(x, y, Math.max(h, w * Math.max(0, Math.min(1, frac))), h, h / 2); g.fill();
+}
+function draw() {
+  g.save();
+  g.clearRect(0, 0, W, H);
+  if (S && S.shake > 0) g.translate((Math.random() - 0.5) * S.shake * 2, (Math.random() - 0.5) * S.shake * 2);
+  // backdrop
+  const grd = g.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, "#2a2140"); grd.addColorStop(0.55, "#1d2433"); grd.addColorStop(1, "#151821");
+  g.fillStyle = grd; g.fillRect(-20, -20, W + 40, H + 40);
+  if (!S) { text("Press ▶ Fight", W / 2, H / 2, 26, "#fff"); g.restore(); return; }
+
+  // monsters (READ: intents)
+  S.foes.forEach((f, i) => {
+    if (f.dead) return;
+    const m = MOVES[f.intent], left = Math.max(0, f.dur - f.clock);
+    const lunge = f.lunge > 0 ? Math.sin(f.lunge / 0.25 * Math.PI) * 30 : 0;
+    const fx = f.x + (f.shake > 0 ? (Math.random() - 0.5) * 10 : 0), fy = f.y + lunge;
+    // the danger glow before a heavy blow or a spell lands
+    if ((m.parry || m.breakable) && left < 0.5 && f.stun <= 0) {
+      g.save(); g.globalAlpha = 0.35 + 0.35 * Math.sin(S.time * 40); g.fillStyle = m.color;
+      g.beginPath(); g.arc(fx, fy, 85, 0, Math.PI * 2); g.fill(); g.restore();
+    }
+    if (i === S.target && S.foes.filter(x => !x.dead).length > 1) { g.fillStyle = "#ffd54a"; g.fillRect(fx - 40, fy + 70, 80, 5); }
+    g.save(); g.font = "110px serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    if (f.flash > 0) g.filter = "brightness(3)";
+    if (f.stun > 0) g.globalAlpha = 0.75 + 0.25 * Math.sin(S.time * 20);
+    g.fillText(f.icon, fx, fy); g.restore();
+    // intent: an icon in a ring that fills to the hit
+    const ix = f.x, iy = 95;
+    g.fillStyle = "rgba(0,0,0,.45)"; g.beginPath(); g.arc(ix, iy, 30, 0, Math.PI * 2); g.fill();
+    if (f.stun > 0) { text(f.stun > 1.6 ? "BROKEN" : "STUN", ix, iy, 13, "#ffd54a"); }
+    else {
+      g.strokeStyle = m.color; g.lineWidth = 5; g.beginPath();
+      g.arc(ix, iy, 30, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, Math.min(1, f.clock / f.dur))); g.stroke();
+      g.font = "26px serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(m.icon, ix, iy + 1);
+      if ($("words").checked) text(`${m.word} ${left.toFixed(1)}s`, ix, iy + 46, 13, m.color);
+    }
+    // HP and break gauge
+    bar(f.x - 75, 320, 150, 12, f.hp / f.maxHp, "#f08080");
+    bar(f.x - 75, 334, 150, 5, f.breakG / f.breakMax, "#ffe27a");
+    text(f.name + (f.weak === S.weapon ? "  weak: yours!" : ""), f.x, 352, 12, f.weak === S.weapon ? "#ffd54a" : "#cfd3dd", "center", "500");
+  });
+
+  // the hero and their HP
+  g.save(); g.font = "80px serif"; g.textAlign = "center"; g.textBaseline = "middle";
+  const heroIcon = { bow: "🏹", sword: "⚔️", staff: "🪄" }[S.weapon];
+  g.fillText("🧝", W / 2 - 30, 470); g.font = "40px serif"; g.fillText(heroIcon, W / 2 + 35, 485); g.restore();
+  bar(60, 535, W - 120, 14, S.hp / S.maxHp, "#8fe0a0");
+  text(`HP ${S.hp} / ${S.maxHp}`, W / 2, 562, 13, "#e8eaf0", "center", "500");
+  if (S.shieldUp) text("🛡 shield", W / 2 + 120, 470, 14, "#7fd4ff");
+  if (S.chain >= 2) text(`Chain ×${S.chain}`, 70, 595, 18, "#ffd54a", "left");
+  // super charge
+  for (let k = 0; k < 5; k++) { g.fillStyle = k < S.super ? "#ffca88" : "#555b6e"; g.beginPath(); g.arc(250 + k * 20, 600, 7, 0, Math.PI * 2); g.fill(); }
+  text("super", 250 - 30, 600, 11, "#9aa1b3");
+
+  // the weapon play, over the monsters
+  if (S.play) drawPlay(S.play);
+
+  // buttons
+  const guardRecent = S.time - S.guardAt < 0.55;
+  drawBtn(BTN.guard, guardRecent ? "#5a8fd0" : "#3e5580", "🛡 GUARD", "F");
+  // the attack: a status, not a button (the play over the monster is the attack)
+  const ab = BTN.attack, recovering = S.atkCd > 0 && !S.play;
+  g.fillStyle = recovering ? "#3a3326" : S.play && S.play.started ? "#c4733f" : "#b0663a"; rr(ab.x, ab.y, ab.w, ab.h, 12); g.fill();
+  if (recovering) { g.fillStyle = "#6a5434"; rr(ab.x, ab.y, ab.w * (1 - S.atkCd / S.atkCdMax), ab.h, 12); g.fill(); }
+  text(recovering ? "⚔ recovering" : S.play && S.play.started ? "⚔ attacking" : "⚔ READY", ab.x + ab.w / 2, ab.y + ab.h / 2 - 8, 20,
+       recovering ? "#9a8a70" : "#fff");
+  text(recovering ? "" : "play it over the monster", ab.x + ab.w / 2, ab.y + ab.h / 2 + 18, 11, "rgba(255,255,255,.75)", "center", "500");
+  if (S.super >= 5) drawBtn(BTN.ult, `hsl(${(S.time * 200) % 360},70%,45%)`, "★ ULTIMATE", "U");
+  const slots = parseInt($("skills").value);
+  for (let k = 0; k < slots; k++) {
+    const s = S.skills[k], b = BTN["s" + k];
+    drawBtn(b, s.cd > 0 ? "#2c3040" : "#4b5a7a", s.id === "shield" ? "🛡" : "⏳", String(k + 1));
+    if (s.cd > 0) { g.fillStyle = "rgba(0,0,0,.5)"; rr(b.x, b.y, b.w, b.h * (s.cd / s.max), 10); g.fill(); }
+  }
+
+  // the feel: words, numbers, particles, dim, banner, cut-in
+  for (const p of S.parts) { g.globalAlpha = 1 - p.t / p.life; g.fillStyle = p.color; g.fillRect(p.x - 2, p.y - 2, 4, 4); }
+  g.globalAlpha = 1;
+  for (const p of S.pops) { g.globalAlpha = p.t < 0.6 ? 1 : 1 - (p.t - 0.6) / 0.4; text(p.text, p.x, p.y - p.t * 60, p.size * (p.t < 0.1 ? 1 + (0.1 - p.t) * 4 : 1), p.color); }
+  for (const w of S.words) { g.globalAlpha = w.t < 0.8 ? 1 : 1 - (w.t - 0.8) / 0.3; text(w.text, W / 2, w.y - w.t * 20, w.size, w.color); }
+  g.globalAlpha = 1;
+  if (S.dim > 0) { g.fillStyle = `rgba(0,0,0,${S.dim * 0.5 * Math.min(1, feel())})`; g.fillRect(0, 0, W, H); }
+  if (S.banner) {
+    const b = S.banner, x = W / 2 + (b.t < 0.2 ? (0.2 - b.t) * 2500 : b.t > 1.1 ? -(b.t - 1.1) * 2500 : 0);
+    g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(0, 380, W, 70);
+    text(b.text, x, 415, b.small ? 22 : 52, b.color, "center", "800");
+  }
+  if (S.cutin) {
+    const c = S.cutin, x = c.t < 0.15 ? -W + c.t / 0.15 * W : c.t > 0.65 ? (c.t - 0.65) / 0.15 * W : 0;
+    g.save(); g.translate(x, 0);
+    g.fillStyle = "#ffd54a"; g.beginPath(); g.moveTo(0, 300); g.lineTo(W, 260); g.lineTo(W, 380); g.lineTo(0, 420); g.fill();
+    g.font = "90px serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("🧝", 90, 340);
+    text(c.text, W / 2 + 60, 340, 22, "#2a1d00", "center", "900"); g.restore();
+  }
+  if (S.slowTime > 0) { g.fillStyle = "rgba(160,120,255,.08)"; g.fillRect(0, 0, W, H); }
+  if (S.result) drawResult(S.result);
+  g.restore();
+}
+function drawBtn(b, color, label, key) {
+  g.fillStyle = color; rr(b.x, b.y, b.w, b.h, 12); g.fill();
+  text(label, b.x + b.w / 2, b.y + b.h / 2, b.h > 60 ? 22 : 16, "#fff");
+  if (key) text(key, b.x + b.w - 14, b.y + 12, 10, "rgba(255,255,255,.5)", "center", "400");
+}
+function drawPlay(p) {
+  g.fillStyle = "rgba(10,12,20,.35)"; g.fillRect(0, 160, W, 265);   // below the intents: they stay readable (monsters keep charging)
+  const head = p.ult ? "ULTIMATE — " : "";
+  if (p.kind === "bow") {
+    const t = p.target, wob = Math.sin(S.time * 3 + t.wob) * (p.ult ? 0 : 6);
+    for (const [r, c] of [[t.r, "#ff5a5a"], [t.r * 0.65, "#fff"], [t.r * 0.4, "#ff5a5a"]]) { g.fillStyle = c; g.beginPath(); g.arc(t.x + wob, t.y, r, 0, Math.PI * 2); g.fill(); }
+    t.x += 0; // (the wobble is only drawn: aiming at its middle is enough)
+    if (p.aim) {
+      const c = bowCross(p);
+      g.strokeStyle = "#ffd54a"; g.lineWidth = 2; g.beginPath(); g.moveTo(p.aim.sx, p.aim.sy); g.lineTo(p.aim.x, p.aim.y); g.stroke();
+      g.beginPath(); g.arc(c.x, c.y, 10, 0, Math.PI * 2); g.moveTo(c.x - 16, c.y); g.lineTo(c.x + 16, c.y); g.moveTo(c.x, c.y - 16); g.lineTo(c.x, c.y + 16); g.stroke();
+    }
+    text(`${head}Drag back and let go — arrow ${p.i + 1} / ${p.n}`, W / 2, 378, 14, "#fff", "center", "500");
+    bar(W / 2 - 60, 392, 120, 5, p.tLeft / 3, "#ffd54a");
+  }
+  if (p.kind === "sword") {
+    const show = !p.memory || p.t < p.showFor;
+    for (let k = 0; k < p.n; k++) {
+      const a = p.dirs[k] * Math.PI / 4, cx = W / 2 + (k - (p.n - 1) / 2) * 56, cy = 405;
+      g.save(); g.translate(cx, cy); g.rotate(a); g.globalAlpha = k < p.i ? 0.25 : k === p.i ? 1 : 0.6;
+      g.fillStyle = k === p.i ? "#ffd54a" : "#cfd3dd";
+      if (show || k < p.i) { g.beginPath(); g.moveTo(22, 0); g.lineTo(-10, -14); g.lineTo(-4, 0); g.lineTo(-10, 14); g.fill(); }
+      else text("?", 0, 0, 22, "#cfd3dd");
+      g.restore();
+    }
+    if (p.swipe) { g.strokeStyle = "#fff"; g.lineWidth = 4; g.beginPath(); g.moveTo(p.swipe.sx, p.swipe.sy); g.lineTo(p.swipe.x, p.swipe.y); g.stroke(); }
+    for (const m of p.marks) if (m.t < 0.5) { g.globalAlpha = 1 - m.t * 2; g.strokeStyle = m.ok ? "#ffd54a" : "#888"; g.lineWidth = 6;
+      g.beginPath(); g.moveTo(m.sx, m.sy); g.lineTo(m.ex, m.ey); g.stroke(); g.globalAlpha = 1; }
+    text(`${head}${p.memory ? "Remember the arrows, then swipe them" : "Swipe the arrow's way"} — cut ${Math.min(p.i + 1, p.n)} / ${p.n}`, W / 2, 375, 14, "#fff", "center", "500");
+  }
+  if (p.kind === "staff") {
+    for (const c of p.circles) {
+      if (c.done) continue;
+      const until = c.at - p.t; if (p.started && until > 0.9) continue;
+      if (p.started) { g.strokeStyle = "#bfe0ff"; g.lineWidth = 3; g.beginPath(); g.arc(c.x, c.y, 26 + Math.max(0, until) * 70, 0, Math.PI * 2); g.stroke(); }
+      g.fillStyle = "#4a7ad0"; g.beginPath(); g.arc(c.x, c.y, 26, 0, Math.PI * 2); g.fill();
+      text(String(p.circles.indexOf(c) + 1), c.x, c.y, 16, "#fff");
+    }
+    text(p.started ? `${head}Tap each circle when the ring meets it` : "Tap to start the circles", W / 2, 378, 14, "#fff", "center", "500");
+  }
+  for (const m of p.marks) if (m.x !== undefined && m.t < 0.6) { g.globalAlpha = 1 - m.t / 0.6; text(m.ok ? "✔" : "✖", m.x, m.y - 30, 20, m.ok ? "#8fe0a0" : "#ff8080"); g.globalAlpha = 1; }
+}
+function drawResult(r) {
+  const a = Math.min(1, r.t0 * 3);
+  g.globalAlpha = a; g.fillStyle = "rgba(8,10,16,.82)"; g.fillRect(0, 0, W, H); g.globalAlpha = 1;
+  if (!r.won) { text("You fell…", W / 2, 300, 40, "#ff8080"); text("Tap to try again", W / 2, 360, 16, "#cfd3dd"); return; }
+  const showGrade = $("grade").checked;
+  text("VICTORY", W / 2, 150, 40, "#ffd54a", "center", "800");
+  if (showGrade) {
+    const s = Math.min(1, r.t0 * 2), size = 120 * (s < 1 ? 1.6 - 0.6 * s : 1);
+    text(r.grade, W / 2, 260, size, r.grade === "S" ? "#ffd54a" : "#e8eaf0", "center", "900");
+    text(`${r.t.toFixed(1)} s · best chain ${S.bestChain} · ${S.perfects} perfect`, W / 2, 335, 13, "#9aa1b3", "center", "500");
+  }
+  const w = WEAPONS[S.weapon];
+  text(`${w.name}  Lv ${r.lv}`, W / 2, 395, 18, "#e8eaf0");
+  bar(80, 415, W - 160, 14, r.prog / r.need, "#ffd54a");
+  text(`${r.prog} / ${r.need} wins to the next level`, W / 2, 445, 12, "#9aa1b3", "center", "500");
+  text(`Next level: ${r.teaser}`, W / 2, 470, 15, "#7fe0ff");
+  text(`+${r.gold} gold   +${r.exp} EXP`, W / 2, 520, 17, "#e8eaf0");
+  if (r.card) text(`🂠 ${S.foes[0].name} card${showGrade && r.grade === "S" ? " (S bonus)" : ""}`, W / 2, 552, 16, "#ffca88");
+  if (r.key) text("🗝 Chest key", W / 2, 582, 16, "#ffd54a");
+  text("Tap: next fight", W / 2, 640, 15, "#cfd3dd", "center", "500");
+}
+
+// ======================================================================= input wiring
+cv.addEventListener("pointerdown", e => {
+  cv.setPointerCapture(e.pointerId);
+  const pt = toCanvas(e); pointer.down = true;
+  if (!S) return;
+  if (S.result) { if (S.result.t0 > 0.6) startFight(); return; }
+  if (inBtn(BTN.guard, pt)) return guard();
+  if (S.super >= 5 && inBtn(BTN.ult, pt)) return attack(true);
+  if (inBtn(BTN.attack, pt)) return;   // a status only
+  for (let k = 0; k < parseInt($("skills").value); k++) if (inBtn(BTN["s" + k], pt)) return useSkill(k);
+  if (S.play) return playPointer("down", pt);
+  S.foes.forEach((f, i) => { if (!f.dead && Math.abs(pt.x - f.x) < 70 && Math.abs(pt.y - f.y) < 80) S.target = i; });   // tap a monster: target it
+});
+cv.addEventListener("pointermove", e => { if (S && S.play && pointer.down) playPointer("move", toCanvas(e)); });
+cv.addEventListener("pointerup", e => { pointer.down = false; if (S && S.play) playPointer("up", toCanvas(e)); });
+addEventListener("keydown", e => {
+  if (e.repeat || !S) return;
+  if (S.result && (e.code === "Space" || e.code === "Enter")) { if (S.result.t0 > 0.6) startFight(); return; }
+  if (e.code === "KeyF") guard();
+
+  if (e.code === "KeyU") attack(true);
+  if (e.code === "Digit1") useSkill(0);
+  if (e.code === "Digit2") useSkill(1);
+  if (e.code === "ArrowLeft" || e.code === "ArrowRight") {
+    const alive = S.foes.map((f, i) => f.dead ? -1 : i).filter(i => i >= 0);
+    const k = alive.indexOf(S.target); S.target = alive[(k + (e.code === "ArrowRight" ? 1 : alive.length - 1)) % alive.length];
+  }
+});
+$("restart").onclick = startFight;
+for (const id of ["mon", "wep", "lv"]) $(id).onchange = startFight;
+
+let failed = null;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  try { if (!failed) { update(dt); draw(); } }
+  catch (e) { failed = e; g.restore(); g.fillStyle = "#400"; g.fillRect(0, 0, W, 60); text("Error: " + e.message, W / 2, 30, 13, "#fff"); console.error(e); }
+  requestAnimationFrame(frame);
+}
+// ?mon=…&wep=…&lv=…&shot=play|ult|break|result: open straight in a state (for screenshots; nothing else needs it)
+const Q = new URLSearchParams(location.search);
+for (const k of ["mon", "wep", "lv"]) if (Q.get(k)) $(k).value = Q.get(k);
+startFight();
+const shot = Q.get("shot");
+if (shot === "play") { S.atkCd = 0; attack(false); }
+if (shot === "ult") { S.super = 5; attack(true); }
+if (shot === "break") { const f = S.foes[0]; f.breakG = f.breakMax - 1; resolveAttack(f, "perfect", 2, false); S.chain = 3; }
+if (shot === "result") { S.perfects = 4; S.hits = 5; S.bestChain = 3; S.time = 22; S.over = "won"; makeResult(); S.result.t0 = 1; }
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
