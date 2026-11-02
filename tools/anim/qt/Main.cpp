@@ -107,7 +107,7 @@ QImage f_PresentedImage(QWidget* l_pW)
     ReleaseDC(nullptr, l_pScreenDc);
     return l_bPrinted && l_bRead ? l_oImg : QImage();
 #else
-    (void)w;
+    (void)l_pW;
     return QImage();
 #endif
 }

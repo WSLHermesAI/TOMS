@@ -367,7 +367,7 @@ std::string f_TodayString() {
 #ifdef _WIN32
     localtime_s(&l_oTm, &l_i64Now);
 #else
-    localtime_r(&now, &tm);
+    localtime_r(&l_i64Now, &l_oTm);
 #endif
     char l_pszB[16];
     std::strftime(l_pszB, sizeof l_pszB, "%Y-%m-%d", &l_oTm);

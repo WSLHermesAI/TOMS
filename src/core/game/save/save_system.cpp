@@ -230,7 +230,7 @@ bool f_WriteJsonAtomic(const std::string& l_strPath, const nlohmann::json& l_jJ,
 #ifdef _WIN32
         l_bOk = l_bOk && _commit(_fileno(l_pF)) == 0;
 #else
-        ok = ok && fsync(fileno(f)) == 0;
+        l_bOk = l_bOk && fsync(fileno(l_pF)) == 0;
 #endif
         l_bOk = (std::fclose(l_pF) == 0) && l_bOk;
         if (!l_bOk) { fprintf(stderr, "[save_system] write failed for %s\n", l_strTmp.c_str()); return false; }

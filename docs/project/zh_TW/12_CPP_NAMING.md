@@ -142,6 +142,11 @@ python tools/naming/rename_cpp.py apply                套用計畫
   `TOMS_NAMING_WIN_DB=windows-debug` 執行（`--only <檔案>`）；轉換後 `leak_check.cpp`（只在 Debug）就是這樣改名，並以 Debug
   建置檢查（`tools\build.cmd windows-debug`）。
 - STL allocator 的 `allocate` / `deallocate`（成員）保留原名：容器依名稱呼叫它們。
+- **Web 與 Android 的程式碼：** Web 與 Android 的解析涵蓋每個檔案（平台程式碼也由專案自己的巨集選擇，例如 `TOMS_GAMMA_SPACE`），
+  並使用 emscripten 的 clang 標頭檔（`wasm_simd128.h`）。只有 Linux 或 macOS 會編譯的程式碼沒有任何建置會解析：轉換後以掃描
+  非 Windows 分支（`#ifdef _WIN32` 的 `#else`、`__linux__`）找出舊名稱並手動修正（2026-11-02，擁有者的 Web 建置：`rml_ui.cpp`、
+  `bgfx_renderer.cpp`、`bgfx_host.cpp`、`save_system.cpp`、`game_skills.cpp`、`job_system.cpp`、`stage_save.cpp`、
+  `gltf_viewer`、`anim/qt/Main.cpp`）。
 - 它做不到、由手動完成的（`Build/naming/postfix.py`，本機）：被許多類別使用的巨集內容中的名稱（`TOMS_OBJECT` 的 `f_Type`、
   `f_StaticType`），以及少數經由泛型 lambda 存取的成員。
 - **只差大小寫的兩個名稱**會變成同一個（`setName` 與 `SetName` 都是 `f_SetName`）。`Node` 的 `name()`/`setName()` 原本只呼叫

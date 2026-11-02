@@ -274,7 +274,7 @@ void BgfxRenderer::f_PrepareCapture() {
         if (m_u16CaptureFb != m_u16Invalid) bgfx::destroy(bgfx::FrameBufferHandle{m_u16CaptureFb});
         if (m_u16CaptureRead != m_u16Invalid) bgfx::destroy(bgfx::TextureHandle{m_u16CaptureRead});
 #if TOMS_GAMMA_SPACE
-        const uint64_t srgb = 0;
+        const uint64_t l_u64Srgb = 0;
 #else
         const uint64_t l_u64Srgb = BGFX_TEXTURE_SRGB;   // written as the sRGB backbuffer would show it
 #endif
@@ -316,7 +316,7 @@ uint16_t BgfxRenderer::f_CreateAtlas(const std::vector<uint8_t>& l_vPx, uint32_t
 #if TOMS_GAMMA_SPACE
     // No sRGB backbuffer (the web, Android: color_space.h), so sampling sRGB textures would darken everything. Same
     // as the old WebGL renderer: plain RGBA8, blending in gamma space.
-    const uint64_t flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
+    const uint64_t l_u64Flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #else
     const uint64_t l_u64Flags = BGFX_TEXTURE_SRGB | BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #endif
@@ -354,7 +354,7 @@ uint16_t BgfxRenderer::f_LoadTexture(const std::vector<uint8_t>& l_vRgba, uint32
 uint16_t BgfxRenderer::f_CreateDynamicTexture(uint32_t l_uW, uint32_t l_uH) {
     if (l_uW == 0 || l_uH == 0) return g_u16SpriteAtlasTexture;
 #if TOMS_GAMMA_SPACE
-    const uint64_t flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
+    const uint64_t l_u64Flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #else
     const uint64_t l_u64Flags = BGFX_TEXTURE_SRGB | BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #endif

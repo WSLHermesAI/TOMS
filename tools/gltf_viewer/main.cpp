@@ -2137,8 +2137,8 @@ int main(int l_iArgc, char** l_pArgv) {
 #elif defined(_WIN32)
     l_oCfg.m_pNativeWindow = SDL_GetPointerProperty(SDL_GetWindowProperties(l_oV.m_pWindow), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 #elif defined(__linux__)
-    cfg.nativeWindow = (void*)(uintptr_t)SDL_GetNumberProperty(SDL_GetWindowProperties(v.window), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
-    cfg.nativeDisplay = SDL_GetPointerProperty(SDL_GetWindowProperties(v.window), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
+    l_oCfg.m_pNativeWindow = (void*)(uintptr_t)SDL_GetNumberProperty(SDL_GetWindowProperties(l_oV.m_pWindow), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+    l_oCfg.m_pNativeDisplay = SDL_GetPointerProperty(SDL_GetWindowProperties(l_oV.m_pWindow), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
 #endif
     SDL_GetWindowSizeInPixels(l_oV.m_pWindow, &l_oV.m_iFbW, &l_oV.m_iFbH);
     l_oCfg.m_uWidth = (uint32_t)l_oV.m_iFbW;

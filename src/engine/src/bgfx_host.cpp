@@ -113,7 +113,7 @@ uint32_t f_BgfxHostResetFlags() {
 // sRGB backbuffer, like the Vulkan swapchain (VK_FORMAT_B8G8R8A8_SRGB) the old renderer used. The web and Android
 // render in gamma space (color_space.h): WebGL has no sRGB backbuffer, and Android's GL ES may not give one.
 #if TOMS_GAMMA_SPACE
-constexpr uint32_t kSwapChainFlags = BGFX_SWAP_CHAIN_NONE;
+constexpr uint32_t g_uSwapChainFlags = BGFX_SWAP_CHAIN_NONE;
 #else
 constexpr uint32_t g_uSwapChainFlags = BGFX_SWAP_CHAIN_SRGB_BACKBUFFER;
 #endif

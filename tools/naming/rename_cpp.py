@@ -107,6 +107,10 @@ def tu_args(config, entry):
     elif config == 'web':
         out = ['--target=wasm32-unknown-emscripten', '--sysroot=' + EMSDK_SYSROOT, '-D__EMSCRIPTEN__',
                '-isystem', EMSDK_SYSROOT + '/include/compat', '-Wno-everything'] + out
+        # emscripten's own clang headers (wasm_simd128.h), after libclang's: only what libclang lacks comes from there
+        found = sorted(Path(EMSDK_SYSROOT).parents[2].glob('lib/clang/*/include'))
+        if found:
+            out = ['-idirafter', str(found[-1])] + out
     else:
         out = ['-Wno-everything', '-resource-dir', str(NDK_CLANG_DIR)] + out
     return src, out
@@ -439,7 +443,8 @@ def jobs_for(only):
             else:
                 # the other platforms: only the files with code the Windows build does not compile
                 text = (ROOT / r).read_text(encoding='utf-8', errors='replace')
-                if r not in seen_win or re.search(r'__EMSCRIPTEN__|__ANDROID__', text):
+                # (every file: platform code is also chosen through the project's own macros, TOMS_GAMMA_SPACE)
+                if r not in seen_win or re.search(r'__EMSCRIPTEN__|__ANDROID__|#\s*if', text):
                     jobs.append((config, e))
     return jobs
 

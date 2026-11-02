@@ -301,8 +301,8 @@ std::vector<SystemFontFile> f_SystemFontCandidates() {
     l_vOut.push_back({"/system/fonts/DroidSansFallbackFull.ttf", 0});   // older Android
     l_vOut.push_back({"/system/fonts/DroidSansFallback.ttf", 0});
 #else
-    out.push_back({"/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 3});
-    out.push_back({"/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc", 3});
+    l_vOut.push_back({"/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 3});
+    l_vOut.push_back({"/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc", 3});
 #endif
     return l_vOut;
 }
@@ -351,7 +351,7 @@ bool RmlUi::f_Init(int l_iDesignW, int l_iDesignH, const std::string& l_strDefau
     Rml::SetFileInterface(&m_upImpl->m_oFile);   // APK entries on Android, the in-memory sprite sheet everywhere
 #ifdef __EMSCRIPTEN__
     (void)l_strDefaultFont;                                  // no font files on the web
-    Rml::SetFontEngineInterface(&m_upImpl->canvasFont);
+    Rml::SetFontEngineInterface(&m_upImpl->m_oCanvasFont);
 #endif
     if (!Rml::Initialise()) { l_strError = "RmlUi: Rml::Initialise failed"; m_upImpl->m_oRender.f_Destroy(); m_upImpl.reset(); return false; }
 #ifndef __EMSCRIPTEN__
@@ -394,7 +394,7 @@ std::string RmlUi::f_LanguageFont(const std::string& l_strCode, const std::strin
     (void)l_strFontFile;
     std::string l_strTag = l_strCode;                                   // zh_TW -> zh-TW (BCP 47)
     std::replace(l_strTag.begin(), l_strTag.end(), '_', '-');
-    m_upImpl->canvasFont.f_SetLanguage(l_strTag, l_strWebFonts);
+    m_upImpl->m_oCanvasFont.f_SetLanguage(l_strTag, l_strWebFonts);
     return "toms";
 #else
     (void)l_strWebFonts;
@@ -419,7 +419,7 @@ void RmlUi::f_SetViewport(float l_fX, float l_fY, float l_fW, float l_fH) {
     if (!m_upImpl) return;
     m_upImpl->m_oRender.m_fVpX = l_fX; m_upImpl->m_oRender.m_fVpY = l_fY; m_upImpl->m_oRender.m_fVpW = l_fW; m_upImpl->m_oRender.m_fVpH = l_fH;
 #ifdef __EMSCRIPTEN__
-    if (m_upImpl->render.designW > 0) m_upImpl->canvasFont.f_SetPixelScale(l_fW / m_upImpl->render.designW);
+    if (m_upImpl->m_oRender.m_fDesignW > 0) m_upImpl->m_oCanvasFont.f_SetPixelScale(l_fW / m_upImpl->m_oRender.m_fDesignW);
 #endif
 }
 

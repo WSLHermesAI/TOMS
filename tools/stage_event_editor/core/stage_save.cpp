@@ -112,7 +112,7 @@ std::string f_TimeStamp() {
 #ifdef _WIN32
     localtime_s(&l_oTm, &l_i64Now);
 #else
-    localtime_r(&now, &tm);
+    localtime_r(&l_i64Now, &l_oTm);
 #endif
     char l_pszBuf[32];
     std::strftime(l_pszBuf, sizeof l_pszBuf, "%Y-%m-%d_%H%M%S", &l_oTm);

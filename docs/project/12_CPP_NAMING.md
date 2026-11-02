@@ -150,6 +150,12 @@ python tools/naming/rename_cpp.py apply                applies the plan
   flags. Run it with `TOMS_NAMING_WIN_DB=windows-debug` for such files (`--only <file>`); after the conversion
   `leak_check.cpp` (Debug only) was renamed that way, and the Debug build checked (`tools\build.cmd windows-debug`).
 - An STL allocator's `allocate` / `deallocate` (members) keep their names: the containers call them by name.
+- **Web and Android code:** the web and Android passes parse every file (platform code is also chosen by the
+  project's own macros, `TOMS_GAMMA_SPACE`), with emscripten's clang headers (`wasm_simd128.h`). Code only Linux or
+  macOS would compile is parsed by no build: after the conversion its old names were found by a scan of the
+  non-Windows branches (`#else` of `#ifdef _WIN32`, `__linux__`) and fixed by hand (2026-11-02, the owner's web build:
+  `rml_ui.cpp`, `bgfx_renderer.cpp`, `bgfx_host.cpp`, `save_system.cpp`, `game_skills.cpp`, `job_system.cpp`,
+  `stage_save.cpp`, `gltf_viewer`, `anim/qt/Main.cpp`).
 - What it cannot do, and was done by hand (`Build/naming/postfix.py`, local): a name inside a macro's body used by many
   classes (`TOMS_OBJECT`'s `f_Type`, `f_StaticType`), and a few members reached through generic lambdas.
 - **Two names that differ only in case** become one (`setName` and `SetName` both `f_SetName`). `Node`'s

@@ -106,7 +106,7 @@ void JobSystem::f_Start(int l_iWorkers) {
 #ifdef __EMSCRIPTEN__
     // Only the pre-started pool: a new Web Worker would need the main thread to return to the
     // browser first, and the main thread waits for jobs -- it would never arrive.
-    workers = std::min(workers, TOMS_WEB_THREAD_POOL);
+    l_iWorkers = std::min(l_iWorkers, TOMS_WEB_THREAD_POOL);
 #endif
     {
         std::lock_guard<std::mutex> l_oLk(l_oP.m_oM);
