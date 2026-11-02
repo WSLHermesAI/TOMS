@@ -154,3 +154,83 @@ Blender by hand: open the GLB).
 **Not done yet:** drawing the glTF fighter in the battle (the existing glTF renderer, between the backdrop and the UI),
 the sword and staff clips, a sharper face (project the concept straight into the texture, or paint a close-up of the
 face).
+
+**The owner's verdict (2026-11-02):** the 3D looks very bad; try 2D again, made like Spine. 3D can come later through
+the 2D/3D switch ([../gameplay/18_FIGHTER_VIEWS.md](../gameplay/18_FIGHTER_VIEWS.md)).
+
+## 5. Spine-style 2D: painted parts in several poses on one skeleton
+
+```
+python tools/art/make_hero_rig2d.py          (the bow; the painted poses of §3)
+```
+
+`tools/art/make_hero_rig2d.py` turns the painted key poses (§3: idle 55, charge 44, miss 44, attack_big 44) into a
+rig, the way Spine works:
+
+1. **Cut:** each painting is cut along its own skeleton (the OpenPose skeleton it was painted on) into 11 parts:
+   head, torso, cape, and near/far upper arm, forearm, thigh and shin. Every part so exists as four paintings, one per
+   pose (an arm hanging, straight at the target, raised; the head turned). The bow and its string go with the near
+   hand (thin things near it); the cape hangs behind the body; a limb keeps only what is close to its bone, so the
+   tunic and the cape painted beside an arm do not swing with it. The cut of each pose:
+   `Build/art_out/hero_bow/parts/labels_<pose>.png`.
+2. **Atlas:** the 44 parts in `assets/media/atlas/hero_bow.atlas`, each centred on its joint (one pivot for every
+   pose's painting of a part).
+3. **Skeleton and clips** (`assets/media/anim/hero_bow.anim`, opens in the anim editor): hips, chest, neck,
+   shoulders, elbows, hips and knees. A change of pose: the bones turn the current paintings part of the way toward
+   the next pose's joint angles, then the next pose's paintings take over (a sprite key) and finish the move. On top:
+   breathing, the tremble at full draw, the cape's sway, the crouch, leap and landing.
+
+| Clip | What it does |
+|---|---|
+| idle (1.6 s, loop) | breathing: the chest leans, the arms and the head follow, the cape sways |
+| charge (1.2 s, loop) | the full draw held, a small tremble in the bow arm |
+| attack (0.6 s) | the release: the drawing hand snaps back, then down to ready |
+| attack_big (0.8 s) | crouch, leap into the painted power shot, release in the air, land |
+| miss (0.7 s) | the stumble and back |
+| hurt (0.5 s) | knocked back, arms up, back to ready |
+
+It replaces the §3 clips (`make_hero_anim.py`, one picture per state) in the bow's `battleAnim`; battle_bow,
+battle_bow_charge and battle_bow_idle pass. GIFs: `Build/art_out/hero_bow/gif/` (each clip, and `battle_bow.gif`, a
+real battle), recorded with `--record` (no window).
+
+Still rough: during a big change of pose the parts show small gaps for a frame or two; a few bits of the bow flicker
+at a swap; the cut follows the skeleton the picture was painted on, not the picture itself, where the two differ.
+Next: the sword and the staff the same way (their poses painted first), and more poses for the bow (a release
+painted on its own, a hurt pose).
+
+### 5.1 The sword and the staff: the weapon as its own part (2026-11-02)
+
+The owner said yes to the Spine way; the sword and the staff are made the same way, with one difference: **the
+weapon is a part of its own**, not painted in the poses.
+
+- Painted in each pose, a weapon was not the same twice (two swords in one picture, a staff half there), and the
+  concept's look (IP-Adapter) kept the arms down. So:
+  - **the hero's poses** are painted with an empty, gripping hand: `make_hero_poses.py --weapon sword --empty-hands
+    --cn 1.3 --ip 0.5` (the skeleton held harder, the concept copied less: raised arms now follow the skeleton);
+  - **the weapon** is painted once, upright, as an item: `tools/art/make_weapon_art.py --weapon sword` (and `staff`);
+  - `make_hero_rig2d.py` puts it on the near hand (`WEAPON_PARTS`: its length, where the fist grips it, its angle in
+    each pose). Between poses it turns by the plain difference, so a slash goes forward over the top (raised -60°
+    -> strike 120°). A blade the painter added anyway (thin, grey, away from the body) is cut away.
+- Poses (seeds in `DEFAULT_PICKS`): idle, charge, attack, miss, attack_big, hurt. A part a pose's cut has none of
+  (forearms over the head) takes the ready pose's painting.
+- **The bow** got a painted release (`attack`, image-to-image from the full draw: `--from charge_44 --denoise 0.8`);
+  its hurt is still made by bones (no painting of it looked hurt).
+- `items.json`: the sword and the staff's `battleAnim` is `anim/hero_sword.anim` / `anim/hero_staff.anim` (the clips
+  named after the battle states; the old `fighter_sword` / `caster_staff` and their held weapons are no longer used
+  by them). `battle_sword` and `trial_try_sword` expect the clip `charge` now (was `raise`).
+- Checked: battle_sword, battle_staff, battle_play_slice, battle_play_circles, trial_try_sword, trial_choose_staff
+  and arena_wand pass (run directly). GIFs: `Build/art_out/hero_<weapon>/gif/` (each clip and `battle_<weapon>.gif`),
+  made by `Build/art_out/record_clips.sh <weapon> <clips>` (hidden window).
+
+**Repainted (2026-11-02, the owner):** the power moves' skeletons now spread the elbows to the sides with the hands
+meeting above the head (the arms frame the face instead of covering it), and the empty hand is prompted as "a tightly
+closed fist, fingers curled around an empty grip" (weighted). New seeds 81-83; every hand is now a fist, no painting
+has a stray blade, the face shows in both power moves. Picks: sword 81/81/83/81/82/81, staff 81/81/83/83/81/81
+(idle, charge, attack, miss, attack_big, hurt). The earlier GIFs are kept in `gif_before/`.
+
+**Tuned (2026-11-02):** the weapon now sits in the **painted** fist (`painted_fist`: the far end of the near forearm
+as cut, not the skeleton's guess, which was 30-50 px off); the strike has a wind-up, an overshoot and a held
+follow-through; the held sword sways a little. The staff's ready pose is seed 87 (no haze). The bow's hurt stays made by
+bones (two more rounds of paintings gave two bows or no pain), stronger now: the body snaps back, the knees buckle, a
+shake, back to ready. The clips are tuned in the generator, so they stay when the rig is made again (a hand edit in the
+anim editor would be overwritten by the next run).

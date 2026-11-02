@@ -148,7 +148,7 @@ python tools/naming/rename_cpp.py apply                applies the plan
   all false, in a web-only file whose parse misses one header). Run it after writing a lot of new code.
 - **Debug-only code:** `assert(...)` bodies and `#ifdef _DEBUG` / `#ifndef NDEBUG` blocks exist only with the Debug
   flags. Run it with `TOMS_NAMING_WIN_DB=windows-debug` for such files (`--only <file>`); after the conversion
-  `leak_check.cpp` (Debug only) was renamed that way, and the Debug build checked (`toolsuild.cmd windows-debug`).
+  `leak_check.cpp` (Debug only) was renamed that way, and the Debug build checked (`tools\build.cmd windows-debug`).
 - An STL allocator's `allocate` / `deallocate` (members) keep their names: the containers call them by name.
 - What it cannot do, and was done by hand (`Build/naming/postfix.py`, local): a name inside a macro's body used by many
   classes (`TOMS_OBJECT`'s `f_Type`, `f_StaticType`), and a few members reached through generic lambdas.

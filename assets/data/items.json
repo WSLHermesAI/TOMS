@@ -990,14 +990,7 @@
       "maxMult": 2.2
     },
     "battleAnim": {
-      "character": "anim/fighter_sword.anim",
-      "held": "anim/weapon_sword.anim",
-      "clips": {
-        "idle": "ready",
-        "charge": "raise",
-        "attack": "slash",
-        "miss": "fumble"
-      }
+      "character": "anim/hero_sword.anim"
     }
   },
   "staff": {
@@ -1020,14 +1013,7 @@
       "maxMult": 2.2
     },
     "battleAnim": {
-      "character": "anim/caster_staff.anim",
-      "held": "anim/weapon_staff.anim",
-      "clips": {
-        "idle": "hold",
-        "charge": "focus",
-        "attack": "cast",
-        "miss": "fizzle"
-      }
+      "character": "anim/hero_staff.anim"
     }
   }
 }

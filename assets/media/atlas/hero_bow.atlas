@@ -1,13 +1,115 @@
 hero_bow.png
-size: 1256, 1210
+size: 2048, 2577
 format: RGBA8888
 filter: Linear, Linear
 repeat: none
-idle
-  bounds: 2, 2, 416, 602
-charge
-  bounds: 420, 2, 416, 602
-miss
-  bounds: 838, 2, 416, 602
-attack_big
-  bounds: 2, 606, 416, 602
+cape_attack
+  bounds: 399, 2, 406, 893
+cape_attack_big
+  bounds: 1593, 2, 427, 819
+cape_charge
+  bounds: 2, 2, 395, 894
+cape_idle
+  bounds: 807, 2, 390, 879
+cape_miss
+  bounds: 1199, 2, 392, 873
+forearm_far_attack
+  bounds: 154, 2482, 150, 89
+forearm_far_attack_big
+  bounds: 1856, 2228, 98, 96
+forearm_far_charge
+  bounds: 306, 2482, 145, 80
+forearm_far_idle
+  bounds: 1155, 2228, 35, 198
+forearm_far_miss
+  bounds: 1580, 2228, 116, 124
+forearm_near_attack
+  bounds: 569, 1466, 204, 389
+forearm_near_attack_big
+  bounds: 378, 1466, 189, 415
+forearm_near_charge
+  bounds: 775, 1466, 289, 385
+forearm_near_idle
+  bounds: 1388, 898, 365, 472
+forearm_near_miss
+  bounds: 1066, 1466, 315, 337
+head_attack
+  bounds: 511, 1909, 289, 307
+head_attack_big
+  bounds: 790, 2228, 278, 232
+head_charge
+  bounds: 210, 1909, 299, 307
+head_idle
+  bounds: 2, 2228, 387, 252
+head_miss
+  bounds: 2, 1909, 206, 317
+shin_far_attack
+  bounds: 1383, 1466, 82, 327
+shin_far_attack_big
+  bounds: 1070, 2228, 83, 232
+shin_far_charge
+  bounds: 1467, 1466, 77, 325
+shin_far_idle
+  bounds: 911, 1909, 62, 304
+shin_far_miss
+  bounds: 802, 1909, 107, 307
+shin_near_attack
+  bounds: 1546, 1466, 138, 325
+shin_near_attack_big
+  bounds: 1357, 1909, 82, 268
+shin_near_charge
+  bounds: 1686, 1466, 128, 324
+shin_near_idle
+  bounds: 1816, 1466, 104, 321
+shin_near_miss
+  bounds: 975, 1909, 128, 293
+thigh_far_attack
+  bounds: 391, 2228, 141, 246
+thigh_far_attack_big
+  bounds: 662, 2228, 126, 233
+thigh_far_charge
+  bounds: 534, 2228, 126, 245
+thigh_far_idle
+  bounds: 1844, 1909, 101, 253
+thigh_far_miss
+  bounds: 1441, 1909, 106, 260
+thigh_near_attack
+  bounds: 1549, 1909, 148, 256
+thigh_near_attack_big
+  bounds: 1192, 2228, 121, 170
+thigh_near_charge
+  bounds: 1699, 1909, 143, 255
+thigh_near_idle
+  bounds: 1234, 1909, 121, 273
+thigh_near_miss
+  bounds: 1105, 1909, 127, 276
+torso_attack
+  bounds: 591, 898, 399, 536
+torso_attack_big
+  bounds: 2, 1466, 374, 441
+torso_charge
+  bounds: 992, 898, 394, 534
+torso_idle
+  bounds: 348, 898, 241, 551
+torso_miss
+  bounds: 2, 898, 344, 566
+upperarm_far_attack
+  bounds: 453, 2482, 97, 73
+upperarm_far_attack_big
+  bounds: 552, 2482, 90, 69
+upperarm_far_charge
+  bounds: 644, 2482, 110, 63
+upperarm_far_idle
+  bounds: 1315, 2228, 73, 143
+upperarm_far_miss
+  bounds: 1499, 2228, 79, 130
+upperarm_near_attack
+  bounds: 756, 2482, 148, 52
+upperarm_near_attack_big
+  bounds: 2, 2482, 150, 93
+upperarm_near_charge
+  bounds: 906, 2482, 137, 51
+upperarm_near_idle
+  bounds: 1390, 2228, 107, 141
+upperarm_near_miss
+  bounds: 1698, 2228, 156, 117

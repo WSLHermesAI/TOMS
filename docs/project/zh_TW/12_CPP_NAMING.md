@@ -140,7 +140,7 @@ python tools/naming/rename_cpp.py apply                套用計畫
   標頭檔）。寫了大量新程式碼後執行一次。
 - **只在 Debug 的程式碼：** `assert(...)` 的內容與 `#ifdef _DEBUG` / `#ifndef NDEBUG` 區塊只在 Debug 參數下存在。這類檔案用
   `TOMS_NAMING_WIN_DB=windows-debug` 執行（`--only <檔案>`）；轉換後 `leak_check.cpp`（只在 Debug）就是這樣改名，並以 Debug
-  建置檢查（`toolsuild.cmd windows-debug`）。
+  建置檢查（`tools\build.cmd windows-debug`）。
 - STL allocator 的 `allocate` / `deallocate`（成員）保留原名：容器依名稱呼叫它們。
 - 它做不到、由手動完成的（`Build/naming/postfix.py`，本機）：被許多類別使用的巨集內容中的名稱（`TOMS_OBJECT` 的 `f_Type`、
   `f_StaticType`），以及少數經由泛型 lambda 存取的成員。

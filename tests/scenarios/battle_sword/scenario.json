@@ -1,5 +1,5 @@
 {
-  "_comment": "The sword (docs/gameplay/07 phase 2): its battleAnim names its own clips; while the attack waits (status charge) the picture plays \"raise\" from fighter_sword.anim and weapon_sword.anim.",
+  "_comment": "The sword (docs/gameplay/07 phase 2): its battleAnim names its own clips; while the attack waits (status charge) the picture plays \"charge\" from hero_sword.anim (the painted hero, docs/engine/20 §5).",
   "scene": "battle",
   "player": {
     "equip": [
@@ -16,6 +16,6 @@
   },
   "expect": {
     "battleAnim": "charge",
-    "battleClip": "raise"
+    "battleClip": "charge"
   }
 }

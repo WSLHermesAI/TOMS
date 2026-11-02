@@ -1,0 +1,139 @@
+hero_staff.png
+size: 2048, 2855
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+cape_attack
+  bounds: 728, 2, 404, 877
+cape_attack_big
+  bounds: 1460, 2, 412, 860
+cape_charge
+  bounds: 2, 2, 414, 891
+cape_hurt
+  bounds: 2, 895, 334, 838
+cape_idle
+  bounds: 418, 2, 308, 889
+cape_miss
+  bounds: 1134, 2, 324, 870
+forearm_far_attack
+  bounds: 610, 2518, 76, 158
+forearm_far_attack_big
+  bounds: 269, 2518, 119, 176
+forearm_far_charge
+  bounds: 502, 2747, 145, 36
+forearm_far_hurt
+  bounds: 1890, 2518, 57, 111
+forearm_far_idle
+  bounds: 231, 2518, 36, 192
+forearm_far_miss
+  bounds: 1575, 2518, 110, 124
+forearm_near_attack
+  bounds: 321, 2747, 179, 40
+forearm_near_attack_big
+  bounds: 390, 2518, 126, 172
+forearm_near_charge
+  bounds: 688, 2518, 76, 157
+forearm_near_hurt
+  bounds: 863, 2518, 77, 144
+forearm_near_idle
+  bounds: 518, 2518, 90, 171
+forearm_near_miss
+  bounds: 1275, 2518, 117, 131
+head_attack
+  bounds: 2, 2254, 169, 262
+head_attack_big
+  bounds: 448, 2254, 137, 257
+head_charge
+  bounds: 1492, 2254, 171, 234
+head_hurt
+  bounds: 2, 2518, 115, 227
+head_idle
+  bounds: 119, 2518, 110, 225
+head_miss
+  bounds: 1102, 2254, 147, 245
+shin_far_attack
+  bounds: 917, 1735, 92, 319
+shin_far_attack_big
+  bounds: 1602, 1735, 48, 299
+shin_far_charge
+  bounds: 708, 1735, 82, 328
+shin_far_hurt
+  bounds: 1508, 1735, 92, 308
+shin_far_idle
+  bounds: 1121, 1735, 62, 314
+shin_far_miss
+  bounds: 1399, 1735, 107, 308
+shin_near_attack
+  bounds: 574, 1735, 132, 333
+shin_near_attack_big
+  bounds: 1313, 1735, 84, 313
+shin_near_charge
+  bounds: 444, 1735, 128, 338
+shin_near_hurt
+  bounds: 792, 1735, 123, 327
+shin_near_idle
+  bounds: 1011, 1735, 108, 318
+shin_near_miss
+  bounds: 1185, 1735, 126, 313
+thigh_far_attack
+  bounds: 842, 2254, 136, 253
+thigh_far_attack_big
+  bounds: 1821, 2254, 116, 231
+thigh_far_charge
+  bounds: 980, 2254, 120, 246
+thigh_far_hurt
+  bounds: 1384, 2254, 106, 236
+thigh_far_idle
+  bounds: 739, 2254, 101, 253
+thigh_far_miss
+  bounds: 341, 2254, 105, 260
+thigh_near_attack
+  bounds: 173, 2254, 166, 261
+thigh_near_attack_big
+  bounds: 1251, 2254, 131, 241
+thigh_near_charge
+  bounds: 587, 2254, 150, 255
+thigh_near_hurt
+  bounds: 1665, 2254, 154, 234
+thigh_near_idle
+  bounds: 1784, 1735, 121, 273
+thigh_near_miss
+  bounds: 1652, 1735, 130, 276
+torso_attack
+  bounds: 338, 895, 363, 560
+torso_attack_big
+  bounds: 1592, 895, 388, 528
+torso_charge
+  bounds: 703, 895, 326, 557
+torso_hurt
+  bounds: 2, 1735, 316, 517
+torso_idle
+  bounds: 1031, 895, 251, 550
+torso_miss
+  bounds: 1284, 895, 306, 550
+upperarm_far_attack
+  bounds: 1687, 2518, 82, 119
+upperarm_far_attack_big
+  bounds: 1121, 2518, 67, 140
+upperarm_far_charge
+  bounds: 271, 2747, 48, 49
+upperarm_far_hurt
+  bounds: 942, 2518, 68, 143
+upperarm_far_idle
+  bounds: 1190, 2518, 83, 139
+upperarm_far_miss
+  bounds: 1489, 2518, 84, 124
+upperarm_near_attack
+  bounds: 136, 2747, 133, 51
+upperarm_near_attack_big
+  bounds: 766, 2518, 95, 154
+upperarm_near_charge
+  bounds: 1771, 2518, 117, 114
+upperarm_near_hurt
+  bounds: 1394, 2518, 93, 127
+upperarm_near_idle
+  bounds: 1012, 2518, 107, 141
+upperarm_near_miss
+  bounds: 2, 2747, 132, 106
+weapon
+  bounds: 320, 1735, 122, 430

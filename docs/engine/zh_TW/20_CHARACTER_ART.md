@@ -136,3 +136,69 @@ Build\windows-release\bin\gltf_viewer.exe Build\art_out\hero_3d\hero_rigged.glb 
 
 **尚未做：** 在戰鬥中繪製 glTF 戰鬥者（用現有的 glTF 繪製器，位於背景與 UI 之間）、劍與法杖的片段、更清楚的臉（把概念圖直接
 投影到貼圖，或另畫一張臉部特寫）。
+
+**擁有者的判斷（2026-11-02）：** 3D 看起來很差；再試 2D，做法像 Spine。3D 之後可以透過 2D/3D 切換再試
+（[../../gameplay/zh_TW/18_FIGHTER_VIEWS.md](../../gameplay/zh_TW/18_FIGHTER_VIEWS.md)）。
+
+## 5. Spine 風格的 2D：同一副骨架上，各部位畫成多個姿勢
+
+```
+python tools/art/make_hero_rig2d.py          （弓；§3 畫好的姿勢）
+```
+
+`tools/art/make_hero_rig2d.py` 把畫好的關鍵姿勢（§3：idle 55、charge 44、miss 44、attack_big 44）做成骨架動畫，做法同 Spine：
+
+1. **切割：** 每張畫依它自己的骨架（畫它時用的 OpenPose 骨架）切成 11 個部位：頭、軀幹、披風，以及近側／遠側的上臂、前臂、
+   大腿與小腿。每個部位因此有四張畫，每個姿勢一張（手臂垂下、伸直對準目標、舉起；頭轉向）。弓與弓弦屬於近側的手（手附近細長
+   的東西）；披風掛在身體後方；四肢只保留靠近自己骨頭的部分，所以畫在手臂旁的上衣與披風不會跟著手臂擺動。各姿勢的切割：
+   `Build/art_out/hero_bow/parts/labels_<姿勢>.png`。
+2. **圖集：** 44 個部位放在 `assets/media/atlas/hero_bow.atlas`，每個都以關節為中心（同一部位的各姿勢畫用同一個樞軸）。
+3. **骨架與片段**（`assets/media/anim/hero_bow.anim`，可在動畫編輯器開啟）：臀、胸、頸、肩、肘、髖、膝。換姿勢時：骨頭先把目前
+   的畫轉向下一個姿勢的關節角度一部分，接著換成下一個姿勢的畫（sprite key）完成動作。另外加上：呼吸、滿弓時的顫動、披風擺動、
+   蹲下、跳起與落地。
+
+| 片段 | 動作 |
+|---|---|
+| idle（1.6 秒，循環） | 呼吸：胸口前傾，手臂與頭跟著動，披風擺動 |
+| charge（1.2 秒，循環） | 停在滿弓，持弓的手臂微微顫動 |
+| attack（0.6 秒） | 放箭：拉弦的手往後彈，然後放下回到準備 |
+| attack_big（0.8 秒） | 蹲下、跳起進入畫好的強力射擊、空中放箭、落地 |
+| miss（0.7 秒） | 踉蹌後回來 |
+| hurt（0.5 秒） | 被擊退、手臂揚起、回到準備 |
+
+它取代弓 `battleAnim` 中 §3 的片段（`make_hero_anim.py`，每個狀態一張畫）；battle_bow、battle_bow_charge 與 battle_bow_idle 都
+通過。GIF：`Build/art_out/hero_bow/gif/`（每個片段，以及實際戰鬥的 `battle_bow.gif`），用 `--record` 錄製（不開視窗）。
+
+仍粗糙的地方：大幅換姿勢時，部位之間會有一兩格的小縫；換畫時弓的少數碎片會閃；切割依畫圖時的骨架，不是依畫本身，兩者不同處會
+不準。下一步：劍與法杖用同樣方式（先畫它們的姿勢），以及弓的更多姿勢（單獨畫的放箭、受傷姿勢）。
+
+### 5.1 劍與法杖：武器是獨立的部位（2026-11-02）
+
+擁有者同意 Spine 的做法；劍與法杖也用同樣方式做，差別在於：**武器是獨立的部位**，不畫在姿勢裡。
+
+- 畫在每個姿勢裡的武器每次都不一樣（一張畫兩把劍、法杖只畫一半），而概念圖的外觀（IP-Adapter）讓手臂一直垂下。所以：
+  - **英雄的姿勢**用空著、握拳的手來畫：`make_hero_poses.py --weapon sword --empty-hands --cn 1.3 --ip 0.5`（骨架抓得更緊、
+    概念圖複製得少：舉起的手臂現在會照骨架）；
+  - **武器**單獨畫一次，直立的物品：`tools/art/make_weapon_art.py --weapon sword`（以及 `staff`）；
+  - `make_hero_rig2d.py` 把它放在近側的手上（`WEAPON_PARTS`：長度、拳頭握的位置、每個姿勢的角度）。換姿勢時以直接的差值
+    轉動，所以劈砍會從上方往前（舉起 -60° -> 劈下 120°）。畫家仍畫上的刀刃（細、灰、離身體遠）會被去掉。
+- 姿勢（seed 在 `DEFAULT_PICKS`）：idle、charge、attack、miss、attack_big、hurt。某姿勢切割中沒有的部位（舉過頭的前臂）
+  用準備姿勢的畫。
+- **弓**多了畫好的放箭（`attack`，從滿弓的圖以圖生圖：`--from charge_44 --denoise 0.8`）；受傷仍由骨頭做出（沒有一張看起來
+  像受傷）。
+- `items.json`：劍與法杖的 `battleAnim` 是 `anim/hero_sword.anim` / `anim/hero_staff.anim`（片段以戰鬥狀態命名；舊的
+  `fighter_sword` / `caster_staff` 與它們的手持武器不再使用）。`battle_sword` 與 `trial_try_sword` 現在期待片段 `charge`
+  （原為 `raise`）。
+- 檢查：battle_sword、battle_staff、battle_play_slice、battle_play_circles、trial_try_sword、trial_choose_staff 與
+  arena_wand 都通過（直接執行）。GIF：`Build/art_out/hero_<武器>/gif/`（每個片段與 `battle_<武器>.gif`），由
+  `Build/art_out/record_clips.sh <武器> <片段>` 製作（隱藏視窗）。
+
+**重畫（2026-11-02，擁有者）：** 強力招式的骨架改為手肘向兩側張開、雙手在頭頂上方會合（手臂框住臉而不是遮住），空手的提示詞改為
+「a tightly closed fist, fingers curled around an empty grip」（加權）。新 seed 81-83；每隻手都是拳頭，沒有多畫的刀刃，兩個強力
+招式都看得到臉。選用：劍 81/81/83/81/82/81，法杖 81/81/83/83/81/81（idle、charge、attack、miss、attack_big、hurt）。之前的 GIF
+保留在 `gif_before/`。
+
+**調整（2026-11-02）：** 武器現在放在**畫出的**拳頭上（`painted_fist`：切出的近側前臂的末端，而不是骨架的猜測，後者偏了 30-50
+像素）；揮擊有預備動作、過衝與停住的收招；持劍時劍會微微擺動。法杖的準備姿勢改用 seed 87（沒有白霧）。弓的受傷仍由骨頭做出（又畫
+了兩輪，不是兩把弓就是看不出痛），但更強烈：身體往後彈、膝蓋彎下、晃動、回到準備。片段在產生器中調整，所以重新產生時會保留
+（在動畫編輯器手動修改的會被下次執行覆蓋）。
