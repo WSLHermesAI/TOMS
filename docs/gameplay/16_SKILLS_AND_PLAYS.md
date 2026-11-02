@@ -1,5 +1,7 @@
 # 16. Skills and plays from reusable parts (the owner's ideas, 2026-10-31)
 
+> **Next:** [17_WEAPONS_AND_PLAYS.md](17_WEAPONS_AND_PLAYS.md) (2026-10-31 night) changes parts of this: the sword's shape prompts become swipe tiers, the ultimates become free modes, and every play becomes a play type in data (17 §13).
+
 The owner's new ideas from 2026-10-31, put in order: the three weapon plays reworked, monsters whose attacks have a
 rhythm the player answers, special guard plays, a training ground for cards, and special moves such as the staff's
 pentagram. They follow the battle revamp ([15](15_BATTLE_REVAMP.md), built through R5) and the weapon plays of

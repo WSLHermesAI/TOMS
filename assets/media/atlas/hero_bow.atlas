@@ -1,0 +1,13 @@
+hero_bow.png
+size: 1256, 1210
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+idle
+  bounds: 2, 2, 416, 602
+charge
+  bounds: 420, 2, 416, 602
+miss
+  bounds: 838, 2, 416, 602
+attack_big
+  bounds: 2, 606, 416, 602

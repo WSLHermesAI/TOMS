@@ -10,6 +10,7 @@ string(REPLACE "|" ";" GAME_ARGS "${GAME_ARGS}")   # back to a list: one argumen
 file(REMOVE_RECURSE "${WORK}")
 file(MAKE_DIRECTORY "${WORK}")
 set(_shot "${WORK}/${NAME}.png")
+set(ENV{TOMS_LANGUAGE} "en")   # the reference pictures are English (the game's default is Traditional Chinese)
 
 execute_process(COMMAND "${GAME}" ${GAME_ARGS} "--screenshot=${_shot}"
                 WORKING_DIRECTORY "${WORK}" RESULT_VARIABLE _rc OUTPUT_VARIABLE _out ERROR_VARIABLE _out TIMEOUT 60)

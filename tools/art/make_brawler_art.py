@@ -2,8 +2,12 @@
 """make_brawler_art.py -- the brawler showcase character's art, from ComfyUI to atlas parts (docs/engine/18_NODE_EFFECTS.md).
 
     python tools/art/make_brawler_art.py pose                 # the OpenPose skeleton the picture is drawn on
-    python tools/art/make_brawler_art.py concept [--seeds 1,2,3,4]
+    python tools/art/make_brawler_art.py concept [--seeds 1,2,3,4] [--char brawler|hero_f|hero_m]
     python tools/art/make_brawler_art.py parts --pick N       # cut concept N into parts -> assets/media/brawler/parts/
+
+--char picks the character drawn on the same skeleton (CHARACTERS): the brawler, or a candidate for the player's battle
+art (docs/gameplay/17 Q58: the owner picks one; then it is cut and animated like the brawler, so its rig and battle clips
+are reused). Each character's pictures go to Build/art_out/<char>/.
 
 The character is drawn ONCE, whole, in a rig-friendly stance: the skeleton (JOINTS) is drawn as an OpenPose picture and
 ControlNet (union, openpose mode) makes ComfyUI put the body's joints there. The parts are then cut along the same
@@ -43,6 +47,29 @@ PROMPT = ('full body character concept art of a short stocky young male martial 
 NEGATIVE = ('photo, realistic, 3d render, blurry, text, watermark, logo, frame, multiple characters, cropped, '
             'red hair, prayer beads, rope belt, blue gi, headband, weapon, extra arms, extra fingers, '
             'arms crossed, hands behind back, background scenery, floor shadow')
+
+# Characters drawn on the same skeleton (concept --char): (prompt, negative). The pose words stay the same for all, so
+# ControlNet puts every one's joints where the rig expects them; hands stay empty (the weapons are their own clips).
+POSE_WORDS = ('three-quarter view facing right, A-pose, both arms spread out away from the body, hands far from the hips, '
+              'legs apart, plain white background, full body visible, centered')
+STYLE_WORDS = ('digital painting, painterly dark fantasy game character art, visible brush strokes, detailed costume, '
+               'soft rim light, clean silhouette, adult proportions, tall, long legs, small head')
+HERO_NEGATIVE = ('photo, 3d render, blurry, text, watermark, logo, frame, multiple characters, cropped, '
+                 'bow, sword, staff, weapon in hand, holding anything, shield, extra arms, extra fingers, '
+                 'arms crossed, hands behind back, background scenery, floor shadow, chibi, child, kid, young child, '
+                 'big head, short legs, cartoon, pixar, toy, doll, photograph, studio photo')
+CHARACTERS = {
+    'brawler': (None, None),   # PROMPT / NEGATIVE below
+    # like the owner's reference picture (2026-11-02): a ranger in leather
+    'hero_f': ('full body character concept art of an adult woman in her twenties, a ranger adventurer, brown hair in a long ponytail, '
+               'determined face, quilted green leather tunic with a brown leather corset belt, leather bracers and '
+               'shoulder guard, dark trousers, tall brown boots, a quiver strap across the chest, empty hands, ' +
+               POSE_WORDS + ', ' + STYLE_WORDS, HERO_NEGATIVE),
+    # close to today's pixel hero: brown hair, blue tunic
+    'hero_m': ('full body character concept art of an adult man in his twenties, an adventurer hero, short messy brown hair, brave face, '
+               'blue tunic under light brown leather armor pieces, leather belt with pouches, dark trousers, brown boots, '
+               'a short travelling cape, empty hands, ' + POSE_WORDS + ', ' + STYLE_WORDS, HERO_NEGATIVE),
+}
 
 # The skeleton, in picture pixels (W x H), OpenPose COCO-18 order. Three-quarter view facing right: the near side is
 # the character's left (screen right). Arms held out and down, legs apart: the parts overlap as little as possible.
@@ -119,11 +146,12 @@ def run(wf):
         time.sleep(1.0)
 
 
-def concept_workflow(pose_name, seed):
+def concept_workflow(pose_name, seed, char='brawler'):
+    prompt, negative = CHARACTERS[char]
     return {
         '1': {'class_type': 'CheckpointLoaderSimple', 'inputs': {'ckpt_name': CHECKPOINT}},
-        '2': {'class_type': 'CLIPTextEncode', 'inputs': {'text': PROMPT, 'clip': ['1', 1]}},
-        '3': {'class_type': 'CLIPTextEncode', 'inputs': {'text': NEGATIVE, 'clip': ['1', 1]}},
+        '2': {'class_type': 'CLIPTextEncode', 'inputs': {'text': prompt or PROMPT, 'clip': ['1', 1]}},
+        '3': {'class_type': 'CLIPTextEncode', 'inputs': {'text': negative or NEGATIVE, 'clip': ['1', 1]}},
         '4': {'class_type': 'LoadImage', 'inputs': {'image': pose_name}},
         '5': {'class_type': 'ControlNetLoader', 'inputs': {'control_net_name': CONTROLNET}},
         '6': {'class_type': 'SetUnionControlNetType', 'inputs': {'control_net': ['5', 0], 'type': 'openpose'}},
@@ -135,9 +163,9 @@ def concept_workflow(pose_name, seed):
                                                    'latent_image': ['8', 0], 'seed': seed, 'steps': 32, 'cfg': 6.0,
                                                    'sampler_name': 'dpmpp_2m', 'scheduler': 'karras', 'denoise': 1.0}},
         '10': {'class_type': 'VAEDecode', 'inputs': {'samples': ['9', 0], 'vae': ['1', 2]}},
-        '11': {'class_type': 'SaveImage', 'inputs': {'images': ['10', 0], 'filename_prefix': 'brawler_concept'}},
+        '11': {'class_type': 'SaveImage', 'inputs': {'images': ['10', 0], 'filename_prefix': char + '_concept'}},
         '12': {'class_type': 'InspyrenetRembg', 'inputs': {'image': ['10', 0], 'torchscript_jit': 'default'}},
-        '13': {'class_type': 'SaveImage', 'inputs': {'images': ['12', 0], 'filename_prefix': 'brawler_cut'}},
+        '13': {'class_type': 'SaveImage', 'inputs': {'images': ['12', 0], 'filename_prefix': char + '_cut'}},
     }
 
 
@@ -148,16 +176,17 @@ def cmd_pose(_):
 
 
 def cmd_concept(a):
-    WORK.mkdir(parents=True, exist_ok=True)
+    work = WORK.parent / a.char   # Build/art_out/<char>
+    work.mkdir(parents=True, exist_ok=True)
     img = pose_image()
-    img.save(WORK / 'pose.png')
+    img.save(work / 'pose.png')
     name = upload(img, 'brawler_pose.png')
     for seed in [int(s) for s in a.seeds.split(',')]:
         t0 = time.time()
-        imgs = run(concept_workflow(name, seed))
-        imgs[0].convert('RGB').save(WORK / f'concept_{seed}.png')
-        imgs[1].save(WORK / f'concept_{seed}_cut.png')
-        print(f'seed {seed}: {time.time() - t0:.0f} s -> {WORK / f"concept_{seed}_cut.png"}')
+        imgs = run(concept_workflow(name, seed, a.char))
+        imgs[0].convert('RGB').save(work / f'concept_{seed}.png')
+        imgs[1].save(work / f'concept_{seed}_cut.png')
+        print(f'seed {seed}: {time.time() - t0:.0f} s -> {work / f"concept_{seed}_cut.png"}')
 
 
 # ---- parts -----------------------------------------------------------------------------------------------------------
@@ -324,6 +353,7 @@ if __name__ == '__main__':
     sub.add_parser('pose').set_defaults(fn=cmd_pose)
     c = sub.add_parser('concept')
     c.add_argument('--seeds', default='11,22,33,44')
+    c.add_argument('--char', default='brawler', choices=sorted(CHARACTERS))
     c.set_defaults(fn=cmd_concept)
     pp = sub.add_parser('parts')
     pp.add_argument('--pick', default='55', help='the concept seed to cut')

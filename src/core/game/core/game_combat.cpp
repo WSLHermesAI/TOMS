@@ -473,25 +473,42 @@ void Game::foeDown(int foe) {
 // ---- the battle rig (Game::battleRigState) ----
 
 void Game::loadBattleRig() {
-    if (battleRigWeapon_ == equipped_.weaponId && (battleCharacterAnim_ || battleHeldAnim_ || battleRigWeapon_.empty())) return;
+    if (battleRigWeapon_ == equipped_.weaponId && (playerView_ || battleRigWeapon_.empty())) return;
     battleRigWeapon_ = equipped_.weaponId;
-    battleCharacterAnim_.reset();
-    battleHeldAnim_.reset();
-    battleRig_.stop();
+    playerView_.reset();
     battleRigState_.clear();
     auto it = equipmentDefs_.find(equipped_.weaponId);
     if (it == equipmentDefs_.end() || !res_) return;
+    toms::FighterLook look;
+    look.m_strRender = it->second.battleRender;
+    look.m_strCharacter = it->second.battleCharacterAnim;
+    look.m_strHeld = it->second.battleHeldAnim;
+    look.m_strModel = it->second.battleModel;
+    playerView_ = makeFighterView(look, [this](const toms::anim::Clip& c) { return fitClipToCharacter(c, playerSprite()); },
+                                  32.0f, false);
+}
+
+bool Game::battleRigReady() const { return playerView_ != nullptr; }
+
+std::unique_ptr<toms::FighterView> Game::makeFighterView(const toms::FighterLook& look, toms::AnimFighterView::Fit fit,
+                                                         float unitsTall, bool boxSide) {
+    if (!res_) return nullptr;
+    if (look.f_Is3d()) {   // the switch is in the data; the 3D view is not built yet (docs/gameplay/18)
+        static bool said = false;
+        if (!said) std::fprintf(stderr, "[battle] %s: 3D fighters are not drawn yet; the look's 2D clips are used\n",
+                                look.m_strModel.c_str());
+        said = true;
+    }
     auto load = [this](const std::string& path) -> std::shared_ptr<toms::res::AnimRes> {
         if (path.empty()) return nullptr;
         auto a = res_->get<toms::res::AnimRes>(path);
         if (!a->ok()) { std::fprintf(stderr, "[battle] %s: %s\n", path.c_str(), a->error().c_str()); return nullptr; }
         return a;
     };
-    battleCharacterAnim_ = load(it->second.battleCharacterAnim);
-    battleHeldAnim_ = load(it->second.battleHeldAnim);
+    auto character = load(look.m_strCharacter), held = load(look.m_strHeld);
+    if (!character && !held) return nullptr;
+    return std::make_unique<toms::AnimFighterView>(character, held, std::move(fit), unitsTall, boxSide);
 }
-
-bool Game::battleRigReady() const { return battleCharacterAnim_ || battleHeldAnim_; }
 
 void Game::setBattleRigState(const std::string& state, bool restart, const std::string& clip) {
     if (state == battleRigState_ && !restart) return;
@@ -499,33 +516,30 @@ void Game::setBattleRigState(const std::string& state, bool restart, const std::
     // The weapon's clip for this status (items.json "battleAnim" "clips"; docs/gameplay/07 phase 2), else the status's own name.
     auto def = equipmentDefs_.find(equipped_.weaponId);
     const std::string clipName = !clip.empty() ? clip : def != equipmentDefs_.end() ? def->second.battleClip(state) : state;
-    const toms::anim::Clip* body = battleCharacterAnim_ ? battleCharacterAnim_->find(clipName) : nullptr;
-    if (body) {   // the player's character in the clip made with another
-        battleFitted_ = fitClipToCharacter(*body, playerSprite());
-        body = &battleFitted_;
-    }
-    const toms::anim::Clip* held = battleHeldAnim_ ? battleHeldAnim_->find(clipName) : nullptr;
-    battleRigClip_ = body || held ? clipName : std::string();   // what plays (a test scenario checks it)
-    battleRig_.play(body, held);
+    const bool found = playerView_ && playerView_->f_Play(clipName, true);
+    if (!found && playerView_) playerView_->f_Stop();
+    battleRigClip_ = found ? clipName : std::string();   // what plays (a test scenario checks it)
 }
 
 void Game::updateBattleRig(int dtMs) {
     const bool shown = cs.active || cs.won || cs.resultPauseMs > 0;
     if (!shown) {
-        if (!battleRigState_.empty()) { battleRig_.stop(); battleRigState_.clear(); battleRigClip_.clear(); }
+        if (!battleRigState_.empty()) {
+            if (playerView_) playerView_->f_Stop();
+            battleRigState_.clear();
+            battleRigClip_.clear();
+        }
         return;
     }
     loadBattleRig();
     if (!battleRigReady()) return;
     // An attack or a miss plays to its end; then the bar decides: waiting for the tap = charge, recovering = idle.
-    const bool shooting = (battleRigState_ == "attack" || battleRigState_ == "miss") && !battleRig_.finished();
+    const bool shooting = (battleRigState_ == "attack" || battleRigState_ == "miss") && !playerView_->f_Finished();
     if (!shooting) setBattleRigState(cs.active && !cs.atkBar.cooling ? "charge" : "idle");
-    battleRig_.update(dtMs);
-    battleRig_.takeEvents();   // (release / hit / miss: the battle's own timers place the numbers)
+    playerView_->f_Update(dtMs);   // (its events: the battle's own timers place the numbers)
 }
 
 void Game::drawBattleRig() {
-    static const toms::anim::AtlasSet kNone;
     // The battle screen's backdrop (common.rcss .focus: black at 80%). The UI draws over the game, so with the backdrop
     // in battle.rml the player and the monster would sit under it, drawn at a fifth of their brightness; it is drawn
     // here instead, under them (battle.rml has none).
@@ -556,23 +570,12 @@ void Game::drawBattleRig() {
     auto zoomed = [&](glm::vec4 b) {
         return glm::vec4(focus.x + (b.x - focus.x) * zoom + ox, focus.y + (b.y - focus.y) * zoom + oy, b.z * zoom, b.w * zoom);
     };
-    // The player's place on the battle screen (battle.rcss #player, wherever the layout put it: playerBox_): the feet
-    // at its bottom centre, the 32-pixel character filling its height.
-    const glm::vec4 pb = zoomed(playerBox_);
-    if (battleRigReady() && !battleRigState_.empty())
-        battleRig_.draw(ren, battleCharacterAnim_ ? battleCharacterAnim_->atlases() : kNone,
-                        battleHeldAnim_ ? battleHeldAnim_->atlases() : kNone,
-                        toms::anim::placement(pb.x + pb.z / 2.0f, pb.y + pb.w, pb.w / 32.0f));
-    // Each monster in its box (battle.rcss .foe .fbox: foeBox_): its sprite's longer side fills the box (a 2-wide golem
-    // as wide as the box), feet at the bottom centre, as the picture it replaces.
+    // The player's place on the battle screen (battle.rcss #player, wherever the layout put it: playerBox_) and each
+    // monster's (battle.rcss .foe .fbox: foeBox_): the view fills its box, the feet at the bottom centre.
+    if (battleRigReady() && !battleRigState_.empty()) playerView_->f_Draw(ren, zoomed(playerBox_));
     for (size_t i = 0; i < foeRigs_.size() && i < cs.foes.size(); i++) {
         const FoeRig& fr = foeRigs_[i];
-        if (!monsterRigReady() || fr.state.empty()) continue;
-        const glm::vec4 eb = zoomed(fighterBox((int)i));
-        const toms::AtlasRegion* r = spriteAtlas_.find(monsterSprite((int)i));
-        const float longer = r ? (float)std::max(std::max(r->origW, r->origH), 1) : 32.0f;
-        fr.rig.draw(ren, monsterAnim_->atlases(), kNone,
-                    toms::anim::placement(eb.x + eb.z / 2.0f, eb.y + eb.w, std::min(eb.z, eb.w) / longer));
+        if (fr.view && !fr.state.empty()) fr.view->f_Draw(ren, zoomed(fighterBox((int)i)));
     }
     if (battleFxFile_) {
         glm::mat3 shake(1.0f);   // (and the close-up's scale)
@@ -650,35 +653,60 @@ std::string Game::monsterSprite(int foe) const {
     return e.boss ? std::string("boss_demonlord") : typeSprite("monster", e.id);
 }
 
+toms::FighterLook Game::monsterLook(int foe) const {
+    // The look's (looks.json "render" / "character" / "model", following "base"), else the shared monster clips.
+    toms::FighterLook look;
+    look.m_strCharacter = kMonsterBattleAnim;
+    const std::string& own = cs.foes[(size_t)foe].enemy.look;
+    std::string name = own.empty() ? std::string("monster") : own;
+    bool character = false, render = false, model = false;
+    for (int step = 0; step < 6 && !name.empty(); step++) {
+        auto it = looks_.looks.find(name);
+        if (it == looks_.looks.end()) break;
+        const toms::Look& l = it->second;
+        if (!character && !l.character.empty()) { look.m_strCharacter = l.character; character = true; }
+        if (!render && !l.render.empty()) { look.m_strRender = l.render; render = true; }
+        if (!model && !l.model.empty()) { look.m_strModel = l.model; model = true; }
+        name = l.base;
+    }
+    return look;
+}
+
 void Game::setFoeRigState(int foe, const std::string& state) {
     FoeRig& fr = foeRigs_[(size_t)foe];
     fr.state = state;
+    // the view, made again when the monster changed (transformInto): its sprite's longer side fills the box (a 2-wide
+    // golem as wide as the box), as the picture it replaces
+    const std::string sprite = monsterSprite(foe);
+    if (!fr.view || fr.sprite != sprite) {
+        fr.sprite = sprite;
+        const toms::AtlasRegion* r = spriteAtlas_.find(sprite);
+        const float longer = r ? (float)std::max(std::max(r->origW, r->origH), 1) : 32.0f;
+        fr.view = makeFighterView(monsterLook(foe),
+                                  [this, sprite](const toms::anim::Clip& c) { return fitClipToCharacter(c, sprite); },
+                                  longer, true);
+    }
+    fr.clip.clear();
+    if (!fr.view) return;
     // the look's clip for this status (data/looks.json), the monster's own version of it first, else the shared one
     const std::string& id = cs.foes[(size_t)foe].enemy.id;
     const toms::LookState* ls = looks_.find(cs.foes[(size_t)foe].enemy.look, state);
     const std::string clip = ls && !ls->clip.empty() ? ls->clip : state;
-    const toms::anim::Clip* c = monsterAnim_->find(clip + "_" + id);
-    if (!c) c = monsterAnim_->find(clip);
-    if (!c) c = monsterAnim_->find(state);
-    fr.clip = c ? c->name : std::string();
-    if (!c) { fr.rig.stop(); return; }
-    fr.fitted = fitClipToCharacter(*c, monsterSprite(foe));
-    fr.rig.play(&fr.fitted, nullptr);
+    if (fr.view->f_Play(clip + "_" + id, true) || fr.view->f_Play(clip, true) || fr.view->f_Play(state, true))
+        fr.clip = fr.view->f_Clip();
+    else
+        fr.view->f_Stop();
 }
 
 void Game::updateMonsterRig(int dtMs) {
     const bool shown = cs.active || cs.won || cs.resultPauseMs > 0;
     if (!shown) {
-        for (FoeRig& fr : foeRigs_) { fr.rig.stop(); fr.state.clear(); fr.clip.clear(); fr.request.clear(); }
+        for (FoeRig& fr : foeRigs_) {
+            if (fr.view) fr.view->f_Stop();
+            fr.state.clear(); fr.clip.clear(); fr.request.clear();
+        }
         return;
     }
-    if (!monsterAnim_ && !monsterAnimTried_ && res_) {   // once: without the file the UI's picture stays
-        monsterAnimTried_ = true;
-        auto a = res_->get<toms::res::AnimRes>(kMonsterBattleAnim);
-        if (a->ok()) monsterAnim_ = a;
-        else std::fprintf(stderr, "[battle] %s: %s\n", kMonsterBattleAnim, a->error().c_str());
-    }
-    if (!monsterRigReady()) return;
     if (foeRigs_.size() != cs.foes.size()) foeRigs_.resize(cs.foes.size());
     for (size_t i = 0; i < foeRigs_.size(); i++) {
         FoeRig& fr = foeRigs_[i];
@@ -691,13 +719,12 @@ void Game::updateMonsterRig(int dtMs) {
             fr.request.clear();
             // every status but idle plays to its end; then the fight decides: down or won = die (it stays gone), else idle
             const bool oneShot = !fr.state.empty() && fr.state != "idle";
-            if (fr.state != "die" && !(oneShot && !fr.rig.finished())) {
+            if (fr.state != "die" && !(oneShot && fr.view && !fr.view->f_Finished())) {
                 const std::string next = cs.won || cs.foes[i].down() ? "die" : "idle";
                 if (next != fr.state) setFoeRigState(foe, next);
             }
         }
-        fr.rig.update(dtMs);
-        fr.rig.takeEvents();   // (hit: the battle's own timers place the numbers)
+        if (fr.view) fr.view->f_Update(dtMs);   // (its events: the battle's own timers place the numbers)
     }
 }
 
@@ -1112,7 +1139,7 @@ void Game::resolveCombo(const toms::ComboResult* played) {
     }
     if (battleRigReady()) {
         const std::string bigClip = ult ? std::string("attack_big") : res ? res->anim : std::string();   // the ultimate: the big clip
-        const bool big = lastAttackDamage_ > 0 && !bigClip.empty() && battleCharacterAnim_ && battleCharacterAnim_->find(bigClip);
+        const bool big = lastAttackDamage_ > 0 && !bigClip.empty() && playerView_ && playerView_->f_Has(bigClip);
         setBattleRigState(lastAttackDamage_ > 0 ? "attack" : "miss", true, big ? bigClip : std::string());
     }
     damageFoe(t, dmg);

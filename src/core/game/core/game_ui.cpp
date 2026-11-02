@@ -315,7 +315,7 @@ void Game::buildUiState(toms::UiState& u) const {
             const CombatState::Foe& f = cs.foes[i];
             toms::UiFoe uf;
             uf.sprite = uiSprite(monsterSprite((int)i));
-            uf.anim = monsterRigReady() && i < foeRigs_.size() && !foeRigs_[i].state.empty();   // drawBattleRig draws it
+            uf.anim = i < foeRigs_.size() && foeRigs_[i].view && !foeRigs_[i].state.empty();   // drawBattleRig draws it
             uf.hp_pct = pct((float)std::max(0, f.hp), (float)f.enemy.hp);
             uf.name = f.enemy.name;
             uf.hp_line = "HP " + std::to_string(std::max(0, f.hp));

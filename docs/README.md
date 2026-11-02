@@ -31,6 +31,8 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [14_WEAPON_PLAY_AND_LOOT.md](gameplay/14_WEAPON_PLAY_AND_LOOT.md) | weapon plays v2 (bow: draw and hit targets; sword: slicing and memory combos; staff: timed circles and magic circles) and the loot grind (farm monsters, chests, go deeper, gear bonuses); the owner's ideas 2026-10-30, questions Q27–Q33 | [zh_TW](gameplay/zh_TW/14_WEAPON_PLAY_AND_LOOT.md) |
 | [15_BATTLE_REVAMP.md](gameplay/15_BATTLE_REVAMP.md) | the battle revamp: the ideas of 07, 11, 13 and 14 put together into one loop (read, answer, play, break, burst, reward), the feel (hit stop, shake, tier sounds), the result screen with the weapon's progress, the screen for thumbs, an order of work R1–R7; questions Q34–Q38; a playable HTML prototype in [gameplay/battle_editor/](gameplay/battle_editor/) | [zh_TW](gameplay/zh_TW/15_BATTLE_REVAMP.md) |
 | [16_SKILLS_AND_PLAYS.md](gameplay/16_SKILLS_AND_PLAYS.md) | skills and plays from five reusable blocks (cue track, gestures and drawn shapes, the "!" warning, the show timeline, `special_moves.json`): the sword, bow and staff reworked, monster attack rhythms and the "!" guard, special guard plays, the card training ground, special moves with their own show (the staff's pentagram); the owner's ideas 2026-10-31, built the same day (§10), questions Q39–Q46 | [zh_TW](gameplay/zh_TW/16_SKILLS_AND_PLAYS.md) |
+| [17_WEAPONS_AND_PLAYS.md](gameplay/17_WEAPONS_AND_PLAYS.md) | weapon families (4 types per class, levels with abilities), every play as a play type in data, swipe tiers and DEX, the new ultimates, bow ammo and volleys, staff charges, resistances and weapon switching, the battle talk bar (280 draft lines in [gameplay/battle_talk/](gameplay/battle_talk/battle_talk_lines.json)), the difficulty curve, issues found; the owner's ideas 2026-10-31 night, questions Q47–Q56 | [zh_TW](gameplay/zh_TW/17_WEAPONS_AND_PLAYS.md) |
+| [18_FIGHTER_VIEWS.md](gameplay/18_FIGHTER_VIEWS.md) | the player and the monsters behind one interface (FighterView): 2D clips or 3D switched in the data (items.json battleAnim, looks.json); recording frames without a window (`--record`, `tools/frames_to_gif.py`) | [zh_TW](gameplay/zh_TW/18_FIGHTER_VIEWS.md) |
 | [event_editor/](gameplay/event_editor/README.md) | the event editor: data model, design, user guide, tutorial, floor links, logic, key gates, NPC dialogue | [zh_TW](gameplay/zh_TW/event_editor/README.md) |
 
 ## engine
@@ -56,6 +58,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [17_SKINNING_TUTORIAL.md](engine/17_SKINNING_TUTORIAL.md) | tutorial: skinning, deforming and weight painting | [zh_TW](engine/zh_TW/17_SKINNING_TUTORIAL.md) |
 | [18_NODE_EFFECTS.md](engine/18_NODE_EFFECTS.md) | node effects (shaders by hierarchy, afterimages) and the brawler showcase: the anim editor vs Spine | [zh_TW](engine/zh_TW/18_NODE_EFFECTS.md) |
 | [19_DESIGN_MAP.md](engine/19_DESIGN_MAP.md) | the design map: how the game is put together (layers, one frame, screens and switching, drawing order, events, talking, battle) and how extendable it is; an interactive page in [engine/design_map/](engine/design_map/design_map.html) | [zh_TW](engine/zh_TW/19_DESIGN_MAP.md) |
+| [20_CHARACTER_ART.md](engine/20_CHARACTER_ART.md) | character art for the battle: one picture cut into parts (A), painted key poses with IP-Adapter (B, being tried), a 3D glTF model (C, the fallback); what each needs installed (models, ComfyUI nodes, Blender) so a new PC can do the same | [zh_TW](engine/zh_TW/20_CHARACTER_ART.md) |
 
 ## project
 
@@ -72,6 +75,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [09_NEW_MACHINE_SETUP.md](project/09_NEW_MACHINE_SETUP.md) | starting from scratch on a new computer | [zh_TW](project/zh_TW/09_NEW_MACHINE_SETUP.md) |
 | [10_SSH_KEY_SETUP.md](project/10_SSH_KEY_SETUP.md) | SSH keys, and using them on another computer | [zh_TW](project/zh_TW/10_SSH_KEY_SETUP.md) |
 | [11_TEAM_PLAN.md](project/11_TEAM_PLAN.md) | the team plan: a programmer, a game designer and an artist | [zh_TW](project/zh_TW/11_TEAM_PLAN.md) |
+| [12_CPP_NAMING.md](project/12_CPP_NAMING.md) | C++ naming: `m_` / `l_` / `g_` scope and a type prefix in every variable's name (`m_strName`, `l_iCount`), `f_` on every function (`f_LoadBattleRig`); third-party code untouched | [zh_TW](project/zh_TW/12_CPP_NAMING.md) |
 | [PROGRESS_REPORT.md](project/PROGRESS_REPORT.md) | the progress report | [zh_TW](project/zh_TW/PROGRESS_REPORT.md) |
 | [progress_report/](project/progress_report/PROGRESS_REPORT.md) | the status board, daily reports, the working log | [zh_TW](project/zh_TW/progress_report/) |
 

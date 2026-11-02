@@ -36,6 +36,7 @@ public:
 
     // Replaces the string table from a parsed data/text.json. Returns false (leaving the
     // previous table + built-in fallbacks intact) if j is not an object with a "strings" map.
+    // Its "offered" list limits the languages the player can pick; "default" is the starting one.
     bool loadFromJson(const nlohmann::json& j);
     // Convenience wrapper: reads `path` (silently keeping the current table when unreadable).
     bool loadFromFile(const std::string& path);

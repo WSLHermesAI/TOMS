@@ -2119,7 +2119,10 @@ int main(int argc, char** argv) {
         std::fprintf(stderr, "SDL: %s\n", SDL_GetError());
         return 1;
     }
-    v.window = SDL_CreateWindow("TOMS glTF Viewer", v.args.w, v.args.h, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+    // A screenshot run draws into a hidden window: no window flashing open and shut on the desktop.
+    v.window = SDL_CreateWindow("TOMS glTF Viewer", v.args.w, v.args.h,
+                                SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY |
+                                    (v.args.screenshot.empty() ? SDL_WindowFlags(0) : SDL_WINDOW_HIDDEN));
     if (!v.window) {
         std::fprintf(stderr, "SDL window: %s\n", SDL_GetError());
         return 1;

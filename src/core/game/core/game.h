@@ -2,6 +2,7 @@
 // The UI (title, HUD, battle, menus, ...) is RmlUi: buildUiState()/uiEvent() below, ui/ui_state.h.
 #pragma once
 #include <array>
+#include <memory>
 #include <vector>
 #include <string>
 #include <map>
@@ -31,6 +32,7 @@
 #include "ui_state.h"       // toms::UiState -- what the UI shows (see buildUiState)
 #include "title_screen.h"    // toms::TitleScreen/TitleAction — the title phase (New Game/Continue/Settings)
 #include "game_settings.h"   // toms::GameSettings — persisted preferences (language, slots)
+#include "fighter_view.h"     // toms::FighterView — a fighter on the battle screen, 2D or 3D (docs/gameplay/18)
 #include "event_bus.h"       // toms::Subscription -- Game::busSubs_
 #include "safe_timer.h"      // toms::TimerQueue / TimerOwner -- delayed calls that die with their owner (battle numbers)
 #include "tween.h"           // toms::Tween -- the damage numbers' rise
@@ -988,12 +990,10 @@ private:
     std::shared_ptr<toms::res::AnimRes> previewAnim_;   // playPreviewAnim (its atlases come with it)
     std::string previewClip_;
     std::string previewCharacter_;                      // setPreviewCharacter
-    // The battle rig (battleRigState above): the weapon its clips were loaded for, the two files, the character clip
-    // fitted to the player's character, and the rig playing them.
+    // The player on the battle screen (battleRigState above): the weapon its look was made for, and the view playing
+    // it (FighterView: 2D clips or 3D, the weapon's battleAnim decides).
     std::string battleRigWeapon_;
-    std::shared_ptr<toms::res::AnimRes> battleCharacterAnim_, battleHeldAnim_;
-    toms::anim::Clip battleFitted_;
-    toms::anim::CharacterRig battleRig_;
+    std::unique_ptr<toms::FighterView> playerView_;
     std::string battleRigState_;
     int lastAttackDamage_ = 0;                          // the last attack tap's damage (attack or miss)
     void loadBattleRig();                               // (re)loads the clips when the weapon changes
@@ -1006,19 +1006,21 @@ private:
     // won) -- with the enemy's own sprite in its `body` (fitCharacter). "<status>_<enemy id>" in the file wins over the
     // shared clip. monsterRigState(): the status shown ("" = none: the file did not load, the UI's picture is drawn).
     static constexpr const char* kMonsterBattleAnim = toms::key::kAnimMonsterBattle;
-    std::shared_ptr<toms::res::AnimRes> monsterAnim_;
-    bool monsterAnimTried_ = false;
     // One rig a foe (cs.foes, the same order).
     struct FoeRig {
-        toms::anim::Clip fitted;
-        toms::anim::CharacterRig rig;
+        std::unique_ptr<toms::FighterView> view;        // its look (looks.json: 2D clips or 3D), made on its first state
         std::string state, clip;
+        std::string sprite;                             // the sprite the view was made for (transformInto: a new one)
         std::string request;                            // attack / hurt / die: played from the start on the next update
     };
     std::vector<FoeRig> foeRigs_;
-    bool monsterRigReady() const { return monsterAnim_ != nullptr; }
     std::string monsterSprite(int foe) const;           // the foe's sprite (the boss's own; else its type's)
     void setFoeRigState(int foe, const std::string& state);
+    toms::FighterLook monsterLook(int foe) const;       // its look's render / files (looks.json), else the shared clips
+    // A fighter's view from its look (docs/gameplay/18): 2D clips (fit: fitted to this character; unitsTall: clip units
+    // at the box's height; boxSide: the box's shorter side instead), or 3D. Null: the look's files did not load.
+    std::unique_ptr<toms::FighterView> makeFighterView(const toms::FighterLook& look, toms::AnimFighterView::Fit fit,
+                                                       float unitsTall, bool boxSide);
     void updateMonsterRig(int dtMs);                    // Game::update
     // The battle's particles (media/fx/battle.particle; weapon_play.json "fx" picks them by weapon level): one-shot
     // effects at the player's weapon or the monster, drawn over both. Cleared when a battle starts or the screen closes.

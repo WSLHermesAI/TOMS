@@ -1,0 +1,1160 @@
+{
+ "_comment": [
+  "Draft lines for the battle talk bar (docs/gameplay/17_WEAPONS_AND_PLAYS.md §9). Not read by the game yet: when the",
+  "system is built, this becomes assets/data/battle_talk.json (by key in resources.json) and gets the other languages.",
+  "levelGap: said at the start of a fight by the level difference (muchWeaker 5+ below ... muchStronger 5+ above),",
+  "20 each. afterHit: said after a moment (resisted, weakHit, perfect, miss, selfLowHp, foeLowHp), 50 in all.",
+  "cardHints: said when the player holds the monster's card; {name} the monster, {type} a damage type word, {pct}",
+  "the percent. idle: small talk and cold jokes, 100, said when nothing else is due."
+ ],
+ "levelGap": {
+  "muchWeaker": [
+   {
+    "zh_TW": "這怪好弱，好無聊的爛怪。",
+    "en": "This one's weak. What a dull little pest."
+   },
+   {
+    "zh_TW": "我閉著眼睛都打得贏。",
+    "en": "I could beat this with my eyes closed."
+   },
+   {
+    "zh_TW": "你確定要擋我的路？",
+    "en": "You sure you want to stand in my way?"
+   },
+   {
+    "zh_TW": "這種程度，熱身都不夠。",
+    "en": "Not even enough for a warm-up."
+   },
+   {
+    "zh_TW": "唉，又是小嘍囉。",
+    "en": "Sigh. Another small fry."
+   },
+   {
+    "zh_TW": "快點結束吧，我還有正事。",
+    "en": "Let's make this quick. I have places to be."
+   },
+   {
+    "zh_TW": "打你都覺得不好意思。",
+    "en": "I almost feel bad hitting you."
+   },
+   {
+    "zh_TW": "你的同伴呢？叫大哥來啦。",
+    "en": "Where are your friends? Go get your big brother."
+   },
+   {
+    "zh_TW": "一下就好，別亂動。",
+    "en": "One hit. Hold still."
+   },
+   {
+    "zh_TW": "這層的怪都這麼客氣嗎？",
+    "en": "Are all the monsters on this floor this polite?"
+   },
+   {
+    "zh_TW": "我的武器在打哈欠了。",
+    "en": "My weapon is yawning."
+   },
+   {
+    "zh_TW": "練功都練不到經驗啦。",
+    "en": "I won't even get experience from this."
+   },
+   {
+    "zh_TW": "拜託，給點挑戰好嗎？",
+    "en": "Come on, give me a challenge."
+   },
+   {
+    "zh_TW": "你是來送金幣的吧？",
+    "en": "You're here to drop some gold, right?"
+   },
+   {
+    "zh_TW": "輕鬆，太輕鬆了。",
+    "en": "Easy. Way too easy."
+   },
+   {
+    "zh_TW": "我先讓你一招……算了，不讓。",
+    "en": "I'll give you a free hit... no, never mind."
+   },
+   {
+    "zh_TW": "這種怪，看一眼就倒。",
+    "en": "This kind falls if I just look at it."
+   },
+   {
+    "zh_TW": "快點，我趕時間。",
+    "en": "Hurry up, I'm on a schedule."
+   },
+   {
+    "zh_TW": "好吧，速戰速決。",
+    "en": "Fine. Quick and clean."
+   },
+   {
+    "zh_TW": "你應該回第一層去。",
+    "en": "You should go back to the first floor."
+   }
+  ],
+  "weaker": [
+   {
+    "zh_TW": "應該不難對付。",
+    "en": "Shouldn't be hard."
+   },
+   {
+    "zh_TW": "小心一點就沒問題。",
+    "en": "Stay careful and it'll be fine."
+   },
+   {
+    "zh_TW": "看起來我佔上風。",
+    "en": "Looks like I have the upper hand."
+   },
+   {
+    "zh_TW": "穩穩打就好。",
+    "en": "Steady hits, that's all."
+   },
+   {
+    "zh_TW": "別大意，小怪也會咬人。",
+    "en": "Don't get sloppy. Small ones bite too."
+   },
+   {
+    "zh_TW": "這個我應付得來。",
+    "en": "I can handle this one."
+   },
+   {
+    "zh_TW": "節奏抓好，一下一下來。",
+    "en": "Keep the rhythm, one hit at a time."
+   },
+   {
+    "zh_TW": "它好像有點怕我。",
+    "en": "I think it's a little scared of me."
+   },
+   {
+    "zh_TW": "打完這隻去補個血。",
+    "en": "After this one, I'll patch up."
+   },
+   {
+    "zh_TW": "不錯，練手剛剛好。",
+    "en": "Nice. Good practice."
+   },
+   {
+    "zh_TW": "盯著它的動作。",
+    "en": "Watch how it moves."
+   },
+   {
+    "zh_TW": "注意它頭上的驚嘆號。",
+    "en": "Watch for the \"!\" over its head."
+   },
+   {
+    "zh_TW": "這種程度，正適合試新招。",
+    "en": "Just right for trying a new move."
+   },
+   {
+    "zh_TW": "別被它碰到就好。",
+    "en": "Just don't let it touch me."
+   },
+   {
+    "zh_TW": "一鼓作氣拿下。",
+    "en": "Take it in one go."
+   },
+   {
+    "zh_TW": "我比它強，但不能輕敵。",
+    "en": "I'm stronger, but no underestimating."
+   },
+   {
+    "zh_TW": "它的攻擊應該不太痛。",
+    "en": "Its hits shouldn't hurt much."
+   },
+   {
+    "zh_TW": "好，讓我們漂亮地贏。",
+    "en": "Alright, let's win this cleanly."
+   },
+   {
+    "zh_TW": "打得完美一點，拿個 S。",
+    "en": "Let's play it perfect and get an S."
+   },
+   {
+    "zh_TW": "連擊練習時間到了。",
+    "en": "Combo practice time."
+   }
+  ],
+  "even": [
+   {
+    "zh_TW": "勢均力敵，認真點。",
+    "en": "Evenly matched. Focus."
+   },
+   {
+    "zh_TW": "這場不能隨便打。",
+    "en": "Can't take this one lightly."
+   },
+   {
+    "zh_TW": "看誰先失誤。",
+    "en": "Whoever slips first loses."
+   },
+   {
+    "zh_TW": "好對手，來吧！",
+    "en": "A worthy opponent. Bring it!"
+   },
+   {
+    "zh_TW": "防禦跟攻擊都要算準。",
+    "en": "Time both my guard and my attacks."
+   },
+   {
+    "zh_TW": "它的攻擊有節奏，看清楚。",
+    "en": "Its attacks have a rhythm. Read it."
+   },
+   {
+    "zh_TW": "血量要顧好。",
+    "en": "Mind my HP."
+   },
+   {
+    "zh_TW": "一個不小心就會輸。",
+    "en": "One mistake and I lose."
+   },
+   {
+    "zh_TW": "我感覺到它也在觀察我。",
+    "en": "I can feel it studying me too."
+   },
+   {
+    "zh_TW": "拼技術的時候到了。",
+    "en": "Time to show some skill."
+   },
+   {
+    "zh_TW": "別貪刀，該擋就擋。",
+    "en": "Don't get greedy. Guard when it's time."
+   },
+   {
+    "zh_TW": "這隻跟我差不多強。",
+    "en": "This one's about as strong as me."
+   },
+   {
+    "zh_TW": "穩住呼吸。",
+    "en": "Steady breathing."
+   },
+   {
+    "zh_TW": "先看它出什麼招。",
+    "en": "Let's see what it does first."
+   },
+   {
+    "zh_TW": "用完美連擊壓制它。",
+    "en": "Pin it down with perfect combos."
+   },
+   {
+    "zh_TW": "破防之後就是我的回合。",
+    "en": "Once it breaks, it's my turn."
+   },
+   {
+    "zh_TW": "一場好戰鬥。",
+    "en": "This'll be a good fight."
+   },
+   {
+    "zh_TW": "集中，集中。",
+    "en": "Focus. Focus."
+   },
+   {
+    "zh_TW": "它的弱點在哪裡呢？",
+    "en": "Where's its weak spot?"
+   },
+   {
+    "zh_TW": "我們來比耐心。",
+    "en": "Let's see who has more patience."
+   }
+  ],
+  "stronger": [
+   {
+    "zh_TW": "這傢伙不簡單。",
+    "en": "This one's no joke."
+   },
+   {
+    "zh_TW": "我可能要拼一下了。",
+    "en": "I might have to push hard here."
+   },
+   {
+    "zh_TW": "它比我強，小心應對。",
+    "en": "It's stronger than me. Careful."
+   },
+   {
+    "zh_TW": "一定要防禦，不能硬吃。",
+    "en": "I have to guard. Can't tank these."
+   },
+   {
+    "zh_TW": "補血道具準備好。",
+    "en": "Keep the potions ready."
+   },
+   {
+    "zh_TW": "找它的破綻……",
+    "en": "Look for an opening..."
+   },
+   {
+    "zh_TW": "硬碰硬會吃虧。",
+    "en": "Trading blows won't end well."
+   },
+   {
+    "zh_TW": "我應該先練一下再來的。",
+    "en": "I should've trained more first."
+   },
+   {
+    "zh_TW": "它的攻擊好重！",
+    "en": "Its hits are heavy!"
+   },
+   {
+    "zh_TW": "不能失誤，一次都不行。",
+    "en": "No mistakes. Not one."
+   },
+   {
+    "zh_TW": "等它出招，再反擊。",
+    "en": "Wait for its move, then strike back."
+   },
+   {
+    "zh_TW": "招架成功就有機會。",
+    "en": "Land a parry and I've got a chance."
+   },
+   {
+    "zh_TW": "撐住，撐住！",
+    "en": "Hold on, hold on!"
+   },
+   {
+    "zh_TW": "這場可能會很久。",
+    "en": "This could take a while."
+   },
+   {
+    "zh_TW": "要不要換個武器試試？",
+    "en": "Maybe try another weapon?"
+   },
+   {
+    "zh_TW": "絕招留到破防再用。",
+    "en": "Save the ultimate for the break."
+   },
+   {
+    "zh_TW": "心跳好快……",
+    "en": "My heart's pounding..."
+   },
+   {
+    "zh_TW": "這怪的眼神很危險。",
+    "en": "That look in its eyes is dangerous."
+   },
+   {
+    "zh_TW": "只要撐過這波攻擊……",
+    "en": "If I can just survive this wave..."
+   },
+   {
+    "zh_TW": "我不會輕易認輸的。",
+    "en": "I won't give up easily."
+   }
+  ],
+  "muchStronger": [
+   {
+    "zh_TW": "我應該打不贏，要跑嗎？",
+    "en": "I don't think I can win. Should I run?"
+   },
+   {
+    "zh_TW": "感覺會死……要拼命嗎？",
+    "en": "This feels deadly... do I go all in?"
+   },
+   {
+    "zh_TW": "這不是我現在能打的對手。",
+    "en": "This isn't a fight I can take right now."
+   },
+   {
+    "zh_TW": "它一下就能打掉我一半的血！",
+    "en": "One hit from it takes half my HP!"
+   },
+   {
+    "zh_TW": "快想辦法，不然就完了。",
+    "en": "Think of something, or it's over."
+   },
+   {
+    "zh_TW": "我的手在發抖。",
+    "en": "My hands are shaking."
+   },
+   {
+    "zh_TW": "先撤退，練強了再回來？",
+    "en": "Retreat, train, come back later?"
+   },
+   {
+    "zh_TW": "這是哪來的怪物啊！",
+    "en": "Where did this monster come from?!"
+   },
+   {
+    "zh_TW": "賭一把嗎……",
+    "en": "Do I take the gamble..."
+   },
+   {
+    "zh_TW": "全力防禦，找機會跑。",
+    "en": "Full guard, look for a way out."
+   },
+   {
+    "zh_TW": "不行，太強了！",
+    "en": "No way, it's too strong!"
+   },
+   {
+    "zh_TW": "這層不該出現這種東西。",
+    "en": "Something like this shouldn't be on this floor."
+   },
+   {
+    "zh_TW": "如果能破防，也許還有一絲希望。",
+    "en": "If I can break it, maybe there's a chance."
+   },
+   {
+    "zh_TW": "拼了！",
+    "en": "All or nothing!"
+   },
+   {
+    "zh_TW": "至少別死得太難看。",
+    "en": "At least let me go down with style."
+   },
+   {
+    "zh_TW": "我記住你了，下次再來。",
+    "en": "I'll remember you. Next time."
+   },
+   {
+    "zh_TW": "這場只能靠運氣了。",
+    "en": "This one's down to luck."
+   },
+   {
+    "zh_TW": "先保命要緊。",
+    "en": "Staying alive comes first."
+   },
+   {
+    "zh_TW": "它在笑……它在笑我。",
+    "en": "It's smiling... it's laughing at me."
+   },
+   {
+    "zh_TW": "快逃——不，等等，先擋住這下！",
+    "en": "Run— no, wait, block this one first!"
+   }
+  ]
+ },
+ "afterHit": {
+  "resisted": [
+   {
+    "zh_TW": "打了不痛？是不是要換武器？",
+    "en": "That didn't hurt it? Should I switch weapons?"
+   },
+   {
+    "zh_TW": "它好像不怕這種攻擊。",
+    "en": "It doesn't seem to fear this kind of attack."
+   },
+   {
+    "zh_TW": "刀砍下去像在砍石頭。",
+    "en": "Like slicing into stone."
+   },
+   {
+    "zh_TW": "傷害好低……換個招式試試。",
+    "en": "So little damage... let's try another move."
+   },
+   {
+    "zh_TW": "這招對它沒什麼用。",
+    "en": "That move barely works on it."
+   },
+   {
+    "zh_TW": "它有抗性，換魔法看看？",
+    "en": "It resists this. Maybe try magic?"
+   },
+   {
+    "zh_TW": "箭都彈開了！",
+    "en": "The arrows bounce off!"
+   },
+   {
+    "zh_TW": "魔法被吸收了一半……",
+    "en": "Half my magic got soaked up..."
+   },
+   {
+    "zh_TW": "再這樣打下去會打很久。",
+    "en": "At this rate, this'll take forever."
+   },
+   {
+    "zh_TW": "看看卡片上寫它怕什麼。",
+    "en": "Let me check its card for what it fears."
+   }
+  ],
+  "weakHit": [
+   {
+    "zh_TW": "有效！它怕這個！",
+    "en": "That works! It hates this!"
+   },
+   {
+    "zh_TW": "打到弱點了！",
+    "en": "Hit its weak spot!"
+   },
+   {
+    "zh_TW": "就是這樣，繼續！",
+    "en": "That's it, keep going!"
+   },
+   {
+    "zh_TW": "這武器選對了。",
+    "en": "Picked the right weapon."
+   },
+   {
+    "zh_TW": "它痛得叫出來了。",
+    "en": "It cried out in pain."
+   },
+   {
+    "zh_TW": "傷害翻倍，爽！",
+    "en": "Double damage. Nice!"
+   },
+   {
+    "zh_TW": "弱點攻擊，一路打下去。",
+    "en": "Weak spot. Keep hitting it."
+   },
+   {
+    "zh_TW": "原來它怕遠攻。",
+    "en": "So it's weak to ranged attacks."
+   },
+   {
+    "zh_TW": "原來它怕魔法。",
+    "en": "So it's weak to magic."
+   },
+   {
+    "zh_TW": "原來它怕近身砍。",
+    "en": "So it's weak to close combat."
+   }
+  ],
+  "perfect": [
+   {
+    "zh_TW": "完美！",
+    "en": "Perfect!"
+   },
+   {
+    "zh_TW": "這連擊太漂亮了。",
+    "en": "What a beautiful combo."
+   },
+   {
+    "zh_TW": "手感來了！",
+    "en": "I'm in the zone!"
+   },
+   {
+    "zh_TW": "連鎖不要斷！",
+    "en": "Don't break the chain!"
+   },
+   {
+    "zh_TW": "再來一次完美。",
+    "en": "Another perfect, let's go."
+   },
+   {
+    "zh_TW": "這招練得不錯嘛。",
+    "en": "I've gotten good at this move."
+   },
+   {
+    "zh_TW": "節奏完全抓到了。",
+    "en": "Totally got the rhythm."
+   },
+   {
+    "zh_TW": "繼續保持，S 評價在望。",
+    "en": "Keep it up, an S is in sight."
+   }
+  ],
+  "miss": [
+   {
+    "zh_TW": "可惡，揮空了。",
+    "en": "Dang, whiffed it."
+   },
+   {
+    "zh_TW": "節奏亂掉了。",
+    "en": "Lost the rhythm."
+   },
+   {
+    "zh_TW": "手滑了……",
+    "en": "My hand slipped..."
+   },
+   {
+    "zh_TW": "太急了，慢一點。",
+    "en": "Too hasty. Slow down."
+   },
+   {
+    "zh_TW": "看清楚提示再出手。",
+    "en": "Read the prompt before striking."
+   },
+   {
+    "zh_TW": "下一下一定中。",
+    "en": "Next one will land."
+   },
+   {
+    "zh_TW": "別慌，重新來。",
+    "en": "Don't panic. Again."
+   },
+   {
+    "zh_TW": "它閃開了？",
+    "en": "It dodged?"
+   }
+  ],
+  "selfLowHp": [
+   {
+    "zh_TW": "血不多了，要小心。",
+    "en": "Low on HP. Careful now."
+   },
+   {
+    "zh_TW": "該喝藥水了嗎？",
+    "en": "Time for a potion?"
+   },
+   {
+    "zh_TW": "再被打一下就危險了。",
+    "en": "One more hit and I'm in trouble."
+   },
+   {
+    "zh_TW": "先防禦，別貪攻。",
+    "en": "Guard first. Don't get greedy."
+   },
+   {
+    "zh_TW": "撐住，快贏了。",
+    "en": "Hold on, almost there."
+   },
+   {
+    "zh_TW": "視線開始模糊了……",
+    "en": "My vision's getting blurry..."
+   },
+   {
+    "zh_TW": "拼命的時候到了。",
+    "en": "Time to give it everything."
+   }
+  ],
+  "foeLowHp": [
+   {
+    "zh_TW": "它快倒了！",
+    "en": "It's about to fall!"
+   },
+   {
+    "zh_TW": "最後一擊！",
+    "en": "Final blow!"
+   },
+   {
+    "zh_TW": "別讓它逃了。",
+    "en": "Don't let it get away."
+   },
+   {
+    "zh_TW": "收尾要漂亮。",
+    "en": "Finish it with style."
+   },
+   {
+    "zh_TW": "還剩一點點。",
+    "en": "Just a little more."
+   },
+   {
+    "zh_TW": "用絕招結束它！",
+    "en": "End it with the ultimate!"
+   },
+   {
+    "zh_TW": "它的腳步不穩了。",
+    "en": "It's staggering."
+   }
+  ]
+ },
+ "cardHints": [
+  {
+   "zh_TW": "{name}不怕{type}，抗性有 {pct}%。",
+   "en": "{name} shrugs off {type}: {pct}% resistance."
+  },
+  {
+   "zh_TW": "卡片上寫著：{name}怕{type}。",
+   "en": "The card says: {name} is weak to {type}."
+  },
+  {
+   "zh_TW": "對{name}用{type}，傷害會多 {pct}%。",
+   "en": "{type} does {pct}% more to {name}."
+  },
+  {
+   "zh_TW": "{name}的弱點是{type}，換過來！",
+   "en": "{name}'s weakness is {type}. Switch!"
+  },
+  {
+   "zh_TW": "記得嗎？{name}對{type}有抗性。",
+   "en": "Remember? {name} resists {type}."
+  },
+  {
+   "zh_TW": "{name}的殼很硬，{type}打不太進去。",
+   "en": "{name}'s shell is tough; {type} barely gets through."
+  },
+  {
+   "zh_TW": "用{type}打{name}最有效。",
+   "en": "{type} works best on {name}."
+  },
+  {
+   "zh_TW": "{name}……卡片說它怕{type}。",
+   "en": "{name}... the card says it fears {type}."
+  },
+  {
+   "zh_TW": "別用{type}，{name}會吸收掉 {pct}%。",
+   "en": "Not {type}, {name} absorbs {pct}% of it."
+  },
+  {
+   "zh_TW": "{name}對{type}毫無抵抗力。",
+   "en": "{name} has no defense against {type}."
+  },
+  {
+   "zh_TW": "上次就是用{type}打倒{name}的。",
+   "en": "Last time I beat {name} with {type}."
+  },
+  {
+   "zh_TW": "{name}行動快，{type}比較好命中。",
+   "en": "{name} is fast; {type} hits it more easily."
+  },
+  {
+   "zh_TW": "{name}會招架，{type}比較不會被擋。",
+   "en": "{name} parries; {type} gets blocked less."
+  },
+  {
+   "zh_TW": "{name}有魔法護盾，先用{type}打破。",
+   "en": "{name} has a magic shield; break it with {type} first."
+  },
+  {
+   "zh_TW": "{name}很怕遠距離攻擊。",
+   "en": "{name} hates being hit from a distance."
+  },
+  {
+   "zh_TW": "{name}靠近身時最脆弱。",
+   "en": "{name} is weakest up close."
+  },
+  {
+   "zh_TW": "{name}不怕任何一種武器……只能硬打。",
+   "en": "{name} fears no weapon... just grind it down."
+  },
+  {
+   "zh_TW": "{name}三種攻擊都抗 {pct}%，是場硬仗。",
+   "en": "{name} resists all three by {pct}%. A hard one."
+  },
+  {
+   "zh_TW": "看{name}頭上的驚嘆號，它的重擊很痛。",
+   "en": "Watch {name}'s \"!\"; its heavy hits hurt."
+  },
+  {
+   "zh_TW": "{name}會連續攻擊，防禦要連按。",
+   "en": "{name} attacks in bursts; guard each one."
+  },
+  {
+   "zh_TW": "{name}的封印要畫出來才能擋。",
+   "en": "{name}'s seal has to be drawn to block it."
+  },
+  {
+   "zh_TW": "{name}破防後會很脆弱。",
+   "en": "{name} is fragile once broken."
+  },
+  {
+   "zh_TW": "{name}的血很厚，準備長期戰。",
+   "en": "{name} has a lot of HP. Settle in."
+  },
+  {
+   "zh_TW": "{name}攻擊很慢，抓空檔連擊。",
+   "en": "{name} attacks slowly. Combo in the gaps."
+  },
+  {
+   "zh_TW": "{name}會逃跑，速戰速決。",
+   "en": "{name} flees. Finish it fast."
+  },
+  {
+   "zh_TW": "{name}會召喚同伴，先打它。",
+   "en": "{name} summons friends. Take it out first."
+  },
+  {
+   "zh_TW": "{name}會變身，小心第二階段。",
+   "en": "{name} transforms. Careful in phase two."
+  },
+  {
+   "zh_TW": "{name}血少時會回血。",
+   "en": "{name} heals when it's low."
+  },
+  {
+   "zh_TW": "{name}怕{type}，但對另外兩種都有抗性。",
+   "en": "{name} is weak to {type} but resists the other two."
+  },
+  {
+   "zh_TW": "{name}的卡片我有兩張了，打法我很熟。",
+   "en": "I have two of {name}'s cards. I know how to fight it."
+  }
+ ],
+ "idle": [
+  {
+   "zh_TW": "今天天氣不錯，適合打怪。",
+   "en": "Nice weather today. Good for monster hunting."
+  },
+  {
+   "zh_TW": "塔裡沒有天氣啦……",
+   "en": "There's no weather inside the tower..."
+  },
+  {
+   "zh_TW": "肚子有點餓了。",
+   "en": "I'm getting a bit hungry."
+  },
+  {
+   "zh_TW": "回去要好好睡一覺。",
+   "en": "I need a good night's sleep after this."
+  },
+  {
+   "zh_TW": "這層的地板好滑。",
+   "en": "The floor on this level is slippery."
+  },
+  {
+   "zh_TW": "誰在塔裡蓋這麼多樓梯的？",
+   "en": "Who built so many stairs in this tower?"
+  },
+  {
+   "zh_TW": "背包好重，都是藥水。",
+   "en": "My bag is heavy. All potions."
+  },
+  {
+   "zh_TW": "我是不是忘了關燈？",
+   "en": "Did I forget to turn off the lights?"
+  },
+  {
+   "zh_TW": "聽說頂樓有寶藏。",
+   "en": "They say there's treasure on the top floor."
+  },
+  {
+   "zh_TW": "村長的鬍子又變長了。",
+   "en": "The elder's beard got longer again."
+  },
+  {
+   "zh_TW": "等等打完要去哪吃飯？",
+   "en": "Where should I eat after this?"
+  },
+  {
+   "zh_TW": "這把武器我越用越順手。",
+   "en": "This weapon feels better every day."
+  },
+  {
+   "zh_TW": "今天的運氣應該不錯。",
+   "en": "Feeling lucky today."
+  },
+  {
+   "zh_TW": "塔裡的空氣有點悶。",
+   "en": "The air in here is a bit stuffy."
+  },
+  {
+   "zh_TW": "有沒有人聽到奇怪的聲音？",
+   "en": "Did anyone else hear that noise?"
+  },
+  {
+   "zh_TW": "我的鞋子破了一個洞。",
+   "en": "My shoe has a hole in it."
+  },
+  {
+   "zh_TW": "下次帶便當來。",
+   "en": "Next time I'm bringing a lunch box."
+  },
+  {
+   "zh_TW": "怪物們也要上班吧。",
+   "en": "Monsters have jobs too, I guess."
+  },
+  {
+   "zh_TW": "這隻怪看起來心情不好。",
+   "en": "This one looks like it's having a bad day."
+  },
+  {
+   "zh_TW": "打完這層就休息一下。",
+   "en": "I'll rest after this floor."
+  },
+  {
+   "zh_TW": "想念村子裡的麵包。",
+   "en": "I miss the village bread."
+  },
+  {
+   "zh_TW": "塔頂的風景一定很漂亮。",
+   "en": "The view from the top must be beautiful."
+  },
+  {
+   "zh_TW": "我的頭髮是不是亂了？",
+   "en": "Is my hair a mess?"
+  },
+  {
+   "zh_TW": "今天的戰鬥特別多。",
+   "en": "Lots of fights today."
+  },
+  {
+   "zh_TW": "這把劍要磨一磨了。",
+   "en": "This sword needs sharpening."
+  },
+  {
+   "zh_TW": "弓弦好像有點鬆。",
+   "en": "The bowstring feels a little loose."
+  },
+  {
+   "zh_TW": "法杖上的寶石在發光。",
+   "en": "The gem on my staff is glowing."
+  },
+  {
+   "zh_TW": "聽說商人進了新貨。",
+   "en": "Heard the merchant got new stock."
+  },
+  {
+   "zh_TW": "寫日記的時候要寫今天。",
+   "en": "Today goes in the diary."
+  },
+  {
+   "zh_TW": "好想泡個溫泉。",
+   "en": "I could really use a hot spring."
+  },
+  {
+   "zh_TW": "這次一定要拿到 S。",
+   "en": "This time I'm getting an S."
+  },
+  {
+   "zh_TW": "這怪的樣子有點可愛。",
+   "en": "This monster is kind of cute."
+  },
+  {
+   "zh_TW": "可愛也要打。",
+   "en": "Cute or not, it's going down."
+  },
+  {
+   "zh_TW": "今天的星星應該很亮。",
+   "en": "The stars should be bright tonight."
+  },
+  {
+   "zh_TW": "塔裡的時間過得好快。",
+   "en": "Time flies in this tower."
+  },
+  {
+   "zh_TW": "我是不是在第幾層迷路了？",
+   "en": "Wait, which floor am I on?"
+  },
+  {
+   "zh_TW": "村裡的貓不知道好不好。",
+   "en": "I wonder how the village cat is doing."
+  },
+  {
+   "zh_TW": "口渴了，等下喝水。",
+   "en": "Thirsty. Water later."
+  },
+  {
+   "zh_TW": "這場打完要伸個懶腰。",
+   "en": "Big stretch after this fight."
+  },
+  {
+   "zh_TW": "今天也要平安回家。",
+   "en": "Getting home safe today too."
+  },
+  {
+   "zh_TW": "有人在這裡掉了金幣嗎？",
+   "en": "Did someone drop gold here?"
+  },
+  {
+   "zh_TW": "寶箱裡最好是好東西。",
+   "en": "That chest better have something good."
+  },
+  {
+   "zh_TW": "我好像聞到烤肉的味道。",
+   "en": "I think I smell barbecue."
+  },
+  {
+   "zh_TW": "戰鬥前要先深呼吸。",
+   "en": "Deep breath before the fight."
+  },
+  {
+   "zh_TW": "今天的我狀態很好。",
+   "en": "I'm in great shape today."
+  },
+  {
+   "zh_TW": "腳有點痠了。",
+   "en": "My legs are getting sore."
+  },
+  {
+   "zh_TW": "剛剛那層的音樂好聽。",
+   "en": "The music on the last floor was nice."
+  },
+  {
+   "zh_TW": "我的影子好像比我還緊張。",
+   "en": "My shadow looks more nervous than me."
+  },
+  {
+   "zh_TW": "塔的牆上有人畫塗鴉。",
+   "en": "Someone drew graffiti on the tower walls."
+  },
+  {
+   "zh_TW": "這次升級要點哪個屬性呢？",
+   "en": "Which stat should I raise next level?"
+  },
+  {
+   "zh_TW": "為什麼史萊姆不會說謊？因為它太透明了。",
+   "en": "Why can't slimes lie? They're too transparent."
+  },
+  {
+   "zh_TW": "骷髏為什麼不打架？因為它沒有膽。",
+   "en": "Why don't skeletons fight? They don't have the guts."
+  },
+  {
+   "zh_TW": "蝙蝠為什麼成績好？因為牠倒背如流。",
+   "en": "Why do bats ace exams? They know everything upside down."
+  },
+  {
+   "zh_TW": "魔像最怕什麼？怕被說是石頭腦袋。",
+   "en": "What does a golem fear? Being called a rockhead."
+  },
+  {
+   "zh_TW": "為什麼弓箭手不愛聊天？因為他們都直接切入重點。",
+   "en": "Why don't archers chat? They get straight to the point."
+  },
+  {
+   "zh_TW": "劍士為什麼常常道歉？因為他太刀子嘴了。",
+   "en": "Why does the swordsman apologise so much? Too sharp a tongue."
+  },
+  {
+   "zh_TW": "法師的寵物是什麼？咒狗。",
+   "en": "What's a wizard's pet? A spell-ter dog... okay, a hex-hound."
+  },
+  {
+   "zh_TW": "塔裡的電梯呢？喔，叫樓梯。",
+   "en": "Where's the elevator in this tower? Oh. Stairs."
+  },
+  {
+   "zh_TW": "鬼魂為什麼不說謊？因為一眼就被看穿。",
+   "en": "Why can't ghosts lie? You can see right through them."
+  },
+  {
+   "zh_TW": "吸血鬼不吃什麼？大蒜，還有我的冷笑話。",
+   "en": "What won't a vampire eat? Garlic. And my jokes."
+  },
+  {
+   "zh_TW": "木乃伊為什麼不度假？怕被拆封。",
+   "en": "Why don't mummies take vacations? Afraid to unwind."
+  },
+  {
+   "zh_TW": "為什麼龍不玩捉迷藏？太好找了。",
+   "en": "Why don't dragons play hide and seek? Too easy to spot."
+  },
+  {
+   "zh_TW": "火精靈為什麼生氣？因為一點就著。",
+   "en": "Why is the fire imp so angry? Short fuse."
+  },
+  {
+   "zh_TW": "為什麼螃蟹不分享？因為牠很自私（蟹）。",
+   "en": "Why don't crabs share? They're shellfish."
+  },
+  {
+   "zh_TW": "巨魔為什麼不洗澡？因為怕變成『美』魔。",
+   "en": "Why don't trolls bathe? They're afraid of getting troll-y clean."
+  },
+  {
+   "zh_TW": "哥布林最愛的音樂？搖滾，因為牠們都在洞穴。",
+   "en": "A goblin's favourite music? Rock. They live in caves."
+  },
+  {
+   "zh_TW": "為什麼勇者總是很冷？因為身上都是冷笑話。",
+   "en": "Why is the hero always cold? Too many cold jokes."
+  },
+  {
+   "zh_TW": "樓梯為什麼累？因為一直被踩。",
+   "en": "Why are the stairs tired? People keep stepping on them."
+  },
+  {
+   "zh_TW": "藥水為什麼紅？因為被我盯著看害羞了。",
+   "en": "Why is the potion red? It's blushing because I'm staring."
+  },
+  {
+   "zh_TW": "寶箱為什麼鎖著？因為它有秘密。",
+   "en": "Why is the chest locked? It has secrets."
+  },
+  {
+   "zh_TW": "我跟史萊姆有什麼共同點？都很黏人。",
+   "en": "What do I have in common with a slime? We're both clingy."
+  },
+  {
+   "zh_TW": "為什麼弓不會累？因為它總是放鬆弦。",
+   "en": "Why doesn't the bow get tired? It knows how to unwind its string."
+  },
+  {
+   "zh_TW": "法杖為什麼高？因為它是長輩（杖輩）。",
+   "en": "Why is the staff so tall? It's the elder of the weapons."
+  },
+  {
+   "zh_TW": "為什麼盾牌人緣好？因為它總是挺你。",
+   "en": "Why is the shield so popular? It always has your back."
+  },
+  {
+   "zh_TW": "為什麼惡魔不開車？怕被開罰單——天罰。",
+   "en": "Why don't demons drive? Afraid of divine traffic tickets."
+  },
+  {
+   "zh_TW": "聽說最後一層的怪最怕冷笑話。",
+   "en": "I hear the top-floor boss hates cold jokes."
+  },
+  {
+   "zh_TW": "那我現在是在攻擊你嗎？",
+   "en": "So, am I attacking you right now?"
+  },
+  {
+   "zh_TW": "一隻史萊姆走進酒館……然後就黏住了。",
+   "en": "A slime walks into a tavern... and sticks around."
+  },
+  {
+   "zh_TW": "為什麼金幣會笑？因為它很閃亮。",
+   "en": "Why is the gold coin smiling? It's feeling shiny."
+  },
+  {
+   "zh_TW": "我的武器說它今天不想上班。",
+   "en": "My weapon says it doesn't want to work today."
+  },
+  {
+   "zh_TW": "塔有幾層？比我想爬的多一層。",
+   "en": "How many floors? One more than I want to climb."
+  },
+  {
+   "zh_TW": "鳳凰為什麼不怕死？因為它有存檔。",
+   "en": "Why isn't the phoenix afraid of dying? It has a save file."
+  },
+  {
+   "zh_TW": "為什麼蜘蛛會上網？因為牠自己就是網。",
+   "en": "Why are spiders good online? They make their own web."
+  },
+  {
+   "zh_TW": "殭屍為什麼走很慢？因為它還沒睡醒。",
+   "en": "Why are zombies so slow? Still waking up."
+  },
+  {
+   "zh_TW": "為什麼鬼魂喜歡電梯？因為可以穿牆。",
+   "en": "Why do ghosts like elevators? They lift their spirits."
+  },
+  {
+   "zh_TW": "我數到三就出招……一、二……算了直接打。",
+   "en": "I'll strike on three... one, two... eh, now."
+  },
+  {
+   "zh_TW": "這怪的表情好像在想晚餐。",
+   "en": "This monster looks like it's thinking about dinner."
+  },
+  {
+   "zh_TW": "希望晚餐不是我。",
+   "en": "Hope dinner isn't me."
+  },
+  {
+   "zh_TW": "為什麼斧頭不受歡迎？因為它太會劈腿。",
+   "en": "Why is the axe unpopular? It keeps splitting up."
+  },
+  {
+   "zh_TW": "寶石為什麼不寂寞？因為它很有光彩。",
+   "en": "Why isn't the gem lonely? It's brilliant company."
+  },
+  {
+   "zh_TW": "我的護甲說它想放假。",
+   "en": "My armor says it wants a day off."
+  },
+  {
+   "zh_TW": "為什麼魔法書很重？因為內容很沉重。",
+   "en": "Why is the spellbook heavy? Heavy reading."
+  },
+  {
+   "zh_TW": "劍跟盾吵架了，誰會贏？當然是劍，它比較尖銳。",
+   "en": "Sword versus shield in an argument? Sword wins. Sharper point."
+  },
+  {
+   "zh_TW": "為什麼弓箭手很準時？因為他們總是瞄準時間。",
+   "en": "Why are archers punctual? They always aim for the time."
+  },
+  {
+   "zh_TW": "骷髏的樂團叫什麼？骨頭搖滾。",
+   "en": "What's a skeleton's band called? The Bone Rollers."
+  },
+  {
+   "zh_TW": "火山為什麼生氣？因為它一直在冒火。",
+   "en": "Why is the volcano angry? It keeps blowing its top."
+  },
+  {
+   "zh_TW": "海浪為什麼不累？因為它一直在休息（浪）。",
+   "en": "Why don't waves get tired? They just keep rolling."
+  },
+  {
+   "zh_TW": "我的冷笑話庫存快用完了。",
+   "en": "I'm running out of cold jokes."
+  },
+  {
+   "zh_TW": "沒關係，怪物也聽不懂。",
+   "en": "That's fine, the monsters don't get them anyway."
+  },
+  {
+   "zh_TW": "好，認真打了。",
+   "en": "Okay. Serious mode now."
+  }
+ ]
+}

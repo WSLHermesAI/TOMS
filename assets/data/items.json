@@ -181,8 +181,7 @@
       "maxMult": 2.2
     },
     "battleAnim": {
-      "character": "anim/archer_bow.anim",
-      "held": "anim/weapon_bow.anim"
+      "character": "anim/hero_bow.anim"
     }
   },
   "twin_daggers": {

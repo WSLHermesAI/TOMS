@@ -244,7 +244,7 @@ void Game::skillBeat(const toms::ShowBeat& b, glm::vec2 at) {
         cs.camOn = b.on == "monster" ? t : -1;
     } else if (b.what == "clip") {
         if (battleRigReady() && cs.skill.owner < 0) {
-            const bool has = battleCharacterAnim_ && !b.clip.empty() && battleCharacterAnim_->find(b.clip);
+            const bool has = playerView_ && !b.clip.empty() && playerView_->f_Has(b.clip);
             setBattleRigState("attack", true, has ? b.clip : std::string());
         }
     } else if (b.what == "hits") {   // the finish's hits share the move's damage (set when the finish began)

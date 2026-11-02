@@ -18,7 +18,10 @@
 //   --title-scene=<f|none> the 3D scene behind the title: a .glb / .gltf, or none (default:
 //                         assets/media/models/VirtualCity.glb when it is there; docs/engine/08_GLTF.md)
 //   --frames=<n>          quit after n frames (automated tests; desktop)
-//   --screenshot=<png>    save the last frame to a PNG (with --frames; desktop)
+//   --screenshot=<png>    save the last frame to a PNG (with --frames; desktop). The window stays hidden.
+//   --record=<folder>     save frames as <folder>/frame_00000.png, ... (desktop; the window stays hidden): every frame
+//                         from --record-from=<n> (default 0), or every --record-step=<n>th; with --frames and
+//                         --fixed-dt, a clip or a battle as pictures, merged by tools/frames_to_gif.py
 //   --keys=<k@f,...>      press key k at frame f, e.g. enter@30,enter@60 (automated tests)
 //   --clicks=<x:y@f,...>  left-click at design point (x,y) (1024x768 space) at frame f (tests)
 //   --fixed-dt=<ms>       every frame advances exactly this long, so a scripted run is identical
@@ -100,6 +103,8 @@ namespace {
 struct Args {
     std::string renderer = "auto", assets, stage = "stage01", screenshot, anim, fx, meshTest, character, held;
     int frames = 0;
+    std::string record;                // --record=<folder>
+    int recordFrom = 0, recordStep = 1;   // --record-from=<n>, --record-step=<n>
     int animCrowd = 0;                 // --anim-crowd=N
     bool bench = false;                // --bench
     bool vsync = true, stats = false, fps = false;
@@ -179,6 +184,9 @@ Args parseArgs(const std::vector<std::string>& argv) {
         else if (const char* v = value(s, "--stage="))  a.stage = v;
         else if (const char* v = value(s, "--frames=")) a.frames = std::atoi(v);
         else if (const char* v = value(s, "--screenshot=")) a.screenshot = v;
+        else if (const char* v = value(s, "--record=")) a.record = v;
+        else if (const char* v = value(s, "--record-from=")) a.recordFrom = std::max(0, std::atoi(v));
+        else if (const char* v = value(s, "--record-step=")) a.recordStep = std::max(1, std::atoi(v));
         else if (const char* v = value(s, "--keys=")) parseKeys(v, a);
         else if (const char* v = value(s, "--clicks=")) parseClicks(v, a);
         else if (const char* v = value(s, "--fixed-dt=")) a.fixedDtMs = std::atoi(v);
@@ -324,7 +332,11 @@ bool appInit(App& app) {
     // Web: no SDL_WINDOW_FILL_DOCUMENT. shell.html sizes the canvas with CSS (full viewport) and SDL
     // follows that; fill-document mode depended on a probe that fails at fractional display scaling
     // (the canvas stayed 1x1) and it also hid the page's own buttons.
-    const SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+    SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+#if !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
+    // A run that only takes pictures draws into a hidden window: no window flashing open and shut on the desktop.
+    if (!args.screenshot.empty() || !args.record.empty()) flags |= SDL_WINDOW_HIDDEN;
+#endif
     app.window = SDL_CreateWindow("Tower of the Sorcerer (bgfx)", args.windowW, args.windowH, flags);
     if (!app.window) {
         fatalBox(nullptr, "TOMS: no window", SDL_GetError());
@@ -616,6 +628,14 @@ bool appFrame(App& app) {
 
     if (args.frames > 0 && !args.screenshot.empty() && app.frameNo == args.frames)
         app.session.renderer()->savePNG(args.screenshot);
+    if (!args.record.empty() && app.frameNo >= args.recordFrom && (app.frameNo - args.recordFrom) % args.recordStep == 0 &&
+        (args.frames <= 0 || app.frameNo <= args.frames)) {
+        static int recorded = 0;
+        if (recorded == 0) std::filesystem::create_directories(args.record);
+        char name[32];
+        std::snprintf(name, sizeof name, "/frame_%05d.png", recorded++);
+        app.session.renderer()->savePNG(args.record + name);
+    }
     bgfxHostFrame();
     if (args.bench && app.session.renderer()) {   // every 120 frames: the averages (stderr)
         static double sumFrame = 0, sumAnim = 0, sumCalls = 0, sumGpu = 0;
@@ -632,7 +652,7 @@ bool appFrame(App& app) {
         }
     }
     ++app.frameNo;
-    if (args.frames > 0 && app.frameNo > args.frames + (args.screenshot.empty() ? 0 : 3)) quit = true;
+    if (args.frames > 0 && app.frameNo > args.frames + (args.screenshot.empty() && args.record.empty() ? 0 : 3)) quit = true;
     if (quit && args.scenarioTest && app.exitCode == 0 && app.scenarioStarted && app.session.game()) {
         std::string report;
         if (!app.session.game()->scenarioCheck(report)) app.exitCode = 3;

@@ -11,7 +11,8 @@
 namespace toms {
 
 // 2: English became the default language (2026-10-12); a version-1 file's language is reset to it.
-constexpr int kGameSettingsSchemaVersion = 2;
+// 3: Traditional Chinese became the default (the owner, 2026-11-02); an older file's language is reset to it.
+constexpr int kGameSettingsSchemaVersion = 3;
 
 // Particle emitters with more than this many particles (maxParticles) are simulated on the GPU,
 // where the renderer has compute shaders (docs/engine/07_PARTICLES.md); 0 = always on the CPU. Phones get
@@ -24,10 +25,10 @@ constexpr int kDefaultParticleGpuThreshold = 5000;
 
 struct GameSettings {
     int schemaVersion = kGameSettingsSchemaVersion;
-    // Language code into data/text.json's "languages" list. English is the default (the owner,
-    // 2026-10-12: English only until translations are asked for; every text is still looked up by its
-    // key, so another language is a matter of filling text.json).
-    std::string language = "en";
+    // Language code into data/text.json's "languages" list. Traditional Chinese is the default (the owner,
+    // 2026-11-02); only it and English are offered for now (text.json "offered"), and a saved language that is not
+    // offered plays in English. The environment variable TOMS_LANGUAGE overrides it without saving (the tests: "en").
+    std::string language = "zh_TW";
     // How many save files the Continue page offers.
     int slotCount = 3;
     // ImGui font scale for the desktop debug/overlay UI (kept here so it finally persists

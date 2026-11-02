@@ -24,7 +24,7 @@ avoid git's *dubious ownership* error).
 Logs: `%TEMP%\TOMS_setup.log`, `%TEMP%\TOMS_setup_admin.log`.
 
 On the way it asks about the **AI art tools (ComfyUI, can be skipped)**: (1) install ComfyUI here and
-download the models (about 13 GB; needs an NVIDIA card with 8 GB+ VRAM), (2) use a ComfyUI server on
+download the models (about 20 GB; needs an NVIDIA card with 8 GB+ VRAM; what each is for: [../engine/20_CHARACTER_ART.md](../engine/20_CHARACTER_ART.md)), (2) use a ComfyUI server on
 another machine (type its URL; it checks the connection and which models the server lacks), or
 (3) skip. You can run `tools\setup_ai_art.cmd` again any time. The setting is stored in the user
 environment variables `COMFYUI_URL` / `COMFYUI_SERVER` (AIGamestyle's scripts read the latter).

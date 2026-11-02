@@ -45,7 +45,13 @@ $Models = @(
     @{ Name = 'IP-Adapter Plus SDXL (copies a reference style)';           Folder = 'ipadapter';   File = 'ip-adapter-plus_sdxl_vit-h.safetensors';   Size = 847517512
        Url = 'https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors' },
     @{ Name = 'CLIP Vision ViT-H (needed by IP-Adapter)';                  Folder = 'clip_vision'; File = 'CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors'; Size = 2528373448
-       Url = 'https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors' }
+       Url = 'https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors' },
+    # the painted HD characters (docs/engine/20_CHARACTER_ART.md: tools/art/make_brawler_art.py, make_hero_poses.py)
+    @{ Name = 'Juggernaut XL v9 (painted HD characters)';                  Folder = 'checkpoints'; File = 'Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors'; Size = 7105348188
+       Url = 'https://huggingface.co/RunDiffusion/Juggernaut-XL-v9/resolve/main/Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors' },
+    # the 3D character trial (docs/engine/20_CHARACTER_ART.md §4: tools/art/make_hero_3d.py); Tencent Hunyuan community license
+    @{ Name = 'Hunyuan3D-2 shape (3D model from a picture)';               Folder = 'checkpoints'; File = 'hunyuan3d-dit-v2-0.fp16.safetensors'; Size = 4928151562
+       Url = 'https://huggingface.co/tencent/Hunyuan3D-2/resolve/main/hunyuan3d-dit-v2-0/model.fp16.safetensors' }
 )
 $CustomNodes = @(
     @{ Dir = 'comfyui_ipadapter_plus';   Url = 'https://github.com/cubiq/ComfyUI_IPAdapter_plus' },
@@ -131,7 +137,7 @@ $intro = New-Object System.Windows.Forms.Label -Property @{
 }
 $rbLocal = New-Object System.Windows.Forms.RadioButton -Property @{
     Left = 20; Top = 75; Width = 550; Height = 70
-    Text = "On THIS PC - install ComfyUI and download models (about 13 GB of models,`n" +
+    Text = "On THIS PC - install ComfyUI and download models (about 25 GB of models,`n" +
            "plus 3-5 GB for ComfyUI and PyTorch). Free; needs an NVIDIA GPU with 8+ GB VRAM." +
            $(if ($localOk) { "`n(recommended for this PC)" } else { "`n(not recommended: this PC's GPU is too small or missing)" })
 }

@@ -1,5 +1,7 @@
 # 15 — The battle revamp: one loop the player loves (design)
 
+> **Next:** the owner's ideas of 2026-10-31 night (weapon families, play types, resistances, the talk bar, the difficulty curve) are in [17_WEAPONS_AND_PLAYS.md](17_WEAPONS_AND_PLAYS.md); its §13 says what they change here.
+
 > 中文版：[zh_TW/15_BATTLE_REVAMP.md](zh_TW/15_BATTLE_REVAMP.md)
 
 **Status:** design, 2026-10-31 (the owner: "revamp the battle scene: from the gameplay documents, integrate some ideas

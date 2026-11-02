@@ -27,6 +27,9 @@ LooksTable looksFromJson(const nlohmann::json& j) {
         if (it.key().empty() || it.key()[0] == '_' || !it.value().is_object()) continue;
         Look l;
         l.base = it.value().value("base", std::string());
+        l.render = it.value().value("render", std::string());
+        l.character = it.value().value("character", std::string());
+        l.model = it.value().value("model", std::string());
         const nlohmann::json st = it.value().value("states", nlohmann::json::object());
         for (auto s = st.begin(); s != st.end(); ++s) {
             if (!s.value().is_object()) continue;

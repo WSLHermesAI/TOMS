@@ -44,6 +44,9 @@ struct EquipmentDefinition {
     // the held clip (the weapon) is drawn at its hand; the battle's status picks the clip of both (idle, charge,
     // attack, miss). Empty: the battle shows the player's picture.
     std::string battleCharacterAnim, battleHeldAnim;
+    // "battleAnim": {"render": "2d" | "3d", "model": ".glb"}: how the fighter is drawn (docs/gameplay/18_FIGHTER_VIEWS.md,
+    // FighterView); "2d" (default) plays the .anim files above, "3d" the model's animations by the same clip names.
+    std::string battleRender = "2d", battleModel;
     // "battleAnim": {"clips": {"idle": "ready", "charge": "raise", "attack": "slash", "miss": "fumble"}} (docs/gameplay/07 phase 2):
     // the clip each battle status plays, in both files. A status not listed plays the clip of its own name.
     std::map<std::string, std::string> battleClips;

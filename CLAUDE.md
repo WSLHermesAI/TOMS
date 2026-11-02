@@ -32,6 +32,16 @@
   (`git add AIGamestyle`, `git add -A`, `git commit -a`). Stage TOMS files by name. The owner commits it by hand
   (2026-10-30) until they ask me to.
 
+### C++ naming: scope and type in every variable, `f_` on every function
+
+- **Every C++ variable is `<scope>_<type><Name>`** (the owner, 2026-11-02; docs/project/12_CPP_NAMING.md): `m_` member,
+  `l_` local (parameters, lambdas, loops), `g_` global; then the type prefix (`str`, `i`, `b`, `f`, `v`, `map`, `p`,
+  `sp`, `up`, `o`, ... the table in §2), e.g. `m_strName`, `l_iCount`, `g_bQuit`.
+- **Every function is `f_<Name>`** (free, member, static): `f_LoadBattleRig`. Not constructors, destructors,
+  operators, entry points, third-party virtual overrides, or names found by lookup (`to_json`, `begin`, `swap`; §3).
+- **New files follow it now.** Existing files keep their style until the owner asks for the conversion (no file half
+  and half). Never touch third-party code (`src/third_party/`, the libraries CMake downloads, `AIGamestyle`).
+
 ### Files: by key, never a path in code
 
 - **Game code names a file by its key** in `assets/media/resources.json` (`toms::key::k…` / `toms::pattern::k…` from

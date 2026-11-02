@@ -16,7 +16,7 @@ add_library(toms_core STATIC
     ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp
     ${L_GAME}/core/game_scene_draw.cpp ${L_GAME}/core/game_input.cpp ${L_GAME}/core/game_inventory.cpp
     ${L_GAME}/core/game_player_menu.cpp
-    ${L_GAME}/core/game_store.cpp ${L_GAME}/core/game_combat.cpp ${L_GAME}/core/game_skills.cpp ${L_GAME}/core/game_story.cpp
+    ${L_GAME}/core/game_store.cpp ${L_GAME}/core/game_combat.cpp ${L_GAME}/core/fighter_view.cpp ${L_GAME}/core/game_skills.cpp ${L_GAME}/core/game_story.cpp
     ${L_GAME}/core/game_title_glue.cpp
     ${L_GAME}/core/game_scenario.cpp   # test scenarios: one scene from a setting file (docs/gameplay/08_TEST_SCENARIOS.md)
     ${L_GAME}/core/map_objects.cpp   # the floor's things, a class per kind (docs/engine/12 §4.10)

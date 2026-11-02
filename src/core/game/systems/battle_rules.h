@@ -25,6 +25,9 @@ struct LookState {
 
 struct Look {
     std::string base;                         // another look whose states this one starts from
+    // How the fighter is drawn (docs/gameplay/18_FIGHTER_VIEWS.md, FighterView): "render" "2d" | "3d" ("" = the base's,
+    // else 2d), "character" its .anim ("" = the base's, else media/anim/monster_battle.anim), "model" its .glb (3d).
+    std::string render, character, model;
     std::map<std::string, LookState> states;
 };
 

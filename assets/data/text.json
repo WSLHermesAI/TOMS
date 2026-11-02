@@ -1,5 +1,7 @@
 {
   "schemaVersion": 1,
+  "default": "zh_TW",
+  "offered": ["zh_TW", "en"],
   "languages": [
     {
       "code": "zh_TW",

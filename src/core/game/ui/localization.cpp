@@ -56,11 +56,25 @@ bool Locale::loadFromJson(const nlohmann::json& j) {
             li.webFont = e.value("web_font", std::string());
             if (!li.code.empty()) langs.push_back(li);
         }
+        // "offered": the languages the player can pick (the owner, 2026-11-02: Traditional Chinese and English for now;
+        // the others keep their strings for later). Missing: every language listed.
+        if (j.contains("offered") && j["offered"].is_array()) {
+            std::vector<LanguageInfo> kept;
+            for (const LanguageInfo& li : langs)
+                for (const auto& o : j["offered"])
+                    if (o.is_string() && o.get<std::string>() == li.code) { kept.push_back(li); break; }
+            if (!kept.empty()) langs = kept;
+        }
         if (!langs.empty()) {
             langs_ = langs;
             idx_ = 0;
-            for (size_t i = 0; i < langs_.size(); i++)   // English is the default language
-                if (langs_[i].code == "en") idx_ = (int)i;
+            // "default": the language a new player starts in (Traditional Chinese, 2026-11-02); else English
+            const std::string def = j.value("default", std::string("en"));
+            bool found = false;
+            for (size_t i = 0; i < langs_.size() && !found; i++)
+                if (langs_[i].code == def) { idx_ = (int)i; found = true; }
+            for (size_t i = 0; i < langs_.size() && !found; i++)
+                if (langs_[i].code == "en") { idx_ = (int)i; found = true; }
         }
     }
 

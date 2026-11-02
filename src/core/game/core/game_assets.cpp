@@ -309,7 +309,11 @@ bool Game::loadAssets(const std::string& assetDir) {
         bool haveSettings = false;
         settings_ = toms::loadGameSettings(toms::settingsPath(), &haveSettings);
         locale_.loadFromFile(pathOf(toms::key::kDataText));
-        locale_.setLanguage(settings_.language);
+        // TOMS_LANGUAGE (the test runners: "en") picks the language without saving it; a saved language that is not
+        // offered (text.json "offered") plays in English
+        const char* forced = std::getenv("TOMS_LANGUAGE");
+        if (!locale_.setLanguage(forced && *forced ? std::string(forced) : settings_.language)) locale_.setLanguage("en");
+        if (!(forced && *forced)) settings_.language = locale_.languageCode();
         cam_.setMode(toms::Camera::modeFromIndex(settings_.cameraMode));
         cam_.setViewCols(settings_.viewCols);
         title_.setSlotCount(settings_.slotCount);
